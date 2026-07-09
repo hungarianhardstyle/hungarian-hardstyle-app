@@ -16,18 +16,24 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    HomeScreen(),
-    NewsScreen(),
-    EventsScreen(),
-    TicketsScreen(),
-    MoreScreen(),
-  ];
+  void _openNewsTab() {
+    setState(() {
+      _currentIndex = 1;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      HomeScreen(onShowMoreNews: _openNewsTab),
+      const NewsScreen(),
+      const EventsScreen(),
+      const TicketsScreen(),
+      const MoreScreen(),
+    ];
+
     return Scaffold(
-      body: _pages[_currentIndex],
+      body: pages[_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {

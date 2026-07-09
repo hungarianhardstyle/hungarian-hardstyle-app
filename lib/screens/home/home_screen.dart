@@ -1,183 +1,214 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+import '../../providers/events_provider.dart';
+import '../../providers/news_provider.dart';
+import '../../widgets/event_card.dart';
+import '../../widgets/featured_news_card.dart';
+import '../../widgets/news_card.dart';
 
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+class HomeScreen extends ConsumerWidget {
+  final VoidCallback onShowMoreNews;
 
-    return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          children: [
-            Center(
-              child: Image.asset(
-                'assets/logos/huhs_logo.png',
-                width: width * 0.72,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.music_note,
-                  size: 140,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            const Text(
-              "LEGFRISSEBB HÍREK",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            _featuredNews(),
-
-            const SizedBox(height: 20),
-
-            _smallNews(
-              "WordPress kapcsolat hamarosan elkészül",
-            ),
-
-            _smallNews(
-              "Automatikus hírszinkron fejlesztés alatt",
-            ),
-
-            _smallNews(
-              "Push értesítések érkeznek",
-            ),
-
-            const SizedBox(height: 35),
-
-            const Text(
-              "KÖZELGŐ ESEMÉNYEK",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            SizedBox(
-              height: 190,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: const [
-                  EventCard(
-                    title: "Hardstyle Revolution",
-                    date: "2026",
-                  ),
-                  SizedBox(width: 14),
-                  EventCard(
-                    title: "Új esemény",
-                    date: "Hamarosan",
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static Widget _featuredNews() {
-    return Card(
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 180,
-            color: Colors.red.shade700,
-            child: const Center(
-              child: Icon(
-                Icons.image,
-                color: Colors.white,
-                size: 70,
-              ),
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              "Ide kerül majd a kiemelt WordPress hír",
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  static Widget _smallNews(String title) {
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: const Icon(Icons.article),
-        title: Text(title),
-        trailing: const Icon(Icons.chevron_right),
-      ),
-    );
-  }
-}
-
-class EventCard extends StatelessWidget {
-  final String title;
-  final String date;
-
-  const EventCard({
+  const HomeScreen({
     super.key,
-    required this.title,
-    required this.date,
+    required this.onShowMoreNews,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 170,
-      decoration: BoxDecoration(
-        color: const Color(0xff1d1d1d),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Icon(
-              Icons.festival,
-              size: 60,
-              color: Colors.red,
-            ),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final news = ref.watch(newsProvider);
+    final events = ref.watch(eventsProvider);
+    final width = MediaQuery.of(context).size.width;
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF080808),
+              Color(0xFF220000),
+              Color(0xFF080808),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(newsProvider);
+              ref.invalidate(eventsProvider);
+              await ref.read(newsProvider.future);
+              await ref.read(eventsProvider.future);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 12,
               ),
+              children: [
+                Center(
+                  child: Image.asset(
+                    'assets/logos/huhs_logo.png',
+                    width: width * 0.95,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Legfrissebb hírek',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                news.when(
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                  error: (error, stack) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Nem sikerült betölteni a híreket.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        FilledButton.icon(
+                          onPressed: () {
+                            ref.invalidate(newsProvider);
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Újrapróbálás'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  data: (posts) {
+                    final latestPosts = posts.take(5).toList();
+
+                    if (latestPosts.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: Center(
+                          child: Text(
+                            'Nincs hír.',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      children: [
+                        FeaturedNewsCard(post: latestPosts.first),
+                        const SizedBox(height: 18),
+                        ...latestPosts.skip(1).map(
+                              (post) => NewsCard(post: post),
+                            ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: onShowMoreNews,
+                            icon: const Icon(Icons.article_outlined),
+                            label: const Text('További hírek'),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 35),
+                const Text(
+                  'Közelgő események',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                events.when(
+                  loading: () => const SizedBox(
+                    height: 210,
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                  error: (error, stack) => SizedBox(
+                    height: 150,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Nem sikerült betölteni az eseményeket.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          onPressed: () {
+                            ref.invalidate(eventsProvider);
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Újrapróbálás'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  data: (items) {
+                    final upcomingEvents = items.take(5).toList();
+
+                    if (upcomingEvents.isEmpty) {
+                      return const SizedBox(
+                        height: 120,
+                        child: Center(
+                          child: Text(
+                            'Nincs közelgő esemény.',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return SizedBox(
+                      height: 310,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: upcomingEvents.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 14),
+                        itemBuilder: (context, index) {
+                          return EventCard(
+                            event: upcomingEvents[index],
+                            width: 250,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
-            Text(date),
-          ],
+          ),
         ),
       ),
     );
