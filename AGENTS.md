@@ -23,7 +23,7 @@ The mobile app is built with Flutter. WordPress is the backend and the single so
 
 ### Hungarian Hardstyle
 
-The main brand, community platform, and app identity.
+The main brand, community platform, website, and app identity. Hungarian Hardstyle is the umbrella brand that contains the news, app, community, and related sub-brands.
 
 ### Hardstyle Revolution
 
@@ -33,16 +33,20 @@ Hardstyle Revolution can represent:
 
 - a record label
 - an event series
+- its own Facebook page
+- its own Instagram page
 - releases inside the app
 - future store/catalog features
 
 ### Rave Revolution
 
-A multi-genre hard dance event series.
+A newer multi-genre hard dance event series. It can include hardstyle, rawstyle, hardcore, hard techno, and other harder electronic styles.
 
 ### Hard Lake
 
-A summer/free/flashmob-style event concept connected to Lake Velence.
+A summer/free/flashmob-style event concept, usually connected to Lake Velence.
+
+In the app, these sub-brands can later appear in a "Brands" or "Our Brands" area under the More section, each with logo, short description, and social links.
 
 ## Core Product Direction
 
@@ -77,12 +81,20 @@ As of the current project state:
 - Flutter app structure exists.
 - Dark UI exists.
 - Home screen and bottom navigation exist.
-- Static placeholder screens exist for news, events, tickets, and more.
-- WordPress API work exists or is being prepared separately.
-- Flutter-side WordPress integration is not complete yet.
-- `lib/services/wordpress_service.dart`, model files, and provider files may be empty placeholders until the API is connected.
+- News API integration works in the Flutter app.
+- News list works with API-backed content.
+- News search UI exists.
+- News item tap/click opens the news detail view.
+- News cards display remote images, title, date, and featured state.
+- The WordPress API plugin ZIP has been reviewed locally from `huhs-mobile-api.zip`.
+- The WordPress plugin version in that ZIP is `2.1.0`.
+- The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
+- The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
+- Events, tickets, and more may still contain placeholder or early-stage UI.
+- WordPress API work exists and should continue to be the backend source for new dynamic features.
+- Flutter-side WordPress integration is complete for news, but not yet complete for every content type.
 
-Do not assume that an empty integration file is a bug by itself. Treat it as an implementation placeholder unless the user asks for a finished API feature.
+Do not assume that an empty or partial integration file is a bug by itself. Treat it as an implementation placeholder unless it blocks the requested feature or conflicts with a known working module.
 
 ## Flutter Stack
 
@@ -156,14 +168,70 @@ When implementing WordPress save logic, always verify nonce, permissions, autosa
 
 ## API Direction
 
+Known current custom API endpoints:
+
+- `GET /wp-json/huhs/v1/posts`
+- `GET /wp-json/huhs/v1/events`
+
+Current posts response fields:
+
+- `id`
+- `title`
+- `date`
+- `excerpt`
+- `content`
+- `featured_image`
+- `link`
+- `gallery_id`
+- `gallery_images`
+- `embeds`
+
+Current events response fields:
+
+- `id`
+- `title`
+- `description`
+- `start_date`
+- `start_time`
+- `end_date`
+- `end_time`
+- `venue_name`
+- `venue_city`
+- `venue_zip`
+- `venue_address`
+- `venue_country`
+- `google_maps`
+- `ticket_type`
+- `ticket_url`
+- `organizer`
+- `artists`
+- `flyer`
+- `featured`
+- `visible`
+- `status`
+
+The events API currently returns only published `huhs_event` posts where `visible` is truthy. It sorts featured events first, then by `start_date`.
+
+Artist and organizer custom post types exist in WordPress, but the reviewed ZIP does not yet expose dedicated mobile REST list/detail endpoints for them. Add those endpoints before building the Flutter DJ/Organizer modules.
+
+Artist/DJ and organizer profile APIs should include related events:
+
+- Artist/DJ profiles should show events where the artist performs.
+- Organizer profiles should show events organized by that organizer.
+- These can be derived from event relationships: `artists` contains artist IDs and `organizer_id` contains the organizer ID.
+- Prefer returning an `upcoming_events` array in artist and organizer detail responses.
+
+Artist/DJ profiles should include a TikTok field when the DJ API is implemented. Organizer already has a `tiktok` meta field in the reviewed plugin ZIP.
+
 The API should support:
 
-- news list
-- event list
-- event detail
-- artists list
+- news list, currently working in Flutter
+- news detail, currently working in Flutter
+- event list, endpoint exists in WordPress
+- event detail, can initially use the event object from the list or a future detail endpoint
+- artists list, endpoint still needed
 - artist detail
-- organizers list
+- organizers list, endpoint still needed
 - organizer detail
 - future release catalog
 
@@ -211,6 +279,7 @@ Focus:
 - genres
 - biography
 - social links
+- TikTok link
 - upcoming events
 
 ### v0.7 - Organizers
@@ -279,6 +348,65 @@ Focus:
 - rewarded-ad download option
 - paid downloads
 - purchase/download history if needed
+
+## Release And Store Business Model
+
+Hardstyle Revolution releases should support two main release types.
+
+### Free Release
+
+Free releases are completely free:
+
+- no payment
+- no ad requirement
+- MP3 download
+
+The UI can label this as `FREE DOWNLOAD`.
+
+### Premium Release
+
+Premium releases should offer two paths:
+
+- Watch a rewarded ad to unlock a free 128 kbps MP3 download.
+- Buy a higher-quality version.
+
+Paid options:
+
+- 320 kbps MP3, example price `1.99 EUR`
+- WAV/lossless, example price `2.99 EUR`
+
+The intended user value:
+
+- casual listeners can watch an ad and get a lower-quality phone-friendly MP3
+- DJs or quality-focused users can buy the 320 kbps MP3 or WAV
+- the free ad-supported option should not remove the value of the paid versions
+
+Example premium release UI structure:
+
+- release title
+- artist name
+- preview player
+- `Watch Ad` option for `MP3 128 kbps`, free
+- `Buy MP3` option for `320 kbps`, paid
+- `Buy WAV` option for lossless, paid
+
+Future release/store API fields should likely include:
+
+- `id`
+- `title`
+- `artist_name`
+- `cover_image`
+- `preview_url`
+- `release_type` (`free` or `premium`)
+- `free_download_url`
+- `ad_reward_download_url`
+- `mp3_320_price`
+- `mp3_320_url`
+- `wav_price`
+- `wav_url`
+- `spotify_url`
+- `youtube_url`
+- `hardstyle_com_url`
 
 ## UX Direction
 
@@ -379,11 +507,11 @@ Likely next useful tasks:
 1. Fix the default Flutter widget test so it matches `HungarianHardstyleApp`.
 2. Clean up asset folder references or create the missing asset folders.
 3. Set Android app label and application id before release.
-4. Implement the WordPress post/news model.
-5. Implement `WordPressService` using Dio.
-6. Implement Riverpod providers for news.
-7. Replace static news screen with dynamic API-backed news.
-8. Implement dynamic events from the WordPress REST API.
+4. Keep the working News API/list/detail flow intact when refactoring.
+5. Improve News loading, empty, and error states if needed.
+6. Improve WordPress rich content/HTML rendering for news if needed.
+7. Implement dynamic events from the WordPress REST API.
+8. Implement event detail with flyer, date, location, Google Maps button, and ticket button.
 
 ## Agent Reminder
 
@@ -394,4 +522,3 @@ Before making code changes:
 - do not treat placeholders as bugs unless they block the requested task
 - keep changes scoped to the requested feature
 - summarize what changed and what could not be verified
-
