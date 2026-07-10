@@ -59,9 +59,54 @@ class EventDetailScreen extends StatelessWidget {
     );
   }
 
+  String _descriptionHtml() {
+    final description = event.description.trim();
+
+    if (description.isEmpty) {
+      return '';
+    }
+
+    final hasHtml = RegExp(
+      r'</?[a-z][\s\S]*>',
+      caseSensitive: false,
+    ).hasMatch(description);
+
+    if (hasHtml) {
+      return description;
+    }
+
+    return description
+        .split(RegExp(r'\n\s*\n'))
+        .map((paragraph) {
+          final lines = paragraph
+              .split(RegExp(r'\n+'))
+              .map((line) => _escapeHtml(line.trim()))
+              .where((line) => line.isNotEmpty)
+              .toList();
+
+          if (lines.isEmpty) {
+            return '';
+          }
+
+          return '<p>${lines.join('<br>')}</p>';
+        })
+        .where((paragraph) => paragraph.isNotEmpty)
+        .join();
+  }
+
+  String _escapeHtml(String value) {
+    return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+  }
+
   @override
   Widget build(BuildContext context) {
     final artists = event.artists.map((artist) => artist.name).join(', ');
+    final descriptionHtml = _descriptionHtml();
 
     return Scaffold(
       appBar: AppBar(
@@ -153,9 +198,9 @@ class EventDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-            if (event.description.isNotEmpty)
+            if (descriptionHtml.isNotEmpty)
               Html(
-                data: event.description,
+                data: descriptionHtml,
                 style: {
                   'body': Style(
                     margin: Margins.zero,
@@ -166,6 +211,31 @@ class EventDetailScreen extends StatelessWidget {
                   ),
                   'p': Style(
                     margin: Margins.only(bottom: 18),
+                  ),
+                  'br': Style(
+                    margin: Margins.only(bottom: 6),
+                  ),
+                  'h2': Style(
+                    margin: Margins.only(top: 12, bottom: 12),
+                    fontSize: FontSize(24),
+                    fontWeight: FontWeight.bold,
+                  ),
+                  'h3': Style(
+                    margin: Margins.only(top: 10, bottom: 10),
+                    fontSize: FontSize(21),
+                    fontWeight: FontWeight.bold,
+                  ),
+                  'ul': Style(
+                    margin: Margins.only(bottom: 18),
+                  ),
+                  'ol': Style(
+                    margin: Margins.only(bottom: 18),
+                  ),
+                  'li': Style(
+                    margin: Margins.only(bottom: 8),
+                  ),
+                  'strong': Style(
+                    fontWeight: FontWeight.bold,
                   ),
                   'a': Style(
                     color: Colors.redAccent,

@@ -8,6 +8,8 @@ String _decodeHtmlText(Object? value) {
       .replaceAll('&quot;', '"')
       .replaceAll('&#039;', "'")
       .replaceAll('&apos;', "'")
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&hellip;', '...')
       .replaceAll('&lt;', '<')
       .replaceAll('&gt;', '>')
       .replaceAllMapped(RegExp(r'&#x([0-9a-fA-F]+);'), (match) {
@@ -17,6 +19,19 @@ String _decodeHtmlText(Object? value) {
     final codePoint = int.tryParse(match.group(1)!);
     return codePoint == null ? match.group(0)! : String.fromCharCode(codePoint);
   });
+}
+
+String _readPlainText(Object? value) {
+  return _stripHtmlText(_decodeHtmlText(value));
+}
+
+String _stripHtmlText(String value) {
+  return value
+      .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), ' ')
+      .replaceAll(RegExp(r'</p\s*>', caseSensitive: false), ' ')
+      .replaceAll(RegExp(r'<[^>]*>'), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
 }
 
 class GalleryImage {
@@ -40,9 +55,9 @@ class GalleryImage {
     return GalleryImage(
       id: json['id'] ?? 0,
       url: json['url'] ?? '',
-      title: _decodeHtmlText(json['title'] ?? ''),
-      alt: _decodeHtmlText(json['alt'] ?? ''),
-      description: _decodeHtmlText(json['description'] ?? ''),
+      title: _readPlainText(json['title'] ?? ''),
+      alt: _readPlainText(json['alt'] ?? ''),
+      description: _readPlainText(json['description'] ?? ''),
       order: json['order'] ?? 0,
     );
   }
@@ -81,8 +96,8 @@ class Post {
 
     return Post(
       id: json['id'] ?? 0,
-      title: _decodeHtmlText(json['title']),
-      excerpt: _decodeHtmlText(json['excerpt']),
+      title: _readPlainText(json['title']),
+      excerpt: _readPlainText(json['excerpt']),
       content: json['content'] ?? '',
       imageUrl: json['featured_image'] ?? '',
       date: json['date'] ?? '',
@@ -193,7 +208,7 @@ class Post {
   }
 
   static List<String> _splitCategoryString(String value) {
-    return _decodeHtmlText(value)
+    return _readPlainText(value)
         .split(',')
         .map((category) => category.trim())
         .where((category) => category.isNotEmpty)
@@ -202,12 +217,12 @@ class Post {
 
   static String _readRenderedText(Object? value) {
     if (value is String) {
-      return _decodeHtmlText(value);
+      return _readPlainText(value);
     }
 
     if (value is Map<String, dynamic>) {
       final rendered = value['rendered'];
-      return _decodeHtmlText(rendered);
+      return _readPlainText(rendered);
     }
 
     return '';

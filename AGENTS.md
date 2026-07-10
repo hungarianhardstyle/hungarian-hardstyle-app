@@ -512,6 +512,9 @@ Likely next useful tasks:
 6. Improve WordPress rich content/HTML rendering for news if needed.
 7. Implement dynamic events from the WordPress REST API.
 8. Implement event detail with flyer, date, location, Google Maps button, and ticket button.
+9. Make event detail artists and organizer clickable, linking to their existing DJ/organizer profile pages.
+10. Update the roadmap after the current event/news work is finalized.
+11. Do not bump the app version unless the user explicitly asks; the version has not intentionally changed yet.
 
 ## Agent Reminder
 
