@@ -13,12 +13,17 @@ String _decodeHtmlText(Object? value) {
       .replaceAll('&lt;', '<')
       .replaceAll('&gt;', '>')
       .replaceAllMapped(RegExp(r'&#x([0-9a-fA-F]+);'), (match) {
-    final codePoint = int.tryParse(match.group(1)!, radix: 16);
-    return codePoint == null ? match.group(0)! : String.fromCharCode(codePoint);
-  }).replaceAllMapped(RegExp(r'&#([0-9]+);'), (match) {
-    final codePoint = int.tryParse(match.group(1)!);
-    return codePoint == null ? match.group(0)! : String.fromCharCode(codePoint);
-  });
+        final codePoint = int.tryParse(match.group(1)!, radix: 16);
+        return codePoint == null
+            ? match.group(0)!
+            : String.fromCharCode(codePoint);
+      })
+      .replaceAllMapped(RegExp(r'&#([0-9]+);'), (match) {
+        final codePoint = int.tryParse(match.group(1)!);
+        return codePoint == null
+            ? match.group(0)!
+            : String.fromCharCode(codePoint);
+      });
 }
 
 String _readPlainText(Object? value) {
@@ -31,6 +36,7 @@ String _stripHtmlText(String value) {
       .replaceAll(RegExp(r'</p\s*>', caseSensitive: false), ' ')
       .replaceAll(RegExp(r'<[^>]*>'), ' ')
       .replaceAll(RegExp(r'\s+'), ' ')
+      .replaceAllMapped(RegExp(r'\s+([.,!?;:])'), (match) => match.group(1)!)
       .trim();
 }
 
@@ -63,6 +69,59 @@ class GalleryImage {
   }
 }
 
+class PostEmbed {
+  final String type;
+  final String url;
+
+  const PostEmbed({required this.type, required this.url});
+
+  factory PostEmbed.fromJson(Object? value) {
+    if (value is! Map<String, dynamic>) {
+      return const PostEmbed(type: '', url: '');
+    }
+    return PostEmbed(
+      type: _readPlainText(value['type']).toLowerCase().trim(),
+      url: _decodeHtmlText(value['url']).replaceAll(r'\u0026', '&').trim(),
+    );
+  }
+
+  String get deduplicationKey {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return '$type|$url';
+    if (type == 'youtube') {
+      final videoId = uri.host.contains('youtu.be')
+          ? (uri.pathSegments.isEmpty ? '' : uri.pathSegments.first)
+          : uri.queryParameters['v'] ??
+                _segmentAfter(uri.pathSegments, 'shorts') ??
+                _segmentAfter(uri.pathSegments, 'embed') ??
+                '';
+      if (videoId.isNotEmpty) return '$type|$videoId';
+    }
+    return '$type|${uri.replace(query: '', fragment: '')}';
+  }
+
+  static String? _segmentAfter(List<String> segments, String marker) {
+    final index = segments.indexOf(marker);
+    return index >= 0 && index + 1 < segments.length
+        ? segments[index + 1]
+        : null;
+  }
+}
+
+class PostShortcode {
+  final String name;
+  final String source;
+
+  const PostShortcode({required this.name, required this.source});
+
+  String get label => switch (name.toLowerCase()) {
+    'ays_poll' => 'Interaktív szavazás',
+    'irp' => 'Kapcsolódó cikk',
+    'finaltilesgallery' => 'Képgaléria',
+    _ => 'Interaktív tartalom',
+  };
+}
+
 class Post {
   final int id;
   final String title;
@@ -76,6 +135,7 @@ class Post {
 
   final int galleryId;
   final List<GalleryImage> galleryImages;
+  final List<PostEmbed> embeds;
 
   const Post({
     required this.id,
@@ -89,6 +149,7 @@ class Post {
     required this.categories,
     required this.galleryId,
     required this.galleryImages,
+    required this.embeds,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -108,6 +169,7 @@ class Post {
       galleryImages: gallery
           .map((e) => GalleryImage.fromJson(e as Map<String, dynamic>))
           .toList(),
+      embeds: _readEmbeds(json['embeds']),
     );
   }
 
@@ -124,10 +186,52 @@ class Post {
       categories: const [],
       galleryId: 0,
       galleryImages: const [],
+      embeds: const [],
     );
   }
 
   bool get hasGallery => galleryImages.isNotEmpty;
+
+  static final RegExp _supportedShortcodePattern = RegExp(
+    r'\[(ays_poll|irp|FinalTilesGallery)\b[^\]]*\]',
+    caseSensitive: false,
+  );
+
+  List<PostShortcode> get shortcodes => _supportedShortcodePattern
+      .allMatches(content)
+      .map(
+        (match) => PostShortcode(
+          name: match.group(1) ?? '',
+          source: match.group(0) ?? '',
+        ),
+      )
+      .where(
+        (shortcode) =>
+            shortcode.name.toLowerCase() != 'finaltilesgallery' ||
+            galleryImages.isEmpty,
+      )
+      .toList();
+
+  String get contentForDisplay =>
+      content.replaceAll(_supportedShortcodePattern, '');
+
+  static List<PostEmbed> _readEmbeds(Object? value) {
+    if (value is! List<dynamic>) return const [];
+    final keys = <String>{};
+    final embeds = <PostEmbed>[];
+    for (final item in value) {
+      final embed = PostEmbed.fromJson(item);
+      final uri = Uri.tryParse(embed.url);
+      if (embed.type.isEmpty ||
+          uri == null ||
+          !uri.isAbsolute ||
+          !keys.add(embed.deduplicationKey)) {
+        continue;
+      }
+      embeds.add(embed);
+    }
+    return embeds;
+  }
 
   static List<String> _readCategories(Map<String, dynamic> json) {
     final value =

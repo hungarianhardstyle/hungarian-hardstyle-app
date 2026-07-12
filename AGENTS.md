@@ -91,6 +91,11 @@ As of the current project state:
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
 - Events, tickets, and more may still contain placeholder or early-stage UI.
+- Dynamic events and the event detail screen are connected to the WordPress events API.
+- Event detail artists and organizer are clickable and open internal profile placeholders.
+- News excerpts are converted to plain text and HTML tags are removed for both custom and standard WordPress responses.
+- News search uses the custom `huhs/v1/posts` endpoint so search results retain the same processed content, featured images, galleries, and embeds as the normal news flow.
+- News detail renders deduplicated YouTube, Spotify, Instagram, and TikTok embeds in-app. Supported interactive WordPress shortcodes (`ays_poll`, `irp`, and legacy Final Tiles Gallery) are detected; their raw shortcode text is removed and the rendered WordPress content can be opened inside the app.
 - WordPress API work exists and should continue to be the backend source for new dynamic features.
 - Flutter-side WordPress integration is complete for news, but not yet complete for every content type.
 
@@ -268,6 +273,8 @@ Focus:
 - ticket button
 - Google Maps button
 - WordPress event detail frontend
+
+Flutter status: dynamic list, detail, flyer, ticket, Google Maps, and clickable artist/organizer relations are implemented. The linked profiles remain placeholders until the dedicated APIs are connected.
 
 ### v0.6 - DJ Database
 
@@ -510,10 +517,10 @@ Likely next useful tasks:
 4. Keep the working News API/list/detail flow intact when refactoring.
 5. Improve News loading, empty, and error states if needed.
 6. Improve WordPress rich content/HTML rendering for news if needed.
-7. Implement dynamic events from the WordPress REST API.
-8. Implement event detail with flyer, date, location, Google Maps button, and ticket button.
-9. Make event detail artists and organizer clickable, linking to their existing DJ/organizer profile pages.
-10. Update the roadmap after the current event/news work is finalized.
+7. Add and connect dedicated artist list/detail REST endpoints.
+8. Add and connect dedicated organizer list/detail REST endpoints.
+9. Replace the event relation profile placeholders with complete API-backed DJ/organizer profiles.
+10. Implement upcoming events on DJ and organizer profiles.
 11. Do not bump the app version unless the user explicitly asks; the version has not intentionally changed yet.
 
 ## Agent Reminder

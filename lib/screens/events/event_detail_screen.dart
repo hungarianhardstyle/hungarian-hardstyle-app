@@ -5,14 +5,13 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/event.dart';
+import '../artists/artist_detail_screen.dart';
+import '../organizers/organizer_detail_screen.dart';
 
 class EventDetailScreen extends StatelessWidget {
   final HuhsEvent event;
 
-  const EventDetailScreen({
-    super.key,
-    required this.event,
-  });
+  const EventDetailScreen({super.key, required this.event});
 
   String _formatDate() {
     try {
@@ -41,10 +40,7 @@ class EventDetailScreen extends StatelessWidget {
       return;
     }
 
-    final opened = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
 
     if (!opened && context.mounted) {
       _showOpenError(context);
@@ -53,9 +49,7 @@ class EventDetailScreen extends StatelessWidget {
 
   void _showOpenError(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Nem sikerult megnyitni a linket.'),
-      ),
+      const SnackBar(content: Text('Nem sikerult megnyitni a linket.')),
     );
   }
 
@@ -105,13 +99,10 @@ class EventDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final artists = event.artists.map((artist) => artist.name).join(', ');
     final descriptionHtml = _descriptionHtml();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Esemény'),
-      ),
+      appBar: AppBar(title: const Text('Esemény')),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,10 +130,7 @@ class EventDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _InfoRow(
-                    icon: Icons.calendar_today,
-                    text: _formatDate(),
-                  ),
+                  _InfoRow(icon: Icons.calendar_today, text: _formatDate()),
                   if (event.venueLine.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     _InfoRow(
@@ -150,19 +138,23 @@ class EventDetailScreen extends StatelessWidget {
                       text: event.venueLine,
                     ),
                   ],
-                  if (event.organizer.isNotEmpty) ...[
+                  if (event.organizer.name.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     _InfoRow(
                       icon: Icons.groups_outlined,
-                      text: event.organizer,
+                      text: event.organizer.name,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              OrganizerDetailScreen(organizer: event.organizer),
+                        ),
+                      ),
                     ),
                   ],
-                  if (artists.isNotEmpty) ...[
+                  if (event.artists.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    _InfoRow(
-                      icon: Icons.music_note_outlined,
-                      text: artists,
-                    ),
+                    _ArtistLinks(artists: event.artists),
                   ],
                   if (event.hasTicket || event.hasGoogleMaps) ...[
                     const SizedBox(height: 22),
@@ -171,10 +163,8 @@ class EventDetailScreen extends StatelessWidget {
                         if (event.hasTicket)
                           Expanded(
                             child: FilledButton.icon(
-                              onPressed: () => _openUrl(
-                                context,
-                                event.ticketUrl,
-                              ),
+                              onPressed: () =>
+                                  _openUrl(context, event.ticketUrl),
                               icon: const Icon(Icons.confirmation_number),
                               label: const Text('Jegyek'),
                             ),
@@ -184,10 +174,8 @@ class EventDetailScreen extends StatelessWidget {
                         if (event.hasGoogleMaps)
                           Expanded(
                             child: OutlinedButton.icon(
-                              onPressed: () => _openUrl(
-                                context,
-                                event.googleMapsUrl,
-                              ),
+                              onPressed: () =>
+                                  _openUrl(context, event.googleMapsUrl),
                               icon: const Icon(Icons.map_outlined),
                               label: const Text('Térkép'),
                             ),
@@ -209,12 +197,8 @@ class EventDetailScreen extends StatelessWidget {
                     lineHeight: const LineHeight(1.7),
                     color: Colors.white,
                   ),
-                  'p': Style(
-                    margin: Margins.only(bottom: 18),
-                  ),
-                  'br': Style(
-                    margin: Margins.only(bottom: 6),
-                  ),
+                  'p': Style(margin: Margins.only(bottom: 18)),
+                  'br': Style(margin: Margins.only(bottom: 6)),
                   'h2': Style(
                     margin: Margins.only(top: 12, bottom: 12),
                     fontSize: FontSize(24),
@@ -225,18 +209,10 @@ class EventDetailScreen extends StatelessWidget {
                     fontSize: FontSize(21),
                     fontWeight: FontWeight.bold,
                   ),
-                  'ul': Style(
-                    margin: Margins.only(bottom: 18),
-                  ),
-                  'ol': Style(
-                    margin: Margins.only(bottom: 18),
-                  ),
-                  'li': Style(
-                    margin: Margins.only(bottom: 8),
-                  ),
-                  'strong': Style(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  'ul': Style(margin: Margins.only(bottom: 18)),
+                  'ol': Style(margin: Margins.only(bottom: 18)),
+                  'li': Style(margin: Margins.only(bottom: 8)),
+                  'strong': Style(fontWeight: FontWeight.bold),
                   'a': Style(
                     color: Colors.redAccent,
                     textDecoration: TextDecoration.none,
@@ -255,30 +231,87 @@ class EventDetailScreen extends StatelessWidget {
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String text;
+  final VoidCallback? onTap;
 
-  const _InfoRow({
-    required this.icon,
-    required this.text,
-  });
+  const _InfoRow({required this.icon, required this.text, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
+        Icon(icon, size: 20, color: Colors.redAccent),
+        const SizedBox(width: 10),
+        Expanded(
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: onTap == null
+                      ? Colors.grey.shade300
+                      : Colors.redAccent,
+                  height: 1.35,
+                  decoration: onTap == null ? null : TextDecoration.underline,
+                  decorationColor: Colors.redAccent,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ArtistLinks extends StatelessWidget {
+  final List<EventArtist> artists;
+
+  const _ArtistLinks({required this.artists});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(
+          Icons.music_note_outlined,
           size: 20,
           color: Colors.redAccent,
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              color: Colors.grey.shade300,
-              height: 1.35,
-            ),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: artists
+                .map(
+                  (artist) => InkWell(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ArtistDetailScreen(artist: artist),
+                      ),
+                    ),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        artist.name,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          height: 1.35,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.redAccent,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ),
       ],

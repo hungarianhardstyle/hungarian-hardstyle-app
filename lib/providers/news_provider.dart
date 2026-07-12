@@ -110,11 +110,7 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
         return;
       }
 
-      state = state.copyWith(
-        isLoading: false,
-        hasMore: false,
-        error: error,
-      );
+      state = state.copyWith(isLoading: false, hasMore: false, error: error);
     }
   }
 
@@ -147,33 +143,36 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
         return;
       }
 
-      state = state.copyWith(
-        isLoadingMore: false,
-        error: error,
-      );
+      state = state.copyWith(isLoadingMore: false, error: error);
     }
   }
 
   Future<PostsPage> _getPostsPage({required int page}) {
-    if (state.selectedCategoryId > 0 || state.search.trim().isNotEmpty) {
-      return _service.getStandardPosts(
-        categoryId: state.selectedCategoryId,
+    if (state.search.trim().isNotEmpty) {
+      return _service.getPosts(
         search: state.search,
         page: page,
         perPage: _perPage,
       );
     }
 
-    return _service.getPosts(
-      page: page,
-      perPage: _perPage,
-    );
+    if (state.selectedCategoryId > 0) {
+      return _service.getStandardPosts(
+        categoryId: state.selectedCategoryId,
+        page: page,
+        perPage: _perPage,
+      );
+    }
+
+    return _service.getPosts(page: page, perPage: _perPage);
   }
 
   Future<void> updateSearch(String value) async {
     state = state.copyWith(
       search: value,
-      selectedCategoryId: value.trim().isNotEmpty ? 0 : state.selectedCategoryId,
+      selectedCategoryId: value.trim().isNotEmpty
+          ? 0
+          : state.selectedCategoryId,
     );
     await refresh();
   }
@@ -191,6 +190,6 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
 
 final paginatedNewsProvider =
     StateNotifierProvider<PaginatedNewsNotifier, PaginatedNewsState>((ref) {
-  final service = ref.watch(wordpressServiceProvider);
-  return PaginatedNewsNotifier(service);
-});
+      final service = ref.watch(wordpressServiceProvider);
+      return PaginatedNewsNotifier(service);
+    });

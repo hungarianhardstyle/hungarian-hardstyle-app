@@ -73,6 +73,7 @@ class WordpressService {
   Future<PostsPage> getPosts({
     int page = 1,
     int perPage = 10,
+    String search = '',
   }) async {
     try {
       final response = await _dio.get(
@@ -80,6 +81,7 @@ class WordpressService {
         queryParameters: {
           'page': page,
           'per_page': perPage,
+          if (search.trim().isNotEmpty) 'search': search.trim(),
         },
       );
 
@@ -117,13 +119,9 @@ class WordpressService {
         hasMore: hasMore,
       );
     } on DioException catch (e) {
-      throw Exception(
-        'Nem sikerult betolteni a hireket.\n\n${e.message}',
-      );
+      throw Exception('Nem sikerult betolteni a hireket.\n\n${e.message}');
     } catch (e) {
-      throw Exception(
-        'Ismeretlen hiba tortent.\n\n$e',
-      );
+      throw Exception('Ismeretlen hiba tortent.\n\n$e');
     }
   }
 
@@ -153,13 +151,9 @@ class WordpressService {
 
       return const [];
     } on DioException catch (e) {
-      throw Exception(
-        'Nem sikerult betolteni az esemenyeket.\n\n${e.message}',
-      );
+      throw Exception('Nem sikerult betolteni az esemenyeket.\n\n${e.message}');
     } catch (e) {
-      throw Exception(
-        'Ismeretlen hiba tortent.\n\n$e',
-      );
+      throw Exception('Ismeretlen hiba tortent.\n\n$e');
     }
   }
 
@@ -269,13 +263,9 @@ class WordpressService {
         hasMore: page < totalPages,
       );
     } on DioException catch (e) {
-      throw Exception(
-        'Nem sikerult betolteni a hireket.\n\n${e.message}',
-      );
+      throw Exception('Nem sikerult betolteni a hireket.\n\n${e.message}');
     } catch (e) {
-      throw Exception(
-        'Ismeretlen hiba tortent.\n\n$e',
-      );
+      throw Exception('Ismeretlen hiba tortent.\n\n$e');
     }
   }
 

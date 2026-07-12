@@ -2,10 +2,7 @@ class EventArtist {
   final int id;
   final String name;
 
-  const EventArtist({
-    required this.id,
-    required this.name,
-  });
+  const EventArtist({required this.id, required this.name});
 
   factory EventArtist.fromJson(Object? value) {
     if (value is String) {
@@ -20,6 +17,28 @@ class EventArtist {
     }
 
     return const EventArtist(id: 0, name: '');
+  }
+}
+
+class EventOrganizer {
+  final int id;
+  final String name;
+
+  const EventOrganizer({required this.id, required this.name});
+
+  factory EventOrganizer.fromJson(Object? value) {
+    if (value is String) {
+      return EventOrganizer(id: 0, name: _decodeHtmlText(value));
+    }
+
+    if (value is Map<String, dynamic>) {
+      return EventOrganizer(
+        id: _readInt(value['id']),
+        name: _readString(value['name'] ?? value['title']),
+      );
+    }
+
+    return const EventOrganizer(id: 0, name: '');
   }
 }
 
@@ -39,7 +58,7 @@ class HuhsEvent {
   final String googleMapsUrl;
   final String ticketType;
   final String ticketUrl;
-  final String organizer;
+  final EventOrganizer organizer;
   final List<EventArtist> artists;
   final String flyerUrl;
   final bool featured;
@@ -89,12 +108,12 @@ class HuhsEvent {
       googleMapsUrl: _readString(json['google_maps']),
       ticketType: _readString(json['ticket_type']),
       ticketUrl: _readString(json['ticket_url']),
-      organizer: _readOrganizer(json['organizer']),
+      organizer: EventOrganizer.fromJson(json['organizer']),
       artists: artistValues is List<dynamic>
           ? artistValues
-              .map(EventArtist.fromJson)
-              .where((artist) => artist.name.isNotEmpty)
-              .toList()
+                .map(EventArtist.fromJson)
+                .where((artist) => artist.name.isNotEmpty)
+                .toList()
           : const [],
       flyerUrl: _readImageUrl(json['flyer']),
       featured: _readBool(json['featured']),
@@ -164,18 +183,6 @@ bool _readBool(Object? value) {
   return false;
 }
 
-String _readOrganizer(Object? value) {
-  if (value is String) {
-    return _decodeHtmlText(value);
-  }
-
-  if (value is Map<String, dynamic>) {
-    return _readString(value['name'] ?? value['title']);
-  }
-
-  return '';
-}
-
 String _readImageUrl(Object? value) {
   if (value is String) {
     return value;
@@ -203,10 +210,15 @@ String _decodeHtmlText(String value) {
       .replaceAll('&lt;', '<')
       .replaceAll('&gt;', '>')
       .replaceAllMapped(RegExp(r'&#x([0-9a-fA-F]+);'), (match) {
-    final codePoint = int.tryParse(match.group(1)!, radix: 16);
-    return codePoint == null ? match.group(0)! : String.fromCharCode(codePoint);
-  }).replaceAllMapped(RegExp(r'&#([0-9]+);'), (match) {
-    final codePoint = int.tryParse(match.group(1)!);
-    return codePoint == null ? match.group(0)! : String.fromCharCode(codePoint);
-  });
+        final codePoint = int.tryParse(match.group(1)!, radix: 16);
+        return codePoint == null
+            ? match.group(0)!
+            : String.fromCharCode(codePoint);
+      })
+      .replaceAllMapped(RegExp(r'&#([0-9]+);'), (match) {
+        final codePoint = int.tryParse(match.group(1)!);
+        return codePoint == null
+            ? match.group(0)!
+            : String.fromCharCode(codePoint);
+      });
 }

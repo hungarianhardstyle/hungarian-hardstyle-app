@@ -506,15 +506,25 @@ Completed
 
 ✔ Event Shortcode
 
+Flutter Completed
+
+- Dynamic Events in Flutter
+
+- Event Detail with flyer, ticket and Google Maps actions
+
+- HTML tag cleanup for news excerpts
+
+- Clickable event artists and organizer with internal profile placeholders
+
 In Progress
-
-- Dynamic Events
-
-- Event Detail
 
 - Artists API
 
 - Organizers API
+
+- Full DJ and organizer profiles populated from their REST APIs
+
+- Rich content: YouTube, Spotify, Instagram and TikTok embeds now render in article detail; interactive WordPress shortcodes open in an in-app web view
 
 - Web Event Detail
 

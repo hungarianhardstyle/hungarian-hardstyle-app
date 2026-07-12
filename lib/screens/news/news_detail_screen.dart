@@ -4,24 +4,20 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
 
 import '../../models/post.dart';
+import '../../widgets/post_embed_card.dart';
+import '../../widgets/post_shortcode_card.dart';
 import '../gallery/gallery_screen.dart';
 
 class NewsDetailScreen extends StatelessWidget {
   final Post post;
 
-  const NewsDetailScreen({
-    super.key,
-    required this.post,
-  });
+  const NewsDetailScreen({super.key, required this.post});
 
   String _formatDate(String date) {
     try {
       final parsed = DateTime.parse(date);
 
-      return DateFormat(
-        'yyyy. MMMM d.',
-        'hu_HU',
-      ).format(parsed);
+      return DateFormat('yyyy. MMMM d.', 'hu_HU').format(parsed);
     } catch (_) {
       return date;
     }
@@ -30,9 +26,7 @@ class NewsDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Hír"),
-      ),
+      appBar: AppBar(title: const Text("Hír")),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,16 +58,14 @@ class NewsDetailScreen extends StatelessWidget {
 
                   Text(
                     _formatDate(post.date),
-                    style: TextStyle(
-                      color: Colors.grey.shade400,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade400),
                   ),
                 ],
               ),
             ),
 
             Html(
-              data: post.content,
+              data: post.contentForDisplay,
               style: {
                 "body": Style(
                   margin: Margins.zero,
@@ -82,12 +74,8 @@ class NewsDetailScreen extends StatelessWidget {
                   lineHeight: const LineHeight(1.7),
                   color: Colors.white,
                 ),
-                "img": Style(
-                  margin: Margins.symmetric(vertical: 16),
-                ),
-                "p": Style(
-                  margin: Margins.only(bottom: 18),
-                ),
+                "img": Style(margin: Margins.symmetric(vertical: 16)),
+                "p": Style(margin: Margins.only(bottom: 18)),
                 "h1": Style(
                   fontSize: FontSize(30),
                   fontWeight: FontWeight.bold,
@@ -107,15 +95,37 @@ class NewsDetailScreen extends StatelessWidget {
               },
             ),
 
+            if (post.shortcodes.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: Text(
+                  'Interaktív tartalom',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ...post.shortcodes.map(
+                (shortcode) =>
+                    PostShortcodeCard(shortcode: shortcode, postUrl: post.link),
+              ),
+            ],
+
+            if (post.embeds.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: Text(
+                  'Média',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ...post.embeds.map((embed) => PostEmbedCard(embed: embed)),
+            ],
+
             if (post.galleryImages.isNotEmpty) ...[
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
                 child: Text(
                   "Galéria",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
 
