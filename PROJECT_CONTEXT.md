@@ -358,6 +358,18 @@ Bottom Navigation
 - Organizers
 - More
 
+Confirmed navigation change:
+
+- The current Tickets tab will be removed.
+- The DJ directory tab will take its place in the bottom navigation.
+
+Confirmed event relationship behavior:
+
+- Event content remains managed through the WordPress API.
+- Every related DJ/artist name and the organizer shown on event detail must be clickable.
+- They must navigate to complete dedicated DJ and organizer profiles populated from WordPress REST APIs.
+- The current name-only internal profile screens are temporary placeholders until those APIs and full profiles are implemented.
+
 ---
 
 # More Menu

@@ -48,4 +48,29 @@ void main() {
     expect(post.shortcodes.single.name, 'ays_poll');
     expect(post.contentForDisplay, '<p>Szavazz!</p><p>Köszönjük.</p>');
   });
+
+  test('eltávolítja a külön megjelenített embed nyers URL blokkját', () {
+    final post = Post.fromJson({
+      'content': '''
+        <p>Belehallgatnál a zenékbe?</p>
+        <figure class="wp-block-embed">
+          <div>https://open.spotify.com/playlist/example?si=test</div>
+        </figure>
+        <p>https://www.youtube.com/watch?v=video123</p>
+        <p>További szöveg.</p>
+      ''',
+      'embeds': [
+        {
+          'type': 'spotify',
+          'url': 'https://open.spotify.com/playlist/example?si=test',
+        },
+        {'type': 'youtube', 'url': 'https://www.youtube.com/watch?v=video123'},
+      ],
+    });
+
+    expect(post.contentForDisplay, contains('Belehallgatnál'));
+    expect(post.contentForDisplay, contains('További szöveg'));
+    expect(post.contentForDisplay, isNot(contains('open.spotify.com')));
+    expect(post.contentForDisplay, isNot(contains('youtube.com/watch')));
+  });
 }

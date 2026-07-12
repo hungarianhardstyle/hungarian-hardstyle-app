@@ -511,6 +511,13 @@ Keep explanations clear and in Hungarian unless the user asks otherwise.
 
 Likely next useful tasks:
 
+Product decisions confirmed by the user:
+
+- The current Tickets bottom-navigation tab is not needed and will be replaced by the DJ tab.
+- Event data continues to come from the WordPress events API.
+- Artist/DJ names and the organizer on event detail must be clickable.
+- These links must open complete, dedicated, API-backed DJ and organizer profile screens; the current internal profile placeholders are temporary only.
+
 1. Fix the default Flutter widget test so it matches `HungarianHardstyleApp`.
 2. Clean up asset folder references or create the missing asset folders.
 3. Set Android app label and application id before release.

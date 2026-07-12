@@ -1,3 +1,6 @@
+import 'package:html/dom.dart';
+import 'package:html/parser.dart' as html_parser;
+
 String _decodeHtmlText(Object? value) {
   if (value is! String) {
     return '';
@@ -212,8 +215,66 @@ class Post {
       )
       .toList();
 
-  String get contentForDisplay =>
-      content.replaceAll(_supportedShortcodePattern, '');
+  String get contentForDisplay {
+    final withoutShortcodes = content.replaceAll(
+      _supportedShortcodePattern,
+      '',
+    );
+    if (embeds.isEmpty) return withoutShortcodes;
+
+    final fragment = html_parser.parseFragment(withoutShortcodes);
+    final candidates = fragment
+        .querySelectorAll('figure, blockquote, p, div')
+        .toList();
+
+    for (final element in candidates.reversed) {
+      if (element.parent == null) continue;
+
+      final text = _decodeHtmlText(
+        element.text,
+      ).replaceAll(r'\u0026', '&').trim();
+      if (!text.startsWith('http')) continue;
+
+      final candidateType = _embedTypeForUrl(text);
+      if (candidateType.isEmpty ||
+          !embeds.any((embed) => embed.type == candidateType)) {
+        continue;
+      }
+
+      final figure = _closestFigure(element);
+      (figure ?? element).remove();
+    }
+
+    final serialized = fragment.nodes
+        .map((node) => node is Element ? node.outerHtml : node.text)
+        .join();
+
+    return serialized.replaceAll(
+      RegExp(
+        r'<p[^>]*>\s*https?://(?:www\.)?(?:youtube\.com|youtu\.be|open\.spotify\.com|instagram\.com|tiktok\.com)/[^<]*</p>',
+        caseSensitive: false,
+      ),
+      '',
+    );
+  }
+
+  static Element? _closestFigure(Element element) {
+    Element? current = element;
+    while (current != null) {
+      if (current.localName == 'figure') return current;
+      current = current.parent;
+    }
+    return null;
+  }
+
+  static String _embedTypeForUrl(String url) {
+    final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
+    if (host.contains('youtu')) return 'youtube';
+    if (host.contains('spotify')) return 'spotify';
+    if (host.contains('instagram')) return 'instagram';
+    if (host.contains('tiktok')) return 'tiktok';
+    return '';
+  }
 
   static List<PostEmbed> _readEmbeds(Object? value) {
     if (value is! List<dynamic>) return const [];
