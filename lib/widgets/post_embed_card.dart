@@ -121,7 +121,7 @@ String? _after(List<String> parts, String marker) {
 
 double _height(String type) => switch (type) {
   'youtube' => 220,
-  'spotify' => 352,
+  'spotify' => 176,
   'instagram' => 600,
   'tiktok' => 640,
   _ => 90,

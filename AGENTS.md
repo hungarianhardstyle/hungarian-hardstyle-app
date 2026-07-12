@@ -346,6 +346,42 @@ Focus:
 - polished Android release
 - iOS preparation if ready
 
+Confirmed v1.0 community direction:
+
+- Add a dedicated Live Feed bottom-navigation tab.
+- Registered users can chat in the live feed and publish image posts.
+- Add Google account sign-in and user registration/onboarding.
+- Users can create and manage their own community profile.
+- Users can send, accept, and manage friend connections.
+- Events must include `Ott leszek` and `Nem leszek ott` attendance actions.
+- User profiles and friend lists should indicate whether that person plans to attend an upcoming event.
+- News, events, DJs, and organizers should remain readable without registration where possible; posting, chatting, friendships, profiles, and attendance state require authentication.
+- Before implementation, define moderation, reporting, blocking, privacy, image upload/storage, retention, and account deletion rules.
+- Registration and community accounts are app-only; do not add account registration or community UI to the public WordPress website.
+- WordPress remains the source of truth for editorial content (news, events, DJs, organizers, and releases), while the app community backend may be a deliberately separate service optimized for authentication, real-time chat/feed data, friendships, attendance, and user uploads.
+
+Confirmed annual voting direction for v1.0:
+
+- Replace or complement the current WordPress voting extension with a dedicated Hungarian Hardstyle voting module and REST API.
+- WordPress admin must manage each annual voting season, its opening/closing dates, status, rules, and candidates.
+- Required annual categories are:
+  - `Legjobb magyar hardstyle DJ – <év>`
+  - `Legjobb magyar hardcore DJ – <év>`
+  - `Legjobb magyar bulisorozat – <év>`
+  - `Legjobb magyar zene – <év>`
+  - `Legjobb külföldi DJ – <év>`
+- Derive the displayed year from the voting season instead of requiring it to be typed into every category name.
+- Admins must be able to add DJ, event-series, and track candidates, including the display data needed by the app (name/title, artist, image/cover/logo, optional preview and external links).
+- Flutter must list active voting categories and candidates and allow votes to be submitted in-app.
+- Voting should use authenticated app users when Google sign-in is available, with server-side one-user/one-vote enforcement per category unless a season explicitly defines different rules.
+- The API must enforce voting windows and duplicate-vote protection server-side; Flutter validation alone is not sufficient.
+- Define result visibility (`live`, `hidden until close`, or `admin only`), vote correction rules, audit data, abuse protection, and privacy before launch.
+- Provide a complete private admin summary/dashboard with totals and per-category results. It must never be exposed by a public REST endpoint or displayed to normal app users.
+- After a voting season closes, admins must be able to publish a separate public results summary for the app.
+- Publishing results must be an explicit admin action; closing voting must not automatically expose results.
+- The public summary should contain the season/year, category names, final ranking, candidate display data, and optionally vote totals or percentages according to the season settings.
+- Never include voter identities, audit logs, moderation flags, suspicious-vote indicators, or other private admin data in the public results response.
+
 ### v1.5 - Hardstyle Revolution Store
 
 Focus:
@@ -517,6 +553,9 @@ Product decisions confirmed by the user:
 - Event data continues to come from the WordPress events API.
 - Artist/DJ names and the organizer on event detail must be clickable.
 - These links must open complete, dedicated, API-backed DJ and organizer profile screens; the current internal profile placeholders are temporary only.
+- v1.0 should introduce a Live Feed tab with chat and image posting.
+- v1.0 should introduce Google sign-in, user profiles, friendships, and event attendance status (`Ott leszek` / `Nem leszek ott`).
+- v1.0 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting.
 
 1. Fix the default Flutter widget test so it matches `HungarianHardstyleApp`.
 2. Clean up asset folder references or create the missing asset folders.

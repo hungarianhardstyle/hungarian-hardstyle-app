@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/post.dart';
 import '../../widgets/post_embed_card.dart';
@@ -20,6 +21,18 @@ class NewsDetailScreen extends StatelessWidget {
       return DateFormat('yyyy. MMMM d.', 'hu_HU').format(parsed);
     } catch (_) {
       return date;
+    }
+  }
+
+  Future<void> _openLink(BuildContext context, String? url) async {
+    final uri = Uri.tryParse(url ?? '');
+    if (uri == null || !uri.isAbsolute) return;
+
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nem sikerült megnyitni a linket.')),
+      );
     }
   }
 
@@ -66,6 +79,7 @@ class NewsDetailScreen extends StatelessWidget {
 
             Html(
               data: post.contentForDisplay,
+              onLinkTap: (url, attributes, element) => _openLink(context, url),
               style: {
                 "body": Style(
                   margin: Margins.zero,
@@ -95,6 +109,17 @@ class NewsDetailScreen extends StatelessWidget {
               },
             ),
 
+            if (post.embeds.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: Text(
+                  'Média',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ...post.embeds.map((embed) => PostEmbedCard(embed: embed)),
+            ],
+
             if (post.shortcodes.isNotEmpty) ...[
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -107,17 +132,6 @@ class NewsDetailScreen extends StatelessWidget {
                 (shortcode) =>
                     PostShortcodeCard(shortcode: shortcode, postUrl: post.link),
               ),
-            ],
-
-            if (post.embeds.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
-                child: Text(
-                  'Média',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ),
-              ...post.embeds.map((embed) => PostEmbedCard(embed: embed)),
             ],
 
             if (post.galleryImages.isNotEmpty) ...[

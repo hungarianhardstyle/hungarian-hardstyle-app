@@ -322,11 +322,26 @@ Contains:
 
 # Authentication
 
-No user registration.
+Current versions do not require registration and do not yet have user accounts.
 
-No user accounts.
+For v1.0, add Google account sign-in and community user accounts.
 
-Everything should work anonymously.
+Confirmed scope: registration and community accounts exist only in the mobile app. The public WordPress website does not need registration, user profiles, friendships, live feed, or chat UI.
+
+Architecture exception: WordPress remains the single source of truth for editorial content, but app-only community data may use a separate real-time backend. This exception is limited to authentication, community profiles, friendships, chat/feed posts, image uploads, moderation state, and event attendance responses.
+
+Public content such as news, events, DJs, and organizers should remain available anonymously where possible.
+
+Authentication will be required for:
+
+- live feed posting
+- live chat
+- image uploads
+- creating and editing a personal profile
+- adding and managing friends
+- event attendance responses
+
+The authentication and community backend must support privacy controls, moderation, reporting, blocking, account deletion, and safe image storage.
 
 ---
 
@@ -362,6 +377,7 @@ Confirmed navigation change:
 
 - The current Tickets tab will be removed.
 - The DJ directory tab will take its place in the bottom navigation.
+- By v1.0, add a dedicated Live Feed tab for community chat and image posts; the final bottom-navigation layout must be revisited when this is implemented.
 
 Confirmed event relationship behavior:
 
@@ -475,6 +491,76 @@ Always expose new modules through REST API.
 - Better search
 
 - Recommendations
+
+- Live Feed with chat and image posts
+
+- Google account registration and sign-in
+
+- Community user profiles
+
+- Friend connections
+
+- Event attendance (`Ott leszek` / `Nem leszek ott`)
+
+- Friend attendance visibility on profiles and events
+
+## Annual Top DJ And Track Voting
+
+Target: implement by v1.0.
+
+The existing annual WordPress-extension voting workflow should be replaced or complemented by a dedicated Hungarian Hardstyle voting module and REST API.
+
+WordPress remains the administration surface and source of truth for:
+
+- voting seasons and year
+- start and end timestamps
+- voting status and rules
+- `Legjobb magyar hardstyle DJ – <év>` candidates
+- `Legjobb magyar hardcore DJ – <év>` candidates
+- `Legjobb magyar bulisorozat – <év>` candidates
+- `Legjobb magyar zene – <év>` candidates
+- `Legjobb külföldi DJ – <év>` candidates
+- candidate names, artist/title data, images/covers, optional previews, and external links
+- result publication settings
+
+The displayed year should come from the voting season configuration. Candidate types must support DJs, event series, and tracks.
+
+Flutter must:
+
+- fetch the active annual voting season and categories
+- display DJ and track candidates
+- allow authenticated users to vote in-app
+- clearly show whether the user has already voted
+- show results only according to the server-defined visibility policy
+
+The backend must enforce voting windows, authentication, duplicate-vote prevention, and category limits. Prefer one authenticated user vote per category by default. Before implementation, decide whether votes can be changed, when results become public, what audit data is retained, and how suspicious voting is moderated.
+
+WordPress admin must include a private overall results dashboard with:
+
+- total submitted votes
+- unique voter count where privacy rules allow it
+- per-category totals and ranking
+- candidate vote totals and percentages
+- optional suspicious-vote/moderation indicators
+- export capability if needed later
+
+This summary is admin-only. Do not expose it through public REST routes and do not make it visible to ordinary app users unless a season explicitly publishes a separate sanitized result response after voting closes.
+
+### Published Results After Voting
+
+When voting is closed, WordPress admins must be able to explicitly publish a separate results summary that the Flutter app can display. Closing a season and publishing its results are separate actions.
+
+The public results API/page should support:
+
+- season title and year
+- voting closed timestamp
+- all published categories
+- final candidate ranking per category
+- candidate name/title and image/cover/logo
+- optional vote count and percentage controlled by season settings
+- winner highlighting
+
+The public result must never expose voter identities, authentication identifiers, raw vote records, IP/device data, audit logs, moderation notes, or suspicious-vote indicators. Admins should also be able to keep results private or unpublish the public summary if correction is required.
 
 ---
 

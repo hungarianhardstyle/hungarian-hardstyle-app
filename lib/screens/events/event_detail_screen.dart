@@ -54,7 +54,7 @@ class EventDetailScreen extends StatelessWidget {
   }
 
   String _descriptionHtml() {
-    final description = event.description.trim();
+    final description = _restorePlainTextBreaks(event.description.trim());
 
     if (description.isEmpty) {
       return '';
@@ -86,6 +86,22 @@ class EventDetailScreen extends StatelessWidget {
         })
         .where((paragraph) => paragraph.isNotEmpty)
         .join();
+  }
+
+  String _restorePlainTextBreaks(String value) {
+    if (RegExp(r'</?[a-z][\s\S]*>', caseSensitive: false).hasMatch(value)) {
+      return value;
+    }
+
+    return value
+        .replaceAllMapped(
+          RegExp(r'([a-záéíóöőúüű])([A-ZÁÉÍÓÖŐÚÜŰ])'),
+          (match) => '${match.group(1)}\n${match.group(2)}',
+        )
+        .replaceAllMapped(
+          RegExp(r'([.!?])([A-ZÁÉÍÓÖŐÚÜŰ])'),
+          (match) => '${match.group(1)}\n${match.group(2)}',
+        );
   }
 
   String _escapeHtml(String value) {
@@ -189,6 +205,8 @@ class EventDetailScreen extends StatelessWidget {
             if (descriptionHtml.isNotEmpty)
               Html(
                 data: descriptionHtml,
+                onLinkTap: (url, attributes, element) =>
+                    _openUrl(context, url ?? ''),
                 style: {
                   'body': Style(
                     margin: Margins.zero,
