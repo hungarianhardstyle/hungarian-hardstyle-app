@@ -239,6 +239,7 @@ class EventDetailScreen extends StatelessWidget {
               )
             else
               const SizedBox(height: 24),
+            SizedBox(height: MediaQuery.viewPaddingOf(context).bottom + 24),
           ],
         ),
       ),
