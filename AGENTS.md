@@ -88,6 +88,7 @@ As of the current project state:
 - News cards display remote images, title, date, and featured state.
 - The WordPress API plugin ZIP has been reviewed locally from `huhs-mobile-api.zip`.
 - The WordPress plugin version in that ZIP is `2.1.0`.
+- The latest locally prepared backend package is `2.1.7`. It expands media extraction to YouTube `/embed`, `/shorts`, and `/live` URLs and to real WordPress Instagram/TikTok embed blocks, while leaving ordinary profile and article links as links.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
 - Events, tickets, and more may still contain placeholder or early-stage UI.
@@ -95,7 +96,7 @@ As of the current project state:
 - Event detail artists and organizer are clickable and open internal profile placeholders.
 - News excerpts are converted to plain text and HTML tags are removed for both custom and standard WordPress responses.
 - News search uses the custom `huhs/v1/posts` endpoint so search results retain the same processed content, featured images, galleries, and embeds as the normal news flow.
-- News detail renders deduplicated YouTube, Spotify, Instagram, and TikTok embeds in-app. Supported interactive WordPress shortcodes (`ays_poll`, `irp`, and legacy Final Tiles Gallery) are detected; their raw shortcode text is removed and the rendered WordPress content can be opened inside the app.
+- News detail renders deduplicated YouTube, Spotify, SoundCloud, Instagram, and TikTok embeds in-app. Supported interactive WordPress shortcodes (`ays_poll`, `irp`, and legacy Final Tiles Gallery) are detected; their raw shortcode text is removed and the rendered WordPress content can be opened inside the app.
 - WordPress API work exists and should continue to be the backend source for new dynamic features.
 - Flutter-side WordPress integration is complete for news, but not yet complete for every content type.
 

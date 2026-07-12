@@ -86,7 +86,8 @@ class _YouTubeLinkCard extends StatelessWidget {
         ? (source.pathSegments.isEmpty ? null : source.pathSegments.first)
         : source.queryParameters['v'] ??
               _after(source.pathSegments, 'shorts') ??
-              _after(source.pathSegments, 'embed');
+              _after(source.pathSegments, 'embed') ??
+              _after(source.pathSegments, 'live');
 
     return InkWell(
       onTap: () => _openExternal(embed.url),
@@ -176,7 +177,8 @@ Uri? _embedUri(PostEmbed embed) {
           ? (source.pathSegments.isEmpty ? null : source.pathSegments.first)
           : source.queryParameters['v'] ??
                 _after(source.pathSegments, 'shorts') ??
-                _after(source.pathSegments, 'embed');
+                _after(source.pathSegments, 'embed') ??
+                _after(source.pathSegments, 'live');
       return id == null ? null : Uri.https('www.youtube.com', '/embed/$id');
     case 'spotify':
       return Uri.https(

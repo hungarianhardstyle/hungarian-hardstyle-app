@@ -97,6 +97,7 @@ class PostEmbed {
           : uri.queryParameters['v'] ??
                 _segmentAfter(uri.pathSegments, 'shorts') ??
                 _segmentAfter(uri.pathSegments, 'embed') ??
+                _segmentAfter(uri.pathSegments, 'live') ??
                 '';
       if (videoId.isNotEmpty) return '$type|$videoId';
     }
@@ -228,14 +229,19 @@ class Post {
         .toList();
 
     for (final element in candidates.reversed) {
-      if (element.parent == null) continue;
-
       final text = _decodeHtmlText(
         element.text,
       ).replaceAll(r'\u0026', '&').trim();
-      if (!text.startsWith('http')) continue;
+      final candidateUrl = text.startsWith('http')
+          ? text
+          : element.classes.contains('instagram-media')
+          ? element.attributes['data-instgrm-permalink'] ?? ''
+          : element.classes.contains('tiktok-embed')
+          ? element.attributes['cite'] ?? ''
+          : '';
+      if (!candidateUrl.startsWith('http')) continue;
 
-      final candidateType = _embedTypeForUrl(text);
+      final candidateType = _embedTypeForUrl(candidateUrl);
       if (candidateType.isEmpty ||
           !embeds.any((embed) => embed.type == candidateType)) {
         continue;

@@ -641,7 +641,8 @@ In Progress
 
 - Full DJ and organizer profiles populated from their REST APIs
 
-- Rich content: YouTube, Spotify, Instagram and TikTok embeds now render in article detail; interactive WordPress shortcodes open in an in-app web view
+- Rich content: YouTube, Spotify, SoundCloud, Instagram and TikTok embeds now render in article detail; interactive WordPress shortcodes open in an in-app web view
+- Backend package `2.1.7` recognizes legacy YouTube `/embed` URLs plus WordPress Instagram/TikTok embed blocks without converting ordinary social/profile links into media cards
 
 - Web Event Detail
 

@@ -18,6 +18,7 @@ void main() {
 
     expect(post.excerpt, 'Rövid összefoglaló.');
   });
+
   test('beolvassa és kiszűri a duplikált embedeket', () {
     final post = Post.fromJson({
       'embeds': [
@@ -38,6 +39,29 @@ void main() {
 
     expect(post.embeds, hasLength(2));
     expect(post.embeds.map((embed) => embed.type), ['youtube', 'spotify']);
+  });
+
+  test('kezeli az összes médiatípust és a régi YouTube URL-formátumot', () {
+    final post = Post.fromJson({
+      'embeds': [
+        {'type': 'youtube', 'url': 'https://www.youtube.com/live/video123'},
+        {'type': 'youtube', 'url': 'https://www.youtube.com/embed/video123'},
+        {'type': 'soundcloud', 'url': 'https://soundcloud.com/artist/track'},
+        {'type': 'instagram', 'url': 'https://www.instagram.com/reel/reel123/'},
+        {
+          'type': 'tiktok',
+          'url': 'https://www.tiktok.com/@artist/video/1234567890',
+        },
+      ],
+    });
+
+    expect(post.embeds, hasLength(4));
+    expect(post.embeds.map((embed) => embed.type), [
+      'youtube',
+      'soundcloud',
+      'instagram',
+      'tiktok',
+    ]);
   });
 
   test('felismeri és eltávolítja a támogatott shortcode-ot a HTML-ből', () {
@@ -72,5 +96,23 @@ void main() {
     expect(post.contentForDisplay, contains('További szöveg'));
     expect(post.contentForDisplay, isNot(contains('open.spotify.com')));
     expect(post.contentForDisplay, isNot(contains('youtube.com/watch')));
+  });
+
+  test('eltávolítja a külön megjelenített közösségi embed blokkot', () {
+    final post = Post.fromJson({
+      'content': '''
+        <p>A cikk szövege.</p>
+        <blockquote class="instagram-media"
+          data-instgrm-permalink="https://www.instagram.com/p/post123/">
+          Instagram bejegyzés
+        </blockquote>
+      ''',
+      'embeds': [
+        {'type': 'instagram', 'url': 'https://www.instagram.com/p/post123/'},
+      ],
+    });
+
+    expect(post.contentForDisplay, contains('A cikk szövege.'));
+    expect(post.contentForDisplay, isNot(contains('instagram-media')));
   });
 }
