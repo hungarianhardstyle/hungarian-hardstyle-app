@@ -1,11 +1,11 @@
 {
-    "name": "hungarian_hardstyle_app",
-    "short_name": "hungarian_hardstyle_app",
+    "name": "Hungarian Hardstyle",
+    "short_name": "HUHS",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#080808",
+    "theme_color": "#220000",
+    "description": "A Hungarian Hardstyle közösségi és eseményalkalmazása.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

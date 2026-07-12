@@ -196,11 +196,15 @@ Contains:
 - Instagram
 - TikTok
 
+- Music genres/styles (future, multi-select)
+
 Future:
 
 Upcoming Events list.
 
 Clickable.
+
+Organizer genres should be editable in WordPress, returned by the organizer REST API, and displayed on both app and public web profiles. This is a later enhancement and does not block the current organizer work.
 
 ---
 
@@ -375,9 +379,13 @@ Bottom Navigation
 
 Confirmed navigation change:
 
-- The current Tickets tab will be removed.
-- The DJ directory tab will take its place in the bottom navigation.
+- The currently empty Tickets tab after Events is unnecessary and will be removed.
+- Its replacement is not decided yet; do not automatically replace it with the DJ directory.
+- Home and News should remain the first two bottom-navigation items.
+- Define a deliberate importance order for what belongs on Home, in primary navigation, and under More. The leading user-hook hypothesis is immediate utility (what is happening now / what event is next), making Events a stronger primary-tab candidate while DJs may initially live under More.
+- Revisit this choice using real testing and usage feedback before locking the final navigation.
 - By v1.0, add a dedicated Live Feed tab for community chat and image posts; the final bottom-navigation layout must be revisited when this is implemented.
+- Detail screens should eventually open inside a persistent navigation shell so the bottom tabs remain visible and the active tab/history is preserved. Implement this centrally rather than copying the bottom bar into each detail screen.
 
 Confirmed event relationship behavior:
 
@@ -401,6 +409,17 @@ Social
 Contact
 
 About
+
+The future About/App information screen should include:
+
+- app name
+- runtime app version and build number (read from package metadata, not hardcoded)
+- developer/maintainer credit
+- Hungarian Hardstyle website
+- contact link
+- privacy policy
+- terms/community guidelines
+- optional open-source licenses
 
 ---
 

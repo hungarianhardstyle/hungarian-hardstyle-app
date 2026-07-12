@@ -67,20 +67,14 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF080808),
-              Color(0xFF220000),
-              Color(0xFF080808),
-            ],
+            colors: [Color(0xFF080808), Color(0xFF220000), Color(0xFF080808)],
           ),
         ),
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: () => ref.read(paginatedNewsProvider.notifier).refresh(),
             child: state.isLoading && state.posts.isEmpty
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  )
+                ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(
@@ -154,6 +148,12 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                       label: Text(label),
                                       selected: isSelected,
                                       onSelected: (_) {
+                                        if (categoryId > 0 &&
+                                            _searchController.text.isNotEmpty) {
+                                          _searchDebounce?.cancel();
+                                          _searchController.clear();
+                                          setState(() {});
+                                        }
                                         ref
                                             .read(
                                               paginatedNewsProvider.notifier,
@@ -223,9 +223,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                         if (state.isLoadingMore) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                              child: CircularProgressIndicator(),
-                            ),
+                            child: Center(child: CircularProgressIndicator()),
                           );
                         }
 

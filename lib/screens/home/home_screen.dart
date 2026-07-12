@@ -10,10 +10,7 @@ import '../../widgets/news_card.dart';
 class HomeScreen extends ConsumerWidget {
   final VoidCallback onShowMoreNews;
 
-  const HomeScreen({
-    super.key,
-    required this.onShowMoreNews,
-  });
+  const HomeScreen({super.key, required this.onShowMoreNews});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,11 +25,7 @@ class HomeScreen extends ConsumerWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF080808),
-              Color(0xFF220000),
-              Color(0xFF080808),
-            ],
+            colors: [Color(0xFF080808), Color(0xFF220000), Color(0xFF080808)],
           ),
         ),
         child: SafeArea(
@@ -45,33 +38,28 @@ class HomeScreen extends ConsumerWidget {
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               children: [
                 Center(
-                  child: Image.asset(
-                    'assets/logos/huhs_logo.png',
-                    width: width * 0.95,
-                    fit: BoxFit.contain,
+                  child: Transform.scale(
+                    scale: 1.18,
+                    child: Image.asset(
+                      'assets/logos/huhs_logo.png',
+                      width: width * 0.95,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
                 const Text(
                   'Legfrissebb hírek',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 18),
                 news.when(
                   loading: () => const Padding(
                     padding: EdgeInsets.symmetric(vertical: 40),
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (error, stack) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
@@ -80,9 +68,7 @@ class HomeScreen extends ConsumerWidget {
                         const Text(
                           'Nem sikerült betölteni a híreket.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white70,
-                          ),
+                          style: TextStyle(color: Colors.white70),
                         ),
                         const SizedBox(height: 14),
                         FilledButton.icon(
@@ -117,9 +103,9 @@ class HomeScreen extends ConsumerWidget {
                       children: [
                         FeaturedNewsCard(post: latestPosts.first),
                         const SizedBox(height: 18),
-                        ...latestPosts.skip(1).map(
-                              (post) => NewsCard(post: post),
-                            ),
+                        ...latestPosts
+                            .skip(1)
+                            .map((post) => NewsCard(post: post)),
                         const SizedBox(height: 8),
                         SizedBox(
                           width: double.infinity,
@@ -136,18 +122,13 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 35),
                 const Text(
                   'Közelgő események',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 18),
                 events.when(
                   loading: () => const SizedBox(
                     height: 210,
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (error, stack) => SizedBox(
                     height: 150,

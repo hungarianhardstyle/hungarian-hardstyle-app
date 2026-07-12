@@ -148,23 +148,12 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
   }
 
   Future<PostsPage> _getPostsPage({required int page}) {
-    if (state.search.trim().isNotEmpty) {
-      return _service.getPosts(
-        search: state.search,
-        page: page,
-        perPage: _perPage,
-      );
-    }
-
-    if (state.selectedCategoryId > 0) {
-      return _service.getStandardPosts(
-        categoryId: state.selectedCategoryId,
-        page: page,
-        perPage: _perPage,
-      );
-    }
-
-    return _service.getPosts(page: page, perPage: _perPage);
+    return _service.getPosts(
+      search: state.search,
+      categoryId: state.selectedCategoryId,
+      page: page,
+      perPage: _perPage,
+    );
   }
 
   Future<void> updateSearch(String value) async {
@@ -182,7 +171,10 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
       return;
     }
 
-    state = state.copyWith(selectedCategoryId: value);
+    state = state.copyWith(
+      selectedCategoryId: value,
+      search: value > 0 ? '' : state.search,
+    );
 
     await refresh();
   }

@@ -251,7 +251,7 @@ class Post {
 
     return serialized.replaceAll(
       RegExp(
-        r'<p[^>]*>\s*https?://(?:www\.)?(?:youtube\.com|youtu\.be|open\.spotify\.com|instagram\.com|tiktok\.com)/[^<]*</p>',
+        r'<p[^>]*>\s*https?://(?:www\.)?(?:youtube\.com|youtu\.be|open\.spotify\.com|soundcloud\.com|instagram\.com|tiktok\.com)/[^<]*</p>',
         caseSensitive: false,
       ),
       '',
@@ -271,6 +271,7 @@ class Post {
     final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
     if (host.contains('youtu')) return 'youtube';
     if (host.contains('spotify')) return 'spotify';
+    if (host.contains('soundcloud')) return 'soundcloud';
     if (host.contains('instagram')) return 'instagram';
     if (host.contains('tiktok')) return 'tiktok';
     return '';

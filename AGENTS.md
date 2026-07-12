@@ -299,6 +299,7 @@ Focus:
 - social links
 - description
 - upcoming events
+- organizer music genres/styles, editable in WordPress and exposed through the REST API
 
 ### v0.8 - Rich Content
 
@@ -322,6 +323,7 @@ Focus:
 - social links
 - contact/about pages
 - push notification preparation
+- About/app information screen with runtime version and build number, developer/maintainer credit, website, contact, privacy policy, and terms links
 
 ### v0.95 - Media
 
@@ -549,13 +551,18 @@ Likely next useful tasks:
 
 Product decisions confirmed by the user:
 
-- The current Tickets bottom-navigation tab is not needed and will be replaced by the DJ tab.
+- The current empty Tickets bottom-navigation tab after Events is not needed and should be removed, but its replacement is not decided yet; do not assume the DJ directory belongs there.
+- Keep Home and News as the first two bottom-navigation items. Before finalizing the remaining items, define a clear importance order for primary navigation, Home content, and the More section.
+- Evaluate the main user hook around immediate utility (for example, what is happening now and which event is next). Events are a strong primary-tab candidate; the DJ directory may initially live under More unless usage testing supports promoting it.
 - Event data continues to come from the WordPress events API.
 - Artist/DJ names and the organizer on event detail must be clickable.
 - These links must open complete, dedicated, API-backed DJ and organizer profile screens; the current internal profile placeholders are temporary only.
 - v1.0 should introduce a Live Feed tab with chat and image posting.
 - v1.0 should introduce Google sign-in, user profiles, friendships, and event attendance status (`Ott leszek` / `Nem leszek ott`).
 - v1.0 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting.
+- Organizers should later support one or more selectable music genres/styles. This is recorded for the organizer module but is not urgent for the current implementation.
+- Add an About/App information area under More. Read the app version and build number from package metadata instead of hardcoding them, and include developer credit plus relevant website, contact, privacy, and terms links.
+- Refactor navigation into a persistent shell so the bottom tabs remain visible on news, event, DJ, and organizer detail screens. Do not duplicate the NavigationBar inside each detail screen; preserve the active tab and each tab's navigation history.
 
 1. Fix the default Flutter widget test so it matches `HungarianHardstyleApp`.
 2. Clean up asset folder references or create the missing asset folders.

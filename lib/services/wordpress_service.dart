@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 import '../models/event.dart';
@@ -74,6 +76,7 @@ class WordpressService {
     int page = 1,
     int perPage = 10,
     String search = '',
+    int categoryId = 0,
   }) async {
     try {
       final response = await _dio.get(
@@ -82,15 +85,27 @@ class WordpressService {
           'page': page,
           'per_page': perPage,
           if (search.trim().isNotEmpty) 'search': search.trim(),
+          if (categoryId > 0) 'category': categoryId,
         },
       );
 
       final data = response.data;
 
       if (data is List<dynamic>) {
-        final posts = data
+        final allPosts = data
             .map((json) => Post.fromJson(json as Map<String, dynamic>))
             .toList();
+        final query = search.trim().toLowerCase();
+        final posts = query.isEmpty
+            ? allPosts
+            : allPosts
+                  .where(
+                    (post) =>
+                        post.title.toLowerCase().contains(query) ||
+                        post.excerpt.toLowerCase().contains(query) ||
+                        post.content.toLowerCase().contains(query),
+                  )
+                  .toList();
 
         return PostsPage(
           items: posts,
@@ -132,8 +147,11 @@ class WordpressService {
 
   Future<List<HuhsEvent>> getEvents() async {
     try {
-      final response = await _dio.get('/events');
-      final data = response.data;
+      final response = await _dio.get<String>(
+        '/events',
+        options: Options(responseType: ResponseType.plain),
+      );
+      final data = _decodePossiblyPrefixedJson(response.data ?? '');
 
       if (data is List<dynamic>) {
         return data
@@ -155,6 +173,16 @@ class WordpressService {
     } catch (e) {
       throw Exception('Ismeretlen hiba tortent.\n\n$e');
     }
+  }
+
+  Object? _decodePossiblyPrefixedJson(String value) {
+    final arrayStart = value.indexOf('[');
+    final objectStart = value.indexOf('{');
+    final starts = [arrayStart, objectStart].where((index) => index >= 0);
+
+    if (starts.isEmpty) return null;
+
+    return jsonDecode(value.substring(starts.reduce((a, b) => a < b ? a : b)));
   }
 
   Future<List<NewsCategory>> getCategories() async {

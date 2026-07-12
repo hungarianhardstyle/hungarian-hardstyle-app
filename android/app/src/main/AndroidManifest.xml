@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:label="hungarian_hardstyle_app"
+        android:label="Hungarian Hardstyle"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 

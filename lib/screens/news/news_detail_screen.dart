@@ -41,6 +41,9 @@ class NewsDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("Hír")),
       body: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewPaddingOf(context).bottom + 24,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
