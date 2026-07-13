@@ -95,7 +95,7 @@ Implemented:
 ### v0.9 — Community utilities
 
 - [x] local favorites for news, events and DJs
-- [ ] Mailchimp newsletter integration
+- [x] Mailchimp newsletter signup via hosted landing page
 - [x] notification and cache settings
 - [x] social, contact and About sections
 - [x] show runtime app version and build number from package metadata

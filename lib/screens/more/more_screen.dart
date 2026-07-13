@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/navigation/in_app_browser.dart';
 import '../artists/artists_screen.dart';
 import '../organizers/organizers_screen.dart';
 import 'about_screen.dart';
@@ -12,6 +13,8 @@ import '../submissions/organizer_submission_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
+
+  static const _newsletterUrl = 'https://mailchi.mp/fccf4f34b297/hunhs-app';
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +81,17 @@ class MoreScreen extends StatelessWidget {
                 title: 'Spotify Playlistek',
                 subtitle: 'Öt válogatás a keményebb stílusokból',
                 onTap: () => _open(context, const SpotifyPlaylistsScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                icon: Icons.mark_email_unread_outlined,
+                title: 'Hírlevél',
+                subtitle: 'Iratkozz fel a Hungarian Hardstyle híreire',
+                onTap: () => openInAppBrowser(
+                  context,
+                  _newsletterUrl,
+                  title: 'Hírlevél',
+                ),
               ),
               const SizedBox(height: 12),
               _MenuCard(
