@@ -100,6 +100,7 @@ Implemented:
 - [x] social, contact and About sections
 - [x] show runtime app version and build number from package metadata
 - [x] prepare local push notification preferences
+- [x] integrate the Firebase/FCM client and store the device token locally
 - [ ] notify on new news/events, event reminders at 7 days and on the event day, and support WordPress-created custom push messages
 
 ### v0.95 — Media
