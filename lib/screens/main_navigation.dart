@@ -18,9 +18,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final _navigatorKeys = List.generate(4, (_) => GlobalKey<NavigatorState>());
   final _tabs = List<Widget?>.filled(4, null);
 
-  void _openNewsTab() {
-    setState(() => _currentIndex = 1);
-  }
+  void _openNewsTab() => setState(() => _currentIndex = 1);
 
   Widget _tabNavigator(int index) {
     return Navigator(
@@ -42,51 +40,63 @@ class _MainNavigationState extends State<MainNavigation> {
     );
   }
 
-  Widget _tabFor(int index) {
-    return _tabs[index] ??= _tabNavigator(index);
-  }
+  Widget _tabFor(int index) => _tabs[index] ??= _tabNavigator(index);
 
   @override
   Widget build(BuildContext context) {
     _tabFor(_currentIndex);
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: List.generate(
-          4,
-          (index) => _tabs[index] ?? const SizedBox.shrink(),
+    return PopScope<void>(
+      // A rendszer-vissza ne zárja be az appot a fő navigációs héjból.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        final navigator = _navigatorKeys[_currentIndex].currentState;
+        if (navigator?.canPop() ?? false) {
+          navigator!.pop();
+        } else if (_currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: List.generate(
+            4,
+            (index) => _tabs[index] ?? const SizedBox.shrink(),
+          ),
         ),
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          if (index == _currentIndex) {
-            _navigatorKeys[index].currentState?.popUntil(
-              (route) => route.isFirst,
-            );
-          } else {
-            setState(() => _currentIndex = index);
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Kezdőlap',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.article_outlined),
-            selectedIcon: Icon(Icons.article),
-            label: 'Hírek',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.event_outlined),
-            selectedIcon: Icon(Icons.event),
-            label: 'Események',
-          ),
-          NavigationDestination(icon: Icon(Icons.menu), label: 'Több'),
-        ],
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) {
+            if (index == _currentIndex) {
+              _navigatorKeys[index].currentState?.popUntil(
+                (route) => route.isFirst,
+              );
+            } else {
+              setState(() => _currentIndex = index);
+            }
+          },
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Kezdőlap',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.article_outlined),
+              selectedIcon: Icon(Icons.article),
+              label: 'Hírek',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.event_outlined),
+              selectedIcon: Icon(Icons.event),
+              label: 'Események',
+            ),
+            NavigationDestination(icon: Icon(Icons.menu), label: 'Több'),
+          ],
+        ),
       ),
     );
   }

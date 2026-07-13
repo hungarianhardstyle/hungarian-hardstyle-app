@@ -81,13 +81,6 @@ class MoreScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _MenuCard(
-                icon: Icons.info_outline,
-                title: 'Az appról',
-                subtitle: 'Verzió, kapcsolat és weboldal',
-                onTap: () => _open(context, const AboutScreen()),
-              ),
-              const SizedBox(height: 12),
-              _MenuCard(
                 icon: Icons.favorite_outline,
                 title: 'Kedvencek',
                 subtitle: 'Mentett hírek, események és DJ-k',
@@ -99,6 +92,13 @@ class MoreScreen extends StatelessWidget {
                 title: 'Beállítások',
                 subtitle: 'Értesítések és gyorsítótár',
                 onTap: () => _open(context, const SettingsScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                icon: Icons.info_outline,
+                title: 'Az appról',
+                subtitle: 'Verzió, kapcsolat és weboldal',
+                onTap: () => _open(context, const AboutScreen()),
               ),
             ],
           ),

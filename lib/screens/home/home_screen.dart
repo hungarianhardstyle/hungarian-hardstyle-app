@@ -173,7 +173,9 @@ class HomeScreen extends ConsumerWidget {
                     }
 
                     return SizedBox(
-                      height: 310,
+                      // A műfaj-chipek több sorba törhetnek, ezért a kártyának
+                      // elég helyet kell adnunk a tartalom levágása nélkül.
+                      height: 420,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: upcomingEvents.length,
