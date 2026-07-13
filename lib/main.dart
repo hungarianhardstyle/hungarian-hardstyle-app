@@ -11,7 +11,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await initializeDateFormatting('hu_HU');
-  await MobileAds.instance.initialize();
+  // Ads are optional; a provider/configuration problem must never block startup.
+  try {
+    await MobileAds.instance.initialize();
+  } catch (_) {}
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
 }
 

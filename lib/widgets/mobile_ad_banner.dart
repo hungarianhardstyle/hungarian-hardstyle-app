@@ -28,7 +28,10 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner> {
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          if (!mounted) return;
+          if (!mounted) {
+            ad.dispose();
+            return;
+          }
           setState(() {
             _ad = ad as BannerAd;
             _loaded = true;

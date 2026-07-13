@@ -22,9 +22,10 @@ class FavoritesNotifier extends ChangeNotifier {
   static const _storageKey = 'favorite_items';
 
   final Map<String, FavoriteEntry> _items = {};
+  late final Future<void> _ready;
 
   FavoritesNotifier() {
-    _load();
+    _ready = _load();
   }
 
   bool contains(FavoriteKind kind, int id) =>
@@ -33,6 +34,7 @@ class FavoritesNotifier extends ChangeNotifier {
   List<FavoriteEntry> get entries => _items.values.toList(growable: false);
 
   Future<void> toggle(FavoriteKind kind, int id, String title) async {
+    await _ready;
     final key = _key(kind, id);
     if (_items.containsKey(key)) {
       _items.remove(key);

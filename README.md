@@ -10,7 +10,7 @@ The app version remains **v0.4** while the first public release scope is being c
 
 The current WordPress backend package is **2.4.3**. It is deployed and tested; it adds the dedicated Facebook Event URL field to WordPress events and the mobile API.
 
-Current external blocker: Websupport's upstream WAF returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them. Event flyer, DJ profile image and organizer logo submissions can be verified after the three REST endpoints are allowlisted. A dedicated Facebook Event URL field is also still planned for the normal WordPress event editor and events API; the current app submission field is only a general event link.
+Current external blocker: Websupport's upstream WAF returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them. Event flyer, DJ profile image and organizer logo submissions can be verified after the three REST endpoints are allowlisted. The dedicated Facebook Event URL field is deployed in backend 2.4.3; the app submission field remains a general event link.
 
 Implemented:
 
@@ -25,6 +25,17 @@ Implemented:
 - WordPress admin approval into non-public draft profiles
 
 ## Roadmap
+
+### Current bug-fix backlog
+
+- [x] make AdMob initialization failure-safe and platform-aware so it can never block app startup
+- [ ] add the required iOS AdMob application identifier before iOS testing
+- [ ] remove the remaining event-card overflow at 2.0x accessibility text scaling and keep a small-screen regression test
+- [x] prevent the favorites startup load from overwriting a newly saved favorite
+- [ ] make saved news, events and DJs openable from the Favorites screen
+- [x] dispose late AdMob banner callbacks safely; consent/privacy handling remains required before production ads
+- [ ] replace the three deprecated `withOpacity()` calls
+- [ ] upgrade Gradle, Android Gradle Plugin and Kotlin before current Flutter support is dropped
 
 ### v0.4 — Foundation
 

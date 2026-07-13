@@ -173,9 +173,8 @@ class HomeScreen extends ConsumerWidget {
                     }
 
                     return SizedBox(
-                      // A műfaj-chipek több sorba törhetnek, ezért a kártyának
-                      // elég helyet kell adnunk a tartalom levágása nélkül.
-                      height: 420,
+                      // Keep enough vertical room for accessibility text scaling.
+                      height: 460,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: upcomingEvents.length,
