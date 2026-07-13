@@ -30,7 +30,7 @@ Implemented:
 
 - [x] make AdMob initialization failure-safe and platform-aware so it can never block app startup
 - [x] add the iOS AdMob test application identifier; replace it with the production App ID before release
-- [ ] remove the remaining event-card overflow at 2.0x accessibility text scaling and keep a small-screen regression test
+- [x] remove the remaining event-card overflow at 2.0x accessibility text scaling; a small-screen regression test remains to be added
 - [x] prevent the favorites startup load from overwriting a newly saved favorite
 - [x] make saved news, events and DJs openable from the Favorites screen
 - [x] dispose late AdMob banner callbacks safely; consent/privacy handling remains required before production ads

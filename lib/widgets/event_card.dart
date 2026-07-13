@@ -114,7 +114,8 @@ class EventCard extends StatelessWidget {
                     if (event.genres.isNotEmpty) ...[
                       const SizedBox(height: 10),
                       SizedBox(
-                        height: 34,
+                        // Chips scale with accessibility text size.
+                        height: 48,
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
