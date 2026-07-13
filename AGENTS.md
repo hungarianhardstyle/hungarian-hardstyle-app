@@ -573,6 +573,7 @@ Before a public Android release:
 - configure release signing
 - verify launcher icons
 - verify permissions
+- use Gradle 8.14+, Android Gradle Plugin 8.11.1+, and Kotlin 2.2.20+
 - test on a physical Android device
 
 ## iOS Notes
