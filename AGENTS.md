@@ -398,7 +398,7 @@ Focus:
 - Spotify/Hardstyle.com/YouTube links
 - five curated Spotify playlists in a dedicated app section, opened through the shared in-app browser
 
-### v1.0 - First Public Release
+### v1.0 - First Public Release (later)
 
 Focus:
 
@@ -415,14 +415,14 @@ Focus:
 - iOS preparation if ready
 - WordPress-managed FAQ section in the app, initially under More
 
-FAQ requirements for v1.0:
+FAQ requirements, deferred until after the core v1.0 release:
 
 - questions and answers are editable in WordPress and exposed through a public read-only REST endpoint
 - support categories and an explicit display order
 - Flutter shows a searchable, expandable FAQ list with loading, empty, and error states
 - do not hardcode production FAQ content in Flutter
 
-Online radio requirements for v1.0:
+Online radio requirements, deferred until after the core v1.0 release:
 
 - place a compact player directly below the Hungarian Hardstyle logo on Home
 - use a server-side AutoDJ to rotate a configurable library of X tracks; do not bundle or sequence the production music library in Flutter

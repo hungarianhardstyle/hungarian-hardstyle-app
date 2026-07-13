@@ -6,7 +6,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-The app version remains **v0.4** while the first public release scope is being completed. Several later roadmap modules are already functional.
+The current delivery target is a stable **v0.9**. The app version remains **v0.4** until an explicit release bump is approved; several later roadmap modules are already functional.
 
 The current WordPress backend package is **2.4.3**. It is deployed and tested; it adds the dedicated Facebook Event URL field to WordPress events and the mobile API.
 
@@ -117,7 +117,7 @@ Core release quality:
 - [ ] stabilize news, events, DJs and organizers for public release
 - [ ] ship Hungarian/English Flutter UI localization
 - [ ] ship reviewed English WordPress content and locale-aware mobile APIs for news, events, DJs and organizers, with Hungarian fallback
-- [ ] add a compact online-radio player below the Home logo with explicit play/pause/stop, server-side AutoDJ rotation, Now Playing data and clear loading/offline/error states
+- [ ] add a compact online-radio player below the Home logo with explicit play/pause/stop, server-side AutoDJ rotation, Now Playing data and clear loading/offline/error states — deferred until after core 1.0
 - [x] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
 - [x] introduce a persistent navigation shell with per-tab history
 - [ ] finalize the bottom-navigation priority and add the Live Feed tab
@@ -147,17 +147,17 @@ Annual voting:
 
 FAQ:
 
-- [ ] WordPress-managed questions, categories and display order
-- [ ] public read-only REST endpoint
-- [ ] searchable, expandable Flutter FAQ under More
-- [ ] loading, empty and error states
+- [ ] WordPress-managed questions, categories and display order — deferred until after core 1.0
+- [ ] public read-only REST endpoint — deferred until after core 1.0
+- [ ] searchable, expandable Flutter FAQ under More — deferred until after core 1.0
+- [ ] loading, empty and error states — deferred until after core 1.0
 
 Online radio:
 
-- [ ] configure a server-side AutoDJ for a managed library of X uploaded tracks
-- [ ] prefer AzuraCast for Liquidsoap AutoDJ, Icecast-compatible streaming, playlist management and Now Playing data
-- [ ] choose the provider during radio implementation; start with a managed AzuraCast hosting plan for the simplest launch, then move to a suitably sized self-managed VPS only when usage or control requirements justify it
-- [ ] support bulk media upload through SFTP; do not use unencrypted FTP
+- [ ] configure a server-side AutoDJ for a managed library of X uploaded tracks — deferred until after core 1.0
+- [ ] prefer AzuraCast for Liquidsoap AutoDJ, Icecast-compatible streaming, playlist management and Now Playing data — deferred until after core 1.0
+- [ ] choose the provider during radio implementation — deferred until after core 1.0
+- [ ] support bulk media upload through SFTP; do not use unencrypted FTP — deferred until after core 1.0
 - [ ] use an officially supported S3-compatible provider or Dropbox for cloud storage instead of a custom Google Drive sync
 - [ ] require an explicit user action before audible playback and always allow stopping it
 - [ ] decide licensing, hosting, bandwidth, codec/bitrate, background playback, interruptions and notification controls

@@ -545,7 +545,7 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 
 - Purposeful Hungarian Hardstyle-branded loading animation for v1.0, without artificial startup delay and with reduced-motion support
 
-- Online Radio required for v1.0, with a Home mini-player and server-side AutoDJ
+- Online Radio is planned after the core v1.0 release, with a Home mini-player and server-side AutoDJ
 
 - Five curated Spotify playlists should be available from a dedicated app section; open Spotify first and fall back to the browser.
 
@@ -576,7 +576,7 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 
 - Friend attendance visibility on profiles and events
 
-- WordPress-managed FAQ / GYIK section for v1.0, initially accessible under More, with categories, ordering, search, and expandable answers in Flutter
+- WordPress-managed FAQ / GYIK section is planned after the core v1.0 release, initially accessible under More, with categories, ordering, search, and expandable answers in Flutter
 
 ## Annual Top DJ And Track Voting
 
@@ -654,7 +654,7 @@ iPad
 
 # Current Version
 
-v0.4
+v0.4 (current app package version; current delivery target is the stable v0.9 milestone)
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
