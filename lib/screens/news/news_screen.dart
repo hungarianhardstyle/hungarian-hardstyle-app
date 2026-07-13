@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/news_provider.dart';
+import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/news_card.dart';
 
 class NewsScreen extends ConsumerStatefulWidget {
@@ -74,7 +75,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
           child: RefreshIndicator(
             onRefresh: () => ref.read(paginatedNewsProvider.notifier).refresh(),
             child: state.isLoading && state.posts.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: BrandLoadingIndicator(size: 150))
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(

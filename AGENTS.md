@@ -411,7 +411,7 @@ Focus:
 - Hungarian/English Flutter UI localization plus reviewed English WordPress content for posts, events, DJs/artists, and organizers, served through locale-aware mobile APIs with Hungarian fallback
 - an online radio mini-player directly below the logo on Home, backed by a server-side AutoDJ that rotates a configurable library of X uploaded tracks and can always be stopped by the user
 - a purposeful Hungarian Hardstyle-branded loading animation that does not delay startup and respects reduced-motion accessibility settings
-- refine the Android startup animation with the white HUHS icon on a transparent/no-white background
+- refine the Android startup animation with the full HUHS logo on a transparent/no-white background
 - polished Android release
 - iOS preparation if ready
 - WordPress-managed FAQ section in the app, initially under More

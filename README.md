@@ -120,7 +120,7 @@ Core release quality:
 - [ ] ship reviewed English WordPress content and locale-aware mobile APIs for news, events, DJs and organizers, with Hungarian fallback
 - [ ] add a compact online-radio player below the Home logo with explicit play/pause/stop, server-side AutoDJ rotation, Now Playing data and clear loading/offline/error states — deferred until after core 1.0
 - [x] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
-- [ ] refine the Android startup animation to use the white HUHS icon on a transparent/no-white background
+- [ ] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background
 - [x] introduce a persistent navigation shell with per-tab history
 - [ ] finalize the bottom-navigation priority and add the Live Feed tab
 - [ ] polish the Android release and prepare iOS support
