@@ -544,6 +544,7 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 # Future Features
 
 - Purposeful Hungarian Hardstyle-branded loading animation for v1.0, without artificial startup delay and with reduced-motion support
+- Refine the Android startup animation to show the white HUHS icon without a white background
 
 - Online Radio is planned after the core v1.0 release, with a Home mini-player and server-side AutoDJ
 

@@ -1,4 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PushNotificationService {
@@ -20,6 +21,7 @@ class PushNotificationService {
 
   static Future<void> _storeToken(String? token) async {
     if (token == null || token.isEmpty) return;
+    if (kDebugMode) debugPrint('HUHS FCM registration token: $token');
     final preferences = await SharedPreferences.getInstance();
     await preferences.setString(_tokenKey, token);
   }
