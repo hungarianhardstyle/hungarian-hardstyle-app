@@ -7,6 +7,7 @@ import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
 import '../../widgets/news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
+import '../../widgets/brand_loading_indicator.dart';
 
 class HomeScreen extends ConsumerWidget {
   final VoidCallback onShowMoreNews;
@@ -62,7 +63,7 @@ class HomeScreen extends ConsumerWidget {
                 news.when(
                   loading: () => const Padding(
                     padding: EdgeInsets.symmetric(vertical: 40),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(child: BrandLoadingIndicator()),
                   ),
                   error: (error, stack) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
@@ -131,7 +132,7 @@ class HomeScreen extends ConsumerWidget {
                 events.when(
                   loading: () => const SizedBox(
                     height: 210,
-                    child: Center(child: CircularProgressIndicator()),
+                      child: Center(child: BrandLoadingIndicator()),
                   ),
                   error: (error, stack) => SizedBox(
                     height: 150,
