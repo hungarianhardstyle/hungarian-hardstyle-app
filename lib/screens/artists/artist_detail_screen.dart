@@ -257,7 +257,7 @@ class _ArtistContent extends StatelessWidget {
                               icon: const Icon(Icons.email_outlined),
                               label: Text(
                                 artist.bookingViaHuhs
-                                    ? 'Szervezés a HUHS-on keresztül'
+                                    ? 'Szervezés a Hungarian Hardstyle-on keresztül'
                                     : 'Fellépés kérése e-mailben',
                               ),
                             ),

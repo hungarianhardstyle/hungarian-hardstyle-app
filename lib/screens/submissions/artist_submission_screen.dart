@@ -194,7 +194,9 @@ class _ArtistSubmissionScreenState
                 contentPadding: EdgeInsets.zero,
                 value: _bookingViaHuhs,
                 onChanged: (value) => setState(() => _bookingViaHuhs = value),
-                title: const Text('Fellépésszervezés a HUHS-on keresztül'),
+                title: const Text(
+                  'Fellépésszervezés a Hungarian Hardstyle-on keresztül',
+                ),
                 subtitle: const Text('A booking levelek az info@hungarianhardstyle.hu címre érkeznek.'),
               ),
               if (!_bookingViaHuhs)
