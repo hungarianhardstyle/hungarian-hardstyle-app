@@ -18,7 +18,9 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner> {
   @override
   void initState() {
     super.initState();
-    _loadAd();
+    if (ref.read(adsEnabledProvider)) {
+      _loadAd();
+    }
   }
 
   void _loadAd() {

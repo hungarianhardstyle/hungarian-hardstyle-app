@@ -8,6 +8,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'core/theme/app_theme.dart';
+import 'providers/ads_provider.dart';
 import 'screens/main_navigation.dart';
 import 'services/push_notification_service.dart';
 
@@ -15,10 +16,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await initializeDateFormatting('hu_HU');
-  // Ads are optional; a provider/configuration problem must never block startup.
-  try {
-    await MobileAds.instance.initialize();
-  } catch (_) {}
+  if (enableTestAds) {
+    // Ads are opt-in; a provider/configuration problem must never block startup.
+    try {
+      await MobileAds.instance.initialize();
+    } catch (_) {}
+  }
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
   unawaited(_initializePushNotifications());
 }
