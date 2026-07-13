@@ -195,42 +195,32 @@ class EventDetailScreen extends StatelessWidget {
                       event.hasGoogleMaps ||
                       event.hasFacebookEvent) ...[
                     const SizedBox(height: 22),
-                    Row(
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
                       children: [
                         if (event.hasFacebookEvent)
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: () => openInAppBrowser(
-                                context,
-                                event.facebookEventUrl,
-                              ),
-                              icon: const Icon(Icons.facebook),
-                              label: const Text('Facebook-esemény'),
+                          FilledButton.icon(
+                            onPressed: () => openInAppBrowser(
+                              context,
+                              event.facebookEventUrl,
                             ),
+                            icon: const Icon(Icons.facebook),
+                            label: const Text('Facebook'),
                           ),
                         if (event.hasTicket)
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: () =>
-                                  openInAppBrowser(context, event.ticketUrl),
-                              icon: const Icon(Icons.confirmation_number),
-                              label: const Text('Jegyek'),
-                            ),
+                          FilledButton.icon(
+                            onPressed: () =>
+                                openInAppBrowser(context, event.ticketUrl),
+                            icon: const Icon(Icons.confirmation_number),
+                            label: const Text('Jegyek'),
                           ),
-                        if ((event.hasFacebookEvent && event.hasTicket) ||
-                            (event.hasFacebookEvent && event.hasGoogleMaps) ||
-                            (event.hasTicket && event.hasGoogleMaps))
-                          const SizedBox(width: 12),
                         if (event.hasGoogleMaps)
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => _openExternalUrl(
-                                context,
-                                event.googleMapsUrl,
-                              ),
-                              icon: const Icon(Icons.map_outlined),
-                              label: const Text('Térkép'),
-                            ),
+                          OutlinedButton.icon(
+                            onPressed: () =>
+                                _openExternalUrl(context, event.googleMapsUrl),
+                            icon: const Icon(Icons.map_outlined),
+                            label: const Text('Térkép'),
                           ),
                       ],
                     ),
