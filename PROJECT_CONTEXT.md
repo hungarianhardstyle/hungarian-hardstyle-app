@@ -206,6 +206,8 @@ Clickable.
 
 Organizer genres should be editable in WordPress, returned by the organizer REST API, and displayed on both app and public web profiles. This is a later enhancement and does not block the current organizer work.
 
+DJ and organizer listing cards must show images in one consistent frame size and aspect ratio. Use cover cropping with an upper-center focus so faces remain visible in portrait images while organizer logos and artwork keep the same card dimensions.
+
 ---
 
 ## Events
@@ -294,11 +296,19 @@ Paid
 
 # Radio
 
-Future.
+Required by v1.0.
 
 Online streaming.
 
 Background playback.
+
+Place a compact, user-controllable player directly below the Hungarian Hardstyle logo on Home. A server-side AutoDJ should continuously rotate a configurable library of X uploaded tracks; Flutter consumes one live stream and does not bundle or sequence the production library. Audible playback starts only after a user action and can always be paused or stopped.
+
+Preferred simple architecture: AzuraCast for media and playlist administration, Liquidsoap AutoDJ, Icecast-compatible streaming, and Now Playing data. Upload media in bulk through AzuraCast's built-in SFTP server, not unencrypted FTP. For cloud storage, use an officially supported S3-compatible provider or Dropbox. Google Drive is not a supported production storage location and would require a fragile custom synchronization layer.
+
+Defer the hosting-provider decision until radio implementation. Start with a managed AzuraCast hosting plan for the simplest launch, then move to a suitably sized self-managed VPS only when listener usage, storage, or control requirements justify the extra operational responsibility.
+
+Before implementation, decide music licensing, hosting, bandwidth, codec/bitrate, background playback, audio focus, interruptions, notification controls, and the initial X-sized music library.
 
 ---
 
@@ -523,11 +533,19 @@ Requirements:
 - validate remote URLs and block internal/private network targets, unsafe HTML, oversized downloads, and slow requests
 - retain the existing WordPress post format so galleries, embeds, website rendering, and the Flutter app continue to use one source of truth
 
+## AI-assisted English post translation
+
+Add the article translation workflow directly to the standard WordPress blog post editor. An administrator should be able to generate or refresh a separately editable English draft/version from the Hungarian post. Keep the AI provider key server-side, preserve names, links, embeds and shortcodes, require human review, and never auto-publish or translate content dynamically in Flutter.
+
+English localization must also cover the mobile REST APIs for posts, events, DJs/artists, and organizers. Their WordPress editing screens should eventually support stored, reviewable English fields or versions. Each endpoint should return the requested stored language according to the Flutter locale and fall back field-by-field to Hungarian when English is unavailable. Public API requests must never trigger AI generation. The Flutter interface itself may separately support Hungarian and English through normal app localization.
+
 ---
 
 # Future Features
 
-- Online Radio
+- Purposeful Hungarian Hardstyle-branded loading animation for v1.0, without artificial startup delay and with reduced-motion support
+
+- Online Radio required for v1.0, with a Home mini-player and server-side AutoDJ
 
 - Hardstyle Revolution Releases
 
@@ -634,6 +652,8 @@ iPad
 # Current Version
 
 v0.4
+
+Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
 Completed
 

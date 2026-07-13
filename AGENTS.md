@@ -246,6 +246,8 @@ For artists, `hero_image` is the stored legacy meta key but its product/admin na
 
 DJ profile images use `cover` cropping with an upper-center portrait focus (approximately 50% horizontal / 25% vertical on web, matching upper-center alignment in Flutter) so faces remain visible across mixed source image dimensions.
 
+DJ and organizer list cards must use a consistent image frame size and aspect ratio across every item. Use `cover` cropping with an upper-center focal alignment so portrait faces remain visible; organizer logos or non-portrait artwork should still fill the same standardized frame without changing card dimensions.
+
 The WordPress `HUHS Mobile > Shortcode-ok` admin page is the canonical in-dashboard shortcode reference. It lists every supported DJ/event shortcode, parameters, descriptions, and copy buttons; keep it updated whenever a shortcode is added or changed.
 
 Event submissions from Flutter require title, date, venue, at least one server-approved genre, and contact e-mail. Optional fields are start time, city, organizer name, event URL, and description. Submissions must remain `pending`; they must never become published events automatically.
@@ -362,6 +364,8 @@ Focus:
 - galleries
 - external link handling
 - admin-only AI-assisted article importer in WordPress: accept a public source URL, extract usable article content, create Hungarian copy, and preserve supported inline media
+- add an AI-assisted English translation action directly to the standard WordPress blog post editor; it should create or update a separately editable English draft/version for human review, never translate on demand in Flutter or auto-publish
+- extend the mobile REST APIs for posts, events, DJs/artists, and organizers to return stored, reviewed English content when requested by the Flutter locale, with Hungarian fallback when an English field or version is unavailable; do not invoke AI during a public API request
 - imported content must always be created as a draft for human review; never auto-publish AI output
 - support two explicit modes: faithful translation for owned/licensed/partner content, and an original Hungarian summary/adaptation with source attribution for third-party reporting
 - import images into the WordPress Media Library only when reuse rights are confirmed; otherwise require an owned/replacement image and do not hotlink or copy third-party assets automatically
@@ -399,6 +403,9 @@ Focus:
 - DJ directory
 - organizer directory
 - basic community features
+- Hungarian/English Flutter UI localization plus reviewed English WordPress content for posts, events, DJs/artists, and organizers, served through locale-aware mobile APIs with Hungarian fallback
+- an online radio mini-player directly below the logo on Home, backed by a server-side AutoDJ that rotates a configurable library of X uploaded tracks and can always be stopped by the user
+- a purposeful Hungarian Hardstyle-branded loading animation that does not delay startup and respects reduced-motion accessibility settings
 - polished Android release
 - iOS preparation if ready
 - WordPress-managed FAQ section in the app, initially under More
@@ -409,6 +416,18 @@ FAQ requirements for v1.0:
 - support categories and an explicit display order
 - Flutter shows a searchable, expandable FAQ list with loading, empty, and error states
 - do not hardcode production FAQ content in Flutter
+
+Online radio requirements for v1.0:
+
+- place a compact player directly below the Hungarian Hardstyle logo on Home
+- use a server-side AutoDJ to rotate a configurable library of X tracks; do not bundle or sequence the production music library in Flutter
+- require an explicit user action before audible playback and always provide play/pause/stop
+- include loading, offline, and stream-error states, plus current-track metadata when available
+- prefer AzuraCast as the simplest operations layer: Liquidsoap AutoDJ, Icecast-compatible streaming, playlist/media management, and Now Playing API
+- defer the hosting-provider decision until radio implementation; prefer a managed AzuraCast plan for launch and move to a suitably sized self-managed VPS only when real usage or control requirements justify the operational work
+- allow bulk upload through AzuraCast's built-in SFTP server; do not use unencrypted FTP
+- for cloud media storage, prefer an officially supported S3-compatible provider or Dropbox; do not depend on an unofficial Google Drive mount/sync for production playback
+- define music licensing, hosting, bandwidth, stream codec/bitrate, background playback, audio focus, interruptions, and media-notification controls before implementation
 
 Confirmed v1.0 community direction:
 
@@ -566,7 +585,7 @@ When iOS preparation starts:
 
 Hungarian is the primary app language.
 
-English support is a future internationalization goal. Do not introduce full i18n unless the user asks for it or the roadmap reaches that step.
+English support is a future internationalization goal. The Flutter interface may support Hungarian and English through Flutter's generated localization/ARB workflow. Dynamic content translation is separate: reviewed English content for posts, events, DJs/artists, and organizers should be stored in WordPress and delivered through their mobile REST APIs according to the selected locale, not translated on demand by Flutter. Do not introduce full i18n unless the user asks for it or the roadmap reaches that step.
 
 ## Coding Style
 

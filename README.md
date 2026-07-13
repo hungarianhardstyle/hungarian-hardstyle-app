@@ -53,6 +53,7 @@ Implemented:
 - [x] TikTok and upcoming events
 - [x] moderated DJ submission with optional profile image
 - [x] Hungarian Hardstyle-managed booking option
+- [ ] standardize every DJ list image to one card frame and aspect ratio with upper-center face-focused cover cropping
 - [ ] complete an intentional live image submission and approval test
 
 ### v0.7 — Organizers
@@ -63,6 +64,7 @@ Implemented:
 - [x] related upcoming events
 - [x] moderated organizer submission
 - [x] gallery/camera logo upload in backend 2.4.2
+- [ ] standardize every organizer list image to the same card frame and aspect ratio with upper-center portrait focus
 - [ ] live-verify organizer logo upload and draft-profile approval
 - [ ] add optional multi-select music genres/styles later
 
@@ -73,6 +75,8 @@ Implemented:
 - [x] shared in-app browser for normal content links
 - [x] automatic linkification of plain-text web URLs
 - [ ] add a private AI-assisted WordPress article importer
+- [ ] add an AI-assisted English translation action to the standard WordPress blog post editor, producing a separately editable draft for human review
+- [ ] extend the mobile APIs for news, events, DJs and organizers to serve stored English content by locale, with Hungarian fallback and no AI generation during public requests
 - [ ] enforce draft-only import, attribution, safe URL fetching and media rights checks
 
 ### v0.9 — Community utilities
@@ -86,7 +90,7 @@ Implemented:
 
 ### v0.95 — Media
 
-- [ ] online radio with background playback
+- [ ] prepare the online-radio backend and background playback
 - [ ] Hardstyle Revolution release catalog
 - [ ] preview player
 - [ ] Spotify, YouTube and Hardstyle.com links
@@ -96,6 +100,10 @@ Implemented:
 Core release quality:
 
 - [ ] stabilize news, events, DJs and organizers for public release
+- [ ] ship Hungarian/English Flutter UI localization
+- [ ] ship reviewed English WordPress content and locale-aware mobile APIs for news, events, DJs and organizers, with Hungarian fallback
+- [ ] add a compact online-radio player below the Home logo with explicit play/pause/stop, server-side AutoDJ rotation, Now Playing data and clear loading/offline/error states
+- [ ] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
 - [ ] introduce a persistent navigation shell with per-tab history
 - [ ] finalize the bottom-navigation priority and add the Live Feed tab
 - [ ] polish the Android release and prepare iOS support
@@ -129,6 +137,16 @@ FAQ:
 - [ ] searchable, expandable Flutter FAQ under More
 - [ ] loading, empty and error states
 
+Online radio:
+
+- [ ] configure a server-side AutoDJ for a managed library of X uploaded tracks
+- [ ] prefer AzuraCast for Liquidsoap AutoDJ, Icecast-compatible streaming, playlist management and Now Playing data
+- [ ] choose the provider during radio implementation; start with a managed AzuraCast hosting plan for the simplest launch, then move to a suitably sized self-managed VPS only when usage or control requirements justify it
+- [ ] support bulk media upload through SFTP; do not use unencrypted FTP
+- [ ] use an officially supported S3-compatible provider or Dropbox for cloud storage instead of a custom Google Drive sync
+- [ ] require an explicit user action before audible playback and always allow stopping it
+- [ ] decide licensing, hosting, bandwidth, codec/bitrate, background playback, interruptions and notification controls
+
 ### v1.5 — Hardstyle Revolution Store
 
 - [ ] free MP3 releases without payment or advertising
@@ -148,6 +166,12 @@ Releases and Store use one WordPress-managed catalog rather than separate conten
 - DJs and organizers may initially remain under More.
 - v1.0 adds a dedicated Live Feed tab.
 - Detail screens should open inside one persistent navigation shell instead of duplicating the bottom bar.
+
+## Language direction
+
+- The Flutter interface may support Hungarian and English using generated ARB localization files.
+- AI-assisted English article versions are created and reviewed in the standard WordPress post editor.
+- The mobile REST APIs for news, events, DJs and organizers should serve the stored language requested by Flutter, with Hungarian fallback, rather than translating content on demand.
 
 ## Brands
 
