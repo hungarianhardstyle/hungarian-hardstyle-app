@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import '../artists/artists_screen.dart';
 import '../organizers/organizers_screen.dart';
 import 'about_screen.dart';
+import 'favorites_screen.dart';
+import 'settings_screen.dart';
+import 'social_contact_screen.dart';
+import 'spotify_playlists_screen.dart';
 import '../submissions/artist_submission_screen.dart';
 import '../submissions/organizer_submission_screen.dart';
 
@@ -63,10 +67,38 @@ class MoreScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
               _MenuCard(
+                icon: Icons.share_outlined,
+                title: 'Social és kapcsolat',
+                subtitle: 'Közösségi oldalak és elérhetőségek',
+                onTap: () => _open(context, const SocialContactScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                icon: Icons.queue_music_outlined,
+                title: 'Spotify playlisták',
+                subtitle: 'Öt válogatás a keményebb stílusokból',
+                onTap: () => _open(context, const SpotifyPlaylistsScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
                 icon: Icons.info_outline,
                 title: 'Az appról',
                 subtitle: 'Verzió, kapcsolat és weboldal',
                 onTap: () => _open(context, const AboutScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                icon: Icons.favorite_outline,
+                title: 'Kedvencek',
+                subtitle: 'Mentett hírek, események és DJ-k',
+                onTap: () => _open(context, const FavoritesScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                icon: Icons.settings_outlined,
+                title: 'Beállítások',
+                subtitle: 'Értesítések és gyorsítótár',
+                onTap: () => _open(context, const SettingsScreen()),
               ),
             ],
           ),

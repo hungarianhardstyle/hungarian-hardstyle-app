@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/event.dart';
+import '../providers/favorites_provider.dart';
 import '../screens/events/event_detail_screen.dart';
+import 'favorite_button.dart';
 
 class EventCard extends StatelessWidget {
   final HuhsEvent event;
@@ -153,6 +155,11 @@ class EventCard extends StatelessWidget {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
+                        ),
+                        FavoriteButton(
+                          kind: FavoriteKind.event,
+                          id: event.id,
+                          title: event.title,
                         ),
                         const Icon(
                           Icons.arrow_forward_ios,

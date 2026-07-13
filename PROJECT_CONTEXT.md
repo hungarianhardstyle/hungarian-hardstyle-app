@@ -547,6 +547,8 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 
 - Online Radio required for v1.0, with a Home mini-player and server-side AutoDJ
 
+- Five curated Spotify playlists should be available from a dedicated app section; open Spotify first and fall back to the browser.
+
 - Hardstyle Revolution Releases
 
 - Music Store
@@ -562,6 +564,7 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 - Recommendations
 
 - Live Feed with chat and image posts
+- Push notifications should cover new published news, new published events, event reminders one week before and on the event day, plus admin-created custom notifications from WordPress.
 
 - Google account registration and sign-in
 
@@ -719,6 +722,7 @@ In Progress
 - Flutter event and DJ submission forms use the device gallery/camera with local preview instead of requiring users to paste image URLs
 - Backend `2.4.2` is deployed and its organizer-logo upload was tested in the admin flow; an approved organizer submission receives the uploaded Media Library image as its logo and featured image
 - Backend `2.4.3` is deployed and tested. It adds a dedicated `facebook_event_url` field to the WordPress event editor and events mobile API.
+- The public WordPress `/events/` directory should later include an `Esemény beküldése` call-to-action; after app registration is available, the action must require an authenticated user.
 - Flutter includes DJ and organizer submission forms under More. DJ submitters can choose Hungarian Hardstyle-managed performance booking; submitted profiles still require WordPress editorial approval and explicit publication/app visibility
 - Submitted profile and organizer images are reviewable URLs. They are not automatically copied into the WordPress Media Library; the editor selects/imports the approved image before publication
 - Link handling implemented: normal news, event, ticket, and shortcode links open in one shared in-app browser view, and plain-text URLs in WordPress news/event HTML become tappable automatically. Native media and Maps handoff remain explicit exceptions.

@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/artist.dart';
 import '../../providers/artists_provider.dart';
+import '../../providers/favorites_provider.dart';
+import '../../widgets/favorite_button.dart';
 import 'artist_detail_screen.dart';
 
 class ArtistsScreen extends ConsumerStatefulWidget {
@@ -162,7 +164,10 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
                               ),
-                          delegate: SliverChildBuilderDelegate((context, index) {
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
                             return _ArtistCard(artist: page.items[index]);
                           }, childCount: page.items.length),
                         ),
@@ -234,12 +239,12 @@ class _ArtistCard extends StatelessWidget {
               child: Hero(
                 tag: 'artist_${artist.id}',
                 child: artist.profileImageUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: artist.profileImageUrl,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          alignment: const Alignment(0, -0.5),
-                        )
+                    ? CachedNetworkImage(
+                        imageUrl: artist.profileImageUrl,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        alignment: const Alignment(0, -0.5),
+                      )
                     : Container(
                         color: const Color(0xFF242424),
                         alignment: Alignment.center,
@@ -275,6 +280,11 @@ class _ArtistCard extends StatelessWidget {
                           size: 18,
                           color: Colors.redAccent,
                         ),
+                      FavoriteButton(
+                        kind: FavoriteKind.artist,
+                        id: artist.id,
+                        title: artist.title,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),

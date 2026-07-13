@@ -6,6 +6,7 @@ import '../../providers/news_provider.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
 import '../../widgets/news_card.dart';
+import '../../widgets/mobile_ad_banner.dart';
 
 class HomeScreen extends ConsumerWidget {
   final VoidCallback onShowMoreNews;
@@ -50,6 +51,8 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                const Center(child: MobileAdBanner()),
                 const SizedBox(height: 24),
                 const Text(
                   'Legfrissebb hírek',

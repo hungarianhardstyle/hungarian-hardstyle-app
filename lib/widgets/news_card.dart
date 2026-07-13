@@ -4,14 +4,13 @@ import 'package:intl/intl.dart';
 
 import '../models/post.dart';
 import '../screens/news/news_detail_screen.dart';
+import '../providers/favorites_provider.dart';
+import 'favorite_button.dart';
 
 class NewsCard extends StatelessWidget {
   final Post post;
 
-  const NewsCard({
-    super.key,
-    required this.post,
-  });
+  const NewsCard({super.key, required this.post});
 
   String _formatDate() {
     try {
@@ -33,7 +32,7 @@ class NewsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.25),
+            color: Colors.black.withValues(alpha: .25),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -44,9 +43,7 @@ class NewsCard extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => NewsDetailScreen(post: post),
-            ),
+            MaterialPageRoute(builder: (_) => NewsDetailScreen(post: post)),
           );
         },
         child: Column(
@@ -62,17 +59,17 @@ class NewsCard extends StatelessWidget {
                   aspectRatio: 16 / 9,
                   child: post.imageUrl.isNotEmpty
                       ? CachedNetworkImage(
-                    imageUrl: post.imageUrl,
-                    fit: BoxFit.cover,
-                  )
+                          imageUrl: post.imageUrl,
+                          fit: BoxFit.cover,
+                        )
                       : Container(
-                    color: Colors.grey.shade900,
-                    child: const Icon(
-                      Icons.article,
-                      color: Colors.white54,
-                      size: 60,
-                    ),
-                  ),
+                          color: Colors.grey.shade900,
+                          child: const Icon(
+                            Icons.article,
+                            color: Colors.white54,
+                            size: 60,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -96,10 +93,7 @@ class NewsCard extends StatelessWidget {
                     post.excerpt,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.grey.shade300,
-                      height: 1.5,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade300, height: 1.5),
                   ),
                   const SizedBox(height: 14),
                   Row(
@@ -116,6 +110,11 @@ class NewsCard extends StatelessWidget {
                           color: Colors.grey.shade400,
                           fontWeight: FontWeight.w500,
                         ),
+                      ),
+                      FavoriteButton(
+                        kind: FavoriteKind.news,
+                        id: post.id,
+                        title: post.title,
                       ),
                       const Spacer(),
                       const Icon(

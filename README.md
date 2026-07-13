@@ -83,12 +83,13 @@ Implemented:
 
 ### v0.9 — Community utilities
 
-- [ ] local favorites for news, events and DJs
+- [x] local favorites for news, events and DJs
 - [ ] Mailchimp newsletter integration
-- [ ] notification and cache settings
-- [ ] social, contact and About sections
-- [ ] show runtime app version and build number from package metadata
+- [x] notification and cache settings
+- [x] social, contact and About sections
+- [x] show runtime app version and build number from package metadata
 - [ ] prepare push notifications
+- [ ] notify on new news/events, event reminders at 7 days and on the event day, and support WordPress-created custom push messages
 
 ### v0.95 — Media
 
@@ -96,6 +97,7 @@ Implemented:
 - [ ] Hardstyle Revolution release catalog
 - [ ] preview player
 - [ ] Spotify, YouTube and Hardstyle.com links
+- [x] Spotify playlist section with five curated Hungarian Hardstyle playlists (Spotify app first, browser fallback)
 
 ### v1.0 — First public release
 
@@ -164,6 +166,7 @@ Releases and Store use one WordPress-managed catalog rather than separate conten
 
 - Home and News remain the first two primary destinations.
 - The unused Tickets tab will be removed; its future primary-tab slot is reserved for the v1.0 Live Feed/chat user hook.
+- The public WordPress `/events/` directory should later include an `Esemény beküldése` call-to-action, gated by authentication once registration is available.
 - Events are a strong primary-tab candidate because they provide immediate utility.
 - DJs and organizers may initially remain under More.
 - v1.0 adds a dedicated Live Feed tab.

@@ -384,6 +384,7 @@ Focus:
 - social links
 - contact/about pages
 - push notification preparation
+- Push notification requirements: notify for newly published news and events, send event reminders one week before and on the event day, and later allow admins to create/send custom push notifications from the WordPress Mobile API admin area.
 - About/app information screen with runtime version and build number, developer/maintainer credit, website, contact, privacy policy, and terms links
 
 ### v0.95 - Media
@@ -395,6 +396,7 @@ Focus:
 - Hardstyle Revolution releases
 - preview player
 - Spotify/Hardstyle.com/YouTube links
+- five curated Spotify playlists in a dedicated app section, opened through the shared in-app browser
 
 ### v1.0 - First Public Release
 
@@ -630,6 +632,8 @@ When working inside the repo, make the actual file changes when possible and sum
 
 Keep explanations clear and in Hungarian unless the user asks otherwise.
 
+When the user says "mehet", continue with the next clearly scoped implementation step without pausing for confirmation on minor sub-decisions.
+
 When a WordPress backend change is required, never leave out the deployable WordPress files. Always identify the exact plugin files that must be uploaded, include them in the handoff (or package them when possible), and keep the Flutter/API contract changes synchronized. A Flutter-only change is incomplete when the backend contract also changed.
 
 Do not change the Flutter app version in `pubspec.yaml` automatically. Only bump the app version when the user explicitly requests it or after confirming an objectively justified release milestone.
@@ -659,6 +663,7 @@ Product decisions confirmed by the user:
 - Keep using the shared in-app browser for ordinary article, event, profile, ticket, shortcode, and About-page links. Media and Maps may remain intentional native-app exceptions.
 - Keep plain-text `http://` and `https://` URL linkification enabled for WordPress news and event HTML. A URL styled as a link must always be tappable even when the source did not wrap it in an HTML `<a>` tag.
 - Event submission retains its general event/Facebook link field, while published event records now expose the dedicated `facebook_event_url` field through backend 2.4.3.
+- The public WordPress `/events/` directory should later include an `Esemény beküldése` call-to-action that leads to the submission flow; once app registration exists, the action must require authentication.
 
 1. Fix the default Flutter widget test so it matches `HungarianHardstyleApp`.
 2. Clean up asset folder references or create the missing asset folders.
