@@ -99,7 +99,7 @@ Implemented:
 - [x] notification and cache settings
 - [x] social, contact and About sections
 - [x] show runtime app version and build number from package metadata
-- [ ] prepare push notifications
+- [x] prepare local push notification preferences
 - [ ] notify on new news/events, event reminders at 7 days and on the event day, and support WordPress-created custom push messages
 
 ### v0.95 — Media

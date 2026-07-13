@@ -11,8 +11,14 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   static const _notificationsKey = 'notifications_enabled';
+  static const _newsNotificationsKey = 'news_notifications_enabled';
+  static const _eventNotificationsKey = 'event_notifications_enabled';
+  static const _reminderNotificationsKey = 'event_reminders_enabled';
 
   bool _notificationsEnabled = true;
+  bool _newsNotificationsEnabled = true;
+  bool _eventNotificationsEnabled = true;
+  bool _reminderNotificationsEnabled = true;
   bool _loading = true;
   bool _clearingCache = false;
 
@@ -28,6 +34,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() {
       _notificationsEnabled = preferences.getBool(_notificationsKey) ?? true;
+      _newsNotificationsEnabled =
+          preferences.getBool(_newsNotificationsKey) ?? true;
+      _eventNotificationsEnabled =
+          preferences.getBool(_eventNotificationsKey) ?? true;
+      _reminderNotificationsEnabled =
+          preferences.getBool(_reminderNotificationsKey) ?? true;
       _loading = false;
     });
   }
@@ -36,6 +48,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _notificationsEnabled = value);
     final preferences = await SharedPreferences.getInstance();
     await preferences.setBool(_notificationsKey, value);
+  }
+
+  Future<void> _setNotificationPreference(String key, bool value) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(key, value);
   }
 
   Future<void> _clearCache() async {
@@ -75,6 +92,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 value: _notificationsEnabled,
                 onChanged: _loading ? null : _setNotifications,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    secondary: const Icon(Icons.article_outlined),
+                    title: const Text('Új hírek'),
+                    subtitle: const Text('Értesítés új hír közzétételekor'),
+                    value: _newsNotificationsEnabled,
+                    onChanged: _loading || !_notificationsEnabled
+                        ? null
+                        : (value) {
+                            setState(() => _newsNotificationsEnabled = value);
+                            _setNotificationPreference(
+                              _newsNotificationsKey,
+                              value,
+                            );
+                          },
+                  ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.event_outlined),
+                    title: const Text('Új események'),
+                    subtitle: const Text('Értesítés új esemény közzétételekor'),
+                    value: _eventNotificationsEnabled,
+                    onChanged: _loading || !_notificationsEnabled
+                        ? null
+                        : (value) {
+                            setState(() => _eventNotificationsEnabled = value);
+                            _setNotificationPreference(
+                              _eventNotificationsKey,
+                              value,
+                            );
+                          },
+                  ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.alarm_outlined),
+                    title: const Text('Esemény-emlékeztetők'),
+                    subtitle: const Text('Egy héttel előtte és aznap'),
+                    value: _reminderNotificationsEnabled,
+                    onChanged: _loading || !_notificationsEnabled
+                        ? null
+                        : (value) {
+                            setState(
+                              () => _reminderNotificationsEnabled = value,
+                            );
+                            _setNotificationPreference(
+                              _reminderNotificationsKey,
+                              value,
+                            );
+                          },
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
