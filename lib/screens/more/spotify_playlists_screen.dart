@@ -17,7 +17,7 @@ class SpotifyPlaylistsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Spotify playlisták')),
+      appBar: AppBar(title: const Text('Spotify Playlistek')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -50,7 +50,9 @@ class SpotifyPlaylistsScreen extends StatelessWidget {
 
   Future<void> _openSpotify(BuildContext context, String url) async {
     final uri = Uri.parse(url);
-    if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+    if (await launchUrl(uri, mode: LaunchMode.externalNonBrowserApplication)) {
+      return;
+    }
     if (context.mounted) {
       await openInAppBrowser(context, url, title: 'Spotify');
     }

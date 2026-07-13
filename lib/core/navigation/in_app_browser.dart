@@ -32,6 +32,32 @@ Future<void> openInAppBrowser(
   );
 }
 
+/// Opens a social URL in its installed native app first, then falls back to
+/// the shared in-app browser when no native handler is available.
+Future<void> openSocialLink(
+  BuildContext context,
+  String url, {
+  String? title,
+}) async {
+  final uri = Uri.tryParse(url.trim());
+  if (uri == null || uri.scheme.isEmpty) {
+    _showOpenError(context);
+    return;
+  }
+
+  try {
+    if (await launchUrl(uri, mode: LaunchMode.externalNonBrowserApplication)) {
+      return;
+    }
+  } catch (_) {
+    // Fall back to the in-app browser below.
+  }
+
+  if (context.mounted) {
+    await openInAppBrowser(context, url, title: title);
+  }
+}
+
 class InAppBrowserScreen extends StatefulWidget {
   final Uri initialUri;
   final String title;

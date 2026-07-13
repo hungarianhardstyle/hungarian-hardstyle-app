@@ -75,7 +75,7 @@ class MoreScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _MenuCard(
                 icon: Icons.queue_music_outlined,
-                title: 'Spotify playlisták',
+                title: 'Spotify Playlistek',
                 subtitle: 'Öt válogatás a keményebb stílusokból',
                 onTap: () => _open(context, const SpotifyPlaylistsScreen()),
               ),

@@ -161,8 +161,11 @@ class _OrganizerContent extends StatelessWidget {
                   children: [
                     ...organizer.socialLinks.entries.map(
                       (entry) => OutlinedButton.icon(
-                        onPressed: () =>
-                            openInAppBrowser(context, entry.value),
+                        onPressed: () => openSocialLink(
+                          context,
+                          entry.value,
+                          title: _socialLabel(entry.key),
+                        ),
                         icon: Icon(
                           entry.key == 'website'
                               ? Icons.language

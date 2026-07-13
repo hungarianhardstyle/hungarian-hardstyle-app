@@ -201,9 +201,10 @@ class EventDetailScreen extends StatelessWidget {
                       children: [
                         if (event.hasFacebookEvent)
                           FilledButton.icon(
-                            onPressed: () => openInAppBrowser(
+                            onPressed: () => openSocialLink(
                               context,
                               event.facebookEventUrl,
+                              title: 'Facebook',
                             ),
                             icon: const Icon(Icons.facebook),
                             label: const Text('Facebook'),

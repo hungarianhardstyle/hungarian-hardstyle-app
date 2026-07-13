@@ -199,8 +199,11 @@ class _ArtistContent extends StatelessWidget {
                         children: [
                           ...artist.socialLinks.entries.map(
                             (entry) => OutlinedButton.icon(
-                              onPressed: () =>
-                                  openInAppBrowser(context, entry.value),
+                            onPressed: () => openSocialLink(
+                              context,
+                              entry.value,
+                              title: _socialLabel(entry.key),
+                            ),
                               icon: Icon(_socialIcon(entry.key)),
                               label: Text(_socialLabel(entry.key)),
                             ),
