@@ -66,7 +66,7 @@ Implemented:
 - [x] TikTok and upcoming events
 - [x] moderated DJ submission with optional profile image
 - [x] Hungarian Hardstyle-managed booking option
-- [ ] standardize every DJ list image to one card frame and aspect ratio with upper-center face-focused cover cropping
+- [x] standardize every DJ list image to one card frame and aspect ratio with upper-center face-focused cover cropping
 - [ ] complete an intentional live image submission and approval test
 
 ### v0.7 — Organizers
@@ -77,7 +77,7 @@ Implemented:
 - [x] related upcoming events
 - [x] moderated organizer submission
 - [x] gallery/camera logo upload in backend 2.4.2
-- [ ] standardize every organizer list image to the same card frame and aspect ratio with upper-center portrait focus
+- [x] standardize every organizer list image to the same fixed card frame; logos retain contain rendering inside the frame
 - [ ] live-verify organizer logo upload and draft-profile approval
 - [ ] add optional multi-select music genres/styles later
 
