@@ -27,9 +27,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Az eseményflyer és a DJ-profilkép elkészítéséhez használjuk a kamerát.</string>
+	<string>Beküldési képek, flyerek és profilképek elkészítéséhez használjuk a kamerát.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Az eseményflyer és a DJ-profilkép kiválasztásához használjuk a fotókönyvtárat.</string>
+	<string>Beküldési képek, flyerek és profilképek kiválasztásához használjuk a fotókönyvtárat.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

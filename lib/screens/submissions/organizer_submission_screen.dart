@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/profile_submission.dart';
+import '../../models/submission_image.dart';
 import '../../providers/news_provider.dart';
+import '../../widgets/submission_image_picker.dart';
 
 class OrganizerSubmissionScreen extends ConsumerStatefulWidget {
   const OrganizerSubmissionScreen({super.key});
@@ -20,13 +22,13 @@ class _OrganizerSubmissionScreenState
   final _country = TextEditingController(text: 'Magyarország');
   final _description = TextEditingController();
   final _contactEmail = TextEditingController();
-  final _logoUrl = TextEditingController();
   final Map<String, TextEditingController> _links = {
     'website': TextEditingController(),
     'facebook': TextEditingController(),
     'instagram': TextEditingController(),
     'tiktok': TextEditingController(),
   };
+  SubmissionImage? _logo;
   bool _submitting = false;
 
   @override
@@ -36,7 +38,6 @@ class _OrganizerSubmissionScreenState
     _country.dispose();
     _description.dispose();
     _contactEmail.dispose();
-    _logoUrl.dispose();
     for (final controller in _links.values) {
       controller.dispose();
     }
@@ -56,13 +57,14 @@ class _OrganizerSubmissionScreenState
               country: _country.text,
               description: _description.text,
               contactEmail: _contactEmail.text,
-              logoUrl: _logoUrl.text,
+              logoUrl: '',
               socialLinks: {
                 for (final entry in _links.entries)
                   if (entry.value.text.trim().isNotEmpty)
                     entry.key: entry.value.text,
               },
             ),
+            image: _logo,
           );
 
       if (!mounted) return;
@@ -134,12 +136,12 @@ class _OrganizerSubmissionScreenState
                   keyboardType: TextInputType.emailAddress,
                   helper: 'Csak az admin látja.',
                 ),
-                _field(
-                  _logoUrl,
-                  'Logó linkje',
-                  Icons.image_outlined,
-                  _optionalUrl,
-                  keyboardType: TextInputType.url,
+                SubmissionImagePicker(
+                  image: _logo,
+                  title: 'Szervezői logó feltöltése',
+                  helperText:
+                      'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
+                  onChanged: (image) => setState(() => _logo = image),
                 ),
                 _field(
                   _description,

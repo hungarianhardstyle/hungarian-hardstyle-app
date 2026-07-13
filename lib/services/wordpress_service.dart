@@ -306,8 +306,15 @@ class WordpressService {
     );
   }
 
-  Future<String> submitOrganizer(OrganizerSubmission submission) {
-    return _submitProfile('/organizer-submissions', submission.toJson());
+  Future<String> submitOrganizer(
+    OrganizerSubmission submission, {
+    SubmissionImage? image,
+  }) {
+    return _submitProfile(
+      '/organizer-submissions',
+      submission.toJson(),
+      image: image,
+    );
   }
 
   Future<String> _submitProfile(

@@ -90,7 +90,8 @@ As of the current project state:
 - The WordPress plugin version in that ZIP is `2.1.0`.
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
-- Backend package `2.4.1` is prepared locally but not yet deployment-verified. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
+- Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
+- Backend package `2.4.2` is prepared locally and extends the same multipart upload flow to organizer logos. On approval, the uploaded image is assigned to the draft organizer profile as its logo and featured image.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
 - Backend package `2.2.0` is deployed. Its artist list/category endpoints, shared submission genre options, validation response, and public DJ/event archive templates were verified live. A successful real submission still needs an intentional end-to-end app test because it creates a pending WordPress item.
@@ -606,6 +607,10 @@ When providing code manually, prefer complete replacement file contents instead 
 When working inside the repo, make the actual file changes when possible and summarize what changed.
 
 Keep explanations clear and in Hungarian unless the user asks otherwise.
+
+For major product or architecture decisions with meaningful alternatives, use the installed `grill-me` skill to clarify requirements before implementation. Do not invoke it for small, obvious, or narrowly scoped fixes.
+
+Use the installed Ponytail plugin/rules for implementation work: prefer deleting or skipping unnecessary work, reuse existing project code, then standard/native platform features, then installed dependencies, and only write the minimum custom code that safely solves the task. Never trade away validation, security, accessibility, or data-loss protection merely to reduce code or token usage.
 
 ## Important Current Implementation Priorities
 
