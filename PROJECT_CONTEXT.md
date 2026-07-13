@@ -406,7 +406,7 @@ Bottom Navigation
 
 Confirmed navigation change:
 
-- The currently empty Tickets tab after Events is unnecessary and will be removed.
+- The currently empty Tickets tab after Events is unnecessary and will be removed; its future primary-tab slot is reserved for the v1.0 Live Feed/chat user hook.
 - Its replacement is not decided yet; do not automatically replace it with the DJ directory.
 - Home and News should remain the first two bottom-navigation items.
 - Define a deliberate importance order for what belongs on Home, in primary navigation, and under More. The leading user-hook hypothesis is immediate utility (what is happening now / what event is next), making Events a stronger primary-tab candidate while DJs may initially live under More.
@@ -655,7 +655,7 @@ v0.4
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
-Open integration blockers: Websupport's upstream WAF currently returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them, so event flyer, DJ profile image, and organizer logo submissions need Websupport allowlisting before live verification. The event form already accepts a general event/Facebook link, but a dedicated Facebook Event URL field still needs to be added to the normal WordPress event editor and mobile events API.
+Open integration blocker: Websupport's upstream WAF currently returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them, so event flyer, DJ profile image, and organizer logo submissions need Websupport allowlisting before live verification. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.
 
 Completed
 
@@ -717,7 +717,8 @@ In Progress
 - Backend `2.4.0` is deployed and live-verified. It adds moderated DJ/organizer submissions, admin approval into non-public draft profiles, public DJ booking e-mail support, and a `booking_via_huhs` option that routes booking requests to `info@hungarianhardstyle.hu`
 - Backend `2.4.1` is deployed. It accepts optional multipart event flyers and DJ profile images, restricted to JPG/PNG/WebP and 5 MB, stores them as Media Library attachments on pending submissions, previews them for admins, and applies an approved DJ image to the generated draft profile
 - Flutter event and DJ submission forms use the device gallery/camera with local preview instead of requiring users to paste image URLs
-- Backend `2.4.2` is deployed and awaits final live verification. It and Flutter extend the same gallery/camera upload workflow to organizer logos; an approved organizer submission receives the uploaded Media Library image as its logo and featured image
+- Backend `2.4.2` is deployed and its organizer-logo upload was tested in the admin flow; an approved organizer submission receives the uploaded Media Library image as its logo and featured image
+- Backend `2.4.3` is deployed and tested. It adds a dedicated `facebook_event_url` field to the WordPress event editor and events mobile API.
 - Flutter includes DJ and organizer submission forms under More. DJ submitters can choose Hungarian Hardstyle-managed performance booking; submitted profiles still require WordPress editorial approval and explicit publication/app visibility
 - Submitted profile and organizer images are reviewable URLs. They are not automatically copied into the WordPress Media Library; the editor selects/imports the approved image before publication
 - Link handling implemented: normal news, event, ticket, and shortcode links open in one shared in-app browser view, and plain-text URLs in WordPress news/event HTML become tappable automatically. Native media and Maps handoff remain explicit exceptions.

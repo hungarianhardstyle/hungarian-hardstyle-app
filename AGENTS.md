@@ -91,7 +91,8 @@ As of the current project state:
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
-- Backend package `2.4.2` is deployed and awaits final live verification. It extends the same multipart upload flow to organizer logos. On approval, the uploaded image is assigned to the draft organizer profile as its logo and featured image.
+- Backend package `2.4.2` is deployed and its organizer-logo upload was tested in the admin flow.
+- Backend package `2.4.3` is deployed and tested. It adds a dedicated `facebook_event_url` field to the WordPress event editor and events mobile API.
 - Current blocker: Websupport's upstream web application firewall returns HTTP 466 and blocks multipart image uploads before WordPress/Wordfence receives them. Event flyer, DJ profile image, and organizer logo submissions remain unverified until Websupport allowlists the three submission endpoints.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
@@ -224,7 +225,7 @@ Current events response fields:
 - `google_maps`
 - `ticket_type`
 - `ticket_url`
-- `facebook_event_url` (planned; separate Facebook Event link on event records and mobile API)
+- `facebook_event_url` (separate Facebook Event link on event records and mobile API; backend 2.4.3)
 - `organizer`
 - `artists`
 - `flyer`
@@ -629,6 +630,10 @@ When working inside the repo, make the actual file changes when possible and sum
 
 Keep explanations clear and in Hungarian unless the user asks otherwise.
 
+When a WordPress backend change is required, never leave out the deployable WordPress files. Always identify the exact plugin files that must be uploaded, include them in the handoff (or package them when possible), and keep the Flutter/API contract changes synchronized. A Flutter-only change is incomplete when the backend contract also changed.
+
+Do not change the Flutter app version in `pubspec.yaml` automatically. Only bump the app version when the user explicitly requests it or after confirming an objectively justified release milestone.
+
 For major product or architecture decisions with meaningful alternatives, use the installed `grill-me` skill to clarify requirements before implementation. Do not invoke it for small, obvious, or narrowly scoped fixes.
 
 Use the installed Ponytail plugin/rules for implementation work: prefer deleting or skipping unnecessary work, reuse existing project code, then standard/native platform features, then installed dependencies, and only write the minimum custom code that safely solves the task. Never trade away validation, security, accessibility, or data-loss protection merely to reduce code or token usage.
@@ -639,7 +644,7 @@ Likely next useful tasks:
 
 Product decisions confirmed by the user:
 
-- The current empty Tickets bottom-navigation tab after Events is not needed and should be removed, but its replacement is not decided yet; do not assume the DJ directory belongs there.
+- The current empty Tickets bottom-navigation tab after Events is not needed and should be removed; reserve its future primary-tab slot for the v1.0 Live Feed/chat user hook, and do not assume the DJ directory belongs there.
 - Keep Home and News as the first two bottom-navigation items. Before finalizing the remaining items, define a clear importance order for primary navigation, Home content, and the More section.
 - Evaluate the main user hook around immediate utility (for example, what is happening now and which event is next). Events are a strong primary-tab candidate; the DJ directory may initially live under More unless usage testing supports promoting it.
 - Event data continues to come from the WordPress events API.
@@ -653,7 +658,7 @@ Product decisions confirmed by the user:
 - Refactor navigation into a persistent shell so the bottom tabs remain visible on news, event, DJ, and organizer detail screens. Do not duplicate the NavigationBar inside each detail screen; preserve the active tab and each tab's navigation history.
 - Keep using the shared in-app browser for ordinary article, event, profile, ticket, shortcode, and About-page links. Media and Maps may remain intentional native-app exceptions.
 - Keep plain-text `http://` and `https://` URL linkification enabled for WordPress news and event HTML. A URL styled as a link must always be tappable even when the source did not wrap it in an HTML `<a>` tag.
-- Event submission currently shows a general event/Facebook link field, but the regular WordPress event editor and events mobile API still need a dedicated `facebook_event_url` field.
+- Event submission retains its general event/Facebook link field, while published event records now expose the dedicated `facebook_event_url` field through backend 2.4.3.
 
 1. Fix the default Flutter widget test so it matches `HungarianHardstyleApp`.
 2. Clean up asset folder references or create the missing asset folders.

@@ -15,4 +15,12 @@ void main() {
     expect(event.artists.single.id, 34);
     expect(event.artists.single.name, 'Teszt DJ');
   });
+
+  test('beolvassa az esemény stílusait', () {
+    final event = HuhsEvent.fromJson({
+      'genres': ['Hardstyle', 'Hardcore'],
+    });
+
+    expect(event.genres, ['Hardstyle', 'Hardcore']);
+  });
 }

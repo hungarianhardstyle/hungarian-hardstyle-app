@@ -56,6 +56,8 @@ class HuhsEvent {
   final String venueAddress;
   final String venueCountry;
   final String googleMapsUrl;
+  final String facebookEventUrl;
+  final List<String> genres;
   final String ticketType;
   final String ticketUrl;
   final EventOrganizer organizer;
@@ -79,6 +81,8 @@ class HuhsEvent {
     required this.venueAddress,
     required this.venueCountry,
     required this.googleMapsUrl,
+    required this.facebookEventUrl,
+    required this.genres,
     required this.ticketType,
     required this.ticketUrl,
     required this.organizer,
@@ -106,6 +110,8 @@ class HuhsEvent {
       venueAddress: _readString(json['venue_address']),
       venueCountry: _readString(json['venue_country']),
       googleMapsUrl: _readString(json['google_maps']),
+      facebookEventUrl: _readString(json['facebook_event_url']),
+      genres: _readStringList(json['genres']),
       ticketType: _readString(json['ticket_type']),
       ticketUrl: _readString(json['ticket_url']),
       organizer: EventOrganizer.fromJson(json['organizer']),
@@ -136,6 +142,24 @@ class HuhsEvent {
   bool get hasTicket => ticketUrl.trim().isNotEmpty;
 
   bool get hasGoogleMaps => googleMapsUrl.trim().isNotEmpty;
+
+  bool get hasFacebookEvent => facebookEventUrl.trim().isNotEmpty;
+}
+
+List<String> _readStringList(Object? value) {
+  if (value is String) {
+    return value
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+
+  if (value is List<dynamic>) {
+    return value.map(_readString).where((item) => item.isNotEmpty).toList();
+  }
+
+  return const [];
 }
 
 String _readString(Object? value) {

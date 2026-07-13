@@ -8,7 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 The app version remains **v0.4** while the first public release scope is being completed. Several later roadmap modules are already functional.
 
-The current WordPress backend package is **2.4.2**. It is deployed and awaits a final live organizer-logo submission and approval test.
+The current WordPress backend package is **2.4.3**. It is deployed and tested; it adds the dedicated Facebook Event URL field to WordPress events and the mobile API.
 
 Current external blocker: Websupport's upstream WAF returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them. Event flyer, DJ profile image and organizer logo submissions can be verified after the three REST endpoints are allowlisted. A dedicated Facebook Event URL field is also still planned for the normal WordPress event editor and events API; the current app submission field is only a general event link.
 
@@ -163,7 +163,7 @@ Releases and Store use one WordPress-managed catalog rather than separate conten
 ## Navigation direction
 
 - Home and News remain the first two primary destinations.
-- The unused Tickets tab will be removed; its replacement is not assumed.
+- The unused Tickets tab will be removed; its future primary-tab slot is reserved for the v1.0 Live Feed/chat user hook.
 - Events are a strong primary-tab candidate because they provide immediate utility.
 - DJs and organizers may initially remain under More.
 - v1.0 adds a dedicated Live Feed tab.

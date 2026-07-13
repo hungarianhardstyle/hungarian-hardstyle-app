@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../artists/artists_screen.dart';
 import '../organizers/organizers_screen.dart';
+import 'about_screen.dart';
 import '../submissions/artist_submission_screen.dart';
 import '../submissions/organizer_submission_screen.dart';
 
@@ -58,8 +59,14 @@ class MoreScreen extends StatelessWidget {
                 icon: Icons.add_business,
                 title: 'Szervező beküldése',
                 subtitle: 'Új szervező jóváhagyásra',
-                onTap: () =>
-                    _open(context, const OrganizerSubmissionScreen()),
+                onTap: () => _open(context, const OrganizerSubmissionScreen()),
+              ),
+              const SizedBox(height: 28),
+              _MenuCard(
+                icon: Icons.info_outline,
+                title: 'Az appról',
+                subtitle: 'Verzió, kapcsolat és weboldal',
+                onTap: () => _open(context, const AboutScreen()),
               ),
             ],
           ),
@@ -69,9 +76,9 @@ class MoreScreen extends StatelessWidget {
   }
 
   void _open(BuildContext context, Widget screen) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => screen),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (context) => screen));
   }
 }
 
@@ -92,7 +99,10 @@ class _MenuCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 10,
+        ),
         leading: CircleAvatar(
           backgroundColor: const Color(0xFFE53935),
           child: Icon(icon, color: Colors.white),

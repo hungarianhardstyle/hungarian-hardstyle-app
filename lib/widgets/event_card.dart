@@ -9,11 +9,7 @@ class EventCard extends StatelessWidget {
   final HuhsEvent event;
   final double? width;
 
-  const EventCard({
-    super.key,
-    required this.event,
-    this.width,
-  });
+  const EventCard({super.key, required this.event, this.width});
 
   String _formatDate() {
     try {
@@ -44,7 +40,7 @@ class EventCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(.25),
+              color: Colors.black.withValues(alpha: .25),
               blurRadius: 12,
               offset: const Offset(0, 5),
             ),
@@ -102,6 +98,21 @@ class EventCard extends StatelessWidget {
                         height: 1.2,
                       ),
                     ),
+                    if (event.genres.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: event.genres
+                            .map(
+                              (genre) => Chip(
+                                label: Text(genre),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ],
                     const SizedBox(height: 10),
                     if (event.venueCity.isNotEmpty) ...[
                       Row(

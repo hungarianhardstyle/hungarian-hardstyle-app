@@ -147,6 +147,21 @@ class EventDetailScreen extends StatelessWidget {
                       height: 1.15,
                     ),
                   ),
+                  if (event.genres.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: event.genres
+                          .map(
+                            (genre) => Chip(
+                              label: Text(genre),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   _InfoRow(icon: Icons.calendar_today, text: _formatDate()),
                   if (event.venueLine.isNotEmpty) ...[
@@ -176,10 +191,23 @@ class EventDetailScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     _ArtistLinks(artists: event.artists),
                   ],
-                  if (event.hasTicket || event.hasGoogleMaps) ...[
+                  if (event.hasTicket ||
+                      event.hasGoogleMaps ||
+                      event.hasFacebookEvent) ...[
                     const SizedBox(height: 22),
                     Row(
                       children: [
+                        if (event.hasFacebookEvent)
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: () => openInAppBrowser(
+                                context,
+                                event.facebookEventUrl,
+                              ),
+                              icon: const Icon(Icons.facebook),
+                              label: const Text('Facebook-esemény'),
+                            ),
+                          ),
                         if (event.hasTicket)
                           Expanded(
                             child: FilledButton.icon(
@@ -189,7 +217,9 @@ class EventDetailScreen extends StatelessWidget {
                               label: const Text('Jegyek'),
                             ),
                           ),
-                        if (event.hasTicket && event.hasGoogleMaps)
+                        if ((event.hasFacebookEvent && event.hasTicket) ||
+                            (event.hasFacebookEvent && event.hasGoogleMaps) ||
+                            (event.hasTicket && event.hasGoogleMaps))
                           const SizedBox(width: 12),
                         if (event.hasGoogleMaps)
                           Expanded(
