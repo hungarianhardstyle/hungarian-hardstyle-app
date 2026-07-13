@@ -113,17 +113,24 @@ class EventCard extends StatelessWidget {
                     ),
                     if (event.genres.isNotEmpty) ...[
                       const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: _visibleGenres()
-                            .map(
-                              (genre) => Chip(
-                                label: Text(genre),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                            )
-                            .toList(),
+                      SizedBox(
+                        height: 34,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: _visibleGenres()
+                                .map(
+                                  (genre) => Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: Chip(
+                                      label: Text(genre),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
                       ),
                     ],
                     const SizedBox(height: 10),
