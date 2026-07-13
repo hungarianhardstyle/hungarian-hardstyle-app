@@ -42,7 +42,7 @@ class FeaturedNewsCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(.35),
+              color: Colors.black.withValues(alpha: .35),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -80,8 +80,8 @@ class FeaturedNewsCard extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(.35),
-                      Colors.black.withOpacity(.95),
+                      Colors.black.withValues(alpha: .35),
+                      Colors.black.withValues(alpha: .95),
                     ],
                   ),
                 ),
