@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../providers/events_provider.dart';
 import '../../providers/favorites_provider.dart';
+import '../../providers/news_provider.dart';
+import '../artists/artist_detail_screen.dart';
+import '../events/event_detail_screen.dart';
+import '../news/news_detail_screen.dart';
 
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
@@ -14,6 +19,67 @@ class FavoritesScreen extends ConsumerWidget {
         return 'Esemény';
       case FavoriteKind.artist:
         return 'DJ';
+    }
+  }
+
+  Future<void> _openEntry(
+    BuildContext context,
+    WidgetRef ref,
+    FavoriteEntry entry,
+  ) async {
+    try {
+      switch (entry.kind) {
+      case FavoriteKind.artist:
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ArtistDetailScreen(artistId: entry.id),
+          ),
+        );
+        return;
+      case FavoriteKind.event:
+        final events = await ref.read(eventsProvider.future);
+        final eventMatches = events
+            .where((item) => item.id == entry.id)
+            .toList();
+        final event = eventMatches.isEmpty ? null : eventMatches.first;
+        if (event != null && context.mounted) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)),
+          );
+        } else if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Az esemény már nem érhető el.')),
+          );
+        }
+        return;
+      case FavoriteKind.news:
+        final page = await ref
+            .read(wordpressServiceProvider)
+            .getPosts(search: entry.title, perPage: 10);
+        final postMatches = page.items
+            .where((item) => item.id == entry.id)
+            .toList();
+        final post = postMatches.isEmpty ? null : postMatches.first;
+        if (post != null && context.mounted) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => NewsDetailScreen(post: post)),
+          );
+        } else if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('A hír már nem érhető el.')),
+          );
+        }
+        return;
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('A kedvenc nem tölthető be.')),
+        );
+      }
     }
   }
 
@@ -45,6 +111,7 @@ class FavoritesScreen extends ConsumerWidget {
                     ),
                     title: Text(entry.title),
                     subtitle: Text(_label(entry.kind)),
+                    onTap: () => _openEntry(context, ref, entry),
                     trailing: IconButton(
                       tooltip: 'Eltávolítás',
                       icon: const Icon(Icons.delete_outline),

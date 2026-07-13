@@ -32,7 +32,7 @@ Implemented:
 - [ ] add the required iOS AdMob application identifier before iOS testing
 - [ ] remove the remaining event-card overflow at 2.0x accessibility text scaling and keep a small-screen regression test
 - [x] prevent the favorites startup load from overwriting a newly saved favorite
-- [ ] make saved news, events and DJs openable from the Favorites screen
+- [x] make saved news, events and DJs openable from the Favorites screen
 - [x] dispose late AdMob banner callbacks safely; consent/privacy handling remains required before production ads
 - [ ] replace the three deprecated `withOpacity()` calls
 - [ ] upgrade Gradle, Android Gradle Plugin and Kotlin before current Flutter support is dropped
