@@ -655,6 +655,8 @@ v0.4
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
+Open integration blockers: Websupport's upstream WAF currently returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them, so event flyer, DJ profile image, and organizer logo submissions need Websupport allowlisting before live verification. The event form already accepts a general event/Facebook link, but a dedicated Facebook Event URL field still needs to be added to the normal WordPress event editor and mobile events API.
+
 Completed
 
 ✔ News

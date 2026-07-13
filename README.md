@@ -10,6 +10,8 @@ The app version remains **v0.4** while the first public release scope is being c
 
 The current WordPress backend package is **2.4.2**. It is deployed and awaits a final live organizer-logo submission and approval test.
 
+Current external blocker: Websupport's upstream WAF returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them. Event flyer, DJ profile image and organizer logo submissions can be verified after the three REST endpoints are allowlisted. A dedicated Facebook Event URL field is also still planned for the normal WordPress event editor and events API; the current app submission field is only a general event link.
+
 Implemented:
 
 - dark Material 3 Flutter UI with Riverpod and Dio

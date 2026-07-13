@@ -92,6 +92,7 @@ As of the current project state:
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
 - Backend package `2.4.2` is deployed and awaits final live verification. It extends the same multipart upload flow to organizer logos. On approval, the uploaded image is assigned to the draft organizer profile as its logo and featured image.
+- Current blocker: Websupport's upstream web application firewall returns HTTP 466 and blocks multipart image uploads before WordPress/Wordfence receives them. Event flyer, DJ profile image, and organizer logo submissions remain unverified until Websupport allowlists the three submission endpoints.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
 - Backend package `2.2.0` is deployed. Its artist list/category endpoints, shared submission genre options, validation response, and public DJ/event archive templates were verified live. A successful real submission still needs an intentional end-to-end app test because it creates a pending WordPress item.
@@ -223,6 +224,7 @@ Current events response fields:
 - `google_maps`
 - `ticket_type`
 - `ticket_url`
+- `facebook_event_url` (planned; separate Facebook Event link on event records and mobile API)
 - `organizer`
 - `artists`
 - `flyer`
@@ -651,6 +653,7 @@ Product decisions confirmed by the user:
 - Refactor navigation into a persistent shell so the bottom tabs remain visible on news, event, DJ, and organizer detail screens. Do not duplicate the NavigationBar inside each detail screen; preserve the active tab and each tab's navigation history.
 - Keep using the shared in-app browser for ordinary article, event, profile, ticket, shortcode, and About-page links. Media and Maps may remain intentional native-app exceptions.
 - Keep plain-text `http://` and `https://` URL linkification enabled for WordPress news and event HTML. A URL styled as a link must always be tappable even when the source did not wrap it in an HTML `<a>` tag.
+- Event submission currently shows a general event/Facebook link field, but the regular WordPress event editor and events mobile API still need a dedicated `facebook_event_url` field.
 
 1. Fix the default Flutter widget test so it matches `HungarianHardstyleApp`.
 2. Clean up asset folder references or create the missing asset folders.
