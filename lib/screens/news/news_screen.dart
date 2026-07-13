@@ -75,7 +75,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
           child: RefreshIndicator(
             onRefresh: () => ref.read(paginatedNewsProvider.notifier).refresh(),
             child: state.isLoading && state.posts.isEmpty
-                ? const Center(child: BrandLoadingIndicator(size: 150))
+                ? const Center(child: BrandLoadingIndicator(size: 220))
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(

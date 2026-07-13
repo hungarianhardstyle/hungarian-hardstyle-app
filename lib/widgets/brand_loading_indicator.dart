@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class BrandLoadingIndicator extends StatefulWidget {
   final double size;
 
-  const BrandLoadingIndicator({super.key, this.size = 72});
+  const BrandLoadingIndicator({super.key, this.size = 220});
 
   @override
   State<BrandLoadingIndicator> createState() => _BrandLoadingIndicatorState();
@@ -53,7 +53,7 @@ class _BrandLoadingIndicatorState extends State<BrandLoadingIndicator>
           child: child,
         ),
         child: Image.asset(
-          'assets/logos/huhs_logo.png',
+          'assets/logos/huhs_full_logo.png',
           width: widget.size,
           height: widget.size,
           fit: BoxFit.contain,
