@@ -32,6 +32,17 @@ class EventCard extends StatelessWidget {
     }
   }
 
+  List<String> _visibleGenres() {
+    if (event.genres.length <= 4) {
+      return event.genres;
+    }
+
+    return [
+      ...event.genres.take(4),
+      '+${event.genres.length - 4}',
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -105,7 +116,7 @@ class EventCard extends StatelessWidget {
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
-                        children: event.genres
+                        children: _visibleGenres()
                             .map(
                               (genre) => Chip(
                                 label: Text(genre),
