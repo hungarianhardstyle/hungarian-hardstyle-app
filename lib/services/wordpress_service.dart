@@ -2,8 +2,13 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
+import '../models/artist.dart';
 import '../models/event.dart';
+import '../models/event_submission.dart';
+import '../models/organizer.dart';
 import '../models/post.dart';
+import '../models/profile_submission.dart';
+import '../models/submission_image.dart';
 
 class NewsCategory {
   final int id;
@@ -173,6 +178,251 @@ class WordpressService {
     } catch (e) {
       throw Exception('Ismeretlen hiba tortent.\n\n$e');
     }
+  }
+
+  Future<ArtistsPage> getArtists({
+    String search = '',
+    String category = '',
+    int page = 1,
+    int perPage = 50,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/artists',
+        queryParameters: {
+          'page': page,
+          'per_page': perPage,
+          if (search.trim().isNotEmpty) 'search': search.trim(),
+          if (category.trim().isNotEmpty) 'category': category.trim(),
+        },
+      );
+      final data = response.data;
+
+      if (data is Map<String, dynamic>) {
+        return ArtistsPage.fromJson(data);
+      }
+
+      throw const FormatException('Hibás DJ-lista válasz.');
+    } on DioException catch (e) {
+      throw Exception(_readApiError(e, 'Nem sikerült betölteni a DJ-ket.'));
+    } catch (e) {
+      throw Exception('Nem sikerült betölteni a DJ-ket.\n\n$e');
+    }
+  }
+
+  Future<Artist> getArtist(int artistId) async {
+    try {
+      final response = await _dio.get('/artists/$artistId');
+      final data = response.data;
+
+      if (data is Map<String, dynamic>) {
+        return Artist.fromJson(data);
+      }
+
+      throw const FormatException('Hibás DJ-adatlap válasz.');
+    } on DioException catch (e) {
+      throw Exception(_readApiError(e, 'Nem sikerült betölteni a DJ-adatlapot.'));
+    } catch (e) {
+      throw Exception('Nem sikerült betölteni a DJ-adatlapot.\n\n$e');
+    }
+  }
+
+  Future<OrganizersPage> getOrganizers({
+    String search = '',
+    int page = 1,
+    int perPage = 50,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/organizers',
+        queryParameters: {
+          'page': page,
+          'per_page': perPage,
+          if (search.trim().isNotEmpty) 'search': search.trim(),
+        },
+      );
+      final data = response.data;
+
+      if (data is Map<String, dynamic>) {
+        return OrganizersPage.fromJson(data);
+      }
+
+      throw const FormatException('Hibás szervezőlista-válasz.');
+    } on DioException catch (e) {
+      throw Exception(
+        _readApiError(e, 'Nem sikerült betölteni a szervezőket.'),
+      );
+    } catch (e) {
+      throw Exception('Nem sikerült betölteni a szervezőket.\n\n$e');
+    }
+  }
+
+  Future<OrganizerProfile> getOrganizer(int organizerId) async {
+    try {
+      final response = await _dio.get('/organizers/$organizerId');
+      final data = response.data;
+
+      if (data is Map<String, dynamic>) {
+        return OrganizerProfile.fromJson(data);
+      }
+
+      throw const FormatException('Hibás szervezői adatlap válasz.');
+    } on DioException catch (e) {
+      throw Exception(
+        _readApiError(e, 'Nem sikerült betölteni a szervezői adatlapot.'),
+      );
+    } catch (e) {
+      throw Exception('Nem sikerült betölteni a szervezői adatlapot.\n\n$e');
+    }
+  }
+
+  Future<ProfileSubmissionOptions> getProfileSubmissionOptions() async {
+    try {
+      final response = await _dio.get('/profile-submission-options');
+      final data = response.data;
+
+      if (data is Map<String, dynamic>) {
+        return ProfileSubmissionOptions.fromJson(data);
+      }
+
+      throw const FormatException('Hibás beküldési beállítások.');
+    } on DioException catch (e) {
+      throw Exception(
+        _readApiError(e, 'Nem sikerült betölteni a beküldési adatokat.'),
+      );
+    } catch (e) {
+      throw Exception('Nem sikerült betölteni a beküldési adatokat.\n\n$e');
+    }
+  }
+
+  Future<String> submitArtist(
+    ArtistSubmission submission, {
+    SubmissionImage? image,
+  }) {
+    return _submitProfile(
+      '/artist-submissions',
+      submission.toJson(),
+      image: image,
+    );
+  }
+
+  Future<String> submitOrganizer(OrganizerSubmission submission) {
+    return _submitProfile('/organizer-submissions', submission.toJson());
+  }
+
+  Future<String> _submitProfile(
+    String path,
+    Map<String, dynamic> data, {
+    SubmissionImage? image,
+  }
+  ) async {
+    try {
+      final response = await _dio.post(
+        path,
+        data: image == null ? data : _multipartSubmission(data, image),
+      );
+      final responseData = response.data;
+
+      if (responseData is Map<String, dynamic>) {
+        final message = responseData['message'];
+        if (message is String && message.trim().isNotEmpty) {
+          return message.trim();
+        }
+      }
+
+      return 'Köszönjük, a beküldést elküldtük ellenőrzésre.';
+    } on DioException catch (e) {
+      throw Exception(_readApiError(e, 'A beküldés nem sikerült.'));
+    } catch (e) {
+      throw Exception('A beküldés nem sikerült.\n\n$e');
+    }
+  }
+
+  Future<List<String>> getEventSubmissionGenres() async {
+    try {
+      final response = await _dio.get('/event-submission-options');
+      final data = response.data as Map<String, dynamic>;
+      final genres = data['genres'] as List<dynamic>? ?? const [];
+
+      return genres
+          .whereType<String>()
+          .map((genre) => genre.trim())
+          .where((genre) => genre.isNotEmpty)
+          .toList(growable: false);
+    } on DioException catch (e) {
+      throw Exception(
+        _readApiError(e, 'Nem sikerült betölteni a műfajokat.'),
+      );
+    } catch (e) {
+      throw Exception('Nem sikerült betölteni a műfajokat.\n\n$e');
+    }
+  }
+
+  Future<String> submitEvent(
+    EventSubmission submission, {
+    SubmissionImage? image,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/event-submissions',
+        data: image == null
+            ? submission.toJson()
+            : _multipartSubmission(submission.toJson(), image),
+      );
+      final data = response.data;
+
+      if (data is Map<String, dynamic>) {
+        final message = data['message'];
+        if (message is String && message.trim().isNotEmpty) {
+          return message.trim();
+        }
+      }
+
+      return 'Köszönjük, az eseményt elküldtük ellenőrzésre.';
+    } on DioException catch (e) {
+      throw Exception(
+        _readApiError(e, 'Az eseményt nem sikerült elküldeni.'),
+      );
+    } catch (e) {
+      throw Exception('Az eseményt nem sikerült elküldeni.\n\n$e');
+    }
+  }
+
+  FormData _multipartSubmission(
+    Map<String, dynamic> payload,
+    SubmissionImage image,
+  ) {
+    return FormData.fromMap({
+      'payload': jsonEncode(payload),
+      'image': MultipartFile.fromBytes(image.bytes, filename: image.name),
+    });
+  }
+
+  String _readApiError(DioException exception, String fallback) {
+    final data = exception.response?.data;
+
+    if (data is Map<String, dynamic>) {
+      final message = data['message'];
+      if (message is String && message.trim().isNotEmpty) {
+        return message.trim();
+      }
+    }
+
+    if (data is String && data.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(data);
+        if (decoded is Map<String, dynamic>) {
+          final message = decoded['message'];
+          if (message is String && message.trim().isNotEmpty) {
+            return message.trim();
+          }
+        }
+      } catch (_) {
+        // Keep the localized fallback for non-JSON server responses.
+      }
+    }
+
+    return fallback;
   }
 
   Object? _decodePossiblyPrefixedJson(String value) {

@@ -2,8 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/content/html_linkifier.dart';
+import '../../core/navigation/in_app_browser.dart';
 import '../../models/post.dart';
 import '../../widgets/post_embed_card.dart';
 import '../../widgets/post_shortcode_card.dart';
@@ -25,15 +26,7 @@ class NewsDetailScreen extends StatelessWidget {
   }
 
   Future<void> _openLink(BuildContext context, String? url) async {
-    final uri = Uri.tryParse(url ?? '');
-    if (uri == null || !uri.isAbsolute) return;
-
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nem sikerült megnyitni a linket.')),
-      );
-    }
+    await openInAppBrowser(context, url ?? '');
   }
 
   @override
@@ -81,8 +74,15 @@ class NewsDetailScreen extends StatelessWidget {
             ),
 
             Html(
-              data: post.contentForDisplay,
-              onLinkTap: (url, attributes, element) => _openLink(context, url),
+              data: linkifyPlainUrls(post.contentForDisplay),
+              onLinkTap: (url, attributes, element) => _openLink(
+                context,
+                resolveHtmlLinkTarget(
+                  callbackUrl: url,
+                  attributes: attributes,
+                  visibleText: element?.text,
+                ),
+              ),
               style: {
                 "body": Style(
                   margin: Margins.zero,

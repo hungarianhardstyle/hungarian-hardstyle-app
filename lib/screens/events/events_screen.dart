@@ -3,9 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/events_provider.dart';
 import '../../widgets/event_card.dart';
+import 'event_submission_screen.dart';
 
 class EventsScreen extends ConsumerWidget {
   const EventsScreen({super.key});
+
+  void _openSubmission(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const EventSubmissionScreen(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -18,11 +27,7 @@ class EventsScreen extends ConsumerWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF080808),
-              Color(0xFF220000),
-              Color(0xFF080808),
-            ],
+            colors: [Color(0xFF080808), Color(0xFF220000), Color(0xFF080808)],
           ),
         ),
         child: SafeArea(
@@ -32,8 +37,17 @@ class EventsScreen extends ConsumerWidget {
               await ref.read(eventsProvider.future);
             },
             child: events.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
+              loading: () => ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 18,
+                ),
+                children: [
+                  _EventsHeader(onSubmit: () => _openSubmission(context)),
+                  const SizedBox(height: 100),
+                  const Center(child: CircularProgressIndicator()),
+                ],
               ),
               error: (error, stack) => ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -42,13 +56,7 @@ class EventsScreen extends ConsumerWidget {
                   vertical: 18,
                 ),
                 children: [
-                  const Text(
-                    'Események',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  _EventsHeader(onSubmit: () => _openSubmission(context)),
                   const SizedBox(height: 80),
                   const Text(
                     'Nem sikerült betölteni az eseményeket.',
@@ -58,9 +66,7 @@ class EventsScreen extends ConsumerWidget {
                   const SizedBox(height: 14),
                   Center(
                     child: FilledButton.icon(
-                      onPressed: () {
-                        ref.invalidate(eventsProvider);
-                      },
+                      onPressed: () => ref.invalidate(eventsProvider),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Újrapróbálás'),
                     ),
@@ -75,16 +81,10 @@ class EventsScreen extends ConsumerWidget {
                       horizontal: 18,
                       vertical: 18,
                     ),
-                    children: const [
-                      Text(
-                        'Események',
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 80),
-                      Center(
+                    children: [
+                      _EventsHeader(onSubmit: () => _openSubmission(context)),
+                      const SizedBox(height: 80),
+                      const Center(
                         child: Text(
                           'Nincs közelgő esemény.',
                           style: TextStyle(
@@ -106,14 +106,10 @@ class EventsScreen extends ConsumerWidget {
                   itemCount: items.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      return const Padding(
-                        padding: EdgeInsets.only(bottom: 18),
-                        child: Text(
-                          'Események',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 18),
+                        child: _EventsHeader(
+                          onSubmit: () => _openSubmission(context),
                         ),
                       );
                     }
@@ -129,6 +125,31 @@ class EventsScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _EventsHeader extends StatelessWidget {
+  final VoidCallback onSubmit;
+
+  const _EventsHeader({required this.onSubmit});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Események',
+          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 14),
+        OutlinedButton.icon(
+          onPressed: onSubmit,
+          icon: const Icon(Icons.add_circle_outline),
+          label: const Text('Esemény beküldése'),
+        ),
+      ],
     );
   }
 }

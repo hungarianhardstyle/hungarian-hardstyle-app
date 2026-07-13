@@ -7,3 +7,8 @@ final eventsProvider = FutureProvider<List<HuhsEvent>>((ref) async {
   final service = ref.watch(wordpressServiceProvider);
   return service.getEvents();
 });
+
+final eventSubmissionGenresProvider = FutureProvider<List<String>>((ref) async {
+  final service = ref.watch(wordpressServiceProvider);
+  return service.getEventSubmissionGenres();
+});

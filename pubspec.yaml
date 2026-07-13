@@ -30,6 +30,7 @@ dependencies:
 
   # Spotify Player
   webview_flutter: ^4.13.0
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:

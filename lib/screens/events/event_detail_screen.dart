@@ -4,6 +4,8 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/content/html_linkifier.dart';
+import '../../core/navigation/in_app_browser.dart';
 import '../../models/event.dart';
 import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
@@ -32,7 +34,7 @@ class EventDetailScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _openUrl(BuildContext context, String url) async {
+  Future<void> _openExternalUrl(BuildContext context, String url) async {
     final uri = Uri.tryParse(url);
 
     if (uri == null) {
@@ -162,8 +164,10 @@ class EventDetailScreen extends StatelessWidget {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              OrganizerDetailScreen(organizer: event.organizer),
+                          builder: (_) => OrganizerDetailScreen(
+                            organizerId: event.organizer.id,
+                            fallbackName: event.organizer.name,
+                          ),
                         ),
                       ),
                     ),
@@ -180,7 +184,7 @@ class EventDetailScreen extends StatelessWidget {
                           Expanded(
                             child: FilledButton.icon(
                               onPressed: () =>
-                                  _openUrl(context, event.ticketUrl),
+                                  openInAppBrowser(context, event.ticketUrl),
                               icon: const Icon(Icons.confirmation_number),
                               label: const Text('Jegyek'),
                             ),
@@ -190,8 +194,10 @@ class EventDetailScreen extends StatelessWidget {
                         if (event.hasGoogleMaps)
                           Expanded(
                             child: OutlinedButton.icon(
-                              onPressed: () =>
-                                  _openUrl(context, event.googleMapsUrl),
+                              onPressed: () => _openExternalUrl(
+                                context,
+                                event.googleMapsUrl,
+                              ),
                               icon: const Icon(Icons.map_outlined),
                               label: const Text('Térkép'),
                             ),
@@ -204,9 +210,15 @@ class EventDetailScreen extends StatelessWidget {
             ),
             if (descriptionHtml.isNotEmpty)
               Html(
-                data: descriptionHtml,
-                onLinkTap: (url, attributes, element) =>
-                    _openUrl(context, url ?? ''),
+                data: linkifyPlainUrls(descriptionHtml),
+                onLinkTap: (url, attributes, element) => openInAppBrowser(
+                  context,
+                  resolveHtmlLinkTarget(
+                    callbackUrl: url,
+                    attributes: attributes,
+                    visibleText: element?.text,
+                  ),
+                ),
                 style: {
                   'body': Style(
                     margin: Margins.zero,
@@ -312,7 +324,10 @@ class _ArtistLinks extends StatelessWidget {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ArtistDetailScreen(artist: artist),
+                        builder: (_) => ArtistDetailScreen(
+                          artistId: artist.id,
+                          fallbackName: artist.name,
+                        ),
                       ),
                     ),
                     borderRadius: BorderRadius.circular(6),

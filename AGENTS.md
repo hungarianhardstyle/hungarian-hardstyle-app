@@ -88,15 +88,19 @@ As of the current project state:
 - News cards display remote images, title, date, and featured state.
 - The WordPress API plugin ZIP has been reviewed locally from `huhs-mobile-api.zip`.
 - The WordPress plugin version in that ZIP is `2.1.0`.
-- The latest locally prepared backend package is `2.1.7`. It expands media extraction to YouTube `/embed`, `/shorts`, and `/live` URLs and to real WordPress Instagram/TikTok embed blocks, while leaving ordinary profile and article links as links.
+- Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
+- Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
+- Backend package `2.4.1` is prepared locally but not yet deployment-verified. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
+- Backend package `2.2.0` is deployed. Its artist list/category endpoints, shared submission genre options, validation response, and public DJ/event archive templates were verified live. A successful real submission still needs an intentional end-to-end app test because it creates a pending WordPress item.
 - Events, tickets, and more may still contain placeholder or early-stage UI.
 - Dynamic events and the event detail screen are connected to the WordPress events API.
-- Event detail artists and organizer are clickable and open internal profile placeholders.
+- Event detail artists and organizer are clickable. Artist links open complete API-backed DJ profiles. Organizer links are now connected to the organizer detail provider and require backend `2.3.0` in production.
 - News excerpts are converted to plain text and HTML tags are removed for both custom and standard WordPress responses.
 - News search uses the custom `huhs/v1/posts` endpoint so search results retain the same processed content, featured images, galleries, and embeds as the normal news flow.
 - News detail renders deduplicated YouTube, Spotify, SoundCloud, Instagram, and TikTok embeds in-app. Supported interactive WordPress shortcodes (`ays_poll`, `irp`, and legacy Final Tiles Gallery) are detected; their raw shortcode text is removed and the rendered WordPress content can be opened inside the app.
+- Plain-text web URLs in news and event HTML are automatically converted into tappable links. Normal article, event, ticket, and shortcode links use the shared in-app browser; native media and Maps handoff remain intentional exceptions.
 - WordPress API work exists and should continue to be the backend source for new dynamic features.
 - Flutter-side WordPress integration is complete for news, but not yet complete for every content type.
 
@@ -178,6 +182,15 @@ Known current custom API endpoints:
 
 - `GET /wp-json/huhs/v1/posts`
 - `GET /wp-json/huhs/v1/events`
+- `GET /wp-json/huhs/v1/artists` (deployed and verified in backend `2.2.0`)
+- `GET /wp-json/huhs/v1/artists/{id}` (deployed and verified with live DJ data)
+- `GET /wp-json/huhs/v1/event-submission-options` (deployed and verified; returns the shared DJ/event genre list)
+- `POST /wp-json/huhs/v1/event-submissions` (deployed; required-field validation verified, successful pending-item creation awaits intentional app testing)
+- `GET /wp-json/huhs/v1/organizers` (deployed and live-verified in backend `2.3.0`)
+- `GET /wp-json/huhs/v1/organizers/{id}` (deployed and live-verified with upcoming events in backend `2.3.0`)
+- `GET /wp-json/huhs/v1/profile-submission-options` (deployed and live-verified in backend `2.4.0`; shared genres and DJ categories)
+- `POST /wp-json/huhs/v1/artist-submissions` (route live-verified in backend `2.4.0`; creates a pending submission only)
+- `POST /wp-json/huhs/v1/organizer-submissions` (route live-verified in backend `2.4.0`; creates a pending submission only)
 
 Current posts response fields:
 
@@ -218,7 +231,29 @@ Current events response fields:
 
 The events API currently returns only published `huhs_event` posts where `visible` is truthy. It sorts featured events first, then by `start_date`.
 
-Artist and organizer custom post types exist in WordPress, but the reviewed ZIP does not yet expose dedicated mobile REST list/detail endpoints for them. Add those endpoints before building the Flutter DJ/Organizer modules.
+Artist and organizer custom post types and their list/detail mobile APIs are deployed and verified. Only profiles with `Publikálás az alkalmazásban` (`visible`) enabled appear in their mobile APIs, although published artists may still appear on the public WordPress `/djs/` archive.
+
+The artist list endpoint supports `page`, `per_page`, `search`, and `category` parameters. Artist responses include biography, excerpt, images, genres, Hardstyle/Hardcore category objects, location, social links including TikTok, flags, public link, and detail-only `upcoming_events`.
+
+WordPress artist management includes the hierarchical `huhs_artist_category` taxonomy. The default categories are `Hardstyle` and `Hardcore`, and an artist may belong to either or both. The `[huhs_djs]` shortcode renders a responsive, category-grouped DJ directory linking to public profiles. `[huhs_djs category="hardstyle"]` and `[huhs_djs category="hardcore"]` render a single category.
+
+The `[huhs_events]` shortcode renders the complete responsive upcoming-event directory with flyer, date/time, venue, description, detail link, ticket link, and featured state. Use `[huhs_events include_past="true"]` only when a page intentionally needs past events too.
+
+Backend `2.2.0` also overrides the public `huhs_artist` and `huhs_event` archive templates so `/djs/` and `/events/` automatically render the same polished collection views without requiring manually created WordPress pages.
+
+For artists, `hero_image` is the stored legacy meta key but its product/admin name is `Profilkép`. Use the API `profile_image` field for new Flutter code. `hero_image` remains in responses temporarily for backward compatibility. DJ list cards must prefer `profile_image`; the logo is only a fallback.
+
+DJ profile images use `cover` cropping with an upper-center portrait focus (approximately 50% horizontal / 25% vertical on web, matching upper-center alignment in Flutter) so faces remain visible across mixed source image dimensions.
+
+The WordPress `HUHS Mobile > Shortcode-ok` admin page is the canonical in-dashboard shortcode reference. It lists every supported DJ/event shortcode, parameters, descriptions, and copy buttons; keep it updated whenever a shortcode is added or changed.
+
+Event submissions from Flutter require title, date, venue, at least one server-approved genre, and contact e-mail. Optional fields are start time, city, organizer name, event URL, and description. Submissions must remain `pending`; they must never become published events automatically.
+
+With backend `2.4.1`, event submissions may include an uploaded flyer selected from the device gallery or camera. The admin submission screen previews the uploaded image and links to its Media Library attachment.
+
+DJ and organizer submissions from Flutter also remain pending until editorial review. The WordPress approval action creates a draft DJ/organizer profile with `visible` disabled; publishing and app visibility remain separate manual decisions. Submitted profile/logo images are supplied as reviewable URLs and are not automatically imported into the Media Library.
+
+DJ profiles support a public booking e-mail and a `booking_via_huhs` option. When enabled, both the public website and Flutter must show `info@hungarianhardstyle.hu` as the booking address and explain that the performance can be arranged through Hungarian Hardstyle. The private submission contact e-mail must never be exposed on the public profile.
 
 Artist/DJ and organizer profile APIs should include related events:
 
@@ -235,10 +270,10 @@ The API should support:
 - news detail, currently working in Flutter
 - event list, endpoint exists in WordPress
 - event detail, can initially use the event object from the list or a future detail endpoint
-- artists list, endpoint still needed
-- artist detail
-- organizers list, endpoint still needed
-- organizer detail
+- artists list, deployed and verified with live data
+- artist detail, deployed and verified with live data
+- organizers list, deployed and live-verified in backend `2.3.0`
+- organizer detail with upcoming events, deployed and live-verified in backend `2.3.0`
 - future release catalog
 
 Flutter should not rely on WordPress admin-only fields or HTML that is hard to render on mobile unless rich content support is explicitly being implemented.
@@ -275,7 +310,9 @@ Focus:
 - Google Maps button
 - WordPress event detail frontend
 
-Flutter status: dynamic list, detail, flyer, ticket, Google Maps, and clickable artist/organizer relations are implemented. The linked profiles remain placeholders until the dedicated APIs are connected.
+Flutter status: dynamic list, detail, flyer, ticket, Google Maps, and clickable artist/organizer relations are implemented. Both relations open real API-backed profile screens.
+
+The Events screen includes an `Esemény beküldése` action and a validated submission form with multi-select genres loaded from WordPress. It requires backend `2.2.0` or newer to work against production.
 
 ### v0.6 - DJ Database
 
@@ -289,6 +326,12 @@ Focus:
 - social links
 - TikTok link
 - upcoming events
+- separate Hardstyle and Hardcore DJ categories, assignable in WordPress and filterable through the REST API
+- reusable WordPress DJ directory with linked profile cards, using the `[huhs_djs]` shortcode
+
+Flutter status: the DJ list and detail module is implemented under More and confirmed working with live data, including API search, Hardstyle/Hardcore filters, portrait-focused profile images, biography HTML, genres/categories, location, social links, and upcoming events. Event-detail artist taps use the real DJ detail provider.
+
+The app includes a moderated `DJ beküldése` form, device image selection for the profile picture, and a `Fellépésszervezés a HUHS-on keresztül` switch. Backend `2.4.1` is required for uploaded images. On approval, the submitted DJ image becomes the draft profile's `hero_image` and featured image.
 
 ### v0.7 - Organizers
 
@@ -302,6 +345,10 @@ Focus:
 - upcoming events
 - organizer music genres/styles, editable in WordPress and exposed through the REST API
 
+Flutter status: organizer search/list and full detail screens are implemented under More and confirmed against live API data, including logo, description HTML, location, website/social links, and upcoming events. Event-detail organizer taps use the real organizer detail provider. Organizer genres/styles remain a later enhancement.
+
+The app includes a moderated `Szervező beküldése` form. Its backend `2.4.0` route is deployed and live-verified; a successful real submission still requires an intentional app test because it creates a pending WordPress item.
+
 ### v0.8 - Rich Content
 
 Focus:
@@ -313,6 +360,11 @@ Focus:
 - Instagram embeds
 - galleries
 - external link handling
+- admin-only AI-assisted article importer in WordPress: accept a public source URL, extract usable article content, create Hungarian copy, and preserve supported inline media
+- imported content must always be created as a draft for human review; never auto-publish AI output
+- support two explicit modes: faithful translation for owned/licensed/partner content, and an original Hungarian summary/adaptation with source attribution for third-party reporting
+- import images into the WordPress Media Library only when reuse rights are confirmed; otherwise require an owned/replacement image and do not hotlink or copy third-party assets automatically
+- store the original source URL and attribution with the draft, keep the AI provider key server-side, and protect the fetcher against private/internal URLs, oversized responses, unsafe HTML, and timeouts
 
 ### v0.9 - Community
 
@@ -348,6 +400,14 @@ Focus:
 - basic community features
 - polished Android release
 - iOS preparation if ready
+- WordPress-managed FAQ section in the app, initially under More
+
+FAQ requirements for v1.0:
+
+- questions and answers are editable in WordPress and exposed through a public read-only REST endpoint
+- support categories and an explicit display order
+- Flutter shows a searchable, expandable FAQ list with loading, empty, and error states
+- do not hardcode production FAQ content in Flutter
 
 Confirmed v1.0 community direction:
 
@@ -362,6 +422,7 @@ Confirmed v1.0 community direction:
 - Before implementation, define moderation, reporting, blocking, privacy, image upload/storage, retention, and account deletion rules.
 - Registration and community accounts are app-only; do not add account registration or community UI to the public WordPress website.
 - WordPress remains the source of truth for editorial content (news, events, DJs, organizers, and releases), while the app community backend may be a deliberately separate service optimized for authentication, real-time chat/feed data, friendships, attendance, and user uploads.
+- Once app registration is available, DJ, organizer, and event submission actions and forms must be visible only to authenticated users. The submission API must also enforce authentication server-side; hiding the forms in Flutter is not sufficient.
 
 Confirmed annual voting direction for v1.0:
 
@@ -557,13 +618,15 @@ Product decisions confirmed by the user:
 - Evaluate the main user hook around immediate utility (for example, what is happening now and which event is next). Events are a strong primary-tab candidate; the DJ directory may initially live under More unless usage testing supports promoting it.
 - Event data continues to come from the WordPress events API.
 - Artist/DJ names and the organizer on event detail must be clickable.
-- These links must open complete, dedicated, API-backed DJ and organizer profile screens; the current internal profile placeholders are temporary only.
+- Artist and organizer event relations open dedicated API-backed profile screens and are confirmed against live data.
 - v1.0 should introduce a Live Feed tab with chat and image posting.
 - v1.0 should introduce Google sign-in, user profiles, friendships, and event attendance status (`Ott leszek` / `Nem leszek ott`).
 - v1.0 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting.
 - Organizers should later support one or more selectable music genres/styles. This is recorded for the organizer module but is not urgent for the current implementation.
 - Add an About/App information area under More. Read the app version and build number from package metadata instead of hardcoding them, and include developer credit plus relevant website, contact, privacy, and terms links.
 - Refactor navigation into a persistent shell so the bottom tabs remain visible on news, event, DJ, and organizer detail screens. Do not duplicate the NavigationBar inside each detail screen; preserve the active tab and each tab's navigation history.
+- Keep using the shared in-app browser for ordinary article, event, profile, ticket, shortcode, and About-page links. Media and Maps may remain intentional native-app exceptions.
+- Keep plain-text `http://` and `https://` URL linkification enabled for WordPress news and event HTML. A URL styled as a link must always be tappable even when the source did not wrap it in an HTML `<a>` tag.
 
 1. Fix the default Flutter widget test so it matches `HungarianHardstyleApp`.
 2. Clean up asset folder references or create the missing asset folders.
@@ -572,9 +635,9 @@ Product decisions confirmed by the user:
 5. Improve News loading, empty, and error states if needed.
 6. Improve WordPress rich content/HTML rendering for news if needed.
 7. Add and connect dedicated artist list/detail REST endpoints.
-8. Add and connect dedicated organizer list/detail REST endpoints.
-9. Replace the event relation profile placeholders with complete API-backed DJ/organizer profiles.
-10. Implement upcoming events on DJ and organizer profiles.
+8. Keep the deployed organizer list/detail REST endpoints compatible with the Flutter organizer module.
+9. Add organizer genres/styles later without breaking the working organizer API.
+10. Keep upcoming events working on DJ and organizer profiles.
 11. Do not bump the app version unless the user explicitly asks; the version has not intentionally changed yet.
 
 ## Agent Reminder

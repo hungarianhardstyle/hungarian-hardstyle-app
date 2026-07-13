@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Az eseményflyer és a DJ-profilkép elkészítéséhez használjuk a kamerát.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Az eseményflyer és a DJ-profilkép kiválasztásához használjuk a fotókönyvtárat.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
