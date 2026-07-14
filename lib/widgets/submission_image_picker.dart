@@ -88,9 +88,9 @@ class SubmissionImagePicker extends StatelessWidget {
     try {
       final file = await ImagePicker().pickImage(
         source: source,
-        imageQuality: 88,
-        maxWidth: 2048,
-        maxHeight: 2048,
+        imageQuality: 82,
+        maxWidth: 1600,
+        maxHeight: 1600,
       );
       if (file == null) return;
 

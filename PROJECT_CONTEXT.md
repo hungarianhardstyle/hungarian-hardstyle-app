@@ -546,11 +546,13 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 - Purposeful Hungarian Hardstyle-branded loading animation for v1.0, without artificial startup delay and with reduced-motion support
 - Refine the Android startup animation to show the full HUHS logo without a white background
 
-- Online Radio is planned after the core v1.0 release, with a Home mini-player and server-side AutoDJ
+- Online Radio is a v1.0 goal, with a Home mini-player and server-side AutoDJ
 
 - Five curated Spotify playlists should be available from a dedicated app section; open Spotify first and fall back to the browser.
 
-- Hardstyle Revolution Releases
+- Before external/cloud image uploads, compress submission images on-device to roughly 1200–1600 px width in JPEG/WebP format to reduce storage and bandwidth use.
+
+- Hardstyle Revolution Releases are a v1.0 goal; the catalog remains WordPress-managed and should be exposed through the mobile API.
 
 - Music Store
 
@@ -658,9 +660,11 @@ iPad
 
 # Current Version
 
-v0.4 (current app package version; current delivery target is the stable v0.9 milestone)
+v0.95.0+25 (current Flutter package version and ARM test build; current delivery target is v0.95)
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
+
+Required before public release: a final UX and visual polish pass covering navigation, spacing, labels, buttons, loading/error states, accessibility, and tasteful motion/effects.
 
 Open integration blocker: Websupport's upstream WAF currently returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them, so event flyer, DJ profile image, and organizer logo submissions need Websupport allowlisting before live verification. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.
 
@@ -673,12 +677,26 @@ v0.9 implementation status:
 - completed: native Mailchimp signup screen and WordPress proxy (backend 2.4.15 live; personal double-opt-in test successful)
 - remaining operational monitoring: observe the first natural one-week and event-day reminder occurrences; the implementation is complete
 
+v0.95 implementation status:
+
+- completed: on-device submission-image resizing and quality reduction before multipart upload (up to 1600 px, quality 82)
+
 Planned v1.0 community profile details:
 
 - expose the authenticated profile from a circular top-left Home avatar, using the profile image or a monogram fallback
+- let users select an onboarding role: DJ, organizer, or attendee/partygoer
+- show DJ submission only to DJ accounts, organizer submission only to organizer accounts, and both to admins; enforce this in the backend as well as Flutter
+- bootstrap a private app-admin account for the project owner with full submission approval and editing permissions; do not publish the owner e-mail in app content
 - store profile social links, planned events, and favorites together in the profile area
+- allow a registered user to claim a DJ profile only after verifying the private or artist-owned booking e-mail stored on that profile; exclude the Hungarian Hardstyle-managed booking address (`info@hungarianhardstyle.hu`) from ownership proof
 - add friend requests and an `Ismerősök` list
 - show attending friends on event details
+
+Additional v1.0 product requirements:
+
+- rename the event ticket action in Flutter to `Jegyvásárlás`
+- provide an embedded event map preview; fallback to the Google Maps app when installed, otherwise Google Maps in the browser
+- provide an authenticated app-admin backend for reviewing, approving, editing, and managing submissions while WordPress remains the editorial source of truth
 
 Completed
 
@@ -747,6 +765,8 @@ In Progress
 - The public WordPress `/events/` directory should later include an `Esemény beküldése` call-to-action; after app registration is available, the action must require an authenticated user.
 - Flutter includes DJ and organizer submission forms under More. DJ submitters can choose Hungarian Hardstyle-managed performance booking; submitted profiles still require WordPress editorial approval and explicit publication/app visibility
 - Submitted profile and organizer images are reviewable URLs. They are not automatically copied into the WordPress Media Library; the editor selects/imports the approved image before publication
+- Known display bug: artist/DJ logos are currently missing from both the Flutter app and the public WordPress artist pages; this needs a separate rendering/data-path fix from the Websupport upload blocker
+- Known refresh bug: newly published or edited DJ profiles can remain stale in Flutter until a forced refresh; check WordPress/API caching and Flutter provider invalidation together
 - Link handling implemented: normal news, event, ticket, and shortcode links open in one shared in-app browser view, and plain-text URLs in WordPress news/event HTML become tappable automatically. Native media and Maps handoff remain explicit exceptions.
 
 - Web Event Detail

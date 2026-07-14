@@ -101,6 +101,8 @@ As of the current project state:
 - Backend package `2.4.15` adds the server-side Mailchimp newsletter subscription endpoint and protected admin settings page; the endpoint is live and both invalid-email validation and a real personal e-mail double-opt-in test succeeded. Flutter includes a native signup screen with consent and double opt-in messaging.
 - Backend package `2.4.9` is prepared for deployment. It adds organizer genre/style metadata, WordPress editor controls, API output, and genre validation/storage for organizer submissions. Flutter now displays organizer genres and includes them in organizer submissions.
 - Current blocker: Websupport's upstream web application firewall returns HTTP 466 and blocks multipart image uploads before WordPress/Wordfence receives them. Event flyer, DJ profile image, and organizer logo submissions remain unverified until Websupport allowlists the three submission endpoints.
+- Known display bug: artist/DJ logos are currently not rendered in either the Flutter app or the public WordPress artist pages; keep this separate from the upstream multipart-upload/WAF blocker.
+- Known refresh bug: newly published or edited DJ profiles do not always appear in Flutter until a forced refresh; investigate API/cache invalidation on both sides.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
 - Backend package `2.2.0` is deployed. Its artist list/category endpoints, shared submission genre options, validation response, and public DJ/event archive templates were verified live. A successful real submission still needs an intentional end-to-end app test because it creates a pending WordPress item.
@@ -406,12 +408,8 @@ Focus:
 
 Focus:
 
-- online radio
-- background playback
-- Hardstyle Revolution releases
-- preview player
-- Spotify/Hardstyle.com/YouTube links
 - five curated Spotify playlists in a dedicated app section, opened through the shared in-app browser
+- client-side image compression before cloud upload (target 1200–1600 px width, JPEG/WebP) to reduce storage and bandwidth use
 
 ### v1.0 - First Public Release (later)
 
@@ -422,6 +420,17 @@ Focus:
 - event details
 - DJ directory
 - organizer directory
+- Hardstyle Revolution release catalog
+- release preview player
+- Spotify/Hardstyle.com/YouTube links for releases
+- WordPress-managed release records with cover art, preview audio, downloadable file, and free/paid status
+- a dedicated `Kiadások` app destination between Events and More
+- Hardstyle.com is an external destination only; do not scrape or import its catalog
+- show configured Hardstyle.com, Beatport, Spotify and Apple Music links at the bottom of each release detail screen
+- the own shop catalog may contain both Radio Edit/Radio Version and Extended/full versions when they are intentionally uploaded as separate products
+- online-radio backend
+- background playback and audio-focus handling
+- final UX and visual polish pass across navigation, spacing, labels, buttons, loading/error states, accessibility, and tasteful motion/effects before release
 - basic community features
 - Hungarian/English Flutter UI localization plus reviewed English WordPress content for posts, events, DJs/artists, and organizers, served through locale-aware mobile APIs with Hungarian fallback
 - an online radio mini-player directly below the logo on Home, backed by a server-side AutoDJ that rotates a configurable library of X uploaded tracks and can always be stopped by the user
@@ -438,7 +447,7 @@ FAQ requirements, deferred until after the core v1.0 release:
 - Flutter shows a searchable, expandable FAQ list with loading, empty, and error states
 - do not hardcode production FAQ content in Flutter
 
-Online radio requirements, deferred until after the core v1.0 release:
+Online radio requirements for v1.0:
 
 - place a compact player directly below the Hungarian Hardstyle logo on Home
 - use a server-side AutoDJ to rotate a configurable library of X tracks; do not bundle or sequence the production music library in Flutter
@@ -456,14 +465,20 @@ Confirmed v1.0 community direction:
 - Registered users can chat in the live feed and publish image posts.
 - Add Google account sign-in and user registration/onboarding.
 - Users can create and manage their own community profile. Once registration exists, make the profile reachable from the top-left of Home through a circular avatar; show the profile image or a monogram fallback.
+- During onboarding, users can choose an account role: DJ, organizer, or attendee/partygoer. Role changes and privileged actions require server-side authorization.
+- DJ submission is visible to DJ accounts, organizer submission to organizer accounts, and both submission flows to admins; Flutter visibility is not sufficient without matching API enforcement.
+- v1.0 requires a separate app-admin role/account with full review, approval, and editing access for submissions. The owner admin e-mail is configured privately during deployment and must not be hardcoded into public app content.
+- Registered users can claim a DJ profile only after proving control of the private or artist-owned booking e-mail stored on that profile. The Hungarian Hardstyle-managed booking address (`info@hungarianhardstyle.hu`) is never valid claim proof.
 - Users can add social-media links to their profile, see the events they plan to attend, and access favorites from the profile area.
 - Users can send, accept, and manage friend connections; each profile should include an `Ismerősök` list.
 - Events must include `Ott leszek` and `Nem leszek ott` attendance actions.
+- Event details should include an embedded map preview where platform/API constraints allow it. The fallback should open the Google Maps app when installed and otherwise open Google Maps in the browser.
 - When viewing an event, show which friends are attending it.
 - User profiles and friend lists should indicate whether that person plans to attend an upcoming event.
 - News, events, DJs, and organizers should remain readable without registration where possible; posting, chatting, friendships, profiles, and attendance state require authentication.
 - Before implementation, define moderation, reporting, blocking, privacy, image upload/storage, retention, and account deletion rules.
 - Registration and community accounts are app-only; do not add account registration or community UI to the public WordPress website.
+- Provide an authenticated app-admin backend for reviewing, approving, editing, and managing event, DJ, and organizer submissions. Keep WordPress as the editorial source of truth and enforce admin permissions server-side.
 - WordPress remains the source of truth for editorial content (news, events, DJs, organizers, and releases), while the app community backend may be a deliberately separate service optimized for authentication, real-time chat/feed data, friendships, attendance, and user uploads.
 - Once app registration is available, DJ, organizer, and event submission actions and forms must be visible only to authenticated users. The submission API must also enforce authentication server-side; hiding the forms in Flutter is not sufficient.
 
@@ -497,6 +512,7 @@ Focus:
 - premium releases
 - rewarded-ad download option
 - paid downloads
+- Android digital purchases must use Google Play Billing; Google Pay is not the correct in-app product API
 - purchase/download history if needed
 
 ## Release And Store Business Model
@@ -519,6 +535,18 @@ Premium releases should offer two paths:
 
 - Watch a rewarded ad to unlock a free 128 kbps MP3 download.
 - Buy a higher-quality version.
+
+Payment requirement:
+
+- paid digital releases are purchased through Google Play Billing (not a direct Google Pay checkout) so the Android app remains Play policy compliant
+
+Release processing:
+
+- upload one WAV master per release
+- generate the 128 kbps MP3, 320 kbps MP3 and preview derivative server-side with FFmpeg
+- run conversion as a background job, never inside the upload/API request
+- keep the WAV master private and expose each derivative only after its entitlement is satisfied
+- Websupport currently provides `/usr/bin/ffmpeg` 4.4.2 with `libmp3lame`; background-job execution and upload-path permissions still need an end-to-end test
 
 Paid options:
 
@@ -554,6 +582,8 @@ Future release/store API fields should likely include:
 - `mp3_320_url`
 - `wav_price`
 - `wav_url`
+- `wav_master_url` (private/admin-only; never expose before purchase)
+- `processing_status`
 - `spotify_url`
 - `youtube_url`
 - `hardstyle_com_url`

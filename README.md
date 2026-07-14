@@ -6,7 +6,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-The current delivery target is a stable **v0.9**, and the Flutter release version is **0.9.0** (test build `+24`). Several later roadmap modules are already functional.
+The current delivery target is **v0.95**, and the Flutter release version is **0.95.0** (ARM test build `+25`). Several later roadmap modules are already functional.
 
 The current WordPress backend package is **2.4.17**. It is deployed and tested; it includes the v0.9 push, newsletter, and event-label updates.
 
@@ -42,6 +42,8 @@ Implemented:
 - [x] make saved news, events and DJs openable from the Favorites screen
 - [x] dispose late AdMob banner callbacks safely; consent/privacy handling remains required before production ads
 - [x] replace the three deprecated `withOpacity()` calls
+- [ ] restore artist/DJ logo rendering on both the Flutter app and public WordPress pages
+- [ ] make newly published or edited DJ profiles refresh reliably in the app without forced refresh
 - [ ] upgrade Gradle, Android Gradle Plugin and Kotlin before current Flutter support is dropped
 
 ### v0.4 — Foundation
@@ -133,21 +135,29 @@ Push verification after uploading the WordPress package:
 
 ### v0.95 — Media
 
-- [ ] prepare the online-radio backend and background playback
-- [ ] Hardstyle Revolution release catalog
-- [ ] preview player
-- [ ] Spotify, YouTube and Hardstyle.com links
 - [x] Spotify playlist section with five curated Hungarian Hardstyle playlists (Spotify app first, browser fallback)
-- [ ] compress submission images on-device before upload (target: 1200–1600 px width, JPEG/WebP)
+- [x] compress submission images on-device before upload (target: up to 1600 px, quality 82; native picker output)
 
 ### v1.0 — First public release
 
 Core release quality:
 
 - [ ] stabilize news, events, DJs and organizers for public release
+- [ ] complete a final UX and visual polish pass: navigation, spacing, labels, buttons, loading/error states, accessibility and tasteful motion/effects
+- [ ] rename the event ticket action in the app to `Jegyvásárlás`
+- [ ] add an embedded event map preview; fallback should open the Google Maps app when installed, otherwise Google Maps in the browser
+- [ ] add the Hardstyle Revolution release catalog
+- [ ] add release preview playback
+- [ ] add Spotify, YouTube and Hardstyle.com links to releases
+- [ ] add WordPress-managed release records with cover art, preview audio, downloadable file, and free/paid status
+- [ ] add a dedicated `Kiadások` destination between Events and More in the app
+- [ ] show configured Hardstyle.com, Beatport, Spotify and Apple Music links at the bottom of each release detail screen
+- [ ] allow the own shop catalog to sell separately uploaded Radio Edit/Radio Version and Extended/full versions
+- [ ] prepare the online-radio backend
+- [ ] add background playback and audio-focus handling
 - [ ] ship Hungarian/English Flutter UI localization
 - [ ] ship reviewed English WordPress content and locale-aware mobile APIs for news, events, DJs and organizers, with Hungarian fallback
-- [ ] add a compact online-radio player below the Home logo with explicit play/pause/stop, server-side AutoDJ rotation, Now Playing data and clear loading/offline/error states — deferred until after core 1.0
+- [ ] add a compact online-radio player below the Home logo with explicit play/pause/stop, server-side AutoDJ rotation, Now Playing data and clear loading/offline/error states
 - [x] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
 - [ ] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background
 - [x] introduce a persistent navigation shell with per-tab history
@@ -157,14 +167,23 @@ Core release quality:
 Authentication and community:
 
 - [ ] Google sign-in and app-only community accounts
+- [ ] let users choose an account role during onboarding: DJ, organizer, or attendee/partygoer
+- [ ] show DJ submission only to DJ accounts, organizer submission only to organizer accounts, and both to admins; enforce the same rules server-side
+- [ ] bootstrap a separate app-admin account and role with full submission approval and editing permissions
 - [ ] top-left Home avatar profile entry with profile image or monogram fallback
 - [ ] user profiles with social links, planned events, and favorites
+- [ ] allow a registered user to claim a DJ profile only after verifying the private or artist-owned booking e-mail stored on that profile; the Hungarian Hardstyle-managed booking address must never qualify as proof of ownership
 - [ ] friend requests and an `Ismerősök` profile section
 - [ ] Live Feed chat and image posts
 - [ ] event attendance: `Ott leszek` / `Nem leszek ott`
 - [ ] show which friends are attending on event details
 - [ ] friend attendance visibility
 - [ ] moderation, reporting, blocking, privacy and account deletion
+
+App administration:
+
+- [ ] provide an authenticated admin backend for the app so admins can review, approve, edit and manage event, DJ and organizer submissions without using the WordPress dashboard
+- [ ] keep WordPress as the editorial source of truth and enforce admin permissions server-side
 
 News, events, DJs and organizers should remain readable without registration. Event, DJ and organizer submission forms remain public until authentication launches. After that, only signed-in users may see and use them, and the backend must reject unauthenticated submissions.
 
@@ -202,7 +221,11 @@ Online radio:
 - [ ] rewarded-ad 128 kbps MP3 downloads for premium releases
 - [ ] paid 320 kbps MP3 downloads
 - [ ] paid WAV/lossless downloads
+- [ ] process paid digital downloads through Google Play Billing (not direct Google Pay checkout)
 - [ ] preview player
+- [ ] upload one WAV master and generate 128 kbps MP3, 320 kbps MP3 and preview derivatives server-side with FFmpeg
+- [ ] process conversions in a background job and keep the WAV master private
+- [x] verify Websupport FFmpeg support (`/usr/bin/ffmpeg` 4.4.2 with `libmp3lame`); background-job execution still needs an end-to-end test
 - [ ] optional purchase and download history
 
 Releases and Store use one WordPress-managed catalog rather than separate content systems.

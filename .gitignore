@@ -1,4 +1,5 @@
 # Miscellaneous
+wp-import.local.json
 *.class
 *.log
 *.pyc
