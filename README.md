@@ -6,9 +6,9 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-The current delivery target is a stable **v0.9**. The app version remains **v0.4** until an explicit release bump is approved; several later roadmap modules are already functional.
+The current delivery target is a stable **v0.9**, and the Flutter release version is **0.9.0** (test build `+24`). Several later roadmap modules are already functional.
 
-The current WordPress backend package is **2.4.3**. It is deployed and tested; it adds the dedicated Facebook Event URL field to WordPress events and the mobile API.
+The current WordPress backend package is **2.4.17**. It is deployed and tested; it includes the v0.9 push, newsletter, and event-label updates.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -27,6 +27,9 @@ Implemented:
 - moderated event, DJ and organizer submissions
 - gallery/camera uploads for event flyers, DJ profile images and organizer logos
 - WordPress admin approval into non-public draft profiles
+- local favorites for news, events, DJs and organizers
+- native Mailchimp newsletter signup
+- Firebase/FCM push notifications for news and events, including foreground display
 
 ## Roadmap
 
@@ -47,7 +50,7 @@ Implemented:
 - [x] WordPress REST API foundation
 - [x] API-backed news, search and detail screens
 - [x] pull-to-refresh and basic loading/error handling
-- [ ] update the default widget test for `HungarianHardstyleApp`
+- [x] update the default widget test for `HungarianHardstyleApp`
 - [ ] finish asset cleanup and launcher icon setup
 - [ ] set the final Android application ID and release signing
 
@@ -98,7 +101,7 @@ Implemented:
 
 ### v0.9 — Community utilities
 
-- [x] local favorites for news, events and DJs
+- [x] local favorites for news, events, DJs and organizers
 - [x] allow the featured news card on Home to be marked as a favorite
 - [x] show uploaded/approved DJ logos in the Flutter DJ list and profile with a consistent fallback order (live upload verification remains WAF-blocked)
 - [x] show the opened news title in the app-bar instead of the generic `Hír` label
@@ -115,7 +118,9 @@ Implemented:
 - [x] rename the artist website label to `Website`
 - [x] rename the artist booking action to `Booking` or `Fellépés lekötése`
 - [x] add organizer genre/style selection in WordPress, API, and submission flow (backend 2.4.9 prepared)
-- [x] configure and live-test WordPress-created custom push delivery; news and event publishing pushes plus foreground display are live-verified; reminder scheduling is implemented in backend 2.4.16 and its first natural Sunday/Friday occurrences will be monitored
+- [x] configure and live-test WordPress-created custom push delivery; news and event publishing pushes plus foreground display are live-verified
+- [x] implement one-week and event-day reminder scheduling in the backend
+- [ ] monitor the first natural one-week and event-day reminder occurrences
 
 Push setup: in Firebase Console open Project settings → Service accounts → Generate new private key, then upload the downloaded JSON under WordPress `HUHS Mobile → Push értesítések`. The JSON stays on the server; never commit or embed it in Flutter.
 
@@ -123,8 +128,8 @@ Push verification after uploading the WordPress package:
 
 - choose a published news item or event by title in the custom-push form and send it; the app should open the native detail screen;
 - paste a HUHS news/event URL as an individual link; the server resolves it to the native detail screen, while unrelated external URLs open in the in-app browser;
-- publish a new news item and a new visible event, then verify the automatic notifications;
-- create a future event and monitor the one-week and event-day reminder jobs at their first natural occurrences.
+- [x] publish a new news item and a new visible event, then verify the automatic notifications;
+- [ ] create a future event and monitor the one-week and event-day reminder jobs at their first natural occurrences.
 
 ### v0.95 — Media
 
@@ -133,6 +138,7 @@ Push verification after uploading the WordPress package:
 - [ ] preview player
 - [ ] Spotify, YouTube and Hardstyle.com links
 - [x] Spotify playlist section with five curated Hungarian Hardstyle playlists (Spotify app first, browser fallback)
+- [ ] compress submission images on-device before upload (target: 1200–1600 px width, JPEG/WebP)
 
 ### v1.0 — First public release
 
