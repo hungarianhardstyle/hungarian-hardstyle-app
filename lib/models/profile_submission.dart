@@ -93,6 +93,7 @@ class OrganizerSubmission {
   final String country;
   final String description;
   final String contactEmail;
+  final List<String> genres;
   final String logoUrl;
   final Map<String, String> socialLinks;
 
@@ -102,6 +103,7 @@ class OrganizerSubmission {
     required this.country,
     required this.description,
     required this.contactEmail,
+    required this.genres,
     required this.logoUrl,
     required this.socialLinks,
   });
@@ -113,6 +115,7 @@ class OrganizerSubmission {
       'country': country.trim(),
       'description': description.trim(),
       'contact_email': contactEmail.trim(),
+      'genres': genres,
       'logo_url': logoUrl.trim(),
       for (final entry in socialLinks.entries) entry.key: entry.value.trim(),
       'website_check': '',

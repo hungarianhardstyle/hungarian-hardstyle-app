@@ -110,6 +110,9 @@ class _ArtistContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final biography = _biographyHtml();
     final bookingEmail = artist.effectiveBookingEmail;
+    final imageUrl = artist.profileImageUrl.isNotEmpty
+        ? artist.profileImageUrl
+        : artist.logoUrl;
 
     return Container(
       decoration: const BoxDecoration(
@@ -123,13 +126,13 @@ class _ArtistContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (artist.profileImageUrl.isNotEmpty)
+            if (imageUrl.isNotEmpty)
               Hero(
                 tag: 'artist_${artist.id}',
                 child: AspectRatio(
                   aspectRatio: 16 / 11,
                   child: CachedNetworkImage(
-                    imageUrl: artist.profileImageUrl,
+                    imageUrl: imageUrl,
                     fit: BoxFit.cover,
                     alignment: const Alignment(0, -0.5),
                   ),
@@ -199,11 +202,11 @@ class _ArtistContent extends StatelessWidget {
                         children: [
                           ...artist.socialLinks.entries.map(
                             (entry) => OutlinedButton.icon(
-                            onPressed: () => openSocialLink(
-                              context,
-                              entry.value,
-                              title: _socialLabel(entry.key),
-                            ),
+                              onPressed: () => openSocialLink(
+                                context,
+                                entry.value,
+                                title: _socialLabel(entry.key),
+                              ),
                               icon: Icon(_socialIcon(entry.key)),
                               label: Text(_socialLabel(entry.key)),
                             ),
@@ -233,7 +236,7 @@ class _ArtistContent extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Fellépés kérése',
+                              'Booking',
                               style: TextStyle(
                                 fontSize: 19,
                                 fontWeight: FontWeight.bold,
@@ -258,7 +261,7 @@ class _ArtistContent extends StatelessWidget {
                               label: Text(
                                 artist.bookingViaHuhs
                                     ? 'Szervezés a Hungarian Hardstyle-on keresztül'
-                                    : 'Fellépés kérése e-mailben',
+                                    : 'Fellépés lekötése e-mailben',
                               ),
                             ),
                           ],
@@ -337,6 +340,7 @@ class _ArtistContent extends StatelessWidget {
       'spotify' => Icons.music_note,
       'soundcloud' => Icons.cloud,
       'youtube' => Icons.play_circle_outline,
+      'website' => Icons.language,
       'facebook' || 'instagram' || 'tiktok' => Icons.alternate_email,
       _ => Icons.link,
     };
@@ -365,6 +369,7 @@ class _ArtistContent extends StatelessWidget {
       'spotify' => 'Spotify',
       'soundcloud' => 'SoundCloud',
       'youtube' => 'YouTube',
+      'website' => 'Weboldal',
       _ => key,
     };
   }

@@ -140,6 +140,7 @@ class Post {
   final int galleryId;
   final List<GalleryImage> galleryImages;
   final List<PostEmbed> embeds;
+  final List<Post> relatedPosts;
 
   const Post({
     required this.id,
@@ -154,6 +155,7 @@ class Post {
     required this.galleryId,
     required this.galleryImages,
     required this.embeds,
+    required this.relatedPosts,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -174,6 +176,7 @@ class Post {
           .map((e) => GalleryImage.fromJson(e as Map<String, dynamic>))
           .toList(),
       embeds: _readEmbeds(json['embeds']),
+      relatedPosts: _readRelatedPosts(json['related_posts']),
     );
   }
 
@@ -191,7 +194,16 @@ class Post {
       galleryId: 0,
       galleryImages: const [],
       embeds: const [],
+      relatedPosts: const [],
     );
+  }
+
+  static List<Post> _readRelatedPosts(Object? value) {
+    if (value is! List) return const [];
+    return value
+        .whereType<Map<String, dynamic>>()
+        .map(Post.fromJson)
+        .toList(growable: false);
   }
 
   bool get hasGallery => galleryImages.isNotEmpty;

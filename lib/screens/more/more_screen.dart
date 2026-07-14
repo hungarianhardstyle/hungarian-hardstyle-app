@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/navigation/in_app_browser.dart';
 import '../artists/artists_screen.dart';
 import '../organizers/organizers_screen.dart';
 import 'about_screen.dart';
@@ -8,13 +7,12 @@ import 'favorites_screen.dart';
 import 'settings_screen.dart';
 import 'social_contact_screen.dart';
 import 'spotify_playlists_screen.dart';
+import 'newsletter_screen.dart';
 import '../submissions/artist_submission_screen.dart';
 import '../submissions/organizer_submission_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
-
-  static const _newsletterUrl = 'https://mailchi.mp/fccf4f34b297/hunhs-app';
 
   @override
   Widget build(BuildContext context) {
@@ -87,11 +85,7 @@ class MoreScreen extends StatelessWidget {
                 icon: Icons.mark_email_unread_outlined,
                 title: 'Hírlevél',
                 subtitle: 'Iratkozz fel a Hungarian Hardstyle híreire',
-                onTap: () => openInAppBrowser(
-                  context,
-                  _newsletterUrl,
-                  title: 'Hírlevél',
-                ),
+                onTap: () => _open(context, const NewsletterScreen()),
               ),
               const SizedBox(height: 12),
               _MenuCard(

@@ -19,6 +19,7 @@ void main() {
         child: const HungarianHardstyleApp(),
       ),
     );
+    await tester.pump(const Duration(milliseconds: 701));
 
     expect(find.byType(MaterialApp), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);

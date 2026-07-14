@@ -3,15 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/post.dart';
+import '../providers/favorites_provider.dart';
 import '../screens/news/news_detail_screen.dart';
+import 'favorite_button.dart';
 
 class FeaturedNewsCard extends StatelessWidget {
   final Post post;
 
-  const FeaturedNewsCard({
-    super.key,
-    required this.post,
-  });
+  const FeaturedNewsCard({super.key, required this.post});
 
   String _formatDate() {
     try {
@@ -31,9 +30,7 @@ class FeaturedNewsCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => NewsDetailScreen(post: post),
-          ),
+          MaterialPageRoute(builder: (_) => NewsDetailScreen(post: post)),
         );
       },
       child: Container(
@@ -57,17 +54,17 @@ class FeaturedNewsCard extends StatelessWidget {
                 aspectRatio: 16 / 9,
                 child: post.imageUrl.isNotEmpty
                     ? CachedNetworkImage(
-                  imageUrl: post.imageUrl,
-                  fit: BoxFit.cover,
-                )
+                        imageUrl: post.imageUrl,
+                        fit: BoxFit.cover,
+                      )
                     : Container(
-                  color: Colors.grey.shade900,
-                  child: const Icon(
-                    Icons.article,
-                    color: Colors.white54,
-                    size: 70,
-                  ),
-                ),
+                        color: Colors.grey.shade900,
+                        child: const Icon(
+                          Icons.article,
+                          color: Colors.white54,
+                          size: 70,
+                        ),
+                      ),
               ),
             ),
 
@@ -162,6 +159,11 @@ class FeaturedNewsCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
+                      FavoriteButton(
+                        kind: FavoriteKind.news,
+                        id: post.id,
+                        title: post.title,
+                      ),
                       const Icon(
                         Icons.arrow_forward_rounded,
                         color: Colors.white,

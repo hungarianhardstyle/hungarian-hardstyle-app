@@ -7,6 +7,7 @@ import '../../core/content/html_linkifier.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/organizer.dart';
 import '../../providers/organizers_provider.dart';
+import '../../providers/favorites_provider.dart';
 import '../../widgets/event_card.dart';
 
 class OrganizerDetailScreen extends ConsumerWidget {
@@ -139,6 +140,31 @@ class _OrganizerContent extends StatelessWidget {
               organizer.title,
               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 10),
+            Consumer(
+              builder: (context, ref, child) {
+                final favorites = ref.watch(favoritesProvider);
+                final isFavorite = favorites.contains(
+                  FavoriteKind.organizer,
+                  organizer.id,
+                );
+                return Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: () => ref.read(favoritesProvider).toggle(
+                          FavoriteKind.organizer,
+                          organizer.id,
+                          organizer.title,
+                        ),
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: Colors.redAccent,
+                    ),
+                    label: Text(isFavorite ? 'Kedvenc' : 'Kedvencekhez adom'),
+                  ),
+                );
+              },
+            ),
             if (organizer.location.isNotEmpty) ...[
               const SizedBox(height: 12),
               Row(
@@ -152,6 +178,17 @@ class _OrganizerContent extends StatelessWidget {
                 ],
               ),
             ],
+            if (organizer.genres.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: organizer.genres
+                      .map((genre) => Chip(label: Text(genre)))
+                      .toList(),
+                ),
+              ),
             if (organizer.socialLinks.isNotEmpty || organizer.webUrl.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 18),

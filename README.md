@@ -10,6 +10,10 @@ The current delivery target is a stable **v0.9**. The app version remains **v0.4
 
 The current WordPress backend package is **2.4.3**. It is deployed and tested; it adds the dedicated Facebook Event URL field to WordPress events and the mobile API.
 
+Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
+
+Backend **2.4.8** is deployed. It adds a separate optional DJ-logo upload, an editable DJ website field across WordPress, REST API, public profiles, and Flutter, and complete event details when an event is opened from a DJ or organizer profile. The profile-event navigation fix is live-verified; image-upload verification remains blocked by the upstream WAF.
+
 Current external blocker: Websupport's upstream WAF returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them. Event flyer, DJ profile image and organizer logo submissions can be verified after the three REST endpoints are allowlisted. The dedicated Facebook Event URL field is deployed in backend 2.4.3; the app submission field remains a general event link.
 
 Implemented:
@@ -79,7 +83,7 @@ Implemented:
 - [x] gallery/camera logo upload in backend 2.4.2
 - [x] standardize every organizer list image to the same fixed card frame; logos retain contain rendering inside the frame
 - [ ] live-verify organizer logo upload and draft-profile approval
-- [ ] add optional multi-select music genres/styles later
+- [x] add optional multi-select music genres/styles (backend 2.4.9 prepared)
 
 ### v0.8 — Rich content
 
@@ -95,13 +99,32 @@ Implemented:
 ### v0.9 — Community utilities
 
 - [x] local favorites for news, events and DJs
+- [x] allow the featured news card on Home to be marked as a favorite
+- [x] show uploaded/approved DJ logos in the Flutter DJ list and profile with a consistent fallback order (live upload verification remains WAF-blocked)
+- [x] show the opened news title in the app-bar instead of the generic `Hír` label
+- [x] show the opened event title in the app-bar instead of a generic event label
 - [x] Mailchimp newsletter signup via hosted landing page
+- [x] native Mailchimp newsletter signup screen with a WordPress server-side proxy (backend 2.4.15 live; personal e-mail double-opt-in test successful)
+- [x] organizer favorites in profile screens and the local favorites list
 - [x] notification and cache settings
 - [x] social, contact and About sections
 - [x] show runtime app version and build number from package metadata
 - [x] prepare local push notification preferences
 - [x] integrate the Firebase/FCM client and store the device token locally
-- [ ] notify on new news/events, event reminders at 7 days and on the event day, and support WordPress-created custom push messages
+- [x] open related WordPress articles (including “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links) in the native app news screen; backend 2.4.12 is live and the detail endpoint was verified with a real related article
+- [x] rename the artist website label to `Website`
+- [x] rename the artist booking action to `Booking` or `Fellépés lekötése`
+- [x] add organizer genre/style selection in WordPress, API, and submission flow (backend 2.4.9 prepared)
+- [x] configure and live-test WordPress-created custom push delivery; news and event publishing pushes plus foreground display are live-verified; reminder scheduling is implemented in backend 2.4.16 and its first natural Sunday/Friday occurrences will be monitored
+
+Push setup: in Firebase Console open Project settings → Service accounts → Generate new private key, then upload the downloaded JSON under WordPress `HUHS Mobile → Push értesítések`. The JSON stays on the server; never commit or embed it in Flutter.
+
+Push verification after uploading the WordPress package:
+
+- choose a published news item or event by title in the custom-push form and send it; the app should open the native detail screen;
+- paste a HUHS news/event URL as an individual link; the server resolves it to the native detail screen, while unrelated external URLs open in the in-app browser;
+- publish a new news item and a new visible event, then verify the automatic notifications;
+- create a future event and monitor the one-week and event-day reminder jobs at their first natural occurrences.
 
 ### v0.95 — Media
 
@@ -128,9 +151,12 @@ Core release quality:
 Authentication and community:
 
 - [ ] Google sign-in and app-only community accounts
-- [ ] user profiles and friend connections
+- [ ] top-left Home avatar profile entry with profile image or monogram fallback
+- [ ] user profiles with social links, planned events, and favorites
+- [ ] friend requests and an `Ismerősök` profile section
 - [ ] Live Feed chat and image posts
 - [ ] event attendance: `Ott leszek` / `Nem leszek ott`
+- [ ] show which friends are attending on event details
 - [ ] friend attendance visibility
 - [ ] moderation, reporting, blocking, privacy and account deletion
 

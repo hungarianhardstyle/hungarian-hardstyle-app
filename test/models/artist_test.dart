@@ -15,6 +15,7 @@ void main() {
         {'id': 1, 'name': 'Hardstyle', 'slug': 'hardstyle'},
       ],
       'social_links': {
+        'website': 'https://example.com',
         'facebook': 'https://facebook.com/example',
         'spotify': '',
       },
@@ -22,7 +23,9 @@ void main() {
         {
           'id': 99,
           'title': 'Teszt esemény',
+          'description': '<p>Teljes eseményleírás.</p>',
           'start_date': '2026-08-15',
+          'ticket_url': 'https://example.com/tickets',
           'flyer': 'https://example.com/flyer.jpg',
         },
       ],
@@ -33,8 +36,10 @@ void main() {
     expect(artist.bookingViaHuhs, isTrue);
     expect(artist.effectiveBookingEmail, 'info@hungarianhardstyle.hu');
     expect(artist.categories.single.slug, 'hardstyle');
-    expect(artist.socialLinks.keys, ['facebook']);
+    expect(artist.socialLinks.keys, ['website', 'facebook']);
     expect(artist.upcomingEvents.single.title, 'Teszt esemény');
+    expect(artist.upcomingEvents.single.description, contains('Teljes'));
+    expect(artist.upcomingEvents.single.hasTicket, isTrue);
     expect(
       artist.upcomingEvents.single.flyerUrl,
       'https://example.com/flyer.jpg',

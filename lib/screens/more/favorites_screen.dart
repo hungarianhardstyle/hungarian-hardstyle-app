@@ -7,6 +7,7 @@ import '../../providers/news_provider.dart';
 import '../artists/artist_detail_screen.dart';
 import '../events/event_detail_screen.dart';
 import '../news/news_detail_screen.dart';
+import '../organizers/organizer_detail_screen.dart';
 
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
@@ -19,6 +20,8 @@ class FavoritesScreen extends ConsumerWidget {
         return 'Esemény';
       case FavoriteKind.artist:
         return 'DJ';
+      case FavoriteKind.organizer:
+        return 'Szervező';
     }
   }
 
@@ -72,6 +75,17 @@ class FavoritesScreen extends ConsumerWidget {
             const SnackBar(content: Text('A hír már nem érhető el.')),
           );
         }
+        return;
+      case FavoriteKind.organizer:
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => OrganizerDetailScreen(
+              organizerId: entry.id,
+              fallbackName: entry.title,
+            ),
+          ),
+        );
         return;
       }
     } catch (_) {

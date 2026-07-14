@@ -314,7 +314,7 @@ Before implementation, decide music licensing, hosting, bandwidth, codec/bitrate
 
 # Newsletter
 
-Mailchimp.
+Mailchimp. The app now has a native signup screen backed by the live WordPress `newsletter/subscribe` endpoint (backend 2.4.15); invalid-email validation and a real personal e-mail double-opt-in test both succeeded. The Mailchimp API key stays on the server, and the hosted signup landing page remains available as a fallback.
 
 No registration.
 
@@ -566,6 +566,9 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 
 - Live Feed with chat and image posts
 - Push notifications should cover new published news, new published events, event reminders one week before and on the event day, plus admin-created custom notifications from WordPress.
+- Current push status: Flutter initializes Firebase/FCM, stores the token locally, registers it with the WordPress API, shows foreground notifications, opens news/event targets in native screens, and syncs per-device notification preferences. Backend 2.4.16 includes Firebase HTTP v1 sending, news/event/link targets, automatic HUHS URL resolution, publish hooks, event reminder scheduling, preference filtering, and a protected service-account settings page. Custom push, news/event publishing pushes, and foreground display are live-tested successfully; reminder scheduling is implemented and will be monitored at the first natural Sunday/Friday occurrences. Credentials must never be embedded in Flutter or committed to the plugin.
+- The WordPress custom-push form lists the latest published news and events by title, so editors do not need to know WordPress post IDs. It validates that the selected content matches the chosen target type.
+- Backend 2.4.12 is live with published IRP related-post records and a public post-detail endpoint. The live endpoint and a real “Kapcsolódó cikk” target were verified. Flutter opens IRP records and normal WordPress “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links in the native news detail screen and falls back to the in-app browser when no post ID is available.
 
 - Google account registration and sign-in
 
@@ -661,6 +664,22 @@ Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted
 
 Open integration blocker: Websupport's upstream WAF currently returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them, so event flyer, DJ profile image, and organizer logo submissions need Websupport allowlisting before live verification. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.
 
+Backend 2.4.9 organizer genre/style metadata and synchronized Flutter display/submission support are implemented; the Flutter changes pass analysis and all tests. Live organizer genre verification remains an editorial content check.
+
+v0.9 implementation status:
+
+- completed: local favorites for news, events, DJs, organizers, and the featured news card
+- completed: native news/event titles, related-article navigation, artist Website/Booking labels, organizer genres, social/contact, settings, FCM registration, and custom push targets
+- completed: native Mailchimp signup screen and WordPress proxy (backend 2.4.15 live; personal double-opt-in test successful)
+- remaining operational monitoring: observe the first natural one-week and event-day reminder occurrences; the implementation is complete
+
+Planned v1.0 community profile details:
+
+- expose the authenticated profile from a circular top-left Home avatar, using the profile image or a monogram fallback
+- store profile social links, planned events, and favorites together in the profile area
+- add friend requests and an `Ismerősök` list
+- show attending friends on event details
+
 Completed
 
 ✔ News
@@ -723,6 +742,8 @@ In Progress
 - Flutter event and DJ submission forms use the device gallery/camera with local preview instead of requiring users to paste image URLs
 - Backend `2.4.2` is deployed and its organizer-logo upload was tested in the admin flow; an approved organizer submission receives the uploaded Media Library image as its logo and featured image
 - Backend `2.4.3` is deployed and tested. It adds a dedicated `facebook_event_url` field to the WordPress event editor and events mobile API.
+- Backend `2.4.7` is deployed and awaiting live approval-flow verification. It replaces the invalid nested approval form with a nonce-protected admin action, removes the misleading native publish box from submissions, restores DJ/organizer draft creation, and adds event-submission conversion into a non-visible event draft.
+- Backend `2.4.8` is deployed. It adds separate DJ profile-image and DJ-logo multipart fields, applies both images to approved DJ drafts, exposes an editable DJ website through WordPress, the artist REST API, public profiles, and Flutter, and returns full event objects in DJ/organizer `upcoming_events` so tapping those cards opens complete event details. The latter was verified live; image-upload verification remains blocked by the upstream WAF.
 - The public WordPress `/events/` directory should later include an `Esemény beküldése` call-to-action; after app registration is available, the action must require an authenticated user.
 - Flutter includes DJ and organizer submission forms under More. DJ submitters can choose Hungarian Hardstyle-managed performance booking; submitted profiles still require WordPress editorial approval and explicit publication/app visibility
 - Submitted profile and organizer images are reviewable URLs. They are not automatically copied into the WordPress Media Library; the editor selects/imports the approved image before publication

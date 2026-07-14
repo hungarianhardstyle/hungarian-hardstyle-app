@@ -220,6 +220,15 @@ class _OrganizerCard extends StatelessWidget {
                           : organizer.location,
                       style: const TextStyle(color: Colors.white70),
                     ),
+                    if (organizer.genres.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        organizer.genres.join(' · '),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
                   ],
                 ),
               ),

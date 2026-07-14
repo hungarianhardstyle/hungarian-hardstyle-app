@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../services/push_notification_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -48,12 +52,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _notificationsEnabled = value);
     final preferences = await SharedPreferences.getInstance();
     await preferences.setBool(_notificationsKey, value);
+    unawaited(_syncNotificationPreferences());
   }
 
   Future<void> _setNotificationPreference(String key, bool value) async {
     final preferences = await SharedPreferences.getInstance();
     await preferences.setBool(key, value);
+    unawaited(_syncNotificationPreferences());
   }
+
+  Future<void> _syncNotificationPreferences() =>
+      PushNotificationService.updatePreferences(
+        enabled: _notificationsEnabled,
+        news: _newsNotificationsEnabled,
+        events: _eventNotificationsEnabled,
+        reminders: _reminderNotificationsEnabled,
+      );
 
   Future<void> _clearCache() async {
     setState(() => _clearingCache = true);
@@ -88,7 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: Text(
                   _loading
                       ? 'Beállítás betöltése…'
-                      : 'Értesítési engedélyek előkészítése',
+                      : 'Összes értesítés ki- és bekapcsolása',
                 ),
                 value: _notificationsEnabled,
                 onChanged: _loading ? null : _setNotifications,

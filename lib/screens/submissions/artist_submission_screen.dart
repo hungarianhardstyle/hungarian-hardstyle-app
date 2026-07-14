@@ -26,6 +26,7 @@ class _ArtistSubmissionScreenState
   final _contactEmail = TextEditingController();
   final _bookingEmail = TextEditingController();
   final Map<String, TextEditingController> _social = {
+    'website': TextEditingController(),
     'facebook': TextEditingController(),
     'instagram': TextEditingController(),
     'tiktok': TextEditingController(),
@@ -37,6 +38,7 @@ class _ArtistSubmissionScreenState
   final Set<String> _genres = {};
   bool _bookingViaHuhs = false;
   SubmissionImage? _profileImage;
+  SubmissionImage? _logo;
   bool _submitting = false;
 
   @override
@@ -65,7 +67,9 @@ class _ArtistSubmissionScreenState
 
     setState(() => _submitting = true);
     try {
-      final message = await ref.read(wordpressServiceProvider).submitArtist(
+      final message = await ref
+          .read(wordpressServiceProvider)
+          .submitArtist(
             ArtistSubmission(
               name: _name.text,
               realName: _realName.text,
@@ -85,6 +89,7 @@ class _ArtistSubmissionScreenState
               },
             ),
             image: _profileImage,
+            logo: _logo,
           );
 
       if (!mounted) return;
@@ -197,7 +202,9 @@ class _ArtistSubmissionScreenState
                 title: const Text(
                   'Fellépésszervezés a Hungarian Hardstyle-on keresztül',
                 ),
-                subtitle: const Text('A booking levelek az info@hungarianhardstyle.hu címre érkeznek.'),
+                subtitle: const Text(
+                  'A booking levelek az info@hungarianhardstyle.hu címre érkeznek.',
+                ),
               ),
               if (!_bookingViaHuhs)
                 _field(
@@ -214,12 +221,14 @@ class _ArtistSubmissionScreenState
                     'Opcionális · álló portré ajánlott · legfeljebb 5 MB',
                 onChanged: (image) => setState(() => _profileImage = image),
               ),
-              _field(
-                _biography,
-                'Bemutatkozás',
-                Icons.notes,
-                maxLines: 6,
+              SubmissionImagePicker(
+                image: _logo,
+                title: 'DJ-logó feltöltése',
+                helperText:
+                    'Opcionális · négyzetes, átlátszó PNG ajánlott · legfeljebb 5 MB',
+                onChanged: (image) => setState(() => _logo = image),
               ),
+              _field(_biography, 'Bemutatkozás', Icons.notes, maxLines: 6),
               ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: const Text('Közösségi és zenei linkek'),
@@ -255,15 +264,15 @@ class _ArtistSubmissionScreenState
   }
 
   Widget _background(Widget child) => Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF080808), Color(0xFF220000), Color(0xFF080808)],
-          ),
-        ),
-        child: SafeArea(top: false, child: child),
-      );
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF080808), Color(0xFF220000), Color(0xFF080808)],
+      ),
+    ),
+    child: SafeArea(top: false, child: child),
+  );
 
   Widget _field(
     TextEditingController controller,
@@ -274,25 +283,25 @@ class _ArtistSubmissionScreenState
     String? helper,
     String? Function(String?)? validator,
   }) => Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          validator: validator,
-          decoration: InputDecoration(
-            labelText: label,
-            helperText: helper,
-            prefixIcon: Icon(icon),
-            filled: true,
-            fillColor: const Color(0xFF171717),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
-            ),
-          ),
+    padding: const EdgeInsets.only(bottom: 14),
+    child: TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helper,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: const Color(0xFF171717),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
         ),
-      );
+      ),
+    ),
+  );
 
   String? _required(String? value) =>
       value == null || value.trim().isEmpty ? 'Kötelező mező.' : null;
@@ -319,25 +328,24 @@ class _ArtistSubmissionScreenState
         : 'Teljes http:// vagy https:// linket adj meg.';
   }
 
-  String _linkLabel(String key) =>
-      key[0].toUpperCase() + key.substring(1);
+  String _linkLabel(String key) => key[0].toUpperCase() + key.substring(1);
 
   void _message(String value) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 
   Future<void> _success(String message) => showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          icon: const Icon(Icons.check_circle, color: Color(0xFFE53935)),
-          title: const Text('Beküldés sikeres'),
-          content: Text(message),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Rendben'),
-            ),
-          ],
+    context: context,
+    builder: (context) => AlertDialog(
+      icon: const Icon(Icons.check_circle, color: Color(0xFFE53935)),
+      title: const Text('Beküldés sikeres'),
+      content: Text(message),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Rendben'),
         ),
-      );
+      ],
+    ),
+  );
 }

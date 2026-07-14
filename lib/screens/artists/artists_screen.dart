@@ -218,6 +218,9 @@ class _ArtistCard extends StatelessWidget {
     final subtitle = artist.genres.isNotEmpty
         ? artist.genres.take(3).join(' · ')
         : artist.location;
+    final imageUrl = artist.profileImageUrl.isNotEmpty
+        ? artist.profileImageUrl
+        : artist.logoUrl;
 
     return Material(
       color: const Color(0xFF171717),
@@ -238,9 +241,9 @@ class _ArtistCard extends StatelessWidget {
             Expanded(
               child: Hero(
                 tag: 'artist_${artist.id}',
-                child: artist.profileImageUrl.isNotEmpty
+                child: imageUrl.isNotEmpty
                     ? CachedNetworkImage(
-                        imageUrl: artist.profileImageUrl,
+                        imageUrl: imageUrl,
                         width: double.infinity,
                         fit: BoxFit.cover,
                         alignment: const Alignment(0, -0.5),

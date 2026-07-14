@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/content/html_linkifier.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/post.dart';
+import '../../services/wordpress_service.dart';
 import '../../widgets/post_embed_card.dart';
 import '../../widgets/post_shortcode_card.dart';
 import '../gallery/gallery_screen.dart';
@@ -25,14 +26,47 @@ class NewsDetailScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _openLink(BuildContext context, String? url) async {
-    await openInAppBrowser(context, url ?? '');
+  Future<void> _openLink(
+    BuildContext context,
+    String? url,
+    Map<String, String>? attributes,
+  ) async {
+    final isPostLink = attributes?['data-type'] == 'post' ||
+        attributes?['type'] == 'post';
+    final postId = int.tryParse(
+      attributes?['data-id'] ?? attributes?['id'] ?? '',
+    );
+
+    if (isPostLink && postId != null && postId > 0) {
+      try {
+        final relatedPost = await WordpressService().getPost(postId);
+        if (!context.mounted) return;
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => NewsDetailScreen(post: relatedPost),
+          ),
+        );
+        return;
+      } catch (_) {
+        // Fall back to the in-app browser when the related post is unavailable.
+      }
+    }
+
+    if (context.mounted) {
+      await openInAppBrowser(context, url ?? '');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Hír")),
+      appBar: AppBar(
+        title: Text(
+          post.title.trim().isEmpty ? 'Hír' : post.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewPaddingOf(context).bottom + 24,
@@ -82,6 +116,7 @@ class NewsDetailScreen extends StatelessWidget {
                   attributes: attributes,
                   visibleText: element?.text,
                 ),
+                attributes,
               ),
               style: {
                 "body": Style(
@@ -133,7 +168,11 @@ class NewsDetailScreen extends StatelessWidget {
               ),
               ...post.shortcodes.map(
                 (shortcode) =>
-                    PostShortcodeCard(shortcode: shortcode, postUrl: post.link),
+                    PostShortcodeCard(
+                      shortcode: shortcode,
+                      postUrl: post.link,
+                      relatedPosts: post.relatedPosts,
+                    ),
               ),
             ],
 

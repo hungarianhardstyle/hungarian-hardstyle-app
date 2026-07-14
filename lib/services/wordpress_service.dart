@@ -150,6 +150,27 @@ class WordpressService {
     return page.items;
   }
 
+  Future<Post> getPost(int postId) async {
+    final response = await _dio.get('/posts/$postId');
+    final data = response.data;
+    if (data is Map<String, dynamic>) return Post.fromJson(data);
+    throw const FormatException('Hibás hír válasz.');
+  }
+
+  Future<void> subscribeNewsletter({
+    required String email,
+    required bool consent,
+  }) async {
+    try {
+      await _dio.post(
+        '/newsletter/subscribe',
+        data: {'email': email.trim(), 'consent': consent},
+      );
+    } on DioException catch (e) {
+      throw Exception(_readApiError(e, 'A hírlevél-feliratkozás nem sikerült.'));
+    }
+  }
+
   Future<List<HuhsEvent>> getEvents() async {
     try {
       final response = await _dio.get<String>(
@@ -221,7 +242,9 @@ class WordpressService {
 
       throw const FormatException('Hibás DJ-adatlap válasz.');
     } on DioException catch (e) {
-      throw Exception(_readApiError(e, 'Nem sikerült betölteni a DJ-adatlapot.'));
+      throw Exception(
+        _readApiError(e, 'Nem sikerült betölteni a DJ-adatlapot.'),
+      );
     } catch (e) {
       throw Exception('Nem sikerült betölteni a DJ-adatlapot.\n\n$e');
     }
@@ -298,11 +321,13 @@ class WordpressService {
   Future<String> submitArtist(
     ArtistSubmission submission, {
     SubmissionImage? image,
+    SubmissionImage? logo,
   }) {
     return _submitProfile(
       '/artist-submissions',
       submission.toJson(),
       image: image,
+      logo: logo,
     );
   }
 
@@ -321,12 +346,14 @@ class WordpressService {
     String path,
     Map<String, dynamic> data, {
     SubmissionImage? image,
-  }
-  ) async {
+    SubmissionImage? logo,
+  }) async {
     try {
       final response = await _dio.post(
         path,
-        data: image == null ? data : _multipartSubmission(data, image),
+        data: image == null && logo == null
+            ? data
+            : _multipartSubmission(data, image, logo: logo),
       );
       final responseData = response.data;
 
@@ -357,9 +384,7 @@ class WordpressService {
           .where((genre) => genre.isNotEmpty)
           .toList(growable: false);
     } on DioException catch (e) {
-      throw Exception(
-        _readApiError(e, 'Nem sikerült betölteni a műfajokat.'),
-      );
+      throw Exception(_readApiError(e, 'Nem sikerült betölteni a műfajokat.'));
     } catch (e) {
       throw Exception('Nem sikerült betölteni a műfajokat.\n\n$e');
     }
@@ -387,9 +412,7 @@ class WordpressService {
 
       return 'Köszönjük, az eseményt elküldtük ellenőrzésre.';
     } on DioException catch (e) {
-      throw Exception(
-        _readApiError(e, 'Az eseményt nem sikerült elküldeni.'),
-      );
+      throw Exception(_readApiError(e, 'Az eseményt nem sikerült elküldeni.'));
     } catch (e) {
       throw Exception('Az eseményt nem sikerült elküldeni.\n\n$e');
     }
@@ -397,11 +420,15 @@ class WordpressService {
 
   FormData _multipartSubmission(
     Map<String, dynamic> payload,
-    SubmissionImage image,
-  ) {
+    SubmissionImage? image, {
+    SubmissionImage? logo,
+  }) {
     return FormData.fromMap({
       'payload': jsonEncode(payload),
-      'image': MultipartFile.fromBytes(image.bytes, filename: image.name),
+      if (image != null)
+        'image': MultipartFile.fromBytes(image.bytes, filename: image.name),
+      if (logo != null)
+        'logo': MultipartFile.fromBytes(logo.bytes, filename: logo.name),
     });
   }
 

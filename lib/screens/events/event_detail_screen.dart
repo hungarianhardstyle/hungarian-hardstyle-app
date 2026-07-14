@@ -120,7 +120,13 @@ class EventDetailScreen extends StatelessWidget {
     final descriptionHtml = _descriptionHtml();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Esemény')),
+      appBar: AppBar(
+        title: Text(
+          event.title.trim().isEmpty ? 'Esemény' : event.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,7 +220,7 @@ class EventDetailScreen extends StatelessWidget {
                             onPressed: () =>
                                 openInAppBrowser(context, event.ticketUrl),
                             icon: const Icon(Icons.confirmation_number),
-                            label: const Text('Jegyek'),
+                            label: const Text('Jegy link'),
                           ),
                         if (event.hasGoogleMaps)
                           OutlinedButton.icon(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/profile_submission.dart';
 import '../../models/submission_image.dart';
 import '../../providers/news_provider.dart';
+import '../../providers/profile_submission_provider.dart';
 import '../../widgets/submission_image_picker.dart';
 
 class OrganizerSubmissionScreen extends ConsumerStatefulWidget {
@@ -29,6 +30,7 @@ class _OrganizerSubmissionScreenState
     'tiktok': TextEditingController(),
   };
   SubmissionImage? _logo;
+  final Set<String> _genres = {};
   bool _submitting = false;
 
   @override
@@ -47,16 +49,25 @@ class _OrganizerSubmissionScreenState
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
+    if (_genres.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Válassz legalább egy műfajt.')),
+      );
+      return;
+    }
 
     setState(() => _submitting = true);
     try {
-      final message = await ref.read(wordpressServiceProvider).submitOrganizer(
+      final message = await ref
+          .read(wordpressServiceProvider)
+          .submitOrganizer(
             OrganizerSubmission(
               name: _name.text,
               city: _city.text,
               country: _country.text,
               description: _description.text,
               contactEmail: _contactEmail.text,
+              genres: _genres.toList(growable: false),
               logoUrl: '',
               socialLinks: {
                 for (final entry in _links.entries)
@@ -136,6 +147,42 @@ class _OrganizerSubmissionScreenState
                   keyboardType: TextInputType.emailAddress,
                   helper: 'Csak az admin látja.',
                 ),
+                ref
+                    .watch(profileSubmissionOptionsProvider)
+                    .when(
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (error, stack) =>
+                          const Text('A műfajok betöltése sikertelen.'),
+                      data: (options) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Műfajok *',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: options.genres
+                                .map(
+                                  (genre) => FilterChip(
+                                    selected: _genres.contains(genre),
+                                    label: Text(genre),
+                                    onSelected: (selected) => setState(() {
+                                      selected
+                                          ? _genres.add(genre)
+                                          : _genres.remove(genre);
+                                    }),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+                      ),
+                    ),
                 SubmissionImagePicker(
                   image: _logo,
                   title: 'Szervezői logó feltöltése',
@@ -174,9 +221,7 @@ class _OrganizerSubmissionScreenState
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.send),
-                  label: Text(
-                    _submitting ? 'Küldés…' : 'Szervező beküldése',
-                  ),
+                  label: Text(_submitting ? 'Küldés…' : 'Szervező beküldése'),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(54),
                   ),
@@ -198,25 +243,25 @@ class _OrganizerSubmissionScreenState
     String? helper,
     int maxLines = 1,
   }) => Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: TextFormField(
-          controller: controller,
-          validator: validator,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            labelText: label,
-            helperText: helper,
-            prefixIcon: Icon(icon),
-            filled: true,
-            fillColor: const Color(0xFF171717),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
-            ),
-          ),
+    padding: const EdgeInsets.only(bottom: 14),
+    child: TextFormField(
+      controller: controller,
+      validator: validator,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helper,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: const Color(0xFF171717),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
         ),
-      );
+      ),
+    ),
+  );
 
   String? _required(String? value) =>
       value == null || value.trim().isEmpty ? 'Kötelező mező.' : null;
@@ -241,10 +286,10 @@ class _OrganizerSubmissionScreenState
   }
 
   String _label(String key) => switch (key) {
-        'website' => 'Weboldal',
-        'facebook' => 'Facebook',
-        'instagram' => 'Instagram',
-        'tiktok' => 'TikTok',
-        _ => key,
-      };
+    'website' => 'Weboldal',
+    'facebook' => 'Facebook',
+    'instagram' => 'Instagram',
+    'tiktok' => 'TikTok',
+    _ => key,
+  };
 }

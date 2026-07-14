@@ -93,6 +93,13 @@ As of the current project state:
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
 - Backend package `2.4.2` is deployed and its organizer-logo upload was tested in the admin flow.
 - Backend package `2.4.3` is deployed and tested. It adds a dedicated `facebook_event_url` field to the WordPress event editor and events mobile API.
+- Backend package `2.4.7` is deployed. It fixes the invalid nested admin approval form that prevented DJ and organizer draft creation, removes the misleading native publish box from submissions, and adds the same one-click draft creation flow for event submissions. The approval flow still requires a live WordPress admin test.
+- Backend package `2.4.8` is deployed. It adds an optional separate DJ-logo multipart upload, transfers the approved logo to the DJ draft, adds an artist website field to the WordPress editor, artist API, public profile, Flutter DJ submission, and Flutter DJ profile links, and returns complete event records from DJ/organizer profiles so their event cards open the full event detail. The latter was verified live; image-upload verification remains blocked by the upstream WAF.
+- Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real “Kapcsolódó cikk” target was verified. Flutter opens returned related articles plus normal WordPress “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
+- Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; reminder scheduling is implemented and will be monitored at the first natural Sunday/Friday occurrences.
+- The custom-push admin form lists recent published news and events by title and validates the selected post type, so editors do not need to look up event IDs manually.
+- Backend package `2.4.15` adds the server-side Mailchimp newsletter subscription endpoint and protected admin settings page; the endpoint is live and both invalid-email validation and a real personal e-mail double-opt-in test succeeded. Flutter includes a native signup screen with consent and double opt-in messaging.
+- Backend package `2.4.9` is prepared for deployment. It adds organizer genre/style metadata, WordPress editor controls, API output, and genre validation/storage for organizer submissions. Flutter now displays organizer genres and includes them in organizer submissions.
 - Current blocker: Websupport's upstream web application firewall returns HTTP 466 and blocks multipart image uploads before WordPress/Wordfence receives them. Event flyer, DJ profile image, and organizer logo submissions remain unverified until Websupport allowlists the three submission endpoints.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
@@ -255,9 +262,9 @@ The WordPress `HUHS Mobile > Shortcode-ok` admin page is the canonical in-dashbo
 
 Event submissions from Flutter require title, date, venue, at least one server-approved genre, and contact e-mail. Optional fields are start time, city, organizer name, event URL, and description. Submissions must remain `pending`; they must never become published events automatically.
 
-With backend `2.4.1`, event submissions may include an uploaded flyer selected from the device gallery or camera. The admin submission screen previews the uploaded image and links to its Media Library attachment.
+With backend `2.4.1`, event submissions may include an uploaded flyer selected from the device gallery or camera. The admin submission screen previews the uploaded image and links to its Media Library attachment. Backend `2.4.8` also accepts a separate optional `logo` image alongside the DJ profile `image`, with the same 5 MB and JPG/PNG/WebP validation.
 
-DJ and organizer submissions from Flutter also remain pending until editorial review. The WordPress approval action creates a draft DJ/organizer profile with `visible` disabled; publishing and app visibility remain separate manual decisions. Submitted profile/logo images are supplied as reviewable URLs and are not automatically imported into the Media Library.
+DJ, organizer, and event submissions from Flutter remain pending until editorial review. Backend `2.4.7` adds a nonce-protected WordPress approval action that creates the matching draft DJ/organizer/event with `visible` disabled; publishing and app visibility remain separate manual decisions. Submitted profile/logo images are supplied as reviewable URLs and are not automatically imported into the Media Library.
 
 DJ profiles support a public booking e-mail and a `booking_via_huhs` option. When enabled, both the public website and Flutter must show `info@hungarianhardstyle.hu` as the booking address and explain that the performance can be arranged through Hungarian Hardstyle. The private submission contact e-mail must never be exposed on the public profile.
 
@@ -379,10 +386,18 @@ Focus:
 Focus:
 
 - local favorites
+- allow the featured news card on Home to be marked as a favorite
+- show the uploaded/approved DJ logo in the Flutter DJ list and profile when available, with the existing profile-image fallback order preserved
+- show the opened news article's title in its app-bar instead of the generic `Hír` label
+- show the opened event's title in its app-bar instead of a generic event label
 - newsletter integration
 - settings
 - social links
 - contact/about pages
+- open related articles inside the app instead of sending users to the public website browser page
+- capitalize the artist social-link label as `Website`
+- rename the artist booking action from `Fellépés kérése` to `Booking` or `Fellépés lekötése`
+- add the same server-managed genre/style selector to organizer profiles and organizer submissions
 - push notification preparation
 - Push notification requirements: notify for newly published news and events, send event reminders one week before and on the event day, and later allow admins to create/send custom push notifications from the WordPress Mobile API admin area.
 - About/app information screen with runtime version and build number, developer/maintainer credit, website, contact, privacy policy, and terms links
@@ -440,9 +455,11 @@ Confirmed v1.0 community direction:
 - Add a dedicated Live Feed bottom-navigation tab.
 - Registered users can chat in the live feed and publish image posts.
 - Add Google account sign-in and user registration/onboarding.
-- Users can create and manage their own community profile.
-- Users can send, accept, and manage friend connections.
+- Users can create and manage their own community profile. Once registration exists, make the profile reachable from the top-left of Home through a circular avatar; show the profile image or a monogram fallback.
+- Users can add social-media links to their profile, see the events they plan to attend, and access favorites from the profile area.
+- Users can send, accept, and manage friend connections; each profile should include an `Ismerősök` list.
 - Events must include `Ott leszek` and `Nem leszek ott` attendance actions.
+- When viewing an event, show which friends are attending it.
 - User profiles and friend lists should indicate whether that person plans to attend an upcoming event.
 - News, events, DJs, and organizers should remain readable without registration where possible; posting, chatting, friendships, profiles, and attendance state require authentication.
 - Before implementation, define moderation, reporting, blocking, privacy, image upload/storage, retention, and account deletion rules.
@@ -659,7 +676,7 @@ Product decisions confirmed by the user:
 - v1.0 should introduce a Live Feed tab with chat and image posting.
 - v1.0 should introduce Google sign-in, user profiles, friendships, and event attendance status (`Ott leszek` / `Nem leszek ott`).
 - v1.0 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting.
-- Organizers should later support one or more selectable music genres/styles. This is recorded for the organizer module but is not urgent for the current implementation.
+- Organizer profiles and submissions now support server-managed selectable music genres/styles (backend 2.4.9 prepared; deploy and live-test still pending).
 - Add an About/App information area under More. Read the app version and build number from package metadata instead of hardcoding them, and include developer credit plus relevant website, contact, privacy, and terms links.
 - Refactor navigation into a persistent shell so the bottom tabs remain visible on news, event, DJ, and organizer detail screens. Do not duplicate the NavigationBar inside each detail screen; preserve the active tab and each tab's navigation history.
 - Keep using the shared in-app browser for ordinary article, event, profile, ticket, shortcode, and About-page links. Media and Maps may remain intentional native-app exceptions.
@@ -675,7 +692,7 @@ Product decisions confirmed by the user:
 6. Improve WordPress rich content/HTML rendering for news if needed.
 7. Add and connect dedicated artist list/detail REST endpoints.
 8. Keep the deployed organizer list/detail REST endpoints compatible with the Flutter organizer module.
-9. Add organizer genres/styles later without breaking the working organizer API.
+9. Keep organizer genres/styles from backend 2.4.9 compatible with the working organizer API.
 10. Keep upcoming events working on DJ and organizer profiles.
 11. Do not bump the app version unless the user explicitly asks; the version has not intentionally changed yet.
 

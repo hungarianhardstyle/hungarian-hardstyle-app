@@ -8,6 +8,7 @@ class OrganizerProfile {
   final String excerpt;
   final String city;
   final String country;
+  final List<String> genres;
   final String logoUrl;
   final String featuredImageUrl;
   final bool featured;
@@ -24,6 +25,7 @@ class OrganizerProfile {
     required this.excerpt,
     required this.city,
     required this.country,
+    required this.genres,
     required this.logoUrl,
     required this.featuredImageUrl,
     required this.featured,
@@ -55,10 +57,12 @@ class OrganizerProfile {
       excerpt: _readString(json['excerpt']),
       city: _readString(json['city']),
       country: _readString(json['country']),
+      genres: (json['genres'] as List<dynamic>? ?? const [])
+          .map(_readString)
+          .where((value) => value.isNotEmpty)
+          .toList(growable: false),
       logoUrl: _readString(json['logo']),
-      featuredImageUrl: _readString(
-        json['featured_image'] ?? json['logo'],
-      ),
+      featuredImageUrl: _readString(json['featured_image'] ?? json['logo']),
       featured: _readBool(json['featured']),
       visible: _readBool(json['visible']),
       webUrl: _readString(json['link']),
@@ -73,10 +77,7 @@ class OrganizerProfile {
   }
 
   String get location {
-    return [
-      city,
-      country,
-    ].where((value) => value.trim().isNotEmpty).join(', ');
+    return [city, country].where((value) => value.trim().isNotEmpty).join(', ');
   }
 }
 

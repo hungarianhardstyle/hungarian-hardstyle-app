@@ -15,7 +15,10 @@ void main() {
       bookingEmail: '',
       bookingViaHuhs: true,
       profileImageUrl: ' https://example.com/profile.jpg ',
-      socialLinks: {'instagram': ' https://instagram.com/example '},
+      socialLinks: {
+        'website': ' https://example.com ',
+        'instagram': ' https://instagram.com/example ',
+      },
     );
 
     final json = submission.toJson();
@@ -26,6 +29,7 @@ void main() {
     expect(json['booking_via_huhs'], isTrue);
     expect(json['booking_email'], isEmpty);
     expect(json['instagram'], 'https://instagram.com/example');
+    expect(json['website'], 'https://example.com');
     expect(json['website_check'], isEmpty);
   });
 
@@ -37,6 +41,7 @@ void main() {
       description: ' Leiras ',
       contactEmail: ' info@example.com ',
       logoUrl: ' https://example.com/logo.png ',
+      genres: ['Hardstyle', 'Hardcore'],
       socialLinks: {'website': ' https://example.com '},
     );
 
@@ -45,6 +50,7 @@ void main() {
     expect(json['name'], 'Teszt Szervezo');
     expect(json['contact_email'], 'info@example.com');
     expect(json['logo_url'], 'https://example.com/logo.png');
+    expect(json['genres'], ['Hardstyle', 'Hardcore']);
     expect(json['website'], 'https://example.com');
     expect(json['website_check'], isEmpty);
   });

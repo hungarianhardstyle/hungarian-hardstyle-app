@@ -8,6 +8,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/navigation/app_navigator.dart';
 import 'providers/ads_provider.dart';
 import 'services/push_notification_service.dart';
 import 'widgets/startup_gate.dart';
@@ -39,6 +40,7 @@ class HungarianHardstyleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'Hungarian Hardstyle',
       debugShowCheckedModeBanner: false,
 
