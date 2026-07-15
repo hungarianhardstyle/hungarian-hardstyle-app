@@ -157,7 +157,8 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] load the organizer list from WordPress and provide an organizer dropdown in the app and WordPress editor
 - [x] require at least one genre and show inline error messages and red invalid-field styling for every missing required value
 - [x] bypass the Websupport multipart-upload block with direct Cloudinary uploads (`fjxo93em` / unsigned `Hun_hs_Mobile`) and pass returned image URLs to WordPress for DJ, organizer and event submissions
-- [x] prepare WordPress Mobile API 2.4.21 for Cloudinary image URLs and the new event fields; deploy and live-test this package next
+- [x] prepare WordPress Mobile API 2.4.22 for Cloudinary image URLs and the new event fields; approval now also migrates legacy image URL meta keys to the profile/event record
+- [ ] add a WordPress Mobile API trash/recycle-bin menu for deleted submissions and managed content, with restore and permanent-empty actions protected by capability and nonce checks
 
 ### v1.0 — First public release
 
