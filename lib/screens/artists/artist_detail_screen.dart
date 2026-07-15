@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/content/html_linkifier.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/artist.dart';
+import '../../widgets/genre_chip.dart';
 import '../../providers/artists_provider.dart';
 import '../../widgets/event_card.dart';
 
@@ -209,10 +210,7 @@ class _ArtistContent extends StatelessWidget {
                             (category) => Chip(label: Text(category.name)),
                           ),
                           ...artist.genres.map(
-                            (genre) => Chip(
-                              avatar: const Icon(Icons.graphic_eq, size: 17),
-                              label: Text(genre),
-                            ),
+                            (genre) => GenreChip(genre: genre),
                           ),
                         ],
                       ),

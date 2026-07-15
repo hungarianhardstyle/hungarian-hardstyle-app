@@ -6,9 +6,9 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-The current delivery target is **v0.99**. The Flutter release version remains **0.99.0+29** (ARM64 debug test build).
+The current delivery target is **v0.99**. The Flutter release version remains **0.99.0+30** (ARM64 debug test build).
 
-The current WordPress backend package is **2.4.26**. It includes Happy Hardcore, all three reminder intervals, Cloudinary submissions, admin tools, numeric-only event postal-code validation, and automatic address-based Google Maps links.
+The current WordPress backend package is **2.4.27**. It includes Happy Hardcore, all three reminder intervals, Cloudinary submissions, admin tools, numeric-only event postal-code validation, automatic address-based Google Maps links, DJ-logo rendering, and genre discovery.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -159,9 +159,12 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] load the organizer list from WordPress and provide an organizer dropdown in the app and WordPress editor
 - [x] require at least one genre and show inline error messages and red invalid-field styling for every missing required value
 - [x] bypass the Websupport multipart-upload block with direct Cloudinary uploads (`fjxo93em` / unsigned `Hun_hs_Mobile`) and pass returned image URLs to WordPress for DJ, organizer and event submissions
-- [x] prepare WordPress Mobile API 2.4.26 for Cloudinary image URLs, the new event fields, numeric postal-code validation and automatic address-based Maps links; approval now also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
+- [x] prepare WordPress Mobile API 2.4.27 for Cloudinary image URLs, the new event fields, numeric postal-code validation and automatic address-based Maps links; approval now also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
 - [x] add a WordPress Mobile API trash/recycle-bin menu for deleted submissions and managed content, with restore and permanent-empty actions protected by capability and nonce checks
 - [x] add a WordPress Mobile API `About` menu showing the developer/maintainer information and the current API version
+- [x] refresh DJ/organizer list data after navigation instead of retaining stale family-provider cache
+- [x] make event, DJ and organizer genre chips open grouped Események/DJ-k/Hírek discovery results
+- [x] render the DJ logo on public WordPress artist profiles as well as in the app
 
 ### v1.0 — First public release
 
@@ -169,7 +172,7 @@ Core release quality:
 
 - [ ] stabilize news, events, DJs and organizers for public release
 - [ ] complete a final UX and visual polish pass: navigation, spacing, labels, buttons, loading/error states, accessibility and tasteful motion/effects
-- [ ] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections
+- [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections
 - [ ] add a `Támogatás / Donate` card under More with a configurable PayPal donation link (PayPal app first, browser fallback)
 - [ ] add the Hardstyle Revolution release catalog
 - [ ] add release preview playback

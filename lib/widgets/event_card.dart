@@ -6,6 +6,7 @@ import '../models/event.dart';
 import '../providers/favorites_provider.dart';
 import '../screens/events/event_detail_screen.dart';
 import 'favorite_button.dart';
+import 'genre_chip.dart';
 
 class EventCard extends StatelessWidget {
   final HuhsEvent event;
@@ -123,10 +124,7 @@ class EventCard extends StatelessWidget {
                                 .map(
                                   (genre) => Padding(
                                     padding: const EdgeInsets.only(right: 6),
-                                    child: Chip(
-                                      label: Text(genre),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
+                                    child: GenreChip(genre: genre),
                                   ),
                                 )
                                 .toList(),

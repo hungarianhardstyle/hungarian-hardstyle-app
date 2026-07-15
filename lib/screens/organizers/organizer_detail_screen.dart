@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/content/html_linkifier.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/organizer.dart';
+import '../../widgets/genre_chip.dart';
 import '../../providers/organizers_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../widgets/event_card.dart';
@@ -185,7 +186,7 @@ class _OrganizerContent extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: organizer.genres
-                      .map((genre) => Chip(label: Text(genre)))
+                      .map((genre) => GenreChip(genre: genre))
                       .toList(),
                 ),
               ),

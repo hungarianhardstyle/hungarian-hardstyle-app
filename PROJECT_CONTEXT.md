@@ -196,7 +196,7 @@ Contains:
 - Instagram
 - TikTok
 
-- Music genres/styles (future, multi-select)
+- Music genres/styles (multi-select)
 
 Future:
 
@@ -204,7 +204,7 @@ Upcoming Events list.
 
 Clickable.
 
-Organizer genres should be editable in WordPress, returned by the organizer REST API, and displayed on both app and public web profiles. This is a later enhancement and does not block the current organizer work.
+Organizer genres are editable in WordPress, returned by the organizer REST API, and displayed on both app and public web profiles.
 
 DJ and organizer listing cards must show images in one consistent frame size and aspect ratio. Use cover cropping with an upper-center focus so faces remain visible in portrait images while organizer logos and artwork keep the same card dimensions.
 
@@ -660,7 +660,7 @@ iPad
 
 # Current Version
 
-v0.99.0+29 (current Flutter package version and ARM64 debug test build)
+v0.99.0+30 (current Flutter package version and ARM64 debug test build)
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -699,8 +699,8 @@ v0.99 submission polish:
 - Populate the organizer dropdown from WordPress in Flutter and keep it aligned with the existing WordPress selector.
 - Require at least one genre; missing required values must show inline messages and red invalid-field styling.
 - Replace blocked multipart image submission with direct Cloudinary upload using the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
-- Flutter implementation is complete in release `0.99.0+29`; WordPress Mobile API `2.4.26` is prepared locally and still needs deployment/live verification. It generates address-based Google Maps links when no manual URL is stored, while preserving manual links.
-- WordPress Mobile API `2.4.26` includes the v0.99 Lomtár and About admin menus, numeric-only event postal-code validation, Cloudinary approval/admin previews, and automatic address-based Maps links. The Lomtár supports nonce-protected restore, selected permanent deletion, and full emptying for submissions, artists, organizers, and events.
+- Flutter implementation is complete in release `0.99.0+30`; WordPress Mobile API `2.4.27` is prepared locally and still needs deployment/live verification. It generates address-based Google Maps links when no manual URL is stored, refreshes profile list providers after navigation, and renders genre discovery plus public DJ logos.
+- WordPress Mobile API `2.4.27` includes the v0.99 Lomtár and About admin menus, numeric-only event postal-code validation, Cloudinary approval/admin previews, automatic address-based Maps links, and public DJ-logo rendering. The Lomtár supports nonce-protected restore, selected permanent deletion, and full emptying for submissions, artists, organizers, and events.
 - v0.97 polish complete: event postal-code input accepts digits only in Flutter and WordPress/API validation; new-event publication pushes remain global to FCM-token devices.
 - Planned v1.0 notification personalization: normal event pushes target users who favorited or marked attendance; featured-event publication and reminder pushes remain global to every app-installed device with an FCM token, regardless of account registration; users who favorite an organizer receive that organizer's new-event notifications. Explicit notification opt-outs remain respected. A separate admin/editor push for newly received submissions is an optional follow-up.
 
@@ -789,8 +789,8 @@ In Progress
 - The public WordPress `/events/` directory should later include an `Esemény beküldése` call-to-action; after app registration is available, the action must require an authenticated user.
 - Flutter includes DJ and organizer submission forms under More. DJ submitters can choose Hungarian Hardstyle-managed performance booking; submitted profiles still require WordPress editorial approval and explicit publication/app visibility
 - Submitted profile and organizer images are reviewable URLs. They are not automatically copied into the WordPress Media Library; the editor selects/imports the approved image before publication
-- Known display bug: artist/DJ logos are currently missing from both the Flutter app and the public WordPress artist pages; this needs a separate rendering/data-path fix from the Websupport upload blocker
-- Known refresh bug: newly published or edited DJ profiles can remain stale in Flutter until a forced refresh; check WordPress/API caching and Flutter provider invalidation together
+- DJ logos now render in Flutter and public WordPress artist profiles; direct multipart upload remains separate and uses Cloudinary.
+- Profile list refresh now uses auto-dispose providers; continue monitoring live WordPress/API cache behavior after publishing.
 - Link handling implemented: normal news, event, ticket, and shortcode links open in one shared in-app browser view, and plain-text URLs in WordPress news/event HTML become tappable automatically. Native media and Maps handoff remain explicit exceptions.
 
 - Web Event Detail

@@ -5,7 +5,8 @@ import 'news_provider.dart';
 
 typedef ArtistListQuery = ({String category, String search});
 
-final artistsProvider = FutureProvider.family<ArtistsPage, ArtistListQuery>((
+final artistsProvider = FutureProvider.autoDispose
+    .family<ArtistsPage, ArtistListQuery>((
   ref,
   query,
 ) async {

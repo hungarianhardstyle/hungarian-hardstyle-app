@@ -9,6 +9,7 @@ import '../../core/navigation/in_app_browser.dart';
 import '../../models/event.dart';
 import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
+import '../../widgets/genre_chip.dart';
 
 class EventDetailScreen extends StatelessWidget {
   final HuhsEvent event;
@@ -169,10 +170,7 @@ class EventDetailScreen extends StatelessWidget {
                       runSpacing: 6,
                       children: event.genres
                           .map(
-                            (genre) => Chip(
-                              label: Text(genre),
-                              visualDensity: VisualDensity.compact,
-                            ),
+                            (genre) => GenreChip(genre: genre),
                           )
                           .toList(),
                     ),
