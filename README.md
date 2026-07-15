@@ -158,8 +158,8 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] require at least one genre and show inline error messages and red invalid-field styling for every missing required value
 - [x] bypass the Websupport multipart-upload block with direct Cloudinary uploads (`fjxo93em` / unsigned `Hun_hs_Mobile`) and pass returned image URLs to WordPress for DJ, organizer and event submissions
 - [x] prepare WordPress Mobile API 2.4.23 for Cloudinary image URLs and the new event fields; approval now also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
-- [ ] add a WordPress Mobile API trash/recycle-bin menu for deleted submissions and managed content, with restore and permanent-empty actions protected by capability and nonce checks
-- [ ] add a WordPress Mobile API `About` menu showing the developer/maintainer information and the current API version
+- [x] add a WordPress Mobile API trash/recycle-bin menu for deleted submissions and managed content, with restore and permanent-empty actions protected by capability and nonce checks
+- [x] add a WordPress Mobile API `About` menu showing the developer/maintainer information and the current API version
 
 ### v1.0 — First public release
 

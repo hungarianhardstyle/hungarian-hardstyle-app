@@ -702,6 +702,7 @@ v0.99 submission polish:
 - Flutter implementation is complete in release `0.99.0+27`; WordPress Mobile API `2.4.23` is prepared locally and still needs deployment/live verification. Its approval flow accepts legacy URL meta keys, and the WordPress admin now previews Cloudinary images on submissions and approved records.
 - v0.99 follow-up: add a WordPress Mobile API trash/recycle-bin menu so deleted submissions and managed content can be reviewed, restored, or permanently emptied; permanent deletion must handle related attachments and use capability/nonce protection.
 - v0.99 follow-up: add a WordPress Mobile API `About` admin menu showing developer/maintainer information and the current API version.
+- WordPress Mobile API `2.4.24` includes the v0.99 Lomtár and About admin menus. The Lomtár supports nonce-protected restore, selected permanent deletion, and full emptying for submissions, artists, organizers, and events.
 
 Planned v1.0 community profile details:
 
