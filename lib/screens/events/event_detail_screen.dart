@@ -220,7 +220,7 @@ class EventDetailScreen extends StatelessWidget {
                             onPressed: () =>
                                 openInAppBrowser(context, event.ticketUrl),
                             icon: const Icon(Icons.confirmation_number),
-                            label: const Text('Jegy link'),
+                            label: const Text('Jegyvásárlás'),
                           ),
                         if (event.hasGoogleMaps)
                           OutlinedButton.icon(

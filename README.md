@@ -6,9 +6,9 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-The current delivery target is **v0.97**. The last released Flutter build is **0.95.0** (ARM test build `+25`); the version number will change when the v0.97 work is implemented.
+The current delivery target is **v0.97**. The Flutter release version is **0.97.0** (ARM64 debug test build `+26`).
 
-The current WordPress backend package is **2.4.17**. It is deployed and tested; it includes the v0.9 push, newsletter, and event-label updates.
+The current deployed WordPress backend package is **2.4.17**. Package **2.4.18** is prepared for upload; it adds Happy Hardcore and a reminder safety scan.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -143,10 +143,11 @@ Small, low-risk finishing work that can be released independently before the lar
 
 - [ ] show uploaded/approved DJ logos in the Flutter DJ list and profile with a consistent fallback order (live upload verification remains WAF-blocked)
 - [ ] standardize DJ and organizer list thumbnails with a fixed frame, cover crop and upper-center face focus
+- [ ] deploy backend 2.4.18 with `Happy Hardcore` in the shared DJ, event and organizer genre options
 - [x] keep DJ names readable in the two-column cards; keep them on one line and scale long names down instead of truncating them
-- [ ] rename the event ticket action in the app to `Jegyvásárlás`
-- [ ] add the event map preview/fallback: Google Maps app when installed, otherwise Google Maps in the browser
-- [ ] investigate the missed event-day reminder: WP-Cron, timezone/date parsing, preference filtering and the FCM send path
+- [x] rename the event ticket action in the app to `Jegyvásárlás`
+- [x] use the Google Maps app when installed, otherwise the external browser fallback
+- [ ] deploy backend 2.4.18 and verify the missed event-day reminder through the WP-Cron safety scan
 
 ### v1.0 — First public release
 

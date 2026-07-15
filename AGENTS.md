@@ -96,6 +96,7 @@ As of the current project state:
 - Backend package `2.4.7` is deployed. It fixes the invalid nested admin approval form that prevented DJ and organizer draft creation, removes the misleading native publish box from submissions, and adds the same one-click draft creation flow for event submissions. The approval flow still requires a live WordPress admin test.
 - Backend package `2.4.8` is deployed. It adds an optional separate DJ-logo multipart upload, transfers the approved logo to the DJ draft, adds an artist website field to the WordPress editor, artist API, public profile, Flutter DJ submission, and Flutter DJ profile links, and returns complete event records from DJ/organizer profiles so their event cards open the full event detail. The latter was verified live; image-upload verification remains blocked by the upstream WAF.
 - Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real “Kapcsolódó cikk” target was verified. Flutter opens returned related articles plus normal WordPress “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
+- Backend package `2.4.18` is prepared for deployment. It adds `Happy Hardcore` to the shared genre options and adds a recurring WP-Cron safety scan for event reminders; live deployment and reminder verification remain pending.
 - Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; the first natural event-day reminder did not arrive and the cron/timezone/filter path needs investigation.
 - The custom-push admin form lists recent published news and events by title and validates the selected post type, so editors do not need to look up event IDs manually.
 - Backend package `2.4.15` adds the server-side Mailchimp newsletter subscription endpoint and protected admin settings page; the endpoint is live and both invalid-email validation and a real personal e-mail double-opt-in test succeeded. Flutter includes a native signup screen with consent and double opt-in messaging.
@@ -416,10 +417,11 @@ Keep this release intentionally small and low-risk:
 
 - fix rendering of uploaded/approved DJ logos in the Flutter DJ list and profile, preserving the profile-image fallback order
 - standardize DJ and organizer list thumbnails with a fixed frame, cover crop, and upper-center portrait focus
+- deploy backend 2.4.18 with `Happy Hardcore` in the shared DJ, event, and organizer genre options
 - keep DJ names readable in two-column cards; keep them on one line and scale long names down instead of truncating them (implemented in Flutter)
-- rename the event ticket action to `Jegyvásárlás`
-- add the event map preview/fallback (Google Maps app first, browser second)
-- investigate the missed event-day reminder: verify WP-Cron execution, WordPress timezone, event start date/time parsing, reminder preference filtering, and the FCM send log
+- [x] rename the event ticket action to `Jegyvásárlás`
+- [x] use the Google Maps app when installed, otherwise the external browser fallback
+- deploy backend 2.4.18 and verify the missed event-day reminder through the WP-Cron safety scan
 
 ### v1.0 - First Public Release (later)
 

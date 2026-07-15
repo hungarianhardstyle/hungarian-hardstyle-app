@@ -660,7 +660,7 @@ iPad
 
 # Current Version
 
-v0.95.0+25 (current Flutter package version and ARM test build; next delivery target is v0.97)
+v0.97.0+26 (current Flutter package version and ARM64 debug test build)
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -685,10 +685,11 @@ v0.97 planned polish build:
 
 - fix DJ logo rendering in Flutter while retaining the profile-image fallback order
 - standardize DJ and organizer list thumbnails with a fixed cover frame and upper-center portrait focus
+- deploy backend 2.4.18 with `Happy Hardcore` in the shared DJ, event, and organizer genre options
 - keep DJ names readable in two-column cards on one line by scaling long names down instead of truncating them beside action icons (implemented in Flutter)
-- rename the event ticket action to `Jegyvásárlás`
-- add the event map preview/fallback (Google Maps app first, browser second)
-- investigate the missed event-day reminder and verify the scheduled one-week/event-day send path
+- [x] rename the event ticket action to `Jegyvásárlás`
+- [x] use the Google Maps app when installed, otherwise the external browser fallback
+- deploy backend 2.4.18 and verify the missed event-day reminder through the WP-Cron safety scan
 
 Planned v1.0 community profile details:
 
