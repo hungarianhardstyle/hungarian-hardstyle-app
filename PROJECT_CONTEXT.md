@@ -716,6 +716,17 @@ Planned v1.0 community profile details:
 - show attending friends on event details
 - Reuse the Cloudinary direct-upload path for authenticated Live Feed/chat image posts; do not send those images through the Websupport multipart endpoint.
 
+Planned v0.99.1 Community MVP decisions:
+
+- The Live Feed is publicly readable without registration.
+- Signed-out users may publish text only under a generated `Unknown User ####` display name; they cannot upload images or create profiles.
+- Registration requires an account role: DJ, organizer, or partygoer.
+- Registered users get an app-only profile with avatar/monogram, name, bio, social links, favorites, and planned events.
+- Registered users may publish compressed snapshot images to the Live Feed.
+- Live Feed messages support Unicode emoji and a small fixed reaction set without introducing a heavy emoji dependency.
+- Firebase Authentication/Firestore is the minimal community backend; Cloudinary is the temporary image store. WordPress remains the editorial source of truth.
+- Full moderation, friendships, attendance visibility, profile claims, and app-admin tooling remain v1.0 work.
+
 Additional v1.0 product requirements:
 
 - Make displayed genres selectable. A genre detail/discovery screen should show separate API-backed `Események`, `DJ-k`, and `Hírek` sections for the selected genre and clearly retain the active genre label.

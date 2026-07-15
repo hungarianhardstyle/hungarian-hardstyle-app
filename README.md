@@ -6,7 +6,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-The current delivery target is **v0.99**. The Flutter release version remains **0.99.0+30** (ARM64 debug test build).
+The current delivery target is **v0.99.1 Community MVP**. v0.99 submission polish is complete; the next build adds app-only registration, profiles and the public Live Feed. The latest Flutter test build is **0.99.0+32** (ARM64 debug build).
 
 The current WordPress backend package is **2.4.27**. It includes Happy Hardcore, all three reminder intervals, Cloudinary submissions, admin tools, numeric-only event postal-code validation, automatic address-based Google Maps links, DJ-logo rendering, and genre discovery.
 
@@ -25,7 +25,7 @@ Implemented:
 - searchable DJ and organizer directories with full profile pages
 - related upcoming events on DJ and organizer profiles
 - moderated event, DJ and organizer submissions
-- gallery/camera uploads for event flyers, DJ profile images and organizer logos
+- Cloudinary-backed image submissions for event flyers, DJ profile images and organizer logos (Websupport multipart upload remains deferred)
 - WordPress admin approval into non-public draft profiles
 - local favorites for news, events, DJs and organizers
 - native Mailchimp newsletter signup
@@ -42,8 +42,8 @@ Implemented:
 - [x] make saved news, events and DJs openable from the Favorites screen
 - [x] dispose late AdMob banner callbacks safely; consent/privacy handling remains required before production ads
 - [x] replace the three deprecated `withOpacity()` calls
-- [ ] restore artist/DJ logo rendering on both the Flutter app and public WordPress pages
-- [ ] make newly published or edited DJ profiles refresh reliably in the app without forced refresh
+- [x] restore artist/DJ logo rendering on both the Flutter app and public WordPress pages
+- [x] make newly published or edited DJ profiles refresh reliably in the app without forced refresh
 - [ ] upgrade Gradle, Android Gradle Plugin and Kotlin before current Flutter support is dropped
 
 ### v0.4 — Foundation
@@ -160,11 +160,28 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] require at least one genre and show inline error messages and red invalid-field styling for every missing required value
 - [x] bypass the Websupport multipart-upload block with direct Cloudinary uploads (`fjxo93em` / unsigned `Hun_hs_Mobile`) and pass returned image URLs to WordPress for DJ, organizer and event submissions
 - [x] prepare WordPress Mobile API 2.4.27 for Cloudinary image URLs, the new event fields, numeric postal-code validation and automatic address-based Maps links; approval now also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
+
+### v0.99 — Completed polish items
+
 - [x] add a WordPress Mobile API trash/recycle-bin menu for deleted submissions and managed content, with restore and permanent-empty actions protected by capability and nonce checks
 - [x] add a WordPress Mobile API `About` menu showing the developer/maintainer information and the current API version
 - [x] refresh DJ/organizer list data after navigation instead of retaining stale family-provider cache
 - [x] make event, DJ and organizer genre chips open grouped Események/DJ-k/Hírek discovery results
 - [x] render the DJ logo on public WordPress artist profiles as well as in the app
+
+### v0.99.1 — Community MVP (planned)
+
+- [ ] app-only registration and sign-in (e-mail/password and Google)
+- [ ] mandatory account role during registration: DJ, organizer or partygoer
+- [ ] profile from the top-left Home avatar, with profile image or monogram fallback
+- [ ] profile name, bio, social links, favorites and planned events
+- [ ] Live Feed visible without registration
+- [ ] anonymous text posting with generated `Unknown User ####` display names
+- [ ] registered users can post text and compressed snapshots in the Live Feed
+- [ ] anonymous users cannot upload images
+- [ ] support Unicode emoji in messages and a small fixed reaction set (for example ❤️ 🔥 🙌)
+- [ ] use Firebase Authentication/Firestore for community data and Cloudinary for images; keep WordPress as the editorial source of truth
+- [ ] apply basic size, permission and ownership checks before adding full moderation/friend features in v1.0
 
 ### v1.0 — First public release
 
@@ -204,7 +221,7 @@ Authentication and community:
 - [ ] user profiles with social links, planned events, and favorites
 - [ ] allow a registered user to claim a DJ profile only after verifying the private or artist-owned booking e-mail stored on that profile; the Hungarian Hardstyle-managed booking address must never qualify as proof of ownership
 - [ ] friend requests and an `Ismerősök` profile section
-- [ ] Live Feed chat and image posts
+- [ ] full Live Feed chat/image-post moderation and community features (v1.0; the v0.99.1 MVP is tracked above)
 - [ ] event attendance: `Ott leszek` / `Nem leszek ott`
 - [ ] show which friends are attending on event details
 - [ ] friend attendance visibility

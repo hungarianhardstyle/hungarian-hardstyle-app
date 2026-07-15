@@ -432,6 +432,16 @@ Keep this release intentionally small and low-risk:
 - require at least one genre and show inline validation text and red invalid-field styling for every missing required value
 - replace blocked multipart image submission with direct Cloudinary upload (`fjxo93em` / unsigned `Hun_hs_Mobile`) and send the returned URL to WordPress for DJ, organizer, and event submissions
 
+### v0.99.1 - Community MVP (planned)
+
+- App-only registration/sign-in with e-mail/password and Google; account role is mandatory (`DJ`, `organizer`, or `partygoer`).
+- Home top-left avatar opens the user's profile, showing profile image or monogram, name, bio, social links, favorites, and planned events.
+- Live Feed is readable without registration. Anonymous users may publish text only under a generated `Unknown User ####` name and cannot upload images.
+- Registered users may publish text and compressed snapshot images in the Live Feed.
+- Live Feed messages support normal Unicode emoji and a small fixed reaction set; do not add a heavy emoji package unless the native keyboard proves insufficient.
+- Use Firebase Authentication and Firestore for community data, and Cloudinary for community images; do not route these uploads through the blocked Websupport multipart endpoint.
+- Keep full moderation, friendships, attendance visibility, profile claims, and app-admin tooling in v1.0.
+
 ### v1.0 - First Public Release (later)
 
 Focus:
@@ -499,7 +509,7 @@ Confirmed v1.0 community direction:
 - Event details should include an embedded map preview where platform/API constraints allow it. The fallback should open the Google Maps app when installed and otherwise open Google Maps in the browser.
 - When viewing an event, show which friends are attending it.
 - User profiles and friend lists should indicate whether that person plans to attend an upcoming event.
-- News, events, DJs, and organizers should remain readable without registration where possible; posting, chatting, friendships, profiles, and attendance state require authentication.
+- News, events, DJs, organizers, and the Live Feed should remain readable without registration where possible. Anonymous Live Feed text posts are allowed under a generated `Unknown User ####` name, but anonymous users cannot upload images; profiles, friendships, and attendance state require authentication.
 - Before implementation, define moderation, reporting, blocking, privacy, image upload/storage, retention, and account deletion rules.
 - Registration and community accounts are app-only; do not add account registration or community UI to the public WordPress website.
 - Provide an authenticated app-admin backend for reviewing, approving, editing, and managing event, DJ, and organizer submissions. Keep WordPress as the editorial source of truth and enforce admin permissions server-side.
