@@ -68,6 +68,9 @@ class PostsPage {
 }
 
 class WordpressService {
+  static const _cloudinaryCloudName = 'fjxo93em';
+  static const _cloudinaryUploadPreset = 'Hun_hs_Mobile';
+
   final Dio _dio = Dio(
     BaseOptions(
       baseUrl: 'https://hungarianhardstyle.hu/wp-json/huhs/v1',
@@ -322,38 +325,36 @@ class WordpressService {
     ArtistSubmission submission, {
     SubmissionImage? image,
     SubmissionImage? logo,
-  }) {
-    return _submitProfile(
-      '/artist-submissions',
-      submission.toJson(),
-      image: image,
-      logo: logo,
-    );
+  }) async {
+    final payload = submission.toJson();
+    if (image != null) {
+      payload['profile_image_url'] = await _uploadCloudinaryImage(image);
+    }
+    if (logo != null) {
+      payload['logo_url'] = await _uploadCloudinaryImage(logo);
+    }
+    return _submitProfile('/artist-submissions', payload);
   }
 
   Future<String> submitOrganizer(
     OrganizerSubmission submission, {
     SubmissionImage? image,
-  }) {
-    return _submitProfile(
-      '/organizer-submissions',
-      submission.toJson(),
-      image: image,
-    );
+  }) async {
+    final payload = submission.toJson();
+    if (image != null) {
+      payload['logo_url'] = await _uploadCloudinaryImage(image);
+    }
+    return _submitProfile('/organizer-submissions', payload);
   }
 
   Future<String> _submitProfile(
     String path,
-    Map<String, dynamic> data, {
-    SubmissionImage? image,
-    SubmissionImage? logo,
-  }) async {
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _dio.post(
         path,
-        data: image == null && logo == null
-            ? data
-            : _multipartSubmission(data, image, logo: logo),
+        data: data,
       );
       final responseData = response.data;
 
@@ -395,12 +396,11 @@ class WordpressService {
     SubmissionImage? image,
   }) async {
     try {
-      final response = await _dio.post(
-        '/event-submissions',
-        data: image == null
-            ? submission.toJson()
-            : _multipartSubmission(submission.toJson(), image),
-      );
+      final payload = submission.toJson();
+      if (image != null) {
+        payload['flyer_url'] = await _uploadCloudinaryImage(image);
+      }
+      final response = await _dio.post('/event-submissions', data: payload);
       final data = response.data;
 
       if (data is Map<String, dynamic>) {
@@ -418,18 +418,23 @@ class WordpressService {
     }
   }
 
-  FormData _multipartSubmission(
-    Map<String, dynamic> payload,
-    SubmissionImage? image, {
-    SubmissionImage? logo,
-  }) {
-    return FormData.fromMap({
-      'payload': jsonEncode(payload),
-      if (image != null)
-        'image': MultipartFile.fromBytes(image.bytes, filename: image.name),
-      if (logo != null)
-        'logo': MultipartFile.fromBytes(logo.bytes, filename: logo.name),
-    });
+  Future<String> _uploadCloudinaryImage(SubmissionImage image) async {
+    try {
+      final upload = Dio();
+      final response = await upload.post(
+        'https://api.cloudinary.com/v1_1/$_cloudinaryCloudName/image/upload',
+        data: FormData.fromMap({
+          'file': MultipartFile.fromBytes(image.bytes, filename: image.name),
+          'upload_preset': _cloudinaryUploadPreset,
+        }),
+        options: Options(receiveTimeout: const Duration(seconds: 30)),
+      );
+      final url = response.data is Map ? response.data['secure_url'] : null;
+      if (url is String && url.trim().isNotEmpty) return url.trim();
+      throw const FormatException('A kép URL-je nem érkezett meg.');
+    } on DioException catch (e) {
+      throw Exception(_readApiError(e, 'A képet nem sikerült feltölteni.'));
+    }
   }
 
   String _readApiError(DioException exception, String fallback) {

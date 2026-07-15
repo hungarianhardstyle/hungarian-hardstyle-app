@@ -97,6 +97,7 @@ As of the current project state:
 - Backend package `2.4.8` is deployed. It adds an optional separate DJ-logo multipart upload, transfers the approved logo to the DJ draft, adds an artist website field to the WordPress editor, artist API, public profile, Flutter DJ submission, and Flutter DJ profile links, and returns complete event records from DJ/organizer profiles so their event cards open the full event detail. The latter was verified live; image-upload verification remains blocked by the upstream WAF.
 - Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real “Kapcsolódó cikk” target was verified. Flutter opens returned related articles plus normal WordPress “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
 - Backend package `2.4.20` is deployed. It adds `Happy Hardcore`, a recurring WP-Cron safety scan, and one-week, one-day and six-hour pre-event reminders. The one-day reminder was live-verified with a five-minute WP-Cron delay; one-week and six-hour reminders remain to be tested.
+- Backend package `2.4.21` is prepared locally. It accepts the v0.99 event address/end fields and Cloudinary image URLs, and exposes Cloudinary-backed images after approval; deployment and live verification are still pending.
 - Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; the first natural event-day reminder did not arrive and the cron/timezone/filter path needs investigation.
 - The custom-push admin form lists recent published news and events by title and validates the selected post type, so editors do not need to look up event IDs manually.
 - Backend package `2.4.15` adds the server-side Mailchimp newsletter subscription endpoint and protected admin settings page; the endpoint is live and both invalid-email validation and a real personal e-mail double-opt-in test succeeded. Flutter includes a native signup screen with consent and double opt-in messaging.
@@ -423,6 +424,15 @@ Keep this release intentionally small and low-risk:
 - [x] use the Google Maps app when installed, otherwise the external browser fallback
 - verify the one-week and six-hour reminders; the one-day reminder is live-verified with a five-minute WP-Cron delay
 
+### v0.99 - Submission polish
+
+- make event submission date, venue name, city, and address required in Flutter and WordPress validation
+- add the required event address field directly below the venue name
+- add event end date and end time fields and reject an end before the start
+- load organizers from WordPress for an app dropdown and keep the WordPress organizer selector aligned
+- require at least one genre and show inline validation text and red invalid-field styling for every missing required value
+- replace blocked multipart image submission with direct Cloudinary upload (`fjxo93em` / unsigned `Hun_hs_Mobile`) and send the returned URL to WordPress for DJ, organizer, and event submissions
+
 ### v1.0 - First Public Release (later)
 
 Focus:
@@ -477,6 +487,7 @@ Confirmed v1.0 community direction:
 
 - Add a dedicated Live Feed bottom-navigation tab.
 - Registered users can chat in the live feed and publish image posts.
+- Live Feed/chat image posts should reuse the direct Cloudinary upload path instead of Websupport multipart uploads.
 - Add Google account sign-in and user registration/onboarding.
 - Users can create and manage their own community profile. Once registration exists, make the profile reachable from the top-left of Home through a circular avatar; show the profile image or a monogram fallback.
 - During onboarding, users can choose an account role: DJ, organizer, or attendee/partygoer. Role changes and privileged actions require server-side authorization.

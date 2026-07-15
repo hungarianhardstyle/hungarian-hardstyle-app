@@ -149,6 +149,16 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] use the Google Maps app when installed, otherwise the external browser fallback
 - [ ] verify the one-week and six-hour reminders; the one-day reminder is live-verified (five-minute WP-Cron delay)
 
+### v0.99 — Submission polish
+
+- [x] make event submission date, venue name, city and address required in Flutter and WordPress validation
+- [x] add the required event address field below the venue name
+- [x] add event end date and end time fields, validating that the end is not before the start
+- [x] load the organizer list from WordPress and provide an organizer dropdown in the app and WordPress editor
+- [x] require at least one genre and show inline error messages and red invalid-field styling for every missing required value
+- [x] bypass the Websupport multipart-upload block with direct Cloudinary uploads (`fjxo93em` / unsigned `Hun_hs_Mobile`) and pass returned image URLs to WordPress for DJ, organizer and event submissions
+- [x] prepare WordPress Mobile API 2.4.21 for Cloudinary image URLs and the new event fields; deploy and live-test this package next
+
 ### v1.0 — First public release
 
 Core release quality:

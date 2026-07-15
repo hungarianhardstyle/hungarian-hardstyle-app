@@ -6,6 +6,7 @@ import '../../models/event_submission.dart';
 import '../../models/submission_image.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
+import '../../providers/organizers_provider.dart';
 import '../../widgets/submission_image_picker.dart';
 
 class EventSubmissionScreen extends ConsumerStatefulWidget {
@@ -16,13 +17,12 @@ class EventSubmissionScreen extends ConsumerStatefulWidget {
       _EventSubmissionScreenState();
 }
 
-class _EventSubmissionScreenState
-    extends ConsumerState<EventSubmissionScreen> {
+class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _venueController = TextEditingController();
   final _cityController = TextEditingController();
-  final _organizerController = TextEditingController();
+  final _addressController = TextEditingController();
   final _emailController = TextEditingController();
   final _urlController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -30,6 +30,10 @@ class _EventSubmissionScreenState
 
   DateTime? _startDate;
   TimeOfDay? _startTime;
+  DateTime? _endDate;
+  TimeOfDay? _endTime;
+  int? _selectedOrganizerId;
+  String _selectedOrganizerName = '';
   SubmissionImage? _flyer;
   bool _isSubmitting = false;
 
@@ -38,7 +42,7 @@ class _EventSubmissionScreenState
     _titleController.dispose();
     _venueController.dispose();
     _cityController.dispose();
-    _organizerController.dispose();
+    _addressController.dispose();
     _emailController.dispose();
     _urlController.dispose();
     _descriptionController.dispose();
@@ -70,6 +74,26 @@ class _EventSubmissionScreenState
     }
   }
 
+  Future<void> _pickEndDate() async {
+    final now = _startDate ?? DateTime.now();
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: _endDate ?? now,
+      firstDate: _startDate ?? DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(now.year + 5, 12, 31),
+    );
+    if (selected != null && mounted) setState(() => _endDate = selected);
+  }
+
+  Future<void> _pickEndTime() async {
+    final selected = await showTimePicker(
+      context: context,
+      initialTime:
+          _endTime ?? _startTime ?? const TimeOfDay(hour: 23, minute: 0),
+    );
+    if (selected != null && mounted) setState(() => _endTime = selected);
+  }
+
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
 
@@ -82,6 +106,34 @@ class _EventSubmissionScreenState
       return;
     }
 
+    if ((_endDate == null) != (_endTime == null)) {
+      _showMessage('Az esemény végét napra és órára együtt add meg.');
+      return;
+    }
+
+    if (_endDate != null && _startDate != null) {
+      final start = DateTime(
+        _startDate!.year,
+        _startDate!.month,
+        _startDate!.day,
+        _startTime?.hour ?? 0,
+        _startTime?.minute ?? 0,
+      );
+      final end = DateTime(
+        _endDate!.year,
+        _endDate!.month,
+        _endDate!.day,
+        _endTime?.hour ?? 0,
+        _endTime?.minute ?? 0,
+      );
+      if (!end.isAfter(start)) {
+        _showMessage(
+          'Az esemény vége nem lehet a kezdés előtt vagy azzal egy időben.',
+        );
+        return;
+      }
+    }
+
     if (_selectedGenres.isEmpty) {
       _showMessage('Válassz legalább egy műfajt.');
       return;
@@ -90,16 +142,26 @@ class _EventSubmissionScreenState
     setState(() => _isSubmitting = true);
 
     try {
-      final message = await ref.read(wordpressServiceProvider).submitEvent(
+      final message = await ref
+          .read(wordpressServiceProvider)
+          .submitEvent(
             EventSubmission(
               title: _titleController.text,
               startDate: DateFormat('yyyy-MM-dd').format(_startDate!),
               startTime: _startTime == null
                   ? ''
                   : '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
+              endDate: _endDate == null
+                  ? ''
+                  : DateFormat('yyyy-MM-dd').format(_endDate!),
+              endTime: _endTime == null
+                  ? ''
+                  : '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
               venueName: _venueController.text,
               venueCity: _cityController.text,
-              organizerName: _organizerController.text,
+              venueAddress: _addressController.text,
+              organizerName: _selectedOrganizerName,
+              organizerId: _selectedOrganizerId ?? 0,
               genres: _selectedGenres.toList(growable: false),
               contactEmail: _emailController.text,
               eventUrl: _urlController.text,
@@ -139,9 +201,9 @@ class _EventSubmissionScreenState
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String? _required(String? value) {
@@ -228,6 +290,32 @@ class _EventSubmissionScreenState
                           icon: const Icon(Icons.close),
                         ),
                 ),
+                _pickerTile(
+                  icon: Icons.event_available,
+                  label: 'Esemény vége',
+                  value: _endDate == null
+                      ? 'Opcionális – válassz napot'
+                      : DateFormat('yyyy. MM. dd.').format(_endDate!),
+                  onTap: _pickEndDate,
+                  trailing: _endDate == null
+                      ? null
+                      : IconButton(
+                          tooltip: 'Vége törlése',
+                          onPressed: () => setState(() {
+                            _endDate = null;
+                            _endTime = null;
+                          }),
+                          icon: const Icon(Icons.close),
+                        ),
+                ),
+                _pickerTile(
+                  icon: Icons.schedule,
+                  label: 'Esemény vége – óra',
+                  value:
+                      _endTime?.format(context) ??
+                      'Opcionális – válassz időpontot',
+                  onTap: _pickEndTime,
+                ),
                 _field(
                   controller: _venueController,
                   label: 'Helyszín *',
@@ -236,14 +324,17 @@ class _EventSubmissionScreenState
                 ),
                 _field(
                   controller: _cityController,
-                  label: 'Város',
+                  label: 'Város *',
                   icon: Icons.location_city,
+                  validator: _required,
                 ),
                 _field(
-                  controller: _organizerController,
-                  label: 'Szervező neve',
-                  icon: Icons.groups,
+                  controller: _addressController,
+                  label: 'Cím *',
+                  icon: Icons.home,
+                  validator: _required,
                 ),
+                _organizerDropdown(ref.watch(organizersProvider(''))),
                 const SizedBox(height: 4),
                 const Text(
                   'Műfajok *',
@@ -307,7 +398,8 @@ class _EventSubmissionScreenState
                 SubmissionImagePicker(
                   image: _flyer,
                   title: 'Flyer feltöltése',
-                  helperText: 'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
+                  helperText:
+                      'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
                   onChanged: (image) => setState(() => _flyer = image),
                 ),
                 _field(
@@ -325,9 +417,7 @@ class _EventSubmissionScreenState
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.send),
-                  label: Text(
-                    _isSubmitting ? 'Küldés…' : 'Esemény elküldése',
-                  ),
+                  label: Text(_isSubmitting ? 'Küldés…' : 'Esemény elküldése'),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(54),
                   ),
@@ -365,6 +455,52 @@ class _EventSubmissionScreenState
             borderSide: BorderSide.none,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _organizerDropdown(AsyncValue<dynamic> value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: value.when(
+        loading: () => const LinearProgressIndicator(),
+        error: (_, _) => const Text(
+          'A szervezők nem tölthetők be.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        data: (page) {
+          final items = page.items as List;
+          return DropdownButtonFormField<int?>(
+            initialValue: _selectedOrganizerId,
+            decoration: const InputDecoration(
+              labelText: 'Szervező',
+              prefixIcon: Icon(Icons.groups),
+            ),
+            items: [
+              const DropdownMenuItem<int?>(
+                value: null,
+                child: Text('Nincs kiválasztva'),
+              ),
+              ...items.map(
+                (organizer) => DropdownMenuItem<int?>(
+                  value: organizer.id as int,
+                  child: Text(
+                    organizer.title as String,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+            onChanged: (id) {
+              final matches = items.where((item) => item.id == id);
+              final match = matches.isEmpty ? null : matches.first;
+              setState(() {
+                _selectedOrganizerId = id;
+                _selectedOrganizerName = match?.title as String? ?? '';
+              });
+            },
+          );
+        },
       ),
     );
   }

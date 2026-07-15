@@ -20,13 +20,18 @@ void main() {
       'title': 'Teszt esemény',
       'start_date': '2026-08-15',
       'start_time': '22:00',
+      'end_date': '',
+      'end_time': '',
       'venue_name': 'Stenk',
       'venue_city': 'Budapest',
+      'venue_address': '',
       'organizer_name': 'HUHS',
+      'organizer_id': 0,
       'genres': ['Hardstyle', 'Rawstyle'],
       'contact_email': 'test@example.com',
       'event_url': 'https://example.com/event',
       'description': 'Leírás',
+      'flyer_url': '',
       'website': '',
     });
   });

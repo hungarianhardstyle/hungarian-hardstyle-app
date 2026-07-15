@@ -691,6 +691,16 @@ v0.97 planned polish build:
 - [x] use the Google Maps app when installed, otherwise the external browser fallback
 - verify the one-week and six-hour reminders; the one-day reminder is live-verified with a five-minute WP-Cron delay
 
+v0.99 submission polish:
+
+- Event submission must require date, venue name, city, and address in both Flutter and WordPress/API validation.
+- Add the required address field below the venue name.
+- Add event end date and end time fields; reject an end datetime earlier than the start datetime.
+- Populate the organizer dropdown from WordPress in Flutter and keep it aligned with the existing WordPress selector.
+- Require at least one genre; missing required values must show inline messages and red invalid-field styling.
+- Replace blocked multipart image submission with direct Cloudinary upload using the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
+- Flutter implementation is complete in release `0.99.0+27`; WordPress Mobile API `2.4.21` is prepared locally and still needs deployment/live verification.
+
 Planned v1.0 community profile details:
 
 - expose the authenticated profile from a circular top-left Home avatar, using the profile image or a monogram fallback
@@ -701,6 +711,7 @@ Planned v1.0 community profile details:
 - allow a registered user to claim a DJ profile only after verifying the private or artist-owned booking e-mail stored on that profile; exclude the Hungarian Hardstyle-managed booking address (`info@hungarianhardstyle.hu`) from ownership proof
 - add friend requests and an `Ismerősök` list
 - show attending friends on event details
+- Reuse the Cloudinary direct-upload path for authenticated Live Feed/chat image posts; do not send those images through the Websupport multipart endpoint.
 
 Additional v1.0 product requirements:
 
