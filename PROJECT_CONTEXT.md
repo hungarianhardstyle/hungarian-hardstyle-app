@@ -660,7 +660,7 @@ iPad
 
 # Current Version
 
-v0.97.0+26 (current Flutter package version and ARM64 debug test build)
+v0.99.0+28 (current Flutter package version and ARM64 debug test build)
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -681,7 +681,7 @@ v0.95 implementation status:
 
 - completed: on-device submission-image resizing and quality reduction before multipart upload (up to 1600 px, quality 82)
 
-v0.97 planned polish build:
+v0.97 polish build status: complete
 
 - fix DJ logo rendering in Flutter while retaining the profile-image fallback order
 - standardize DJ and organizer list thumbnails with a fixed cover frame and upper-center portrait focus
@@ -689,7 +689,7 @@ v0.97 planned polish build:
 - keep DJ names readable in two-column cards on one line by scaling long names down instead of truncating them beside action icons (implemented in Flutter)
 - [x] rename the event ticket action to `Jegyvásárlás`
 - [x] use the Google Maps app when installed, otherwise the external browser fallback
-- verify the one-week and six-hour reminders; the one-day reminder is live-verified with a five-minute WP-Cron delay
+- one-week, one-day and six-hour reminders are live-verified
 
 v0.99 submission polish:
 
@@ -699,10 +699,12 @@ v0.99 submission polish:
 - Populate the organizer dropdown from WordPress in Flutter and keep it aligned with the existing WordPress selector.
 - Require at least one genre; missing required values must show inline messages and red invalid-field styling.
 - Replace blocked multipart image submission with direct Cloudinary upload using the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
-- Flutter implementation is complete in release `0.99.0+27`; WordPress Mobile API `2.4.23` is prepared locally and still needs deployment/live verification. Its approval flow accepts legacy URL meta keys, and the WordPress admin now previews Cloudinary images on submissions and approved records.
+- Flutter implementation is complete in release `0.99.0+27`; WordPress Mobile API `2.4.25` is prepared locally and still needs deployment/live verification. Its approval flow accepts legacy URL meta keys, and the WordPress admin now previews Cloudinary images on submissions and approved records.
 - v0.99 follow-up: add a WordPress Mobile API trash/recycle-bin menu so deleted submissions and managed content can be reviewed, restored, or permanently emptied; permanent deletion must handle related attachments and use capability/nonce protection.
 - v0.99 follow-up: add a WordPress Mobile API `About` admin menu showing developer/maintainer information and the current API version.
-- WordPress Mobile API `2.4.24` includes the v0.99 Lomtár and About admin menus. The Lomtár supports nonce-protected restore, selected permanent deletion, and full emptying for submissions, artists, organizers, and events.
+- WordPress Mobile API `2.4.25` includes the v0.99 Lomtár and About admin menus, numeric-only event postal-code validation, and the Cloudinary approval/admin preview flow. The Lomtár supports nonce-protected restore, selected permanent deletion, and full emptying for submissions, artists, organizers, and events.
+- v0.97 polish complete: event postal-code input accepts digits only in Flutter and WordPress/API validation; new-event publication pushes remain global to FCM-token devices.
+- Planned v1.0 notification personalization: normal event pushes target users who favorited or marked attendance; featured-event publication and reminder pushes remain global to every app-installed device with an FCM token, regardless of account registration; users who favorite an organizer receive that organizer's new-event notifications. Explicit notification opt-outs remain respected. A separate admin/editor push for newly received submissions is an optional follow-up.
 
 Planned v1.0 community profile details:
 

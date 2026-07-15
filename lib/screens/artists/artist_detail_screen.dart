@@ -131,10 +131,34 @@ class _ArtistContent extends StatelessWidget {
                 tag: 'artist_${artist.id}',
                 child: AspectRatio(
                   aspectRatio: 16 / 11,
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    alignment: const Alignment(0, -0.5),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        alignment: const Alignment(0, -0.5),
+                      ),
+                      if (artist.logoUrl.isNotEmpty &&
+                          artist.profileImageUrl.isNotEmpty)
+                        Positioned(
+                          top: 16,
+                          right: 16,
+                          child: Container(
+                            width: 76,
+                            height: 76,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.72),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: CachedNetworkImage(
+                              imageUrl: artist.logoUrl,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -22,6 +23,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
   final _titleController = TextEditingController();
   final _venueController = TextEditingController();
   final _cityController = TextEditingController();
+  final _zipController = TextEditingController();
   final _addressController = TextEditingController();
   final _emailController = TextEditingController();
   final _urlController = TextEditingController();
@@ -42,6 +44,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
     _titleController.dispose();
     _venueController.dispose();
     _cityController.dispose();
+    _zipController.dispose();
     _addressController.dispose();
     _emailController.dispose();
     _urlController.dispose();
@@ -159,6 +162,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                   : '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
               venueName: _venueController.text,
               venueCity: _cityController.text,
+              venueZip: _zipController.text,
               venueAddress: _addressController.text,
               organizerName: _selectedOrganizerName,
               organizerId: _selectedOrganizerId ?? 0,
@@ -230,6 +234,14 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
             uri.host.isNotEmpty
         ? null
         : 'Teljes http:// vagy https:// linket adj meg.';
+  }
+
+  String? _validatePostalCode(String? value) {
+    final requiredError = _required(value);
+    if (requiredError != null) return requiredError;
+    return RegExp(r'^\d+$').hasMatch(value!.trim())
+        ? null
+        : 'Az irányítószám csak számokat tartalmazhat.';
   }
 
   @override
@@ -327,6 +339,14 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                   label: 'Város *',
                   icon: Icons.location_city,
                   validator: _required,
+                ),
+                _field(
+                  controller: _zipController,
+                  label: 'Irányítószám *',
+                  icon: Icons.markunread_mailbox,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: _validatePostalCode,
                 ),
                 _field(
                   controller: _addressController,
@@ -435,6 +455,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
     required String label,
     required IconData icon,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
@@ -443,6 +464,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
         maxLines: maxLines,
         validator: validator,
         decoration: InputDecoration(

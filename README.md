@@ -6,9 +6,9 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-The current delivery target is **v0.97**. The Flutter release version is **0.97.0** (ARM64 debug test build `+26`).
+The current delivery target is **v0.99**. The Flutter release version remains **0.99.0+28** (ARM64 debug test build).
 
-The current deployed WordPress backend package is **2.4.20**. It adds Happy Hardcore, a reminder safety scan, and one-week, one-day and six-hour pre-event pushes. The one-day push was live-verified with a five-minute WP-Cron delay.
+The current WordPress backend package is **2.4.25**. It includes Happy Hardcore, all three reminder intervals, Cloudinary submissions, admin tools, and numeric-only event postal-code validation.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -141,13 +141,15 @@ Push verification after uploading the WordPress package:
 
 Small, low-risk finishing work that can be released independently before the larger v1.0 modules:
 
-- [ ] show uploaded/approved DJ logos in the Flutter DJ list and profile with a consistent fallback order (live upload verification remains WAF-blocked)
-- [ ] standardize DJ and organizer list thumbnails with a fixed frame, cover crop and upper-center face focus
-- [ ] deploy backend 2.4.20 with `Happy Hardcore` in the shared DJ, event and organizer genre options
+- [x] show uploaded/approved DJ logos in the Flutter DJ list and profile with a consistent fallback order
+- [x] standardize DJ and organizer list thumbnails with a fixed frame, cover crop and upper-center face focus
+- [x] include `Happy Hardcore` in the shared DJ, event and organizer genre options
 - [x] keep DJ names readable in the two-column cards; keep them on one line and scale long names down instead of truncating them
 - [x] rename the event ticket action in the app to `Jegyvásárlás`
 - [x] use the Google Maps app when installed, otherwise the external browser fallback
-- [ ] verify the one-week and six-hour reminders; the one-day reminder is live-verified (five-minute WP-Cron delay)
+- [x] verify the one-week, one-day and six-hour reminders
+- [x] validate event postal codes as numeric-only in both Flutter and WordPress/API submission flows
+- [x] keep new-event publication pushes global to FCM-token devices; personalized recipient rules remain a v1.0 task
 
 ### v0.99 — Submission polish
 
@@ -157,7 +159,7 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] load the organizer list from WordPress and provide an organizer dropdown in the app and WordPress editor
 - [x] require at least one genre and show inline error messages and red invalid-field styling for every missing required value
 - [x] bypass the Websupport multipart-upload block with direct Cloudinary uploads (`fjxo93em` / unsigned `Hun_hs_Mobile`) and pass returned image URLs to WordPress for DJ, organizer and event submissions
-- [x] prepare WordPress Mobile API 2.4.24 for Cloudinary image URLs and the new event fields; approval now also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
+- [x] prepare WordPress Mobile API 2.4.25 for Cloudinary image URLs, the new event fields and numeric postal-code validation; approval now also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
 - [x] add a WordPress Mobile API trash/recycle-bin menu for deleted submissions and managed content, with restore and permanent-empty actions protected by capability and nonce checks
 - [x] add a WordPress Mobile API `About` menu showing the developer/maintainer information and the current API version
 
@@ -202,6 +204,10 @@ Authentication and community:
 - [ ] event attendance: `Ott leszek` / `Nem leszek ott`
 - [ ] show which friends are attending on event details
 - [ ] friend attendance visibility
+- [ ] send event pushes only to users who favorited the event or selected `Ott leszek`
+- [ ] send publication and reminder pushes for featured events to every app-installed device with an FCM token, regardless of account registration (respect explicit notification opt-out)
+- [ ] send notifications for every new event from organizers a user has favorited
+- [ ] optionally send a separate admin/editor push when a new event submission is received
 - [ ] moderation, reporting, blocking, privacy and account deletion
 
 App administration:

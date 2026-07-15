@@ -241,22 +241,46 @@ class _ArtistCard extends StatelessWidget {
             Expanded(
               child: Hero(
                 tag: 'artist_${artist.id}',
-                child: imageUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        alignment: const Alignment(0, -0.5),
-                      )
-                    : Container(
-                        color: const Color(0xFF242424),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.graphic_eq,
-                          size: 64,
-                          color: Colors.redAccent,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    imageUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            alignment: const Alignment(0, -0.5),
+                          )
+                        : Container(
+                            color: const Color(0xFF242424),
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.graphic_eq,
+                              size: 64,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                    if (artist.logoUrl.isNotEmpty &&
+                        artist.profileImageUrl.isNotEmpty)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          width: 56,
+                          height: 56,
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.72),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: CachedNetworkImage(
+                            imageUrl: artist.logoUrl,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
+                  ],
+                ),
               ),
             ),
             Padding(

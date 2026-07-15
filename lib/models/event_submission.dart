@@ -6,6 +6,7 @@ class EventSubmission {
   final String endTime;
   final String venueName;
   final String venueCity;
+  final String venueZip;
   final String venueAddress;
   final String organizerName;
   final int organizerId;
@@ -23,6 +24,7 @@ class EventSubmission {
     this.endTime = '',
     required this.venueName,
     required this.venueCity,
+    this.venueZip = '',
     this.venueAddress = '',
     required this.organizerName,
     this.organizerId = 0,
@@ -42,6 +44,7 @@ class EventSubmission {
       'end_time': endTime.trim(),
       'venue_name': venueName.trim(),
       'venue_city': venueCity.trim(),
+      'venue_zip': venueZip.trim(),
       'venue_address': venueAddress.trim(),
       'organizer_name': organizerName.trim(),
       'organizer_id': organizerId,
