@@ -666,7 +666,7 @@ Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted
 
 Required before public release: a final UX and visual polish pass covering navigation, spacing, labels, buttons, loading/error states, accessibility, and tasteful motion/effects.
 
-Open integration blocker: Websupport's upstream WAF currently returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them, so event flyer, DJ profile image, and organizer logo submissions need Websupport allowlisting before live verification. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.
+The Websupport upstream WAF still blocks direct multipart image uploads with HTTP 466, but v0.99 bypasses it with direct Cloudinary uploads. Websupport allowlisting is intentionally deferred until after v1.0 and is not a current release blocker. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.
 
 Backend 2.4.9 organizer genre/style metadata and synchronized Flutter display/submission support are implemented; the Flutter changes pass analysis and all tests. Live organizer genre verification remains an editorial content check.
 
@@ -700,9 +700,7 @@ v0.99 submission polish:
 - Require at least one genre; missing required values must show inline messages and red invalid-field styling.
 - Replace blocked multipart image submission with direct Cloudinary upload using the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
 - Flutter implementation is complete in release `0.99.0+29`; WordPress Mobile API `2.4.26` is prepared locally and still needs deployment/live verification. It generates address-based Google Maps links when no manual URL is stored, while preserving manual links.
-- v0.99 follow-up: add a WordPress Mobile API trash/recycle-bin menu so deleted submissions and managed content can be reviewed, restored, or permanently emptied; permanent deletion must handle related attachments and use capability/nonce protection.
-- v0.99 follow-up: add a WordPress Mobile API `About` admin menu showing developer/maintainer information and the current API version.
-- WordPress Mobile API `2.4.25` includes the v0.99 Lomtár and About admin menus, numeric-only event postal-code validation, and the Cloudinary approval/admin preview flow. The Lomtár supports nonce-protected restore, selected permanent deletion, and full emptying for submissions, artists, organizers, and events.
+- WordPress Mobile API `2.4.26` includes the v0.99 Lomtár and About admin menus, numeric-only event postal-code validation, Cloudinary approval/admin previews, and automatic address-based Maps links. The Lomtár supports nonce-protected restore, selected permanent deletion, and full emptying for submissions, artists, organizers, and events.
 - v0.97 polish complete: event postal-code input accepts digits only in Flutter and WordPress/API validation; new-event publication pushes remain global to FCM-token devices.
 - Planned v1.0 notification personalization: normal event pushes target users who favorited or marked attendance; featured-event publication and reminder pushes remain global to every app-installed device with an FCM token, regardless of account registration; users who favorite an organizer receive that organizer's new-event notifications. Explicit notification opt-outs remain respected. A separate admin/editor push for newly received submissions is an optional follow-up.
 

@@ -12,9 +12,9 @@ The current WordPress backend package is **2.4.26**. It includes Happy Hardcore,
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
-Backend **2.4.8** is deployed. It adds a separate optional DJ-logo upload, an editable DJ website field across WordPress, REST API, public profiles, and Flutter, and complete event details when an event is opened from a DJ or organizer profile. The profile-event navigation fix is live-verified; image-upload verification remains blocked by the upstream WAF.
+Backend **2.4.8** is deployed. It adds a separate optional DJ-logo upload, an editable DJ website field across WordPress, REST API, public profiles, and Flutter, and complete event details when an event is opened from a DJ or organizer profile. The profile-event navigation fix is live-verified.
 
-Current external blocker: Websupport's upstream WAF returns HTTP 466 for multipart image uploads before WordPress/Wordfence receives them. Event flyer, DJ profile image and organizer logo submissions can be verified after the three REST endpoints are allowlisted. The dedicated Facebook Event URL field is deployed in backend 2.4.3; the app submission field remains a general event link.
+The Websupport multipart-upload/WAF issue is bypassed in v0.99 with direct Cloudinary uploads. Websupport allowlisting is deferred until after v1.0 and is no longer a v0.99 blocker. The dedicated Facebook Event URL field is deployed in backend 2.4.3; the app submission field remains a general event link.
 
 Implemented:
 
@@ -159,7 +159,7 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] load the organizer list from WordPress and provide an organizer dropdown in the app and WordPress editor
 - [x] require at least one genre and show inline error messages and red invalid-field styling for every missing required value
 - [x] bypass the Websupport multipart-upload block with direct Cloudinary uploads (`fjxo93em` / unsigned `Hun_hs_Mobile`) and pass returned image URLs to WordPress for DJ, organizer and event submissions
-- [x] prepare WordPress Mobile API 2.4.25 for Cloudinary image URLs, the new event fields and numeric postal-code validation; approval now also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
+- [x] prepare WordPress Mobile API 2.4.26 for Cloudinary image URLs, the new event fields, numeric postal-code validation and automatic address-based Maps links; approval now also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
 - [x] add a WordPress Mobile API trash/recycle-bin menu for deleted submissions and managed content, with restore and permanent-empty actions protected by capability and nonce checks
 - [x] add a WordPress Mobile API `About` menu showing the developer/maintainer information and the current API version
 
@@ -189,6 +189,7 @@ Core release quality:
 - [ ] finalize the bottom-navigation priority and add the Live Feed tab
 - [ ] polish the Android release and prepare iOS support
 - [ ] add the WordPress-managed FAQ under More with search, expandable answers, loading, empty and error states
+- [ ] after v1.0, revisit Websupport WAF/allowlisting and decide whether direct WordPress multipart uploads are worth restoring alongside Cloudinary
 
 Authentication and community:
 
