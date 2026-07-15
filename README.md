@@ -6,9 +6,9 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-The current delivery target is **v0.99**. The Flutter release version remains **0.99.0+28** (ARM64 debug test build).
+The current delivery target is **v0.99**. The Flutter release version remains **0.99.0+29** (ARM64 debug test build).
 
-The current WordPress backend package is **2.4.25**. It includes Happy Hardcore, all three reminder intervals, Cloudinary submissions, admin tools, and numeric-only event postal-code validation.
+The current WordPress backend package is **2.4.26**. It includes Happy Hardcore, all three reminder intervals, Cloudinary submissions, admin tools, numeric-only event postal-code validation, and automatic address-based Google Maps links.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 

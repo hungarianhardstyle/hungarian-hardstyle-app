@@ -109,7 +109,14 @@ class HuhsEvent {
       venueZip: _readString(json['venue_zip']),
       venueAddress: _readString(json['venue_address']),
       venueCountry: _readString(json['venue_country']),
-      googleMapsUrl: _readString(json['google_maps']),
+      googleMapsUrl: _eventMapsUrl(
+        _readString(json['google_maps']),
+        venueName: _readString(json['venue_name']),
+        venueZip: _readString(json['venue_zip']),
+        venueCity: _readString(json['venue_city']),
+        venueAddress: _readString(json['venue_address']),
+        venueCountry: _readString(json['venue_country']),
+      ),
       facebookEventUrl: _readString(json['facebook_event_url']),
       genres: _readStringList(json['genres']),
       ticketType: _readString(json['ticket_type']),
@@ -144,6 +151,26 @@ class HuhsEvent {
   bool get hasGoogleMaps => googleMapsUrl.trim().isNotEmpty;
 
   bool get hasFacebookEvent => facebookEventUrl.trim().isNotEmpty;
+}
+
+String _eventMapsUrl(
+  String manual, {
+  required String venueName,
+  required String venueZip,
+  required String venueCity,
+  required String venueAddress,
+  required String venueCountry,
+}) {
+  if (manual.trim().isNotEmpty) return manual.trim();
+  final query = [venueName, venueZip, venueCity, venueAddress, venueCountry]
+      .map((part) => part.trim())
+      .where((part) => part.isNotEmpty)
+      .join(', ');
+  if (query.isEmpty) return '';
+  return Uri.https('www.google.com', '/maps/search/', {
+    'api': '1',
+    'query': query,
+  }).toString();
 }
 
 List<String> _readStringList(Object? value) {

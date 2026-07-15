@@ -660,7 +660,7 @@ iPad
 
 # Current Version
 
-v0.99.0+28 (current Flutter package version and ARM64 debug test build)
+v0.99.0+29 (current Flutter package version and ARM64 debug test build)
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -699,7 +699,7 @@ v0.99 submission polish:
 - Populate the organizer dropdown from WordPress in Flutter and keep it aligned with the existing WordPress selector.
 - Require at least one genre; missing required values must show inline messages and red invalid-field styling.
 - Replace blocked multipart image submission with direct Cloudinary upload using the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
-- Flutter implementation is complete in release `0.99.0+27`; WordPress Mobile API `2.4.25` is prepared locally and still needs deployment/live verification. Its approval flow accepts legacy URL meta keys, and the WordPress admin now previews Cloudinary images on submissions and approved records.
+- Flutter implementation is complete in release `0.99.0+29`; WordPress Mobile API `2.4.26` is prepared locally and still needs deployment/live verification. It generates address-based Google Maps links when no manual URL is stored, while preserving manual links.
 - v0.99 follow-up: add a WordPress Mobile API trash/recycle-bin menu so deleted submissions and managed content can be reviewed, restored, or permanently emptied; permanent deletion must handle related attachments and use capability/nonce protection.
 - v0.99 follow-up: add a WordPress Mobile API `About` admin menu showing developer/maintainer information and the current API version.
 - WordPress Mobile API `2.4.25` includes the v0.99 Lomtár and About admin menus, numeric-only event postal-code validation, and the Cloudinary approval/admin preview flow. The Lomtár supports nonce-protected restore, selected permanent deletion, and full emptying for submissions, artists, organizers, and events.

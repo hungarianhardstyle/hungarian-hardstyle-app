@@ -42,7 +42,16 @@ class EventDetailScreen extends StatelessWidget {
       return;
     }
 
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    var opened = false;
+    try {
+      opened = await launchUrl(
+        uri,
+        mode: LaunchMode.externalNonBrowserApplication,
+      );
+    } catch (_) {}
+    if (!opened) {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
 
     if (!opened && context.mounted) {
       _showOpenError(context);
