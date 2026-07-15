@@ -240,7 +240,8 @@ class _ArtistCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            SizedBox(
+              height: 240,
               child: Hero(
                 tag: 'artist_${artist.id}',
                 child: Stack(
