@@ -8,7 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 The current delivery target is **v0.97**. The Flutter release version is **0.97.0** (ARM64 debug test build `+26`).
 
-The current deployed WordPress backend package is **2.4.17**. Package **2.4.20** is prepared for upload; it adds Happy Hardcore, a reminder safety scan, and one-week, one-day and six-hour pre-event pushes.
+The current deployed WordPress backend package is **2.4.20**. It adds Happy Hardcore, a reminder safety scan, and one-week, one-day and six-hour pre-event pushes. The one-day push was live-verified with a five-minute WP-Cron delay.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -147,7 +147,7 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] keep DJ names readable in the two-column cards; keep them on one line and scale long names down instead of truncating them
 - [x] rename the event ticket action in the app to `Jegyvásárlás`
 - [x] use the Google Maps app when installed, otherwise the external browser fallback
-- [ ] deploy backend 2.4.20 and verify the one-week, one-day and six-hour reminders
+- [ ] verify the one-week and six-hour reminders; the one-day reminder is live-verified (five-minute WP-Cron delay)
 
 ### v1.0 — First public release
 
@@ -155,6 +155,8 @@ Core release quality:
 
 - [ ] stabilize news, events, DJs and organizers for public release
 - [ ] complete a final UX and visual polish pass: navigation, spacing, labels, buttons, loading/error states, accessibility and tasteful motion/effects
+- [ ] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections
+- [ ] add a `Támogatás / Donate` card under More with a configurable PayPal donation link (PayPal app first, browser fallback)
 - [ ] add the Hardstyle Revolution release catalog
 - [ ] add release preview playback
 - [ ] add Spotify, YouTube and Hardstyle.com links to releases

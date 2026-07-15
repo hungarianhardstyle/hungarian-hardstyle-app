@@ -689,7 +689,7 @@ v0.97 planned polish build:
 - keep DJ names readable in two-column cards on one line by scaling long names down instead of truncating them beside action icons (implemented in Flutter)
 - [x] rename the event ticket action to `Jegyvásárlás`
 - [x] use the Google Maps app when installed, otherwise the external browser fallback
-- deploy backend 2.4.20 and verify the one-week, one-day and six-hour reminders
+- verify the one-week and six-hour reminders; the one-day reminder is live-verified with a five-minute WP-Cron delay
 
 Planned v1.0 community profile details:
 
@@ -704,6 +704,8 @@ Planned v1.0 community profile details:
 
 Additional v1.0 product requirements:
 
+- Make displayed genres selectable. A genre detail/discovery screen should show separate API-backed `Események`, `DJ-k`, and `Hírek` sections for the selected genre and clearly retain the active genre label.
+- Add a More-section `Támogatás / Donate` card backed by a configurable PayPal donation URL. Open the PayPal app when available and fall back to the browser; do not build a custom payment flow for the first release.
 - provide an authenticated app-admin backend for reviewing, approving, editing, and managing submissions while WordPress remains the editorial source of truth
 
 Completed
