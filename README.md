@@ -6,7 +6,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-The current delivery target is **v0.95**, and the Flutter release version is **0.95.0** (ARM test build `+25`). Several later roadmap modules are already functional.
+The current delivery target is **v0.97**. The last released Flutter build is **0.95.0** (ARM test build `+25`); the version number will change when the v0.97 work is implemented.
 
 The current WordPress backend package is **2.4.17**. It is deployed and tested; it includes the v0.9 push, newsletter, and event-label updates.
 
@@ -101,11 +101,10 @@ Implemented:
 - [ ] extend the mobile APIs for news, events, DJs and organizers to serve stored English content by locale, with Hungarian fallback and no AI generation during public requests
 - [ ] enforce draft-only import, attribution, safe URL fetching and media rights checks
 
-### v0.9 — Community utilities
+### v0.9 — Community utilities (implemented)
 
 - [x] local favorites for news, events, DJs and organizers
 - [x] allow the featured news card on Home to be marked as a favorite
-- [x] show uploaded/approved DJ logos in the Flutter DJ list and profile with a consistent fallback order (live upload verification remains WAF-blocked)
 - [x] show the opened news title in the app-bar instead of the generic `Hír` label
 - [x] show the opened event title in the app-bar instead of a generic event label
 - [x] Mailchimp newsletter signup via hosted landing page
@@ -138,14 +137,23 @@ Push verification after uploading the WordPress package:
 - [x] Spotify playlist section with five curated Hungarian Hardstyle playlists (Spotify app first, browser fallback)
 - [x] compress submission images on-device before upload (target: up to 1600 px, quality 82; native picker output)
 
+### v0.97 — Polish build
+
+Small, low-risk finishing work that can be released independently before the larger v1.0 modules:
+
+- [ ] show uploaded/approved DJ logos in the Flutter DJ list and profile with a consistent fallback order (live upload verification remains WAF-blocked)
+- [ ] standardize DJ and organizer list thumbnails with a fixed frame, cover crop and upper-center face focus
+- [x] keep DJ names readable in the two-column cards; keep them on one line and scale long names down instead of truncating them
+- [ ] rename the event ticket action in the app to `Jegyvásárlás`
+- [ ] add the event map preview/fallback: Google Maps app when installed, otherwise Google Maps in the browser
+- [ ] investigate the missed event-day reminder: WP-Cron, timezone/date parsing, preference filtering and the FCM send path
+
 ### v1.0 — First public release
 
 Core release quality:
 
 - [ ] stabilize news, events, DJs and organizers for public release
 - [ ] complete a final UX and visual polish pass: navigation, spacing, labels, buttons, loading/error states, accessibility and tasteful motion/effects
-- [ ] rename the event ticket action in the app to `Jegyvásárlás`
-- [ ] add an embedded event map preview; fallback should open the Google Maps app when installed, otherwise Google Maps in the browser
 - [ ] add the Hardstyle Revolution release catalog
 - [ ] add release preview playback
 - [ ] add Spotify, YouTube and Hardstyle.com links to releases
@@ -163,6 +171,7 @@ Core release quality:
 - [x] introduce a persistent navigation shell with per-tab history
 - [ ] finalize the bottom-navigation priority and add the Live Feed tab
 - [ ] polish the Android release and prepare iOS support
+- [ ] add the WordPress-managed FAQ under More with search, expandable answers, loading, empty and error states
 
 Authentication and community:
 
@@ -200,17 +209,17 @@ Annual voting:
 
 FAQ:
 
-- [ ] WordPress-managed questions, categories and display order — deferred until after core 1.0
-- [ ] public read-only REST endpoint — deferred until after core 1.0
-- [ ] searchable, expandable Flutter FAQ under More — deferred until after core 1.0
-- [ ] loading, empty and error states — deferred until after core 1.0
+- [ ] WordPress-managed questions, categories and display order
+- [ ] public read-only REST endpoint
+- [ ] searchable, expandable Flutter FAQ under More
+- [ ] loading, empty and error states
 
 Online radio:
 
-- [ ] configure a server-side AutoDJ for a managed library of X uploaded tracks — deferred until after core 1.0
-- [ ] prefer AzuraCast for Liquidsoap AutoDJ, Icecast-compatible streaming, playlist management and Now Playing data — deferred until after core 1.0
-- [ ] choose the provider during radio implementation — deferred until after core 1.0
-- [ ] support bulk media upload through SFTP; do not use unencrypted FTP — deferred until after core 1.0
+- [ ] configure a server-side AutoDJ for a managed library of X uploaded tracks
+- [ ] prefer AzuraCast for Liquidsoap AutoDJ, Icecast-compatible streaming, playlist management and Now Playing data
+- [ ] choose the provider during radio implementation
+- [ ] support bulk media upload through SFTP; do not use unencrypted FTP
 - [ ] use an officially supported S3-compatible provider or Dropbox for cloud storage instead of a custom Google Drive sync
 - [ ] require an explicit user action before audible playback and always allow stopping it
 - [ ] decide licensing, hosting, bandwidth, codec/bitrate, background playback, interruptions and notification controls

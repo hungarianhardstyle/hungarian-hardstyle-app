@@ -96,7 +96,7 @@ As of the current project state:
 - Backend package `2.4.7` is deployed. It fixes the invalid nested admin approval form that prevented DJ and organizer draft creation, removes the misleading native publish box from submissions, and adds the same one-click draft creation flow for event submissions. The approval flow still requires a live WordPress admin test.
 - Backend package `2.4.8` is deployed. It adds an optional separate DJ-logo multipart upload, transfers the approved logo to the DJ draft, adds an artist website field to the WordPress editor, artist API, public profile, Flutter DJ submission, and Flutter DJ profile links, and returns complete event records from DJ/organizer profiles so their event cards open the full event detail. The latter was verified live; image-upload verification remains blocked by the upstream WAF.
 - Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real “Kapcsolódó cikk” target was verified. Flutter opens returned related articles plus normal WordPress “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
-- Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; reminder scheduling is implemented and will be monitored at the first natural Sunday/Friday occurrences.
+- Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; the first natural event-day reminder did not arrive and the cron/timezone/filter path needs investigation.
 - The custom-push admin form lists recent published news and events by title and validates the selected post type, so editors do not need to look up event IDs manually.
 - Backend package `2.4.15` adds the server-side Mailchimp newsletter subscription endpoint and protected admin settings page; the endpoint is live and both invalid-email validation and a real personal e-mail double-opt-in test succeeded. Flutter includes a native signup screen with consent and double opt-in messaging.
 - Backend package `2.4.9` is prepared for deployment. It adds organizer genre/style metadata, WordPress editor controls, API output, and genre validation/storage for organizer submissions. Flutter now displays organizer genres and includes them in organizer submissions.
@@ -383,13 +383,12 @@ Focus:
 - import images into the WordPress Media Library only when reuse rights are confirmed; otherwise require an owned/replacement image and do not hotlink or copy third-party assets automatically
 - store the original source URL and attribution with the draft, keep the AI provider key server-side, and protect the fetcher against private/internal URLs, oversized responses, unsafe HTML, and timeouts
 
-### v0.9 - Community
+### v0.9 - Community (implemented)
 
 Focus:
 
 - local favorites
 - allow the featured news card on Home to be marked as a favorite
-- show the uploaded/approved DJ logo in the Flutter DJ list and profile when available, with the existing profile-image fallback order preserved
 - show the opened news article's title in its app-bar instead of the generic `Hír` label
 - show the opened event's title in its app-bar instead of a generic event label
 - newsletter integration
@@ -410,6 +409,17 @@ Focus:
 
 - five curated Spotify playlists in a dedicated app section, opened through the shared in-app browser
 - client-side image compression before cloud upload (target 1200–1600 px width, JPEG/WebP) to reduce storage and bandwidth use
+
+### v0.97 - Polish build
+
+Keep this release intentionally small and low-risk:
+
+- fix rendering of uploaded/approved DJ logos in the Flutter DJ list and profile, preserving the profile-image fallback order
+- standardize DJ and organizer list thumbnails with a fixed frame, cover crop, and upper-center portrait focus
+- keep DJ names readable in two-column cards; keep them on one line and scale long names down instead of truncating them (implemented in Flutter)
+- rename the event ticket action to `Jegyvásárlás`
+- add the event map preview/fallback (Google Maps app first, browser second)
+- investigate the missed event-day reminder: verify WP-Cron execution, WordPress timezone, event start date/time parsing, reminder preference filtering, and the FCM send log
 
 ### v1.0 - First Public Release (later)
 
@@ -440,7 +450,7 @@ Focus:
 - iOS preparation if ready
 - WordPress-managed FAQ section in the app, initially under More
 
-FAQ requirements, deferred until after the core v1.0 release:
+FAQ requirements for v1.0:
 
 - questions and answers are editable in WordPress and exposed through a public read-only REST endpoint
 - support categories and an explicit display order

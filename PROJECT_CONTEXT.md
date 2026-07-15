@@ -568,7 +568,7 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 
 - Live Feed with chat and image posts
 - Push notifications should cover new published news, new published events, event reminders one week before and on the event day, plus admin-created custom notifications from WordPress.
-- Current push status: Flutter initializes Firebase/FCM, stores the token locally, registers it with the WordPress API, shows foreground notifications, opens news/event targets in native screens, and syncs per-device notification preferences. Backend 2.4.16 includes Firebase HTTP v1 sending, news/event/link targets, automatic HUHS URL resolution, publish hooks, event reminder scheduling, preference filtering, and a protected service-account settings page. Custom push, news/event publishing pushes, and foreground display are live-tested successfully; reminder scheduling is implemented and will be monitored at the first natural Sunday/Friday occurrences. Credentials must never be embedded in Flutter or committed to the plugin.
+- Current push status: Flutter initializes Firebase/FCM, stores the token locally, registers it with the WordPress API, shows foreground notifications, opens news/event targets in native screens, and syncs per-device notification preferences. Backend 2.4.16 includes Firebase HTTP v1 sending, news/event/link targets, automatic HUHS URL resolution, publish hooks, event reminder scheduling, preference filtering, and a protected service-account settings page. Custom push, news/event publishing pushes, and foreground display are live-tested successfully; the first natural event-day reminder did not arrive, so WP-Cron execution, timezone/date parsing, preference filtering, and the FCM send path must be investigated. Credentials must never be embedded in Flutter or committed to the plugin.
 - The WordPress custom-push form lists the latest published news and events by title, so editors do not need to know WordPress post IDs. It validates that the selected content matches the chosen target type.
 - Backend 2.4.12 is live with published IRP related-post records and a public post-detail endpoint. The live endpoint and a real “Kapcsolódó cikk” target were verified. Flutter opens IRP records and normal WordPress “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links in the native news detail screen and falls back to the in-app browser when no post ID is available.
 
@@ -582,7 +582,7 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 
 - Friend attendance visibility on profiles and events
 
-- WordPress-managed FAQ / GYIK section is planned after the core v1.0 release, initially accessible under More, with categories, ordering, search, and expandable answers in Flutter
+- WordPress-managed FAQ / GYIK section is a v1.0 goal, initially accessible under More, with categories, ordering, search, and expandable answers in Flutter
 
 ## Annual Top DJ And Track Voting
 
@@ -660,7 +660,7 @@ iPad
 
 # Current Version
 
-v0.95.0+25 (current Flutter package version and ARM test build; current delivery target is v0.95)
+v0.95.0+25 (current Flutter package version and ARM test build; next delivery target is v0.97)
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -675,11 +675,20 @@ v0.9 implementation status:
 - completed: local favorites for news, events, DJs, organizers, and the featured news card
 - completed: native news/event titles, related-article navigation, artist Website/Booking labels, organizer genres, social/contact, settings, FCM registration, and custom push targets
 - completed: native Mailchimp signup screen and WordPress proxy (backend 2.4.15 live; personal double-opt-in test successful)
-- remaining operational monitoring: observe the first natural one-week and event-day reminder occurrences; the implementation is complete
+- remaining operational investigation: the first natural event-day reminder did not arrive; verify WP-Cron, timezone/date parsing, preference filtering, and the FCM send path
 
 v0.95 implementation status:
 
 - completed: on-device submission-image resizing and quality reduction before multipart upload (up to 1600 px, quality 82)
+
+v0.97 planned polish build:
+
+- fix DJ logo rendering in Flutter while retaining the profile-image fallback order
+- standardize DJ and organizer list thumbnails with a fixed cover frame and upper-center portrait focus
+- keep DJ names readable in two-column cards on one line by scaling long names down instead of truncating them beside action icons (implemented in Flutter)
+- rename the event ticket action to `Jegyvásárlás`
+- add the event map preview/fallback (Google Maps app first, browser second)
+- investigate the missed event-day reminder and verify the scheduled one-week/event-day send path
 
 Planned v1.0 community profile details:
 
@@ -694,8 +703,6 @@ Planned v1.0 community profile details:
 
 Additional v1.0 product requirements:
 
-- rename the event ticket action in Flutter to `Jegyvásárlás`
-- provide an embedded event map preview; fallback to the Google Maps app when installed, otherwise Google Maps in the browser
 - provide an authenticated app-admin backend for reviewing, approving, editing, and managing submissions while WordPress remains the editorial source of truth
 
 Completed
