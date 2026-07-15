@@ -160,7 +160,9 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
                           gridDelegate:
                               const SliverGridDelegateWithMaxCrossAxisExtent(
                                 maxCrossAxisExtent: 320,
-                                mainAxisExtent: 390,
+                                // Extra room keeps action icons and multi-genre
+                                // subtitles inside the fixed card frame.
+                                mainAxisExtent: 430,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
                               ),
@@ -322,7 +324,7 @@ class _ArtistCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle.isEmpty ? 'DJ adatlap' : subtitle,
-                    maxLines: 2,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Colors.white70),
                   ),
