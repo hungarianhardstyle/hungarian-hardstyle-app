@@ -699,7 +699,7 @@ v0.99 submission polish:
 - Populate the organizer dropdown from WordPress in Flutter and keep it aligned with the existing WordPress selector.
 - Require at least one genre; missing required values must show inline messages and red invalid-field styling.
 - Replace blocked multipart image submission with direct Cloudinary upload using the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
-- Flutter implementation is complete in release `0.99.0+27`; WordPress Mobile API `2.4.22` is prepared locally and still needs deployment/live verification. Its approval flow also accepts legacy URL meta keys, so an already-created image link is copied to the approved profile/event.
+- Flutter implementation is complete in release `0.99.0+27`; WordPress Mobile API `2.4.23` is prepared locally and still needs deployment/live verification. Its approval flow accepts legacy URL meta keys, and the WordPress admin now previews Cloudinary images on submissions and approved records.
 - v0.99 follow-up: add a WordPress Mobile API trash/recycle-bin menu so deleted submissions and managed content can be reviewed, restored, or permanently emptied; permanent deletion must handle related attachments and use capability/nonce protection.
 - v0.99 follow-up: add a WordPress Mobile API `About` admin menu showing developer/maintainer information and the current API version.
 
