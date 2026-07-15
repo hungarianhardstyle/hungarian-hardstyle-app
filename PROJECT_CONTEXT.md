@@ -685,11 +685,11 @@ v0.97 planned polish build:
 
 - fix DJ logo rendering in Flutter while retaining the profile-image fallback order
 - standardize DJ and organizer list thumbnails with a fixed cover frame and upper-center portrait focus
-- deploy backend 2.4.18 with `Happy Hardcore` in the shared DJ, event, and organizer genre options
+- deploy backend 2.4.20 with `Happy Hardcore` in the shared DJ, event, and organizer genre options
 - keep DJ names readable in two-column cards on one line by scaling long names down instead of truncating them beside action icons (implemented in Flutter)
 - [x] rename the event ticket action to `Jegyvásárlás`
 - [x] use the Google Maps app when installed, otherwise the external browser fallback
-- deploy backend 2.4.18 and verify the missed event-day reminder through the WP-Cron safety scan
+- deploy backend 2.4.20 and verify the one-week, one-day and six-hour reminders
 
 Planned v1.0 community profile details:
 

@@ -8,7 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 The current delivery target is **v0.97**. The Flutter release version is **0.97.0** (ARM64 debug test build `+26`).
 
-The current deployed WordPress backend package is **2.4.17**. Package **2.4.18** is prepared for upload; it adds Happy Hardcore and a reminder safety scan.
+The current deployed WordPress backend package is **2.4.17**. Package **2.4.20** is prepared for upload; it adds Happy Hardcore, a reminder safety scan, and one-week, one-day and six-hour pre-event pushes.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -143,11 +143,11 @@ Small, low-risk finishing work that can be released independently before the lar
 
 - [ ] show uploaded/approved DJ logos in the Flutter DJ list and profile with a consistent fallback order (live upload verification remains WAF-blocked)
 - [ ] standardize DJ and organizer list thumbnails with a fixed frame, cover crop and upper-center face focus
-- [ ] deploy backend 2.4.18 with `Happy Hardcore` in the shared DJ, event and organizer genre options
+- [ ] deploy backend 2.4.20 with `Happy Hardcore` in the shared DJ, event and organizer genre options
 - [x] keep DJ names readable in the two-column cards; keep them on one line and scale long names down instead of truncating them
 - [x] rename the event ticket action in the app to `Jegyvásárlás`
 - [x] use the Google Maps app when installed, otherwise the external browser fallback
-- [ ] deploy backend 2.4.18 and verify the missed event-day reminder through the WP-Cron safety scan
+- [ ] deploy backend 2.4.20 and verify the one-week, one-day and six-hour reminders
 
 ### v1.0 — First public release
 
