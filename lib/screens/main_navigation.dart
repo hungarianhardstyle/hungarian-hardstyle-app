@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'events/events_screen.dart';
+import 'community/community_screen.dart';
 import 'home/home_screen.dart';
 import 'more/more_screen.dart';
 import 'news/news_screen.dart';
@@ -15,8 +16,8 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final _navigatorKeys = List.generate(4, (_) => GlobalKey<NavigatorState>());
-  final _tabs = List<Widget?>.filled(4, null);
+  final _navigatorKeys = List.generate(5, (_) => GlobalKey<NavigatorState>());
+  final _tabs = List<Widget?>.filled(5, null);
 
   void _openNewsTab() => setState(() => _currentIndex = 1);
 
@@ -32,6 +33,8 @@ class _MainNavigationState extends State<MainNavigation> {
               return const NewsScreen();
             case 2:
               return const EventsScreen();
+            case 3:
+              return const LiveFeedScreen();
             default:
               return const MoreScreen();
           }
@@ -63,7 +66,7 @@ class _MainNavigationState extends State<MainNavigation> {
         body: IndexedStack(
           index: _currentIndex,
           children: List.generate(
-            4,
+            5,
             (index) => _tabs[index] ?? const SizedBox.shrink(),
           ),
         ),
@@ -93,6 +96,11 @@ class _MainNavigationState extends State<MainNavigation> {
               icon: Icon(Icons.event_outlined),
               selectedIcon: Icon(Icons.event),
               label: 'Események',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.forum_outlined),
+              selectedIcon: Icon(Icons.forum),
+              label: 'Live Feed',
             ),
             NavigationDestination(icon: Icon(Icons.menu), label: 'Több'),
           ],

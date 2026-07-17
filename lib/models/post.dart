@@ -136,6 +136,7 @@ class Post {
   final String link;
   final List<int> categoryIds;
   final List<String> categories;
+  final List<String> tags;
 
   final int galleryId;
   final List<GalleryImage> galleryImages;
@@ -152,6 +153,7 @@ class Post {
     required this.link,
     required this.categoryIds,
     required this.categories,
+    required this.tags,
     required this.galleryId,
     required this.galleryImages,
     required this.embeds,
@@ -171,6 +173,7 @@ class Post {
       link: json['link'] ?? '',
       categoryIds: _readCategoryIds(json),
       categories: _readCategories(json),
+      tags: _readTags(json),
       galleryId: json['gallery_id'] ?? 0,
       galleryImages: gallery
           .map((e) => GalleryImage.fromJson(e as Map<String, dynamic>))
@@ -191,6 +194,7 @@ class Post {
       link: json['link'] ?? '',
       categoryIds: _readCategoryIds(json),
       categories: const [],
+      tags: _readTags(json),
       galleryId: 0,
       galleryImages: const [],
       embeds: const [],
@@ -340,6 +344,26 @@ class Post {
           .toList();
     }
 
+    return const [];
+  }
+
+  static List<String> _readTags(Map<String, dynamic> json) {
+    final value = json['tags'] ?? json['tag_names'] ?? json['tag'];
+    if (value is String) return _splitCategoryString(value);
+    if (value is List<dynamic>) {
+      return value
+          .expand((item) {
+            if (item is String) return _splitCategoryString(item);
+            if (item is Map<String, dynamic>) {
+              final name = item['name'] ?? item['slug'] ?? item['title'];
+              return name is String ? _splitCategoryString(name) : <String>[];
+            }
+            return <String>[];
+          })
+          .where((tag) => tag.isNotEmpty)
+          .toSet()
+          .toList();
+    }
     return const [];
   }
 

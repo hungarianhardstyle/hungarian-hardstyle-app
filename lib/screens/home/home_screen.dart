@@ -1,13 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
+import '../../models/post.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
-import '../../widgets/news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
+import '../community/community_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   final VoidCallback onShowMoreNews;
@@ -42,6 +45,18 @@ class HomeScreen extends ConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton.filledTonal(
+                    tooltip: 'Profil',
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CommunityProfileScreen(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.person_outline),
+                  ),
+                ),
                 Center(
                   child: Transform.scale(
                     scale: 1.18,
@@ -105,11 +120,7 @@ class HomeScreen extends ConsumerWidget {
 
                     return Column(
                       children: [
-                        FeaturedNewsCard(post: latestPosts.first),
-                        const SizedBox(height: 18),
-                        ...latestPosts
-                            .skip(1)
-                            .map((post) => NewsCard(post: post)),
+                        _NewsSlider(posts: latestPosts),
                         const SizedBox(height: 8),
                         SizedBox(
                           width: double.infinity,
@@ -132,7 +143,7 @@ class HomeScreen extends ConsumerWidget {
                 events.when(
                   loading: () => const SizedBox(
                     height: 210,
-                      child: Center(child: BrandLoadingIndicator()),
+                    child: Center(child: BrandLoadingIndicator()),
                   ),
                   error: (error, stack) => SizedBox(
                     height: 150,
@@ -197,6 +208,80 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _NewsSlider extends StatefulWidget {
+  final List<Post> posts;
+
+  const _NewsSlider({required this.posts});
+
+  @override
+  State<_NewsSlider> createState() => _NewsSliderState();
+}
+
+class _NewsSliderState extends State<_NewsSlider> {
+  late final PageController _controller;
+  Timer? _timer;
+  int _page = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController();
+    if (widget.posts.length > 1) {
+      _timer = Timer.periodic(const Duration(seconds: 10), (_) {
+        if (!mounted || !_controller.hasClients) return;
+        _page = (_page + 1) % widget.posts.length;
+        _controller.animateToPage(
+          _page,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOut,
+        );
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 250,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: widget.posts.length,
+            onPageChanged: (page) => _page = page,
+            itemBuilder: (_, index) =>
+                FeaturedNewsCard(post: widget.posts[index]),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            widget.posts.length,
+            (index) => AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              height: 6,
+              width: index == _page ? 20 : 6,
+              decoration: BoxDecoration(
+                color: index == _page ? Colors.redAccent : Colors.white24,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

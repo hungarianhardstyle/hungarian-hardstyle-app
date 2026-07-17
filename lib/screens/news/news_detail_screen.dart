@@ -10,6 +10,7 @@ import '../../services/wordpress_service.dart';
 import '../../widgets/post_embed_card.dart';
 import '../../widgets/post_shortcode_card.dart';
 import '../gallery/gallery_screen.dart';
+import 'tagged_news_screen.dart';
 
 class NewsDetailScreen extends StatelessWidget {
   final Post post;
@@ -103,6 +104,23 @@ class NewsDetailScreen extends StatelessWidget {
                     _formatDate(post.date),
                     style: TextStyle(color: Colors.grey.shade400),
                   ),
+                  if (post.tags.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: post.tags.map((tag) {
+                        return ActionChip(
+                          label: Text('#$tag'),
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => TaggedNewsScreen(tag: tag),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ],
               ),
             ),
