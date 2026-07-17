@@ -716,6 +716,13 @@ Planned v1.0 community profile details:
 - show attending friends on event details
 - Reuse the Cloudinary direct-upload path for authenticated Live Feed/chat image posts; do not send those images through the Websupport multipart endpoint.
 
+Current v0.99.1 implementation status:
+
+- Flutter includes Firebase Auth registration/sign-in with mandatory DJ, organizer, and partygoer roles.
+- The public Firestore Live Feed supports anonymous text-only posts, registered Cloudinary image posts, Unicode emoji, and fixed reactions.
+- Home exposes a profile entry, a five-item news slider with 10-second rotation, and news detail exposes tappable tags with a native filtered article list.
+- Firestore deployment files are `firestore.rules`, `firebase.json`, and `.firebaserc`; physical ARM verification and rules deployment remain external release checks.
+
 Planned v0.99.1 Community MVP decisions:
 
 - The Live Feed is publicly readable without registration.

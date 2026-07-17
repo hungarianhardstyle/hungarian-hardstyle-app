@@ -6,6 +6,10 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
+### v0.99.1 implementation status
+
+The Community MVP source implementation is complete on `codex/v1.0`: Firebase Authentication (email/password and Google), mandatory account roles, public Firestore Live Feed, anonymous text-only posting, registered Cloudinary image posts, profile entry/editing, fixed reactions, a five-item Home news slider with 10-second rotation, and native article-tag filtering. `firestore.rules`, `firebase.json` and `.firebaserc` are included for deployment. Physical ARM verification and Firebase rules deployment remain external release checks.
+
 The current delivery target is **v0.99.1 Community MVP**. The first MVP implementation is now in the Flutter source: Firebase Auth/Firestore Live Feed, anonymous text posting, registered image posting through Cloudinary, role-aware registration, profile entry, the five-news ten-second Home slider, and native article-tag filtering.
 
 The current WordPress backend package is **2.4.27**. It includes Happy Hardcore, all three reminder intervals, Cloudinary submissions, admin tools, numeric-only event postal-code validation, automatic address-based Google Maps links, DJ-logo rendering, and genre discovery.

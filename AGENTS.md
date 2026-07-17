@@ -305,6 +305,10 @@ Prefer API responses that are easy for Flutter to parse:
 
 ## Roadmap
 
+### v0.99.1 implementation note
+
+The current Flutter branch contains the Community MVP implementation: Firebase Auth registration/sign-in with mandatory DJ/organizer/partygoer roles, public Firestore Live Feed, anonymous text-only posts, registered Cloudinary image posts, profile entry/editing with monogram fallback, fixed reactions, a five-item Home news slider rotating every 10 seconds, and native article-tag filtering. Firestore deployment files are `firestore.rules`, `firebase.json`, and `.firebaserc`; physical ARM verification and rules deployment remain release checks.
+
 ### v0.4 - Foundation
 
 Focus:

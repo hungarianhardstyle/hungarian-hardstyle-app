@@ -6,8 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../models/community_post.dart';
+import '../../models/submission_image.dart';
 import '../../providers/community_provider.dart';
 import '../../services/community_service.dart';
+import '../../widgets/submission_image_picker.dart';
 import '../more/favorites_screen.dart';
 
 class LiveFeedScreen extends ConsumerStatefulWidget {
@@ -359,6 +361,8 @@ class _CommunityProfileScreenState
   final _name = TextEditingController();
   final _bio = TextEditingController();
   final _social = TextEditingController();
+  SubmissionImage? _profileImage;
+  String _profileImageUrl = '';
   String _role = 'partygoer';
   bool _register = true;
   bool _busy = false;
@@ -413,6 +417,7 @@ class _CommunityProfileScreenState
       _name.text = data['displayName'] as String? ?? user.displayName ?? '';
       _bio.text = data['bio'] as String? ?? '';
       _social.text = data['socialLinks'] as String? ?? '';
+      _profileImageUrl = data['profileImageUrl'] as String? ?? '';
       _profileLoaded = true;
     } catch (_) {}
   }
@@ -426,6 +431,9 @@ class _CommunityProfileScreenState
         'displayName': _name.text.trim(),
         'bio': _bio.text.trim(),
         'socialLinks': _social.text.trim(),
+        'profileImageUrl': _profileImage == null
+            ? _profileImageUrl
+            : await _service.uploadImage(_profileImage!.bytes),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       await user.updateDisplayName(_name.text.trim());
@@ -468,10 +476,17 @@ class _CommunityProfileScreenState
             ? [
                 CircleAvatar(
                   radius: 42,
-                  child: Text(
-                    (user.displayName ?? 'HU').substring(0, 1).toUpperCase(),
-                    style: const TextStyle(fontSize: 30),
-                  ),
+                  backgroundImage: _profileImageUrl.isNotEmpty
+                      ? NetworkImage(_profileImageUrl)
+                      : null,
+                  child: _profileImageUrl.isEmpty
+                      ? Text(
+                          (user.displayName ?? 'HU')
+                              .substring(0, 1)
+                              .toUpperCase(),
+                          style: const TextStyle(fontSize: 30),
+                        )
+                      : null,
                 ),
                 const SizedBox(height: 14),
                 Center(
@@ -485,6 +500,13 @@ class _CommunityProfileScreenState
                 ),
                 const SizedBox(height: 24),
           const SizedBox(height: 20),
+          SubmissionImagePicker(
+            image: _profileImage,
+            title: 'Profilkép',
+            helperText:
+                'Opcionális kép; monogram jelenik meg, ha nincs feltöltve.',
+            onChanged: (image) => setState(() => _profileImage = image),
+          ),
           TextField(controller: _name, decoration: const InputDecoration(labelText: 'Megjelenő név')),
           const SizedBox(height: 12),
           TextField(controller: _bio, maxLines: 3, decoration: const InputDecoration(labelText: 'Bemutatkozás')),
