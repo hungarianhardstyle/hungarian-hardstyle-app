@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../models/community_post.dart';
@@ -10,6 +12,8 @@ import '../models/community_post.dart';
 class CommunityService {
   static const cloudName = 'fjxo93em';
   static const uploadPreset = 'Hun_hs_Mobile';
+  static const adminEmail = 'djdeeroy@gmail.com';
+  static const firestoreDatabaseId = 'hungarian-hardstyle';
 
   final FirebaseAuth auth;
   final FirebaseFirestore firestore;
@@ -17,7 +21,11 @@ class CommunityService {
 
   CommunityService({FirebaseAuth? auth, FirebaseFirestore? firestore, Dio? dio})
     : auth = auth ?? FirebaseAuth.instance,
-      firestore = firestore ?? FirebaseFirestore.instance,
+      firestore = firestore ??
+          FirebaseFirestore.instanceFor(
+            app: Firebase.app(),
+            databaseId: firestoreDatabaseId,
+          ),
       _dio = dio ?? Dio();
 
   Future<User> ensureAnonymousUser() async {
@@ -54,7 +62,7 @@ class CommunityService {
     await user.updateDisplayName(displayName.trim());
     await firestore.collection('community_profiles').doc(user.uid).set({
       'displayName': displayName.trim(),
-      'role': role,
+      'role': _roleFor(user.email, role),
       'email': email.trim(),
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -68,22 +76,47 @@ class CommunityService {
     );
   }
 
-  Future<void> signInWithGoogle() async {
-    final account = await GoogleSignIn().signIn();
-    if (account == null) return;
-    final tokens = await account.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: tokens.accessToken,
-      idToken: tokens.idToken,
-    );
-    final result = await auth.signInWithCredential(credential);
-    final user = result.user!;
-    await firestore.collection('community_profiles').doc(user.uid).set({
-      'displayName': user.displayName ?? 'Hungarian Hardstyle user',
-      'email': user.email,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+  Future<void> signInWithGoogle({String? role}) async {
+    try {
+      final account = await GoogleSignIn().signIn();
+      if (account == null) return;
+      final tokens = await account.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: tokens.accessToken,
+        idToken: tokens.idToken,
+      );
+      final result = await auth.signInWithCredential(credential);
+      final user = result.user!;
+      final profile = firestore.collection('community_profiles').doc(user.uid);
+      try {
+        final existing = await profile.get();
+        final existingRole = existing.data()?['role'] as String?;
+        await profile.set({
+          'displayName': user.displayName ?? 'Hungarian Hardstyle user',
+          'email': user.email,
+          if (_isAdmin(user.email)) 'role': 'admin',
+          if (!_isAdmin(user.email) && existingRole == null && role != null)
+            'role': role,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } catch (_) {
+        // Authentication remains successful if Firestore is temporarily unavailable.
+      }
+    } on PlatformException catch (error) {
+      if (error.code == 'sign_in_failed' || error.code == '10') {
+        throw StateError(
+          'A Google-belépés Firebase-beállítása hiányos. Engedélyezd a Google szolgáltatót, add hozzá az Android SHA-1/SHA-256 kulcsot, majd töltsd le újra a google-services.json fájlt.',
+        );
+      }
+      rethrow;
+    }
   }
+
+  bool _isAdmin(String? email) =>
+      email?.trim().toLowerCase() == adminEmail;
+
+  String _roleFor(String? email, String role) =>
+      _isAdmin(email) ? 'admin' : role;
 
   Future<void> publishPost({
     required String text,
@@ -166,7 +199,10 @@ class CommunityService {
     });
   }
 
-  Future<String> uploadImage(Uint8List bytes) async {
+  Future<String> uploadImage(
+    Uint8List bytes, {
+    bool faceFocus = false,
+  }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
       data: FormData.fromMap({
@@ -178,7 +214,11 @@ class CommunityService {
     if (url is! String || url.isEmpty) {
       throw StateError('A kép feltöltése sikertelen.');
     }
-    return url;
+    if (!faceFocus) return url;
+    return url.replaceFirst(
+      '/upload/',
+      '/upload/c_fill,g_face,w_800,h_800,q_auto,f_auto/',
+    );
   }
 
   Future<DocumentSnapshot<Map<String, dynamic>>> profile() async {

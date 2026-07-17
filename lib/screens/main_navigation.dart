@@ -100,7 +100,7 @@ class _MainNavigationState extends State<MainNavigation> {
             NavigationDestination(
               icon: Icon(Icons.forum_outlined),
               selectedIcon: Icon(Icons.forum),
-              label: 'Live Feed',
+              label: 'Chat',
             ),
             NavigationDestination(icon: Icon(Icons.menu), label: 'Több'),
           ],

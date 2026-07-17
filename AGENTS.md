@@ -96,7 +96,7 @@ As of the current project state:
 - Backend package `2.4.7` is deployed. It fixes the invalid nested admin approval form that prevented DJ and organizer draft creation, removes the misleading native publish box from submissions, and adds the same one-click draft creation flow for event submissions. The approval flow still requires a live WordPress admin test.
 - Backend package `2.4.8` is deployed. It adds an optional separate DJ-logo multipart upload, transfers the approved logo to the DJ draft, adds an artist website field to the WordPress editor, artist API, public profile, Flutter DJ submission, and Flutter DJ profile links, and returns complete event records from DJ/organizer profiles so their event cards open the full event detail. The latter was verified live; direct multipart uploads are bypassed by Cloudinary in v0.99.
 - Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real “Kapcsolódó cikk” target was verified. Flutter opens returned related articles plus normal WordPress “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
-- Backend package `2.4.27` is prepared locally. It includes `Happy Hardcore`, one-week/one-day/six-hour reminders, v0.99 event fields, numeric-only postal-code validation, Cloudinary image approval/admin previews, WordPress API Lomtár/About menus, automatic address-based Google Maps links, and public DJ-logo rendering; deployment and live verification are still pending.
+- Backend package `2.4.28` is prepared locally. It includes the `2.4.27` features plus published post `tags` in the HUHS posts API; deployment and live verification are still pending.
 - Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; the first natural event-day reminder did not arrive and the cron/timezone/filter path needs investigation.
 - The custom-push admin form lists recent published news and events by title and validates the selected post type, so editors do not need to look up event IDs manually.
 - Backend package `2.4.15` adds the server-side Mailchimp newsletter subscription endpoint and protected admin settings page; the endpoint is live and both invalid-email validation and a real personal e-mail double-opt-in test succeeded. Flutter includes a native signup screen with consent and double opt-in messaging.
@@ -307,7 +307,7 @@ Prefer API responses that are easy for Flutter to parse:
 
 ### v0.99.1 implementation note
 
-The current Flutter branch contains the Community MVP implementation: Firebase Auth registration/sign-in with mandatory DJ/organizer/partygoer roles, public Firestore Live Feed, anonymous text-only posts, registered Cloudinary image posts, profile entry/editing with monogram fallback, fixed reactions, a five-item Home news slider rotating every 10 seconds, and native article-tag filtering. Firestore deployment files are `firestore.rules`, `firebase.json`, and `.firebaserc`; physical ARM verification and rules deployment remain release checks.
+The current Flutter branch contains the Community MVP implementation: Firebase Auth registration/sign-in with mandatory DJ/organizer/partygoer roles, public Firestore Chat, anonymous text-only posts, registered Cloudinary image posts, profile entry/editing with monogram fallback, fixed reactions, a five-item Home news slider rotating every 10 seconds, and native article-tag filtering. Firestore deployment files are `firestore.rules`, `firebase.json`, and `.firebaserc`; physical ARM verification and rules deployment remain release checks. The composer uses a responsive layout. Google sign-in still needs the Firebase Console Google provider plus Android SHA-1/SHA-256 configuration; the checked-in `google-services.json` currently has an empty `oauth_client` array. The HUHS posts endpoint does not currently expose tag names, so Flutter hydrates them from the WordPress core posts endpoint when necessary.
 
 ### v0.4 - Foundation
 
@@ -436,7 +436,7 @@ Keep this release intentionally small and low-risk:
 - require at least one genre and show inline validation text and red invalid-field styling for every missing required value
 - replace blocked multipart image submission with direct Cloudinary upload (`fjxo93em` / unsigned `Hun_hs_Mobile`) and send the returned URL to WordPress for DJ, organizer, and event submissions
 
-### v0.99.1 - Community MVP (planned)
+### v0.99.1 - Community MVP (implemented; Firebase Console deployment remains)
 
 - App-only registration/sign-in with e-mail/password and Google; account role is mandatory (`DJ`, `organizer`, or `partygoer`).
 - Home top-left avatar opens the user's profile, showing profile image or monogram, name, bio, social links, favorites, and planned events.

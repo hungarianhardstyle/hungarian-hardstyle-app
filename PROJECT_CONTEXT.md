@@ -660,7 +660,7 @@ iPad
 
 # Current Version
 
-v0.99.0+30 (current Flutter package version and ARM64 debug test build)
+v0.99.1+4 (current Flutter package version; Chat/tag/Firebase initialization bugfix build)
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -699,8 +699,7 @@ v0.99 submission polish:
 - Populate the organizer dropdown from WordPress in Flutter and keep it aligned with the existing WordPress selector.
 - Require at least one genre; missing required values must show inline messages and red invalid-field styling.
 - Replace blocked multipart image submission with direct Cloudinary upload using the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
-- Flutter implementation is complete in release `0.99.0+30`; WordPress Mobile API `2.4.27` is prepared locally and still needs deployment/live verification. It generates address-based Google Maps links when no manual URL is stored, refreshes profile list providers after navigation, and renders genre discovery plus public DJ logos.
-- WordPress Mobile API `2.4.27` includes the v0.99 Lomtár and About admin menus, numeric-only event postal-code validation, Cloudinary approval/admin previews, automatic address-based Maps links, and public DJ-logo rendering. The Lomtár supports nonce-protected restore, selected permanent deletion, and full emptying for submissions, artists, organizers, and events.
+- Flutter implementation is complete in release `0.99.1+4`; WordPress Mobile API `2.4.28` is prepared locally and still needs deployment/live verification. It includes the 2.4.27 features plus published post tag names in the HUHS posts API.
 - v0.97 polish complete: event postal-code input accepts digits only in Flutter and WordPress/API validation; new-event publication pushes remain global to FCM-token devices.
 - Planned v1.0 notification personalization: normal event pushes target users who favorited or marked attendance; featured-event publication and reminder pushes remain global to every app-installed device with an FCM token, regardless of account registration; users who favorite an organizer receive that organizer's new-event notifications. Explicit notification opt-outs remain respected. A separate admin/editor push for newly received submissions is an optional follow-up.
 
@@ -717,6 +716,8 @@ Planned v1.0 community profile details:
 - Reuse the Cloudinary direct-upload path for authenticated Live Feed/chat image posts; do not send those images through the Websupport multipart endpoint.
 
 Current v0.99.1 implementation status:
+
+- The user-facing community destination is named `Chat`; the Firestore collection remains `live_feed_posts` for compatibility. The composer is responsive, Firebase initializes before the app shell, and missing WordPress tag names are hydrated from the core posts REST endpoint. Google sign-in still needs the Firebase Console provider and Android SHA-1/SHA-256 setup; Firestore rules still need deployment.
 
 - Flutter includes Firebase Auth registration/sign-in with mandatory DJ, organizer, and partygoer roles.
 - The public Firestore Live Feed supports anonymous text-only posts, registered Cloudinary image posts, Unicode emoji, and fixed reactions.

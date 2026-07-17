@@ -351,7 +351,7 @@ class Post {
     final value = json['tags'] ?? json['tag_names'] ?? json['tag'];
     if (value is String) return _splitCategoryString(value);
     if (value is List<dynamic>) {
-      return value
+      final names = value
           .expand((item) {
             if (item is String) return _splitCategoryString(item);
             if (item is Map<String, dynamic>) {
@@ -363,6 +363,28 @@ class Post {
           .where((tag) => tag.isNotEmpty)
           .toSet()
           .toList();
+      if (names.isNotEmpty) return names;
+    }
+
+    // WordPress core returns tag IDs in `tags`; names are available in the
+    // embedded post_tag terms. This keeps labels working without hardcoding
+    // tags or adding a second content database in Flutter.
+    final embedded = json['_embedded'];
+    if (embedded is Map<String, dynamic>) {
+      final terms = embedded['wp:term'];
+      if (terms is List<dynamic>) {
+        return terms
+            .whereType<List<dynamic>>()
+            .expand((group) => group)
+            .whereType<Map<String, dynamic>>()
+            .where((term) => term['taxonomy'] == 'post_tag')
+            .map((term) => term['name'])
+            .whereType<String>()
+            .map(_readPlainText)
+            .where((tag) => tag.isNotEmpty)
+            .toSet()
+            .toList();
+      }
     }
     return const [];
   }

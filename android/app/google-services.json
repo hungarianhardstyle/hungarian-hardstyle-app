@@ -12,7 +12,20 @@
           "package_name": "com.example.hungarian_hardstyle_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1030187737487-08ep9jms7vr63g0kf6a7jj8h4itoaphq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hungarian_hardstyle_app",
+            "certificate_hash": "a33ef9c4a0e1adebc7a9fc5c62ac75f82133a6b6"
+          }
+        },
+        {
+          "client_id": "1030187737487-7cpgfu99rdngge4ine087ltlr339drkt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAVlVkSsBu39kvOWRtCLon9M3_QNb6aDio"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1030187737487-7cpgfu99rdngge4ine087ltlr339drkt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

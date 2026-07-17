@@ -12,6 +12,20 @@ import '../../services/community_service.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../more/favorites_screen.dart';
 
+String _chatError(Object error) {
+  final raw = error.toString();
+  if (raw.contains('admin-restricted-operation')) {
+    return 'A névtelen Chat-hozzáférés nincs engedélyezve a Firebase-ben.';
+  }
+  if (raw.contains('permission-denied')) {
+    return 'A Chat Firebase-szabályai még nincsenek telepítve.';
+  }
+  if (raw.contains('failed-precondition') || raw.contains('unavailable')) {
+    return 'A Chat az alapértelmezett Firestore-adatbázist nem éri el. Ellenőrizd, hogy a `(default)` adatbázis létre van-e hozva.';
+  }
+  return raw.replaceFirst('Exception: ', '');
+}
+
 class LiveFeedScreen extends ConsumerStatefulWidget {
   const LiveFeedScreen({super.key});
 
@@ -80,7 +94,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       _textController.clear();
       if (mounted) setState(() => _image = null);
     } catch (error) {
-      _showMessage(error.toString().replaceFirst('Exception: ', ''));
+      _showMessage(_chatError(error));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -107,7 +121,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     final posts = ref.watch(communityPostsProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Live Feed'),
+        title: const Text('Chat'),
         actions: [
           IconButton(
             onPressed: _openProfile,
@@ -131,7 +145,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
                 child: Text(
-                  'A Live Feed nem érhető el.\n$error',
+                  'A Chat nem érhető el.\n${_chatError(error)}',
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -220,11 +234,14 @@ class _Composer extends StatelessWidget {
                   onPressed: onPickImage,
                   icon: const Icon(Icons.photo_camera_outlined),
                 ),
-                const Text(
-                  'Emoji a billentyűzetről is használható',
-                  style: TextStyle(color: Colors.white54, fontSize: 11),
+                const Expanded(
+                  child: Text(
+                    'Emoji a billentyűzetről is használható',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.white54, fontSize: 11),
+                  ),
                 ),
-                const Spacer(),
                 FilledButton.icon(
                   onPressed: sending ? null : onSend,
                   icon: sending
@@ -371,6 +388,12 @@ class _CommunityProfileScreenState
   CommunityService get _service => ref.read(communityServiceProvider);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadProfile());
+  }
+
+  @override
   void dispose() {
     _email.dispose();
     _password.dispose();
@@ -418,6 +441,7 @@ class _CommunityProfileScreenState
       _bio.text = data['bio'] as String? ?? '';
       _social.text = data['socialLinks'] as String? ?? '';
       _profileImageUrl = data['profileImageUrl'] as String? ?? '';
+      _role = data['role'] as String? ?? 'partygoer';
       _profileLoaded = true;
     } catch (_) {}
   }
@@ -427,16 +451,27 @@ class _CommunityProfileScreenState
     if (user == null || user.isAnonymous) return;
     setState(() => _busy = true);
     try {
+      final uploadedImageUrl = _profileImage == null
+          ? _profileImageUrl
+          : await _service.uploadImage(
+              _profileImage!.bytes,
+              faceFocus: true,
+            );
       await _service.firestore.collection('community_profiles').doc(user.uid).set({
         'displayName': _name.text.trim(),
         'bio': _bio.text.trim(),
-        'socialLinks': _social.text.trim(),
-        'profileImageUrl': _profileImage == null
-            ? _profileImageUrl
-            : await _service.uploadImage(_profileImage!.bytes),
+          'socialLinks': _social.text.trim(),
+        'role': _role,
+        'profileImageUrl': uploadedImageUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       await user.updateDisplayName(_name.text.trim());
+      if (mounted) {
+        setState(() {
+          _profileImageUrl = uploadedImageUrl;
+          _profileImage = null;
+        });
+      }
       _message('Profil mentve.');
     } catch (error) {
       _message('A profil mentése sikertelen: $error');
@@ -448,10 +483,10 @@ class _CommunityProfileScreenState
   Future<void> _google() async {
     setState(() => _busy = true);
     try {
-      await _service.signInWithGoogle();
+      await _service.signInWithGoogle(role: _register ? _role : null);
       if (mounted) setState(() {});
     } catch (error) {
-      _message('Google-bejelentkezés nem sikerült: $error');
+      _message('Google-bejelentkezés nem sikerült: ${_chatError(error)}');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -467,7 +502,6 @@ class _CommunityProfileScreenState
   Widget build(BuildContext context) {
     final user = _service.auth.currentUser;
     final signedIn = user != null && !user.isAnonymous;
-    if (signedIn) _loadProfile();
     return Scaffold(
       appBar: AppBar(title: const Text('Profil')),
       body: ListView(
@@ -499,6 +533,40 @@ class _CommunityProfileScreenState
                   ),
                 ),
                 const SizedBox(height: 24),
+                if (_role == 'admin')
+                  const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.admin_panel_settings_outlined),
+                    title: Text('Szerepkör'),
+                    subtitle: Text('Admin'),
+                  )
+                else ...[
+                  DropdownButtonFormField<String>(
+                    value: _role == 'dj' ||
+                            _role == 'organizer' ||
+                            _role == 'partygoer'
+                        ? _role
+                        : 'partygoer',
+                    decoration: const InputDecoration(
+                      labelText: 'Szerepkör',
+                      helperText: 'Válaszd ki, hogyan használod az appot.',
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'dj', child: Text('DJ')),
+                      DropdownMenuItem(
+                        value: 'organizer',
+                        child: Text('Szervező'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'partygoer',
+                        child: Text('Bulizó'),
+                      ),
+                    ],
+                    onChanged: (value) =>
+                        setState(() => _role = value ?? 'partygoer'),
+                  ),
+                  const SizedBox(height: 14),
+                ],
           const SizedBox(height: 20),
           SubmissionImagePicker(
             image: _profileImage,
@@ -536,7 +604,7 @@ class _CommunityProfileScreenState
                 const SizedBox(height: 8),
                 Text(
                   _register
-                      ? 'A Live Feed névvel és képfeltöltéssel használható.'
+                      ? 'A Chat névvel és képfeltöltéssel használható.'
                       : 'Jelentkezz be a közösségi profilodhoz.',
                 ),
                 const SizedBox(height: 18),

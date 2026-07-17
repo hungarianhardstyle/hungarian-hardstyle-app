@@ -19,6 +19,24 @@ void main() {
     expect(post.excerpt, 'Rövid összefoglaló.');
   });
 
+  test('standard WordPress beágyazott post_tag termekből beolvassa a címkéket', () {
+    final post = Post.fromWordpressJson({
+      'tags': [42],
+      '_embedded': {
+        'wp:term': [
+          [
+            {'taxonomy': 'category', 'name': 'Hírek'},
+          ],
+          [
+            {'taxonomy': 'post_tag', 'name': 'Hardcore'},
+          ],
+        ],
+      },
+    });
+
+    expect(post.tags, ['Hardcore']);
+  });
+
   test('beolvassa és kiszűri a duplikált embedeket', () {
     final post = Post.fromJson({
       'embeds': [

@@ -8,11 +8,11 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.1 implementation status
 
-The Community MVP source implementation is complete on `codex/v1.0`: Firebase Authentication (email/password and Google), mandatory account roles, public Firestore Live Feed, anonymous text-only posting, registered Cloudinary image posts, profile entry/editing, fixed reactions, a five-item Home news slider with 10-second rotation, and native article-tag filtering. `firestore.rules`, `firebase.json` and `.firebaserc` are included for deployment. Physical ARM verification and Firebase rules deployment remain external release checks.
+The Community MVP source implementation is complete on `codex/v1.0`: Firebase Authentication (email/password and Google), mandatory account roles, public Firestore Chat, anonymous text-only posting, registered Cloudinary image posts, profile entry/editing, fixed reactions, a five-item Home news slider with 10-second rotation, and native article-tag filtering. `firestore.rules`, `firebase.json` and `.firebaserc` are included for deployment. Physical ARM verification, Firebase rules deployment, and Google OAuth Console configuration remain external release checks.
 
-The current delivery target is **v0.99.1 Community MVP**. The first MVP implementation is now in the Flutter source: Firebase Auth/Firestore Live Feed, anonymous text posting, registered image posting through Cloudinary, role-aware registration, profile entry, the five-news ten-second Home slider, and native article-tag filtering.
+The current delivery target is **v0.99.1 Community MVP**. The first MVP implementation is now in the Flutter source: Firebase Auth/Firestore Chat, anonymous text posting, registered image posting through Cloudinary, role-aware registration, profile entry, the five-news ten-second Home slider, and native article-tag filtering.
 
-The current WordPress backend package is **2.4.27**. It includes Happy Hardcore, all three reminder intervals, Cloudinary submissions, admin tools, numeric-only event postal-code validation, automatic address-based Google Maps links, DJ-logo rendering, and genre discovery.
+The current WordPress backend package is **2.4.28 (prepared locally)**. It includes the 2.4.27 features plus published post tag names in the HUHS posts API; deployment and live verification are still pending.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -163,7 +163,7 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] load the organizer list from WordPress and provide an organizer dropdown in the app and WordPress editor
 - [x] require at least one genre and show inline error messages and red invalid-field styling for every missing required value
 - [x] bypass the Websupport multipart-upload block with direct Cloudinary uploads (`fjxo93em` / unsigned `Hun_hs_Mobile`) and pass returned image URLs to WordPress for DJ, organizer and event submissions
-- [x] prepare WordPress Mobile API 2.4.27 for Cloudinary image URLs, the new event fields, numeric postal-code validation and automatic address-based Maps links; approval now also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
+- [x] prepare WordPress Mobile API 2.4.28 for Cloudinary image URLs, the new event fields, numeric postal-code validation, automatic address-based Maps links and published post tag names; approval also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
 
 ### v0.99 — Completed polish items
 
@@ -173,19 +173,23 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] make event, DJ and organizer genre chips open grouped Események/DJ-k/Hírek discovery results
 - [x] render the DJ logo on public WordPress artist profiles as well as in the app
 
-### v0.99.1 — Community MVP (planned)
+### v0.99.1 — Community MVP (implemented; external setup remains)
 
-- [ ] app-only registration and sign-in (e-mail/password and Google)
-- [ ] mandatory account role during registration: DJ, organizer or partygoer
-- [ ] profile from the top-left Home avatar, with profile image or monogram fallback
-- [ ] profile name, bio, social links, favorites and planned events
-- [ ] Live Feed visible without registration
-- [ ] anonymous text posting with generated `Unknown User ####` display names
-- [ ] registered users can post text and compressed snapshots in the Live Feed
-- [ ] anonymous users cannot upload images
-- [ ] support Unicode emoji in messages and a small fixed reaction set (for example ❤️ 🔥 🙌)
-- [ ] use Firebase Authentication/Firestore for community data and Cloudinary for images; keep WordPress as the editorial source of truth
-- [ ] apply basic size, permission and ownership checks before adding full moderation/friend features in v1.0
+- [x] app-only registration and sign-in code (e-mail/password and Google)
+- [x] mandatory account role during registration: DJ, organizer or partygoer
+- [x] profile from the top-left Home avatar, with profile image or monogram fallback
+- [x] profile name, bio, social links, favorites and planned-events placeholder
+- [x] Chat visible without registration
+- [x] anonymous text posting with generated `Unknown User ####` display names
+- [x] registered users can post text and compressed snapshots in Chat
+- [x] anonymous users cannot upload images
+- [x] support Unicode emoji in messages and a small fixed reaction set (for example ❤️ 🔥 🙌)
+- [x] use Firebase Authentication/Firestore for community data and Cloudinary for images; keep WordPress as the editorial source of truth
+- [x] apply basic size, permission and ownership checks before adding full moderation/friend features in v1.0
+- [x] remove the Chat composer overflow at narrow widths
+- [x] native article tags: hydrate tag names from WordPress core REST when the HUHS endpoint only returns tag IDs
+- [ ] deploy `firestore.rules` to the `hungarian-hardstyle` Firebase project
+- [ ] enable Google provider and add Android SHA-1/SHA-256 credentials, then replace `android/app/google-services.json`
 
 ### v1.0 — First public release
 
@@ -210,7 +214,7 @@ Core release quality:
 - [x] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
 - [ ] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background
 - [x] introduce a persistent navigation shell with per-tab history
-- [ ] finalize the bottom-navigation priority and add the Live Feed tab
+- [x] add the Chat tab to the persistent bottom-navigation shell
 - [ ] polish the Android release and prepare iOS support
 - [ ] add the WordPress-managed FAQ under More with search, expandable answers, loading, empty and error states
 - [ ] after v1.0, revisit Websupport WAF/allowlisting and decide whether direct WordPress multipart uploads are worth restoring alongside Cloudinary
@@ -288,11 +292,11 @@ Releases and Store use one WordPress-managed catalog rather than separate conten
 ## Navigation direction
 
 - Home and News remain the first two primary destinations.
-- The unused Tickets tab will be removed; its future primary-tab slot is reserved for the v1.0 Live Feed/chat user hook.
+- The unused Tickets tab will be removed; its future primary-tab slot is now the Chat destination.
 - The public WordPress `/events/` directory should later include an `Esemény beküldése` call-to-action, gated by authentication once registration is available.
 - Events are a strong primary-tab candidate because they provide immediate utility.
 - DJs and organizers may initially remain under More.
-- v1.0 adds a dedicated Live Feed tab.
+- The app now exposes the community destination as a dedicated Chat tab.
 - Detail screens should open inside one persistent navigation shell instead of duplicating the bottom bar.
 
 ## Language direction

@@ -100,9 +100,10 @@ class WordpressService {
       final data = response.data;
 
       if (data is List<dynamic>) {
-        final allPosts = data
-            .map((json) => Post.fromJson(json as Map<String, dynamic>))
-            .toList();
+        final rawPosts = data.whereType<Map<String, dynamic>>().toList();
+        final allPosts = (await _hydratePostTags(
+          rawPosts,
+        )).map(Post.fromJson).toList();
         final query = search.trim().toLowerCase();
         final posts = query.isEmpty
             ? allPosts
@@ -126,15 +127,16 @@ class WordpressService {
       }
 
       final json = data as Map<String, dynamic>;
-      final items = json['items'] as List<dynamic>? ?? [];
+      final items = (json['items'] as List<dynamic>? ?? [])
+          .whereType<Map<String, dynamic>>()
+          .toList();
+      final hydratedItems = await _hydratePostTags(items);
       final currentPage = _readInt(json['page'], fallback: page);
       final totalPages = _readInt(json['total_pages'], fallback: 1);
       final hasMore = _readBool(json['has_more']) || currentPage < totalPages;
 
       return PostsPage(
-        items: items
-            .map((json) => Post.fromJson(json as Map<String, dynamic>))
-            .toList(),
+        items: hydratedItems.map(Post.fromJson).toList(),
         page: currentPage,
         perPage: _readInt(json['per_page'], fallback: perPage),
         total: _readInt(json['total']),
@@ -156,8 +158,65 @@ class WordpressService {
   Future<Post> getPost(int postId) async {
     final response = await _dio.get('/posts/$postId');
     final data = response.data;
-    if (data is Map<String, dynamic>) return Post.fromJson(data);
+    if (data is Map<String, dynamic>) {
+      final hydrated = await _hydratePostTags([data]);
+      return Post.fromJson(hydrated.first);
+    }
     throw const FormatException('Hibás hír válasz.');
+  }
+
+  Future<List<Map<String, dynamic>>> _hydratePostTags(
+    List<Map<String, dynamic>> posts,
+  ) async {
+    final ids = posts
+        .map((post) => _readInt(post['id']))
+        .where((id) => id > 0)
+        .toList();
+    if (ids.isEmpty || posts.every((post) => _hasNamedTags(post))) {
+      return posts;
+    }
+
+    try {
+      final response = await _dio.get(
+        'https://hungarianhardstyle.hu/wp-json/wp/v2/posts',
+        options: Options(
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 5),
+        ),
+        queryParameters: {
+          'include': ids.join(','),
+          'per_page': ids.length,
+          '_embed': true,
+          '_fields': 'id,tags,_embedded',
+        },
+      );
+      final byId = <int, List<String>>{};
+      for (final item in (response.data as List<dynamic>? ?? const [])) {
+        if (item is! Map<String, dynamic>) continue;
+        final id = _readInt(item['id']);
+        final names = Post.fromWordpressJson(item).tags;
+        if (id > 0 && names.isNotEmpty) byId[id] = names;
+      }
+      return posts
+          .map((post) {
+            final names = byId[_readInt(post['id'])];
+            return names == null ? post : {...post, 'tag_names': names};
+          })
+          .toList(growable: false);
+    } catch (_) {
+      // The custom endpoint remains usable if the optional core REST lookup
+      // is blocked or unavailable.
+      return posts;
+    }
+  }
+
+  bool _hasNamedTags(Map<String, dynamic> post) {
+    final value = post['tag_names'] ?? post['tag'] ?? post['tags'];
+    if (value is String) return value.trim().isNotEmpty;
+    if (value is List) {
+      return value.any((item) => item is String || item is Map);
+    }
+    return false;
   }
 
   Future<void> subscribeNewsletter({

@@ -17,6 +17,14 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await initializeDateFormatting('hu_HU');
+  // Firebase must be ready before a community screen/provider is built.  The
+  // previous fire-and-forget initialization raced the first Chat navigation.
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {
+    // Keep the rest of the app usable when a platform Firebase config is
+    // missing; the affected community feature will report its own error.
+  }
   if (enableTestAds) {
     // Ads are opt-in; a provider/configuration problem must never block startup.
     try {
@@ -29,7 +37,6 @@ Future<void> main() async {
 
 Future<void> _initializePushNotifications() async {
   try {
-    await Firebase.initializeApp();
     await PushNotificationService.initialize();
   } catch (_) {}
 }

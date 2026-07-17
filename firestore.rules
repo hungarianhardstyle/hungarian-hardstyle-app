@@ -2,6 +2,11 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'djdeeroy@gmail.com';
+    }
+
     match /live_feed_posts/{postId} {
       allow read: if true;
       allow create: if request.auth != null
@@ -23,7 +28,17 @@ service cloud.firestore {
     }
 
     match /community_profiles/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && (isAdmin()
+            || request.resource.data.role in ['dj', 'organizer', 'partygoer']);
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && (isAdmin()
+            || request.resource.data.role == resource.data.role
+            || (!resource.data.keys().hasAny(['role'])
+                && request.resource.data.role in ['dj', 'organizer', 'partygoer']));
     }
   }
 }
