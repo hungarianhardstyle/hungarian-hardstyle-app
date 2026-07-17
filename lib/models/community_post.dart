@@ -6,6 +6,7 @@ class CommunityPost {
   final String authorId;
   final String text;
   final String imageUrl;
+  final Map<String, int> reactions;
   final DateTime createdAt;
 
   const CommunityPost({
@@ -14,6 +15,7 @@ class CommunityPost {
     required this.authorId,
     required this.text,
     required this.imageUrl,
+    required this.reactions,
     required this.createdAt,
   });
 
@@ -28,6 +30,14 @@ class CommunityPost {
       authorName: data['authorName'] as String? ?? 'Unknown User',
       text: data['text'] as String? ?? '',
       imageUrl: data['imageUrl'] as String? ?? '',
+      reactions: data['reactions'] is Map
+          ? (data['reactions'] as Map).map(
+              (key, value) => MapEntry(
+                key.toString(),
+                (value as num?)?.toInt() ?? 0,
+              ),
+            )
+          : const <String, int>{},
       createdAt: timestamp is Timestamp ? timestamp.toDate() : DateTime.now(),
     );
   }

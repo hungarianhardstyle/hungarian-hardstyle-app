@@ -251,12 +251,32 @@ class _Composer extends StatelessWidget {
   }
 }
 
-class _PostCard extends StatelessWidget {
+class _PostCard extends ConsumerStatefulWidget {
   final CommunityPost post;
   const _PostCard({required this.post});
 
   @override
+  ConsumerState<_PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends ConsumerState<_PostCard> {
+  String? _selectedReaction;
+
+  Future<void> _react(String emoji) async {
+    setState(() => _selectedReaction = emoji);
+    try {
+      await ref.read(communityServiceProvider).toggleReaction(
+        postId: widget.post.id,
+        emoji: emoji,
+      );
+    } catch (_) {
+      if (mounted) setState(() => _selectedReaction = null);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final post = widget.post;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
@@ -295,16 +315,18 @@ class _PostCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 6),
-            const Row(
-              children: [
-                Icon(Icons.favorite_border, size: 18, color: Colors.white54),
-                SizedBox(width: 14),
-                Icon(
-                  Icons.emoji_emotions_outlined,
-                  size: 18,
-                  color: Colors.white54,
-                ),
-              ],
+            Wrap(
+              spacing: 6,
+              children: ['❤️', '🔥', '🙌'].map((emoji) {
+                final count = post.reactions[emoji] ?? 0;
+                return ActionChip(
+                  label: Text('$emoji${count > 0 ? ' $count' : ''}'),
+                  backgroundColor: _selectedReaction == emoji
+                      ? Theme.of(context).colorScheme.primary.withValues(alpha: .25)
+                      : null,
+                  onPressed: () => _react(emoji),
+                );
+              }).toList(),
             ),
           ],
         ),

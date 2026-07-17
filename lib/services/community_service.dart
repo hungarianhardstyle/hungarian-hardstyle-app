@@ -117,7 +117,52 @@ class CommunityService {
       'authorName': displayName,
       'text': trimmed,
       'imageUrl': imageUrl,
+      'reactions': <String, int>{},
+      'reactionBy': <String, String>{},
       'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> toggleReaction({
+    required String postId,
+    required String emoji,
+  }) async {
+    final user = await ensureAnonymousUser();
+    final reference = firestore.collection('live_feed_posts').doc(postId);
+    await firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(reference);
+      final data = snapshot.data() ?? <String, dynamic>{};
+      final reactions = Map<String, dynamic>.from(
+        data['reactions'] as Map? ?? <String, dynamic>{},
+      );
+      final reactionBy = Map<String, dynamic>.from(
+        data['reactionBy'] as Map? ?? <String, dynamic>{},
+      );
+      final previous = reactionBy[user.uid] as String?;
+      if (previous == emoji) {
+        final count = (reactions[emoji] as num?)?.toInt() ?? 0;
+        if (count <= 1) {
+          reactions.remove(emoji);
+        } else {
+          reactions[emoji] = count - 1;
+        }
+        reactionBy.remove(user.uid);
+      } else {
+        if (previous != null) {
+          final count = (reactions[previous] as num?)?.toInt() ?? 0;
+          if (count <= 1) {
+            reactions.remove(previous);
+          } else {
+            reactions[previous] = count - 1;
+          }
+        }
+        reactions[emoji] = ((reactions[emoji] as num?)?.toInt() ?? 0) + 1;
+        reactionBy[user.uid] = emoji;
+      }
+      transaction.update(reference, {
+        'reactions': reactions,
+        'reactionBy': reactionBy,
+      });
     });
   }
 
