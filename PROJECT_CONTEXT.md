@@ -660,7 +660,7 @@ iPad
 
 # Current Version
 
-v0.99.1+4 (current Flutter package version; Chat/tag/Firebase initialization bugfix build)
+v0.99.1+5 (current Flutter package version; community bugfix/audit build)
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -717,17 +717,19 @@ Planned v1.0 community profile details:
 
 Current v0.99.1 implementation status:
 
-- The user-facing community destination is named `Chat`; the Firestore collection remains `live_feed_posts` for compatibility. The composer is responsive, Firebase initializes before the app shell, and missing WordPress tag names are hydrated from the core posts REST endpoint. Google sign-in still needs the Firebase Console provider and Android SHA-1/SHA-256 setup; Firestore rules still need deployment.
+- The user-facing community destination is named `Chat`; the Firestore collection remains `live_feed_posts` for compatibility. The composer is responsive, Firebase initializes before the app shell, missing WordPress tag names are hydrated from the core posts REST endpoint, and Firestore rules are deployed. Google sign-in provider and Android SHA configuration are present; release-device verification remains a final external check.
 
 - Flutter includes Firebase Auth registration/sign-in with mandatory DJ, organizer, and partygoer roles.
 - The public Firestore Live Feed supports anonymous text-only posts, registered Cloudinary image posts, Unicode emoji, and fixed reactions.
 - Home exposes a profile entry, a five-item news slider with 10-second rotation, and news detail exposes tappable tags with a native filtered article list.
 - Firestore deployment files are `firestore.rules`, `firebase.json`, and `.firebaserc`; physical ARM verification and rules deployment remain external release checks.
-- Known v0.99.1 follow-up issues (recorded, not fixed yet): profile image upload does not complete; the top profile avatar shows neither the saved image nor the expected monogram; Chat image posting incorrectly reports that registration is required even when the user is signed in. Registration must offer both e-mail/password and Google-account sign-in, with the account role selected during onboarding.
+- v0.99.1+5 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, role persistence/admin authorization, admin message/user deletion access, duplicate-role dropdown crash, and logout navigation crash. Profile uploads use Cloudinary face-aware cropping; manual focal-point editing remains a later UX enhancement.
 - Chat message deletion and the in-app role-management panel are implemented; actual Firebase Auth account deletion for another user is handled by the deployed server-side Cloud Function/Admin SDK task.
 - The Cloud Function source is in `functions/` (`deleteCommunityUser`) and is deployed to Firebase. Artifact cleanup retains old function images for 90 days.
 - Also record for the next fix pass: push notification text has an encoding bug and may show Hungarian punctuation/accents as HTML entities (for example `&#8211;`) instead of decoded characters.
 - Additional community authorization issues/requirements: the `djdeeroy@gmail.com` admin role currently disappears after sign-out/sign-in; account roles must be immutable for normal users after onboarding and editable only by an admin; admins must be able to remove inappropriate user accounts and delete Chat messages.
+- Newly reported v0.99.1 bugs (record only; do not fix until explicitly scheduled): profile images still do not render reliably after upload; profile image cropping has no face-focus/manual focal-point control; Chat conversations/messages cannot be deleted from the app; a selected Chat image appears in the top-left avatar area but not consistently in the user/profile views; the Home profile avatar shows a generic person icon instead of the saved image or monogram; logout can show the red Flutter error screen; the admin role dropdown can crash with duplicate `admin` values; the in-app admin/user-management backend menus are not visible.
+- v0.99.1 remaining external check: verify Google sign-in on the release device with the current Firebase Android SHA configuration; manual profile focal-point editing remains optional polish.
 
 Planned v0.99.1 Community MVP decisions:
 

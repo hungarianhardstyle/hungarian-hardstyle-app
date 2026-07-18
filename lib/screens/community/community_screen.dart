@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import '../../models/community_post.dart';
 import '../../models/submission_image.dart';
@@ -24,6 +25,48 @@ String _chatError(Object error) {
     return 'A Chat az alapértelmezett Firestore-adatbázist nem éri el. Ellenőrizd, hogy a `(default)` adatbázis létre van-e hozva.';
   }
   return raw.replaceFirst('Exception: ', '');
+}
+
+class CommunityAvatarButton extends ConsumerWidget {
+  final VoidCallback onPressed;
+
+  const CommunityAvatarButton({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final fallback = IconButton.filledTonal(
+      tooltip: 'Profil',
+      onPressed: onPressed,
+      icon: const Icon(Icons.person_outline),
+    );
+    if (Firebase.apps.isEmpty) return fallback;
+    final service = ref.watch(communityServiceProvider);
+    final user = service.auth.currentUser;
+    if (user == null || user.isAnonymous) return fallback;
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: service.firestore
+          .collection('community_profiles')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data() ?? const <String, dynamic>{};
+        final url = data['profileImageUrl'] as String? ?? '';
+        final name =
+            (data['displayName'] as String? ?? user.displayName ?? 'HU').trim();
+        return IconButton(
+          tooltip: 'Profil',
+          onPressed: onPressed,
+          icon: CircleAvatar(
+            radius: 18,
+            backgroundImage: url.isEmpty ? null : NetworkImage(url),
+            child: url.isEmpty
+                ? Text(name.isEmpty ? 'H' : name[0].toUpperCase())
+                : null,
+          ),
+        );
+      },
+    );
+  }
 }
 
 class CommunityAdminScreen extends ConsumerWidget {
@@ -98,32 +141,39 @@ class CommunityAdminScreen extends ConsumerWidget {
                   subtitle: Text(data['email'] as String? ?? doc.id),
                   trailing: DropdownButton<String>(
                     value:
-                        {'admin', 'dj', 'organizer', 'partygoer'}.contains(role)
+                        const {
+                          'admin',
+                          'dj',
+                          'organizer',
+                          'partygoer',
+                        }.contains(role)
                         ? role
                         : 'partygoer',
-                    items: const [
-                      DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                      DropdownMenuItem(value: 'dj', child: Text('DJ')),
-                      DropdownMenuItem(
-                        value: 'organizer',
-                        child: Text('Szervező'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'partygoer',
-                        child: Text('Bulizó'),
-                      ),
+                    items: [
+                      for (final entry in const {
+                        'admin': 'Admin',
+                        'dj': 'DJ',
+                        'organizer': 'Szervező',
+                        'partygoer': 'Bulizó',
+                      }.entries)
+                        DropdownMenuItem(
+                          value: entry.key,
+                          child: Text(entry.value),
+                        ),
                     ],
-                    onChanged: (value) async {
-                      if (value == null) return;
-                      try {
-                        await service.setUserRole(doc.id, value);
-                      } catch (error) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(_chatError(error))),
-                        );
-                      }
-                    },
+                    onChanged: doc.id == service.auth.currentUser?.uid
+                        ? null
+                        : (value) async {
+                            if (value == null) return;
+                            try {
+                              await service.setUserRole(doc.id, value);
+                            } catch (error) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(_chatError(error))),
+                              );
+                            }
+                          },
                   ),
                 ),
               );
@@ -190,7 +240,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   }
 
   Future<void> _pickImage() async {
-    if (_service.auth.currentUser?.isAnonymous ?? true) {
+    if (_anonymous) {
       _showMessage('Kép feltöltéséhez regisztráció szükséges.');
       return;
     }
@@ -453,9 +503,18 @@ class _PostCardState extends ConsumerState<_PostCard> {
           children: [
             Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 17,
-                  child: Icon(Icons.person_outline, size: 19),
+                  backgroundImage: post.authorImageUrl.isEmpty
+                      ? null
+                      : NetworkImage(post.authorImageUrl),
+                  child: post.authorImageUrl.isEmpty
+                      ? Text(
+                          post.authorName.trim().isEmpty
+                              ? '?'
+                              : post.authorName.trim()[0].toUpperCase(),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 9),
                 Expanded(
@@ -539,7 +598,7 @@ class _CommunityProfileScreenState
   String _role = 'partygoer';
   bool _register = true;
   bool _busy = false;
-  bool _profileLoaded = false;
+  String? _loadedUid;
 
   CommunityService get _service => ref.read(communityServiceProvider);
 
@@ -578,6 +637,7 @@ class _CommunityProfileScreenState
       } else {
         await _service.signIn(email: _email.text, password: _password.text);
       }
+      _loadedUid = null;
       await _loadProfile();
       if (mounted) setState(() {});
     } catch (error) {
@@ -589,7 +649,7 @@ class _CommunityProfileScreenState
 
   Future<void> _loadProfile() async {
     final user = _service.auth.currentUser;
-    if (user == null || user.isAnonymous || _profileLoaded) return;
+    if (user == null || user.isAnonymous || _loadedUid == user.uid) return;
     try {
       final snapshot = await _service.profile();
       final data = snapshot.data() ?? const <String, dynamic>{};
@@ -600,7 +660,7 @@ class _CommunityProfileScreenState
       _role = _service.isAdmin
           ? 'admin'
           : data['role'] as String? ?? 'partygoer';
-      _profileLoaded = true;
+      _loadedUid = user.uid;
     } catch (_) {}
   }
 
@@ -624,6 +684,9 @@ class _CommunityProfileScreenState
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
       await user.updateDisplayName(_name.text.trim());
+      if (uploadedImageUrl.isNotEmpty) {
+        await user.updatePhotoURL(uploadedImageUrl);
+      }
       if (mounted) {
         setState(() {
           _profileImageUrl = uploadedImageUrl;
@@ -642,6 +705,7 @@ class _CommunityProfileScreenState
     setState(() => _busy = true);
     try {
       await _service.signInWithGoogle(role: _register ? _role : null);
+      _loadedUid = null;
       await _loadProfile();
       if (mounted) setState(() {});
     } catch (error) {
@@ -783,8 +847,9 @@ class _CommunityProfileScreenState
                 const SizedBox(height: 18),
                 OutlinedButton.icon(
                   onPressed: () async {
+                    final navigator = Navigator.of(context);
                     await _service.signOut();
-                    if (mounted) setState(() {});
+                    if (mounted) navigator.pop();
                   },
                   icon: const Icon(Icons.logout),
                   label: const Text('Kijelentkezés'),

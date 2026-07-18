@@ -4,6 +4,7 @@ class CommunityPost {
   final String id;
   final String authorName;
   final String authorId;
+  final String authorImageUrl;
   final String text;
   final String imageUrl;
   final Map<String, int> reactions;
@@ -13,6 +14,7 @@ class CommunityPost {
     required this.id,
     required this.authorName,
     required this.authorId,
+    required this.authorImageUrl,
     required this.text,
     required this.imageUrl,
     required this.reactions,
@@ -28,14 +30,13 @@ class CommunityPost {
       id: doc.id,
       authorId: data['authorId'] as String? ?? '',
       authorName: data['authorName'] as String? ?? 'Unknown User',
+      authorImageUrl: data['authorImageUrl'] as String? ?? '',
       text: data['text'] as String? ?? '',
       imageUrl: data['imageUrl'] as String? ?? '',
       reactions: data['reactions'] is Map
           ? (data['reactions'] as Map).map(
-              (key, value) => MapEntry(
-                key.toString(),
-                (value as num?)?.toInt() ?? 0,
-              ),
+              (key, value) =>
+                  MapEntry(key.toString(), (value as num?)?.toInt() ?? 0),
             )
           : const <String, int>{},
       createdAt: timestamp is Timestamp ? timestamp.toDate() : DateTime.now(),

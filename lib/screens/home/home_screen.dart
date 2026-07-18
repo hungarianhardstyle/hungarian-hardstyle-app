@@ -47,14 +47,12 @@ class HomeScreen extends ConsumerWidget {
               children: [
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: IconButton.filledTonal(
-                    tooltip: 'Profil',
+                  child: CommunityAvatarButton(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const CommunityProfileScreen(),
                       ),
                     ),
-                    icon: const Icon(Icons.person_outline),
                   ),
                 ),
                 Center(

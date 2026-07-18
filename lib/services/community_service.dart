@@ -17,6 +17,7 @@ class CommunityService {
   final FirebaseAuth auth;
   final FirebaseFirestore firestore;
   final Dio _dio;
+  String _cachedRole = '';
 
   CommunityService({FirebaseAuth? auth, FirebaseFirestore? firestore, Dio? dio})
     : auth = auth ?? FirebaseAuth.instance,
@@ -82,6 +83,7 @@ class CommunityService {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }
+    await _cacheProfileRole();
   }
 
   Future<void> signInWithGoogle({String? role}) async {
@@ -107,6 +109,9 @@ class CommunityService {
             'role': role,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
+        _cachedRole = _isAdmin(user.email)
+            ? 'admin'
+            : (existingRole ?? role ?? '');
       } catch (_) {
         // Authentication remains successful if Firestore is temporarily unavailable.
       }
@@ -122,7 +127,8 @@ class CommunityService {
 
   bool _isAdmin(String? email) => email?.trim().toLowerCase() == adminEmail;
 
-  bool get isAdmin => _isAdmin(auth.currentUser?.email);
+  bool get isAdmin =>
+      _isAdmin(auth.currentUser?.email) || _cachedRole == 'admin';
 
   String _roleFor(String? email, String role) =>
       _isAdmin(email) ? 'admin' : role;
@@ -149,14 +155,18 @@ class CommunityService {
         .collection('community_profiles')
         .doc(user.uid)
         .get();
+    final profileData = profile.data() ?? const <String, dynamic>{};
     final displayName = isAnonymous
         ? 'Unknown User ${_anonymousNumber(user.uid)}'
-        : (profile.data()?['displayName'] as String? ??
+        : (profileData['displayName'] as String? ??
               user.displayName ??
               'HUHS user');
     await firestore.collection('live_feed_posts').add({
       'authorId': user.uid,
       'authorName': displayName,
+      'authorImageUrl': isAnonymous
+          ? ''
+          : (profileData['profileImageUrl'] as String? ?? ''),
       'text': trimmed,
       'imageUrl': imageUrl,
       'reactions': <String, int>{},
@@ -262,10 +272,27 @@ class CommunityService {
     if (user == null || user.isAnonymous) {
       throw StateError('A profil megtekintéséhez regisztráció szükséges.');
     }
-    return firestore.collection('community_profiles').doc(user.uid).get();
+    final snapshot = await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .get();
+    _cachedRole = (snapshot.data()?['role'] as String?) ?? '';
+    if (_isAdmin(user.email)) _cachedRole = 'admin';
+    return snapshot;
   }
 
-  Future<void> signOut() => auth.signOut();
+  Future<void> signOut() async {
+    _cachedRole = '';
+    await auth.signOut();
+  }
+
+  Future<void> _cacheProfileRole() async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return;
+    try {
+      await profile();
+    } catch (_) {}
+  }
 
   static String _anonymousNumber(String uid) {
     final value = uid.codeUnits.fold<int>(17, (hash, code) => hash * 31 + code);

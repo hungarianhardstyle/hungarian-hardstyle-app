@@ -8,8 +8,13 @@ const ADMIN_EMAIL = 'djdeeroy@gmail.com';
 
 exports.deleteCommunityUser = onCall(async (data, context) => {
   const email = String(context.auth?.token?.email || '').trim().toLowerCase();
-  if (!context.auth || email !== ADMIN_EMAIL) {
+  if (!context.auth) {
     throw new HttpsError('permission-denied', 'Csak admin törölhet felhasználót.');
+  }
+
+  const callerProfile = await db.collection('community_profiles').doc(context.auth.uid).get();
+  if (email !== ADMIN_EMAIL && callerProfile.data()?.role !== 'admin') {
+    throw new HttpsError('permission-denied', 'Only admins can delete users.');
   }
 
   const uid = String(data?.uid || '').trim();
