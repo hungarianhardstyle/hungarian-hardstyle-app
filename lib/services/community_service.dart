@@ -276,6 +276,13 @@ class CommunityService {
         .collection('community_profiles')
         .doc(user.uid)
         .get();
+    if (_isAdmin(user.email)) {
+      await firestore.collection('community_profiles').doc(user.uid).set({
+        'role': 'admin',
+        'email': user.email,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
     _cachedRole = (snapshot.data()?['role'] as String?) ?? '';
     if (_isAdmin(user.email)) _cachedRole = 'admin';
     return snapshot;
