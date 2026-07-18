@@ -56,6 +56,44 @@ class CommunityAdminScreen extends ConsumerWidget {
               final role = data['role'] as String? ?? 'partygoer';
               return Card(
                 child: ListTile(
+                  leading: IconButton(
+                    tooltip: 'Felhasználó törlése',
+                    icon: const Icon(Icons.person_remove_outlined),
+                    onPressed: doc.id == service.auth.currentUser?.uid
+                        ? null
+                        : () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (dialogContext) => AlertDialog(
+                                title: const Text('Felhasználó törlése'),
+                                content: const Text(
+                                  'A profil, a Chat-üzenetek és a bejelentkezés is törlődik. Folytatod?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(dialogContext, false),
+                                    child: const Text('Mégse'),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () =>
+                                        Navigator.pop(dialogContext, true),
+                                    child: const Text('Törlés'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirmed != true || !context.mounted) return;
+                            try {
+                              await service.deleteUser(doc.id);
+                            } catch (error) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(_chatError(error))),
+                              );
+                            }
+                          },
+                  ),
                   title: Text(data['displayName'] as String? ?? 'HUHS user'),
                   subtitle: Text(data['email'] as String? ?? doc.id),
                   trailing: DropdownButton<String>(

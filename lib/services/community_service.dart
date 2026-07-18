@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -228,6 +229,13 @@ class CommunityService {
       'role': role,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+  }
+
+  Future<void> deleteUser(String userId) async {
+    if (!isAdmin) throw StateError('Csak admin törölhet felhasználót.');
+    await FirebaseFunctions.instance.httpsCallable('deleteCommunityUser').call(
+      <String, dynamic>{'uid': userId},
+    );
   }
 
   Future<String> uploadImage(Uint8List bytes, {bool faceFocus = false}) async {

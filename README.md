@@ -13,7 +13,7 @@ The Community MVP source implementation is complete on `codex/v1.0`: Firebase Au
 The current delivery target is **v0.99.1 Community MVP**. The first MVP implementation is now in the Flutter source: Firebase Auth/Firestore Chat, anonymous text posting, registered image posting through Cloudinary, role-aware registration, profile entry, the five-news ten-second Home slider, and native article-tag filtering.
 
 Known follow-up issues are recorded for the next fix pass: profile image upload, top avatar image/monogram rendering, and the signed-in Chat image-upload permission check. E-mail/password registration and Google-account sign-in remain required entry paths, with a mandatory account role.
-Chat message deletion and the in-app role-management panel are implemented. Actual deletion of another Firebase Auth account remains a server-side Cloud Function/Admin SDK task.
+Chat message deletion and the in-app role-management panel are implemented. The server-side `functions/deleteCommunityUser` Cloud Function now performs real Auth/profile/Chat deletion; it still needs deployment after Firebase CLI authentication.
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions also need hardening: persist the owner admin role across sessions, make user roles final after onboarding unless changed by an admin, and provide admin deletion of inappropriate users and Chat messages.
 
