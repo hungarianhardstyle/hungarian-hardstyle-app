@@ -17,7 +17,7 @@ Chat message deletion and the in-app role-management panel are implemented. Actu
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions also need hardening: persist the owner admin role across sessions, make user roles final after onboarding unless changed by an admin, and provide admin deletion of inappropriate users and Chat messages.
 
-The current WordPress backend package is **2.4.28 (prepared locally)**. It includes the 2.4.27 features plus published post tag names in the HUHS posts API; deployment and live verification are still pending.
+The current WordPress backend package is **2.4.29 (prepared locally)**. It includes the 2.4.28 features plus push-title/body HTML-entity decoding and UTF-8 JSON output; deployment and live verification are still pending.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 

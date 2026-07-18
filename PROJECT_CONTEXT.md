@@ -699,7 +699,7 @@ v0.99 submission polish:
 - Populate the organizer dropdown from WordPress in Flutter and keep it aligned with the existing WordPress selector.
 - Require at least one genre; missing required values must show inline messages and red invalid-field styling.
 - Replace blocked multipart image submission with direct Cloudinary upload using the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
-- Flutter implementation is complete in release `0.99.1+4`; WordPress Mobile API `2.4.28` is prepared locally and still needs deployment/live verification. It includes the 2.4.27 features plus published post tag names in the HUHS posts API.
+- Flutter implementation is complete in release `0.99.1+4`; WordPress Mobile API `2.4.29` is prepared locally and still needs deployment/live verification. It includes the 2.4.28 features plus push-title/body HTML-entity decoding and UTF-8 JSON output.
 - v0.97 polish complete: event postal-code input accepts digits only in Flutter and WordPress/API validation; new-event publication pushes remain global to FCM-token devices.
 - Planned v1.0 notification personalization: normal event pushes target users who favorited or marked attendance; featured-event publication and reminder pushes remain global to every app-installed device with an FCM token, regardless of account registration; users who favorite an organizer receive that organizer's new-event notifications. Explicit notification opt-outs remain respected. A separate admin/editor push for newly received submissions is an optional follow-up.
 
