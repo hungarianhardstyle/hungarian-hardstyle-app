@@ -24,21 +24,23 @@ service cloud.firestore {
         && request.resource.data.imageUrl == resource.data.imageUrl
         && request.resource.data.reactions is map
         && request.resource.data.reactionBy is map;
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     match /community_profiles/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null
+        && (request.auth.uid == userId || isAdmin());
       allow create: if request.auth != null
         && request.auth.uid == userId
         && (isAdmin()
             || request.resource.data.role in ['dj', 'organizer', 'partygoer']);
       allow update: if request.auth != null
-        && request.auth.uid == userId
-        && (isAdmin()
-            || request.resource.data.role == resource.data.role
+        && ((request.auth.uid == userId
+          && (request.resource.data.role == resource.data.role
             || (!resource.data.keys().hasAny(['role'])
-                && request.resource.data.role in ['dj', 'organizer', 'partygoer']));
+                && request.resource.data.role in ['dj', 'organizer', 'partygoer'])))
+          || (isAdmin()
+            && request.resource.data.role in ['admin', 'dj', 'organizer', 'partygoer']));
     }
   }
 }

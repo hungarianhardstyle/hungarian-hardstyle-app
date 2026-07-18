@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,7 +19,8 @@ class CommunityService {
 
   CommunityService({FirebaseAuth? auth, FirebaseFirestore? firestore, Dio? dio})
     : auth = auth ?? FirebaseAuth.instance,
-      firestore = firestore ??
+      firestore =
+          firestore ??
           FirebaseFirestore.instanceFor(
             app: Firebase.app(),
             databaseId: firestoreDatabaseId,
@@ -69,11 +68,19 @@ class CommunityService {
     }, SetOptions(merge: true));
   }
 
-  Future<void> signIn({required String email, required String password}) {
-    return auth.signInWithEmailAndPassword(
+  Future<void> signIn({required String email, required String password}) async {
+    final credential = await auth.signInWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
+    final user = credential.user!;
+    if (_isAdmin(user.email)) {
+      await firestore.collection('community_profiles').doc(user.uid).set({
+        'role': 'admin',
+        'email': user.email,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
   }
 
   Future<void> signInWithGoogle({String? role}) async {
@@ -112,8 +119,9 @@ class CommunityService {
     }
   }
 
-  bool _isAdmin(String? email) =>
-      email?.trim().toLowerCase() == adminEmail;
+  bool _isAdmin(String? email) => email?.trim().toLowerCase() == adminEmail;
+
+  bool get isAdmin => _isAdmin(auth.currentUser?.email);
 
   String _roleFor(String? email, String role) =>
       _isAdmin(email) ? 'admin' : role;
@@ -199,10 +207,30 @@ class CommunityService {
     });
   }
 
-  Future<String> uploadImage(
-    Uint8List bytes, {
-    bool faceFocus = false,
-  }) async {
+  Future<void> deletePost(String postId) async {
+    if (!isAdmin) {
+      throw StateError('Csak admin törölhet Chat-üzenetet.');
+    }
+    await firestore.collection('live_feed_posts').doc(postId).delete();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchProfiles() {
+    if (!isAdmin) return const Stream.empty();
+    return firestore
+        .collection('community_profiles')
+        .orderBy('displayName')
+        .snapshots();
+  }
+
+  Future<void> setUserRole(String userId, String role) async {
+    if (!isAdmin) throw StateError('Csak admin módosíthat szerepkört.');
+    await firestore.collection('community_profiles').doc(userId).set({
+      'role': role,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<String> uploadImage(Uint8List bytes, {bool faceFocus = false}) async {
     final response = await _dio.post<Map<String, dynamic>>(
       'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
       data: FormData.fromMap({

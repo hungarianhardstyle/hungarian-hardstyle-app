@@ -723,6 +723,10 @@ Current v0.99.1 implementation status:
 - The public Firestore Live Feed supports anonymous text-only posts, registered Cloudinary image posts, Unicode emoji, and fixed reactions.
 - Home exposes a profile entry, a five-item news slider with 10-second rotation, and news detail exposes tappable tags with a native filtered article list.
 - Firestore deployment files are `firestore.rules`, `firebase.json`, and `.firebaserc`; physical ARM verification and rules deployment remain external release checks.
+- Known v0.99.1 follow-up issues (recorded, not fixed yet): profile image upload does not complete; the top profile avatar shows neither the saved image nor the expected monogram; Chat image posting incorrectly reports that registration is required even when the user is signed in. Registration must offer both e-mail/password and Google-account sign-in, with the account role selected during onboarding.
+- Chat message deletion and the in-app role-management panel are implemented; actual Firebase Auth account deletion for another user remains a server-side Cloud Function/Admin SDK task.
+- Also record for the next fix pass: push notification text has an encoding bug and may show Hungarian punctuation/accents as HTML entities (for example `&#8211;`) instead of decoded characters.
+- Additional community authorization issues/requirements: the `djdeeroy@gmail.com` admin role currently disappears after sign-out/sign-in; account roles must be immutable for normal users after onboarding and editable only by an admin; admins must be able to remove inappropriate user accounts and delete Chat messages.
 
 Planned v0.99.1 Community MVP decisions:
 

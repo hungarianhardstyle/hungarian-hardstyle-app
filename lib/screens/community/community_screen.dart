@@ -26,6 +26,77 @@ String _chatError(Object error) {
   return raw.replaceFirst('Exception: ', '');
 }
 
+class CommunityAdminScreen extends ConsumerWidget {
+  const CommunityAdminScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final service = ref.watch(communityServiceProvider);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Közösségi adminisztráció')),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: service.watchProfiles(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text(_chatError(snapshot.error!)));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final profiles = snapshot.data!.docs;
+          if (profiles.isEmpty) {
+            return const Center(child: Text('Még nincs regisztrált profil.'));
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: profiles.length,
+            itemBuilder: (context, index) {
+              final doc = profiles[index];
+              final data = doc.data();
+              final role = data['role'] as String? ?? 'partygoer';
+              return Card(
+                child: ListTile(
+                  title: Text(data['displayName'] as String? ?? 'HUHS user'),
+                  subtitle: Text(data['email'] as String? ?? doc.id),
+                  trailing: DropdownButton<String>(
+                    value:
+                        {'admin', 'dj', 'organizer', 'partygoer'}.contains(role)
+                        ? role
+                        : 'partygoer',
+                    items: const [
+                      DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                      DropdownMenuItem(value: 'dj', child: Text('DJ')),
+                      DropdownMenuItem(
+                        value: 'organizer',
+                        child: Text('Szervező'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'partygoer',
+                        child: Text('Bulizó'),
+                      ),
+                    ],
+                    onChanged: (value) async {
+                      if (value == null) return;
+                      try {
+                        await service.setUserRole(doc.id, value);
+                      } catch (error) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(_chatError(error))),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
 class LiveFeedScreen extends ConsumerStatefulWidget {
   const LiveFeedScreen({super.key});
 
@@ -38,6 +109,8 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   Uint8List? _image;
   bool _sending = false;
   bool _anonymous = true;
+  String _avatarUrl = '';
+  String _avatarLetter = 'H';
 
   CommunityService get _service => ref.read(communityServiceProvider);
 
@@ -51,6 +124,24 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     try {
       final user = await _service.ensureAnonymousUser();
       if (mounted) setState(() => _anonymous = user.isAnonymous);
+      await _refreshAvatar();
+    } catch (_) {}
+  }
+
+  Future<void> _refreshAvatar() async {
+    final user = _service.auth.currentUser;
+    if (user == null || user.isAnonymous) return;
+    try {
+      final data =
+          (await _service.profile()).data() ?? const <String, dynamic>{};
+      if (!mounted) return;
+      setState(() {
+        _avatarUrl = data['profileImageUrl'] as String? ?? '';
+        final name = data['displayName'] as String? ?? user.displayName ?? '';
+        _avatarLetter = name.trim().isEmpty
+            ? 'H'
+            : name.trim()[0].toUpperCase();
+      });
     } catch (_) {}
   }
 
@@ -61,7 +152,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   }
 
   Future<void> _pickImage() async {
-    if (_anonymous) {
+    if (_service.auth.currentUser?.isAnonymous ?? true) {
       _showMessage('Kép feltöltéséhez regisztráció szükséges.');
       return;
     }
@@ -114,6 +205,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     if (!mounted) return;
     final user = _service.auth.currentUser;
     setState(() => _anonymous = user?.isAnonymous ?? true);
+    await _refreshAvatar();
   }
 
   @override
@@ -125,7 +217,15 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
         actions: [
           IconButton(
             onPressed: _openProfile,
-            icon: const Icon(Icons.account_circle_outlined),
+            icon: CircleAvatar(
+              radius: 16,
+              backgroundImage: _avatarUrl.isEmpty
+                  ? null
+                  : NetworkImage(_avatarUrl),
+              child: _avatarUrl.isEmpty
+                  ? Text(_anonymous ? '?' : _avatarLetter)
+                  : null,
+            ),
           ),
         ],
       ),
@@ -284,12 +384,22 @@ class _PostCardState extends ConsumerState<_PostCard> {
   Future<void> _react(String emoji) async {
     setState(() => _selectedReaction = emoji);
     try {
-      await ref.read(communityServiceProvider).toggleReaction(
-        postId: widget.post.id,
-        emoji: emoji,
-      );
+      await ref
+          .read(communityServiceProvider)
+          .toggleReaction(postId: widget.post.id, emoji: emoji);
     } catch (_) {
       if (mounted) setState(() => _selectedReaction = null);
+    }
+  }
+
+  Future<void> _delete() async {
+    try {
+      await ref.read(communityServiceProvider).deletePost(widget.post.id);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_chatError(error))));
     }
   }
 
@@ -320,6 +430,12 @@ class _PostCardState extends ConsumerState<_PostCard> {
                   _timeLabel(post.createdAt),
                   style: const TextStyle(color: Colors.white54, fontSize: 11),
                 ),
+                if (ref.read(communityServiceProvider).isAdmin)
+                  IconButton(
+                    tooltip: 'Üzenet törlése',
+                    icon: const Icon(Icons.delete_outline, size: 19),
+                    onPressed: _delete,
+                  ),
               ],
             ),
             if (post.text.isNotEmpty) ...[
@@ -341,7 +457,9 @@ class _PostCardState extends ConsumerState<_PostCard> {
                 return ActionChip(
                   label: Text('$emoji${count > 0 ? ' $count' : ''}'),
                   backgroundColor: _selectedReaction == emoji
-                      ? Theme.of(context).colorScheme.primary.withValues(alpha: .25)
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: .25)
                       : null,
                   onPressed: () => _react(emoji),
                 );
@@ -441,7 +559,9 @@ class _CommunityProfileScreenState
       _bio.text = data['bio'] as String? ?? '';
       _social.text = data['socialLinks'] as String? ?? '';
       _profileImageUrl = data['profileImageUrl'] as String? ?? '';
-      _role = data['role'] as String? ?? 'partygoer';
+      _role = _service.isAdmin
+          ? 'admin'
+          : data['role'] as String? ?? 'partygoer';
       _profileLoaded = true;
     } catch (_) {}
   }
@@ -453,18 +573,18 @@ class _CommunityProfileScreenState
     try {
       final uploadedImageUrl = _profileImage == null
           ? _profileImageUrl
-          : await _service.uploadImage(
-              _profileImage!.bytes,
-              faceFocus: true,
-            );
-      await _service.firestore.collection('community_profiles').doc(user.uid).set({
-        'displayName': _name.text.trim(),
-        'bio': _bio.text.trim(),
-          'socialLinks': _social.text.trim(),
-        'role': _role,
-        'profileImageUrl': uploadedImageUrl,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+          : await _service.uploadImage(_profileImage!.bytes, faceFocus: true);
+      await _service.firestore
+          .collection('community_profiles')
+          .doc(user.uid)
+          .set({
+            'displayName': _name.text.trim(),
+            'bio': _bio.text.trim(),
+            'socialLinks': _social.text.trim(),
+            'role': _service.isAdmin ? 'admin' : _role,
+            'profileImageUrl': uploadedImageUrl,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
       await user.updateDisplayName(_name.text.trim());
       if (mounted) {
         setState(() {
@@ -484,6 +604,7 @@ class _CommunityProfileScreenState
     setState(() => _busy = true);
     try {
       await _service.signInWithGoogle(role: _register ? _role : null);
+      await _loadProfile();
       if (mounted) setState(() {});
     } catch (error) {
       _message('Google-bejelentkezés nem sikerült: ${_chatError(error)}');
@@ -542,7 +663,8 @@ class _CommunityProfileScreenState
                   )
                 else ...[
                   DropdownButtonFormField<String>(
-                    value: _role == 'dj' ||
+                    initialValue:
+                        _role == 'dj' ||
                             _role == 'organizer' ||
                             _role == 'partygoer'
                         ? _role
@@ -562,30 +684,64 @@ class _CommunityProfileScreenState
                         child: Text('Bulizó'),
                       ),
                     ],
-                    onChanged: (value) =>
-                        setState(() => _role = value ?? 'partygoer'),
+                    onChanged: null,
                   ),
                   const SizedBox(height: 14),
                 ],
-          const SizedBox(height: 20),
-          SubmissionImagePicker(
-            image: _profileImage,
-            title: 'Profilkép',
-            helperText:
-                'Opcionális kép; monogram jelenik meg, ha nincs feltöltve.',
-            onChanged: (image) => setState(() => _profileImage = image),
-          ),
-          TextField(controller: _name, decoration: const InputDecoration(labelText: 'Megjelenő név')),
-          const SizedBox(height: 12),
-          TextField(controller: _bio, maxLines: 3, decoration: const InputDecoration(labelText: 'Bemutatkozás')),
-          const SizedBox(height: 12),
-          TextField(controller: _social, maxLines: 2, decoration: const InputDecoration(labelText: 'Social linkek')),
-          const SizedBox(height: 14),
-          FilledButton.icon(onPressed: _busy ? null : _saveProfile, icon: const Icon(Icons.save_outlined), label: const Text('Profil mentése')),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const FavoritesScreen())), icon: const Icon(Icons.favorite_outline), label: const Text('Kedvencek')),
-          const SizedBox(height: 8),
-          const Text('Tervezett események az Ott leszek funkcióval jelennek majd meg.'),
+                if (_service.isAdmin)
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CommunityAdminScreen(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.admin_panel_settings_outlined),
+                    label: const Text('Közösségi adminisztráció'),
+                  ),
+                const SizedBox(height: 20),
+                SubmissionImagePicker(
+                  image: _profileImage,
+                  title: 'Profilkép',
+                  helperText:
+                      'Opcionális kép; monogram jelenik meg, ha nincs feltöltve.',
+                  onChanged: (image) => setState(() => _profileImage = image),
+                ),
+                TextField(
+                  controller: _name,
+                  decoration: const InputDecoration(labelText: 'Megjelenő név'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _bio,
+                  maxLines: 3,
+                  decoration: const InputDecoration(labelText: 'Bemutatkozás'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _social,
+                  maxLines: 2,
+                  decoration: const InputDecoration(labelText: 'Social linkek'),
+                ),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: _busy ? null : _saveProfile,
+                  icon: const Icon(Icons.save_outlined),
+                  label: const Text('Profil mentése'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const FavoritesScreen(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.favorite_outline),
+                  label: const Text('Kedvencek'),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Tervezett események az Ott leszek funkcióval jelennek majd meg.',
+                ),
                 const SizedBox(height: 18),
                 OutlinedButton.icon(
                   onPressed: () async {
