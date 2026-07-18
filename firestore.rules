@@ -55,7 +55,8 @@ service cloud.firestore {
             || request.resource.data.accessRole == resource.data.accessRole))
           || (isAdmin()
             && request.resource.data.role in ['dj', 'organizer', 'partygoer']
-            && request.resource.data.accessRole in ['none', 'moderator', 'admin']));
+            && (!request.resource.data.keys().hasAny(['accessRole'])
+              || request.resource.data.accessRole in ['none', 'moderator', 'admin'])));
     }
   }
 }

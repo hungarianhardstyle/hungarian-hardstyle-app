@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../../models/community_post.dart';
@@ -637,17 +639,23 @@ class _CommunityProfileScreenState
   bool _register = true;
   bool _busy = false;
   String? _loadedUid;
+  StreamSubscription<User?>? _authSubscription;
 
   CommunityService get _service => ref.read(communityServiceProvider);
 
   @override
   void initState() {
     super.initState();
+    _authSubscription = _service.auth.userChanges().listen((_) {
+      _loadedUid = null;
+      _loadProfile();
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadProfile());
   }
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     _email.dispose();
     _password.dispose();
     _name.dispose();
