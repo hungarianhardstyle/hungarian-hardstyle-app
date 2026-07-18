@@ -310,8 +310,8 @@ Prefer API responses that are easy for Flutter to parse:
 The current Flutter branch contains the Community MVP implementation: Firebase Auth registration/sign-in with mandatory DJ/organizer/partygoer roles, public Firestore Chat, anonymous text-only posts, registered Cloudinary image posts, profile entry/editing with monogram fallback, fixed reactions, a five-item Home news slider rotating every 10 seconds, and native article-tag filtering. Firestore deployment files are `firestore.rules`, `firebase.json`, and `.firebaserc`; physical ARM verification and rules deployment remain release checks. The composer uses a responsive layout. Google sign-in still needs the Firebase Console Google provider plus Android SHA-1/SHA-256 configuration; the checked-in `google-services.json` currently has an empty `oauth_client` array. The HUHS posts endpoint does not currently expose tag names, so Flutter hydrates them from the WordPress core posts endpoint when necessary.
 
 Known v0.99.1 follow-up issues (recorded, not fixed yet): profile image upload does not complete; the top profile avatar shows neither the saved image nor the expected monogram; Chat image posting incorrectly reports that registration is required even when the user is signed in. Registration must offer both e-mail/password and Google-account sign-in, with the account role selected during onboarding.
-Chat message deletion and the in-app role-management panel are implemented; actual Firebase Auth account deletion for another user remains a server-side Cloud Function/Admin SDK task.
-The Cloud Function source is in `functions/` (`deleteCommunityUser`); deploy it with Firebase CLI after authenticating to the project. The current environment is not authenticated, so live deployment is still pending.
+Chat message deletion and the in-app role-management panel are implemented; actual Firebase Auth account deletion for another user is handled by the deployed server-side Cloud Function/Admin SDK task.
+The Cloud Function source is in `functions/` (`deleteCommunityUser`) and is deployed to Firebase. Artifact cleanup retains old function images for 90 days.
 Also record for the next fix pass: push notification text has an encoding bug and may show Hungarian punctuation/accents as HTML entities (for example `&#8211;`) instead of decoded characters.
 Additional community authorization issues/requirements: the `djdeeroy@gmail.com` admin role currently disappears after sign-out/sign-in; account roles must be immutable for normal users after onboarding and editable only by an admin; admins must be able to remove inappropriate user accounts and delete Chat messages.
 
@@ -442,7 +442,7 @@ Keep this release intentionally small and low-risk:
 - require at least one genre and show inline validation text and red invalid-field styling for every missing required value
 - replace blocked multipart image submission with direct Cloudinary upload (`fjxo93em` / unsigned `Hun_hs_Mobile`) and send the returned URL to WordPress for DJ, organizer, and event submissions
 
-### v0.99.1 - Community MVP (implemented; Firebase Console deployment remains)
+### v0.99.1 - Community MVP (implemented; Firebase deployment live)
 
 - App-only registration/sign-in with e-mail/password and Google; account role is mandatory (`DJ`, `organizer`, or `partygoer`).
 - Home top-left avatar opens the user's profile, showing profile image or monogram, name, bio, social links, favorites, and planned events.
