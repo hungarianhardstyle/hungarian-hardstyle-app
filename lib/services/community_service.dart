@@ -13,11 +13,15 @@ class CommunityService {
   static const uploadPreset = 'Hun_hs_Mobile';
   static const adminEmail = 'djdeeroy@gmail.com';
   static const firestoreDatabaseId = 'hungarian-hardstyle';
+  static const accessNone = 'none';
+  static const accessModerator = 'moderator';
+  static const accessAdmin = 'admin';
 
   final FirebaseAuth auth;
   final FirebaseFirestore firestore;
   final Dio _dio;
   String _cachedRole = '';
+  String _cachedAccessRole = accessNone;
 
   CommunityService({FirebaseAuth? auth, FirebaseFirestore? firestore, Dio? dio})
     : auth = auth ?? FirebaseAuth.instance,
@@ -63,7 +67,8 @@ class CommunityService {
     await user.updateDisplayName(displayName.trim());
     await firestore.collection('community_profiles').doc(user.uid).set({
       'displayName': displayName.trim(),
-      'role': _roleFor(user.email, role),
+      'role': role,
+      'accessRole': _isAdmin(user.email) ? accessAdmin : accessNone,
       'email': email.trim(),
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -78,7 +83,8 @@ class CommunityService {
     final user = credential.user!;
     if (_isAdmin(user.email)) {
       await firestore.collection('community_profiles').doc(user.uid).set({
-        'role': 'admin',
+        'role': 'organizer',
+        'accessRole': accessAdmin,
         'email': user.email,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -100,18 +106,29 @@ class CommunityService {
       final profile = firestore.collection('community_profiles').doc(user.uid);
       try {
         final existing = await profile.get();
-        final existingRole = existing.data()?['role'] as String?;
+        final existingData = existing.data() ?? const <String, dynamic>{};
+        final existingRole = existingData['role'] as String?;
+        final existingAccessRole = existingData['accessRole'] as String? ??
+            (existingRole == accessAdmin ? accessAdmin : accessNone);
         await profile.set({
           'displayName': user.displayName ?? 'Hungarian Hardstyle user',
           'email': user.email,
-          if (_isAdmin(user.email)) 'role': 'admin',
+          if (_isAdmin(user.email)) 'role': 'organizer',
+          if (_isAdmin(user.email)) 'accessRole': accessAdmin,
           if (!_isAdmin(user.email) && existingRole == null && role != null)
             'role': role,
+          if (!_isAdmin(user.email) && existingData['accessRole'] == null)
+            'accessRole': existingAccessRole,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         _cachedRole = _isAdmin(user.email)
-            ? 'admin'
-            : (existingRole ?? role ?? '');
+            ? 'organizer'
+            : (existingRole == accessAdmin
+                  ? 'organizer'
+                  : (existingRole ?? role ?? ''));
+        _cachedAccessRole = _isAdmin(user.email)
+            ? accessAdmin
+            : existingAccessRole;
       } catch (_) {
         // Authentication remains successful if Firestore is temporarily unavailable.
       }
@@ -128,10 +145,20 @@ class CommunityService {
   bool _isAdmin(String? email) => email?.trim().toLowerCase() == adminEmail;
 
   bool get isAdmin =>
-      _isAdmin(auth.currentUser?.email) || _cachedRole == 'admin';
+      _isAdmin(auth.currentUser?.email) ||
+      _cachedAccessRole == accessAdmin ||
+      _cachedRole == accessAdmin;
 
-  String _roleFor(String? email, String role) =>
-      _isAdmin(email) ? 'admin' : role;
+  bool get canModerate =>
+      isAdmin || _cachedAccessRole == accessModerator;
+
+  String accountRole(String? value) => const {
+    'dj',
+    'organizer',
+    'partygoer',
+  }.contains(value)
+      ? value!
+      : 'partygoer';
 
   Future<void> publishPost({
     required String text,
@@ -219,7 +246,10 @@ class CommunityService {
   }
 
   Future<void> deletePost(String postId) async {
-    if (!isAdmin) {
+    if (!isAdmin && _cachedAccessRole == accessNone) {
+      await _cacheProfileRole();
+    }
+    if (!canModerate) {
       throw StateError('Csak admin törölhet Chat-üzenetet.');
     }
     await firestore.collection('live_feed_posts').doc(postId).delete();
@@ -234,9 +264,21 @@ class CommunityService {
   }
 
   Future<void> setUserRole(String userId, String role) async {
+    await setAccountRole(userId, role);
+  }
+
+  Future<void> setAccountRole(String userId, String role) async {
     if (!isAdmin) throw StateError('Csak admin módosíthat szerepkört.');
     await firestore.collection('community_profiles').doc(userId).set({
       'role': role,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> setAccessRole(String userId, String accessRole) async {
+    if (!isAdmin) throw StateError('Csak admin adhat jogosultsĂˇgot.');
+    await firestore.collection('community_profiles').doc(userId).set({
+      'accessRole': accessRole,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -272,24 +314,35 @@ class CommunityService {
     if (user == null || user.isAnonymous) {
       throw StateError('A profil megtekintéséhez regisztráció szükséges.');
     }
-    final snapshot = await firestore
+    var snapshot = await firestore
         .collection('community_profiles')
         .doc(user.uid)
         .get();
     if (_isAdmin(user.email)) {
       await firestore.collection('community_profiles').doc(user.uid).set({
-        'role': 'admin',
+        'role': 'organizer',
+        'accessRole': accessAdmin,
         'email': user.email,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+      snapshot = await firestore
+          .collection('community_profiles')
+          .doc(user.uid)
+          .get();
     }
-    _cachedRole = (snapshot.data()?['role'] as String?) ?? '';
-    if (_isAdmin(user.email)) _cachedRole = 'admin';
+    final data = snapshot.data() ?? const <String, dynamic>{};
+    final role = data['role'] as String?;
+    _cachedRole = accountRole(role);
+    _cachedAccessRole = _isAdmin(user.email)
+        ? accessAdmin
+        : (data['accessRole'] as String? ??
+              (role == accessAdmin ? accessAdmin : accessNone));
     return snapshot;
   }
 
   Future<void> signOut() async {
     _cachedRole = '';
+    _cachedAccessRole = accessNone;
     await auth.signOut();
   }
 

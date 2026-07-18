@@ -660,7 +660,9 @@ iPad
 
 # Current Version
 
-v0.99.1+10 (current Flutter package version; community bugfix/audit build)
+v0.99.1+11 (current Flutter package version; community authorization build)
+
+Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile.
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -723,7 +725,7 @@ Current v0.99.1 implementation status:
 - The public Firestore Live Feed supports anonymous text-only posts, registered Cloudinary image posts, Unicode emoji, and fixed reactions.
 - Home exposes a profile entry, a five-item news slider with 10-second rotation, and news detail exposes tappable tags with a native filtered article list.
 - Firestore deployment files are `firestore.rules`, `firebase.json`, and `.firebaserc`; physical ARM verification and rules deployment remain external release checks.
-- v0.99.1+10 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, role persistence/admin authorization, admin message/user deletion access, duplicate-role dropdown crash, logout navigation crash, and deploys Firestore rules to the named `hungarian-hardstyle` database used by the app. Profile uploads use Cloudinary face-aware cropping; manual focal-point editing remains a later UX enhancement.
+- v0.99.1+11 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separates account roles from access roles, adds moderator Chat deletion and admin user-role management, and deploys Firestore rules to the named `hungarian-hardstyle` database used by the app. Profile uploads use Cloudinary face-aware cropping; manual focal-point editing remains a later UX enhancement.
 - Chat message deletion and the in-app role-management panel are implemented; actual Firebase Auth account deletion for another user is handled by the deployed server-side Cloud Function/Admin SDK task.
 - The Cloud Function source is in `functions/` (`deleteCommunityUser`) and is deployed to Firebase. Artifact cleanup retains old function images for 90 days.
 - Also record for the next fix pass: push notification text has an encoding bug and may show Hungarian punctuation/accents as HTML entities (for example `&#8211;`) instead of decoded characters.

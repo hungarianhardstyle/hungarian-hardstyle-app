@@ -13,7 +13,12 @@ exports.deleteCommunityUser = onCall(async (data, context) => {
   }
 
   const callerProfile = await db.collection('community_profiles').doc(context.auth.uid).get();
-  if (email !== ADMIN_EMAIL && callerProfile.data()?.role !== 'admin') {
+  const callerData = callerProfile.data() || {};
+  if (
+    email !== ADMIN_EMAIL &&
+    callerData.accessRole !== 'admin' &&
+    callerData.role !== 'admin'
+  ) {
     throw new HttpsError('permission-denied', 'Only admins can delete users.');
   }
 

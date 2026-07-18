@@ -6,7 +6,15 @@ service cloud.firestore {
       return request.auth != null
         && (request.auth.token.email == 'djdeeroy@gmail.com'
           || (exists(/databases/$(database)/documents/community_profiles/$(request.auth.uid))
-            && get(/databases/$(database)/documents/community_profiles/$(request.auth.uid)).data.role == 'admin'));
+            && (get(/databases/$(database)/documents/community_profiles/$(request.auth.uid)).data.accessRole == 'admin'
+              || get(/databases/$(database)/documents/community_profiles/$(request.auth.uid)).data.role == 'admin')));
+    }
+
+    function isModerator() {
+      return isAdmin()
+        || (request.auth != null
+          && exists(/databases/$(database)/documents/community_profiles/$(request.auth.uid))
+          && get(/databases/$(database)/documents/community_profiles/$(request.auth.uid)).data.accessRole == 'moderator');
     }
 
     match /live_feed_posts/{postId} {
@@ -26,7 +34,7 @@ service cloud.firestore {
         && request.resource.data.imageUrl == resource.data.imageUrl
         && request.resource.data.reactions is map
         && request.resource.data.reactionBy is map;
-      allow delete: if isAdmin();
+      allow delete: if isModerator();
     }
 
     match /community_profiles/{userId} {
@@ -35,14 +43,19 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.auth.uid == userId
         && (isAdmin()
-            || request.resource.data.role in ['dj', 'organizer', 'partygoer']);
+            || (request.resource.data.role in ['dj', 'organizer', 'partygoer']
+              && (!request.resource.data.keys().hasAny(['accessRole'])
+                || request.resource.data.accessRole == 'none')));
       allow update: if request.auth != null
         && ((request.auth.uid == userId
           && (request.resource.data.role == resource.data.role
             || (!resource.data.keys().hasAny(['role'])
-                && request.resource.data.role in ['dj', 'organizer', 'partygoer'])))
+                && request.resource.data.role in ['dj', 'organizer', 'partygoer']))
+          && (!request.resource.data.keys().hasAny(['accessRole'])
+            || request.resource.data.accessRole == resource.data.accessRole))
           || (isAdmin()
-            && request.resource.data.role in ['admin', 'dj', 'organizer', 'partygoer']));
+            && request.resource.data.role in ['dj', 'organizer', 'partygoer']
+            && request.resource.data.accessRole in ['none', 'moderator', 'admin']));
     }
   }
 }

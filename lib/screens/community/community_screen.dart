@@ -96,7 +96,7 @@ class CommunityAdminScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final doc = profiles[index];
               final data = doc.data();
-              final role = data['role'] as String? ?? 'partygoer';
+              final role = service.accountRole(data['role'] as String?);
               return Card(
                 child: ListTile(
                   leading: IconButton(
@@ -138,11 +138,50 @@ class CommunityAdminScreen extends ConsumerWidget {
                           },
                   ),
                   title: Text(data['displayName'] as String? ?? 'HUHS user'),
-                  subtitle: Text(data['email'] as String? ?? doc.id),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(data['email'] as String? ?? doc.id),
+                      PopupMenuButton<String>(
+                        enabled: doc.id != service.auth.currentUser?.uid,
+                        padding: EdgeInsets.zero,
+                        tooltip: 'Adminjog / moderátori jog',
+                        onSelected: doc.id == service.auth.currentUser?.uid
+                            ? null
+                            : (value) async {
+                                try {
+                                  await service.setAccessRole(doc.id, value);
+                                } catch (error) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(_chatError(error))),
+                                  );
+                                }
+                              },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: CommunityService.accessNone,
+                            child: Text('Nincs jogosultság'),
+                          ),
+                          PopupMenuItem(
+                            value: CommunityService.accessModerator,
+                            child: Text('Moderátor'),
+                          ),
+                          PopupMenuItem(
+                            value: CommunityService.accessAdmin,
+                            child: Text('Admin'),
+                          ),
+                        ],
+                        child: Text(
+                          'Jog: ${data['accessRole'] ?? (data['role'] == 'admin' ? 'admin' : 'none')}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
                   trailing: DropdownButton<String>(
                     value:
                         const {
-                          'admin',
                           'dj',
                           'organizer',
                           'partygoer',
@@ -151,7 +190,6 @@ class CommunityAdminScreen extends ConsumerWidget {
                         : 'partygoer',
                     items: [
                       for (final entry in const {
-                        'admin': 'Admin',
                         'dj': 'DJ',
                         'organizer': 'Szervező',
                         'partygoer': 'Bulizó',
@@ -166,7 +204,7 @@ class CommunityAdminScreen extends ConsumerWidget {
                         : (value) async {
                             if (value == null) return;
                             try {
-                              await service.setUserRole(doc.id, value);
+                              await service.setAccountRole(doc.id, value);
                             } catch (error) {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -527,7 +565,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
                   _timeLabel(post.createdAt),
                   style: const TextStyle(color: Colors.white54, fontSize: 11),
                 ),
-                if (ref.read(communityServiceProvider).isAdmin)
+                if (ref.read(communityServiceProvider).canModerate)
                   IconButton(
                     tooltip: 'Üzenet törlése',
                     icon: const Icon(Icons.delete_outline, size: 19),
@@ -657,9 +695,7 @@ class _CommunityProfileScreenState
       _bio.text = data['bio'] as String? ?? '';
       _social.text = data['socialLinks'] as String? ?? '';
       _profileImageUrl = data['profileImageUrl'] as String? ?? '';
-      _role = _service.isAdmin
-          ? 'admin'
-          : data['role'] as String? ?? 'partygoer';
+      _role = _service.accountRole(data['role'] as String?);
       _loadedUid = user.uid;
     } catch (_) {}
   }
@@ -679,7 +715,7 @@ class _CommunityProfileScreenState
             'displayName': _name.text.trim(),
             'bio': _bio.text.trim(),
             'socialLinks': _social.text.trim(),
-            'role': _service.isAdmin ? 'admin' : _role,
+            'role': _role,
             'profileImageUrl': uploadedImageUrl,
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));

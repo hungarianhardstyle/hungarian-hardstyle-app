@@ -12,12 +12,14 @@ The Community MVP source implementation is complete on `codex/v1.0`: Firebase Au
 
 The current delivery target is **v0.99.1 Community MVP**. The first MVP implementation is now in the Flutter source: Firebase Auth/Firestore Chat, anonymous text posting, registered image posting through Cloudinary, role-aware registration, profile entry, the five-news ten-second Home slider, and native article-tag filtering.
 
-The v0.99.1 community bugfix pass is implemented in `v0.99.1+10`; e-mail/password registration and Google-account sign-in remain the required entry paths, with a mandatory account role.
-Additional reported bugs are recorded without fixes for now: unreliable profile-image rendering and missing face-focus/manual crop control, Chat deletion unavailable, Chat image/avatar display inconsistency, generic Home avatar instead of image/monogram, red Flutter error screen on logout, duplicate-`admin` role dropdown crash, and missing in-app admin/user-management menus.
-v0.99.1+10 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, role persistence/admin authorization, admin message/user deletion access, duplicate-role dropdown crash, logout navigation crash, and deploys the Firestore rules to the named `hungarian-hardstyle` database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; manual focal-point editing is optional later UX polish.
+The v0.99.1 community bugfix pass is implemented in `v0.99.1+11`; e-mail/password registration and Google-account sign-in remain the required entry paths, with a mandatory account role.
+The v0.99.1+11 authorization pass also resolves the previously reported Chat deletion, admin-role persistence, and in-app user-management issues. Manual profile focal-point editing remains optional polish.
+v0.99.1+11 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separate account/access roles, moderator Chat deletion, admin user-role management, duplicate-role dropdown crash, logout navigation crash, and deploys the Firestore rules to the named `hungarian-hardstyle` database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; manual focal-point editing is optional later UX polish.
+
+Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile.
 Chat message deletion and the in-app role-management panel are implemented. The server-side `functions/deleteCommunityUser` Cloud Function performs real Auth/profile/Chat deletion and is deployed to Firebase. Artifact cleanup retains old function images for 90 days.
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
-Community permissions also need hardening: persist the owner admin role across sessions, make user roles final after onboarding unless changed by an admin, and provide admin deletion of inappropriate users and Chat messages.
+Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles, and moderators can delete Chat messages only.
 
 The current WordPress backend package is **2.4.29 (prepared locally)**. It includes the 2.4.28 features plus push-title/body HTML-entity decoding and UTF-8 JSON output; deployment and live verification are still pending.
 
