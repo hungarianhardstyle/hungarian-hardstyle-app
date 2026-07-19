@@ -296,7 +296,7 @@ Paid
 
 # Radio
 
-Required by v1.0.
+Planned after v1.0; deferred from the first public release.
 
 Online streaming.
 
@@ -674,6 +674,11 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - Next build follow-up: refresh the Home top-left profile avatar immediately after sign-in without requiring manual refresh.
 - Next build follow-up: add a dismissible/pinnable Chat notice, admin-created pinned messages, admin pin controls, and a configurable profanity filter that masks blocked words with asterisks.
 - Next build follow-up: show an admin-managed startup announcement image with a close button; allow image upload/replacement from the app admin panel and the WordPress Mobile API.
+- v0.99.2 follow-up: allow gallery images to be saved to the device with platform permission handling.
+- v0.99.2 follow-up: add a Data protection / GDPR information section covering privacy, retention, and user rights.
+- v0.99.2 follow-up: review personal-data access rules and keep sensitive operations server-side.
+- v0.99.2 follow-up: add practical release hardening (release signing, obfuscation, restricted backend secrets, and abuse/rate-limit checks); absolute protection against reverse engineering is not possible.
+- v0.99.2.1 follow-up: integrate Real Hardstyle FM at `https://stream.realhardstyle.nl` as the Home radio stream, show stream track metadata when available, keep the player above bottom navigation without covering event panels, and add a More-section provider page with the supplied Real Hardstyle logo, website, and attribution text.
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 

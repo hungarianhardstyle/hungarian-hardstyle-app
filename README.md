@@ -41,6 +41,14 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
 - [ ] always render the persisted account role on profiles and Chat; show `Admin` or `Moderátor` as a separate access badge next to the account role
 
  - [ ] tag- and genre-filtered discovery lists use API pagination/infinite scroll so all matching news and DJ results can be reached, not only items already loaded in the app
+ - [ ] allow gallery images to be saved to the device with platform permission handling
+ - [ ] add an in-app Data protection / GDPR information section with privacy and retention details
+ - [ ] review personal-data access rules and keep sensitive operations server-side
+ - [ ] add practical release hardening: release signing, obfuscation, restricted backend secrets, and abuse/rate-limit checks
+ - [ ] integrate the Real Hardstyle FM stream at `https://stream.realhardstyle.nl` as a Home audio player
+ - [ ] show the currently playing track title in the radio player when stream metadata provides it
+ - [ ] place the persistent radio player above the bottom navigation without covering event panels
+ - [ ] add a More-section radio provider page with Real Hardstyle FM name, website, logo, and provider attribution text
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -234,11 +242,8 @@ Core release quality:
 - [ ] add a dedicated `Kiadások` destination between Events and More in the app
 - [ ] show configured Hardstyle.com, Beatport, Spotify and Apple Music links at the bottom of each release detail screen
 - [ ] allow the own shop catalog to sell separately uploaded Radio Edit/Radio Version and Extended/full versions
-- [ ] prepare the online-radio backend
-- [ ] add background playback and audio-focus handling
 - [ ] ship Hungarian/English Flutter UI localization
 - [ ] ship reviewed English WordPress content and locale-aware mobile APIs for news, events, DJs and organizers, with Hungarian fallback
-- [ ] add a compact online-radio player below the Home logo with explicit play/pause/stop, server-side AutoDJ rotation, Now Playing data and clear loading/offline/error states
 - [x] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
 - [ ] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background
 - [x] introduce a persistent navigation shell with per-tab history
@@ -292,7 +297,7 @@ FAQ:
 - [ ] searchable, expandable Flutter FAQ under More
 - [ ] loading, empty and error states
 
-Online radio:
+### Post-v1.0 — Online radio (deferred)
 
 - [ ] configure a server-side AutoDJ for a managed library of X uploaded tracks
 - [ ] prefer AzuraCast for Liquidsoap AutoDJ, Icecast-compatible streaming, playlist management and Now Playing data

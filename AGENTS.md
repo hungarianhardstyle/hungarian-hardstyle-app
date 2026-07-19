@@ -330,6 +330,11 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - Next build follow-up: refresh the Home top-left profile avatar immediately after sign-in without requiring manual refresh.
 - Next build follow-up: add a dismissible/pinnable Chat notice, admin-created pinned messages, admin pin controls, and a configurable profanity filter that masks blocked words with asterisks.
 - Next build follow-up: show an admin-managed startup announcement image with a close button; allow image upload/replacement from the app admin panel and the WordPress Mobile API.
+- v0.99.2 follow-up: allow gallery images to be saved to the device with platform permission handling.
+- v0.99.2 follow-up: add a Data protection / GDPR information section covering privacy, retention, and user rights.
+- v0.99.2 follow-up: review personal-data access rules and keep sensitive operations server-side.
+- v0.99.2 follow-up: add practical release hardening (release signing, obfuscation, restricted backend secrets, and abuse/rate-limit checks); absolute protection against reverse engineering is not possible.
+- v0.99.2.1 follow-up: integrate Real Hardstyle FM at `https://stream.realhardstyle.nl` as the Home radio stream, show stream track metadata when available, keep the player above bottom navigation without covering event panels, and add a More-section provider page with the supplied Real Hardstyle logo, website, and attribution text.
 
 ### v0.4 - Foundation
 
@@ -487,12 +492,9 @@ Focus:
 - Hardstyle.com is an external destination only; do not scrape or import its catalog
 - show configured Hardstyle.com, Beatport, Spotify and Apple Music links at the bottom of each release detail screen
 - the own shop catalog may contain both Radio Edit/Radio Version and Extended/full versions when they are intentionally uploaded as separate products
-- online-radio backend
-- background playback and audio-focus handling
 - final UX and visual polish pass across navigation, spacing, labels, buttons, loading/error states, accessibility, and tasteful motion/effects before release
 - basic community features
 - Hungarian/English Flutter UI localization plus reviewed English WordPress content for posts, events, DJs/artists, and organizers, served through locale-aware mobile APIs with Hungarian fallback
-- an online radio mini-player directly below the logo on Home, backed by a server-side AutoDJ that rotates a configurable library of X uploaded tracks and can always be stopped by the user
 - a purposeful Hungarian Hardstyle-branded loading animation that does not delay startup and respects reduced-motion accessibility settings
 - refine the Android startup animation with the full HUHS logo on a transparent/no-white background
 - polished Android release
@@ -505,18 +507,6 @@ FAQ requirements for v1.0:
 - support categories and an explicit display order
 - Flutter shows a searchable, expandable FAQ list with loading, empty, and error states
 - do not hardcode production FAQ content in Flutter
-
-Online radio requirements for v1.0:
-
-- place a compact player directly below the Hungarian Hardstyle logo on Home
-- use a server-side AutoDJ to rotate a configurable library of X tracks; do not bundle or sequence the production music library in Flutter
-- require an explicit user action before audible playback and always provide play/pause/stop
-- include loading, offline, and stream-error states, plus current-track metadata when available
-- prefer AzuraCast as the simplest operations layer: Liquidsoap AutoDJ, Icecast-compatible streaming, playlist/media management, and Now Playing API
-- defer the hosting-provider decision until radio implementation; prefer a managed AzuraCast plan for launch and move to a suitably sized self-managed VPS only when real usage or control requirements justify the operational work
-- allow bulk upload through AzuraCast's built-in SFTP server; do not use unencrypted FTP
-- for cloud media storage, prefer an officially supported S3-compatible provider or Dropbox; do not depend on an unofficial Google Drive mount/sync for production playback
-- define music licensing, hosting, bandwidth, stream codec/bitrate, background playback, audio focus, interruptions, and media-notification controls before implementation
 
 Confirmed v1.0 community direction:
 
