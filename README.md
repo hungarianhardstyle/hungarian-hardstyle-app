@@ -17,11 +17,30 @@ The v0.99.1+11 authorization pass also resolves the previously reported Chat del
 v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separate account/access roles, moderator Chat deletion, admin user-role management for legacy profiles, Auth-restored profile loading, duplicate-role dropdown crash, logout navigation crash, and deploys the Firestore rules to the named `hungarian-hardstyle` database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; manual focal-point editing is optional later UX polish.
 
 Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile.
+- Next build follow-up: add a password-reset link to login and replace raw Firebase credential errors with a clear Hungarian message.
+- Next build follow-up: add password visibility toggles and an optional strong-password generator during registration.
+- Next build follow-up: refresh the Home top-left profile avatar immediately after sign-in without requiring manual refresh.
+- Next build follow-up: add a dismissible/pinnable Chat notice, admin-created pinned messages, admin pin controls, and a configurable profanity filter that masks blocked words with asterisks.
+- Next build follow-up: show an admin-managed startup announcement image with a close button; allow image upload/replacement from the app admin panel and the WordPress Mobile API.
 Chat message deletion and the in-app role-management panel are implemented. The server-side `functions/deleteCommunityUser` Cloud Function performs real Auth/profile/Chat deletion and is deployed to Firebase. Artifact cleanup retains old function images for 90 days.
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles, and moderators can delete Chat messages only.
 
 The current WordPress backend package is **2.4.29 (prepared locally)**. It includes the 2.4.28 features plus push-title/body HTML-entity decoding and UTF-8 JSON output; deployment and live verification are still pending.
+
+### v0.99.2 — next test build
+
+- [ ] re-enable the Google AdMob test banner with `HUHS_ENABLE_TEST_ADS=true`
+- [ ] verify the test ad on the ARM debug APK without blocking startup
+- [ ] keep production AdMob IDs and consent/privacy handling deferred until release
+- [ ] fix e-mail/password sign-in independently of the misleading raw Firebase credential error
+- [ ] fix saved profile images not appearing on the user's profile/avatar
+- [ ] fix admin user deletion and the failing `deleteCommunityUser` Cloud Function call
+- [ ] make the owner's `djdeeroy@gmail.com` account role persist as `Szervező` while retaining admin access
+- [ ] enforce final account roles server-side: users choose once at registration; only admins may change another user's role
+- [ ] always render the persisted account role on profiles and Chat; show `Admin` or `Moderátor` as a separate access badge next to the account role
+
+ - [ ] tag- and genre-filtered discovery lists use API pagination/infinite scroll so all matching news and DJ results can be reached, not only items already loaded in the app
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 

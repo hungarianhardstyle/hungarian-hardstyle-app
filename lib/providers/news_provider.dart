@@ -94,7 +94,7 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
     try {
       final response = await _getPostsPage(page: 1);
 
-      if (requestId != _requestId) {
+      if (_isStale(requestId)) {
         return;
       }
 
@@ -106,7 +106,7 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
         clearError: true,
       );
     } catch (error) {
-      if (requestId != _requestId) {
+      if (_isStale(requestId)) {
         return;
       }
 
@@ -155,6 +155,8 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
       perPage: _perPage,
     );
   }
+
+  bool _isStale(int requestId) => requestId != _requestId;
 
   Future<void> updateSearch(String value) async {
     state = state.copyWith(

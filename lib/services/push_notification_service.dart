@@ -13,6 +13,7 @@ import 'wordpress_service.dart';
 
 class PushNotificationService {
   static const _tokenKey = 'fcm_token';
+  static bool _initialized = false;
   static final Dio _api = Dio(
     BaseOptions(
       baseUrl: 'https://hungarianhardstyle.hu/wp-json/huhs/v1',
@@ -22,6 +23,8 @@ class PushNotificationService {
   );
 
   static Future<void> initialize() async {
+    if (_initialized) return;
+
     final messaging = FirebaseMessaging.instance;
     final settings = await messaging.requestPermission(
       alert: true,
@@ -39,6 +42,7 @@ class PushNotificationService {
     if (initialMessage != null) {
       await _handleOpenedMessage(initialMessage);
     }
+    _initialized = true;
   }
 
   static Future<void> _handleOpenedMessage(RemoteMessage message) async {

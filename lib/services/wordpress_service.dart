@@ -10,6 +10,19 @@ import '../models/post.dart';
 import '../models/profile_submission.dart';
 import '../models/submission_image.dart';
 
+int _readInt(Object? value, {int fallback = 0}) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? fallback;
+  return fallback;
+}
+
+String? _readResponseMessage(Object? responseData) {
+  if (responseData is! Map<String, dynamic>) return null;
+  final message = responseData['message'];
+  return message is String && message.trim().isNotEmpty ? message.trim() : null;
+}
+
 class NewsCategory {
   final int id;
   final String name;
@@ -32,21 +45,6 @@ class NewsCategory {
     );
   }
 
-  static int _readInt(Object? value) {
-    if (value is int) {
-      return value;
-    }
-
-    if (value is num) {
-      return value.toInt();
-    }
-
-    if (value is String) {
-      return int.tryParse(value) ?? 0;
-    }
-
-    return 0;
-  }
 }
 
 class PostsPage {
@@ -416,13 +414,8 @@ class WordpressService {
         data: data,
       );
       final responseData = response.data;
-
-      if (responseData is Map<String, dynamic>) {
-        final message = responseData['message'];
-        if (message is String && message.trim().isNotEmpty) {
-          return message.trim();
-        }
-      }
+      final message = _readResponseMessage(responseData);
+      if (message != null) return message;
 
       return 'Köszönjük, a beküldést elküldtük ellenőrzésre.';
     } on DioException catch (e) {
@@ -460,14 +453,8 @@ class WordpressService {
         payload['flyer_url'] = await _uploadCloudinaryImage(image);
       }
       final response = await _dio.post('/event-submissions', data: payload);
-      final data = response.data;
-
-      if (data is Map<String, dynamic>) {
-        final message = data['message'];
-        if (message is String && message.trim().isNotEmpty) {
-          return message.trim();
-        }
-      }
+      final message = _readResponseMessage(response.data);
+      if (message != null) return message;
 
       return 'Köszönjük, az eseményt elküldtük ellenőrzésre.';
     } on DioException catch (e) {
@@ -643,22 +630,6 @@ class WordpressService {
     } catch (e) {
       throw Exception('Ismeretlen hiba tortent.\n\n$e');
     }
-  }
-
-  int _readInt(Object? value, {int fallback = 0}) {
-    if (value is int) {
-      return value;
-    }
-
-    if (value is num) {
-      return value.toInt();
-    }
-
-    if (value is String) {
-      return int.tryParse(value) ?? fallback;
-    }
-
-    return fallback;
   }
 
   bool _readBool(Object? value) {

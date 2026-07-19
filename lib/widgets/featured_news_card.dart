@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
+import '../core/content/date_formatters.dart';
 import '../models/post.dart';
 import '../providers/favorites_provider.dart';
 import '../screens/news/news_detail_screen.dart';
@@ -11,17 +11,6 @@ class FeaturedNewsCard extends StatelessWidget {
   final Post post;
 
   const FeaturedNewsCard({super.key, required this.post});
-
-  String _formatDate() {
-    try {
-      return DateFormat(
-        'yyyy. MMM d.',
-        'hu_HU',
-      ).format(DateTime.parse(post.date));
-    } catch (_) {
-      return post.date;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +140,7 @@ class FeaturedNewsCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        _formatDate(),
+                        formatHungarianDate(post.date),
                         style: const TextStyle(
                           color: Colors.white70,
                           fontWeight: FontWeight.w500,

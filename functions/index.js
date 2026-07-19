@@ -27,7 +27,12 @@ exports.deleteCommunityUser = onCall(async (data, context) => {
     throw new HttpsError('invalid-argument', 'Érvényes, másik felhasználó szükséges.');
   }
 
-  await admin.auth().deleteUser(uid);
+  try {
+    await admin.auth().deleteUser(uid);
+  } catch (error) {
+    // Make retries safe when Auth was already deleted but Firestore cleanup did not finish.
+    if (error?.code !== 'auth/user-not-found') throw error;
+  }
   await db.collection('community_profiles').doc(uid).delete();
 
   const posts = await db

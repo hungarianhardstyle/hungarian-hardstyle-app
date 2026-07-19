@@ -82,11 +82,7 @@ class _ArtistSubmissionScreenState
               bookingEmail: _bookingViaHuhs ? '' : _bookingEmail.text,
               bookingViaHuhs: _bookingViaHuhs,
               profileImageUrl: '',
-              socialLinks: {
-                for (final entry in _social.entries)
-                  if (entry.value.text.trim().isNotEmpty)
-                    entry.key: entry.value.text,
-              },
+              socialLinks: _socialValues(),
             ),
             image: _profileImage,
             logo: _logo,
@@ -329,6 +325,11 @@ class _ArtistSubmissionScreenState
   }
 
   String _linkLabel(String key) => key[0].toUpperCase() + key.substring(1);
+
+  Map<String, String> _socialValues() => {
+    for (final entry in _social.entries)
+      if (entry.value.text.trim().isNotEmpty) entry.key: entry.value.text,
+  };
 
   void _message(String value) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));

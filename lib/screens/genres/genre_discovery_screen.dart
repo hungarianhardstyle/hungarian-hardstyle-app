@@ -9,17 +9,21 @@ import '../../widgets/event_card.dart';
 import '../artists/artist_detail_screen.dart';
 import '../news/news_detail_screen.dart';
 
+bool _hasGenre(Iterable<String> genres, String genre) => genres.any(
+  (item) => item.toLowerCase() == genre.toLowerCase(),
+);
+
 class GenreDiscoveryScreen extends ConsumerWidget {
   final String genre;
 
   const GenreDiscoveryScreen({super.key, required this.genre});
 
   bool _matchesPost(Post post) => [
-        post.title,
-        post.excerpt,
-        post.content,
-        ...post.categories,
-      ].join(' ').toLowerCase().contains(genre.toLowerCase());
+    post.title,
+    post.excerpt,
+    post.content,
+    ...post.categories,
+  ].join(' ').toLowerCase().contains(genre.toLowerCase());
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,9 +54,7 @@ class GenreDiscoveryScreen extends ConsumerWidget {
                 error: (error, stack) => const _Empty(),
                 data: (items) {
                   final matches = items
-                      .where((event) => event.genres.any(
-                            (item) => item.toLowerCase() == genre.toLowerCase(),
-                          ))
+                      .where((event) => _hasGenre(event.genres, genre))
                       .toList();
                   return matches.isEmpty
                       ? const _Empty()
@@ -74,9 +76,7 @@ class GenreDiscoveryScreen extends ConsumerWidget {
                 error: (error, stack) => const _Empty(),
                 data: (page) {
                   final matches = page.items
-                      .where((artist) => artist.genres.any(
-                            (item) => item.toLowerCase() == genre.toLowerCase(),
-                          ))
+                      .where((artist) => _hasGenre(artist.genres, genre))
                       .toList();
                   return matches.isEmpty
                       ? const _Empty()

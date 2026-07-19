@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
+import '../core/content/date_formatters.dart';
 import '../models/event.dart';
 import '../providers/favorites_provider.dart';
 import '../screens/events/event_detail_screen.dart';
@@ -13,25 +13,6 @@ class EventCard extends StatelessWidget {
   final double? width;
 
   const EventCard({super.key, required this.event, this.width});
-
-  String _formatDate() {
-    try {
-      final parsed = DateTime.parse(event.startDate);
-      final date = DateFormat('yyyy. MMM d.', 'hu_HU').format(parsed);
-
-      if (event.startTime.isEmpty) {
-        return date;
-      }
-
-      return '$date - ${event.startTime}';
-    } catch (_) {
-      if (event.startTime.isEmpty) {
-        return event.startDate.isEmpty ? 'Hamarosan' : event.startDate;
-      }
-
-      return '${event.startDate} - ${event.startTime}';
-    }
-  }
 
   List<String> _visibleGenres() {
     if (event.genres.length <= 4) {
@@ -164,7 +145,7 @@ class EventCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            _formatDate(),
+                            formatEventDate(event.startDate, event.startTime),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(

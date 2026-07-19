@@ -662,7 +662,18 @@ iPad
 
 v0.99.1+12 (current Flutter package version; community authorization build)
 
+Planned next package: v0.99.2. Its first release check is the AdMob test banner, enabled only for the test build with `HUHS_ENABLE_TEST_ADS=true` and verified on the ARM APK. Production AdMob IDs and consent/privacy handling remain deferred until the public release.
+
+v0.99.2 bugfixes to investigate: e-mail/password sign-in fails despite valid credentials; saved profile images do not render on the profile/avatar; admin user deletion returns a Firebase Functions `INTERNAL` error; and the owner account intermittently falls back from `Szervező` to `Bulizó` while admin access must remain intact. Account roles are final after registration; only admins may change another user's role, enforced server-side. Profiles and Chat must render the persisted account role, with separate `Admin` or `Moderátor` access badges.
+
+Tag- and genre-filtered discovery lists must use API pagination/infinite scroll so all matching news and DJ results can be reached, not only the initially loaded page.
+
 Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile.
+- Next build follow-up: add a password-reset link to login and replace raw Firebase credential errors with a clear Hungarian message.
+- Next build follow-up: add password visibility toggles and an optional strong-password generator during registration.
+- Next build follow-up: refresh the Home top-left profile avatar immediately after sign-in without requiring manual refresh.
+- Next build follow-up: add a dismissible/pinnable Chat notice, admin-created pinned messages, admin pin controls, and a configurable profanity filter that masks blocked words with asterisks.
+- Next build follow-up: show an admin-managed startup announcement image with a close button; allow image upload/replacement from the app admin panel and the WordPress Mobile API.
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 

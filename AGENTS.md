@@ -317,7 +317,19 @@ Community authorization is now separated: `djdeeroy@gmail.com` is an Admin with 
 
 The latest v0.99.1 bugfix build addresses the previously reported profile/avatar, Chat deletion, logout, duplicate-role, and admin-menu issues. Manual focal-point editing remains optional later UX polish.
 v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separates account roles from access roles, adds moderator Chat deletion and admin user-role management for legacy profiles, reloads profiles after Auth restoration, and deploys the Firestore rules to the named database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; manual focal-point editing is optional later UX polish.
+
+The next Flutter test build is v0.99.2. Re-enable the existing Google AdMob test banner with `HUHS_ENABLE_TEST_ADS=true` and verify it on the ARM APK; do not switch to production AdMob identifiers yet. Consent/privacy and production monetization remain release work.
+
+Record for v0.99.2 bugfix work: diagnose the e-mail/password sign-in failure without assuming the password is wrong; restore profile-image rendering; fix the `deleteCommunityUser` Cloud Function `INTERNAL` failure from admin user deletion; persist `djdeeroy@gmail.com` as account role `organizer`/`Szervező` while retaining `admin` access; enforce final account roles server-side so only admins can change them after registration; and show the persisted account role on profiles and Chat with separate Admin/Moderátor access badges.
+
+Tag- and genre-filtered discovery lists must use API pagination/infinite scroll so all matching news and DJ results can be reached, not only the initially loaded page.
+
 Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile.
+- Next build follow-up: add a password-reset link to login and replace raw Firebase credential errors with a clear Hungarian message.
+- Next build follow-up: add password visibility toggles and an optional strong-password generator during registration.
+- Next build follow-up: refresh the Home top-left profile avatar immediately after sign-in without requiring manual refresh.
+- Next build follow-up: add a dismissible/pinnable Chat notice, admin-created pinned messages, admin pin controls, and a configurable profanity filter that masks blocked words with asterisks.
+- Next build follow-up: show an admin-managed startup announcement image with a close button; allow image upload/replacement from the app admin panel and the WordPress Mobile API.
 
 ### v0.4 - Foundation
 

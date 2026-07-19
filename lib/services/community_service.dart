@@ -81,14 +81,7 @@ class CommunityService {
       password: password,
     );
     final user = credential.user!;
-    if (_isAdmin(user.email)) {
-      await firestore.collection('community_profiles').doc(user.uid).set({
-        'role': 'organizer',
-        'accessRole': accessAdmin,
-        'email': user.email,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    }
+    await _ensureAdminProfile(user);
     await _cacheProfileRole();
   }
 
@@ -319,12 +312,7 @@ class CommunityService {
         .doc(user.uid)
         .get();
     if (_isAdmin(user.email)) {
-      await firestore.collection('community_profiles').doc(user.uid).set({
-        'role': 'organizer',
-        'accessRole': accessAdmin,
-        'email': user.email,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await _ensureAdminProfile(user);
       snapshot = await firestore
           .collection('community_profiles')
           .doc(user.uid)
@@ -352,6 +340,16 @@ class CommunityService {
     try {
       await profile();
     } catch (_) {}
+  }
+
+  Future<void> _ensureAdminProfile(User user) async {
+    if (!_isAdmin(user.email)) return;
+    await firestore.collection('community_profiles').doc(user.uid).set({
+      'role': 'organizer',
+      'accessRole': accessAdmin,
+      'email': user.email,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   static String _anonymousNumber(String uid) {

@@ -69,11 +69,7 @@ class _OrganizerSubmissionScreenState
               contactEmail: _contactEmail.text,
               genres: _genres.toList(growable: false),
               logoUrl: '',
-              socialLinks: {
-                for (final entry in _links.entries)
-                  if (entry.value.text.trim().isNotEmpty)
-                    entry.key: entry.value.text,
-              },
+              socialLinks: _linkValues(),
             ),
             image: _logo,
           );
@@ -291,5 +287,10 @@ class _OrganizerSubmissionScreenState
     'instagram' => 'Instagram',
     'tiktok' => 'TikTok',
     _ => key,
+  };
+
+  Map<String, String> _linkValues() => {
+    for (final entry in _links.entries)
+      if (entry.value.text.trim().isNotEmpty) entry.key: entry.value.text,
   };
 }

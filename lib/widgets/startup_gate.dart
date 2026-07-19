@@ -13,6 +13,10 @@ class StartupGate extends StatefulWidget {
 
 class _StartupGateState extends State<StartupGate>
     with SingleTickerProviderStateMixin {
+  static const _animationDuration = Duration(milliseconds: 850);
+  static const _startupDelay = Duration(milliseconds: 700);
+  static const _logoAsset = 'assets/logos/huhs_full_logo.png';
+
   late final AnimationController _controller;
   Timer? _timer;
   bool _ready = false;
@@ -22,12 +26,12 @@ class _StartupGateState extends State<StartupGate>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 850),
+      duration: _animationDuration,
       lowerBound: .88,
       upperBound: 1,
       value: .88,
     )..repeat(reverse: true);
-    _timer = Timer(const Duration(milliseconds: 700), () {
+    _timer = Timer(_startupDelay, () {
       if (mounted) setState(() => _ready = true);
     });
   }
@@ -64,7 +68,7 @@ class _StartupGateState extends State<StartupGate>
             child: child,
           ),
           child: Image.asset(
-            'assets/logos/huhs_full_logo.png',
+            _logoAsset,
             width: MediaQuery.sizeOf(context).width * .82,
             fit: BoxFit.contain,
           ),

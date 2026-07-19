@@ -14,10 +14,15 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
+  static const _tabCount = 5;
+
   int _currentIndex = 0;
 
-  final _navigatorKeys = List.generate(5, (_) => GlobalKey<NavigatorState>());
-  final _tabs = List<Widget?>.filled(5, null);
+  final _navigatorKeys = List.generate(
+    _tabCount,
+    (_) => GlobalKey<NavigatorState>(),
+  );
+  final _tabs = List<Widget?>.filled(_tabCount, null);
 
   void _openNewsTab() => setState(() => _currentIndex = 1);
 
@@ -66,7 +71,7 @@ class _MainNavigationState extends State<MainNavigation> {
         body: IndexedStack(
           index: _currentIndex,
           children: List.generate(
-            5,
+            _tabCount,
             (index) => _tabs[index] ?? const SizedBox.shrink(),
           ),
         ),

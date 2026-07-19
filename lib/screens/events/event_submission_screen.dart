@@ -150,16 +150,10 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
           .submitEvent(
             EventSubmission(
               title: _titleController.text,
-              startDate: DateFormat('yyyy-MM-dd').format(_startDate!),
-              startTime: _startTime == null
-                  ? ''
-                  : '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
-              endDate: _endDate == null
-                  ? ''
-                  : DateFormat('yyyy-MM-dd').format(_endDate!),
-              endTime: _endTime == null
-                  ? ''
-                  : '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
+              startDate: _formatDate(_startDate),
+              startTime: _formatTime(_startTime),
+              endDate: _formatDate(_endDate),
+              endTime: _formatTime(_endTime),
               venueName: _venueController.text,
               venueCity: _cityController.text,
               venueZip: _zipController.text,
@@ -243,6 +237,13 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
         ? null
         : 'Az irányítószám csak számokat tartalmazhat.';
   }
+
+  String _formatDate(DateTime? value) =>
+      value == null ? '' : DateFormat('yyyy-MM-dd').format(value);
+
+  String _formatTime(TimeOfDay? value) => value == null
+      ? ''
+      : '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
