@@ -10,6 +10,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      fontFamily: 'sans-serif-condensed',
 
       scaffoldBackgroundColor: background,
 
@@ -47,18 +48,12 @@ class AppTheme {
       textTheme: const TextTheme(
         headlineMedium: TextStyle(
           fontWeight: FontWeight.bold,
-          color: Colors.white,
         ),
         titleLarge: TextStyle(
           fontWeight: FontWeight.bold,
-          color: Colors.white,
         ),
-        bodyLarge: TextStyle(
-          color: Colors.white,
-        ),
-        bodyMedium: TextStyle(
-          color: Colors.white70,
-        ),
+        bodyLarge: TextStyle(color: Colors.white),
+        bodyMedium: TextStyle(color: Colors.white70),
       ),
     );
   }

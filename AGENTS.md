@@ -318,7 +318,7 @@ Community authorization is now separated: `djdeeroy@gmail.com` is an Admin with 
 The latest v0.99.1 bugfix build addresses the previously reported profile/avatar, Chat deletion, logout, duplicate-role, and admin-menu issues. Manual focal-point editing remains optional later UX polish.
 v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separates account roles from access roles, adds moderator Chat deletion and admin user-role management for legacy profiles, reloads profiles after Auth restoration, and deploys the Firestore rules to the named database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; manual focal-point editing is optional later UX polish.
 
-The next Flutter test build is v0.99.2. Re-enable the existing Google AdMob test banner with `HUHS_ENABLE_TEST_ADS=true` and verify it on the ARM APK; do not switch to production AdMob identifiers yet. Consent/privacy and production monetization remain release work.
+The next Flutter test build is v0.99.2. The Google AdMob test banner is enabled for the test build with `HUHS_ENABLE_TEST_ADS=true`; do not switch to production AdMob identifiers yet. Consent/privacy and production monetization remain release work.
 
 Record for v0.99.2 bugfix work: diagnose the e-mail/password sign-in failure without assuming the password is wrong; restore profile-image rendering; fix the `deleteCommunityUser` Cloud Function `INTERNAL` failure from admin user deletion; persist `djdeeroy@gmail.com` as account role `organizer`/`Szervező` while retaining `admin` access; enforce final account roles server-side so only admins can change them after registration; and show the persisted account role on profiles and Chat with separate Admin/Moderátor access badges.
 
@@ -334,7 +334,15 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - v0.99.2 follow-up: add a Data protection / GDPR information section covering privacy, retention, and user rights.
 - v0.99.2 follow-up: review personal-data access rules and keep sensitive operations server-side.
 - v0.99.2 follow-up: add practical release hardening (release signing, obfuscation, restricted backend secrets, and abuse/rate-limit checks); absolute protection against reverse engineering is not possible.
-- v0.99.2.1 follow-up: integrate Real Hardstyle FM at `https://stream.realhardstyle.nl` as the Home radio stream, show stream track metadata when available, keep the player above bottom navigation without covering event panels, and add a More-section provider page with the supplied Real Hardstyle logo, website, and attribution text.
+- v0.99.2.1 radio scope: completed the Real Hardstyle FM integration at `https://stream.realhardstyle.nl` as the Home radio stream, including a custom compact bar player matching the app's red-black design (Play, Stop, and Mute), current-track metadata when available, safe placement above bottom navigation, and a More-section provider page with the supplied logo, website, and attribution text.
+- v0.99.2.1 follow-up: completed the readable modern/cyber-style font fallback with Hungarian accented-character support.
+
+### v0.99.3 - HUHS Vezérlőközpont
+
+- Integrate the WordPress Mobile API administration into the authenticated app admin panel as a separate, red-black branded `HUHS Vezérlőközpont` menu; show and authorize it exclusively for Admin access roles.
+- Add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions.
+- Restrict event submission to authenticated registered users; hide it from guests in Flutter and reject unauthenticated API requests.
+- Refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen: Rajdhani typography, consistent cards and controls, compact news/event sections, section shortcuts, and the compact radio bar, using the real HUHS logo rather than generated placeholder artwork.
 
 ### v0.4 - Foundation
 
@@ -472,6 +480,8 @@ Keep this release intentionally small and low-risk:
 - Live Feed messages support normal Unicode emoji and a small fixed reaction set; do not add a heavy emoji package unless the native keyboard proves insufficient.
 - Use Firebase Authentication and Firestore for community data, and Cloudinary for community images; do not route these uploads through the blocked Websupport multipart endpoint.
 - Keep full moderation, friendships, attendance visibility, profile claims, and app-admin tooling in v1.0.
+- Add a `Több`-menu user directory/search that lists registered users only and is unavailable to guests.
+- Organize `Több`-menu entries into clear categories while keeping `Több` as the visible menu name.
 
 ### v1.0 - First Public Release (later)
 
@@ -528,7 +538,6 @@ Confirmed v1.0 community direction:
 - News, events, DJs, organizers, and the Live Feed should remain readable without registration where possible. Anonymous Live Feed text posts are allowed under a generated `Unknown User ####` name, but anonymous users cannot upload images; profiles, friendships, and attendance state require authentication.
 - Before implementation, define moderation, reporting, blocking, privacy, image upload/storage, retention, and account deletion rules.
 - Registration and community accounts are app-only; do not add account registration or community UI to the public WordPress website.
-- Provide an authenticated app-admin backend for reviewing, approving, editing, and managing event, DJ, and organizer submissions. Keep WordPress as the editorial source of truth and enforce admin permissions server-side.
 - WordPress remains the source of truth for editorial content (news, events, DJs, organizers, and releases), while the app community backend may be a deliberately separate service optimized for authentication, real-time chat/feed data, friendships, attendance, and user uploads.
 - Once app registration is available, DJ, organizer, and event submission actions and forms must be visible only to authenticated users. The submission API must also enforce authentication server-side; hiding the forms in Flutter is not sufficient.
 

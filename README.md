@@ -30,7 +30,7 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
 
 ### v0.99.2 — next test build
 
-- [ ] re-enable the Google AdMob test banner with `HUHS_ENABLE_TEST_ADS=true`
+- [x] re-enable the Google AdMob test banner with `HUHS_ENABLE_TEST_ADS=true` (test build default)
 - [ ] verify the test ad on the ARM debug APK without blocking startup
 - [ ] keep production AdMob IDs and consent/privacy handling deferred until release
 - [ ] fix e-mail/password sign-in independently of the misleading raw Firebase credential error
@@ -45,10 +45,18 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
  - [ ] add an in-app Data protection / GDPR information section with privacy and retention details
  - [ ] review personal-data access rules and keep sensitive operations server-side
  - [ ] add practical release hardening: release signing, obfuscation, restricted backend secrets, and abuse/rate-limit checks
- - [ ] integrate the Real Hardstyle FM stream at `https://stream.realhardstyle.nl` as a Home audio player
+ - [x] complete the Real Hardstyle FM radio integration at `https://stream.realhardstyle.nl` in v0.99.2.1 with a custom compact red-black bar player and Play/Stop/Mute controls
  - [ ] show the currently playing track title in the radio player when stream metadata provides it
  - [ ] place the persistent radio player above the bottom navigation without covering event panels
- - [ ] add a More-section radio provider page with Real Hardstyle FM name, website, logo, and provider attribution text
+ - [x] add a More-section radio provider page with Real Hardstyle FM name, website, logo, and provider attribution text
+ - [x] adopt a readable modern/cyber-style font such as Rajdhani with complete Hungarian accented-character support (native condensed fallback)
+
+### v0.99.3 - HUHS Vezérlőközpont
+
+- [ ] integrate WordPress Mobile API administration into the authenticated app admin panel as a separate menu, matching the app's red-black design; expose it only to Admin access roles
+- [ ] add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions
+- [ ] restrict event submission to authenticated registered users and reject unauthenticated API requests
+- [ ] refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen with Rajdhani typography, consistent cards and controls, compact news/event sections, the compact radio bar, and the real HUHS logo
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -260,6 +268,8 @@ Authentication and community:
 - [ ] bootstrap a separate app-admin account and role with full submission approval and editing permissions
 - [ ] top-left Home avatar profile entry with profile image or monogram fallback
 - [ ] user profiles with social links, planned events, and favorites
+- [ ] add a `Több`-menu user directory/search listing registered users only
+- [ ] organize `Több`-menu entries into clear categories while keeping `Több` as the visible menu name
 - [ ] allow a registered user to claim a DJ profile only after verifying the private or artist-owned booking e-mail stored on that profile; the Hungarian Hardstyle-managed booking address must never qualify as proof of ownership
 - [ ] friend requests and an `Ismerősök` profile section
 - [ ] full Live Feed chat/image-post moderation and community features (v1.0; the v0.99.1 MVP is tracked above)
@@ -274,7 +284,6 @@ Authentication and community:
 
 App administration:
 
-- [ ] provide an authenticated admin backend for the app so admins can review, approve, edit and manage event, DJ and organizer submissions without using the WordPress dashboard
 - [ ] keep WordPress as the editorial source of truth and enforce admin permissions server-side
 
 News, events, DJs and organizers should remain readable without registration. Event, DJ and organizer submission forms remain public until authentication launches. After that, only signed-in users may see and use them, and the backend must reject unauthenticated submissions.
@@ -297,15 +306,7 @@ FAQ:
 - [ ] searchable, expandable Flutter FAQ under More
 - [ ] loading, empty and error states
 
-### Post-v1.0 — Online radio (deferred)
-
-- [ ] configure a server-side AutoDJ for a managed library of X uploaded tracks
-- [ ] prefer AzuraCast for Liquidsoap AutoDJ, Icecast-compatible streaming, playlist management and Now Playing data
-- [ ] choose the provider during radio implementation
-- [ ] support bulk media upload through SFTP; do not use unencrypted FTP
-- [ ] use an officially supported S3-compatible provider or Dropbox for cloud storage instead of a custom Google Drive sync
-- [ ] require an explicit user action before audible playback and always allow stopping it
-- [ ] decide licensing, hosting, bandwidth, codec/bitrate, background playback, interruptions and notification controls
+Radio note: the previous AutoDJ/AzuraCast concept is superseded. Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and its in-app player.
 
 ### v1.5 — Hardstyle Revolution Store
 

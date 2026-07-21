@@ -296,7 +296,7 @@ Paid
 
 # Radio
 
-Planned after v1.0; deferred from the first public release.
+The radio is a v0.99.2.1 scope item, not a deferred post-v1.0 feature. Use the Real Hardstyle FM stream and its current-track metadata; the feature is complete when a custom compact bar player matching the app's red-black design with Play/Stop/Mute, safe bottom-navigation placement, and the provider page are delivered. The former AutoDJ/AzuraCast concept is superseded.
 
 Online streaming.
 
@@ -662,7 +662,7 @@ iPad
 
 v0.99.1+12 (current Flutter package version; community authorization build)
 
-Planned next package: v0.99.2. Its first release check is the AdMob test banner, enabled only for the test build with `HUHS_ENABLE_TEST_ADS=true` and verified on the ARM APK. Production AdMob IDs and consent/privacy handling remain deferred until the public release.
+Planned next package: v0.99.2. Its first release check is the AdMob test banner, enabled for the test build with `HUHS_ENABLE_TEST_ADS=true`. Production AdMob IDs and consent/privacy handling remain deferred until the public release.
 
 v0.99.2 bugfixes to investigate: e-mail/password sign-in fails despite valid credentials; saved profile images do not render on the profile/avatar; admin user deletion returns a Firebase Functions `INTERNAL` error; and the owner account intermittently falls back from `Szervező` to `Bulizó` while admin access must remain intact. Account roles are final after registration; only admins may change another user's role, enforced server-side. Profiles and Chat must render the persisted account role, with separate `Admin` or `Moderátor` access badges.
 
@@ -678,7 +678,15 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - v0.99.2 follow-up: add a Data protection / GDPR information section covering privacy, retention, and user rights.
 - v0.99.2 follow-up: review personal-data access rules and keep sensitive operations server-side.
 - v0.99.2 follow-up: add practical release hardening (release signing, obfuscation, restricted backend secrets, and abuse/rate-limit checks); absolute protection against reverse engineering is not possible.
-- v0.99.2.1 follow-up: integrate Real Hardstyle FM at `https://stream.realhardstyle.nl` as the Home radio stream, show stream track metadata when available, keep the player above bottom navigation without covering event panels, and add a More-section provider page with the supplied Real Hardstyle logo, website, and attribution text.
+- v0.99.2.1 radio scope: completed the Real Hardstyle FM integration at `https://stream.realhardstyle.nl` as the Home radio stream, with a custom compact bar player (Play, Stop, and Mute), current-track metadata when available, safe placement above bottom navigation, and a More-section provider page with the supplied logo, website, and attribution text.
+- v0.99.2.1 follow-up: completed the readable modern/cyber-style font fallback with Hungarian accented-character support.
+
+### v0.99.3 - HUHS Vezérlőközpont
+
+- Integrate the WordPress Mobile API administration into the authenticated app admin panel as a separate, red-black branded `HUHS Vezérlőközpont` menu; show and authorize it exclusively for Admin access roles.
+- Add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions.
+- Restrict event submission to authenticated registered users; hide it from guests in Flutter and reject unauthenticated API requests.
+- Refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen: Rajdhani typography, consistent cards and controls, compact news/event sections, section shortcuts, and the compact radio bar, using the real HUHS logo rather than generated placeholder artwork.
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -759,12 +767,13 @@ Planned v0.99.1 Community MVP decisions:
 - Live Feed messages support Unicode emoji and a small fixed reaction set without introducing a heavy emoji dependency.
 - Firebase Authentication/Firestore is the minimal community backend; Cloudinary is the temporary image store. WordPress remains the editorial source of truth.
 - Full moderation, friendships, attendance visibility, profile claims, and app-admin tooling remain v1.0 work.
+- Add a `Több`-menu user directory/search that lists registered users only and is unavailable to guests.
+- Organize `Több`-menu entries into clear categories while keeping `Több` as the visible menu name.
 
 Additional v1.0 product requirements:
 
 - Make displayed genres selectable. A genre detail/discovery screen should show separate API-backed `Események`, `DJ-k`, and `Hírek` sections for the selected genre and clearly retain the active genre label.
 - Add a More-section `Támogatás / Donate` card backed by a configurable PayPal donation URL. Open the PayPal app when available and fall back to the browser; do not build a custom payment flow for the first release.
-- provide an authenticated app-admin backend for reviewing, approving, editing, and managing submissions while WordPress remains the editorial source of truth
 
 Completed
 

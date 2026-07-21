@@ -10,6 +10,7 @@ import 'spotify_playlists_screen.dart';
 import 'newsletter_screen.dart';
 import '../submissions/artist_submission_screen.dart';
 import '../submissions/organizer_submission_screen.dart';
+import 'radio_provider_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -79,6 +80,13 @@ class MoreScreen extends StatelessWidget {
                 title: 'Spotify Playlistek',
                 subtitle: 'Öt válogatás a keményebb stílusokból',
                 onTap: () => _open(context, const SpotifyPlaylistsScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                icon: Icons.radio,
+                title: 'Rádió szolgáltató',
+                subtitle: 'Real Hardstyle FM',
+                onTap: () => _open(context, const RadioProviderScreen()),
               ),
               const SizedBox(height: 12),
               _MenuCard(

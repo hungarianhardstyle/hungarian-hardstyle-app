@@ -5,6 +5,7 @@ import 'community/community_screen.dart';
 import 'home/home_screen.dart';
 import 'more/more_screen.dart';
 import 'news/news_screen.dart';
+import '../widgets/radio_player_bar.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -75,39 +76,45 @@ class _MainNavigationState extends State<MainNavigation> {
             (index) => _tabs[index] ?? const SizedBox.shrink(),
           ),
         ),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _currentIndex,
-          onDestinationSelected: (index) {
-            if (index == _currentIndex) {
-              _navigatorKeys[index].currentState?.popUntil(
-                (route) => route.isFirst,
-              );
-            } else {
-              setState(() => _currentIndex = index);
-            }
-          },
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Kezdőlap',
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const RadioPlayerBar(),
+            NavigationBar(
+              selectedIndex: _currentIndex,
+              onDestinationSelected: (index) {
+                if (index == _currentIndex) {
+                  _navigatorKeys[index].currentState?.popUntil(
+                    (route) => route.isFirst,
+                  );
+                } else {
+                  setState(() => _currentIndex = index);
+                }
+              },
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home),
+                  label: 'Kezdőlap',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.article_outlined),
+                  selectedIcon: Icon(Icons.article),
+                  label: 'Hírek',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.event_outlined),
+                  selectedIcon: Icon(Icons.event),
+                  label: 'Események',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.forum_outlined),
+                  selectedIcon: Icon(Icons.forum),
+                  label: 'Chat',
+                ),
+                NavigationDestination(icon: Icon(Icons.menu), label: 'Több'),
+              ],
             ),
-            NavigationDestination(
-              icon: Icon(Icons.article_outlined),
-              selectedIcon: Icon(Icons.article),
-              label: 'Hírek',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.event_outlined),
-              selectedIcon: Icon(Icons.event),
-              label: 'Események',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.forum_outlined),
-              selectedIcon: Icon(Icons.forum),
-              label: 'Chat',
-            ),
-            NavigationDestination(icon: Icon(Icons.menu), label: 'Több'),
           ],
         ),
       ),
