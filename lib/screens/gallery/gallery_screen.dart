@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/post.dart';
+import '../../services/image_saver.dart';
 
 class GalleryScreen extends StatefulWidget {
   final List<GalleryImage> images;
@@ -51,6 +52,29 @@ class _GalleryScreenState extends State<GalleryScreen> {
         title: Text(
           "${_current + 1} / ${widget.images.length}",
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Kép mentése',
+            icon: const Icon(Icons.download_outlined),
+            onPressed: () async {
+              try {
+                await ImageSaver.saveFromUrl(
+                  widget.images[_current].url,
+                  name: 'huhs-gallery-${widget.images[_current].id}.jpg',
+                );
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Kép mentve a galériába.')),
+                );
+              } catch (error) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('A kép mentése sikertelen: $error')),
+                );
+              }
+            },
+          ),
+        ],
       ),
 
       body: PageView.builder(

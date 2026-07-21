@@ -320,6 +320,8 @@ v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat im
 
 The next Flutter test build is v0.99.2. The Google AdMob test banner is enabled for the test build with `HUHS_ENABLE_TEST_ADS=true`; do not switch to production AdMob identifiers yet. Consent/privacy and production monetization remain release work.
 
+The v0.99.3 scope also includes making the About screen contact e-mail open the device mail app and keeping the Real Hardstyle FM stream playing when the user switches between apps.
+
 Record for v0.99.2 bugfix work: diagnose the e-mail/password sign-in failure without assuming the password is wrong; restore profile-image rendering; fix the `deleteCommunityUser` Cloud Function `INTERNAL` failure from admin user deletion; persist `djdeeroy@gmail.com` as account role `organizer`/`Szervező` while retaining `admin` access; enforce final account roles server-side so only admins can change them after registration; and show the persisted account role on profiles and Chat with separate Admin/Moderátor access badges.
 
 Tag- and genre-filtered discovery lists must use API pagination/infinite scroll so all matching news and DJ results can be reached, not only the initially loaded page.
@@ -343,6 +345,10 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - Add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions.
 - Restrict event submission to authenticated registered users; hide it from guests in Flutter and reject unauthenticated API requests.
 - Refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen: Rajdhani typography, consistent cards and controls, compact news/event sections, section shortcuts, and the compact radio bar, using the real HUHS logo rather than generated placeholder artwork.
+- Make the About screen contact e-mail open the device mail app.
+- Keep the Real Hardstyle FM stream playing when the user switches between apps.
+- Show the saved profile image on the user's own profile screen.
+- Investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images.
 
 ### v0.4 - Foundation
 

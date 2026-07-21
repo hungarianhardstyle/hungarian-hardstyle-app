@@ -21,7 +21,8 @@ service cloud.firestore {
       allow read: if true;
       allow create: if request.auth != null
         && request.resource.data.keys().hasOnly([
-          'authorId', 'authorName', 'authorImageUrl', 'text', 'imageUrl',
+          'authorId', 'authorName', 'authorImageUrl', 'authorRole',
+          'authorAccessRole', 'text', 'imageUrl',
           'reactions', 'reactionBy', 'createdAt'
         ])
         && request.resource.data.authorId == request.auth.uid

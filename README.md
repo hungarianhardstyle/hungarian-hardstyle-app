@@ -6,6 +6,14 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
+### v0.99.2 audit status (2026-07-21)
+
+- Flutter analyzer: clean; existing test suite: 26 tests passed.
+- ARM64 debug APK built at `build/huhs-v0.99.2+1-arm64-debug.apk`.
+- Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
+- Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
+- Production release signing, obfuscation, and live AdMob verification remain release checks.
+
 ### v0.99.1 implementation status
 
 The Community MVP source implementation is complete on `codex/v1.0`: Firebase Authentication (email/password and Google), mandatory account roles, public Firestore Chat, anonymous text-only posting, registered Cloudinary image posts, profile entry/editing, fixed reactions, a five-item Home news slider with 10-second rotation, and native article-tag filtering. `firestore.rules`, `firebase.json` and `.firebaserc` are included for deployment. Physical ARM verification, Firebase rules deployment, and Google OAuth Console configuration remain external release checks.
@@ -57,6 +65,10 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
 - [ ] add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions
 - [ ] restrict event submission to authenticated registered users and reject unauthenticated API requests
 - [ ] refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen with Rajdhani typography, consistent cards and controls, compact news/event sections, the compact radio bar, and the real HUHS logo
+- [ ] make the About screen contact e-mail open the device mail app
+- [ ] keep the Real Hardstyle FM stream playing when switching between apps
+- [ ] show the saved profile image on the user's own profile screen
+- [ ] investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 

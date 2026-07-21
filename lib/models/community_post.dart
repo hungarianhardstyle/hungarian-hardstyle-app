@@ -5,6 +5,8 @@ class CommunityPost {
   final String authorName;
   final String authorId;
   final String authorImageUrl;
+  final String authorRole;
+  final String authorAccessRole;
   final String text;
   final String imageUrl;
   final Map<String, int> reactions;
@@ -15,6 +17,8 @@ class CommunityPost {
     required this.authorName,
     required this.authorId,
     required this.authorImageUrl,
+    required this.authorRole,
+    required this.authorAccessRole,
     required this.text,
     required this.imageUrl,
     required this.reactions,
@@ -31,6 +35,8 @@ class CommunityPost {
       authorId: data['authorId'] as String? ?? '',
       authorName: data['authorName'] as String? ?? 'Unknown User',
       authorImageUrl: data['authorImageUrl'] as String? ?? '',
+      authorRole: data['authorRole'] as String? ?? '',
+      authorAccessRole: data['authorAccessRole'] as String? ?? '',
       text: data['text'] as String? ?? '',
       imageUrl: data['imageUrl'] as String? ?? '',
       reactions: data['reactions'] is Map

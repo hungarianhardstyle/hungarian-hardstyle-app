@@ -11,6 +11,7 @@ import 'newsletter_screen.dart';
 import '../submissions/artist_submission_screen.dart';
 import '../submissions/organizer_submission_screen.dart';
 import 'radio_provider_screen.dart';
+import 'privacy_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -115,6 +116,13 @@ class MoreScreen extends StatelessWidget {
                 title: 'Az appról',
                 subtitle: 'Verzió, kapcsolat és weboldal',
                 onTap: () => _open(context, const AboutScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                icon: Icons.privacy_tip_outlined,
+                title: 'Adatvédelem és GDPR',
+                subtitle: 'Adatkezelés, megőrzés és felhasználói jogok',
+                onTap: () => _open(context, const PrivacyScreen()),
               ),
             ],
           ),

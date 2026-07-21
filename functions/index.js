@@ -1,9 +1,10 @@
 const { onCall, HttpsError } = require('firebase-functions/v1/https');
 const admin = require('firebase-admin');
+const { getFirestore } = require('firebase-admin/firestore');
 
 admin.initializeApp();
 
-const db = admin.firestore();
+const db = getFirestore(admin.app(), 'hungarian-hardstyle');
 const ADMIN_EMAIL = 'djdeeroy@gmail.com';
 
 exports.deleteCommunityUser = onCall(async (data, context) => {

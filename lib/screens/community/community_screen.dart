@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -182,12 +183,7 @@ class CommunityAdminScreen extends ConsumerWidget {
                     ],
                   ),
                   trailing: DropdownButton<String>(
-                    value:
-                        const {
-                          'dj',
-                          'organizer',
-                          'partygoer',
-                        }.contains(role)
+                    value: const {'dj', 'organizer', 'partygoer'}.contains(role)
                         ? role
                         : 'partygoer',
                     items: [
@@ -558,9 +554,46 @@ class _PostCardState extends ConsumerState<_PostCard> {
                 ),
                 const SizedBox(width: 9),
                 Expanded(
-                  child: Text(
-                    post.authorName,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  child: Wrap(
+                    spacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        post.authorName,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      if (post.authorRole.isNotEmpty)
+                        Text(
+                          post.authorRole == 'dj'
+                              ? 'DJ'
+                              : post.authorRole == 'organizer'
+                              ? 'Szervező'
+                              : 'Bulizó',
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 11,
+                          ),
+                        ),
+                      if (post.authorAccessRole == CommunityService.accessAdmin)
+                        const Text(
+                          'Admin',
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      else if (post.authorAccessRole ==
+                          CommunityService.accessModerator)
+                        const Text(
+                          'Moderátor',
+                          style: TextStyle(
+                            color: Colors.orangeAccent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 Text(
@@ -638,6 +671,7 @@ class _CommunityProfileScreenState
   String _role = 'partygoer';
   bool _register = true;
   bool _busy = false;
+  bool _passwordVisible = false;
   String? _loadedUid;
   StreamSubscription<User?>? _authSubscription;
 
@@ -699,12 +733,15 @@ class _CommunityProfileScreenState
     try {
       final snapshot = await _service.profile();
       final data = snapshot.data() ?? const <String, dynamic>{};
-      _name.text = data['displayName'] as String? ?? user.displayName ?? '';
-      _bio.text = data['bio'] as String? ?? '';
-      _social.text = data['socialLinks'] as String? ?? '';
-      _profileImageUrl = data['profileImageUrl'] as String? ?? '';
-      _role = _service.accountRole(data['role'] as String?);
-      _loadedUid = user.uid;
+      if (!mounted) return;
+      setState(() {
+        _name.text = data['displayName'] as String? ?? user.displayName ?? '';
+        _bio.text = data['bio'] as String? ?? '';
+        _social.text = data['socialLinks'] as String? ?? '';
+        _profileImageUrl = data['profileImageUrl'] as String? ?? '';
+        _role = _service.accountRole(data['role'] as String?);
+        _loadedUid = user.uid;
+      });
     } catch (_) {}
   }
 
@@ -759,6 +796,17 @@ class _CommunityProfileScreenState
     }
   }
 
+  void _suggestPassword() {
+    const alphabet =
+        'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#';
+    final random = Random.secure();
+    _password.text = List.generate(
+      16,
+      (_) => alphabet[random.nextInt(alphabet.length)],
+    ).join();
+    setState(() => _passwordVisible = true);
+  }
+
   void _message(String message) {
     ScaffoldMessenger.of(
       context,
@@ -800,12 +848,12 @@ class _CommunityProfileScreenState
                   ),
                 ),
                 const SizedBox(height: 24),
-                if (_role == 'admin')
+                if (_service.isAdmin)
                   const ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(Icons.admin_panel_settings_outlined),
                     title: Text('Szerepkör'),
-                    subtitle: Text('Admin'),
+                    subtitle: Text('Szervező · Admin'),
                   )
                 else ...[
                   DropdownButtonFormField<String>(
@@ -927,10 +975,30 @@ class _CommunityProfileScreenState
                 const SizedBox(height: 12),
                 TextField(
                   controller: _password,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Jelszó'),
+                  obscureText: !_passwordVisible,
+                  decoration: InputDecoration(
+                    labelText: 'Jelszó',
+                    suffixIcon: IconButton(
+                      tooltip: _passwordVisible ? 'Elrejtés' : 'Megjelenítés',
+                      onPressed: () =>
+                          setState(() => _passwordVisible = !_passwordVisible),
+                      icon: Icon(
+                        _passwordVisible
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                    ),
+                  ),
                 ),
                 if (_register) ...[
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: _busy ? null : _suggestPassword,
+                      icon: const Icon(Icons.auto_fix_high_outlined),
+                      label: const Text('Erős jelszó ajánlása'),
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: _role,
@@ -961,6 +1029,31 @@ class _CommunityProfileScreenState
                   icon: const Icon(Icons.login),
                   label: const Text('Folytatás Google-fiókkal'),
                 ),
+                if (!_register)
+                  TextButton(
+                    onPressed: _busy
+                        ? null
+                        : () async {
+                            if (_email.text.trim().isEmpty) {
+                              _message('Add meg az e-mail-címedet.');
+                              return;
+                            }
+                            try {
+                              await _service.sendPasswordReset(_email.text);
+                              _message(
+                                'A jelszó-visszaállító e-mail elküldve.',
+                              );
+                            } catch (error) {
+                              _message(
+                                error.toString().replaceFirst(
+                                  'Bad state: ',
+                                  '',
+                                ),
+                              );
+                            }
+                          },
+                    child: const Text('Jelszó visszaállítása'),
+                  ),
                 TextButton(
                   onPressed: _busy
                       ? null

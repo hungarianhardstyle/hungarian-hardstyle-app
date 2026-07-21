@@ -59,31 +59,61 @@ class CommunityService {
     required String displayName,
     required String role,
   }) async {
-    final credential = await auth.createUserWithEmailAndPassword(
-      email: email.trim(),
-      password: password,
-    );
-    final user = credential.user!;
-    await user.updateDisplayName(displayName.trim());
-    await firestore.collection('community_profiles').doc(user.uid).set({
-      'displayName': displayName.trim(),
-      'role': role,
-      'accessRole': _isAdmin(user.email) ? accessAdmin : accessNone,
-      'email': email.trim(),
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      final credential = await auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+      final user = credential.user!;
+      await user.updateDisplayName(displayName.trim());
+      final accountRole = _isAdmin(email)
+          ? 'organizer'
+          : this.accountRole(role);
+      await firestore.collection('community_profiles').doc(user.uid).set({
+        'displayName': displayName.trim(),
+        'role': accountRole,
+        'accessRole': _isAdmin(user.email) ? accessAdmin : accessNone,
+        'email': email.trim(),
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } on FirebaseAuthException catch (error) {
+      throw StateError(_authError(error.code));
+    }
   }
 
   Future<void> signIn({required String email, required String password}) async {
-    final credential = await auth.signInWithEmailAndPassword(
-      email: email.trim(),
-      password: password,
-    );
-    final user = credential.user!;
-    await _ensureAdminProfile(user);
-    await _cacheProfileRole();
+    try {
+      final credential = await auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+      final user = credential.user!;
+      await _ensureAdminProfile(user);
+      await _cacheProfileRole();
+    } on FirebaseAuthException catch (error) {
+      throw StateError(_authError(error.code));
+    }
   }
+
+  Future<void> sendPasswordReset(String email) async {
+    try {
+      await auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (error) {
+      throw StateError(_authError(error.code));
+    }
+  }
+
+  String _authError(String code) => switch (code) {
+    'invalid-credential' ||
+    'wrong-password' ||
+    'user-not-found' => 'A megadott e-mail-cím vagy jelszó hibás.',
+    'invalid-email' => 'Érvénytelen e-mail-cím.',
+    'email-already-in-use' => 'Ez az e-mail-cím már használatban van.',
+    'weak-password' => 'A jelszó túl gyenge.',
+    'network-request-failed' => 'Hálózati hiba. Próbáld újra később.',
+    _ => 'A bejelentkezés nem sikerült. Próbáld újra.',
+  };
 
   Future<void> signInWithGoogle({String? role}) async {
     try {
@@ -101,7 +131,8 @@ class CommunityService {
         final existing = await profile.get();
         final existingData = existing.data() ?? const <String, dynamic>{};
         final existingRole = existingData['role'] as String?;
-        final existingAccessRole = existingData['accessRole'] as String? ??
+        final existingAccessRole =
+            existingData['accessRole'] as String? ??
             (existingRole == accessAdmin ? accessAdmin : accessNone);
         await profile.set({
           'displayName': user.displayName ?? 'Hungarian Hardstyle user',
@@ -142,16 +173,13 @@ class CommunityService {
       _cachedAccessRole == accessAdmin ||
       _cachedRole == accessAdmin;
 
-  bool get canModerate =>
-      isAdmin || _cachedAccessRole == accessModerator;
+  bool get canModerate => isAdmin || _cachedAccessRole == accessModerator;
 
-  String accountRole(String? value) => const {
-    'dj',
-    'organizer',
-    'partygoer',
-  }.contains(value)
-      ? value!
-      : 'partygoer';
+  String accountRole(String? value) {
+    if (value == accessAdmin || value == 'organizer') return 'organizer';
+    if (value == 'dj' || value == 'partygoer') return value!;
+    return 'partygoer';
+  }
 
   Future<void> publishPost({
     required String text,
@@ -187,6 +215,12 @@ class CommunityService {
       'authorImageUrl': isAnonymous
           ? ''
           : (profileData['profileImageUrl'] as String? ?? ''),
+      'authorRole': isAnonymous
+          ? ''
+          : accountRole(profileData['role'] as String?),
+      'authorAccessRole': isAnonymous
+          ? ''
+          : (profileData['accessRole'] as String? ?? accessNone),
       'text': trimmed,
       'imageUrl': imageUrl,
       'reactions': <String, int>{},
