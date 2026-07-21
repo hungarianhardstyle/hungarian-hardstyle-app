@@ -8,6 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.2 audit status (2026-07-21)
 
+- Current Flutter build: `0.99.2+1`; the next planned release is v0.99.3 HUHS Vezérlőközpont and security hardening.
 - Flutter analyzer: clean; existing test suite: 26 tests passed.
 - ARM64 debug APK built at `build/huhs-v0.99.2+1-arm64-debug.apk`.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
@@ -69,6 +70,10 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
 - [ ] keep the Real Hardstyle FM stream playing when switching between apps
 - [ ] show the saved profile image on the user's own profile screen
 - [ ] investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images
+- [ ] audit REST endpoints for HTTPS, authentication, authorization, nonce/token checks, and server-side input validation; fix confirmed gaps only
+- [ ] add or verify rate limiting and spam/abuse protection for submissions, Chat, authentication, and write endpoints
+- [ ] restrict Cloudinary upload presets by type, size, folder, and quota; keep service credentials server-side
+- [ ] add privacy-safe security logging and monitoring for rejected requests and suspicious activity
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 

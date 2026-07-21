@@ -349,6 +349,10 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - Keep the Real Hardstyle FM stream playing when the user switches between apps.
 - Show the saved profile image on the user's own profile screen.
 - Investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images.
+- Audit every REST endpoint for HTTPS transport, authentication, authorization, nonce/token checks, and server-side input validation; fix only confirmed gaps.
+- Add or verify rate limiting and spam/abuse protection on submissions, Chat, authentication, and other write endpoints.
+- Restrict Cloudinary upload presets by file type, size, folder, and quota; keep Firebase/WordPress service credentials server-side.
+- Add security logging and monitoring for rejected requests and suspicious activity without exposing personal data.
 
 ### v0.4 - Foundation
 
