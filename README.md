@@ -8,9 +8,9 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 audit status (2026-07-22)
 
-- Current Flutter build: `0.99.3+5`; v0.99.3 remains the HUHS Vezérlőközpont and security-hardening target.
+- Current Flutter build: `0.99.3+6`; v0.99.3 remains the HUHS Vezérlőközpont and security-hardening target.
 - Flutter ARM debug build succeeded; `flutter analyze --no-pub` reports no issues and all 26 tests pass.
-- ARM64 debug APK built at `build/huhs-v0.99.3+5-arm64-debug.apk`.
+- ARM64 debug APK built at `build/huhs-v0.99.3+6-arm64-debug.apk`.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
@@ -263,7 +263,7 @@ Core release quality:
 - [ ] configure production release signing and final Android release packaging
 - [ ] stabilize news, events, DJs and organizers for public release
 - [ ] complete a final UX and visual polish pass: navigation, spacing, labels, buttons, loading/error states, accessibility and tasteful motion/effects
-- [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections
+- [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches
 - [ ] add a `Támogatás / Donate` card under More with a configurable PayPal donation link (PayPal app first, browser fallback)
 - [ ] add the Hardstyle Revolution release catalog
 - [ ] add release preview playback
