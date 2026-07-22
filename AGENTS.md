@@ -86,8 +86,8 @@ As of the current project state:
 - News search UI exists.
 - News item tap/click opens the news detail view.
 - News cards display remote images, title, date, and featured state.
-- The WordPress API plugin ZIP has been reviewed locally from `huhs-mobile-api.zip`.
-- The WordPress plugin version in that ZIP is `2.1.0`.
+- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, currently through `build/huhs-mobile-api-2.4.29.zip`; the latest package has been extracted and reviewed locally.
+- The latest package version in that ZIP is `2.4.29`. It includes the WordPress admin dashboard/settings, submissions approval flow, trash/About menus, push/newsletter settings, Cloudinary URL handling, rate limits/honeypots, and UTF-8/HTML-entity push fixes. Deployment and live verification of 2.4.29 remain pending.
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.

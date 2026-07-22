@@ -22,7 +22,7 @@ String _chatError(Object error) {
     return 'A névtelen Chat-hozzáférés nincs engedélyezve a Firebase-ben.';
   }
   if (raw.contains('permission-denied')) {
-    return 'A Chat Firebase-szabályai még nincsenek telepítve.';
+    return 'A Chat-művelethez nincs megfelelő jogosultság.';
   }
   if (raw.contains('failed-precondition') || raw.contains('unavailable')) {
     return 'A Chat az alapértelmezett Firestore-adatbázist nem éri el. Ellenőrizd, hogy a `(default)` adatbázis létre van-e hozva.';

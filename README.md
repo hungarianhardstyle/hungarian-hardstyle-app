@@ -8,7 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 audit status (2026-07-22)
 
-- Current Flutter build: `0.99.3+2`; v0.99.3 remains the HUHS Vezérlőközpont and security-hardening target.
+- Current Flutter build: `0.99.3+3`; v0.99.3 remains the HUHS Vezérlőközpont and security-hardening target.
 - Flutter ARM debug build succeeded; local analyzer and test commands timed out and are not reported as passing.
 - ARM64 debug APK built at `build/huhs-v0.99.3+2-arm64-debug.apk`.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
@@ -35,7 +35,7 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles, and moderators can delete Chat messages only.
 
-The current WordPress backend package is **2.4.29 (prepared locally)**. It includes the 2.4.28 features plus push-title/body HTML-entity decoding and UTF-8 JSON output; deployment and live verification are still pending.
+The current WordPress backend package is **2.4.29 (prepared locally in `build/`)**. The deployable source is available as `build/huhs-mobile-api-2.4.29.zip`; it includes the 2.4.28 features plus push-title/body HTML-entity decoding, UTF-8 JSON output, the admin dashboard/settings/trash/About menus, submissions approval flow, Cloudinary URL handling, and submission rate limits/honeypots. Deployment and live verification are still pending.
 
 ### v0.99.2 — next test build
 
