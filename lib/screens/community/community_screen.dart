@@ -43,6 +43,7 @@ class CommunityAvatarButton extends ConsumerWidget {
       icon: const Icon(Icons.person_outline),
     );
     if (Firebase.apps.isEmpty) return fallback;
+    ref.watch(communityAuthProvider);
     final service = ref.watch(communityServiceProvider);
     final user = service.auth.currentUser;
     if (user == null || user.isAnonymous) return fallback;

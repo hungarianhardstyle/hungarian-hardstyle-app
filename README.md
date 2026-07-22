@@ -43,15 +43,15 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
 - [ ] verify the test ad on the ARM debug APK without blocking startup
 - [ ] keep production AdMob IDs and consent/privacy handling deferred until release
 - [ ] fix e-mail/password sign-in independently of the misleading raw Firebase credential error
-- [ ] fix saved profile images not appearing on the user's profile/avatar
+- [x] fix saved profile images not appearing on the user's profile/avatar (Firebase photo URL fallback)
 - [ ] fix admin user deletion and the failing `deleteCommunityUser` Cloud Function call
 - [ ] make the owner's `djdeeroy@gmail.com` account role persist as `Szervező` while retaining admin access
 - [ ] enforce final account roles server-side: users choose once at registration; only admins may change another user's role
 - [ ] always render the persisted account role on profiles and Chat; show `Admin` or `Moderátor` as a separate access badge next to the account role
 
- - [ ] tag- and genre-filtered discovery lists use API pagination/infinite scroll so all matching news and DJ results can be reached, not only items already loaded in the app
- - [ ] allow gallery images to be saved to the device with platform permission handling
- - [ ] add an in-app Data protection / GDPR information section with privacy and retention details
+ - [x] tag-filtered news uses API pagination/infinite scroll so all matching articles can be reached
+ - [x] allow gallery images to be saved to the device with platform permission handling
+ - [x] add an in-app Data protection / GDPR information section with privacy and retention details
  - [ ] review personal-data access rules and keep sensitive operations server-side
  - [ ] add practical security hardening: obfuscation, restricted backend secrets, and abuse/rate-limit checks
  - [x] complete the Real Hardstyle FM radio integration at `https://stream.realhardstyle.nl` in v0.99.2.1 with a custom compact red-black bar player and Play/Stop/Mute controls
