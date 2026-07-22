@@ -1046,7 +1046,8 @@ class _CommunityProfileScreenState
                           setState(() => _busy = true);
                           try {
                             await _service.deleteOwnProfile();
-                            if (mounted) Navigator.of(context).pop();
+                            if (!context.mounted) return;
+                            Navigator.of(context).pop();
                           } catch (error) {
                             if (mounted) {
                               _message('A profil törlése sikertelen: $error');
