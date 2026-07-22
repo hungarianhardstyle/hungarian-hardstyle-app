@@ -53,7 +53,7 @@ class CommunityAvatarButton extends ConsumerWidget {
           .snapshots(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? const <String, dynamic>{};
-        final url = data['profileImageUrl'] as String? ?? '';
+        final url = data['profileImageUrl'] as String? ?? user.photoURL ?? '';
         final name =
             (data['displayName'] as String? ?? user.displayName ?? 'HU').trim();
         return IconButton(
@@ -298,7 +298,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
           (await _service.profile()).data() ?? const <String, dynamic>{};
       if (!mounted) return;
       setState(() {
-        _avatarUrl = data['profileImageUrl'] as String? ?? '';
+        _avatarUrl = data['profileImageUrl'] as String? ?? user.photoURL ?? '';
         final name = data['displayName'] as String? ?? user.displayName ?? '';
         _avatarLetter = name.trim().isEmpty
             ? 'H'

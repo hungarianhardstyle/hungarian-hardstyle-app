@@ -53,10 +53,10 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
  - [ ] allow gallery images to be saved to the device with platform permission handling
  - [ ] add an in-app Data protection / GDPR information section with privacy and retention details
  - [ ] review personal-data access rules and keep sensitive operations server-side
- - [ ] add practical release hardening: release signing, obfuscation, restricted backend secrets, and abuse/rate-limit checks
+ - [ ] add practical security hardening: obfuscation, restricted backend secrets, and abuse/rate-limit checks
  - [x] complete the Real Hardstyle FM radio integration at `https://stream.realhardstyle.nl` in v0.99.2.1 with a custom compact red-black bar player and Play/Stop/Mute controls
- - [ ] show the currently playing track title in the radio player when stream metadata provides it
- - [ ] place the persistent radio player above the bottom navigation without covering event panels
+ - [x] show the currently playing track title in the radio player when stream metadata provides it
+ - [x] place the persistent radio player above the bottom navigation without covering event panels
  - [x] add a More-section radio provider page with Real Hardstyle FM name, website, logo, and provider attribution text
  - [x] adopt a readable modern/cyber-style font such as Rajdhani with complete Hungarian accented-character support (native condensed fallback)
 
@@ -67,7 +67,7 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
 - [ ] restrict event submission to authenticated registered users and reject unauthenticated API requests (Flutter gate is implemented; WordPress-side rejection remains)
 - [ ] refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen with Rajdhani typography, consistent cards and controls, compact news/event sections, the compact radio bar, and the real HUHS logo
 - [x] make the About screen contact e-mail open the device mail app
-- [ ] keep the Real Hardstyle FM stream playing when switching between apps
+- [x] keep the Real Hardstyle FM stream playing when switching between apps with an Android foreground media service
 - [x] show the saved profile image on the user's own profile screen, falling back to the Firebase user photo URL
 - [ ] investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images
 - [ ] audit REST endpoints for HTTPS, authentication, authorization, nonce/token checks, and server-side input validation; fix confirmed gaps only
@@ -260,6 +260,7 @@ Small, low-risk finishing work that can be released independently before the lar
 
 Core release quality:
 
+- [ ] configure production release signing and final Android release packaging
 - [ ] stabilize news, events, DJs and organizers for public release
 - [ ] complete a final UX and visual polish pass: navigation, spacing, labels, buttons, loading/error states, accessibility and tasteful motion/effects
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections

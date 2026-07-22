@@ -1,8 +1,7 @@
 package com.example.hungarian_hardstyle_app
 
 import android.content.ContentValues
-import android.media.AudioManager
-import android.media.MediaPlayer
+import android.content.Intent
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -11,8 +10,6 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private var player: MediaPlayer? = null
-
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/radio")
@@ -23,25 +20,28 @@ class MainActivity : FlutterActivity() {
                         if (url == null) {
                             result.error("missing_url", "Radio URL missing", null)
                         } else {
-                            player?.release()
-                            player = MediaPlayer().apply {
-                                setAudioStreamType(AudioManager.STREAM_MUSIC)
-                                setDataSource(url)
-                                setOnPreparedListener { start() }
-                                setOnErrorListener { _, _, _ -> true }
-                                prepareAsync()
+                            val intent = Intent(this, RadioPlaybackService::class.java)
+                                .setAction(RadioPlaybackService.ACTION_PLAY)
+                                .putExtra(RadioPlaybackService.EXTRA_URL, url)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                startForegroundService(intent)
+                            } else {
+                                startService(intent)
                             }
                             result.success(null)
                         }
                     }
                     "stop" -> {
-                        player?.stop()
-                        player?.reset()
+                        startService(Intent(this, RadioPlaybackService::class.java).setAction(RadioPlaybackService.ACTION_STOP))
                         result.success(null)
                     }
                     "volume" -> {
                         val volume = (call.arguments as? Number)?.toFloat() ?: 1f
-                        player?.setVolume(volume, volume)
+                        startService(
+                            Intent(this, RadioPlaybackService::class.java)
+                                .setAction(RadioPlaybackService.ACTION_VOLUME)
+                                .putExtra(RadioPlaybackService.EXTRA_VOLUME, volume),
+                        )
                         result.success(null)
                     }
                     else -> result.notImplemented()
@@ -84,9 +84,4 @@ class MainActivity : FlutterActivity() {
             }
     }
 
-    override fun onDestroy() {
-        player?.release()
-        player = null
-        super.onDestroy()
-    }
 }

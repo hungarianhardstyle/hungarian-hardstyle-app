@@ -335,7 +335,7 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - v0.99.2 follow-up: allow gallery images to be saved to the device with platform permission handling.
 - v0.99.2 follow-up: add a Data protection / GDPR information section covering privacy, retention, and user rights.
 - v0.99.2 follow-up: review personal-data access rules and keep sensitive operations server-side.
-- v0.99.2 follow-up: add practical release hardening (release signing, obfuscation, restricted backend secrets, and abuse/rate-limit checks); absolute protection against reverse engineering is not possible.
+- v0.99.2 follow-up: add practical security hardening (obfuscation, restricted backend secrets, and abuse/rate-limit checks); production release signing is tracked for v1.0, and absolute protection against reverse engineering is not possible.
 - v0.99.2.1 radio scope: completed the Real Hardstyle FM integration at `https://stream.realhardstyle.nl` as the Home radio stream, including a custom compact bar player matching the app's red-black design (Play, Stop, and Mute), current-track metadata when available, safe placement above bottom navigation, and a More-section provider page with the supplied logo, website, and attribution text.
 - v0.99.2.1 follow-up: completed the readable modern/cyber-style font fallback with Hungarian accented-character support.
 
@@ -346,7 +346,7 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - Restrict event submission to authenticated registered users; the Flutter form is now hidden/guarded for guests, while WordPress-side unauthenticated rejection remains to be verified.
 - Refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen: Rajdhani typography, consistent cards and controls, compact news/event sections, section shortcuts, and the compact radio bar, using the real HUHS logo rather than generated placeholder artwork.
 - Make the About screen contact e-mail open the device mail app. (Implemented in Flutter.)
-- Keep the Real Hardstyle FM stream playing when the user switches between apps.
+- Keep the Real Hardstyle FM stream playing when the user switches between apps. (Implemented on Android with a foreground media service.)
 - Show the saved profile image on the user's own profile screen, falling back to the Firebase user photo URL. (Implemented in Flutter.)
 - Investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images.
 - Audit every REST endpoint for HTTPS transport, authentication, authorization, nonce/token checks, and server-side input validation; fix only confirmed gaps.
