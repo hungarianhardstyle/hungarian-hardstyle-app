@@ -341,7 +341,7 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 
 ### v0.99.3 - HUHS Vezérlőközpont
 
-- Integrate the WordPress Mobile API administration into the authenticated app admin panel as a separate, red-black branded `HUHS Vezérlőközpont` menu; show and authorize it exclusively for Admin access roles.
+- Add an Admin-only `HUHS Vezérlőközpont` entry to the authenticated app admin panel; it opens the existing WordPress Mobile API admin dashboard in the in-app browser. Direct API editing requires a later authenticated integration.
 - Add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions.
 - Restrict event submission to authenticated registered users; the Flutter form is now hidden/guarded for guests, while WordPress-side unauthenticated rejection remains to be verified.
 - Refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen: Rajdhani typography, consistent cards and controls, compact news/event sections, section shortcuts, and the compact radio bar, using the real HUHS logo rather than generated placeholder artwork.

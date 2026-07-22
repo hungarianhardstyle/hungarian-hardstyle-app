@@ -9,8 +9,8 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 ### v0.99.3 audit status (2026-07-22)
 
 - Current Flutter build: `0.99.3+3`; v0.99.3 remains the HUHS Vezérlőközpont and security-hardening target.
-- Flutter ARM debug build succeeded; local analyzer and test commands timed out and are not reported as passing.
-- ARM64 debug APK built at `build/huhs-v0.99.3+2-arm64-debug.apk`.
+- Flutter ARM debug build succeeded; `flutter analyze --no-pub` reports one existing non-blocking info and all 26 tests pass.
+- ARM64 debug APK built at `build/huhs-v0.99.3+3-arm64-debug.apk`.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
@@ -62,7 +62,7 @@ The current WordPress backend package is **2.4.29 (prepared locally in `build/`)
 
 ### v0.99.3 - HUHS Vezérlőközpont
 
-- [ ] integrate WordPress Mobile API administration into the authenticated app admin panel as a separate menu, matching the app's red-black design; expose it only to Admin access roles
+- [x] add an Admin-only `HUHS Vezérlőközpont` entry to the authenticated app admin panel; it opens the existing WordPress Mobile API admin dashboard in the in-app browser (direct API editing remains a later authenticated integration)
 - [x] add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions
 - [ ] restrict event submission to authenticated registered users and reject unauthenticated API requests (Flutter gate is implemented; WordPress-side rejection remains)
 - [ ] refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen with Rajdhani typography, consistent cards and controls, compact news/event sections, the compact radio bar, and the real HUHS logo

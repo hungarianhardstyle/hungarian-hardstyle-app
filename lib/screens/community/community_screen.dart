@@ -14,6 +14,7 @@ import '../../models/submission_image.dart';
 import '../../providers/community_provider.dart';
 import '../../services/community_service.dart';
 import '../../widgets/submission_image_picker.dart';
+import '../../core/navigation/in_app_browser.dart';
 import '../more/favorites_screen.dart';
 
 String _chatError(Object error) {
@@ -117,6 +118,17 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
           }
           return Column(
             children: [
+              ListTile(
+                leading: const Icon(Icons.dashboard_customize_outlined),
+                title: const Text('HUHS Vezérlőközpont'),
+                subtitle: const Text('WordPress Mobile API adminisztráció'),
+                trailing: const Icon(Icons.open_in_new),
+                onTap: () => openInAppBrowser(
+                  context,
+                  'https://hungarianhardstyle.hu/wp-admin/admin.php?page=huhs-mobile',
+                  title: 'HUHS Vezérlőközpont',
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: TextField(
