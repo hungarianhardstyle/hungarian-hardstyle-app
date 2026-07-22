@@ -16,6 +16,7 @@ class CommunityService {
   static const accessNone = 'none';
   static const accessModerator = 'moderator';
   static const accessAdmin = 'admin';
+  static const maxUploadBytes = 5 * 1024 * 1024;
 
   final FirebaseAuth auth;
   final FirebaseFirestore firestore;
@@ -329,6 +330,9 @@ class CommunityService {
   }
 
   Future<String> uploadImage(Uint8List bytes, {bool faceFocus = false}) async {
+    if (bytes.isEmpty || bytes.length > maxUploadBytes) {
+      throw StateError('A kĂ©p legfeljebb 5 MB lehet.');
+    }
     final response = await _dio.post<Map<String, dynamic>>(
       'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
       data: FormData.fromMap({
