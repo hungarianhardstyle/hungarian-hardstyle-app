@@ -20,7 +20,7 @@ class EventsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final events = ref.watch(eventsProvider);
-    final user = ref.watch(communityServiceProvider).auth.currentUser;
+    final user = ref.watch(communityAuthProvider).valueOrNull;
     final canSubmit = user != null && !user.isAnonymous;
 
     return Scaffold(
