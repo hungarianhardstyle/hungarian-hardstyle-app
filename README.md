@@ -10,7 +10,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 - Current Flutter build: `0.99.3+7`; v0.99.3 remains the HUHS Vezérlőközpont and security-hardening target.
 - Flutter ARM debug build succeeded; `flutter analyze --no-pub` reports no issues and all 26 tests pass.
-- ARM64 debug APK built at `build/huhs-v0.99.3+7-arm64-debug.apk`.
+- ARM64 debug APK built at `build/huhs-v0.99.3+8-arm64-debug.apk`.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
