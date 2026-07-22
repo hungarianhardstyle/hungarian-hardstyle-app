@@ -8,6 +8,7 @@ import '../../models/submission_image.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/organizers_provider.dart';
+import '../../providers/community_provider.dart';
 import '../../widgets/submission_image_picker.dart';
 
 class EventSubmissionScreen extends ConsumerStatefulWidget {
@@ -99,6 +100,12 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
+
+    final user = ref.read(communityServiceProvider).auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      _showMessage('Eseményt csak regisztrált felhasználó küldhet be.');
+      return;
+    }
 
     if (!_formKey.currentState!.validate()) {
       return;

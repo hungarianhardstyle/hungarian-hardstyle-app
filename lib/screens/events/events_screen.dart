@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/events_provider.dart';
+import '../../providers/community_provider.dart';
 import '../../widgets/event_card.dart';
 import 'event_submission_screen.dart';
 
@@ -19,6 +20,8 @@ class EventsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final events = ref.watch(eventsProvider);
+    final user = ref.watch(communityServiceProvider).auth.currentUser;
+    final canSubmit = user != null && !user.isAnonymous;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -44,7 +47,10 @@ class EventsScreen extends ConsumerWidget {
                   vertical: 18,
                 ),
                 children: [
-                  _EventsHeader(onSubmit: () => _openSubmission(context)),
+                  _EventsHeader(
+                    onSubmit: () => _openSubmission(context),
+                    showSubmit: canSubmit,
+                  ),
                   const SizedBox(height: 100),
                   const Center(child: CircularProgressIndicator()),
                 ],
@@ -56,7 +62,10 @@ class EventsScreen extends ConsumerWidget {
                   vertical: 18,
                 ),
                 children: [
-                  _EventsHeader(onSubmit: () => _openSubmission(context)),
+                  _EventsHeader(
+                    onSubmit: () => _openSubmission(context),
+                    showSubmit: canSubmit,
+                  ),
                   const SizedBox(height: 80),
                   const Text(
                     'Nem sikerült betölteni az eseményeket.',
@@ -82,7 +91,10 @@ class EventsScreen extends ConsumerWidget {
                       vertical: 18,
                     ),
                     children: [
-                      _EventsHeader(onSubmit: () => _openSubmission(context)),
+                      _EventsHeader(
+                        onSubmit: () => _openSubmission(context),
+                        showSubmit: canSubmit,
+                      ),
                       const SizedBox(height: 80),
                       const Center(
                         child: Text(
@@ -110,6 +122,7 @@ class EventsScreen extends ConsumerWidget {
                         padding: const EdgeInsets.only(bottom: 18),
                         child: _EventsHeader(
                           onSubmit: () => _openSubmission(context),
+                          showSubmit: canSubmit,
                         ),
                       );
                     }
@@ -131,8 +144,9 @@ class EventsScreen extends ConsumerWidget {
 
 class _EventsHeader extends StatelessWidget {
   final VoidCallback onSubmit;
+  final bool showSubmit;
 
-  const _EventsHeader({required this.onSubmit});
+  const _EventsHeader({required this.onSubmit, required this.showSubmit});
 
   @override
   Widget build(BuildContext context) {
@@ -144,10 +158,11 @@ class _EventsHeader extends StatelessWidget {
           style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 14),
-        OutlinedButton.icon(
-          onPressed: onSubmit,
-          icon: const Icon(Icons.add_circle_outline),
-          label: const Text('Esemény beküldése'),
+        if (showSubmit)
+          OutlinedButton.icon(
+            onPressed: onSubmit,
+            icon: const Icon(Icons.add_circle_outline),
+            label: const Text('Esemény beküldése'),
         ),
       ],
     );

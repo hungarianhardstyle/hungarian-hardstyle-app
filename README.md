@@ -64,11 +64,11 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
 
 - [ ] integrate WordPress Mobile API administration into the authenticated app admin panel as a separate menu, matching the app's red-black design; expose it only to Admin access roles
 - [x] add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions
-- [ ] restrict event submission to authenticated registered users and reject unauthenticated API requests
+- [ ] restrict event submission to authenticated registered users and reject unauthenticated API requests (Flutter gate is implemented; WordPress-side rejection remains)
 - [ ] refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen with Rajdhani typography, consistent cards and controls, compact news/event sections, the compact radio bar, and the real HUHS logo
-- [ ] make the About screen contact e-mail open the device mail app
+- [x] make the About screen contact e-mail open the device mail app
 - [ ] keep the Real Hardstyle FM stream playing when switching between apps
-- [ ] show the saved profile image on the user's own profile screen
+- [x] show the saved profile image on the user's own profile screen, falling back to the Firebase user photo URL
 - [ ] investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images
 - [ ] audit REST endpoints for HTTPS, authentication, authorization, nonce/token checks, and server-side input validation; fix confirmed gaps only
 - [ ] add or verify rate limiting and spam/abuse protection for submissions, Chat, authentication, and write endpoints

@@ -343,11 +343,11 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 
 - Integrate the WordPress Mobile API administration into the authenticated app admin panel as a separate, red-black branded `HUHS Vezérlőközpont` menu; show and authorize it exclusively for Admin access roles.
 - Add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions.
-- Restrict event submission to authenticated registered users; hide it from guests in Flutter and reject unauthenticated API requests.
+- Restrict event submission to authenticated registered users; the Flutter form is now hidden/guarded for guests, while WordPress-side unauthenticated rejection remains to be verified.
 - Refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen: Rajdhani typography, consistent cards and controls, compact news/event sections, section shortcuts, and the compact radio bar, using the real HUHS logo rather than generated placeholder artwork.
-- Make the About screen contact e-mail open the device mail app.
+- Make the About screen contact e-mail open the device mail app. (Implemented in Flutter.)
 - Keep the Real Hardstyle FM stream playing when the user switches between apps.
-- Show the saved profile image on the user's own profile screen.
+- Show the saved profile image on the user's own profile screen, falling back to the Firebase user photo URL. (Implemented in Flutter.)
 - Investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images.
 - Audit every REST endpoint for HTTPS transport, authentication, authorization, nonce/token checks, and server-side input validation; fix only confirmed gaps.
 - Add or verify rate limiting and spam/abuse protection on submissions, Chat, authentication, and other write endpoints.

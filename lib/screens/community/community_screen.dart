@@ -794,7 +794,8 @@ class _CommunityProfileScreenState
         _name.text = data['displayName'] as String? ?? user.displayName ?? '';
         _bio.text = data['bio'] as String? ?? '';
         _social.text = data['socialLinks'] as String? ?? '';
-        _profileImageUrl = data['profileImageUrl'] as String? ?? '';
+        _profileImageUrl =
+            data['profileImageUrl'] as String? ?? user.photoURL ?? '';
         _role = _service.accountRole(data['role'] as String?);
         _loadedUid = user.uid;
       });

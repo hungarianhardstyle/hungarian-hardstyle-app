@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/navigation/in_app_browser.dart';
 
@@ -68,6 +69,10 @@ class AboutScreen extends StatelessWidget {
                     icon: Icons.mail_outline,
                     label: 'Kapcsolat',
                     value: 'info@hungarianhardstyle.hu',
+                    onTap: () => launchUrl(
+                      Uri(scheme: 'mailto', path: 'info@hungarianhardstyle.hu'),
+                      mode: LaunchMode.externalApplication,
+                    ),
                   ),
                 ],
               );
