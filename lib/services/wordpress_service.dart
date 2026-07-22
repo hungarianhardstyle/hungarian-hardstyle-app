@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import '../models/artist.dart';
 import '../models/event.dart';
@@ -68,6 +69,8 @@ class PostsPage {
 class WordpressService {
   static const _cloudinaryCloudName = 'fjxo93em';
   static const _cloudinaryUploadPreset = 'Hun_hs_Mobile';
+  static const _maxUploadBytes = 5 * 1024 * 1024;
+  static const _allowedImageExtensions = {'jpg', 'jpeg', 'png', 'webp'};
 
   final Dio _dio = Dio(
     BaseOptions(
@@ -390,7 +393,7 @@ class WordpressService {
     if (logo != null) {
       payload['logo_url'] = await _uploadCloudinaryImage(logo);
     }
-    return _submitProfile('/artist-submissions', payload);
+    return _submitProfile('artist', payload);
   }
 
   Future<String> submitOrganizer(
@@ -401,19 +404,18 @@ class WordpressService {
     if (image != null) {
       payload['logo_url'] = await _uploadCloudinaryImage(image);
     }
-    return _submitProfile('/organizer-submissions', payload);
+    return _submitProfile('organizer', payload);
   }
 
   Future<String> _submitProfile(
-    String path,
+    String kind,
     Map<String, dynamic> data,
   ) async {
     try {
-      final response = await _dio.post(
-        path,
-        data: data,
-      );
-      final responseData = response.data;
+      final responseData = (await FirebaseFunctions.instance
+              .httpsCallable('submitWordPressContent')
+              .call<Map<String, dynamic>>({'kind': kind, 'payload': data}))
+          .data;
       final message = _readResponseMessage(responseData);
       if (message != null) return message;
 
@@ -452,8 +454,11 @@ class WordpressService {
       if (image != null) {
         payload['flyer_url'] = await _uploadCloudinaryImage(image);
       }
-      final response = await _dio.post('/event-submissions', data: payload);
-      final message = _readResponseMessage(response.data);
+      final responseData = (await FirebaseFunctions.instance
+              .httpsCallable('submitWordPressContent')
+              .call<Map<String, dynamic>>({'kind': 'event', 'payload': payload}))
+          .data;
+      final message = _readResponseMessage(responseData);
       if (message != null) return message;
 
       return 'Köszönjük, az eseményt elküldtük ellenőrzésre.';
@@ -466,6 +471,12 @@ class WordpressService {
 
   Future<String> _uploadCloudinaryImage(SubmissionImage image) async {
     try {
+      final extension = image.name.split('.').last.toLowerCase();
+      if (image.bytes.isEmpty ||
+          image.bytes.length > _maxUploadBytes ||
+          !_allowedImageExtensions.contains(extension)) {
+        throw const FormatException('JPG, PNG vagy WebP kép szükséges, legfeljebb 5 MB méretben.');
+      }
       final upload = Dio();
       final response = await upload.post(
         'https://api.cloudinary.com/v1_1/$_cloudinaryCloudName/image/upload',

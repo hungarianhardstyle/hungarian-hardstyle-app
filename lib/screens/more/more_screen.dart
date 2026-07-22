@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../providers/community_provider.dart';
 import '../artists/artists_screen.dart';
 import '../organizers/organizers_screen.dart';
 import 'about_screen.dart';
@@ -13,11 +15,18 @@ import '../submissions/organizer_submission_screen.dart';
 import 'radio_provider_screen.dart';
 import 'privacy_screen.dart';
 
-class MoreScreen extends StatelessWidget {
+class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final service = ref.watch(communityServiceProvider);
+    final user = ref.watch(communityAuthProvider).valueOrNull;
+    final registered = user != null && !user.isAnonymous;
+    final role = service.cachedAccountRole;
+    final canSubmitArtist = registered && (service.isAdmin || role == 'dj');
+    final canSubmitOrganizer = registered &&
+        (service.isAdmin || role == 'organizer');
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -55,14 +64,17 @@ class MoreScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              _SubmissionCard(
+              if (canSubmitArtist)
+                _SubmissionCard(
                 icon: Icons.person_add_alt_1,
                 title: 'DJ beküldése',
                 subtitle: 'Új DJ-adatlap jóváhagyásra',
                 onTap: () => _open(context, const ArtistSubmissionScreen()),
               ),
-              const SizedBox(height: 8),
-              _SubmissionCard(
+              if (canSubmitArtist && canSubmitOrganizer)
+                const SizedBox(height: 8),
+              if (canSubmitOrganizer)
+                _SubmissionCard(
                 icon: Icons.add_business,
                 title: 'Szervező beküldése',
                 subtitle: 'Új szervező jóváhagyásra',

@@ -14,6 +14,8 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
+- WordPress submissions now use the `submitWordPressContent` Firebase Function: it verifies Firebase Auth and the account role before forwarding to WordPress. Deploy after setting the server-only `WORDPRESS_USERNAME` and `WORDPRESS_APPLICATION_PASSWORD` secrets; no WordPress credential belongs in Flutter.
+- Cloudinary uploads are client-guarded to JPG/JPEG/PNG/WebP and 5 MB. The unsigned `Hun_hs_Mobile` preset must use the same allowed formats, `huhs/community` folder, unique filenames, and overwrite disabled.
 
 ### v0.99.1 implementation status
 

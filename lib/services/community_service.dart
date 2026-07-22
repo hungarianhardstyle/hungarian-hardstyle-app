@@ -174,6 +174,8 @@ class CommunityService {
       _cachedAccessRole == accessAdmin ||
       _cachedRole == accessAdmin;
 
+  String get cachedAccountRole => accountRole(_cachedRole);
+
   bool get canModerate => isAdmin || _cachedAccessRole == accessModerator;
 
   String accountRole(String? value) {
