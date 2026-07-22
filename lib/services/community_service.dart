@@ -317,6 +317,17 @@ class CommunityService {
     );
   }
 
+  Future<void> deleteOwnProfile() async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      throw StateError('Nincs törölhető profil.');
+    }
+    await FirebaseFunctions.instance.httpsCallable('deleteCommunityUser').call(
+      <String, dynamic>{'uid': user.uid},
+    );
+    await signOut();
+  }
+
   Future<String> uploadImage(Uint8List bytes, {bool faceFocus = false}) async {
     final response = await _dio.post<Map<String, dynamic>>(
       'https://api.cloudinary.com/v1_1/$cloudName/image/upload',

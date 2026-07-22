@@ -72,11 +72,25 @@ class CommunityAvatarButton extends ConsumerWidget {
   }
 }
 
-class CommunityAdminScreen extends ConsumerWidget {
+class CommunityAdminScreen extends ConsumerStatefulWidget {
   const CommunityAdminScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CommunityAdminScreen> createState() =>
+      _CommunityAdminScreenState();
+}
+
+class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
+  final _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final service = ref.watch(communityServiceProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Közösségi adminisztráció')),
@@ -89,14 +103,35 @@ class CommunityAdminScreen extends ConsumerWidget {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final profiles = snapshot.data!.docs;
+          final query = _search.text.trim().toLowerCase();
+          final profiles = snapshot.data!.docs.where((doc) {
+            if (query.isEmpty) return true;
+            final data = doc.data();
+            final name = (data['displayName'] as String? ?? '').toLowerCase();
+            final email = (data['email'] as String? ?? '').toLowerCase();
+            return name.contains(query) || email.contains(query);
+          }).toList();
           if (profiles.isEmpty) {
             return const Center(child: Text('Még nincs regisztrált profil.'));
           }
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: profiles.length,
-            itemBuilder: (context, index) {
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: TextField(
+                  controller: _search,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    labelText: 'Felhasználó keresése',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: profiles.length,
+                  itemBuilder: (context, index) {
               final doc = profiles[index];
               final data = doc.data();
               final role = service.accountRole(data['role'] as String?);
@@ -213,7 +248,10 @@ class CommunityAdminScreen extends ConsumerWidget {
                   ),
                 ),
               );
-            },
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -461,7 +499,7 @@ class _Composer extends StatelessWidget {
                 const Expanded(
                   child: Text(
                     'Emoji a billentyűzetről is használható',
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: Colors.white54, fontSize: 11),
                   ),
@@ -517,6 +555,24 @@ class _PostCardState extends ConsumerState<_PostCard> {
   }
 
   Future<void> _delete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Üzenet törlése'),
+        content: const Text('Biztosan törlöd ezt a Chat-üzenetet?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Mégse'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Törlés'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     try {
       await ref.read(communityServiceProvider).deletePost(widget.post.id);
     } catch (error) {
@@ -945,6 +1001,48 @@ class _CommunityProfileScreenState
                   },
                   icon: const Icon(Icons.logout),
                   label: const Text('Kijelentkezés'),
+                ),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: _busy
+                      ? null
+                      : () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (dialogContext) => AlertDialog(
+                              title: const Text('Profil törlése'),
+                              content: const Text(
+                                'A profilod, a Chat-üzeneteid és a bejelentkezésed is törlődik. Folytatod?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(dialogContext, false),
+                                  child: const Text('Mégse'),
+                                ),
+                                FilledButton(
+                                  onPressed: () =>
+                                      Navigator.pop(dialogContext, true),
+                                  child: const Text('Profil törlése'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirmed != true || !mounted) return;
+                          setState(() => _busy = true);
+                          try {
+                            await _service.deleteOwnProfile();
+                            if (mounted) Navigator.of(context).pop();
+                          } catch (error) {
+                            if (mounted) {
+                              _message('A profil törlése sikertelen: $error');
+                            }
+                          } finally {
+                            if (mounted) setState(() => _busy = false);
+                          }
+                        },
+                  icon: const Icon(Icons.delete_forever_outlined),
+                  label: const Text('Profil törlése'),
                 ),
               ]
             : [

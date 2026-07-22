@@ -13,19 +13,21 @@ exports.deleteCommunityUser = onCall(async (data, context) => {
     throw new HttpsError('permission-denied', 'Csak admin törölhet felhasználót.');
   }
 
-  const callerProfile = await db.collection('community_profiles').doc(context.auth.uid).get();
-  const callerData = callerProfile.data() || {};
-  if (
-    email !== ADMIN_EMAIL &&
-    callerData.accessRole !== 'admin' &&
-    callerData.role !== 'admin'
-  ) {
-    throw new HttpsError('permission-denied', 'Only admins can delete users.');
+  const uid = String(data?.uid || '').trim();
+  if (!uid) {
+    throw new HttpsError('invalid-argument', 'Érvényes felhasználó szükséges.');
   }
 
-  const uid = String(data?.uid || '').trim();
-  if (!uid || uid === context.auth.uid) {
-    throw new HttpsError('invalid-argument', 'Érvényes, másik felhasználó szükséges.');
+  if (uid !== context.auth.uid) {
+    const callerProfile = await db.collection('community_profiles').doc(context.auth.uid).get();
+    const callerData = callerProfile.data() || {};
+    if (
+      email !== ADMIN_EMAIL &&
+      callerData.accessRole !== 'admin' &&
+      callerData.role !== 'admin'
+    ) {
+      throw new HttpsError('permission-denied', 'Only admins can delete users.');
+    }
   }
 
   try {

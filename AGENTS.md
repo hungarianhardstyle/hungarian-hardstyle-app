@@ -353,6 +353,10 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - Add or verify rate limiting and spam/abuse protection on submissions, Chat, authentication, and other write endpoints.
 - Restrict Cloudinary upload presets by file type, size, folder, and quota; keep Firebase/WordPress service credentials server-side.
 - Add security logging and monitoring for rejected requests and suspicious activity without exposing personal data.
+- Add a profile deletion option with an explicit confirmation step.
+- Require confirmation before deleting Chat messages.
+- Require confirmation before an admin deletes a user account.
+- Keep the Chat composer helper text (`Emoji a billentyűzetről is használható`) on one line on supported phone widths.
 
 ### v0.4 - Foundation
 

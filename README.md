@@ -6,11 +6,11 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-### v0.99.2 audit status (2026-07-21)
+### v0.99.3 audit status (2026-07-22)
 
-- Current Flutter build: `0.99.2+1`; the next planned release is v0.99.3 HUHS Vezérlőközpont and security hardening.
-- Flutter analyzer: clean; existing test suite: 26 tests passed.
-- ARM64 debug APK built at `build/huhs-v0.99.2+1-arm64-debug.apk`.
+- Current Flutter build: `0.99.3+1`; v0.99.3 remains the HUHS Vezérlőközpont and security-hardening target.
+- Flutter ARM debug build succeeded; local analyzer and test commands timed out and are not reported as passing.
+- ARM64 debug APK built at `build/huhs-v0.99.3+1-arm64-debug.apk`.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
@@ -63,7 +63,7 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
 ### v0.99.3 - HUHS Vezérlőközpont
 
 - [ ] integrate WordPress Mobile API administration into the authenticated app admin panel as a separate menu, matching the app's red-black design; expose it only to Admin access roles
-- [ ] add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions
+- [x] add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions
 - [ ] restrict event submission to authenticated registered users and reject unauthenticated API requests
 - [ ] refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen with Rajdhani typography, consistent cards and controls, compact news/event sections, the compact radio bar, and the real HUHS logo
 - [ ] make the About screen contact e-mail open the device mail app
@@ -74,6 +74,10 @@ The current WordPress backend package is **2.4.29 (prepared locally)**. It inclu
 - [ ] add or verify rate limiting and spam/abuse protection for submissions, Chat, authentication, and write endpoints
 - [ ] restrict Cloudinary upload presets by type, size, folder, and quota; keep service credentials server-side
 - [ ] add privacy-safe security logging and monitoring for rejected requests and suspicious activity
+- [x] add profile deletion with explicit confirmation
+- [x] require confirmation before deleting Chat messages
+- [x] require confirmation before an admin deletes a user account
+- [x] keep the Chat composer emoji helper text on one line on supported phone widths
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
