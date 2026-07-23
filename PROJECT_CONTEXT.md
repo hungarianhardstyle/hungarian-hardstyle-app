@@ -670,7 +670,7 @@ v0.99.2 bugfixes to investigate: e-mail/password sign-in fails despite valid cre
 
 Tag- and genre-filtered discovery lists must use API pagination/infinite scroll so all matching news and DJ results can be reached, not only the initially loaded page.
 
-Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile.
+v0.99.3 follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile.
 - Next build follow-up: add a password-reset link to login and replace raw Firebase credential errors with a clear Hungarian message.
 - Next build follow-up: add password visibility toggles and an optional strong-password generator during registration.
 - Next build follow-up: refresh the Home top-left profile avatar immediately after sign-in without requiring manual refresh.
@@ -681,6 +681,7 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - v0.99.2 follow-up: review personal-data access rules and keep sensitive operations server-side.
 - v0.99.2 follow-up: add practical release hardening (release signing, obfuscation, restricted backend secrets, and abuse/rate-limit checks); absolute protection against reverse engineering is not possible.
 - v0.99.2.1 radio scope: completed the Real Hardstyle FM integration at `https://stream.realhardstyle.nl` as the Home radio stream, with a custom compact bar player (Play, Stop, and Mute), current-track metadata when available, safe placement above bottom navigation, and a More-section provider page with the supplied logo, website, and attribution text.
+- Real Hardstyle FM provider page must include this legal information: the radio is operated by Dutch Real Hardstyle; according to the provider's public information it has the required Dutch music-rights licences (Buma/Stemra and Sena); Hungarian Hardstyle stores no music files, operates no radio media server, and does not broadcast its own stream; the app only accesses and plays Real Hardstyle's official external stream.
 - v0.99.2.1 follow-up: completed the readable modern/cyber-style font fallback with Hungarian accented-character support.
 
 ### v0.99.3 - HUHS Vezérlőközpont
@@ -694,11 +695,29 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - Show the saved profile image on the user's own profile screen.
 - Investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images.
 
+Current v0.99.3 remaining work (recorded 2026-07-22):
+
+- Integrate the WordPress Mobile API admin natively in the app; do not open the web dashboard.
+- Finish the reversible TypeUI/Rajdhani red-black design transition using the real HUHS logo.
+- Verify profile-image rendering and automatic refresh after profile changes.
+- Complete the REST API security audit and fix confirmed gaps only.
+- Verify rate limiting, abuse protection, Cloudinary preset restrictions, and privacy-safe security logging.
+- Deletion confirmation dialogs for profile, Chat messages, and admin user deletion are complete.
+- Keep the Chat emoji helper text on one line.
+- Rename the radio notification subtitle to `Real Hardstyle FM` only.
+- Add the Real Hardstyle FM legal/provider information to the radio provider page.
+- Fix radio lifecycle behavior: it may continue during app switching, but must stop when the app is fully closed; after reopening, the Stop button must also stop any still-running background playback.
+- Refresh the Chat top-right avatar when a different user signs in.
+- After self-deletion, clear app state and return to the registration/sign-in screen automatically.
+- Add profile-image positioning/cropping adjustment so users can move and frame the uploaded image.
+- Completed: pagination/infinite scroll for tag- and genre-filtered lists.
+- Completed: artist/DJ genre tags are clickable and open grouped discovery results for related Events, News, and DJs/artists, with the full paginated result set.
+
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
 Required before public release: a final UX and visual polish pass covering navigation, spacing, labels, buttons, loading/error states, accessibility, and tasteful motion/effects.
 
-The Websupport upstream WAF still blocks direct multipart image uploads with HTTP 466, but v0.99 bypasses it with direct Cloudinary uploads. Websupport allowlisting is intentionally deferred until after v1.0 and is not a current release blocker. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.
+Cloudinary is the only active image-upload path for the app. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.
 
 Backend 2.4.9 organizer genre/style metadata and synchronized Flutter display/submission support are implemented; the Flutter changes pass analysis and all tests. Live organizer genre verification remains an editorial content check.
 
@@ -730,7 +749,7 @@ v0.99 submission polish:
 - Add event end date and end time fields; reject an end datetime earlier than the start datetime.
 - Populate the organizer dropdown from WordPress in Flutter and keep it aligned with the existing WordPress selector.
 - Require at least one genre; missing required values must show inline messages and red invalid-field styling.
-- Replace blocked multipart image submission with direct Cloudinary upload using the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
+- Use only direct Cloudinary upload with the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
 - Flutter implementation is complete in release `0.99.1+4`; WordPress Mobile API `2.4.29` is prepared locally and still needs deployment/live verification. It includes the 2.4.28 features plus push-title/body HTML-entity decoding and UTF-8 JSON output.
 - v0.97 polish complete: event postal-code input accepts digits only in Flutter and WordPress/API validation; new-event publication pushes remain global to FCM-token devices.
 - Planned v1.0 notification personalization: normal event pushes target users who favorited or marked attendance; featured-event publication and reminder pushes remain global to every app-installed device with an FCM token, regardless of account registration; users who favorite an organizer receive that organizer's new-event notifications. Explicit notification opt-outs remain respected. A separate admin/editor push for newly received submissions is an optional follow-up.
@@ -745,7 +764,7 @@ Planned v1.0 community profile details:
 - allow a registered user to claim a DJ profile only after verifying the private or artist-owned booking e-mail stored on that profile; exclude the Hungarian Hardstyle-managed booking address (`info@hungarianhardstyle.hu`) from ownership proof
 - add friend requests and an `Ismerősök` list
 - show attending friends on event details
-- Reuse the Cloudinary direct-upload path for authenticated Live Feed/chat image posts; do not send those images through the Websupport multipart endpoint.
+- Reuse the Cloudinary direct-upload path for authenticated Live Feed/chat image posts.
 
 Current v0.99.1 implementation status:
 

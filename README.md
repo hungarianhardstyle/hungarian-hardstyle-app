@@ -85,7 +85,7 @@ Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes 
 
 Backend **2.4.8** is deployed. It adds a separate optional DJ-logo upload, an editable DJ website field across WordPress, REST API, public profiles, and Flutter, and complete event details when an event is opened from a DJ or organizer profile. The profile-event navigation fix is live-verified.
 
-The Websupport multipart-upload/WAF issue is bypassed in v0.99 with direct Cloudinary uploads. Websupport allowlisting is deferred until after v1.0 and is no longer a v0.99 blocker. The dedicated Facebook Event URL field is deployed in backend 2.4.3; the app submission field remains a general event link.
+Cloudinary is the only active image-upload path. The dedicated Facebook Event URL field is deployed in backend 2.4.3; the app submission field remains a general event link.
 
 Implemented:
 
@@ -96,7 +96,7 @@ Implemented:
 - searchable DJ and organizer directories with full profile pages
 - related upcoming events on DJ and organizer profiles
 - moderated event, DJ and organizer submissions
-- Cloudinary-backed image submissions for event flyers, DJ profile images and organizer logos (Websupport multipart upload remains deferred)
+- Cloudinary-backed image submissions for event flyers, DJ profile images and organizer logos
 - WordPress admin approval into non-public draft profiles
 - local favorites for news, events, DJs and organizers
 - native Mailchimp newsletter signup
@@ -229,7 +229,7 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] add event end date and end time fields, validating that the end is not before the start
 - [x] load the organizer list from WordPress and provide an organizer dropdown in the app and WordPress editor
 - [x] require at least one genre and show inline error messages and red invalid-field styling for every missing required value
-- [x] bypass the Websupport multipart-upload block with direct Cloudinary uploads (`fjxo93em` / unsigned `Hun_hs_Mobile`) and pass returned image URLs to WordPress for DJ, organizer and event submissions
+- [x] use direct Cloudinary uploads (`fjxo93em` / unsigned `Hun_hs_Mobile`) and pass returned image URLs to WordPress for DJ, organizer and event submissions
 - [x] prepare WordPress Mobile API 2.4.28 for Cloudinary image URLs, the new event fields, numeric postal-code validation, automatic address-based Maps links and published post tag names; approval also migrates legacy image URL meta keys and the WordPress admin shows Cloudinary image previews
 
 ### v0.99 — Completed polish items
@@ -266,6 +266,7 @@ Core release quality:
 - [ ] stabilize news, events, DJs and organizers for public release
 - [ ] complete a final UX and visual polish pass: navigation, spacing, labels, buttons, loading/error states, accessibility and tasteful motion/effects
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches
+- [x] make artist/DJ profile genre tags open the same grouped `Események`, `DJ-k` and `Hírek` discovery view with the complete paginated result set
 - [ ] add a `Támogatás / Donate` card under More with a configurable PayPal donation link (PayPal app first, browser fallback)
 - [ ] add the Hardstyle Revolution release catalog
 - [ ] add release preview playback
@@ -282,7 +283,6 @@ Core release quality:
 - [x] add the Chat tab to the persistent bottom-navigation shell
 - [ ] polish the Android release and prepare iOS support
 - [ ] add the WordPress-managed FAQ under More with search, expandable answers, loading, empty and error states
-- [ ] after v1.0, revisit Websupport WAF/allowlisting and decide whether direct WordPress multipart uploads are worth restoring alongside Cloudinary
 
 Authentication and community:
 
