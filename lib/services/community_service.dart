@@ -59,6 +59,7 @@ class CommunityService {
     required String password,
     required String displayName,
     required String role,
+    Map<String, String>? socialLinks,
   }) async {
     try {
       final credential = await auth.createUserWithEmailAndPassword(
@@ -75,6 +76,7 @@ class CommunityService {
         'role': accountRole,
         'accessRole': _isAdmin(user.email) ? accessAdmin : accessNone,
         'email': email.trim(),
+        'socialLinks': ?socialLinks,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -116,7 +118,10 @@ class CommunityService {
     _ => 'A bejelentkezés nem sikerült. Próbáld újra.',
   };
 
-  Future<void> signInWithGoogle({String? role}) async {
+  Future<void> signInWithGoogle({
+    String? role,
+    Map<String, String>? socialLinks,
+  }) async {
     try {
       final account = await GoogleSignIn().signIn();
       if (account == null) return;
@@ -142,6 +147,10 @@ class CommunityService {
           if (_isAdmin(user.email)) 'accessRole': accessAdmin,
           if (!_isAdmin(user.email) && existingRole == null && role != null)
             'role': role,
+          if (!_isAdmin(user.email) &&
+              existingRole == null &&
+              socialLinks != null)
+            'socialLinks': socialLinks,
           if (!_isAdmin(user.email) && existingData['accessRole'] == null)
             'accessRole': existingAccessRole,
           'updatedAt': FieldValue.serverTimestamp(),

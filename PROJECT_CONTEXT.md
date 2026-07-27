@@ -570,7 +570,7 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 - Push notifications should cover new published news, new published events, event reminders one week before and on the event day, plus admin-created custom notifications from WordPress.
 - Current push status: Flutter initializes Firebase/FCM, stores the token locally, registers it with the WordPress API, shows foreground notifications, opens news/event targets in native screens, and syncs per-device notification preferences. Backend 2.4.16 includes Firebase HTTP v1 sending, news/event/link targets, automatic HUHS URL resolution, publish hooks, event reminder scheduling, preference filtering, and a protected service-account settings page. Custom push, news/event publishing pushes, and foreground display are live-tested successfully; the first natural event-day reminder did not arrive, so WP-Cron execution, timezone/date parsing, preference filtering, and the FCM send path must be investigated. Credentials must never be embedded in Flutter or committed to the plugin.
 - The WordPress custom-push form lists the latest published news and events by title, so editors do not need to know WordPress post IDs. It validates that the selected content matches the chosen target type.
-- Backend 2.4.12 is live with published IRP related-post records and a public post-detail endpoint. The live endpoint and a real “Kapcsolódó cikk” target were verified. Flutter opens IRP records and normal WordPress “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links in the native news detail screen and falls back to the in-app browser when no post ID is available.
+- Backend 2.4.12 is live with published IRP related-post records and a public post-detail endpoint. The live endpoint and a real "Kapcsolódó cikk" target were verified. Flutter opens IRP records and normal WordPress "Kapcsolódó cikk", "Kapcsolódó", and "Ez is érdekelhet" links in the native news detail screen and falls back to the in-app browser when no post ID is available.
 
 - Google account registration and sign-in
 
@@ -712,6 +712,9 @@ Current v0.99.3 remaining work (recorded 2026-07-22):
 - Add profile-image positioning/cropping adjustment so users can move and frame the uploaded image.
 - Completed: pagination/infinite scroll for tag- and genre-filtered lists.
 - Completed: artist/DJ genre tags are clickable and open grouped discovery results for related Events, News, and DJs/artists, with the full paginated result set.
+- Completed: expired events are removed from API results and the cached event provider rechecks every minute.
+- Completed: the Real Hardstyle FM provider page contains the requested legal information.
+- Completed: Firestore rules were compiled and deployed after tightening role-bound Chat authorship checks.
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -750,7 +753,7 @@ v0.99 submission polish:
 - Populate the organizer dropdown from WordPress in Flutter and keep it aligned with the existing WordPress selector.
 - Require at least one genre; missing required values must show inline messages and red invalid-field styling.
 - Use only direct Cloudinary upload with the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
-- Flutter implementation is complete in release `0.99.1+4`; WordPress Mobile API `2.4.29` is prepared locally and still needs deployment/live verification. It includes the 2.4.28 features plus push-title/body HTML-entity decoding and UTF-8 JSON output.
+- Flutter implementation is complete in release `0.99.1+4`; WordPress Mobile API `2.4.30` is prepared locally and still needs deployment/live verification. It adds authenticated permission checks to submission POST routes while keeping public option GET routes available.
 - v0.97 polish complete: event postal-code input accepts digits only in Flutter and WordPress/API validation; new-event publication pushes remain global to FCM-token devices.
 - Planned v1.0 notification personalization: normal event pushes target users who favorited or marked attendance; featured-event publication and reminder pushes remain global to every app-installed device with an FCM token, regardless of account registration; users who favorite an organizer receive that organizer's new-event notifications. Explicit notification opt-outs remain respected. A separate admin/editor push for newly received submissions is an optional follow-up.
 
@@ -802,25 +805,25 @@ Additional v1.0 product requirements:
 
 Completed
 
-✔ News
+âś" News
 
-✔ Search
+âś" Search
 
-✔ Events Backend
+âś" Events Backend
 
-✔ Artists Backend
+âś" Artists Backend
 
-✔ Organizers Backend
+âś" Organizers Backend
 
-✔ Event REST API
+âś" Event REST API
 
-✔ Flyer
+âś" Flyer
 
-✔ Ticket URL
+âś" Ticket URL
 
-✔ Google Maps
+âś" Google Maps
 
-✔ Event Shortcode
+âś" Event Shortcode
 
 Flutter Completed
 

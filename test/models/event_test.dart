@@ -23,4 +23,12 @@ void main() {
 
     expect(event.genres, ['Hardstyle', 'Hardcore']);
   });
+
+  test('kiszűri a lejárt eseményeket a dátum alapján', () {
+    final past = HuhsEvent.fromJson({'start_date': '2000-01-01'});
+    final future = HuhsEvent.fromJson({'start_date': '2099-01-01'});
+
+    expect(past.isPast, isTrue);
+    expect(future.isPast, isFalse);
+  });
 }

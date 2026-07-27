@@ -33,6 +33,14 @@ service cloud.firestore {
         && request.resource.data.imageUrl is string
         && request.resource.data.reactions is map
         && request.resource.data.reactionBy is map
+        && (request.auth.token.firebase.sign_in_provider == 'anonymous'
+            ? request.resource.data.authorRole == ''
+              && request.resource.data.authorAccessRole == ''
+            : exists(/databases/$(database)/documents/community_profiles/$(request.auth.uid))
+              && request.resource.data.authorRole == get(/databases/$(database)/documents/community_profiles/$(request.auth.uid)).data.role
+              && request.resource.data.authorAccessRole == (get(/databases/$(database)/documents/community_profiles/$(request.auth.uid)).data.accessRole == null
+                ? 'none'
+                : get(/databases/$(database)/documents/community_profiles/$(request.auth.uid)).data.accessRole))
         && (request.auth.token.firebase.sign_in_provider != 'anonymous'
             || request.resource.data.imageUrl == '');
       allow update: if request.auth != null
@@ -58,12 +66,19 @@ service cloud.firestore {
                 || request.resource.data.accessRole == 'none')));
       allow update: if request.auth != null
         && ((request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl', 'updatedAt'
+          ])
           && (request.resource.data.role == resource.data.role
             || (!resource.data.keys().hasAny(['role'])
                 && request.resource.data.role in ['dj', 'organizer', 'partygoer']))
           && (!request.resource.data.keys().hasAny(['accessRole'])
             || request.resource.data.accessRole == resource.data.accessRole))
           || (isAdmin()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl',
+              'updatedAt', 'role', 'accessRole'
+            ])
             && request.resource.data.role in ['dj', 'organizer', 'partygoer']
             && (!request.resource.data.keys().hasAny(['accessRole'])
               || request.resource.data.accessRole in ['none', 'moderator', 'admin'])));

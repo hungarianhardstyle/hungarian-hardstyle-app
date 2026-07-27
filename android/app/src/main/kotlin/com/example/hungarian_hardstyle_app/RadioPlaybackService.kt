@@ -17,7 +17,7 @@ class RadioPlaybackService : Service() {
         super.onCreate()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             getSystemService(NotificationManager::class.java).createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Hungarian Hardstyle rádió", NotificationManager.IMPORTANCE_LOW),
+                NotificationChannel(CHANNEL_ID, "Real Hardstyle FM", NotificationManager.IMPORTANCE_LOW),
             )
         }
     }
@@ -26,17 +26,19 @@ class RadioPlaybackService : Service() {
         when (intent?.action) {
             ACTION_PLAY -> play(intent.getStringExtra(EXTRA_URL))
             ACTION_STOP -> {
+                getSharedPreferences("huhs_radio", MODE_PRIVATE).edit().putBoolean("playing", false).apply()
                 stopPlayer()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
             ACTION_VOLUME -> player?.setVolume(intent.getFloatExtra(EXTRA_VOLUME, 1f), intent.getFloatExtra(EXTRA_VOLUME, 1f))
         }
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun play(url: String?) {
         if (url.isNullOrBlank()) return
+        getSharedPreferences("huhs_radio", MODE_PRIVATE).edit().putBoolean("playing", true).apply()
         startForeground(NOTIFICATION_ID, notification())
         stopPlayer()
         player = MediaPlayer().apply {
@@ -58,6 +60,7 @@ class RadioPlaybackService : Service() {
     }
 
     private fun stopPlayer() {
+        getSharedPreferences("huhs_radio", MODE_PRIVATE).edit().putBoolean("playing", false).apply()
         player?.runCatching { stop() }
         player?.release()
         player = null
@@ -71,7 +74,7 @@ class RadioPlaybackService : Service() {
         }
         return builder
             .setContentTitle("Real Hardstyle FM")
-            .setContentText("Hungarian Hardstyle rádió")
+            .setContentText("Real Hardstyle FM")
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setOngoing(true)
             .build()
@@ -80,6 +83,13 @@ class RadioPlaybackService : Service() {
     override fun onDestroy() {
         stopPlayer()
         super.onDestroy()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        stopPlayer()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

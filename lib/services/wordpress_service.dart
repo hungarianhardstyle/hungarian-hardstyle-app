@@ -245,6 +245,7 @@ class WordpressService {
       if (data is List<dynamic>) {
         return data
             .map((json) => HuhsEvent.fromJson(json as Map<String, dynamic>))
+            .where((event) => !event.isPast)
             .toList();
       }
 
@@ -253,6 +254,7 @@ class WordpressService {
 
         return items
             .map((json) => HuhsEvent.fromJson(json as Map<String, dynamic>))
+            .where((event) => !event.isPast)
             .toList();
       }
 

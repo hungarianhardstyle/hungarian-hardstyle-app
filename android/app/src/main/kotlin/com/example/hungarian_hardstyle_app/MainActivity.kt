@@ -31,6 +31,9 @@ class MainActivity : FlutterActivity() {
                             result.success(null)
                         }
                     }
+                    "isPlaying" -> {
+                        result.success(getSharedPreferences("huhs_radio", MODE_PRIVATE).getBoolean("playing", false))
+                    }
                     "stop" -> {
                         startService(Intent(this, RadioPlaybackService::class.java).setAction(RadioPlaybackService.ACTION_STOP))
                         result.success(null)

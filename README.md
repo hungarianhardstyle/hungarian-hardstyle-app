@@ -16,6 +16,9 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
 - WordPress submissions now use the `submitWordPressContent` Firebase Function: it verifies Firebase Auth and the account role before forwarding to WordPress. Deploy after setting the server-only `WORDPRESS_USERNAME` and `WORDPRESS_APPLICATION_PASSWORD` secrets; no WordPress credential belongs in Flutter.
 - Cloudinary uploads are client-guarded to JPG/JPEG/PNG/WebP and 5 MB. The unsigned `Hun_hs_Mobile` preset must use the same allowed formats, `huhs/community` folder, unique filenames, and overwrite disabled.
+- Expired events are filtered from API results and the cached event list rechecks every minute.
+- Firestore rules for role-bound Chat authorship are compiled and deployed to the hungarian-hardstyle database.
+- The Real Hardstyle FM provider page includes the requested legal information.
 
 ### v0.99.1 implementation status
 
@@ -37,7 +40,7 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles, and moderators can delete Chat messages only.
 
-The current WordPress backend package is **2.4.29 (prepared locally in `build/`)**. The deployable source is available as `build/huhs-mobile-api-2.4.29.zip`; it includes the 2.4.28 features plus push-title/body HTML-entity decoding, UTF-8 JSON output, the admin dashboard/settings/trash/About menus, submissions approval flow, Cloudinary URL handling, and submission rate limits/honeypots. Deployment and live verification are still pending.
+The current WordPress backend package is **2.4.30 (prepared locally in `build/`)**. The deployable source is available as `build/huhs-mobile-api-2.4.30.zip`; it adds authenticated WordPress permission checks to submission POST routes while keeping public option GET routes available. Deployment and live verification are still pending.
 
 ### v0.99.2 — next test build
 
@@ -66,7 +69,7 @@ The current WordPress backend package is **2.4.29 (prepared locally in `build/`)
 
 - [x] add an Admin-only `HUHS Vezérlőközpont` entry to the authenticated app admin panel; it opens the existing WordPress Mobile API admin dashboard in the in-app browser (direct API editing remains a later authenticated integration)
 - [x] add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions
-- [ ] restrict event submission to authenticated registered users and reject unauthenticated API requests (Flutter gate is implemented; WordPress-side rejection remains)
+- [ ] restrict event submission to authenticated registered users and reject unauthenticated API requests (Flutter gate is implemented; backend 2.4.30 adds the WordPress-side permission check; deployment/live verification remains)
 - [ ] refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen with Rajdhani typography, consistent cards and controls, compact news/event sections, the compact radio bar, and the real HUHS logo
 - [x] make the About screen contact e-mail open the device mail app
 - [x] keep the Real Hardstyle FM stream playing when switching between apps with an Android foreground media service
@@ -176,7 +179,7 @@ Implemented:
 
 - [x] local favorites for news, events, DJs and organizers
 - [x] allow the featured news card on Home to be marked as a favorite
-- [x] show the opened news title in the app-bar instead of the generic `Hír` label
+- [x] show the opened news title in the app-bar instead of the generic `HĂ­r` label
 - [x] show the opened event title in the app-bar instead of a generic event label
 - [x] Mailchimp newsletter signup via hosted landing page
 - [x] native Mailchimp newsletter signup screen with a WordPress server-side proxy (backend 2.4.15 live; personal e-mail double-opt-in test successful)
@@ -186,7 +189,7 @@ Implemented:
 - [x] show runtime app version and build number from package metadata
 - [x] prepare local push notification preferences
 - [x] integrate the Firebase/FCM client and store the device token locally
-- [x] open related WordPress articles (including “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links) in the native app news screen; backend 2.4.12 is live and the detail endpoint was verified with a real related article
+- [x] open related WordPress articles (including "Kapcsolódó cikk", "Kapcsolódó", and "Ez is érdekelhet" links) in the native app news screen; backend 2.4.12 is live and the detail endpoint was verified with a real related article
 - [x] rename the artist website label to `Website`
 - [x] rename the artist booking action to `Booking` or `Fellépés lekötése`
 - [x] add organizer genre/style selection in WordPress, API, and submission flow (backend 2.4.9 prepared)

@@ -18,6 +18,19 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
   bool _muted = false;
   bool _playing = false;
 
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_syncPlaying());
+  }
+
+  Future<void> _syncPlaying() async {
+    try {
+      final playing = await _channel.invokeMethod<bool>('isPlaying') ?? false;
+      if (mounted) setState(() => _playing = playing);
+    } catch (_) {}
+  }
+
   Future<void> _togglePlay() async {
     try {
       if (_playing) {

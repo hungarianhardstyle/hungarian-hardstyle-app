@@ -151,6 +151,27 @@ class HuhsEvent {
   bool get hasGoogleMaps => googleMapsUrl.trim().isNotEmpty;
 
   bool get hasFacebookEvent => facebookEventUrl.trim().isNotEmpty;
+
+  bool get isPast {
+    final dateText = endDate.trim().isNotEmpty ? endDate : startDate;
+    final timeText = endDate.trim().isNotEmpty ? endTime : startTime;
+    final date = DateTime.tryParse(dateText);
+    if (date == null) return false;
+    if (timeText.trim().isEmpty) {
+      final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+      return endOfDay.isBefore(DateTime.now());
+    }
+    final parts = timeText.split(':');
+    final hour = int.tryParse(parts.first) ?? 23;
+    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 59 : 59;
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      hour,
+      minute,
+    ).isBefore(DateTime.now());
+  }
 }
 
 String _eventMapsUrl(
@@ -162,10 +183,13 @@ String _eventMapsUrl(
   required String venueCountry,
 }) {
   if (manual.trim().isNotEmpty) return manual.trim();
-  final query = [venueName, venueZip, venueCity, venueAddress, venueCountry]
-      .map((part) => part.trim())
-      .where((part) => part.isNotEmpty)
-      .join(', ');
+  final query = [
+    venueName,
+    venueZip,
+    venueCity,
+    venueAddress,
+    venueCountry,
+  ].map((part) => part.trim()).where((part) => part.isNotEmpty).join(', ');
   if (query.isEmpty) return '';
   return Uri.https('www.google.com', '/maps/search/', {
     'api': '1',
