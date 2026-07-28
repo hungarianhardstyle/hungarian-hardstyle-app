@@ -9,6 +9,7 @@ class CommunityPost {
   final String authorAccessRole;
   final String text;
   final String imageUrl;
+  final bool pinned;
   final Map<String, int> reactions;
   final DateTime createdAt;
 
@@ -21,6 +22,7 @@ class CommunityPost {
     required this.authorAccessRole,
     required this.text,
     required this.imageUrl,
+    required this.pinned,
     required this.reactions,
     required this.createdAt,
   });
@@ -39,6 +41,7 @@ class CommunityPost {
       authorAccessRole: data['authorAccessRole'] as String? ?? '',
       text: data['text'] as String? ?? '',
       imageUrl: data['imageUrl'] as String? ?? '',
+      pinned: data['pinned'] == true,
       reactions: data['reactions'] is Map
           ? (data['reactions'] as Map).map(
               (key, value) =>

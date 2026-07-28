@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../screens/main_navigation.dart';
 
@@ -20,6 +23,7 @@ class _StartupGateState extends State<StartupGate>
   late final AnimationController _controller;
   Timer? _timer;
   bool _ready = false;
+  String? _announcementUrl;
 
   @override
   void initState() {
@@ -34,6 +38,25 @@ class _StartupGateState extends State<StartupGate>
     _timer = Timer(_startupDelay, () {
       if (mounted) setState(() => _ready = true);
     });
+    _loadAnnouncement();
+  }
+
+  Future<void> _loadAnnouncement() async {
+    if (Firebase.apps.isEmpty) return;
+    try {
+      final snapshot = await FirebaseFirestore.instanceFor(
+        app: Firebase.app(),
+        databaseId: 'hungarian-hardstyle',
+      ).collection('app_settings').doc('startup').get();
+      final data = snapshot.data();
+      if (data?['enabled'] == true && data?['imageUrl'] is String) {
+        final imageUrl = data!['imageUrl'] as String;
+        final prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('startup_announcement_dismissed') != imageUrl && mounted) {
+          setState(() => _announcementUrl = imageUrl);
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -56,7 +79,46 @@ class _StartupGateState extends State<StartupGate>
 
   @override
   Widget build(BuildContext context) {
-    if (_ready) return const MainNavigation();
+    if (_ready) {
+      final home = const MainNavigation();
+      if (_announcementUrl == null) return home;
+      return Stack(
+        children: [
+          home,
+          Positioned.fill(
+            child: ColoredBox(
+              color: Colors.black87,
+              child: Center(
+                child: Card(
+                  margin: const EdgeInsets.all(24),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.network(_announcementUrl!, fit: BoxFit.contain),
+                        const SizedBox(height: 10),
+                        FilledButton(
+                          onPressed: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setString(
+                              'startup_announcement_dismissed',
+                              _announcementUrl!,
+                            );
+                            if (mounted) setState(() => _announcementUrl = null);
+                          },
+                          child: const Text('Bezárás'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF080808),

@@ -47,11 +47,16 @@ class CommunityService {
         .orderBy('createdAt', descending: true)
         .limit(60)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(CommunityPost.fromDocument)
-              .toList(growable: false),
-        );
+        .map((snapshot) {
+          final posts = snapshot.docs.map(CommunityPost.fromDocument).toList();
+          posts.sort((a, b) {
+            final pinOrder = (b.pinned ? 1 : 0).compareTo(a.pinned ? 1 : 0);
+            return pinOrder == 0
+                ? b.createdAt.compareTo(a.createdAt)
+                : pinOrder;
+          });
+          return posts;
+        });
   }
 
   Future<void> register({
@@ -76,7 +81,7 @@ class CommunityService {
         'role': accountRole,
         'accessRole': _isAdmin(user.email) ? accessAdmin : accessNone,
         'email': email.trim(),
-        'socialLinks': ?socialLinks,
+        ...?(socialLinks == null ? null : {'socialLinks': socialLinks}),
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -196,10 +201,14 @@ class CommunityService {
   Future<void> publishPost({
     required String text,
     Uint8List? imageBytes,
+    bool pinned = false,
   }) async {
     final user = await ensureAnonymousUser();
     final isAnonymous = user.isAnonymous;
-    final trimmed = text.trim();
+    if (pinned && !isAdmin) {
+      throw StateError('Csak admin rögzíthet Chat-üzenetet.');
+    }
+    final trimmed = maskProfanity(text.trim());
     if (trimmed.isEmpty && imageBytes == null) {
       throw ArgumentError('A bejegyzés szövege vagy képe kötelező.');
     }
@@ -237,6 +246,7 @@ class CommunityService {
       'imageUrl': imageUrl,
       'reactions': <String, int>{},
       'reactionBy': <String, String>{},
+      'pinned': pinned,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -294,6 +304,37 @@ class CommunityService {
     await firestore.collection('live_feed_posts').doc(postId).delete();
   }
 
+  Future<void> setPostPinned(String postId, bool pinned) async {
+    if (!isAdmin) throw StateError('Csak admin rögzíthet Chat-üzenetet.');
+    await firestore.collection('live_feed_posts').doc(postId).update({
+      'pinned': pinned,
+    });
+  }
+
+  Stream<DocumentSnapshot<Map<String, dynamic>>> watchStartupAnnouncement() =>
+      firestore.collection('app_settings').doc('startup').snapshots();
+
+  Future<void> setStartupAnnouncement({required String imageUrl, required bool enabled}) async {
+    if (!isAdmin) throw StateError('Csak admin kezelheti a bejelentést.');
+    await firestore.collection('app_settings').doc('startup').set({
+      'imageUrl': imageUrl,
+      'enabled': enabled,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  String maskProfanity(String text) {
+    const words = ['kurva', 'fasz', 'geci', 'bazdmeg', 'picsa', 'szar'];
+    var result = text;
+    for (final word in words) {
+      result = result.replaceAllMapped(
+        RegExp('\\b${RegExp.escape(word)}\\w*', caseSensitive: false),
+        (match) => '*' * match.group(0)!.length,
+      );
+    }
+    return result;
+  }
+
   Stream<QuerySnapshot<Map<String, dynamic>>> watchProfiles() {
     if (!isAdmin) return const Stream.empty();
     return firestore
@@ -307,6 +348,9 @@ class CommunityService {
   }
 
   Future<void> setAccountRole(String userId, String role) async {
+    if (!{'dj', 'organizer', 'partygoer'}.contains(role)) {
+      throw ArgumentError('Invalid account role.');
+    }
     if (!isAdmin) throw StateError('Csak admin módosíthat szerepkört.');
     await firestore.collection('community_profiles').doc(userId).set({
       'role': role,
@@ -315,6 +359,9 @@ class CommunityService {
   }
 
   Future<void> setAccessRole(String userId, String accessRole) async {
+    if (!{'none', 'moderator', 'admin'}.contains(accessRole)) {
+      throw ArgumentError('Invalid access role.');
+    }
     if (!isAdmin) throw StateError('Csak admin adhat jogosultsĂˇgot.');
     await firestore.collection('community_profiles').doc(userId).set({
       'accessRole': accessRole,

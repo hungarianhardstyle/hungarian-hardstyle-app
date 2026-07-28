@@ -84,10 +84,16 @@ class CommunityAdminScreen extends ConsumerStatefulWidget {
 
 class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
   final _search = TextEditingController();
+  final _announcementUrl = TextEditingController();
+  final _pinnedText = TextEditingController();
+  SubmissionImage? _announcementImage;
+  bool _announcementEnabled = false;
 
   @override
   void dispose() {
     _search.dispose();
+    _announcementUrl.dispose();
+    _pinnedText.dispose();
     super.dispose();
   }
 
@@ -127,6 +133,92 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                   context,
                   'https://hungarianhardstyle.hu/wp-admin/admin.php?page=huhs-mobile',
                   title: 'HUHS Vezérlőközpont',
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Indításkori bejelentés', style: TextStyle(fontWeight: FontWeight.bold)),
+                        SubmissionImagePicker(
+                          image: _announcementImage,
+                          title: 'Bejelentési kép',
+                          helperText: 'A kép Cloudinary-ra kerül, és az app indulásakor bezárható.',
+                          onChanged: (image) => setState(() => _announcementImage = image),
+                        ),
+                        TextField(
+                          controller: _announcementUrl,
+                          decoration: const InputDecoration(labelText: 'Kép URL-je'),
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          value: _announcementEnabled,
+                          title: const Text('Megjelenítés engedélyezése'),
+                          onChanged: (value) => setState(() => _announcementEnabled = value),
+                        ),
+                        FilledButton(
+                          onPressed: () async {
+                            try {
+                              var url = _announcementUrl.text.trim();
+                              if (_announcementImage != null) {
+                                url = await service.uploadImage(_announcementImage!.bytes, faceFocus: false);
+                              }
+                              await service.setStartupAnnouncement(imageUrl: url, enabled: _announcementEnabled);
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bejelentés mentve.')));
+                            } catch (error) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_chatError(error))));
+                            }
+                          },
+                          child: const Text('Bejelentés mentése'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _pinnedText,
+                            maxLines: 2,
+                            decoration: const InputDecoration(
+                              labelText: 'Rögzített Chat-üzenet',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          tooltip: 'Küldés és rögzítés',
+                          icon: const Icon(Icons.push_pin_outlined),
+                          onPressed: () async {
+                            final text = _pinnedText.text.trim();
+                            if (text.isEmpty) return;
+                            try {
+                              await service.publishPost(text: text, pinned: true);
+                              _pinnedText.clear();
+                            } catch (error) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(_chatError(error))),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               Padding(
@@ -452,6 +544,18 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       ),
       body: Column(
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Ha hibát találsz, írd meg nekünk a Kapcsolat menüpontban található címen.',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: Colors.white54, fontSize: 11),
+              ),
+            ),
+          ),
           _Composer(
             controller: _textController,
             image: _image,
@@ -642,6 +746,20 @@ class _PostCardState extends ConsumerState<_PostCard> {
     }
   }
 
+  Future<void> _togglePinned() async {
+    try {
+      await ref.read(communityServiceProvider).setPostPinned(
+        widget.post.id,
+        !widget.post.pinned,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_chatError(error))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
@@ -721,8 +839,25 @@ class _PostCardState extends ConsumerState<_PostCard> {
                     icon: const Icon(Icons.delete_outline, size: 19),
                     onPressed: _delete,
                   ),
+                if (ref.read(communityServiceProvider).isAdmin)
+                  IconButton(
+                    tooltip: post.pinned ? 'Rögzítés feloldása' : 'Üzenet rögzítése',
+                    icon: Icon(
+                      post.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                      size: 19,
+                    ),
+                    onPressed: _togglePinned,
+                  ),
               ],
             ),
+            if (post.pinned)
+              const Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Text(
+                  'Rögzített üzenet',
+                  style: TextStyle(color: Colors.redAccent, fontSize: 11),
+                ),
+              ),
             if (post.text.isNotEmpty) ...[
               const SizedBox(height: 10),
               Text(post.text),
