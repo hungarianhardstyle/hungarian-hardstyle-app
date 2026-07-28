@@ -8,13 +8,13 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 audit status (2026-07-28)
 
-- Current Flutter build: `0.99.3+14`; v0.99.3 implementation is complete pending final ARM/device verification.
-- Flutter ARM debug build succeeded; `flutter analyze --no-pub` reports no issues and all 26 tests pass.
+- Current Flutter build: `0.99.3+16`; v0.99.3 implementation is complete pending final device verification.
+- Final ARM debug build is generated after the completed audit; `flutter analyze` reports no issues and all tests pass.
 - The final ARM64 debug APK is generated only after the final audit and tests.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
-- WordPress submissions now use the `submitWordPressContent` Firebase Function: it verifies Firebase Auth and the account role before forwarding to WordPress. Deploy after setting the server-only `WORDPRESS_USERNAME` and `WORDPRESS_APPLICATION_PASSWORD` secrets; no WordPress credential belongs in Flutter.
+- WordPress submissions and native admin submission editing/approval/trash actions use server-side Firebase Functions: they verify Firebase Auth and access roles before forwarding to WordPress. No WordPress credential belongs in Flutter.
 - Cloudinary uploads are client-guarded to JPG/JPEG/PNG/WebP and 5 MB. The unsigned `Hun_hs_Mobile` preset must use the same allowed formats, `huhs/community` folder, unique filenames, and overwrite disabled.
 - Expired events are filtered from API results and the cached event list rechecks every minute.
 - Firestore rules for role-bound Chat authorship are compiled and deployed to the hungarian-hardstyle database.
@@ -83,6 +83,8 @@ The current WordPress backend package is **2.4.31**. `build/huhs-mobile-api-2.4.
 - [x] require confirmation before deleting Chat messages
 - [x] require confirmation before an admin deletes a user account
 - [x] keep the Chat composer emoji helper text on one line on supported phone widths
+- [x] persist profile-image focus values in Firestore and apply them to Cloudinary crops
+- [x] deploy and verify the final Firestore rules and Firebase Functions used by community administration
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 

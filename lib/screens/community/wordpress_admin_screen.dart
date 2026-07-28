@@ -45,6 +45,62 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     }
   }
 
+  Future<void> _edit(Map<String, dynamic> item) async {
+    final id = (item['id'] as num?)?.toInt() ?? 0;
+    if (id == 0) return;
+    final titleController = TextEditingController(text: item['title'] as String? ?? '');
+    final contentController = TextEditingController(
+      text: item['content'] as String? ?? item['description'] as String? ?? '',
+    );
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Beküldés szerkesztése'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Cím')),
+              TextField(
+                controller: contentController,
+                minLines: 4,
+                maxLines: 10,
+                decoration: const InputDecoration(labelText: 'Tartalom'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Mégse')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Mentés')),
+        ],
+      ),
+    );
+    if (save != true || !mounted) {
+      titleController.dispose();
+      contentController.dispose();
+      return;
+    }
+    final title = titleController.text.trim();
+    final content = contentController.text;
+    titleController.dispose();
+    contentController.dispose();
+    if (title.isEmpty) return;
+    setState(() => _busyIds.add(id));
+    try {
+      await ref.read(communityServiceProvider).updateWordPressSubmission(
+            id: id,
+            title: title,
+            content: content,
+          );
+      _reload();
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('A mentés nem sikerült: $error')));
+    } finally {
+      if (mounted) setState(() => _busyIds.remove(id));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,6 +162,11 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                         ),
                         OverflowBar(
                           children: [
+                            OutlinedButton.icon(
+                              onPressed: busy || id == 0 ? null : () => _edit(item),
+                              icon: const Icon(Icons.edit_outlined),
+                              label: const Text('Szerkesztés'),
+                            ),
                             OutlinedButton.icon(
                               onPressed: busy || id == 0 ? null : () => _manage(id, 'trash'),
                               icon: const Icon(Icons.delete_outline),

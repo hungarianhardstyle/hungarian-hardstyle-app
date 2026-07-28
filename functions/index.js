@@ -103,7 +103,7 @@ exports.listWordPressSubmissions = onCall(
     }
     const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
     const response = await fetch(
-      'https://hungarianhardstyle.hu/wp-json/wp/v2/huhs_submission?status=pending&per_page=100&_fields=id,date,title,link',
+      'https://hungarianhardstyle.hu/wp-json/wp/v2/huhs_submission?status=pending&per_page=100&_fields=id,date,title,link,content,excerpt,type,post_type',
       { headers: { Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`, Accept: 'application/json' } },
     );
     const body = await response.json().catch(() => []);
@@ -115,6 +115,9 @@ exports.listWordPressSubmissions = onCall(
       date: item.date,
       title: item.title?.rendered || '',
       link: item.link || '',
+      content: item.content?.rendered || '',
+      excerpt: item.excerpt?.rendered || '',
+      type: item.type || item.post_type || '',
     })) : [];
   },
 );
@@ -157,6 +160,44 @@ exports.manageWordPressSubmission = onCall(
       throw new HttpsError('failed-precondition', body?.message || 'A WordPress művelet sikertelen.');
     }
     return { ok: true, action, id, profileId: body?.profile_id || null };
+  },
+);
+
+exports.updateWordPressSubmission = onCall(
+  { secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] },
+  async (data, context) => {
+    if (!context.auth) {
+      throw new HttpsError('permission-denied', 'Csak admin szerkeszthet beküldést.');
+    }
+    const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+    if (!isAdmin(context, profile)) {
+      throw new HttpsError('permission-denied', 'Csak admin szerkeszthet beküldést.');
+    }
+    if (!allowCall(context.auth.uid, 'wp_admin')) {
+      securityLog('wp_admin_rate_limited', context);
+      throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
+    }
+    const id = Number(data?.id);
+    const title = String(data?.title || '').trim();
+    const content = String(data?.content || '');
+    if (!Number.isInteger(id) || id <= 0 || !title || title.length > 300 || content.length > 512_000) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen beküldési adat.');
+    }
+    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+    const response = await fetch(`https://hungarianhardstyle.hu/wp-json/wp/v2/huhs_submission/${id}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ title, content }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new HttpsError('failed-precondition', body?.message || 'A WordPress beküldés mentése sikertelen.');
+    }
+    return { ok: true, id, title: body?.title?.rendered || title };
   },
 );
 

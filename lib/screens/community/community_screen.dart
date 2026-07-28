@@ -358,7 +358,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                             for (final entry in const {
                               'dj': 'DJ',
                               'organizer': 'Szervező',
-                              'partygoer': 'BulizĂł',
+                              'partygoer': 'Bulizó',
                             }.entries)
                               DropdownMenuItem(
                                 value: entry.key,
@@ -806,7 +806,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
                               ? 'DJ'
                               : post.authorRole == 'organizer'
                               ? 'Szervező'
-                              : 'BulizĂł',
+                              : 'Bulizó',
                           style: const TextStyle(
                             color: Colors.white60,
                             fontSize: 11,
@@ -901,7 +901,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
     final difference = now.difference(value);
     if (difference.inMinutes < 1) return 'most';
     if (difference.inHours < 1) return '${difference.inMinutes} p';
-    if (difference.inDays < 1) return '${difference.inHours} Ăł';
+    if (difference.inDays < 1) return '${difference.inHours} ó';
     return '${value.month}.${value.day}.';
   }
 }
@@ -1127,8 +1127,8 @@ class _CommunityProfileScreenState
   String _roleLabel(String role) => const <String, String>{
     'dj': 'DJ',
     'organizer': 'Szervező',
-    'partygoer': 'BulizĂł',
-  }[role] ?? 'BulizĂł';
+    'partygoer': 'Bulizó',
+  }[role] ?? 'Bulizó';
 
   void _message(String message) {
     ScaffoldMessenger.of(
@@ -1198,7 +1198,7 @@ class _CommunityProfileScreenState
                       ),
                       DropdownMenuItem(
                         value: 'partygoer',
-                        child: Text('BulizĂł'),
+                        child: Text('Bulizó'),
                       ),
                     ],
                     onChanged: null,
@@ -1385,7 +1385,7 @@ class _CommunityProfileScreenState
                   controller: _password,
                   obscureText: !_passwordVisible,
                   decoration: InputDecoration(
-                    labelText: 'JelszĂł',
+                    labelText: 'Jelszó',
                     suffixIcon: IconButton(
                       tooltip: _passwordVisible ? 'Elrejtés' : 'Megjelenítés',
                       onPressed: () =>
@@ -1420,7 +1420,7 @@ class _CommunityProfileScreenState
                       ),
                       DropdownMenuItem(
                         value: 'partygoer',
-                        child: Text('BulizĂł'),
+                        child: Text('Bulizó'),
                       ),
                     ],
                     onChanged: (value) =>
@@ -1444,7 +1444,7 @@ class _CommunityProfileScreenState
                         ? null
                         : () async {
                             if (_email.text.trim().isEmpty) {
-                              _message('Add meg az e-mail-cĂ­medet.');
+                              _message('Add meg az e-mail-címedet.');
                               return;
                             }
                             try {

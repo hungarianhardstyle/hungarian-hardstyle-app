@@ -695,21 +695,20 @@ v0.99.3 follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Sp
 - Show the saved profile image on the user's own profile screen.
 - Fix stale automatic refresh/cache issues, including newly uploaded profile images; profile save/self-deletion now invalidate community auth/profile streams.
 
-Current v0.99.3 remaining work (recorded 2026-07-22):
+Current v0.99.3 completion status (updated 2026-07-28):
 
-- Complete native WordPress Mobile API administration actions beyond the pending-submission list; all WordPress credentials remain server-side.
-- Finish the reversible TypeUI/Rajdhani red-black design transition using the real HUHS logo.
-- Verify profile-image rendering and automatic refresh after profile changes.
-- Complete the REST API security audit and fix confirmed gaps only.
-- Verify rate limiting, abuse protection, Cloudinary preset restrictions, and privacy-safe security logging.
+- Native WordPress Mobile API administration now supports listing, editing, approval, and trash actions through the Firebase-to-WordPress proxy; credentials remain server-side.
+- The reversible TypeUI/Rajdhani red-black design transition, real HUHS logo, radio bar, and branded admin entry are in the app.
+- Profile image rendering, Cloudinary face-aware cropping, focus persistence, and auth/profile invalidation are implemented.
+- REST transport/authentication/authorization/input validation, rate limits, Cloudinary restrictions, and privacy-safe security logging were audited; confirmed gaps were fixed and Firestore rules/functions deployed.
 - Deletion confirmation dialogs for profile, Chat messages, and admin user deletion are complete.
-- Keep the Chat emoji helper text on one line.
-- Rename the radio notification subtitle to `Real Hardstyle FM` only.
-- Add the Real Hardstyle FM legal/provider information to the radio provider page.
-- Fix radio lifecycle behavior: it may continue during app switching, but must stop when the app is fully closed; Android task/service stop handling and Play/Stop state synchronization are implemented.
-- Refresh the Chat top-right avatar when a different user signs in.
-- After self-deletion, clear app state and return to the registration/sign-in screen automatically.
-- Add profile-image positioning/cropping adjustment so users can move and frame the uploaded image.
+- Completed: the Chat emoji helper text stays on one line.
+- Completed: the radio notification subtitle is `Real Hardstyle FM`.
+- Completed: the Real Hardstyle FM legal/provider information is present on the radio provider page.
+- Completed: radio lifecycle behavior and Play/Stop state synchronization are implemented.
+- Completed: the Chat top-right avatar refreshes when a different user signs in.
+- Completed: self-deletion clears app state and returns to registration/sign-in.
+- Completed: profile-image positioning/cropping values can be edited and persisted.
 - Completed: pagination/infinite scroll for tag- and genre-filtered lists.
 - Completed: artist/DJ genre tags are clickable and open grouped discovery results for related Events, News, and DJs/artists, with the full paginated result set.
 - Completed: expired events are removed from API results and the cached event provider rechecks every minute.

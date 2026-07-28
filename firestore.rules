@@ -71,7 +71,8 @@ service cloud.firestore {
       allow update: if request.auth != null
         && ((request.auth.uid == userId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl', 'updatedAt'
+            'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl',
+            'profileFocusX', 'profileFocusY', 'updatedAt'
           ])
           && (request.resource.data.role == resource.data.role
             || (!resource.data.keys().hasAny(['role'])
@@ -81,7 +82,7 @@ service cloud.firestore {
           || (isAdmin()
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
               'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl',
-              'updatedAt', 'role', 'accessRole'
+              'profileFocusX', 'profileFocusY', 'updatedAt', 'role', 'accessRole'
             ])
             && request.resource.data.role in ['dj', 'organizer', 'partygoer']
             && (!request.resource.data.keys().hasAny(['accessRole'])

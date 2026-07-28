@@ -412,6 +412,19 @@ class CommunityService {
     });
   }
 
+  Future<void> updateWordPressSubmission({
+    required int id,
+    required String title,
+    required String content,
+  }) async {
+    if (!isAdmin) throw StateError('Csak admin szerkeszthet beküldést.');
+    await FirebaseFunctions.instance.httpsCallable('updateWordPressSubmission').call({
+      'id': id,
+      'title': title,
+      'content': content,
+    });
+  }
+
   Future<String> uploadImage(Uint8List bytes) async {
     if (bytes.isEmpty || bytes.length > maxUploadBytes) {
       throw StateError('A kép legfeljebb 5 MB lehet.');
