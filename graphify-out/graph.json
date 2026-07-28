@@ -12616,7 +12616,7 @@
       "label": "Development Philosophy",
       "file_type": "document",
       "source_file": "PROJECT_CONTEXT.md",
-      "source_location": "L881",
+      "source_location": "L880",
       "_origin": "ast"
     },
     {
@@ -12624,7 +12624,7 @@
       "label": "Vision",
       "file_type": "document",
       "source_file": "PROJECT_CONTEXT.md",
-      "source_location": "L901",
+      "source_location": "L900",
       "_origin": "ast"
     },
     {
@@ -12688,7 +12688,7 @@
       "label": "Roadmap",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L108",
+      "source_location": "L112",
       "_origin": "ast"
     },
     {
@@ -12696,7 +12696,7 @@
       "label": "Current bug-fix backlog",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L110",
+      "source_location": "L114",
       "_origin": "ast"
     },
     {
@@ -12704,7 +12704,7 @@
       "label": "v0.4 — Foundation",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L123",
+      "source_location": "L127",
       "_origin": "ast"
     },
     {
@@ -12712,7 +12712,7 @@
       "label": "v0.5 — Dynamic events",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L133",
+      "source_location": "L137",
       "_origin": "ast"
     },
     {
@@ -12720,7 +12720,7 @@
       "label": "v0.6 — DJ database",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L143",
+      "source_location": "L147",
       "_origin": "ast"
     },
     {
@@ -12728,7 +12728,7 @@
       "label": "v0.7 — Organizers",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L155",
+      "source_location": "L159",
       "_origin": "ast"
     },
     {
@@ -12736,7 +12736,7 @@
       "label": "v0.8 — Rich content",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L167",
+      "source_location": "L171",
       "_origin": "ast"
     },
     {
@@ -12744,7 +12744,7 @@
       "label": "v0.9 — Community utilities (implemented)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L178",
+      "source_location": "L182",
       "_origin": "ast"
     },
     {
@@ -12752,7 +12752,7 @@
       "label": "v0.95 — Media",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L209",
+      "source_location": "L213",
       "_origin": "ast"
     },
     {
@@ -12760,7 +12760,7 @@
       "label": "v0.97 — Polish build",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L214",
+      "source_location": "L218",
       "_origin": "ast"
     },
     {
@@ -12768,7 +12768,7 @@
       "label": "v0.99 — Submission polish",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L228",
+      "source_location": "L232",
       "_origin": "ast"
     },
     {
@@ -12776,7 +12776,7 @@
       "label": "v0.99 — Completed polish items",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L238",
+      "source_location": "L242",
       "_origin": "ast"
     },
     {
@@ -12784,7 +12784,7 @@
       "label": "v0.99.1 — Community MVP (implemented; external setup remains)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L246",
+      "source_location": "L250",
       "_origin": "ast"
     },
     {
@@ -12792,7 +12792,7 @@
       "label": "v1.0 — First public release",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L264",
+      "source_location": "L268",
       "_origin": "ast"
     },
     {
@@ -12800,7 +12800,7 @@
       "label": "v1.5 — Hardstyle Revolution Store",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L338",
+      "source_location": "L342",
       "_origin": "ast"
     },
     {
@@ -12808,7 +12808,7 @@
       "label": "Navigation direction",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L353",
+      "source_location": "L357",
       "_origin": "ast"
     },
     {
@@ -12816,7 +12816,7 @@
       "label": "Language direction",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L363",
+      "source_location": "L367",
       "_origin": "ast"
     },
     {
@@ -12824,7 +12824,7 @@
       "label": "Brands",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L369",
+      "source_location": "L373",
       "_origin": "ast"
     },
     {
@@ -12832,7 +12832,7 @@
       "label": "Long-term vision",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L376",
+      "source_location": "L380",
       "_origin": "ast"
     },
     {
@@ -22947,18 +22947,6 @@
       "_origin": "ast"
     },
     {
-      "source": "lib_screens_events_event_detail_screen_escapehtml",
-      "target": "materialpageroute",
-      "relation": "navigates",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/screens/events/event_detail_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "route_object",
-      "_origin": "ast"
-    },
-    {
       "source": "lib_screens_events_event_detail_screen",
       "target": "lib_screens_events_event_detail_screen_build",
       "relation": "defines",
@@ -28189,18 +28177,6 @@
       "source_file": "lib/screens/organizers/organizer_detail_screen.dart",
       "source_location": null,
       "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "lib_screens_organizers_organizer_detail_screen_escapehtml",
-      "target": "lib_providers_favorites_provider_favoritesprovider",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/screens/organizers/organizer_detail_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "riverpod_reference",
       "_origin": "ast"
     },
     {
@@ -38056,7 +38032,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "PROJECT_CONTEXT.md",
-      "source_location": "L881",
+      "source_location": "L880",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38066,7 +38042,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "PROJECT_CONTEXT.md",
-      "source_location": "L901",
+      "source_location": "L900",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38136,7 +38112,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L108",
+      "source_location": "L112",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38146,7 +38122,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L110",
+      "source_location": "L114",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38156,7 +38132,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L123",
+      "source_location": "L127",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38166,7 +38142,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L133",
+      "source_location": "L137",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38176,7 +38152,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L143",
+      "source_location": "L147",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38186,7 +38162,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L155",
+      "source_location": "L159",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38196,7 +38172,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L167",
+      "source_location": "L171",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38206,7 +38182,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L178",
+      "source_location": "L182",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38216,7 +38192,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L209",
+      "source_location": "L213",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38226,7 +38202,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L214",
+      "source_location": "L218",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38236,7 +38212,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L228",
+      "source_location": "L232",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38246,7 +38222,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L238",
+      "source_location": "L242",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38256,7 +38232,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L246",
+      "source_location": "L250",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38266,7 +38242,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L264",
+      "source_location": "L268",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38276,7 +38252,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L338",
+      "source_location": "L342",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38286,7 +38262,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L353",
+      "source_location": "L357",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38296,7 +38272,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L363",
+      "source_location": "L367",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38306,7 +38282,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L369",
+      "source_location": "L373",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -38316,7 +38292,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L376",
+      "source_location": "L380",
       "weight": 1.0,
       "_origin": "ast"
     },

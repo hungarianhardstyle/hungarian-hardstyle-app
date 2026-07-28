@@ -119,7 +119,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
             final email = (data['email'] as String? ?? '').toLowerCase();
             return name.contains(query) || email.contains(query);
           }).toList();
-          return Column(
+          return ListView(
             children: [
               ListTile(
                 leading: const Icon(Icons.dashboard_customize_outlined),
@@ -131,9 +131,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                 ),
               ),
               if (profiles.isEmpty)
-                const Expanded(
-                  child: Center(child: Text('Még nincs regisztrált profil.')),
-                ),
+                const Center(child: Text('Még nincs regisztrált profil.')),
               if (profiles.isNotEmpty)
                 const ListTile(
                   leading: Icon(Icons.people_outline),
@@ -237,11 +235,12 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                   ),
                 ),
               ),
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: profiles.length,
-                  itemBuilder: (context, index) {
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                itemCount: profiles.length,
+                itemBuilder: (context, index) {
                     final doc = profiles[index];
                     final data = doc.data();
                     final role = service.accountRole(data['role'] as String?);
@@ -385,7 +384,6 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                     );
                   },
                 ),
-              ),
             ],
           );
         },

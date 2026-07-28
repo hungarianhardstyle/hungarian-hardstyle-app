@@ -85,7 +85,7 @@ class _GenreDiscoveryScreenState extends ConsumerState<GenreDiscoveryScreen> {
   }
 
   Future<void> _loadMore() async {
-    if (_loading && (_artistPage > 0 || _postPage > 0)) return;
+    if (_loading) return;
     if (!_artistHasMore && !_postHasMore) {
       if (mounted) setState(() => _loading = false);
       return;
