@@ -168,7 +168,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                             try {
                               var url = _announcementUrl.text.trim();
                               if (_announcementImage != null) {
-                                url = await service.uploadImage(_announcementImage!.bytes);
+                                url = await service.uploadImage(_announcementImage!.bytes, filename: _announcementImage!.name);
                               }
                               await service.setStartupAnnouncement(imageUrl: url, enabled: _announcementEnabled);
                               if (!context.mounted) return;
@@ -1023,7 +1023,7 @@ class _CommunityProfileScreenState
           ? (_profileImageUrl.isEmpty
                 ? _profileImageUrl
                 : _profileImageUrl)
-          : await _service.uploadImage(_profileImage!.bytes);
+          : await _service.uploadImage(_profileImage!.bytes, filename: _profileImage!.name);
       final uploadedImageUrl = sourceImageUrl.isEmpty
           ? sourceImageUrl
           : _service.imageWithFocus(sourceImageUrl, _focusX, _focusY);

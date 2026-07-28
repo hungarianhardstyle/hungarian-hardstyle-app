@@ -220,7 +220,7 @@ class CommunityService {
 
     String imageUrl = '';
     if (imageBytes != null) {
-      imageUrl = await uploadImage(imageBytes);
+      imageUrl = await uploadImage(imageBytes, filename: 'chat.jpg');
     }
     final profile = await firestore
         .collection('community_profiles')
@@ -425,14 +425,14 @@ class CommunityService {
     });
   }
 
-  Future<String> uploadImage(Uint8List bytes) async {
+  Future<String> uploadImage(Uint8List bytes, {String filename = 'upload.jpg'}) async {
     if (bytes.isEmpty || bytes.length > maxUploadBytes) {
       throw StateError('A kép legfeljebb 5 MB lehet.');
     }
     final response = await _dio.post<Map<String, dynamic>>(
       'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
       data: FormData.fromMap({
-        'file': MultipartFile.fromBytes(bytes, filename: 'feed.jpg'),
+        'file': MultipartFile.fromBytes(bytes, filename: filename),
         'upload_preset': uploadPreset,
       }),
     );
