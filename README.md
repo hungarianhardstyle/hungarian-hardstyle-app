@@ -85,6 +85,8 @@ The current WordPress backend package is **2.4.31**. `build/huhs-mobile-api-2.4.
 - [x] keep the Chat composer emoji helper text on one line on supported phone widths
 - [x] persist profile-image focus values in Firestore and apply them to Cloudinary crops
 - [x] deploy and verify the final Firestore rules and Firebase Functions used by community administration
+- [x] native WordPress submission editing, approval and trash actions are available through the admin-only proxy
+- v0.99.3 code scope is complete; only installation on the physical test phone remains for external verification.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
