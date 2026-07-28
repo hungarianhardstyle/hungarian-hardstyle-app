@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static ThemeData get darkTheme {
@@ -7,11 +8,13 @@ class AppTheme {
     const card = Color(0xFF202020);
     const accent = Color(0xFFE53935);
 
+    final baseTextTheme = GoogleFonts.rajdhaniTextTheme(
+      ThemeData.dark().textTheme,
+    );
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      fontFamily: 'sans-serif-condensed',
-
       scaffoldBackgroundColor: background,
 
       colorScheme: const ColorScheme.dark(
@@ -45,15 +48,15 @@ class AppTheme {
         ),
       ),
 
-      textTheme: const TextTheme(
-        headlineMedium: TextStyle(
+      textTheme: baseTextTheme.copyWith(
+        headlineMedium: baseTextTheme.headlineMedium?.copyWith(
           fontWeight: FontWeight.bold,
         ),
-        titleLarge: TextStyle(
+        titleLarge: baseTextTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.bold,
         ),
-        bodyLarge: TextStyle(color: Colors.white),
-        bodyMedium: TextStyle(color: Colors.white70),
+        bodyLarge: baseTextTheme.bodyLarge?.copyWith(color: Colors.white),
+        bodyMedium: baseTextTheme.bodyMedium?.copyWith(color: Colors.white70),
       ),
     );
   }

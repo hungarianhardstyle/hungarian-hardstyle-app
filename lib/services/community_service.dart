@@ -171,6 +171,8 @@ class CommunityService {
       } catch (_) {
         // Authentication remains successful if Firestore is temporarily unavailable.
       }
+      await _ensureAdminProfile(user);
+      await _cacheProfileRole();
     } on PlatformException catch (error) {
       if (error.code == 'sign_in_failed' || error.code == '10') {
         throw StateError(
@@ -362,7 +364,7 @@ class CommunityService {
     if (!{'none', 'moderator', 'admin'}.contains(accessRole)) {
       throw ArgumentError('Invalid access role.');
     }
-    if (!isAdmin) throw StateError('Csak admin adhat jogosultsĂˇgot.');
+    if (!isAdmin) throw StateError('Csak admin adhat jogosultságot.');
     await firestore.collection('community_profiles').doc(userId).set({
       'accessRole': accessRole,
       'updatedAt': FieldValue.serverTimestamp(),
@@ -387,9 +389,32 @@ class CommunityService {
     await signOut();
   }
 
-  Future<String> uploadImage(Uint8List bytes, {bool faceFocus = false}) async {
+  Future<List<Map<String, dynamic>>> wordPressSubmissions() async {
+    if (!isAdmin) throw StateError('Csak admin tekintheti meg a beküldéseket.');
+    final result = await FirebaseFunctions.instance
+        .httpsCallable('listWordPressSubmissions')
+        .call();
+    final items = result.data is List ? result.data as List : const [];
+    return items
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
+  Future<void> manageWordPressSubmission({
+    required int id,
+    required String action,
+  }) async {
+    if (!isAdmin) throw StateError('Csak admin kezelheti a beküldéseket.');
+    await FirebaseFunctions.instance.httpsCallable('manageWordPressSubmission').call({
+      'id': id,
+      'action': action,
+    });
+  }
+
+  Future<String> uploadImage(Uint8List bytes) async {
     if (bytes.isEmpty || bytes.length > maxUploadBytes) {
-      throw StateError('A kĂ©p legfeljebb 5 MB lehet.');
+      throw StateError('A kép legfeljebb 5 MB lehet.');
     }
     final response = await _dio.post<Map<String, dynamic>>(
       'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
@@ -402,10 +427,13 @@ class CommunityService {
     if (url is! String || url.isEmpty) {
       throw StateError('A kép feltöltése sikertelen.');
     }
-    if (!faceFocus) return url;
+    return url;
+  }
+
+  String imageWithFocus(String url, double focusX, double focusY) {
     return url.replaceFirst(
       '/upload/',
-      '/upload/c_fill,g_face,w_800,h_800,q_auto,f_auto/',
+      '/upload/c_fill,g_xy_center,x_${focusX.round()}p,y_${focusY.round()}p,w_800,h_800,q_auto,f_auto/',
     );
   }
 
@@ -414,19 +442,15 @@ class CommunityService {
     if (user == null || user.isAnonymous) {
       throw StateError('A profil megtekintéséhez regisztráció szükséges.');
     }
+    if (_isAdmin(user.email)) {
+      await _ensureAdminProfile(user);
+    }
     var snapshot = await firestore
         .collection('community_profiles')
         .doc(user.uid)
         .get();
-    if (_isAdmin(user.email)) {
-      await _ensureAdminProfile(user);
-      snapshot = await firestore
-          .collection('community_profiles')
-          .doc(user.uid)
-          .get();
-    }
     final data = snapshot.data() ?? const <String, dynamic>{};
-    final role = data['role'] as String?;
+    final role = _isAdmin(user.email) ? 'organizer' : data['role'] as String?;
     _cachedRole = accountRole(role);
     _cachedAccessRole = _isAdmin(user.email)
         ? accessAdmin

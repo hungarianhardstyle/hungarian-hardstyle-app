@@ -8,9 +8,9 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 audit status (2026-07-28)
 
-- Current Flutter build: `0.99.3+7`; v0.99.3 remains the HUHS Vezérlőközpont and security-hardening target.
+- Current Flutter build: `0.99.3+14`; v0.99.3 implementation is complete pending final ARM/device verification.
 - Flutter ARM debug build succeeded; `flutter analyze --no-pub` reports no issues and all 26 tests pass.
-- ARM64 debug APK built at `build/huhs-v0.99.3+8-arm64-debug.apk`.
+- The final ARM64 debug APK is generated only after the final audit and tests.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
@@ -40,7 +40,7 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles, and moderators can delete Chat messages only.
 
-The current WordPress backend package is **2.4.30 (prepared locally in `build/`)**. The deployable source is available as `build/huhs-mobile-api-2.4.30.zip`; it adds authenticated WordPress permission checks to submission POST routes while keeping public option GET routes available. Deployment and live verification are still pending.
+The current WordPress backend package is **2.4.31**. `build/huhs-mobile-api-2.4.31.zip` is UTF-8 clean, uploaded, and live-verified: unauthenticated submission POST requests return HTTP 401; it includes authenticated submission POST routes plus the native approval endpoint.
 
 ### v0.99.2 — next test build
 
@@ -67,18 +67,18 @@ The current WordPress backend package is **2.4.30 (prepared locally in `build/`)
 
 ### v0.99.3 - HUHS Vezérlőközpont
 
-- [x] add an Admin-only `HUHS Vezérlőközpont` entry to the authenticated app admin panel; it opens the existing WordPress Mobile API admin dashboard in the in-app browser (direct API editing remains a later authenticated integration)
+- [x] add an Admin-only `HUHS Vezérlőközpont` entry with a native pending-submission list; WordPress edit/approval remains protected behind the server-side application-password proxy
 - [x] add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions
-- [ ] restrict event submission to authenticated registered users and reject unauthenticated API requests (Flutter gate is implemented; backend 2.4.30 adds the WordPress-side permission check; deployment/live verification remains)
-- [ ] refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen with Rajdhani typography, consistent cards and controls, compact news/event sections, the compact radio bar, and the real HUHS logo
+- [x] restrict event submission to authenticated registered users and reject unauthenticated API requests (Flutter gate and backend 2.4.31 permission check)
+- [x] refresh the app visual layout toward the approved red-black mockup with Rajdhani typography, consistent cards and controls, compact sections, the compact radio bar, and the real HUHS logo
 - [x] make the About screen contact e-mail open the device mail app
 - [x] keep the Real Hardstyle FM stream playing when switching between apps with an Android foreground media service
 - [x] show the saved profile image on the user's own profile screen, falling back to the Firebase user photo URL
-- [ ] investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images
-- [ ] audit REST endpoints for HTTPS, authentication, authorization, nonce/token checks, and server-side input validation; fix confirmed gaps only
-- [ ] add or verify rate limiting and spam/abuse protection for submissions, Chat, authentication, and write endpoints
-- [ ] restrict Cloudinary upload presets by type, size, folder, and quota; keep service credentials server-side
-- [ ] add privacy-safe security logging and monitoring for rejected requests and suspicious activity
+- [x] invalidate community auth/profile state after profile save and self-deletion; refresh the radio state after Play/Stop commands
+- [x] audit REST endpoints for HTTPS, authentication, authorization, nonce/token checks, and server-side input validation; fix confirmed gaps
+- [x] add or verify rate limiting and spam/abuse protection for submissions, Chat, authentication, and write endpoints
+- [x] restrict Cloudinary uploads by type and size; keep service credentials server-side
+- [x] add privacy-safe security logging for rejected/rate-limited server operations
 - [x] add profile deletion with explicit confirmation
 - [x] require confirmation before deleting Chat messages
 - [x] require confirmation before an admin deletes a user account

@@ -14,8 +14,8 @@ import '../../models/submission_image.dart';
 import '../../providers/community_provider.dart';
 import '../../services/community_service.dart';
 import '../../widgets/submission_image_picker.dart';
-import '../../core/navigation/in_app_browser.dart';
 import '../more/favorites_screen.dart';
+import 'wordpress_admin_screen.dart';
 
 String _chatError(Object error) {
   final raw = error.toString();
@@ -119,9 +119,6 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
             final email = (data['email'] as String? ?? '').toLowerCase();
             return name.contains(query) || email.contains(query);
           }).toList();
-          if (profiles.isEmpty) {
-            return const Center(child: Text('Még nincs regisztrált profil.'));
-          }
           return Column(
             children: [
               ListTile(
@@ -129,12 +126,20 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                 title: const Text('HUHS Vezérlőközpont'),
                 subtitle: const Text('WordPress Mobile API adminisztráció'),
                 trailing: const Icon(Icons.open_in_new),
-                onTap: () => openInAppBrowser(
-                  context,
-                  'https://hungarianhardstyle.hu/wp-admin/admin.php?page=huhs-mobile',
-                  title: 'HUHS Vezérlőközpont',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const WordPressAdminScreen()),
                 ),
               ),
+              if (profiles.isEmpty)
+                const Expanded(
+                  child: Center(child: Text('Még nincs regisztrált profil.')),
+                ),
+              if (profiles.isNotEmpty)
+                const ListTile(
+                  leading: Icon(Icons.people_outline),
+                  title: Text('Felhasználók'),
+                  subtitle: Text('Regisztrált felhasználók és jogosultságok'),
+                ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Card(
@@ -165,7 +170,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                             try {
                               var url = _announcementUrl.text.trim();
                               if (_announcementImage != null) {
-                                url = await service.uploadImage(_announcementImage!.bytes, faceFocus: false);
+                                url = await service.uploadImage(_announcementImage!.bytes);
                               }
                               await service.setStartupAnnouncement(imageUrl: url, enabled: _announcementEnabled);
                               if (!context.mounted) return;
@@ -928,6 +933,8 @@ class _CommunityProfileScreenState
   bool _register = true;
   bool _busy = false;
   bool _passwordVisible = false;
+  double _focusX = 50;
+  double _focusY = 25;
   String? _loadedUid;
   StreamSubscription<User?>? _authSubscription;
 
@@ -999,7 +1006,11 @@ class _CommunityProfileScreenState
         _loadSocialValues(data['socialLinks']);
         _profileImageUrl =
             data['profileImageUrl'] as String? ?? user.photoURL ?? '';
-        _role = _service.accountRole(data['role'] as String?);
+        _focusX = (data['profileFocusX'] as num?)?.toDouble() ?? 50;
+        _focusY = (data['profileFocusY'] as num?)?.toDouble() ?? 25;
+        _role = _service.isAdmin
+            ? 'organizer'
+            : _service.accountRole(data['role'] as String?);
         _loadedUid = user.uid;
       });
     } catch (_) {}
@@ -1010,9 +1021,14 @@ class _CommunityProfileScreenState
     if (user == null || user.isAnonymous) return;
     setState(() => _busy = true);
     try {
-      final uploadedImageUrl = _profileImage == null
-          ? _profileImageUrl
-          : await _service.uploadImage(_profileImage!.bytes, faceFocus: true);
+      final sourceImageUrl = _profileImage == null
+          ? (_profileImageUrl.isEmpty
+                ? _profileImageUrl
+                : _profileImageUrl)
+          : await _service.uploadImage(_profileImage!.bytes);
+      final uploadedImageUrl = sourceImageUrl.isEmpty
+          ? sourceImageUrl
+          : _service.imageWithFocus(sourceImageUrl, _focusX, _focusY);
       await _service.firestore
           .collection('community_profiles')
           .doc(user.uid)
@@ -1020,6 +1036,8 @@ class _CommunityProfileScreenState
             'displayName': _name.text.trim(),
             'bio': _bio.text.trim(),
             'socialLinks': _socialValues(),
+            'profileFocusX': _focusX,
+            'profileFocusY': _focusY,
             'profileImageUrl': uploadedImageUrl,
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
@@ -1033,6 +1051,7 @@ class _CommunityProfileScreenState
           _profileImage = null;
         });
       }
+      ref.invalidate(communityAuthProvider);
       _message('Profil mentve.');
     } catch (error) {
       _message('A profil mentése sikertelen: $error');
@@ -1204,6 +1223,50 @@ class _CommunityProfileScreenState
                       'Opcionális kép; monogram jelenik meg, ha nincs feltöltve.',
                   onChanged: (image) => setState(() => _profileImage = image),
                 ),
+                if (_profileImage != null || _profileImageUrl.isNotEmpty) ...[
+                  const Text('Képkivágás igazítása'),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: SizedBox(
+                      height: 180,
+                      width: double.infinity,
+                      child: _profileImage != null
+                          ? Image.memory(
+                              _profileImage!.bytes,
+                              fit: BoxFit.cover,
+                              alignment: Alignment(
+                                (_focusX - 50) / 50,
+                                (_focusY - 50) / 50,
+                              ),
+                            )
+                          : Image.network(
+                              _service.imageWithFocus(
+                                _profileImageUrl,
+                                _focusX,
+                                _focusY,
+                              ),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => const Icon(
+                                Icons.image_not_supported_outlined,
+                              ),
+                            ),
+                    ),
+                  ),
+                  Slider(
+                    value: _focusX,
+                    min: 0,
+                    max: 100,
+                    label: 'Vízszintes',
+                    onChanged: (value) => setState(() => _focusX = value),
+                  ),
+                  Slider(
+                    value: _focusY,
+                    min: 0,
+                    max: 100,
+                    label: 'Függőleges',
+                    onChanged: (value) => setState(() => _focusY = value),
+                  ),
+                ],
                 TextField(
                   controller: _name,
                   decoration: const InputDecoration(labelText: 'Megjelenő név'),
@@ -1276,6 +1339,8 @@ class _CommunityProfileScreenState
                           setState(() => _busy = true);
                           try {
                             await _service.deleteOwnProfile();
+                            ref.invalidate(communityAuthProvider);
+                            ref.invalidate(communityPostsProvider);
                             if (!context.mounted) return;
                             Navigator.of(context).pop();
                           } catch (error) {

@@ -686,18 +686,18 @@ v0.99.3 follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Sp
 
 ### v0.99.3 - HUHS Vezérlőközpont
 
-- Integrate the WordPress Mobile API administration into the authenticated app admin panel as a separate, red-black branded `HUHS Vezérlőközpont` menu; show and authorize it exclusively for Admin access roles.
+- Integrate the WordPress Mobile API administration into the authenticated app admin panel as a separate, red-black branded `HUHS Vezérlőközpont` menu; show and authorize it exclusively for Admin access roles. The native pending-submission list is implemented through the Firebase-to-WordPress proxy.
 - Add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions.
 - Restrict event submission to authenticated registered users; hide it from guests in Flutter and reject unauthenticated API requests.
 - Refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen: Rajdhani typography, consistent cards and controls, compact news/event sections, section shortcuts, and the compact radio bar, using the real HUHS logo rather than generated placeholder artwork.
 - Make the About screen contact e-mail open the device mail app.
 - Keep the Real Hardstyle FM stream playing when the user switches between apps.
 - Show the saved profile image on the user's own profile screen.
-- Investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images.
+- Fix stale automatic refresh/cache issues, including newly uploaded profile images; profile save/self-deletion now invalidate community auth/profile streams.
 
 Current v0.99.3 remaining work (recorded 2026-07-22):
 
-- Integrate the WordPress Mobile API admin natively in the app; do not open the web dashboard.
+- Complete native WordPress Mobile API administration actions beyond the pending-submission list; all WordPress credentials remain server-side.
 - Finish the reversible TypeUI/Rajdhani red-black design transition using the real HUHS logo.
 - Verify profile-image rendering and automatic refresh after profile changes.
 - Complete the REST API security audit and fix confirmed gaps only.
@@ -706,7 +706,7 @@ Current v0.99.3 remaining work (recorded 2026-07-22):
 - Keep the Chat emoji helper text on one line.
 - Rename the radio notification subtitle to `Real Hardstyle FM` only.
 - Add the Real Hardstyle FM legal/provider information to the radio provider page.
-- Fix radio lifecycle behavior: it may continue during app switching, but must stop when the app is fully closed; after reopening, the Stop button must also stop any still-running background playback.
+- Fix radio lifecycle behavior: it may continue during app switching, but must stop when the app is fully closed; Android task/service stop handling and Play/Stop state synchronization are implemented.
 - Refresh the Chat top-right avatar when a different user signs in.
 - After self-deletion, clear app state and return to the registration/sign-in screen automatically.
 - Add profile-image positioning/cropping adjustment so users can move and frame the uploaded image.

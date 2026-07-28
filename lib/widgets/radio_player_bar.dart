@@ -39,7 +39,7 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
         await _channel.invokeMethod<void>('play', _streamUri.toString());
         unawaited(_readMetadata());
       }
-      if (mounted) setState(() => _playing = !_playing);
+      await _syncPlaying();
     } catch (_) {}
   }
 
