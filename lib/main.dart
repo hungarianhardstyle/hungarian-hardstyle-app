@@ -48,10 +48,15 @@ class HungarianHardstyleApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: appNavigatorKey,
+      scaffoldMessengerKey: appScaffoldMessengerKey,
       title: 'Hungarian Hardstyle',
       debugShowCheckedModeBanner: false,
 
       theme: AppTheme.darkTheme,
+      builder: (context, child) => DecoratedBox(
+        decoration: AppTheme.backgroundDecoration,
+        child: child ?? const SizedBox.shrink(),
+      ),
 
       locale: const Locale('hu', 'HU'),
 

@@ -53,13 +53,14 @@ class _GenreDiscoveryScreenState extends ConsumerState<GenreDiscoveryScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 240) {
+    if (_scrollController.hasClients &&
+        _scrollController.position.extentAfter < 240) {
       _loadMore();
     }
   }
 
   Future<void> _loadInitial() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -67,13 +68,16 @@ class _GenreDiscoveryScreenState extends ConsumerState<GenreDiscoveryScreen> {
     try {
       final events = await _service.getEvents();
       if (!mounted) return;
-      setState(
-        () => _events
+      setState(() {
+        _events
           ..clear()
           ..addAll(
             events.where((event) => _hasGenre(event.genres, widget.genre)),
-          ),
-      );
+          );
+        // Release the initial-load guard before requesting the first page.
+        // Otherwise _loadMore() returns immediately and infinite scroll stalls.
+        _loading = false;
+      });
       await _loadMore();
     } catch (error) {
       if (!mounted) return;
@@ -134,7 +138,7 @@ class _GenreDiscoveryScreenState extends ConsumerState<GenreDiscoveryScreen> {
         }
       });
       if (!foundMatch && (_artistHasMore || _postHasMore)) {
-        await _loadMore();
+        WidgetsBinding.instance.addPostFrameCallback((_) => _loadMore());
       }
     } catch (error) {
       if (!mounted) return;

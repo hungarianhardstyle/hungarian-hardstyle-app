@@ -15,7 +15,7 @@ class FeaturedNewsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(12),
       onTap: () {
         Navigator.push(
           context,
@@ -25,12 +25,13 @@ class FeaturedNewsCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF171717),
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF5A2424)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: .35),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+              color: const Color(0xFFF03A37).withValues(alpha: .15),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
             ),
           ],
         ),

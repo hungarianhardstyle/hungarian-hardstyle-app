@@ -96,12 +96,12 @@ class PushNotificationService {
   }
 
   static Future<void> _showForegroundMessage(RemoteMessage message) async {
-    final context = appNavigatorKey.currentContext;
-    if (context == null || !context.mounted) return;
+    final messenger = appScaffoldMessengerKey.currentState;
+    if (messenger == null) return;
     final title = message.notification?.title?.trim() ?? 'Új értesítés';
     final body = message.notification?.body?.trim() ?? '';
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
       SnackBar(
         content: Text(body.isEmpty ? title : '$title\n$body'),
         action: SnackBarAction(

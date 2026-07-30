@@ -1,10 +1,7 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../screens/main_navigation.dart';
 
 class StartupGate extends StatefulWidget {
@@ -24,6 +21,7 @@ class _StartupGateState extends State<StartupGate>
   Timer? _timer;
   bool _ready = false;
   String? _announcementUrl;
+  String? _dismissedAnnouncementUrl;
 
   @override
   void initState() {
@@ -42,20 +40,24 @@ class _StartupGateState extends State<StartupGate>
   }
 
   Future<void> _loadAnnouncement() async {
-    if (Firebase.apps.isEmpty) return;
     try {
-      final snapshot = await FirebaseFirestore.instanceFor(
-        app: Firebase.app(),
-        databaseId: 'hungarian-hardstyle',
-      ).collection('app_settings').doc('startup').get();
-      final data = snapshot.data();
-      if (data?['enabled'] == true && data?['imageUrl'] is String) {
-        final imageUrl = data!['imageUrl'] as String;
-        final prefs = await SharedPreferences.getInstance();
-        if (prefs.getString('startup_announcement_dismissed') != imageUrl && mounted) {
-          setState(() => _announcementUrl = imageUrl);
-        }
-      }
+      final response = await Dio().get<Map<String, dynamic>>(
+        'https://hungarianhardstyle.hu/wp-json/huhs/v1/startup-announcement',
+        queryParameters: {'_': DateTime.now().millisecondsSinceEpoch},
+        options: Options(headers: const {'Cache-Control': 'no-cache'}),
+      );
+      final data = response.data;
+      final imageUrl = (data?['imageUrl'] as String?)?.trim();
+      if (!mounted) return;
+      setState(() {
+        _announcementUrl =
+            data?['enabled'] == true &&
+                imageUrl != null &&
+                imageUrl.isNotEmpty &&
+                imageUrl != _dismissedAnnouncementUrl
+            ? imageUrl
+            : null;
+      });
     } catch (_) {}
   }
 
@@ -96,16 +98,29 @@ class _StartupGateState extends State<StartupGate>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Image.network(_announcementUrl!, fit: BoxFit.contain),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.sizeOf(context).width * .82,
+                            maxHeight: MediaQuery.sizeOf(context).height * .62,
+                          ),
+                          child: Image.network(
+                            _announcementUrl!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, _, _) => const Icon(
+                              Icons.image_not_supported_outlined,
+                              size: 56,
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 10),
                         FilledButton(
-                          onPressed: () async {
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.setString(
-                              'startup_announcement_dismissed',
-                              _announcementUrl!,
-                            );
-                            if (mounted) setState(() => _announcementUrl = null);
+                          onPressed: () {
+                            if (mounted) {
+                              setState(() {
+                                _dismissedAnnouncementUrl = _announcementUrl;
+                                _announcementUrl = null;
+                              });
+                            }
                           },
                           child: const Text('Bezárás'),
                         ),
@@ -125,10 +140,8 @@ class _StartupGateState extends State<StartupGate>
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
-          builder: (context, child) => Transform.scale(
-            scale: _controller.value,
-            child: child,
-          ),
+          builder: (context, child) =>
+              Transform.scale(scale: _controller.value, child: child),
           child: Image.asset(
             _logoAsset,
             width: MediaQuery.sizeOf(context).width * .82,

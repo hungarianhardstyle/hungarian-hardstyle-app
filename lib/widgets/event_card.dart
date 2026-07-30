@@ -19,10 +19,7 @@ class EventCard extends StatelessWidget {
       return event.genres;
     }
 
-    return [
-      ...event.genres.take(4),
-      '+${event.genres.length - 4}',
-    ];
+    return [...event.genres.take(4), '+${event.genres.length - 4}'];
   }
 
   @override
@@ -32,17 +29,18 @@ class EventCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF171717),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF5A2424)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: .25),
+              color: const Color(0xFFF03A37).withValues(alpha: .12),
               blurRadius: 12,
               offset: const Offset(0, 5),
             ),
           ],
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(12),
           onTap: () {
             Navigator.push(
               context,
@@ -58,7 +56,7 @@ class EventCard extends StatelessWidget {
                 tag: 'event_${event.id}',
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(18),
+                    top: Radius.circular(12),
                   ),
                   child: AspectRatio(
                     aspectRatio: 16 / 10,

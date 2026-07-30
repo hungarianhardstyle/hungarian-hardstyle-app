@@ -226,7 +226,10 @@ class _ArtistCard extends StatelessWidget {
 
     return Material(
       color: const Color(0xFF171717),
-      borderRadius: BorderRadius.circular(18),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFF5A2424)),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => Navigator.of(context).push(

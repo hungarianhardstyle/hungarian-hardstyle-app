@@ -296,7 +296,7 @@ Paid
 
 # Radio
 
-The radio is a v0.99.2.1 scope item, not a deferred post-v1.0 feature. Use the Real Hardstyle FM stream and its current-track metadata; the feature is complete when a custom compact bar player matching the app's red-black design with Play/Stop/Mute, safe bottom-navigation placement, and the provider page are delivered. The former AutoDJ/AzuraCast concept is superseded.
+The radio is a v0.99.2.1 scope item, not a deferred post-v1.0 feature. Use the Real Hardstyle FM stream and its current-track metadata; the feature is complete when a custom compact bar player matching the app's red-black design with Play/Stop/Mute, safe bottom-navigation placement, and the provider page are delivered.
 
 Online streaming.
 
@@ -304,9 +304,9 @@ Background playback.
 
 Place a compact, user-controllable player directly below the Hungarian Hardstyle logo on Home. A server-side AutoDJ should continuously rotate a configurable library of X uploaded tracks; Flutter consumes one live stream and does not bundle or sequence the production library. Audible playback starts only after a user action and can always be paused or stopped.
 
-Preferred simple architecture: AzuraCast for media and playlist administration, Liquidsoap AutoDJ, Icecast-compatible streaming, and Now Playing data. Upload media in bulk through AzuraCast's built-in SFTP server, not unencrypted FTP. For cloud storage, use an officially supported S3-compatible provider or Dropbox. Google Drive is not a supported production storage location and would require a fragile custom synchronization layer.
+The former AutoDJ/AzuraCast and separate self-hosted radio-backend concepts are removed from the roadmap. The active implementation uses the Real Hardstyle FM stream.
 
-Defer the hosting-provider decision until radio implementation. Start with a managed AzuraCast hosting plan for the simplest launch, then move to a suitably sized self-managed VPS only when listener usage, storage, or control requirements justify the extra operational responsibility.
+
 
 Before implementation, decide music licensing, hosting, bandwidth, codec/bitrate, background playback, audio focus, interruptions, notification controls, and the initial X-sized music library.
 
@@ -670,7 +670,7 @@ v0.99.2 bugfixes to investigate: e-mail/password sign-in fails despite valid cre
 
 Tag- and genre-filtered discovery lists must use API pagination/infinite scroll so all matching news and DJ results can be reached, not only the initially loaded page.
 
-v0.99.3 follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile.
+v0.99.3: separate Facebook, Instagram, TikTok, YouTube, and Spotify fields are implemented during registration and in the community profile.
 - Next build follow-up: add a password-reset link to login and replace raw Firebase credential errors with a clear Hungarian message.
 - Next build follow-up: add password visibility toggles and an optional strong-password generator during registration.
 - Next build follow-up: refresh the Home top-left profile avatar immediately after sign-in without requiring manual refresh.
@@ -686,34 +686,31 @@ v0.99.3 follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Sp
 
 ### v0.99.3 - HUHS Vezérlőközpont
 
-- Integrate the WordPress Mobile API administration into the authenticated app admin panel as a separate, red-black branded `HUHS Vezérlőközpont` menu; show and authorize it exclusively for Admin access roles. The native pending-submission list is implemented through the Firebase-to-WordPress proxy.
-- Add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions.
-- Restrict event submission to authenticated registered users; hide it from guests in Flutter and reject unauthenticated API requests.
-- Refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen: Rajdhani typography, consistent cards and controls, compact news/event sections, section shortcuts, and the compact radio bar, using the real HUHS logo rather than generated placeholder artwork.
-- Make the About screen contact e-mail open the device mail app.
-- Keep the Real Hardstyle FM stream playing when the user switches between apps.
-- Show the saved profile image on the user's own profile screen.
-- Fix stale automatic refresh/cache issues, including newly uploaded profile images; profile save/self-deletion now invalidate community auth/profile streams.
+- The WordPress Mobile API administration is implemented in source as a separate, red-black branded, Admin-only `HUHS Vezérlőközpont`. It covers readable event/DJ/organizer content and custom metadata editing, submissions, trash, Mobile API settings/status, push, newsletter status, shortcodes, About data and the persistent `Indítási kép`; the radio provider and generic WordPress news/page/media/comment/taxonomy/user menus are excluded.
+- A separate admin-only `Felhasználók` menu with search and user-management actions is implemented.
+- Event submission is restricted to authenticated registered users in Flutter and unauthenticated API requests are rejected.
+- The approved red-black TypeUI layout is implemented globally across Home and every menu/screen with Rajdhani typography, consistent cards and controls, compact sections and radio bar, the unchanged original `assets/logos/huhs_logo.png` HUHS logo, and the `A magyar hardstyle otthona` Home slogan.
+- The Home logo area does not repeat bottom-navigation destinations. The persistent radio control is a compact two-line TypeUI bar with a dedicated Play/Stop control, station label, current-track line and Mute control.
+- Startup-image saving no longer reports a false failure after a successful backend save; the native admin refresh assigns the new request inside a synchronous `setState` callback.
+- The native startup-image dialog includes a delete action that disables display and clears the stored image URL.
+- The Chat composer keeps the camera action, emoji helper, and signed-in status on one compact line above the Send button, avoiding overlap on phone widths.
+- The About screen contact e-mail opens the device mail app.
+- Real Hardstyle FM keeps playing while switching between apps and stops when the app is fully closed.
+- The profile screen uses the saved profile image, then the Firebase photo URL, then a name/e-mail monogram. Its editor previews the same circular crop used by the saved avatar and supports free pinch zoom plus horizontal/vertical pan.
+- Existing Chat messages resolve the author's live community profile image and crop settings instead of remaining on the avatar stored when the message was created.
+- Profile save, image changes, authentication changes and self-deletion invalidate the community auth/profile streams.
 
-Current v0.99.3 completion status (updated 2026-07-28):
+Current v0.99.3 source status (2026-07-29):
 
-- Native WordPress Mobile API administration now supports listing, editing, approval, and trash actions through the Firebase-to-WordPress proxy; credentials remain server-side.
-- The reversible TypeUI/Rajdhani red-black design transition, real HUHS logo, radio bar, and branded admin entry are in the app.
-- Profile image rendering, Cloudinary face-aware cropping, focus persistence, and auth/profile invalidation are implemented.
-- REST transport/authentication/authorization/input validation, rate limits, Cloudinary restrictions, and privacy-safe security logging were audited; confirmed gaps were fixed and Firestore rules/functions deployed.
-- Deletion confirmation dialogs for profile, Chat messages, and admin user deletion are complete.
-- Completed: the Chat emoji helper text stays on one line.
-- Completed: the radio notification subtitle is `Real Hardstyle FM`.
-- Completed: the Real Hardstyle FM legal/provider information is present on the radio provider page.
-- Completed: radio lifecycle behavior and Play/Stop state synchronization are implemented.
-- Completed: the Chat top-right avatar refreshes when a different user signs in.
-- Completed: self-deletion clears app state and returns to registration/sign-in.
-- Completed: profile-image positioning/cropping values can be edited and persisted.
-- Completed: pagination/infinite scroll for tag- and genre-filtered lists.
-- Completed: artist/DJ genre tags are clickable and open grouped discovery results for related Events, News, and DJs/artists, with the full paginated result set.
-- Completed: expired events are removed from API results and the cached event provider rechecks every minute.
-- Completed: the Real Hardstyle FM provider page contains the requested legal information.
-- Completed: Firestore rules were compiled and deployed after tightening role-bound Chat authorship checks.
+Completed in source: native Mobile API admin coverage, Firebase-to-WordPress proxy, TypeUI/Rajdhani design, radio behavior, profile image/monogram fallback with free two-axis zoom/pan/focus, profile refresh, persistent no-cache WordPress-backed startup image, Chat permissions/deletion/pinned data, REST/Firebase/Cloudinary checks, pagination, the event-tag fast-scroll fix and expired-event filtering.
+
+Completed follow-ups: the Hungarian character-encoding/mojibake errors on the community profile screen are fixed, and the unnecessary `Beállítások`, `Hírlevél`, and `Shortcode` entries are removed from the native HUHS Vezérlőközpont.
+
+The final v0.99.3 source pass separates the read-only community profile from its editor, persists and reuses the circular avatar's X/Y position and pinch zoom, refreshes active Real Hardstyle FM metadata periodically, and removes the foreground-push lifecycle dependency on a transient widget context. Physical phone verification is performed separately by the project owner.
+
+The Android radio foreground service now retries the Real Hardstyle FM stream after an unexpected playback error or stream completion instead of remaining silently marked as playing. Explicit Stop and full app closure still cancel pending reconnects.
+
+The owner will perform phone verification separately. Firebase proxy Functions are deployed. `build/huhs-mobile-api-2.4.32.zip` is the prepared WordPress package for readable native editing, Mobile API status, persistent `Indítási kép` endpoints, and Media Library upload/selection on the WordPress `Indítási kép` page; live `2.4.31` remains deployed and live-verified and is not an open re-verification task. Security hardening and signing/obfuscation are v1.0.
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -752,7 +749,7 @@ v0.99 submission polish:
 - Populate the organizer dropdown from WordPress in Flutter and keep it aligned with the existing WordPress selector.
 - Require at least one genre; missing required values must show inline messages and red invalid-field styling.
 - Use only direct Cloudinary upload with the unsigned `Hun_hs_Mobile` preset, then send the returned URL to WordPress for DJ, organizer, and event submissions.
-- Flutter implementation is complete in release `0.99.1+4`; WordPress Mobile API `2.4.30` is prepared locally and still needs deployment/live verification. It adds authenticated permission checks to submission POST routes while keeping public option GET routes available.
+- Flutter implementation is complete in release `0.99.1+4`; WordPress Mobile API `2.4.31` is uploaded, deployed to production, live-verified, and confirmed active by the project owner; deployment and live verification are complete. It adds authenticated permission checks to submission POST routes while keeping public option GET routes available.
 - v0.97 polish complete: event postal-code input accepts digits only in Flutter and WordPress/API validation; new-event publication pushes remain global to FCM-token devices.
 - Planned v1.0 notification personalization: normal event pushes target users who favorited or marked attendance; featured-event publication and reminder pushes remain global to every app-installed device with an FCM token, regardless of account registration; users who favorite an organizer receive that organizer's new-event notifications. Explicit notification opt-outs remain respected. A separate admin/editor push for newly received submissions is an optional follow-up.
 
@@ -865,7 +862,7 @@ In Progress
 - Backend `2.4.2` is deployed and its organizer-logo upload was tested in the admin flow; an approved organizer submission receives the uploaded Media Library image as its logo and featured image
 - Backend `2.4.3` is deployed and tested. It adds a dedicated `facebook_event_url` field to the WordPress event editor and events mobile API.
 - Backend `2.4.7` is deployed and awaiting live approval-flow verification. It replaces the invalid nested approval form with a nonce-protected admin action, removes the misleading native publish box from submissions, restores DJ/organizer draft creation, and adds event-submission conversion into a non-visible event draft.
-- Backend `2.4.8` is deployed. It adds separate DJ profile-image and DJ-logo multipart fields, applies both images to approved DJ drafts, exposes an editable DJ website through WordPress, the artist REST API, public profiles, and Flutter, and returns full event objects in DJ/organizer `upcoming_events` so tapping those cards opens complete event details. The latter was verified live; image-upload verification remains blocked by the upstream WAF.
+- Backend `2.4.8` is historical. Its multipart image path remains documented for compatibility, but the active app upload path is Cloudinary; the old upstream-WAF limitation is no longer a current deployment status.
 - The public WordPress `/events/` directory should later include an `Esemény beküldése` call-to-action; after app registration is available, the action must require an authenticated user.
 - Flutter includes DJ and organizer submission forms under More. DJ submitters can choose Hungarian Hardstyle-managed performance booking; submitted profiles still require WordPress editorial approval and explicit publication/app visibility
 - Submitted profile and organizer images are reviewable URLs. They are not automatically copied into the WordPress Media Library; the editor selects/imports the approved image before publication

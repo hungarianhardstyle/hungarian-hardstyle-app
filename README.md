@@ -6,11 +6,9 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
-### v0.99.3 audit status (2026-07-28)
+### v0.99.3 — complete and closed (2026-07-30)
 
-- Current Flutter build: `0.99.3+16`; v0.99.3 implementation is complete pending final device verification.
-- Final ARM debug build is generated after the completed audit; `flutter analyze` reports no issues and all tests pass.
-- The final ARM64 debug APK is generated only after the final audit and tests.
+- Current Flutter build: `0.99.3+27`; the final ARM64 debug APK and the reported v0.99.3 fixes were verified on a physical phone by the project owner.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
@@ -30,7 +28,7 @@ The v0.99.1 community bugfix pass is implemented in `v0.99.1+12`; e-mail/passwor
 The v0.99.1+11 authorization pass also resolves the previously reported Chat deletion, admin-role persistence, and in-app user-management issues. Manual profile focal-point editing remains optional polish.
 v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separate account/access roles, moderator Chat deletion, admin user-role management for legacy profiles, Auth-restored profile loading, duplicate-role dropdown crash, logout navigation crash, and deploys the Firestore rules to the named `hungarian-hardstyle` database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; manual focal-point editing is optional later UX polish.
 
-Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile.
+- Separate Facebook, Instagram, TikTok, YouTube, and Spotify fields are implemented during registration and in the community profile.
 - Next build follow-up: add a password-reset link to login and replace raw Firebase credential errors with a clear Hungarian message.
 - Next build follow-up: add password visibility toggles and an optional strong-password generator during registration.
 - Next build follow-up: refresh the Home top-left profile avatar immediately after sign-in without requiring manual refresh.
@@ -40,53 +38,56 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles, and moderators can delete Chat messages only.
 
-The current WordPress backend package is **2.4.31**. `build/huhs-mobile-api-2.4.31.zip` is UTF-8 clean, uploaded, and live-verified: unauthenticated submission POST requests return HTTP 401; it includes authenticated submission POST routes plus the native approval endpoint.
+The current WordPress backend package is **2.4.31**. `build/huhs-mobile-api-2.4.31.zip` is UTF-8 clean, uploaded, deployed to production, live-verified, and confirmed active by the project owner; deployment and live verification are complete. Unauthenticated submission POST requests return HTTP 401; it includes authenticated submission POST routes plus the native approval endpoint.
 
 ### v0.99.2 — next test build
 
 - [x] re-enable the Google AdMob test banner with `HUHS_ENABLE_TEST_ADS=true` (test build default)
 - [ ] verify the test ad on the ARM debug APK without blocking startup
 - [ ] keep production AdMob IDs and consent/privacy handling deferred until release
-- [ ] fix e-mail/password sign-in independently of the misleading raw Firebase credential error
-- [x] fix saved profile images not appearing on the user's profile/avatar (Firebase photo URL fallback)
-- [ ] fix admin user deletion and the failing `deleteCommunityUser` Cloud Function call
-- [ ] make the owner's `djdeeroy@gmail.com` account role persist as `Szervező` while retaining admin access
-- [ ] enforce final account roles server-side: users choose once at registration; only admins may change another user's role
-- [ ] always render the persisted account role on profiles and Chat; show `Admin` or `Moderátor` as a separate access badge next to the account role
+- [x] fix e-mail/password sign-in independently of the misleading raw Firebase credential error
+- [x] fix saved profile-image rendering and Cloudinary upload persistence in source; physical phone verification remains with the project owner
+- [x] fix admin user deletion and deploy the `deleteCommunityUser` Cloud Function
+- [x] make the owner's `djdeeroy@gmail.com` account role persist as `Szervező` while retaining admin access
+- [x] enforce final account roles server-side: users choose once at registration; only admins may change another user's role
+- [x] always render the persisted account role on profiles and Chat; show `Admin` or `Moderátor` as a separate access badge next to the account role
 
  - [x] tag-filtered news uses API pagination/infinite scroll so all matching articles can be reached
  - [x] allow gallery images to be saved to the device with platform permission handling
  - [x] add an in-app Data protection / GDPR information section with privacy and retention details
- - [ ] review personal-data access rules and keep sensitive operations server-side
- - [ ] add practical security hardening: obfuscation, restricted backend secrets, and abuse/rate-limit checks
+ - [x] keep sensitive account, role, deletion and WordPress proxy operations server-side
+ - [ ] complete production security hardening, obfuscation, abuse/rate-limit checks and release signing in v1.0
  - [x] complete the Real Hardstyle FM radio integration at `https://stream.realhardstyle.nl` in v0.99.2.1 with a custom compact red-black bar player and Play/Stop/Mute controls
  - [x] show the currently playing track title in the radio player when stream metadata provides it
  - [x] place the persistent radio player above the bottom navigation without covering event panels
  - [x] add a More-section radio provider page with Real Hardstyle FM name, website, logo, and provider attribution text
  - [x] adopt a readable modern/cyber-style font such as Rajdhani with complete Hungarian accented-character support (native condensed fallback)
 
-### v0.99.3 - HUHS Vezérlőközpont
+### v0.99.3 implementation status — complete and closed (2026-07-30)
 
-- [x] add an Admin-only `HUHS Vezérlőközpont` entry with a native pending-submission list; WordPress edit/approval remains protected behind the server-side application-password proxy
-- [x] add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions
-- [x] restrict event submission to authenticated registered users and reject unauthenticated API requests (Flutter gate and backend 2.4.31 permission check)
-- [x] refresh the app visual layout toward the approved red-black mockup with Rajdhani typography, consistent cards and controls, compact sections, the compact radio bar, and the real HUHS logo
-- [x] make the About screen contact e-mail open the device mail app
-- [x] keep the Real Hardstyle FM stream playing when switching between apps with an Android foreground media service
-- [x] show the saved profile image on the user's own profile screen, falling back to the Firebase user photo URL
-- [x] invalidate community auth/profile state after profile save and self-deletion; refresh the radio state after Play/Stop commands
-- [x] audit REST endpoints for HTTPS, authentication, authorization, nonce/token checks, and server-side input validation; fix confirmed gaps
-- [x] add or verify rate limiting and spam/abuse protection for submissions, Chat, authentication, and write endpoints
-- [x] restrict Cloudinary uploads by type and size; keep service credentials server-side
-- [x] add privacy-safe security logging for rejected/rate-limited server operations
-- [x] add profile deletion with explicit confirmation
-- [x] require confirmation before deleting Chat messages
-- [x] require confirmation before an admin deletes a user account
-- [x] keep the Chat composer emoji helper text on one line on supported phone widths
-- [x] persist profile-image focus values in Firestore and apply them to Cloudinary crops
-- [x] deploy and verify the final Firestore rules and Firebase Functions used by community administration
-- [x] native WordPress submission editing, approval and trash actions are available through the admin-only proxy
-- v0.99.3 code scope is complete; only installation on the physical test phone remains for external verification.
+Implemented in source: the approved Rajdhani/TypeUI red-black visual system while retaining the original `assets/logos/huhs_logo.png` HUHS logo, Home slogan and branding; the Admin-only native HUHS Vezérlőközpont; Mobile API events, DJs, organizers, submissions, trash, settings, push, newsletter, shortcode, About and persistent startup-image management; the separate Firebase community-user administration; profile image/monogram fallback; radio Stop synchronization; tag/genre pagination, the fast-scroll fix and expired-event filtering. Generic WordPress news/page/media/comment/taxonomy/user menus are intentionally not duplicated in the mobile controller.
+
+The Home header does not duplicate the bottom navigation with extra quick-action tiles. The radio uses the compact TypeUI red-black two-line bar with a dedicated Play/Stop control, station label, track metadata and Mute control.
+
+v0.99.3 completion:
+
+- [x] Fix the visible Hungarian character-encoding/mojibake errors on the community profile screen.
+- [x] Remove the unnecessary `Beállítások`, `Hírlevél`, and `Shortcode` entries from the native HUHS Vezérlőközpont.
+- [x] Make the circular profile-image editor persist and reproduce true horizontal and vertical positioning together with zoom.
+- [x] Open the community profile in a read-only view and place editing behind a separate `Profil szerkesztése` action and screen.
+- [x] Refresh the Real Hardstyle FM current-track metadata automatically while the radio is playing.
+- [x] Reconnect the Real Hardstyle FM player automatically after an unexpected stream interruption.
+- [x] Fix the push-settings screen lifecycle assertion (`_dependents.isEmpty`) without changing the already working push delivery.
+
+The native admin refresh after saving the persistent startup image uses a synchronous `setState` callback, so a successful save is no longer reported as a Flutter error.
+The same admin dialog can also disable and clear the configured startup image.
+
+The Chat composer keeps the camera action, emoji helper, and signed-in status on one compact line above the Send button so none overlaps the message field.
+Existing Chat messages resolve their author's current profile image, crop and zoom settings, so an avatar change updates earlier messages too.
+
+Firebase WordPress proxy Functions are deployed. WordPress Mobile API `2.4.32` is prepared at `build/huhs-mobile-api-2.4.32.zip`; it adds readable native content editing that preserves unchanged HTML, reliable persistent `Indítási kép` data with no-cache delivery, Media Library upload/selection on the WordPress `Indítási kép` page, and the Mobile API status endpoint. The currently live `2.4.31` remains deployed and live-verified and must not be repeatedly rechecked.
+
+v0.99.3 is complete, phone-verified, and closed in Flutter build `0.99.3+27`. Release signing/obfuscation and broader security remain v1.0.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -293,11 +294,11 @@ Core release quality:
 
 Authentication and community:
 
-- [ ] Google sign-in and app-only community accounts
-- [ ] let users choose an account role during onboarding: DJ, organizer, or attendee/partygoer
-- [ ] show DJ submission only to DJ accounts, organizer submission only to organizer accounts, and both to admins; enforce the same rules server-side
-- [ ] bootstrap a separate app-admin account and role with full submission approval and editing permissions
-- [ ] top-left Home avatar profile entry with profile image or monogram fallback
+- [x] Google sign-in and app-only community accounts
+- [x] let users choose an account role during onboarding: DJ, organizer, or attendee/partygoer
+- [x] show DJ submission only to DJ accounts, organizer submission only to organizer accounts, and both to admins; enforce the same rules server-side
+- [x] bootstrap a separate app-admin account and role with full submission approval and editing permissions
+- [x] top-left Home avatar profile entry with profile image or monogram fallback
 - [ ] user profiles with social links, planned events, and favorites
 - [ ] add a `Több`-menu user directory/search listing registered users only
 - [ ] organize `Több`-menu entries into clear categories while keeping `Több` as the visible menu name
@@ -337,7 +338,7 @@ FAQ:
 - [ ] searchable, expandable Flutter FAQ under More
 - [ ] loading, empty and error states
 
-Radio note: the previous AutoDJ/AzuraCast concept is superseded. Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and its in-app player.
+Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and its in-app player.
 
 ### v1.5 — Hardstyle Revolution Store
 

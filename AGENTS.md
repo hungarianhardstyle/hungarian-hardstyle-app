@@ -63,7 +63,7 @@ The app should prioritize:
 
 ## Data Source Rule
 
-WordPress is the only source of truth.
+WordPress is the source of truth for editorial/content data (news, events, DJs, organizers and future catalog items). Firebase is the source for community authentication and community data such as profiles, roles, Chat and reactions.
 
 Do not create separate hardcoded databases in Flutter for real app content. Temporary placeholder content is allowed only while a feature is being built.
 
@@ -86,28 +86,28 @@ As of the current project state:
 - News search UI exists.
 - News item tap/click opens the news detail view.
 - News cards display remote images, title, date, and featured state.
-- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, currently through `build/huhs-mobile-api-2.4.29.zip`; the latest package has been extracted and reviewed locally.
-- The latest package version in that ZIP is `2.4.29`. It includes the WordPress admin dashboard/settings, submissions approval flow, trash/About menus, push/newsletter settings, Cloudinary URL handling, rate limits/honeypots, and UTF-8/HTML-entity push fixes. Deployment and live verification of 2.4.29 remain pending.
+- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, currently through `build/huhs-mobile-api-2.4.31.zip`; the latest package has been extracted and reviewed locally.
+- The latest package version in that ZIP is 2.4.31. It is uploaded, deployed to production, live-verified, and confirmed active by the project owner; deployment and live verification are complete. It includes the WordPress admin dashboard/settings, submissions approval flow, trash/About menus, push/newsletter settings, Cloudinary URL handling, rate limits/honeypots, and UTF-8/HTML-entity push fixes.
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
 - Backend package `2.4.2` is deployed and its organizer-logo upload was tested in the admin flow.
 - Backend package `2.4.3` is deployed and tested. It adds a dedicated `facebook_event_url` field to the WordPress event editor and events mobile API.
 - Backend package `2.4.7` is deployed. It fixes the invalid nested admin approval form that prevented DJ and organizer draft creation, removes the misleading native publish box from submissions, and adds the same one-click draft creation flow for event submissions. The approval flow still requires a live WordPress admin test.
-- Backend package `2.4.8` is deployed. It adds an optional separate DJ-logo multipart upload, transfers the approved logo to the DJ draft, adds an artist website field to the WordPress editor, artist API, public profile, Flutter DJ submission, and Flutter DJ profile links, and returns complete event records from DJ/organizer profiles so their event cards open the full event detail. The latter was verified live; direct multipart uploads are bypassed by Cloudinary in v0.99.
-- Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real “Kapcsolódó cikk” target was verified. Flutter opens returned related articles plus normal WordPress “Kapcsolódó cikk”, “Kapcsolódó”, and “Ez is érdekelhet” links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
-- Backend package `2.4.29` is prepared locally. It includes the `2.4.28` features plus push-title/body HTML-entity decoding and UTF-8 JSON output; deployment and live verification are still pending.
+- Backend package `2.4.8` is historical. Its multipart image path remains documented for compatibility; the active app upload path is Cloudinary and direct multipart uploads are not a current WAF/deployment status.
+- Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real "Kapcsolódó cikk" target was verified. Flutter opens returned related articles plus normal WordPress "Kapcsolódó cikk", "Kapcsolódó", and "Ez is érdekelhet" links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
+- Backend package 2.4.31 is the current uploaded package. It includes push-title/body HTML-entity decoding, UTF-8 JSON output, authenticated submission routes, and the native approval endpoint.
 - Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; the first natural event-day reminder did not arrive and the cron/timezone/filter path needs investigation.
 - The custom-push admin form lists recent published news and events by title and validates the selected post type, so editors do not need to look up event IDs manually.
 - Backend package `2.4.15` adds the server-side Mailchimp newsletter subscription endpoint and protected admin settings page; the endpoint is live and both invalid-email validation and a real personal e-mail double-opt-in test succeeded. Flutter includes a native signup screen with consent and double opt-in messaging.
 - Backend package `2.4.9` is prepared for deployment. It adds organizer genre/style metadata, WordPress editor controls, API output, and genre validation/storage for organizer submissions. Flutter now displays organizer genres and includes them in organizer submissions.
-- Websupport's upstream WAF still returns HTTP 466 for direct multipart image uploads, but Cloudinary is the active v0.99 upload path. Websupport allowlisting is deferred until after v1.0 and is not a current release blocker.
+- Cloudinary is the only active app image-upload path.
 - DJ logos are rendered in Flutter and public WordPress artist profiles; direct multipart upload remains separate and uses Cloudinary.
 - DJ/organizer list providers now use auto-dispose so newly published or edited profiles refresh after navigation.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
 - Backend package `2.2.0` is deployed. Its artist list/category endpoints, shared submission genre options, validation response, and public DJ/event archive templates were verified live. A successful real submission still needs an intentional end-to-end app test because it creates a pending WordPress item.
-- Events, tickets, and more may still contain placeholder or early-stage UI.
+- Release catalog and other future media sections may still contain placeholder or early-stage UI.
 - Dynamic events and the event detail screen are connected to the WordPress events API.
 - Event detail artists and organizer are clickable. Artist links open complete API-backed DJ profiles. Organizer links are now connected to the organizer detail provider and require backend `2.3.0` in production.
 - News excerpts are converted to plain text and HTML tags are removed for both custom and standard WordPress responses.
@@ -115,7 +115,7 @@ As of the current project state:
 - News detail renders deduplicated YouTube, Spotify, SoundCloud, Instagram, and TikTok embeds in-app. Supported interactive WordPress shortcodes (`ays_poll`, `irp`, and legacy Final Tiles Gallery) are detected; their raw shortcode text is removed and the rendered WordPress content can be opened inside the app.
 - Plain-text web URLs in news and event HTML are automatically converted into tappable links. Normal article, event, ticket, and shortcode links use the shared in-app browser; native media and Maps handoff remain intentional exceptions.
 - WordPress API work exists and should continue to be the backend source for new dynamic features.
-- Flutter-side WordPress integration is complete for news, but not yet complete for every content type.
+- Flutter-side WordPress integration is complete for the current news, events, DJs, organizers and submissions. The v0.99.3 native HUHS Vezérlőközpont is implemented in source; the release catalog remains future work.
 
 Do not assume that an empty or partial integration file is a bug by itself. Treat it as an implementation placeholder unless it blocks the requested feature or conflicts with a known working module.
 
@@ -315,8 +315,8 @@ The Cloud Function source is in `functions/` (`deleteCommunityUser`) and is depl
 Also record for the next fix pass: push notification text has an encoding bug and may show Hungarian punctuation/accents as HTML entities (for example `&#8211;`) instead of decoded characters.
 Community authorization is now separated: `djdeeroy@gmail.com` is an Admin with the account role Szervező; normal users cannot change account roles after onboarding; admins manage account/access roles; moderators can delete Chat messages only.
 
-The latest v0.99.1 bugfix build addresses the previously reported profile/avatar, Chat deletion, logout, duplicate-role, and admin-menu issues. Manual focal-point editing remains optional later UX polish.
-v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separates account roles from access roles, adds moderator Chat deletion and admin user-role management for legacy profiles, reloads profiles after Auth restoration, and deploys the Firestore rules to the named database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; manual focal-point editing is optional later UX polish.
+The latest v0.99.1 bugfix build addresses the previously reported profile/avatar, Chat deletion, logout, duplicate-role, and admin-menu issues. Superseded by v0.99.3: free profile-image zoom and movement are required.
+v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separates account roles from access roles, adds moderator Chat deletion and admin user-role management for legacy profiles, reloads profiles after Auth restoration, and deploys the Firestore rules to the named database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; Superseded by v0.99.3: free profile-image zoom and movement are required.
 
 The next Flutter test build is v0.99.2. The Google AdMob test banner is enabled for the test build with `HUHS_ENABLE_TEST_ADS=true`; do not switch to production AdMob identifiers yet. Consent/privacy and production monetization remain release work.
 
@@ -326,7 +326,7 @@ Record for v0.99.2 bugfix work: diagnose the e-mail/password sign-in failure wit
 
 Tag- and genre-filtered discovery lists must use API pagination/infinite scroll so all matching news and DJ results can be reached, not only the initially loaded page.
 
-Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile.
+Separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registration and in the community profile are complete.
 - Next build follow-up: add a password-reset link to login and replace raw Firebase credential errors with a clear Hungarian message.
 - Next build follow-up: add password visibility toggles and an optional strong-password generator during registration.
 - Next build follow-up: refresh the Home top-left profile avatar immediately after sign-in without requiring manual refresh.
@@ -335,28 +335,41 @@ Next build follow-up: collect separate Facebook, Instagram, TikTok, YouTube, and
 - v0.99.2 follow-up: allow gallery images to be saved to the device with platform permission handling.
 - v0.99.2 follow-up: add a Data protection / GDPR information section covering privacy, retention, and user rights.
 - v0.99.2 follow-up: review personal-data access rules and keep sensitive operations server-side.
-- v0.99.2 follow-up: add practical security hardening (obfuscation, restricted backend secrets, and abuse/rate-limit checks); production release signing is tracked for v1.0, and absolute protection against reverse engineering is not possible.
+- v1.0: complete security hardening, obfuscation, restricted backend secrets, abuse/rate-limit checks, and production release signing; absolute protection against reverse engineering is not possible.
 - v0.99.2.1 radio scope: completed the Real Hardstyle FM integration at `https://stream.realhardstyle.nl` as the Home radio stream, including a custom compact bar player matching the app's red-black design (Play, Stop, and Mute), current-track metadata when available, safe placement above bottom navigation, and a More-section provider page with the supplied logo, website, and attribution text.
 - v0.99.2.1 follow-up: completed the readable modern/cyber-style font fallback with Hungarian accented-character support.
 
 ### v0.99.3 - HUHS Vezérlőközpont
 
-- Add an Admin-only `HUHS Vezérlőközpont` entry to the authenticated app admin panel; it opens the existing WordPress Mobile API admin dashboard in the in-app browser. Direct API editing requires a later authenticated integration.
-- Add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions.
-- Restrict event submission to authenticated registered users; the Flutter form is now hidden/guarded for guests, while WordPress-side unauthenticated rejection remains to be verified.
-- Refresh the full app visual layout toward the approved red-black mockup across Home and every menu/screen: Rajdhani typography, consistent cards and controls, compact news/event sections, section shortcuts, and the compact radio bar, using the real HUHS logo rather than generated placeholder artwork.
-- Make the About screen contact e-mail open the device mail app. (Implemented in Flutter.)
-- Keep the Real Hardstyle FM stream playing when the user switches between apps. (Implemented on Android with a foreground media service.)
-- Show the saved profile image on the user's own profile screen, falling back to the Firebase user photo URL. (Implemented in Flutter.)
-- Investigate and fix stale automatic refresh/cache issues, including newly uploaded profile images.
-- Audit every REST endpoint for HTTPS transport, authentication, authorization, nonce/token checks, and server-side input validation; fix only confirmed gaps.
-- Add or verify rate limiting and spam/abuse protection on submissions, Chat, authentication, and other write endpoints.
-- Restrict Cloudinary upload presets by file type, size, folder, and quota; keep Firebase/WordPress service credentials server-side.
-- Add security logging and monitoring for rejected requests and suspicious activity without exposing personal data.
-- Add a profile deletion option with an explicit confirmation step.
-- Require confirmation before deleting Chat messages.
-- Require confirmation before an admin deletes a user account.
-- Keep the Chat composer helper text (`Emoji a billentyűzetről is használható`) on one line on supported phone widths.
+- [x] Implement the WordPress Mobile API administration natively in the Admin-only HUHS Vezérlőközpont, including readable content/custom metadata editing, submissions, trash, Mobile API settings/status, push, newsletter status, shortcodes, About and persistent `Indítási kép` management. Exclude the radio provider and generic WordPress news/page/media/comment/taxonomy/user menus.
+- [x] Add a separate admin-only `Felhasználók` menu inside the admin panel with user search and user-management actions.
+- [x] Restrict event submission to authenticated registered users; the Flutter form is hidden/guarded for guests, and WordPress-side unauthenticated rejection is verified.
+- [x] Complete the approved red-black TypeUI visual layout across Home and every menu/screen: Rajdhani typography with Hungarian accents, consistent cards and controls, compact sections and radio bar, the unchanged original `assets/logos/huhs_logo.png` HUHS logo, and the Home slogan.
+- [x] Keep the Home logo area free of navigation shortcuts that duplicate the persistent bottom navigation; use the compact two-line TypeUI radio bar above the bottom navigation.
+- [x] Refresh the native admin after startup-image saving without returning the asynchronous reload request from `setState`.
+- [x] Allow admins to disable and clear the configured startup image from the app.
+- [x] Keep the Chat emoji helper on one line and the send action in its own full-width row.
+- [x] Make the About screen contact e-mail open the device mail app.
+- [x] Keep the Real Hardstyle FM stream playing when the user switches between apps.
+- [x] Show the saved profile image on the user's own profile screen, falling back to the Firebase user photo URL and then a name/e-mail monogram.
+- [x] Refresh profile/avatar state after authentication and profile-image changes.
+- [x] Keep the editor preview identical to the saved circular avatar crop and persist true horizontal and vertical positioning together with pinch zoom.
+- [x] Open the community profile in a read-only view and place editing behind a separate `Profil szerkesztése` action and screen.
+- [x] Refresh the Real Hardstyle FM current-track metadata automatically while playback is active.
+- [x] Reconnect the Real Hardstyle FM player automatically after an unexpected stream interruption.
+- [x] Fix the push-settings screen lifecycle assertion (`_dependents.isEmpty`); push delivery itself remains unchanged.
+- [x] Resolve Chat avatars from the author's current community profile so earlier messages update after a profile-image change.
+- [x] Add a profile deletion option with an explicit confirmation step.
+- [x] Require confirmation before deleting Chat messages.
+- [x] Require confirmation before an admin deletes a user account.
+- [x] Keep the Chat camera action, emoji helper (`Emoji a billentyűzetről is használható`) and signed-in status on one compact line above the Send button.
+
+- [x] Fix the phone-verified Hungarian character-encoding/mojibake errors on the community profile screen.
+- [x] Remove the unnecessary `Beállítások`, `Hírlevél`, and `Shortcode` entries from the native HUHS Vezérlőközpont.
+
+v0.99.3 is complete, phone-verified by the project owner in Flutter build `0.99.3+27`, and closed. Do not reopen or rework this release unless a new regression is explicitly reported.
+
+The event-tag fast-scroll regression is fixed. WordPress Mobile API `2.4.32` is the prepared package for the native editor and persistent startup-image fixes, including Media Library upload/selection on the WordPress `Indítási kép` page; `2.4.31` remains the deployed, live-verified production package until the owner uploads the prepared update.
 
 ### v0.4 - Foundation
 
@@ -443,7 +456,7 @@ Focus:
 
 - local favorites
 - allow the featured news card on Home to be marked as a favorite
-- show the opened news article's title in its app-bar instead of the generic `Hír` label
+- show the opened news article's title in its app-bar instead of the generic `HĂ­r` label
 - show the opened event's title in its app-bar instead of a generic event label
 - newsletter integration
 - settings
@@ -492,8 +505,8 @@ Keep this release intentionally small and low-risk:
 - Live Feed is readable without registration. Anonymous users may publish text only under a generated `Unknown User ####` name and cannot upload images.
 - Registered users may publish text and compressed snapshot images in the Live Feed.
 - Live Feed messages support normal Unicode emoji and a small fixed reaction set; do not add a heavy emoji package unless the native keyboard proves insufficient.
-- Use Firebase Authentication and Firestore for community data, and Cloudinary for community images; do not route these uploads through the blocked Websupport multipart endpoint.
-- Keep full moderation, friendships, attendance visibility, profile claims, and app-admin tooling in v1.0.
+- Use Firebase Authentication and Firestore for community data, and Cloudinary for community images.
+- Keep friendships, attendance visibility, and profile claims in v1.0; v0.99.3 owns app-admin tooling and Chat moderation.
 - Add a `Több`-menu user directory/search that lists registered users only and is unavailable to guests.
 - Organize `Több`-menu entries into clear categories while keeping `Több` as the visible menu name.
 
@@ -536,12 +549,12 @@ Confirmed v1.0 community direction:
 
 - Add a dedicated Live Feed bottom-navigation tab.
 - Registered users can chat in the live feed and publish image posts.
-- Live Feed/chat image posts should reuse the direct Cloudinary upload path instead of Websupport multipart uploads.
+- Live Feed/chat image posts should use the direct Cloudinary upload path.
 - Add Google account sign-in and user registration/onboarding.
 - Users can create and manage their own community profile. Once registration exists, make the profile reachable from the top-left of Home through a circular avatar; show the profile image or a monogram fallback.
 - During onboarding, users can choose an account role: DJ, organizer, or attendee/partygoer. Role changes and privileged actions require server-side authorization.
 - DJ submission is visible to DJ accounts, organizer submission to organizer accounts, and both submission flows to admins; Flutter visibility is not sufficient without matching API enforcement.
-- v1.0 requires a separate app-admin role/account with full review, approval, and editing access for submissions. The owner admin e-mail is configured privately during deployment and must not be hardcoded into public app content.
+- v0.99.3 provides the admin-only HUHS Vezérlőközpont with full review, approval, editing, user, trash, settings, and management access for the WordPress Mobile API, excluding only the radio provider menu. The owner admin e-mail is configured privately during deployment and must not be hardcoded into public app content.
 - Registered users can claim a DJ profile only after proving control of the private or artist-owned booking e-mail stored on that profile. The Hungarian Hardstyle-managed booking address (`info@hungarianhardstyle.hu`) is never valid claim proof.
 - Users can add social-media links to their profile, see the events they plan to attend, and access favorites from the profile area.
 - Users can send, accept, and manage friend connections; each profile should include an `Ismerősök` list.
@@ -619,7 +632,6 @@ Release processing:
 - generate the 128 kbps MP3, 320 kbps MP3 and preview derivative server-side with FFmpeg
 - run conversion as a background job, never inside the upload/API request
 - keep the WAV master private and expose each derivative only after its entitlement is satisfied
-- Websupport currently provides `/usr/bin/ffmpeg` 4.4.2 with `libmp3lame`; background-job execution and upload-path permissions still need an end-to-end test
 
 Paid options:
 
@@ -808,3 +820,9 @@ Before making code changes:
 - do not treat placeholders as bugs unless they block the requested task
 - keep changes scoped to the requested feature
 - summarize what changed and what could not be verified
+Documentation note: backend package entries older than 2.4.31 are historical deployment notes; the current active upload path is 2.4.31.
+- v0.99.3 source fix: the radio Stop action now synchronizes against the native playback service before deciding Play/Stop.
+- v0.99.3 completed fix: profile images use the persisted raw Cloudinary URL and fall back to a name/e-mail monogram; persisted X/Y positioning and zoom are implemented and phone-verified.
+- v0.99.3 source fix: the startup announcement is stored in WordPress and served by a public endpoint so it remains visible on every app launch until an admin disables or removes it.
+- Phone verification of the v0.99.3 fixes is complete in Flutter build `0.99.3+27`.
+- WordPress Mobile API `2.4.32` is prepared at `build/huhs-mobile-api-2.4.32.zip`; live `2.4.31` remains deployed and live-verified and must not be repeatedly rechecked.

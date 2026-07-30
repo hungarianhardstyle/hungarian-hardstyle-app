@@ -1,4 +1,5 @@
-const { onCall, HttpsError } = require('firebase-functions/v1/https');
+const functions = require('firebase-functions/v1');
+const { HttpsError } = functions.https;
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const { getFirestore } = require('firebase-admin/firestore');
@@ -11,6 +12,9 @@ const WORDPRESS_BASE_URL = 'https://hungarianhardstyle.hu/wp-json/huhs/v1';
 const WORDPRESS_USERNAME = defineSecret('WORDPRESS_USERNAME');
 const WORDPRESS_APPLICATION_PASSWORD = defineSecret('WORDPRESS_APPLICATION_PASSWORD');
 const callWindows = new Map();
+const wordPressCall = (handler) => functions
+  .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] })
+  .https.onCall(handler);
 
 // ponytail: process-local limit; move to a shared counter only if traffic exceeds one instance.
 function allowCall(uid, key, limit = 20) {
@@ -43,8 +47,7 @@ function isAdmin(context, profile) {
     || profile.accessRole === 'admin';
 }
 
-exports.submitWordPressContent = onCall(
-  { secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] },
+exports.submitWordPressContent = wordPressCall(
   async (data, context) => {
     if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
       throw new HttpsError('permission-denied', 'Regisztráció szükséges a beküldéshez.');
@@ -87,8 +90,7 @@ exports.submitWordPressContent = onCall(
   },
 );
 
-exports.listWordPressSubmissions = onCall(
-  { secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] },
+exports.listWordPressSubmissions = wordPressCall(
   async (data, context) => {
     if (!context.auth) {
       throw new HttpsError('permission-denied', 'Csak admin tekintheti meg a beküldéseket.');
@@ -122,8 +124,7 @@ exports.listWordPressSubmissions = onCall(
   },
 );
 
-exports.manageWordPressSubmission = onCall(
-  { secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] },
+exports.manageWordPressSubmission = wordPressCall(
   async (data, context) => {
     if (!context.auth) {
       throw new HttpsError('permission-denied', 'Csak admin kezelheti a beküldéseket.');
@@ -163,8 +164,7 @@ exports.manageWordPressSubmission = onCall(
   },
 );
 
-exports.updateWordPressSubmission = onCall(
-  { secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] },
+exports.updateWordPressSubmission = wordPressCall(
   async (data, context) => {
     if (!context.auth) {
       throw new HttpsError('permission-denied', 'Csak admin szerkeszthet beküldést.');
@@ -201,7 +201,51 @@ exports.updateWordPressSubmission = onCall(
   },
 );
 
-exports.deleteCommunityUser = onCall(async (data, context) => {
+
+const WORDPRESS_ADMIN_PATHS = new Set([
+  '/wp/v2/huhs_event',
+  '/wp/v2/huhs_artist',
+  '/wp/v2/huhs_organizer',
+  '/wp/v2/huhs_submission',
+  '/huhs/v1/admin',
+]);
+
+exports.wordPressAdminRequest = wordPressCall(
+  async (data, context) => {
+    if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin használhatja a WordPress vezérlőközpontot.');
+    const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+    if (!isAdmin(context, profile)) throw new HttpsError('permission-denied', 'Csak admin használhatja a WordPress vezérlőközpontot.');
+    if (!allowCall(context.auth.uid, 'wp_admin_request')) {
+      securityLog('wp_admin_request_rate_limited', context);
+      throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
+    }
+    const rawPath = String(data?.path || '');
+    const path = rawPath.split('?')[0];
+    const method = String(data?.method || 'GET').toUpperCase();
+    const isAllowedPath = WORDPRESS_ADMIN_PATHS.has(path) || [...WORDPRESS_ADMIN_PATHS].some((base) => path.startsWith(base + '/') && /^\/\d+$/.test(path.slice(base.length)));
+    if (!isAllowedPath || !['GET', 'POST', 'PUT', 'DELETE'].includes(method)) {
+      throw new HttpsError('invalid-argument', 'Nem engedélyezett WordPress admin útvonal vagy művelet.');
+    }
+    const query = rawPath.includes('?') ? `?${rawPath.split('?').slice(1).join('?')}` : '';
+    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+    const options = {
+      method,
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        Accept: 'application/json',
+      },
+    };
+    if (method !== 'GET' && method !== 'DELETE') {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(data?.body && typeof data.body === 'object' ? data.body : {});
+    }
+    const response = await fetch(`https://hungarianhardstyle.hu/wp-json${path}${query}`, options);
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new HttpsError('failed-precondition', body?.message || 'A WordPress admin művelet sikertelen.');
+    return body;
+  },
+);
+exports.deleteCommunityUser = functions.https.onCall(async (data, context) => {
   const email = String(context.auth?.token?.email || '').trim().toLowerCase();
   if (!context.auth) {
     throw new HttpsError('permission-denied', 'Csak admin törölhet felhasználót.');
@@ -228,6 +272,16 @@ exports.deleteCommunityUser = onCall(async (data, context) => {
     }
   }
 
+  let targetUser;
+  try {
+    targetUser = await admin.auth().getUser(uid);
+  } catch (error) {
+    if (error?.code === 'auth/user-not-found') targetUser = null; else throw error;
+  }
+  if (String(targetUser?.email || '').trim().toLowerCase() === ADMIN_EMAIL) {
+    throw new HttpsError('failed-precondition', 'A fő adminisztrátori fiók nem törölhető.');
+  }
+
   try {
     await admin.auth().deleteUser(uid);
   } catch (error) {
@@ -250,3 +304,5 @@ exports.deleteCommunityUser = onCall(async (data, context) => {
 
   return { deleted: true, uid };
 });
+
+

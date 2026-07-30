@@ -162,9 +162,7 @@ class CommunityService {
         }, SetOptions(merge: true));
         _cachedRole = _isAdmin(user.email)
             ? 'organizer'
-            : (existingRole == accessAdmin
-                  ? 'organizer'
-                  : (existingRole ?? role ?? ''));
+            : accountRole(existingRole ?? role);
         _cachedAccessRole = _isAdmin(user.email)
             ? accessAdmin
             : existingAccessRole;
@@ -184,6 +182,8 @@ class CommunityService {
   }
 
   bool _isAdmin(String? email) => email?.trim().toLowerCase() == adminEmail;
+
+  bool get isOwner => _isAdmin(auth.currentUser?.email);
 
   bool get isAdmin =>
       _isAdmin(auth.currentUser?.email) ||
@@ -235,9 +235,7 @@ class CommunityService {
     await firestore.collection('live_feed_posts').add({
       'authorId': user.uid,
       'authorName': displayName,
-      'authorImageUrl': isAnonymous
-          ? ''
-          : (profileData['profileImageUrl'] as String? ?? ''),
+      'authorImageUrl': isAnonymous ? '' : resolveProfileImage(profileData),
       'authorRole': isAnonymous
           ? ''
           : accountRole(profileData['role'] as String?),
@@ -307,22 +305,12 @@ class CommunityService {
   }
 
   Future<void> setPostPinned(String postId, bool pinned) async {
-    if (!isAdmin) throw StateError('Csak admin rögzíthet Chat-üzenetet.');
+    if (!isAdmin) {
+      throw StateError('Csak admin rögzíthet Chat-üzenetet.');
+    }
     await firestore.collection('live_feed_posts').doc(postId).update({
       'pinned': pinned,
     });
-  }
-
-  Stream<DocumentSnapshot<Map<String, dynamic>>> watchStartupAnnouncement() =>
-      firestore.collection('app_settings').doc('startup').snapshots();
-
-  Future<void> setStartupAnnouncement({required String imageUrl, required bool enabled}) async {
-    if (!isAdmin) throw StateError('Csak admin kezelheti a bejelentést.');
-    await firestore.collection('app_settings').doc('startup').set({
-      'imageUrl': imageUrl,
-      'enabled': enabled,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
   }
 
   String maskProfanity(String text) {
@@ -353,7 +341,9 @@ class CommunityService {
     if (!{'dj', 'organizer', 'partygoer'}.contains(role)) {
       throw ArgumentError('Invalid account role.');
     }
-    if (!isAdmin) throw StateError('Csak admin módosíthat szerepkört.');
+    if (!isAdmin) {
+      throw StateError('Csak admin módosíthat szerepkört.');
+    }
     await firestore.collection('community_profiles').doc(userId).set({
       'role': role,
       'updatedAt': FieldValue.serverTimestamp(),
@@ -372,7 +362,9 @@ class CommunityService {
   }
 
   Future<void> deleteUser(String userId) async {
-    if (!isAdmin) throw StateError('Csak admin törölhet felhasználót.');
+    if (!isAdmin) {
+      throw StateError('Csak admin törölhet felhasználót.');
+    }
     await FirebaseFunctions.instance.httpsCallable('deleteCommunityUser').call(
       <String, dynamic>{'uid': userId},
     );
@@ -389,8 +381,24 @@ class CommunityService {
     await signOut();
   }
 
+  Future<dynamic> wordPressAdminRequest({
+    required String path,
+    String method = 'GET',
+    Map<String, dynamic>? body,
+  }) async {
+    if (!isAdmin) {
+      throw StateError('Csak admin használhatja a WordPress vezérlőközpontot.');
+    }
+    final result = await FirebaseFunctions.instance
+        .httpsCallable('wordPressAdminRequest')
+        .call({'path': path, 'method': method, 'body': ?body});
+    return result.data;
+  }
+
   Future<List<Map<String, dynamic>>> wordPressSubmissions() async {
-    if (!isAdmin) throw StateError('Csak admin tekintheti meg a beküldéseket.');
+    if (!isAdmin) {
+      throw StateError('Csak admin tekintheti meg a beküldéseket.');
+    }
     final result = await FirebaseFunctions.instance
         .httpsCallable('listWordPressSubmissions')
         .call();
@@ -405,11 +413,12 @@ class CommunityService {
     required int id,
     required String action,
   }) async {
-    if (!isAdmin) throw StateError('Csak admin kezelheti a beküldéseket.');
-    await FirebaseFunctions.instance.httpsCallable('manageWordPressSubmission').call({
-      'id': id,
-      'action': action,
-    });
+    if (!isAdmin) {
+      throw StateError('Csak admin kezelheti a beküldéseket.');
+    }
+    await FirebaseFunctions.instance
+        .httpsCallable('manageWordPressSubmission')
+        .call({'id': id, 'action': action});
   }
 
   Future<void> updateWordPressSubmission({
@@ -418,14 +427,15 @@ class CommunityService {
     required String content,
   }) async {
     if (!isAdmin) throw StateError('Csak admin szerkeszthet beküldést.');
-    await FirebaseFunctions.instance.httpsCallable('updateWordPressSubmission').call({
-      'id': id,
-      'title': title,
-      'content': content,
-    });
+    await FirebaseFunctions.instance
+        .httpsCallable('updateWordPressSubmission')
+        .call({'id': id, 'title': title, 'content': content});
   }
 
-  Future<String> uploadImage(Uint8List bytes, {String filename = 'upload.jpg'}) async {
+  Future<String> uploadImage(
+    Uint8List bytes, {
+    String filename = 'upload.jpg',
+  }) async {
     if (bytes.isEmpty || bytes.length > maxUploadBytes) {
       throw StateError('A kép legfeljebb 5 MB lehet.');
     }
@@ -443,11 +453,15 @@ class CommunityService {
     return url;
   }
 
-  String imageWithFocus(String url, double focusX, double focusY) {
-    return url.replaceFirst(
-      '/upload/',
-      '/upload/c_fill,g_xy_center,x_${focusX.round()}p,y_${focusY.round()}p,w_800,h_800,q_auto,f_auto/',
-    );
+  String resolveProfileImage(
+    Map<String, dynamic> data, [
+    String fallback = '',
+  ]) {
+    for (final key in const ['profileSourceImageUrl', 'profileImageUrl']) {
+      final value = data[key];
+      if (value is String && value.trim().isNotEmpty) return value.trim();
+    }
+    return fallback.trim();
   }
 
   Future<DocumentSnapshot<Map<String, dynamic>>> profile() async {

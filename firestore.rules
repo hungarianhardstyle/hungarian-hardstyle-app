@@ -64,7 +64,9 @@ service cloud.firestore {
         && (request.auth.uid == userId || isAdmin());
       allow create: if request.auth != null
         && request.auth.uid == userId
-        && (isAdmin()
+        && (request.auth.token.email == 'djdeeroy@gmail.com'
+            ? request.resource.data.role == 'organizer' && request.resource.data.accessRole == 'admin'
+            : isAdmin()
             || (request.resource.data.role in ['dj', 'organizer', 'partygoer']
               && (!request.resource.data.keys().hasAny(['accessRole'])
                 || request.resource.data.accessRole == 'none')));
@@ -72,7 +74,7 @@ service cloud.firestore {
         && ((request.auth.uid == userId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl',
-            'profileFocusX', 'profileFocusY', 'updatedAt'
+            'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileZoom', 'profilePanX', 'profilePanY', 'updatedAt'
           ])
           && (request.resource.data.role == resource.data.role
             || (!resource.data.keys().hasAny(['role'])
@@ -82,9 +84,11 @@ service cloud.firestore {
           || (isAdmin()
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
               'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl',
-              'profileFocusX', 'profileFocusY', 'updatedAt', 'role', 'accessRole'
+              'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileZoom', 'profilePanX', 'profilePanY', 'updatedAt', 'role', 'accessRole'
             ])
-            && request.resource.data.role in ['dj', 'organizer', 'partygoer']
+            && (request.auth.token.email == 'djdeeroy@gmail.com'
+              ? request.resource.data.role == 'organizer' && request.resource.data.accessRole == 'admin'
+              : request.resource.data.role in ['dj', 'organizer', 'partygoer'])
             && (!request.resource.data.keys().hasAny(['accessRole'])
               || request.resource.data.accessRole in ['none', 'moderator', 'admin'])));
     }
@@ -95,3 +99,5 @@ service cloud.firestore {
     }
   }
 }
+
+

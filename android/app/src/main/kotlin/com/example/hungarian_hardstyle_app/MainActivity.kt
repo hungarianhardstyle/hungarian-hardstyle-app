@@ -35,7 +35,11 @@ class MainActivity : FlutterActivity() {
                         result.success(getSharedPreferences("huhs_radio", MODE_PRIVATE).getBoolean("playing", false))
                     }
                     "stop" -> {
-                        stopService(Intent(this, RadioPlaybackService::class.java))
+                        getSharedPreferences("huhs_radio", MODE_PRIVATE).edit()
+                            .putBoolean("playing", false).apply()
+                        val stopIntent = Intent(this, RadioPlaybackService::class.java)
+                            .setAction(RadioPlaybackService.ACTION_STOP)
+                        startService(stopIntent)
                         result.success(null)
                     }
                     "volume" -> {
@@ -88,3 +92,11 @@ class MainActivity : FlutterActivity() {
     }
 
 }
+
+
+
+
+
+
+
+
