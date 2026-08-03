@@ -392,7 +392,7 @@ Implemented in Flutter `0.99.4+1`:
 
 - [x] compact the Home event cards while keeping every card the same height and preserving title, date/time, city, genres, favorite, and open actions
 
-The event-tag fast-scroll regression is fixed. WordPress Mobile API `2.4.33` is the prepared package for the FAQ endpoint; `2.4.31` remains the deployed, live-verified production package until the owner uploads the prepared update. Production AdMob identifiers and consent/privacy handling remain release work.
+The event-tag fast-scroll regression is fixed. WordPress Mobile API `2.4.33` is the prepared package for the FAQ endpoint; `2.4.31` remains the deployed, live-verified production package until the owner uploads the prepared update. The ARM64 test APK is `build/HUHS-v0.99.4+1-arm64-debug.apk`. Production AdMob identifiers and consent/privacy handling remain release work.
 
 ### v0.4 - Foundation
 

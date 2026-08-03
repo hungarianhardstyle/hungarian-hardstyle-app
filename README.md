@@ -8,7 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 — complete and closed (2026-07-30)
 
-- Current Flutter build: `0.99.4+1`; v0.99.3 remains closed and the v0.99.4 changes are ready for the final ARM64 test build.
+- Current Flutter build: `0.99.4+1`; v0.99.3 remains closed and the v0.99.4 ARM64 test APK is available at `build/HUHS-v0.99.4+1-arm64-debug.apk`.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
