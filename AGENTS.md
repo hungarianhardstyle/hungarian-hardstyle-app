@@ -382,7 +382,7 @@ Implemented in Flutter `0.99.4+1`:
   - keep the HUHS Vezérlőközpont in the Admin profile; do not duplicate it in `Több`
 - [x] add the PayPal `Támogatás / Donate` card
 - [x] add a pre-addressed feedback e-mail action with the runtime app version
-- [x] add the WordPress-managed FAQ under More with categories, ordering, search, expandable answers, and loading/empty/error states (prepared API package 2.4.33)
+- [x] add the WordPress-managed FAQ under More with categories, ordering, search, expandable answers, and loading/empty/error states; the initial 10 Hungarian FAQ entries are populated in production (API package 2.4.33)
 - [x] add simple bulk management and deletion for local favorites
 - [x] replace full social-media URLs on community profiles with compact, clickable Facebook, Instagram, TikTok, YouTube, and Spotify buttons
 - [x] move the existing Home AdMob banner below both the latest-news and upcoming-events sections

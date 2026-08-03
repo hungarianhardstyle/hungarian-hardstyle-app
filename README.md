@@ -113,7 +113,7 @@ Implemented in Flutter `0.99.4+1`:
 - [x] update the in-app GDPR text for the current Firebase, Cloudinary, WordPress, Mailchimp, and test-AdMob functions
 - [x] add a second separated adaptive test AdMob placement after the first five news cards
 
-Production AdMob identifiers and consent/privacy handling remain release work. The WordPress API `2.4.33` FAQ endpoint is available in production.
+Production AdMob identifiers and consent/privacy handling remain release work. The WordPress API `2.4.33` FAQ endpoint is available in production and is populated with the initial 10 Hungarian FAQ entries.
 
 #### FAQ-választervezet
 
