@@ -130,7 +130,53 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _message('A push elküldve.');
     } catch (error) {
-      _message('A push nem sikerült: $error');
+      _message('A push nem sikerült: ${_errorText(error)}');
+    }
+  }
+
+  Future<void> _sendPersonalizedPush() async {
+    var kind = 'event';
+    var id = '';
+    var title = '';
+    var body = '';
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('SzemĂ©lyre szabott push'),
+        content: StatefulBuilder(
+          builder: (context, setDialogState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: kind,
+                items: const [
+                  DropdownMenuItem(value: 'event', child: Text('EsemĂ©ny')),
+                  DropdownMenuItem(value: 'organizer', child: Text('SzervezĹ‘')),
+                ],
+                onChanged: (value) => setDialogState(() => kind = value ?? kind),
+                decoration: const InputDecoration(labelText: 'CĂ©ltĂ­pus'),
+              ),
+              TextField(onChanged: (value) => id = value, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ID')),
+              TextField(onChanged: (value) => title = value, decoration: const InputDecoration(labelText: 'CĂ­m')),
+              TextField(onChanged: (value) => body = value, decoration: const InputDecoration(labelText: 'Ăśzenet')),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('MĂ©gse')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('KĂĽldĂ©s')),
+        ],
+      ),
+    );
+    final parsedId = int.tryParse(id.trim());
+    if (result != true || parsedId == null || title.trim().isEmpty || body.trim().isEmpty) return;
+    try {
+      final sent = await ref.read(communityServiceProvider).sendPersonalizedPush(
+        kind: kind, id: parsedId, title: title.trim(), body: body.trim(),
+      );
+      _message('CĂ©lzottsĂ©gi push elkĂĽldve ($sent eszkĂ¶z).');
+    } catch (error) {
+      _message('A cĂ©lzottsĂ©gi push nem sikerĂĽlt: ${_errorText(error)}');
     }
   }
 
@@ -142,7 +188,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           .manageWordPressSubmission(id: id, action: action);
       _reload();
     } catch (error) {
-      _message('A művelet nem sikerült: $error');
+      _message('A művelet nem sikerült: ${_errorText(error)}');
     } finally {
       if (mounted) setState(() => _busyIds.remove(id));
     }
@@ -167,7 +213,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A mentés nem sikerült: $error');
+      _message('A mentés nem sikerült: ${_errorText(error)}');
     } finally {
       if (mounted) setState(() => _busyIds.remove(id));
     }
@@ -223,7 +269,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A mentés nem sikerült: $error');
+      _message('A mentés nem sikerült: ${_errorText(error)}');
     } finally {
       if (mounted) setState(() => _busyIds.remove(id));
     }
@@ -346,7 +392,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         controller.dispose();
       }
     } catch (error) {
-      _message('A szerkesztés nem sikerült: $error');
+      _message('A szerkesztés nem sikerült: ${_errorText(error)}');
     }
   }
 
@@ -378,7 +424,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       _message('Az elem létrehozva.');
       _reload();
     } catch (error) {
-      _message('A létrehozás nem sikerült: $error');
+      _message('A létrehozás nem sikerült: ${_errorText(error)}');
     }
   }
 
@@ -463,7 +509,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A felhasználó mentése nem sikerült: $error');
+      _message('A felhasználó mentése nem sikerült: ${_errorText(error)}');
     }
   }
 
@@ -485,7 +531,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A felhasználó törlése nem sikerült: $error');
+      _message('A felhasználó törlése nem sikerült: ${_errorText(error)}');
     }
   }
 
@@ -508,7 +554,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A törlés nem sikerült: $error');
+      _message('A törlés nem sikerült: ${_errorText(error)}');
     }
   }
 
@@ -530,7 +576,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       _message('A lomtár kiürítve.');
       _reload();
     } catch (error) {
-      _message('A lomtár ürítése nem sikerült: $error');
+      _message('A lomtár ürítése nem sikerült: ${_errorText(error)}');
     }
   }
 
@@ -547,7 +593,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A visszaállítás nem sikerült: $error');
+      _message('A visszaállítás nem sikerült: ${_errorText(error)}');
     }
   }
 
@@ -751,6 +797,12 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
             onPressed: _sendPush,
             icon: const Icon(Icons.send),
             label: const Text('Egyedi push létrehozása'),
+          ),
+        if (_section == 'push')
+          OutlinedButton.icon(
+            onPressed: _sendPersonalizedPush,
+            icon: const Icon(Icons.person_pin_circle_outlined),
+            label: const Text('SzemĂ©lyre szabott push'),
           ),
         if (_section == 'startup')
           FilledButton.icon(

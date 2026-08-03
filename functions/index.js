@@ -305,4 +305,90 @@ exports.deleteCommunityUser = functions.https.onCall(async (data, context) => {
   return { deleted: true, uid };
 });
 
+exports.claimArtistProfile = functions.https.onCall(async (data, context) => {
+  if (!context.auth || context.auth.token.email_verified !== true) {
+    throw new HttpsError('permission-denied', 'Hitelesített e-mailes fiók szükséges.');
+  }
+  const artistId = Number(data?.artistId);
+  const email = String(context.auth.token.email || '').trim().toLowerCase();
+  const isAdminClaim = email === ADMIN_EMAIL;
+  if (!Number.isInteger(artistId) || artistId <= 0 || !email || email === 'info@hungarianhardstyle.hu') {
+    throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap és e-mail szükséges.');
+  }
+  if (!allowCall(context.auth.uid, 'artist_claim', 5)) {
+    throw new HttpsError('resource-exhausted', 'Túl sok claim-kérés, próbáld később.');
+  }
+  const claimRef = db.collection('artist_claims').doc(String(artistId));
+  const existing = await claimRef.get();
+  if (existing.exists && existing.data()?.uid !== context.auth.uid) {
+    throw new HttpsError('already-exists', 'Ezt a DJ-adatlapot már claimelte egy másik fiók.');
+  }
+  const response = await fetch(`${WORDPRESS_BASE_URL}/artists/${artistId}`);
+  const artist = await response.json().catch(() => ({}));
+  if (!response.ok || (!isAdminClaim && String(artist?.booking_email || '').trim().toLowerCase() !== email)) {
+    throw new HttpsError('permission-denied', 'A bejelentkezési e-mail nem egyezik a booking e-maillel.');
+  }
+  await claimRef.set({
+    artistId,
+    uid: context.auth.uid,
+    email,
+    status: 'claimed',
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+  return { claimed: true, artistId };
+});
 
+exports.getArtistClaimStatus = functions.https.onCall(async (data) => {
+  const artistId = Number(data?.artistId);
+  if (!Number.isInteger(artistId) || artistId <= 0) {
+    throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap szükséges.');
+  }
+  const claim = await db.collection('artist_claims').doc(String(artistId)).get();
+  return { claimed: claim.exists };
+});
+
+exports.getMyClaimedArtists = functions.https.onCall(async (data, context) => {
+  if (!context.auth || context.auth.token.email_verified !== true) {
+    throw new HttpsError('permission-denied', 'Bejelentkezés szükséges.');
+  }
+  const snapshot = await db
+    .collection('artist_claims')
+    .where('uid', '==', context.auth.uid)
+    .get();
+  return {
+    artistIds: snapshot.docs
+      .map((doc) => Number(doc.data()?.artistId))
+      .filter((id) => Number.isInteger(id) && id > 0),
+  };
+});
+
+exports.sendPersonalizedPush = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new HttpsError('permission-denied', 'Bejelentkezés szükséges.');
+  const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+  if (!isAdmin(context, profile)) throw new HttpsError('permission-denied', 'Csak admin küldhet célzott értesítést.');
+  const kind = String(data?.kind || '');
+  const id = Number(data?.id);
+  const title = String(data?.title || '').trim();
+  const body = String(data?.body || '').trim();
+  if (!['event', 'organizer'].includes(kind) || !Number.isInteger(id) || !title || !body) {
+    throw new HttpsError('invalid-argument', 'Érvényes esemény/szervező és üzenet szükséges.');
+  }
+  const favorites = await db.collectionGroup('favorites').where('kind', '==', kind).get();
+  const tokens = [];
+  for (const favorite of favorites.docs) {
+    if (Number(favorite.data().id) !== id) continue;
+    const userId = favorite.ref.parent.parent?.id;
+    if (!userId) continue;
+    const profile = (await db.collection('community_profiles').doc(userId).get()).data() || {};
+    const userTokens = profile.fcmTokens;
+    if (Array.isArray(userTokens)) tokens.push(...userTokens.filter((token) => typeof token === 'string'));
+  }
+  const uniqueTokens = [...new Set(tokens)].slice(0, 500);
+  if (!uniqueTokens.length) return { sent: 0 };
+  const result = await admin.messaging().sendEachForMulticast({
+    tokens: uniqueTokens,
+    notification: { title, body },
+    data: { type: kind, id: String(id) },
+  });
+  return { sent: result.successCount, failed: result.failureCount };
+});

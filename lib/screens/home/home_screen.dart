@@ -47,23 +47,53 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              Center(
-                child: Transform.scale(
-                  scale: 1.18,
-                  child: Image.asset(
-                    'assets/logos/huhs_logo.png',
-                    width: width * 0.95,
-                    fit: BoxFit.contain,
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF16090B), Color(0xFF2A080D)],
                   ),
+                  border: Border.all(color: Colors.white12),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x331F0005),
+                      blurRadius: 22,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'A magyar hardstyle otthona',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white70,
-                  letterSpacing: 1.1,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/logos/huhs_logo.png',
+                      width: width * 0.74,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: 42,
+                      height: 2,
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 9),
+                    Text(
+                      'A magyar hardstyle otthona',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white70,
+                        letterSpacing: 1.4,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 18),
@@ -177,7 +207,7 @@ class HomeScreen extends ConsumerWidget {
                   }
 
                   return SizedBox(
-                    height: 360,
+                    height: 380,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: upcomingEvents.length,
@@ -187,7 +217,7 @@ class HomeScreen extends ConsumerWidget {
                         return EventCard(
                           event: upcomingEvents[index],
                           width: 250,
-                          height: 360,
+                          height: 380,
                         );
                       },
                     ),

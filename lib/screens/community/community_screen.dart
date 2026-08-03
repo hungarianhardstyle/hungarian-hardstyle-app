@@ -16,6 +16,7 @@ import '../../providers/community_provider.dart';
 import '../../services/community_service.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../more/favorites_screen.dart';
+import '../artists/artist_detail_screen.dart';
 import 'wordpress_admin_screen.dart';
 
 String _chatError(Object error) {
@@ -310,6 +311,34 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                     prefixIcon: Icon(Icons.search),
                   ),
                 ),
+              ),
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: service.watchReports(),
+                builder: (context, reportSnapshot) {
+                  if (reportSnapshot.hasError || !reportSnapshot.hasData) {
+                    return const SizedBox.shrink();
+                  }
+                  final reports = reportSnapshot.data!.docs;
+                  if (reports.isEmpty) return const SizedBox.shrink();
+                  return Card(
+                    child: ExpansionTile(
+                      leading: const Icon(Icons.flag_outlined),
+                      title: Text('JelentĂ©sek (${reports.length})'),
+                      children: [
+                        for (final report in reports)
+                          ListTile(
+                            dense: true,
+                            title: Text(
+                              'BejegyzĂ©s: ${report.data()['postId'] ?? '-'}',
+                            ),
+                            subtitle: Text(
+                              'Ok: ${report.data()['reason'] ?? 'egyĂ©b'}',
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
               ),
               ListView.builder(
                 shrinkWrap: true,
@@ -836,6 +865,33 @@ class _PostCardState extends ConsumerState<_PostCard> {
     }
   }
 
+  Future<void> _moderateUser(String action) async {
+    final service = ref.read(communityServiceProvider);
+    try {
+      if (action == 'report') {
+        await service.reportPost(widget.post.id);
+      } else {
+        await service.blockUser(widget.post.authorId);
+        ref.invalidate(communityPostsProvider);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            action == 'report'
+                ? 'Jelentés elküldve.'
+                : 'Felhasználó blokkolva.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_chatError(error))));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
@@ -913,6 +969,15 @@ class _PostCardState extends ConsumerState<_PostCard> {
                       size: 19,
                     ),
                     onPressed: _togglePinned,
+                  ),
+                if (widget.post.authorId !=
+                    ref.read(communityServiceProvider).auth.currentUser?.uid)
+                  PopupMenuButton<String>(
+                    onSelected: _moderateUser,
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'report', child: Text('Jelentés')),
+                      PopupMenuItem(value: 'block', child: Text('Blokkolás')),
+                    ],
                   ),
               ],
             ),
@@ -1002,6 +1067,7 @@ class _CommunityProfileScreenState
   double _panX = 0;
   double _panY = 0;
   double _gestureStartZoom = 1;
+  List<int> _claimedArtistIds = const [];
   String? _loadedUid;
   StreamSubscription<User?>? _authSubscription;
 
@@ -1074,6 +1140,9 @@ class _CommunityProfileScreenState
     try {
       final snapshot = await _service.profile();
       final data = snapshot.data() ?? const <String, dynamic>{};
+      final claimedArtistIds = await _service.myClaimedArtists().catchError(
+        (_) => const <int>[],
+      );
       if (!mounted) return;
       setState(() {
         _name.text = data['displayName'] as String? ?? user.displayName ?? '';
@@ -1092,6 +1161,7 @@ class _CommunityProfileScreenState
             ? 'organizer'
             : _service.accountRole(data['role'] as String?);
         _loadedUid = user.uid;
+        _claimedArtistIds = claimedArtistIds;
       });
     } catch (_) {}
   }
@@ -1294,6 +1364,18 @@ class _CommunityProfileScreenState
           ],
         ),
       const SizedBox(height: 12),
+      if (_claimedArtistIds.isNotEmpty)
+        FilledButton.icon(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  ArtistDetailScreen(artistId: _claimedArtistIds.first),
+            ),
+          ),
+          icon: const Icon(Icons.library_music_outlined),
+          label: const Text('Saját DJ-adatlap megnyitása'),
+        ),
+      if (_claimedArtistIds.isNotEmpty) const SizedBox(height: 8),
       FilledButton.icon(
         onPressed: () async {
           await Navigator.of(context).push(

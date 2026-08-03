@@ -8,7 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 — complete and closed (2026-07-30)
 
-- Current Flutter build: `0.99.4+1`; v0.99.3 remains closed and the v0.99.4 ARM64 test APK is available at `build/HUHS-v0.99.4+1-arm64-debug.apk`.
+- Current Flutter build: `0.99.7+3`; v0.99.3 through v0.99.7 remain closed.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
@@ -91,7 +91,7 @@ v0.99.3 is complete, phone-verified, and closed in Flutter build `0.99.3+27`. Re
 
 ### v0.99.4 — Small improvements (implemented)
 
-Implemented in Flutter `0.99.4+1`:
+Implemented in Flutter `0.99.4+3`:
 
 - organize the existing `Több` entries without changing the menu name:
   - `Felfedezés`: DJ-k, Szervezők, Spotify Playlistek
@@ -103,7 +103,7 @@ Implemented in Flutter `0.99.4+1`:
 - [x] add the `Támogatás / Donate` card with PayPal app/browser fallback
 - [x] add a pre-addressed feedback e-mail action that includes the app version
 - [x] add the WordPress-managed FAQ under More with categories, ordering, search, expandable answers, and loading/empty/error states (prepared API package 2.4.33)
-- [x] add simple bulk management and deletion for locally saved favorites
+- [x] persist favorites in the signed-in user's Firestore profile (with local cache and bulk deletion)
 - [x] replace full social-media URLs on community profiles with compact, clickable Facebook, Instagram, TikTok, YouTube, and Spotify buttons
 - [x] move the existing Home AdMob banner below both the latest-news and upcoming-events sections
 - [x] add one clearly separated inline adaptive test AdMob banner to the native news list
@@ -114,6 +114,50 @@ Implemented in Flutter `0.99.4+1`:
 - [x] add a second separated adaptive test AdMob placement after the first five news cards
 
 Production AdMob identifiers and consent/privacy handling remain release work. The WordPress API `2.4.33` FAQ endpoint is available in production and is populated with the initial 10 Hungarian FAQ entries.
+
+### v0.99.5 — complete
+
+Implemented in Flutter `0.99.5+1`:
+
+- [x] password reset, visibility toggle, clear Hungarian authentication errors, and strong-password suggestion
+- [x] clickable social buttons plus avatar refresh, crop, zoom, and positioning persistence
+- [x] Chat profanity masking and automatic message/avatar refresh
+- [x] native admin panel scope and readable content with concise save/cancel errors
+- [x] final loading/card/control polish and test-AdMob placement
+
+Phone-verified by the project owner; all listed v0.99.5 items are marked complete. ARM64 test APK: `build/HUHS-v0.99.5+1-arm64-debug.apk`.
+
+### v0.99.6 — complete
+
+- [x] allow gallery images to be saved to the device, including the pre-Android 10 permission fallback
+- [x] make widget tests Firebase-safe and restore a green test run
+- [x] update Gradle, Android Gradle Plugin and Kotlin compatibility
+- [x] finalize the full HUHS-logo startup animation
+- [x] polish profile and Chat avatar refresh/cache behavior
+- [x] complete a Hungarian text and character-encoding audit
+- [x] resolve remaining accessibility and layout-overflow issues
+- [x] complete AdMob test-placement and display verification
+- [x] produce and verify the final ARM64 debug test APK for this build
+
+Analyzer and the complete Flutter test suite pass. The final ARM64-only debug artifact is `build/HUHS-v0.99.6+1-arm64-debug.apk` (package `0.99.6`, ARM64 ABI). Graphify was refreshed after the final source and documentation changes.
+
+Security hardening, friends/attendance, the release catalog and the music store remain scheduled for v1.0/v1.5.
+
+### v0.99.7 — Community follow-up (complete)
+
+- [x] allow verified-email users to claim a DJ profile after matching the private or artist-owned booking e-mail; the Hungarian Hardstyle-managed booking address never qualifies as proof
+- [x] add registered-user search/listing under `Több`; the list filters from the first typed character
+- [x] add admin-triggered personalized event and organizer notifications for favorited records
+- [x] add community moderation follow-up with reporting, blocking, blocked-post filtering, and admin report visibility
+
+Firebase rules and the `claimArtistProfile`/`sendPersonalizedPush` Cloud Functions are deployed. Flutter analyzer, tests, and Cloud Function syntax checks pass.
+The final ARM64 debug test APK is `build/HUHS-v0.99.7+3-arm64-debug.apk`.
+
+### v0.99.7+3 — Claim display follow-up (complete)
+
+- [x] After a DJ profile is claimed, show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
+
+Security hardening, friends/attendance, the release catalog and the music store remain scheduled for v1.0/v1.5.
 
 #### FAQ-választervezet
 
@@ -337,18 +381,18 @@ Authentication and community:
 - [x] bootstrap a separate app-admin account and role with full submission approval and editing permissions
 - [x] top-left Home avatar profile entry with profile image or monogram fallback
 - [ ] user profiles with social links, planned events, and favorites
-- [ ] add a `Több`-menu user directory/search listing registered users only
-- [ ] allow a registered user to claim a DJ profile only after verifying the private or artist-owned booking e-mail stored on that profile; the Hungarian Hardstyle-managed booking address must never qualify as proof of ownership
+- moved to v0.99.7: add a `Több`-menu user directory/search listing registered users only
+- moved to v0.99.7: allow DJ profile claiming after verified private/artist-owned booking e-mail; the Hungarian Hardstyle-managed booking address must never qualify as proof of ownership
 - [ ] friend requests and an `Ismerősök` profile section
 - [ ] full Live Feed chat/image-post moderation and community features (v1.0; the v0.99.1 MVP is tracked above)
 - [ ] event attendance: `Ott leszek` / `Nem leszek ott`
 - [ ] show which friends are attending on event details
 - [ ] friend attendance visibility
-- [ ] send event pushes only to users who favorited the event or selected `Ott leszek`
+- moved to v0.99.7: personalized event pushes for favorites/attendance
 - [ ] send publication and reminder pushes for featured events to every app-installed device with an FCM token, regardless of account registration (respect explicit notification opt-out)
-- [ ] send notifications for every new event from organizers a user has favorited
+- moved to v0.99.7: favorited-organizer event notifications
 - [ ] optionally send a separate admin/editor push when a new event submission is received
-- [ ] moderation, reporting, blocking, privacy and account deletion
+- moved to v0.99.7: moderation/reporting/blocking follow-up; privacy and account deletion remain v1.0 work
 
 App administration:
 

@@ -2,9 +2,12 @@ package com.example.hungarian_hardstyle_app
 
 import android.content.ContentValues
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import java.io.File
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -56,14 +59,44 @@ class MainActivity : FlutterActivity() {
             }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/media")
             .setMethodCallHandler { call, result ->
-                if (call.method != "saveImage" || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                    result.error("unsupported", "A képmentés ezen az Android-verzión nem támogatott.", null)
+                if (call.method != "saveImage") {
+                    result.notImplemented()
                     return@setMethodCallHandler
                 }
                 val bytes = call.argument<ByteArray>("bytes")
                 val name = call.argument<String>("name") ?: "huhs-image.jpg"
                 if (bytes == null || bytes.isEmpty()) {
                     result.error("missing_bytes", "A kép adatai hiányoznak.", null)
+                    return@setMethodCallHandler
+                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                    if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                        PackageManager.PERMISSION_GRANTED
+                    ) {
+                        requestPermissions(
+                            arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                            401,
+                        )
+                        result.error("permission_required", "A képmentéshez tárhelyengedély szükséges.", null)
+                        return@setMethodCallHandler
+                    }
+                    try {
+                        val directory = File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                            "Hungarian Hardstyle",
+                        ).apply { mkdirs() }
+                        val file = File(directory, name)
+                        file.outputStream().use { it.write(bytes) }
+                        MediaScannerConnection.scanFile(
+                            this,
+                            arrayOf(file.absolutePath),
+                            arrayOf("image/jpeg"),
+                            null,
+                        )
+                        result.success(null)
+                    } catch (error: Exception) {
+                        result.error("write_failed", error.message, null)
+                    }
                     return@setMethodCallHandler
                 }
                 val values = ContentValues().apply {

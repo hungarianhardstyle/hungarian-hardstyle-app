@@ -47,8 +47,19 @@ class CommunityService {
         .orderBy('createdAt', descending: true)
         .limit(60)
         .snapshots()
-        .map((snapshot) {
+        .asyncMap((snapshot) async {
+          final user = auth.currentUser;
+          final blocked = <String>{};
+          if (user != null && !user.isAnonymous) {
+            final blockedSnapshot = await firestore
+                .collection('community_profiles')
+                .doc(user.uid)
+                .collection('blocked_users')
+                .get();
+            blocked.addAll(blockedSnapshot.docs.map((doc) => doc.id));
+          }
           final posts = snapshot.docs.map(CommunityPost.fromDocument).toList();
+          posts.removeWhere((post) => blocked.contains(post.authorId));
           posts.sort((a, b) {
             final pinOrder = (b.pinned ? 1 : 0).compareTo(a.pinned ? 1 : 0);
             return pinOrder == 0
@@ -304,6 +315,72 @@ class CommunityService {
     await firestore.collection('live_feed_posts').doc(postId).delete();
   }
 
+  Future<void> reportPost(String postId, {String reason = 'other'}) async {
+    final user = await ensureAnonymousUser();
+    if (user.isAnonymous) {
+      throw StateError('Jelentéshez regisztráció szükséges.');
+    }
+    await firestore.collection('chat_reports').add({
+      'postId': postId,
+      'reporterId': user.uid,
+      'reason': reason,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> blockUser(String userId) async {
+    final user = await ensureAnonymousUser();
+    if (user.isAnonymous || userId.isEmpty || userId == user.uid) {
+      throw StateError('A blokkoláshoz regisztráció szükséges.');
+    }
+    await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('blocked_users')
+        .doc(userId)
+        .set({'createdAt': FieldValue.serverTimestamp()});
+  }
+
+  Future<void> claimArtist(int artistId) async {
+    if (auth.currentUser?.emailVerified != true) {
+      throw StateError('Hitelesített e-mailes fiók szükséges.');
+    }
+    await FirebaseFunctions.instance.httpsCallable('claimArtistProfile').call({
+      'artistId': artistId,
+    });
+  }
+
+  Future<bool> isArtistClaimed(int artistId) async {
+    final result = await FirebaseFunctions.instance
+        .httpsCallable('getArtistClaimStatus')
+        .call({'artistId': artistId});
+    return (result.data as Map?)?['claimed'] == true;
+  }
+
+  Future<List<int>> myClaimedArtists() async {
+    final result = await FirebaseFunctions.instance
+        .httpsCallable('getMyClaimedArtists')
+        .call();
+    final ids = (result.data as Map?)?['artistIds'];
+    if (ids is! List) return const [];
+    return ids.whereType<num>().map((id) => id.toInt()).toList();
+  }
+
+  Future<int> sendPersonalizedPush({
+    required String kind,
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    if (!isAdmin) {
+      throw StateError('Csak admin kĂĽldhet cĂ©lzott Ă©rtesĂ­tĂ©st.');
+    }
+    final result = await FirebaseFunctions.instance
+        .httpsCallable('sendPersonalizedPush')
+        .call({'kind': kind, 'id': id, 'title': title, 'body': body});
+    return (result.data as Map?)?['sent'] as int? ?? 0;
+  }
+
   Future<void> setPostPinned(String postId, bool pinned) async {
     if (!isAdmin) {
       throw StateError('Csak admin rögzíthet Chat-üzenetet.');
@@ -331,6 +408,21 @@ class CommunityService {
         .collection('community_profiles')
         .orderBy('displayName')
         .snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchReports() {
+    if (!isAdmin) return const Stream.empty();
+    return firestore
+        .collection('chat_reports')
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchRegisteredProfiles() {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return const Stream.empty();
+    return firestore.collection('community_profiles').limit(200).snapshots();
   }
 
   Future<void> setUserRole(String userId, String role) async {

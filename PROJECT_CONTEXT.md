@@ -666,7 +666,7 @@ Planned next package: v0.99.2. Its first release check is the AdMob test banner,
 
 The v0.99.3 scope also includes making the About screen contact e-mail open the device mail app and keeping the Real Hardstyle FM stream playing when the user switches between apps.
 
-v0.99.4 is implemented in Flutter `0.99.4+1`: the `Több` menu is categorized as `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; Donate, versioned feedback e-mail, FAQ search/category/expandable answers, bulk favorites deletion, compact social buttons, Home/news test AdMob banners, Instagram URL normalization, and equal-height compact Home event cards are implemented. The WordPress Mobile API `2.4.33` is uploaded, deployed, live-verified, and active with the public FAQ endpoint and managed FAQ post type. Production AdMob identifiers and consent/privacy handling remain release work.
+v0.99.4 is implemented and closed in Flutter `0.99.4+3`: the `Több` menu is categorized as `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; Donate, versioned feedback e-mail, FAQ search/category/expandable answers, account-backed favorites with bulk deletion, compact social buttons, Home/news test AdMob banners, Instagram URL normalization, and equal-height compact Home event cards are implemented. The WordPress Mobile API `2.4.33` is uploaded, deployed, live-verified, and active with the public FAQ endpoint and managed FAQ post type. Production AdMob identifiers and consent/privacy handling remain release work.
 
 v0.99.2 bugfixes to investigate: e-mail/password sign-in fails despite valid credentials; saved profile images do not render on the profile/avatar; admin user deletion returns a Firebase Functions `INTERNAL` error; and the owner account intermittently falls back from `Szervező` to `Bulizó` while admin access must remain intact. Account roles are final after registration; only admins may change another user's role, enforced server-side. Profiles and Chat must render the persisted account role, with separate `Admin` or `Moderátor` access badges.
 
@@ -922,6 +922,41 @@ Events.
 
 News.
 
-v0.99.4 follow-up status: the Beküldés section explains registration/role requirements when no action is available; Home event cards use the smaller uniform layout; the GDPR screen reflects current Firebase, Cloudinary, WordPress, Mailchimp, and test-AdMob data flows; and the native news list has a second separated adaptive test-AdMob placement after the first five cards.
+v0.99.4 follow-up status: the Beküldés section explains registration/role requirements when no action is available; Home event cards use the smaller uniform layout; the GDPR screen reflects current Firebase, Cloudinary, WordPress, Mailchimp, and test-AdMob data flows; the native news list has a second separated adaptive test-AdMob placement after the first five cards; and signed-in favorites persist in Firestore with a local cache and bulk deletion.
+
+v0.99.5 is complete in Flutter `0.99.5+1`:
+
+- password reset, visibility toggle, clear Hungarian authentication errors, and strong-password suggestion
+- clickable social buttons plus avatar refresh, crop, zoom, and positioning persistence
+- Chat profanity masking and automatic message/avatar refresh
+- native admin panel scope and readable content with concise save/cancel errors
+- final loading/card/control polish and test-AdMob placement
+
+The final ARM64 debug APK artifact is `build/HUHS-v0.99.5+1-arm64-debug.apk`; it is phone-verified by the project owner and v0.99.5 is closed.
+
+v0.99.6 is complete in Flutter `0.99.6+1`:
+
+- gallery images can be saved to the device, including a pre-Android 10 permission fallback
+- widget tests are Firebase-safe and the full test suite passes
+- Gradle 8.14, AGP 8.11.1 and Kotlin 2.2.20 are verified
+- the full HUHS-logo startup animation is active
+- profile and Chat avatar refresh/cache behavior is covered by the current implementation
+- Hungarian text and character encoding were audited
+- accessibility/layout overflow coverage is green
+- AdMob test placement and display are verified
+- the final ARM64-only debug test APK is built and verified as `build/HUHS-v0.99.6+1-arm64-debug.apk` (package `0.99.6`, ARM64 ABI)
 
 Everything connected.
+
+### v0.99.7 - Community follow-up (complete)
+
+- Verified-email DJ profile claiming matches the authenticated e-mail to the public artist booking e-mail; the Hungarian Hardstyle-managed booking route is excluded.
+- Registered-user search/listing is available under `Több` and starts filtering from the first typed character.
+- Admin-triggered personalized event and organizer pushes target users who favorited the matching record.
+- Chat moderation includes report submission, user blocking, filtering blocked authors from the feed, and admin report visibility.
+- Firestore rules and the `claimArtistProfile`/`sendPersonalizedPush` Cloud Functions are deployed. Analyzer, Flutter tests, and Cloud Function syntax checks pass.
+- Final ARM64 debug test APK: `build/HUHS-v0.99.7+3-arm64-debug.apk`.
+
+### v0.99.7+3 follow-up (complete)
+
+- After a DJ profile is claimed, show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.

@@ -18,6 +18,7 @@ import 'radio_provider_screen.dart';
 import 'privacy_screen.dart';
 import 'donate_screen.dart';
 import 'faq_screen.dart';
+import 'community_users_screen.dart';
 
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
@@ -77,6 +78,15 @@ class MoreScreen extends ConsumerWidget {
               subtitle: 'Iratkozz fel a Hungarian Hardstyle híreire',
               onTap: () => _open(context, const NewsletterScreen()),
             ),
+            if (registered) ...[
+              const SizedBox(height: 12),
+              _MenuCard(
+                icon: Icons.people_outline,
+                title: 'Felhasználók',
+                subtitle: 'Regisztrált felhasználók keresése és listája',
+                onTap: () => _open(context, const CommunityUsersScreen()),
+              ),
+            ],
             const SizedBox(height: 28),
             const _SectionTitle('Beküldés'),
             const SizedBox(height: 12),

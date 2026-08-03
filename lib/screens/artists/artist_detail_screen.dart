@@ -10,6 +10,7 @@ import '../../models/artist.dart';
 import '../../widgets/genre_chip.dart';
 import '../../providers/artists_provider.dart';
 import '../../widgets/event_card.dart';
+import '../../providers/community_provider.dart';
 
 class ArtistDetailScreen extends ConsumerWidget {
   final int artistId;
@@ -74,7 +75,7 @@ class ArtistDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ArtistContent extends StatelessWidget {
+class _ArtistContent extends ConsumerWidget {
   final Artist artist;
 
   const _ArtistContent({required this.artist});
@@ -108,8 +109,9 @@ class _ArtistContent extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final biography = _biographyHtml();
+    final claimed = ref.watch(artistClaimStatusProvider(artist.id));
     final bookingEmail = artist.effectiveBookingEmail;
     final imageUrl = artist.profileImageUrl.isNotEmpty
         ? artist.profileImageUrl
@@ -233,7 +235,7 @@ class _ArtistContent extends StatelessWidget {
                               label: Text(_socialLabel(entry.key)),
                             ),
                           ),
-                          if (artist.webUrl.isNotEmpty)
+                          if (artist.webUrl.isNotEmpty && claimed.value != true)
                             OutlinedButton.icon(
                               onPressed: () =>
                                   openInAppBrowser(context, artist.webUrl),
@@ -241,6 +243,47 @@ class _ArtistContent extends StatelessWidget {
                               label: const Text('Webes adatlap'),
                             ),
                         ],
+                      ),
+                    ),
+                  if (claimed.value != true &&
+                      ref
+                              .read(communityServiceProvider)
+                              .auth
+                              .currentUser
+                              ?.emailVerified ==
+                          true)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          try {
+                            await ref
+                                .read(communityServiceProvider)
+                                .claimArtist(artist.id);
+                            ref.invalidate(
+                              artistClaimStatusProvider(artist.id),
+                            );
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'A DJ-adatlap claimelése sikeres.',
+                                ),
+                              ),
+                            );
+                          } catch (error) {
+                            if (!context.mounted) return;
+                            final raw = error.toString();
+                            final message = raw.contains('permission-denied')
+                                ? 'A bejelentkezési e-mail nem egyezik a booking e-maillel.'
+                                : raw.replaceFirst('Exception: ', '');
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text(message)));
+                          }
+                        },
+                        icon: const Icon(Icons.verified_user_outlined),
+                        label: const Text('DJ-adatlap claimelése'),
                       ),
                     ),
                   if (bookingEmail.isNotEmpty)

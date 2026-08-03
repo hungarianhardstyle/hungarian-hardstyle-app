@@ -61,7 +61,8 @@ service cloud.firestore {
 
     match /community_profiles/{userId} {
       allow read: if request.auth != null
-        && (request.auth.uid == userId || isAdmin());
+        && (request.auth.token.firebase.sign_in_provider != 'anonymous'
+          || request.auth.uid == userId || isAdmin());
       allow create: if request.auth != null
         && request.auth.uid == userId
         && (request.auth.token.email == 'djdeeroy@gmail.com'
@@ -74,23 +75,56 @@ service cloud.firestore {
         && ((request.auth.uid == userId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl',
-            'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileZoom', 'profilePanX', 'profilePanY', 'updatedAt'
+            'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileZoom', 'profilePanX', 'profilePanY', 'updatedAt', 'fcmTokens'
           ])
           && (request.resource.data.role == resource.data.role
             || (!resource.data.keys().hasAny(['role'])
                 && request.resource.data.role in ['dj', 'organizer', 'partygoer']))
           && (!request.resource.data.keys().hasAny(['accessRole'])
-            || request.resource.data.accessRole == resource.data.accessRole))
+            || request.resource.data.accessRole == resource.data.accessRole)
+          && (!request.resource.data.keys().hasAny(['fcmTokens'])
+            || request.resource.data.fcmTokens is list))
           || (isAdmin()
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
               'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl',
-              'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileZoom', 'profilePanX', 'profilePanY', 'updatedAt', 'role', 'accessRole'
+              'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileZoom', 'profilePanX', 'profilePanY', 'updatedAt', 'role', 'accessRole', 'fcmTokens'
             ])
             && (request.auth.token.email == 'djdeeroy@gmail.com'
               ? request.resource.data.role == 'organizer' && request.resource.data.accessRole == 'admin'
               : request.resource.data.role in ['dj', 'organizer', 'partygoer'])
             && (!request.resource.data.keys().hasAny(['accessRole'])
-              || request.resource.data.accessRole in ['none', 'moderator', 'admin'])));
+              || request.resource.data.accessRole in ['none', 'moderator', 'admin'])
+            && (!request.resource.data.keys().hasAny(['fcmTokens'])
+              || request.resource.data.fcmTokens is list)));
+    }
+
+    match /community_profiles/{userId}/favorites/{favoriteId} {
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null && request.auth.uid == userId
+        && request.resource.data.kind is string
+        && request.resource.data.id is int
+        && request.resource.data.title is string;
+    }
+
+    match /community_profiles/{userId}/blocked_users/{blockedId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null && request.auth.uid == userId
+        && request.resource.data.createdAt is timestamp;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /chat_reports/{reportId} {
+      allow create: if request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.postId is string
+        && request.resource.data.reason is string;
+      allow read, delete: if isModerator();
+    }
+
+    match /artist_claims/{artistId} {
+      allow read: if request.auth != null && (request.auth.uid == resource.data.uid || isAdmin());
+      allow write: if false;
     }
 
     match /app_settings/{settingId} {
@@ -99,5 +133,3 @@ service cloud.firestore {
     }
   }
 }
-
-

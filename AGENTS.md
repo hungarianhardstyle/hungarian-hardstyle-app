@@ -371,7 +371,7 @@ v0.99.3 is complete, phone-verified by the project owner in Flutter build `0.99.
 
 ### v0.99.4 - Small Improvements (implemented)
 
-Implemented in Flutter `0.99.4+1`:
+Implemented in Flutter `0.99.4+3`:
 
 - categorize the existing `Több` entries without renaming the menu:
   - `Felfedezés`: DJ-k, Szervezők, Spotify Playlistek
@@ -383,7 +383,7 @@ Implemented in Flutter `0.99.4+1`:
 - [x] add the PayPal `Támogatás / Donate` card
 - [x] add a pre-addressed feedback e-mail action with the runtime app version
 - [x] add the WordPress-managed FAQ under More with categories, ordering, search, expandable answers, and loading/empty/error states; the initial 10 Hungarian FAQ entries are populated in production (API package 2.4.33)
-- [x] add simple bulk management and deletion for local favorites
+- [x] persist favorites in the signed-in user's Firestore profile (with local cache and bulk deletion)
 - [x] replace full social-media URLs on community profiles with compact, clickable Facebook, Instagram, TikTok, YouTube, and Spotify buttons
 - [x] move the existing Home AdMob banner below both the latest-news and upcoming-events sections
 - [x] add one clearly separated inline adaptive AdMob banner to the native news list
@@ -395,7 +395,48 @@ Implemented in Flutter `0.99.4+1`:
 
 - [x] compact the Home event cards while keeping every card the same height and preserving title, date/time, city, genres, favorite, and open actions
 
-The event-tag fast-scroll regression is fixed. WordPress Mobile API `2.4.33` is deployed and live-verified with the FAQ endpoint. The ARM64 test APK is `build/HUHS-v0.99.4+1-arm64-debug.apk`. Production AdMob identifiers and consent/privacy handling remain release work.
+The event-tag fast-scroll regression is fixed. WordPress Mobile API `2.4.33` is deployed and live-verified with the FAQ endpoint. The ARM64 test APK is `build/HUHS-v0.99.4+3-arm64-debug.apk`. Production AdMob identifiers and consent/privacy handling remain release work. v0.99.4 is closed.
+
+### v0.99.5 - complete
+
+Implemented in Flutter `0.99.5+1`:
+
+- [x] password reset, visibility toggle, clear Hungarian authentication errors, and strong-password suggestion
+- [x] clickable social buttons plus avatar refresh, crop, zoom, and positioning persistence
+- [x] Chat profanity masking and automatic message/avatar refresh
+- [x] native admin panel scope and readable content with concise save/cancel errors
+- [x] final loading/card/control polish and test-AdMob placement
+
+v0.99.5 is complete, phone-verified by the project owner, and closed. The ARM64 debug APK is `build/HUHS-v0.99.5+1-arm64-debug.apk`.
+
+### v0.99.6 - complete
+
+- [x] save gallery images to the device, including the pre-Android 10 permission fallback
+- [x] make widget tests Firebase-safe and restore a green test run
+- [x] update Gradle, Android Gradle Plugin and Kotlin compatibility
+- [x] finalize the full HUHS-logo startup animation
+- [x] polish profile and Chat avatar refresh/cache behavior
+- [x] audit Hungarian text and character encoding
+- [x] resolve remaining accessibility and layout-overflow issues
+- [x] verify AdMob test placement and display
+- [x] build and verify the final ARM64 debug test APK
+
+v0.99.6 is complete after passing `flutter analyze` and the full `flutter test` suite. The final ARM64-only debug artifact is `build/HUHS-v0.99.6+1-arm64-debug.apk`; Graphify was refreshed after the final source and documentation changes.
+
+### v0.99.7 - Community follow-up (complete)
+
+- [x] allow verified-email users to claim a DJ profile after matching the private or artist-owned booking e-mail; the Hungarian Hardstyle-managed booking address never qualifies as proof
+- [x] add registered-user search/listing under `Több`; the list filters from the first typed character
+- [x] add admin-triggered personalized event and organizer notifications for favorited records
+- [x] add community moderation follow-up with reporting, blocking, blocked-post filtering, and admin report visibility
+
+Firebase rules and the `claimArtistProfile`/`sendPersonalizedPush`/`getArtistClaimStatus`/`getMyClaimedArtists` Cloud Functions are deployed. Analyzer, Flutter tests, and Cloud Function syntax checks pass. The final ARM64 debug test APK is `build/HUHS-v0.99.7+3-arm64-debug.apk`.
+
+### v0.99.7+3 follow-up (complete)
+
+- [x] Show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
+
+Keep security hardening, friends/attendance, the release catalog and the music store in v1.0/v1.5.
 
 ### v0.4 - Foundation
 
@@ -532,8 +573,8 @@ Keep this release intentionally small and low-risk:
 - Registered users may publish text and compressed snapshot images in the Live Feed.
 - Live Feed messages support normal Unicode emoji and a small fixed reaction set; do not add a heavy emoji package unless the native keyboard proves insufficient.
 - Use Firebase Authentication and Firestore for community data, and Cloudinary for community images.
-- Keep friendships, attendance visibility, and profile claims in v1.0; v0.99.3 owns app-admin tooling and Chat moderation.
-- Add a `Több`-menu user directory/search that lists registered users only and is unavailable to guests.
+- Keep friendships and attendance visibility in v1.0; v0.99.7 owns profile claims and the moderation/reporting/blocking follow-up, while v0.99.3 owns app-admin tooling and Chat moderation.
+- Add a `Több`-menu user directory/search that lists registered users only and is unavailable to guests (v0.99.7).
 
 ### v1.0 - First Public Release (later)
 
@@ -571,7 +612,7 @@ Confirmed v1.0 community direction:
 - During onboarding, users can choose an account role: DJ, organizer, or attendee/partygoer. Role changes and privileged actions require server-side authorization.
 - DJ submission is visible to DJ accounts, organizer submission to organizer accounts, and both submission flows to admins; Flutter visibility is not sufficient without matching API enforcement.
 - v0.99.3 provides the admin-only HUHS Vezérlőközpont with full review, approval, editing, user, trash, settings, and management access for the WordPress Mobile API, excluding only the radio provider menu. The owner admin e-mail is configured privately during deployment and must not be hardcoded into public app content.
-- Registered users can claim a DJ profile only after proving control of the private or artist-owned booking e-mail stored on that profile. The Hungarian Hardstyle-managed booking address (`info@hungarianhardstyle.hu`) is never valid claim proof.
+- Registered users can claim a DJ profile only after proving control of the private or artist-owned booking e-mail stored on that profile; this is complete in v0.99.7. The Hungarian Hardstyle-managed booking address (`info@hungarianhardstyle.hu`) is never valid claim proof.
 - Users can add social-media links to their profile, see the events they plan to attend, and access favorites from the profile area.
 - Users can send, accept, and manage friend connections; each profile should include an `Ismerősök` list.
 - Events must include `Ott leszek` and `Nem leszek ott` attendance actions.

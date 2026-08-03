@@ -15,3 +15,10 @@ final communityAuthProvider = StreamProvider<User?>((ref) {
 final communityPostsProvider = StreamProvider<List<CommunityPost>>((ref) {
   return ref.watch(communityServiceProvider).watchPosts();
 });
+
+final artistClaimStatusProvider = FutureProvider.family<bool, int>((
+  ref,
+  artistId,
+) {
+  return ref.watch(communityServiceProvider).isArtistClaimed(artistId);
+});

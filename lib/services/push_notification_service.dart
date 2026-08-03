@@ -1,4 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -118,6 +121,17 @@ class PushNotificationService {
     if (kDebugMode) debugPrint('HUHS FCM registration token: $token');
     final preferences = await SharedPreferences.getInstance();
     await preferences.setString(_tokenKey, token);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && !user.isAnonymous && Firebase.apps.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instanceFor(
+          app: Firebase.app(),
+          databaseId: 'hungarian-hardstyle',
+        ).collection('community_profiles').doc(user.uid).set({
+          'fcmTokens': FieldValue.arrayUnion([token]),
+        }, SetOptions(merge: true));
+      } catch (_) {}
+    }
     try {
       await _api.post(
         '/push/register',
