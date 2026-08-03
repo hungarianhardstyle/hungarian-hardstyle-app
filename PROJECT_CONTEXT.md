@@ -972,3 +972,4 @@ Everything connected.
 - [x] Add biometric unlock for an already saved sign-in session.
 - [x] Add simpler own-chat management, a blocked-user list, and report-status visibility.
 - [x] Admin-only Chat message deletion and editing are enforced in the app and Firestore rules; normal users and moderators cannot delete or edit messages.
+- v0.99.8+2 bugfix pass: attendance records now include the validated event ID; attendance errors are surfaced; connection-request status refreshes after send; the named `hungarian-hardstyle` database push trigger `notifyConnectionRequest` is deployed; biometric enablement checks real device support; `MainActivity` uses `FlutterFragmentActivity` for `local_auth`. Final ARM build is pending phone testing.

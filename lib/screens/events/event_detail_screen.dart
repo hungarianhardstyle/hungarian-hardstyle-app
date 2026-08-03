@@ -24,6 +24,32 @@ class EventDetailScreen extends ConsumerStatefulWidget {
 
 class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   HuhsEvent get event => widget.event;
+  String? _attendanceState;
+  bool _attendanceBusy = false;
+
+  Future<void> _setAttendance(String state) async {
+    if (_attendanceBusy) return;
+    setState(() {
+      _attendanceBusy = true;
+      _attendanceState = state;
+    });
+    try {
+      await ref.read(communityServiceProvider).setAttendance(
+        event.id,
+        state,
+        title: event.title,
+      );
+    } catch (error) {
+      if (mounted) {
+        setState(() => _attendanceState = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('A részvétel mentése sikertelen: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _attendanceBusy = false);
+    }
+  }
 
   String _formatDate() {
     try {
@@ -265,7 +291,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                             .read(communityServiceProvider)
                             .getMyAttendance(event.id),
                         builder: (context, stateSnapshot) {
-                          final selected = stateSnapshot.data;
+                          final selected = _attendanceState ?? stateSnapshot.data;
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -280,13 +306,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                   spacing: 8,
                                   children: [
                                     FilledButton.icon(
-                                      onPressed: () => ref
-                                          .read(communityServiceProvider)
-                                          .setAttendance(
-                                            event.id,
-                                            'attending',
-                                            title: event.title,
-                                          ),
+                                      onPressed: _attendanceBusy
+                                          ? null
+                                          : () => _setAttendance('attending'),
                                       icon: Icon(
                                         selected == 'attending'
                                             ? Icons.check
@@ -295,13 +317,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                       label: const Text('Ott leszek'),
                                     ),
                                     OutlinedButton(
-                                      onPressed: () => ref
-                                          .read(communityServiceProvider)
-                                          .setAttendance(
-                                            event.id,
-                                            'not_attending',
-                                            title: event.title,
-                                          ),
+                                      onPressed: _attendanceBusy
+                                          ? null
+                                          : () => _setAttendance('not_attending'),
                                       child: const Text('Nem leszek ott'),
                                     ),
                                   ],

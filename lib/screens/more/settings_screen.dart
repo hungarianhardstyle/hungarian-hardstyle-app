@@ -52,7 +52,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _setBiometric(bool value) async {
-    if (value && !await CommunityService().authenticateBiometric()) return;
+    if (value && !await CommunityService().authenticateBiometric()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('A biometrikus feloldás nem érhető el. Engedélyezd a telefon beállításaiban.')),
+        );
+      }
+      return;
+    }
     await CommunityService().setBiometricEnabled(value);
     if (mounted) setState(() => _biometricEnabled = value);
   }

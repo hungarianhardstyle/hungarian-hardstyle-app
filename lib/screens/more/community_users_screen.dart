@@ -131,20 +131,52 @@ class _UserTile extends StatelessWidget {
   }
 }
 
-class CommunityPublicProfileScreen extends StatelessWidget {
+class CommunityPublicProfileScreen extends StatefulWidget {
   final String userId;
 
   const CommunityPublicProfileScreen({super.key, required this.userId});
 
   @override
+  State<CommunityPublicProfileScreen> createState() =>
+      _CommunityPublicProfileScreenState();
+}
+
+class _CommunityPublicProfileScreenState
+    extends State<CommunityPublicProfileScreen> {
+  late final CommunityService service;
+  late Future<String?> _connectionStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    service = CommunityService();
+    _connectionStatus = service.connectionStatus(widget.userId);
+  }
+
+  Future<void> _requestConnection() async {
+    try {
+      await service.requestConnection(widget.userId);
+      if (!mounted) return;
+      setState(() => _connectionStatus = Future.value('pending'));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ismerősnek jelölés elküldve.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('A jelölés sikertelen: $error')),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final service = CommunityService();
     return Scaffold(
       appBar: AppBar(title: const Text('Profil')),
       body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         future: service.firestore
             .collection('community_profiles')
-            .doc(userId)
+            .doc(widget.userId)
             .get(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -213,20 +245,20 @@ class CommunityPublicProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               FutureBuilder<String?>(
-                future: service.connectionStatus(userId),
+                future: _connectionStatus,
                 builder: (context, status) => status.data == 'accepted'
                     ? const Text('Ismerős')
                     : FilledButton.icon(
                         onPressed: status.data == 'pending'
                             ? null
-                            : () => service.requestConnection(userId),
+                            : _requestConnection,
                         icon: const Icon(Icons.person_add),
                         label: const Text('Ismerősnek jelölés'),
                       ),
               ),
               const SizedBox(height: 18),
               StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: service.watchConnections(userId),
+                stream: service.watchConnections(widget.userId),
                 builder: (context, connections) =>
                     Text('Ismerősök: ${connections.data?.docs.length ?? 0}'),
               ),

@@ -8,7 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 — complete and closed (2026-07-30)
 
-- Current Flutter build: `0.99.8+1`; v0.99.3 through v0.99.8 remain closed.
+- Current Flutter build: `0.99.8+2`; v0.99.3 through v0.99.7 remain closed. v0.99.8 bugfix work is in progress.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
@@ -466,3 +466,4 @@ Releases and Store use one WordPress-managed catalog rather than separate conten
 ## Long-term vision
 
 One connected platform for Android, iOS and the web, combining news, events, artists, organizers, community, radio, releases and digital music distribution.
+- v0.99.8+2 bugfix pass: attendance writes now include the validated event ID; attendance UI reports save failures; connection-request state refreshes after sending; the named-database connection-request push trigger is deployed; biometric enablement requires real device support; Android uses a FragmentActivity host for local_auth.

@@ -1,4 +1,5 @@
 const functions = require('firebase-functions/v1');
+const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { HttpsError } = functions.https;
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
@@ -392,3 +393,27 @@ exports.sendPersonalizedPush = functions.https.onCall(async (data, context) => {
   });
   return { sent: result.successCount, failed: result.failureCount };
 });
+
+exports.notifyConnectionRequest = onDocumentCreated(
+  {
+    document: 'connection_requests/{requestId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  async (event) => {
+    const request = event.data?.data() || {};
+    if (request.status !== 'pending' || !request.from || !request.to) return null;
+    const target = (await db.collection('community_profiles').doc(String(request.to)).get()).data() || {};
+    const tokens = Array.isArray(target.fcmTokens)
+      ? target.fcmTokens.filter((token) => typeof token === 'string')
+      : [];
+    if (!tokens.length) return null;
+    const sender = (await db.collection('community_profiles').doc(String(request.from)).get()).data() || {};
+    const name = String(sender.displayName || 'Egy felhasználó').trim();
+    return admin.messaging().sendEachForMulticast({
+      tokens: [...new Set(tokens)].slice(0, 500),
+      notification: { title: 'Új ismerősnek jelölés', body: `${name} ismerősnek jelölt.` },
+      data: { type: 'connection_request', from: String(request.from) },
+    });
+  },
+);

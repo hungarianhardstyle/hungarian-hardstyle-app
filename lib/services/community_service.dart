@@ -499,8 +499,9 @@ class CommunityService {
     if (!{'attending', 'not_attending'}.contains(state)) {
       throw ArgumentError('Érvénytelen részvételi állapot.');
     }
-    await _attendance(eventId).doc(user.uid).set({
-      'state': state,
+  await _attendance(eventId).doc(user.uid).set({
+    'eventId': eventId,
+    'state': state,
       'updatedAt': FieldValue.serverTimestamp(),
     });
     final planned = firestore
@@ -551,11 +552,17 @@ class CommunityService {
 
   Future<bool> authenticateBiometric() async {
     final auth = LocalAuthentication();
-    if (!await auth.isDeviceSupported()) return true;
-    return auth.authenticate(
-      localizedReason: 'Oldd fel a Hungarian Hardstyle profilodat',
-      options: const AuthenticationOptions(stickyAuth: true),
-    );
+    try {
+      if (!await auth.isDeviceSupported()) return false;
+      if (!await auth.canCheckBiometrics) return false;
+      if ((await auth.getAvailableBiometrics()).isEmpty) return false;
+      return await auth.authenticate(
+        localizedReason: 'Oldd fel a Hungarian Hardstyle profilodat',
+        options: const AuthenticationOptions(stickyAuth: true),
+      );
+    } on PlatformException {
+      return false;
+    }
   }
 
   Future<String?> connectionStatus(String otherUserId) async {
