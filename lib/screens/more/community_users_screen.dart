@@ -458,24 +458,86 @@ class _ReportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final storedText = (data['reportedText'] as String? ?? '').trim();
-    final reporter =
-        (data['reporterName'] as String? ??
-                data['reporterId'] as String? ??
-                '—')
-            .trim();
+    final reporterId = (data['reporterId'] as String? ?? '').trim();
     final reason = (data['reason'] as String? ?? 'other').trim();
-    final post = postId.isEmpty
-        ? Future.value(null)
-        : service.firestore.collection('live_feed_posts').doc(postId).get();
-    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
-      future: post,
+    final futures = <Future<DocumentSnapshot<Map<String, dynamic>>>>[];
+    int? postIndex;
+    int? reporterIndex;
+    int? reportedIndex;
+    if (postId.isNotEmpty) {
+      postIndex = futures.length;
+      futures.add(
+        service.firestore.collection('live_feed_posts').doc(postId).get(),
+      );
+    }
+    if (reporterId.isNotEmpty) {
+      reporterIndex = futures.length;
+      futures.add(
+        service.firestore
+            .collection('community_profiles')
+            .doc(reporterId)
+            .get(),
+      );
+    }
+    if (reportedUserId.isNotEmpty) {
+      reportedIndex = futures.length;
+      futures.add(
+        service.firestore
+            .collection('community_profiles')
+            .doc(reportedUserId)
+            .get(),
+      );
+    }
+    return FutureBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
+      future: Future.wait(futures),
       builder: (context, snapshot) {
-        final live = snapshot.data?.data();
+        if (snapshot.hasError) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text('A jelentés adatai nem tölthetők be.'),
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: LinearProgressIndicator(),
+            ),
+          );
+        }
+        final lookup = snapshot.data!;
+        final live = postIndex == null ? null : lookup[postIndex].data();
+        final reporterProfile = reporterIndex == null
+            ? null
+            : lookup[reporterIndex].data();
+        final reportedProfile = reportedIndex == null
+            ? null
+            : lookup[reportedIndex].data();
+        String firstValue(Iterable<String?> values, String fallback) {
+          for (final value in values) {
+            final trimmed = (value ?? '').trim();
+            if (trimmed.isNotEmpty) return trimmed;
+          }
+          return fallback;
+        }
+
+        final reporter = firstValue([
+          data['reporterName'] as String?,
+          reporterProfile?['displayName'] as String?,
+          reporterId,
+        ], '—');
+        final liveName = firstValue([
+          data['reportedUserName'] as String?,
+          reportedName,
+          reportedProfile?['displayName'] as String?,
+          live?['authorName'] as String?,
+          reportedUserId,
+        ], 'Felhasználó');
         final text = storedText.isNotEmpty
             ? storedText
             : (live?['text'] as String? ?? 'Üzenet nem érhető el.');
-        final liveName = (live?['authorName'] as String? ?? reportedName)
-            .trim();
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: Padding(

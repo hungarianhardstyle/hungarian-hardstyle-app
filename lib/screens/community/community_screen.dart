@@ -874,33 +874,29 @@ class _PostCardState extends ConsumerState<_PostCard> {
   }
 
   Future<void> _edit() async {
-    final controller = TextEditingController(text: widget.post.text);
-    String? updated;
-    try {
-      updated = await showDialog<String>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Üzenet szerkesztése'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            maxLines: 5,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Mégse'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, controller.text),
-              child: const Text('Mentés'),
-            ),
-          ],
+    var editedText = widget.post.text;
+    final updated = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Üzenet szerkesztése'),
+        content: TextFormField(
+          initialValue: editedText,
+          autofocus: true,
+          maxLines: 5,
+          onChanged: (value) => editedText = value,
         ),
-      );
-    } finally {
-      controller.dispose();
-    }
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Mégse'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, editedText),
+            child: const Text('Mentés'),
+          ),
+        ],
+      ),
+    );
     if (updated == null || !mounted) return;
     try {
       await ref
