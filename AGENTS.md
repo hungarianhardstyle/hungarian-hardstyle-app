@@ -313,10 +313,10 @@ Historical v0.99.1 follow-up reports are addressed in the current bugfix build. 
 Chat message deletion and the in-app role-management panel are implemented; actual Firebase Auth account deletion for another user is handled by the deployed server-side Cloud Function/Admin SDK task.
 The Cloud Function source is in `functions/` (`deleteCommunityUser`) and is deployed to Firebase. Artifact cleanup retains old function images for 90 days.
 Also record for the next fix pass: push notification text has an encoding bug and may show Hungarian punctuation/accents as HTML entities (for example `&#8211;`) instead of decoded characters.
-Community authorization is now separated: `djdeeroy@gmail.com` is an Admin with the account role Szervező; normal users cannot change account roles after onboarding; admins manage account/access roles; moderators can delete Chat messages only.
+Community authorization is now separated: `djdeeroy@gmail.com` is an Admin with the account role Szervező; normal users cannot change account roles after onboarding; admins manage account/access roles and Chat messages; moderators cannot edit or delete Chat messages.
 
 The latest v0.99.1 bugfix build addresses the previously reported profile/avatar, Chat deletion, logout, duplicate-role, and admin-menu issues. Superseded by v0.99.3: free profile-image zoom and movement are required.
-v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separates account roles from access roles, adds moderator Chat deletion and admin user-role management for legacy profiles, reloads profiles after Auth restoration, and deploys the Firestore rules to the named database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; Superseded by v0.99.3: free profile-image zoom and movement are required.
+v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separates account roles from access roles, adds admin-only Chat deletion and admin user-role management for legacy profiles, reloads profiles after Auth restoration, and deploys the Firestore rules to the named database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; Superseded by v0.99.3: free profile-image zoom and movement are required.
 
 The next Flutter test build is v0.99.2. The Google AdMob test banner is enabled for the test build with `HUHS_ENABLE_TEST_ADS=true`; do not switch to production AdMob identifiers yet. Consent/privacy and production monetization remain release work.
 
@@ -437,6 +437,18 @@ Firebase rules and the `claimArtistProfile`/`sendPersonalizedPush`/`getArtistCla
 - [x] Show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
 
 Keep security hardening, friends/attendance, the release catalog and the music store in v1.0/v1.5.
+
+### v0.99.8 - User profile navigation and community details (complete)
+
+- [x] Make each profile card in `Több -> Felhasználók` tappable and open that user's native in-app profile.
+- [x] Show only favorite DJs, organizers, and events on the user profile, together with planned event attendance; favorite news is excluded from this profile section.
+- [x] Add event attendance states (`Ott leszek` / `Nem leszek ott`), persist the choice, and show participant counts on event details.
+- [x] Add basic friends/connections with request, accept/reject, and profile connection-list flows.
+- [x] Keep separate Facebook, Instagram, TikTok, YouTube, and Spotify profile links (already implemented).
+- [x] Show planned events and favorites on the user profile.
+- [x] Add biometric unlock for an already saved sign-in session.
+- [x] Add simpler own-chat management, a blocked-user list, and report-status visibility.
+- [x] Restrict Chat message editing and deletion to admins; normal users cannot edit or delete their own messages.
 
 ### v0.4 - Foundation
 

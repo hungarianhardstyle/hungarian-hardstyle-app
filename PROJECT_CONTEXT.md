@@ -775,7 +775,7 @@ Current v0.99.1 implementation status:
 - The public Firestore Live Feed supports anonymous text-only posts, registered Cloudinary image posts, Unicode emoji, and fixed reactions.
 - Home exposes a profile entry, a five-item news slider with 10-second rotation, and news detail exposes tappable tags with a native filtered article list.
 - Firestore deployment files are `firestore.rules`, `firebase.json`, and `.firebaserc`; physical ARM verification and rules deployment remain external release checks.
-- v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separates account roles from access roles, adds moderator Chat deletion and admin user-role management for legacy profiles, reloads profiles after Auth restoration, and deploys Firestore rules to the named `hungarian-hardstyle` database used by the app. Profile uploads use Cloudinary face-aware cropping; manual focal-point editing remains a later UX enhancement.
+- v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separates account roles from access roles, adds admin-only Chat deletion and admin user-role management for legacy profiles, reloads profiles after Auth restoration, and deploys Firestore rules to the named `hungarian-hardstyle` database used by the app. Profile uploads use Cloudinary face-aware cropping; manual focal-point editing remains a later UX enhancement.
 - Chat message deletion and the in-app role-management panel are implemented; actual Firebase Auth account deletion for another user is handled by the deployed server-side Cloud Function/Admin SDK task.
 - The Cloud Function source is in `functions/` (`deleteCommunityUser`) and is deployed to Firebase. Artifact cleanup retains old function images for 90 days.
 - Also record for the next fix pass: push notification text has an encoding bug and may show Hungarian punctuation/accents as HTML entities (for example `&#8211;`) instead of decoded characters.
@@ -960,3 +960,15 @@ Everything connected.
 ### v0.99.7+3 follow-up (complete)
 
 - After a DJ profile is claimed, show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
+
+### v0.99.8 - User profile navigation and community details (complete)
+
+- [x] Make each profile card in `Több -> Felhasználók` tappable and open that user's native in-app profile.
+- [x] Show only favorite DJs, organizers, and events on the user profile, together with planned event attendance; favorite news is excluded from this profile section.
+- [x] Add event attendance states (`Ott leszek` / `Nem leszek ott`), persist the choice, and show participant counts on event details.
+- [x] Add basic friends/connections with request, accept/reject, and profile connection-list flows.
+- [x] Separate Facebook, Instagram, TikTok, YouTube, and Spotify profile links.
+- [x] Show planned events and favorites on the user profile.
+- [x] Add biometric unlock for an already saved sign-in session.
+- [x] Add simpler own-chat management, a blocked-user list, and report-status visibility.
+- [x] Admin-only Chat message deletion and editing are enforced in the app and Firestore rules; normal users and moderators cannot delete or edit messages.

@@ -5,6 +5,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/community_post.dart';
 
@@ -309,10 +311,24 @@ class CommunityService {
     if (!isAdmin && _cachedAccessRole == accessNone) {
       await _cacheProfileRole();
     }
-    if (!canModerate) {
+    if (!isAdmin) {
       throw StateError('Csak admin törölhet Chat-üzenetet.');
     }
     await firestore.collection('live_feed_posts').doc(postId).delete();
+  }
+
+  Future<void> updatePostText({
+    required String postId,
+    required String text,
+  }) async {
+    if (!isAdmin) {
+      throw StateError('Csak admin szerkeszthet Chat-üzenetet.');
+    }
+    final trimmed = maskProfanity(text.trim());
+    if (trimmed.isEmpty) throw ArgumentError('Az üzenet nem lehet üres.');
+    await firestore.collection('live_feed_posts').doc(postId).update({
+      'text': trimmed,
+    });
   }
 
   Future<void> reportPost(String postId, {String reason = 'other'}) async {
@@ -324,6 +340,7 @@ class CommunityService {
       'postId': postId,
       'reporterId': user.uid,
       'reason': reason,
+      'status': 'open',
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -339,6 +356,27 @@ class CommunityService {
         .collection('blocked_users')
         .doc(userId)
         .set({'createdAt': FieldValue.serverTimestamp()});
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchBlockedUsers() {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return const Stream.empty();
+    return firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('blocked_users')
+        .snapshots();
+  }
+
+  Future<void> unblockUser(String userId) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return;
+    await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('blocked_users')
+        .doc(userId)
+        .delete();
   }
 
   Future<void> claimArtist(int artistId) async {
@@ -423,6 +461,165 @@ class CommunityService {
     final user = auth.currentUser;
     if (user == null || user.isAnonymous) return const Stream.empty();
     return firestore.collection('community_profiles').limit(200).snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchMyReports() {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return const Stream.empty();
+    return firestore
+        .collection('chat_reports')
+        .where('reporterId', isEqualTo: user.uid)
+        .orderBy('createdAt', descending: true)
+        .limit(50)
+        .snapshots();
+  }
+
+  CollectionReference<Map<String, dynamic>> _attendance(int eventId) =>
+      firestore
+          .collection('event_attendance')
+          .doc('$eventId')
+          .collection('users');
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchEventAttendance(
+    int eventId,
+  ) => _attendance(eventId).snapshots();
+
+  Future<String?> getMyAttendance(int eventId) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return null;
+    final snapshot = await _attendance(eventId).doc(user.uid).get();
+    return snapshot.data()?['state'] as String?;
+  }
+
+  Future<void> setAttendance(int eventId, String state, {String? title}) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      throw StateError('A részvétel mentéséhez regisztráció szükséges.');
+    }
+    if (!{'attending', 'not_attending'}.contains(state)) {
+      throw ArgumentError('Érvénytelen részvételi állapot.');
+    }
+    await _attendance(eventId).doc(user.uid).set({
+      'state': state,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    final planned = firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('planned_events')
+        .doc('$eventId');
+    if (state == 'attending') {
+      await planned.set({
+        'eventId': eventId,
+        if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
+        'state': state,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } else {
+      await planned.delete();
+    }
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchPlannedEvents() {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return const Stream.empty();
+    return firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('planned_events')
+        .orderBy('updatedAt', descending: true)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchConnections(String userId) {
+    return firestore
+        .collection('community_profiles')
+        .doc(userId)
+        .collection('connections')
+        .snapshots();
+  }
+
+  Future<bool> biometricEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('biometric_unlock') ?? false;
+  }
+
+  Future<void> setBiometricEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('biometric_unlock', value);
+  }
+
+  Future<bool> authenticateBiometric() async {
+    final auth = LocalAuthentication();
+    if (!await auth.isDeviceSupported()) return true;
+    return auth.authenticate(
+      localizedReason: 'Oldd fel a Hungarian Hardstyle profilodat',
+      options: const AuthenticationOptions(stickyAuth: true),
+    );
+  }
+
+  Future<String?> connectionStatus(String otherUserId) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous || otherUserId == user.uid) {
+      return null;
+    }
+    final request = firestore
+        .collection('connection_requests')
+        .doc('${user.uid}_$otherUserId');
+    final reverse = firestore
+        .collection('connection_requests')
+        .doc('${otherUserId}_${user.uid}');
+    final own = await request.get();
+    if (own.exists) return own.data()?['status'] as String?;
+    final incoming = await reverse.get();
+    return incoming.exists ? 'incoming:${incoming.data()?['status']}' : null;
+  }
+
+  Future<void> requestConnection(String otherUserId) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous || otherUserId == user.uid) {
+      throw StateError('Ismerős-jelöléshez regisztráció szükséges.');
+    }
+    await firestore
+        .collection('connection_requests')
+        .doc('${user.uid}_$otherUserId')
+        .set({
+          'from': user.uid,
+          'to': otherUserId,
+          'status': 'pending',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+  }
+
+  Future<void> respondConnection(String fromUserId, bool accept) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      throw StateError('Regisztráció szükséges.');
+    }
+    final status = accept ? 'accepted' : 'rejected';
+    await firestore
+        .collection('connection_requests')
+        .doc('${fromUserId}_${user.uid}')
+        .set({
+          'from': fromUserId,
+          'to': user.uid,
+          'status': status,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+    if (accept) {
+      await firestore
+          .collection('community_profiles')
+          .doc(user.uid)
+          .collection('connections')
+          .doc(fromUserId)
+          .set({'createdAt': FieldValue.serverTimestamp()});
+      await firestore
+          .collection('community_profiles')
+          .doc(fromUserId)
+          .collection('connections')
+          .doc(user.uid)
+          .set({'createdAt': FieldValue.serverTimestamp()});
+    }
   }
 
   Future<void> setUserRole(String userId, String role) async {

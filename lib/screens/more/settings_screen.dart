@@ -5,6 +5,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/push_notification_service.dart';
+import '../../services/community_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -25,6 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _reminderNotificationsEnabled = true;
   bool _loading = true;
   bool _clearingCache = false;
+  bool _biometricEnabled = false;
 
   @override
   void initState() {
@@ -44,8 +46,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           preferences.getBool(_eventNotificationsKey) ?? true;
       _reminderNotificationsEnabled =
           preferences.getBool(_reminderNotificationsKey) ?? true;
+      _biometricEnabled = preferences.getBool('biometric_unlock') ?? false;
       _loading = false;
     });
+  }
+
+  Future<void> _setBiometric(bool value) async {
+    if (value && !await CommunityService().authenticateBiometric()) return;
+    await CommunityService().setBiometricEnabled(value);
+    if (mounted) setState(() => _biometricEnabled = value);
   }
 
   Future<void> _setNotifications(bool value) async {
@@ -106,6 +115,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 value: _notificationsEnabled,
                 onChanged: _loading ? null : _setNotifications,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: SwitchListTile(
+                secondary: const Icon(Icons.fingerprint),
+                title: const Text('Biometrikus feloldás'),
+                subtitle: const Text(
+                  'A mentett profil feloldása ujjlenyomattal vagy arcfelismeréssel',
+                ),
+                value: _biometricEnabled,
+                onChanged: _loading ? null : _setBiometric,
               ),
             ),
             const SizedBox(height: 12),

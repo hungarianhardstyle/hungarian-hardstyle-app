@@ -13,9 +13,11 @@ import '../../models/community_post.dart';
 import '../../models/submission_image.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../providers/community_provider.dart';
+import '../../providers/favorites_provider.dart';
 import '../../services/community_service.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../more/favorites_screen.dart';
+import '../more/community_users_screen.dart';
 import '../artists/artist_detail_screen.dart';
 import 'wordpress_admin_screen.dart';
 
@@ -852,6 +854,43 @@ class _PostCardState extends ConsumerState<_PostCard> {
     }
   }
 
+  Future<void> _edit() async {
+    final controller = TextEditingController(text: widget.post.text);
+    final updated = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Üzenet szerkesztése'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: 5,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Mégse'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Mentés'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (updated == null || !mounted) return;
+    try {
+      await ref
+          .read(communityServiceProvider)
+          .updatePostText(postId: widget.post.id, text: updated);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_chatError(error))));
+    }
+  }
+
   Future<void> _togglePinned() async {
     try {
       await ref
@@ -953,7 +992,13 @@ class _PostCardState extends ConsumerState<_PostCard> {
                   _timeLabel(post.createdAt),
                   style: const TextStyle(color: Colors.white54, fontSize: 11),
                 ),
-                if (ref.read(communityServiceProvider).canModerate)
+                if (ref.read(communityServiceProvider).isAdmin)
+                  IconButton(
+                    tooltip: 'Üzenet szerkesztése',
+                    icon: const Icon(Icons.edit_outlined, size: 19),
+                    onPressed: _edit,
+                  ),
+                if (ref.read(communityServiceProvider).isAdmin)
                   IconButton(
                     tooltip: 'Üzenet törlése',
                     icon: const Icon(Icons.delete_outline, size: 19),
@@ -1069,6 +1114,7 @@ class _CommunityProfileScreenState
   double _gestureStartZoom = 1;
   List<int> _claimedArtistIds = const [];
   String? _loadedUid;
+  String? _biometricGateUid;
   StreamSubscription<User?>? _authSubscription;
 
   CommunityService get _service => ref.read(communityServiceProvider);
@@ -1078,6 +1124,7 @@ class _CommunityProfileScreenState
     super.initState();
     _authSubscription = _service.auth.userChanges().listen((_) {
       _loadedUid = null;
+      _biometricGateUid = null;
       _loadProfile();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadProfile());
@@ -1137,6 +1184,13 @@ class _CommunityProfileScreenState
   Future<void> _loadProfile() async {
     final user = _service.auth.currentUser;
     if (user == null || user.isAnonymous || _loadedUid == user.uid) return;
+    if (_biometricGateUid != user.uid && await _service.biometricEnabled()) {
+      if (!await _service.authenticateBiometric()) {
+        if (mounted) _message('A profil feloldása sikertelen.');
+        return;
+      }
+      _biometricGateUid = user.uid;
+    }
     try {
       final snapshot = await _service.profile();
       final data = snapshot.data() ?? const <String, dynamic>{};
@@ -1305,6 +1359,11 @@ class _CommunityProfileScreenState
       'youtube': 'YouTube',
       'spotify': 'Spotify',
     };
+    final profileFavorites = ref
+        .watch(favoritesProvider)
+        .entries
+        .where((entry) => entry.kind != FavoriteKind.news)
+        .toList(growable: false);
     return [
       Center(
         child: _ProfileAvatar(
@@ -1376,6 +1435,48 @@ class _CommunityProfileScreenState
           label: const Text('Saját DJ-adatlap megnyitása'),
         ),
       if (_claimedArtistIds.isNotEmpty) const SizedBox(height: 8),
+      if (profileFavorites.isNotEmpty) ...[
+        const SizedBox(height: 16),
+        const Text(
+          'Kedvelt tartalmak',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        for (final entry in profileFavorites)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.favorite, color: Colors.redAccent),
+            title: Text(entry.title),
+            subtitle: Text(switch (entry.kind) {
+              FavoriteKind.event => 'Esemény',
+              FavoriteKind.artist => 'DJ',
+              FavoriteKind.organizer => 'Szervező',
+              FavoriteKind.news => 'Hír',
+            }),
+          ),
+      ],
+      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: _service.watchPlannedEvents(),
+        builder: (context, snapshot) {
+          final events = snapshot.data?.docs ?? const [];
+          if (events.isEmpty) return const SizedBox.shrink();
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              const Text(
+                'Tervezett események',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              for (final event in events)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.event_outlined),
+                  title: Text(event.data()['title'] as String? ?? 'Esemény'),
+                ),
+            ],
+          );
+        },
+      ),
       FilledButton.icon(
         onPressed: () async {
           await Navigator.of(context).push(
@@ -1408,6 +1509,39 @@ class _CommunityProfileScreenState
         ),
         icon: const Icon(Icons.favorite_outline),
         label: const Text('Kedvencek'),
+      ),
+      const SizedBox(height: 8),
+      OutlinedButton.icon(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const CommunityConnectionsScreen(),
+          ),
+        ),
+        icon: const Icon(Icons.people_outline),
+        label: const Text('Ismerősök'),
+      ),
+      const SizedBox(height: 8),
+      OutlinedButton.icon(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const CommunityBlockedUsersScreen(),
+          ),
+        ),
+        icon: const Icon(Icons.block_outlined),
+        label: const Text('Blokkolt felhasználók'),
+      ),
+      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: _service.watchMyReports(),
+        builder: (context, snapshot) {
+          final count = snapshot.data?.docs.length ?? 0;
+          if (count == 0) return const SizedBox.shrink();
+          return ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.flag_outlined),
+            title: Text('Jelentések: $count'),
+            subtitle: const Text('A jelentések állapota megtekinthető.'),
+          );
+        },
       ),
       const SizedBox(height: 18),
       OutlinedButton.icon(

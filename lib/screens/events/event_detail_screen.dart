@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -10,11 +11,19 @@ import '../../models/event.dart';
 import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
 import '../../widgets/genre_chip.dart';
+import '../../providers/community_provider.dart';
 
-class EventDetailScreen extends StatelessWidget {
+class EventDetailScreen extends ConsumerStatefulWidget {
   final HuhsEvent event;
 
   const EventDetailScreen({super.key, required this.event});
+
+  @override
+  ConsumerState<EventDetailScreen> createState() => _EventDetailScreenState();
+}
+
+class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
+  HuhsEvent get event => widget.event;
 
   String _formatDate() {
     try {
@@ -169,9 +178,7 @@ class EventDetailScreen extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 6,
                       children: event.genres
-                          .map(
-                            (genre) => GenreChip(genre: genre),
-                          )
+                          .map((genre) => GenreChip(genre: genre))
                           .toList(),
                     ),
                   ],
@@ -239,6 +246,72 @@ class EventDetailScreen extends StatelessWidget {
                       ],
                     ),
                   ],
+                  const SizedBox(height: 18),
+                  StreamBuilder(
+                    stream: ref
+                        .read(communityServiceProvider)
+                        .watchEventAttendance(event.id),
+                    builder: (context, snapshot) {
+                      final docs = snapshot.data?.docs ?? const [];
+                      final attending = docs
+                          .where((doc) => doc.data()['state'] == 'attending')
+                          .length;
+                      final user = ref
+                          .read(communityServiceProvider)
+                          .auth
+                          .currentUser;
+                      return FutureBuilder<String?>(
+                        future: ref
+                            .read(communityServiceProvider)
+                            .getMyAttendance(event.id),
+                        builder: (context, stateSnapshot) {
+                          final selected = stateSnapshot.data;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Ott leszek: $attending résztvevő'),
+                              const SizedBox(height: 8),
+                              if (user == null || user.isAnonymous)
+                                const Text(
+                                  'A részvétel jelöléséhez regisztráció szükséges.',
+                                ),
+                              if (user != null && !user.isAnonymous)
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    FilledButton.icon(
+                                      onPressed: () => ref
+                                          .read(communityServiceProvider)
+                                          .setAttendance(
+                                            event.id,
+                                            'attending',
+                                            title: event.title,
+                                          ),
+                                      icon: Icon(
+                                        selected == 'attending'
+                                            ? Icons.check
+                                            : Icons.event_available,
+                                      ),
+                                      label: const Text('Ott leszek'),
+                                    ),
+                                    OutlinedButton(
+                                      onPressed: () => ref
+                                          .read(communityServiceProvider)
+                                          .setAttendance(
+                                            event.id,
+                                            'not_attending',
+                                            title: event.title,
+                                          ),
+                                      child: const Text('Nem leszek ott'),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ],
               ),
             ),

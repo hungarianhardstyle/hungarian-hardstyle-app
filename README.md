@@ -8,7 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 — complete and closed (2026-07-30)
 
-- Current Flutter build: `0.99.7+3`; v0.99.3 through v0.99.7 remain closed.
+- Current Flutter build: `0.99.8+1`; v0.99.3 through v0.99.8 remain closed.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
@@ -26,7 +26,7 @@ The current delivery target is **v0.99.1 Community MVP**. The first MVP implemen
 
 The v0.99.1 community bugfix pass is implemented in `v0.99.1+12`; e-mail/password registration and Google-account sign-in remain the required entry paths, with a mandatory account role.
 The v0.99.1+11 authorization pass also resolves the previously reported Chat deletion, admin-role persistence, and in-app user-management issues. Manual profile focal-point editing remains optional polish.
-v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separate account/access roles, moderator Chat deletion, admin user-role management for legacy profiles, Auth-restored profile loading, duplicate-role dropdown crash, logout navigation crash, and deploys the Firestore rules to the named `hungarian-hardstyle` database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; manual focal-point editing is optional later UX polish.
+v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat image permission state, author monogram/avatar rendering, separate account/access roles, admin-only Chat deletion, admin user-role management for legacy profiles, Auth-restored profile loading, duplicate-role dropdown crash, logout navigation crash, and deploys the Firestore rules to the named `hungarian-hardstyle` database used by the app. Google sign-in remains a release-device/Firebase SHA verification check; manual focal-point editing is optional later UX polish.
 
 - Separate Facebook, Instagram, TikTok, YouTube, and Spotify fields are implemented during registration and in the community profile.
 - Next build follow-up: add a password-reset link to login and replace raw Firebase credential errors with a clear Hungarian message.
@@ -36,7 +36,7 @@ v0.99.1+12 fixes the community profile/avatar synchronization, signed-in Chat im
 - Next build follow-up: show an admin-managed startup announcement image with a close button; allow image upload/replacement from the app admin panel and the WordPress Mobile API.
 Chat message deletion and the in-app role-management panel are implemented. The server-side `functions/deleteCommunityUser` Cloud Function performs real Auth/profile/Chat deletion and is deployed to Firebase. Artifact cleanup retains old function images for 90 days.
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
-Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles, and moderators can delete Chat messages only.
+Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles and Chat messages, and moderators cannot edit or delete Chat messages.
 
 The current WordPress backend package is **2.4.33**. `build/huhs-mobile-api-2.4.33.zip` is uploaded, deployed to production, live-verified, and confirmed active by the project owner; deployment and live verification are complete. It includes the managed FAQ post type/category editor and paginated public FAQ endpoint in addition to the authenticated submission and native approval endpoints. Unauthenticated submission POST requests return HTTP 401.
 
@@ -158,6 +158,18 @@ The final ARM64 debug test APK is `build/HUHS-v0.99.7+3-arm64-debug.apk`.
 - [x] After a DJ profile is claimed, show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
 
 Security hardening, friends/attendance, the release catalog and the music store remain scheduled for v1.0/v1.5.
+
+### v0.99.8 — User profile navigation and community details (complete)
+
+- [x] Make each profile card in `Több → Felhasználók` tappable and open that user's native in-app profile.
+- [x] On a user profile, show the user's favorite DJs, organizers, and events, plus planned event attendance; favorite news does not appear in this profile section.
+- [x] Add event attendance states: `Ott leszek` and `Nem leszek ott`, persist the user's choice, and show the participant count on event details.
+- [x] Add basic friends/connections: send a connection request, accept/reject it, and show the connections list on the profile.
+- [x] Keep separate Facebook, Instagram, TikTok, YouTube, and Spotify profile links (already implemented).
+- [x] Show planned events and favorites on the user profile.
+- [x] Add biometric unlock for an already saved sign-in session (fingerprint/face recognition).
+- [x] Add community follow-up: simpler own-chat management, blocked-user list, and report-status visibility.
+- [x] Restrict Chat message editing and deletion to admins; normal users cannot edit or delete their own messages.
 
 #### FAQ-választervezet
 

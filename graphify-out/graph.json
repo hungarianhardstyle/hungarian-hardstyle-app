@@ -5322,6 +5322,14 @@
       "_origin": "ast"
     },
     {
+      "id": "lib_screens_community_community_screen_biometricgateuid",
+      "label": "_biometricGateUid",
+      "file_type": "code",
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "lib_screens_community_community_screen_chaterror",
       "label": "_chatError",
       "file_type": "code",
@@ -5428,6 +5436,14 @@
     {
       "id": "lib_screens_community_community_screen_delete",
       "label": "_delete",
+      "file_type": "code",
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_community_community_screen_edit",
+      "label": "_edit",
       "file_type": "code",
       "source_file": "lib/screens/community/community_screen.dart",
       "source_location": null,
@@ -5596,6 +5612,14 @@
     {
       "id": "more_favorites_screen_dart",
       "label": "../more/favorites_screen.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "more_community_users_screen_dart",
+      "label": "../more/community_users_screen.dart",
       "file_type": "code",
       "source_file": null,
       "source_location": null,
@@ -5962,6 +5986,14 @@
       "_origin": "ast"
     },
     {
+      "id": "lib_screens_events_event_detail_screen_eventdetailscreenstate",
+      "label": "_EventDetailScreenState",
+      "file_type": "code",
+      "source_file": "lib/screens/events/event_detail_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "lib_screens_events_event_detail_screen_inforow",
       "label": "_InfoRow",
       "file_type": "code",
@@ -5982,6 +6014,14 @@
       "label": "event",
       "file_type": "code",
       "source_file": "lib/screens/events/event_detail_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "huhsevent_get",
+      "label": "HuhsEvent get",
+      "file_type": "code",
+      "source_file": null,
       "source_location": null,
       "_origin": "ast"
     },
@@ -6020,6 +6060,14 @@
     {
       "id": "lib_screens_events_event_detail_screen_artists",
       "label": "artists",
+      "file_type": "code",
+      "source_file": "lib/screens/events/event_detail_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_events_event_detail_screen_createstate",
+      "label": "createState",
       "file_type": "code",
       "source_file": "lib/screens/events/event_detail_screen.dart",
       "source_location": null,
@@ -7298,6 +7346,30 @@
       "_origin": "ast"
     },
     {
+      "id": "lib_screens_more_community_users_screen_communitypublicprofilescreen",
+      "label": "CommunityPublicProfileScreen",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_communityconnectionsscreen",
+      "label": "CommunityConnectionsScreen",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_communityblockedusersscreen",
+      "label": "CommunityBlockedUsersScreen",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "lib_screens_more_community_users_screen_search",
       "label": "_search",
       "file_type": "code",
@@ -7330,6 +7402,14 @@
       "_origin": "ast"
     },
     {
+      "id": "lib_screens_more_community_users_screen_userid",
+      "label": "userId",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "lib_screens_more_community_users_screen_createstate",
       "label": "createState",
       "file_type": "code",
@@ -7348,6 +7428,14 @@
     {
       "id": "lib_screens_more_community_users_screen_build",
       "label": "build",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_role",
+      "label": "_role",
       "file_type": "code",
       "source_file": "lib/screens/more/community_users_screen.dart",
       "source_location": null,
@@ -8034,6 +8122,14 @@
       "_origin": "ast"
     },
     {
+      "id": "lib_screens_more_settings_screen_biometricenabled",
+      "label": "_biometricEnabled",
+      "file_type": "code",
+      "source_file": "lib/screens/more/settings_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "lib_screens_more_settings_screen_createstate",
       "label": "createState",
       "file_type": "code",
@@ -8052,6 +8148,14 @@
     {
       "id": "lib_screens_more_settings_screen_loadsettings",
       "label": "_loadSettings",
+      "file_type": "code",
+      "source_file": "lib/screens/more/settings_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_settings_screen_setbiometric",
+      "label": "_setBiometric",
       "file_type": "code",
       "source_file": "lib/screens/more/settings_screen.dart",
       "source_location": null,
@@ -9458,6 +9562,14 @@
       "_origin": "ast"
     },
     {
+      "id": "lib_services_community_service_updateposttext",
+      "label": "updatePostText",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "lib_services_community_service_reportpost",
       "label": "reportPost",
       "file_type": "code",
@@ -9468,6 +9580,22 @@
     {
       "id": "lib_services_community_service_blockuser",
       "label": "blockUser",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_watchblockedusers",
+      "label": "watchBlockedUsers",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_unblockuser",
+      "label": "unblockUser",
       "file_type": "code",
       "source_file": "lib/services/community_service.dart",
       "source_location": null,
@@ -9540,6 +9668,110 @@
     {
       "id": "lib_services_community_service_watchregisteredprofiles",
       "label": "watchRegisteredProfiles",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_watchmyreports",
+      "label": "watchMyReports",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_attendance",
+      "label": "_attendance",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_watcheventattendance",
+      "label": "watchEventAttendance",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_getmyattendance",
+      "label": "getMyAttendance",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_setattendance",
+      "label": "setAttendance",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_watchplannedevents",
+      "label": "watchPlannedEvents",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_watchconnections",
+      "label": "watchConnections",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_biometricenabled",
+      "label": "biometricEnabled",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_setbiometricenabled",
+      "label": "setBiometricEnabled",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_authenticatebiometric",
+      "label": "authenticateBiometric",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_connectionstatus",
+      "label": "connectionStatus",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_requestconnection",
+      "label": "requestConnection",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_respondconnection",
+      "label": "respondConnection",
       "file_type": "code",
       "source_file": "lib/services/community_service.dart",
       "source_location": null,
@@ -9684,6 +9916,14 @@
     {
       "id": "package_google_sign_in_google_sign_in_dart",
       "label": "package:google_sign_in/google_sign_in.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "package_local_auth_local_auth_dart",
+      "label": "package:local_auth/local_auth.dart",
       "file_type": "code",
       "source_file": null,
       "source_location": null,
@@ -11659,12 +11899,21 @@
       "_origin": "ast"
     },
     {
+      "id": "local_auth_darwin",
+      "label": "local_auth_darwin",
+      "file_type": "code",
+      "type": "module",
+      "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
       "id": "package_info_plus",
       "label": "package_info_plus",
       "file_type": "code",
       "type": "module",
       "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
-      "source_location": "L15",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -11673,7 +11922,7 @@
       "file_type": "code",
       "type": "module",
       "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
-      "source_location": "L16",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
@@ -11682,7 +11931,7 @@
       "file_type": "code",
       "type": "module",
       "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
-      "source_location": "L17",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -11691,7 +11940,7 @@
       "file_type": "code",
       "type": "module",
       "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -11700,7 +11949,7 @@
       "file_type": "code",
       "type": "module",
       "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -11708,7 +11957,7 @@
       "label": "RegisterGeneratedPlugins()",
       "file_type": "code",
       "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -12408,7 +12657,7 @@
       "label": "RegisterPlugins()",
       "file_type": "code",
       "source_file": "windows/flutter/generated_plugin_registrant.cc",
-      "source_location": "L15",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -13180,11 +13429,19 @@
       "_origin": "ast"
     },
     {
+      "id": "agents_v0_99_8_user_profile_navigation_and_community_details_complete",
+      "label": "v0.99.8 - User profile navigation and community details (complete)",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L441",
+      "_origin": "ast"
+    },
+    {
       "id": "agents_v0_4_foundation",
       "label": "v0.4 - Foundation",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L441",
+      "source_location": "L453",
       "_origin": "ast"
     },
     {
@@ -13192,7 +13449,7 @@
       "label": "v0.5 - Dynamic Events",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L451",
+      "source_location": "L463",
       "_origin": "ast"
     },
     {
@@ -13200,7 +13457,7 @@
       "label": "v0.6 - DJ Database",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L466",
+      "source_location": "L478",
       "_origin": "ast"
     },
     {
@@ -13208,7 +13465,7 @@
       "label": "v0.7 - Organizers",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L485",
+      "source_location": "L497",
       "_origin": "ast"
     },
     {
@@ -13216,7 +13473,7 @@
       "label": "v0.8 - Rich Content",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L501",
+      "source_location": "L513",
       "_origin": "ast"
     },
     {
@@ -13224,7 +13481,7 @@
       "label": "v0.9 - Community (implemented)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L520",
+      "source_location": "L532",
       "_origin": "ast"
     },
     {
@@ -13232,7 +13489,7 @@
       "label": "v0.95 - Media",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L540",
+      "source_location": "L552",
       "_origin": "ast"
     },
     {
@@ -13240,7 +13497,7 @@
       "label": "v0.97 - Polish build (complete)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L547",
+      "source_location": "L559",
       "_origin": "ast"
     },
     {
@@ -13248,7 +13505,7 @@
       "label": "v0.99 - Submission polish",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L559",
+      "source_location": "L571",
       "_origin": "ast"
     },
     {
@@ -13256,7 +13513,7 @@
       "label": "v0.99.1 - Community MVP (implemented; Firebase deployment live)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L568",
+      "source_location": "L580",
       "_origin": "ast"
     },
     {
@@ -13264,7 +13521,7 @@
       "label": "v1.0 - First Public Release (later)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L579",
+      "source_location": "L591",
       "_origin": "ast"
     },
     {
@@ -13272,7 +13529,7 @@
       "label": "v1.1 - Annual Voting",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L628",
+      "source_location": "L640",
       "_origin": "ast"
     },
     {
@@ -13280,7 +13537,7 @@
       "label": "v1.5 - Hardstyle Revolution Store",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L652",
+      "source_location": "L664",
       "_origin": "ast"
     },
     {
@@ -13288,7 +13545,7 @@
       "label": "Release And Store Business Model",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L663",
+      "source_location": "L675",
       "_origin": "ast"
     },
     {
@@ -13296,7 +13553,7 @@
       "label": "Free Release",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L667",
+      "source_location": "L679",
       "_origin": "ast"
     },
     {
@@ -13304,7 +13561,7 @@
       "label": "Premium Release",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L677",
+      "source_location": "L689",
       "_origin": "ast"
     },
     {
@@ -13312,7 +13569,7 @@
       "label": "UX Direction",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L735",
+      "source_location": "L747",
       "_origin": "ast"
     },
     {
@@ -13320,7 +13577,7 @@
       "label": "Android Notes",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L758",
+      "source_location": "L770",
       "_origin": "ast"
     },
     {
@@ -13328,7 +13585,7 @@
       "label": "iOS Notes",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L770",
+      "source_location": "L782",
       "_origin": "ast"
     },
     {
@@ -13336,7 +13593,7 @@
       "label": "Content Language",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L782",
+      "source_location": "L794",
       "_origin": "ast"
     },
     {
@@ -13344,7 +13601,7 @@
       "label": "Coding Style",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L788",
+      "source_location": "L800",
       "_origin": "ast"
     },
     {
@@ -13352,7 +13609,7 @@
       "label": "Testing Expectations",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L808",
+      "source_location": "L820",
       "_origin": "ast"
     },
     {
@@ -13360,7 +13617,7 @@
       "label": "User Collaboration Preferences",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L818",
+      "source_location": "L830",
       "_origin": "ast"
     },
     {
@@ -13368,7 +13625,7 @@
       "label": "Important Current Implementation Priorities",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L838",
+      "source_location": "L850",
       "_origin": "ast"
     },
     {
@@ -13376,7 +13633,7 @@
       "label": "Agent Reminder",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L873",
+      "source_location": "L885",
       "_origin": "ast"
     },
     {
@@ -13740,6 +13997,14 @@
       "_origin": "ast"
     },
     {
+      "id": "project_context_v0_99_8_user_profile_navigation_and_community_details_complete",
+      "label": "v0.99.8 - User profile navigation and community details (complete)",
+      "file_type": "document",
+      "source_file": "PROJECT_CONTEXT.md",
+      "source_location": "L964",
+      "_origin": "ast"
+    },
+    {
       "id": "readme",
       "label": "README.md",
       "file_type": "document",
@@ -13836,11 +14101,19 @@
       "_origin": "ast"
     },
     {
+      "id": "readme_v0_99_8_user_profile_navigation_and_community_details_complete",
+      "label": "v0.99.8 — User profile navigation and community details (complete)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L162",
+      "_origin": "ast"
+    },
+    {
       "id": "readme_faq_választervezet",
       "label": "FAQ-választervezet",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L162",
+      "source_location": "L174",
       "_origin": "ast"
     },
     {
@@ -13848,7 +14121,7 @@
       "label": "Roadmap",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L196",
+      "source_location": "L208",
       "_origin": "ast"
     },
     {
@@ -13856,7 +14129,7 @@
       "label": "Current bug-fix backlog",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L198",
+      "source_location": "L210",
       "_origin": "ast"
     },
     {
@@ -13864,7 +14137,7 @@
       "label": "v0.4 — Foundation",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L211",
+      "source_location": "L223",
       "_origin": "ast"
     },
     {
@@ -13872,7 +14145,7 @@
       "label": "v0.5 — Dynamic events",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L221",
+      "source_location": "L233",
       "_origin": "ast"
     },
     {
@@ -13880,7 +14153,7 @@
       "label": "v0.6 — DJ database",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L231",
+      "source_location": "L243",
       "_origin": "ast"
     },
     {
@@ -13888,7 +14161,7 @@
       "label": "v0.7 — Organizers",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L243",
+      "source_location": "L255",
       "_origin": "ast"
     },
     {
@@ -13896,7 +14169,7 @@
       "label": "v0.8 — Rich content",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L255",
+      "source_location": "L267",
       "_origin": "ast"
     },
     {
@@ -13904,7 +14177,7 @@
       "label": "v0.9 — Community utilities (implemented)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L266",
+      "source_location": "L278",
       "_origin": "ast"
     },
     {
@@ -13912,7 +14185,7 @@
       "label": "v0.95 — Media",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L297",
+      "source_location": "L309",
       "_origin": "ast"
     },
     {
@@ -13920,7 +14193,7 @@
       "label": "v0.97 — Polish build",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L302",
+      "source_location": "L314",
       "_origin": "ast"
     },
     {
@@ -13928,7 +14201,7 @@
       "label": "v0.99 — Submission polish",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L316",
+      "source_location": "L328",
       "_origin": "ast"
     },
     {
@@ -13936,7 +14209,7 @@
       "label": "v0.99 — Completed polish items",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L326",
+      "source_location": "L338",
       "_origin": "ast"
     },
     {
@@ -13944,7 +14217,7 @@
       "label": "v0.99.1 — Community MVP (implemented; external setup remains)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L334",
+      "source_location": "L346",
       "_origin": "ast"
     },
     {
@@ -13952,7 +14225,7 @@
       "label": "v1.0 — First public release",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L352",
+      "source_location": "L364",
       "_origin": "ast"
     },
     {
@@ -13960,7 +14233,7 @@
       "label": "v1.1 — Annual voting",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L405",
+      "source_location": "L417",
       "_origin": "ast"
     },
     {
@@ -13968,7 +14241,7 @@
       "label": "v1.5 — Hardstyle Revolution Store",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L416",
+      "source_location": "L428",
       "_origin": "ast"
     },
     {
@@ -13976,7 +14249,7 @@
       "label": "Navigation direction",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L431",
+      "source_location": "L443",
       "_origin": "ast"
     },
     {
@@ -13984,7 +14257,7 @@
       "label": "Language direction",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L441",
+      "source_location": "L453",
       "_origin": "ast"
     },
     {
@@ -13992,7 +14265,7 @@
       "label": "Brands",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L447",
+      "source_location": "L459",
       "_origin": "ast"
     },
     {
@@ -14000,7 +14273,7 @@
       "label": "Long-term vision",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L454",
+      "source_location": "L466",
       "_origin": "ast"
     },
     {
@@ -23781,6 +24054,17 @@
     },
     {
       "source": "lib_screens_community_community_screen",
+      "target": "lib_screens_community_community_screen_biometricgateuid",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen",
       "target": "lib_screens_community_community_screen_chaterror",
       "relation": "defines",
       "confidence": "EXTRACTED",
@@ -24003,6 +24287,17 @@
       "source_location": null,
       "weight": 1.0,
       "context": "riverpod_reference",
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen",
+      "target": "lib_screens_community_community_screen_edit",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
       "_origin": "ast"
     },
     {
@@ -24350,6 +24645,17 @@
     },
     {
       "source": "lib_screens_community_community_screen",
+      "target": "providers_favorites_provider_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen",
       "target": "services_community_service_dart",
       "relation": "imports",
       "confidence": "EXTRACTED",
@@ -24373,6 +24679,17 @@
     {
       "source": "lib_screens_community_community_screen",
       "target": "more_favorites_screen_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen",
+      "target": "more_community_users_screen_dart",
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -25042,8 +25359,41 @@
     },
     {
       "source": "lib_screens_events_event_detail_screen_eventdetailscreen",
-      "target": "statelesswidget",
+      "target": "consumerstatefulwidget",
       "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/events/event_detail_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_events_event_detail_screen",
+      "target": "lib_screens_events_event_detail_screen_eventdetailscreenstate",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/events/event_detail_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_events_event_detail_screen_eventdetailscreenstate",
+      "target": "consumerstate",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/events/event_detail_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_events_event_detail_screen_eventdetailscreenstate",
+      "target": "lib_screens_events_event_detail_screen_eventdetailscreen",
+      "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/screens/events/event_detail_screen.dart",
@@ -25109,6 +25459,18 @@
     {
       "source": "lib_screens_events_event_detail_screen",
       "target": "lib_models_event_huhsevent",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/events/event_detail_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_events_event_detail_screen",
+      "target": "huhsevent_get",
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -25196,6 +25558,17 @@
       "source_location": null,
       "weight": 1.0,
       "context": "variable_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_events_event_detail_screen",
+      "target": "lib_screens_events_event_detail_screen_createstate",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/events/event_detail_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
       "_origin": "ast"
     },
     {
@@ -25322,6 +25695,17 @@
     },
     {
       "source": "lib_screens_events_event_detail_screen",
+      "target": "package_flutter_riverpod_flutter_riverpod_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/events/event_detail_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_events_event_detail_screen",
       "target": "package_intl_intl_dart",
       "relation": "imports",
       "confidence": "EXTRACTED",
@@ -25400,6 +25784,17 @@
     {
       "source": "lib_screens_events_event_detail_screen",
       "target": "widgets_genre_chip_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/events/event_detail_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_events_event_detail_screen",
+      "target": "providers_community_provider_dart",
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -28081,6 +28476,72 @@
     },
     {
       "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_communitypublicprofilescreen",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen_communitypublicprofilescreen",
+      "target": "statelesswidget",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_communityconnectionsscreen",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen_communityconnectionsscreen",
+      "target": "statelesswidget",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_communityblockedusersscreen",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen_communityblockedusersscreen",
+      "target": "statelesswidget",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
       "target": "lib_screens_more_community_users_screen_search",
       "relation": "defines",
       "confidence": "EXTRACTED",
@@ -28116,6 +28577,17 @@
     {
       "source": "lib_screens_more_community_users_screen",
       "target": "lib_screens_more_community_users_screen_imageurl",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_userid",
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -28182,6 +28654,29 @@
       "_origin": "ast"
     },
     {
+      "source": "lib_screens_more_community_users_screen_build",
+      "target": "materialpageroute",
+      "relation": "navigates",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "route_object",
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_role",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "lib_screens_more_community_users_screen",
       "target": "package_cloud_firestore_cloud_firestore_dart",
       "relation": "imports",
@@ -28227,7 +28722,41 @@
     },
     {
       "source": "lib_screens_more_community_users_screen",
+      "target": "core_navigation_in_app_browser_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "services_community_service_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
       "target": "querysnapshot",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "type_lookup",
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "documentsnapshot",
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -29776,6 +30305,17 @@
     },
     {
       "source": "lib_screens_more_settings_screen",
+      "target": "lib_screens_more_settings_screen_biometricenabled",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/settings_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_settings_screen",
       "target": "lib_screens_more_settings_screen_createstate",
       "relation": "defines",
       "confidence": "EXTRACTED",
@@ -29799,6 +30339,17 @@
     {
       "source": "lib_screens_more_settings_screen",
       "target": "lib_screens_more_settings_screen_loadsettings",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/settings_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_settings_screen",
+      "target": "lib_screens_more_settings_screen_setbiometric",
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -29909,6 +30460,17 @@
     {
       "source": "lib_screens_more_settings_screen",
       "target": "services_push_notification_service_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/settings_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_settings_screen",
+      "target": "services_community_service_dart",
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -33031,6 +33593,17 @@
     },
     {
       "source": "lib_services_community_service",
+      "target": "lib_services_community_service_updateposttext",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
       "target": "lib_services_community_service_reportpost",
       "relation": "defines",
       "confidence": "EXTRACTED",
@@ -33043,6 +33616,28 @@
     {
       "source": "lib_services_community_service",
       "target": "lib_services_community_service_blockuser",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_watchblockedusers",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_unblockuser",
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -33142,6 +33737,149 @@
     {
       "source": "lib_services_community_service",
       "target": "lib_services_community_service_watchregisteredprofiles",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_watchmyreports",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_attendance",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_watcheventattendance",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_getmyattendance",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_setattendance",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_watchplannedevents",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_watchconnections",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_biometricenabled",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_setbiometricenabled",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_authenticatebiometric",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_connectionstatus",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_requestconnection",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_respondconnection",
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -33395,6 +34133,28 @@
     {
       "source": "lib_services_community_service",
       "target": "package_google_sign_in_google_sign_in_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "package_local_auth_local_auth_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "package_shared_preferences_shared_preferences_dart",
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -37572,7 +38332,7 @@
     },
     {
       "source": "macos_flutter_generatedpluginregistrant",
-      "target": "package_info_plus",
+      "target": "local_auth_darwin",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -37583,7 +38343,7 @@
     },
     {
       "source": "macos_flutter_generatedpluginregistrant",
-      "target": "shared_preferences_foundation",
+      "target": "package_info_plus",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -37594,7 +38354,7 @@
     },
     {
       "source": "macos_flutter_generatedpluginregistrant",
-      "target": "sqflite_darwin",
+      "target": "shared_preferences_foundation",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -37605,7 +38365,7 @@
     },
     {
       "source": "macos_flutter_generatedpluginregistrant",
-      "target": "url_launcher_macos",
+      "target": "sqflite_darwin",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -37616,7 +38376,7 @@
     },
     {
       "source": "macos_flutter_generatedpluginregistrant",
-      "target": "webview_flutter_wkwebview",
+      "target": "url_launcher_macos",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -37627,11 +38387,22 @@
     },
     {
       "source": "macos_flutter_generatedpluginregistrant",
+      "target": "webview_flutter_wkwebview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "macos_flutter_generatedpluginregistrant",
       "target": "macos_flutter_generatedpluginregistrant_registergeneratedplugins",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -37641,7 +38412,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -39098,7 +39869,7 @@
     },
     {
       "source": "windows_flutter_generated_plugin_registrant_cc_windows_flutter_generated_plugin_registrant",
-      "target": "url_launcher_windows",
+      "target": "local_auth_plugin",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -39109,11 +39880,22 @@
     },
     {
       "source": "windows_flutter_generated_plugin_registrant_cc_windows_flutter_generated_plugin_registrant",
+      "target": "url_launcher_windows",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "windows/flutter/generated_plugin_registrant.cc",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "windows_flutter_generated_plugin_registrant_cc_windows_flutter_generated_plugin_registrant",
       "target": "windows_flutter_generated_plugin_registrant_registerplugins",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "windows/flutter/generated_plugin_registrant.cc",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -39123,7 +39905,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "windows/flutter/generated_plugin_registrant.cc",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -40748,7 +41530,7 @@
     },
     {
       "source": "agents_roadmap",
-      "target": "agents_v0_4_foundation",
+      "target": "agents_v0_99_8_user_profile_navigation_and_community_details_complete",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
@@ -40758,11 +41540,21 @@
     },
     {
       "source": "agents_roadmap",
+      "target": "agents_v0_4_foundation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L453",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "agents_roadmap",
       "target": "agents_v0_5_dynamic_events",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L451",
+      "source_location": "L463",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40772,7 +41564,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L466",
+      "source_location": "L478",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40782,7 +41574,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L485",
+      "source_location": "L497",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40792,7 +41584,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L501",
+      "source_location": "L513",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40802,7 +41594,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L520",
+      "source_location": "L532",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40812,7 +41604,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L540",
+      "source_location": "L552",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40822,7 +41614,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L547",
+      "source_location": "L559",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40832,7 +41624,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L559",
+      "source_location": "L571",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40842,7 +41634,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L568",
+      "source_location": "L580",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40852,7 +41644,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L579",
+      "source_location": "L591",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40862,7 +41654,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L628",
+      "source_location": "L640",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40872,7 +41664,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L652",
+      "source_location": "L664",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40882,7 +41674,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L663",
+      "source_location": "L675",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40892,7 +41684,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L667",
+      "source_location": "L679",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40902,7 +41694,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L677",
+      "source_location": "L689",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40912,7 +41704,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L735",
+      "source_location": "L747",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40922,7 +41714,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L758",
+      "source_location": "L770",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40932,7 +41724,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L770",
+      "source_location": "L782",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40942,7 +41734,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L782",
+      "source_location": "L794",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40952,7 +41744,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L788",
+      "source_location": "L800",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40962,7 +41754,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L808",
+      "source_location": "L820",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40972,7 +41764,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L818",
+      "source_location": "L830",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40982,7 +41774,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L838",
+      "source_location": "L850",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -40992,7 +41784,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L873",
+      "source_location": "L885",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41437,6 +42229,16 @@
       "_origin": "ast"
     },
     {
+      "source": "project_context_vision",
+      "target": "project_context_v0_99_8_user_profile_navigation_and_community_details_complete",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "PROJECT_CONTEXT.md",
+      "source_location": "L964",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "readme",
       "target": "readme_hungarian_hardstyle_app",
       "relation": "contains",
@@ -41547,12 +42349,22 @@
       "_origin": "ast"
     },
     {
-      "source": "readme_v0_99_7_3_claim_display_follow_up_complete",
-      "target": "readme_faq_választervezet",
+      "source": "readme_current_status",
+      "target": "readme_v0_99_8_user_profile_navigation_and_community_details_complete",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
       "source_location": "L162",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "readme_v0_99_8_user_profile_navigation_and_community_details_complete",
+      "target": "readme_faq_választervezet",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L174",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41562,7 +42374,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L196",
+      "source_location": "L208",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41572,7 +42384,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L198",
+      "source_location": "L210",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41582,7 +42394,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L211",
+      "source_location": "L223",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41592,7 +42404,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L221",
+      "source_location": "L233",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41602,7 +42414,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L231",
+      "source_location": "L243",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41612,7 +42424,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L243",
+      "source_location": "L255",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41622,7 +42434,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L255",
+      "source_location": "L267",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41632,7 +42444,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L266",
+      "source_location": "L278",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41642,7 +42454,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L297",
+      "source_location": "L309",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41652,7 +42464,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L302",
+      "source_location": "L314",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41662,7 +42474,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L316",
+      "source_location": "L328",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41672,7 +42484,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L326",
+      "source_location": "L338",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41682,7 +42494,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L334",
+      "source_location": "L346",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41692,7 +42504,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L352",
+      "source_location": "L364",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41702,7 +42514,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L405",
+      "source_location": "L417",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41712,7 +42524,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L416",
+      "source_location": "L428",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41722,7 +42534,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L431",
+      "source_location": "L443",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41732,7 +42544,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L441",
+      "source_location": "L453",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41742,7 +42554,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L447",
+      "source_location": "L459",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41752,7 +42564,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L454",
+      "source_location": "L466",
       "weight": 1.0,
       "_origin": "ast"
     },
