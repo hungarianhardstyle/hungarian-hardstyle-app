@@ -25,7 +25,7 @@ class FavoritesScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _openEntry(
+  static Future<void> openEntry(
     BuildContext context,
     WidgetRef ref,
     FavoriteEntry entry,
@@ -158,7 +158,7 @@ class FavoritesScreen extends ConsumerWidget {
                     ),
                     title: Text(entry.title),
                     subtitle: Text(_label(entry.kind)),
-                    onTap: () => _openEntry(context, ref, entry),
+                    onTap: () => openEntry(context, ref, entry),
                     trailing: IconButton(
                       tooltip: 'Eltávolítás',
                       icon: const Icon(Icons.delete_outline),

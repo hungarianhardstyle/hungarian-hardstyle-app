@@ -5570,6 +5570,14 @@
       "_origin": "ast"
     },
     {
+      "id": "lib_screens_community_community_screen_openplannedevent",
+      "label": "_openPlannedEvent",
+      "file_type": "code",
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "lib_screens_community_community_screen_readonlyprofilewidgets",
       "label": "_readOnlyProfileWidgets",
       "file_type": "code",
@@ -5610,6 +5618,14 @@
       "_origin": "ast"
     },
     {
+      "id": "providers_events_provider_dart",
+      "label": "../../providers/events_provider.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "widgets_submission_image_picker_dart",
       "label": "../../widgets/submission_image_picker.dart",
       "file_type": "code",
@@ -5636,6 +5652,14 @@
     {
       "id": "artists_artist_detail_screen_dart",
       "label": "../artists/artist_detail_screen.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "events_event_detail_screen_dart",
+      "label": "../events/event_detail_screen.dart",
       "file_type": "code",
       "source_file": null,
       "source_location": null,
@@ -6514,14 +6538,6 @@
       "_origin": "ast"
     },
     {
-      "id": "providers_events_provider_dart",
-      "label": "../../providers/events_provider.dart",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast"
-    },
-    {
       "id": "providers_news_provider_dart",
       "label": "../../providers/news_provider.dart",
       "file_type": "code",
@@ -7394,8 +7410,8 @@
       "_origin": "ast"
     },
     {
-      "id": "lib_screens_more_community_users_screen_communityconnectionsscreen",
-      "label": "CommunityConnectionsScreen",
+      "id": "lib_screens_more_community_users_screen_legacycommunityconnectionsscreen",
+      "label": "_LegacyCommunityConnectionsScreen",
       "file_type": "code",
       "source_file": "lib/screens/more/community_users_screen.dart",
       "source_location": null,
@@ -7404,6 +7420,30 @@
     {
       "id": "lib_screens_more_community_users_screen_communityblockedusersscreen",
       "label": "CommunityBlockedUsersScreen",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_communityreportsscreen",
+      "label": "CommunityReportsScreen",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_communityconnectionsscreen",
+      "label": "CommunityConnectionsScreen",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_connectionrequesttile",
+      "label": "_ConnectionRequestTile",
       "file_type": "code",
       "source_file": "lib/screens/more/community_users_screen.dart",
       "source_location": null,
@@ -7460,6 +7500,14 @@
     {
       "id": "lib_screens_more_community_users_screen_connectionstatus",
       "label": "_connectionStatus",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_request",
+      "label": "request",
       "file_type": "code",
       "source_file": "lib/screens/more/community_users_screen.dart",
       "source_location": null,
@@ -7683,7 +7731,7 @@
     },
     {
       "id": "lib_screens_more_favorites_screen_openentry",
-      "label": "_openEntry",
+      "label": "openEntry",
       "file_type": "code",
       "source_file": "lib/screens/more/favorites_screen.dart",
       "source_location": null,
@@ -7694,14 +7742,6 @@
       "label": "build",
       "file_type": "code",
       "source_file": "lib/screens/more/favorites_screen.dart",
-      "source_location": null,
-      "_origin": "ast"
-    },
-    {
-      "id": "events_event_detail_screen_dart",
-      "label": "../events/event_detail_screen.dart",
-      "file_type": "code",
-      "source_file": null,
       "source_location": null,
       "_origin": "ast"
     },
@@ -9644,6 +9684,22 @@
     {
       "id": "lib_services_community_service_reportpost",
       "label": "reportPost",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_resolvereport",
+      "label": "resolveReport",
+      "file_type": "code",
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_services_community_service_adminblockuser",
+      "label": "adminBlockUser",
       "file_type": "code",
       "source_file": "lib/services/community_service.dart",
       "source_location": null,
@@ -13509,11 +13565,19 @@
       "_origin": "ast"
     },
     {
+      "id": "agents_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
+      "label": "v0.99.8+3 - Connections, reports and planned-event links (in progress)",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L453",
+      "_origin": "ast"
+    },
+    {
       "id": "agents_v0_4_foundation",
       "label": "v0.4 - Foundation",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L453",
+      "source_location": "L460",
       "_origin": "ast"
     },
     {
@@ -13521,7 +13585,7 @@
       "label": "v0.5 - Dynamic Events",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L463",
+      "source_location": "L470",
       "_origin": "ast"
     },
     {
@@ -13529,7 +13593,7 @@
       "label": "v0.6 - DJ Database",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L478",
+      "source_location": "L485",
       "_origin": "ast"
     },
     {
@@ -13537,7 +13601,7 @@
       "label": "v0.7 - Organizers",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L497",
+      "source_location": "L504",
       "_origin": "ast"
     },
     {
@@ -13545,7 +13609,7 @@
       "label": "v0.8 - Rich Content",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L513",
+      "source_location": "L520",
       "_origin": "ast"
     },
     {
@@ -13553,7 +13617,7 @@
       "label": "v0.9 - Community (implemented)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L532",
+      "source_location": "L539",
       "_origin": "ast"
     },
     {
@@ -13561,7 +13625,7 @@
       "label": "v0.95 - Media",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L552",
+      "source_location": "L559",
       "_origin": "ast"
     },
     {
@@ -13569,7 +13633,7 @@
       "label": "v0.97 - Polish build (complete)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L559",
+      "source_location": "L566",
       "_origin": "ast"
     },
     {
@@ -13577,7 +13641,7 @@
       "label": "v0.99 - Submission polish",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L571",
+      "source_location": "L578",
       "_origin": "ast"
     },
     {
@@ -13585,7 +13649,7 @@
       "label": "v0.99.1 - Community MVP (implemented; Firebase deployment live)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L580",
+      "source_location": "L587",
       "_origin": "ast"
     },
     {
@@ -13593,7 +13657,7 @@
       "label": "v1.0 - First Public Release (later)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L591",
+      "source_location": "L598",
       "_origin": "ast"
     },
     {
@@ -13601,7 +13665,7 @@
       "label": "v1.1 - Annual Voting",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L640",
+      "source_location": "L647",
       "_origin": "ast"
     },
     {
@@ -13609,7 +13673,7 @@
       "label": "v1.5 - Hardstyle Revolution Store",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L664",
+      "source_location": "L671",
       "_origin": "ast"
     },
     {
@@ -13617,7 +13681,7 @@
       "label": "Release And Store Business Model",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L675",
+      "source_location": "L682",
       "_origin": "ast"
     },
     {
@@ -13625,7 +13689,7 @@
       "label": "Free Release",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L679",
+      "source_location": "L686",
       "_origin": "ast"
     },
     {
@@ -13633,7 +13697,7 @@
       "label": "Premium Release",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L689",
+      "source_location": "L696",
       "_origin": "ast"
     },
     {
@@ -13641,7 +13705,7 @@
       "label": "UX Direction",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L747",
+      "source_location": "L754",
       "_origin": "ast"
     },
     {
@@ -13649,7 +13713,7 @@
       "label": "Android Notes",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L770",
+      "source_location": "L777",
       "_origin": "ast"
     },
     {
@@ -13657,7 +13721,7 @@
       "label": "iOS Notes",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L782",
+      "source_location": "L789",
       "_origin": "ast"
     },
     {
@@ -13665,7 +13729,7 @@
       "label": "Content Language",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L794",
+      "source_location": "L801",
       "_origin": "ast"
     },
     {
@@ -13673,7 +13737,7 @@
       "label": "Coding Style",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L800",
+      "source_location": "L807",
       "_origin": "ast"
     },
     {
@@ -13681,7 +13745,7 @@
       "label": "Testing Expectations",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L820",
+      "source_location": "L827",
       "_origin": "ast"
     },
     {
@@ -13689,7 +13753,7 @@
       "label": "User Collaboration Preferences",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L830",
+      "source_location": "L837",
       "_origin": "ast"
     },
     {
@@ -13697,7 +13761,7 @@
       "label": "Important Current Implementation Priorities",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L850",
+      "source_location": "L857",
       "_origin": "ast"
     },
     {
@@ -13705,7 +13769,7 @@
       "label": "Agent Reminder",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L885",
+      "source_location": "L892",
       "_origin": "ast"
     },
     {
@@ -14077,6 +14141,14 @@
       "_origin": "ast"
     },
     {
+      "id": "project_context_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
+      "label": "v0.99.8+3 - Connections, reports and planned-event links (in progress)",
+      "file_type": "document",
+      "source_file": "PROJECT_CONTEXT.md",
+      "source_location": "L977",
+      "_origin": "ast"
+    },
+    {
       "id": "readme",
       "label": "README.md",
       "file_type": "document",
@@ -14181,11 +14253,19 @@
       "_origin": "ast"
     },
     {
+      "id": "readme_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
+      "label": "v0.99.8+3 — Connections, reports and planned-event links (in progress)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L174",
+      "_origin": "ast"
+    },
+    {
       "id": "readme_faq_választervezet",
       "label": "FAQ-választervezet",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L174",
+      "source_location": "L181",
       "_origin": "ast"
     },
     {
@@ -14193,7 +14273,7 @@
       "label": "Roadmap",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L208",
+      "source_location": "L215",
       "_origin": "ast"
     },
     {
@@ -14201,7 +14281,7 @@
       "label": "Current bug-fix backlog",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L210",
+      "source_location": "L217",
       "_origin": "ast"
     },
     {
@@ -14209,7 +14289,7 @@
       "label": "v0.4 — Foundation",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L223",
+      "source_location": "L230",
       "_origin": "ast"
     },
     {
@@ -14217,7 +14297,7 @@
       "label": "v0.5 — Dynamic events",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L233",
+      "source_location": "L240",
       "_origin": "ast"
     },
     {
@@ -14225,7 +14305,7 @@
       "label": "v0.6 — DJ database",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L243",
+      "source_location": "L250",
       "_origin": "ast"
     },
     {
@@ -14233,7 +14313,7 @@
       "label": "v0.7 — Organizers",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L255",
+      "source_location": "L262",
       "_origin": "ast"
     },
     {
@@ -14241,7 +14321,7 @@
       "label": "v0.8 — Rich content",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L267",
+      "source_location": "L274",
       "_origin": "ast"
     },
     {
@@ -14249,7 +14329,7 @@
       "label": "v0.9 — Community utilities (implemented)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L278",
+      "source_location": "L285",
       "_origin": "ast"
     },
     {
@@ -14257,7 +14337,7 @@
       "label": "v0.95 — Media",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L309",
+      "source_location": "L316",
       "_origin": "ast"
     },
     {
@@ -14265,7 +14345,7 @@
       "label": "v0.97 — Polish build",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L314",
+      "source_location": "L321",
       "_origin": "ast"
     },
     {
@@ -14273,7 +14353,7 @@
       "label": "v0.99 — Submission polish",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L328",
+      "source_location": "L335",
       "_origin": "ast"
     },
     {
@@ -14281,7 +14361,7 @@
       "label": "v0.99 — Completed polish items",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L338",
+      "source_location": "L345",
       "_origin": "ast"
     },
     {
@@ -14289,7 +14369,7 @@
       "label": "v0.99.1 — Community MVP (implemented; external setup remains)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L346",
+      "source_location": "L353",
       "_origin": "ast"
     },
     {
@@ -14297,7 +14377,7 @@
       "label": "v1.0 — First public release",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L364",
+      "source_location": "L371",
       "_origin": "ast"
     },
     {
@@ -14305,7 +14385,7 @@
       "label": "v1.1 — Annual voting",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L417",
+      "source_location": "L424",
       "_origin": "ast"
     },
     {
@@ -14313,7 +14393,7 @@
       "label": "v1.5 — Hardstyle Revolution Store",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L428",
+      "source_location": "L435",
       "_origin": "ast"
     },
     {
@@ -14321,7 +14401,7 @@
       "label": "Navigation direction",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L443",
+      "source_location": "L450",
       "_origin": "ast"
     },
     {
@@ -14329,7 +14409,7 @@
       "label": "Language direction",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L453",
+      "source_location": "L460",
       "_origin": "ast"
     },
     {
@@ -14337,7 +14417,7 @@
       "label": "Brands",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L459",
+      "source_location": "L466",
       "_origin": "ast"
     },
     {
@@ -14345,7 +14425,7 @@
       "label": "Long-term vision",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L466",
+      "source_location": "L473",
       "_origin": "ast"
     },
     {
@@ -23497,6 +23577,18 @@
       "_origin": "ast"
     },
     {
+      "source": "lib_screens_community_community_screen_communityprofilescreenstate",
+      "target": "lib_providers_events_provider_eventsprovider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast"
+    },
+    {
       "source": "lib_screens_community_community_screen",
       "target": "lib_screens_community_community_screen_raw",
       "relation": "defines",
@@ -24561,6 +24653,41 @@
     },
     {
       "source": "lib_screens_community_community_screen",
+      "target": "lib_screens_community_community_screen_openplannedevent",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen_openplannedevent",
+      "target": "lib_providers_events_provider_eventsprovider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen_openplannedevent",
+      "target": "materialpageroute",
+      "relation": "navigates",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "route_object",
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen",
       "target": "lib_screens_community_community_screen_readonlyprofilewidgets",
       "relation": "defines",
       "confidence": "EXTRACTED",
@@ -24705,6 +24832,17 @@
     },
     {
       "source": "lib_screens_community_community_screen",
+      "target": "models_event_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen",
       "target": "models_submission_image_dart",
       "relation": "imports",
       "confidence": "EXTRACTED",
@@ -24728,6 +24866,17 @@
     {
       "source": "lib_screens_community_community_screen",
       "target": "providers_community_provider_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen",
+      "target": "providers_events_provider_dart",
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -24794,6 +24943,17 @@
     {
       "source": "lib_screens_community_community_screen",
       "target": "artists_artist_detail_screen_dart",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen",
+      "target": "events_event_detail_screen_dart",
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -28693,7 +28853,7 @@
     },
     {
       "source": "lib_screens_more_community_users_screen",
-      "target": "lib_screens_more_community_users_screen_communityconnectionsscreen",
+      "target": "lib_screens_more_community_users_screen_legacycommunityconnectionsscreen",
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -28703,7 +28863,7 @@
       "_origin": "ast"
     },
     {
-      "source": "lib_screens_more_community_users_screen_communityconnectionsscreen",
+      "source": "lib_screens_more_community_users_screen_legacycommunityconnectionsscreen",
       "target": "statelesswidget",
       "relation": "inherits",
       "confidence": "EXTRACTED",
@@ -28726,6 +28886,72 @@
     },
     {
       "source": "lib_screens_more_community_users_screen_communityblockedusersscreen",
+      "target": "statelesswidget",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_communityreportsscreen",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen_communityreportsscreen",
+      "target": "statelesswidget",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_communityconnectionsscreen",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen_communityconnectionsscreen",
+      "target": "statelesswidget",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_connectionrequesttile",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen_connectionrequesttile",
       "target": "statelesswidget",
       "relation": "inherits",
       "confidence": "EXTRACTED",
@@ -28847,6 +29073,17 @@
       "source_location": null,
       "weight": 1.0,
       "context": "variable_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_request",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
       "_origin": "ast"
     },
     {
@@ -33880,6 +34117,28 @@
     {
       "source": "lib_services_community_service",
       "target": "lib_services_community_service_reportpost",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_resolvereport",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/services/community_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_services_community_service",
+      "target": "lib_services_community_service_adminblockuser",
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -41815,7 +42074,7 @@
     },
     {
       "source": "agents_roadmap",
-      "target": "agents_v0_4_foundation",
+      "target": "agents_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
@@ -41825,11 +42084,21 @@
     },
     {
       "source": "agents_roadmap",
+      "target": "agents_v0_4_foundation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L460",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "agents_roadmap",
       "target": "agents_v0_5_dynamic_events",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L463",
+      "source_location": "L470",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41839,7 +42108,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L478",
+      "source_location": "L485",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41849,7 +42118,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L497",
+      "source_location": "L504",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41859,7 +42128,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L513",
+      "source_location": "L520",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41869,7 +42138,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L532",
+      "source_location": "L539",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41879,7 +42148,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L552",
+      "source_location": "L559",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41889,7 +42158,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L559",
+      "source_location": "L566",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41899,7 +42168,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L571",
+      "source_location": "L578",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41909,7 +42178,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L580",
+      "source_location": "L587",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41919,7 +42188,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L591",
+      "source_location": "L598",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41929,7 +42198,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L640",
+      "source_location": "L647",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41939,7 +42208,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L664",
+      "source_location": "L671",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41949,7 +42218,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L675",
+      "source_location": "L682",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41959,7 +42228,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L679",
+      "source_location": "L686",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41969,7 +42238,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L689",
+      "source_location": "L696",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41979,7 +42248,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L747",
+      "source_location": "L754",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41989,7 +42258,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L770",
+      "source_location": "L777",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -41999,7 +42268,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L782",
+      "source_location": "L789",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42009,7 +42278,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L794",
+      "source_location": "L801",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42019,7 +42288,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L800",
+      "source_location": "L807",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42029,7 +42298,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L820",
+      "source_location": "L827",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42039,7 +42308,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L830",
+      "source_location": "L837",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42049,7 +42318,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L850",
+      "source_location": "L857",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42059,7 +42328,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L885",
+      "source_location": "L892",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42514,6 +42783,16 @@
       "_origin": "ast"
     },
     {
+      "source": "project_context_vision",
+      "target": "project_context_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "PROJECT_CONTEXT.md",
+      "source_location": "L977",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "readme",
       "target": "readme_hungarian_hardstyle_app",
       "relation": "contains",
@@ -42634,12 +42913,22 @@
       "_origin": "ast"
     },
     {
-      "source": "readme_v0_99_8_user_profile_navigation_and_community_details_complete",
-      "target": "readme_faq_választervezet",
+      "source": "readme_current_status",
+      "target": "readme_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
       "source_location": "L174",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "readme_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
+      "target": "readme_faq_választervezet",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L181",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42649,7 +42938,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L208",
+      "source_location": "L215",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42659,7 +42948,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L210",
+      "source_location": "L217",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42669,7 +42958,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L223",
+      "source_location": "L230",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42679,7 +42968,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L233",
+      "source_location": "L240",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42689,7 +42978,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L243",
+      "source_location": "L250",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42699,7 +42988,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L255",
+      "source_location": "L262",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42709,7 +42998,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L267",
+      "source_location": "L274",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42719,7 +43008,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L278",
+      "source_location": "L285",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42729,7 +43018,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L309",
+      "source_location": "L316",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42739,7 +43028,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L314",
+      "source_location": "L321",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42749,7 +43038,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L328",
+      "source_location": "L335",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42759,7 +43048,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L338",
+      "source_location": "L345",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42769,7 +43058,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L346",
+      "source_location": "L353",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42779,7 +43068,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L364",
+      "source_location": "L371",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42789,7 +43078,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L417",
+      "source_location": "L424",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42799,7 +43088,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L428",
+      "source_location": "L435",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42809,7 +43098,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L443",
+      "source_location": "L450",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42819,7 +43108,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L453",
+      "source_location": "L460",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42829,7 +43118,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L459",
+      "source_location": "L466",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42839,7 +43128,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L466",
+      "source_location": "L473",
       "weight": 1.0,
       "_origin": "ast"
     },

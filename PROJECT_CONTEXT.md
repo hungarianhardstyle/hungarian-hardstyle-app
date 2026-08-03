@@ -973,3 +973,10 @@ Everything connected.
 - [x] Add simpler own-chat management, a blocked-user list, and report-status visibility.
 - [x] Admin-only Chat message deletion and editing are enforced in the app and Firestore rules; normal users and moderators cannot delete or edit messages.
 - v0.99.8+2 bugfix pass: attendance records now include the validated event ID; attendance errors are surfaced; connection-request status refreshes after send; the named `hungarian-hardstyle` database push trigger `notifyConnectionRequest` is deployed; biometric enablement checks real device support; `MainActivity` uses `FlutterFragmentActivity` for `local_auth`. Final ARM build is pending phone testing.
+
+### v0.99.8+3 - Connections, reports and planned-event links (complete; phone verification pending)
+
+- [x] Show the sender's profile name and avatar in incoming friend requests, with native profile navigation.
+- [x] Send connection-request push notifications for list, map, string and legacy single-token storage.
+- [x] Make profile favorites and planned events open their native detail screens.
+- [x] Add an admin-only report-management screen with reported user/message details, resolve, delete-message and block-user actions.

@@ -404,14 +404,23 @@ exports.notifyConnectionRequest = onDocumentCreated(
     const request = event.data?.data() || {};
     if (request.status !== 'pending' || !request.from || !request.to) return null;
     const target = (await db.collection('community_profiles').doc(String(request.to)).get()).data() || {};
-    const tokens = Array.isArray(target.fcmTokens)
-      ? target.fcmTokens.filter((token) => typeof token === 'string')
-      : [];
-    if (!tokens.length) return null;
+    const rawTokens = target.fcmTokens;
+    const tokens = Array.isArray(rawTokens)
+      ? rawTokens
+      : rawTokens && typeof rawTokens === 'object'
+        ? Object.values(rawTokens)
+        : typeof rawTokens === 'string'
+          ? [rawTokens]
+          : [];
+    if (typeof target.fcmToken === 'string') tokens.push(target.fcmToken);
+    const uniqueTokens = [...new Set(
+      tokens.filter((token) => typeof token === 'string' && token.trim()),
+    )].slice(0, 500);
+    if (!uniqueTokens.length) return null;
     const sender = (await db.collection('community_profiles').doc(String(request.from)).get()).data() || {};
     const name = String(sender.displayName || 'Egy felhasználó').trim();
     return admin.messaging().sendEachForMulticast({
-      tokens: [...new Set(tokens)].slice(0, 500),
+      tokens: uniqueTokens,
       notification: { title: 'Új ismerősnek jelölés', body: `${name} ismerősnek jelölt.` },
       data: { type: 'connection_request', from: String(request.from) },
     });

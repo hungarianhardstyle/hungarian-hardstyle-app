@@ -450,6 +450,13 @@ Keep security hardening, friends/attendance, the release catalog and the music s
 - [x] Add simpler own-chat management, a blocked-user list, and report-status visibility.
 - [x] Restrict Chat message editing and deletion to admins; normal users cannot edit or delete their own messages.
 
+### v0.99.8+3 - Connections, reports and planned-event links (complete; phone verification pending)
+
+- [x] Show the sender's profile name and avatar in incoming friend requests, with native profile navigation.
+- [x] Send connection-request push notifications for list, map, string and legacy single-token storage.
+- [x] Make profile favorites and planned events open their native detail screens.
+- [x] Add an admin-only report-management screen with reported user/message details, resolve, delete-message and block-user actions.
+
 ### v0.4 - Foundation
 
 Focus:

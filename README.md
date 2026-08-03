@@ -171,6 +171,13 @@ Security hardening, friends/attendance, the release catalog and the music store 
 - [x] Add community follow-up: simpler own-chat management, blocked-user list, and report-status visibility.
 - [x] Restrict Chat message editing and deletion to admins; normal users cannot edit or delete their own messages.
 
+### v0.99.8+3 — Connections, reports and planned-event links (complete; phone verification pending)
+
+- [x] Show the sender's profile name and avatar in incoming friend requests, with native profile navigation.
+- [x] Send connection-request push notifications for list, map, string and legacy single-token storage.
+- [x] Make profile favorites and planned events open their native detail screens.
+- [x] Add an admin-only report-management screen with reported user/message details, resolve, delete-message and block-user actions.
+
 #### FAQ-választervezet
 
 - **Hogyan regisztrálhatok?** A Több → Profil oldalon e-mail-címmel vagy Google-fiókkal regisztrálhatsz. Regisztrációkor kötelező szerepkört választani: bulizó, DJ vagy szervező.

@@ -10,15 +10,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../../models/community_post.dart';
+import '../../models/event.dart';
 import '../../models/submission_image.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../providers/community_provider.dart';
+import '../../providers/events_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../services/community_service.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../more/favorites_screen.dart';
 import '../more/community_users_screen.dart';
 import '../artists/artist_detail_screen.dart';
+import '../events/event_detail_screen.dart';
 import 'wordpress_admin_screen.dart';
 
 String _chatError(Object error) {
@@ -312,6 +315,18 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                     labelText: 'Felhasználó keresése',
                     prefixIcon: Icon(Icons.search),
                   ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const CommunityReportsScreen(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.flag_outlined),
+                  label: const Text('Jelentések kezelése'),
                 ),
               ),
               StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -1351,6 +1366,41 @@ class _CommunityProfileScreenState
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _openPlannedEvent(
+    BuildContext context,
+    WidgetRef ref,
+    int eventId,
+  ) async {
+    try {
+      final events = await ref.read(eventsProvider.future);
+      HuhsEvent? match;
+      for (final event in events) {
+        if (event.id == eventId) {
+          match = event;
+          break;
+        }
+      }
+      if (!context.mounted) return;
+      if (match == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Az esemény már nem érhető el.')),
+        );
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => EventDetailScreen(event: match!),
+        ),
+      );
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Az esemény nem tölthető be.')),
+        );
+      }
+    }
+  }
+
   List<Widget> _readOnlyProfileWidgets(User user, String initial) {
     final socialLabels = const {
       'facebook': 'Facebook',
@@ -1446,6 +1496,7 @@ class _CommunityProfileScreenState
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.favorite, color: Colors.redAccent),
             title: Text(entry.title),
+            onTap: () => FavoritesScreen.openEntry(context, ref, entry),
             subtitle: Text(switch (entry.kind) {
               FavoriteKind.event => 'Esemény',
               FavoriteKind.artist => 'DJ',
@@ -1472,6 +1523,12 @@ class _CommunityProfileScreenState
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.event_outlined),
                   title: Text(event.data()['title'] as String? ?? 'Esemény'),
+                  onTap: () {
+                    final eventId = (event.data()['eventId'] as num?)?.toInt();
+                    if (eventId != null) {
+                      _openPlannedEvent(context, ref, eventId);
+                    }
+                  },
                 ),
             ],
           );

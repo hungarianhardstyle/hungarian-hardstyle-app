@@ -276,8 +276,10 @@ class _CommunityPublicProfileScreenState
   };
 }
 
-class CommunityConnectionsScreen extends StatelessWidget {
-  const CommunityConnectionsScreen({super.key});
+// ignore: unused_element
+class _LegacyCommunityConnectionsScreen extends StatelessWidget {
+  // ignore: unused_element_parameter
+  const _LegacyCommunityConnectionsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -371,6 +373,168 @@ class CommunityBlockedUsersScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class CommunityReportsScreen extends StatelessWidget {
+  const CommunityReportsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final service = CommunityService();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Jelentések kezelése')),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: service.watchReports(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) return Center(child: Text('${snapshot.error}'));
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          final reports = snapshot.data!.docs;
+          if (reports.isEmpty) return const Center(child: Text('Nincs nyitott jelentés.'));
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: reports.length,
+            itemBuilder: (context, index) {
+              final report = reports[index];
+              final data = report.data();
+              final postId = data['postId'] as String? ?? '';
+              final reportedUserId = data['reportedUserId'] as String? ?? '';
+              final reportedName = data['reportedUserName'] as String? ?? 'Felhasználó';
+              return Card(
+                child: ListTile(
+                  title: Text('$reportedName · ${data['reason'] ?? 'egyéb'}'),
+                  subtitle: Text(
+                    (data['reportedText'] as String? ?? 'Üzenet nem érhető el.').trim(),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (action) async {
+                      try {
+                        if (action == 'delete' && postId.isNotEmpty) {
+                          await service.deletePost(postId);
+                        } else if (action == 'block' && reportedUserId.isNotEmpty) {
+                          await service.adminBlockUser(reportedUserId);
+                        }
+                        await service.resolveReport(report.id);
+                      } catch (error) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('$error')),
+                          );
+                        }
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'resolve', child: Text('Lezárás')),
+                      PopupMenuItem(value: 'delete', child: Text('Üzenet törlése')),
+                      PopupMenuItem(value: 'block', child: Text('Felhasználó tiltása')),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class CommunityConnectionsScreen extends StatelessWidget {
+  const CommunityConnectionsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final service = CommunityService();
+    final user = service.auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      return const Scaffold(body: Center(child: Text('Regisztráció szükséges.')));
+    }
+    return Scaffold(
+      appBar: AppBar(title: const Text('Ismerősök')),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: service.firestore
+            .collection('connection_requests')
+            .where('to', isEqualTo: user.uid)
+            .where('status', isEqualTo: 'pending')
+            .snapshots(),
+        builder: (context, snapshot) {
+          final requests = snapshot.data?.docs ?? const [];
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (requests.isEmpty)
+                const Text('Nincs függőben lévő felkérés.'),
+              for (final request in requests)
+                _ConnectionRequestTile(request: request, service: service),
+              const Divider(),
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: service.watchConnections(user.uid),
+                builder: (context, connections) =>
+                    Text('Ismerősök: ${connections.data?.docs.length ?? 0}'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ConnectionRequestTile extends StatelessWidget {
+  final QueryDocumentSnapshot<Map<String, dynamic>> request;
+  final CommunityService service;
+
+  const _ConnectionRequestTile({required this.request, required this.service});
+
+  @override
+  Widget build(BuildContext context) {
+    final data = request.data();
+    final from = data['from'] as String? ?? '';
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: service.firestore.collection('community_profiles').doc(from).get(),
+      builder: (context, snapshot) {
+        final profile = snapshot.data?.data() ?? const <String, dynamic>{};
+        final name = (profile['displayName'] as String? ??
+                data['fromName'] as String? ??
+                'Felhasználó')
+            .trim();
+        final image = service.resolveProfileImage(
+          profile,
+          data['fromImageUrl'] as String? ?? '',
+        );
+        return ListTile(
+          onTap: from.isEmpty
+              ? null
+              : () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => CommunityPublicProfileScreen(userId: from),
+                    ),
+                  ),
+          leading: CircleAvatar(
+            backgroundImage: image.isEmpty ? null : NetworkImage(image),
+            child: image.isEmpty
+                ? Text(name.isEmpty ? 'F' : name.characters.first.toUpperCase())
+                : null,
+          ),
+          title: Text(name.isEmpty ? 'Felhasználó' : name),
+          trailing: Wrap(
+            spacing: 4,
+            children: [
+              IconButton(
+                onPressed: () => service.respondConnection(from, true),
+                icon: const Icon(Icons.check),
+              ),
+              IconButton(
+                onPressed: () => service.respondConnection(from, false),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -230,6 +230,11 @@ class CommunityService {
     if (isAnonymous && imageBytes != null) {
       throw StateError('Névtelen felhasználó nem tölthet fel képet.');
     }
+    if (!isAnonymous &&
+        (await firestore.collection('community_bans').doc(user.uid).get())
+            .exists) {
+      throw StateError('A Chat-hozzáférésed le van tiltva.');
+    }
 
     String imageUrl = '';
     if (imageBytes != null) {
@@ -336,12 +341,35 @@ class CommunityService {
     if (user.isAnonymous) {
       throw StateError('Jelentéshez regisztráció szükséges.');
     }
+    final post = await firestore.collection('live_feed_posts').doc(postId).get();
+    final postData = post.data() ?? const <String, dynamic>{};
     await firestore.collection('chat_reports').add({
       'postId': postId,
       'reporterId': user.uid,
       'reason': reason,
+      'reportedUserId': postData['authorId'] as String? ?? '',
+      'reportedUserName': postData['authorName'] as String? ?? '',
+      'reportedText': postData['text'] as String? ?? '',
       'status': 'open',
       'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> resolveReport(String reportId) async {
+    if (!isAdmin) throw StateError('Csak admin kezelhet jelentést.');
+    await firestore.collection('chat_reports').doc(reportId).update({
+      'status': 'resolved',
+      'resolvedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> adminBlockUser(String userId) async {
+    if (!isAdmin || userId.isEmpty) {
+      throw StateError('Csak admin tilthat felhasználót.');
+    }
+    await firestore.collection('community_bans').doc(userId).set({
+      'createdAt': FieldValue.serverTimestamp(),
+      'createdBy': auth.currentUser?.uid,
     });
   }
 
@@ -587,12 +615,24 @@ class CommunityService {
     if (user == null || user.isAnonymous || otherUserId == user.uid) {
       throw StateError('Ismerős-jelöléshez regisztráció szükséges.');
     }
+    final profile = await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .get();
+    final profileData = profile.data() ?? const <String, dynamic>{};
+    final senderName = (profileData['displayName'] as String? ??
+            user.displayName ??
+            user.email ??
+            'Felhasználó')
+        .trim();
     await firestore
         .collection('connection_requests')
         .doc('${user.uid}_$otherUserId')
         .set({
           'from': user.uid,
           'to': otherUserId,
+          'fromName': senderName,
+          'fromImageUrl': resolveProfileImage(profileData, user.photoURL ?? ''),
           'status': 'pending',
           'createdAt': FieldValue.serverTimestamp(),
         });
