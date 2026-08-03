@@ -341,11 +341,24 @@ class CommunityService {
     if (user.isAnonymous) {
       throw StateError('Jelentéshez regisztráció szükséges.');
     }
-    final post = await firestore.collection('live_feed_posts').doc(postId).get();
+    final post = await firestore
+        .collection('live_feed_posts')
+        .doc(postId)
+        .get();
     final postData = post.data() ?? const <String, dynamic>{};
+    final reporter = await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .get();
+    final reporterData = reporter.data() ?? const <String, dynamic>{};
     await firestore.collection('chat_reports').add({
       'postId': postId,
       'reporterId': user.uid,
+      'reporterName':
+          reporterData['displayName'] as String? ??
+          user.displayName ??
+          user.email ??
+          '',
       'reason': reason,
       'reportedUserId': postData['authorId'] as String? ?? '',
       'reportedUserName': postData['authorName'] as String? ?? '',
@@ -527,9 +540,9 @@ class CommunityService {
     if (!{'attending', 'not_attending'}.contains(state)) {
       throw ArgumentError('Érvénytelen részvételi állapot.');
     }
-  await _attendance(eventId).doc(user.uid).set({
-    'eventId': eventId,
-    'state': state,
+    await _attendance(eventId).doc(user.uid).set({
+      'eventId': eventId,
+      'state': state,
       'updatedAt': FieldValue.serverTimestamp(),
     });
     final planned = firestore
@@ -620,11 +633,12 @@ class CommunityService {
         .doc(user.uid)
         .get();
     final profileData = profile.data() ?? const <String, dynamic>{};
-    final senderName = (profileData['displayName'] as String? ??
-            user.displayName ??
-            user.email ??
-            'Felhasználó')
-        .trim();
+    final senderName =
+        (profileData['displayName'] as String? ??
+                user.displayName ??
+                user.email ??
+                'Felhasználó')
+            .trim();
     await firestore
         .collection('connection_requests')
         .doc('${user.uid}_$otherUserId')

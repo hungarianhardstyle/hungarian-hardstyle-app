@@ -163,9 +163,9 @@ class _CommunityPublicProfileScreenState
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('A jelölés sikertelen: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('A jelölés sikertelen: $error')));
     }
   }
 
@@ -388,10 +388,13 @@ class CommunityReportsScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: service.watchReports(),
         builder: (context, snapshot) {
-          if (snapshot.hasError) return Center(child: Text('${snapshot.error}'));
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          if (snapshot.hasError)
+            return Center(child: Text('${snapshot.error}'));
+          if (!snapshot.hasData)
+            return const Center(child: CircularProgressIndicator());
           final reports = snapshot.data!.docs;
-          if (reports.isEmpty) return const Center(child: Text('Nincs nyitott jelentés.'));
+          if (reports.isEmpty)
+            return const Center(child: Text('Nincs nyitott jelentés.'));
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: reports.length,
@@ -400,44 +403,125 @@ class CommunityReportsScreen extends StatelessWidget {
               final data = report.data();
               final postId = data['postId'] as String? ?? '';
               final reportedUserId = data['reportedUserId'] as String? ?? '';
-              final reportedName = data['reportedUserName'] as String? ?? 'Felhasználó';
-              return Card(
-                child: ListTile(
-                  title: Text('$reportedName · ${data['reason'] ?? 'egyéb'}'),
-                  subtitle: Text(
-                    (data['reportedText'] as String? ?? 'Üzenet nem érhető el.').trim(),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (action) async {
-                      try {
-                        if (action == 'delete' && postId.isNotEmpty) {
-                          await service.deletePost(postId);
-                        } else if (action == 'block' && reportedUserId.isNotEmpty) {
-                          await service.adminBlockUser(reportedUserId);
-                        }
-                        await service.resolveReport(report.id);
-                      } catch (error) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('$error')),
-                          );
-                        }
-                      }
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'resolve', child: Text('Lezárás')),
-                      PopupMenuItem(value: 'delete', child: Text('Üzenet törlése')),
-                      PopupMenuItem(value: 'block', child: Text('Felhasználó tiltása')),
-                    ],
-                  ),
-                ),
+              final reportedName =
+                  data['reportedUserName'] as String? ?? 'Felhasználó';
+              return _ReportCard(
+                reportId: report.id,
+                data: data,
+                postId: postId,
+                reportedUserId: reportedUserId,
+                reportedName: reportedName,
+                service: service,
               );
             },
           );
         },
       ),
+    );
+  }
+}
+
+class _ReportCard extends StatelessWidget {
+  final String reportId;
+  final Map<String, dynamic> data;
+  final String postId;
+  final String reportedUserId;
+  final String reportedName;
+  final CommunityService service;
+
+  const _ReportCard({
+    required this.reportId,
+    required this.data,
+    required this.postId,
+    required this.reportedUserId,
+    required this.reportedName,
+    required this.service,
+  });
+
+  Future<void> _action(BuildContext context, String action) async {
+    try {
+      if (action == 'delete' && postId.isNotEmpty) {
+        await service.deletePost(postId);
+      } else if (action == 'block' && reportedUserId.isNotEmpty) {
+        await service.adminBlockUser(reportedUserId);
+      }
+      await service.resolveReport(reportId);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$error')));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final storedText = (data['reportedText'] as String? ?? '').trim();
+    final reporter =
+        (data['reporterName'] as String? ??
+                data['reporterId'] as String? ??
+                '—')
+            .trim();
+    final reason = (data['reason'] as String? ?? 'other').trim();
+    final post = postId.isEmpty
+        ? Future.value(null)
+        : service.firestore.collection('live_feed_posts').doc(postId).get();
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
+      future: post,
+      builder: (context, snapshot) {
+        final live = snapshot.data?.data();
+        final text = storedText.isNotEmpty
+            ? storedText
+            : (live?['text'] as String? ?? 'Üzenet nem érhető el.');
+        final liveName = (live?['authorName'] as String? ?? reportedName)
+            .trim();
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Üzenet jelentése',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    PopupMenuButton<String>(
+                      onSelected: (action) => _action(context, action),
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(value: 'resolve', child: Text('Lezárás')),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Üzenet törlése'),
+                        ),
+                        PopupMenuItem(
+                          value: 'block',
+                          child: Text('Felhasználó tiltása'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text('Bejelentő: $reporter'),
+                Text(
+                  'Jelentett felhasználó: $liveName${reportedUserId.isEmpty ? '' : ' ($reportedUserId)'}',
+                ),
+                Text('Indok: $reason'),
+                if (postId.isNotEmpty) Text('Bejegyzés: $postId'),
+                const SizedBox(height: 6),
+                Text(text, maxLines: 6, overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -450,7 +534,9 @@ class CommunityConnectionsScreen extends StatelessWidget {
     final service = CommunityService();
     final user = service.auth.currentUser;
     if (user == null || user.isAnonymous) {
-      return const Scaffold(body: Center(child: Text('Regisztráció szükséges.')));
+      return const Scaffold(
+        body: Center(child: Text('Regisztráció szükséges.')),
+      );
     }
     return Scaffold(
       appBar: AppBar(title: const Text('Ismerősök')),
@@ -465,20 +551,66 @@ class CommunityConnectionsScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (requests.isEmpty)
-                const Text('Nincs függőben lévő felkérés.'),
+              if (requests.isEmpty) const Text('Nincs függőben lévő felkérés.'),
               for (final request in requests)
                 _ConnectionRequestTile(request: request, service: service),
               const Divider(),
               StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: service.watchConnections(user.uid),
-                builder: (context, connections) =>
-                    Text('Ismerősök: ${connections.data?.docs.length ?? 0}'),
+                builder: (context, connections) {
+                  final friends = connections.data?.docs ?? const [];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Ismerősök: ${friends.length}'),
+                      for (final friend in friends)
+                        _FriendTile(userId: friend.id, service: service),
+                    ],
+                  );
+                },
               ),
             ],
           );
         },
       ),
+    );
+  }
+}
+
+class _FriendTile extends StatelessWidget {
+  final String userId;
+  final CommunityService service;
+
+  const _FriendTile({required this.userId, required this.service});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: service.firestore
+          .collection('community_profiles')
+          .doc(userId)
+          .get(),
+      builder: (context, snapshot) {
+        final profile = snapshot.data?.data() ?? const <String, dynamic>{};
+        final name = (profile['displayName'] as String? ?? userId).trim();
+        final image = service.resolveProfileImage(profile, '');
+        return ListTile(
+          contentPadding: EdgeInsets.zero,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => CommunityPublicProfileScreen(userId: userId),
+            ),
+          ),
+          leading: CircleAvatar(
+            backgroundImage: image.isEmpty ? null : NetworkImage(image),
+            child: image.isEmpty
+                ? Text(name.isEmpty ? 'F' : name.characters.first.toUpperCase())
+                : null,
+          ),
+          title: Text(name.isEmpty ? 'Felhasználó' : name),
+          trailing: const Icon(Icons.chevron_right),
+        );
+      },
     );
   }
 }
@@ -494,13 +626,17 @@ class _ConnectionRequestTile extends StatelessWidget {
     final data = request.data();
     final from = data['from'] as String? ?? '';
     return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      future: service.firestore.collection('community_profiles').doc(from).get(),
+      future: service.firestore
+          .collection('community_profiles')
+          .doc(from)
+          .get(),
       builder: (context, snapshot) {
         final profile = snapshot.data?.data() ?? const <String, dynamic>{};
-        final name = (profile['displayName'] as String? ??
-                data['fromName'] as String? ??
-                'Felhasználó')
-            .trim();
+        final name =
+            (profile['displayName'] as String? ??
+                    data['fromName'] as String? ??
+                    'Felhasználó')
+                .trim();
         final image = service.resolveProfileImage(
           profile,
           data['fromImageUrl'] as String? ?? '',
@@ -509,10 +645,10 @@ class _ConnectionRequestTile extends StatelessWidget {
           onTap: from.isEmpty
               ? null
               : () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => CommunityPublicProfileScreen(userId: from),
-                    ),
+                  MaterialPageRoute<void>(
+                    builder: (_) => CommunityPublicProfileScreen(userId: from),
                   ),
+                ),
           leading: CircleAvatar(
             backgroundImage: image.isEmpty ? null : NetworkImage(image),
             child: image.isEmpty

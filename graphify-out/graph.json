@@ -5338,6 +5338,14 @@
       "_origin": "ast"
     },
     {
+      "id": "lib_screens_community_community_screen_loadingprofile",
+      "label": "_loadingProfile",
+      "file_type": "code",
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "lib_screens_community_community_screen_chaterror",
       "label": "_chatError",
       "file_type": "code",
@@ -7434,8 +7442,24 @@
       "_origin": "ast"
     },
     {
+      "id": "lib_screens_more_community_users_screen_reportcard",
+      "label": "_ReportCard",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "lib_screens_more_community_users_screen_communityconnectionsscreen",
       "label": "CommunityConnectionsScreen",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_friendtile",
+      "label": "_FriendTile",
       "file_type": "code",
       "source_file": "lib/screens/more/community_users_screen.dart",
       "source_location": null,
@@ -7506,6 +7530,46 @@
       "_origin": "ast"
     },
     {
+      "id": "lib_screens_more_community_users_screen_reportid",
+      "label": "reportId",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_data",
+      "label": "data",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_postid",
+      "label": "postId",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_reporteduserid",
+      "label": "reportedUserId",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_reportedname",
+      "label": "reportedName",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
       "id": "lib_screens_more_community_users_screen_request",
       "label": "request",
       "file_type": "code",
@@ -7556,6 +7620,14 @@
     {
       "id": "lib_screens_more_community_users_screen_role",
       "label": "_role",
+      "file_type": "code",
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "lib_screens_more_community_users_screen_action",
+      "label": "_action",
       "file_type": "code",
       "source_file": "lib/screens/more/community_users_screen.dart",
       "source_location": null,
@@ -13565,8 +13637,8 @@
       "_origin": "ast"
     },
     {
-      "id": "agents_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
-      "label": "v0.99.8+3 - Connections, reports and planned-event links (in progress)",
+      "id": "agents_v0_99_8_3_connections_reports_and_planned_event_links_complete_phone_verification_pending",
+      "label": "v0.99.8+3 - Connections, reports and planned-event links (complete; phone verification pending)",
       "file_type": "document",
       "source_file": "AGENTS.md",
       "source_location": "L453",
@@ -14141,8 +14213,8 @@
       "_origin": "ast"
     },
     {
-      "id": "project_context_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
-      "label": "v0.99.8+3 - Connections, reports and planned-event links (in progress)",
+      "id": "project_context_v0_99_8_3_connections_reports_and_planned_event_links_complete_phone_verification_pending",
+      "label": "v0.99.8+3 - Connections, reports and planned-event links (complete; phone verification pending)",
       "file_type": "document",
       "source_file": "PROJECT_CONTEXT.md",
       "source_location": "L977",
@@ -14253,8 +14325,8 @@
       "_origin": "ast"
     },
     {
-      "id": "readme_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
-      "label": "v0.99.8+3 — Connections, reports and planned-event links (in progress)",
+      "id": "readme_v0_99_8_3_connections_reports_and_planned_event_links_complete_phone_verification_pending",
+      "label": "v0.99.8+3 — Connections, reports and planned-event links (complete; phone verification pending)",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L174",
@@ -24250,6 +24322,17 @@
     },
     {
       "source": "lib_screens_community_community_screen",
+      "target": "lib_screens_community_community_screen_loadingprofile",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/community/community_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_community_community_screen",
       "target": "lib_screens_community_community_screen_chaterror",
       "relation": "defines",
       "confidence": "EXTRACTED",
@@ -28919,6 +29002,28 @@
     },
     {
       "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_reportcard",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen_reportcard",
+      "target": "statelesswidget",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
       "target": "lib_screens_more_community_users_screen_communityconnectionsscreen",
       "relation": "defines",
       "confidence": "EXTRACTED",
@@ -28930,6 +29035,28 @@
     },
     {
       "source": "lib_screens_more_community_users_screen_communityconnectionsscreen",
+      "target": "statelesswidget",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_friendtile",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen_friendtile",
       "target": "statelesswidget",
       "relation": "inherits",
       "confidence": "EXTRACTED",
@@ -29077,6 +29204,73 @@
     },
     {
       "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_reportid",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_data",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "map",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_postid",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_reporteduserid",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_reportedname",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
       "target": "lib_screens_more_community_users_screen_request",
       "relation": "defines",
       "confidence": "EXTRACTED",
@@ -29180,6 +29374,17 @@
     {
       "source": "lib_screens_more_community_users_screen",
       "target": "lib_screens_more_community_users_screen_role",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/screens/more/community_users_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "lib_screens_more_community_users_screen",
+      "target": "lib_screens_more_community_users_screen_action",
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -42074,7 +42279,7 @@
     },
     {
       "source": "agents_roadmap",
-      "target": "agents_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
+      "target": "agents_v0_99_8_3_connections_reports_and_planned_event_links_complete_phone_verification_pending",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
@@ -42784,7 +42989,7 @@
     },
     {
       "source": "project_context_vision",
-      "target": "project_context_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
+      "target": "project_context_v0_99_8_3_connections_reports_and_planned_event_links_complete_phone_verification_pending",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "PROJECT_CONTEXT.md",
@@ -42914,7 +43119,7 @@
     },
     {
       "source": "readme_current_status",
-      "target": "readme_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
+      "target": "readme_v0_99_8_3_connections_reports_and_planned_event_links_complete_phone_verification_pending",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
@@ -42923,7 +43128,7 @@
       "_origin": "ast"
     },
     {
-      "source": "readme_v0_99_8_3_connections_reports_and_planned_event_links_in_progress",
+      "source": "readme_v0_99_8_3_connections_reports_and_planned_event_links_complete_phone_verification_pending",
       "target": "readme_faq_választervezet",
       "relation": "contains",
       "confidence": "EXTRACTED",

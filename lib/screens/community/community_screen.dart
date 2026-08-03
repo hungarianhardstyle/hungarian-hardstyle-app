@@ -329,34 +329,38 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                   label: const Text('Jelentések kezelése'),
                 ),
               ),
-              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: service.watchReports(),
-                builder: (context, reportSnapshot) {
-                  if (reportSnapshot.hasError || !reportSnapshot.hasData) {
-                    return const SizedBox.shrink();
-                  }
-                  final reports = reportSnapshot.data!.docs;
-                  if (reports.isEmpty) return const SizedBox.shrink();
-                  return Card(
-                    child: ExpansionTile(
-                      leading: const Icon(Icons.flag_outlined),
-                      title: Text('JelentĂ©sek (${reports.length})'),
-                      children: [
-                        for (final report in reports)
-                          ListTile(
-                            dense: true,
-                            title: Text(
-                              'BejegyzĂ©s: ${report.data()['postId'] ?? '-'}',
+              /*
+              if (false)
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  // The dedicated report-management screen owns this list.
+                  stream: service.watchReports(),
+                  builder: (context, reportSnapshot) {
+                    if (reportSnapshot.hasError || !reportSnapshot.hasData) {
+                      return const SizedBox.shrink();
+                    }
+                    final reports = reportSnapshot.data!.docs;
+                    if (reports.isEmpty) return const SizedBox.shrink();
+                    return Card(
+                      child: ExpansionTile(
+                        leading: const Icon(Icons.flag_outlined),
+                        title: Text('JelentĂ©sek (${reports.length})'),
+                        children: [
+                          for (final report in reports)
+                            ListTile(
+                              dense: true,
+                              title: Text(
+                                'BejegyzĂ©s: ${report.data()['postId'] ?? '-'}',
+                              ),
+                              subtitle: Text(
+                                'Ok: ${report.data()['reason'] ?? 'egyĂ©b'}',
+                              ),
                             ),
-                            subtitle: Text(
-                              'Ok: ${report.data()['reason'] ?? 'egyĂ©b'}',
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              */
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -871,28 +875,32 @@ class _PostCardState extends ConsumerState<_PostCard> {
 
   Future<void> _edit() async {
     final controller = TextEditingController(text: widget.post.text);
-    final updated = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Üzenet szerkesztése'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 5,
+    String? updated;
+    try {
+      updated = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Üzenet szerkesztése'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 5,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Mégse'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, controller.text),
+              child: const Text('Mentés'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Mégse'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text),
-            child: const Text('Mentés'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
+      );
+    } finally {
+      controller.dispose();
+    }
     if (updated == null || !mounted) return;
     try {
       await ref
@@ -1130,6 +1138,7 @@ class _CommunityProfileScreenState
   List<int> _claimedArtistIds = const [];
   String? _loadedUid;
   String? _biometricGateUid;
+  bool _loadingProfile = false;
   StreamSubscription<User?>? _authSubscription;
 
   CommunityService get _service => ref.read(communityServiceProvider);
@@ -1197,16 +1206,18 @@ class _CommunityProfileScreenState
   }
 
   Future<void> _loadProfile() async {
+    if (_loadingProfile) return;
     final user = _service.auth.currentUser;
     if (user == null || user.isAnonymous || _loadedUid == user.uid) return;
-    if (_biometricGateUid != user.uid && await _service.biometricEnabled()) {
-      if (!await _service.authenticateBiometric()) {
-        if (mounted) _message('A profil feloldása sikertelen.');
-        return;
-      }
-      _biometricGateUid = user.uid;
-    }
+    _loadingProfile = true;
     try {
+      if (_biometricGateUid != user.uid && await _service.biometricEnabled()) {
+        if (!await _service.authenticateBiometric()) {
+          if (mounted) _message('A profil feloldása sikertelen.');
+          return;
+        }
+        _biometricGateUid = user.uid;
+      }
       final snapshot = await _service.profile();
       final data = snapshot.data() ?? const <String, dynamic>{};
       final claimedArtistIds = await _service.myClaimedArtists().catchError(
@@ -1232,7 +1243,10 @@ class _CommunityProfileScreenState
         _loadedUid = user.uid;
         _claimedArtistIds = claimedArtistIds;
       });
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      _loadingProfile = false;
+    }
   }
 
   Future<void> _saveProfile() async {
