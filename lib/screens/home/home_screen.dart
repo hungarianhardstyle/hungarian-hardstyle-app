@@ -177,8 +177,7 @@ class HomeScreen extends ConsumerWidget {
                   }
 
                   return SizedBox(
-                    // Keep enough vertical room for accessibility text scaling.
-                    height: 430,
+                    height: 360,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: upcomingEvents.length,
@@ -188,7 +187,7 @@ class HomeScreen extends ConsumerWidget {
                         return EventCard(
                           event: upcomingEvents[index],
                           width: 250,
-                          height: 430,
+                          height: 360,
                         );
                       },
                     ),

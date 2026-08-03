@@ -922,4 +922,6 @@ Events.
 
 News.
 
+v0.99.4 follow-up status: the Beküldés section explains registration/role requirements when no action is available; Home event cards use the smaller uniform layout; the GDPR screen reflects current Firebase, Cloudinary, WordPress, Mailchimp, and test-AdMob data flows; and the native news list has a second separated adaptive test-AdMob placement after the first five cards.
+
 Everything connected.

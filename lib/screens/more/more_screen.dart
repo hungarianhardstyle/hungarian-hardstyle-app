@@ -96,6 +96,12 @@ class MoreScreen extends ConsumerWidget {
                 subtitle: 'Új szervező jóváhagyásra',
                 onTap: () => _open(context, const OrganizerSubmissionScreen()),
               ),
+            if (!canSubmitArtist && !canSubmitOrganizer)
+              _SubmissionNotice(
+                text: registered
+                    ? 'A DJ- és szervezőbeküldés a megfelelő szerepkörhöz kötött.'
+                    : 'A beküldés csak regisztrált felhasználóknak érhető el.',
+              ),
             const SizedBox(height: 28),
             const _SectionTitle('Kapcsolat és támogatás'),
             _MenuCard(
@@ -256,6 +262,22 @@ class _SubmissionCard extends StatelessWidget {
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+class _SubmissionNotice extends StatelessWidget {
+  final String text;
+
+  const _SubmissionNotice({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(text, style: const TextStyle(color: Colors.white70)),
       ),
     );
   }

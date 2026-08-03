@@ -83,7 +83,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                       horizontal: 18,
                       vertical: 18,
                     ),
-                    itemCount: posts.length + 3,
+                    itemCount: posts.length + (posts.length >= 5 ? 4 : 3),
                     itemBuilder: (context, index) {
                       if (index == 0) {
                         return Column(
@@ -189,7 +189,18 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                         );
                       }
 
-                      if (index == posts.length + 2) {
+                      final hasMidAd = posts.length >= 5;
+                      const midAdIndex = 7;
+                      final footerIndex = posts.length + (hasMidAd ? 3 : 2);
+
+                      if (hasMidAd && index == midAdIndex) {
+                        return const Padding(
+                          padding: EdgeInsets.only(bottom: 18),
+                          child: Center(child: MobileAdBanner()),
+                        );
+                      }
+
+                      if (index == footerIndex) {
                         if (state.error != null && state.posts.isEmpty) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 60),
@@ -239,7 +250,9 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                         return const SizedBox(height: 24);
                       }
 
-                      return NewsCard(post: posts[index - 2]);
+                      final postIndex =
+                          index - 2 - (hasMidAd && index > midAdIndex ? 1 : 0);
+                      return NewsCard(post: posts[postIndex]);
                     },
                   ),
           ),

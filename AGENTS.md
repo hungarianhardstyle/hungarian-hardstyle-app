@@ -389,6 +389,9 @@ Implemented in Flutter `0.99.4+1`:
 - [x] add one clearly separated inline adaptive AdMob banner to the native news list
 - [x] fix Instagram post embeds in news so `instagram://` URLs are converted to supported web links before opening
 - compact the Home event cards while keeping every card the same height and preserving title, date/time, city, genres, favorite, and open actions
+- [x] show a registered-user/role requirement in `Beküldés` when no submission action is available
+- [x] update the in-app GDPR text for the current Firebase, Cloudinary, WordPress, Mailchimp, and test-AdMob data flows
+- [x] add a second separated adaptive test AdMob placement after the first five news cards
 
 - [x] compact the Home event cards while keeping every card the same height and preserving title, date/time, city, genres, favorite, and open actions
 

@@ -16,29 +16,29 @@ class PrivacyScreen extends StatelessWidget {
           ),
           SizedBox(height: 16),
           Text(
-            'A Hungarian Hardstyle app a működéshez szükséges adatokat kezeli. '
-            'A regisztráció során megadott e-mail-címet, megjelenő nevet, '
-            'szerepkört és az önkéntesen feltöltött profilképet a közösségi '
-            'funkciók biztosítására használjuk.',
+            'A Hungarian Hardstyle az alkalmazás működéséhez szükséges adatokat kezeli. '
+            'A regisztráció során megadott e-mail-címet, megjelenő nevet, szerepkört és '
+            'az önkéntesen feltöltött profilképet a közösségi funkciók biztosítására használjuk.',
           ),
           SizedBox(height: 14),
           Text(
-            'A Chat-bejegyzések és képek a közösségi szolgáltatás működéséig '
-            'megmaradnak. A felhasználói fiók és a hozzá tartozó profil törlését '
-            'az adminisztrátor végezheti el kérésre.',
+            'A Chat üzenetei, reakciói és képei a közösségi szolgáltatás működéséhez '
+            'szükséges ideig maradnak meg. A saját profil törölhető az alkalmazásból; '
+            'adminisztrátor szükség esetén felhasználói fiókot és Chat-üzenetet is törölhet.',
           ),
           SizedBox(height: 14),
           Text(
-            'Külső szolgáltatók: Firebase (hitelesítés, adatbázis és értesítések), '
-            'Cloudinary (képfeltöltés) és WordPress (hírek, események, DJ-k és '
-            'szervezők). A szolgáltatók csak a saját feladatukhoz szükséges '
-            'adatokat kapják meg.',
+            'Külső szolgáltatók: Firebase (hitelesítés, profilok, Chat, reakciók és pushértesítések), '
+            'Cloudinary (profil- és közösségi képek), WordPress (hírek, események, DJ-k, '
+            'szervezők és beküldések), Mailchimp (hírlevél-feliratkozás) és Google AdMob '
+            '(teszthirdetések). A szolgáltatók csak a saját feladatukhoz szükséges adatokat kapják meg.',
           ),
           SizedBox(height: 14),
           Text(
-            'Kérheted az adataid helyesbítését vagy törlését a '
-            'info@hungarianhardstyle.hu címen. Jogellenes adatkezelés gyanúja '
-            'esetén panaszt tehetsz a felügyeleti hatóságnál.',
+            'Kérheted az adataidhoz való hozzáférést, helyesbítését vagy törlését a '
+            'info@hungarianhardstyle.hu címen. A készüléken tárolt kedvencek és értesítési '
+            'beállítások helyben kezelhetők. Jogellenes adatkezelés gyanúja esetén panaszt '
+            'tehetsz a felügyeleti hatóságnál.',
           ),
         ],
       ),
