@@ -369,7 +369,30 @@ Separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registr
 
 v0.99.3 is complete, phone-verified by the project owner in Flutter build `0.99.3+27`, and closed. Do not reopen or rework this release unless a new regression is explicitly reported.
 
-The event-tag fast-scroll regression is fixed. WordPress Mobile API `2.4.32` is the prepared package for the native editor and persistent startup-image fixes, including Media Library upload/selection on the WordPress `Indítási kép` page; `2.4.31` remains the deployed, live-verified production package until the owner uploads the prepared update.
+### v0.99.4 - Small Improvements (implemented)
+
+Implemented in Flutter `0.99.4+1`:
+
+- categorize the existing `Több` entries without renaming the menu:
+  - `Felfedezés`: DJ-k, Szervezők, Spotify Playlistek
+  - `Közösség`: Kedvencek, Hírlevél; the v1.0 registered-user search will also belong here
+  - `Beküldés`: role-gated event, DJ and organizer submissions
+  - `Kapcsolat és támogatás`: Social és kapcsolat, Támogatás / Donate, Hibajelzés, GYIK / FAQ
+  - `Alkalmazás`: Beállítások, Adatvédelem és GDPR, Az appról, Rádió szolgáltató
+  - keep the HUHS Vezérlőközpont in the Admin profile; do not duplicate it in `Több`
+- [x] add the PayPal `Támogatás / Donate` card
+- [x] add a pre-addressed feedback e-mail action with the runtime app version
+- [x] add the WordPress-managed FAQ under More with categories, ordering, search, expandable answers, and loading/empty/error states (prepared API package 2.4.33)
+- [x] add simple bulk management and deletion for local favorites
+- [x] replace full social-media URLs on community profiles with compact, clickable Facebook, Instagram, TikTok, YouTube, and Spotify buttons
+- [x] move the existing Home AdMob banner below both the latest-news and upcoming-events sections
+- [x] add one clearly separated inline adaptive AdMob banner to the native news list
+- [x] fix Instagram post embeds in news so `instagram://` URLs are converted to supported web links before opening
+- compact the Home event cards while keeping every card the same height and preserving title, date/time, city, genres, favorite, and open actions
+
+- [x] compact the Home event cards while keeping every card the same height and preserving title, date/time, city, genres, favorite, and open actions
+
+The event-tag fast-scroll regression is fixed. WordPress Mobile API `2.4.33` is the prepared package for the FAQ endpoint; `2.4.31` remains the deployed, live-verified production package until the owner uploads the prepared update. Production AdMob identifiers and consent/privacy handling remain release work.
 
 ### v0.4 - Foundation
 
@@ -508,7 +531,6 @@ Keep this release intentionally small and low-risk:
 - Use Firebase Authentication and Firestore for community data, and Cloudinary for community images.
 - Keep friendships, attendance visibility, and profile claims in v1.0; v0.99.3 owns app-admin tooling and Chat moderation.
 - Add a `Több`-menu user directory/search that lists registered users only and is unavailable to guests.
-- Organize `Több`-menu entries into clear categories while keeping `Több` as the visible menu name.
 
 ### v1.0 - First Public Release (later)
 
@@ -520,7 +542,6 @@ Focus:
 - DJ directory
 - organizer directory
 - clickable genre chips with a grouped discovery screen for events, DJs, and news
-- a More-section `Támogatás / Donate` card using a configurable PayPal donation link, with native-app-first and browser fallback opening
 - Hardstyle Revolution release catalog
 - release preview player
 - Spotify/Hardstyle.com/YouTube links for releases
@@ -536,14 +557,6 @@ Focus:
 - refine the Android startup animation with the full HUHS logo on a transparent/no-white background
 - polished Android release
 - iOS preparation if ready
-- WordPress-managed FAQ section in the app, initially under More
-
-FAQ requirements for v1.0:
-
-- questions and answers are editable in WordPress and exposed through a public read-only REST endpoint
-- support categories and an explicit display order
-- Flutter shows a searchable, expandable FAQ list with loading, empty, and error states
-- do not hardcode production FAQ content in Flutter
 
 Confirmed v1.0 community direction:
 
@@ -568,7 +581,9 @@ Confirmed v1.0 community direction:
 - WordPress remains the source of truth for editorial content (news, events, DJs, organizers, and releases), while the app community backend may be a deliberately separate service optimized for authentication, real-time chat/feed data, friendships, attendance, and user uploads.
 - Once app registration is available, DJ, organizer, and event submission actions and forms must be visible only to authenticated users. The submission API must also enforce authentication server-side; hiding the forms in Flutter is not sufficient.
 
-Confirmed annual voting direction for v1.0:
+### v1.1 - Annual Voting
+
+Confirmed annual voting direction for v1.1:
 
 - Replace or complement the current WordPress voting extension with a dedicated Hungarian Hardstyle voting module and REST API.
 - WordPress admin must manage each annual voting season, its opening/closing dates, status, rules, and candidates.
@@ -790,7 +805,7 @@ Product decisions confirmed by the user:
 - Artist and organizer event relations open dedicated API-backed profile screens and are confirmed against live data.
 - v1.0 should introduce a Live Feed tab with chat and image posting.
 - v1.0 should introduce Google sign-in, user profiles, friendships, and event attendance status (`Ott leszek` / `Nem leszek ott`).
-- v1.0 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting.
+- v1.1 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting.
 - Organizer profiles and submissions now support server-managed selectable music genres/styles (backend 2.4.9 prepared; deploy and live-test still pending).
 - Add an About/App information area under More. Read the app version and build number from package metadata instead of hardcoding them, and include developer credit plus relevant website, contact, privacy, and terms links.
 - Refactor navigation into a persistent shell so the bottom tabs remain visible on news, event, DJ, and organizer detail screens. Do not duplicate the NavigationBar inside each detail screen; preserve the active tab and each tab's navigation history.
@@ -825,4 +840,4 @@ Documentation note: backend package entries older than 2.4.31 are historical dep
 - v0.99.3 completed fix: profile images use the persisted raw Cloudinary URL and fall back to a name/e-mail monogram; persisted X/Y positioning and zoom are implemented and phone-verified.
 - v0.99.3 source fix: the startup announcement is stored in WordPress and served by a public endpoint so it remains visible on every app launch until an admin disables or removes it.
 - Phone verification of the v0.99.3 fixes is complete in Flutter build `0.99.3+27`.
-- WordPress Mobile API `2.4.32` is prepared at `build/huhs-mobile-api-2.4.32.zip`; live `2.4.31` remains deployed and live-verified and must not be repeatedly rechecked.
+- WordPress Mobile API `2.4.33` is prepared at `build/huhs-mobile-api-2.4.33.zip`; it adds the managed FAQ post type/category editor and paginated public FAQ endpoint. Live `2.4.31` remains deployed and live-verified and must not be repeatedly rechecked.

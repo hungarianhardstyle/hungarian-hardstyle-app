@@ -1226,7 +1226,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "flutterappdelegate",
-      "community": 66,
+      "community": 53,
       "community_name": "AppDelegate",
       "norm_label": "flutterappdelegate"
     },
@@ -1358,8 +1358,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_core_content_date_formatters",
-      "community": 48,
-      "community_name": "event_detail_screen.dart",
+      "community": 4,
+      "community_name": "event_submission_screen.dart",
       "norm_label": "date_formatters.dart"
     },
     {
@@ -1369,8 +1369,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_core_content_date_formatters_formathungariandate",
-      "community": 48,
-      "community_name": "event_detail_screen.dart",
+      "community": 4,
+      "community_name": "event_submission_screen.dart",
       "norm_label": "formathungariandate"
     },
     {
@@ -1380,8 +1380,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_core_content_date_formatters_formateventdate",
-      "community": 48,
-      "community_name": "event_detail_screen.dart",
+      "community": 4,
+      "community_name": "event_submission_screen.dart",
       "norm_label": "formateventdate"
     },
     {
@@ -1391,8 +1391,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_intl_intl_dart",
-      "community": 48,
-      "community_name": "event_detail_screen.dart",
+      "community": 4,
+      "community_name": "event_submission_screen.dart",
       "norm_label": "package:intl/intl.dart"
     },
     {
@@ -1622,8 +1622,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_core_navigation_app_navigator",
-      "community": 26,
-      "community_name": "main_navigation.dart",
+      "community": 33,
+      "community_name": "app_navigator.dart",
       "norm_label": "app_navigator.dart"
     },
     {
@@ -1633,8 +1633,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_core_navigation_app_navigator_appnavigatorkey",
-      "community": 26,
-      "community_name": "main_navigation.dart",
+      "community": 33,
+      "community_name": "app_navigator.dart",
       "norm_label": "appnavigatorkey"
     },
     {
@@ -1644,8 +1644,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_core_navigation_app_navigator_appscaffoldmessengerkey",
-      "community": 26,
-      "community_name": "main_navigation.dart",
+      "community": 33,
+      "community_name": "app_navigator.dart",
       "norm_label": "appscaffoldmessengerkey"
     },
     {
@@ -1655,7 +1655,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_flutter_material_dart",
-      "community": 15,
+      "community": 71,
       "community_name": "package:flutter/material.dart",
       "norm_label": "package:flutter/material.dart"
     },
@@ -1666,8 +1666,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "navigatorstate",
-      "community": 26,
-      "community_name": "main_navigation.dart",
+      "community": 33,
+      "community_name": "app_navigator.dart",
       "norm_label": "navigatorstate"
     },
     {
@@ -1677,8 +1677,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "scaffoldmessengerstate",
-      "community": 26,
-      "community_name": "main_navigation.dart",
+      "community": 33,
+      "community_name": "app_navigator.dart",
       "norm_label": "scaffoldmessengerstate"
     },
     {
@@ -1699,8 +1699,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_core_navigation_in_app_browser_inappbrowserscreen",
-      "community": 58,
-      "community_name": "State",
+      "community": 42,
+      "community_name": "in_app_browser.dart",
       "norm_label": "inappbrowserscreen"
     },
     {
@@ -1721,8 +1721,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_core_navigation_in_app_browser_inappbrowserscreenstate",
-      "community": 58,
-      "community_name": "State",
+      "community": 42,
+      "community_name": "in_app_browser.dart",
       "norm_label": "_inappbrowserscreenstate"
     },
     {
@@ -1920,7 +1920,7 @@
       "_origin": "ast",
       "id": "package_url_launcher_url_launcher_dart",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "package:url_launcher/url_launcher.dart"
     },
     {
@@ -1996,7 +1996,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_main",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "main.dart"
     },
@@ -2007,7 +2007,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_main_hungarianhardstyleapp",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "hungarianhardstyleapp"
     },
@@ -2018,7 +2018,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "statelesswidget",
-      "community": 71,
+      "community": 15,
       "community_name": "StatelessWidget",
       "norm_label": "statelesswidget"
     },
@@ -2029,7 +2029,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_main_main",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "main"
     },
@@ -2040,7 +2040,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_main_initializedateformatting",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "initializedateformatting"
     },
@@ -2051,7 +2051,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_main_initializepushnotifications",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "_initializepushnotifications"
     },
@@ -2062,7 +2062,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_main_build",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "build"
     },
@@ -2074,7 +2074,7 @@
       "_origin": "ast",
       "id": "dart_async",
       "community": 63,
-      "community_name": "dart:async",
+      "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "dart:async"
     },
     {
@@ -2084,7 +2084,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_flutter_localizations_flutter_localizations_dart",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "package:flutter_localizations/flutter_localizations.dart"
     },
@@ -2095,7 +2095,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_flutter_riverpod_flutter_riverpod_dart",
-      "community": 109,
+      "community": 63,
       "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "package:flutter_riverpod/flutter_riverpod.dart"
     },
@@ -2106,7 +2106,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_intl_date_symbol_data_local_dart",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "package:intl/date_symbol_data_local.dart"
     },
@@ -2128,7 +2128,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_firebase_core_firebase_core_dart",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "package:firebase_core/firebase_core.dart"
     },
@@ -2139,7 +2139,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "core_theme_app_theme_dart",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "core/theme/app_theme.dart"
     },
@@ -2150,7 +2150,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "core_navigation_app_navigator_dart",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "../core/navigation/app_navigator.dart"
     },
@@ -2172,7 +2172,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_push_notification_service_dart",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "../../services/push_notification_service.dart"
     },
@@ -2183,7 +2183,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_startup_gate_dart",
-      "community": 51,
+      "community": 47,
       "community_name": "main.dart",
       "norm_label": "widgets/startup_gate.dart"
     },
@@ -2217,7 +2217,7 @@
       "_origin": "ast",
       "id": "lib_models_artist_artist",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "artist"
     },
     {
@@ -2348,8 +2348,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "list",
-      "community": 64,
-      "community_name": "List",
+      "community": 55,
+      "community_name": "gallery_screen.dart",
       "norm_label": "list"
     },
     {
@@ -3547,7 +3547,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_models_organizer_organizerprofile",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "organizerprofile"
     },
@@ -3900,7 +3900,7 @@
       "_origin": "ast",
       "id": "lib_models_post_postshortcode",
       "community": 64,
-      "community_name": "List",
+      "community_name": "featured_news_card.dart",
       "norm_label": "postshortcode"
     },
     {
@@ -4746,7 +4746,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_ads_provider",
-      "community": 109,
+      "community": 63,
       "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "ads_provider.dart"
     },
@@ -4757,7 +4757,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_ads_provider_enabletestads",
-      "community": 109,
+      "community": 63,
       "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "enabletestads"
     },
@@ -4780,7 +4780,7 @@
       "_origin": "ast",
       "id": "lib_providers_artists_provider",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "artists_provider.dart"
     },
     {
@@ -4791,7 +4791,7 @@
       "_origin": "ast",
       "id": "lib_providers_artists_provider_artistlistquery",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "artistlistquery"
     },
     {
@@ -4802,7 +4802,7 @@
       "_origin": "ast",
       "id": "typedef",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "typedef"
     },
     {
@@ -4812,7 +4812,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_artists_provider_artistsprovider",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "artistsprovider"
     },
@@ -4824,7 +4824,7 @@
       "_origin": "ast",
       "id": "lib_providers_artists_provider_service",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "service"
     },
     {
@@ -4835,7 +4835,7 @@
       "_origin": "ast",
       "id": "lib_providers_artists_provider_artistdetailprovider",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "artistdetailprovider"
     },
     {
@@ -4846,7 +4846,7 @@
       "_origin": "ast",
       "id": "lib_providers_artists_provider_getartists",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "getartists"
     },
     {
@@ -4857,7 +4857,7 @@
       "_origin": "ast",
       "id": "lib_providers_artists_provider_getartist",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "getartist"
     },
     {
@@ -4868,7 +4868,7 @@
       "_origin": "ast",
       "id": "models_artist_dart",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "../models/artist.dart"
     },
     {
@@ -4889,7 +4889,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_community_provider",
-      "community": 78,
+      "community": 50,
       "community_name": "community_provider.dart",
       "norm_label": "community_provider.dart"
     },
@@ -4900,7 +4900,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_community_provider_communityserviceprovider",
-      "community": 50,
+      "community": 43,
       "community_name": "communityServiceProvider",
       "norm_label": "communityserviceprovider"
     },
@@ -4911,8 +4911,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_community_provider_communityauthprovider",
-      "community": 50,
-      "community_name": "communityServiceProvider",
+      "community": 86,
+      "community_name": "ConsumerWidget",
       "norm_label": "communityauthprovider"
     },
     {
@@ -4923,7 +4923,7 @@
       "_origin": "ast",
       "id": "lib_providers_community_provider_communitypostsprovider",
       "community": 50,
-      "community_name": "communityServiceProvider",
+      "community_name": "community_provider.dart",
       "norm_label": "communitypostsprovider"
     },
     {
@@ -4933,7 +4933,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_community_provider_watch",
-      "community": 78,
+      "community": 50,
       "community_name": "community_provider.dart",
       "norm_label": "watch"
     },
@@ -4944,7 +4944,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_firebase_auth_firebase_auth_dart",
-      "community": 78,
+      "community": 50,
       "community_name": "community_provider.dart",
       "norm_label": "package:firebase_auth/firebase_auth.dart"
     },
@@ -4955,7 +4955,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_community_post_dart",
-      "community": 78,
+      "community": 50,
       "community_name": "community_provider.dart",
       "norm_label": "../models/community_post.dart"
     },
@@ -4966,7 +4966,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_community_service_dart",
-      "community": 78,
+      "community": 50,
       "community_name": "community_provider.dart",
       "norm_label": "../../services/community_service.dart"
     },
@@ -4978,7 +4978,7 @@
       "_origin": "ast",
       "id": "lib_providers_events_provider",
       "community": 63,
-      "community_name": "dart:async",
+      "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "events_provider.dart"
     },
     {
@@ -4989,7 +4989,7 @@
       "_origin": "ast",
       "id": "lib_providers_events_provider_eventsprovider",
       "community": 86,
-      "community_name": "eventsProvider",
+      "community_name": "ConsumerWidget",
       "norm_label": "eventsprovider"
     },
     {
@@ -5000,7 +5000,7 @@
       "_origin": "ast",
       "id": "lib_providers_events_provider_refreshtimer",
       "community": 63,
-      "community_name": "dart:async",
+      "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "refreshtimer"
     },
     {
@@ -5011,7 +5011,7 @@
       "_origin": "ast",
       "id": "lib_providers_events_provider_service",
       "community": 63,
-      "community_name": "dart:async",
+      "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "service"
     },
     {
@@ -5021,8 +5021,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_events_provider_eventsubmissiongenresprovider",
-      "community": 88,
-      "community_name": "_EventSubmissionScreenState",
+      "community": 4,
+      "community_name": "event_submission_screen.dart",
       "norm_label": "eventsubmissiongenresprovider"
     },
     {
@@ -5033,7 +5033,7 @@
       "_origin": "ast",
       "id": "lib_providers_events_provider_getevents",
       "community": 63,
-      "community_name": "dart:async",
+      "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "getevents"
     },
     {
@@ -5044,7 +5044,7 @@
       "_origin": "ast",
       "id": "lib_providers_events_provider_geteventsubmissiongenres",
       "community": 63,
-      "community_name": "dart:async",
+      "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "geteventsubmissiongenres"
     },
     {
@@ -5055,7 +5055,7 @@
       "_origin": "ast",
       "id": "models_event_dart",
       "community": 63,
-      "community_name": "dart:async",
+      "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "../models/event.dart"
     },
     {
@@ -5208,7 +5208,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_favorites_provider_favoritesprovider",
-      "community": 59,
+      "community": 86,
       "community_name": "ConsumerWidget",
       "norm_label": "favoritesprovider"
     },
@@ -5340,7 +5340,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_news_provider_wordpressserviceprovider",
-      "community": 111,
+      "community": 51,
       "community_name": "_GenreDiscoveryScreenState",
       "norm_label": "wordpressserviceprovider"
     },
@@ -5352,7 +5352,7 @@
       "_origin": "ast",
       "id": "lib_providers_news_provider_newsprovider",
       "community": 86,
-      "community_name": "eventsProvider",
+      "community_name": "ConsumerWidget",
       "norm_label": "newsprovider"
     },
     {
@@ -5638,7 +5638,7 @@
       "_origin": "ast",
       "id": "models_post_dart",
       "community": 64,
-      "community_name": "List",
+      "community_name": "featured_news_card.dart",
       "norm_label": "../models/post.dart"
     },
     {
@@ -5648,8 +5648,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_wordpress_service_dart",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "../../services/wordpress_service.dart"
     },
     {
@@ -5659,8 +5659,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_organizers_provider",
-      "community": 104,
-      "community_name": "organizers_provider.dart",
+      "community": 39,
+      "community_name": "organizer_detail_screen.dart",
       "norm_label": "organizers_provider.dart"
     },
     {
@@ -5670,8 +5670,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_organizers_provider_organizersprovider",
-      "community": 88,
-      "community_name": "_EventSubmissionScreenState",
+      "community": 6,
+      "community_name": "organizers_screen.dart",
       "norm_label": "organizersprovider"
     },
     {
@@ -5681,8 +5681,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_organizers_provider_service",
-      "community": 104,
-      "community_name": "organizers_provider.dart",
+      "community": 39,
+      "community_name": "organizer_detail_screen.dart",
       "norm_label": "service"
     },
     {
@@ -5692,8 +5692,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_organizers_provider_organizerdetailprovider",
-      "community": 59,
-      "community_name": "ConsumerWidget",
+      "community": 39,
+      "community_name": "organizer_detail_screen.dart",
       "norm_label": "organizerdetailprovider"
     },
     {
@@ -5703,8 +5703,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_organizers_provider_getorganizers",
-      "community": 104,
-      "community_name": "organizers_provider.dart",
+      "community": 39,
+      "community_name": "organizer_detail_screen.dart",
       "norm_label": "getorganizers"
     },
     {
@@ -5714,8 +5714,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_providers_organizers_provider_getorganizer",
-      "community": 104,
-      "community_name": "organizers_provider.dart",
+      "community": 39,
+      "community_name": "organizer_detail_screen.dart",
       "norm_label": "getorganizer"
     },
     {
@@ -5725,8 +5725,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_organizer_dart",
-      "community": 104,
-      "community_name": "organizers_provider.dart",
+      "community": 39,
+      "community_name": "organizer_detail_screen.dart",
       "norm_label": "../models/organizer.dart"
     },
     {
@@ -5770,7 +5770,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "artist_detail_screen.dart"
     },
     {
@@ -5781,7 +5781,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_artistdetailscreen",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "artistdetailscreen"
     },
     {
@@ -5791,7 +5791,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "consumerwidget",
-      "community": 59,
+      "community": 86,
       "community_name": "ConsumerWidget",
       "norm_label": "consumerwidget"
     },
@@ -5803,7 +5803,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_artistcontent",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "_artistcontent"
     },
     {
@@ -5814,7 +5814,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_missingartist",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "_missingartist"
     },
     {
@@ -5825,7 +5825,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_artistid",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "artistid"
     },
     {
@@ -5836,7 +5836,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_fallbackname",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "fallbackname"
     },
     {
@@ -5847,7 +5847,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_artist",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "artist"
     },
     {
@@ -5858,7 +5858,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_name",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "name"
     },
     {
@@ -5869,7 +5869,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_build",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "build"
     },
     {
@@ -5880,7 +5880,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_biographyhtml",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "_biographyhtml"
     },
     {
@@ -5891,7 +5891,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_escapehtml",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "_escapehtml"
     },
     {
@@ -5902,7 +5902,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_socialicon",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "_socialicon"
     },
     {
@@ -5913,7 +5913,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_openbookingemail",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "_openbookingemail"
     },
     {
@@ -5924,7 +5924,7 @@
       "_origin": "ast",
       "id": "lib_screens_artists_artist_detail_screen_sociallabel",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "_sociallabel"
     },
     {
@@ -5934,8 +5934,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_cached_network_image_cached_network_image_dart",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "package:cached_network_image/cached_network_image.dart"
     },
     {
@@ -5968,7 +5968,7 @@
       "_origin": "ast",
       "id": "core_navigation_in_app_browser_dart",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "../core/navigation/in_app_browser.dart"
     },
     {
@@ -5978,7 +5978,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_genre_chip_dart",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "../../widgets/genre_chip.dart"
     },
@@ -5990,7 +5990,7 @@
       "_origin": "ast",
       "id": "providers_artists_provider_dart",
       "community": 52,
-      "community_name": "artist_detail_screen.dart",
+      "community_name": "artists_screen.dart",
       "norm_label": "../../providers/artists_provider.dart"
     },
     {
@@ -6000,8 +6000,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_event_card_dart",
-      "community": 53,
-      "community_name": "events_screen.dart",
+      "community": 34,
+      "community_name": "more_screen.dart",
       "norm_label": "../../widgets/event_card.dart"
     },
     {
@@ -6011,7 +6011,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "artists_screen.dart"
     },
@@ -6022,7 +6022,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_artistsscreen",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "artistsscreen"
     },
@@ -6034,7 +6034,7 @@
       "_origin": "ast",
       "id": "consumerstatefulwidget",
       "community": 43,
-      "community_name": "ConsumerState",
+      "community_name": "communityServiceProvider",
       "norm_label": "consumerstatefulwidget"
     },
     {
@@ -6044,7 +6044,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_artistsscreenstate",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "_artistsscreenstate"
     },
@@ -6056,7 +6056,7 @@
       "_origin": "ast",
       "id": "consumerstate",
       "community": 43,
-      "community_name": "ConsumerState",
+      "community_name": "communityServiceProvider",
       "norm_label": "consumerstate"
     },
     {
@@ -6066,8 +6066,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_categorychip",
-      "community": 71,
-      "community_name": "StatelessWidget",
+      "community": 52,
+      "community_name": "artists_screen.dart",
       "norm_label": "_categorychip"
     },
     {
@@ -6077,8 +6077,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_artistcard",
-      "community": 71,
-      "community_name": "StatelessWidget",
+      "community": 52,
+      "community_name": "artists_screen.dart",
       "norm_label": "_artistcard"
     },
     {
@@ -6088,8 +6088,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_artisterror",
-      "community": 71,
-      "community_name": "StatelessWidget",
+      "community": 52,
+      "community_name": "artists_screen.dart",
       "norm_label": "_artisterror"
     },
     {
@@ -6099,7 +6099,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_category",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "_category"
     },
@@ -6110,7 +6110,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_search",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "_search"
     },
@@ -6121,7 +6121,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_searchtimer",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "_searchtimer"
     },
@@ -6132,8 +6132,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "timer",
-      "community": 105,
-      "community_name": "home_screen.dart",
+      "community": 35,
+      "community_name": "news_screen.dart",
       "norm_label": "timer?"
     },
     {
@@ -6143,7 +6143,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_query",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "_query"
     },
@@ -6154,7 +6154,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "artistlistquery_get",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "artistlistquery get"
     },
@@ -6165,7 +6165,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_label",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "label"
     },
@@ -6176,7 +6176,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_selected",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "selected"
     },
@@ -6187,7 +6187,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_onselected",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "onselected"
     },
@@ -6198,8 +6198,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "voidcallback",
-      "community": 53,
-      "community_name": "events_screen.dart",
+      "community": 34,
+      "community_name": "more_screen.dart",
       "norm_label": "voidcallback"
     },
     {
@@ -6209,7 +6209,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_artist",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "artist"
     },
@@ -6220,7 +6220,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_onretry",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "onretry"
     },
@@ -6231,7 +6231,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_createstate",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "createstate"
     },
@@ -6242,7 +6242,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_dispose",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "dispose"
     },
@@ -6253,7 +6253,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_onsearchchanged",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "_onsearchchanged"
     },
@@ -6264,7 +6264,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_artists_artists_screen_build",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "build"
     },
@@ -6297,7 +6297,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_favorite_button_dart",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "../../widgets/favorite_button.dart"
     },
@@ -6308,7 +6308,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "artist_detail_screen_dart",
-      "community": 6,
+      "community": 52,
       "community_name": "artists_screen.dart",
       "norm_label": "artist_detail_screen.dart"
     },
@@ -6330,7 +6330,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_profileavatar",
-      "community": 71,
+      "community": 15,
       "community_name": "StatelessWidget",
       "norm_label": "_profileavatar"
     },
@@ -6341,7 +6341,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_postauthoravatar",
-      "community": 59,
+      "community": 86,
       "community_name": "ConsumerWidget",
       "norm_label": "_postauthoravatar"
     },
@@ -6352,8 +6352,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_communityavatarbutton",
-      "community": 50,
-      "community_name": "communityServiceProvider",
+      "community": 86,
+      "community_name": "ConsumerWidget",
       "norm_label": "communityavatarbutton"
     },
     {
@@ -6364,7 +6364,7 @@
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_communityadminscreen",
       "community": 43,
-      "community_name": "ConsumerState",
+      "community_name": "communityServiceProvider",
       "norm_label": "communityadminscreen"
     },
     {
@@ -6375,7 +6375,7 @@
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_communityadminscreenstate",
       "community": 43,
-      "community_name": "ConsumerState",
+      "community_name": "communityServiceProvider",
       "norm_label": "_communityadminscreenstate"
     },
     {
@@ -6386,7 +6386,7 @@
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_livefeedscreen",
       "community": 43,
-      "community_name": "ConsumerState",
+      "community_name": "communityServiceProvider",
       "norm_label": "livefeedscreen"
     },
     {
@@ -6397,7 +6397,7 @@
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_livefeedscreenstate",
       "community": 43,
-      "community_name": "ConsumerState",
+      "community_name": "communityServiceProvider",
       "norm_label": "_livefeedscreenstate"
     },
     {
@@ -6407,7 +6407,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_composer",
-      "community": 71,
+      "community": 15,
       "community_name": "StatelessWidget",
       "norm_label": "_composer"
     },
@@ -6419,7 +6419,7 @@
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_postcard",
       "community": 43,
-      "community_name": "ConsumerState",
+      "community_name": "communityServiceProvider",
       "norm_label": "_postcard"
     },
     {
@@ -6430,7 +6430,7 @@
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_postcardstate",
       "community": 43,
-      "community_name": "ConsumerState",
+      "community_name": "communityServiceProvider",
       "norm_label": "_postcardstate"
     },
     {
@@ -6441,7 +6441,7 @@
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_communityprofilescreen",
       "community": 43,
-      "community_name": "ConsumerState",
+      "community_name": "communityServiceProvider",
       "norm_label": "communityprofilescreen"
     },
     {
@@ -6452,7 +6452,7 @@
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_communityprofilescreenstate",
       "community": 43,
-      "community_name": "ConsumerState",
+      "community_name": "communityServiceProvider",
       "norm_label": "_communityprofilescreenstate"
     },
     {
@@ -7046,7 +7046,7 @@
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_build",
       "community": 50,
-      "community_name": "communityServiceProvider",
+      "community_name": "community_provider.dart",
       "norm_label": "build"
     },
     {
@@ -7166,7 +7166,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_community_community_screen_delete",
-      "community": 50,
+      "community": 43,
       "community_name": "communityServiceProvider",
       "norm_label": "_delete"
     },
@@ -7364,8 +7364,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_community_provider_dart",
-      "community": 53,
-      "community_name": "events_screen.dart",
+      "community": 34,
+      "community_name": "more_screen.dart",
       "norm_label": "../../providers/community_provider.dart"
     },
     {
@@ -7441,8 +7441,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_community_wordpress_admin_screen_wordpressadminscreen",
-      "community": 112,
-      "community_name": "_WordPressAdminScreenState",
+      "community": 43,
+      "community_name": "communityServiceProvider",
       "norm_label": "wordpressadminscreen"
     },
     {
@@ -7452,8 +7452,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_community_wordpress_admin_screen_wordpressadminscreenstate",
-      "community": 112,
-      "community_name": "_WordPressAdminScreenState",
+      "community": 43,
+      "community_name": "communityServiceProvider",
       "norm_label": "_wordpressadminscreenstate"
     },
     {
@@ -7573,7 +7573,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_community_wordpress_admin_screen_load",
-      "community": 50,
+      "community": 43,
       "community_name": "communityServiceProvider",
       "norm_label": "_load"
     },
@@ -7650,7 +7650,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_community_wordpress_admin_screen_editcustomresource",
-      "community": 50,
+      "community": 43,
       "community_name": "communityServiceProvider",
       "norm_label": "_editcustomresource"
     },
@@ -7782,7 +7782,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_community_wordpress_admin_screen_editstartup",
-      "community": 50,
+      "community": 43,
       "community_name": "communityServiceProvider",
       "norm_label": "_editstartup"
     },
@@ -7859,8 +7859,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_event_detail_screen_eventdetailscreen",
-      "community": 48,
-      "community_name": "event_detail_screen.dart",
+      "community": 15,
+      "community_name": "StatelessWidget",
       "norm_label": "eventdetailscreen"
     },
     {
@@ -7870,7 +7870,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_event_detail_screen_inforow",
-      "community": 71,
+      "community": 15,
       "community_name": "StatelessWidget",
       "norm_label": "_inforow"
     },
@@ -7915,7 +7915,7 @@
       "_origin": "ast",
       "id": "icondata",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "icondata"
     },
     {
@@ -8068,8 +8068,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_event_submission_screen_eventsubmissionscreen",
-      "community": 88,
-      "community_name": "_EventSubmissionScreenState",
+      "community": 4,
+      "community_name": "event_submission_screen.dart",
       "norm_label": "eventsubmissionscreen"
     },
     {
@@ -8079,8 +8079,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_event_submission_screen_eventsubmissionscreenstate",
-      "community": 88,
-      "community_name": "_EventSubmissionScreenState",
+      "community": 4,
+      "community_name": "event_submission_screen.dart",
       "norm_label": "_eventsubmissionscreenstate"
     },
     {
@@ -8376,7 +8376,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_event_submission_screen_submit",
-      "community": 50,
+      "community": 43,
       "community_name": "communityServiceProvider",
       "norm_label": "_submit"
     },
@@ -8464,8 +8464,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_event_submission_screen_build",
-      "community": 88,
-      "community_name": "_EventSubmissionScreenState",
+      "community": 4,
+      "community_name": "event_submission_screen.dart",
       "norm_label": "build"
     },
     {
@@ -8530,8 +8530,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_events_provider_dart",
-      "community": 53,
-      "community_name": "events_screen.dart",
+      "community": 61,
+      "community_name": "favorites_screen.dart",
       "norm_label": "../../providers/events_provider.dart"
     },
     {
@@ -8552,7 +8552,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_organizers_provider_dart",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "../../providers/organizers_provider.dart"
     },
@@ -8563,8 +8563,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "formstate",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "formstate"
     },
     {
@@ -8574,8 +8574,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_events_screen",
-      "community": 53,
-      "community_name": "events_screen.dart",
+      "community": 34,
+      "community_name": "more_screen.dart",
       "norm_label": "events_screen.dart"
     },
     {
@@ -8586,7 +8586,7 @@
       "_origin": "ast",
       "id": "lib_screens_events_events_screen_eventsscreen",
       "community": 86,
-      "community_name": "eventsProvider",
+      "community_name": "ConsumerWidget",
       "norm_label": "eventsscreen"
     },
     {
@@ -8596,8 +8596,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_events_screen_eventsheader",
-      "community": 53,
-      "community_name": "events_screen.dart",
+      "community": 34,
+      "community_name": "more_screen.dart",
       "norm_label": "_eventsheader"
     },
     {
@@ -8607,8 +8607,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_events_screen_onsubmit",
-      "community": 53,
-      "community_name": "events_screen.dart",
+      "community": 34,
+      "community_name": "more_screen.dart",
       "norm_label": "onsubmit"
     },
     {
@@ -8618,8 +8618,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_events_screen_showsubmit",
-      "community": 53,
-      "community_name": "events_screen.dart",
+      "community": 34,
+      "community_name": "more_screen.dart",
       "norm_label": "showsubmit"
     },
     {
@@ -8629,8 +8629,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_events_events_screen_opensubmission",
-      "community": 53,
-      "community_name": "events_screen.dart",
+      "community": 34,
+      "community_name": "more_screen.dart",
       "norm_label": "_opensubmission"
     },
     {
@@ -8641,7 +8641,7 @@
       "_origin": "ast",
       "id": "lib_screens_events_events_screen_build",
       "community": 86,
-      "community_name": "eventsProvider",
+      "community_name": "ConsumerWidget",
       "norm_label": "build"
     },
     {
@@ -8651,8 +8651,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "event_submission_screen_dart",
-      "community": 53,
-      "community_name": "events_screen.dart",
+      "community": 34,
+      "community_name": "more_screen.dart",
       "norm_label": "event_submission_screen.dart"
     },
     {
@@ -8816,7 +8816,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_genres_genre_discovery_screen_genrediscoveryscreen",
-      "community": 111,
+      "community": 51,
       "community_name": "_GenreDiscoveryScreenState",
       "norm_label": "genrediscoveryscreen"
     },
@@ -8827,7 +8827,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_genres_genre_discovery_screen_genrediscoveryscreenstate",
-      "community": 111,
+      "community": 51,
       "community_name": "_GenreDiscoveryScreenState",
       "norm_label": "_genrediscoveryscreenstate"
     },
@@ -8838,8 +8838,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_genres_genre_discovery_screen_section",
-      "community": 71,
-      "community_name": "StatelessWidget",
+      "community": 18,
+      "community_name": "genre_discovery_screen.dart",
       "norm_label": "_section"
     },
     {
@@ -8849,8 +8849,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_genres_genre_discovery_screen_empty",
-      "community": 71,
-      "community_name": "StatelessWidget",
+      "community": 18,
+      "community_name": "genre_discovery_screen.dart",
       "norm_label": "_empty"
     },
     {
@@ -9202,7 +9202,7 @@
       "_origin": "ast",
       "id": "lib_screens_home_home_screen_homescreen",
       "community": 86,
-      "community_name": "eventsProvider",
+      "community_name": "ConsumerWidget",
       "norm_label": "homescreen"
     },
     {
@@ -9212,8 +9212,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_home_home_screen_newsslider",
-      "community": 58,
-      "community_name": "State",
+      "community": 105,
+      "community_name": "home_screen.dart",
       "norm_label": "_newsslider"
     },
     {
@@ -9223,8 +9223,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_home_home_screen_newssliderstate",
-      "community": 58,
-      "community_name": "State",
+      "community": 105,
+      "community_name": "home_screen.dart",
       "norm_label": "_newssliderstate"
     },
     {
@@ -9290,7 +9290,7 @@
       "_origin": "ast",
       "id": "lib_screens_home_home_screen_build",
       "community": 86,
-      "community_name": "eventsProvider",
+      "community_name": "ConsumerWidget",
       "norm_label": "build"
     },
     {
@@ -9565,7 +9565,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_about_screen",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "about_screen.dart"
     },
     {
@@ -9576,7 +9576,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_about_screen_aboutscreen",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "aboutscreen"
     },
     {
@@ -9587,7 +9587,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_about_screen_infotile",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "_infotile"
     },
     {
@@ -9598,7 +9598,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_about_screen_icon",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "icon"
     },
     {
@@ -9609,7 +9609,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_about_screen_label",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "label"
     },
     {
@@ -9620,7 +9620,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_about_screen_value",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "value"
     },
     {
@@ -9631,7 +9631,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_about_screen_ontap",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "ontap"
     },
     {
@@ -9642,7 +9642,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_about_screen_build",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "build"
     },
     {
@@ -9653,7 +9653,7 @@
       "_origin": "ast",
       "id": "package_package_info_plus_package_info_plus_dart",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "package:package_info_plus/package_info_plus.dart"
     },
     {
@@ -9664,7 +9664,7 @@
       "_origin": "ast",
       "id": "packageinfo",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "packageinfo"
     },
     {
@@ -9685,7 +9685,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_favorites_screen_favoritesscreen",
-      "community": 59,
+      "community": 86,
       "community_name": "ConsumerWidget",
       "norm_label": "favoritesscreen"
     },
@@ -9708,7 +9708,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_favorites_screen_openentry",
       "community": 86,
-      "community_name": "eventsProvider",
+      "community_name": "ConsumerWidget",
       "norm_label": "_openentry"
     },
     {
@@ -9718,7 +9718,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_favorites_screen_build",
-      "community": 59,
+      "community": 86,
       "community_name": "ConsumerWidget",
       "norm_label": "build"
     },
@@ -9751,7 +9751,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_more_screen_morescreen",
-      "community": 59,
+      "community": 86,
       "community_name": "ConsumerWidget",
       "norm_label": "morescreen"
     },
@@ -9762,8 +9762,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_more_screen_menucard",
-      "community": 34,
-      "community_name": "more_screen.dart",
+      "community": 15,
+      "community_name": "StatelessWidget",
       "norm_label": "_menucard"
     },
     {
@@ -9773,8 +9773,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_more_screen_submissioncard",
-      "community": 34,
-      "community_name": "more_screen.dart",
+      "community": 15,
+      "community_name": "StatelessWidget",
       "norm_label": "_submissioncard"
     },
     {
@@ -9828,8 +9828,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_more_screen_build",
-      "community": 50,
-      "community_name": "communityServiceProvider",
+      "community": 86,
+      "community_name": "ConsumerWidget",
       "norm_label": "build"
     },
     {
@@ -9982,8 +9982,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "newsletter_screen.dart"
     },
     {
@@ -9993,8 +9993,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_newsletterscreen",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "newsletterscreen"
     },
     {
@@ -10004,8 +10004,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_newsletterscreenstate",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "_newsletterscreenstate"
     },
     {
@@ -10015,8 +10015,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_hostedsignupurl",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "_hostedsignupurl"
     },
     {
@@ -10026,8 +10026,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_formkey",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "_formkey"
     },
     {
@@ -10037,8 +10037,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_emailcontroller",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "_emailcontroller"
     },
     {
@@ -10048,8 +10048,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_service",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "_service"
     },
     {
@@ -10059,8 +10059,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_consent",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "_consent"
     },
     {
@@ -10070,8 +10070,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_submitting",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "_submitting"
     },
     {
@@ -10081,8 +10081,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_createstate",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "createstate"
     },
     {
@@ -10092,8 +10092,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_dispose",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "dispose"
     },
     {
@@ -10103,8 +10103,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_submit",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "_submit"
     },
     {
@@ -10114,8 +10114,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_newsletter_screen_build",
-      "community": 47,
-      "community_name": "newsletter_screen.dart",
+      "community": 16,
+      "community_name": "news_provider.dart",
       "norm_label": "build"
     },
     {
@@ -10125,7 +10125,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_privacy_screen",
-      "community": 15,
+      "community": 71,
       "community_name": "package:flutter/material.dart",
       "norm_label": "privacy_screen.dart"
     },
@@ -10136,7 +10136,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_privacy_screen_privacyscreen",
-      "community": 15,
+      "community": 71,
       "community_name": "package:flutter/material.dart",
       "norm_label": "privacyscreen"
     },
@@ -10147,7 +10147,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_privacy_screen_build",
-      "community": 15,
+      "community": 71,
       "community_name": "package:flutter/material.dart",
       "norm_label": "build"
     },
@@ -10159,7 +10159,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_radio_provider_screen",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "radio_provider_screen.dart"
     },
     {
@@ -10170,7 +10170,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_radio_provider_screen_radioproviderscreen",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "radioproviderscreen"
     },
     {
@@ -10181,7 +10181,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_radio_provider_screen_build",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "build"
     },
     {
@@ -10202,8 +10202,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_settings_screen_settingsscreen",
-      "community": 58,
-      "community_name": "State",
+      "community": 25,
+      "community_name": "settings_screen.dart",
       "norm_label": "settingsscreen"
     },
     {
@@ -10213,8 +10213,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_more_settings_screen_settingsscreenstate",
-      "community": 58,
-      "community_name": "State",
+      "community": 25,
+      "community_name": "settings_screen.dart",
       "norm_label": "_settingsscreenstate"
     },
     {
@@ -10434,7 +10434,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_social_contact_screen",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "social_contact_screen.dart"
     },
     {
@@ -10445,7 +10445,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_social_contact_screen_socialcontactscreen",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "socialcontactscreen"
     },
     {
@@ -10456,7 +10456,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_social_contact_screen_linktile",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "_linktile"
     },
     {
@@ -10478,7 +10478,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_social_contact_screen_icon",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "icon"
     },
     {
@@ -10489,7 +10489,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_social_contact_screen_label",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "label"
     },
     {
@@ -10500,7 +10500,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_social_contact_screen_value",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "value"
     },
     {
@@ -10511,7 +10511,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_social_contact_screen_ontap",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "ontap"
     },
     {
@@ -10522,7 +10522,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_social_contact_screen_build",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "build"
     },
     {
@@ -10533,7 +10533,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_spotify_playlists_screen",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "spotify_playlists_screen.dart"
     },
     {
@@ -10544,7 +10544,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_spotify_playlists_screen_spotifyplaylistsscreen",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "spotifyplaylistsscreen"
     },
     {
@@ -10555,7 +10555,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_spotify_playlists_screen_playlists",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "_playlists"
     },
     {
@@ -10566,7 +10566,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_spotify_playlists_screen_build",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "build"
     },
     {
@@ -10577,7 +10577,7 @@
       "_origin": "ast",
       "id": "lib_screens_more_spotify_playlists_screen_openspotify",
       "community": 15,
-      "community_name": "package:flutter/material.dart",
+      "community_name": "StatelessWidget",
       "norm_label": "_openspotify"
     },
     {
@@ -10862,8 +10862,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_news_tagged_news_screen_taggednewsscreen",
-      "community": 38,
-      "community_name": "tagged_news_screen.dart",
+      "community": 43,
+      "community_name": "communityServiceProvider",
       "norm_label": "taggednewsscreen"
     },
     {
@@ -10873,8 +10873,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_news_tagged_news_screen_taggednewsscreenstate",
-      "community": 38,
-      "community_name": "tagged_news_screen.dart",
+      "community": 43,
+      "community_name": "communityServiceProvider",
       "norm_label": "_taggednewsscreenstate"
     },
     {
@@ -11049,7 +11049,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "organizer_detail_screen.dart"
     },
@@ -11060,8 +11060,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_organizerdetailscreen",
-      "community": 59,
-      "community_name": "ConsumerWidget",
+      "community": 39,
+      "community_name": "organizer_detail_screen.dart",
       "norm_label": "organizerdetailscreen"
     },
     {
@@ -11071,7 +11071,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_organizercontent",
-      "community": 59,
+      "community": 86,
       "community_name": "ConsumerWidget",
       "norm_label": "_organizercontent"
     },
@@ -11082,7 +11082,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_missingorganizer",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "_missingorganizer"
     },
@@ -11093,7 +11093,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_organizerid",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "organizerid"
     },
@@ -11104,7 +11104,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_fallbackname",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "fallbackname"
     },
@@ -11115,7 +11115,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_organizer",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "organizer"
     },
@@ -11126,7 +11126,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_name",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "name"
     },
@@ -11137,8 +11137,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_build",
-      "community": 59,
-      "community_name": "ConsumerWidget",
+      "community": 39,
+      "community_name": "organizer_detail_screen.dart",
       "norm_label": "build"
     },
     {
@@ -11148,7 +11148,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_descriptionhtml",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "_descriptionhtml"
     },
@@ -11159,7 +11159,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_escapehtml",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "_escapehtml"
     },
@@ -11170,7 +11170,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizer_detail_screen_sociallabel",
-      "community": 33,
+      "community": 39,
       "community_name": "organizer_detail_screen.dart",
       "norm_label": "_sociallabel"
     },
@@ -11181,7 +11181,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "organizers_screen.dart"
     },
@@ -11192,7 +11192,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_organizersscreen",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "organizersscreen"
     },
@@ -11203,7 +11203,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_organizersscreenstate",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "_organizersscreenstate"
     },
@@ -11214,7 +11214,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_organizercard",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "_organizercard"
     },
@@ -11225,7 +11225,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_organizererror",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "_organizererror"
     },
@@ -11236,7 +11236,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_search",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "_search"
     },
@@ -11247,7 +11247,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_searchtimer",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "_searchtimer"
     },
@@ -11258,7 +11258,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_organizer",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "organizer"
     },
@@ -11269,7 +11269,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_onretry",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "onretry"
     },
@@ -11280,7 +11280,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_createstate",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "createstate"
     },
@@ -11291,7 +11291,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_dispose",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "dispose"
     },
@@ -11302,7 +11302,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_onsearchchanged",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "_onsearchchanged"
     },
@@ -11313,8 +11313,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_organizers_organizers_screen_build",
-      "community": 88,
-      "community_name": "_EventSubmissionScreenState",
+      "community": 6,
+      "community_name": "organizers_screen.dart",
       "norm_label": "build"
     },
     {
@@ -11324,7 +11324,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "organizer_detail_screen_dart",
-      "community": 39,
+      "community": 6,
       "community_name": "organizers_screen.dart",
       "norm_label": "organizer_detail_screen.dart"
     },
@@ -11709,8 +11709,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_submissions_organizer_submission_screen_organizersubmissionscreen",
-      "community": 43,
-      "community_name": "ConsumerState",
+      "community": 20,
+      "community_name": "organizer_submission_screen.dart",
       "norm_label": "organizersubmissionscreen"
     },
     {
@@ -11720,8 +11720,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_screens_submissions_organizer_submission_screen_organizersubmissionscreenstate",
-      "community": 43,
-      "community_name": "ConsumerState",
+      "community": 20,
+      "community_name": "organizer_submission_screen.dart",
       "norm_label": "_organizersubmissionscreenstate"
     },
     {
@@ -11962,7 +11962,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_services_community_service_communityservice",
-      "community": 78,
+      "community": 50,
       "community_name": "community_provider.dart",
       "norm_label": "communityservice"
     },
@@ -12754,8 +12754,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "screens_news_news_detail_screen_dart",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "../screens/news/news_detail_screen.dart"
     },
     {
@@ -13315,8 +13315,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_brand_loading_indicator_brandloadingindicator",
-      "community": 68,
-      "community_name": "brand_loading_indicator.dart",
+      "community": 58,
+      "community_name": "State",
       "norm_label": "brandloadingindicator"
     },
     {
@@ -13326,8 +13326,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_brand_loading_indicator_brandloadingindicatorstate",
-      "community": 68,
-      "community_name": "brand_loading_indicator.dart",
+      "community": 58,
+      "community_name": "State",
       "norm_label": "_brandloadingindicatorstate"
     },
     {
@@ -13337,8 +13337,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "singletickerproviderstatemixin",
-      "community": 40,
-      "community_name": "startup_gate.dart",
+      "community": 58,
+      "community_name": "State",
       "norm_label": "singletickerproviderstatemixin"
     },
     {
@@ -13513,8 +13513,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "core_content_date_formatters_dart",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "../core/content/date_formatters.dart"
     },
     {
@@ -13524,8 +13524,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "favorite_button_dart",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "favorite_button.dart"
     },
     {
@@ -13557,7 +13557,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_favorite_button_favoritebutton",
-      "community": 59,
+      "community": 86,
       "community_name": "ConsumerWidget",
       "norm_label": "favoritebutton"
     },
@@ -13601,7 +13601,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_favorite_button_build",
-      "community": 59,
+      "community": 86,
       "community_name": "ConsumerWidget",
       "norm_label": "build"
     },
@@ -13612,8 +13612,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_featured_news_card",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "featured_news_card.dart"
     },
     {
@@ -13623,8 +13623,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_featured_news_card_featurednewscard",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "featurednewscard"
     },
     {
@@ -13634,8 +13634,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_featured_news_card_post",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "post"
     },
     {
@@ -13645,8 +13645,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_featured_news_card_build",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "build"
     },
     {
@@ -13657,7 +13657,7 @@
       "_origin": "ast",
       "id": "lib_widgets_genre_chip",
       "community": 71,
-      "community_name": "StatelessWidget",
+      "community_name": "package:flutter/material.dart",
       "norm_label": "genre_chip.dart"
     },
     {
@@ -13668,7 +13668,7 @@
       "_origin": "ast",
       "id": "lib_widgets_genre_chip_genrechip",
       "community": 71,
-      "community_name": "StatelessWidget",
+      "community_name": "package:flutter/material.dart",
       "norm_label": "genrechip"
     },
     {
@@ -13679,7 +13679,7 @@
       "_origin": "ast",
       "id": "lib_widgets_genre_chip_genre",
       "community": 71,
-      "community_name": "StatelessWidget",
+      "community_name": "package:flutter/material.dart",
       "norm_label": "genre"
     },
     {
@@ -13690,7 +13690,7 @@
       "_origin": "ast",
       "id": "lib_widgets_genre_chip_build",
       "community": 71,
-      "community_name": "StatelessWidget",
+      "community_name": "package:flutter/material.dart",
       "norm_label": "build"
     },
     {
@@ -13701,7 +13701,7 @@
       "_origin": "ast",
       "id": "screens_genres_genre_discovery_screen_dart",
       "community": 71,
-      "community_name": "StatelessWidget",
+      "community_name": "package:flutter/material.dart",
       "norm_label": "../screens/genres/genre_discovery_screen.dart"
     },
     {
@@ -13832,8 +13832,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_news_card",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "news_card.dart"
     },
     {
@@ -13843,8 +13843,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_news_card_newscard",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "newscard"
     },
     {
@@ -13854,8 +13854,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_news_card_post",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "post"
     },
     {
@@ -13865,8 +13865,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_news_card_build",
-      "community": 27,
-      "community_name": "event_card.dart",
+      "community": 64,
+      "community_name": "featured_news_card.dart",
       "norm_label": "build"
     },
     {
@@ -13909,8 +13909,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_post_embed_card_youtubelinkcard",
-      "community": 31,
-      "community_name": "post_embed_card.dart",
+      "community": 15,
+      "community_name": "StatelessWidget",
       "norm_label": "_youtubelinkcard"
     },
     {
@@ -14086,7 +14086,7 @@
       "_origin": "ast",
       "id": "lib_widgets_post_shortcode_card",
       "community": 64,
-      "community_name": "List",
+      "community_name": "featured_news_card.dart",
       "norm_label": "post_shortcode_card.dart"
     },
     {
@@ -14097,7 +14097,7 @@
       "_origin": "ast",
       "id": "lib_widgets_post_shortcode_card_postshortcodecard",
       "community": 64,
-      "community_name": "List",
+      "community_name": "featured_news_card.dart",
       "norm_label": "postshortcodecard"
     },
     {
@@ -14108,7 +14108,7 @@
       "_origin": "ast",
       "id": "lib_widgets_post_shortcode_card_shortcode",
       "community": 64,
-      "community_name": "List",
+      "community_name": "featured_news_card.dart",
       "norm_label": "shortcode"
     },
     {
@@ -14119,7 +14119,7 @@
       "_origin": "ast",
       "id": "lib_widgets_post_shortcode_card_posturl",
       "community": 64,
-      "community_name": "List",
+      "community_name": "featured_news_card.dart",
       "norm_label": "posturl"
     },
     {
@@ -14130,7 +14130,7 @@
       "_origin": "ast",
       "id": "lib_widgets_post_shortcode_card_relatedposts",
       "community": 64,
-      "community_name": "List",
+      "community_name": "featured_news_card.dart",
       "norm_label": "relatedposts"
     },
     {
@@ -14141,7 +14141,7 @@
       "_origin": "ast",
       "id": "lib_widgets_post_shortcode_card_build",
       "community": 64,
-      "community_name": "List",
+      "community_name": "featured_news_card.dart",
       "norm_label": "build"
     },
     {
@@ -14162,8 +14162,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_radio_player_bar_radioplayerbar",
-      "community": 41,
-      "community_name": "radio_player_bar.dart",
+      "community": 58,
+      "community_name": "State",
       "norm_label": "radioplayerbar"
     },
     {
@@ -14173,8 +14173,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_radio_player_bar_radioplayerbarstate",
-      "community": 41,
-      "community_name": "radio_player_bar.dart",
+      "community": 58,
+      "community_name": "State",
       "norm_label": "_radioplayerbarstate"
     },
     {
@@ -14481,8 +14481,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_startup_gate_startupgate",
-      "community": 40,
-      "community_name": "startup_gate.dart",
+      "community": 58,
+      "community_name": "State",
       "norm_label": "startupgate"
     },
     {
@@ -14492,8 +14492,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_widgets_startup_gate_startupgatestate",
-      "community": 40,
-      "community_name": "startup_gate.dart",
+      "community": 58,
+      "community_name": "State",
       "norm_label": "_startupgatestate"
     },
     {
@@ -15332,7 +15332,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "macos_runner_appdelegate_appdelegate",
-      "community": 66,
+      "community": 53,
       "community_name": "AppDelegate",
       "norm_label": "appdelegate"
     },
@@ -15343,7 +15343,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "macos_runner_appdelegate_appdelegate_applicationshouldterminateafterlastwindowclosed",
-      "community": 66,
+      "community": 53,
       "community_name": "AppDelegate",
       "norm_label": ".applicationshouldterminateafterlastwindowclosed()"
     },
@@ -15354,7 +15354,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "nsapplication",
-      "community": 66,
+      "community": 53,
       "community_name": "AppDelegate",
       "norm_label": "nsapplication"
     },
@@ -15365,7 +15365,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "macos_runner_appdelegate_swift_bool",
-      "community": 66,
+      "community": 53,
       "community_name": "AppDelegate",
       "norm_label": "bool"
     },
@@ -15376,7 +15376,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "macos_runner_appdelegate_appdelegate_applicationsupportssecurerestorablestate",
-      "community": 66,
+      "community": 53,
       "community_name": "AppDelegate",
       "norm_label": ".applicationsupportssecurerestorablestate()"
     },
@@ -17221,10 +17221,21 @@
       "norm_label": "v0.99.3 - huhs vezerlokozpont"
     },
     {
+      "label": "v0.99.4 - Small Improvements (planning)",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L372",
+      "_origin": "ast",
+      "id": "agents_v0_99_4_small_improvements_planning",
+      "community": 9,
+      "community_name": "Hungarian Hardstyle App - Project Context for AI Agents",
+      "norm_label": "v0.99.4 - small improvements (planning)"
+    },
+    {
       "label": "v0.4 - Foundation",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L374",
+      "source_location": "L395",
       "_origin": "ast",
       "id": "agents_v0_4_foundation",
       "community": 9,
@@ -17235,7 +17246,7 @@
       "label": "v0.5 - Dynamic Events",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L384",
+      "source_location": "L405",
       "_origin": "ast",
       "id": "agents_v0_5_dynamic_events",
       "community": 9,
@@ -17246,7 +17257,7 @@
       "label": "v0.6 - DJ Database",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L399",
+      "source_location": "L420",
       "_origin": "ast",
       "id": "agents_v0_6_dj_database",
       "community": 9,
@@ -17257,7 +17268,7 @@
       "label": "v0.7 - Organizers",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L418",
+      "source_location": "L439",
       "_origin": "ast",
       "id": "agents_v0_7_organizers",
       "community": 9,
@@ -17268,7 +17279,7 @@
       "label": "v0.8 - Rich Content",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L434",
+      "source_location": "L455",
       "_origin": "ast",
       "id": "agents_v0_8_rich_content",
       "community": 9,
@@ -17279,7 +17290,7 @@
       "label": "v0.9 - Community (implemented)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L453",
+      "source_location": "L474",
       "_origin": "ast",
       "id": "agents_v0_9_community_implemented",
       "community": 9,
@@ -17290,7 +17301,7 @@
       "label": "v0.95 - Media",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L473",
+      "source_location": "L494",
       "_origin": "ast",
       "id": "agents_v0_95_media",
       "community": 9,
@@ -17301,7 +17312,7 @@
       "label": "v0.97 - Polish build (complete)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L480",
+      "source_location": "L501",
       "_origin": "ast",
       "id": "agents_v0_97_polish_build_complete",
       "community": 9,
@@ -17312,7 +17323,7 @@
       "label": "v0.99 - Submission polish",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L492",
+      "source_location": "L513",
       "_origin": "ast",
       "id": "agents_v0_99_submission_polish",
       "community": 9,
@@ -17323,7 +17334,7 @@
       "label": "v0.99.1 - Community MVP (implemented; Firebase deployment live)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L501",
+      "source_location": "L522",
       "_origin": "ast",
       "id": "agents_v0_99_1_community_mvp_implemented_firebase_deployment_live",
       "community": 9,
@@ -17334,7 +17345,7 @@
       "label": "v1.0 - First Public Release (later)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L513",
+      "source_location": "L533",
       "_origin": "ast",
       "id": "agents_v1_0_first_public_release_later",
       "community": 9,
@@ -17342,10 +17353,21 @@
       "norm_label": "v1.0 - first public release (later)"
     },
     {
+      "label": "v1.1 - Annual Voting",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L582",
+      "_origin": "ast",
+      "id": "agents_v1_1_annual_voting",
+      "community": 9,
+      "community_name": "Hungarian Hardstyle App - Project Context for AI Agents",
+      "norm_label": "v1.1 - annual voting"
+    },
+    {
       "label": "v1.5 - Hardstyle Revolution Store",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L593",
+      "source_location": "L606",
       "_origin": "ast",
       "id": "agents_v1_5_hardstyle_revolution_store",
       "community": 9,
@@ -17356,7 +17378,7 @@
       "label": "Release And Store Business Model",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L604",
+      "source_location": "L617",
       "_origin": "ast",
       "id": "agents_release_and_store_business_model",
       "community": 9,
@@ -17367,7 +17389,7 @@
       "label": "Free Release",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L608",
+      "source_location": "L621",
       "_origin": "ast",
       "id": "agents_free_release",
       "community": 9,
@@ -17378,7 +17400,7 @@
       "label": "Premium Release",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L618",
+      "source_location": "L631",
       "_origin": "ast",
       "id": "agents_premium_release",
       "community": 9,
@@ -17389,7 +17411,7 @@
       "label": "UX Direction",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L676",
+      "source_location": "L689",
       "_origin": "ast",
       "id": "agents_ux_direction",
       "community": 9,
@@ -17400,7 +17422,7 @@
       "label": "Android Notes",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L699",
+      "source_location": "L712",
       "_origin": "ast",
       "id": "agents_android_notes",
       "community": 9,
@@ -17411,7 +17433,7 @@
       "label": "iOS Notes",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L711",
+      "source_location": "L724",
       "_origin": "ast",
       "id": "agents_ios_notes",
       "community": 9,
@@ -17422,7 +17444,7 @@
       "label": "Content Language",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L723",
+      "source_location": "L736",
       "_origin": "ast",
       "id": "agents_content_language",
       "community": 9,
@@ -17433,7 +17455,7 @@
       "label": "Coding Style",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L729",
+      "source_location": "L742",
       "_origin": "ast",
       "id": "agents_coding_style",
       "community": 9,
@@ -17444,7 +17466,7 @@
       "label": "Testing Expectations",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L749",
+      "source_location": "L762",
       "_origin": "ast",
       "id": "agents_testing_expectations",
       "community": 9,
@@ -17455,7 +17477,7 @@
       "label": "User Collaboration Preferences",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L759",
+      "source_location": "L772",
       "_origin": "ast",
       "id": "agents_user_collaboration_preferences",
       "community": 9,
@@ -17466,7 +17488,7 @@
       "label": "Important Current Implementation Priorities",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L779",
+      "source_location": "L792",
       "_origin": "ast",
       "id": "agents_important_current_implementation_priorities",
       "community": 9,
@@ -17477,7 +17499,7 @@
       "label": "Agent Reminder",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L814",
+      "source_location": "L827",
       "_origin": "ast",
       "id": "agents_agent_reminder",
       "community": 9,
@@ -17928,7 +17950,7 @@
       "label": "v0.99.3 - HUHS Vez\u00e9rl\u0151k\u00f6zpont",
       "file_type": "document",
       "source_file": "PROJECT_CONTEXT.md",
-      "source_location": "L687",
+      "source_location": "L689",
       "_origin": "ast",
       "id": "project_context_v0_99_3_huhs_vez\u00e9rl\u0151k\u00f6zpont",
       "community": 10,
@@ -17939,7 +17961,7 @@
       "label": "Development Philosophy",
       "file_type": "document",
       "source_file": "PROJECT_CONTEXT.md",
-      "source_location": "L877",
+      "source_location": "L879",
       "_origin": "ast",
       "id": "project_context_development_philosophy",
       "community": 10,
@@ -17950,7 +17972,7 @@
       "label": "Vision",
       "file_type": "document",
       "source_file": "PROJECT_CONTEXT.md",
-      "source_location": "L897",
+      "source_location": "L899",
       "_origin": "ast",
       "id": "project_context_vision",
       "community": 10,
@@ -18035,10 +18057,21 @@
       "norm_label": "v0.99.3 implementation status \u2014 complete and closed (2026-07-30)"
     },
     {
+      "label": "v0.99.4 \u2014 Small improvements (planning)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L92",
+      "_origin": "ast",
+      "id": "readme_v0_99_4_small_improvements_planning",
+      "community": 22,
+      "community_name": "Roadmap",
+      "norm_label": "v0.99.4 \u2014 small improvements (planning)"
+    },
+    {
       "label": "Roadmap",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L113",
+      "source_location": "L134",
       "_origin": "ast",
       "id": "readme_roadmap",
       "community": 22,
@@ -18049,7 +18082,7 @@
       "label": "Current bug-fix backlog",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L115",
+      "source_location": "L136",
       "_origin": "ast",
       "id": "readme_current_bug_fix_backlog",
       "community": 22,
@@ -18060,7 +18093,7 @@
       "label": "v0.4 \u2014 Foundation",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L128",
+      "source_location": "L149",
       "_origin": "ast",
       "id": "readme_v0_4_foundation",
       "community": 22,
@@ -18071,7 +18104,7 @@
       "label": "v0.5 \u2014 Dynamic events",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L138",
+      "source_location": "L159",
       "_origin": "ast",
       "id": "readme_v0_5_dynamic_events",
       "community": 22,
@@ -18082,7 +18115,7 @@
       "label": "v0.6 \u2014 DJ database",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L148",
+      "source_location": "L169",
       "_origin": "ast",
       "id": "readme_v0_6_dj_database",
       "community": 22,
@@ -18093,7 +18126,7 @@
       "label": "v0.7 \u2014 Organizers",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L160",
+      "source_location": "L181",
       "_origin": "ast",
       "id": "readme_v0_7_organizers",
       "community": 22,
@@ -18104,7 +18137,7 @@
       "label": "v0.8 \u2014 Rich content",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L172",
+      "source_location": "L193",
       "_origin": "ast",
       "id": "readme_v0_8_rich_content",
       "community": 22,
@@ -18115,7 +18148,7 @@
       "label": "v0.9 \u2014 Community utilities (implemented)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L183",
+      "source_location": "L204",
       "_origin": "ast",
       "id": "readme_v0_9_community_utilities_implemented",
       "community": 22,
@@ -18126,7 +18159,7 @@
       "label": "v0.95 \u2014 Media",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L214",
+      "source_location": "L235",
       "_origin": "ast",
       "id": "readme_v0_95_media",
       "community": 22,
@@ -18137,7 +18170,7 @@
       "label": "v0.97 \u2014 Polish build",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L219",
+      "source_location": "L240",
       "_origin": "ast",
       "id": "readme_v0_97_polish_build",
       "community": 22,
@@ -18148,7 +18181,7 @@
       "label": "v0.99 \u2014 Submission polish",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L233",
+      "source_location": "L254",
       "_origin": "ast",
       "id": "readme_v0_99_submission_polish",
       "community": 22,
@@ -18159,7 +18192,7 @@
       "label": "v0.99 \u2014 Completed polish items",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L243",
+      "source_location": "L264",
       "_origin": "ast",
       "id": "readme_v0_99_completed_polish_items",
       "community": 22,
@@ -18170,7 +18203,7 @@
       "label": "v0.99.1 \u2014 Community MVP (implemented; external setup remains)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L251",
+      "source_location": "L272",
       "_origin": "ast",
       "id": "readme_v0_99_1_community_mvp_implemented_external_setup_remains",
       "community": 22,
@@ -18181,7 +18214,7 @@
       "label": "v1.0 \u2014 First public release",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L269",
+      "source_location": "L290",
       "_origin": "ast",
       "id": "readme_v1_0_first_public_release",
       "community": 22,
@@ -18189,10 +18222,21 @@
       "norm_label": "v1.0 \u2014 first public release"
     },
     {
-      "label": "v1.5 \u2014 Hardstyle Revolution Store",
+      "label": "v1.1 \u2014 Annual voting",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L343",
+      "_origin": "ast",
+      "id": "readme_v1_1_annual_voting",
+      "community": 22,
+      "community_name": "Roadmap",
+      "norm_label": "v1.1 \u2014 annual voting"
+    },
+    {
+      "label": "v1.5 \u2014 Hardstyle Revolution Store",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L354",
       "_origin": "ast",
       "id": "readme_v1_5_hardstyle_revolution_store",
       "community": 22,
@@ -18203,7 +18247,7 @@
       "label": "Navigation direction",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L358",
+      "source_location": "L369",
       "_origin": "ast",
       "id": "readme_navigation_direction",
       "community": 22,
@@ -18214,7 +18258,7 @@
       "label": "Language direction",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L368",
+      "source_location": "L379",
       "_origin": "ast",
       "id": "readme_language_direction",
       "community": 22,
@@ -18225,7 +18269,7 @@
       "label": "Brands",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L374",
+      "source_location": "L385",
       "_origin": "ast",
       "id": "readme_brands",
       "community": 22,
@@ -18236,7 +18280,7 @@
       "label": "Long-term vision",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L381",
+      "source_location": "L392",
       "_origin": "ast",
       "id": "readme_long_term_vision",
       "community": 22,
@@ -43150,7 +43194,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L814",
+      "source_location": "L827",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_hungarian_hardstyle_app_project_context_for_ai_agents",
@@ -43161,7 +43205,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L699",
+      "source_location": "L712",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_hungarian_hardstyle_app_project_context_for_ai_agents",
@@ -43183,7 +43227,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L729",
+      "source_location": "L742",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_hungarian_hardstyle_app_project_context_for_ai_agents",
@@ -43194,7 +43238,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L723",
+      "source_location": "L736",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_hungarian_hardstyle_app_project_context_for_ai_agents",
@@ -43260,7 +43304,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L779",
+      "source_location": "L792",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_hungarian_hardstyle_app_project_context_for_ai_agents",
@@ -43271,7 +43315,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L711",
+      "source_location": "L724",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_hungarian_hardstyle_app_project_context_for_ai_agents",
@@ -43304,7 +43348,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L604",
+      "source_location": "L617",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_hungarian_hardstyle_app_project_context_for_ai_agents",
@@ -43326,7 +43370,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L749",
+      "source_location": "L762",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_hungarian_hardstyle_app_project_context_for_ai_agents",
@@ -43337,7 +43381,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L759",
+      "source_location": "L772",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_hungarian_hardstyle_app_project_context_for_ai_agents",
@@ -43348,7 +43392,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L676",
+      "source_location": "L689",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_hungarian_hardstyle_app_project_context_for_ai_agents",
@@ -43414,7 +43458,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L374",
+      "source_location": "L395",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
@@ -43425,7 +43469,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L384",
+      "source_location": "L405",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
@@ -43436,7 +43480,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L399",
+      "source_location": "L420",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
@@ -43447,7 +43491,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L418",
+      "source_location": "L439",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
@@ -43458,7 +43502,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L434",
+      "source_location": "L455",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
@@ -43469,7 +43513,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L473",
+      "source_location": "L494",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
@@ -43480,7 +43524,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L480",
+      "source_location": "L501",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
@@ -43491,7 +43535,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L501",
+      "source_location": "L522",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
@@ -43524,22 +43568,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L492",
+      "source_location": "L372",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
-      "target": "agents_v0_99_submission_polish",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "AGENTS.md",
-      "source_location": "L453",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "agents_roadmap",
-      "target": "agents_v0_9_community_implemented",
+      "target": "agents_v0_99_4_small_improvements_planning",
       "confidence_score": 1.0
     },
     {
@@ -43550,6 +43583,28 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
+      "target": "agents_v0_99_submission_polish",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L474",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents_roadmap",
+      "target": "agents_v0_9_community_implemented",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L533",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents_roadmap",
       "target": "agents_v1_0_first_public_release_later",
       "confidence_score": 1.0
     },
@@ -43557,7 +43612,18 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L593",
+      "source_location": "L582",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents_roadmap",
+      "target": "agents_v1_1_annual_voting",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L606",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_roadmap",
@@ -43568,7 +43634,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L608",
+      "source_location": "L621",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_release_and_store_business_model",
@@ -43579,7 +43645,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L618",
+      "source_location": "L631",
       "weight": 1.0,
       "_origin": "ast",
       "source": "agents_release_and_store_business_model",
@@ -43645,7 +43711,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "PROJECT_CONTEXT.md",
-      "source_location": "L877",
+      "source_location": "L879",
       "weight": 1.0,
       "_origin": "ast",
       "source": "project_context",
@@ -43865,7 +43931,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "PROJECT_CONTEXT.md",
-      "source_location": "L897",
+      "source_location": "L899",
       "weight": 1.0,
       "_origin": "ast",
       "source": "project_context",
@@ -44041,7 +44107,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "PROJECT_CONTEXT.md",
-      "source_location": "L687",
+      "source_location": "L689",
       "weight": 1.0,
       "_origin": "ast",
       "source": "project_context_current_version",
@@ -44063,7 +44129,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L374",
+      "source_location": "L385",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_hungarian_hardstyle_app",
@@ -44085,7 +44151,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L368",
+      "source_location": "L379",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_hungarian_hardstyle_app",
@@ -44096,7 +44162,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L381",
+      "source_location": "L392",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_hungarian_hardstyle_app",
@@ -44107,7 +44173,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L358",
+      "source_location": "L369",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_hungarian_hardstyle_app",
@@ -44118,7 +44184,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L113",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_hungarian_hardstyle_app",
@@ -44173,7 +44239,18 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L115",
+      "source_location": "L92",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "readme_current_status",
+      "target": "readme_v0_99_4_small_improvements_planning",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L136",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44184,7 +44261,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L128",
+      "source_location": "L149",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44195,7 +44272,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L138",
+      "source_location": "L159",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44206,7 +44283,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L148",
+      "source_location": "L169",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44217,7 +44294,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L160",
+      "source_location": "L181",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44228,7 +44305,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L172",
+      "source_location": "L193",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44239,7 +44316,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L214",
+      "source_location": "L235",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44250,7 +44327,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L219",
+      "source_location": "L240",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44261,7 +44338,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L251",
+      "source_location": "L272",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44272,7 +44349,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L243",
+      "source_location": "L264",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44283,7 +44360,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L233",
+      "source_location": "L254",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44294,7 +44371,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L183",
+      "source_location": "L204",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44305,7 +44382,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L269",
+      "source_location": "L290",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -44317,6 +44394,17 @@
       "confidence": "EXTRACTED",
       "source_file": "README.md",
       "source_location": "L343",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "readme_roadmap",
+      "target": "readme_v1_1_annual_voting",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L354",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_roadmap",
@@ -45315,5 +45403,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "73215dcd424a19c0aeb1933922714a924376128e"
+  "built_at_commit": "0aeedba1589611b795e7f44673f9632b73f59da9"
 }

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/news_provider.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/news_card.dart';
+import '../../widgets/mobile_ad_banner.dart';
 
 class NewsScreen extends ConsumerStatefulWidget {
   const NewsScreen({super.key});
@@ -82,7 +83,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                       horizontal: 18,
                       vertical: 18,
                     ),
-                    itemCount: posts.length + 2,
+                    itemCount: posts.length + 3,
                     itemBuilder: (context, index) {
                       if (index == 0) {
                         return Column(
@@ -181,7 +182,14 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                         );
                       }
 
-                      if (index == posts.length + 1) {
+                      if (index == 1) {
+                        return const Padding(
+                          padding: EdgeInsets.only(bottom: 18),
+                          child: Center(child: MobileAdBanner()),
+                        );
+                      }
+
+                      if (index == posts.length + 2) {
                         if (state.error != null && state.posts.isEmpty) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 60),
@@ -231,7 +239,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                         return const SizedBox(height: 24);
                       }
 
-                      return NewsCard(post: posts[index - 1]);
+                      return NewsCard(post: posts[index - 2]);
                     },
                   ),
           ),

@@ -582,7 +582,7 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 
 - Friend attendance visibility on profiles and events
 
-- WordPress-managed FAQ / GYIK section is a v1.0 goal, initially accessible under More, with categories, ordering, search, and expandable answers in Flutter
+- WordPress-managed FAQ / GYIK is planned for v0.99.4 under More, with categories, ordering, search, and expandable answers in Flutter
 
 ## Annual Top DJ And Track Voting
 
@@ -666,6 +666,8 @@ Planned next package: v0.99.2. Its first release check is the AdMob test banner,
 
 The v0.99.3 scope also includes making the About screen contact e-mail open the device mail app and keeping the Real Hardstyle FM stream playing when the user switches between apps.
 
+v0.99.4 is implemented in Flutter `0.99.4+1`: the `Több` menu is categorized as `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; Donate, versioned feedback e-mail, FAQ search/category/expandable answers, bulk favorites deletion, compact social buttons, Home/news test AdMob banners, Instagram URL normalization, and equal-height compact Home event cards are implemented. The WordPress Mobile API `2.4.33` is prepared with the public FAQ endpoint and managed FAQ post type; `2.4.31` remains the deployed live package until upload. Production AdMob identifiers and consent/privacy handling remain release work.
+
 v0.99.2 bugfixes to investigate: e-mail/password sign-in fails despite valid credentials; saved profile images do not render on the profile/avatar; admin user deletion returns a Firebase Functions `INTERNAL` error; and the owner account intermittently falls back from `Szervező` to `Bulizó` while admin access must remain intact. Account roles are final after registration; only admins may change another user's role, enforced server-side. Profiles and Chat must render the persisted account role, with separate `Admin` or `Moderátor` access badges.
 
 Tag- and genre-filtered discovery lists must use API pagination/infinite scroll so all matching news and DJ results can be reached, not only the initially loaded page.
@@ -710,7 +712,7 @@ The final v0.99.3 source pass separates the read-only community profile from its
 
 The Android radio foreground service now retries the Real Hardstyle FM stream after an unexpected playback error or stream completion instead of remaining silently marked as playing. Explicit Stop and full app closure still cancel pending reconnects.
 
-The owner will perform phone verification separately. Firebase proxy Functions are deployed. `build/huhs-mobile-api-2.4.32.zip` is the prepared WordPress package for readable native editing, Mobile API status, persistent `Indítási kép` endpoints, and Media Library upload/selection on the WordPress `Indítási kép` page; live `2.4.31` remains deployed and live-verified and is not an open re-verification task. Security hardening and signing/obfuscation are v1.0.
+The owner will perform phone verification separately. Firebase proxy Functions are deployed. `build/huhs-mobile-api-2.4.33.zip` is the prepared WordPress package for the managed FAQ post type/category editor and paginated public FAQ endpoint, in addition to the native editing/startup-image work; live `2.4.31` remains deployed and live-verified and is not an open re-verification task. Security hardening and signing/obfuscation are v1.0.
 
 Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
@@ -797,7 +799,7 @@ Planned v0.99.1 Community MVP decisions:
 Additional v1.0 product requirements:
 
 - Make displayed genres selectable. A genre detail/discovery screen should show separate API-backed `Események`, `DJ-k`, and `Hírek` sections for the selected genre and clearly retain the active genre label.
-- Add a More-section `Támogatás / Donate` card backed by a configurable PayPal donation URL. Open the PayPal app when available and fall back to the browser; do not build a custom payment flow for the first release.
+- The More-section `Támogatás / Donate` card is planned for v0.99.4, backed by a configurable PayPal donation URL with PayPal-app-first and browser fallback opening; do not build a custom payment flow.
 
 Completed
 

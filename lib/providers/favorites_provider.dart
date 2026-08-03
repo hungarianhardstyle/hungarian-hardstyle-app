@@ -58,6 +58,14 @@ class FavoritesNotifier extends ChangeNotifier {
     );
   }
 
+  Future<void> clearAll() async {
+    await _ready;
+    _items.clear();
+    notifyListeners();
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove(_storageKey);
+  }
+
   Future<void> _load() async {
     final preferences = await SharedPreferences.getInstance();
     _items.clear();

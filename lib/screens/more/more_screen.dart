@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/community_provider.dart';
 import '../artists/artists_screen.dart';
@@ -14,6 +16,8 @@ import '../submissions/artist_submission_screen.dart';
 import '../submissions/organizer_submission_screen.dart';
 import 'radio_provider_screen.dart';
 import 'privacy_screen.dart';
+import 'donate_screen.dart';
+import 'faq_screen.dart';
 
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
@@ -37,6 +41,7 @@ class MoreScreen extends ConsumerWidget {
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 22),
+            const _SectionTitle('Felfedezés'),
             _MenuCard(
               icon: Icons.graphic_eq,
               title: 'DJ-k',
@@ -50,11 +55,30 @@ class MoreScreen extends ConsumerWidget {
               subtitle: 'Hazai eseményszervezők és sorozatok',
               onTap: () => _open(context, const OrganizersScreen()),
             ),
-            const SizedBox(height: 28),
-            const Text(
-              'Beküldés',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            const SizedBox(height: 12),
+            _MenuCard(
+              icon: Icons.queue_music_outlined,
+              title: 'Spotify Playlistek',
+              subtitle: 'Öt válogatás a keményebb stílusokból',
+              onTap: () => _open(context, const SpotifyPlaylistsScreen()),
             ),
+            const SizedBox(height: 28),
+            const _SectionTitle('Közösség'),
+            _MenuCard(
+              icon: Icons.favorite_outline,
+              title: 'Kedvencek',
+              subtitle: 'Mentett hírek, események és DJ-k',
+              onTap: () => _open(context, const FavoritesScreen()),
+            ),
+            const SizedBox(height: 12),
+            _MenuCard(
+              icon: Icons.mark_email_unread_outlined,
+              title: 'Hírlevél',
+              subtitle: 'Iratkozz fel a Hungarian Hardstyle híreire',
+              onTap: () => _open(context, const NewsletterScreen()),
+            ),
+            const SizedBox(height: 28),
+            const _SectionTitle('Beküldés'),
             const SizedBox(height: 12),
             if (canSubmitArtist)
               _SubmissionCard(
@@ -73,6 +97,7 @@ class MoreScreen extends ConsumerWidget {
                 onTap: () => _open(context, const OrganizerSubmissionScreen()),
               ),
             const SizedBox(height: 28),
+            const _SectionTitle('Kapcsolat és támogatás'),
             _MenuCard(
               icon: Icons.share_outlined,
               title: 'Social és kapcsolat',
@@ -81,38 +106,39 @@ class MoreScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             _MenuCard(
-              icon: Icons.queue_music_outlined,
-              title: 'Spotify Playlistek',
-              subtitle: 'Öt válogatás a keményebb stílusokból',
-              onTap: () => _open(context, const SpotifyPlaylistsScreen()),
+              icon: Icons.favorite,
+              title: 'Támogatás / Donate',
+              subtitle: 'Segítsd a Hungarian Hardstyle munkáját',
+              onTap: () => _open(context, const DonateScreen()),
             ),
             const SizedBox(height: 12),
             _MenuCard(
-              icon: Icons.radio,
-              title: 'Rádió szolgáltató',
-              subtitle: 'Real Hardstyle FM',
-              onTap: () => _open(context, const RadioProviderScreen()),
+              icon: Icons.bug_report_outlined,
+              title: 'Hibajelzés',
+              subtitle: 'Hiba jelzése e-mailben, app-verzióval',
+              onTap: _sendFeedback,
             ),
             const SizedBox(height: 12),
             _MenuCard(
-              icon: Icons.mark_email_unread_outlined,
-              title: 'Hírlevél',
-              subtitle: 'Iratkozz fel a Hungarian Hardstyle híreire',
-              onTap: () => _open(context, const NewsletterScreen()),
+              icon: Icons.help_outline,
+              title: 'GYIK / FAQ',
+              subtitle: 'Gyakori kérdések és válaszok',
+              onTap: () => _open(context, const FaqScreen()),
             ),
             const SizedBox(height: 12),
-            _MenuCard(
-              icon: Icons.favorite_outline,
-              title: 'Kedvencek',
-              subtitle: 'Mentett hírek, események és DJ-k',
-              onTap: () => _open(context, const FavoritesScreen()),
-            ),
-            const SizedBox(height: 12),
+            const _SectionTitle('Alkalmazás'),
             _MenuCard(
               icon: Icons.settings_outlined,
               title: 'Beállítások',
               subtitle: 'Értesítések és gyorsítótár',
               onTap: () => _open(context, const SettingsScreen()),
+            ),
+            const SizedBox(height: 12),
+            _MenuCard(
+              icon: Icons.privacy_tip_outlined,
+              title: 'Adatvédelem és GDPR',
+              subtitle: 'Adatkezelés, megőrzés és felhasználói jogok',
+              onTap: () => _open(context, const PrivacyScreen()),
             ),
             const SizedBox(height: 12),
             _MenuCard(
@@ -123,10 +149,10 @@ class MoreScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             _MenuCard(
-              icon: Icons.privacy_tip_outlined,
-              title: 'Adatvédelem és GDPR',
-              subtitle: 'Adatkezelés, megőrzés és felhasználói jogok',
-              onTap: () => _open(context, const PrivacyScreen()),
+              icon: Icons.radio,
+              title: 'Rádió szolgáltató',
+              subtitle: 'Real Hardstyle FM',
+              onTap: () => _open(context, const RadioProviderScreen()),
             ),
           ],
         ),
@@ -139,6 +165,33 @@ class MoreScreen extends ConsumerWidget {
       context,
     ).push(MaterialPageRoute<void>(builder: (context) => screen));
   }
+
+  Future<void> _sendFeedback() async {
+    final info = await PackageInfo.fromPlatform();
+    final version = '${info.version}+${info.buildNumber}';
+    final uri = Uri(
+      scheme: 'mailto',
+      path: 'info@hungarianhardstyle.hu',
+      queryParameters: {
+        'subject': 'Hibajelzés – Hungarian Hardstyle $version',
+        'body': 'App verzió: $version\n\nHiba leírása:\n',
+      },
+    );
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle(this.text);
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+    ),
+  );
 }
 
 class _MenuCard extends StatelessWidget {

@@ -67,7 +67,6 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 18),
-              const Center(child: MobileAdBanner()),
               const SizedBox(height: 24),
               const Text(
                 'Legfrissebb hírek',
@@ -179,7 +178,7 @@ class HomeScreen extends ConsumerWidget {
 
                   return SizedBox(
                     // Keep enough vertical room for accessibility text scaling.
-                    height: 460,
+                    height: 430,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: upcomingEvents.length,
@@ -189,12 +188,15 @@ class HomeScreen extends ConsumerWidget {
                         return EventCard(
                           event: upcomingEvents[index],
                           width: 250,
+                          height: 430,
                         );
                       },
                     ),
                   );
                 },
               ),
+              const SizedBox(height: 24),
+              const Center(child: MobileAdBanner()),
               const SizedBox(height: 30),
             ],
           ),

@@ -162,14 +162,14 @@ class _ExternalLink extends StatelessWidget {
 }
 
 Future<void> _openExternal(String url) async {
-  final uri = Uri.tryParse(url);
+  final uri = Uri.tryParse(_normalizeEmbedUrl(url));
   if (uri != null) {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
 
 Uri? _embedUri(PostEmbed embed) {
-  final source = Uri.tryParse(embed.url);
+  final source = Uri.tryParse(_normalizeEmbedUrl(embed.url));
   if (source == null || !source.isAbsolute) return null;
   switch (embed.type) {
     case 'youtube':
@@ -205,6 +205,16 @@ Uri? _embedUri(PostEmbed embed) {
     default:
       return null;
   }
+}
+
+String _normalizeEmbedUrl(String raw) {
+  final value = raw.trim();
+  if (!value.startsWith('instagram://')) return value;
+  final uri = Uri.tryParse(value);
+  final shortcode = uri?.queryParameters['shortcode'];
+  return shortcode == null || shortcode.isEmpty
+      ? 'https://www.instagram.com/'
+      : 'https://www.instagram.com/p/$shortcode/';
 }
 
 String? _after(List<String> parts, String marker) {

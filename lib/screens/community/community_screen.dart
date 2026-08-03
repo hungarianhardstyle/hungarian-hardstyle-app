@@ -11,6 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 import '../../models/community_post.dart';
 import '../../models/submission_image.dart';
+import '../../core/navigation/in_app_browser.dart';
 import '../../providers/community_provider.dart';
 import '../../services/community_service.dart';
 import '../../widgets/submission_image_picker.dart';
@@ -1274,14 +1275,24 @@ class _CommunityProfileScreenState
           title: const Text('Bemutatkozás'),
           subtitle: Text(_bio.text.trim()),
         ),
-      for (final entry in _social.entries)
-        if (entry.value.text.trim().isNotEmpty)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.link_outlined),
-            title: Text(socialLabels[entry.key] ?? entry.key),
-            subtitle: Text(entry.value.text.trim()),
-          ),
+      if (_social.values.any((controller) => controller.text.trim().isNotEmpty))
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final entry in _social.entries)
+              if (entry.value.text.trim().isNotEmpty)
+                OutlinedButton.icon(
+                  onPressed: () => openSocialLink(
+                    context,
+                    entry.value.text.trim(),
+                    title: socialLabels[entry.key] ?? entry.key,
+                  ),
+                  icon: Icon(_socialIcon(entry.key)),
+                  label: Text(socialLabels[entry.key] ?? entry.key),
+                ),
+          ],
+        ),
       const SizedBox(height: 12),
       FilledButton.icon(
         onPressed: () async {
@@ -1328,6 +1339,15 @@ class _CommunityProfileScreenState
       ),
     ];
   }
+
+  IconData _socialIcon(String key) => switch (key) {
+    'facebook' => Icons.facebook,
+    'instagram' => Icons.camera_alt_outlined,
+    'tiktok' => Icons.music_note,
+    'youtube' => Icons.smart_display_outlined,
+    'spotify' => Icons.queue_music_outlined,
+    _ => Icons.link_outlined,
+  };
 
   @override
   Widget build(BuildContext context) {

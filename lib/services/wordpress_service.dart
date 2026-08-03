@@ -6,6 +6,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../models/artist.dart';
 import '../models/event.dart';
 import '../models/event_submission.dart';
+import '../models/faq.dart';
 import '../models/organizer.dart';
 import '../models/post.dart';
 import '../models/profile_submission.dart';
@@ -45,7 +46,6 @@ class NewsCategory {
       count: _readInt(json['count']),
     );
   }
-
 }
 
 class PostsPage {
@@ -156,6 +156,24 @@ class WordpressService {
     return page.items;
   }
 
+  Future<List<FaqItem>> getFaq() async {
+    try {
+      final response = await _dio.get('/faq');
+      final data = response.data;
+      final raw = data is List<dynamic>
+          ? data
+          : (data is Map<String, dynamic> ? data['items'] : null);
+      if (raw is! List<dynamic>) return const [];
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(FaqItem.fromJson)
+          .where((item) => item.question.trim().isNotEmpty)
+          .toList(growable: false);
+    } on DioException catch (e) {
+      throw Exception(_readApiError(e, 'Nem sikerült betölteni a GYIK-et.'));
+    }
+  }
+
   Future<Post> getPost(int postId) async {
     final response = await _dio.get('/posts/$postId');
     final data = response.data;
@@ -230,7 +248,9 @@ class WordpressService {
         data: {'email': email.trim(), 'consent': consent},
       );
     } on DioException catch (e) {
-      throw Exception(_readApiError(e, 'A hírlevél-feliratkozás nem sikerült.'));
+      throw Exception(
+        _readApiError(e, 'A hírlevél-feliratkozás nem sikerült.'),
+      );
     }
   }
 
@@ -409,15 +429,13 @@ class WordpressService {
     return _submitProfile('organizer', payload);
   }
 
-  Future<String> _submitProfile(
-    String kind,
-    Map<String, dynamic> data,
-  ) async {
+  Future<String> _submitProfile(String kind, Map<String, dynamic> data) async {
     try {
-      final responseData = (await FirebaseFunctions.instance
-              .httpsCallable('submitWordPressContent')
-              .call<Map<String, dynamic>>({'kind': kind, 'payload': data}))
-          .data;
+      final responseData =
+          (await FirebaseFunctions.instance
+                  .httpsCallable('submitWordPressContent')
+                  .call<Map<String, dynamic>>({'kind': kind, 'payload': data}))
+              .data;
       final message = _readResponseMessage(responseData);
       if (message != null) return message;
 
@@ -456,10 +474,14 @@ class WordpressService {
       if (image != null) {
         payload['flyer_url'] = await _uploadCloudinaryImage(image);
       }
-      final responseData = (await FirebaseFunctions.instance
-              .httpsCallable('submitWordPressContent')
-              .call<Map<String, dynamic>>({'kind': 'event', 'payload': payload}))
-          .data;
+      final responseData =
+          (await FirebaseFunctions.instance
+                  .httpsCallable('submitWordPressContent')
+                  .call<Map<String, dynamic>>({
+                    'kind': 'event',
+                    'payload': payload,
+                  }))
+              .data;
       final message = _readResponseMessage(responseData);
       if (message != null) return message;
 
@@ -477,7 +499,9 @@ class WordpressService {
       if (image.bytes.isEmpty ||
           image.bytes.length > _maxUploadBytes ||
           !_allowedImageExtensions.contains(extension)) {
-        throw const FormatException('JPG, PNG vagy WebP kép szükséges, legfeljebb 5 MB méretben.');
+        throw const FormatException(
+          'JPG, PNG vagy WebP kép szükséges, legfeljebb 5 MB méretben.',
+        );
       }
       final upload = Dio();
       final response = await upload.post(

@@ -32,61 +32,63 @@ class FavoritesScreen extends ConsumerWidget {
   ) async {
     try {
       switch (entry.kind) {
-      case FavoriteKind.artist:
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ArtistDetailScreen(artistId: entry.id),
-          ),
-        );
-        return;
-      case FavoriteKind.event:
-        final events = await ref.read(eventsProvider.future);
-        final eventMatches = events
-            .where((item) => item.id == entry.id)
-            .toList();
-        final event = eventMatches.isEmpty ? null : eventMatches.first;
-        if (event != null && context.mounted) {
+        case FavoriteKind.artist:
           await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)),
-          );
-        } else if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Az esemény már nem érhető el.')),
-          );
-        }
-        return;
-      case FavoriteKind.news:
-        final page = await ref
-            .read(wordpressServiceProvider)
-            .getPosts(search: entry.title, perPage: 10);
-        final postMatches = page.items
-            .where((item) => item.id == entry.id)
-            .toList();
-        final post = postMatches.isEmpty ? null : postMatches.first;
-        if (post != null && context.mounted) {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => NewsDetailScreen(post: post)),
-          );
-        } else if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('A hír már nem érhető el.')),
-          );
-        }
-        return;
-      case FavoriteKind.organizer:
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => OrganizerDetailScreen(
-              organizerId: entry.id,
-              fallbackName: entry.title,
+            MaterialPageRoute(
+              builder: (_) => ArtistDetailScreen(artistId: entry.id),
             ),
-          ),
-        );
-        return;
+          );
+          return;
+        case FavoriteKind.event:
+          final events = await ref.read(eventsProvider.future);
+          final eventMatches = events
+              .where((item) => item.id == entry.id)
+              .toList();
+          final event = eventMatches.isEmpty ? null : eventMatches.first;
+          if (event != null && context.mounted) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => EventDetailScreen(event: event),
+              ),
+            );
+          } else if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Az esemény már nem érhető el.')),
+            );
+          }
+          return;
+        case FavoriteKind.news:
+          final page = await ref
+              .read(wordpressServiceProvider)
+              .getPosts(search: entry.title, perPage: 10);
+          final postMatches = page.items
+              .where((item) => item.id == entry.id)
+              .toList();
+          final post = postMatches.isEmpty ? null : postMatches.first;
+          if (post != null && context.mounted) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => NewsDetailScreen(post: post)),
+            );
+          } else if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('A hír már nem érhető el.')),
+            );
+          }
+          return;
+        case FavoriteKind.organizer:
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OrganizerDetailScreen(
+                organizerId: entry.id,
+                fallbackName: entry.title,
+              ),
+            ),
+          );
+          return;
       }
     } catch (_) {
       if (context.mounted) {
@@ -103,7 +105,38 @@ class FavoritesScreen extends ConsumerWidget {
     final entries = favorites.entries;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kedvencek')),
+      appBar: AppBar(
+        title: const Text('Kedvencek'),
+        actions: [
+          if (entries.isNotEmpty)
+            IconButton(
+              tooltip: 'Összes törlése',
+              icon: const Icon(Icons.delete_sweep_outlined),
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Kedvencek törlése'),
+                    content: const Text('Törlöd az összes mentett kedvencet?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Mégse'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Törlés'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true && context.mounted) {
+                  await ref.read(favoritesProvider).clearAll();
+                }
+              },
+            ),
+        ],
+      ),
       body: entries.isEmpty
           ? const Center(
               child: Text(

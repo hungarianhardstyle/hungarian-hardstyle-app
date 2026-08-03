@@ -11,8 +11,9 @@ import 'genre_chip.dart';
 class EventCard extends StatelessWidget {
   final HuhsEvent event;
   final double? width;
+  final double? height;
 
-  const EventCard({super.key, required this.event, this.width});
+  const EventCard({super.key, required this.event, this.width, this.height});
 
   List<String> _visibleGenres() {
     if (event.genres.length <= 4) {
@@ -26,6 +27,7 @@ class EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: width,
+      height: height,
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF171717),

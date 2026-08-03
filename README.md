@@ -8,7 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 — complete and closed (2026-07-30)
 
-- Current Flutter build: `0.99.3+27`; the final ARM64 debug APK and the reported v0.99.3 fixes were verified on a physical phone by the project owner.
+- Current Flutter build: `0.99.4+1`; v0.99.3 remains closed and the v0.99.4 changes are ready for the final ARM64 test build.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
@@ -85,9 +85,32 @@ The same admin dialog can also disable and clear the configured startup image.
 The Chat composer keeps the camera action, emoji helper, and signed-in status on one compact line above the Send button so none overlaps the message field.
 Existing Chat messages resolve their author's current profile image, crop and zoom settings, so an avatar change updates earlier messages too.
 
-Firebase WordPress proxy Functions are deployed. WordPress Mobile API `2.4.32` is prepared at `build/huhs-mobile-api-2.4.32.zip`; it adds readable native content editing that preserves unchanged HTML, reliable persistent `Indítási kép` data with no-cache delivery, Media Library upload/selection on the WordPress `Indítási kép` page, and the Mobile API status endpoint. The currently live `2.4.31` remains deployed and live-verified and must not be repeatedly rechecked.
+Firebase WordPress proxy Functions are deployed. WordPress Mobile API `2.4.33` is prepared at `build/huhs-mobile-api-2.4.33.zip`; it adds the managed FAQ post type/category editor and paginated public FAQ endpoint on top of the native admin/startup-image work. The currently live `2.4.31` remains deployed and live-verified and must not be repeatedly rechecked; upload `2.4.33` when the FAQ is to go live.
 
 v0.99.3 is complete, phone-verified, and closed in Flutter build `0.99.3+27`. Release signing/obfuscation and broader security remain v1.0.
+
+### v0.99.4 — Small improvements (implemented)
+
+Implemented in Flutter `0.99.4+1`:
+
+- organize the existing `Több` entries without changing the menu name:
+  - `Felfedezés`: DJ-k, Szervezők, Spotify Playlistek
+  - `Közösség`: Kedvencek, Hírlevél; the v1.0 registered-user search will also belong here
+  - `Beküldés`: role-gated event, DJ and organizer submissions
+  - `Kapcsolat és támogatás`: Social és kapcsolat, Támogatás / Donate, Hibajelzés, GYIK / FAQ
+  - `Alkalmazás`: Beállítások, Adatvédelem és GDPR, Az appról, Rádió szolgáltató
+  - keep the HUHS Vezérlőközpont in the Admin profile; do not duplicate it in `Több`
+- [x] add the `Támogatás / Donate` card with PayPal app/browser fallback
+- [x] add a pre-addressed feedback e-mail action that includes the app version
+- [x] add the WordPress-managed FAQ under More with categories, ordering, search, expandable answers, and loading/empty/error states (prepared API package 2.4.33)
+- [x] add simple bulk management and deletion for locally saved favorites
+- [x] replace full social-media URLs on community profiles with compact, clickable Facebook, Instagram, TikTok, YouTube, and Spotify buttons
+- [x] move the existing Home AdMob banner below both the latest-news and upcoming-events sections
+- [x] add one clearly separated inline adaptive test AdMob banner to the native news list
+- [x] fix Instagram post embeds in news so `instagram://` URLs are converted to supported web links before opening
+- [x] compact the Home event cards while keeping every card the same height and preserving title, date/time, city, genres, favorite, and open actions
+
+Production AdMob identifiers and consent/privacy handling remain release work. The prepared WordPress API `2.4.33` must be uploaded before the FAQ is available in production.
 
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
@@ -275,7 +298,6 @@ Core release quality:
 - [ ] complete a final UX and visual polish pass: navigation, spacing, labels, buttons, loading/error states, accessibility and tasteful motion/effects
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches
 - [x] make artist/DJ profile genre tags open the same grouped `Események`, `DJ-k` and `Hírek` discovery view with the complete paginated result set
-- [ ] add a `Támogatás / Donate` card under More with a configurable PayPal donation link (PayPal app first, browser fallback)
 - [ ] add the Hardstyle Revolution release catalog
 - [ ] add release preview playback
 - [ ] add Spotify, YouTube and Hardstyle.com links to releases
@@ -290,7 +312,6 @@ Core release quality:
 - [x] introduce a persistent navigation shell with per-tab history
 - [x] add the Chat tab to the persistent bottom-navigation shell
 - [ ] polish the Android release and prepare iOS support
-- [ ] add the WordPress-managed FAQ under More with search, expandable answers, loading, empty and error states
 
 Authentication and community:
 
@@ -301,7 +322,6 @@ Authentication and community:
 - [x] top-left Home avatar profile entry with profile image or monogram fallback
 - [ ] user profiles with social links, planned events, and favorites
 - [ ] add a `Több`-menu user directory/search listing registered users only
-- [ ] organize `Több`-menu entries into clear categories while keeping `Több` as the visible menu name
 - [ ] allow a registered user to claim a DJ profile only after verifying the private or artist-owned booking e-mail stored on that profile; the Hungarian Hardstyle-managed booking address must never qualify as proof of ownership
 - [ ] friend requests and an `Ismerősök` profile section
 - [ ] full Live Feed chat/image-post moderation and community features (v1.0; the v0.99.1 MVP is tracked above)
@@ -320,7 +340,9 @@ App administration:
 
 News, events, DJs and organizers should remain readable without registration. Event, DJ and organizer submission forms remain public until authentication launches. After that, only signed-in users may see and use them, and the backend must reject unauthenticated submissions.
 
-Annual voting:
+Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and its in-app player.
+
+### v1.1 — Annual voting
 
 - [ ] WordPress-managed voting seasons and candidates
 - [ ] best Hungarian hardstyle DJ
@@ -330,15 +352,6 @@ Annual voting:
 - [ ] best international DJ
 - [ ] authenticated one-user/one-vote enforcement
 - [ ] private admin dashboard and explicitly published public results
-
-FAQ:
-
-- [ ] WordPress-managed questions, categories and display order
-- [ ] public read-only REST endpoint
-- [ ] searchable, expandable Flutter FAQ under More
-- [ ] loading, empty and error states
-
-Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and its in-app player.
 
 ### v1.5 — Hardstyle Revolution Store
 

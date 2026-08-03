@@ -14,37 +14,44 @@ class MobileAdBanner extends ConsumerStatefulWidget {
 class _MobileAdBannerState extends ConsumerState<MobileAdBanner> {
   BannerAd? _ad;
   bool _loaded = false;
+  int? _requestedWidth;
 
   @override
   void initState() {
     super.initState();
-    if (ref.read(adsEnabledProvider)) {
-      _loadAd();
-    }
   }
 
-  void _loadAd() {
-    final ad = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (!mounted) {
-            ad.dispose();
-            return;
-          }
-          setState(() {
-            _ad = ad as BannerAd;
-            _loaded = true;
-          });
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-    );
-    ad.load();
+  void _ensureAd(int width) {
+    if (_requestedWidth == width ||
+        _ad != null ||
+        !ref.read(adsEnabledProvider)) {
+      return;
+    }
+    _requestedWidth = width;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final size =
+          await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
+      if (!mounted || size == null || _requestedWidth != width) return;
+      final ad = BannerAd(
+        adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+        size: size,
+        request: const AdRequest(),
+        listener: BannerAdListener(
+          onAdLoaded: (ad) {
+            if (!mounted) {
+              ad.dispose();
+              return;
+            }
+            setState(() {
+              _ad = ad as BannerAd;
+              _loaded = true;
+            });
+          },
+          onAdFailedToLoad: (ad, error) => ad.dispose(),
+        ),
+      );
+      ad.load();
+    });
   }
 
   @override
@@ -55,14 +62,21 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner> {
 
   @override
   Widget build(BuildContext context) {
-    if (!ref.watch(adsEnabledProvider) || !_loaded || _ad == null) {
-      return const SizedBox.shrink();
-    }
-
-    return SizedBox(
-      width: _ad!.size.width.toDouble(),
-      height: _ad!.size.height.toDouble(),
-      child: AdWidget(ad: _ad!),
+    final enabled = ref.watch(adsEnabledProvider);
+    if (!enabled) return const SizedBox.shrink();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth.floor().clamp(320, 640).toInt()
+            : 320;
+        _ensureAd(width);
+        if (!_loaded || _ad == null) return const SizedBox(height: 50);
+        return SizedBox(
+          width: _ad!.size.width.toDouble(),
+          height: _ad!.size.height.toDouble(),
+          child: AdWidget(ad: _ad!),
+        );
+      },
     );
   }
 }
