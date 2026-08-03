@@ -115,6 +115,19 @@ Implemented in Flutter `0.99.4+1`:
 
 Production AdMob identifiers and consent/privacy handling remain release work. The prepared WordPress API `2.4.33` must be uploaded before the FAQ is available in production.
 
+#### FAQ-választervezet
+
+- **Hogyan regisztrálhatok?** A Több → Profil oldalon e-mail-címmel vagy Google-fiókkal regisztrálhatsz. Regisztrációkor kötelező szerepkört választani: bulizó, DJ vagy szervező.
+- **Módosíthatom később a szerepkörömet?** Nem. A szerepkör a regisztráció után végleges; módosítani csak adminisztrátor tud.
+- **Hogyan küldhetek be tartalmat?** A beküldés regisztrációhoz és a megfelelő szerepkörhöz kötött. A beküldés szerkesztői jóváhagyás után jelenik meg.
+- **Hogyan működnek a kedvencek?** A hírek, események és DJ-k adatlapján a szív ikon menti vagy törli a kedvencet. A mentett elemek a Kedvencek menüben kezelhetők.
+- **Hogyan működnek a push értesítések?** A beállításokban kapcsolhatók. Értesítés érkezhet új hír, új esemény és esemény-emlékeztető miatt.
+- **Hogyan használhatom a rádiót?** A Real Hardstyle FM lejátszója a főképernyő alján található. A Play/Stop és némítás gombbal vezérelhető; a szám címe akkor látható, ha a stream metaadata elérhető.
+- **Hogyan iratkozhatok fel a hírlevélre?** A Több → Hírlevél menüben add meg az e-mail-címed, majd erősítsd meg a feliratkozást a kapott e-mailben.
+- **Hogyan törölhetem a profilomat?** A saját profil oldalon válaszd a Profil törlése lehetőséget, majd erősítsd meg a műveletet.
+- **Hogyan kezeljük az adataimat?** A Firebase a közösségi fiókot és Chat-adatokat, a Cloudinary a feltöltött képeket, a WordPress a tartalmakat, a Mailchimp a hírlevél-feliratkozást kezeli. Részletek az Adatvédelem és GDPR menüben.
+- **Hogyan jelezhetek hibát vagy támogathatom a projektet?** A Több → Hibajelzés előre címzett e-mailt nyit meg az app verziójával. Támogatáshoz használd a Támogatás / Donate menüpontot.
+
 Backend **2.4.7** is deployed and awaiting live approval-flow testing. It fixes DJ/organizer approval redirects and adds one-click event draft creation from pending submissions; generated drafts remain non-visible until reviewed and published manually.
 
 Backend **2.4.8** is deployed. It adds a separate optional DJ-logo upload, an editable DJ website field across WordPress, REST API, public profiles, and Flutter, and complete event details when an event is opened from a DJ or organizer profile. The profile-event navigation fix is live-verified.
