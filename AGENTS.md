@@ -86,8 +86,8 @@ As of the current project state:
 - News search UI exists.
 - News item tap/click opens the news detail view.
 - News cards display remote images, title, date, and featured state.
-- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, currently through `build/huhs-mobile-api-2.4.31.zip`; the latest package has been extracted and reviewed locally.
-- The latest package version in that ZIP is 2.4.31. It is uploaded, deployed to production, live-verified, and confirmed active by the project owner; deployment and live verification are complete. It includes the WordPress admin dashboard/settings, submissions approval flow, trash/About menus, push/newsletter settings, Cloudinary URL handling, rate limits/honeypots, and UTF-8/HTML-entity push fixes.
+- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, currently through `build/huhs-mobile-api-2.4.33.zip`; the latest package has been extracted and reviewed locally.
+- The latest package version is 2.4.33. It is uploaded, deployed to production, live-verified, and confirmed active by the project owner; deployment and live verification are complete. It includes the managed FAQ post type/category editor and paginated public FAQ endpoint in addition to the WordPress admin dashboard/settings, submissions approval flow, trash/About menus, push/newsletter settings, Cloudinary URL handling, rate limits/honeypots, and UTF-8/HTML-entity push fixes.
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
@@ -96,7 +96,7 @@ As of the current project state:
 - Backend package `2.4.7` is deployed. It fixes the invalid nested admin approval form that prevented DJ and organizer draft creation, removes the misleading native publish box from submissions, and adds the same one-click draft creation flow for event submissions. The approval flow still requires a live WordPress admin test.
 - Backend package `2.4.8` is historical. Its multipart image path remains documented for compatibility; the active app upload path is Cloudinary and direct multipart uploads are not a current WAF/deployment status.
 - Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real "Kapcsolódó cikk" target was verified. Flutter opens returned related articles plus normal WordPress "Kapcsolódó cikk", "Kapcsolódó", and "Ez is érdekelhet" links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
-- Backend package 2.4.31 is the current uploaded package. It includes push-title/body HTML-entity decoding, UTF-8 JSON output, authenticated submission routes, and the native approval endpoint.
+- Backend package 2.4.31 is historical; the current uploaded and active package is 2.4.33, which also includes the managed FAQ endpoint and editor.
 - Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; the first natural event-day reminder did not arrive and the cron/timezone/filter path needs investigation.
 - The custom-push admin form lists recent published news and events by title and validates the selected post type, so editors do not need to look up event IDs manually.
 - Backend package `2.4.15` adds the server-side Mailchimp newsletter subscription endpoint and protected admin settings page; the endpoint is live and both invalid-email validation and a real personal e-mail double-opt-in test succeeded. Flutter includes a native signup screen with consent and double opt-in messaging.
@@ -395,7 +395,7 @@ Implemented in Flutter `0.99.4+1`:
 
 - [x] compact the Home event cards while keeping every card the same height and preserving title, date/time, city, genres, favorite, and open actions
 
-The event-tag fast-scroll regression is fixed. WordPress Mobile API `2.4.33` is the prepared package for the FAQ endpoint; `2.4.31` remains the deployed, live-verified production package until the owner uploads the prepared update. The ARM64 test APK is `build/HUHS-v0.99.4+1-arm64-debug.apk`. Production AdMob identifiers and consent/privacy handling remain release work.
+The event-tag fast-scroll regression is fixed. WordPress Mobile API `2.4.33` is deployed and live-verified with the FAQ endpoint. The ARM64 test APK is `build/HUHS-v0.99.4+1-arm64-debug.apk`. Production AdMob identifiers and consent/privacy handling remain release work.
 
 ### v0.4 - Foundation
 
@@ -838,9 +838,9 @@ Before making code changes:
 - do not treat placeholders as bugs unless they block the requested task
 - keep changes scoped to the requested feature
 - summarize what changed and what could not be verified
-Documentation note: backend package entries older than 2.4.31 are historical deployment notes; the current active upload path is 2.4.31.
+Documentation note: backend package entries older than 2.4.33 are historical deployment notes; the current active package is 2.4.33.
 - v0.99.3 source fix: the radio Stop action now synchronizes against the native playback service before deciding Play/Stop.
 - v0.99.3 completed fix: profile images use the persisted raw Cloudinary URL and fall back to a name/e-mail monogram; persisted X/Y positioning and zoom are implemented and phone-verified.
 - v0.99.3 source fix: the startup announcement is stored in WordPress and served by a public endpoint so it remains visible on every app launch until an admin disables or removes it.
 - Phone verification of the v0.99.3 fixes is complete in Flutter build `0.99.3+27`.
-- WordPress Mobile API `2.4.33` is prepared at `build/huhs-mobile-api-2.4.33.zip`; it adds the managed FAQ post type/category editor and paginated public FAQ endpoint. Live `2.4.31` remains deployed and live-verified and must not be repeatedly rechecked.
+- WordPress Mobile API `2.4.33` is active at `build/huhs-mobile-api-2.4.33.zip`; it adds the managed FAQ post type/category editor and paginated public FAQ endpoint. It is deployed and live-verified and must not be repeatedly rechecked.

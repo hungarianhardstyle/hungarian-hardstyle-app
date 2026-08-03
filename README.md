@@ -38,7 +38,7 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles, and moderators can delete Chat messages only.
 
-The current WordPress backend package is **2.4.31**. `build/huhs-mobile-api-2.4.31.zip` is UTF-8 clean, uploaded, deployed to production, live-verified, and confirmed active by the project owner; deployment and live verification are complete. Unauthenticated submission POST requests return HTTP 401; it includes authenticated submission POST routes plus the native approval endpoint.
+The current WordPress backend package is **2.4.33**. `build/huhs-mobile-api-2.4.33.zip` is uploaded, deployed to production, live-verified, and confirmed active by the project owner; deployment and live verification are complete. It includes the managed FAQ post type/category editor and paginated public FAQ endpoint in addition to the authenticated submission and native approval endpoints. Unauthenticated submission POST requests return HTTP 401.
 
 ### v0.99.2 — next test build
 
@@ -85,7 +85,7 @@ The same admin dialog can also disable and clear the configured startup image.
 The Chat composer keeps the camera action, emoji helper, and signed-in status on one compact line above the Send button so none overlaps the message field.
 Existing Chat messages resolve their author's current profile image, crop and zoom settings, so an avatar change updates earlier messages too.
 
-Firebase WordPress proxy Functions are deployed. WordPress Mobile API `2.4.33` is prepared at `build/huhs-mobile-api-2.4.33.zip`; it adds the managed FAQ post type/category editor and paginated public FAQ endpoint on top of the native admin/startup-image work. The currently live `2.4.31` remains deployed and live-verified and must not be repeatedly rechecked; upload `2.4.33` when the FAQ is to go live.
+Firebase WordPress proxy Functions are deployed. WordPress Mobile API `2.4.33` is live, deployed, and verified; it adds the managed FAQ post type/category editor and paginated public FAQ endpoint on top of the native admin/startup-image work. Do not treat this deployment as an open re-verification task.
 
 v0.99.3 is complete, phone-verified, and closed in Flutter build `0.99.3+27`. Release signing/obfuscation and broader security remain v1.0.
 
@@ -113,7 +113,7 @@ Implemented in Flutter `0.99.4+1`:
 - [x] update the in-app GDPR text for the current Firebase, Cloudinary, WordPress, Mailchimp, and test-AdMob functions
 - [x] add a second separated adaptive test AdMob placement after the first five news cards
 
-Production AdMob identifiers and consent/privacy handling remain release work. The prepared WordPress API `2.4.33` must be uploaded before the FAQ is available in production.
+Production AdMob identifiers and consent/privacy handling remain release work. The WordPress API `2.4.33` FAQ endpoint is available in production.
 
 #### FAQ-választervezet
 
