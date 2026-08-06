@@ -436,26 +436,31 @@ Firebase rules and the `claimArtistProfile`/`sendPersonalizedPush`/`getArtistCla
 
 - [x] Show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
 
-Keep security hardening, friends/attendance, the release catalog and the music store in v1.0/v1.5.
+Keep security hardening, the release catalog and the music store in v1.0/v1.5. Friends, attendance, public community profiles, friend-request notifications and their remaining bugs are v0.99.8 scope.
 
-### v0.99.8 - User profile navigation and community details (complete)
+### v0.99.8 - User profile navigation and community details (in progress)
+
+Authoritative status: WordPress Mobile API `2.4.33` is uploaded, deployed, live-verified and active; the current APK is `0.99.8+7`. Completed v0.99.3 TypeUI/native admin, profile crop, radio, tag/genre pagination, general push, social fields and FAQ remain complete.
 
 - [x] Make each profile card in `Több -> Felhasználók` tappable and open that user's native in-app profile.
-- [x] Show only favorite DJs, organizers, and events on the user profile, together with planned event attendance; favorite news is excluded from this profile section.
-- [x] Add event attendance states (`Ott leszek` / `Nem leszek ott`), persist the choice, and show participant counts on event details.
-- [x] Add basic friends/connections with request, accept/reject, and profile connection-list flows.
+- [x] Show only favorite DJs, organizers, and events on the user profile; favorite news is excluded from this profile section.
+- [ ] Stabilize planned events and attendance (`Ott leszek` / `Nem leszek ott`), persistence, participant counts and friend visibility.
+- [ ] Stabilize friend request/accept/reject persistence and remove false success/error states.
 - [x] Keep separate Facebook, Instagram, TikTok, YouTube, and Spotify profile links (already implemented).
 - [x] Show planned events and favorites on the user profile.
-- [x] Add biometric unlock for an already saved sign-in session.
-- [x] Add simpler own-chat management, a blocked-user list, and report-status visibility.
+- [ ] Fix biometric enablement, false unlock errors, and once-per-open-app session behaviour.
+- [ ] Complete registered/guest public-profile visibility, clickable friends, blocked-user list and report-status visibility.
 - [x] Restrict Chat message editing and deletion to admins; normal users cannot edit or delete their own messages.
 
-### v0.99.8+3 - Connections, reports and planned-event links (complete; phone verification pending)
+### v0.99.8 open fixes (including the former +3 follow-up)
 
-- [x] Show the sender's profile name and avatar in incoming friend requests, with native profile navigation.
-- [x] Send connection-request push notifications for list, map, string and legacy single-token storage.
+- [ ] Show request display names/avatars instead of UIDs and retain connections consistently.
+- [ ] Send connection-request push notifications reliably and remove false-success/false-failure errors.
 - [x] Make profile favorites and planned events open their native detail screens.
-- [x] Add an admin-only report-management screen with reported user/message details, resolve, delete-message and block-user actions.
+- [ ] Complete admin report management with full details, resolve/close removal, delete/block actions, and no duplicate/mojibake UI.
+- [ ] Provide unfriend/remove actions and context-sensitive public-profile friend controls.
+- [ ] Allow registered non-admin Chat writes and open native profiles from Chat author name/avatar.
+- [ ] Fix admin account-role changes.
 
 ### v0.4 - Foundation
 
@@ -592,7 +597,7 @@ Keep this release intentionally small and low-risk:
 - Registered users may publish text and compressed snapshot images in the Live Feed.
 - Live Feed messages support normal Unicode emoji and a small fixed reaction set; do not add a heavy emoji package unless the native keyboard proves insufficient.
 - Use Firebase Authentication and Firestore for community data, and Cloudinary for community images.
-- Keep friendships and attendance visibility in v1.0; v0.99.7 owns profile claims and the moderation/reporting/blocking follow-up, while v0.99.3 owns app-admin tooling and Chat moderation.
+- Keep security hardening and release signing in v1.0; v0.99.8 owns friendships, attendance, public community profiles, friend-request notifications, and the remaining moderation/reporting fixes. v0.99.3 owns the completed app-admin tooling and Chat moderation.
 - Add a `Több`-menu user directory/search that lists registered users only and is unavailable to guests (v0.99.7).
 
 ### v1.0 - First Public Release (later)
@@ -621,7 +626,7 @@ Focus:
 - polished Android release
 - iOS preparation if ready
 
-Confirmed v1.0 community direction:
+Confirmed community direction (v0.99.8 scope; only security/privacy remains v1.0):
 
 - Add a dedicated Live Feed bottom-navigation tab.
 - Registered users can chat in the live feed and publish image posts.
@@ -867,7 +872,7 @@ Product decisions confirmed by the user:
 - Artist/DJ names and the organizer on event detail must be clickable.
 - Artist and organizer event relations open dedicated API-backed profile screens and are confirmed against live data.
 - v1.0 should introduce a Live Feed tab with chat and image posting.
-- v1.0 should introduce Google sign-in, user profiles, friendships, and event attendance status (`Ott leszek` / `Nem leszek ott`).
+- v1.0 should focus on security hardening, release signing/obfuscation, release catalog/store work, and remaining public-release quality. Google sign-in, user profiles, friendships, and event attendance status (`Ott leszek` / `Nem leszek ott`) are tracked in v0.99.8.
 - v1.1 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting.
 - Organizer profiles and submissions now support server-managed selectable music genres/styles (backend 2.4.9 prepared; deploy and live-test still pending).
 - Add an About/App information area under More. Read the app version and build number from package metadata instead of hardcoding them, and include developer credit plus relevant website, contact, privacy, and terms links.
@@ -904,4 +909,4 @@ Documentation note: backend package entries older than 2.4.33 are historical dep
 - v0.99.3 source fix: the startup announcement is stored in WordPress and served by a public endpoint so it remains visible on every app launch until an admin disables or removes it.
 - Phone verification of the v0.99.3 fixes is complete in Flutter build `0.99.3+27`.
 - WordPress Mobile API `2.4.33` is active at `build/huhs-mobile-api-2.4.33.zip`; it adds the managed FAQ post type/category editor and paginated public FAQ endpoint. It is deployed and live-verified and must not be repeatedly rechecked.
-- v0.99.8+2 bugfix pass: attendance records now include the validated event ID; attendance errors are surfaced; connection-request status refreshes after send; the named `hungarian-hardstyle` database push trigger `notifyConnectionRequest` is deployed; biometric enablement checks real device support; `MainActivity` uses `FlutterFragmentActivity` for `local_auth`. Final ARM build is pending phone testing.
+- v0.99.8+2 bugfix pass (historical, superseded by the active v0.99.8+7 build): attendance records now include the validated event ID; attendance errors are surfaced; connection-request status refreshes after send; the named `hungarian-hardstyle` database push trigger `notifyConnectionRequest` is deployed; biometric enablement checks real device support; `MainActivity` uses `FlutterFragmentActivity` for `local_auth`. Current v0.99.8 friend/profile/notification and moderation fixes remain open.

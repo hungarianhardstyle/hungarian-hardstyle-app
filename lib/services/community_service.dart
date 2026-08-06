@@ -19,6 +19,8 @@ class CommunityService {
   static const accessModerator = 'moderator';
   static const accessAdmin = 'admin';
   static const maxUploadBytes = 5 * 1024 * 1024;
+  static String? _biometricSessionUid;
+  static Future<bool>? _biometricRequest;
 
   final FirebaseAuth auth;
   final FirebaseFirestore firestore;
@@ -235,7 +237,6 @@ class CommunityService {
             .exists) {
       throw StateError('A Chat-hozzáférésed le van tiltva.');
     }
-
     String imageUrl = '';
     if (imageBytes != null) {
       imageUrl = await uploadImage(imageBytes, filename: 'chat.jpg');
@@ -259,7 +260,10 @@ class CommunityService {
           : accountRole(profileData['role'] as String?),
       'authorAccessRole': isAnonymous
           ? ''
-          : (profileData['accessRole'] as String? ?? accessNone),
+          : (profileData['accessRole'] == accessAdmin ||
+                    profileData['accessRole'] == accessModerator
+                ? profileData['accessRole'] as String
+                : accessNone),
       'text': trimmed,
       'imageUrl': imageUrl,
       'reactions': <String, int>{},
@@ -452,7 +456,7 @@ class CommunityService {
     required String body,
   }) async {
     if (!isAdmin) {
-      throw StateError('Csak admin kĂĽldhet cĂ©lzott Ă©rtesĂ­tĂ©st.');
+      throw StateError('Csak admin küldhet célzott értesítést.');
     }
     final result = await FirebaseFunctions.instance
         .httpsCallable('sendPersonalizedPush')
@@ -581,6 +585,42 @@ class CommunityService {
         .snapshots();
   }
 
+  Future<List<Map<String, String>>> getFriendAttendees(int eventId) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return const [];
+    final connections = await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('connections')
+        .get();
+    if (connections.docs.isEmpty) return const [];
+    final attendance = await _attendance(eventId).get();
+    final attendeeIds = attendance.docs
+        .where((doc) => doc.data()['state'] == 'attending')
+        .map((doc) => doc.id)
+        .toSet();
+    final result = <Map<String, String>>[];
+    for (final connection in connections.docs) {
+      if (!attendeeIds.contains(connection.id)) continue;
+      final data = connection.data();
+      var name = (data['displayName'] as String? ?? '').trim();
+      var image = (data['imageUrl'] as String? ?? '').trim();
+      if (name.isEmpty || image.isEmpty) {
+        final profile = await firestore
+            .collection('community_profiles')
+            .doc(connection.id)
+            .get();
+        final profileData = profile.data() ?? const <String, dynamic>{};
+        name = name.isEmpty
+            ? (profileData['displayName'] as String? ?? '').trim()
+            : name;
+        image = image.isEmpty ? resolveProfileImage(profileData) : image;
+      }
+      result.add({'id': connection.id, 'name': name, 'image': image});
+    }
+    return result;
+  }
+
   Future<bool> biometricEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('biometric_unlock') ?? false;
@@ -606,11 +646,40 @@ class CommunityService {
     }
   }
 
+  Future<bool> unlockBiometricSession(String userId) async {
+    if (_biometricSessionUid == userId) return true;
+    final active = _biometricRequest;
+    if (active != null) return active;
+    final request = authenticateBiometric();
+    _biometricRequest = request;
+    final unlocked = await request.whenComplete(() => _biometricRequest = null);
+    if (unlocked) _biometricSessionUid = userId;
+    return unlocked;
+  }
+
+  static void resetBiometricSession() {
+    _biometricSessionUid = null;
+  }
+
   Future<String?> connectionStatus(String otherUserId) async {
     final user = auth.currentUser;
     if (user == null || user.isAnonymous || otherUserId == user.uid) {
       return null;
     }
+    final ownConnection = await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('connections')
+        .doc(otherUserId)
+        .get();
+    if (ownConnection.exists) return 'accepted';
+    final otherConnection = await firestore
+        .collection('community_profiles')
+        .doc(otherUserId)
+        .collection('connections')
+        .doc(user.uid)
+        .get();
+    if (otherConnection.exists) return 'accepted';
     final request = firestore
         .collection('connection_requests')
         .doc('${user.uid}_$otherUserId');
@@ -620,7 +689,9 @@ class CommunityService {
     final own = await request.get();
     if (own.exists) return own.data()?['status'] as String?;
     final incoming = await reverse.get();
-    return incoming.exists ? 'incoming:${incoming.data()?['status']}' : null;
+    if (!incoming.exists) return null;
+    final status = incoming.data()?['status'] as String?;
+    return status == 'accepted' ? 'accepted' : 'incoming:$status';
   }
 
   Future<void> requestConnection(String otherUserId) async {
@@ -628,6 +699,26 @@ class CommunityService {
     if (user == null || user.isAnonymous || otherUserId == user.uid) {
       throw StateError('Ismerős-jelöléshez regisztráció szükséges.');
     }
+    final ownConnection = firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('connections')
+        .doc(otherUserId);
+    final otherConnection = firestore
+        .collection('community_profiles')
+        .doc(otherUserId)
+        .collection('connections')
+        .doc(user.uid);
+    if ((await ownConnection.get()).exists ||
+        (await otherConnection.get()).exists) {
+      return;
+    }
+    final requestRef = firestore
+        .collection('connection_requests')
+        .doc('${user.uid}_$otherUserId');
+    final existing = await requestRef.get();
+    if (existing.data()?['status'] == 'pending') return;
+    if (existing.exists) await requestRef.delete();
     final profile = await firestore
         .collection('community_profiles')
         .doc(user.uid)
@@ -639,17 +730,14 @@ class CommunityService {
                 user.email ??
                 'Felhasználó')
             .trim();
-    await firestore
-        .collection('connection_requests')
-        .doc('${user.uid}_$otherUserId')
-        .set({
-          'from': user.uid,
-          'to': otherUserId,
-          'fromName': senderName,
-          'fromImageUrl': resolveProfileImage(profileData, user.photoURL ?? ''),
-          'status': 'pending',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+    await requestRef.set({
+      'from': user.uid,
+      'to': otherUserId,
+      'fromName': senderName,
+      'fromImageUrl': resolveProfileImage(profileData, user.photoURL ?? ''),
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> respondConnection(String fromUserId, bool accept) async {
@@ -658,29 +746,89 @@ class CommunityService {
       throw StateError('Regisztráció szükséges.');
     }
     final status = accept ? 'accepted' : 'rejected';
-    await firestore
+    final requestRef = firestore
         .collection('connection_requests')
-        .doc('${fromUserId}_${user.uid}')
-        .set({
-          'from': fromUserId,
-          'to': user.uid,
-          'status': status,
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-    if (accept) {
-      await firestore
-          .collection('community_profiles')
-          .doc(user.uid)
-          .collection('connections')
-          .doc(fromUserId)
-          .set({'createdAt': FieldValue.serverTimestamp()});
-      await firestore
-          .collection('community_profiles')
-          .doc(fromUserId)
-          .collection('connections')
-          .doc(user.uid)
-          .set({'createdAt': FieldValue.serverTimestamp()});
+        .doc('${fromUserId}_${user.uid}');
+    final requestSnapshot = await requestRef.get();
+    if (!requestSnapshot.exists) {
+      throw StateError('Az ismerős-kérés már nem érhető el.');
     }
+    final batch = firestore.batch();
+    batch.update(requestRef, {
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    if (accept) {
+      batch.set(
+        firestore
+            .collection('community_profiles')
+            .doc(user.uid)
+            .collection('connections')
+            .doc(fromUserId),
+        {
+          'userId': fromUserId,
+          'displayName': requestSnapshot.data()?['fromName'] ?? '',
+          'imageUrl': requestSnapshot.data()?['fromImageUrl'] ?? '',
+          'createdAt': FieldValue.serverTimestamp(),
+        },
+      );
+      final targetProfile = await firestore
+          .collection('community_profiles')
+          .doc(user.uid)
+          .get();
+      final targetData = targetProfile.data() ?? const <String, dynamic>{};
+      batch.set(
+        firestore
+            .collection('community_profiles')
+            .doc(fromUserId)
+            .collection('connections')
+            .doc(user.uid),
+        {
+          'userId': user.uid,
+          'displayName': targetData['displayName'] ?? '',
+          'imageUrl': resolveProfileImage(targetData, user.photoURL ?? ''),
+          'createdAt': FieldValue.serverTimestamp(),
+        },
+      );
+    }
+    await batch.commit();
+  }
+
+  Future<void> removeConnection(String otherUserId) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous || otherUserId == user.uid) {
+      throw StateError('Regisztráció szükséges.');
+    }
+    final batch = firestore.batch();
+    batch.delete(
+      firestore
+          .collection('community_profiles')
+          .doc(user.uid)
+          .collection('connections')
+          .doc(otherUserId),
+    );
+    batch.delete(
+      firestore
+          .collection('community_profiles')
+          .doc(otherUserId)
+          .collection('connections')
+          .doc(user.uid),
+    );
+    final requestRefs = [
+      firestore
+          .collection('connection_requests')
+          .doc('${user.uid}_$otherUserId'),
+      firestore
+          .collection('connection_requests')
+          .doc('${otherUserId}_${user.uid}'),
+    ];
+    final requestSnapshots = await Future.wait(
+      requestRefs.map((reference) => reference.get()),
+    );
+    for (var index = 0; index < requestRefs.length; index++) {
+      if (requestSnapshots[index].exists) batch.delete(requestRefs[index]);
+    }
+    await batch.commit();
   }
 
   Future<void> setUserRole(String userId, String role) async {
@@ -688,11 +836,9 @@ class CommunityService {
   }
 
   Future<void> setAccountRole(String userId, String role) async {
+    if (!isAdmin) throw StateError('Csak admin módosíthat szerepkört.');
     if (!{'dj', 'organizer', 'partygoer'}.contains(role)) {
       throw ArgumentError('Invalid account role.');
-    }
-    if (!isAdmin) {
-      throw StateError('Csak admin módosíthat szerepkört.');
     }
     await firestore.collection('community_profiles').doc(userId).set({
       'role': role,
@@ -701,10 +847,10 @@ class CommunityService {
   }
 
   Future<void> setAccessRole(String userId, String accessRole) async {
+    if (!isAdmin) throw StateError('Csak admin adhat jogosultságot.');
     if (!{'none', 'moderator', 'admin'}.contains(accessRole)) {
       throw ArgumentError('Invalid access role.');
     }
-    if (!isAdmin) throw StateError('Csak admin adhat jogosultságot.');
     await firestore.collection('community_profiles').doc(userId).set({
       'accessRole': accessRole,
       'updatedAt': FieldValue.serverTimestamp(),
@@ -839,6 +985,7 @@ class CommunityService {
   Future<void> signOut() async {
     _cachedRole = '';
     _cachedAccessRole = accessNone;
+    resetBiometricSession();
     await auth.signOut();
   }
 

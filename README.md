@@ -8,7 +8,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 — complete and closed (2026-07-30)
 
-- Current Flutter build: `0.99.8+2`; v0.99.3 through v0.99.7 remain closed. v0.99.8 bugfix work is in progress.
+- Current Flutter build: `0.99.8+7`; v0.99.3 through v0.99.7 remain closed. v0.99.8 is still in progress; older APK references are historical.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
 - Production release signing, obfuscation, and live AdMob verification remain release checks.
@@ -141,7 +141,7 @@ Phone-verified by the project owner; all listed v0.99.5 items are marked complet
 
 Analyzer and the complete Flutter test suite pass. The final ARM64-only debug artifact is `build/HUHS-v0.99.6+1-arm64-debug.apk` (package `0.99.6`, ARM64 ABI). Graphify was refreshed after the final source and documentation changes.
 
-Security hardening, friends/attendance, the release catalog and the music store remain scheduled for v1.0/v1.5.
+Security hardening, the release catalog and the music store remain scheduled for v1.0/v1.5. Friends, attendance, public community profiles, friend-request notifications and their remaining bugs are tracked in v0.99.8.
 
 ### v0.99.7 — Community follow-up (complete)
 
@@ -157,26 +157,31 @@ The final ARM64 debug test APK is `build/HUHS-v0.99.7+3-arm64-debug.apk`.
 
 - [x] After a DJ profile is claimed, show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
 
-Security hardening, friends/attendance, the release catalog and the music store remain scheduled for v1.0/v1.5.
+Security hardening, the release catalog and the music store remain scheduled for v1.0/v1.5. Friends, attendance, public community profiles, friend-request notifications and their remaining bugs are tracked in v0.99.8.
 
-### v0.99.8 — User profile navigation and community details (complete)
+### v0.99.8 — User profile navigation and community details (in progress)
+
+Status is authoritative: the active WordPress Mobile API is `2.4.33` (uploaded, deployed and live-verified), and the current APK is `0.99.8+7`. Earlier completed work (v0.99.3 TypeUI/native admin, profile-image crop, radio, tag/genre pagination, general push, social fields and FAQ) is not reopened here.
 
 - [x] Make each profile card in `Több → Felhasználók` tappable and open that user's native in-app profile.
-- [x] On a user profile, show the user's favorite DJs, organizers, and events, plus planned event attendance; favorite news does not appear in this profile section.
-- [x] Add event attendance states: `Ott leszek` and `Nem leszek ott`, persist the user's choice, and show the participant count on event details.
-- [x] Add basic friends/connections: send a connection request, accept/reject it, and show the connections list on the profile.
+- [x] On a user profile, show the user's favorite DJs, organizers, and events; favorite news does not appear in this profile section.
+- [ ] Stabilize planned-event display and attendance states (`Ott leszek` / `Nem leszek ott`), persistence, participant counts and friend visibility.
+- [ ] Stabilize friend requests, accept/reject, persistence and list consistency; remove false success/error states.
 - [x] Keep separate Facebook, Instagram, TikTok, YouTube, and Spotify profile links (already implemented).
 - [x] Show planned events and favorites on the user profile.
-- [x] Add biometric unlock for an already saved sign-in session (fingerprint/face recognition).
-- [x] Add community follow-up: simpler own-chat management, blocked-user list, and report-status visibility.
+- [ ] Fix biometric enablement, false unlock errors, and session behaviour (once per open app, again after a full close).
+- [ ] Complete registered/guest public-profile visibility, clickable friend lists, blocked-user list and report-status visibility.
 - [x] Restrict Chat message editing and deletion to admins; normal users cannot edit or delete their own messages.
 
-### v0.99.8+3 — Connections, reports and planned-event links (complete; phone verification pending)
+### v0.99.8 open fixes (including the former +3 follow-up)
 
-- [x] Show the sender's profile name and avatar in incoming friend requests, with native profile navigation.
-- [x] Send connection-request push notifications for list, map, string and legacy single-token storage.
+- [ ] Show the requester's display name/avatar instead of a UID and retain friend connections consistently.
+- [ ] Send connection-request push notifications reliably and remove false-success/false-failure errors.
 - [x] Make profile favorites and planned events open their native detail screens.
-- [x] Add an admin-only report-management screen with reported user/message details, resolve, delete-message and block-user actions.
+- [ ] Complete admin report management: reporter, reported user, reason, message details, resolve/close (removed from the active list), delete-message and block-user actions; remove duplicate report UI and mojibake.
+- [ ] Provide unfriend/remove actions and context-sensitive friend controls on public profiles; own profiles must not show self-actions.
+- [ ] Let registered non-admin users write Chat messages and make Chat author name/avatar open the native profile.
+- [ ] Fix admin account-role changes.
 
 #### FAQ-választervezet
 
@@ -365,7 +370,7 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] apply basic size, permission and ownership checks before adding full moderation/friend features in v1.0
 - [x] remove the Chat composer overflow at narrow widths
 - [x] native article tags: hydrate tag names from WordPress core REST when the HUHS endpoint only returns tag IDs
-- [ ] deploy `firestore.rules` to the `hungarian-hardstyle` Firebase project
+- [x] deploy `firestore.rules` to the `hungarian-hardstyle` Firebase project
 - [ ] enable Google provider and add Android SHA-1/SHA-256 credentials, then replace `android/app/google-services.json`
 
 ### v1.0 — First public release
@@ -399,19 +404,19 @@ Authentication and community:
 - [x] show DJ submission only to DJ accounts, organizer submission only to organizer accounts, and both to admins; enforce the same rules server-side
 - [x] bootstrap a separate app-admin account and role with full submission approval and editing permissions
 - [x] top-left Home avatar profile entry with profile image or monogram fallback
-- [ ] user profiles with social links, planned events, and favorites
+- moved to v0.99.8: user profiles with social links, planned events, and favorites
 - moved to v0.99.7: add a `Több`-menu user directory/search listing registered users only
 - moved to v0.99.7: allow DJ profile claiming after verified private/artist-owned booking e-mail; the Hungarian Hardstyle-managed booking address must never qualify as proof of ownership
-- [ ] friend requests and an `Ismerősök` profile section
+- moved to v0.99.8: friend requests and an `Ismerősök` profile section
 - [ ] full Live Feed chat/image-post moderation and community features (v1.0; the v0.99.1 MVP is tracked above)
-- [ ] event attendance: `Ott leszek` / `Nem leszek ott`
-- [ ] show which friends are attending on event details
-- [ ] friend attendance visibility
+- moved to v0.99.8: event attendance: `Ott leszek` / `Nem leszek ott`
+- moved to v0.99.8: show which friends are attending on event details
+- moved to v0.99.8: friend attendance visibility
 - moved to v0.99.7: personalized event pushes for favorites/attendance
 - [ ] send publication and reminder pushes for featured events to every app-installed device with an FCM token, regardless of account registration (respect explicit notification opt-out)
 - moved to v0.99.7: favorited-organizer event notifications
 - [ ] optionally send a separate admin/editor push when a new event submission is received
-- moved to v0.99.7: moderation/reporting/blocking follow-up; privacy and account deletion remain v1.0 work
+- moved to v0.99.8: moderation/reporting/blocking follow-up; privacy and account deletion remain v1.0 work
 
 App administration:
 

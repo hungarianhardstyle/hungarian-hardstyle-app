@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,6 +19,7 @@ import 'wordpress_service.dart';
 class PushNotificationService {
   static const _tokenKey = 'fcm_token';
   static bool _initialized = false;
+  static StreamSubscription<User?>? _authSubscription;
   static final Dio _api = Dio(
     BaseOptions(
       baseUrl: 'https://hungarianhardstyle.hu/wp-json/huhs/v1',
@@ -38,6 +41,10 @@ class PushNotificationService {
     if (settings.authorizationStatus == AuthorizationStatus.denied) return;
 
     await _storeToken(await messaging.getToken());
+    _authSubscription ??= FirebaseAuth.instance.authStateChanges().listen((_) {
+      unawaited(_syncStoredToken());
+    });
+    await _syncStoredToken();
     messaging.onTokenRefresh.listen(_storeToken);
     FirebaseMessaging.onMessage.listen(_showForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_handleOpenedMessage);
@@ -140,6 +147,11 @@ class PushNotificationService {
     } catch (_) {
       // Push registration must never block app startup or content loading.
     }
+  }
+
+  static Future<void> _syncStoredToken() async {
+    final preferences = await SharedPreferences.getInstance();
+    await _storeToken(preferences.getString(_tokenKey));
   }
 
   static Future<void> updatePreferences({

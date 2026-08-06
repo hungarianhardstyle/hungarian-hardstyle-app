@@ -26,6 +26,19 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   HuhsEvent get event => widget.event;
   String? _attendanceState;
   bool _attendanceBusy = false;
+  late Future<String?> _attendanceFuture;
+  late Future<List<Map<String, String>>> _friendAttendanceFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _attendanceFuture = ref
+        .read(communityServiceProvider)
+        .getMyAttendance(event.id);
+    _friendAttendanceFuture = ref
+        .read(communityServiceProvider)
+        .getFriendAttendees(event.id);
+  }
 
   Future<void> _setAttendance(String state) async {
     if (_attendanceBusy) return;
@@ -34,11 +47,15 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       _attendanceState = state;
     });
     try {
-      await ref.read(communityServiceProvider).setAttendance(
-        event.id,
-        state,
-        title: event.title,
-      );
+      await ref
+          .read(communityServiceProvider)
+          .setAttendance(event.id, state, title: event.title);
+      _attendanceFuture = ref
+          .read(communityServiceProvider)
+          .getMyAttendance(event.id);
+      _friendAttendanceFuture = ref
+          .read(communityServiceProvider)
+          .getFriendAttendees(event.id);
     } catch (error) {
       if (mounted) {
         setState(() => _attendanceState = null);
@@ -287,15 +304,33 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                           .auth
                           .currentUser;
                       return FutureBuilder<String?>(
-                        future: ref
-                            .read(communityServiceProvider)
-                            .getMyAttendance(event.id),
+                        future: _attendanceFuture,
                         builder: (context, stateSnapshot) {
-                          final selected = _attendanceState ?? stateSnapshot.data;
+                          final selected =
+                              _attendanceState ?? stateSnapshot.data;
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Ott leszek: $attending résztvevő'),
+                              if (user != null && !user.isAnonymous)
+                                FutureBuilder<List<Map<String, String>>>(
+                                  future: _friendAttendanceFuture,
+                                  builder: (context, friends) {
+                                    final names = (friends.data ?? const [])
+                                        .map((friend) => friend['name']!.trim())
+                                        .where((name) => name.isNotEmpty)
+                                        .toList();
+                                    if (names.isEmpty) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        'Ismerőseid is jönnek: ${names.join(', ')}',
+                                      ),
+                                    );
+                                  },
+                                ),
                               const SizedBox(height: 8),
                               if (user == null || user.isAnonymous)
                                 const Text(
@@ -319,7 +354,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                     OutlinedButton(
                                       onPressed: _attendanceBusy
                                           ? null
-                                          : () => _setAttendance('not_attending'),
+                                          : () =>
+                                                _setAttendance('not_attending'),
                                       child: const Text('Nem leszek ott'),
                                     ),
                                   ],

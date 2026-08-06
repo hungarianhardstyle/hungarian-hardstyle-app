@@ -343,16 +343,16 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                     return Card(
                       child: ExpansionTile(
                         leading: const Icon(Icons.flag_outlined),
-                        title: Text('JelentĂ©sek (${reports.length})'),
+                        title: Text('Jelentések (${reports.length})'),
                         children: [
                           for (final report in reports)
                             ListTile(
                               dense: true,
                               title: Text(
-                                'BejegyzĂ©s: ${report.data()['postId'] ?? '-'}',
+                                'Bejegyzés: ${report.data()['postId'] ?? '-'}',
                               ),
                               subtitle: Text(
-                                'Ok: ${report.data()['reason'] ?? 'egyĂ©b'}',
+                                'Ok: ${report.data()['reason'] ?? 'egyéb'}',
                               ),
                             ),
                         ],
@@ -950,9 +950,25 @@ class _PostCardState extends ConsumerState<_PostCard> {
     }
   }
 
+  Future<void> _openAuthorProfile() async {
+    if (widget.post.authorId.isEmpty ||
+        widget.post.authorName.startsWith('Unknown User ')) {
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            CommunityPublicProfileScreen(userId: widget.post.authorId),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
+    final canOpenProfile =
+        post.authorId.isNotEmpty &&
+        !post.authorName.startsWith('Unknown User ');
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
@@ -960,90 +976,95 @@ class _PostCardState extends ConsumerState<_PostCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                _PostAuthorAvatar(post),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Wrap(
-                    spacing: 6,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(
-                        post.authorName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      if (post.authorRole.isNotEmpty)
+            InkWell(
+              onTap: canOpenProfile ? _openAuthorProfile : null,
+              borderRadius: BorderRadius.circular(8),
+              child: Row(
+                children: [
+                  _PostAuthorAvatar(post),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Wrap(
+                      spacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
                         Text(
-                          post.authorRole == 'dj'
-                              ? 'DJ'
-                              : post.authorRole == 'organizer'
-                              ? 'Szervező'
-                              : 'Bulizó',
-                          style: const TextStyle(
-                            color: Colors.white60,
-                            fontSize: 11,
-                          ),
+                          post.authorName,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                      if (post.authorAccessRole == CommunityService.accessAdmin)
-                        const Text(
-                          'Admin',
-                          style: TextStyle(
-                            color: Colors.redAccent,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                        if (post.authorRole.isNotEmpty)
+                          Text(
+                            post.authorRole == 'dj'
+                                ? 'DJ'
+                                : post.authorRole == 'organizer'
+                                ? 'Szervező'
+                                : 'Bulizó',
+                            style: const TextStyle(
+                              color: Colors.white60,
+                              fontSize: 11,
+                            ),
                           ),
-                        )
-                      else if (post.authorAccessRole ==
-                          CommunityService.accessModerator)
-                        const Text(
-                          'Moderátor',
-                          style: TextStyle(
-                            color: Colors.orangeAccent,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                        if (post.authorAccessRole ==
+                            CommunityService.accessAdmin)
+                          const Text(
+                            'Admin',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        else if (post.authorAccessRole ==
+                            CommunityService.accessModerator)
+                          const Text(
+                            'Moderátor',
+                            style: TextStyle(
+                              color: Colors.orangeAccent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
-                ),
-                Text(
-                  _timeLabel(post.createdAt),
-                  style: const TextStyle(color: Colors.white54, fontSize: 11),
-                ),
-                if (ref.read(communityServiceProvider).isAdmin)
-                  IconButton(
-                    tooltip: 'Üzenet szerkesztése',
-                    icon: const Icon(Icons.edit_outlined, size: 19),
-                    onPressed: _edit,
-                  ),
-                if (ref.read(communityServiceProvider).isAdmin)
-                  IconButton(
-                    tooltip: 'Üzenet törlése',
-                    icon: const Icon(Icons.delete_outline, size: 19),
-                    onPressed: _delete,
-                  ),
-                if (ref.read(communityServiceProvider).isAdmin)
-                  IconButton(
-                    tooltip: post.pinned
-                        ? 'Rögzítés feloldása'
-                        : 'Üzenet rögzítése',
-                    icon: Icon(
-                      post.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                      size: 19,
+                      ],
                     ),
-                    onPressed: _togglePinned,
                   ),
-                if (widget.post.authorId !=
-                    ref.read(communityServiceProvider).auth.currentUser?.uid)
-                  PopupMenuButton<String>(
-                    onSelected: _moderateUser,
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'report', child: Text('Jelentés')),
-                      PopupMenuItem(value: 'block', child: Text('Blokkolás')),
-                    ],
+                  Text(
+                    _timeLabel(post.createdAt),
+                    style: const TextStyle(color: Colors.white54, fontSize: 11),
                   ),
-              ],
+                  if (ref.read(communityServiceProvider).isAdmin)
+                    IconButton(
+                      tooltip: 'Üzenet szerkesztése',
+                      icon: const Icon(Icons.edit_outlined, size: 19),
+                      onPressed: _edit,
+                    ),
+                  if (ref.read(communityServiceProvider).isAdmin)
+                    IconButton(
+                      tooltip: 'Üzenet törlése',
+                      icon: const Icon(Icons.delete_outline, size: 19),
+                      onPressed: _delete,
+                    ),
+                  if (ref.read(communityServiceProvider).isAdmin)
+                    IconButton(
+                      tooltip: post.pinned
+                          ? 'Rögzítés feloldása'
+                          : 'Üzenet rögzítése',
+                      icon: Icon(
+                        post.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                        size: 19,
+                      ),
+                      onPressed: _togglePinned,
+                    ),
+                  if (widget.post.authorId !=
+                      ref.read(communityServiceProvider).auth.currentUser?.uid)
+                    PopupMenuButton<String>(
+                      onSelected: _moderateUser,
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(value: 'report', child: Text('Jelentés')),
+                        PopupMenuItem(value: 'block', child: Text('Blokkolás')),
+                      ],
+                    ),
+                ],
+              ),
             ),
             if (post.pinned)
               const Padding(
@@ -1133,7 +1154,6 @@ class _CommunityProfileScreenState
   double _gestureStartZoom = 1;
   List<int> _claimedArtistIds = const [];
   String? _loadedUid;
-  String? _biometricGateUid;
   bool _loadingProfile = false;
   StreamSubscription<User?>? _authSubscription;
 
@@ -1144,7 +1164,6 @@ class _CommunityProfileScreenState
     super.initState();
     _authSubscription = _service.auth.userChanges().listen((_) {
       _loadedUid = null;
-      _biometricGateUid = null;
       _loadProfile();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadProfile());
@@ -1207,12 +1226,11 @@ class _CommunityProfileScreenState
     if (user == null || user.isAnonymous || _loadedUid == user.uid) return;
     _loadingProfile = true;
     try {
-      if (_biometricGateUid != user.uid && await _service.biometricEnabled()) {
-        if (!await _service.authenticateBiometric()) {
+      if (await _service.biometricEnabled()) {
+        if (!await _service.unlockBiometricSession(user.uid)) {
           if (mounted) _message('A profil feloldása sikertelen.');
           return;
         }
-        _biometricGateUid = user.uid;
       }
       final snapshot = await _service.profile();
       final data = snapshot.data() ?? const <String, dynamic>{};
