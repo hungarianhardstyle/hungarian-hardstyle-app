@@ -267,9 +267,10 @@ Runs from WordPress.
 
 Uses Releases.
 
-The current catalog only exposes a maximum 60-second preview. It never
-offers a full MP3 download, free or ad-supported. Any later store must use
-explicit paid entitlements and keep source/master files private.
+The current catalog only exposes a maximum 60-second preview. The later
+store may offer a full 128 kbps MP3 after a rewarded advertisement, while
+320 kbps MP3 and WAV/lossless remain paid products. Source/master files stay
+private and higher-quality downloads require explicit paid entitlements.
 
 ---
 

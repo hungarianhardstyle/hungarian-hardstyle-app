@@ -689,14 +689,15 @@ Confirmed annual voting direction for v1.1:
 
 Focus:
 
-- paid releases only; no free or ad-supported full MP3 downloads
-- Android digital purchases must use Google Play Billing; Google Pay is not the correct in-app product API
+- rewarded-ad full MP3 download at 128 kbps only
+- paid 320 kbps MP3 and WAV/lossless products must use Google Play Billing; Google Pay is not the correct in-app product API
 - purchase/download history if needed
 
 ## Release And Store Business Model (later, not in v0.99.89)
 
-The later store may support paid digital products. It must not offer free,
-rewarded-ad or anonymous full-MP3 downloads.
+The later store may offer a 128 kbps full MP3 after a rewarded advertisement,
+plus paid 320 kbps MP3 and WAV/lossless products. It must not offer
+unadvertised or anonymous full-MP3 downloads.
 
 Payment requirement:
 
@@ -711,6 +712,7 @@ Release processing:
 
 Paid options:
 
+- 128 kbps MP3 after a rewarded advertisement
 - 320 kbps MP3, example price `1.99 EUR`
 - WAV/lossless, example price `2.99 EUR`
 

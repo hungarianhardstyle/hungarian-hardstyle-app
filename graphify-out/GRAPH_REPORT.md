@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 1768 nodes · 2457 edges · 105 communities (97 shown, 8 thin omitted)
+- 1768 nodes · 2457 edges · 106 communities (98 shown, 8 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.77)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a9caacf1`
+- Built from commit: `e0b9a8af`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -85,19 +85,20 @@
 - List
 - package:url_launcher/url_launcher.dart
 - package:flutter/material.dart
-- FlutterMacOS
 - events_screen.dart
+- ios/RunnerTests/RunnerTests.swift
 - AppDelegate
 - faq.dart
 - release_detail_screen.dart
 - community_provider.dart
+- FlutterMacOS
 - dart:async
-- ios/RunnerTests/RunnerTests.swift
 - ../core/navigation/in_app_browser.dart
 - SubmissionImage
 - AppDelegate
 - _EventSubmissionScreenState
 - favorite_button.dart
+- RunnerTests
 - organizers_provider.dart
 - RegisterGeneratedPlugins
 - package:intl/intl.dart
@@ -138,7 +139,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (105 total, 8 thin omitted)
+## Communities (106 total, 8 thin omitted)
 
 ### Community 0 - "community_service.dart"
 Cohesion: 0.02
@@ -424,13 +425,13 @@ Nodes (7): build, DonateScreen, _donateUri, build, RadioProviderScreen, package:
 Cohesion: 0.22
 Nodes (7): build, PrivacyScreen, build, genre, GenreChip, package:flutter/material.dart, ../screens/genres/genre_discovery_screen.dart
 
-### Community 71 - "FlutterMacOS"
-Cohesion: 0.32
-Nodes (4): Cocoa, FlutterMacOS, RunnerTests, XCTest
-
-### Community 72 - "events_screen.dart"
+### Community 71 - "events_screen.dart"
 Cohesion: 0.25
 Nodes (7): event_submission_screen.dart, _EventsHeader, onSubmit, _openSubmission, showSubmit, ../../providers/community_provider.dart, ../../widgets/event_card.dart
+
+### Community 72 - "ios/RunnerTests/RunnerTests.swift"
+Cohesion: 0.38
+Nodes (4): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit
 
 ### Community 73 - "AppDelegate"
 Cohesion: 0.25
@@ -448,13 +449,13 @@ Nodes (7): HuhsRelease, build, _label, release, ReleaseDetailScreen, releases_sc
 Cohesion: 0.25
 Nodes (7): communityPostsProvider, watch, build, CommunityService, ../models/community_post.dart, package:firebase_auth/firebase_auth.dart, ../services/community_service.dart
 
-### Community 77 - "dart:async"
+### Community 77 - "FlutterMacOS"
+Cohesion: 0.32
+Nodes (5): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow, XCTest
+
+### Community 78 - "dart:async"
 Cohesion: 0.29
 Nodes (6): dart:async, getEvents, getEventSubmissionGenres, refreshTimer, service, ../models/event.dart
-
-### Community 78 - "ios/RunnerTests/RunnerTests.swift"
-Cohesion: 0.24
-Nodes (6): Flutter, FlutterSceneDelegate, SceneDelegate, RunnerTests, UIKit, XCTestCase
 
 ### Community 79 - "../core/navigation/in_app_browser.dart"
 Cohesion: 0.33
@@ -476,13 +477,17 @@ Nodes (6): eventSubmissionGenresProvider, organizersProvider, build, EventSubmis
 Cohesion: 0.33
 Nodes (5): FavoriteKind, id, kind, title, ../providers/favorites_provider.dart
 
+### Community 84 - "RunnerTests"
+Cohesion: 0.40
+Nodes (3): RunnerTests, RunnerTests, XCTestCase
+
 ### Community 85 - "organizers_provider.dart"
 Cohesion: 0.40
 Nodes (4): getOrganizer, getOrganizers, service, ../models/organizer.dart
 
 ### Community 86 - "RegisterGeneratedPlugins"
-Cohesion: 0.33
-Nodes (5): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins(), MainFlutterWindow, NSWindow
+Cohesion: 0.50
+Nodes (3): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins()
 
 ### Community 87 - "package:intl/intl.dart"
 Cohesion: 0.50

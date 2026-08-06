@@ -450,8 +450,8 @@ Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and
 
 The Label preview catalog is already complete in v0.99.89; this section covers only the later paid extension.
 
-- [ ] paid digital releases only; never expose free or ad-supported full MP3 downloads
-- [ ] process paid digital downloads through Google Play Billing (not direct Google Pay checkout)
+- [ ] offer a rewarded-ad full MP3 download at 128 kbps only
+- [ ] sell 320 kbps MP3 and WAV/lossless through Google Play Billing (not direct Google Pay checkout)
 - [ ] process conversions in a background job and keep the WAV master private
 - [x] verify Websupport FFmpeg support (`/usr/bin/ffmpeg` 4.4.2 with `libmp3lame`); background-job execution still needs an end-to-end test
 - [ ] optional purchase and download history
