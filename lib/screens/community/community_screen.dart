@@ -214,6 +214,16 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
   final _pinnedText = TextEditingController();
   String _roleFilter = 'all';
 
+  String _roleFilterLabel() =>
+      const {
+        'all': 'Mindenki',
+        'admin': 'Admin',
+        'dj': 'DJ',
+        'organizer': 'Szervező',
+        'partygoer': 'Bulizó',
+      }[_roleFilter] ??
+      'Mindenki';
+
   @override
   void dispose() {
     _search.dispose();
@@ -380,28 +390,45 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _roleFilter,
-                      dropdownColor: const Color(0xFF171717),
-                      menuMaxHeight: 260,
-                      decoration: const InputDecoration(
-                        labelText: 'Szűrés szerepkör szerint',
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'all', child: Text('Mindenki')),
-                        DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                        DropdownMenuItem(value: 'dj', child: Text('DJ')),
-                        DropdownMenuItem(
+                    child: PopupMenuButton<String>(
+                      tooltip: 'Szerepkör szűrése',
+                      offset: const Offset(0, 58),
+                      color: const Color(0xFF171717),
+                      onSelected: (value) =>
+                          setState(() => _roleFilter = value),
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(value: 'all', child: Text('Mindenki')),
+                        PopupMenuItem(value: 'admin', child: Text('Admin')),
+                        PopupMenuItem(value: 'dj', child: Text('DJ')),
+                        PopupMenuItem(
                           value: 'organizer',
                           child: Text('Szervező'),
                         ),
-                        DropdownMenuItem(
+                        PopupMenuItem(
                           value: 'partygoer',
                           child: Text('Bulizó'),
                         ),
                       ],
-                      onChanged: (value) =>
-                          setState(() => _roleFilter = value ?? 'all'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xF21B1B1B),
+                          border: Border.all(color: const Color(0xFF5A2424)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text('Szerepkör szűrése'),
+                            const Spacer(),
+                            Text(_roleFilterLabel()),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_drop_down),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   ListView.builder(

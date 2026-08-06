@@ -727,7 +727,12 @@ class CommunityService {
         .collection('connection_requests')
         .doc('${user.uid}_$otherUserId');
     final existing = await requestRef.get();
-    if (existing.data()?['status'] == 'pending') return;
+    if (existing.data()?['status'] == 'pending') {
+      await requestRef.update({
+        'notificationRequestedAt': FieldValue.serverTimestamp(),
+      });
+      return;
+    }
     if (existing.exists) await requestRef.delete();
     final profile = await firestore
         .collection('community_profiles')
@@ -747,6 +752,7 @@ class CommunityService {
       'fromImageUrl': resolveProfileImage(profileData, user.photoURL ?? ''),
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
+      'notificationRequestedAt': FieldValue.serverTimestamp(),
     });
   }
 

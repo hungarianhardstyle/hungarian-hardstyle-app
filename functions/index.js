@@ -1,5 +1,5 @@
 const functions = require('firebase-functions/v1');
-const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { HttpsError } = functions.https;
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
@@ -394,15 +394,19 @@ exports.sendPersonalizedPush = functions.https.onCall(async (data, context) => {
   return { sent: result.successCount, failed: result.failureCount };
 });
 
-exports.notifyConnectionRequest = onDocumentCreated(
+exports.notifyConnectionRequest = onDocumentWritten(
   {
     document: 'connection_requests/{requestId}',
     database: 'hungarian-hardstyle',
     region: 'europe-central2',
   },
   async (event) => {
-    const request = event.data?.data() || {};
+    const before = event.data?.before?.data() || {};
+    const request = event.data?.after?.data() || {};
     if (request.status !== 'pending' || !request.from || !request.to) return null;
+    const beforeNotification = before.notificationRequestedAt?.toMillis?.();
+    const notification = request.notificationRequestedAt?.toMillis?.();
+    if (!notification || beforeNotification === notification) return null;
     const target = (await db.collection('community_profiles').doc(String(request.to)).get()).data() || {};
     const rawTokens = target.fcmTokens;
     const tokens = Array.isArray(rawTokens)

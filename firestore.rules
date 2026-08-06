@@ -160,8 +160,14 @@ service cloud.firestore {
         && request.resource.data.to != request.auth.uid
         && request.resource.data.status == 'pending';
       allow update: if request.auth != null
-        && (resource.data.to == request.auth.uid || isAdmin())
-        && request.resource.data.status in ['accepted', 'rejected'];
+        && ((resource.data.to == request.auth.uid
+              && request.resource.data.status in ['accepted', 'rejected'])
+            || (resource.data.from == request.auth.uid
+              && resource.data.status == 'pending'
+              && request.resource.data.status == 'pending'
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                'notificationRequestedAt']))
+            || isAdmin());
       allow delete: if request.auth != null
         && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid || isAdmin());
     }
