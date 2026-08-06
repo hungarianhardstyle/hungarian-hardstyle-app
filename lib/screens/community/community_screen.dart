@@ -383,6 +383,8 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
               */
               ExpansionTile(
                 initiallyExpanded: true,
+                shape: const Border(),
+                collapsedShape: const Border(),
                 leading: const Icon(Icons.people_outline),
                 title: Text(
                   'Regisztrált felhasználók (${filteredProfiles.length})',

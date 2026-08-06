@@ -401,8 +401,16 @@ exports.notifyConnectionRequest = onDocumentWritten(
     region: 'europe-central2',
   },
   async (event) => {
+    const requestId = event.params.requestId;
     const before = event.data?.before?.data() || {};
     const request = event.data?.after?.data() || {};
+    console.log(JSON.stringify({
+      event: 'connection_request_received',
+      requestId,
+      status: request.status || null,
+      from: request.from || null,
+      to: request.to || null,
+    }));
     if (request.status !== 'pending' || !request.from || !request.to) return null;
     const beforeNotification = before.notificationRequestedAt?.toMillis?.();
     const notification = request.notificationRequestedAt?.toMillis?.();
@@ -420,13 +428,32 @@ exports.notifyConnectionRequest = onDocumentWritten(
     const uniqueTokens = [...new Set(
       tokens.filter((token) => typeof token === 'string' && token.trim()),
     )].slice(0, 500);
-    if (!uniqueTokens.length) return null;
+    if (!uniqueTokens.length) {
+      console.warn(JSON.stringify({
+        event: 'connection_request_no_target_token',
+        requestId,
+        target: String(request.to),
+      }));
+      return null;
+    }
     const sender = (await db.collection('community_profiles').doc(String(request.from)).get()).data() || {};
     const name = String(sender.displayName || 'Egy felhasználó').trim();
-    return admin.messaging().sendEachForMulticast({
+    const result = await admin.messaging().sendEachForMulticast({
       tokens: uniqueTokens,
       notification: { title: 'Új ismerősnek jelölés', body: `${name} ismerősnek jelölt.` },
       data: { type: 'connection_request', from: String(request.from) },
     });
+    console.log(JSON.stringify({
+      event: 'connection_request_push_result',
+      requestId,
+      target: String(request.to),
+      tokenCount: uniqueTokens.length,
+      successCount: result.successCount,
+      failureCount: result.failureCount,
+      failures: result.responses
+        .filter((response) => !response.success)
+        .map((response) => response.error?.code || 'unknown'),
+    }));
+    return result;
   },
 );

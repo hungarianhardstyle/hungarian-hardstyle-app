@@ -137,7 +137,9 @@ class PushNotificationService {
         ).collection('community_profiles').doc(user.uid).set({
           'fcmTokens': FieldValue.arrayUnion([token]),
         }, SetOptions(merge: true));
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('HUHS FCM profile token sync failed: $error');
+      }
     }
     try {
       await _api.post(
