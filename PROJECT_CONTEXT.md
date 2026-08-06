@@ -689,8 +689,6 @@ The Android radio foreground service now retries the Real Hardstyle FM stream af
 The owner will perform phone verification separately. Firebase proxy Functions are deployed. The active WordPress package is `build/huhs-mobile-api-2.4.36.zip`, which includes the completed Label release catalog endpoint and preview generation. Security hardening and signing/obfuscation are v1.0.
 
 
-Required before public release: a final UX and visual polish pass covering navigation, spacing, labels, buttons, loading/error states, accessibility, and tasteful motion/effects.
-
 Cloudinary is the only active image-upload path for the app. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.
 
 Backend 2.4.9 organizer genre/style metadata and synchronized Flutter display/submission support are implemented; the Flutter changes pass analysis and all tests. Live organizer genre verification remains an editorial content check.
@@ -978,3 +976,4 @@ A korábbi build-ek késznek és lezártnak tekintendők. A következő hibákat
 - A DJ-ket név alapján lehessen kiválasztani, ne csak ID-k jelenjenek meg.
 - A nem kért `Személyre szabott push` funkciót ki kell venni a HUHS Vezérlőközpontból; az általános és egyedi push maradjon.
 - Ki kell vizsgálni a vezérlőközpont megnyitásakor jelentkező Flutter `_dependents.isEmpty` assertion hibát.
+- El kell végezni a végső UX-, accessibility- és layout-polish kört: navigáció, térközök, feliratok, gombok, loading/error állapotok, akadálymentesség és visszafogott animációk.

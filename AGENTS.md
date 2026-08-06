@@ -456,6 +456,7 @@ All previous builds remain complete and closed. Newly discovered issues recorded
 - [ ] Let admins select DJs by display name rather than seeing only numeric IDs.
 - [ ] Remove the unrequested `Személyre szabott push` feature from the HUHS Vezérlőközpont; general and custom push remain.
 - [ ] Investigate and fix the Flutter `_dependents.isEmpty` assertion crash observed while opening the controller.
+- [ ] Complete the final UX, accessibility and layout polish pass: navigation, spacing, labels, buttons, loading/error states and restrained motion.
 
 ### v0.99.8 - User profile navigation and community details (closed)
 
@@ -631,7 +632,6 @@ Focus:
 - Hardstyle.com is an external destination only; do not scrape or import its catalog
 - show configured Hardstyle.com, Beatport, Spotify and Apple Music links at the bottom of each release detail screen
 - the own shop catalog may contain both Radio Edit/Radio Version and Extended/full versions when they are intentionally uploaded as separate products
-- final UX and visual polish pass across navigation, spacing, labels, buttons, loading/error states, accessibility, and tasteful motion/effects before release
 - basic community features
 - a purposeful Hungarian Hardstyle-branded loading animation that does not delay startup and respects reduced-motion accessibility settings
 - the full HUHS-logo startup animation with a transparent/no-white background is complete

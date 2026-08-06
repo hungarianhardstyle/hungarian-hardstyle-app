@@ -160,6 +160,7 @@ A korábbi build-ek továbbra is lezártak; ezek újonnan felfedezett hibák a k
 - [ ] A DJ-k kiválasztása név alapján történjen; a szerkesztőben ne csak azonosítók jelenjenek meg.
 - [ ] A HUHS Vezérlőközpontból ki kell venni a nem kért „Személyre szabott push” funkciót. Az általános és az egyedi push kezelése maradjon meg.
 - [ ] Kivizsgálni és javítani a vezérlőközpont megnyitásakor jelentkező Flutter `_dependents.isEmpty` assertion crash-t.
+- [ ] Elvégezni a végső UX-, accessibility- és layout-polish kört: navigáció, térközök, feliratok, gombok, loading/error állapotok, akadálymentesség és visszafogott animációk.
 
 ### v0.99.7 — Community follow-up (complete)
 
@@ -395,7 +396,6 @@ Core release quality:
 
 - [ ] configure production release signing and final Android release packaging
 - [ ] stabilize news, events, DJs and organizers for public release
-- [ ] complete a final UX and visual polish pass: navigation, spacing, labels, buttons, loading/error states, accessibility and tasteful motion/effects
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches
 - [x] make artist/DJ profile genre tags open the same grouped `Események`, `DJ-k` and `Hírek` discovery view with the complete paginated result set
 - [x] complete the Label release catalog in v0.99.89, including preview playback, WordPress release records, multi-artist links, cover art and external release links
