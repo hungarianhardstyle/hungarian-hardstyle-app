@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 1768 nodes · 2457 edges · 106 communities (98 shown, 8 thin omitted)
+- 1768 nodes · 2457 edges · 105 communities (97 shown, 8 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.77)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `555ea51c`
+- Built from commit: `33e8e31d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -76,7 +76,6 @@
 - package.json
 - home_screen.dart
 - manifest.json
-- ios/RunnerTests/RunnerTests.swift
 - hungarian-hardstyle-newsroom/app/graphics.py
 - social_contact_screen.dart
 - MaterialPageRoute
@@ -86,20 +85,21 @@
 - List
 - package:url_launcher/url_launcher.dart
 - package:flutter/material.dart
-- FlutterMacOS
 - events_screen.dart
+- ios/RunnerTests/RunnerTests.swift
 - AppDelegate
 - faq.dart
 - release_detail_screen.dart
 - community_provider.dart
+- FlutterMacOS
 - dart:async
 - ../core/navigation/in_app_browser.dart
 - SubmissionImage
 - AppDelegate
-- RegisterGeneratedPlugins
 - _EventSubmissionScreenState
 - favorite_button.dart
 - organizers_provider.dart
+- RegisterGeneratedPlugins
 - package:intl/intl.dart
 - _ArtistSubmissionScreenState
 - OpenAPITests
@@ -110,7 +110,6 @@
 - hungarian-hardstyle-newsroom
 - hungarian-hardstyle-newsroom
 - String?
-- RunnerTests
 
 ## God Nodes (most connected - your core abstractions)
 1. `Win32Window` - 22 edges
@@ -139,7 +138,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (106 total, 8 thin omitted)
+## Communities (105 total, 8 thin omitted)
 
 ### Community 0 - "community_service.dart"
 Cohesion: 0.02
@@ -389,69 +388,69 @@ Nodes (10): _controller, createState, dispose, initState, onShowMoreNews, _page,
 Cohesion: 0.18
 Nodes (10): background_color, description, display, icons, name, orientation, prefer_related_applications, short_name (+2 more)
 
-### Community 62 - "ios/RunnerTests/RunnerTests.swift"
-Cohesion: 0.32
-Nodes (5): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit, XCTest
-
-### Community 63 - "hungarian-hardstyle-newsroom/app/graphics.py"
+### Community 62 - "hungarian-hardstyle-newsroom/app/graphics.py"
 Cohesion: 0.33
 Nodes (8): cover(), fetch(), generate(), Image, Path, render_psd(), Fit, Path
 
-### Community 64 - "social_contact_screen.dart"
+### Community 63 - "social_contact_screen.dart"
 Cohesion: 0.20
 Nodes (9): IconData, build, icon, label, _LinkTile, onTap, SocialContactScreen, value (+1 more)
 
-### Community 65 - "MaterialPageRoute"
+### Community 64 - "MaterialPageRoute"
 Cohesion: 0.20
 Nodes (10): _openAuthorProfile, _openProfile, _readOnlyProfileWidgets, build, _artistContent, _postContent, _open, _openLink (+2 more)
 
-### Community 66 - "about_screen.dart"
+### Community 65 - "about_screen.dart"
 Cohesion: 0.20
 Nodes (9): AboutScreen, build, icon, _InfoTile, label, onTap, value, package:package_info_plus/package_info_plus.dart (+1 more)
 
-### Community 67 - "spotify_player.dart"
+### Community 66 - "spotify_player.dart"
 Cohesion: 0.22
 Nodes (9): build, _controller, createState, _expanded, initState, SpotifyPlayer, _SpotifyPlayerState, package:webview_flutter/webview_flutter.dart (+1 more)
 
-### Community 68 - "brand_loading_indicator.dart"
+### Community 67 - "brand_loading_indicator.dart"
 Cohesion: 0.22
 Nodes (8): AnimationController, build, _controller, createState, didChangeDependencies, dispose, initState, size
 
-### Community 69 - "List"
+### Community 68 - "List"
 Cohesion: 0.22
 Nodes (8): PostShortcode, build, PostShortcodeCard, postUrl, relatedPosts, shortcode, List, ../models/post.dart
 
-### Community 70 - "package:url_launcher/url_launcher.dart"
+### Community 69 - "package:url_launcher/url_launcher.dart"
 Cohesion: 0.22
 Nodes (7): build, DonateScreen, _donateUri, build, RadioProviderScreen, package:url_launcher/url_launcher.dart, static final
 
-### Community 71 - "package:flutter/material.dart"
+### Community 70 - "package:flutter/material.dart"
 Cohesion: 0.22
 Nodes (7): build, PrivacyScreen, build, genre, GenreChip, package:flutter/material.dart, ../screens/genres/genre_discovery_screen.dart
 
-### Community 72 - "FlutterMacOS"
-Cohesion: 0.38
-Nodes (4): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow
-
-### Community 73 - "events_screen.dart"
+### Community 71 - "events_screen.dart"
 Cohesion: 0.25
 Nodes (7): event_submission_screen.dart, _EventsHeader, onSubmit, _openSubmission, showSubmit, ../../providers/community_provider.dart, ../../widgets/event_card.dart
 
-### Community 74 - "AppDelegate"
+### Community 72 - "ios/RunnerTests/RunnerTests.swift"
+Cohesion: 0.24
+Nodes (6): Flutter, FlutterSceneDelegate, SceneDelegate, RunnerTests, UIKit, XCTestCase
+
+### Community 73 - "AppDelegate"
 Cohesion: 0.25
 Nodes (6): FlutterImplicitEngineBridge, FlutterImplicitEngineDelegate, AppDelegate, Any, Bool, UIApplication
 
-### Community 75 - "faq.dart"
+### Community 74 - "faq.dart"
 Cohesion: 0.25
 Nodes (7): answer, category, FaqItem, fromJson, id, order, question
 
-### Community 76 - "release_detail_screen.dart"
+### Community 75 - "release_detail_screen.dart"
 Cohesion: 0.25
 Nodes (7): HuhsRelease, build, _label, release, ReleaseDetailScreen, releases_screen.dart, ../../widgets/release_preview_player.dart
 
-### Community 77 - "community_provider.dart"
+### Community 76 - "community_provider.dart"
 Cohesion: 0.25
 Nodes (7): communityPostsProvider, watch, build, CommunityService, ../models/community_post.dart, package:firebase_auth/firebase_auth.dart, ../services/community_service.dart
+
+### Community 77 - "FlutterMacOS"
+Cohesion: 0.32
+Nodes (4): Cocoa, FlutterMacOS, RunnerTests, XCTest
 
 ### Community 78 - "dart:async"
 Cohesion: 0.29
@@ -469,15 +468,11 @@ Nodes (5): dart:typed_data, bytes, name, SubmissionImage, Uint8List
 Cohesion: 0.47
 Nodes (4): FlutterAppDelegate, AppDelegate, Bool, NSApplication
 
-### Community 82 - "RegisterGeneratedPlugins"
-Cohesion: 0.50
-Nodes (3): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins()
-
-### Community 83 - "_EventSubmissionScreenState"
+### Community 82 - "_EventSubmissionScreenState"
 Cohesion: 0.40
 Nodes (6): eventSubmissionGenresProvider, organizersProvider, build, EventSubmissionScreen, _EventSubmissionScreenState, build
 
-### Community 84 - "favorite_button.dart"
+### Community 83 - "favorite_button.dart"
 Cohesion: 0.33
 Nodes (5): FavoriteKind, id, kind, title, ../providers/favorites_provider.dart
 
@@ -485,17 +480,17 @@ Nodes (5): FavoriteKind, id, kind, title, ../providers/favorites_provider.dart
 Cohesion: 0.40
 Nodes (4): getOrganizer, getOrganizers, service, ../models/organizer.dart
 
-### Community 86 - "package:intl/intl.dart"
+### Community 86 - "RegisterGeneratedPlugins"
+Cohesion: 0.33
+Nodes (5): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins(), MainFlutterWindow, NSWindow
+
+### Community 87 - "package:intl/intl.dart"
 Cohesion: 0.50
 Nodes (3): formatEventDate, formatHungarianDate, package:intl/intl.dart
 
-### Community 87 - "_ArtistSubmissionScreenState"
+### Community 88 - "_ArtistSubmissionScreenState"
 Cohesion: 0.50
 Nodes (4): profileSubmissionOptionsProvider, ArtistSubmissionScreen, _ArtistSubmissionScreenState, build
-
-### Community 105 - "RunnerTests"
-Cohesion: 0.40
-Nodes (3): RunnerTests, RunnerTests, XCTestCase
 
 ## Knowledge Gaps
 - **1037 isolated node(s):** `functions`, `{ onDocumentWritten }`, `{ defineSecret }`, `admin`, `{ getFirestore }` (+1032 more)

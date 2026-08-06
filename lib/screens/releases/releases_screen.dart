@@ -112,57 +112,60 @@ class _ReleaseCard extends StatelessWidget {
             builder: (_) => ReleaseDetailScreen(release: release),
           ),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 118,
-              height: 118,
-              child: release.coverUrl.isEmpty
-                  ? const ColoredBox(
-                      color: Color(0xFF242424),
-                      child: Icon(
-                        Icons.album,
-                        size: 42,
-                        color: Colors.redAccent,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 118,
+                child: release.coverUrl.isEmpty
+                    ? const ColoredBox(
+                        color: Color(0xFF242424),
+                        child: Icon(
+                          Icons.album,
+                          size: 42,
+                          color: Colors.redAccent,
+                        ),
+                      )
+                    : CachedNetworkImage(
+                        imageUrl: release.coverUrl,
+                        fit: BoxFit.cover,
                       ),
-                    )
-                  : CachedNetworkImage(
-                      imageUrl: release.coverUrl,
-                      fit: BoxFit.cover,
-                    ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      release.title,
-                      style: const TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      release.artists.map((artist) => artist.name).join(' · '),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (release.genre.isNotEmpty) ...[
-                      const SizedBox(height: 7),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        release.genre,
-                        style: const TextStyle(color: Colors.white70),
+                        release.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                      const SizedBox(height: 5),
+                      Text(
+                        release.artists
+                            .map((artist) => artist.name)
+                            .join(' · '),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (release.genre.isNotEmpty) ...[
+                        const SizedBox(height: 7),
+                        Text(
+                          release.genre,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
