@@ -426,7 +426,9 @@ exports.notifyConnectionRequest = onDocumentWritten(
           : [];
     if (typeof target.fcmToken === 'string') tokens.push(target.fcmToken);
     const uniqueTokens = [...new Set(
-      tokens.filter((token) => typeof token === 'string' && token.trim()),
+      tokens
+        .filter((token) => typeof token === 'string' && token.trim())
+        .map((token) => token.trim()),
     )].slice(0, 500);
     if (!uniqueTokens.length) {
       console.warn(JSON.stringify({
@@ -452,8 +454,21 @@ exports.notifyConnectionRequest = onDocumentWritten(
       failureCount: result.failureCount,
       failures: result.responses
         .filter((response) => !response.success)
-        .map((response) => response.error?.code || 'unknown'),
+        .map((response) => ({
+          code: response.error?.code || 'unknown',
+          message: response.error?.message || '',
+        })),
     }));
+    const invalidTokens = uniqueTokens.filter((_, index) => {
+      const error = result.responses[index].error;
+      return error?.code === 'messaging/invalid-argument'
+        || error?.code === 'messaging/registration-token-not-registered';
+    });
+    if (invalidTokens.length) {
+      await db.collection('community_profiles').doc(String(request.to)).update({
+        fcmTokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
+      });
+    }
     return result;
   },
 );

@@ -18,6 +18,7 @@ import 'wordpress_service.dart';
 
 class PushNotificationService {
   static const _tokenKey = 'fcm_token';
+  static const _tokenRefreshKey = 'fcm_token_refresh_v2';
   static bool _initialized = false;
   static StreamSubscription<User?>? _authSubscription;
   static final Dio _api = Dio(
@@ -40,6 +41,14 @@ class PushNotificationService {
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) return;
 
+    final preferences = await SharedPreferences.getInstance();
+    if (preferences.getBool(_tokenRefreshKey) != true) {
+      try {
+        await messaging.deleteToken();
+      } catch (_) {}
+      await preferences.remove(_tokenKey);
+      await preferences.setBool(_tokenRefreshKey, true);
+    }
     await _storeToken(await messaging.getToken());
     _authSubscription ??= FirebaseAuth.instance.authStateChanges().listen((_) {
       unawaited(_syncStoredToken());
