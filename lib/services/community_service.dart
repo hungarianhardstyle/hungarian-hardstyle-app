@@ -493,6 +493,10 @@ class CommunityService {
         .snapshots();
   }
 
+  Stream<DocumentSnapshot<Map<String, dynamic>>> watchProfile(String userId) {
+    return firestore.collection('community_profiles').doc(userId).snapshots();
+  }
+
   Stream<QuerySnapshot<Map<String, dynamic>>> watchReports() {
     if (!isAdmin) return const Stream.empty();
     return firestore

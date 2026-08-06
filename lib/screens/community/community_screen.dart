@@ -1077,47 +1077,9 @@ class _PostCardState extends ConsumerState<_PostCard> {
                   _PostAuthorAvatar(post),
                   const SizedBox(width: 9),
                   Expanded(
-                    child: Wrap(
-                      spacing: 6,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          post.authorName,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        if (post.authorRole.isNotEmpty)
-                          Text(
-                            post.authorRole == 'dj'
-                                ? 'DJ'
-                                : post.authorRole == 'organizer'
-                                ? 'Szervező'
-                                : 'Bulizó',
-                            style: const TextStyle(
-                              color: Colors.white60,
-                              fontSize: 11,
-                            ),
-                          ),
-                        if (post.authorAccessRole ==
-                            CommunityService.accessAdmin)
-                          const Text(
-                            'Admin',
-                            style: TextStyle(
-                              color: Colors.redAccent,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        else if (post.authorAccessRole ==
-                            CommunityService.accessModerator)
-                          const Text(
-                            'Moderátor',
-                            style: TextStyle(
-                              color: Colors.orangeAccent,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                      ],
+                    child: _PostAuthorLabels(
+                      post: post,
+                      service: ref.read(communityServiceProvider),
                     ),
                   ),
                   Text(
@@ -1207,6 +1169,70 @@ class _PostCardState extends ConsumerState<_PostCard> {
     if (difference.inHours < 1) return '${difference.inMinutes} p';
     if (difference.inDays < 1) return '${difference.inHours} ó';
     return '${value.month}.${value.day}.';
+  }
+}
+
+class _PostAuthorLabels extends StatelessWidget {
+  final CommunityPost post;
+  final CommunityService service;
+
+  const _PostAuthorLabels({required this.post, required this.service});
+
+  @override
+  Widget build(BuildContext context) {
+    if (post.authorId.isEmpty) {
+      return _labels(post.authorRole, post.authorAccessRole);
+    }
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: service.watchProfile(post.authorId),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data();
+        return _labels(
+          data?['role'] as String? ?? post.authorRole,
+          data?['accessRole'] as String? ?? CommunityService.accessNone,
+        );
+      },
+    );
+  }
+
+  Widget _labels(String role, String accessRole) {
+    return Wrap(
+      spacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(
+          post.authorName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        if (role.isNotEmpty)
+          Text(
+            role == 'dj'
+                ? 'DJ'
+                : role == 'organizer'
+                ? 'Szervező'
+                : 'Bulizó',
+            style: const TextStyle(color: Colors.white60, fontSize: 11),
+          ),
+        if (accessRole == CommunityService.accessAdmin)
+          const Text(
+            'Admin',
+            style: TextStyle(
+              color: Colors.redAccent,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          )
+        else if (accessRole == CommunityService.accessModerator)
+          const Text(
+            'Moderátor',
+            style: TextStyle(
+              color: Colors.orangeAccent,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+      ],
+    );
   }
 }
 

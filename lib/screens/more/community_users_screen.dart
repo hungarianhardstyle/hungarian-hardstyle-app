@@ -8,6 +8,8 @@ import '../../providers/community_provider.dart';
 import '../../services/community_service.dart';
 import '../../services/wordpress_service.dart';
 import '../events/event_detail_screen.dart';
+import '../artists/artist_detail_screen.dart';
+import '../organizers/organizer_detail_screen.dart';
 
 class CommunityUsersScreen extends ConsumerStatefulWidget {
   const CommunityUsersScreen({super.key});
@@ -421,6 +423,11 @@ class _CommunityPublicProfileScreenState
                     );
                   },
                 ),
+                const SizedBox(height: 18),
+                _FavoriteProfilesSection(
+                  userId: widget.userId,
+                  service: service,
+                ),
               ],
             ],
           );
@@ -434,6 +441,94 @@ class _CommunityPublicProfileScreenState
     'organizer' => 'Szervező',
     _ => 'Bulizó',
   };
+}
+
+class _FavoriteProfilesSection extends StatelessWidget {
+  final String userId;
+  final CommunityService service;
+
+  const _FavoriteProfilesSection({required this.userId, required this.service});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: service.firestore
+          .collection('community_profiles')
+          .doc(userId)
+          .collection('favorites')
+          .snapshots(),
+      builder: (context, snapshot) {
+        final favorites =
+            snapshot.data?.docs
+                .map((doc) => doc.data())
+                .where(
+                  (item) =>
+                      item['kind'] == 'artist' || item['kind'] == 'organizer',
+                )
+                .toList() ??
+            const <Map<String, dynamic>>[];
+        final artists = favorites
+            .where((item) => item['kind'] == 'artist')
+            .toList();
+        final organizers = favorites
+            .where((item) => item['kind'] == 'organizer')
+            .toList();
+        if (artists.isEmpty && organizers.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Kedvenc DJ-k és szervezők',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            for (final item in artists)
+              _favoriteTile(
+                context,
+                item,
+                icon: Icons.album_outlined,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ArtistDetailScreen(
+                      artistId: (item['id'] as num).toInt(),
+                    ),
+                  ),
+                ),
+              ),
+            for (final item in organizers)
+              _favoriteTile(
+                context,
+                item,
+                icon: Icons.groups_outlined,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => OrganizerDetailScreen(
+                      organizerId: (item['id'] as num).toInt(),
+                      fallbackName: item['title'] as String? ?? '',
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _favoriteTile(
+    BuildContext context,
+    Map<String, dynamic> item, {
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text(item['title'] as String? ?? 'Ismeretlen'),
+      onTap: onTap,
+    );
+  }
 }
 
 class CommunityPublicFriendsScreen extends StatelessWidget {
