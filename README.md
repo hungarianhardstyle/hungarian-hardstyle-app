@@ -311,7 +311,7 @@ Implemented:
 - [x] add organizer genre/style selection in WordPress, API, and submission flow (backend 2.4.9 prepared)
 - [x] configure and live-test WordPress-created custom push delivery; news and event publishing pushes plus foreground display are live-verified
 - [x] implement one-week and event-day reminder scheduling in the backend
-- [ ] monitor the first natural one-week and event-day reminder occurrences
+- [x] monitor the first natural one-week and event-day reminder occurrences; event-day delivery is live-verified
 
 Push setup: in Firebase Console open Project settings → Service accounts → Generate new private key, then upload the downloaded JSON under WordPress `HUHS Mobile → Push értesítések`. The JSON stays on the server; never commit or embed it in Flutter.
 
@@ -320,7 +320,7 @@ Push verification after uploading the WordPress package:
 - choose a published news item or event by title in the custom-push form and send it; the app should open the native detail screen;
 - paste a HUHS news/event URL as an individual link; the server resolves it to the native detail screen, while unrelated external URLs open in the in-app browser;
 - [x] publish a new news item and a new visible event, then verify the automatic notifications;
-- [ ] create a future event and monitor the one-week and event-day reminder jobs at their first natural occurrences.
+- [x] create a future event and monitor the one-week and event-day reminder jobs at their first natural occurrences.
 
 ### v0.95 — Media
 

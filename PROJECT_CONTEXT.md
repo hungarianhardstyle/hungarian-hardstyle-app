@@ -568,6 +568,7 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 
 - Live Feed with chat and image posts
 - Push notifications should cover new published news, new published events, event reminders one week before and on the event day, plus admin-created custom notifications from WordPress.
+- Event-day reminder delivery is live-verified and is not an open investigation.
 - Current push status: Flutter initializes Firebase/FCM, stores the token locally, registers it with the WordPress API, shows foreground notifications, opens news/event targets in native screens, and syncs per-device notification preferences. Backend 2.4.16 includes Firebase HTTP v1 sending, news/event/link targets, automatic HUHS URL resolution, publish hooks, event reminder scheduling, preference filtering, and a protected service-account settings page. Custom push, news/event publishing pushes, and foreground display are live-tested successfully; the first natural event-day reminder did not arrive, so WP-Cron execution, timezone/date parsing, preference filtering, and the FCM send path must be investigated. Credentials must never be embedded in Flutter or committed to the plugin.
 - The WordPress custom-push form lists the latest published news and events by title, so editors do not need to know WordPress post IDs. It validates that the selected content matches the chosen target type.
 - Backend 2.4.12 is live with published IRP related-post records and a public post-detail endpoint. The live endpoint and a real "Kapcsolódó cikk" target were verified. Flutter opens IRP records and normal WordPress "Kapcsolódó cikk", "Kapcsolódó", and "Ez is érdekelhet" links in the native news detail screen and falls back to the in-app browser when no post ID is available.
@@ -727,7 +728,7 @@ v0.9 implementation status:
 - completed: local favorites for news, events, DJs, organizers, and the featured news card
 - completed: native news/event titles, related-article navigation, artist Website/Booking labels, organizer genres, social/contact, settings, FCM registration, and custom push targets
 - completed: native Mailchimp signup screen and WordPress proxy (backend 2.4.15 live; personal double-opt-in test successful)
-- remaining operational investigation: the first natural event-day reminder did not arrive; verify WP-Cron, timezone/date parsing, preference filtering, and the FCM send path
+- completed operational verification: one-week, one-day/event-day and six-hour reminder delivery is live-verified
 
 v0.95 implementation status:
 
