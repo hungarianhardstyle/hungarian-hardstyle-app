@@ -443,7 +443,7 @@ exports.notifyConnectionRequest = onDocumentWritten(
     const result = await admin.messaging().sendEachForMulticast({
       tokens: uniqueTokens,
       notification: { title: 'Új ismerősnek jelölés', body: `${name} ismerősnek jelölt.` },
-      data: { type: 'connection_request', from: String(request.from) },
+      data: { type: 'connection_request', senderId: String(request.from) },
     });
     console.log(JSON.stringify({
       event: 'connection_request_push_result',
@@ -461,8 +461,7 @@ exports.notifyConnectionRequest = onDocumentWritten(
     }));
     const invalidTokens = uniqueTokens.filter((_, index) => {
       const error = result.responses[index].error;
-      return error?.code === 'messaging/invalid-argument'
-        || error?.code === 'messaging/registration-token-not-registered';
+      return error?.code === 'messaging/registration-token-not-registered';
     });
     if (invalidTokens.length) {
       await db.collection('community_profiles').doc(String(request.to)).update({
