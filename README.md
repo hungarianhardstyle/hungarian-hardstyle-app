@@ -143,6 +143,10 @@ Analyzer and the complete Flutter test suite pass. The final ARM64-only debug ar
 
 Security hardening, the release catalog and the music store remain scheduled for v1.0/v1.5. Friends, attendance, public community profiles, friend-request notifications and their remaining bugs are tracked in v0.99.8.
 
+### v0.99.8 closure (2026-08-06)
+
+v0.99.8 is complete and closed. The final ARM64 debug test APK is `build/HUHS-v0.99.8+16-arm64-debug.apk`. Completed scope: friend requests and push delivery, push-to-requester profile navigation, accept/reject/unfriend flows, live role/access badges in Chat, public profiles and friends, favorite DJs/organizers on profiles (favorite news excluded), planned events and attendance, registered Chat writes, native Chat author profiles, report management, biometric session handling, and admin role/access management. Firebase rules and the connection-request FCM trigger are deployed. `flutter analyze`, the full Flutter test suite, Cloud Function syntax checks and Graphify refresh pass. v1.0 remains for security hardening, obfuscation, release signing, catalog/store work and final release preparation.
+
 ### v0.99.7 — Community follow-up (complete)
 
 - [x] allow verified-email users to claim a DJ profile after matching the private or artist-owned booking e-mail; the Hungarian Hardstyle-managed booking address never qualifies as proof

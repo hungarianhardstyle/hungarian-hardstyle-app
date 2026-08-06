@@ -438,6 +438,10 @@ Firebase rules and the `claimArtistProfile`/`sendPersonalizedPush`/`getArtistCla
 
 Keep security hardening, the release catalog and the music store in v1.0/v1.5. Friends, attendance, public community profiles, friend-request notifications and their remaining bugs are v0.99.8 scope.
 
+### v0.99.8 closure (2026-08-06)
+
+v0.99.8 is complete and closed. Final ARM64 debug test APK: `build/HUHS-v0.99.8+16-arm64-debug.apk`. Completed: friend requests, push delivery and push-to-requester profile navigation; accept/reject/unfriend; live Chat role/access badges; public profiles and friends; favorite DJs/organizers on profiles with favorite news excluded; planned events and attendance; registered Chat writes; Chat author profile navigation; report management; biometric session handling; and admin role/access management. Firebase rules and the connection-request FCM trigger are deployed. Analyzer, full Flutter tests, Cloud Function syntax checks and Graphify refresh pass. v1.0 retains security hardening, obfuscation, release signing, catalog/store work and final release preparation.
+
 ### v0.99.8 - User profile navigation and community details (in progress)
 
 Authoritative status: WordPress Mobile API `2.4.33` is uploaded, deployed, live-verified and active; the current APK is `0.99.8+7`. Completed v0.99.3 TypeUI/native admin, profile crop, radio, tag/genre pagination, general push, social fields and FAQ remain complete.

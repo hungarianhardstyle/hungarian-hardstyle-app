@@ -980,3 +980,7 @@ Everything connected.
 - [x] Send connection-request push notifications for list, map, string and legacy single-token storage.
 - [x] Make profile favorites and planned events open their native detail screens.
 - [x] Add an admin-only report-management screen with reported user/message details, resolve, delete-message and block-user actions.
+
+### v0.99.8 closure (2026-08-06)
+
+v0.99.8 is closed after the final community fixes. The final ARM64 debug test APK is `build/HUHS-v0.99.8+16-arm64-debug.apk`. Friend-request FCM delivery is live-verified; tapping the notification opens the requester profile. Chat reads live account/access roles, public profiles show favorite DJs/organizers but not favorite news, and the complete attendance, reports, biometric, Chat-permission and admin-role scope is implemented. Remaining release work belongs to v1.0.
