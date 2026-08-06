@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 1768 nodes · 2457 edges · 106 communities (98 shown, 8 thin omitted)
+- 1768 nodes · 2457 edges · 105 communities (97 shown, 8 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.77)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `29d87439`
+- Built from commit: `a70119cc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -110,7 +110,6 @@
 - hungarian-hardstyle-newsroom
 - hungarian-hardstyle-newsroom
 - String?
-- RunnerTests
 
 ## God Nodes (most connected - your core abstractions)
 1. `Win32Window` - 22 edges
@@ -139,7 +138,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (106 total, 8 thin omitted)
+## Communities (105 total, 8 thin omitted)
 
 ### Community 0 - "community_service.dart"
 Cohesion: 0.02
@@ -390,8 +389,8 @@ Cohesion: 0.18
 Nodes (10): background_color, description, display, icons, name, orientation, prefer_related_applications, short_name (+2 more)
 
 ### Community 62 - "ios/RunnerTests/RunnerTests.swift"
-Cohesion: 0.38
-Nodes (4): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit
+Cohesion: 0.24
+Nodes (6): Flutter, FlutterSceneDelegate, SceneDelegate, RunnerTests, UIKit, XCTestCase
 
 ### Community 63 - "hungarian-hardstyle-newsroom/app/graphics.py"
 Cohesion: 0.33
@@ -431,7 +430,7 @@ Nodes (7): build, PrivacyScreen, build, genre, GenreChip, package:flutter/materi
 
 ### Community 72 - "FlutterMacOS"
 Cohesion: 0.32
-Nodes (5): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow, XCTest
+Nodes (4): Cocoa, FlutterMacOS, RunnerTests, XCTest
 
 ### Community 73 - "events_screen.dart"
 Cohesion: 0.25
@@ -470,8 +469,8 @@ Cohesion: 0.47
 Nodes (4): FlutterAppDelegate, AppDelegate, Bool, NSApplication
 
 ### Community 82 - "RegisterGeneratedPlugins"
-Cohesion: 0.50
-Nodes (3): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins()
+Cohesion: 0.33
+Nodes (5): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins(), MainFlutterWindow, NSWindow
 
 ### Community 83 - "_EventSubmissionScreenState"
 Cohesion: 0.40
@@ -492,10 +491,6 @@ Nodes (3): formatEventDate, formatHungarianDate, package:intl/intl.dart
 ### Community 87 - "_ArtistSubmissionScreenState"
 Cohesion: 0.50
 Nodes (4): profileSubmissionOptionsProvider, ArtistSubmissionScreen, _ArtistSubmissionScreenState, build
-
-### Community 105 - "RunnerTests"
-Cohesion: 0.40
-Nodes (3): RunnerTests, RunnerTests, XCTestCase
 
 ## Knowledge Gaps
 - **1037 isolated node(s):** `functions`, `{ onDocumentWritten }`, `{ defineSecret }`, `admin`, `{ getFirestore }` (+1032 more)

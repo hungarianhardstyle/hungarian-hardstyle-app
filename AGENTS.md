@@ -661,9 +661,9 @@ Confirmed community direction (v0.99.8 scope; only security/privacy remains v1.0
 - WordPress remains the source of truth for editorial content (news, events, DJs, organizers, and releases), while the app community backend may be a deliberately separate service optimized for authentication, real-time chat/feed data, friendships, attendance, and user uploads.
 - Once app registration is available, DJ, organizer, and event submission actions and forms must be visible only to authenticated users. The submission API must also enforce authentication server-side; hiding the forms in Flutter is not sufficient.
 
-### v1.1 - Annual Voting
+### v0.99.99 - Annual HUHS Voting (planned before v1.0)
 
-Confirmed annual voting direction for v1.1:
+Confirmed annual voting direction for v0.99.99:
 
 - Replace or complement the current WordPress voting extension with a dedicated Hungarian Hardstyle voting module and REST API.
 - WordPress admin must manage each annual voting season, its opening/closing dates, status, rules, and candidates.
@@ -676,6 +676,7 @@ Confirmed annual voting direction for v1.1:
 - Derive the displayed year from the voting season instead of requiring it to be typed into every category name.
 - Admins must be able to add DJ, event-series, and track candidates, including the display data needed by the app (name/title, artist, image/cover/logo, optional preview and external links).
 - Flutter must list active voting categories and candidates and allow votes to be submitted in-app.
+- Flutter Home must show a prominent button for the active voting season; WordPress/admin configuration must be able to turn it on or off, and it must be hidden when no season is active.
 - Voting should use authenticated app users when Google sign-in is available, with server-side one-user/one-vote enforcement per category unless a season explicitly defines different rules.
 - The API must enforce voting windows and duplicate-vote protection server-side; Flutter validation alone is not sufficient.
 - Define result visibility (`live`, `hidden until close`, or `admin only`), vote correction rules, audit data, abuse protection, and privacy before launch.
@@ -857,7 +858,7 @@ Product decisions confirmed by the user:
 - Artist and organizer event relations open dedicated API-backed profile screens and are confirmed against live data.
 - Live Feed chat and image posting are already implemented and are not v1.0 future work.
 - v1.0 should focus on security hardening, release signing/obfuscation, purchase/store work, and remaining public-release quality. Google sign-in, user profiles, friendships, event attendance and the release catalog preview are covered before v1.0.
-- v1.1 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting.
+- v0.99.99 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting and an admin-controlled Home entry point.
 - Organizer profiles and submissions now support server-managed selectable music genres/styles (backend 2.4.9 prepared; deploy and live-test still pending).
 - Add an About/App information area under More. Read the app version and build number from package metadata instead of hardcoding them, and include developer credit plus relevant website, contact, privacy, and terms links.
 - Refactor navigation into a persistent shell so the bottom tabs remain visible on news, event, DJ, and organizer detail screens. Do not duplicate the NavigationBar inside each detail screen; preserve the active tab and each tab's navigation history.

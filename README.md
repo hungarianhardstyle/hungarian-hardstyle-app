@@ -435,7 +435,7 @@ News, events, DJs and organizers should remain readable without registration. Ev
 
 Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and its in-app player.
 
-### v1.1 — Annual voting
+### v0.99.99 — Annual HUHS voting (planned before v1.0)
 
 - [ ] WordPress-managed voting seasons and candidates
 - [ ] best Hungarian hardstyle DJ
@@ -445,6 +445,7 @@ Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and
 - [ ] best international DJ
 - [ ] authenticated one-user/one-vote enforcement
 - [ ] private admin dashboard and explicitly published public results
+- [ ] add a prominent Home button for the active voting season, controlled by an admin on/off setting and hidden when voting is inactive
 
 ### v1.5 — Hardstyle Revolution Store
 

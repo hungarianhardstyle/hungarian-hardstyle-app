@@ -1181,10 +1181,10 @@
       "source_file": "ios/RunnerTests/RunnerTests.swift",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 105,
+      "community": 62,
       "norm_label": "runnertests",
       "id": "ios_runnertests_runnertests_runnertests",
-      "community_name": "RunnerTests"
+      "community_name": "ios/RunnerTests/RunnerTests.swift"
     },
     {
       "label": "XCTestCase",
@@ -1192,10 +1192,10 @@
       "source_file": "",
       "source_location": "",
       "_origin": "ast",
-      "community": 105,
+      "community": 62,
       "norm_label": "xctestcase",
       "id": "xctestcase",
-      "community_name": "RunnerTests"
+      "community_name": "ios/RunnerTests/RunnerTests.swift"
     },
     {
       "label": ".testExample()",
@@ -1203,10 +1203,10 @@
       "source_file": "ios/RunnerTests/RunnerTests.swift",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 105,
+      "community": 62,
       "norm_label": ".testexample()",
       "id": "ios_runnertests_runnertests_runnertests_testexample",
-      "community_name": "RunnerTests"
+      "community_name": "ios/RunnerTests/RunnerTests.swift"
     },
     {
       "label": "ios/Runner/AppDelegate.swift",
@@ -17732,10 +17732,10 @@
       "source_file": "macos/RunnerTests/RunnerTests.swift",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 105,
+      "community": 72,
       "norm_label": "runnertests",
       "id": "macos_runnertests_runnertests_runnertests",
-      "community_name": "RunnerTests"
+      "community_name": "FlutterMacOS"
     },
     {
       "label": ".testExample()",
@@ -17743,10 +17743,10 @@
       "source_file": "macos/RunnerTests/RunnerTests.swift",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 105,
+      "community": 72,
       "norm_label": ".testexample()",
       "id": "macos_runnertests_runnertests_runnertests_testexample",
-      "community_name": "RunnerTests"
+      "community_name": "FlutterMacOS"
     },
     {
       "label": "macos/Runner/AppDelegate.swift",
@@ -17831,10 +17831,10 @@
       "source_file": "macos/Runner/MainFlutterWindow.swift",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 72,
+      "community": 82,
       "norm_label": "mainflutterwindow",
       "id": "macos_runner_mainflutterwindow_mainflutterwindow",
-      "community_name": "FlutterMacOS"
+      "community_name": "RegisterGeneratedPlugins"
     },
     {
       "label": "NSWindow",
@@ -17842,10 +17842,10 @@
       "source_file": "",
       "source_location": "",
       "_origin": "ast",
-      "community": 72,
+      "community": 82,
       "norm_label": "nswindow",
       "id": "nswindow",
-      "community_name": "FlutterMacOS"
+      "community_name": "RegisterGeneratedPlugins"
     },
     {
       "label": ".awakeFromNib()",
@@ -47031,5 +47031,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "29d87439970896f48c8fbd68983d6e22f5dfb244"
+  "built_at_commit": "a70119cca824d2315691f36e60a3c090f1ae6453"
 }

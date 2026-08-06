@@ -560,7 +560,7 @@ Requirements:
 
 ## Annual Top DJ And Track Voting
 
-Target: implement by v1.0.
+Target: implement in v0.99.99 before v1.0.
 
 The existing annual WordPress-extension voting workflow should be replaced or complemented by a dedicated Hungarian Hardstyle voting module and REST API.
 
@@ -582,6 +582,7 @@ The displayed year should come from the voting season configuration. Candidate t
 Flutter must:
 
 - fetch the active annual voting season and categories
+- show a prominent Home button for the active season; WordPress/admin configuration must be able to enable or disable it, and it must be hidden when no voting is active
 - display DJ and track candidates
 - allow authenticated users to vote in-app
 - clearly show whether the user has already voted
