@@ -13,6 +13,7 @@ import '../core/navigation/app_navigator.dart';
 import '../core/navigation/in_app_browser.dart';
 import '../models/event.dart';
 import '../screens/events/event_detail_screen.dart';
+import '../screens/more/community_users_screen.dart';
 import '../screens/news/news_detail_screen.dart';
 import 'wordpress_service.dart';
 
@@ -66,9 +67,14 @@ class PushNotificationService {
 
   static Future<void> _handleOpenedMessage(RemoteMessage message) async {
     final type = message.data['type']?.toString().trim() ?? '';
+    final senderId =
+        (message.data['senderId'] ?? message.data['from'])?.toString().trim() ??
+        '';
     final id = int.tryParse(message.data['id']?.toString() ?? '');
     final url = message.data['url']?.toString().trim() ?? '';
-    if (url.isEmpty && (id == null || (type != 'news' && type != 'event'))) {
+    if (url.isEmpty &&
+        senderId.isEmpty &&
+        (id == null || (type != 'news' && type != 'event'))) {
       return;
     }
 
@@ -77,6 +83,15 @@ class PushNotificationService {
     if (context == null || !context.mounted) return;
 
     try {
+      if (type == 'connection_request' && senderId.isNotEmpty) {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => CommunityPublicProfileScreen(userId: senderId),
+          ),
+        );
+        return;
+      }
+
       if (type == 'news' && id != null) {
         final post = await WordpressService().getPost(id);
         if (!context.mounted) return;
