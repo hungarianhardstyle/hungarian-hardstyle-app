@@ -1,16 +1,16 @@
 # Graph Report - hungarian_hardstyle_app  (2026-08-06)
 
 ## Corpus Check
-- 156 files · ~260,042 words
+- 156 files · ~260,047 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1932 nodes · 2573 edges · 120 communities (109 shown, 11 thin omitted)
+- 1932 nodes · 2573 edges · 120 communities (110 shown, 10 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.77)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cc121b9d`
+- Built from commit: `e5d7bc63`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -153,7 +153,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (120 total, 11 thin omitted)
+## Communities (120 total, 10 thin omitted)
 
 ### Community 0 - "community_screen.dart"
 Cohesion: 0.02
@@ -483,6 +483,10 @@ Nodes (7): ProfileSubmissionOptions, profileSubmissionOptionsProvider, ArtistSub
 Cohesion: 0.22
 Nodes (8): AnimationController, build, _controller, createState, didChangeDependencies, dispose, initState, size
 
+### Community 82 - "FlutterMacOS"
+Cohesion: 0.38
+Nodes (4): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow
+
 ### Community 83 - "dart:async"
 Cohesion: 0.29
 Nodes (6): dart:async, getEvents, getEventSubmissionGenres, refreshTimer, service, ../models/event.dart
@@ -520,8 +524,8 @@ Cohesion: 0.50
 Nodes (4): eventSubmissionGenresProvider, build, EventSubmissionScreen, _EventSubmissionScreenState
 
 ### Community 92 - "RegisterGeneratedPlugins"
-Cohesion: 0.33
-Nodes (5): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins(), MainFlutterWindow, NSWindow
+Cohesion: 0.50
+Nodes (3): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins()
 
 ### Community 93 - "Release And Store Business Model"
 Cohesion: 0.67
@@ -554,7 +558,7 @@ Nodes (4): build, genre, GenreChip, ../screens/genres/genre_discovery_screen.dar
 ## Knowledge Gaps
 - **1180 isolated node(s):** `functions`, `{ onDocumentCreated }`, `{ defineSecret }`, `admin`, `{ getFirestore }` (+1175 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_

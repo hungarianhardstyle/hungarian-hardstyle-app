@@ -382,6 +382,8 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                     child: DropdownButtonFormField<String>(
                       initialValue: _roleFilter,
+                      dropdownColor: const Color(0xFF171717),
+                      menuMaxHeight: 260,
                       decoration: const InputDecoration(
                         labelText: 'Szűrés szerepkör szerint',
                       ),
