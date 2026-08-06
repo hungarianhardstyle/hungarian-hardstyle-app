@@ -19,12 +19,16 @@ class ReleaseDetailScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
         children: [
           if (release.coverUrl.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: CachedNetworkImage(
-                imageUrl: release.coverUrl,
-                height: 280,
-                fit: BoxFit.cover,
+            AspectRatio(
+              aspectRatio: 1,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: CachedNetworkImage(
+                  imageUrl: release.coverUrl,
+                  fit: BoxFit.contain,
+                  color: const Color(0xFF171717),
+                  colorBlendMode: BlendMode.dstOver,
+                ),
               ),
             ),
           const SizedBox(height: 18),
