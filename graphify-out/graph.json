@@ -1134,7 +1134,7 @@
       "source_file": "ios/RunnerTests/RunnerTests.swift",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 72,
+      "community": 78,
       "norm_label": "ios/runnertests/runnertests.swift",
       "id": "ios_runnertests_runnertests",
       "community_name": "ios/RunnerTests/RunnerTests.swift"
@@ -1146,7 +1146,7 @@
       "source_file": "ios/Runner/AppDelegate.swift",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 72,
+      "community": 78,
       "norm_label": "flutter",
       "id": "flutter",
       "community_name": "ios/RunnerTests/RunnerTests.swift"
@@ -1158,7 +1158,7 @@
       "source_file": "ios/Runner/AppDelegate.swift",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 72,
+      "community": 78,
       "norm_label": "uikit",
       "id": "uikit",
       "community_name": "ios/RunnerTests/RunnerTests.swift"
@@ -1170,7 +1170,7 @@
       "source_file": "ios/RunnerTests/RunnerTests.swift",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 77,
+      "community": 71,
       "norm_label": "xctest",
       "id": "xctest",
       "community_name": "FlutterMacOS"
@@ -1181,10 +1181,10 @@
       "source_file": "ios/RunnerTests/RunnerTests.swift",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 84,
+      "community": 78,
       "norm_label": "runnertests",
       "id": "ios_runnertests_runnertests_runnertests",
-      "community_name": "RunnerTests"
+      "community_name": "ios/RunnerTests/RunnerTests.swift"
     },
     {
       "label": "XCTestCase",
@@ -1192,10 +1192,10 @@
       "source_file": "",
       "source_location": "",
       "_origin": "ast",
-      "community": 84,
+      "community": 78,
       "norm_label": "xctestcase",
       "id": "xctestcase",
-      "community_name": "RunnerTests"
+      "community_name": "ios/RunnerTests/RunnerTests.swift"
     },
     {
       "label": ".testExample()",
@@ -1203,10 +1203,10 @@
       "source_file": "ios/RunnerTests/RunnerTests.swift",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 84,
+      "community": 78,
       "norm_label": ".testexample()",
       "id": "ios_runnertests_runnertests_runnertests_testexample",
-      "community_name": "RunnerTests"
+      "community_name": "ios/RunnerTests/RunnerTests.swift"
     },
     {
       "label": "ios/Runner/AppDelegate.swift",
@@ -1214,7 +1214,7 @@
       "source_file": "ios/Runner/AppDelegate.swift",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 72,
+      "community": 78,
       "norm_label": "ios/runner/appdelegate.swift",
       "id": "ios_runner_appdelegate",
       "community_name": "ios/RunnerTests/RunnerTests.swift"
@@ -1335,7 +1335,7 @@
       "source_file": "ios/Runner/SceneDelegate.swift",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 72,
+      "community": 78,
       "norm_label": "scenedelegate.swift",
       "id": "ios_runner_scenedelegate",
       "community_name": "ios/RunnerTests/RunnerTests.swift"
@@ -1346,7 +1346,7 @@
       "source_file": "ios/Runner/SceneDelegate.swift",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 72,
+      "community": 78,
       "norm_label": "scenedelegate",
       "id": "ios_runner_scenedelegate_scenedelegate",
       "community_name": "ios/RunnerTests/RunnerTests.swift"
@@ -1357,7 +1357,7 @@
       "source_file": "",
       "source_location": "",
       "_origin": "ast",
-      "community": 72,
+      "community": 78,
       "norm_label": "flutterscenedelegate",
       "id": "flutterscenedelegate",
       "community_name": "ios/RunnerTests/RunnerTests.swift"
@@ -2083,7 +2083,7 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 78,
+      "community": 77,
       "norm_label": "dart:async",
       "id": "dart_async",
       "community_name": "dart:async"
@@ -5262,7 +5262,7 @@
       "source_file": "lib/providers/events_provider.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 78,
+      "community": 77,
       "norm_label": "events_provider.dart",
       "id": "lib_providers_events_provider",
       "community_name": "dart:async"
@@ -5284,7 +5284,7 @@
       "source_file": "lib/providers/events_provider.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 78,
+      "community": 77,
       "norm_label": "refreshtimer",
       "id": "lib_providers_events_provider_refreshtimer",
       "community_name": "dart:async"
@@ -5295,7 +5295,7 @@
       "source_file": "lib/providers/events_provider.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 78,
+      "community": 77,
       "norm_label": "service",
       "id": "lib_providers_events_provider_service",
       "community_name": "dart:async"
@@ -5317,7 +5317,7 @@
       "source_file": "lib/providers/events_provider.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 78,
+      "community": 77,
       "norm_label": "getevents",
       "id": "lib_providers_events_provider_getevents",
       "community_name": "dart:async"
@@ -5328,7 +5328,7 @@
       "source_file": "lib/providers/events_provider.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 78,
+      "community": 77,
       "norm_label": "geteventsubmissiongenres",
       "id": "lib_providers_events_provider_geteventsubmissiongenres",
       "community_name": "dart:async"
@@ -5339,7 +5339,7 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 78,
+      "community": 77,
       "norm_label": "../models/event.dart",
       "id": "models_event_dart",
       "community_name": "dart:async"
@@ -6527,7 +6527,7 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 71,
+      "community": 72,
       "norm_label": "../../widgets/event_card.dart",
       "id": "widgets_event_card_dart",
       "community_name": "events_screen.dart"
@@ -6538,7 +6538,7 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 71,
+      "community": 72,
       "norm_label": "../../providers/community_provider.dart",
       "id": "providers_community_provider_dart",
       "community_name": "events_screen.dart"
@@ -9332,7 +9332,7 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 71,
+      "community": 72,
       "norm_label": "events_screen.dart",
       "id": "lib_screens_events_events_screen",
       "community_name": "events_screen.dart"
@@ -9354,7 +9354,7 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 71,
+      "community": 72,
       "norm_label": "_eventsheader",
       "id": "lib_screens_events_events_screen_eventsheader",
       "community_name": "events_screen.dart"
@@ -9365,7 +9365,7 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 71,
+      "community": 72,
       "norm_label": "onsubmit",
       "id": "lib_screens_events_events_screen_onsubmit",
       "community_name": "events_screen.dart"
@@ -9376,7 +9376,7 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 71,
+      "community": 72,
       "norm_label": "showsubmit",
       "id": "lib_screens_events_events_screen_showsubmit",
       "community_name": "events_screen.dart"
@@ -9387,7 +9387,7 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 71,
+      "community": 72,
       "norm_label": "_opensubmission",
       "id": "lib_screens_events_events_screen_opensubmission",
       "community_name": "events_screen.dart"
@@ -9409,7 +9409,7 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 71,
+      "community": 72,
       "norm_label": "event_submission_screen.dart",
       "id": "event_submission_screen_dart",
       "community_name": "events_screen.dart"
@@ -17484,7 +17484,7 @@
       "source_file": "macos/Flutter/GeneratedPluginRegistrant.swift",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 77,
+      "community": 71,
       "norm_label": "fluttermacos",
       "id": "fluttermacos",
       "community_name": "FlutterMacOS"
@@ -17709,7 +17709,7 @@
       "source_file": "macos/RunnerTests/RunnerTests.swift",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 77,
+      "community": 71,
       "norm_label": "macos/runnertests/runnertests.swift",
       "id": "macos_runnertests_runnertests",
       "community_name": "FlutterMacOS"
@@ -17721,7 +17721,7 @@
       "source_file": "macos/Runner/AppDelegate.swift",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 77,
+      "community": 71,
       "norm_label": "cocoa",
       "id": "cocoa",
       "community_name": "FlutterMacOS"
@@ -17732,10 +17732,10 @@
       "source_file": "macos/RunnerTests/RunnerTests.swift",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 84,
+      "community": 71,
       "norm_label": "runnertests",
       "id": "macos_runnertests_runnertests_runnertests",
-      "community_name": "RunnerTests"
+      "community_name": "FlutterMacOS"
     },
     {
       "label": ".testExample()",
@@ -17743,10 +17743,10 @@
       "source_file": "macos/RunnerTests/RunnerTests.swift",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 84,
+      "community": 71,
       "norm_label": ".testexample()",
       "id": "macos_runnertests_runnertests_runnertests_testexample",
-      "community_name": "RunnerTests"
+      "community_name": "FlutterMacOS"
     },
     {
       "label": "macos/Runner/AppDelegate.swift",
@@ -17754,7 +17754,7 @@
       "source_file": "macos/Runner/AppDelegate.swift",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 77,
+      "community": 71,
       "norm_label": "macos/runner/appdelegate.swift",
       "id": "macos_runner_appdelegate",
       "community_name": "FlutterMacOS"
@@ -17820,7 +17820,7 @@
       "source_file": "macos/Runner/MainFlutterWindow.swift",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 77,
+      "community": 71,
       "norm_label": "mainflutterwindow.swift",
       "id": "macos_runner_mainflutterwindow",
       "community_name": "FlutterMacOS"
@@ -17831,10 +17831,10 @@
       "source_file": "macos/Runner/MainFlutterWindow.swift",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 77,
+      "community": 86,
       "norm_label": "mainflutterwindow",
       "id": "macos_runner_mainflutterwindow_mainflutterwindow",
-      "community_name": "FlutterMacOS"
+      "community_name": "RegisterGeneratedPlugins"
     },
     {
       "label": "NSWindow",
@@ -17842,10 +17842,10 @@
       "source_file": "",
       "source_location": "",
       "_origin": "ast",
-      "community": 77,
+      "community": 86,
       "norm_label": "nswindow",
       "id": "nswindow",
-      "community_name": "FlutterMacOS"
+      "community_name": "RegisterGeneratedPlugins"
     },
     {
       "label": ".awakeFromNib()",
@@ -47031,5 +47031,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "f2f9340d6dd21354eaf154d702d25abb58048b73"
+  "built_at_commit": "a9caacf1b772a84f6d08101af0bc48f580c88efa"
 }

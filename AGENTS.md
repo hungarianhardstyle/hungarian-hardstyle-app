@@ -614,7 +614,7 @@ Keep this release intentionally small and low-risk:
 - Registered users may publish text and compressed snapshot images in the Live Feed.
 - Live Feed messages support normal Unicode emoji and a small fixed reaction set; do not add a heavy emoji package unless the native keyboard proves insufficient.
 - Use Firebase Authentication and Firestore for community data, and Cloudinary for community images.
-- Keep security hardening and release signing in v1.0; v0.99.8 owns friendships, attendance, public community profiles, friend-request notifications, and the remaining moderation/reporting fixes. v0.99.3 owns the completed app-admin tooling and Chat moderation.
+- Keep security hardening and release signing in v1.0; v0.99.8 owns friendships, attendance, public community profiles, friend-request notifications, and completed moderation/reporting. v0.99.3 owns the completed app-admin tooling and Chat moderation.
 - Add a `Több`-menu user directory/search that lists registered users only and is unavailable to guests (v0.99.7).
 
 ### v1.0 - First Public Release (later)
@@ -634,15 +634,15 @@ Focus:
 - final UX and visual polish pass across navigation, spacing, labels, buttons, loading/error states, accessibility, and tasteful motion/effects before release
 - basic community features
 - a purposeful Hungarian Hardstyle-branded loading animation that does not delay startup and respects reduced-motion accessibility settings
-- refine the Android startup animation with the full HUHS logo on a transparent/no-white background
+- the full HUHS-logo startup animation with a transparent/no-white background is complete
 - polished Android release
 - iOS preparation if ready
 
 Confirmed community direction (v0.99.8 scope; only security/privacy remains v1.0):
 
-- Add a dedicated Live Feed bottom-navigation tab.
+- The dedicated Live Feed bottom-navigation tab is complete.
 - Registered users can chat in the live feed and publish image posts.
-- Live Feed/chat image posts should use the direct Cloudinary upload path.
+- Live Feed/chat image posts use the direct Cloudinary upload path.
 - Add Google account sign-in and user registration/onboarding.
 - Users can create and manage their own community profile. Once registration exists, make the profile reachable from the top-left of Home through a circular avatar; show the profile image or a monogram fallback.
 - During onboarding, users can choose an account role: DJ, organizer, or attendee/partygoer. Role changes and privileged actions require server-side authorization.
@@ -847,13 +847,13 @@ Likely next useful tasks:
 
 Product decisions confirmed by the user:
 
-- The current empty Tickets bottom-navigation tab after Events is not needed and should be removed; reserve its future primary-tab slot for the v1.0 Live Feed/chat user hook, and do not assume the DJ directory belongs there.
+- The old empty Tickets bottom-navigation slot is now used by the completed Live Feed/Chat destination.
 - Keep Home and News as the first two bottom-navigation items. Before finalizing the remaining items, define a clear importance order for primary navigation, Home content, and the More section.
 - Evaluate the main user hook around immediate utility (for example, what is happening now and which event is next). Events are a strong primary-tab candidate; the DJ directory may initially live under More unless usage testing supports promoting it.
 - Event data continues to come from the WordPress events API.
 - Artist/DJ names and the organizer on event detail must be clickable.
 - Artist and organizer event relations open dedicated API-backed profile screens and are confirmed against live data.
-- v1.0 should introduce a Live Feed tab with chat and image posting.
+- Live Feed chat and image posting are already implemented and are not v1.0 future work.
 - v1.0 should focus on security hardening, release signing/obfuscation, purchase/store work, and remaining public-release quality. Google sign-in, user profiles, friendships, event attendance and the release catalog preview are covered before v1.0.
 - v1.1 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting.
 - Organizer profiles and submissions now support server-managed selectable music genres/styles (backend 2.4.9 prepared; deploy and live-test still pending).
@@ -891,4 +891,4 @@ Documentation note: backend package entries older than 2.4.33 are historical dep
 - v0.99.3 source fix: the startup announcement is stored in WordPress and served by a public endpoint so it remains visible on every app launch until an admin disables or removes it.
 - Phone verification of the v0.99.3 fixes is complete in Flutter build `0.99.3+27`.
 - WordPress Mobile API `2.4.33` is active at `build/huhs-mobile-api-2.4.33.zip`; it adds the managed FAQ post type/category editor and paginated public FAQ endpoint. It is deployed and live-verified and must not be repeatedly rechecked.
-- v0.99.8+2 bugfix pass (historical, superseded by the active v0.99.8+7 build): attendance records now include the validated event ID; attendance errors are surfaced; connection-request status refreshes after send; the named `hungarian-hardstyle` database push trigger `notifyConnectionRequest` is deployed; biometric enablement checks real device support; `MainActivity` uses `FlutterFragmentActivity` for `local_auth`. Current v0.99.8 friend/profile/notification and moderation fixes remain open.
+- v0.99.8+2 bugfix pass (historical, superseded by the active v0.99.8+7 build): attendance records now include the validated event ID; attendance errors are surfaced; connection-request status refreshes after send; the named `hungarian-hardstyle` database push trigger `notifyConnectionRequest` is deployed; biometric enablement checks real device support; `MainActivity` uses `FlutterFragmentActivity` for `local_auth`. Current v0.99.8 friend/profile/notification and moderation fixes are closed.

@@ -385,12 +385,12 @@ Bottom Navigation
 
 Confirmed navigation change:
 
-- The currently empty Tickets tab after Events is unnecessary and will be removed; its future primary-tab slot is reserved for the v1.0 Live Feed/chat user hook.
-- Its replacement is not decided yet; do not automatically replace it with the DJ directory.
+- The old empty Tickets slot is now used by the completed Live Feed/Chat destination.
+- Do not reintroduce a separate Tickets slot or replace the Live Feed/Chat destination with the DJ directory.
 - Home and News should remain the first two bottom-navigation items.
 - Define a deliberate importance order for what belongs on Home, in primary navigation, and under More. The leading user-hook hypothesis is immediate utility (what is happening now / what event is next), making Events a stronger primary-tab candidate while DJs may initially live under More.
 - Revisit this choice using real testing and usage feedback before locking the final navigation.
-- By v1.0, add a dedicated Live Feed tab for community chat and image posts; the final bottom-navigation layout must be revisited when this is implemented.
+- The dedicated Live Feed/Chat tab and its bottom-navigation placement are implemented; do not treat them as future work.
 - Detail screens should eventually open inside a persistent navigation shell so the bottom tabs remain visible and the active tab/history is preserved. Implement this centrally rather than copying the bottom bar into each detail screen.
 
 Confirmed event relationship behavior:
@@ -516,7 +516,7 @@ Requirements:
 # Future Features
 
 - Purposeful Hungarian Hardstyle-branded loading animation for v1.0, without artificial startup delay and with reduced-motion support
-- Refine the Android startup animation to show the full HUHS logo without a white background
+- The full HUHS-logo startup animation with transparent/no-white background is complete.
 
 - Online Radio is a v1.0 goal, with a Home mini-player and server-side AutoDJ
 
@@ -538,7 +538,7 @@ Requirements:
 
 - Recommendations
 
-- Live Feed with chat and image posts
+- Live Feed with chat, image posts and moderation is complete.
 - Push notifications should cover new published news, new published events, event reminders one week before and on the event day, plus admin-created custom notifications from WordPress.
 - Event-day reminder delivery is live-verified and is not an open investigation.
 - Current push status: Flutter initializes Firebase/FCM, stores the token locally, registers it with the WordPress API, shows foreground notifications, opens news/event targets in native screens, and syncs per-device notification preferences. Backend 2.4.16 includes Firebase HTTP v1 sending, news/event/link targets, automatic HUHS URL resolution, publish hooks, event reminder scheduling, preference filtering, and a protected service-account settings page. Custom push, news/event publishing pushes, and foreground display are live-tested successfully; the first natural event-day reminder did not arrive, so WP-Cron execution, timezone/date parsing, preference filtering, and the FCM send path must be investigated. Credentials must never be embedded in Flutter or committed to the plugin.
@@ -764,7 +764,7 @@ Planned v0.99.1 Community MVP decisions:
 - Registered users may publish compressed snapshot images to the Live Feed.
 - Live Feed messages support Unicode emoji and a small fixed reaction set without introducing a heavy emoji dependency.
 - Firebase Authentication/Firestore is the minimal community backend; Cloudinary is the temporary image store. WordPress remains the editorial source of truth.
-- Full moderation, friendships, attendance visibility, profile claims, and app-admin tooling remain v1.0 work.
+- Friendships, attendance visibility, profile claims, Live Feed moderation and app-admin tooling are complete; privacy and account deletion remain v1.0 work.
 - Add a `Több`-menu user directory/search that lists registered users only and is unavailable to guests.
 - Organize `Több`-menu entries into clear categories while keeping `Több` as the visible menu name.
 

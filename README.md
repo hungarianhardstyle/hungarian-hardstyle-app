@@ -401,7 +401,7 @@ Core release quality:
 - [x] complete the Label release catalog in v0.99.89, including preview playback, WordPress release records, multi-artist links, cover art and external release links
 - [ ] extend the same Label catalog later with paid Radio Edit/Radio Version and Extended/full products; no separate store/catalog is planned
 - [x] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
-- [ ] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background
+- [x] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background (complete)
 - [x] introduce a persistent navigation shell with per-tab history
 - [x] add the Chat tab to the persistent bottom-navigation shell
 - [ ] polish the Android release and prepare iOS support
@@ -417,7 +417,7 @@ Authentication and community:
 - moved to v0.99.7: add a `Több`-menu user directory/search listing registered users only
 - moved to v0.99.7: allow DJ profile claiming after verified private/artist-owned booking e-mail; the Hungarian Hardstyle-managed booking address must never qualify as proof of ownership
 - moved to v0.99.8: friend requests and an `Ismerősök` profile section
-- [ ] full Live Feed chat/image-post moderation and community features (v1.0; the v0.99.1 MVP is tracked above)
+- [x] complete Live Feed chat/image-post moderation and community features (complete)
 - moved to v0.99.8: event attendance: `Ott leszek` / `Nem leszek ott`
 - moved to v0.99.8: show which friends are attending on event details
 - moved to v0.99.8: friend attendance visibility
