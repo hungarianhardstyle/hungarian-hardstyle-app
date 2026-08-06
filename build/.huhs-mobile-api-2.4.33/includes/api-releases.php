@@ -10,7 +10,7 @@ function huhs_get_releases(WP_REST_Request $request)
 {
     $search = sanitize_text_field((string) $request->get_param('search'));
     $artist_id = absint($request->get_param('artist'));
-    $query = new WP_Query(array('post_type' => 'huhs_release', 'post_status' => 'publish', 'posts_per_page' => 100, 'orderby' => 'title', 'order' => 'ASC', 's' => $search, 'meta_query' => array(array('key' => 'visible', 'value' => '1', 'compare' => '='))));
+    $query = new WP_Query(array('post_type' => 'huhs_release', 'post_status' => 'publish', 'posts_per_page' => 100, 'orderby' => 'date', 'order' => 'DESC', 's' => $search, 'meta_query' => array(array('key' => 'visible', 'value' => '1', 'compare' => '='))));
     $items = array();
     foreach ($query->posts as $post) {
         $release = huhs_build_release_response($post);

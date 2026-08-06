@@ -158,11 +158,6 @@ class _ReleaseCard extends StatelessWidget {
                         style: const TextStyle(color: Colors.white70),
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    Text(
-                      '${release.tracks.length} track',
-                      style: const TextStyle(color: Colors.white60),
-                    ),
                   ],
                 ),
               ),
