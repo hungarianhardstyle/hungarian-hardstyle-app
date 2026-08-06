@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/navigation/in_app_browser.dart';
+import '../../models/event.dart';
 import '../../providers/community_provider.dart';
 import '../../services/community_service.dart';
+import '../../services/wordpress_service.dart';
+import '../events/event_detail_screen.dart';
 
 class CommunityUsersScreen extends ConsumerStatefulWidget {
   const CommunityUsersScreen({super.key});
@@ -365,6 +368,60 @@ class _CommunityPublicProfileScreenState
                   );
                 },
               ),
+              if (isRegistered) ...[
+                const SizedBox(height: 18),
+                const Text(
+                  'Tervezett események',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: service.watchPlannedEventsFor(widget.userId),
+                  builder: (context, planned) {
+                    final items = planned.data?.docs ?? const [];
+                    if (items.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: Text('Nincs megjelölt esemény.'),
+                      );
+                    }
+                    return Column(
+                      children: [
+                        for (final item in items)
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.event_outlined),
+                            title: Text(
+                              item.data()['title'] as String? ?? 'Esemény',
+                            ),
+                            onTap: () async {
+                              final eventId = (item.data()['eventId'] as num?)
+                                  ?.toInt();
+                              if (eventId == null || !context.mounted) return;
+                              final events = await WordpressService()
+                                  .getEvents();
+                              HuhsEvent? event;
+                              for (final candidate in events) {
+                                if (candidate.id == eventId) {
+                                  event = candidate;
+                                  break;
+                                }
+                              }
+                              final selectedEvent = event;
+                              if (selectedEvent != null && context.mounted) {
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) =>
+                                        EventDetailScreen(event: selectedEvent),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ],
             ],
           );
         },

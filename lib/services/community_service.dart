@@ -569,9 +569,19 @@ class CommunityService {
   Stream<QuerySnapshot<Map<String, dynamic>>> watchPlannedEvents() {
     final user = auth.currentUser;
     if (user == null || user.isAnonymous) return const Stream.empty();
+    return watchPlannedEventsFor(user.uid);
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchPlannedEventsFor(
+    String userId,
+  ) {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous || userId.isEmpty) {
+      return const Stream.empty();
+    }
     return firestore
         .collection('community_profiles')
-        .doc(user.uid)
+        .doc(userId)
         .collection('planned_events')
         .orderBy('updatedAt', descending: true)
         .snapshots();

@@ -212,6 +212,7 @@ class CommunityAdminScreen extends ConsumerStatefulWidget {
 class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
   final _search = TextEditingController();
   final _pinnedText = TextEditingController();
+  String _roleFilter = 'all';
 
   @override
   void dispose() {
@@ -241,6 +242,15 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
             final name = (data['displayName'] as String? ?? '').toLowerCase();
             final email = (data['email'] as String? ?? '').toLowerCase();
             return name.contains(query) || email.contains(query);
+          }).toList();
+          final filteredProfiles = profiles.where((doc) {
+            if (_roleFilter == 'all') return true;
+            final data = doc.data();
+            if (_roleFilter == 'admin') {
+              return data['accessRole'] == CommunityService.accessAdmin ||
+                  data['role'] == CommunityService.accessAdmin;
+            }
+            return service.accountRole(data['role'] as String?) == _roleFilter;
           }).toList();
           return ListView(
             padding: const EdgeInsets.only(bottom: 220),
@@ -361,73 +371,177 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                   },
                 ),
               */
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                itemCount: profiles.length,
-                itemBuilder: (context, index) {
-                  final doc = profiles[index];
-                  final data = doc.data();
-                  final role = service.accountRole(data['role'] as String?);
-                  return Card(
-                    child: ListTile(
-                      leading: IconButton(
-                        tooltip: 'Felhasználó törlése',
-                        icon: const Icon(Icons.person_remove_outlined),
-                        onPressed: doc.id == service.auth.currentUser?.uid
-                            ? null
-                            : () async {
-                                final confirmed = await showDialog<bool>(
-                                  context: context,
-                                  builder: (dialogContext) => AlertDialog(
-                                    title: const Text('Felhasználó törlése'),
-                                    content: const Text(
-                                      'A profil, a Chat-üzenetek és a bejelentkezés is törlődik. Folytatod?',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(dialogContext, false),
-                                        child: const Text('Mégse'),
+              ExpansionTile(
+                initiallyExpanded: true,
+                leading: const Icon(Icons.people_outline),
+                title: Text(
+                  'Regisztrált felhasználók (${filteredProfiles.length})',
+                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _roleFilter,
+                      decoration: const InputDecoration(
+                        labelText: 'Szűrés szerepkör szerint',
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'all', child: Text('Mindenki')),
+                        DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                        DropdownMenuItem(value: 'dj', child: Text('DJ')),
+                        DropdownMenuItem(
+                          value: 'organizer',
+                          child: Text('Szervező'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'partygoer',
+                          child: Text('Bulizó'),
+                        ),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => _roleFilter = value ?? 'all'),
+                    ),
+                  ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredProfiles.length,
+                    itemBuilder: (context, index) {
+                      final doc = filteredProfiles[index];
+                      final data = doc.data();
+                      final role = service.accountRole(data['role'] as String?);
+                      return Card(
+                        child: ListTile(
+                          leading: IconButton(
+                            tooltip: 'Felhasználó törlése',
+                            icon: const Icon(Icons.person_remove_outlined),
+                            onPressed: doc.id == service.auth.currentUser?.uid
+                                ? null
+                                : () async {
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: const Text(
+                                          'Felhasználó törlése',
+                                        ),
+                                        content: const Text(
+                                          'A profil, a Chat-üzenetek és a bejelentkezés is törlődik. Folytatod?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(
+                                              dialogContext,
+                                              false,
+                                            ),
+                                            child: const Text('Mégse'),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () => Navigator.pop(
+                                              dialogContext,
+                                              true,
+                                            ),
+                                            child: const Text('Törlés'),
+                                          ),
+                                        ],
                                       ),
-                                      FilledButton(
-                                        onPressed: () =>
-                                            Navigator.pop(dialogContext, true),
-                                        child: const Text('Törlés'),
-                                      ),
-                                    ],
+                                    );
+                                    if (confirmed != true || !context.mounted) {
+                                      return;
+                                    }
+                                    try {
+                                      await service.deleteUser(doc.id);
+                                    } catch (error) {
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(_chatError(error)),
+                                        ),
+                                      );
+                                    }
+                                  },
+                          ),
+                          title: Text(
+                            data['displayName'] as String? ?? 'HUHS user',
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(data['email'] as String? ?? doc.id),
+                              PopupMenuButton<String>(
+                                enabled:
+                                    doc.id != service.auth.currentUser?.uid,
+                                padding: EdgeInsets.zero,
+                                tooltip: 'Adminjog / moderátori jog',
+                                onSelected:
+                                    doc.id == service.auth.currentUser?.uid
+                                    ? null
+                                    : (value) async {
+                                        try {
+                                          await service.setAccessRole(
+                                            doc.id,
+                                            value,
+                                          );
+                                        } catch (error) {
+                                          if (!context.mounted) return;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(_chatError(error)),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                itemBuilder: (_) => const [
+                                  PopupMenuItem(
+                                    value: CommunityService.accessNone,
+                                    child: Text('Nincs jogosultság'),
                                   ),
-                                );
-                                if (confirmed != true || !context.mounted) {
-                                  return;
-                                }
-                                try {
-                                  await service.deleteUser(doc.id);
-                                } catch (error) {
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(_chatError(error))),
-                                  );
-                                }
-                              },
-                      ),
-                      title: Text(
-                        data['displayName'] as String? ?? 'HUHS user',
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(data['email'] as String? ?? doc.id),
-                          PopupMenuButton<String>(
-                            enabled: doc.id != service.auth.currentUser?.uid,
-                            padding: EdgeInsets.zero,
-                            tooltip: 'Adminjog / moderátori jog',
-                            onSelected: doc.id == service.auth.currentUser?.uid
+                                  PopupMenuItem(
+                                    value: CommunityService.accessModerator,
+                                    child: Text('Moderátor'),
+                                  ),
+                                  PopupMenuItem(
+                                    value: CommunityService.accessAdmin,
+                                    child: Text('Admin'),
+                                  ),
+                                ],
+                                child: Text(
+                                  'Jog: ${data['accessRole'] ?? (data['role'] == 'admin' ? 'admin' : 'none')}',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                          trailing: DropdownButton<String>(
+                            value:
+                                const {
+                                  'dj',
+                                  'organizer',
+                                  'partygoer',
+                                }.contains(role)
+                                ? role
+                                : 'partygoer',
+                            items: [
+                              for (final entry in const {
+                                'dj': 'DJ',
+                                'organizer': 'Szervező',
+                                'partygoer': 'Bulizó',
+                              }.entries)
+                                DropdownMenuItem(
+                                  value: entry.key,
+                                  child: Text(entry.value),
+                                ),
+                            ],
+                            onChanged: doc.id == service.auth.currentUser?.uid
                                 ? null
                                 : (value) async {
+                                    if (value == null) return;
                                     try {
-                                      await service.setAccessRole(
+                                      await service.setAccountRole(
                                         doc.id,
                                         value,
                                       );
@@ -442,64 +556,12 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                                       );
                                     }
                                   },
-                            itemBuilder: (_) => const [
-                              PopupMenuItem(
-                                value: CommunityService.accessNone,
-                                child: Text('Nincs jogosultság'),
-                              ),
-                              PopupMenuItem(
-                                value: CommunityService.accessModerator,
-                                child: Text('Moderátor'),
-                              ),
-                              PopupMenuItem(
-                                value: CommunityService.accessAdmin,
-                                child: Text('Admin'),
-                              ),
-                            ],
-                            child: Text(
-                              'Jog: ${data['accessRole'] ?? (data['role'] == 'admin' ? 'admin' : 'none')}',
-                              style: const TextStyle(fontSize: 12),
-                            ),
                           ),
-                        ],
-                      ),
-                      trailing: DropdownButton<String>(
-                        value:
-                            const {
-                              'dj',
-                              'organizer',
-                              'partygoer',
-                            }.contains(role)
-                            ? role
-                            : 'partygoer',
-                        items: [
-                          for (final entry in const {
-                            'dj': 'DJ',
-                            'organizer': 'Szervező',
-                            'partygoer': 'Bulizó',
-                          }.entries)
-                            DropdownMenuItem(
-                              value: entry.key,
-                              child: Text(entry.value),
-                            ),
-                        ],
-                        onChanged: doc.id == service.auth.currentUser?.uid
-                            ? null
-                            : (value) async {
-                                if (value == null) return;
-                                try {
-                                  await service.setAccountRole(doc.id, value);
-                                } catch (error) {
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(_chatError(error))),
-                                  );
-                                }
-                              },
-                      ),
-                    ),
-                  );
-                },
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           );
@@ -1614,19 +1676,6 @@ class _CommunityProfileScreenState
         ),
         icon: const Icon(Icons.block_outlined),
         label: const Text('Blokkolt felhasználók'),
-      ),
-      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _service.watchMyReports(),
-        builder: (context, snapshot) {
-          final count = snapshot.data?.docs.length ?? 0;
-          if (count == 0) return const SizedBox.shrink();
-          return ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.flag_outlined),
-            title: Text('Jelentések: $count'),
-            subtitle: const Text('A jelentések állapota megtekinthető.'),
-          );
-        },
       ),
       const SizedBox(height: 18),
       OutlinedButton.icon(

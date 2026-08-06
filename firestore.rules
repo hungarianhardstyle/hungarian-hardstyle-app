@@ -129,7 +129,10 @@ service cloud.firestore {
     }
 
     match /community_profiles/{userId}/planned_events/{eventId} {
-      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null
+        && (request.auth.uid == userId
+          || request.auth.token.firebase.sign_in_provider != 'anonymous');
+      allow delete: if request.auth != null && request.auth.uid == userId;
       allow create, update: if request.auth != null && request.auth.uid == userId
         && request.resource.data.eventId is int
         && request.resource.data.state == 'attending';
@@ -176,7 +179,8 @@ service cloud.firestore {
     }
 
     match /community_bans/{userId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin()
+        || (request.auth != null && request.auth.uid == userId);
       allow write: if isAdmin();
     }
 
