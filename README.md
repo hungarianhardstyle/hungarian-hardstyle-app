@@ -151,6 +151,16 @@ v0.99.8 is complete and closed. The final ARM64 debug test APK is `build/HUHS-v0
 
 The Label tab is live between Chat and Több. It reads WordPress-managed release records with title, clickable multiple artists, cover, genre, 60-second preview playback and Spotify, Apple Music, Beatport, Hardstyle.com and YouTube links. The uploaded MP3/WAV is only a temporary source: FFmpeg creates a preview from the 30th second, then the source is deleted. No full-track download, cart or purchase flow is included. ARM64 debug APK: `build/HUHS-v0.99.89+1-arm64-debug.apk`. The later paid music store will be implemented inside this Label catalog.
 
+### v0.99.90 — HUHS Vezérlőközpont bugfixek (nyitott)
+
+A korábbi build-ek továbbra is lezártak; ezek újonnan felfedezett hibák a következő buildhez:
+
+- [ ] Events, DJ-k, Szervezők és kapcsolódó beküldési szerkesztőkben a `Mégse` ne küldjön hibás piros hibaüzenetet, és ne maradjon hibás űrlapállapot.
+- [ ] A natív Mobil API-szerkesztő mezői legyenek átláthatóbban tagolva, ne torlódjanak egymásra.
+- [ ] A DJ-k kiválasztása név alapján történjen; a szerkesztőben ne csak azonosítók jelenjenek meg.
+- [ ] A HUHS Vezérlőközpontból ki kell venni a nem kért „Személyre szabott push” funkciót. Az általános és az egyedi push kezelése maradjon meg.
+- [ ] Kivizsgálni és javítani a vezérlőközpont megnyitásakor jelentkező Flutter `_dependents.isEmpty` assertion crash-t.
+
 ### v0.99.7 — Community follow-up (complete)
 
 - [x] allow verified-email users to claim a DJ profile after matching the private or artist-owned booking e-mail; the Hungarian Hardstyle-managed booking address never qualifies as proof

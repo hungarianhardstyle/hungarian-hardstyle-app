@@ -967,3 +967,13 @@ v0.99.8 is closed after the final community fixes. The final ARM64 debug test AP
 - A kész cache-javító csomag a meglévő HUHS Mobile API 2.4.36-os változata, nem új API.
 - A build lezárt: ARM64 debug APK: `build/HUHS-v0.99.89+1-arm64-debug.apk`.
 - A későbbi fizetős zeneértékesítés ugyanebbe a Label katalógusba kerül; külön katalógus vagy külön Store-rész nem készül.
+
+### v0.99.90 - újonnan felfedezett HUHS Vezérlőközpont hibák (nyitott)
+
+A korábbi build-ek késznek és lezártnak tekintendők. A következő hibákat a v0.99.90-ben kell kezelni:
+
+- Events, DJ-k, Szervezők és a kapcsolódó beküldési szerkesztőkben a `Mégse` ne adjon téves piros hibaüzenetet, és ne maradjon hibás űrlapállapot.
+- A natív Mobil API-szerkesztők mezői legyenek jobban tagolva és átláthatók.
+- A DJ-ket név alapján lehessen kiválasztani, ne csak ID-k jelenjenek meg.
+- A nem kért `Személyre szabott push` funkciót ki kell venni a HUHS Vezérlőközpontból; az általános és egyedi push maradjon.
+- Ki kell vizsgálni a vezérlőközpont megnyitásakor jelentkező Flutter `_dependents.isEmpty` assertion hibát.

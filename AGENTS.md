@@ -447,6 +447,16 @@ v0.99.8 is complete and closed. Final ARM64 debug test APK: `build/HUHS-v0.99.8+
 
 v0.99.89 is complete. The ARM64 debug APK is `build/HUHS-v0.99.89+1-arm64-debug.apk`; the active HUHS Mobile API package is `2.4.36`. The Label tab is between Chat and Több and includes WordPress release records, clickable multiple artists, cover, genre, external links and preview playback. MP3/WAV uploads are temporary sources only: FFmpeg creates a maximum 60-second preview from the 30th second and the source is deleted. Full-track downloads, buying and a separate store are excluded. Future paid music sales will extend this same Label catalog.
 
+### v0.99.90 - HUHS Vezérlőközpont bugfixek (open)
+
+All previous builds remain complete and closed. Newly discovered issues recorded for v0.99.90:
+
+- [ ] In native Mobile API editors for Events, DJs, Organizers and related submissions, pressing `Mégse` must not show a false red error or leave an invalid form state.
+- [ ] Improve field spacing and grouping so the editors remain readable instead of crowded.
+- [ ] Let admins select DJs by display name rather than seeing only numeric IDs.
+- [ ] Remove the unrequested `Személyre szabott push` feature from the HUHS Vezérlőközpont; general and custom push remain.
+- [ ] Investigate and fix the Flutter `_dependents.isEmpty` assertion crash observed while opening the controller.
+
 ### v0.99.8 - User profile navigation and community details (closed)
 
 Authoritative status: WordPress Mobile API `2.4.36` is uploaded, deployed and live-tested; the current app build is `0.99.89+1`. Completed v0.99.3 TypeUI/native admin, profile crop, radio, tag/genre pagination, general push, social fields, FAQ and Label catalog remain complete.

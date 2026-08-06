@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `82487fd8`
+- Built from commit: `f2f9340d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -85,14 +85,14 @@
 - List
 - package:url_launcher/url_launcher.dart
 - package:flutter/material.dart
-- FlutterMacOS
 - events_screen.dart
+- ios/RunnerTests/RunnerTests.swift
 - AppDelegate
 - faq.dart
 - release_detail_screen.dart
 - community_provider.dart
+- FlutterMacOS
 - dart:async
-- ios/RunnerTests/RunnerTests.swift
 - ../core/navigation/in_app_browser.dart
 - SubmissionImage
 - AppDelegate
@@ -425,13 +425,13 @@ Nodes (7): build, DonateScreen, _donateUri, build, RadioProviderScreen, package:
 Cohesion: 0.22
 Nodes (7): build, PrivacyScreen, build, genre, GenreChip, package:flutter/material.dart, ../screens/genres/genre_discovery_screen.dart
 
-### Community 71 - "FlutterMacOS"
-Cohesion: 0.32
-Nodes (5): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow, XCTest
-
-### Community 72 - "events_screen.dart"
+### Community 71 - "events_screen.dart"
 Cohesion: 0.25
 Nodes (7): event_submission_screen.dart, _EventsHeader, onSubmit, _openSubmission, showSubmit, ../../providers/community_provider.dart, ../../widgets/event_card.dart
+
+### Community 72 - "ios/RunnerTests/RunnerTests.swift"
+Cohesion: 0.38
+Nodes (4): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit
 
 ### Community 73 - "AppDelegate"
 Cohesion: 0.25
@@ -449,13 +449,13 @@ Nodes (7): HuhsRelease, build, _label, release, ReleaseDetailScreen, releases_sc
 Cohesion: 0.25
 Nodes (7): communityPostsProvider, watch, build, CommunityService, ../models/community_post.dart, package:firebase_auth/firebase_auth.dart, ../services/community_service.dart
 
-### Community 77 - "dart:async"
+### Community 77 - "FlutterMacOS"
+Cohesion: 0.32
+Nodes (5): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow, XCTest
+
+### Community 78 - "dart:async"
 Cohesion: 0.29
 Nodes (6): dart:async, getEvents, getEventSubmissionGenres, refreshTimer, service, ../models/event.dart
-
-### Community 78 - "ios/RunnerTests/RunnerTests.swift"
-Cohesion: 0.38
-Nodes (4): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit
 
 ### Community 79 - "../core/navigation/in_app_browser.dart"
 Cohesion: 0.33
