@@ -67,16 +67,17 @@ class AppTheme {
         ),
         elevation: 0,
         height: 72,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             color: states.contains(WidgetState.selected)
                 ? Colors.black
                 : Colors.white,
-            size: 26,
+            size: 22,
           ),
         ),
         labelTextStyle: WidgetStateProperty.all(
-          const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
         ),
       ),
 

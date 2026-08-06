@@ -3,7 +3,7 @@ description: "Hungarian Hardstyle mobile application"
 
 publish_to: 'none'
 
-version: 0.99.8+6
+version: 0.99.89+1
 
 environment:
   sdk: ^3.12.2
@@ -29,6 +29,7 @@ dependencies:
 
   # Spotify Player
   webview_flutter: ^4.13.0
+  just_audio: ^0.10.5
   image_picker: ^1.2.3
   package_info_plus: ^8.3.0
   shared_preferences: ^2.5.3

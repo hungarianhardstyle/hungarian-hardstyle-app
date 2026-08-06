@@ -5,6 +5,7 @@ import 'community/community_screen.dart';
 import 'home/home_screen.dart';
 import 'more/more_screen.dart';
 import 'news/news_screen.dart';
+import 'releases/releases_screen.dart';
 import '../widgets/radio_player_bar.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -15,7 +16,7 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  static const _tabCount = 5;
+  static const _tabCount = 6;
 
   int _currentIndex = 0;
 
@@ -41,6 +42,8 @@ class _MainNavigationState extends State<MainNavigation> {
               return const EventsScreen();
             case 3:
               return const LiveFeedScreen();
+            case 4:
+              return const ReleasesScreen();
             default:
               return const MoreScreen();
           }
@@ -111,6 +114,11 @@ class _MainNavigationState extends State<MainNavigation> {
                   icon: Icon(Icons.forum_outlined),
                   selectedIcon: Icon(Icons.forum),
                   label: 'Chat',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.album_outlined),
+                  selectedIcon: Icon(Icons.album),
+                  label: 'Label',
                 ),
                 NavigationDestination(icon: Icon(Icons.menu), label: 'Több'),
               ],

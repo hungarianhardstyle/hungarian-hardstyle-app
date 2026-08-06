@@ -10,6 +10,7 @@ import '../models/faq.dart';
 import '../models/organizer.dart';
 import '../models/post.dart';
 import '../models/profile_submission.dart';
+import '../models/release.dart';
 import '../models/submission_image.dart';
 
 int _readInt(Object? value, {int fallback = 0}) {
@@ -381,6 +382,36 @@ class WordpressService {
       );
     } catch (e) {
       throw Exception('Nem sikerült betölteni a szervezői adatlapot.\n\n$e');
+    }
+  }
+
+  Future<List<HuhsRelease>> getReleases({
+    String search = '',
+    int artistId = 0,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/releases',
+        queryParameters: {
+          if (search.trim().isNotEmpty) 'search': search.trim(),
+          if (artistId > 0) 'artist': artistId,
+        },
+      );
+      final data = response.data;
+      final values = data is List
+          ? data
+          : data is Map<String, dynamic>
+          ? data['items']
+          : null;
+      if (values is! List) return const [];
+      return values
+          .whereType<Map<String, dynamic>>()
+          .map(HuhsRelease.fromJson)
+          .toList(growable: false);
+    } on DioException catch (e) {
+      throw Exception(
+        _readApiError(e, 'Nem sikerült betölteni a release-eket.'),
+      );
     }
   }
 

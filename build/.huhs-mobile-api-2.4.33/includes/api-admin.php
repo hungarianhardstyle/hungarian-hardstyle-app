@@ -324,6 +324,19 @@ function huhs_admin_resource_fields($post_type)
             array('key' => 'logo', 'label' => 'Logó média ID', 'type' => 'int'),
         ), $common);
     }
+    if ($post_type === 'huhs_release') {
+        return array_merge(array(
+            array('key' => 'genre', 'label' => 'Műfaj', 'type' => 'text'),
+            array('key' => 'artists', 'label' => 'Előadó ID-k (vesszővel)', 'type' => 'ids'),
+            array('key' => 'cover', 'label' => 'Borító média ID', 'type' => 'int'),
+            array('key' => 'preview_url', 'label' => 'Preview MP3 URL', 'type' => 'url'),
+            array('key' => 'spotify', 'label' => 'Spotify', 'type' => 'url'),
+            array('key' => 'apple_music', 'label' => 'Apple Music', 'type' => 'url'),
+            array('key' => 'beatport', 'label' => 'Beatport', 'type' => 'url'),
+            array('key' => 'hardstyle_com', 'label' => 'Hardstyle.com', 'type' => 'url'),
+            array('key' => 'youtube', 'label' => 'YouTube', 'type' => 'url'),
+        ), $common);
+    }
     return array();
 }
 

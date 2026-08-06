@@ -61,6 +61,15 @@ function huhs_mobile_admin_menu()
         'edit.php?post_type=huhs_event'
     );
 
+    // Releases
+    add_submenu_page(
+        'huhs-mobile',
+        'Release-ek',
+        'Release-ek',
+        'manage_options',
+        'edit.php?post_type=huhs_release'
+    );
+
     // Submissions
     add_submenu_page(
         'huhs-mobile',
@@ -326,7 +335,7 @@ function huhs_about_page()
 
 function huhs_trash_post_types()
 {
-    return array('huhs_submission', 'huhs_artist', 'huhs_organizer', 'huhs_event');
+    return array('huhs_submission', 'huhs_artist', 'huhs_organizer', 'huhs_event', 'huhs_release');
 }
 
 function huhs_trash_page()
@@ -351,6 +360,7 @@ function huhs_trash_page()
         'huhs_artist'     => 'DJ-k',
         'huhs_organizer'  => 'Szervezők',
         'huhs_event'      => 'Események',
+        'huhs_release'    => 'Release-ek',
     );
     ?>
     <div class="wrap">

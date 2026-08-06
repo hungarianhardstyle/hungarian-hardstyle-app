@@ -86,8 +86,8 @@ As of the current project state:
 - News search UI exists.
 - News item tap/click opens the news detail view.
 - News cards display remote images, title, date, and featured state.
-- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, currently through `build/huhs-mobile-api-2.4.33.zip`; the latest package has been extracted and reviewed locally.
-- The latest package version is 2.4.33. It is uploaded, deployed to production, live-verified, and confirmed active by the project owner; deployment and live verification are complete. It includes the managed FAQ post type/category editor and paginated public FAQ endpoint in addition to the WordPress admin dashboard/settings, submissions approval flow, trash/About menus, push/newsletter settings, Cloudinary URL handling, rate limits/honeypots, and UTF-8/HTML-entity push fixes.
+- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, currently through `build/huhs-mobile-api-2.4.36.zip`; the latest package has been extracted and reviewed locally.
+- The latest package version is 2.4.36. It is the existing HUHS Mobile API, deployed and live-tested with the `huhs_release` records and public releases endpoint. It generates only a maximum 60-second preview from a temporary MP3/WAV source, then deletes the source; full audio is never exposed.
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
@@ -96,7 +96,7 @@ As of the current project state:
 - Backend package `2.4.7` is deployed. It fixes the invalid nested admin approval form that prevented DJ and organizer draft creation, removes the misleading native publish box from submissions, and adds the same one-click draft creation flow for event submissions. The approval flow still requires a live WordPress admin test.
 - Backend package `2.4.8` is historical. Its multipart image path remains documented for compatibility; the active app upload path is Cloudinary and direct multipart uploads are not a current WAF/deployment status.
 - Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real "Kapcsolódó cikk" target was verified. Flutter opens returned related articles plus normal WordPress "Kapcsolódó cikk", "Kapcsolódó", and "Ez is érdekelhet" links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
-- Backend package 2.4.31 is historical; the current uploaded and active package is 2.4.33, which also includes the managed FAQ endpoint and editor.
+- Backend package 2.4.31 and 2.4.33 are historical; the current uploaded and active package is 2.4.36.
 - Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; the first natural event-day reminder did not arrive and the cron/timezone/filter path needs investigation.
 - Event-day reminder delivery is now live-verified; it is not an open v0.99.8 or v1.0 investigation.
 - The custom-push admin form lists recent published news and events by title and validates the selected post type, so editors do not need to look up event IDs manually.
@@ -108,7 +108,7 @@ As of the current project state:
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/posts`.
 - The WordPress plugin exposes `GET /wp-json/huhs/v1/events`.
 - Backend package `2.2.0` is deployed. Its artist list/category endpoints, shared submission genre options, validation response, and public DJ/event archive templates were verified live. A successful real submission still needs an intentional end-to-end app test because it creates a pending WordPress item.
-- Release catalog and other future media sections may still contain placeholder or early-stage UI.
+- The v0.99.89 Label release catalog is complete; only the later paid store extension remains future work.
 - Dynamic events and the event detail screen are connected to the WordPress events API.
 - Event detail artists and organizer are clickable. Artist links open complete API-backed DJ profiles. Organizer links are now connected to the organizer detail provider and require backend `2.3.0` in production.
 - News excerpts are converted to plain text and HTML tags are removed for both custom and standard WordPress responses.
@@ -116,7 +116,7 @@ As of the current project state:
 - News detail renders deduplicated YouTube, Spotify, SoundCloud, Instagram, and TikTok embeds in-app. Supported interactive WordPress shortcodes (`ays_poll`, `irp`, and legacy Final Tiles Gallery) are detected; their raw shortcode text is removed and the rendered WordPress content can be opened inside the app.
 - Plain-text web URLs in news and event HTML are automatically converted into tappable links. Normal article, event, ticket, and shortcode links use the shared in-app browser; native media and Maps handoff remain intentional exceptions.
 - WordPress API work exists and should continue to be the backend source for new dynamic features.
-- Flutter-side WordPress integration is complete for the current news, events, DJs, organizers and submissions. The v0.99.3 native HUHS Vezérlőközpont is implemented in source; the release catalog remains future work.
+- Flutter-side WordPress integration is complete for the current news, events, DJs, organizers, submissions and the closed v0.99.89 Label release catalog. The native HUHS Vezérlőközpont remains the admin source.
 
 Do not assume that an empty or partial integration file is a bug by itself. Treat it as an implementation placeholder unless it blocks the requested feature or conflicts with a known working module.
 
@@ -291,7 +291,7 @@ The API should support:
 - artist detail, deployed and verified with live data
 - organizers list, deployed and live-verified in backend `2.3.0`
 - organizer detail with upcoming events, deployed and live-verified in backend `2.3.0`
-- future release catalog
+- the Label release catalog is complete in v0.99.89; paid purchase/store is a later extension in the same area
 
 Flutter should not rely on WordPress admin-only fields or HTML that is hard to render on mobile unless rich content support is explicitly being implemented.
 
@@ -437,15 +437,19 @@ Firebase rules and the `claimArtistProfile`/`sendPersonalizedPush`/`getArtistCla
 
 - [x] Show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
 
-Keep security hardening, the release catalog and the music store in v1.0/v1.5. Friends, attendance, public community profiles, friend-request notifications and their remaining bugs are v0.99.8 scope.
+Keep security hardening, obfuscation, release signing and purchase/store work in v1.0+. The Label release catalog is closed in v0.99.89.
 
 ### v0.99.8 closure (2026-08-06)
 
-v0.99.8 is complete and closed. Final ARM64 debug test APK: `build/HUHS-v0.99.8+16-arm64-debug.apk`. Completed: friend requests, push delivery and push-to-requester profile navigation; accept/reject/unfriend; live Chat role/access badges; public profiles and friends; favorite DJs/organizers on profiles with favorite news excluded; planned events and attendance; registered Chat writes; Chat author profile navigation; report management; biometric session handling; and admin role/access management. Firebase rules and the connection-request FCM trigger are deployed. Analyzer, full Flutter tests, Cloud Function syntax checks and Graphify refresh pass. v1.0 retains security hardening, obfuscation, release signing, catalog/store work and final release preparation.
+v0.99.8 is complete and closed. Final ARM64 debug test APK: `build/HUHS-v0.99.8+16-arm64-debug.apk`. Completed: friend requests, push delivery and push-to-requester profile navigation; accept/reject/unfriend; live Chat role/access badges; public profiles and friends; favorite DJs/organizers on profiles with favorite news excluded; planned events and attendance; registered Chat writes; Chat author profile navigation; report management; biometric session handling; and admin role/access management. Firebase rules and the connection-request FCM trigger are deployed. Analyzer, full Flutter tests, Cloud Function syntax checks and Graphify refresh pass. v1.0 retains security hardening, obfuscation, release signing, purchase/store work and final release preparation.
 
-### v0.99.8 - User profile navigation and community details (in progress)
+### v0.99.89 - Label release catalog (complete; 2026-08-06)
 
-Authoritative status: WordPress Mobile API `2.4.33` is uploaded, deployed, live-verified and active; the current APK is `0.99.8+7`. Completed v0.99.3 TypeUI/native admin, profile crop, radio, tag/genre pagination, general push, social fields and FAQ remain complete.
+v0.99.89 is complete. The ARM64 debug APK is `build/HUHS-v0.99.89+1-arm64-debug.apk`; the active HUHS Mobile API package is `2.4.36`. The Label tab is between Chat and Több and includes WordPress release records, clickable multiple artists, cover, genre, external links and preview playback. MP3/WAV uploads are temporary sources only: FFmpeg creates a maximum 60-second preview from the 30th second and the source is deleted. Full-track downloads, buying and a separate store are excluded. Future paid music sales will extend this same Label catalog.
+
+### v0.99.8 - User profile navigation and community details (closed)
+
+Authoritative status: WordPress Mobile API `2.4.36` is uploaded, deployed and live-tested; the current app build is `0.99.89+1`. Completed v0.99.3 TypeUI/native admin, profile crop, radio, tag/genre pagination, general push, social fields, FAQ and Label catalog remain complete.
 
 - [x] Make each profile card in `Több -> Felhasználók` tappable and open that user's native in-app profile.
 - [x] Show only favorite DJs, organizers, and events on the user profile; favorite news is excluded from this profile section.
@@ -539,8 +543,6 @@ Focus:
 - galleries
 - external link handling
 - admin-only AI-assisted article importer in WordPress: accept a public source URL, extract usable article content, create Hungarian copy, and preserve supported inline media
-- add an AI-assisted English translation action directly to the standard WordPress blog post editor; it should create or update a separately editable English draft/version for human review, never translate on demand in Flutter or auto-publish
-- extend the mobile REST APIs for posts, events, DJs/artists, and organizers to return stored, reviewed English content when requested by the Flutter locale, with Hungarian fallback when an English field or version is unavailable; do not invoke AI during a public API request
 - imported content must always be created as a draft for human review; never auto-publish AI output
 - support two explicit modes: faithful translation for owned/licensed/partner content, and an original Hungarian summary/adaptation with source attribution for third-party reporting
 - import images into the WordPress Media Library only when reuse rights are confirmed; otherwise require an owned/replacement image and do not hotlink or copy third-party assets automatically
@@ -615,17 +617,12 @@ Focus:
 - DJ directory
 - organizer directory
 - clickable genre chips with a grouped discovery screen for events, DJs, and news
-- Hardstyle Revolution release catalog
-- release preview player
-- Spotify/Hardstyle.com/YouTube links for releases
-- WordPress-managed release records with cover art, preview audio, downloadable file, and free/paid status
-- a dedicated `Kiadások` app destination between Events and More
+- paid Hardstyle Revolution music sales (later, inside the completed Label catalog)
 - Hardstyle.com is an external destination only; do not scrape or import its catalog
 - show configured Hardstyle.com, Beatport, Spotify and Apple Music links at the bottom of each release detail screen
 - the own shop catalog may contain both Radio Edit/Radio Version and Extended/full versions when they are intentionally uploaded as separate products
 - final UX and visual polish pass across navigation, spacing, labels, buttons, loading/error states, accessibility, and tasteful motion/effects before release
 - basic community features
-- Hungarian/English Flutter UI localization plus reviewed English WordPress content for posts, events, DJs/artists, and organizers, served through locale-aware mobile APIs with Hungarian fallback
 - a purposeful Hungarian Hardstyle-branded loading animation that does not delay startup and respects reduced-motion accessibility settings
 - refine the Android startup animation with the full HUHS logo on a transparent/no-white background
 - polished Android release
@@ -678,37 +675,18 @@ Confirmed annual voting direction for v1.1:
 - The public summary should contain the season/year, category names, final ranking, candidate display data, and optionally vote totals or percentages according to the season settings.
 - Never include voter identities, audit logs, moderation flags, suspicious-vote indicators, or other private admin data in the public results response.
 
-### v1.5 - Hardstyle Revolution Store
+### v1.5 - Hardstyle Revolution Store (later)
 
 Focus:
 
-- free releases
-- premium releases
-- rewarded-ad download option
-- paid downloads
+- paid releases only; no free or ad-supported full MP3 downloads
 - Android digital purchases must use Google Play Billing; Google Pay is not the correct in-app product API
 - purchase/download history if needed
 
-## Release And Store Business Model
+## Release And Store Business Model (later, not in v0.99.89)
 
-Hardstyle Revolution releases should support two main release types.
-
-### Free Release
-
-Free releases are completely free:
-
-- no payment
-- no ad requirement
-- MP3 download
-
-The UI can label this as `FREE DOWNLOAD`.
-
-### Premium Release
-
-Premium releases should offer two paths:
-
-- Watch a rewarded ad to unlock a free 128 kbps MP3 download.
-- Buy a higher-quality version.
+The later store may support paid digital products. It must not offer free,
+rewarded-ad or anonymous full-MP3 downloads.
 
 Payment requirement:
 
@@ -717,7 +695,7 @@ Payment requirement:
 Release processing:
 
 - upload one WAV master per release
-- generate the 128 kbps MP3, 320 kbps MP3 and preview derivative server-side with FFmpeg
+- generate only the preview derivative server-side with FFmpeg for the catalog; store derivatives remain private until a later paid-store design exists
 - run conversion as a background job, never inside the upload/API request
 - keep the WAV master private and expose each derivative only after its entitlement is satisfied
 
@@ -726,18 +704,11 @@ Paid options:
 - 320 kbps MP3, example price `1.99 EUR`
 - WAV/lossless, example price `2.99 EUR`
 
-The intended user value:
-
-- casual listeners can watch an ad and get a lower-quality phone-friendly MP3
-- DJs or quality-focused users can buy the 320 kbps MP3 or WAV
-- the free ad-supported option should not remove the value of the paid versions
-
-Example premium release UI structure:
+Example later paid-store UI structure:
 
 - release title
 - artist name
 - preview player
-- `Watch Ad` option for `MP3 128 kbps`, free
 - `Buy MP3` option for `320 kbps`, paid
 - `Buy WAV` option for lossless, paid
 
@@ -748,9 +719,7 @@ Future release/store API fields should likely include:
 - `artist_name`
 - `cover_image`
 - `preview_url`
-- `release_type` (`free` or `premium`)
-- `free_download_url`
-- `ad_reward_download_url`
+- `release_type` (`paid`)
 - `mp3_320_price`
 - `mp3_320_url`
 - `wav_price`
@@ -811,8 +780,6 @@ When iOS preparation starts:
 ## Content Language
 
 Hungarian is the primary app language.
-
-English support is a future internationalization goal. The Flutter interface may support Hungarian and English through Flutter's generated localization/ARB workflow. Dynamic content translation is separate: reviewed English content for posts, events, DJs/artists, and organizers should be stored in WordPress and delivered through their mobile REST APIs according to the selected locale, not translated on demand by Flutter. Do not introduce full i18n unless the user asks for it or the roadmap reaches that step.
 
 ## Coding Style
 
@@ -877,7 +844,7 @@ Product decisions confirmed by the user:
 - Artist/DJ names and the organizer on event detail must be clickable.
 - Artist and organizer event relations open dedicated API-backed profile screens and are confirmed against live data.
 - v1.0 should introduce a Live Feed tab with chat and image posting.
-- v1.0 should focus on security hardening, release signing/obfuscation, release catalog/store work, and remaining public-release quality. Google sign-in, user profiles, friendships, and event attendance status (`Ott leszek` / `Nem leszek ott`) are tracked in v0.99.8.
+- v1.0 should focus on security hardening, release signing/obfuscation, purchase/store work, and remaining public-release quality. Google sign-in, user profiles, friendships, event attendance and the release catalog preview are covered before v1.0.
 - v1.1 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting.
 - Organizer profiles and submissions now support server-managed selectable music genres/styles (backend 2.4.9 prepared; deploy and live-test still pending).
 - Add an About/App information area under More. Read the app version and build number from package metadata instead of hardcoding them, and include developer credit plus relevant website, contact, privacy, and terms links.

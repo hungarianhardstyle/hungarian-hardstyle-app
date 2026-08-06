@@ -267,30 +267,9 @@ Runs from WordPress.
 
 Uses Releases.
 
-Release types:
-
-## Free Release
-
-Free download.
-
-No advertisement.
-
----
-
-## Premium Release
-
-Reward Download
-
-- 128 kbps MP3
-- Requires rewarded advertisement
-
-Paid
-
-- 320 kbps MP3
-
-Paid
-
-- WAV
+The current catalog only exposes a maximum 60-second preview. It never
+offers a full MP3 download, free or ad-supported. Any later store must use
+explicit paid entitlements and keep source/master files private.
 
 ---
 
@@ -525,19 +504,12 @@ Add a private WordPress admin workflow where an editor enters a public article U
 Requirements:
 
 - always create a draft and require human editorial approval
-- provide a faithful translation mode only for content the publisher owns or is permitted to translate
 - provide an original Hungarian summary/adaptation mode with a visible source link for third-party reporting
 - store the source URL and attribution metadata
 - import featured and inline images into the WordPress Media Library only when reuse rights are confirmed; otherwise require an owned/replacement image
 - never expose the AI provider key to Flutter or public REST responses
 - validate remote URLs and block internal/private network targets, unsafe HTML, oversized downloads, and slow requests
 - retain the existing WordPress post format so galleries, embeds, website rendering, and the Flutter app continue to use one source of truth
-
-## AI-assisted English post translation
-
-Add the article translation workflow directly to the standard WordPress blog post editor. An administrator should be able to generate or refresh a separately editable English draft/version from the Hungarian post. Keep the AI provider key server-side, preserve names, links, embeds and shortcodes, require human review, and never auto-publish or translate content dynamically in Flutter.
-
-English localization must also cover the mobile REST APIs for posts, events, DJs/artists, and organizers. Their WordPress editing screens should eventually support stored, reviewable English fields or versions. Each endpoint should return the requested stored language according to the Flutter locale and fall back field-by-field to Hungarian when English is unavailable. Public API requests must never trigger AI generation. The Flutter interface itself may separately support Hungarian and English through normal app localization.
 
 ---
 
@@ -552,7 +524,7 @@ English localization must also cover the mobile REST APIs for posts, events, DJs
 
 - Before external/cloud image uploads, compress submission images on-device to roughly 1200–1600 px width in JPEG/WebP format to reduce storage and bandwidth use.
 
-- Hardstyle Revolution Releases are a v1.0 goal; the catalog remains WordPress-managed and should be exposed through the mobile API.
+- Hardstyle Revolution Releases are covered by the completed v0.99.89 WordPress-managed Label catalog; paid purchase/store remains a later extension in that same area.
 
 - Music Store
 
@@ -713,9 +685,8 @@ The final v0.99.3 source pass separates the read-only community profile from its
 
 The Android radio foreground service now retries the Real Hardstyle FM stream after an unexpected playback error or stream completion instead of remaining silently marked as playing. Explicit Stop and full app closure still cancel pending reconnects.
 
-The owner will perform phone verification separately. Firebase proxy Functions are deployed. `build/huhs-mobile-api-2.4.33.zip` is the prepared WordPress package for the managed FAQ post type/category editor and paginated public FAQ endpoint, in addition to the native editing/startup-image work; live `2.4.31` remains deployed and live-verified and is not an open re-verification task. Security hardening and signing/obfuscation are v1.0.
+The owner will perform phone verification separately. Firebase proxy Functions are deployed. The active WordPress package is `build/huhs-mobile-api-2.4.36.zip`, which includes the completed Label release catalog endpoint and preview generation. Security hardening and signing/obfuscation are v1.0.
 
-Required for v1.0: Hungarian/English Flutter interface localization, AI-assisted and human-reviewed English WordPress content for blog posts, events, DJs/artists, and organizers, and locale-aware mobile REST APIs with Hungarian fallback.
 
 Required before public release: a final UX and visual polish pass covering navigation, spacing, labels, buttons, loading/error states, accessibility, and tasteful motion/effects.
 
@@ -985,3 +956,14 @@ Everything connected.
 ### v0.99.8 closure (2026-08-06)
 
 v0.99.8 is closed after the final community fixes. The final ARM64 debug test APK is `build/HUHS-v0.99.8+16-arm64-debug.apk`. Friend-request FCM delivery is live-verified; tapping the notification opens the requester profile. Chat reads live account/access roles, public profiles show favorite DJs/organizers but not favorite news, and the complete attendance, reports, biometric, Chat-permission and admin-role scope is implemented. Remaining release work belongs to v1.0.
+
+### v0.99.89 - Label release-katalógus (complete and closed, 2026-08-06)
+
+- A meglévő HUHS Mobile API új `huhs_release` erőforrást ad címhez, borítóhoz, műfajhoz, több előadóhoz és külső elérhetőségi linkekhez.
+- A feltöltött teljes MP3 csak ideiglenes forrás; a plugin FFmpeg-gel a 30. másodperctől legfeljebb 60 másodperces preview MP3-at generál, majd törli az eredeti MP3-at. Az API kizárólag a preview URL-t adja vissza.
+- Flutterben önálló `Label` alsó navigációs fül van a Chat és Több között.
+- Az előadók külön kattinthatók, és az adott előadó további release-ei listázhatók.
+- A preview saját lejátszóval hallgatható; vásárlás, kosár, letöltés és saját digitális store nem része ennek a buildnek.
+- A kész cache-javító csomag a meglévő HUHS Mobile API 2.4.36-os változata, nem új API.
+- A build lezárt: ARM64 debug APK: `build/HUHS-v0.99.89+1-arm64-debug.apk`.
+- A későbbi fizetős zeneértékesítés ugyanebbe a Label katalógusba kerül; külön katalógus vagy külön Store-rész nem készül.
