@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `82153fbd`
+- Built from commit: `78c6369f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -95,7 +95,7 @@
 - favorites_screen.dart
 - dart:async
 - ios/RunnerTests/RunnerTests.swift
-- ../core/navigation/in_app_browser.dart
+- genre_chip.dart
 - SubmissionImage
 - AppDelegate
 - event_card_test.dart
@@ -295,7 +295,7 @@ Nodes (17): releasesProvider, artistId, artistName, build, createState, dispose,
 
 ### Community 37 - "package:flutter/material.dart"
 Cohesion: 0.12
-Nodes (14): build, DonateScreen, _donateUri, build, PrivacyScreen, build, RadioProviderScreen, build (+6 more)
+Nodes (15): ../core/navigation/in_app_browser.dart, build, DonateScreen, _donateUri, build, PrivacyScreen, build, RadioProviderScreen (+7 more)
 
 ### Community 38 - "GeneratedPluginRegistrant.swift"
 Cohesion: 0.12
@@ -469,9 +469,9 @@ Nodes (6): dart:async, getEvents, getEventSubmissionGenres, refreshTimer, servic
 Cohesion: 0.32
 Nodes (5): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit, XCTest
 
-### Community 81 - "../core/navigation/in_app_browser.dart"
-Cohesion: 0.33
-Nodes (5): ../core/navigation/in_app_browser.dart, build, _openSpotify, _playlists, SpotifyPlaylistsScreen
+### Community 81 - "genre_chip.dart"
+Cohesion: 0.40
+Nodes (4): build, genre, GenreChip, ../screens/genres/genre_discovery_screen.dart
 
 ### Community 82 - "SubmissionImage"
 Cohesion: 0.33

@@ -6494,10 +6494,10 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 81,
+      "community": 37,
       "norm_label": "../core/navigation/in_app_browser.dart",
       "id": "core_navigation_in_app_browser_dart",
-      "community_name": "../core/navigation/in_app_browser.dart"
+      "community_name": "package:flutter/material.dart"
     },
     {
       "label": "../../widgets/genre_chip.dart",
@@ -12038,10 +12038,10 @@
       "source_file": "lib/screens/more/spotify_playlists_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 81,
+      "community": 37,
       "norm_label": "spotify_playlists_screen.dart",
       "id": "lib_screens_more_spotify_playlists_screen",
-      "community_name": "../core/navigation/in_app_browser.dart"
+      "community_name": "package:flutter/material.dart"
     },
     {
       "label": "SpotifyPlaylistsScreen",
@@ -12049,10 +12049,10 @@
       "source_file": "lib/screens/more/spotify_playlists_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 81,
+      "community": 37,
       "norm_label": "spotifyplaylistsscreen",
       "id": "lib_screens_more_spotify_playlists_screen_spotifyplaylistsscreen",
-      "community_name": "../core/navigation/in_app_browser.dart"
+      "community_name": "package:flutter/material.dart"
     },
     {
       "label": "_playlists",
@@ -12060,10 +12060,10 @@
       "source_file": "lib/screens/more/spotify_playlists_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 81,
+      "community": 37,
       "norm_label": "_playlists",
       "id": "lib_screens_more_spotify_playlists_screen_playlists",
-      "community_name": "../core/navigation/in_app_browser.dart"
+      "community_name": "package:flutter/material.dart"
     },
     {
       "label": "build",
@@ -12071,10 +12071,10 @@
       "source_file": "lib/screens/more/spotify_playlists_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 81,
+      "community": 37,
       "norm_label": "build",
       "id": "lib_screens_more_spotify_playlists_screen_build",
-      "community_name": "../core/navigation/in_app_browser.dart"
+      "community_name": "package:flutter/material.dart"
     },
     {
       "label": "_openSpotify",
@@ -12082,10 +12082,10 @@
       "source_file": "lib/screens/more/spotify_playlists_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 81,
+      "community": 37,
       "norm_label": "_openspotify",
       "id": "lib_screens_more_spotify_playlists_screen_openspotify",
-      "community_name": "../core/navigation/in_app_browser.dart"
+      "community_name": "package:flutter/material.dart"
     },
     {
       "label": "news_detail_screen.dart",
@@ -15888,10 +15888,10 @@
       "source_file": "lib/widgets/genre_chip.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 37,
+      "community": 81,
       "norm_label": "genre_chip.dart",
       "id": "lib_widgets_genre_chip",
-      "community_name": "package:flutter/material.dart"
+      "community_name": "genre_chip.dart"
     },
     {
       "label": "GenreChip",
@@ -15899,10 +15899,10 @@
       "source_file": "lib/widgets/genre_chip.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 37,
+      "community": 81,
       "norm_label": "genrechip",
       "id": "lib_widgets_genre_chip_genrechip",
-      "community_name": "package:flutter/material.dart"
+      "community_name": "genre_chip.dart"
     },
     {
       "label": "genre",
@@ -15910,10 +15910,10 @@
       "source_file": "lib/widgets/genre_chip.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 37,
+      "community": 81,
       "norm_label": "genre",
       "id": "lib_widgets_genre_chip_genre",
-      "community_name": "package:flutter/material.dart"
+      "community_name": "genre_chip.dart"
     },
     {
       "label": "build",
@@ -15921,10 +15921,10 @@
       "source_file": "lib/widgets/genre_chip.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 37,
+      "community": 81,
       "norm_label": "build",
       "id": "lib_widgets_genre_chip_build",
-      "community_name": "package:flutter/material.dart"
+      "community_name": "genre_chip.dart"
     },
     {
       "label": "../screens/genres/genre_discovery_screen.dart",
@@ -15932,10 +15932,10 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 37,
+      "community": 81,
       "norm_label": "../screens/genres/genre_discovery_screen.dart",
       "id": "screens_genres_genre_discovery_screen_dart",
-      "community_name": "package:flutter/material.dart"
+      "community_name": "genre_chip.dart"
     },
     {
       "label": "mobile_ad_banner.dart",
@@ -47086,5 +47086,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "82153fbdd9544fe2d4948fe3d3e1f615ae3afb3b"
+  "built_at_commit": "78c6369fa9d27a7466dd16448c34751bffeadf81"
 }

@@ -586,6 +586,8 @@ Flutter must:
 - display DJ and track candidates
 - allow authenticated users to vote in-app
 - clearly show whether the user has already voted
+- require a registered, signed-in app account; guests cannot vote
+- ask separately about HUHS newsletter subscription and call the existing Mailchimp flow only after explicit consent
 - show results only according to the server-defined visibility policy
 
 The backend must enforce voting windows, authentication, duplicate-vote prevention, and category limits. Prefer one authenticated user vote per category by default. Before implementation, decide whether votes can be changed, when results become public, what audit data is retained, and how suspicious voting is moderated.

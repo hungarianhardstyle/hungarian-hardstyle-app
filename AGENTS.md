@@ -680,6 +680,8 @@ Confirmed annual voting direction for v0.99.99:
 - Flutter must list active voting categories and candidates and allow votes to be submitted in-app.
 - Flutter Home must show a prominent button for the active voting season; WordPress/admin configuration must be able to turn it on or off, and it must be hidden when no season is active.
 - Voting should use authenticated app users when Google sign-in is available, with server-side one-user/one-vote enforcement per category unless a season explicitly defines different rules.
+- Voting must require a registered, signed-in app account; guests cannot open or submit a vote.
+- Before submitting a vote, ask separately whether the user wants the HUHS newsletter. Only an explicit yes may call the existing Mailchimp subscription flow; voting must remain independent from newsletter consent.
 - The API must enforce voting windows and duplicate-vote protection server-side; Flutter validation alone is not sufficient.
 - Define result visibility (`live`, `hidden until close`, or `admin only`), vote correction rules, audit data, abuse protection, and privacy before launch.
 - Provide a complete private admin summary/dashboard with totals and per-category results. It must never be exposed by a public REST endpoint or displayed to normal app users.

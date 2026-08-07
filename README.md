@@ -448,6 +448,8 @@ Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and
 - [ ] authenticated one-user/one-vote enforcement
 - [ ] private admin dashboard and explicitly published public results
 - [ ] add a prominent Home button for the active voting season, controlled by an admin on/off setting and hidden when voting is inactive
+- [ ] require a registered, signed-in app account before voting
+- [ ] ask separately whether the voter wants the HUHS newsletter; only explicit consent may trigger the existing Mailchimp subscription flow
 
 ### v1.5 — Hardstyle Revolution Store
 
