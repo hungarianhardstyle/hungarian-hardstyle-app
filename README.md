@@ -151,7 +151,7 @@ v0.99.8 is complete and closed. The final ARM64 debug test APK is `build/HUHS-v0
 
 The Label tab is live between Chat and Több. It reads WordPress-managed release records with title, clickable multiple artists, cover, genre, 60-second preview playback and Spotify, Apple Music, Beatport, Hardstyle.com and YouTube links. The uploaded MP3/WAV is only a temporary source: FFmpeg creates a preview from the 30th second, then the source is deleted. No full-track download, cart or purchase flow is included. ARM64 debug APK: `build/HUHS-v0.99.89+1-arm64-debug.apk`. The later paid music store will be implemented inside this Label catalog.
 
-### v0.99.90 — HUHS Vezérlőközpont bugfixek (implementáció kész; telefonos ellenőrzésre vár)
+### v0.99.90 — HUHS Vezérlőközpont bugfixek (lezárva, 2026-08-07)
 
 A korábbi build-ek továbbra is lezártak; ezek újonnan felfedezett hibák a következő buildhez:
 
@@ -162,7 +162,7 @@ A korábbi build-ek továbbra is lezártak; ezek újonnan felfedezett hibák a k
 - [x] A vezérlőközpont életciklus- és párbeszédablak-kezelése védett a `_dependents.isEmpty` assertion ellen.
 - [x] Elvégezve a célzott UX-, accessibility- és layout-polish: térközök, feliratok, vezérlők, loading/error állapotok és visszafogott működés ellenőrzése.
 
-Az ARM64 debug APK telefonos ellenőrzése még szükséges a végleges lezáráshoz. A HUHS Mobile API csomag frissített verziója `build/huhs-mobile-api-2.4.37.zip`.
+Telefonon ellenőrizve, a v0.99.90 lezárható. ARM64 debug APK: `build/HUHS-v0.99.90+3-arm64-debug.apk`. A HUHS Mobile API frissített csomagja `build/huhs-mobile-api-2.4.37.zip`.
 
 ### v0.99.7 — Community follow-up (complete)
 

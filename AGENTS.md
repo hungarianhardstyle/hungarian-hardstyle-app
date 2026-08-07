@@ -447,7 +447,7 @@ v0.99.8 is complete and closed. Final ARM64 debug test APK: `build/HUHS-v0.99.8+
 
 v0.99.89 is complete. The Label tab is between Chat and Több and includes WordPress release records, clickable multiple artists, cover, genre, external links and preview playback. MP3/WAV uploads are temporary sources only: FFmpeg creates a maximum 60-second preview from the 30th second and the source is deleted. Full-track downloads, buying and a separate store are excluded. Future paid music sales will extend this same Label catalog.
 
-### v0.99.90 - HUHS Vezérlőközpont bugfixek (implementáció kész; telefonos ellenőrzésre vár)
+### v0.99.90 - HUHS Vezérlőközpont bugfixek (complete; 2026-08-07)
 
 All previous builds remain complete and closed. Newly discovered issues recorded for v0.99.90:
 
@@ -458,7 +458,7 @@ All previous builds remain complete and closed. Newly discovered issues recorded
 - [x] Guard the controller lifecycle and dialogs against the `_dependents.isEmpty` assertion path.
 - [x] Complete the targeted UX, accessibility and layout polish pass.
 
-The ARM64 debug APK still requires the owner's phone verification before v0.99.90 is finally closed. The updated existing HUHS Mobile API package is `build/huhs-mobile-api-2.4.37.zip`.
+The owner phone-verified the fixes. v0.99.90 is closed. ARM64 debug APK: `build/HUHS-v0.99.90+3-arm64-debug.apk`. The updated existing HUHS Mobile API package is `build/huhs-mobile-api-2.4.37.zip`.
 
 ### v0.99.8 - User profile navigation and community details (closed)
 

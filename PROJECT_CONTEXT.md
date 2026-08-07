@@ -968,7 +968,7 @@ v0.99.8 is closed after the final community fixes. The final ARM64 debug test AP
 - A build lezárt: ARM64 debug APK: `build/HUHS-v0.99.89+1-arm64-debug.apk`.
 - A későbbi fizetős zeneértékesítés ugyanebbe a Label katalógusba kerül; külön katalógus vagy külön Store-rész nem készül.
 
-### v0.99.90 - HUHS Vezérlőközpont bugfixek (implementáció kész; telefonos ellenőrzésre vár)
+### v0.99.90 - HUHS Vezérlőközpont bugfixek (lezárva, 2026-08-07)
 
 A korábbi build-ek késznek és lezártnak tekintendők. A következő hibákat a v0.99.90-ben kell kezelni:
 
@@ -979,4 +979,4 @@ A korábbi build-ek késznek és lezártnak tekintendők. A következő hibákat
 - [x] A vezérlőközpont életciklus- és dialóguskezelése védi a `_dependents.isEmpty` assertion útvonalát.
 - [x] A célzott UX-, accessibility- és layout-polish elkészült.
 
-Az ARM64 debug APK telefonos ellenőrzése még hátravan a build végleges lezárásához. Az aktív, meglévő HUHS Mobile API frissített csomagja `2.4.37` (`build/huhs-mobile-api-2.4.37.zip`).
+Telefonon ellenőrizve és lezárva. ARM64 debug APK: `build/HUHS-v0.99.90+3-arm64-debug.apk`. Az aktív, meglévő HUHS Mobile API frissített csomagja `2.4.37` (`build/huhs-mobile-api-2.4.37.zip`).

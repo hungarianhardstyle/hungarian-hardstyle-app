@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `096bc295`
+- Built from commit: `82153fbd`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -85,16 +85,16 @@
 - package:cached_network_image/cached_network_image.dart
 - package:flutter_riverpod/flutter_riverpod.dart
 - State
+- FlutterMacOS
 - events_screen.dart
-- ios/RunnerTests/RunnerTests.swift
 - AppDelegate
 - faq.dart
 - List
 - profile_submission_provider.dart
 - image_saver.dart
 - favorites_screen.dart
-- FlutterMacOS
 - dart:async
+- ios/RunnerTests/RunnerTests.swift
 - ../core/navigation/in_app_browser.dart
 - SubmissionImage
 - AppDelegate
@@ -107,8 +107,8 @@
 - _EventSubmissionScreenState
 - OpenAPITests
 - _GenreDiscoveryScreenState
-- profile_submission_test.dart
 - post_test.dart
+- profile_submission_test.dart
 - hungarian-hardstyle-newsroom/app/__init__.py
 - newsroom/app/__init__.py
 - @hungarianhardstyle
@@ -429,13 +429,13 @@ Nodes (7): enableTestAds, package:flutter_riverpod/flutter_riverpod.dart, packag
 Cohesion: 0.31
 Nodes (9): CommunityPublicProfileScreen, _CommunityPublicProfileScreenState, BrandLoadingIndicator, _BrandLoadingIndicatorState, StartupGate, _StartupGateState, SingleTickerProviderStateMixin, State (+1 more)
 
-### Community 71 - "events_screen.dart"
+### Community 71 - "FlutterMacOS"
+Cohesion: 0.38
+Nodes (4): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow
+
+### Community 72 - "events_screen.dart"
 Cohesion: 0.25
 Nodes (7): event_submission_screen.dart, _EventsHeader, onSubmit, _openSubmission, showSubmit, ../../providers/community_provider.dart, ../../widgets/event_card.dart
-
-### Community 72 - "ios/RunnerTests/RunnerTests.swift"
-Cohesion: 0.38
-Nodes (4): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit
 
 ### Community 73 - "AppDelegate"
 Cohesion: 0.25
@@ -461,13 +461,13 @@ Nodes (7): _channel, _dio, ImageSaver, saveFromUrl, package:dio/dio.dart, packag
 Cohesion: 0.29
 Nodes (6): ../artists/artist_detail_screen.dart, ../events/event_detail_screen.dart, _label, ../news/news_detail_screen.dart, ../organizers/organizer_detail_screen.dart, ../../providers/events_provider.dart
 
-### Community 79 - "FlutterMacOS"
-Cohesion: 0.32
-Nodes (5): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow, XCTest
-
-### Community 80 - "dart:async"
+### Community 79 - "dart:async"
 Cohesion: 0.29
 Nodes (6): dart:async, getEvents, getEventSubmissionGenres, refreshTimer, service, ../models/event.dart
+
+### Community 80 - "ios/RunnerTests/RunnerTests.swift"
+Cohesion: 0.32
+Nodes (5): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit, XCTest
 
 ### Community 81 - "../core/navigation/in_app_browser.dart"
 Cohesion: 0.33
