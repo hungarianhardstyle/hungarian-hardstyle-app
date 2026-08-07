@@ -21,14 +21,23 @@ class VotingService {
     return (await _firestore.collection('voting_votes').doc(id).get()).exists;
   }
 
-  Future<void> submitVote({
+  Future<void> submitVotes({
     required int seasonId,
     required String category,
-    required int candidateId,
+    required List<int> candidateIds,
     required bool newsletterConsent,
     required WordpressService wordpress,
   }) async {
     final user = _registeredUser();
+    if (candidateIds.isEmpty) throw StateError('Legalább egy jelöltet válassz.');
+    final maxVotes = {
+      'hungarian_hardstyle_dj': 5,
+      'hungarian_hardcore_dj': 3,
+      'hungarian_track': 2,
+      'hungarian_organizer': 1,
+      'international_dj': 3,
+    }[category] ?? 1;
+    if (candidateIds.length > maxVotes) throw StateError('Legfeljebb $maxVotes jelöltet választhatsz.');
     final id = '${seasonId}_${category}_${user.uid}';
     if (newsletterConsent && user.email != null && user.email!.trim().isNotEmpty) {
       await wordpress.subscribeNewsletter(email: user.email!, consent: true);
@@ -41,7 +50,7 @@ class VotingService {
       transaction.set(ref, {
         'seasonId': seasonId,
         'category': category,
-        'candidateId': candidateId,
+        'candidateIds': candidateIds,
         'userId': user.uid,
         'createdAt': FieldValue.serverTimestamp(),
       });

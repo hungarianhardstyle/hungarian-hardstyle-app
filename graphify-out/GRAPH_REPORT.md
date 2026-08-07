@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 1828 nodes · 2554 edges · 101 communities (94 shown, 7 thin omitted)
+- 1830 nodes · 2556 edges · 105 communities (97 shown, 8 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.77)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7f7b3959`
+- Built from commit: `aeea04ca`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -19,87 +19,91 @@
 - Win32Window
 - wordpress_service.dart
 - post.dart
-- genre_discovery_screen.dart
-- wordpress_admin_screen.dart
+- artists_screen.dart
 - releases_screen.dart
-- event_submission_screen.dart
 - event.dart
-- news_provider.dart
 - community_users_screen.dart
 - artist.dart
+- event_submission_screen.dart
+- wordpress_admin_screen.dart
 - widget_test.dart
 - favorites_provider.dart
+- startup_gate.dart
+- event_card.dart
 - organizer.dart
+- genre_discovery_screen.dart
 - artist_submission_screen.dart
 - hungarian-hardstyle-newsroom/app/main.py
 - my_application.cc
 - organizer_submission_screen.dart
-- communityServiceProvider
+- event_detail_screen.dart
+- news_provider.dart
 - more_screen.dart
 - RadioPlaybackService
-- main_navigation.dart
-- voting.dart
 - settings_screen.dart
 - newsroom/app/main.py
-- artists_screen.dart
-- ConsumerWidget
-- event_detail_screen.dart
+- voting.dart
 - post_embed_card.dart
 - profile_submission.dart
+- radio_player_bar.dart
 - html_linkifier.dart
 - package:flutter/material.dart
 - event_submission.dart
 - tagged_news_screen.dart
-- radio_player_bar.dart
-- artist_detail_screen.dart
+- ConsumerWidget
+- submission_image_picker.dart
+- MaterialPageRoute
+- news_screen.dart
 - push_notification_service.dart
-- startup_gate.dart
 - GeneratedPluginRegistrant.swift
-- events_screen.dart
 - mobile_ad_banner.dart
+- news_detail_screen.dart
+- main_navigation.dart
 - index.js
 - in_app_browser.dart
-- news_screen.dart
-- organizers_screen.dart
 - community_post.dart
+- newsletter_screen.dart
+- organizer_detail_screen.dart
 - release.dart
 - home_screen.dart
-- organizer_detail_screen.dart
-- faq_screen.dart
+- communityServiceProvider
+- favorites_screen.dart
 - main.dart
 - static const
 - gallery_screen.dart
-- brand_loading_indicator.dart
-- package:cached_network_image/cached_network_image.dart
-- voting_service.dart
+- faq_screen.dart
+- organizers_screen.dart
 - wWinMain
-- news_detail_screen.dart
-- event_card.dart
 - package.json
-- favorite_button.dart
-- MaterialPageRoute
+- voting_screen.dart
 - manifest.json
 - hungarian-hardstyle-newsroom/app/graphics.py
 - State
+- _VotingScreenState
 - about_screen.dart
 - spotify_player.dart
+- events_screen.dart
+- voting_service.dart
 - social_contact_screen.dart
-- List
 - FlutterMacOS
 - AppDelegate
 - faq.dart
+- List
 - news_provider.dart
 - package:flutter_riverpod/flutter_riverpod.dart
-- community_provider.dart
+- package:cloud_firestore/cloud_firestore.dart
 - dart:async
 - ios/RunnerTests/RunnerTests.swift
-- SubmissionImage
 - AppDelegate
-- artists_provider.dart
+- community_provider.dart
+- _EventSubmissionScreenState
 - RunnerTests
+- app_navigator.dart
 - genre_chip.dart
 - RegisterGeneratedPlugins
+- voting_provider.dart
 - OpenAPITests
+- PaginatedNewsNotifier
 - hungarian-hardstyle-newsroom/app/__init__.py
 - newsroom/app/__init__.py
 - @hungarianhardstyle
@@ -124,17 +128,17 @@
   windows/runner/main.cpp → windows/runner/utils.cpp
 - `Win32Window::Win32Window()` --calls--> `Destroy`  [INFERRED]
   windows/runner/win32_window.cpp → windows/runner/win32_window.h
-- `build` --references--> `communityServiceProvider`  [EXTRACTED]
-  lib/screens/community/community_screen.dart → lib/providers/community_provider.dart
 - `CommunityAvatarButton` --references--> `communityServiceProvider`  [EXTRACTED]
   lib/screens/community/community_screen.dart → lib/providers/community_provider.dart
 - `_delete` --references--> `communityServiceProvider`  [EXTRACTED]
+  lib/screens/community/community_screen.dart → lib/providers/community_provider.dart
+- `_moderateUser` --references--> `communityServiceProvider`  [EXTRACTED]
   lib/screens/community/community_screen.dart → lib/providers/community_provider.dart
 
 ## Import Cycles
 - None detected.
 
-## Communities (101 total, 7 thin omitted)
+## Communities (105 total, 8 thin omitted)
 
 ### Community 0 - "community_service.dart"
 Cohesion: 0.02
@@ -156,113 +160,113 @@ Nodes (50): Dio, _allowedImageExtensions, _cloudinaryCloudName, _cloudinaryUploa
 Cohesion: 0.04
 Nodes (47): alt, categories, categoryIds, _closestFigure, content, date, _decodeHtmlText, description (+39 more)
 
-### Community 5 - "genre_discovery_screen.dart"
+### Community 5 - "artists_screen.dart"
 Cohesion: 0.05
-Nodes (46): wordpressServiceProvider, votingServiceProvider, _artistHasMore, _artistPage, _artists, build, child, createState (+38 more)
+Nodes (44): artist_detail_screen.dart, ArtistListQuery get, Artist, artistDetailProvider, ArtistListQuery, artistsProvider, getArtist, getArtists (+36 more)
 
-### Community 6 - "wordpress_admin_screen.dart"
-Cohesion: 0.04
-Nodes (45): _adminField, build, _busyIds, _confirm, _creatableSections, _createResource, createState, _customSections (+37 more)
-
-### Community 7 - "releases_screen.dart"
+### Community 6 - "releases_screen.dart"
 Cohesion: 0.05
 Nodes (41): AudioPlayer, Duration, HuhsRelease, ReleaseTrack, ReleaseQuery, releasesProvider, build, _label (+33 more)
 
-### Community 8 - "event_submission_screen.dart"
-Cohesion: 0.05
-Nodes (43): formatEventDate, formatHungarianDate, eventSubmissionGenresProvider, _addressController, build, _cityController, createState, _descriptionController (+35 more)
-
-### Community 9 - "event.dart"
+### Community 7 - "event.dart"
 Cohesion: 0.05
 Nodes (43): bool get, 0, artists, _decodeHtmlText, description, endDate, endTime, EventArtist (+35 more)
 
-### Community 10 - "news_provider.dart"
-Cohesion: 0.05
-Nodes (41): FormState, categories, copyWith, error, getLatestPosts, _getPostsPage, hasMore, isLoading (+33 more)
-
-### Community 11 - "community_users_screen.dart"
+### Community 8 - "community_users_screen.dart"
 Cohesion: 0.06
 Nodes (40): DocumentSnapshot, _Composer, _PostAuthorLabels, _ProfileAvatar, _action, CommunityBlockedUsersScreen, CommunityConnectionsScreen, CommunityPublicFriendsScreen (+32 more)
 
-### Community 12 - "artist.dart"
+### Community 9 - "artist.dart"
 Cohesion: 0.05
 Nodes (36): 0, ArtistCategory, ArtistsPage, biography, bookingEmail, bookingViaHuhs, categories, city (+28 more)
 
-### Community 13 - "widget_test.dart"
+### Community 10 - "event_submission_screen.dart"
+Cohesion: 0.05
+Nodes (36): _addressController, _cityController, createState, _descriptionController, dispose, _emailController, _endDate, _endTime (+28 more)
+
+### Community 11 - "wordpress_admin_screen.dart"
+Cohesion: 0.06
+Nodes (34): _adminField, build, _busyIds, _confirm, _creatableSections, _createResource, createState, _customSections (+26 more)
+
+### Community 12 - "widget_test.dart"
 Cohesion: 0.06
 Nodes (24): package:flutter_test/flutter_test.dart, package:hungarian_hardstyle_app/core/content/html_linkifier.dart, package:hungarian_hardstyle_app/main.dart, package:hungarian_hardstyle_app/models/artist.dart, package:hungarian_hardstyle_app/models/event.dart, package:hungarian_hardstyle_app/models/event_submission.dart, package:hungarian_hardstyle_app/models/organizer.dart, package:hungarian_hardstyle_app/models/post.dart (+16 more)
 
-### Community 14 - "favorites_provider.dart"
+### Community 13 - "favorites_provider.dart"
 Cohesion: 0.06
 Nodes (30): ChangeNotifier, dart:convert, _auth, _authSubscription, clearAll, _clearCloud, contains, _databaseId (+22 more)
 
-### Community 15 - "organizer.dart"
+### Community 14 - "startup_gate.dart"
+Cohesion: 0.07
+Nodes (28): AnimationController, BrandLoadingIndicator, _BrandLoadingIndicatorState, build, _controller, createState, didChangeDependencies, dispose (+20 more)
+
+### Community 15 - "event_card.dart"
+Cohesion: 0.09
+Nodes (26): ../core/content/date_formatters.dart, double?, favorite_button.dart, genre_chip.dart, HuhsEvent, FavoriteKind, build, event (+18 more)
+
+### Community 16 - "organizer.dart"
 Cohesion: 0.07
 Nodes (29): event.dart, 0, city, country, description, excerpt, false, featured (+21 more)
 
-### Community 16 - "artist_submission_screen.dart"
+### Community 17 - "genre_discovery_screen.dart"
+Cohesion: 0.07
+Nodes (29): _artistHasMore, _artistPage, _artists, build, child, createState, dispose, _Empty (+21 more)
+
+### Community 18 - "artist_submission_screen.dart"
 Cohesion: 0.07
 Nodes (28): _background, _biography, _bookingEmail, _bookingViaHuhs, _categories, _city, _contactEmail, _country (+20 more)
 
-### Community 17 - "hungarian-hardstyle-newsroom/app/main.py"
+### Community 19 - "hungarian-hardstyle-newsroom/app/main.py"
 Cohesion: 0.14
 Nodes (21): BaseHTTPMiddleware, create_wordpress_draft(), custom_openapi(), health(), HealthResponse, Any, BaseModel, get (+13 more)
 
-### Community 18 - "my_application.cc"
+### Community 20 - "my_application.cc"
 Cohesion: 0.09
 Nodes (22): FlPluginRegistry, FlView, GApplication, gboolean, gchar, GObject, GtkApplication, fl_register_plugins() (+14 more)
 
-### Community 19 - "organizer_submission_screen.dart"
+### Community 21 - "organizer_submission_screen.dart"
 Cohesion: 0.08
 Nodes (25): class, build, _city, _contactEmail, _country, createState, _description, dispose (+17 more)
 
-### Community 20 - "communityServiceProvider"
-Cohesion: 0.12
-Nodes (25): ConsumerState, ConsumerStatefulWidget, communityServiceProvider, CommunityAdminScreen, _CommunityAdminScreenState, CommunityProfileScreen, _CommunityProfileScreenState, _delete (+17 more)
+### Community 22 - "event_detail_screen.dart"
+Cohesion: 0.08
+Nodes (24): Future, HuhsEvent get, _ArtistLinks, artists, _attendanceBusy, _attendanceFuture, _attendanceState, createState (+16 more)
 
-### Community 21 - "more_screen.dart"
+### Community 23 - "news_provider.dart"
+Cohesion: 0.08
+Nodes (24): categories, copyWith, error, getLatestPosts, _getPostsPage, hasMore, isLoading, isLoadingMore (+16 more)
+
+### Community 24 - "more_screen.dart"
 Cohesion: 0.08
 Nodes (23): about_screen.dart, ../artists/artists_screen.dart, community_users_screen.dart, donate_screen.dart, faq_screen.dart, favorites_screen.dart, icon, _MenuCard (+15 more)
 
-### Community 22 - "RadioPlaybackService"
+### Community 25 - "RadioPlaybackService"
 Cohesion: 0.13
 Nodes (9): MainActivity, RadioPlaybackService, FlutterEngine, FlutterFragmentActivity, IBinder, Intent, MediaPlayer, Notification (+1 more)
 
-### Community 23 - "main_navigation.dart"
-Cohesion: 0.09
-Nodes (22): community/community_screen.dart, events/events_screen.dart, home/home_screen.dart, appNavigatorKey, appScaffoldMessengerKey, build, createState, _currentIndex (+14 more)
-
-### Community 24 - "voting.dart"
-Cohesion: 0.08
-Nodes (22): active, artist, candidates, categories, fromJson, id, image, inactive (+14 more)
-
-### Community 25 - "settings_screen.dart"
+### Community 26 - "settings_screen.dart"
 Cohesion: 0.09
 Nodes (23): _biometricEnabled, build, _clearCache, _clearingCache, createState, _eventNotificationsEnabled, _eventNotificationsKey, initState (+15 more)
 
-### Community 26 - "newsroom/app/main.py"
+### Community 27 - "newsroom/app/main.py"
 Cohesion: 0.14
 Nodes (20): cover(), fetch(), generate(), Image, Path, render_psd(), create_wordpress_draft(), custom_openapi() (+12 more)
 
-### Community 27 - "artists_screen.dart"
+### Community 28 - "voting.dart"
 Cohesion: 0.09
-Nodes (22): artist_detail_screen.dart, ArtistListQuery get, artistsProvider, artist, _ArtistCard, _ArtistError, ArtistsScreen, _ArtistsScreenState (+14 more)
+Nodes (21): int get, active, artist, candidates, categories, fromJson, id, image (+13 more)
 
-### Community 28 - "ConsumerWidget"
-Cohesion: 0.12
-Nodes (22): ConsumerWidget, communityAuthProvider, eventsProvider, newsProvider, votingProvider, CommunityAvatarButton, _openPlannedEvent, _PostAuthorAvatar (+14 more)
-
-### Community 29 - "event_detail_screen.dart"
-Cohesion: 0.09
-Nodes (22): Future, HuhsEvent get, _ArtistLinks, artists, _attendanceBusy, _attendanceFuture, _attendanceState, createState (+14 more)
-
-### Community 30 - "post_embed_card.dart"
+### Community 29 - "post_embed_card.dart"
 Cohesion: 0.09
 Nodes (21): PostEmbed, _after, build, _controller, createState, embed, _embedUri, _ExternalLink (+13 more)
 
-### Community 31 - "profile_submission.dart"
+### Community 30 - "profile_submission.dart"
 Cohesion: 0.09
 Nodes (21): artistCategories, ArtistSubmission, biography, bookingEmail, bookingViaHuhs, categories, city, contactEmail (+13 more)
+
+### Community 31 - "radio_player_bar.dart"
+Cohesion: 0.11
+Nodes (19): dart:io, build, _channel, createState, dispose, initState, _metadataTimer, _muted (+11 more)
 
 ### Community 32 - "html_linkifier.dart"
 Cohesion: 0.10
@@ -280,149 +284,149 @@ Nodes (18): contactEmail, description, endDate, endTime, EventSubmission, eventU
 Cohesion: 0.11
 Nodes (18): build, createState, dispose, _error, _hasMore, _hasTag, initState, _loading (+10 more)
 
-### Community 36 - "radio_player_bar.dart"
+### Community 36 - "ConsumerWidget"
+Cohesion: 0.18
+Nodes (15): ConsumerWidget, communityAuthProvider, eventsProvider, newsProvider, CommunityAvatarButton, _openPlannedEvent, _PostAuthorAvatar, build (+7 more)
+
+### Community 37 - "submission_image_picker.dart"
 Cohesion: 0.11
-Nodes (17): dart:io, build, _channel, createState, dispose, initState, _metadataTimer, _muted (+9 more)
+Nodes (16): dart:typed_data, bytes, name, SubmissionImage, build, helperText, image, maxBytes (+8 more)
 
-### Community 37 - "artist_detail_screen.dart"
-Cohesion: 0.12
-Nodes (17): Artist, artistDetailProvider, artistClaimStatusProvider, artist, _ArtistContent, ArtistDetailScreen, artistId, _biographyHtml (+9 more)
+### Community 38 - "MaterialPageRoute"
+Cohesion: 0.18
+Nodes (11): _openAuthorProfile, _openProfile, _readOnlyProfileWidgets, _special, build, _artistContent, _postContent, build (+3 more)
 
-### Community 38 - "push_notification_service.dart"
+### Community 39 - "news_screen.dart"
+Cohesion: 0.14
+Nodes (17): paginatedNewsProvider, build, createState, dispose, initState, NewsScreen, _NewsScreenState, _onScroll (+9 more)
+
+### Community 40 - "push_notification_service.dart"
 Cohesion: 0.11
 Nodes (17): _api, _authSubscription, initialize, _initialized, PushNotificationService, _showForegroundMessage, _storeToken, _syncStoredToken (+9 more)
 
-### Community 39 - "startup_gate.dart"
-Cohesion: 0.12
-Nodes (17): _animationDuration, _announcementUrl, build, _controller, createState, didChangeDependencies, _dismissedAnnouncementUrl, dispose (+9 more)
-
-### Community 40 - "GeneratedPluginRegistrant.swift"
+### Community 41 - "GeneratedPluginRegistrant.swift"
 Cohesion: 0.12
 Nodes (16): audio_session, cloud_firestore, cloud_functions, file_selector_macos, firebase_auth, firebase_core, firebase_messaging, Foundation (+8 more)
-
-### Community 41 - "events_screen.dart"
-Cohesion: 0.12
-Nodes (14): ../artists/artist_detail_screen.dart, event_submission_screen.dart, ../events/event_detail_screen.dart, _EventsHeader, onSubmit, _openSubmission, showSubmit, _label (+6 more)
 
 ### Community 42 - "mobile_ad_banner.dart"
 Cohesion: 0.15
 Nodes (15): BannerAd?, int?, adsEnabledProvider, _ad, build, createState, dispose, _ensureAd (+7 more)
 
-### Community 43 - "index.js"
+### Community 43 - "news_detail_screen.dart"
+Cohesion: 0.12
+Nodes (14): ../../core/content/html_linkifier.dart, ../gallery/gallery_screen.dart, formatEventDate, formatHungarianDate, build, _formatDate, NewsDetailScreen, _openLink (+6 more)
+
+### Community 44 - "main_navigation.dart"
+Cohesion: 0.12
+Nodes (15): events/events_screen.dart, home/home_screen.dart, build, createState, _currentIndex, _navigatorKeys, _openNewsTab, _tabCount (+7 more)
+
+### Community 45 - "index.js"
 Cohesion: 0.12
 Nodes (11): admin, callWindows, db, { defineSecret }, functions, { getFirestore }, { onDocumentWritten }, submissionRoutes (+3 more)
 
-### Community 44 - "in_app_browser.dart"
+### Community 46 - "in_app_browser.dart"
 Cohesion: 0.12
 Nodes (15): build, _controller, createState, _handleSystemBack, initialUri, initState, normalizedUrl, of (+7 more)
-
-### Community 45 - "news_screen.dart"
-Cohesion: 0.16
-Nodes (15): paginatedNewsProvider, build, createState, dispose, initState, NewsScreen, _NewsScreenState, _onScroll (+7 more)
-
-### Community 46 - "organizers_screen.dart"
-Cohesion: 0.14
-Nodes (15): organizersProvider, build, createState, dispose, onRetry, _onSearchChanged, organizer, _OrganizerCard (+7 more)
 
 ### Community 47 - "community_post.dart"
 Cohesion: 0.13
 Nodes (14): DateTime, authorAccessRole, authorId, authorImageUrl, authorName, authorRole, CommunityPost, createdAt (+6 more)
 
-### Community 48 - "release.dart"
+### Community 48 - "newsletter_screen.dart"
+Cohesion: 0.14
+Nodes (14): FormState, build, _consent, createState, dispose, _emailController, _formKey, _hostedSignupUrl (+6 more)
+
+### Community 49 - "organizer_detail_screen.dart"
+Cohesion: 0.14
+Nodes (14): OrganizerProfile, organizerDetailProvider, build, _descriptionHtml, _escapeHtml, fallbackName, _MissingOrganizer, name (+6 more)
+
+### Community 50 - "release.dart"
 Cohesion: 0.13
 Nodes (14): artists, coverUrl, fromJson, genre, id, links, name, previewUrl (+6 more)
 
-### Community 49 - "home_screen.dart"
-Cohesion: 0.14
-Nodes (14): _controller, createState, dispose, initState, _NewsSlider, _NewsSliderState, onShowMoreNews, _page (+6 more)
-
-### Community 50 - "organizer_detail_screen.dart"
+### Community 51 - "home_screen.dart"
 Cohesion: 0.15
-Nodes (13): OrganizerProfile, organizerDetailProvider, build, _descriptionHtml, _escapeHtml, fallbackName, _MissingOrganizer, name (+5 more)
+Nodes (13): community/community_screen.dart, _controller, createState, dispose, initState, _NewsSlider, _NewsSliderState, onShowMoreNews (+5 more)
 
-### Community 51 - "faq_screen.dart"
-Cohesion: 0.18
-Nodes (13): build, _category, createState, _ErrorState, faqProvider, FaqScreen, _FaqScreenState, message (+5 more)
+### Community 52 - "communityServiceProvider"
+Cohesion: 0.12
+Nodes (24): ConsumerState, ConsumerStatefulWidget, communityPostsProvider, communityServiceProvider, build, CommunityAdminScreen, _CommunityAdminScreenState, CommunityProfileScreen (+16 more)
 
-### Community 52 - "main.dart"
+### Community 53 - "favorites_screen.dart"
+Cohesion: 0.17
+Nodes (12): ../artists/artist_detail_screen.dart, ../events/event_detail_screen.dart, favoritesProvider, build, FavoritesScreen, _label, _OrganizerContent, build (+4 more)
+
+### Community 54 - "main.dart"
 Cohesion: 0.15
 Nodes (12): core/navigation/app_navigator.dart, core/theme/app_theme.dart, build, HungarianHardstyleApp, initializeDateFormatting, _initializePushNotifications, main, package:firebase_core/firebase_core.dart (+4 more)
 
-### Community 53 - "static const"
+### Community 55 - "static const"
 Cohesion: 0.15
 Nodes (11): AppTheme, backgroundDecoration, _channel, _dio, ImageSaver, saveFromUrl, package:dio/dio.dart, package:flutter/services.dart (+3 more)
 
-### Community 54 - "gallery_screen.dart"
+### Community 56 - "gallery_screen.dart"
 Cohesion: 0.17
 Nodes (12): build, _controller, createState, _current, dispose, GalleryScreen, _GalleryScreenState, images (+4 more)
 
-### Community 55 - "brand_loading_indicator.dart"
-Cohesion: 0.18
-Nodes (11): AnimationController, BrandLoadingIndicator, _BrandLoadingIndicatorState, build, _controller, createState, didChangeDependencies, dispose (+3 more)
+### Community 57 - "faq_screen.dart"
+Cohesion: 0.19
+Nodes (12): build, _category, createState, _ErrorState, faqProvider, FaqScreen, _FaqScreenState, message (+4 more)
 
-### Community 56 - "package:cached_network_image/cached_network_image.dart"
-Cohesion: 0.21
-Nodes (10): ../core/content/date_formatters.dart, favorite_button.dart, build, FeaturedNewsCard, post, build, NewsCard, post (+2 more)
-
-### Community 57 - "voting_service.dart"
+### Community 58 - "organizers_screen.dart"
 Cohesion: 0.17
-Nodes (10): FirebaseAuth, FirebaseFirestore, _auth, _firestore, hasVoted, _registeredUser, submitVote, VotingService (+2 more)
+Nodes (12): createState, dispose, onRetry, _onSearchChanged, organizer, _OrganizerCard, _OrganizerError, OrganizersScreen (+4 more)
 
-### Community 58 - "wWinMain"
+### Community 59 - "wWinMain"
 Cohesion: 0.24
 Nodes (9): _In_, _In_opt_, vector, wWinMain(), string, wchar_t, CreateAndAttachConsole(), GetCommandLineArguments() (+1 more)
 
-### Community 59 - "news_detail_screen.dart"
-Cohesion: 0.18
-Nodes (10): ../../core/content/html_linkifier.dart, ../gallery/gallery_screen.dart, _formatDate, NewsDetailScreen, _openLink, post, package:flutter_html/flutter_html.dart, tagged_news_screen.dart (+2 more)
-
-### Community 60 - "event_card.dart"
-Cohesion: 0.18
-Nodes (10): double?, genre_chip.dart, HuhsEvent, build, event, EventCard, height, _visibleGenres (+2 more)
-
-### Community 61 - "package.json"
+### Community 60 - "package.json"
 Cohesion: 0.18
 Nodes (10): firebase-admin, firebase-functions, dependencies, firebase-admin, firebase-functions, engines, node, main (+2 more)
 
-### Community 62 - "favorite_button.dart"
-Cohesion: 0.20
-Nodes (10): FavoriteKind, favoritesProvider, build, _OrganizerContent, build, FavoriteButton, id, kind (+2 more)
-
-### Community 63 - "MaterialPageRoute"
+### Community 61 - "voting_screen.dart"
 Cohesion: 0.18
-Nodes (11): _openAuthorProfile, _openProfile, _readOnlyProfileWidgets, _special, build, _artistContent, _postContent, _open (+3 more)
+Nodes (10): _busyCategory, _category, createState, _link, _newsletterAsked, _newsletterConsent, _selected, _voted (+2 more)
 
-### Community 64 - "manifest.json"
+### Community 62 - "manifest.json"
 Cohesion: 0.18
 Nodes (10): background_color, description, display, icons, name, orientation, prefer_related_applications, short_name (+2 more)
 
-### Community 65 - "hungarian-hardstyle-newsroom/app/graphics.py"
+### Community 63 - "hungarian-hardstyle-newsroom/app/graphics.py"
 Cohesion: 0.33
 Nodes (8): cover(), fetch(), generate(), Image, Path, render_psd(), Fit, Path
 
-### Community 66 - "State"
+### Community 64 - "State"
 Cohesion: 0.27
-Nodes (10): InAppBrowserScreen, _InAppBrowserScreenState, CommunityPublicProfileScreen, _CommunityPublicProfileScreenState, PostEmbedCard, _PostEmbedCardState, RadioPlayerBar, _RadioPlayerBarState (+2 more)
+Nodes (10): InAppBrowserScreen, _InAppBrowserScreenState, MainNavigation, _MainNavigationState, CommunityPublicProfileScreen, _CommunityPublicProfileScreenState, PostEmbedCard, _PostEmbedCardState (+2 more)
 
-### Community 67 - "about_screen.dart"
+### Community 65 - "_VotingScreenState"
+Cohesion: 0.22
+Nodes (9): wordpressServiceProvider, votingServiceProvider, GenreDiscoveryScreen, _GenreDiscoveryScreenState, _vote, VotingScreen, _VotingScreenState, VotingService (+1 more)
+
+### Community 66 - "about_screen.dart"
 Cohesion: 0.20
 Nodes (9): AboutScreen, build, icon, _InfoTile, label, onTap, value, package:package_info_plus/package_info_plus.dart (+1 more)
 
-### Community 68 - "spotify_player.dart"
+### Community 67 - "spotify_player.dart"
 Cohesion: 0.22
 Nodes (9): build, _controller, createState, _expanded, initState, SpotifyPlayer, _SpotifyPlayerState, package:webview_flutter/webview_flutter.dart (+1 more)
 
-### Community 69 - "social_contact_screen.dart"
+### Community 68 - "events_screen.dart"
+Cohesion: 0.22
+Nodes (8): event_submission_screen.dart, _EventsHeader, onSubmit, _openSubmission, showSubmit, ../../providers/community_provider.dart, VoidCallback, ../../widgets/event_card.dart
+
+### Community 69 - "voting_service.dart"
+Cohesion: 0.22
+Nodes (8): FirebaseAuth, FirebaseFirestore, _auth, _firestore, hasVoted, _registeredUser, submitVotes, wordpress_service.dart
+
+### Community 70 - "social_contact_screen.dart"
 Cohesion: 0.22
 Nodes (8): IconData, build, icon, label, _LinkTile, onTap, SocialContactScreen, value
 
-### Community 70 - "List"
-Cohesion: 0.22
-Nodes (8): PostShortcode, build, PostShortcodeCard, postUrl, relatedPosts, shortcode, List, ../screens/news/news_detail_screen.dart
-
 ### Community 71 - "FlutterMacOS"
-Cohesion: 0.32
-Nodes (5): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow, XCTest
+Cohesion: 0.38
+Nodes (3): Cocoa, FlutterMacOS, RunnerTests
 
 ### Community 72 - "AppDelegate"
 Cohesion: 0.25
@@ -432,66 +436,78 @@ Nodes (6): FlutterImplicitEngineBridge, FlutterImplicitEngineDelegate, AppDelega
 Cohesion: 0.25
 Nodes (7): answer, category, FaqItem, fromJson, id, order, question
 
-### Community 74 - "news_provider.dart"
+### Community 74 - "List"
+Cohesion: 0.25
+Nodes (7): PostShortcode, build, PostShortcodeCard, postUrl, relatedPosts, shortcode, List
+
+### Community 75 - "news_provider.dart"
 Cohesion: 0.25
 Nodes (7): ProfileSubmissionOptions, profileSubmissionOptionsProvider, ArtistSubmissionScreen, _ArtistSubmissionScreenState, build, ../models/profile_submission.dart, news_provider.dart
 
-### Community 75 - "package:flutter_riverpod/flutter_riverpod.dart"
+### Community 76 - "package:flutter_riverpod/flutter_riverpod.dart"
 Cohesion: 0.25
 Nodes (6): enableTestAds, getOrganizer, getOrganizers, service, ../models/organizer.dart, package:flutter_riverpod/flutter_riverpod.dart
 
-### Community 76 - "community_provider.dart"
-Cohesion: 0.25
-Nodes (7): communityPostsProvider, watch, build, CommunityService, ../models/community_post.dart, package:firebase_auth/firebase_auth.dart, ../services/community_service.dart
+### Community 77 - "package:cloud_firestore/cloud_firestore.dart"
+Cohesion: 0.29
+Nodes (7): votingProvider, build, build, VotingSummaryScreen, package:cloud_firestore/cloud_firestore.dart, ../../providers/voting_provider.dart, QuerySnapshot
 
-### Community 77 - "dart:async"
+### Community 78 - "dart:async"
 Cohesion: 0.29
 Nodes (6): dart:async, getEvents, getEventSubmissionGenres, refreshTimer, service, ../models/event.dart
 
-### Community 78 - "ios/RunnerTests/RunnerTests.swift"
-Cohesion: 0.38
-Nodes (4): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit
-
-### Community 79 - "SubmissionImage"
-Cohesion: 0.33
-Nodes (5): dart:typed_data, bytes, name, SubmissionImage, Uint8List
+### Community 79 - "ios/RunnerTests/RunnerTests.swift"
+Cohesion: 0.32
+Nodes (5): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit, XCTest
 
 ### Community 80 - "AppDelegate"
 Cohesion: 0.47
 Nodes (4): FlutterAppDelegate, AppDelegate, Bool, NSApplication
 
-### Community 81 - "artists_provider.dart"
+### Community 81 - "community_provider.dart"
 Cohesion: 0.33
-Nodes (5): ArtistListQuery, getArtist, getArtists, service, ../models/artist.dart
+Nodes (5): watch, CommunityService, ../models/community_post.dart, package:firebase_auth/firebase_auth.dart, ../services/community_service.dart
 
-### Community 82 - "RunnerTests"
+### Community 82 - "_EventSubmissionScreenState"
 Cohesion: 0.40
-Nodes (3): RunnerTests, RunnerTests, XCTestCase
+Nodes (6): eventSubmissionGenresProvider, organizersProvider, build, EventSubmissionScreen, _EventSubmissionScreenState, build
 
-### Community 83 - "genre_chip.dart"
+### Community 84 - "app_navigator.dart"
+Cohesion: 0.40
+Nodes (4): appNavigatorKey, appScaffoldMessengerKey, NavigatorState, ScaffoldMessengerState
+
+### Community 85 - "genre_chip.dart"
 Cohesion: 0.40
 Nodes (4): build, genre, GenreChip, ../screens/genres/genre_discovery_screen.dart
 
-### Community 84 - "RegisterGeneratedPlugins"
+### Community 86 - "RegisterGeneratedPlugins"
+Cohesion: 0.33
+Nodes (5): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins(), MainFlutterWindow, NSWindow
+
+### Community 87 - "voting_provider.dart"
 Cohesion: 0.50
-Nodes (3): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins()
+Nodes (3): VotingSeason, watch, ../models/voting.dart
+
+### Community 89 - "PaginatedNewsNotifier"
+Cohesion: 0.67
+Nodes (3): PaginatedNewsNotifier, PaginatedNewsState, StateNotifier
 
 ## Knowledge Gaps
-- **1072 isolated node(s):** `functions`, `{ onDocumentWritten }`, `{ defineSecret }`, `admin`, `{ getFirestore }` (+1067 more)
+- **1073 isolated node(s):** `functions`, `{ onDocumentWritten }`, `{ defineSecret }`, `admin`, `{ getFirestore }` (+1068 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **8 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `SubmissionImage` connect `SubmissionImage` to `community_screen.dart`, `wordpress_admin_screen.dart`, `event_submission_screen.dart`, `artist_submission_screen.dart`, `organizer_submission_screen.dart`?**
+- **Why does `SubmissionImage` connect `submission_image_picker.dart` to `community_screen.dart`, `event_submission_screen.dart`, `artist_submission_screen.dart`, `organizer_submission_screen.dart`?**
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
-- **Why does `CommunityService` connect `community_provider.dart` to `community_service.dart`, `community_screen.dart`, `community_users_screen.dart`?**
-  _High betweenness centrality (0.006) - this node is a cross-community bridge._
-- **Why does `favoritesProvider` connect `favorite_button.dart` to `organizer_detail_screen.dart`, `ConsumerWidget`, `favorites_provider.dart`?**
+- **Why does `CommunityService` connect `community_provider.dart` to `community_users_screen.dart`, `community_screen.dart`, `community_service.dart`?**
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
+- **Why does `communityServiceProvider` connect `communityServiceProvider` to `_VotingScreenState`, `ConsumerWidget`, `MaterialPageRoute`, `community_provider.dart`, `_EventSubmissionScreenState`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
 - **What connects `functions`, `{ onDocumentWritten }`, `{ defineSecret }` to the rest of the system?**
-  _1072 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1073 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `community_service.dart` be split into smaller, more focused modules?**
   _Cohesion score 0.023255813953488372 - nodes in this community are weakly interconnected._
 - **Should `community_screen.dart` be split into smaller, more focused modules?**

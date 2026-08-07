@@ -560,7 +560,7 @@ Requirements:
 
 ## Annual Top DJ And Track Voting
 
-Target: implement in v0.99.99 before v1.0. The current implementation is ready for phone verification: WordPress manages seasons and unlimited candidates per category, DJ and organizer candidates do not use Spotify/YouTube links, the Hungarian hardstyle track category supports Spotify/YouTube, Flutter displays the active Home entry and voting categories, registered-user votes are protected by Firestore rules, the newsletter question is separate and explicit, and the native admin has a private summary. ARM64 debug APK: `build/HUHS-v0.99.99+2-arm64-debug.apk`; updated existing API package: `build/huhs-mobile-api-2.4.39.zip`. Final closure waits for owner phone verification.
+Target: implement in v0.99.99 before v1.0. The current implementation is ready for phone verification: WordPress manages seasons and unlimited candidates per category, DJ and organizer candidates do not use Spotify/YouTube links, the Hungarian hardstyle track category supports Spotify/YouTube, Flutter enforces category selection limits of 5/3/2/1/3, displays the active Home entry and voting categories, registered-user votes are protected by Firestore rules, the newsletter question is separate and explicit, and the native admin has a private summary. ARM64 debug APK: `build/HUHS-v0.99.99+3-arm64-debug.apk`; updated existing API package: `build/huhs-mobile-api-2.4.39.zip`. Final closure waits for owner phone verification.
 
 The existing annual WordPress-extension voting workflow should be replaced or complemented by a dedicated Hungarian Hardstyle voting module and REST API.
 

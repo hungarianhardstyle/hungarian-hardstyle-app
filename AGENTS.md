@@ -680,7 +680,7 @@ Confirmed annual voting direction for v0.99.99:
 - Flutter must list active voting categories and candidates and allow votes to be submitted in-app.
 - Flutter Home must show a prominent button for the active voting season; WordPress/admin configuration must be able to turn it on or off, and it must be hidden when no season is active.
 - Voting should use authenticated app users when Google sign-in is available, with server-side one-user/one-vote enforcement per category unless a season explicitly defines different rules.
-- Voting must require a registered, signed-in app account; guests cannot open or submit a vote.
+- Voting must require a registered, signed-in app account; guests cannot open or submit a vote. Category selection limits are 5 Hungarian hardstyle DJs, 3 Hungarian hardcore DJs, 2 Hungarian hardstyle tracks, 1 Hungarian organizer, and 3 international DJs.
 - Before submitting a vote, ask separately whether the user wants the HUHS newsletter. Only an explicit yes may call the existing Mailchimp subscription flow; voting must remain independent from newsletter consent.
 - The API must enforce voting windows and duplicate-vote protection server-side; Flutter validation alone is not sufficient.
 - Define result visibility (`live`, `hidden until close`, or `admin only`), vote correction rules, audit data, abuse protection, and privacy before launch.
@@ -690,7 +690,7 @@ Confirmed annual voting direction for v0.99.99:
 - The public summary should contain the season/year, category names, final ranking, candidate display data, and optionally vote totals or percentages according to the season settings.
 - Never include voter identities, audit logs, moderation flags, suspicious-vote indicators, or other private admin data in the public results response.
 
-The current implementation is ready for phone verification in `build/HUHS-v0.99.99+2-arm64-debug.apk`. It includes WordPress-managed seasons and unlimited candidates per category, DJ and organizer candidates without Spotify/YouTube fields, Spotify/YouTube support for the Hungarian hardstyle track category, a Home entry point controlled by the active season, registered-user voting with Firestore duplicate protection, separate Mailchimp consent, and a private native admin summary. The updated existing HUHS Mobile API package is `build/huhs-mobile-api-2.4.39.zip`; Firebase Firestore rules are deployed. Final closure waits for owner phone verification.
+The current implementation is ready for phone verification in `build/HUHS-v0.99.99+3-arm64-debug.apk`. It includes WordPress-managed seasons and unlimited candidates per category, DJ and organizer candidates without Spotify/YouTube fields, Spotify/YouTube support for the Hungarian hardstyle track category, category selection limits of 5/3/2/1/3, a Home entry point controlled by the active season, registered-user voting with Firestore duplicate protection, separate Mailchimp consent, and a private native admin summary. The updated existing HUHS Mobile API package is `build/huhs-mobile-api-2.4.39.zip`; Firebase Firestore rules are deployed. Final closure waits for owner phone verification.
 
 ### v1.5 - Hardstyle Revolution Store (later)
 

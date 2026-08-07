@@ -35,6 +35,15 @@ class VotingCategory {
 
   const VotingCategory({required this.key, required this.label, required this.candidates});
 
+  int get maxVotes => switch (key) {
+        'hungarian_hardstyle_dj' => 5,
+        'hungarian_hardcore_dj' => 3,
+        'hungarian_track' => 2,
+        'hungarian_organizer' => 1,
+        'international_dj' => 3,
+        _ => 1,
+      };
+
   factory VotingCategory.fromJson(Map<String, dynamic> json) => VotingCategory(
         key: '${json['key'] ?? ''}',
         label: '${json['label'] ?? ''}',

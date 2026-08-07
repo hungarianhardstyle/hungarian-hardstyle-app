@@ -214,7 +214,15 @@ service cloud.firestore {
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.seasonId is int
         && request.resource.data.category is string
-        && request.resource.data.candidateId is int
+        && request.resource.data.candidateIds is list
+        && request.resource.data.candidateIds.size() > 0
+        && (
+          (request.resource.data.category == 'hungarian_organizer' && request.resource.data.candidateIds.size() <= 1)
+          || (request.resource.data.category == 'hungarian_hardstyle_dj' && request.resource.data.candidateIds.size() <= 5)
+          || (request.resource.data.category == 'hungarian_hardcore_dj' && request.resource.data.candidateIds.size() <= 3)
+          || (request.resource.data.category == 'hungarian_track' && request.resource.data.candidateIds.size() <= 2)
+          || (request.resource.data.category == 'international_dj' && request.resource.data.candidateIds.size() <= 3)
+        )
         && voteId == request.resource.data.seasonId + '_' + request.resource.data.category + '_' + request.auth.uid;
       allow update, delete: if false;
     }

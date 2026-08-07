@@ -15,13 +15,13 @@ class VotingScreen extends ConsumerStatefulWidget {
 }
 
 class _VotingScreenState extends ConsumerState<VotingScreen> {
-  final Map<String, int> _selected = {};
+  final Map<String, Set<int>> _selected = {};
   final Set<String> _voted = {};
   String? _busyCategory;
   bool _newsletterAsked = false;
   bool _newsletterConsent = false;
 
-  Future<void> _vote(dynamic season, dynamic category, dynamic candidate) async {
+  Future<void> _vote(dynamic season, dynamic category) async {
     if (_busyCategory != null || _voted.contains(category.key)) return;
     final user = ref.read(communityServiceProvider).auth.currentUser;
     if (user == null || user.isAnonymous) {
@@ -45,10 +45,10 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
     }
     setState(() => _busyCategory = category.key);
     try {
-      await ref.read(votingServiceProvider).submitVote(
+      await ref.read(votingServiceProvider).submitVotes(
             seasonId: season.seasonId,
             category: category.key,
-            candidateId: candidate.id,
+            candidateIds: _selected[category.key]!.toList(),
             newsletterConsent: _newsletterConsent,
             wordpress: ref.read(wordpressServiceProvider),
           );
@@ -92,13 +92,25 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(category.label, style: Theme.of(context).textTheme.titleLarge),
+          Text('Legfeljebb ${category.maxVotes} jelölt választható', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 10),
           if (category.candidates.isEmpty) const Text('A jelöltek hamarosan érkeznek.'),
           for (final candidate in category.candidates)
-            RadioListTile<int>(
-              value: candidate.id,
-              groupValue: _selected[category.key],
-              onChanged: voted ? null : (value) => setState(() => _selected[category.key] = value ?? 0),
+            CheckboxListTile(
+              value: _selected[category.key]?.contains(candidate.id) ?? false,
+              onChanged: voted ? null : (value) {
+                final selected = {...?_selected[category.key]};
+                if (value == true) {
+                  if (selected.length >= category.maxVotes) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Legfeljebb ${category.maxVotes} jelöltet választhatsz.')));
+                    return;
+                  }
+                  selected.add(candidate.id);
+                } else {
+                  selected.remove(candidate.id);
+                }
+                setState(() => _selected[category.key] = selected);
+              },
               title: Text(candidate.name),
               subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 if (candidate.artist.isNotEmpty) Text(candidate.artist),
@@ -113,9 +125,9 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: FilledButton(
-                onPressed: voted || _selected[category.key] == null || _busyCategory == category.key
+                onPressed: voted || (_selected[category.key]?.isEmpty ?? true) || _busyCategory == category.key
                     ? null
-                    : () => _vote(season, category, category.candidates.firstWhere((item) => item.id == _selected[category.key])),
+                    : () => _vote(season, category),
                 child: Text(voted ? 'Szavazat rögzítve' : 'Szavazok'),
               ),
             ),

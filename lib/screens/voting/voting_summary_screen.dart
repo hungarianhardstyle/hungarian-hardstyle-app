@@ -21,8 +21,12 @@ class VotingSummaryScreen extends ConsumerWidget {
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
             final counts = <String, int>{};
             for (final vote in snapshot.data!.docs) {
-              final key = '${vote.data()['category']}:${vote.data()['candidateId']}';
-              counts[key] = (counts[key] ?? 0) + 1;
+              final data = vote.data();
+              final candidates = (data['candidateIds'] as List<dynamic>?) ?? [data['candidateId']];
+              for (final id in candidates) {
+                final key = '${data['category']}:$id';
+                counts[key] = (counts[key] ?? 0) + 1;
+              }
             }
             return ListView(
               padding: const EdgeInsets.all(16),
