@@ -85,7 +85,7 @@ function huhs_vote_season_box($post)
                 var rows = document.querySelector('.huhs-vote-rows[data-category="' + category + '"]');
                 var row = document.createElement('p');
                 row.className = 'huhs-vote-row';
-                row.innerHTML = '<input class="widefat" name="huhs_vote_candidates[' + category + '][]" placeholder="Jelölt neve">';
+                row.innerHTML = '<input class="widefat" name="huhs_vote_candidates[' + category + '][]" placeholder="' + (category === 'hungarian_track' ? 'Zene címe' : 'Jelölt neve') + '">' + (category === 'hungarian_track' ? '<input class="widefat" name="huhs_vote_track_artists[]" placeholder="Előadó (opcionális)"><input class="widefat" type="url" name="huhs_vote_track_spotify[]" placeholder="Spotify link (opcionális)"><input class="widefat" type="url" name="huhs_vote_track_youtube[]" placeholder="YouTube link (opcionális)">' : '');
                 rows.appendChild(row);
             });
         });
