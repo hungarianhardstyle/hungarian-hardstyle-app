@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 1770 nodes · 2460 edges · 109 communities (100 shown, 9 thin omitted)
+- 1770 nodes · 2460 edges · 110 communities (101 shown, 9 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.77)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f10ed5c2`
+- Built from commit: `7b9efbd2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -43,7 +43,6 @@
 - radio_player_bar.dart
 - about_screen.dart
 - html_linkifier.dart
-- package:flutter/material.dart
 - event_submission.dart
 - tagged_news_screen.dart
 - push_notification_service.dart
@@ -52,6 +51,7 @@
 - artist_detail_screen.dart
 - news_screen.dart
 - releases_screen.dart
+- package:flutter/material.dart
 - GeneratedPluginRegistrant.swift
 - MaterialPageRoute
 - mobile_ad_banner.dart
@@ -85,20 +85,21 @@
 - package:cached_network_image/cached_network_image.dart
 - package:flutter_riverpod/flutter_riverpod.dart
 - State
-- FlutterMacOS
 - events_screen.dart
+- ios/RunnerTests/RunnerTests.swift
 - AppDelegate
 - faq.dart
 - List
 - profile_submission_provider.dart
 - image_saver.dart
 - favorites_screen.dart
+- FlutterMacOS
 - dart:async
-- ios/RunnerTests/RunnerTests.swift
+- ../core/navigation/in_app_browser.dart
 - SubmissionImage
 - AppDelegate
 - event_card_test.dart
-- ../core/navigation/in_app_browser.dart
+- RunnerTests
 - app_navigator.dart
 - static const
 - organizers_provider.dart
@@ -142,7 +143,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (109 total, 9 thin omitted)
+## Communities (110 total, 9 thin omitted)
 
 ### Community 0 - "community_service.dart"
 Cohesion: 0.02
@@ -260,41 +261,41 @@ Nodes (18): IconData, AboutScreen, build, icon, _InfoTile, label, onTap, value (
 Cohesion: 0.10
 Nodes (19): blocked, blockedTags, candidates, closing, cursor, end, linkifyPlainUrls, _linkifyText (+11 more)
 
-### Community 29 - "package:flutter/material.dart"
-Cohesion: 0.12
-Nodes (14): build, DonateScreen, _donateUri, build, PrivacyScreen, build, RadioProviderScreen, build (+6 more)
-
-### Community 30 - "event_submission.dart"
+### Community 29 - "event_submission.dart"
 Cohesion: 0.11
 Nodes (18): contactEmail, description, endDate, endTime, EventSubmission, eventUrl, flyerUrl, genres (+10 more)
 
-### Community 31 - "tagged_news_screen.dart"
+### Community 30 - "tagged_news_screen.dart"
 Cohesion: 0.11
 Nodes (18): build, createState, dispose, _error, _hasMore, _hasTag, initState, _loading (+10 more)
 
-### Community 32 - "push_notification_service.dart"
+### Community 31 - "push_notification_service.dart"
 Cohesion: 0.11
 Nodes (18): _api, _authSubscription, initialize, _initialized, PushNotificationService, _showForegroundMessage, _storeToken, _syncStoredToken (+10 more)
 
-### Community 33 - "main_navigation.dart"
+### Community 32 - "main_navigation.dart"
 Cohesion: 0.12
 Nodes (17): events/events_screen.dart, home/home_screen.dart, build, createState, _currentIndex, MainNavigation, _MainNavigationState, _navigatorKeys (+9 more)
 
-### Community 34 - "in_app_browser.dart"
+### Community 33 - "in_app_browser.dart"
 Cohesion: 0.12
 Nodes (17): build, _controller, createState, _handleSystemBack, InAppBrowserScreen, _InAppBrowserScreenState, initialUri, initState (+9 more)
 
-### Community 35 - "artist_detail_screen.dart"
+### Community 34 - "artist_detail_screen.dart"
 Cohesion: 0.12
 Nodes (17): Artist, artistDetailProvider, artistClaimStatusProvider, artist, _ArtistContent, ArtistDetailScreen, artistId, _biographyHtml (+9 more)
 
-### Community 36 - "news_screen.dart"
+### Community 35 - "news_screen.dart"
 Cohesion: 0.14
 Nodes (17): paginatedNewsProvider, build, createState, dispose, initState, NewsScreen, _NewsScreenState, _onScroll (+9 more)
 
-### Community 37 - "releases_screen.dart"
+### Community 36 - "releases_screen.dart"
 Cohesion: 0.12
 Nodes (17): releasesProvider, artistId, artistName, build, createState, dispose, _query, release (+9 more)
+
+### Community 37 - "package:flutter/material.dart"
+Cohesion: 0.12
+Nodes (14): build, DonateScreen, _donateUri, build, PrivacyScreen, build, RadioProviderScreen, build (+6 more)
 
 ### Community 38 - "GeneratedPluginRegistrant.swift"
 Cohesion: 0.12
@@ -428,13 +429,13 @@ Nodes (7): enableTestAds, package:flutter_riverpod/flutter_riverpod.dart, packag
 Cohesion: 0.31
 Nodes (9): CommunityPublicProfileScreen, _CommunityPublicProfileScreenState, BrandLoadingIndicator, _BrandLoadingIndicatorState, StartupGate, _StartupGateState, SingleTickerProviderStateMixin, State (+1 more)
 
-### Community 71 - "FlutterMacOS"
-Cohesion: 0.32
-Nodes (4): Cocoa, FlutterMacOS, RunnerTests, XCTest
-
-### Community 72 - "events_screen.dart"
+### Community 71 - "events_screen.dart"
 Cohesion: 0.25
 Nodes (7): event_submission_screen.dart, _EventsHeader, onSubmit, _openSubmission, showSubmit, ../../providers/community_provider.dart, ../../widgets/event_card.dart
+
+### Community 72 - "ios/RunnerTests/RunnerTests.swift"
+Cohesion: 0.38
+Nodes (4): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit
 
 ### Community 73 - "AppDelegate"
 Cohesion: 0.25
@@ -460,45 +461,49 @@ Nodes (7): _channel, _dio, ImageSaver, saveFromUrl, package:dio/dio.dart, packag
 Cohesion: 0.29
 Nodes (6): ../artists/artist_detail_screen.dart, ../events/event_detail_screen.dart, _label, ../news/news_detail_screen.dart, ../organizers/organizer_detail_screen.dart, ../../providers/events_provider.dart
 
-### Community 79 - "dart:async"
+### Community 79 - "FlutterMacOS"
+Cohesion: 0.32
+Nodes (5): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow, XCTest
+
+### Community 80 - "dart:async"
 Cohesion: 0.29
 Nodes (6): dart:async, getEvents, getEventSubmissionGenres, refreshTimer, service, ../models/event.dart
 
-### Community 80 - "ios/RunnerTests/RunnerTests.swift"
-Cohesion: 0.24
-Nodes (6): Flutter, FlutterSceneDelegate, SceneDelegate, RunnerTests, UIKit, XCTestCase
-
-### Community 81 - "SubmissionImage"
-Cohesion: 0.33
-Nodes (5): dart:typed_data, bytes, name, SubmissionImage, Uint8List
-
-### Community 82 - "AppDelegate"
-Cohesion: 0.47
-Nodes (4): FlutterAppDelegate, AppDelegate, Bool, NSApplication
-
-### Community 83 - "event_card_test.dart"
-Cohesion: 0.33
-Nodes (4): package:hungarian_hardstyle_app/models/event.dart, package:hungarian_hardstyle_app/widgets/event_card.dart, main, main
-
-### Community 84 - "../core/navigation/in_app_browser.dart"
+### Community 81 - "../core/navigation/in_app_browser.dart"
 Cohesion: 0.33
 Nodes (5): ../core/navigation/in_app_browser.dart, build, _openSpotify, _playlists, SpotifyPlaylistsScreen
 
-### Community 85 - "app_navigator.dart"
+### Community 82 - "SubmissionImage"
+Cohesion: 0.33
+Nodes (5): dart:typed_data, bytes, name, SubmissionImage, Uint8List
+
+### Community 83 - "AppDelegate"
+Cohesion: 0.47
+Nodes (4): FlutterAppDelegate, AppDelegate, Bool, NSApplication
+
+### Community 84 - "event_card_test.dart"
+Cohesion: 0.33
+Nodes (4): package:hungarian_hardstyle_app/models/event.dart, package:hungarian_hardstyle_app/widgets/event_card.dart, main, main
+
+### Community 85 - "RunnerTests"
+Cohesion: 0.40
+Nodes (3): RunnerTests, RunnerTests, XCTestCase
+
+### Community 86 - "app_navigator.dart"
 Cohesion: 0.40
 Nodes (4): appNavigatorKey, appScaffoldMessengerKey, NavigatorState, ScaffoldMessengerState
 
-### Community 86 - "static const"
+### Community 87 - "static const"
 Cohesion: 0.40
 Nodes (4): AppTheme, backgroundDecoration, package:google_fonts/google_fonts.dart, static const
 
-### Community 87 - "organizers_provider.dart"
+### Community 88 - "organizers_provider.dart"
 Cohesion: 0.40
 Nodes (4): getOrganizer, getOrganizers, service, ../models/organizer.dart
 
 ### Community 89 - "RegisterGeneratedPlugins"
-Cohesion: 0.33
-Nodes (5): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins(), MainFlutterWindow, NSWindow
+Cohesion: 0.50
+Nodes (3): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins()
 
 ### Community 90 - "_EventSubmissionScreenState"
 Cohesion: 0.50

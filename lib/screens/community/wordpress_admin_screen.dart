@@ -318,6 +318,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
             title: Text('Szerkesztés: ${_sections[_section]}'),
             content: SizedBox(
               width: 520,
+              height: MediaQuery.sizeOf(context).height * .65,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -352,7 +353,10 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
+                onPressed: () {
+                  FocusScope.of(dialogContext).unfocus();
+                  Navigator.pop(dialogContext, false);
+                },
                 child: const Text('Mégse'),
               ),
               FilledButton(
@@ -363,6 +367,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           ),
         ),
       );
+      FocusManager.instance.primaryFocus?.unfocus();
       if (!mounted) {
         title.dispose();
         content.dispose();
@@ -421,7 +426,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     final label = '${field['label'] ?? key}';
     if (field['type'] == 'bool') {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.only(bottom: 16),
         child: SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(label),
@@ -433,7 +438,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     final options = _items(field['options']);
     if (field['type'] == 'ids' && options.isNotEmpty) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.only(bottom: 16),
         child: InputDecorator(
           decoration: InputDecoration(labelText: label),
           child: Wrap(
@@ -464,7 +469,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           ? current
           : null;
       return Padding(
-        padding: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.only(bottom: 16),
         child: DropdownButtonFormField<int>(
           initialValue: validCurrent,
           decoration: InputDecoration(labelText: label),
@@ -482,7 +487,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     final controller = controllers[key];
     if (controller == null) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextField(
         controller: controller,
         keyboardType: field['type'] == 'int'
