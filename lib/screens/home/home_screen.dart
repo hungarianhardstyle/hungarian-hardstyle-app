@@ -5,12 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
+import '../../providers/voting_provider.dart';
 import '../../models/post.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../community/community_screen.dart';
+import '../voting/voting_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   final VoidCallback onShowMoreNews;
@@ -97,6 +99,25 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 18),
+              ref.watch(votingProvider).when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (season) => season.active
+                    ? Padding(
+                        padding: const EdgeInsets.only(bottom: 18),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(builder: (_) => const VotingScreen()),
+                            ),
+                            icon: const Icon(Icons.how_to_vote_outlined),
+                            label: Text('Szavazz a HUHS ${season.year} jelöltjeire'),
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
               const SizedBox(height: 24),
               const Text(
                 'Legfrissebb hírek',

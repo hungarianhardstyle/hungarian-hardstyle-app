@@ -12,6 +12,7 @@ import '../models/post.dart';
 import '../models/profile_submission.dart';
 import '../models/release.dart';
 import '../models/submission_image.dart';
+import '../models/voting.dart';
 
 int _readInt(Object? value, {int fallback = 0}) {
   if (value is int) return value;
@@ -412,6 +413,26 @@ class WordpressService {
       throw Exception(
         _readApiError(e, 'Nem sikerült betölteni a release-eket.'),
       );
+    }
+  }
+
+  Future<VotingSeason> getActiveVoting() async {
+    try {
+      final response = await _dio.get(
+        '/voting/active',
+        options: Options(
+          connectTimeout: const Duration(milliseconds: 500),
+          receiveTimeout: const Duration(milliseconds: 500),
+        ),
+      );
+      if (response.data is Map<String, dynamic>) {
+        return VotingSeason.fromJson(response.data as Map<String, dynamic>);
+      }
+      return const VotingSeason.inactive();
+    } on DioException {
+      // The Home button is optional; a temporarily unavailable voting endpoint
+      // must not block the rest of the Home screen.
+      return const VotingSeason.inactive();
     }
   }
 

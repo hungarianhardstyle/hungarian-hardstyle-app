@@ -6,6 +6,8 @@ import 'package:hungarian_hardstyle_app/main.dart';
 import 'package:hungarian_hardstyle_app/providers/events_provider.dart';
 import 'package:hungarian_hardstyle_app/providers/news_provider.dart';
 import 'package:hungarian_hardstyle_app/providers/ads_provider.dart';
+import 'package:hungarian_hardstyle_app/providers/voting_provider.dart';
+import 'package:hungarian_hardstyle_app/models/voting.dart';
 
 void main() {
   testWidgets('starts the Hungarian Hardstyle app', (tester) async {
@@ -15,6 +17,7 @@ void main() {
           newsProvider.overrideWith((ref) async => []),
           eventsProvider.overrideWith((ref) async => []),
           adsEnabledProvider.overrideWithValue(false),
+          votingProvider.overrideWith((ref) async => const VotingSeason.inactive()),
         ],
         child: const HungarianHardstyleApp(),
       ),

@@ -206,5 +206,17 @@ service cloud.firestore {
       allow read: if settingId == 'startup';
       allow write: if isAdmin();
     }
+
+    match /voting_votes/{voteId} {
+      allow read: if isAdmin();
+      allow create: if request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.seasonId is int
+        && request.resource.data.category is string
+        && request.resource.data.candidateId is int
+        && voteId == request.resource.data.seasonId + '_' + request.resource.data.category + '_' + request.auth.uid;
+      allow update, delete: if false;
+    }
   }
 }

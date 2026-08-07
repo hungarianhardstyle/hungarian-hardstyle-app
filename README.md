@@ -437,7 +437,7 @@ News, events, DJs and organizers should remain readable without registration. Ev
 
 Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and its in-app player.
 
-### v0.99.99 — Annual HUHS voting (planned before v1.0)
+### v0.99.99 — Annual HUHS voting (implementation ready; phone verification pending)
 
 - [ ] WordPress-managed voting seasons and candidates
 - [ ] best Hungarian hardstyle DJ
@@ -450,6 +450,8 @@ Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and
 - [ ] add a prominent Home button for the active voting season, controlled by an admin on/off setting and hidden when voting is inactive
 - [ ] require a registered, signed-in app account before voting
 - [ ] ask separately whether the voter wants the HUHS newsletter; only explicit consent may trigger the existing Mailchimp subscription flow
+
+Implemented in source: WordPress-managed seasons/candidates, DJ/event-series/track categories, Spotify and YouTube candidate links, active Home entry point, registered-user voting with Firestore duplicate protection, separate Mailchimp consent and admin-only vote summary. ARM64 debug APK: `build/HUHS-v0.99.99+1-arm64-debug.apk`; WordPress package: `build/huhs-mobile-api-2.4.38.zip`. Phone verification remains before final closure.
 
 ### v1.5 — Hardstyle Revolution Store
 

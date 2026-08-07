@@ -8,6 +8,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../../models/submission_image.dart';
 import '../../providers/community_provider.dart';
 import '../../widgets/submission_image_picker.dart';
+import '../voting/voting_summary_screen.dart';
 
 class WordPressAdminScreen extends ConsumerStatefulWidget {
   const WordPressAdminScreen({super.key});
@@ -907,6 +908,12 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (_section == 'dashboard')
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const VotingSummaryScreen())),
+            icon: const Icon(Icons.bar_chart_outlined),
+            label: const Text('Szavazási összesítő'),
+          ),
         if (_section == 'push')
           FilledButton.icon(
             onPressed: _sendPush,

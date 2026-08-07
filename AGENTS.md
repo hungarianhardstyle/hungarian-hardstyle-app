@@ -690,6 +690,8 @@ Confirmed annual voting direction for v0.99.99:
 - The public summary should contain the season/year, category names, final ranking, candidate display data, and optionally vote totals or percentages according to the season settings.
 - Never include voter identities, audit logs, moderation flags, suspicious-vote indicators, or other private admin data in the public results response.
 
+The first implementation is ready for phone verification in `build/HUHS-v0.99.99+1-arm64-debug.apk`. It includes WordPress-managed seasons/candidates, DJ/event-series/track categories, Spotify and YouTube links, a Home entry point, registered-user voting with Firestore duplicate protection, separate Mailchimp consent and a private native admin summary. The updated existing HUHS Mobile API package is `build/huhs-mobile-api-2.4.38.zip`; Firebase Firestore rules are deployed. Final closure waits for owner phone verification.
+
 ### v1.5 - Hardstyle Revolution Store (later)
 
 Focus:
