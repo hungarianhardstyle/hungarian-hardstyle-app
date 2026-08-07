@@ -394,6 +394,25 @@ exports.sendPersonalizedPush = functions.https.onCall(async (data, context) => {
   return { sent: result.successCount, failed: result.failureCount };
 });
 
+exports.getVotingSummary = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin tekintheti meg az összesítőt.');
+  const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+  if (!isAdmin(context, profile)) throw new HttpsError('permission-denied', 'Csak admin tekintheti meg az összesítőt.');
+  const seasonId = Number(data?.seasonId);
+  if (!Number.isInteger(seasonId) || seasonId <= 0) throw new HttpsError('invalid-argument', 'Érvényes szezon szükséges.');
+  const snapshot = await db.collection('voting_votes').where('seasonId', '==', seasonId).get();
+  const counts = {};
+  for (const doc of snapshot.docs) {
+    const vote = doc.data() || {};
+    const ids = Array.isArray(vote.candidateIds) ? vote.candidateIds : [vote.candidateId];
+    for (const id of ids) {
+      const key = `${vote.category || ''}:${id}`;
+      counts[key] = (counts[key] || 0) + 1;
+    }
+  }
+  return { totalVotes: snapshot.size, counts };
+});
+
 exports.notifyConnectionRequest = onDocumentWritten(
   {
     document: 'connection_requests/{requestId}',

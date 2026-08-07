@@ -1,7 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 import '../../providers/voting_provider.dart';
 
@@ -16,23 +15,17 @@ class VotingSummaryScreen extends ConsumerWidget {
       body: season.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('$error')),
-        data: (data) => FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          future: FirebaseFirestore.instanceFor(app: Firebase.app(), databaseId: 'hungarian-hardstyle').collection('voting_votes').where('seasonId', isEqualTo: data.seasonId).get(),
+        data: (data) => FutureBuilder<Map<String, dynamic>>(
+          future: FirebaseFunctions.instance.httpsCallable('getVotingSummary').call<Map<String, dynamic>>({'seasonId': data.seasonId}).then((result) => Map<String, dynamic>.from(result.data)),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
             final counts = <String, int>{};
-            for (final vote in snapshot.data!.docs) {
-              final data = vote.data();
-              final candidates = (data['candidateIds'] as List<dynamic>?) ?? [data['candidateId']];
-              for (final id in candidates) {
-                final key = '${data['category']}:$id';
-                counts[key] = (counts[key] ?? 0) + 1;
-              }
-            }
+            final rawCounts = snapshot.data!['counts'];
+            if (rawCounts is Map) rawCounts.forEach((key, value) => counts['$key'] = (value as num).toInt());
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Text('Összes szavazat: ${snapshot.data!.docs.length}', style: Theme.of(context).textTheme.titleLarge),
+                Text('Összes szavazat: ${snapshot.data!['totalVotes'] ?? 0}', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 8),
                 for (final category in data.categories)
                   Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

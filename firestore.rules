@@ -223,7 +223,7 @@ service cloud.firestore {
           || (request.resource.data.category == 'hungarian_track' && request.resource.data.candidateIds.size() <= 2)
           || (request.resource.data.category == 'international_dj' && request.resource.data.candidateIds.size() <= 3)
         )
-        && voteId == request.resource.data.seasonId + '_' + request.resource.data.category + '_' + request.auth.uid;
+        && request.resource.data.userId == request.auth.uid;
       allow update, delete: if false;
     }
   }
