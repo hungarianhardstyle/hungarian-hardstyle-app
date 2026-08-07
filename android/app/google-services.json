@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "1030187737487-4d6idv005n6k8qqrdbj77qra5nqo6ckg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hungarian_hardstyle_app",
+            "certificate_hash": "e11f2f612cccab0baf626aa9c9dfe3d042674ad1"
+          }
+        },
+        {
           "client_id": "1030187737487-7cpgfu99rdngge4ine087ltlr339drkt.apps.googleusercontent.com",
           "client_type": 3
         }
