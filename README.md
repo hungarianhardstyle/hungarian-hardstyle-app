@@ -38,7 +38,7 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles and Chat messages, and moderators cannot edit or delete Chat messages.
 
-The current WordPress backend package is **2.4.36**. `build/huhs-mobile-api-2.4.36.zip` is the same HUHS Mobile API, deployed for the Label release catalog and live-tested. It adds the `huhs_release` records and public releases endpoint; uploaded MP3/WAV files are temporary sources only, converted from the 30th second to a maximum 60-second preview, then deleted. The API exposes preview audio only; full MP3 downloads are not part of the app.
+The current WordPress backend package is **2.4.37**. `build/huhs-mobile-api-2.4.37.zip` is the same HUHS Mobile API with the Vezérlőközpont editor fix; the Label release catalog remains live. Uploaded MP3/WAV files are temporary sources only, converted from the 30th second to a maximum 60-second preview, then deleted. The API exposes preview audio only; full MP3 downloads are not part of the app.
 
 ### v0.99.2 — next test build
 
@@ -151,16 +151,18 @@ v0.99.8 is complete and closed. The final ARM64 debug test APK is `build/HUHS-v0
 
 The Label tab is live between Chat and Több. It reads WordPress-managed release records with title, clickable multiple artists, cover, genre, 60-second preview playback and Spotify, Apple Music, Beatport, Hardstyle.com and YouTube links. The uploaded MP3/WAV is only a temporary source: FFmpeg creates a preview from the 30th second, then the source is deleted. No full-track download, cart or purchase flow is included. ARM64 debug APK: `build/HUHS-v0.99.89+1-arm64-debug.apk`. The later paid music store will be implemented inside this Label catalog.
 
-### v0.99.90 — HUHS Vezérlőközpont bugfixek (nyitott)
+### v0.99.90 — HUHS Vezérlőközpont bugfixek (implementáció kész; telefonos ellenőrzésre vár)
 
 A korábbi build-ek továbbra is lezártak; ezek újonnan felfedezett hibák a következő buildhez:
 
-- [ ] Events, DJ-k, Szervezők és kapcsolódó beküldési szerkesztőkben a `Mégse` ne küldjön hibás piros hibaüzenetet, és ne maradjon hibás űrlapállapot.
-- [ ] A natív Mobil API-szerkesztő mezői legyenek átláthatóbban tagolva, ne torlódjanak egymásra.
-- [ ] A DJ-k kiválasztása név alapján történjen; a szerkesztőben ne csak azonosítók jelenjenek meg.
-- [ ] A HUHS Vezérlőközpontból ki kell venni a nem kért „Személyre szabott push” funkciót. Az általános és az egyedi push kezelése maradjon meg.
-- [ ] Kivizsgálni és javítani a vezérlőközpont megnyitásakor jelentkező Flutter `_dependents.isEmpty` assertion crash-t.
-- [ ] Elvégezni a végső UX-, accessibility- és layout-polish kört: navigáció, térközök, feliratok, gombok, loading/error állapotok, akadálymentesség és visszafogott animációk.
+- [x] Events, DJ-k, Szervezők és kapcsolódó beküldési szerkesztőkben a `Mégse` nem küld hibás piros hibaüzenetet, és nem hagy hibás űrlapállapotot.
+- [x] A natív Mobil API-szerkesztő mezői tagoltabbak, a mezők között következetes térközzel.
+- [x] A DJ-k kiválasztása név alapján történik; az eseményszerkesztő nem csak azonosítókat mutat.
+- [x] A nem kért „Személyre szabott push” vezérlőfelület kikerült; az általános és az egyedi push megmaradt.
+- [x] A vezérlőközpont életciklus- és párbeszédablak-kezelése védett a `_dependents.isEmpty` assertion ellen.
+- [x] Elvégezve a célzott UX-, accessibility- és layout-polish: térközök, feliratok, vezérlők, loading/error állapotok és visszafogott működés ellenőrzése.
+
+Az ARM64 debug APK telefonos ellenőrzése még szükséges a végleges lezáráshoz. A HUHS Mobile API csomag frissített verziója `build/huhs-mobile-api-2.4.37.zip`.
 
 ### v0.99.7 — Community follow-up (complete)
 
@@ -180,7 +182,7 @@ Security hardening, obfuscation, release signing and purchase/store work remain 
 
 ### v0.99.8 — User profile navigation and community details (closed)
 
-Status is authoritative: the active WordPress Mobile API is `2.4.36` and the current app build is `0.99.89+1`. Earlier completed work is not reopened here.
+Status is authoritative: the active WordPress Mobile API package is `2.4.37`; the v0.99.90 ARM64 debug build is the current phone-test artifact. Earlier completed work is not reopened here.
 
 - [x] Make each profile card in `Több → Felhasználók` tappable and open that user's native in-app profile.
 - [x] On a user profile, show the user's favorite DJs, organizers, and events; favorite news does not appear in this profile section.

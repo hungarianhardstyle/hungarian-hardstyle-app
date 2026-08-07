@@ -86,8 +86,8 @@ As of the current project state:
 - News search UI exists.
 - News item tap/click opens the news detail view.
 - News cards display remote images, title, date, and featured state.
-- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, currently through `build/huhs-mobile-api-2.4.36.zip`; the latest package has been extracted and reviewed locally.
-- The latest package version is 2.4.36. It is the existing HUHS Mobile API, deployed and live-tested with the `huhs_release` records and public releases endpoint. It generates only a maximum 60-second preview from a temporary MP3/WAV source, then deletes the source; full audio is never exposed.
+- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, currently through `build/huhs-mobile-api-2.4.37.zip`; the latest package has been extracted and reviewed locally.
+- The latest package version is 2.4.37. It is the existing HUHS Mobile API with the native controller editor fixes, and it retains the live `huhs_release` records and public releases endpoint. It generates only a maximum 60-second preview from a temporary MP3/WAV source, then deletes the source; full audio is never exposed.
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
@@ -96,7 +96,7 @@ As of the current project state:
 - Backend package `2.4.7` is deployed. It fixes the invalid nested admin approval form that prevented DJ and organizer draft creation, removes the misleading native publish box from submissions, and adds the same one-click draft creation flow for event submissions. The approval flow still requires a live WordPress admin test.
 - Backend package `2.4.8` is historical. Its multipart image path remains documented for compatibility; the active app upload path is Cloudinary and direct multipart uploads are not a current WAF/deployment status.
 - Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real "Kapcsolódó cikk" target was verified. Flutter opens returned related articles plus normal WordPress "Kapcsolódó cikk", "Kapcsolódó", and "Ez is érdekelhet" links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
-- Backend package 2.4.31 and 2.4.33 are historical; the current uploaded and active package is 2.4.36.
+- Backend package 2.4.31, 2.4.33 and 2.4.36 are historical; the current uploaded package is 2.4.37.
 - Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; the first natural event-day reminder did not arrive and the cron/timezone/filter path needs investigation.
 - Event-day reminder delivery is now live-verified; it is not an open v0.99.8 or v1.0 investigation.
 - The custom-push admin form lists recent published news and events by title and validates the selected post type, so editors do not need to look up event IDs manually.
@@ -445,22 +445,24 @@ v0.99.8 is complete and closed. Final ARM64 debug test APK: `build/HUHS-v0.99.8+
 
 ### v0.99.89 - Label release catalog (complete; 2026-08-06)
 
-v0.99.89 is complete. The ARM64 debug APK is `build/HUHS-v0.99.89+1-arm64-debug.apk`; the active HUHS Mobile API package is `2.4.36`. The Label tab is between Chat and Több and includes WordPress release records, clickable multiple artists, cover, genre, external links and preview playback. MP3/WAV uploads are temporary sources only: FFmpeg creates a maximum 60-second preview from the 30th second and the source is deleted. Full-track downloads, buying and a separate store are excluded. Future paid music sales will extend this same Label catalog.
+v0.99.89 is complete. The Label tab is between Chat and Több and includes WordPress release records, clickable multiple artists, cover, genre, external links and preview playback. MP3/WAV uploads are temporary sources only: FFmpeg creates a maximum 60-second preview from the 30th second and the source is deleted. Full-track downloads, buying and a separate store are excluded. Future paid music sales will extend this same Label catalog.
 
-### v0.99.90 - HUHS Vezérlőközpont bugfixek (open)
+### v0.99.90 - HUHS Vezérlőközpont bugfixek (implementáció kész; telefonos ellenőrzésre vár)
 
 All previous builds remain complete and closed. Newly discovered issues recorded for v0.99.90:
 
-- [ ] In native Mobile API editors for Events, DJs, Organizers and related submissions, pressing `Mégse` must not show a false red error or leave an invalid form state.
-- [ ] Improve field spacing and grouping so the editors remain readable instead of crowded.
-- [ ] Let admins select DJs by display name rather than seeing only numeric IDs.
-- [ ] Remove the unrequested `Személyre szabott push` feature from the HUHS Vezérlőközpont; general and custom push remain.
-- [ ] Investigate and fix the Flutter `_dependents.isEmpty` assertion crash observed while opening the controller.
-- [ ] Complete the final UX, accessibility and layout polish pass: navigation, spacing, labels, buttons, loading/error states and restrained motion.
+- [x] In native Mobile API editors for Events, DJs, Organizers and related submissions, `Mégse` safely cancels without a false error or invalid form state.
+- [x] Improve editor field spacing and grouping.
+- [x] Let admins select DJs by display name instead of only numeric IDs.
+- [x] Remove the unrequested `Személyre szabott push` controller; general and custom push remain.
+- [x] Guard the controller lifecycle and dialogs against the `_dependents.isEmpty` assertion path.
+- [x] Complete the targeted UX, accessibility and layout polish pass.
+
+The ARM64 debug APK still requires the owner's phone verification before v0.99.90 is finally closed. The updated existing HUHS Mobile API package is `build/huhs-mobile-api-2.4.37.zip`.
 
 ### v0.99.8 - User profile navigation and community details (closed)
 
-Authoritative status: WordPress Mobile API `2.4.36` is uploaded, deployed and live-tested; the current app build is `0.99.89+1`. Completed v0.99.3 TypeUI/native admin, profile crop, radio, tag/genre pagination, general push, social fields, FAQ and Label catalog remain complete.
+Authoritative status: WordPress Mobile API `2.4.37` is the updated package for v0.99.90; the current app build is the ARM64 debug phone-test artifact. Completed v0.99.3 TypeUI/native admin, profile crop, radio, tag/genre pagination, general push, social fields, FAQ and Label catalog remain complete.
 
 - [x] Make each profile card in `Több -> Felhasználók` tappable and open that user's native in-app profile.
 - [x] Show only favorite DJs, organizers, and events on the user profile; favorite news is excluded from this profile section.

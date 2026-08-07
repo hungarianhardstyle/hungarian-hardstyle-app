@@ -130,7 +130,12 @@ function huhs_admin_api_read(WP_REST_Request $request)
             'content' => $post->post_content,
             'status' => $post->post_status,
             'fields' => array_map(function ($field) use ($post_id) {
-                return $field + array('value' => get_post_meta($post_id, $field['key'], true));
+                $field['value'] = get_post_meta($post_id, $field['key'], true);
+                $options = huhs_admin_resource_field_options($field['key']);
+                if ($options) {
+                    $field['options'] = $options;
+                }
+                return $field;
             }, $fields),
         );
     }
@@ -336,6 +341,33 @@ function huhs_admin_resource_fields($post_type)
             array('key' => 'hardstyle_com', 'label' => 'Hardstyle.com', 'type' => 'url'),
             array('key' => 'youtube', 'label' => 'YouTube', 'type' => 'url'),
         ), $common);
+    }
+    return array();
+}
+
+function huhs_admin_resource_field_options($key)
+{
+    if ($key === 'artists') {
+        return array_map(function ($post) {
+            return array('id' => (int) $post->ID, 'label' => $post->post_title);
+        }, get_posts(array(
+            'post_type' => 'huhs_artist',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+        )));
+    }
+    if ($key === 'organizer_id') {
+        return array_map(function ($post) {
+            return array('id' => (int) $post->ID, 'label' => $post->post_title);
+        }, get_posts(array(
+            'post_type' => 'huhs_organizer',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+        )));
     }
     return array();
 }

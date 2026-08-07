@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:html/parser.dart' as html_parser;
@@ -67,13 +69,14 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
   }
 
   void _reload() {
+    if (!mounted) return;
     setState(() {
       _request = _load();
     });
   }
 
   void _select(String section) {
-    if (_section == section) return;
+    if (!mounted || _section == section) return;
     setState(() {
       _section = section;
       _request = _load();
@@ -134,6 +137,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     }
   }
 
+  // Legacy callable retained for backend compatibility; not exposed in the UI.
+  // ignore: unused_element
   Future<void> _sendPersonalizedPush() async {
     var kind = 'event';
     var id = '';
@@ -291,12 +296,15 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       final content = TextEditingController(text: editableContent);
       final controllers = <String, TextEditingController>{};
       final checks = <String, bool>{};
+      final selectedIds = <String, Set<int>>{};
       for (final field in fields) {
         final key = '${field['key'] ?? ''}';
         if (key.isEmpty) continue;
         if (field['type'] == 'bool') {
           final value = field['value'];
           checks[key] = value == true || value == 1 || value == '1';
+        } else if (field['type'] == 'ids' && field['options'] is List) {
+          selectedIds[key] = _decodeIds('${field['value'] ?? ''}').toSet();
         } else {
           controllers[key] = TextEditingController(
             text: '${field['value'] ?? ''}',
@@ -314,40 +322,30 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(
-                      controller: title,
-                      decoration: const InputDecoration(labelText: 'Cím'),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TextField(
+                        controller: title,
+                        decoration: const InputDecoration(labelText: 'Cím'),
+                      ),
                     ),
-                    TextField(
-                      controller: content,
-                      minLines: 4,
-                      maxLines: 12,
-                      decoration: const InputDecoration(labelText: 'Tartalom'),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TextField(
+                        controller: content,
+                        minLines: 4,
+                        maxLines: 12,
+                        decoration: const InputDecoration(labelText: 'Tartalom'),
+                      ),
                     ),
                     for (final field in fields)
-                      if (field['type'] == 'bool')
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text('${field['label'] ?? field['key']}'),
-                          value: checks['${field['key']}'] ?? false,
-                          onChanged: (value) => setDialogState(
-                            () => checks['${field['key']}'] = value,
-                          ),
-                        )
-                      else if (controllers.containsKey('${field['key']}'))
-                        TextField(
-                          controller: controllers['${field['key']}'],
-                          keyboardType: field['type'] == 'int'
-                              ? TextInputType.number
-                              : field['type'] == 'email'
-                              ? TextInputType.emailAddress
-                              : field['type'] == 'url'
-                              ? TextInputType.url
-                              : TextInputType.text,
-                          decoration: InputDecoration(
-                            labelText: '${field['label'] ?? field['key']}',
-                          ),
-                        ),
+                      _adminField(
+                        field,
+                        controllers,
+                        checks,
+                        selectedIds,
+                        setDialogState,
+                      ),
                   ],
                 ),
               ),
@@ -365,6 +363,14 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           ),
         ),
       );
+      if (!mounted) {
+        title.dispose();
+        content.dispose();
+        for (final controller in controllers.values) {
+          controller.dispose();
+        }
+        return;
+      }
       if (result == true) {
         await service.wordPressAdminRequest(
           path: '/huhs/v1/admin',
@@ -379,6 +385,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
             'meta': {
               for (final entry in controllers.entries)
                 entry.key: entry.value.text.trim(),
+              for (final entry in selectedIds.entries)
+                entry.key: entry.value.join(','),
               ...checks,
             },
           },
@@ -401,6 +409,110 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     'huhs_artist',
     'huhs_organizer',
   };
+
+  Widget _adminField(
+    Map<String, dynamic> field,
+    Map<String, TextEditingController> controllers,
+    Map<String, bool> checks,
+    Map<String, Set<int>> selectedIds,
+    void Function(void Function()) setDialogState,
+  ) {
+    final key = '${field['key'] ?? ''}';
+    final label = '${field['label'] ?? key}';
+    if (field['type'] == 'bool') {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(label),
+          value: checks[key] ?? false,
+          onChanged: (value) => setDialogState(() => checks[key] = value),
+        ),
+      );
+    }
+    final options = _items(field['options']);
+    if (field['type'] == 'ids' && options.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: InputDecorator(
+          decoration: InputDecoration(labelText: label),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: options.map((option) {
+              final optionId = (option['id'] as num?)?.toInt() ?? 0;
+              final selected = selectedIds[key]?.contains(optionId) ?? false;
+              return FilterChip(
+                label: Text('${option['label'] ?? optionId}'),
+                selected: selected,
+                onSelected: optionId == 0
+                    ? null
+                    : (value) => setDialogState(() {
+                        final values = selectedIds[key] ?? <int>{};
+                        value ? values.add(optionId) : values.remove(optionId);
+                        selectedIds[key] = values;
+                      }),
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    }
+    if (key == 'organizer_id' && options.isNotEmpty) {
+      final current = int.tryParse(controllers[key]?.text ?? '');
+      final validCurrent = options.any((item) => item['id'] == current)
+          ? current
+          : null;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: DropdownButtonFormField<int>(
+          initialValue: validCurrent,
+          decoration: InputDecoration(labelText: label),
+          items: options.map((option) {
+            final optionId = (option['id'] as num?)?.toInt() ?? 0;
+            return DropdownMenuItem<int>(
+              value: optionId,
+              child: Text('${option['label'] ?? optionId}'),
+            );
+          }).toList(),
+          onChanged: (value) => controllers[key]?.text = '${value ?? 0}',
+        ),
+      );
+    }
+    final controller = controllers[key];
+    if (controller == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: TextField(
+        controller: controller,
+        keyboardType: field['type'] == 'int'
+            ? TextInputType.number
+            : field['type'] == 'email'
+            ? TextInputType.emailAddress
+            : field['type'] == 'url'
+            ? TextInputType.url
+            : TextInputType.text,
+        decoration: InputDecoration(labelText: label),
+      ),
+    );
+  }
+
+  List<int> _decodeIds(String value) {
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is List) {
+        return decoded
+            .map((item) => int.tryParse('$item') ?? 0)
+            .where((id) => id > 0)
+            .toList();
+      }
+    } catch (_) {}
+    return value
+        .split(RegExp(r'[\s,]+'))
+        .map((item) => int.tryParse(item) ?? 0)
+        .where((id) => id > 0)
+        .toList();
+  }
 
   Future<void> _createResource() async {
     if (!_creatableSections.contains(_section)) return;
@@ -797,12 +909,6 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
             onPressed: _sendPush,
             icon: const Icon(Icons.send),
             label: const Text('Egyedi push létrehozása'),
-          ),
-        if (_section == 'push')
-          OutlinedButton.icon(
-            onPressed: _sendPersonalizedPush,
-            icon: const Icon(Icons.person_pin_circle_outlined),
-            label: const Text('SzemĂ©lyre szabott push'),
           ),
         if (_section == 'startup')
           FilledButton.icon(

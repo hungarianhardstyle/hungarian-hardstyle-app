@@ -687,7 +687,7 @@ The final v0.99.3 source pass separates the read-only community profile from its
 
 The Android radio foreground service now retries the Real Hardstyle FM stream after an unexpected playback error or stream completion instead of remaining silently marked as playing. Explicit Stop and full app closure still cancel pending reconnects.
 
-The owner will perform phone verification separately. Firebase proxy Functions are deployed. The active WordPress package is `build/huhs-mobile-api-2.4.36.zip`, which includes the completed Label release catalog endpoint and preview generation. Security hardening and signing/obfuscation are v1.0.
+The owner will perform phone verification separately. Firebase proxy Functions are deployed. The updated WordPress package is `build/huhs-mobile-api-2.4.37.zip`, which includes the completed Label release catalog endpoint, preview generation and the native controller editor choices. Security hardening and signing/obfuscation are v1.0.
 
 
 Cloudinary is the only active image-upload path for the app. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.
@@ -964,17 +964,19 @@ v0.99.8 is closed after the final community fixes. The final ARM64 debug test AP
 - Flutterben önálló `Label` alsó navigációs fül van a Chat és Több között.
 - Az előadók külön kattinthatók, és az adott előadó további release-ei listázhatók.
 - A preview saját lejátszóval hallgatható; vásárlás, kosár, letöltés és saját digitális store nem része ennek a buildnek.
-- A kész cache-javító csomag a meglévő HUHS Mobile API 2.4.36-os változata, nem új API.
+- A kész cache-javító csomag a meglévő HUHS Mobile API 2.4.37-es változata, nem új API.
 - A build lezárt: ARM64 debug APK: `build/HUHS-v0.99.89+1-arm64-debug.apk`.
 - A későbbi fizetős zeneértékesítés ugyanebbe a Label katalógusba kerül; külön katalógus vagy külön Store-rész nem készül.
 
-### v0.99.90 - újonnan felfedezett HUHS Vezérlőközpont hibák (nyitott)
+### v0.99.90 - HUHS Vezérlőközpont bugfixek (implementáció kész; telefonos ellenőrzésre vár)
 
 A korábbi build-ek késznek és lezártnak tekintendők. A következő hibákat a v0.99.90-ben kell kezelni:
 
-- Events, DJ-k, Szervezők és a kapcsolódó beküldési szerkesztőkben a `Mégse` ne adjon téves piros hibaüzenetet, és ne maradjon hibás űrlapállapot.
-- A natív Mobil API-szerkesztők mezői legyenek jobban tagolva és átláthatók.
-- A DJ-ket név alapján lehessen kiválasztani, ne csak ID-k jelenjenek meg.
-- A nem kért `Személyre szabott push` funkciót ki kell venni a HUHS Vezérlőközpontból; az általános és egyedi push maradjon.
-- Ki kell vizsgálni a vezérlőközpont megnyitásakor jelentkező Flutter `_dependents.isEmpty` assertion hibát.
-- El kell végezni a végső UX-, accessibility- és layout-polish kört: navigáció, térközök, feliratok, gombok, loading/error állapotok, akadálymentesség és visszafogott animációk.
+- [x] A `Mégse` biztonságosan megszakítja az Events/DJ/Szervező és kapcsolódó szerkesztőket téves piros hiba és hibás űrlapállapot nélkül.
+- [x] A natív Mobil API-szerkesztők mezői tagoltabbak és átláthatóbbak.
+- [x] A DJ-k név alapján választhatók, nem csak ID-k jelennek meg.
+- [x] A nem kért `Személyre szabott push` vezérlőfelület kikerült; az általános és egyedi push megmaradt.
+- [x] A vezérlőközpont életciklus- és dialóguskezelése védi a `_dependents.isEmpty` assertion útvonalát.
+- [x] A célzott UX-, accessibility- és layout-polish elkészült.
+
+Az ARM64 debug APK telefonos ellenőrzése még hátravan a build végleges lezárásához. Az aktív, meglévő HUHS Mobile API frissített csomagja `2.4.37` (`build/huhs-mobile-api-2.4.37.zip`).
