@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import '../../providers/voting_provider.dart';
 
@@ -16,7 +17,7 @@ class VotingSummaryScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('$error')),
         data: (data) => FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          future: FirebaseFirestore.instance.collection('voting_votes').where('seasonId', isEqualTo: data.seasonId).get(),
+          future: FirebaseFirestore.instanceFor(app: Firebase.app(), databaseId: 'hungarian-hardstyle').collection('voting_votes').where('seasonId', isEqualTo: data.seasonId).get(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
             final counts = <String, int>{};
