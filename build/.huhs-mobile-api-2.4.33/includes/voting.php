@@ -63,7 +63,6 @@ function huhs_vote_season_box($post)
     <p><label>Kezdés<br><input class="widefat" type="datetime-local" name="huhs_vote_start" value="<?php echo esc_attr($fields['start']); ?>"></label></p>
     <p><label>Zárás<br><input class="widefat" type="datetime-local" name="huhs_vote_end" value="<?php echo esc_attr($fields['end']); ?>"></label></p>
     <p><label><input type="checkbox" name="huhs_vote_enabled" value="1" <?php checked($fields['enabled'], '1'); ?>> Megjelenjen az app főoldalán</label></p>
-    <p><label><input type="checkbox" name="huhs_vote_results_published" value="1" <?php checked($fields['results_published'], '1'); ?>> Eredmények publikálva</label></p>
     <hr><h3>Jelöltek</h3>
     <?php foreach (HUHS_VOTING_CATEGORIES as $key => $label) : ?>
         <div class="huhs-vote-category" style="margin:16px 0;padding:12px;border:1px solid #ccd0d4;">

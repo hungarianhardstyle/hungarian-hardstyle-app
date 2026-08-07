@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7e9bcc2e`
+- Built from commit: `2e090bfd`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -77,7 +77,6 @@
 - MaterialPageRoute
 - voting_screen.dart
 - manifest.json
-- ios/RunnerTests/RunnerTests.swift
 - hungarian-hardstyle-newsroom/app/graphics.py
 - State
 - _VotingScreenState
@@ -86,20 +85,21 @@
 - events_screen.dart
 - voting_service.dart
 - social_contact_screen.dart
-- FlutterMacOS
+- ios/RunnerTests/RunnerTests.swift
 - AppDelegate
 - faq.dart
 - List
 - news_provider.dart
 - package:flutter_riverpod/flutter_riverpod.dart
 - package:cloud_firestore/cloud_firestore.dart
+- FlutterMacOS
 - dart:async
 - AppDelegate
-- RegisterGeneratedPlugins
 - community_provider.dart
 - _EventSubmissionScreenState
 - app_navigator.dart
 - genre_chip.dart
+- RegisterGeneratedPlugins
 - voting_provider.dart
 - OpenAPITests
 - PaginatedNewsNotifier
@@ -391,69 +391,69 @@ Nodes (10): _busyCategory, _category, createState, _link, _newsletterAsked, _new
 Cohesion: 0.18
 Nodes (10): background_color, description, display, icons, name, orientation, prefer_related_applications, short_name (+2 more)
 
-### Community 63 - "ios/RunnerTests/RunnerTests.swift"
-Cohesion: 0.24
-Nodes (6): Flutter, FlutterSceneDelegate, SceneDelegate, RunnerTests, UIKit, XCTestCase
-
-### Community 64 - "hungarian-hardstyle-newsroom/app/graphics.py"
+### Community 63 - "hungarian-hardstyle-newsroom/app/graphics.py"
 Cohesion: 0.33
 Nodes (8): cover(), fetch(), generate(), Image, Path, render_psd(), Fit, Path
 
-### Community 65 - "State"
+### Community 64 - "State"
 Cohesion: 0.27
 Nodes (10): InAppBrowserScreen, _InAppBrowserScreenState, MainNavigation, _MainNavigationState, CommunityPublicProfileScreen, _CommunityPublicProfileScreenState, PostEmbedCard, _PostEmbedCardState (+2 more)
 
-### Community 66 - "_VotingScreenState"
+### Community 65 - "_VotingScreenState"
 Cohesion: 0.22
 Nodes (9): wordpressServiceProvider, votingServiceProvider, GenreDiscoveryScreen, _GenreDiscoveryScreenState, _vote, VotingScreen, _VotingScreenState, VotingService (+1 more)
 
-### Community 67 - "about_screen.dart"
+### Community 66 - "about_screen.dart"
 Cohesion: 0.20
 Nodes (9): AboutScreen, build, icon, _InfoTile, label, onTap, value, package:package_info_plus/package_info_plus.dart (+1 more)
 
-### Community 68 - "spotify_player.dart"
+### Community 67 - "spotify_player.dart"
 Cohesion: 0.22
 Nodes (9): build, _controller, createState, _expanded, initState, SpotifyPlayer, _SpotifyPlayerState, package:webview_flutter/webview_flutter.dart (+1 more)
 
-### Community 69 - "events_screen.dart"
+### Community 68 - "events_screen.dart"
 Cohesion: 0.22
 Nodes (8): event_submission_screen.dart, _EventsHeader, onSubmit, _openSubmission, showSubmit, ../../providers/community_provider.dart, VoidCallback, ../../widgets/event_card.dart
 
-### Community 70 - "voting_service.dart"
+### Community 69 - "voting_service.dart"
 Cohesion: 0.22
 Nodes (8): FirebaseAuth, FirebaseFirestore, _auth, _firestore, hasVoted, _registeredUser, submitVotes, wordpress_service.dart
 
-### Community 71 - "social_contact_screen.dart"
+### Community 70 - "social_contact_screen.dart"
 Cohesion: 0.22
 Nodes (8): IconData, build, icon, label, _LinkTile, onTap, SocialContactScreen, value
 
-### Community 72 - "FlutterMacOS"
-Cohesion: 0.32
-Nodes (4): Cocoa, FlutterMacOS, RunnerTests, XCTest
+### Community 71 - "ios/RunnerTests/RunnerTests.swift"
+Cohesion: 0.24
+Nodes (6): Flutter, FlutterSceneDelegate, SceneDelegate, RunnerTests, UIKit, XCTestCase
 
-### Community 73 - "AppDelegate"
+### Community 72 - "AppDelegate"
 Cohesion: 0.25
 Nodes (6): FlutterImplicitEngineBridge, FlutterImplicitEngineDelegate, AppDelegate, Any, Bool, UIApplication
 
-### Community 74 - "faq.dart"
+### Community 73 - "faq.dart"
 Cohesion: 0.25
 Nodes (7): answer, category, FaqItem, fromJson, id, order, question
 
-### Community 75 - "List"
+### Community 74 - "List"
 Cohesion: 0.25
 Nodes (7): PostShortcode, build, PostShortcodeCard, postUrl, relatedPosts, shortcode, List
 
-### Community 76 - "news_provider.dart"
+### Community 75 - "news_provider.dart"
 Cohesion: 0.25
 Nodes (7): ProfileSubmissionOptions, profileSubmissionOptionsProvider, ArtistSubmissionScreen, _ArtistSubmissionScreenState, build, ../models/profile_submission.dart, news_provider.dart
 
-### Community 77 - "package:flutter_riverpod/flutter_riverpod.dart"
+### Community 76 - "package:flutter_riverpod/flutter_riverpod.dart"
 Cohesion: 0.25
 Nodes (6): enableTestAds, getOrganizer, getOrganizers, service, ../models/organizer.dart, package:flutter_riverpod/flutter_riverpod.dart
 
-### Community 78 - "package:cloud_firestore/cloud_firestore.dart"
+### Community 77 - "package:cloud_firestore/cloud_firestore.dart"
 Cohesion: 0.29
 Nodes (7): votingProvider, build, build, VotingSummaryScreen, package:cloud_firestore/cloud_firestore.dart, ../../providers/voting_provider.dart, QuerySnapshot
+
+### Community 78 - "FlutterMacOS"
+Cohesion: 0.32
+Nodes (4): Cocoa, FlutterMacOS, RunnerTests, XCTest
 
 ### Community 79 - "dart:async"
 Cohesion: 0.29
@@ -463,15 +463,11 @@ Nodes (6): dart:async, getEvents, getEventSubmissionGenres, refreshTimer, servic
 Cohesion: 0.47
 Nodes (4): FlutterAppDelegate, AppDelegate, Bool, NSApplication
 
-### Community 81 - "RegisterGeneratedPlugins"
-Cohesion: 0.33
-Nodes (5): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins(), MainFlutterWindow, NSWindow
-
-### Community 82 - "community_provider.dart"
+### Community 81 - "community_provider.dart"
 Cohesion: 0.33
 Nodes (5): watch, CommunityService, ../models/community_post.dart, package:firebase_auth/firebase_auth.dart, ../services/community_service.dart
 
-### Community 83 - "_EventSubmissionScreenState"
+### Community 82 - "_EventSubmissionScreenState"
 Cohesion: 0.40
 Nodes (6): eventSubmissionGenresProvider, organizersProvider, build, EventSubmissionScreen, _EventSubmissionScreenState, build
 
@@ -483,11 +479,15 @@ Nodes (4): appNavigatorKey, appScaffoldMessengerKey, NavigatorState, ScaffoldMes
 Cohesion: 0.40
 Nodes (4): build, genre, GenreChip, ../screens/genres/genre_discovery_screen.dart
 
-### Community 86 - "voting_provider.dart"
+### Community 86 - "RegisterGeneratedPlugins"
+Cohesion: 0.33
+Nodes (5): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins(), MainFlutterWindow, NSWindow
+
+### Community 87 - "voting_provider.dart"
 Cohesion: 0.50
 Nodes (3): VotingSeason, watch, ../models/voting.dart
 
-### Community 88 - "PaginatedNewsNotifier"
+### Community 89 - "PaginatedNewsNotifier"
 Cohesion: 0.67
 Nodes (3): PaginatedNewsNotifier, PaginatedNewsState, StateNotifier
 

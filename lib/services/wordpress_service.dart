@@ -421,8 +421,8 @@ class WordpressService {
       final response = await _dio.get(
         '/voting/active',
         options: Options(
-          connectTimeout: const Duration(milliseconds: 500),
-          receiveTimeout: const Duration(milliseconds: 500),
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 5),
         ),
       );
       if (response.data is Map<String, dynamic>) {
