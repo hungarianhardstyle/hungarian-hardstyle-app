@@ -437,7 +437,7 @@ News, events, DJs and organizers should remain readable without registration. Ev
 
 Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and its in-app player.
 
-### v0.99.99 — Annual HUHS voting (implementation ready; phone verification pending)
+### v0.99.99 — Annual HUHS voting (complete; phone verified)
 
 - [x] WordPress-managed voting seasons and candidates
 - [x] best Hungarian hardstyle DJ
@@ -451,7 +451,7 @@ Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and
 - [x] require a registered, signed-in app account before voting
 - [x] ask separately whether the voter wants the HUHS newsletter; only explicit consent may trigger the existing Mailchimp subscription flow
 
-Implemented in source: one WordPress season editor with category-level `+ Jelölt hozzáadása` fields, unlimited candidates per category, DJ and organizer candidates without Spotify/YouTube fields, and optional Spotify/YouTube support for the Hungarian hardstyle track category. Each category accepts up to 5 / 3 / 2 / 1 / 3 selected candidates respectively. The Home button now tolerates the live API response time and appears when a published, enabled season is within its configured time window. The private admin summary is served by the deployed Firebase API function `getVotingSummary`; the unnecessary results-publication checkbox was removed. Registered-user voting, Firestore duplicate protection, separate Mailchimp consent, and the private admin summary remain in place. ARM64 debug APK: `build/HUHS-v0.99.99+6-arm64-debug.apk`; WordPress package: `build/huhs-mobile-api-2.4.42.zip`. Phone verification remains before final closure.
+Implemented in source: one WordPress season editor with category-level `+ Jelölt hozzáadása` fields, unlimited candidates per category, DJ and organizer candidates without Spotify/YouTube fields, and optional Spotify/YouTube support for the Hungarian hardstyle track category. Each category accepts up to 5 / 3 / 2 / 1 / 3 selected candidates respectively. The Home button appears when a published, enabled season is within its configured time window. The private admin summary is served by the deployed Firebase API function `getVotingSummary`; the unnecessary results-publication checkbox was removed. Registered-user voting, Firestore duplicate protection, separate Mailchimp consent, and the private admin summary remain in place. Final phone testing passed in `build/HUHS-v0.99.99+6-arm64-debug.apk`; the test votes were cleared from Firebase after verification. WordPress package: `build/huhs-mobile-api-2.4.42.zip`.
 
 ### v1.5 — Hardstyle Revolution Store
 

@@ -663,7 +663,7 @@ Confirmed community direction (v0.99.8 scope; only security/privacy remains v1.0
 - WordPress remains the source of truth for editorial content (news, events, DJs, organizers, and releases), while the app community backend may be a deliberately separate service optimized for authentication, real-time chat/feed data, friendships, attendance, and user uploads.
 - Once app registration is available, DJ, organizer, and event submission actions and forms must be visible only to authenticated users. The submission API must also enforce authentication server-side; hiding the forms in Flutter is not sufficient.
 
-### v0.99.99 - Annual HUHS Voting (planned before v1.0)
+### v0.99.99 - Annual HUHS Voting (complete; phone verified)
 
 Confirmed annual voting direction for v0.99.99:
 
@@ -690,7 +690,7 @@ Confirmed annual voting direction for v0.99.99:
 - The public summary should contain the season/year, category names, final ranking, candidate display data, and optionally vote totals or percentages according to the season settings.
 - Never include voter identities, audit logs, moderation flags, suspicious-vote indicators, or other private admin data in the public results response.
 
-The current implementation is ready for phone verification in `build/HUHS-v0.99.99+6-arm64-debug.apk`. It includes one WordPress season editor with category-level `+ Jelölt hozzáadása` fields, unlimited candidates per category, DJ and organizer candidates without Spotify/YouTube fields, Spotify/YouTube support for the Hungarian hardstyle track category, category selection limits of 5/3/2/1/3, a Home entry point with a 5-second API timeout, registered-user voting with Firestore duplicate protection, separate Mailchimp consent, and a private native admin summary served by the deployed `getVotingSummary` API function. The updated existing HUHS Mobile API package is `build/huhs-mobile-api-2.4.42.zip`; Firebase Firestore rules are deployed. Final closure waits for owner phone verification.
+The implementation was phone-verified in `build/HUHS-v0.99.99+6-arm64-debug.apk`. It includes one WordPress season editor with category-level `+ Jelölt hozzáadása` fields, unlimited candidates per category, DJ and organizer candidates without Spotify/YouTube fields, Spotify/YouTube support for the Hungarian hardstyle track category, category selection limits of 5/3/2/1/3, a Home entry point with a 5-second API timeout, registered-user voting with Firestore duplicate protection, separate Mailchimp consent, and a private native admin summary served by the deployed `getVotingSummary` API function. The updated existing HUHS Mobile API package is `build/huhs-mobile-api-2.4.42.zip`; Firebase Firestore rules are deployed. Test votes were cleared after verification; the build is closed.
 
 ### v1.5 - Hardstyle Revolution Store (later)
 
