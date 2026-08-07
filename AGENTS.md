@@ -336,7 +336,7 @@ Separate Facebook, Instagram, TikTok, YouTube, and Spotify fields during registr
 - v0.99.2 follow-up: allow gallery images to be saved to the device with platform permission handling.
 - v0.99.2 follow-up: add a Data protection / GDPR information section covering privacy, retention, and user rights.
 - v0.99.2 follow-up: review personal-data access rules and keep sensitive operations server-side.
-- v1.0: complete security hardening, obfuscation, restricted backend secrets, abuse/rate-limit checks, and production release signing; absolute protection against reverse engineering is not possible.
+- v0.99.999: complete security hardening, obfuscation, restricted backend secrets, abuse/rate-limit checks, and Android release signing; absolute protection against reverse engineering is not possible.
 - v0.99.2.1 radio scope: completed the Real Hardstyle FM integration at `https://stream.realhardstyle.nl` as the Home radio stream, including a custom compact bar player matching the app's red-black design (Play, Stop, and Mute), current-track metadata when available, safe placement above bottom navigation, and a More-section provider page with the supplied logo, website, and attribution text.
 - v0.99.2.1 follow-up: completed the readable modern/cyber-style font fallback with Hungarian accented-character support.
 
@@ -437,7 +437,7 @@ Firebase rules and the `claimArtistProfile`/`sendPersonalizedPush`/`getArtistCla
 
 - [x] Show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
 
-Keep security hardening, obfuscation, release signing and purchase/store work in v1.0+. The Label release catalog is closed in v0.99.89.
+The v0.99.999 security-hardening and Android public-QA pass owns R8/resource shrinking, Dart obfuscation, release signing, HTTPS-only networking, backup disablement and verification of existing backend rate limits. Paid purchase/store work remains v1.0+; the Label release catalog is closed in v0.99.89.
 
 ### v0.99.8 closure (2026-08-06)
 
@@ -692,6 +692,16 @@ Confirmed annual voting direction for v0.99.99:
 
 The implementation was phone-verified in `build/HUHS-v0.99.99+6-arm64-debug.apk`. It includes one WordPress season editor with category-level `+ Jelölt hozzáadása` fields, unlimited candidates per category, DJ and organizer candidates without Spotify/YouTube fields, Spotify/YouTube support for the Hungarian hardstyle track category, category selection limits of 5/3/2/1/3, a Home entry point with a 5-second API timeout, registered-user voting with Firestore duplicate protection, separate Mailchimp consent, and a private native admin summary served by the deployed `getVotingSummary` API function. The updated existing HUHS Mobile API package is `build/huhs-mobile-api-2.4.42.zip`; Firebase Firestore rules are deployed. Test votes were cleared after verification; the build is closed.
 
+### v0.99.999 - Android security and public QA (ready for phone verification)
+
+- [x] R8/resource shrinking, Dart obfuscation and split debug symbols
+- [x] non-debug Android release signing with a git-ignored local keystore
+- [x] HTTPS-only networking and Android backup disablement
+- [x] verify existing server-side authorization and rate limiting
+- [x] pass the Flutter test suite and verify the signed ARM64 release APK
+
+Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. The owner must phone-test this build; permanent store-key backup/replacement and Play publication remain release operations. Paid store work remains v1.0+.
+
 ### v1.5 - Hardstyle Revolution Store (later)
 
 Focus:
@@ -863,7 +873,7 @@ Product decisions confirmed by the user:
 - Artist/DJ names and the organizer on event detail must be clickable.
 - Artist and organizer event relations open dedicated API-backed profile screens and are confirmed against live data.
 - Live Feed chat and image posting are already implemented and are not v1.0 future work.
-- v1.0 should focus on security hardening, release signing/obfuscation, purchase/store work, and remaining public-release quality. Google sign-in, user profiles, friendships, event attendance and the release catalog preview are covered before v1.0.
+- v1.0 should focus on purchase/store work and remaining public-release quality. Google sign-in, user profiles, friendships, event attendance, release preview and the v0.99.999 Android hardening pass are covered before v1.0.
 - v0.99.99 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting and an admin-controlled Home entry point.
 - Organizer profiles and submissions now support server-managed selectable music genres/styles (backend 2.4.9 prepared; deploy and live-test still pending).
 - Add an About/App information area under More. Read the app version and build number from package metadata instead of hardcoding them, and include developer credit plus relevant website, contact, privacy, and terms links.

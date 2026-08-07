@@ -101,7 +101,7 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 18),
               ref.watch(votingProvider).when(
                 loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
                 data: (season) => season.active
                     ? Padding(
                         padding: const EdgeInsets.only(bottom: 18),

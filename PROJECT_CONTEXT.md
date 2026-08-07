@@ -562,6 +562,10 @@ Requirements:
 
 v0.99.99 is complete and phone-verified: one WordPress season editor provides category-level candidate fields, WordPress manages unlimited candidates per category, DJ and organizer candidates do not use Spotify/YouTube links, the Hungarian hardstyle track category supports optional Spotify/YouTube, Flutter enforces category selection limits of 5/3/2/1/3, displays the active Home entry and voting categories with a 5-second API timeout, registered-user votes are protected by Firestore rules, the newsletter question is separate and explicit, and the native admin summary uses the deployed Firebase API function `getVotingSummary`. ARM64 debug APK: `build/HUHS-v0.99.99+6-arm64-debug.apk`; updated existing API package: `build/huhs-mobile-api-2.4.42.zip`. Test votes were cleared from Firebase after verification.
 
+## v0.99.999 Android security and public QA
+
+The scope is limited to security hardening and final public Android QA. R8/resource shrinking, Dart obfuscation with split debug symbols, non-debug release signing, HTTPS-only networking, Android backup disablement, and verification of existing Firebase/WordPress server-side authorization and rate limits are implemented. `flutter test` passes all 27 tests, and the signed ARM64 release artifact is `build/HUHS-v0.99.999+1-arm64-release.apk`. The owner must phone-test it; permanent store-key backup/replacement and Play publication remain release operations. Paid Label sales and iOS remain v1.0 scope.
+
 The existing annual WordPress-extension voting workflow should be replaced or complemented by a dedicated Hungarian Hardstyle voting module and REST API.
 
 WordPress remains the administration surface and source of truth for:
@@ -689,7 +693,7 @@ The final v0.99.3 source pass separates the read-only community profile from its
 
 The Android radio foreground service now retries the Real Hardstyle FM stream after an unexpected playback error or stream completion instead of remaining silently marked as playing. Explicit Stop and full app closure still cancel pending reconnects.
 
-The owner will perform phone verification separately. Firebase proxy Functions are deployed. The updated WordPress package is `build/huhs-mobile-api-2.4.37.zip`, which includes the completed Label release catalog endpoint, preview generation and the native controller editor choices. Security hardening and signing/obfuscation are v1.0.
+The owner will perform phone verification separately. Firebase proxy Functions are deployed. The updated WordPress package is `build/huhs-mobile-api-2.4.37.zip`, which includes the completed Label release catalog endpoint, preview generation and the native controller editor choices. Security hardening and signing/obfuscation are covered by v0.99.999; paid store work remains v1.0.
 
 
 Cloudinary is the only active image-upload path for the app. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.

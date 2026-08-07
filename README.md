@@ -8,10 +8,10 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ### v0.99.3 — complete and closed (2026-07-30)
 
-- Current Flutter build: `0.99.89+1`; v0.99.3 through v0.99.8 and v0.99.89 are closed. Older APK references are historical.
+- Current Flutter build: `0.99.999+1`; v0.99.3 through v0.99.90, v0.99.89 and v0.99.99 are closed. Older APK references are historical.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
-- Production release signing, obfuscation, and live AdMob verification remain release checks.
+- v0.99.999 contains the release hardening pass; owner phone verification and final store packaging remain release checks.
 - WordPress submissions and native admin submission editing/approval/trash actions use server-side Firebase Functions: they verify Firebase Auth and access roles before forwarding to WordPress. No WordPress credential belongs in Flutter.
 - Cloudinary uploads are client-guarded to JPG/JPEG/PNG/WebP and 5 MB. The unsigned `Hun_hs_Mobile` preset must use the same allowed formats, `huhs/community` folder, unique filenames, and overwrite disabled.
 - Expired events are filtered from API results and the cached event list rechecks every minute.
@@ -56,7 +56,7 @@ The current WordPress backend package is **2.4.37**. `build/huhs-mobile-api-2.4.
  - [x] allow gallery images to be saved to the device with platform permission handling
  - [x] add an in-app Data protection / GDPR information section with privacy and retention details
  - [x] keep sensitive account, role, deletion and WordPress proxy operations server-side
- - [ ] complete production security hardening, obfuscation, abuse/rate-limit checks and release signing in v1.0
+ - [x] complete the v0.99.999 security hardening pass: R8/resource shrinking, Dart obfuscation, release signing, HTTPS-only Android networking, backup disablement, and verified existing backend rate limits
  - [x] complete the Real Hardstyle FM radio integration at `https://stream.realhardstyle.nl` in v0.99.2.1 with a custom compact red-black bar player and Play/Stop/Mute controls
  - [x] show the currently playing track title in the radio player when stream metadata provides it
  - [x] place the persistent radio player above the bottom navigation without covering event panels
@@ -141,7 +141,7 @@ Phone-verified by the project owner; all listed v0.99.5 items are marked complet
 
 Analyzer and the complete Flutter test suite pass. The final ARM64-only debug artifact is `build/HUHS-v0.99.6+1-arm64-debug.apk` (package `0.99.6`, ARM64 ABI). Graphify was refreshed after the final source and documentation changes.
 
-Security hardening, obfuscation, release signing and purchase/store work remain scheduled for v1.0+. The Label release catalog is complete in v0.99.89; paid music sales will later extend this same Label area.
+The v0.99.999 hardening pass is complete; paid music sales will later extend the completed v0.99.89 Label catalog in v1.0+.
 
 ### v0.99.8 closure (2026-08-06)
 
@@ -178,7 +178,7 @@ The final ARM64 debug test APK is `build/HUHS-v0.99.7+3-arm64-debug.apk`.
 
 - [x] After a DJ profile is claimed, show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
 
-Security hardening, obfuscation, release signing and purchase/store work remain scheduled for v1.0+. The Label release catalog itself is already closed in v0.99.89.
+The v0.99.999 hardening pass is complete. The Label release catalog itself is already closed in v0.99.89; paid store work remains v1.0+.
 
 ### v0.99.8 — User profile navigation and community details (closed)
 
@@ -456,6 +456,18 @@ Implemented in source: one WordPress season editor with category-level `+ Jelöl
 ### v1.5 — Hardstyle Revolution Store
 
 The Label preview catalog is already complete in v0.99.89; this section covers only the later paid extension.
+
+### v0.99.999 — Android security and public QA (ready for phone verification)
+
+- [x] Android release signing with a local, git-ignored release keystore
+- [x] R8 code shrinking and resource shrinking
+- [x] Dart obfuscation with split debug symbols
+- [x] disable Android backup and cleartext traffic
+- [x] verify existing Firebase/WordPress rate limiting and server-side authorization
+- [x] run `flutter test` successfully (27 tests)
+- [x] build and verify a signed ARM64 release APK
+
+Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. The owner must phone-test this build; the local signing key must be backed up and replaced with the permanent store key before Play publication. Paid Label sales, store packaging and iOS remain v1.0 scope.
 
 - [ ] offer a rewarded-ad full MP3 download at 128 kbps only
 - [ ] sell 320 kbps MP3 and WAV/lossless through Google Play Billing (not direct Google Pay checkout)

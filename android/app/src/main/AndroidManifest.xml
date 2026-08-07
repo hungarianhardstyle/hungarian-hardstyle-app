@@ -12,7 +12,9 @@
     <application
         android:label="Hungarian Hardstyle"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:usesCleartextTraffic="false">
 
         <activity
             android:name=".MainActivity"
