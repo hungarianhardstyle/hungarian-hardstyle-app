@@ -368,41 +368,39 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         ),
       );
       FocusManager.instance.primaryFocus?.unfocus();
-      if (!mounted) {
-        title.dispose();
-        content.dispose();
-        for (final controller in controllers.values) {
-          controller.dispose();
-        }
-        return;
-      }
-      if (result == true) {
-        await service.wordPressAdminRequest(
-          path: '/huhs/v1/admin',
-          method: 'POST',
-          body: {
-            'action': 'save_resource',
-            'id': id,
-            'type': _section,
-            'title': title.text.trim(),
-            'content': content.text,
-            'contentChanged': content.text != editableContent,
-            'meta': {
-              for (final entry in controllers.entries)
-                entry.key: entry.value.text.trim(),
-              for (final entry in selectedIds.entries)
-                entry.key: entry.value.join(','),
-              ...checks,
-            },
-          },
-        );
-        _message('Az elem mentve.');
-        _reload();
-      }
+      final saveBody = result == true
+          ? <String, dynamic>{
+              'action': 'save_resource',
+              'id': id,
+              'type': _section,
+              'title': title.text.trim(),
+              'content': content.text,
+              'contentChanged': content.text != editableContent,
+              'meta': {
+                for (final entry in controllers.entries)
+                  entry.key: entry.value.text.trim(),
+                for (final entry in selectedIds.entries)
+                  entry.key: entry.value.join(','),
+                ...checks,
+              },
+            }
+          : null;
+      // Let the dialog route finish before disposing focused text controllers.
+      await Future<void>.delayed(const Duration(milliseconds: 250));
       title.dispose();
       content.dispose();
       for (final controller in controllers.values) {
         controller.dispose();
+      }
+      if (!mounted || saveBody == null) return;
+      if (result == true) {
+        await service.wordPressAdminRequest(
+          path: '/huhs/v1/admin',
+          method: 'POST',
+          body: saveBody,
+        );
+        _message('Az elem mentve.');
+        _reload();
       }
     } catch (error) {
       _message('A szerkesztés nem sikerült: ${_errorText(error)}');

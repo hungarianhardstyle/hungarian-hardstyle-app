@@ -18395,7 +18395,7 @@
       "source_file": "test/models/post_test.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 93,
+      "community": 94,
       "norm_label": "post_test.dart",
       "id": "test_models_post_test",
       "community_name": "post_test.dart"
@@ -18406,7 +18406,7 @@
       "source_file": "test/models/post_test.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 93,
+      "community": 94,
       "norm_label": "main",
       "id": "test_models_post_test_main",
       "community_name": "post_test.dart"
@@ -18417,7 +18417,7 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 93,
+      "community": 94,
       "norm_label": "package:hungarian_hardstyle_app/models/post.dart",
       "id": "package_hungarian_hardstyle_app_models_post_dart",
       "community_name": "post_test.dart"
@@ -18428,7 +18428,7 @@
       "source_file": "test/models/profile_submission_test.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 94,
+      "community": 93,
       "norm_label": "profile_submission_test.dart",
       "id": "test_models_profile_submission_test",
       "community_name": "profile_submission_test.dart"
@@ -18439,7 +18439,7 @@
       "source_file": "test/models/profile_submission_test.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 94,
+      "community": 93,
       "norm_label": "main",
       "id": "test_models_profile_submission_test_main",
       "community_name": "profile_submission_test.dart"
@@ -18450,7 +18450,7 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 94,
+      "community": 93,
       "norm_label": "package:hungarian_hardstyle_app/models/profile_submission.dart",
       "id": "package_hungarian_hardstyle_app_models_profile_submission_dart",
       "community_name": "profile_submission_test.dart"
@@ -47086,5 +47086,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "7b9efbd2bfc478a26ff4a3c362c29373a466702e"
+  "built_at_commit": "096bc29518f8c0eef25800f9279eca54e4faae17"
 }

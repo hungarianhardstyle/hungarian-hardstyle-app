@@ -71,7 +71,7 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     Image.asset(
                       'assets/logos/huhs_logo.png',
-                      width: width * 0.74,
+                      width: width * 0.86,
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 10),

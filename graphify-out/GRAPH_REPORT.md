@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7b9efbd2`
+- Built from commit: `096bc295`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -107,8 +107,8 @@
 - _EventSubmissionScreenState
 - OpenAPITests
 - _GenreDiscoveryScreenState
-- post_test.dart
 - profile_submission_test.dart
+- post_test.dart
 - hungarian-hardstyle-newsroom/app/__init__.py
 - newsroom/app/__init__.py
 - @hungarianhardstyle
