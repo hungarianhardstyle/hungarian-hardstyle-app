@@ -560,7 +560,7 @@ Requirements:
 
 ## Annual Top DJ And Track Voting
 
-Target: implement in v0.99.99 before v1.0. The first implementation is ready for phone verification: WordPress manages seasons and candidates, Flutter displays the active Home entry and voting categories, registered-user votes are protected by Firestore rules, the newsletter question is separate and explicit, and the native admin has a private summary. ARM64 debug APK: `build/HUHS-v0.99.99+1-arm64-debug.apk`; updated existing API package: `build/huhs-mobile-api-2.4.38.zip`. Final closure waits for owner phone verification.
+Target: implement in v0.99.99 before v1.0. The current implementation is ready for phone verification: WordPress manages seasons and unlimited candidates per category, DJ and organizer candidates do not use Spotify/YouTube links, the Hungarian hardstyle track category supports Spotify/YouTube, Flutter displays the active Home entry and voting categories, registered-user votes are protected by Firestore rules, the newsletter question is separate and explicit, and the native admin has a private summary. ARM64 debug APK: `build/HUHS-v0.99.99+2-arm64-debug.apk`; updated existing API package: `build/huhs-mobile-api-2.4.39.zip`. Final closure waits for owner phone verification.
 
 The existing annual WordPress-extension voting workflow should be replaced or complemented by a dedicated Hungarian Hardstyle voting module and REST API.
 
@@ -571,13 +571,13 @@ WordPress remains the administration surface and source of truth for:
 - voting status and rules
 - `Legjobb magyar hardstyle DJ – <év>` candidates
 - `Legjobb magyar hardcore DJ – <év>` candidates
-- `Legjobb magyar bulisorozat – <év>` candidates
-- `Legjobb magyar zene – <év>` candidates
+- `Legjobb magyar hardstyle zene – <év>` candidates
+- `Legjobb magyar szervező – <év>` candidates
 - `Legjobb külföldi DJ – <év>` candidates
 - candidate names, artist/title data, images/covers, optional previews, and external links
 - result publication settings
 
-The displayed year should come from the voting season configuration. Candidate types must support DJs, event series, and tracks.
+The displayed year should come from the voting season configuration. Candidate types must support DJs, organizers, and tracks.
 
 Flutter must:
 

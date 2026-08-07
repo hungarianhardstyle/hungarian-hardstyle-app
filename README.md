@@ -182,7 +182,7 @@ Security hardening, obfuscation, release signing and purchase/store work remain 
 
 ### v0.99.8 — User profile navigation and community details (closed)
 
-Status is authoritative: the active WordPress Mobile API package is `2.4.37`; the v0.99.90 ARM64 debug build is the current phone-test artifact. Earlier completed work is not reopened here.
+Status is authoritative: the voting fix is packaged as WordPress Mobile API `2.4.39`; the v0.99.99+2 ARM64 debug build is the current phone-test artifact. Earlier completed work is not reopened here.
 
 - [x] Make each profile card in `Több → Felhasználók` tappable and open that user's native in-app profile.
 - [x] On a user profile, show the user's favorite DJs, organizers, and events; favorite news does not appear in this profile section.
@@ -439,19 +439,19 @@ Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and
 
 ### v0.99.99 — Annual HUHS voting (implementation ready; phone verification pending)
 
-- [ ] WordPress-managed voting seasons and candidates
-- [ ] best Hungarian hardstyle DJ
-- [ ] best Hungarian hardcore DJ
-- [ ] best Hungarian event series
-- [ ] best Hungarian track
-- [ ] best international DJ
-- [ ] authenticated one-user/one-vote enforcement
-- [ ] private admin dashboard and explicitly published public results
-- [ ] add a prominent Home button for the active voting season, controlled by an admin on/off setting and hidden when voting is inactive
-- [ ] require a registered, signed-in app account before voting
-- [ ] ask separately whether the voter wants the HUHS newsletter; only explicit consent may trigger the existing Mailchimp subscription flow
+- [x] WordPress-managed voting seasons and candidates
+- [x] best Hungarian hardstyle DJ
+- [x] best Hungarian hardcore DJ
+- [x] best Hungarian hardstyle track
+- [x] best Hungarian organizer
+- [x] best international DJ
+- [x] authenticated one-user/one-vote enforcement
+- [x] private admin dashboard and explicitly published public results
+- [x] add a prominent Home button for the active voting season, controlled by an admin on/off setting and hidden when voting is inactive
+- [x] require a registered, signed-in app account before voting
+- [x] ask separately whether the voter wants the HUHS newsletter; only explicit consent may trigger the existing Mailchimp subscription flow
 
-Implemented in source: WordPress-managed seasons/candidates, DJ/event-series/track categories, Spotify and YouTube candidate links, active Home entry point, registered-user voting with Firestore duplicate protection, separate Mailchimp consent and admin-only vote summary. ARM64 debug APK: `build/HUHS-v0.99.99+1-arm64-debug.apk`; WordPress package: `build/huhs-mobile-api-2.4.38.zip`. Phone verification remains before final closure.
+Implemented in source: WordPress-managed seasons/candidates with unlimited candidates per category, DJ and organizer candidates without Spotify/YouTube fields, and Spotify/YouTube support for the Hungarian hardstyle track category. The Home button appears only when a published, enabled season is within its configured time window. Registered-user voting, Firestore duplicate protection, separate Mailchimp consent, and the private admin summary remain in place. ARM64 debug APK: `build/HUHS-v0.99.99+2-arm64-debug.apk`; WordPress package: `build/huhs-mobile-api-2.4.39.zip`. Phone verification remains before final closure.
 
 ### v1.5 — Hardstyle Revolution Store
 
