@@ -776,6 +776,7 @@ Planned v0.99.1 Community MVP decisions:
 
 Additional v1.0 product requirements:
 
+- Refresh the WordPress-managed FAQ with the new v0.99.999/v1.0 features and current user guidance.
 - Make displayed genres selectable. A genre detail/discovery screen should show separate API-backed `Események`, `DJ-k`, and `Hírek` sections for the selected genre and clearly retain the active genre label.
 - The More-section `Támogatás / Donate` card is planned for v0.99.4, backed by a configurable PayPal donation URL with PayPal-app-first and browser fallback opening; do not build a custom payment flow.
 

@@ -396,6 +396,7 @@ Small, low-risk finishing work that can be released independently before the lar
 
 Core release quality:
 
+- [ ] refresh the WordPress-managed FAQ with the new v0.99.999/v1.0 features and current user guidance
 - [ ] configure production release signing and final Android release packaging
 - [ ] stabilize news, events, DJs and organizers for public release
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches

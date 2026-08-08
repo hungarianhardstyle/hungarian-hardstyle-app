@@ -624,6 +624,7 @@ Keep this release intentionally small and low-risk:
 
 Focus:
 
+- Refresh the WordPress-managed FAQ with the new v0.99.999/v1.0 features and current user guidance.
 - stable news
 - stable events
 - event details
