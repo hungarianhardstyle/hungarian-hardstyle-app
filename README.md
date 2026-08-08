@@ -11,7 +11,7 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 - Current Flutter build: `0.99.999+1`; v0.99.3 through v0.99.90, v0.99.89 and v0.99.99 are closed. Older APK references are historical.
 - Firestore rules and the named `hungarian-hardstyle` database `deleteCommunityUser` Function are deployed.
 - Account roles remain independent from Admin/Moderátor access roles; the owner account is Organizer + Admin.
-- v0.99.999 contains the release hardening pass; owner phone verification and final store packaging remain release checks.
+- v0.99.999 is complete and phone-verified; final Play Store packaging remains v1.0 work.
 - WordPress submissions and native admin submission editing/approval/trash actions use server-side Firebase Functions: they verify Firebase Auth and access roles before forwarding to WordPress. No WordPress credential belongs in Flutter.
 - Cloudinary uploads are client-guarded to JPG/JPEG/PNG/WebP and 5 MB. The unsigned `Hun_hs_Mobile` preset must use the same allowed formats, `huhs/community` folder, unique filenames, and overwrite disabled.
 - Expired events are filtered from API results and the cached event list rechecks every minute.
@@ -457,7 +457,7 @@ Implemented in source: one WordPress season editor with category-level `+ Jelöl
 
 The Label preview catalog is already complete in v0.99.89; this section covers only the later paid extension.
 
-### v0.99.999 — Android security and public QA (ready for phone verification)
+### v0.99.999 — Android security and public QA (complete; phone verified)
 
 - [x] Android release signing with a local, git-ignored release keystore
 - [x] R8 code shrinking and resource shrinking
@@ -467,7 +467,7 @@ The Label preview catalog is already complete in v0.99.89; this section covers o
 - [x] run `flutter test` successfully (27 tests)
 - [x] build and verify a signed ARM64 release APK
 
-Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. The owner must phone-test this build; the local signing key must be backed up and replaced with the permanent store key before Play publication. Paid Label sales, store packaging and iOS remain v1.0 scope.
+Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. Paid Label sales, store packaging and iOS remain v1.0 scope.
 
 - [ ] offer a rewarded-ad full MP3 download at 128 kbps only
 - [ ] sell 320 kbps MP3 and WAV/lossless through Google Play Billing (not direct Google Pay checkout)

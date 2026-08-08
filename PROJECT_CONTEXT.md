@@ -564,7 +564,7 @@ v0.99.99 is complete and phone-verified: one WordPress season editor provides ca
 
 ## v0.99.999 Android security and public QA
 
-The scope is limited to security hardening and final public Android QA. R8/resource shrinking, Dart obfuscation with split debug symbols, non-debug release signing, HTTPS-only networking, Android backup disablement, and verification of existing Firebase/WordPress server-side authorization and rate limits are implemented. `flutter test` passes all 27 tests, and the signed ARM64 release artifact is `build/HUHS-v0.99.999+1-arm64-release.apk`. The owner must phone-test it; permanent store-key backup/replacement and Play publication remain release operations. Paid Label sales and iOS remain v1.0 scope.
+The scope was limited to security hardening and final public Android QA. R8/resource shrinking, Dart obfuscation with split debug symbols, non-debug release signing, HTTPS-only networking, Android backup disablement, and verification of existing Firebase/WordPress server-side authorization and rate limits are implemented. `flutter test` passes all 27 tests, and the signed ARM64 release artifact is `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. Permanent Play publication, paid Label sales and iOS remain v1.0 scope.
 
 The existing annual WordPress-extension voting workflow should be replaced or complemented by a dedicated Hungarian Hardstyle voting module and REST API.
 

@@ -692,7 +692,7 @@ Confirmed annual voting direction for v0.99.99:
 
 The implementation was phone-verified in `build/HUHS-v0.99.99+6-arm64-debug.apk`. It includes one WordPress season editor with category-level `+ Jelölt hozzáadása` fields, unlimited candidates per category, DJ and organizer candidates without Spotify/YouTube fields, Spotify/YouTube support for the Hungarian hardstyle track category, category selection limits of 5/3/2/1/3, a Home entry point with a 5-second API timeout, registered-user voting with Firestore duplicate protection, separate Mailchimp consent, and a private native admin summary served by the deployed `getVotingSummary` API function. The updated existing HUHS Mobile API package is `build/huhs-mobile-api-2.4.42.zip`; Firebase Firestore rules are deployed. Test votes were cleared after verification; the build is closed.
 
-### v0.99.999 - Android security and public QA (ready for phone verification)
+### v0.99.999 - Android security and public QA (complete; phone verified)
 
 - [x] R8/resource shrinking, Dart obfuscation and split debug symbols
 - [x] non-debug Android release signing with a git-ignored local keystore
@@ -700,7 +700,7 @@ The implementation was phone-verified in `build/HUHS-v0.99.99+6-arm64-debug.apk`
 - [x] verify existing server-side authorization and rate limiting
 - [x] pass the Flutter test suite and verify the signed ARM64 release APK
 
-Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. The owner must phone-test this build; permanent store-key backup/replacement and Play publication remain release operations. Paid store work remains v1.0+.
+Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. Permanent Play publication remains a v1.0 release operation; paid store work remains v1.0+.
 
 ### v1.5 - Hardstyle Revolution Store (later)
 
