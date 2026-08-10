@@ -716,8 +716,9 @@ Focus:
 
 ## Release And Store Business Model (later, not in v0.99.89)
 
-The later store may offer a 128 kbps full MP3 after a rewarded advertisement,
-plus paid 320 kbps MP3 and WAV/lossless products. It must not offer
+The existing Label tab may offer a 128 kbps full MP3 after a rewarded advertisement,
+plus paid 320 kbps MP3 and WAV/lossless products for the already uploaded
+WordPress release records. It must not offer
 unadvertised or anonymous full-MP3 downloads.
 
 Payment requirement:
@@ -731,11 +732,17 @@ Release processing:
 - run conversion as a background job, never inside the upload/API request
 - keep the WAV master private and expose each derivative only after its entitlement is satisfied
 
-Paid options:
+Paid options inside the existing Label tab:
 
 - 128 kbps MP3 after a rewarded advertisement
 - 320 kbps MP3, example price `1.99 EUR`
 - WAV/lossless, example price `2.99 EUR`
+- Each release may expose separate Radio and Extended versions.
+- The editor sets the actual price for each paid product.
+
+The 128 kbps rewarded-ad target may be approximately 300 HUF per unlock, but
+AdMob revenue is variable and must be measured by eCPM, fill rate and geography;
+the app must not promise a fixed amount per impression.
 
 Example later paid-store UI structure:
 

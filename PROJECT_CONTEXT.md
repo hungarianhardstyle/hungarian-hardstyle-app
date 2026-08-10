@@ -525,7 +525,7 @@ Requirements:
 
 - Before external/cloud image uploads, compress submission images on-device to roughly 1200–1600 px width in JPEG/WebP format to reduce storage and bandwidth use.
 
-- Hardstyle Revolution Releases are covered by the completed v0.99.89 WordPress-managed Label catalog; paid purchase/store remains a later extension in that same area.
+- Hardstyle Revolution Releases are covered by the completed v0.99.89 WordPress-managed Label catalog; paid products will be implemented inside that same Label tab, not as a separate store.
 
 - Music Store
 
@@ -776,6 +776,8 @@ Planned v0.99.1 Community MVP decisions:
 
 Additional v1.0 product requirements:
 
+- Extend the existing Label tab for the uploaded WordPress release records: WAV master upload, preview generation, configurable Radio/Extended versions, editor-defined WAV and 320 kbps MP3 prices, Google Play Billing, and rewarded-ad unlock for a generated 128 kbps MP3.
+- Keep WAV masters private and generate preview/paid derivatives server-side in a background job. The approximately 300 HUF rewarded-ad revenue target is only an estimate; AdMob eCPM and fill rate determine actual revenue.
 - Reorganize `Több` into `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated bottom tab.
 - Add a search field and collapsible category sections to `Több`; place administration in a separate admin-only block.
 - Complete final UX polish for consistent card sizes, spacing, icons, loading/empty/error states, touch targets, back behavior, tab history and accessibility scaling.

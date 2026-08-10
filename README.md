@@ -405,7 +405,7 @@ Core release quality:
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches
 - [x] make artist/DJ profile genre tags open the same grouped `Események`, `DJ-k` and `Hírek` discovery view with the complete paginated result set
 - [x] complete the Label release catalog in v0.99.89, including preview playback, WordPress release records, multi-artist links, cover art and external release links
-- [ ] extend the same Label catalog later with paid Radio Edit/Radio Version and Extended/full products; no separate store/catalog is planned
+- [ ] extend the existing Label tab with paid products; no separate store/catalog is planned
 - [x] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
 - [x] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background (complete)
 - [x] introduce a persistent navigation shell with per-tab history
@@ -474,11 +474,15 @@ The Label preview catalog is already complete in v0.99.89; this section covers o
 
 Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. Paid Label sales and Android store packaging remain v1.0 scope; iOS is deferred until an Apple Developer account is available.
 
-- [ ] offer a rewarded-ad full MP3 download at 128 kbps only
-- [ ] sell 320 kbps MP3 and WAV/lossless through Google Play Billing (not direct Google Pay checkout)
-- [ ] process conversions in a background job and keep the WAV master private
+- [ ] let each existing WordPress Label release accept one uploaded WAV master, generate its preview, and offer configurable Radio and Extended versions
+- [ ] let the editor set separate prices for the WAV/lossless and 320 kbps MP3 products
+- [ ] sell the WAV/lossless and 320 kbps MP3 products through Google Play Billing (not direct Google Pay checkout)
+- [ ] generate a 128 kbps MP3 derivative that is unlocked after a rewarded advertisement
+- [ ] process all derivatives in a background job and keep the WAV master private
 - [x] verify Websupport FFmpeg support (`/usr/bin/ffmpeg` 4.4.2 with `libmp3lame`); background-job execution still needs an end-to-end test
 - [ ] optional purchase and download history
+
+The rewarded-ad revenue target is approximately 300 HUF per 128 kbps unlock, but actual revenue depends on AdMob eCPM, geography, fill rate and user demand; it cannot be guaranteed per impression.
 
 Releases and Store use one WordPress-managed catalog rather than separate content systems.
 

@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4e72c84a`
+- Built from commit: `0853b6ce`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -34,7 +34,7 @@
 - organizer.dart
 - hungarian-hardstyle-newsroom/app/main.py
 - my_application.cc
-- favorites_screen.dart
+- events_screen.dart
 - more_screen.dart
 - RadioPlaybackService
 - main_navigation.dart
@@ -87,7 +87,7 @@
 - spotify_player.dart
 - brand_loading_indicator.dart
 - FlutterMacOS
-- events_screen.dart
+- favorite_button.dart
 - AppDelegate
 - faq.dart
 - List
@@ -218,9 +218,9 @@ Nodes (21): BaseHTTPMiddleware, create_wordpress_draft(), custom_openapi(), heal
 Cohesion: 0.09
 Nodes (22): FlPluginRegistry, FlView, GApplication, gboolean, gchar, GObject, GtkApplication, fl_register_plugins() (+14 more)
 
-### Community 20 - "favorites_screen.dart"
-Cohesion: 0.10
-Nodes (24): ../artists/artist_detail_screen.dart, ConsumerWidget, ../events/event_detail_screen.dart, eventsProvider, FavoriteKind, favoritesProvider, _openPlannedEvent, _PostAuthorAvatar (+16 more)
+### Community 20 - "events_screen.dart"
+Cohesion: 0.09
+Nodes (26): ../artists/artist_detail_screen.dart, ConsumerWidget, event_submission_screen.dart, ../events/event_detail_screen.dart, eventsProvider, favoritesProvider, _openPlannedEvent, _PostAuthorAvatar (+18 more)
 
 ### Community 21 - "more_screen.dart"
 Cohesion: 0.08
@@ -430,9 +430,9 @@ Nodes (8): AnimationController, build, _controller, createState, didChangeDepend
 Cohesion: 0.32
 Nodes (5): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow, XCTest
 
-### Community 73 - "events_screen.dart"
-Cohesion: 0.25
-Nodes (7): event_submission_screen.dart, _EventsHeader, onSubmit, _openSubmission, showSubmit, ../../providers/community_provider.dart, ../../widgets/event_card.dart
+### Community 73 - "favorite_button.dart"
+Cohesion: 0.33
+Nodes (5): FavoriteKind, id, kind, title, ../providers/favorites_provider.dart
 
 ### Community 74 - "AppDelegate"
 Cohesion: 0.25

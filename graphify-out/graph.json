@@ -5517,7 +5517,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "eventsprovider",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_providers_events_provider_eventsprovider"
     },
     {
@@ -5603,9 +5603,9 @@
       "source_file": "lib/providers/favorites_provider.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 20,
+      "community": 73,
       "norm_label": "favoritekind",
-      "community_name": "favorites_screen.dart",
+      "community_name": "favorite_button.dart",
       "id": "lib_providers_favorites_provider_favoritekind"
     },
     {
@@ -5847,7 +5847,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "favoritesprovider",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_providers_favorites_provider_favoritesprovider"
     },
     {
@@ -6639,7 +6639,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "consumerwidget",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "consumerwidget"
     },
     {
@@ -6846,7 +6846,7 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 73,
+      "community": 20,
       "norm_label": "../../widgets/event_card.dart",
       "community_name": "events_screen.dart",
       "id": "widgets_event_card_dart"
@@ -6857,7 +6857,7 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 73,
+      "community": 20,
       "norm_label": "../../providers/community_provider.dart",
       "community_name": "events_screen.dart",
       "id": "providers_community_provider_dart"
@@ -7143,9 +7143,9 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 20,
+      "community": 73,
       "norm_label": "../providers/favorites_provider.dart",
-      "community_name": "favorites_screen.dart",
+      "community_name": "favorite_button.dart",
       "id": "providers_favorites_provider_dart"
     },
     {
@@ -7200,7 +7200,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "_postauthoravatar",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_screens_community_community_screen_postauthoravatar"
     },
     {
@@ -8256,7 +8256,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "_openplannedevent",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_screens_community_community_screen_openplannedevent"
     },
     {
@@ -8322,7 +8322,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "../../providers/events_provider.dart",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "providers_events_provider_dart"
     },
     {
@@ -8366,7 +8366,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "../artists/artist_detail_screen.dart",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "artists_artist_detail_screen_dart"
     },
     {
@@ -8377,7 +8377,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "../events/event_detail_screen.dart",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "events_event_detail_screen_dart"
     },
     {
@@ -9169,7 +9169,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "../organizers/organizer_detail_screen.dart",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "organizers_organizer_detail_screen_dart"
     },
     {
@@ -9684,7 +9684,7 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 73,
+      "community": 20,
       "norm_label": "events_screen.dart",
       "community_name": "events_screen.dart",
       "id": "lib_screens_events_events_screen"
@@ -9697,7 +9697,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "eventsscreen",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_screens_events_events_screen_eventsscreen"
     },
     {
@@ -9706,7 +9706,7 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 73,
+      "community": 20,
       "norm_label": "_eventsheader",
       "community_name": "events_screen.dart",
       "id": "lib_screens_events_events_screen_eventsheader"
@@ -9717,7 +9717,7 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 73,
+      "community": 20,
       "norm_label": "onsubmit",
       "community_name": "events_screen.dart",
       "id": "lib_screens_events_events_screen_onsubmit"
@@ -9728,7 +9728,7 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 73,
+      "community": 20,
       "norm_label": "showsubmit",
       "community_name": "events_screen.dart",
       "id": "lib_screens_events_events_screen_showsubmit"
@@ -9739,7 +9739,7 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 73,
+      "community": 20,
       "norm_label": "_opensubmission",
       "community_name": "events_screen.dart",
       "id": "lib_screens_events_events_screen_opensubmission"
@@ -9752,7 +9752,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "build",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_screens_events_events_screen_build"
     },
     {
@@ -9761,7 +9761,7 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 73,
+      "community": 20,
       "norm_label": "event_submission_screen.dart",
       "community_name": "events_screen.dart",
       "id": "event_submission_screen_dart"
@@ -10291,7 +10291,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "../news/news_detail_screen.dart",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "news_news_detail_screen_dart"
     },
     {
@@ -11303,7 +11303,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "favorites_screen.dart",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_screens_more_favorites_screen"
     },
     {
@@ -11314,7 +11314,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "favoritesscreen",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_screens_more_favorites_screen_favoritesscreen"
     },
     {
@@ -11325,7 +11325,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "_label",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_screens_more_favorites_screen_label"
     },
     {
@@ -11336,7 +11336,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "openentry",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_screens_more_favorites_screen_openentry"
     },
     {
@@ -11347,7 +11347,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "build",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_screens_more_favorites_screen_build"
     },
     {
@@ -12788,7 +12788,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "_organizercontent",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_screens_organizers_organizer_detail_screen_organizercontent"
     },
     {
@@ -16119,9 +16119,9 @@
       "source_file": "lib/widgets/favorite_button.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 20,
+      "community": 73,
       "norm_label": "favorite_button.dart",
-      "community_name": "favorites_screen.dart",
+      "community_name": "favorite_button.dart",
       "id": "lib_widgets_favorite_button"
     },
     {
@@ -16132,7 +16132,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "favoritebutton",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_widgets_favorite_button_favoritebutton"
     },
     {
@@ -16141,9 +16141,9 @@
       "source_file": "lib/widgets/favorite_button.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 20,
+      "community": 73,
       "norm_label": "kind",
-      "community_name": "favorites_screen.dart",
+      "community_name": "favorite_button.dart",
       "id": "lib_widgets_favorite_button_kind"
     },
     {
@@ -16152,9 +16152,9 @@
       "source_file": "lib/widgets/favorite_button.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 20,
+      "community": 73,
       "norm_label": "id",
-      "community_name": "favorites_screen.dart",
+      "community_name": "favorite_button.dart",
       "id": "lib_widgets_favorite_button_id"
     },
     {
@@ -16163,9 +16163,9 @@
       "source_file": "lib/widgets/favorite_button.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 20,
+      "community": 73,
       "norm_label": "title",
-      "community_name": "favorites_screen.dart",
+      "community_name": "favorite_button.dart",
       "id": "lib_widgets_favorite_button_title"
     },
     {
@@ -16176,7 +16176,7 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "build",
-      "community_name": "favorites_screen.dart",
+      "community_name": "events_screen.dart",
       "id": "lib_widgets_favorite_button_build"
     },
     {
@@ -48878,5 +48878,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4e72c84a17919c932b1372ef5121c2582c17683f"
+  "built_at_commit": "0853b6cedd7b171e1574c28ffc656c3e220db062"
 }
