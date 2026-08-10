@@ -877,7 +877,7 @@ Product decisions confirmed by the user:
 - Artist/DJ names and the organizer on event detail must be clickable.
 - Artist and organizer event relations open dedicated API-backed profile screens and are confirmed against live data.
 - Live Feed chat and image posting are already implemented and are not v1.0 future work.
-- v1.0 should focus on Apple account sign-in, purchase/store work and remaining public-release quality. Google sign-in, user profiles, friendships, event attendance, release preview and the v0.99.999 Android hardening pass are covered before v1.0.
+- v1.0 should focus on Apple account sign-in, purchase/store work and remaining Android public-release quality. Google sign-in, user profiles, friendships, event attendance, release preview and the v0.99.999 Android hardening pass are covered before v1.0. iOS is deferred until an Apple Developer account is available.
 - v0.99.99 should include an annual WordPress-managed Top DJ and Top Track voting API with in-app voting and an admin-controlled Home entry point.
 - Organizer profiles and submissions now support server-managed selectable music genres/styles (backend 2.4.9 prepared; deploy and live-test still pending).
 - Add an About/App information area under More. Read the app version and build number from package metadata instead of hardcoding them, and include developer credit plus relevant website, contact, privacy, and terms links.

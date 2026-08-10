@@ -410,7 +410,7 @@ Core release quality:
 - [x] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background (complete)
 - [x] introduce a persistent navigation shell with per-tab history
 - [x] add the Chat tab to the persistent bottom-navigation shell
-- [ ] polish the Android release and prepare iOS support
+- [ ] polish the Android release; iOS preparation is deferred until an Apple Developer account is available
 
 Authentication and community:
 
@@ -472,7 +472,7 @@ The Label preview catalog is already complete in v0.99.89; this section covers o
 - [x] run `flutter test` successfully (27 tests)
 - [x] build and verify a signed ARM64 release APK
 
-Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. Paid Label sales, store packaging and iOS remain v1.0 scope.
+Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. Paid Label sales and Android store packaging remain v1.0 scope; iOS is deferred until an Apple Developer account is available.
 
 - [ ] offer a rewarded-ad full MP3 download at 128 kbps only
 - [ ] sell 320 kbps MP3 and WAV/lossless through Google Play Billing (not direct Google Pay checkout)

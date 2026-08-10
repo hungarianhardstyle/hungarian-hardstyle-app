@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d459444d`
+- Built from commit: `4e72c84a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -30,8 +30,8 @@
 - widget_test.dart
 - genre_discovery_screen.dart
 - favorites_provider.dart
-- organizer.dart
 - organizer_submission_screen.dart
+- organizer.dart
 - hungarian-hardstyle-newsroom/app/main.py
 - my_application.cc
 - favorites_screen.dart
@@ -83,7 +83,6 @@
 - MaterialPageRoute
 - submission_image_picker.dart
 - manifest.json
-- ios/RunnerTests/RunnerTests.swift
 - hungarian-hardstyle-newsroom/app/graphics.py
 - spotify_player.dart
 - brand_loading_indicator.dart
@@ -95,11 +94,13 @@
 - release_detail_screen.dart
 - image_saver.dart
 - dart:async
+- ios/RunnerTests/RunnerTests.swift
 - AppDelegate
-- RegisterGeneratedPlugins
 - submission_image.dart
+- RunnerTests
 - releases_provider.dart
 - genre_chip.dart
+- RegisterGeneratedPlugins
 - OpenAPITests
 - hungarian-hardstyle-newsroom/app/__init__.py
 - newsroom/app/__init__.py
@@ -107,7 +108,6 @@
 - hungarian-hardstyle-newsroom
 - hungarian-hardstyle-newsroom
 - String?
-- RunnerTests
 
 ## God Nodes (most connected - your core abstractions)
 1. `communityServiceProvider` - 23 edges
@@ -202,13 +202,13 @@ Nodes (31): _artistHasMore, _artistPage, _artists, build, child, createState, di
 Cohesion: 0.06
 Nodes (30): ChangeNotifier, dart:convert, _auth, _authSubscription, clearAll, _clearCloud, contains, _databaseId (+22 more)
 
-### Community 16 - "organizer.dart"
-Cohesion: 0.07
-Nodes (29): event.dart, 0, city, country, description, excerpt, false, featured (+21 more)
-
-### Community 17 - "organizer_submission_screen.dart"
+### Community 16 - "organizer_submission_screen.dart"
 Cohesion: 0.07
 Nodes (30): class, FormState, build, _city, _contactEmail, _country, createState, _description (+22 more)
+
+### Community 17 - "organizer.dart"
+Cohesion: 0.07
+Nodes (29): event.dart, 0, city, country, description, excerpt, false, featured (+21 more)
 
 ### Community 18 - "hungarian-hardstyle-newsroom/app/main.py"
 Cohesion: 0.14
@@ -414,65 +414,65 @@ Nodes (10): build, helperText, image, maxBytes, onChanged, _pick, SubmissionImag
 Cohesion: 0.18
 Nodes (10): background_color, description, display, icons, name, orientation, prefer_related_applications, short_name (+2 more)
 
-### Community 69 - "ios/RunnerTests/RunnerTests.swift"
-Cohesion: 0.38
-Nodes (4): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit
-
-### Community 70 - "hungarian-hardstyle-newsroom/app/graphics.py"
+### Community 69 - "hungarian-hardstyle-newsroom/app/graphics.py"
 Cohesion: 0.33
 Nodes (8): cover(), fetch(), generate(), Image, Path, render_psd(), Fit, Path
 
-### Community 71 - "spotify_player.dart"
+### Community 70 - "spotify_player.dart"
 Cohesion: 0.22
 Nodes (9): build, _controller, createState, _expanded, initState, SpotifyPlayer, _SpotifyPlayerState, package:webview_flutter/webview_flutter.dart (+1 more)
 
-### Community 72 - "brand_loading_indicator.dart"
+### Community 71 - "brand_loading_indicator.dart"
 Cohesion: 0.22
 Nodes (8): AnimationController, build, _controller, createState, didChangeDependencies, dispose, initState, size
 
-### Community 73 - "FlutterMacOS"
+### Community 72 - "FlutterMacOS"
 Cohesion: 0.32
 Nodes (5): Cocoa, FlutterMacOS, MainFlutterWindow, NSWindow, XCTest
 
-### Community 74 - "events_screen.dart"
+### Community 73 - "events_screen.dart"
 Cohesion: 0.25
 Nodes (7): event_submission_screen.dart, _EventsHeader, onSubmit, _openSubmission, showSubmit, ../../providers/community_provider.dart, ../../widgets/event_card.dart
 
-### Community 75 - "AppDelegate"
+### Community 74 - "AppDelegate"
 Cohesion: 0.25
 Nodes (6): FlutterImplicitEngineBridge, FlutterImplicitEngineDelegate, AppDelegate, Any, Bool, UIApplication
 
-### Community 76 - "faq.dart"
+### Community 75 - "faq.dart"
 Cohesion: 0.25
 Nodes (7): answer, category, FaqItem, fromJson, id, order, question
 
-### Community 77 - "List"
+### Community 76 - "List"
 Cohesion: 0.25
 Nodes (7): PostShortcode, build, PostShortcodeCard, postUrl, relatedPosts, shortcode, List
 
-### Community 78 - "release_detail_screen.dart"
+### Community 77 - "release_detail_screen.dart"
 Cohesion: 0.25
 Nodes (7): HuhsRelease, build, _label, release, ReleaseDetailScreen, releases_screen.dart, ../../widgets/release_preview_player.dart
 
-### Community 79 - "image_saver.dart"
+### Community 78 - "image_saver.dart"
 Cohesion: 0.25
 Nodes (7): _channel, _dio, ImageSaver, saveFromUrl, package:dio/dio.dart, package:flutter/services.dart, static final Dio
 
-### Community 80 - "dart:async"
+### Community 79 - "dart:async"
 Cohesion: 0.29
 Nodes (6): dart:async, getEvents, getEventSubmissionGenres, refreshTimer, service, ../models/event.dart
+
+### Community 80 - "ios/RunnerTests/RunnerTests.swift"
+Cohesion: 0.38
+Nodes (4): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit
 
 ### Community 81 - "AppDelegate"
 Cohesion: 0.47
 Nodes (4): FlutterAppDelegate, AppDelegate, Bool, NSApplication
 
-### Community 82 - "RegisterGeneratedPlugins"
-Cohesion: 0.50
-Nodes (3): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins()
-
-### Community 83 - "submission_image.dart"
+### Community 82 - "submission_image.dart"
 Cohesion: 0.40
 Nodes (4): dart:typed_data, bytes, name, Uint8List
+
+### Community 83 - "RunnerTests"
+Cohesion: 0.40
+Nodes (3): RunnerTests, RunnerTests, XCTestCase
 
 ### Community 84 - "releases_provider.dart"
 Cohesion: 0.40
@@ -482,9 +482,9 @@ Nodes (4): ReleaseQuery, releasesProvider, ../models/release.dart, typedef
 Cohesion: 0.40
 Nodes (4): build, genre, GenreChip, ../screens/genres/genre_discovery_screen.dart
 
-### Community 102 - "RunnerTests"
-Cohesion: 0.40
-Nodes (3): RunnerTests, RunnerTests, XCTestCase
+### Community 86 - "RegisterGeneratedPlugins"
+Cohesion: 0.50
+Nodes (3): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins()
 
 ## Knowledge Gaps
 - **1075 isolated node(s):** `functions`, `{ onDocumentWritten }`, `{ defineSecret }`, `admin`, `{ getFirestore }` (+1070 more)
