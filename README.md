@@ -397,6 +397,9 @@ Small, low-risk finishing work that can be released independently before the lar
 Core release quality:
 
 - [ ] refresh the WordPress-managed FAQ with the new v0.99.999/v1.0 features and current user guidance
+- [ ] reorganize `Több` into `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated tab
+- [ ] add a `Több`-menu search and collapsible category sections, with Admin functions in a separate admin-only block
+- [ ] apply final UX polish: consistent card sizes, spacing, icons, loading/empty/error states, tap targets, back behavior, tab history, and accessibility scaling
 - [ ] configure production release signing and final Android release packaging
 - [ ] stabilize news, events, DJs and organizers for public release
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches

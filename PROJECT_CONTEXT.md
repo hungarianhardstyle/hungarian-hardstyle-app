@@ -776,6 +776,9 @@ Planned v0.99.1 Community MVP decisions:
 
 Additional v1.0 product requirements:
 
+- Reorganize `Több` into `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated bottom tab.
+- Add a search field and collapsible category sections to `Több`; place administration in a separate admin-only block.
+- Complete final UX polish for consistent card sizes, spacing, icons, loading/empty/error states, touch targets, back behavior, tab history and accessibility scaling.
 - Add Apple account sign-in alongside the existing e-mail/password and Google sign-in.
 - Refresh the WordPress-managed FAQ with the new v0.99.999/v1.0 features and current user guidance.
 - Make displayed genres selectable. A genre detail/discovery screen should show separate API-backed `Események`, `DJ-k`, and `Hírek` sections for the selected genre and clearly retain the active genre label.

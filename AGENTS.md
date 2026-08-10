@@ -624,6 +624,9 @@ Keep this release intentionally small and low-risk:
 
 Focus:
 
+- Reorganize `Több` into clear categories: `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated bottom tab.
+- Add search and collapsible sections to `Több`, and keep administration in a separate admin-only block.
+- Complete UX polish across cards, spacing, icons, loading/empty/error states, touch targets, back behavior, tab history and accessibility scaling.
 - Refresh the WordPress-managed FAQ with the new v0.99.999/v1.0 features and current user guidance.
 - stable news
 - stable events
