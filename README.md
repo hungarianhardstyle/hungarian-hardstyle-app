@@ -411,6 +411,7 @@ Core release quality:
 
 Authentication and community:
 
+- [ ] add Apple account sign-in alongside e-mail/password and Google sign-in
 - [x] Google sign-in and app-only community accounts
 - [x] let users choose an account role during onboarding: DJ, organizer, or attendee/partygoer
 - [x] show DJ submission only to DJ accounts, organizer submission only to organizer accounts, and both to admins; enforce the same rules server-side
