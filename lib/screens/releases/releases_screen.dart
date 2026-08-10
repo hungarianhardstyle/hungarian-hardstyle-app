@@ -34,10 +34,16 @@ class _ReleasesScreenState extends ConsumerState<ReleasesScreen> {
   Widget build(BuildContext context) {
     final releases = ref.watch(releasesProvider(_query));
     final title = widget.artistName.isEmpty
-        ? 'Release-ek'
-        : '${widget.artistName} release-ei';
+        ? const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Hardstyle Revolution', style: TextStyle(fontSize: 18)),
+              Text('Records', style: TextStyle(fontSize: 18)),
+            ],
+          )
+        : Text('${widget.artistName} release-ei');
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: title),
       body: RefreshIndicator(
         onRefresh: () => ref.refresh(releasesProvider(_query).future),
         child: releases.when(
