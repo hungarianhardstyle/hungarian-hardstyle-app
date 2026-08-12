@@ -129,6 +129,7 @@ As of the current project state:
 - News cards display remote images, title, date, and featured state.
 - The WordPress API plugin source is present locally as deployable ZIPs in `build/`, with the locally prepared v1 package at `build/huhs-mobile-api-2.4.43.zip`; it has not yet been deployed to production.
 - The locally prepared 2.4.43 package retains the live voting and release APIs, adds Label product metadata and Radio/Extended availability, and adds private derivative storage plus one-time download-token handling. WAV/320 kbps paths are never returned by the public release API.
+- v1.0 is not closed while 2.4.43 is not deployed, the Firebase Play secret is missing, Play Billing products are not created, and production AdMob identifiers are not configured. The current ARM64 release APK is a phone-test artifact, not a final public Play artifact.
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.

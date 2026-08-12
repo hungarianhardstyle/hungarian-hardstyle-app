@@ -554,3 +554,11 @@ FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces previ
 - A helyi API `2.4.43` a WAV, MP3 320, MP3 128, Radio és Extended változatokat privát fájlútvonalon kezeli, egyszer használatos letöltési tokennel; ezt a WordPressen telepíteni és élesben tesztelni kell.
 - A vásárlást a `verifyLabelPurchase` Firebase Function ellenőrzi a Google Play Developer API-val. Deploy előtt a Firebase Secret Managerben be kell állítani a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secretet; a JSON-kulcs nem kerülhet a repóba vagy az APK-ba.
 - Production buildnél a `HUHS_ADMOB_APP_ID` Gradle property és a `HUHS_ADMOB_BANNER_ID` dart-define szükséges. Teszt buildnél maradhat a Google tesztazonosító.
+
+#### v1.0 aktuális élesítési akadályok
+
+- A helyi WordPress API-csomag kész: `build/huhs-mobile-api-2.4.43.zip`; a live `hungarianhardstyle.hu` API jelenleg még nem ezt futtatja.
+- A Firebase `verifyLabelPurchase` és letöltési Functionök telepítése a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` Secret Manager-secret hiánya miatt áll meg.
+- A valódi Play Billing teszthez a Play Console-ban létre kell hozni a release-enkénti `huhs_release_<id>_wav` és `huhs_release_<id>_mp3_320` termékeket.
+- A végleges publikus APK-hoz valódi AdMob App/Banner/Rewarded azonosítók szükségesek; a helyi teszt APK szándékosan tesztazonosítókat használ.
+- A fenti három külső feltétel és az új release APK telefonos ellenőrzése nélkül az 1.0 nem tekinthető késznek.
