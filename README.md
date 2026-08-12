@@ -425,17 +425,17 @@ Small, low-risk finishing work that can be released independently before the lar
 - [x] remove the Chat composer overflow at narrow widths
 - [x] native article tags: hydrate tag names from WordPress core REST when the HUHS endpoint only returns tag IDs
 - [x] deploy `firestore.rules` to the `hungarian-hardstyle` Firebase project
-- [ ] enable Google provider and add Android SHA-1/SHA-256 credentials, then replace `android/app/google-services.json`
+- [x] enable Google provider and add Android SHA-1/SHA-256 credentials; release-device verification is complete
 
 ### v1.0 — First public release
 
 Core release quality:
 
 - [x] prepare the WordPress-managed FAQ refresh with the new v0.99.999/v1.0 features and current user guidance (API 2.4.44 seeds only missing entries; live deployment pending)
-- [ ] reorganize `Több` into `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated tab
+- [x] reorganize `Több` into `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated tab
 - [x] add a `Több`-menu search and collapsible category sections, with Admin functions in a separate admin-only block
 - [ ] apply final UX polish: consistent card sizes, spacing, icons, loading/empty/error states, tap targets, back behavior, tab history, and accessibility scaling
-- [ ] configure production release signing and final Android release packaging
+- [x] configure production release signing and obfuscated ARM64 release packaging; final public packaging remains blocked by production AdMob configuration
 - [ ] stabilize news, events, DJs and organizers for public release
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches
 - [x] make artist/DJ profile genre tags open the same grouped `Események`, `DJ-k` and `Hírek` discovery view with the complete paginated result set
