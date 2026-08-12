@@ -30,6 +30,7 @@ class HuhsRelease {
   final List<ReleaseArtist> artists;
   final List<ReleaseTrack> tracks;
   final Map<String, String> links;
+  final List<ReleaseProduct> products;
 
   const HuhsRelease({
     required this.id,
@@ -39,12 +40,14 @@ class HuhsRelease {
     required this.artists,
     required this.tracks,
     required this.links,
+    required this.products,
   });
 
   factory HuhsRelease.fromJson(Map<String, dynamic> json) {
     final artistValues = json['artists'];
     final trackValues = json['tracks'];
     final linkValues = json['links'];
+    final productValues = json['products'];
     final links = <String, String>{};
     if (linkValues is Map<String, dynamic>) {
       for (final entry in linkValues.entries) {
@@ -72,8 +75,36 @@ class HuhsRelease {
                 .toList(growable: false)
           : const [],
       links: links,
+      products: productValues is List
+          ? productValues
+                .whereType<Map<String, dynamic>>()
+                .map(ReleaseProduct.fromJson)
+                .where((product) => product.id.isNotEmpty)
+                .toList(growable: false)
+          : const [],
     );
   }
+}
+
+class ReleaseProduct {
+  final String id;
+  final String type;
+  final String label;
+  final String price;
+
+  const ReleaseProduct({
+    required this.id,
+    required this.type,
+    required this.label,
+    required this.price,
+  });
+
+  factory ReleaseProduct.fromJson(Map<String, dynamic> json) => ReleaseProduct(
+    id: _readString(json['id']),
+    type: _readString(json['type']),
+    label: _readString(json['label']),
+    price: _readString(json['price']),
+  );
 }
 
 int _readInt(Object? value) => value is int

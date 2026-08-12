@@ -181,8 +181,8 @@ function huhs_push_on_publish($new_status, $old_status, $post)
         huhs_push_send('Új hír', get_the_title($post), array('type' => 'news', 'id' => (string) $post->ID));
     }
 
-    if ($post->post_type === 'huhs_event') {
-        huhs_push_send('Új esemény', get_the_title($post), array('type' => 'event', 'id' => (string) $post->ID));
+    if ($post->post_type === 'huhs_event' && get_post_meta($post->ID, 'featured', true)) {
+        huhs_push_send('Új kiemelt esemény', get_the_title($post), array('type' => 'event', 'id' => (string) $post->ID));
         huhs_push_schedule_event_reminders($post);
     }
 }
@@ -234,6 +234,7 @@ function huhs_push_scan_event_reminders()
         'post_status' => 'publish',
         'posts_per_page' => 500,
         'fields' => 'all',
+        'meta_query' => array(array('key' => 'featured', 'value' => '1', 'compare' => '=')),
     ));
 
     foreach ($events as $post) {
@@ -261,14 +262,14 @@ function huhs_push_scan_event_reminders()
 
 add_action('save_post_huhs_event', function ($post_id, $post, $update) {
     if (!$post || wp_is_post_revision($post_id) || wp_is_post_autosave($post_id) || $post->post_status !== 'publish') return;
-    huhs_push_schedule_event_reminders($post);
+    if (get_post_meta($post_id, 'featured', true)) huhs_push_schedule_event_reminders($post);
 }, 20, 3);
 
 add_action('huhs_push_event_reminder', 'huhs_push_event_reminder', 10, 2);
 function huhs_push_event_reminder($post_id, $kind)
 {
     $post = get_post($post_id);
-    if (!$post || $post->post_status !== 'publish') return;
+    if (!$post || $post->post_status !== 'publish' || !get_post_meta($post_id, 'featured', true)) return;
     $marker = '_huhs_push_reminder_sent_' . sanitize_key($kind);
     if (get_post_meta($post_id, $marker, true)) return;
     $sent = huhs_push_send(

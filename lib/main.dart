@@ -31,6 +31,20 @@ Future<void> main() async {
       await MobileAds.instance.initialize();
     } catch (_) {}
   }
+  try {
+    final consent = ConsentInformation.instance;
+    await Future<void>.sync(() {
+      consent.requestConsentInfoUpdate(
+        ConsentRequestParameters(),
+        () {
+          ConsentForm.loadAndShowConsentFormIfRequired((_) {});
+        },
+        (_) {},
+      );
+    });
+  } catch (_) {
+    // Consent configuration must never make the app unusable.
+  }
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
   unawaited(_initializePushNotifications());
 }

@@ -6,32 +6,56 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../providers/community_provider.dart';
 import '../artists/artists_screen.dart';
 import '../organizers/organizers_screen.dart';
+import '../submissions/artist_submission_screen.dart';
+import '../submissions/organizer_submission_screen.dart';
 import 'about_screen.dart';
+import 'community_users_screen.dart';
+import 'donate_screen.dart';
 import 'favorites_screen.dart';
+import 'faq_screen.dart';
+import 'newsletter_screen.dart';
+import 'privacy_screen.dart';
+import 'radio_provider_screen.dart';
 import 'settings_screen.dart';
 import 'social_contact_screen.dart';
 import 'spotify_playlists_screen.dart';
-import 'newsletter_screen.dart';
-import '../submissions/artist_submission_screen.dart';
-import '../submissions/organizer_submission_screen.dart';
-import 'radio_provider_screen.dart';
-import 'privacy_screen.dart';
-import 'donate_screen.dart';
-import 'faq_screen.dart';
-import 'community_users_screen.dart';
 
-class MoreScreen extends ConsumerWidget {
+class MoreScreen extends ConsumerStatefulWidget {
   const MoreScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MoreScreen> createState() => _MoreScreenState();
+}
+
+class _MoreScreenState extends ConsumerState<MoreScreen> {
+  final _search = TextEditingController();
+  final _expanded = <String>{
+    'Felfedezés',
+    'Közösség',
+    'Beküldés',
+    'Kapcsolat és támogatás',
+    'Alkalmazás',
+  };
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  bool _matches(String title, String subtitle) {
+    final query = _search.text.trim().toLowerCase();
+    return query.isEmpty || '$title $subtitle'.toLowerCase().contains(query);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final service = ref.watch(communityServiceProvider);
     final user = ref.watch(communityAuthProvider).valueOrNull;
     final registered = user != null && !user.isAnonymous;
     final role = service.cachedAccountRole;
-    final canSubmitArtist = registered && (service.isAdmin || role == 'dj');
-    final canSubmitOrganizer =
-        registered && (service.isAdmin || role == 'organizer');
+    final canArtist = registered && (service.isAdmin || role == 'dj');
+    final canOrganizer = registered && (service.isAdmin || role == 'organizer');
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -41,254 +65,238 @@ class MoreScreen extends ConsumerWidget {
               'Több',
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 22),
-            const _SectionTitle('Felfedezés'),
-            _MenuCard(
-              icon: Icons.graphic_eq,
-              title: 'DJ-k',
-              subtitle: 'Magyar hardstyle és hardcore előadók',
-              onTap: () => _open(context, const ArtistsScreen()),
-            ),
-            const SizedBox(height: 12),
-            _MenuCard(
-              icon: Icons.groups,
-              title: 'Szervezők',
-              subtitle: 'Hazai eseményszervezők és sorozatok',
-              onTap: () => _open(context, const OrganizersScreen()),
-            ),
-            const SizedBox(height: 12),
-            _MenuCard(
-              icon: Icons.queue_music_outlined,
-              title: 'Spotify Playlistek',
-              subtitle: 'Öt válogatás a keményebb stílusokból',
-              onTap: () => _open(context, const SpotifyPlaylistsScreen()),
-            ),
-            const SizedBox(height: 28),
-            const _SectionTitle('Közösség'),
-            _MenuCard(
-              icon: Icons.favorite_outline,
-              title: 'Kedvencek',
-              subtitle: 'Mentett hírek, események és DJ-k',
-              onTap: () => _open(context, const FavoritesScreen()),
-            ),
-            const SizedBox(height: 12),
-            _MenuCard(
-              icon: Icons.mark_email_unread_outlined,
-              title: 'Hírlevél',
-              subtitle: 'Iratkozz fel a Hungarian Hardstyle híreire',
-              onTap: () => _open(context, const NewsletterScreen()),
-            ),
-            if (registered) ...[
-              const SizedBox(height: 12),
-              _MenuCard(
-                icon: Icons.people_outline,
-                title: 'Felhasználók',
-                subtitle: 'Regisztrált felhasználók keresése és listája',
-                onTap: () => _open(context, const CommunityUsersScreen()),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _search,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                labelText: 'Keresés a Több menüben',
+                hintText: 'Akár egy karakterrel',
               ),
-            ],
-            const SizedBox(height: 28),
-            const _SectionTitle('Beküldés'),
-            const SizedBox(height: 12),
-            if (canSubmitArtist)
-              _SubmissionCard(
-                icon: Icons.person_add_alt_1,
-                title: 'DJ beküldése',
-                subtitle: 'Új DJ-adatlap jóváhagyásra',
-                onTap: () => _open(context, const ArtistSubmissionScreen()),
+            ),
+            const SizedBox(height: 14),
+            _section('Felfedezés', [
+              _item(
+                Icons.graphic_eq,
+                'DJ-k',
+                'Magyar hardstyle és hardcore előadók',
+                const ArtistsScreen(),
               ),
-            if (canSubmitArtist && canSubmitOrganizer)
-              const SizedBox(height: 8),
-            if (canSubmitOrganizer)
-              _SubmissionCard(
-                icon: Icons.add_business,
-                title: 'Szervező beküldése',
-                subtitle: 'Új szervező jóváhagyásra',
-                onTap: () => _open(context, const OrganizerSubmissionScreen()),
+              _item(
+                Icons.groups,
+                'Szervezők',
+                'Hazai eseményszervezők és sorozatok',
+                const OrganizersScreen(),
               ),
-            if (!canSubmitArtist && !canSubmitOrganizer)
-              _SubmissionNotice(
-                text: registered
-                    ? 'A DJ- és szervezőbeküldés a megfelelő szerepkörhöz kötött.'
-                    : 'A beküldés csak regisztrált felhasználóknak érhető el.',
+              _item(
+                Icons.queue_music_outlined,
+                'Spotify Playlistek',
+                'Válogatások a keményebb stílusokból',
+                const SpotifyPlaylistsScreen(),
               ),
-            const SizedBox(height: 28),
-            const _SectionTitle('Kapcsolat és támogatás'),
-            _MenuCard(
-              icon: Icons.share_outlined,
-              title: 'Social és kapcsolat',
-              subtitle: 'Közösségi oldalak és elérhetőségek',
-              onTap: () => _open(context, const SocialContactScreen()),
-            ),
-            const SizedBox(height: 12),
-            _MenuCard(
-              icon: Icons.favorite,
-              title: 'Támogatás / Donate',
-              subtitle: 'Segítsd a Hungarian Hardstyle munkáját',
-              onTap: () => _open(context, const DonateScreen()),
-            ),
-            const SizedBox(height: 12),
-            _MenuCard(
-              icon: Icons.bug_report_outlined,
-              title: 'Hibajelzés',
-              subtitle: 'Hiba jelzése e-mailben, app-verzióval',
-              onTap: _sendFeedback,
-            ),
-            const SizedBox(height: 12),
-            _MenuCard(
-              icon: Icons.help_outline,
-              title: 'GYIK / FAQ',
-              subtitle: 'Gyakori kérdések és válaszok',
-              onTap: () => _open(context, const FaqScreen()),
-            ),
-            const SizedBox(height: 12),
-            const _SectionTitle('Alkalmazás'),
-            _MenuCard(
-              icon: Icons.settings_outlined,
-              title: 'Beállítások',
-              subtitle: 'Értesítések és gyorsítótár',
-              onTap: () => _open(context, const SettingsScreen()),
-            ),
-            const SizedBox(height: 12),
-            _MenuCard(
-              icon: Icons.privacy_tip_outlined,
-              title: 'Adatvédelem és GDPR',
-              subtitle: 'Adatkezelés, megőrzés és felhasználói jogok',
-              onTap: () => _open(context, const PrivacyScreen()),
-            ),
-            const SizedBox(height: 12),
-            _MenuCard(
-              icon: Icons.info_outline,
-              title: 'Az appról',
-              subtitle: 'Verzió, kapcsolat és weboldal',
-              onTap: () => _open(context, const AboutScreen()),
-            ),
-            const SizedBox(height: 12),
-            _MenuCard(
-              icon: Icons.radio,
-              title: 'Rádió szolgáltató',
-              subtitle: 'Real Hardstyle FM',
-              onTap: () => _open(context, const RadioProviderScreen()),
-            ),
+            ]),
+            _section('Közösség', [
+              _item(
+                Icons.favorite_outline,
+                'Kedvencek',
+                'Mentett hírek, események és DJ-k',
+                const FavoritesScreen(),
+              ),
+              _item(
+                Icons.mark_email_unread_outlined,
+                'Hírlevél',
+                'Iratkozz fel a Hungarian Hardstyle híreire',
+                const NewsletterScreen(),
+              ),
+              if (registered)
+                _item(
+                  Icons.people_outline,
+                  'Felhasználók',
+                  'Regisztrált felhasználók keresése és listája',
+                  const CommunityUsersScreen(),
+                ),
+            ]),
+            _section('Beküldés', [
+              if (canArtist)
+                _item(
+                  Icons.person_add_alt_1,
+                  'DJ beküldése',
+                  'Új DJ-adatlap jóváhagyásra',
+                  const ArtistSubmissionScreen(),
+                ),
+              if (canOrganizer)
+                _item(
+                  Icons.add_business,
+                  'Szervező beküldése',
+                  'Új szervező jóváhagyásra',
+                  const OrganizerSubmissionScreen(),
+                ),
+              if (!canArtist && !canOrganizer)
+                _notice(
+                  registered
+                      ? 'A DJ- és szervezőbeküldés a megfelelő szerepkörhöz kötött.'
+                      : 'A beküldés csak regisztrált felhasználóknak érhető el.',
+                ),
+            ]),
+            _section('Kapcsolat és támogatás', [
+              _item(
+                Icons.share_outlined,
+                'Social és kapcsolat',
+                'Közösségi oldalak és elérhetőségek',
+                const SocialContactScreen(),
+              ),
+              _item(
+                Icons.favorite,
+                'Támogatás / Donate',
+                'Segítsd a Hungarian Hardstyle munkáját',
+                const DonateScreen(),
+              ),
+              _callback(
+                Icons.bug_report_outlined,
+                'Hibajelzés',
+                'Hiba jelzése e-mailben, app-verzióval',
+                _sendFeedback,
+              ),
+              _item(
+                Icons.help_outline,
+                'GYIK / FAQ',
+                'Gyakori kérdések és válaszok',
+                const FaqScreen(),
+              ),
+            ]),
+            _section('Alkalmazás', [
+              _item(
+                Icons.settings_outlined,
+                'Beállítások',
+                'Értesítések és gyorsítótár',
+                const SettingsScreen(),
+              ),
+              _item(
+                Icons.privacy_tip_outlined,
+                'Adatvédelem és GDPR',
+                'Adatkezelés, megőrzés és felhasználói jogok',
+                const PrivacyScreen(),
+              ),
+              _item(
+                Icons.info_outline,
+                'Az appról',
+                'Verzió, kapcsolat és weboldal',
+                const AboutScreen(),
+              ),
+              _item(
+                Icons.radio,
+                'Rádió szolgáltató',
+                'Real Hardstyle FM',
+                const RadioProviderScreen(),
+              ),
+            ]),
           ],
         ),
       ),
     );
   }
 
-  void _open(BuildContext context, Widget screen) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (context) => screen));
+  Widget _section(String title, List<Widget> children) {
+    final visible = children.where((child) => child is! SizedBox).toList();
+    final hasMatch = visible.any(
+      (child) =>
+          child is _MenuEntry && _matches(child.title, child.subtitle) ||
+          child is _Notice,
+    );
+    if (_search.text.trim().isNotEmpty && !hasMatch) {
+      return const SizedBox.shrink();
+    }
+    final open = _expanded.contains(title);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        initiallyExpanded: open,
+        onExpansionChanged: (value) => setState(
+          () => value ? _expanded.add(title) : _expanded.remove(title),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        children: [
+          for (final child in children)
+            if (child is _MenuEntry && _matches(child.title, child.subtitle) ||
+                child is _Notice)
+              child,
+        ],
+      ),
+    );
   }
+
+  Widget _item(IconData icon, String title, String subtitle, Widget screen) =>
+      _MenuEntry(
+        icon: icon,
+        title: title,
+        subtitle: subtitle,
+        onTap: () => _open(screen),
+      );
+
+  Widget _callback(
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback callback,
+  ) =>
+      _MenuEntry(icon: icon, title: title, subtitle: subtitle, onTap: callback);
+
+  Widget _notice(String text) => _Notice(text);
+
+  void _open(Widget screen) => Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (_) => screen));
 
   Future<void> _sendFeedback() async {
     final info = await PackageInfo.fromPlatform();
     final version = '${info.version}+${info.buildNumber}';
-    final uri = Uri(
-      scheme: 'mailto',
-      path: 'info@hungarianhardstyle.hu',
-      queryParameters: {
-        'subject': 'Hibajelzés – Hungarian Hardstyle $version',
-        'body': 'App verzió: $version\n\nHiba leírása:\n',
-      },
+    await launchUrl(
+      Uri(
+        scheme: 'mailto',
+        path: 'info@hungarianhardstyle.hu',
+        queryParameters: {
+          'subject': 'Hibajelzés – Hungarian Hardstyle $version',
+          'body': 'App verzió: $version\n\nHiba leírása:\n',
+        },
+      ),
+      mode: LaunchMode.externalApplication,
     );
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String text;
-  const _SectionTitle(this.text);
+class _MenuEntry extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  const _MenuEntry({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Text(
-      text,
-      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-    ),
+  Widget build(BuildContext context) => ListTile(
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+    leading: Icon(icon, color: const Color(0xFFF03A37)),
+    title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+    subtitle: Text(subtitle),
+    trailing: const Icon(Icons.chevron_right),
+    onTap: onTap,
   );
 }
 
-class _MenuCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _MenuCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 10,
-        ),
-        leading: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: const Color(0xFF241111),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFF8A2D2D)),
-          ),
-          child: Icon(icon, color: const Color(0xFFF03A37)),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
-      ),
-    );
-  }
-}
-
-class _SubmissionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _SubmissionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
-      ),
-    );
-  }
-}
-
-class _SubmissionNotice extends StatelessWidget {
+class _Notice extends StatelessWidget {
   final String text;
-
-  const _SubmissionNotice({required this.text});
-
+  const _Notice(this.text);
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(text, style: const TextStyle(color: Colors.white70)),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.all(14),
+    child: Text(text, style: const TextStyle(color: Colors.white70)),
+  );
 }

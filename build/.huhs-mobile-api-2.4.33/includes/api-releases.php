@@ -31,11 +31,16 @@ function huhs_build_release_response($post)
     }
     $preview = esc_url_raw(get_post_meta($id, 'preview_url', true));
     $tracks = $preview ? array(array('title' => huhs_clean_title($post->post_title), 'preview_url' => $preview)) : array();
+    $products = array();
+    foreach (array('wav' => 'WAV / lossless', 'mp3_320' => 'MP3 320 kbps') as $key => $label) {
+        $product_id = sanitize_text_field(get_post_meta($id, $key . '_product_id', true));
+        if ($product_id !== '') $products[] = array('id' => $product_id, 'type' => $key, 'label' => $label, 'price' => sanitize_text_field(get_post_meta($id, $key . '_price', true)));
+    }
     $cover_id = absint(get_post_meta($id, 'cover', true));
     $links = array();
     foreach (array('spotify', 'apple_music', 'beatport', 'hardstyle_com', 'youtube') as $key) {
         $value = esc_url_raw(get_post_meta($id, $key, true));
         if ($value !== '') $links[$key] = $value;
     }
-    return array('id' => $id, 'title' => huhs_clean_title($post->post_title), 'cover' => $cover_id ? wp_get_attachment_image_url($cover_id, 'large') : '', 'genre' => sanitize_text_field(get_post_meta($id, 'genre', true)), 'artists' => $artists, 'tracks' => $tracks, 'links' => $links);
+    return array('id' => $id, 'title' => huhs_clean_title($post->post_title), 'cover' => $cover_id ? wp_get_attachment_image_url($cover_id, 'large') : '', 'genre' => sanitize_text_field(get_post_meta($id, 'genre', true)), 'artists' => $artists, 'tracks' => $tracks, 'links' => $links, 'products' => $products);
 }

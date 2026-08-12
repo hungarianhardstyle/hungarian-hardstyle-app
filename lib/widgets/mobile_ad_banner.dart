@@ -33,7 +33,9 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner> {
           await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
       if (!mounted || size == null || _requestedWidth != width) return;
       final ad = BannerAd(
-        adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+        adUnitId: enableTestAds
+            ? 'ca-app-pub-3940256099942544/6300978111'
+            : productionBannerAdUnitId,
         size: size,
         request: const AdRequest(),
         listener: BannerAdListener(

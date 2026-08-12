@@ -26,6 +26,12 @@ function huhs_release_meta_box($post)
     huhs_text_field($post, 'genre', 'Műfaj');
     foreach (array('spotify' => 'Spotify link', 'apple_music' => 'Apple Music link', 'beatport' => 'Beatport link', 'hardstyle_com' => 'Hardstyle.com link', 'youtube' => 'YouTube link') as $key => $label) huhs_text_field($post, $key, $label);
     huhs_audio_url_field($post, 'audio_url', 'MP3 vagy WAV feltöltése – csak a 60 mp-es preview elkészítéséhez');
+    huhs_text_field($post, 'wav_product_id', 'Google Play WAV/lossless product ID');
+    huhs_text_field($post, 'wav_price', 'WAV/lossless price');
+    huhs_text_field($post, 'mp3_product_id', 'Google Play 320 kbps MP3 product ID');
+    huhs_text_field($post, 'mp3_price', '320 kbps MP3 price');
+    huhs_audio_url_field($post, 'radio_audio_url', 'Radio version source');
+    huhs_audio_url_field($post, 'extended_audio_url', 'Extended version source');
     $preview_url = esc_url(get_post_meta($post->ID, 'preview_url', true));
     if ($preview_url) echo '<p><strong>Elkészült preview:</strong> <a href="' . $preview_url . '" target="_blank" rel="noopener">Lejátszás</a></p>';
     echo '<p><em>A feltöltött teljes MP3/WAV a preview elkészülése után automatikusan törlődik.</em></p>';
@@ -57,6 +63,12 @@ add_action('save_post_huhs_release', function ($post_id) {
         delete_post_meta($post_id, 'preview_url');
     }
     update_post_meta($post_id, 'audio_url', $new_audio_url);
+    update_post_meta($post_id, 'wav_product_id', sanitize_text_field(wp_unslash($_POST['wav_product_id'] ?? '')));
+    update_post_meta($post_id, 'wav_price', sanitize_text_field(wp_unslash($_POST['wav_price'] ?? '')));
+    update_post_meta($post_id, 'mp3_product_id', sanitize_text_field(wp_unslash($_POST['mp3_product_id'] ?? '')));
+    update_post_meta($post_id, 'mp3_price', sanitize_text_field(wp_unslash($_POST['mp3_price'] ?? '')));
+    update_post_meta($post_id, 'radio_audio_url', esc_url_raw(wp_unslash($_POST['radio_audio_url'] ?? '')));
+    update_post_meta($post_id, 'extended_audio_url', esc_url_raw(wp_unslash($_POST['extended_audio_url'] ?? '')));
     foreach (array('spotify', 'apple_music', 'beatport', 'hardstyle_com', 'youtube') as $key) update_post_meta($post_id, $key, esc_url_raw(wp_unslash($_POST[$key] ?? '')));
     update_post_meta($post_id, 'visible', isset($_POST['visible']) ? 1 : 0);
     huhs_release_generate_preview($post_id);

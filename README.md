@@ -414,7 +414,7 @@ Core release quality:
 
 Authentication and community:
 
-- [ ] add Apple account sign-in alongside e-mail/password and Google sign-in
+- deferred: Apple account sign-in remains outside the Android v1.0 scope until an Apple Developer Program membership is available
 - [x] Google sign-in and app-only community accounts
 - [x] let users choose an account role during onboarding: DJ, organizer, or attendee/partygoer
 - [x] show DJ submission only to DJ accounts, organizer submission only to organizer accounts, and both to admins; enforce the same rules server-side
@@ -511,3 +511,10 @@ Releases and Store use one WordPress-managed catalog rather than separate conten
 
 One connected platform for Android, iOS and the web, combining news, events, artists, organizers, community, radio, releases and digital music distribution.
 - v0.99.8+2 bugfix pass: attendance writes now include the validated event ID; attendance UI reports save failures; connection-request state refreshes after sending; the named-database connection-request push trigger is deployed; biometric enablement requires real device support; Android uses a FragmentActivity host for local_auth.
+FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces preview hallgatható meg, a teljes master nem nyilvános; a későbbi WAV/lossless és 320 kbps MP3 hozzáférés ellenőrzött Google Play-vásárláshoz kötött, a 128 kbps változat pedig jutalmazott reklám után oldható fel. Az Apple-belépés Apple Developer-tagság hiányában nincs bekapcsolva, és kimarad a jelenlegi Android v1.0 kiadásból.
+
+#### Android/Label release beállítások
+
+- A Google Play termékazonosítókat release-enként a WordPress Label-adatlapján kell megadni (`wav_product_id`, `mp3_product_id`); az alkalmazás ezeket csak a nyilvános release API-ból olvassa.
+- A vásárlást a `verifyLabelPurchase` Firebase Function ellenőrzi a Google Play Developer API-val. Deploy előtt a Firebase Secret Managerben be kell állítani a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secretet; a JSON-kulcs nem kerülhet a repóba vagy az APK-ba.
+- Production buildnél a `HUHS_ADMOB_APP_ID` Gradle property és a `HUHS_ADMOB_BANNER_ID` dart-define szükséges. Teszt buildnél maradhat a Google tesztazonosító.

@@ -4,6 +4,7 @@ const { HttpsError } = functions.https;
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const { getFirestore } = require('firebase-admin/firestore');
+const { google } = require('googleapis');
 
 admin.initializeApp();
 
@@ -12,6 +13,8 @@ const ADMIN_EMAIL = 'djdeeroy@gmail.com';
 const WORDPRESS_BASE_URL = 'https://hungarianhardstyle.hu/wp-json/huhs/v1';
 const WORDPRESS_USERNAME = defineSecret('WORDPRESS_USERNAME');
 const WORDPRESS_APPLICATION_PASSWORD = defineSecret('WORDPRESS_APPLICATION_PASSWORD');
+const GOOGLE_PLAY_SERVICE_ACCOUNT_JSON = defineSecret('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON');
+const GOOGLE_PLAY_PACKAGE_NAME = 'com.example.hungarian_hardstyle_app';
 const callWindows = new Map();
 const wordPressCall = (handler) => functions
   .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] })
@@ -362,6 +365,58 @@ exports.getMyClaimedArtists = functions.https.onCall(async (data, context) => {
       .filter((id) => Number.isInteger(id) && id > 0),
   };
 });
+
+exports.verifyLabelPurchase = functions
+  .runWith({ secrets: [GOOGLE_PLAY_SERVICE_ACCOUNT_JSON] })
+  .https.onCall(async (data, context) => {
+    if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
+      throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a vásárláshoz.');
+    }
+    if (!allowCall(context.auth.uid, 'label_purchase', 10)) {
+      throw new HttpsError('resource-exhausted', 'Túl sok vásárlási ellenőrzés.');
+    }
+    const productId = String(data?.productId || '').trim();
+    const purchaseToken = String(data?.purchaseToken || '').trim();
+    const releaseId = Number(data?.releaseId || 0);
+    if (!/^huhs_release_[0-9]+_(wav|mp3_320)$/.test(productId) || !purchaseToken || !Number.isInteger(releaseId) || releaseId < 1) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen Label-vásárlási adat.');
+    }
+    let serviceAccount;
+    try {
+      serviceAccount = JSON.parse(GOOGLE_PLAY_SERVICE_ACCOUNT_JSON.value());
+    } catch (_) {
+      throw new HttpsError('failed-precondition', 'A Google Play vásárlás-ellenőrzés nincs beállítva.');
+    }
+    const auth = new google.auth.GoogleAuth({
+      credentials: serviceAccount,
+      scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+    });
+    const androidPublisher = google.androidpublisher({ version: 'v3', auth });
+    let purchase;
+    try {
+      purchase = await androidPublisher.purchases.products.get({
+        packageName: GOOGLE_PLAY_PACKAGE_NAME,
+        productId,
+        token: purchaseToken,
+      });
+    } catch (error) {
+      securityLog('label_purchase_verification_failed', context);
+      throw new HttpsError('permission-denied', 'A Google Play-vásárlás nem ellenőrizhető.');
+    }
+    if (Number(purchase.data.purchaseState) !== 0) {
+      throw new HttpsError('permission-denied', 'A vásárlás nincs teljesítve.');
+    }
+    const entitlement = {
+      uid: context.auth.uid,
+      releaseId,
+      productId,
+      purchaseToken,
+      orderId: String(purchase.data.orderId || ''),
+      verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    await db.collection('label_entitlements').doc(`${context.auth.uid}_${productId}`).set(entitlement, { merge: true });
+    return { verified: true, releaseId, productId };
+  });
 
 exports.sendPersonalizedPush = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new HttpsError('permission-denied', 'Bejelentkezés szükséges.');

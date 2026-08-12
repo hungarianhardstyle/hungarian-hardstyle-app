@@ -781,7 +781,8 @@ Additional v1.0 product requirements:
 - Reorganize `Több` into `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated bottom tab.
 - Add a search field and collapsible category sections to `Több`; place administration in a separate admin-only block.
 - Complete final UX polish for consistent card sizes, spacing, icons, loading/empty/error states, touch targets, back behavior, tab history and accessibility scaling.
-- Add Apple account sign-in alongside the existing e-mail/password and Google sign-in.
+- Apple account sign-in is deferred until an Apple Developer Program membership is available; it is outside the Android v1.0 scope.
+- Label purchase verification is implemented in the Flutter client and Firebase `verifyLabelPurchase` callable, but live deployment still requires the Google Play service-account JSON in Firebase Secret Manager and Play Console product configuration.
 - Refresh the WordPress-managed FAQ with the new v0.99.999/v1.0 features and current user guidance.
 - Make displayed genres selectable. A genre detail/discovery screen should show separate API-backed `Események`, `DJ-k`, and `Hírek` sections for the selected genre and clearly retain the active genre label.
 - The More-section `Támogatás / Donate` card is planned for v0.99.4, backed by a configurable PayPal donation URL with PayPal-app-first and browser fallback opening; do not build a custom payment flow.

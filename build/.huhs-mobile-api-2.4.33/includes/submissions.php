@@ -297,6 +297,13 @@ function huhs_create_event_submission(WP_REST_Request $request)
             'Új esemény érkezett az alkalmazásból. Ellenőrzés: ' . admin_url('post.php?post=' . $submission_id . '&action=edit')
         );
     }
+    if (function_exists('huhs_push_send')) {
+        huhs_push_send(
+            'Új eseménybeküldés',
+            $title,
+            array('type' => 'submission', 'kind' => 'event', 'id' => (string) $submission_id)
+        );
+    }
 
     return new WP_REST_Response(array(
         'success' => true,
