@@ -25,6 +25,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   List<ProductDetails> _products = const [];
   StreamSubscription<PurchaseDetails>? _updates;
   String? _message;
+  bool _unlocking = false;
   final Set<String> _verifiedProducts = <String>{};
 
   @override
@@ -146,14 +147,20 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
               padding: EdgeInsets.only(top: 8),
               child: Text('A hanganyag feldolgozása nem sikerült.'),
             ),
-          if (_products.isNotEmpty) ...[
+          if (release.products.isNotEmpty) ...[
             const SizedBox(height: 20),
             const Text(
               'Megvásárolható kiadások',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            ..._products.map(_productCard),
+            ...release.products.map((configured) {
+              ProductDetails? product;
+              for (final candidate in _products) {
+                if (candidate.id == configured.id) product = candidate;
+              }
+              return _productCard(configured, product);
+            }),
             if (_message != null)
               Text(_message!, style: const TextStyle(color: Colors.white70)),
           ],
@@ -165,7 +172,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 'A jutalmazott reklám megtekintése után a fájl letölthető.',
               ),
               trailing: FilledButton(
-                onPressed: _unlock128,
+                onPressed: _unlocking ? null : _unlock128,
                 child: const Text('Feloldás'),
               ),
             ),
@@ -228,24 +235,49 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     return version.isEmpty ? format : '$version – $format';
   }
 
-  Widget _productCard(ProductDetails product) {
-    final verified = _verifiedProducts.contains(product.id);
+  Widget _productCard(ReleaseProduct configured, ProductDetails? product) {
+    final verified = _verifiedProducts.contains(configured.id);
     return Card(
       child: ListTile(
-        title: Text(_productLabel(product.id)),
-        subtitle: Text(product.description),
+        title: Text(_productLabel(configured.id)),
+        subtitle: Text(
+          product?.description.isNotEmpty == true
+              ? product!.description
+              : 'Megvásárolható a Google Playen • ${configured.price} Ft',
+        ),
         trailing: verified
             ? IconButton(
                 tooltip: 'Letöltés',
                 icon: const Icon(Icons.download),
-                onPressed: () => _download(_downloadVariant(product.id)),
+                onPressed: () => _download(_downloadVariant(configured.id)),
               )
             : FilledButton(
-                onPressed: () => _purchases.buy(product),
-                child: Text(product.price),
+                onPressed: product == null
+                    ? () => setState(
+                        () => _message =
+                            'A vásárlás a Google Playből telepített alkalmazásban érhető el.',
+                      )
+                    : () => _buy(product),
+                child: Text(product?.price ?? '${configured.price} Ft'),
               ),
       ),
     );
+  }
+
+  Future<void> _buy(ProductDetails product) async {
+    try {
+      final started = await _purchases.buy(product);
+      if (!started && mounted) {
+        setState(
+          () => _message =
+              'A Google Play vásárlási ablakát nem sikerült megnyitni.',
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _message = 'A Google Play vásárlás nem indítható el.');
+      }
+    }
   }
 
   String _downloadVariant(String productId) {
@@ -254,6 +286,11 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   }
 
   Future<void> _unlock128() async {
+    if (_unlocking) return;
+    setState(() {
+      _unlocking = true;
+      _message = 'A jutalmazott reklám betöltése…';
+    });
     try {
       final earned = await _purchases.showRewardedAd(widget.release.id);
       if (!earned) throw StateError('A reklám megtekintése nem fejeződött be.');
@@ -269,6 +306,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       }
     } catch (error) {
       if (mounted) setState(() => _message = '$error');
+    } finally {
+      if (mounted) setState(() => _unlocking = false);
     }
   }
 

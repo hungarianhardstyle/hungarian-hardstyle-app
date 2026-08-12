@@ -39,7 +39,7 @@ class LabelPurchaseService {
     });
   }
 
-  Future<void> buy(ProductDetails product) => _store.buyNonConsumable(
+  Future<bool> buy(ProductDetails product) => _store.buyNonConsumable(
     purchaseParam: PurchaseParam(productDetails: product),
   );
 
@@ -76,14 +76,17 @@ class LabelPurchaseService {
   }
 
   Future<bool> showRewardedAd(int releaseId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous) return false;
     final unitId = enableTestAds
         ? 'ca-app-pub-3940256099942544/5224354917'
         : productionRewardedAdUnitId;
     if (unitId.isEmpty) return false;
-    final rewarded = await _loadRewarded(unitId);
+    final rewarded = await _loadRewarded(unitId).timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => null,
+    );
     if (rewarded == null) return false;
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.isAnonymous) return false;
     final customData = base64UrlEncode(
       utf8.encode(jsonEncode({'uid': user.uid, 'releaseId': releaseId})),
     );
