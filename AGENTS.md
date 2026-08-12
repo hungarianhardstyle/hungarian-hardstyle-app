@@ -668,7 +668,7 @@ Keep this release intentionally small and low-risk:
 Focus:
 
 - Reorganize `Több` into clear categories: `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated bottom tab.
-- Add search and collapsible sections to `Több`, and keep administration in a separate admin-only block.
+- [x] Add search and collapsible sections to `Több`, and keep administration in a separate admin-only block.
 - Complete UX polish across cards, spacing, icons, loading/empty/error states, touch targets, back behavior, tab history and accessibility scaling.
 - Refresh the WordPress-managed FAQ with the new v0.99.999/v1.0 features and current user guidance.
 - stable news
@@ -705,7 +705,7 @@ Confirmed community direction (v0.99.8 scope; only security/privacy remains v1.0
 - When viewing an event, show which friends are attending it.
 - User profiles and friend lists should indicate whether that person plans to attend an upcoming event.
 - News, events, DJs, organizers, and the Live Feed should remain readable without registration where possible. Anonymous Live Feed text posts are allowed under a generated `Unknown User ####` name, but anonymous users cannot upload images; profiles, friendships, and attendance state require authentication.
-- Before implementation, define moderation, reporting, blocking, privacy, image upload/storage, retention, and account deletion rules.
+- [x] Define and implement moderation, reporting, blocking, privacy, image upload/storage, retention, and account deletion rules.
 - Registration and community accounts are app-only; do not add account registration or community UI to the public WordPress website.
 - WordPress remains the source of truth for editorial content (news, events, DJs, organizers, and releases), while the app community backend may be a deliberately separate service optimized for authentication, real-time chat/feed data, friendships, attendance, and user uploads.
 - Once app registration is available, DJ, organizer, and event submission actions and forms must be visible only to authenticated users. The submission API must also enforce authentication server-side; hiding the forms in Flutter is not sufficient.
@@ -749,7 +749,7 @@ The implementation was phone-verified in `build/HUHS-v0.99.99+6-arm64-debug.apk`
 
 Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. Permanent Play publication remains a v1.0 release operation; paid store work remains v1.0+.
 
-### v1.5 - Hardstyle Revolution Store (later)
+### v1.0 - Hardstyle Revolution paid Label extension
 
 Focus:
 

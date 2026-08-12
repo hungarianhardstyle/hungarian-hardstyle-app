@@ -433,7 +433,7 @@ Core release quality:
 
 - [ ] refresh the WordPress-managed FAQ with the new v0.99.999/v1.0 features and current user guidance
 - [ ] reorganize `Több` into `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated tab
-- [ ] add a `Több`-menu search and collapsible category sections, with Admin functions in a separate admin-only block
+- [x] add a `Több`-menu search and collapsible category sections, with Admin functions in a separate admin-only block
 - [ ] apply final UX polish: consistent card sizes, spacing, icons, loading/empty/error states, tap targets, back behavior, tab history, and accessibility scaling
 - [ ] configure production release signing and final Android release packaging
 - [ ] stabilize news, events, DJs and organizers for public release
@@ -467,7 +467,7 @@ Authentication and community:
 - [ ] send publication and reminder pushes for featured events to every app-installed device with an FCM token, regardless of account registration (respect explicit notification opt-out)
 - moved to v0.99.7: favorited-organizer event notifications
 - [ ] optionally send a separate admin/editor push when a new event submission is received
-- moved to v0.99.8: moderation/reporting/blocking follow-up; privacy and account deletion remain v1.0 work
+- [x] complete moderation/reporting/blocking follow-up, privacy information and self-service account deletion
 
 App administration:
 
@@ -493,7 +493,7 @@ Radio delivery is now part of v0.99.2.1 through the Real Hardstyle FM stream and
 
 Implemented in source: one WordPress season editor with category-level `+ Jelölt hozzáadása` fields, unlimited candidates per category, DJ and organizer candidates without Spotify/YouTube fields, and optional Spotify/YouTube support for the Hungarian hardstyle track category. Each category accepts up to 5 / 3 / 2 / 1 / 3 selected candidates respectively. The Home button appears when a published, enabled season is within its configured time window. The private admin summary is served by the deployed Firebase API function `getVotingSummary`; the unnecessary results-publication checkbox was removed. Registered-user voting, Firestore duplicate protection, separate Mailchimp consent, and the private admin summary remain in place. Final phone testing passed in `build/HUHS-v0.99.99+6-arm64-debug.apk`; the test votes were cleared from Firebase after verification. WordPress package: `build/huhs-mobile-api-2.4.42.zip`.
 
-### v1.5 — Hardstyle Revolution Store
+### v1.0 — Hardstyle Revolution paid Label extension
 
 The Label preview catalog is already complete in v0.99.89; this section covers only the later paid extension.
 
@@ -509,11 +509,11 @@ The Label preview catalog is already complete in v0.99.89; this section covers o
 
 Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. Paid Label sales and Android store packaging remain v1.0 scope; iOS is deferred until an Apple Developer account is available.
 
-- [ ] let each existing WordPress Label release accept one uploaded WAV master, generate its preview, and offer configurable Radio and Extended versions
-- [ ] let the editor set separate prices for the WAV/lossless and 320 kbps MP3 products
-- [ ] sell the WAV/lossless and 320 kbps MP3 products through Google Play Billing (not direct Google Pay checkout)
-- [ ] generate a 128 kbps MP3 derivative that is unlocked after a rewarded advertisement
-- [ ] process all derivatives in a background job and keep the WAV master private
+- [x] let each existing WordPress Label release accept one uploaded WAV master, generate its preview, and offer configurable Radio and Extended versions (local API package ready; live deployment pending)
+- [x] let the editor set separate prices for the WAV/lossless and 320 kbps MP3 products (local API package ready; Play product creation pending)
+- [x] sell the WAV/lossless and 320 kbps MP3 products through Google Play Billing (client and verification Function ready; live Function/Play product verification pending)
+- [x] generate a 128 kbps MP3 derivative that is unlocked after a rewarded advertisement (client and AdMob SSV Function ready; live AdMob callback pending)
+- [x] process all derivatives in a background job and keep the WAV master private (local API package ready; live server end-to-end test pending)
 - [x] verify Websupport FFmpeg support (`/usr/bin/ffmpeg` 4.4.2 with `libmp3lame`); background-job execution still needs an end-to-end test
 - [ ] optional purchase and download history
 
