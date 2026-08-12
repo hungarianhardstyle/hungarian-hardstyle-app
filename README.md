@@ -434,7 +434,7 @@ Core release quality:
 - [x] prepare the WordPress-managed FAQ refresh with the new v0.99.999/v1.0 features and current user guidance (API 2.4.44 seeds only missing entries; live deployment pending)
 - [x] reorganize `Több` into `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated tab
 - [x] add a `Több`-menu search and collapsible category sections, with Admin functions in a separate admin-only block
-- [ ] apply final UX polish: consistent card sizes, spacing, icons, loading/empty/error states, tap targets, back behavior, tab history, and accessibility scaling
+- moved to v0.99.90: final UX polish covering consistent card sizes, spacing, icons, loading/empty/error states, tap targets, back behavior, tab history, and accessibility scaling
 - [x] configure production release signing and obfuscated ARM64 release packaging; final public packaging remains blocked by production AdMob configuration
 - [ ] stabilize news, events, DJs and organizers for public release
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches
@@ -464,7 +464,7 @@ Authentication and community:
 - moved to v0.99.8: show which friends are attending on event details
 - moved to v0.99.8: friend attendance visibility
 - moved to v0.99.7: personalized event pushes for favorites/attendance
-- [ ] send publication and reminder pushes for featured events to every app-installed device with an FCM token, regardless of account registration (respect explicit notification opt-out)
+- [x] send publication and reminder pushes for featured events to every app-installed device with an FCM token, regardless of account registration (respect explicit notification opt-out)
 - moved to v0.99.7: favorited-organizer event notifications
 - [ ] optionally send a separate admin/editor push when a new event submission is received
 - [x] complete moderation/reporting/blocking follow-up, privacy information and self-service account deletion
