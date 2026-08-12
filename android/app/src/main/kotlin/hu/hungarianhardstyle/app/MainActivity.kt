@@ -1,4 +1,4 @@
-package com.example.hungarian_hardstyle_app
+package hu.hungarianhardstyle.app
 
 import android.content.ContentValues
 import android.content.Intent

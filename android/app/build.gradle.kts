@@ -40,7 +40,7 @@ if (isReleaseTask && !testAdsRequested) {
 }
 
 android {
-    namespace = "com.example.hungarian_hardstyle_app"
+    namespace = "hu.hungarianhardstyle.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -50,7 +50,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.hungarian_hardstyle_app"
+        applicationId = "hu.hungarianhardstyle.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

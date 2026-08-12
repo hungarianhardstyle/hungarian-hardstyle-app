@@ -1,4 +1,4 @@
-package com.example.hungarian_hardstyle_app
+package hu.hungarianhardstyle.app
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -138,9 +138,9 @@ class RadioPlaybackService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     companion object {
-        const val ACTION_PLAY = "com.example.hungarian_hardstyle_app.radio.PLAY"
-        const val ACTION_STOP = "com.example.hungarian_hardstyle_app.radio.STOP"
-        const val ACTION_VOLUME = "com.example.hungarian_hardstyle_app.radio.VOLUME"
+        const val ACTION_PLAY = "hu.hungarianhardstyle.app.radio.PLAY"
+        const val ACTION_STOP = "hu.hungarianhardstyle.app.radio.STOP"
+        const val ACTION_VOLUME = "hu.hungarianhardstyle.app.radio.VOLUME"
         const val EXTRA_URL = "url"
         const val EXTRA_VOLUME = "volume"
         private const val CHANNEL_ID = "huhs_radio"

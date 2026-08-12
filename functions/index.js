@@ -15,7 +15,7 @@ const WORDPRESS_BASE_URL = 'https://hungarianhardstyle.hu/wp-json/huhs/v1';
 const WORDPRESS_USERNAME = defineSecret('WORDPRESS_USERNAME');
 const WORDPRESS_APPLICATION_PASSWORD = defineSecret('WORDPRESS_APPLICATION_PASSWORD');
 const GOOGLE_PLAY_SERVICE_ACCOUNT_JSON = defineSecret('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON');
-const GOOGLE_PLAY_PACKAGE_NAME = 'com.example.hungarian_hardstyle_app';
+const GOOGLE_PLAY_PACKAGE_NAME = 'hu.hungarianhardstyle.app';
 const callWindows = new Map();
 const wordPressCall = (handler) => functions
   .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] })

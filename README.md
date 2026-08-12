@@ -561,5 +561,6 @@ FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces previ
 - A Firebase `verifyLabelPurchase` és letöltési Functionök telepítése a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` Secret Manager-secret hiánya miatt áll meg.
 - A valódi Play Billing teszthez a Play Console-ban létre kell hozni a release-enkénti `huhs_release_<id>_radio_wav`, `huhs_release_<id>_radio_mp3_320`, `huhs_release_<id>_extended_wav` és `huhs_release_<id>_extended_mp3_320` termékeket, majd ezeket a WordPress release-adatlapon meg kell adni.
 - A végleges publikus APK-hoz valódi AdMob App/Banner/Rewarded azonosítók szükségesek; a helyi teszt APK szándékosan tesztazonosítókat használ.
+- A Play Console alkalmazás létrejött a végleges `hu.hungarianhardstyle.app` Android csomagnévvel; a Firebase Android-app és a release SHA-k ehhez vannak konfigurálva.
 - A 128 kbps feloldás AdMob SSV callbacket használ; az AdMob jutalmazott hirdetésén be kell állítani az `admobRewardedSsv` HTTPS callback URL-t, és a callback csak hitelesített aláírás után írhat feloldást.
 - A fenti három külső feltétel és az új release APK telefonos ellenőrzése nélkül az 1.0 nem tekinthető késznek.
