@@ -14,6 +14,19 @@ if (signingPropertiesFile.exists()) {
     FileInputStream(signingPropertiesFile).use(signingProperties::load)
 }
 val hasReleaseSigning = signingPropertiesFile.exists()
+val testAdsRequested = providers.gradleProperty("HUHS_ENABLE_TEST_ADS")
+    .map(String::toBoolean)
+    .orElse(false)
+    .get()
+val productionAdMobAppId = providers.gradleProperty("HUHS_ADMOB_APP_ID").orNull
+val isReleaseTask = gradle.startParameter.taskNames.any {
+    it.contains("Release", ignoreCase = true)
+}
+if (isReleaseTask && !testAdsRequested && productionAdMobAppId.isNullOrBlank()) {
+    throw GradleException(
+        "Production release build requires -PHUHS_ADMOB_APP_ID or explicit -PHUHS_ENABLE_TEST_ADS=true."
+    )
+}
 
 android {
     namespace = "com.example.hungarian_hardstyle_app"
@@ -34,8 +47,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders["adMobAppId"] = providers.gradleProperty("HUHS_ADMOB_APP_ID")
-            .getOrElse("ca-app-pub-3940256099942544~3347511713")
+        manifestPlaceholders["adMobAppId"] = if (testAdsRequested) {
+            "ca-app-pub-3940256099942544~3347511713"
+        } else {
+            productionAdMobAppId.orEmpty()
+        }
     }
 
     signingConfigs {
