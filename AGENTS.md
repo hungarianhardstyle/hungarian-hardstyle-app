@@ -784,6 +784,7 @@ Paid options inside the existing Label tab:
 - WAV/lossless, example price `2.99 EUR`
 - Each release may expose separate Radio and Extended versions.
 - The editor sets the actual price for each paid product.
+- Current requested price defaults for the first release: WAV `700 HUF`, 320 kbps MP3 `550 HUF` for both Radio and Extended versions.
 
 The 128 kbps rewarded-ad target may be approximately 300 HUF per unlock, but
 AdMob revenue is variable and must be measured by eCPM, fill rate and geography;

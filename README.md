@@ -511,6 +511,7 @@ Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign
 
 - [x] let each existing WordPress Label release accept one uploaded WAV master, generate its preview, and offer configurable Radio and Extended versions (local API package ready; live deployment pending)
 - [x] let the editor set separate prices for the WAV/lossless and 320 kbps MP3 products (local API package ready; Play product creation pending)
+- requested first-release prices: WAV `700 HUF`, 320 kbps MP3 `550 HUF` for both Radio and Extended versions
 - [x] sell the WAV/lossless and 320 kbps MP3 products through Google Play Billing (client and verification Function ready; live Function/Play product verification pending)
 - [x] generate a 128 kbps MP3 derivative that is unlocked after a rewarded advertisement (client and AdMob SSV Function ready; live AdMob callback pending)
 - [x] process all derivatives in a background job and keep the WAV master private (local API package ready; live server end-to-end test pending)

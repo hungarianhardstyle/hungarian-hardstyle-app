@@ -779,6 +779,7 @@ Planned v0.99.1 Community MVP decisions:
 Additional v1.0 product requirements:
 
 - Extend the existing Label tab for the uploaded WordPress release records: WAV master upload, preview generation, configurable Radio/Extended versions, editor-defined WAV and 320 kbps MP3 prices, Google Play Billing, and rewarded-ad unlock for a generated 128 kbps MP3.
+- Current requested price defaults for the first release: WAV `700 HUF`, 320 kbps MP3 `550 HUF` for both Radio and Extended versions.
 - Keep WAV masters private and generate preview/paid derivatives server-side in a background job. The approximately 300 HUF rewarded-ad revenue target is only an estimate; AdMob eCPM and fill rate determine actual revenue.
 - Reorganize `Több` into `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated bottom tab.
 - Add a search field and collapsible category sections to `Több`; place administration in a separate admin-only block.
