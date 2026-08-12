@@ -435,10 +435,13 @@ exports.getLabelDownloadUrl = functions
       throw new HttpsError('invalid-argument', 'Érvénytelen Label-letöltési adat.');
     }
     const paid = variant !== 'mp3_128';
-    const entitlement = await db.collection('label_entitlements')
-      .doc(`${context.auth.uid}_huhs_release_${releaseId}_${variant}`)
-      .get();
-    if (paid && (!entitlement.exists || entitlement.data()?.releaseId !== releaseId)) {
+    const productId = `huhs_release_${releaseId}_${variant}`;
+    const entitlement = paid
+      ? await db.collection('label_entitlements')
+        .doc(`${context.auth.uid}_${productId}`)
+        .get()
+      : null;
+    if (paid && (!entitlement || !entitlement.exists || entitlement.data()?.releaseId !== releaseId)) {
       throw new HttpsError('permission-denied', 'Ehhez a fájlhoz nincs vásárlási jogosultság.');
     }
     if (!paid && variant === 'mp3_128') {
