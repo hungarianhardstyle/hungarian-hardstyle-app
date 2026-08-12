@@ -558,6 +558,9 @@ FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces previ
 
 #### v1.0 aktuális élesítési akadályok
 
+- v1.0.0+2 bugfix: a Label vásárlási kártyák a WordPressben beállított 700/550 HUF árral akkor is megjelennek, ha a Play terméklekérdezés még nem ad vissza adatot; a Play-vásárlás egyértelmű állapotüzenetet ad. A jutalmazott reklám betöltési állapotot, timeoutot és látható hibát kezel.
+- A +2 production APK emulátoron telepítve és elindítva lett; a valódi Google Play Billing- és jutalmazott reklámtranzakció továbbra is Playből telepített APK-val és valós tesztfiókkal ellenőrizendő.
+
 - A WordPress API `2.4.45` jelenleg telepítve és live-ellenőrizve van; a `/releases` válasz külön Radio/Extended verziókat és `audio_status: ready` állapotot ad. A natív Release-ek adminmezőkkel bővített telepíthető csomag: `build/huhs-mobile-api-2.4.46.zip`.
 - A WordPress API `2.4.46` telepítve és live-ellenőrizve van; a `/releases` válasz külön Radio/Extended verziókat, `audio_status: ready` állapotot és a négy termékmezőt adja. A natív Release-ek adminmezőkkel bővített csomag: `build/huhs-mobile-api-2.4.46.zip`.
 - A `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` Firebase Secret Manager-secret engedélyezve van; a Play szolgáltatásfiók aktív alkalmazásszintű pénzügyi hozzáféréssel rendelkezik. A `verifyLabelPurchase`, `getLabelDownloadUrl` és `admobRewardedSsv` Functionök élesek.
