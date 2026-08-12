@@ -440,12 +440,12 @@ Core release quality:
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches
 - [x] make artist/DJ profile genre tags open the same grouped `Események`, `DJ-k` and `Hírek` discovery view with the complete paginated result set
 - [x] complete the Label release catalog in v0.99.89, including preview playback, WordPress release records, multi-artist links, cover art and external release links
-- [ ] extend the existing Label tab with paid products; no separate store/catalog is planned
+- [x] extend the existing Label tab with paid products; no separate store/catalog is planned (local client/API implementation; live Play/Firebase/WordPress verification pending)
 - [x] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
 - [x] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background (complete)
 - [x] introduce a persistent navigation shell with per-tab history
 - [x] add the Chat tab to the persistent bottom-navigation shell
-- [ ] polish the Android release; iOS preparation is deferred until an Apple Developer account is available
+- [ ] polish and publish the Android release; iOS preparation is deferred until an Apple Developer account is available
 
 Authentication and community:
 

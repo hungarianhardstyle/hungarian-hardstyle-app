@@ -4756,9 +4756,9 @@
       "source_file": "lib/providers/artists_provider.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 91,
+      "community": 86,
       "norm_label": "artistsprovider",
-      "community_name": "_ArtistsScreenState",
+      "community_name": "artists_provider.dart",
       "id": "lib_providers_artists_provider_artistsprovider"
     },
     {
@@ -6307,9 +6307,9 @@
       "source_file": "lib/screens/artists/artists_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 91,
+      "community": 34,
       "norm_label": "artistsscreen",
-      "community_name": "_ArtistsScreenState",
+      "community_name": "artists_screen.dart",
       "id": "lib_screens_artists_artists_screen_artistsscreen"
     },
     {
@@ -6329,9 +6329,9 @@
       "source_file": "lib/screens/artists/artists_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 91,
+      "community": 34,
       "norm_label": "_artistsscreenstate",
-      "community_name": "_ArtistsScreenState",
+      "community_name": "artists_screen.dart",
       "id": "lib_screens_artists_artists_screen_artistsscreenstate"
     },
     {
@@ -6549,9 +6549,9 @@
       "source_file": "lib/screens/artists/artists_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 91,
+      "community": 86,
       "norm_label": "build",
-      "community_name": "_ArtistsScreenState",
+      "community_name": "artists_provider.dart",
       "id": "lib_screens_artists_artists_screen_build"
     },
     {
@@ -20504,17 +20504,6 @@
       "id": "lib_providers_ads_provider_productionrewardedadunitid"
     },
     {
-      "label": "app/build.gradle.kts",
-      "file_type": "code",
-      "source_file": "android/app/build.gradle.kts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 100,
-      "norm_label": "app/build.gradle.kts",
-      "community_name": "app/build.gradle.kts",
-      "id": "android_app_build_gradle"
-    },
-    {
       "label": "index.js",
       "file_type": "code",
       "source_file": "functions/index.js",
@@ -20522,8 +20511,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "index.js",
-      "id": "functions_index",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index"
     },
     {
       "label": "functions",
@@ -20533,8 +20522,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "functions",
-      "id": "functions_index_functions",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_functions"
     },
     {
       "label": "{ onDocumentWritten }",
@@ -20544,8 +20533,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "{ ondocumentwritten }",
-      "id": "functions_index_ondocumentwritten",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_ondocumentwritten"
     },
     {
       "label": "{ defineSecret }",
@@ -20555,8 +20544,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "{ definesecret }",
-      "id": "functions_index_definesecret",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_definesecret"
     },
     {
       "label": "crypto",
@@ -20566,8 +20555,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "crypto",
-      "id": "functions_index_crypto",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_crypto"
     },
     {
       "label": "admin",
@@ -20577,8 +20566,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "admin",
-      "id": "functions_index_admin",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_admin"
     },
     {
       "label": "{ getFirestore }",
@@ -20588,8 +20577,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "{ getfirestore }",
-      "id": "functions_index_getfirestore",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_getfirestore"
     },
     {
       "label": "{ google }",
@@ -20599,8 +20588,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "{ google }",
-      "id": "functions_index_google",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_google"
     },
     {
       "label": "db",
@@ -20610,8 +20599,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "db",
-      "id": "functions_index_db",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_db"
     },
     {
       "label": "WORDPRESS_USERNAME",
@@ -20621,8 +20610,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "wordpress_username",
-      "id": "functions_index_wordpress_username",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_wordpress_username"
     },
     {
       "label": "WORDPRESS_APPLICATION_PASSWORD",
@@ -20632,8 +20621,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "wordpress_application_password",
-      "id": "functions_index_wordpress_application_password",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_wordpress_application_password"
     },
     {
       "label": "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON",
@@ -20643,8 +20632,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "google_play_service_account_json",
-      "id": "functions_index_google_play_service_account_json",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_google_play_service_account_json"
     },
     {
       "label": "callWindows",
@@ -20654,8 +20643,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "callwindows",
-      "id": "functions_index_callwindows",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_callwindows"
     },
     {
       "label": "wordPressCall()",
@@ -20666,8 +20655,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "wordpresscall()",
-      "id": "functions_index_wordpresscall",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_wordpresscall"
     },
     {
       "label": "allowCall()",
@@ -20678,8 +20667,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "allowcall()",
-      "id": "functions_index_allowcall",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_allowcall"
     },
     {
       "label": "securityLog()",
@@ -20690,8 +20679,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "securitylog()",
-      "id": "functions_index_securitylog",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_securitylog"
     },
     {
       "label": "submissionRoutes",
@@ -20701,8 +20690,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "submissionroutes",
-      "id": "functions_index_submissionroutes",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_submissionroutes"
     },
     {
       "label": "isAdmin()",
@@ -20713,8 +20702,8 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "isadmin()",
-      "id": "functions_index_isadmin",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_isadmin"
     },
     {
       "label": "WORDPRESS_ADMIN_PATHS",
@@ -20724,8 +20713,19 @@
       "_origin": "ast",
       "community": 37,
       "norm_label": "wordpress_admin_paths",
-      "id": "functions_index_wordpress_admin_paths",
-      "community_name": "index.js"
+      "community_name": "index.js",
+      "id": "functions_index_wordpress_admin_paths"
+    },
+    {
+      "label": "app/build.gradle.kts",
+      "file_type": "code",
+      "source_file": "android/app/build.gradle.kts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 100,
+      "norm_label": "app/build.gradle.kts",
+      "id": "android_app_build_gradle",
+      "community_name": "app/build.gradle.kts"
     },
     {
       "label": "release_detail_screen.dart",
@@ -50455,5 +50455,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "67d27869f4795ce451d05f7960cbc4cfff1c379f"
+  "built_at_commit": "fe3ea81f31712bb422e7fcfa1532a9266abaad48"
 }

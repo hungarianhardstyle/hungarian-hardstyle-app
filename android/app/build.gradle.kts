@@ -19,13 +19,24 @@ val testAdsRequested = providers.gradleProperty("HUHS_ENABLE_TEST_ADS")
     .orElse(false)
     .get()
 val productionAdMobAppId = providers.gradleProperty("HUHS_ADMOB_APP_ID").orNull
+val productionAdMobBannerId = providers.gradleProperty("HUHS_ADMOB_BANNER_ID").orNull
+val productionAdMobRewardedId = providers.gradleProperty("HUHS_ADMOB_REWARDED_ID").orNull
 val isReleaseTask = gradle.startParameter.taskNames.any {
     it.contains("Release", ignoreCase = true)
 }
-if (isReleaseTask && !testAdsRequested && productionAdMobAppId.isNullOrBlank()) {
-    throw GradleException(
-        "Production release build requires -PHUHS_ADMOB_APP_ID or explicit -PHUHS_ENABLE_TEST_ADS=true."
-    )
+if (isReleaseTask && !testAdsRequested) {
+    val missing = buildList {
+        if (productionAdMobAppId.isNullOrBlank()) add("HUHS_ADMOB_APP_ID")
+        if (productionAdMobBannerId.isNullOrBlank()) add("HUHS_ADMOB_BANNER_ID")
+        if (productionAdMobRewardedId.isNullOrBlank()) add("HUHS_ADMOB_REWARDED_ID")
+        if (!hasReleaseSigning) add("key.properties/release signing")
+    }
+    if (missing.isNotEmpty()) {
+        throw GradleException(
+            "Production release build requires: ${missing.joinToString()}. " +
+                "Use -PHUHS_ENABLE_TEST_ADS=true only for an explicit test build."
+        )
+    }
 }
 
 android {
@@ -39,7 +50,6 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.hungarian_hardstyle_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.

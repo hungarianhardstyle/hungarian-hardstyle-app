@@ -212,11 +212,21 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     );
   }
 
-  String _productLabel(String id) => id.endsWith('_wav')
-      ? 'WAV / lossless'
-      : id.endsWith('_mp3_320')
-      ? 'MP3 320 kbps'
-      : id;
+  String _productLabel(String id) {
+    final radio = id.contains('_radio_');
+    final extended = id.contains('_extended_');
+    final version = radio
+        ? 'Radio'
+        : extended
+        ? 'Extended'
+        : '';
+    final format = id.endsWith('_wav')
+        ? 'WAV / lossless'
+        : id.endsWith('_mp3_320')
+        ? 'MP3 320 kbps'
+        : id;
+    return version.isEmpty ? format : '$version – $format';
+  }
 
   Widget _productCard(ProductDetails product) {
     final verified = _verifiedProducts.contains(product.id);

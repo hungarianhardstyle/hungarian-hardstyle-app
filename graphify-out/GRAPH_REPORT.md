@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 1902 nodes · 2631 edges · 110 communities (102 shown, 8 thin omitted)
+- 1902 nodes · 2631 edges · 109 communities (101 shown, 8 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.77)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `67d27869`
+- Built from commit: `fe3ea81f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -105,7 +105,6 @@
 - ads_provider.dart
 - donate_screen.dart
 - genre_chip.dart
-- _ArtistsScreenState
 - _ArtistSubmissionScreenState
 - OpenAPITests
 - FavoritesNotifier
@@ -133,17 +132,17 @@
   windows/runner/main.cpp → windows/runner/utils.cpp
 - `Win32Window::Win32Window()` --calls--> `Destroy`  [INFERRED]
   windows/runner/win32_window.cpp → windows/runner/win32_window.h
+- `_ArtistsScreenState` --references--> `artistsProvider`  [EXTRACTED]
+  lib/screens/artists/artists_screen.dart → lib/providers/artists_provider.dart
 - `_editCustomResource` --references--> `communityServiceProvider`  [EXTRACTED]
   lib/screens/community/wordpress_admin_screen.dart → lib/providers/community_provider.dart
 - `_editStartup` --references--> `communityServiceProvider`  [EXTRACTED]
-  lib/screens/community/wordpress_admin_screen.dart → lib/providers/community_provider.dart
-- `_load` --references--> `communityServiceProvider`  [EXTRACTED]
   lib/screens/community/wordpress_admin_screen.dart → lib/providers/community_provider.dart
 
 ## Import Cycles
 - None detected.
 
-## Communities (110 total, 8 thin omitted)
+## Communities (109 total, 8 thin omitted)
 
 ### Community 0 - "community_screen.dart"
 Cohesion: 0.02
@@ -282,8 +281,8 @@ Cohesion: 0.10
 Nodes (19): blocked, blockedTags, candidates, closing, cursor, end, linkifyPlainUrls, _linkifyText (+11 more)
 
 ### Community 34 - "artists_screen.dart"
-Cohesion: 0.11
-Nodes (18): artist_detail_screen.dart, ArtistListQuery get, artist, _ArtistCard, _ArtistError, _category, _CategoryChip, createState (+10 more)
+Cohesion: 0.10
+Nodes (20): artist_detail_screen.dart, ArtistListQuery get, artist, _ArtistCard, _ArtistError, ArtistsScreen, _ArtistsScreenState, _category (+12 more)
 
 ### Community 35 - "ConsumerWidget"
 Cohesion: 0.13
@@ -490,8 +489,8 @@ Cohesion: 0.33
 Nodes (5): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins(), MainFlutterWindow, NSWindow
 
 ### Community 86 - "artists_provider.dart"
-Cohesion: 0.33
-Nodes (5): ArtistListQuery, getArtist, getArtists, service, ../models/artist.dart
+Cohesion: 0.25
+Nodes (7): ArtistListQuery, artistsProvider, getArtist, getArtists, service, build, ../models/artist.dart
 
 ### Community 87 - "static const"
 Cohesion: 0.40
@@ -508,10 +507,6 @@ Nodes (4): build, DonateScreen, _donateUri, static final
 ### Community 90 - "genre_chip.dart"
 Cohesion: 0.40
 Nodes (4): build, genre, GenreChip, ../screens/genres/genre_discovery_screen.dart
-
-### Community 91 - "_ArtistsScreenState"
-Cohesion: 0.50
-Nodes (4): artistsProvider, ArtistsScreen, _ArtistsScreenState, build
 
 ### Community 92 - "_ArtistSubmissionScreenState"
 Cohesion: 0.50

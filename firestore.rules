@@ -211,6 +211,8 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow create: if request.auth != null
         && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && voteId == string(request.resource.data.seasonId) + '_' + request.resource.data.category + '_' + request.auth.uid
+        && request.resource.data.keys().hasOnly(['seasonId', 'category', 'candidateIds', 'userId', 'createdAt'])
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.seasonId is int
         && request.resource.data.category is string
