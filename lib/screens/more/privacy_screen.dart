@@ -31,7 +31,7 @@ class PrivacyScreen extends StatelessWidget {
             'Külső szolgáltatók: Firebase (hitelesítés, profilok, Chat, reakciók és pushértesítések), '
             'Cloudinary (profil- és közösségi képek), WordPress (hírek, események, DJ-k, '
             'szervezők és beküldések), Mailchimp (hírlevél-feliratkozás) és Google AdMob '
-            '(teszthirdetések). A szolgáltatók csak a saját feladatukhoz szükséges adatokat kapják meg.',
+            '(alkalmazáson belüli hirdetések és jutalmazott letöltésfeloldás). A szolgáltatók csak a saját feladatukhoz szükséges adatokat kapják meg.',
           ),
           SizedBox(height: 14),
           Text(

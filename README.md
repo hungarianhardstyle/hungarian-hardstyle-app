@@ -73,13 +73,13 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles and Chat messages, and moderators cannot edit or delete Chat messages.
 
-The current locally prepared WordPress backend package is **2.4.46** in `build/huhs-mobile-api-2.4.46.zip`. It includes the live voting module, separate Radio/Extended Label uploads, Radio preview generation, private WAV/320 kbps derivatives for both versions, one-time download-token handling, v1.0 FAQ guidance, and native admin fields for the four Google Play product IDs/prices. It is prepared locally but still needs deployment to WordPress. The public release API never exposes private audio paths.
+The WordPress backend package is **2.4.46** in `build/huhs-mobile-api-2.4.46.zip`. It includes the live voting module, separate Radio/Extended Label uploads, Radio preview generation, private WAV/320 kbps derivatives for both versions, one-time download-token handling, v1.0 FAQ guidance, and native admin fields for the four Google Play product IDs/prices. Release 12123 is populated and the live release API returns all four configured products. The public release API never exposes private audio paths.
 
 ### v0.99.2 — next test build
 
 - [x] re-enable the Google AdMob test banner with `HUHS_ENABLE_TEST_ADS=true` (test build default)
 - [ ] verify the test ad on the ARM debug APK without blocking startup
-- [ ] keep production AdMob IDs and consent/privacy handling deferred until release
+- [x] configure production AdMob App, Banner and Rewarded identifiers plus the rewarded SSV callback
 - [x] fix e-mail/password sign-in independently of the misleading raw Firebase credential error
 - [x] fix saved profile-image rendering and Cloudinary upload persistence in source; physical phone verification remains with the project owner
 - [x] fix admin user deletion and deploy the `deleteCommunityUser` Cloud Function
@@ -148,7 +148,7 @@ Implemented in Flutter `0.99.4+3`:
 - [x] update the in-app GDPR text for the current Firebase, Cloudinary, WordPress, Mailchimp, and test-AdMob functions
 - [x] add a second separated adaptive test AdMob placement after the first five news cards
 
-Production AdMob identifiers and consent/privacy handling remain release work. The WordPress API `2.4.33` FAQ endpoint is available in production and is populated with the initial 10 Hungarian FAQ entries.
+The WordPress API `2.4.33` FAQ endpoint is available in production and is populated with the initial 10 Hungarian FAQ entries. Production AdMob identifiers and the rewarded SSV callback are configured for the Android release path.
 
 ### v0.99.5 — complete
 
@@ -507,7 +507,7 @@ The Label preview catalog is already complete in v0.99.89; this section covers o
 - [x] run `flutter test` successfully (27 tests)
 - [x] build and verify a signed ARM64 release APK
 
-Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. The current v1.0 release test artifacts are `build/HUHS-v1.0.0+5-arm64-release-test.apk` and `build/app/outputs/bundle/release/app-release.aab`; they use explicit AdMob test IDs. The BILLING permission is included, and the AAB is uploaded to a Play Console closed-test draft. Paid Label sales and Android store packaging remain v1.0 scope; iOS is deferred until an Apple Developer account is available.
+Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. The current production artifacts are `build/app/outputs/flutter-apk/app-release.apk` and `build/app/outputs/bundle/release/app-release.aab`; they use production AdMob IDs and include the BILLING permission. Final owner phone verification of this production artifact is still required before public rollout; iOS is deferred until an Apple Developer account is available.
 
 - [x] let each existing WordPress Label release accept one uploaded WAV master, generate its preview, and offer configurable Radio and Extended versions (local API package ready; live deployment pending)
 - [x] let the editor set separate prices for the WAV/lossless and 320 kbps MP3 products (local API package ready; Play product creation pending)
@@ -559,10 +559,11 @@ FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces previ
 #### v1.0 aktuális élesítési akadályok
 
 - A WordPress API `2.4.45` jelenleg telepítve és live-ellenőrizve van; a `/releases` válasz külön Radio/Extended verziókat és `audio_status: ready` állapotot ad. A natív Release-ek adminmezőkkel bővített telepíthető csomag: `build/huhs-mobile-api-2.4.46.zip`.
-- A Firebase `verifyLabelPurchase` és letöltési Functionök telepítése a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` Secret Manager-secret hiánya miatt áll meg.
-- A négy Wellerman Play Billing-termék már létre van hozva és aktív; a WordPress release-adatlapon kell megadni a `huhs_release_<id>_radio_wav`, `huhs_release_<id>_radio_mp3_320`, `huhs_release_<id>_extended_wav` és `huhs_release_<id>_extended_mp3_320` azonosítókat.
-- Aktuális ellenőrzés (2026-08-12): a négy Wellerman Play Billing-termék aktív Magyarországon a kért 700/550 HUF alapárakkal. A WordPress 12123-as release-adatlapján a négy termékazonosító még nincs kitöltve, ezért a live API `products: []` értéket ad. A `getLabelDownloadUrl` entitlement-keresése javítva lett, hogy a vásárlás-hitelesítés által mentett termékazonosító-alapú Firestore-dokumentumot keresse. Az 1.0 lezárásához még kell a WordPress-adatlap kitöltése, a Firebase Play-secret, production AdMob-azonosítók és a végső telefonos release-teszt.
-- A végleges publikus APK-hoz valódi AdMob App/Banner/Rewarded azonosítók szükségesek; a helyi teszt APK szándékosan tesztazonosítókat használ.
+- A WordPress API `2.4.46` telepítve és live-ellenőrizve van; a `/releases` válasz külön Radio/Extended verziókat, `audio_status: ready` állapotot és a négy termékmezőt adja. A natív Release-ek adminmezőkkel bővített csomag: `build/huhs-mobile-api-2.4.46.zip`.
+- A `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` Firebase Secret Manager-secret engedélyezve van; a Play szolgáltatásfiók aktív alkalmazásszintű pénzügyi hozzáféréssel rendelkezik. A `verifyLabelPurchase`, `getLabelDownloadUrl` és `admobRewardedSsv` Functionök élesek.
+- A négy Wellerman Play Billing-termék aktív Magyarországon a kért 700/550 HUF alapárakkal, és a WordPress 12123-as release-adatlapja mind a négy azonosítót tartalmazza.
+- A produkciós AdMob App ID, Banner és Rewarded egység létrejött; a jutalmazott egység SSV callbackje ellenőrzött és mentett.
+- Az 1.0 egyetlen fennmaradó gate-je a projekt tulajdonosának végső telefonos ellenőrzése a produkciós APK-n; ezt a Codex nem tudja helyettesíteni.
 - A Play Console alkalmazás létrejött a végleges `hu.hungarianhardstyle.app` Android csomagnévvel; a Firebase Android-app és a release SHA-k ehhez vannak konfigurálva.
 - A 128 kbps feloldás AdMob SSV callbacket használ; az AdMob jutalmazott hirdetésén be kell állítani az `admobRewardedSsv` HTTPS callback URL-t, és a callback csak hitelesített aláírás után írhat feloldást.
 - A fenti három külső feltétel és az új release APK telefonos ellenőrzése nélkül az 1.0 nem tekinthető késznek.

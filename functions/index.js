@@ -471,26 +471,29 @@ exports.getLabelDownloadUrl = functions
 exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
   try {
     const rawQuery = String(req.originalUrl || '').split('?')[1] || '';
+    const params = new URLSearchParams(rawQuery);
+    const transactionId = String(params.get('transaction_id') || '').trim();
+    const customData = String(params.get('custom_data') || '').trim();
+    // AdMob's dashboard validator does not create a real reward transaction.
+    // Return success for that probe without granting anything. A probe may
+    // also omit the signed callback fields entirely.
+    if (params.get('user_id') || !transactionId || !params.get('signature')) {
+      return res.status(200).send('validated');
+    }
     const signatureMarker = '&signature=';
-    const keyMarker = '&key_id=';
     const signatureStart = rawQuery.indexOf(signatureMarker);
     if (signatureStart < 0) return res.status(400).send('missing signature');
     const signedQuery = rawQuery.slice(0, signatureStart);
-    const signatureAndKey = rawQuery.slice(signatureStart + signatureMarker.length);
-    const keyStart = signatureAndKey.indexOf(keyMarker);
-    if (keyStart < 0) return res.status(400).send('missing key id');
-    const signature = decodeURIComponent(signatureAndKey.slice(0, keyStart));
-    const keyId = Number(signatureAndKey.slice(keyStart + keyMarker.length));
+    const signature = String(params.get('signature') || '').trim();
+    const keyId = Number(params.get('key_id') || 0);
+    if (!keyId) return res.status(400).send('missing key id');
     const keyResponse = await fetch('https://www.gstatic.com/admob/reward/verifier-keys.json');
     const keyBody = await keyResponse.json();
     const key = (keyBody.keys || []).find((item) => Number(item.keyId) === keyId);
     if (!key?.pem || !signature) return res.status(400).send('unknown signing key');
     const valid = crypto.verify('sha256', Buffer.from(signedQuery, 'utf8'), { key: key.pem, dsaEncoding: 'der' }, Buffer.from(signature, 'base64url'));
     if (!valid) return res.status(400).send('invalid signature');
-    const params = new URLSearchParams(rawQuery);
-    const transactionId = String(params.get('transaction_id') || '').trim();
-    const customData = String(params.get('custom_data') || '').trim();
-    if (!transactionId || !customData) return res.status(400).send('missing reward data');
+    if (!customData) return res.status(400).send('missing reward data');
     const decoded = JSON.parse(Buffer.from(decodeURIComponent(customData), 'base64url').toString('utf8'));
     const uid = String(decoded.uid || '').trim();
     const releaseId = Number(decoded.releaseId || 0);

@@ -25,7 +25,7 @@ Future<void> main() async {
     // Keep the rest of the app usable when a platform Firebase config is
     // missing; the affected community feature will report its own error.
   }
-  if (enableTestAds) {
+  if (refineAdsConfigured()) {
     // Ads are opt-in; a provider/configuration problem must never block startup.
     try {
       await MobileAds.instance.initialize();
@@ -47,6 +47,13 @@ Future<void> main() async {
   }
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
   unawaited(_initializePushNotifications());
+}
+
+bool refineAdsConfigured() {
+  return enableTestAds ||
+      (productionAdMobAppId.isNotEmpty &&
+          productionBannerAdUnitId.isNotEmpty &&
+          productionRewardedAdUnitId.isNotEmpty);
 }
 
 Future<void> _initializePushNotifications() async {
