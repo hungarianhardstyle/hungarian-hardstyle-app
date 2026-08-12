@@ -507,7 +507,7 @@ The Label preview catalog is already complete in v0.99.89; this section covers o
 - [x] run `flutter test` successfully (27 tests)
 - [x] build and verify a signed ARM64 release APK
 
-Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. Paid Label sales and Android store packaging remain v1.0 scope; iOS is deferred until an Apple Developer account is available.
+Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. The current v1.0 ARM64 release test artifact is `build/HUHS-v1.0.0+3-arm64-release-test.apk`; it uses explicit AdMob test IDs. Paid Label sales and Android store packaging remain v1.0 scope; iOS is deferred until an Apple Developer account is available.
 
 - [x] let each existing WordPress Label release accept one uploaded WAV master, generate its preview, and offer configurable Radio and Extended versions (local API package ready; live deployment pending)
 - [x] let the editor set separate prices for the WAV/lossless and 320 kbps MP3 products (local API package ready; Play product creation pending)
