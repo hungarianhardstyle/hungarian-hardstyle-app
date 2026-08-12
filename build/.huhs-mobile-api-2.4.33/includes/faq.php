@@ -5,6 +5,79 @@ if (!defined('ABSPATH')) {
 }
 
 add_action('init', 'huhs_register_faq');
+add_action('admin_init', 'huhs_seed_v1_faq_once');
+
+/**
+ * Add the current app guidance once without changing existing editorial FAQ
+ * entries. The WordPress editor remains the source of truth after seeding.
+ */
+function huhs_seed_v1_faq_once()
+{
+    if (!current_user_can('manage_options') || get_option('huhs_faq_v1_seeded_1')) {
+        return;
+    }
+
+    $category = term_exists('App és közösség', 'huhs_faq_category');
+    if (!$category || is_wp_error($category)) {
+        $category = wp_insert_term('App és közösség', 'huhs_faq_category');
+    }
+    $category_id = is_array($category)
+        ? (int) $category['term_id']
+        : (is_int($category) ? $category : 0);
+
+    $items = array(
+        array(
+            'slug' => 'label-preview-es-vasarlas',
+            'title' => 'Hogyan működik a Label preview és a vásárlás?',
+            'content' => 'A Label oldalon legfeljebb 60 másodperces preview hallgatható meg. A teljes WAV master nem nyilvános. A WAV/lossless és 320 kbps MP3 változat Google Play-vásárlással tölthető le; a 128 kbps MP3 jutalmazott reklám megtekintése után oldható fel.',
+        ),
+        array(
+            'slug' => 'label-radio-es-extended-verzio',
+            'title' => 'Mi a Radio és az Extended verzió?',
+            'content' => 'Egy kiadványhoz külön Radio és Extended változat is tartozhat, ha ezeket a kiadvány szerkesztője feltöltötte. Az elérhető verziók a kiadvány adatlapján jelennek meg.',
+        ),
+        array(
+            'slug' => 'huhs-szavazas',
+            'title' => 'Hogyan működik az éves HUHS szavazás?',
+            'content' => 'Szavazni csak regisztrált, bejelentkezett felhasználóként lehet. A kategóriák külön választási limiteket használhatnak: magyar hardstyle DJ 5, magyar hardcore DJ 3, magyar zene 2, magyar szervező 1, külföldi DJ 3 jelölt.',
+        ),
+        array(
+            'slug' => 'baratok-es-esemenyreszvetel',
+            'title' => 'Mit láthatok a barátaimról és az eseményekről?',
+            'content' => 'A regisztrált felhasználók publikus profilokat nézhetnek meg, ismerősnek jelölhetik egymást, és az eseményeknél jelezhetik, hogy ott lesznek-e. Az eseményeken a megosztott részvételi állapotok és az ismerősök részvétele látható.',
+        ),
+        array(
+            'slug' => 'bekuldesek-es-jovahagyas',
+            'title' => 'Mi történik a DJ-, szervező- és eseménybeküldéssel?',
+            'content' => 'A beküldések ellenőrzésre kerülnek, és nem jelennek meg automatikusan publikált tartalomként. A szerkesztőség az adminisztrációban ellenőrzi, javítja és külön dönt a közzétételről.',
+        ),
+        array(
+            'slug' => 'profil-es-fiok-torlese',
+            'title' => 'Hogyan törölhetem a profilomat?',
+            'content' => 'A saját profilod adatlapján a Profil törlése művelettel kezdeményezheted a fiók törlését. A törlés megerősítést kér, és az alkalmazás közösségi adataid eltávolítását is kezeli.',
+        ),
+    );
+
+    foreach ($items as $item) {
+        $existing = get_page_by_path($item['slug'], OBJECT, 'huhs_faq');
+        if ($existing) {
+            continue;
+        }
+        $post_id = wp_insert_post(array(
+            'post_type' => 'huhs_faq',
+            'post_status' => 'publish',
+            'post_title' => $item['title'],
+            'post_name' => $item['slug'],
+            'post_content' => $item['content'],
+            'menu_order' => 100,
+        ), true);
+        if (!is_wp_error($post_id) && $category_id > 0) {
+            wp_set_object_terms($post_id, array($category_id), 'huhs_faq_category');
+        }
+    }
+
+    update_option('huhs_faq_v1_seeded_1', 1, false);
+}
 
 function huhs_register_faq()
 {

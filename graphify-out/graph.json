@@ -4857,7 +4857,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "communityauthprovider",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_providers_community_provider_communityauthprovider"
     },
     {
@@ -4945,7 +4945,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "eventsprovider",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_providers_events_provider_eventsprovider"
     },
     {
@@ -5031,9 +5031,9 @@
       "source_file": "lib/providers/favorites_provider.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "favoritekind",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_providers_favorites_provider_favoritekind"
     },
     {
@@ -5273,9 +5273,9 @@
       "source_file": "lib/providers/favorites_provider.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "favoritesprovider",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_providers_favorites_provider_favoritesprovider"
     },
     {
@@ -6065,9 +6065,9 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "consumerwidget",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "consumerwidget"
     },
     {
@@ -6274,9 +6274,9 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 21,
+      "community": 23,
       "norm_label": "../../widgets/event_card.dart",
-      "community_name": "events_screen.dart",
+      "community_name": "artist_detail_screen.dart",
       "id": "widgets_event_card_dart"
     },
     {
@@ -6285,9 +6285,9 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 21,
+      "community": 23,
       "norm_label": "../../providers/community_provider.dart",
-      "community_name": "events_screen.dart",
+      "community_name": "artist_detail_screen.dart",
       "id": "providers_community_provider_dart"
     },
     {
@@ -6571,9 +6571,9 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "../providers/favorites_provider.dart",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "providers_favorites_provider_dart"
     },
     {
@@ -6672,7 +6672,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "../../providers/events_provider.dart",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "providers_events_provider_dart"
     },
     {
@@ -6716,7 +6716,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "../artists/artist_detail_screen.dart",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "artists_artist_detail_screen_dart"
     },
     {
@@ -6727,7 +6727,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "../events/event_detail_screen.dart",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "events_event_detail_screen_dart"
     },
     {
@@ -7519,7 +7519,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "../organizers/organizer_detail_screen.dart",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "organizers_organizer_detail_screen_dart"
     },
     {
@@ -8034,9 +8034,9 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 21,
+      "community": 23,
       "norm_label": "events_screen.dart",
-      "community_name": "events_screen.dart",
+      "community_name": "artist_detail_screen.dart",
       "id": "lib_screens_events_events_screen"
     },
     {
@@ -8047,7 +8047,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "eventsscreen",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_screens_events_events_screen_eventsscreen"
     },
     {
@@ -8056,9 +8056,9 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 21,
+      "community": 23,
       "norm_label": "_eventsheader",
-      "community_name": "events_screen.dart",
+      "community_name": "artist_detail_screen.dart",
       "id": "lib_screens_events_events_screen_eventsheader"
     },
     {
@@ -8067,9 +8067,9 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 21,
+      "community": 23,
       "norm_label": "onsubmit",
-      "community_name": "events_screen.dart",
+      "community_name": "artist_detail_screen.dart",
       "id": "lib_screens_events_events_screen_onsubmit"
     },
     {
@@ -8078,9 +8078,9 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 21,
+      "community": 23,
       "norm_label": "showsubmit",
-      "community_name": "events_screen.dart",
+      "community_name": "artist_detail_screen.dart",
       "id": "lib_screens_events_events_screen_showsubmit"
     },
     {
@@ -8089,9 +8089,9 @@
       "source_file": "lib/screens/events/events_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 21,
+      "community": 23,
       "norm_label": "_opensubmission",
-      "community_name": "events_screen.dart",
+      "community_name": "artist_detail_screen.dart",
       "id": "lib_screens_events_events_screen_opensubmission"
     },
     {
@@ -8102,7 +8102,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "build",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_screens_events_events_screen_build"
     },
     {
@@ -8111,9 +8111,9 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "community": 21,
+      "community": 23,
       "norm_label": "event_submission_screen.dart",
-      "community_name": "events_screen.dart",
+      "community_name": "artist_detail_screen.dart",
       "id": "event_submission_screen_dart"
     },
     {
@@ -8641,7 +8641,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "../news/news_detail_screen.dart",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "news_news_detail_screen_dart"
     },
     {
@@ -9653,7 +9653,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "favorites_screen.dart",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_screens_more_favorites_screen"
     },
     {
@@ -9664,7 +9664,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "favoritesscreen",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_screens_more_favorites_screen_favoritesscreen"
     },
     {
@@ -9675,7 +9675,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "_label",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_screens_more_favorites_screen_label"
     },
     {
@@ -9686,7 +9686,7 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "openentry",
-      "community_name": "events_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_screens_more_favorites_screen_openentry"
     },
     {
@@ -9695,9 +9695,9 @@
       "source_file": "lib/screens/more/favorites_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "build",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_screens_more_favorites_screen_build"
     },
     {
@@ -10982,9 +10982,9 @@
       "source_file": "lib/screens/organizers/organizer_detail_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "_organizercontent",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_screens_organizers_organizer_detail_screen_organizercontent"
     },
     {
@@ -13347,9 +13347,9 @@
       "source_file": "lib/widgets/favorite_button.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "favorite_button.dart",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_widgets_favorite_button"
     },
     {
@@ -13358,9 +13358,9 @@
       "source_file": "lib/widgets/favorite_button.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "favoritebutton",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_widgets_favorite_button_favoritebutton"
     },
     {
@@ -13369,9 +13369,9 @@
       "source_file": "lib/widgets/favorite_button.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "kind",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_widgets_favorite_button_kind"
     },
     {
@@ -13380,9 +13380,9 @@
       "source_file": "lib/widgets/favorite_button.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "id",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_widgets_favorite_button_id"
     },
     {
@@ -13391,9 +13391,9 @@
       "source_file": "lib/widgets/favorite_button.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "title",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_widgets_favorite_button_title"
     },
     {
@@ -13402,9 +13402,9 @@
       "source_file": "lib/widgets/favorite_button.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "build",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_widgets_favorite_button_build"
     },
     {
@@ -18510,9 +18510,9 @@
       "source_file": "lib/screens/community/community_screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "community": 52,
+      "community": 21,
       "norm_label": "_postauthoravatar",
-      "community_name": "organizer_detail_screen.dart",
+      "community_name": "favorites_screen.dart",
       "id": "lib_screens_community_community_screen_postauthoravatar"
     },
     {
@@ -20944,8 +20944,8 @@
       "_origin": "ast",
       "community": 95,
       "norm_label": "app/build.gradle.kts",
-      "id": "android_app_build_gradle",
-      "community_name": "app/build.gradle.kts"
+      "community_name": "app/build.gradle.kts",
+      "id": "android_app_build_gradle"
     }
   ],
   "links": [
@@ -50433,5 +50433,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "14ef01ed48b086b34346206a4db5aadeaed06bbc"
+  "built_at_commit": "63456fdb7ee71a86914248cc90e520bacc9a216c"
 }

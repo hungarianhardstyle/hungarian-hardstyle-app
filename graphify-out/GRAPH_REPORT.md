@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `14ef01ed`
+- Built from commit: `63456fdb`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -35,7 +35,7 @@
 - news_provider.dart
 - hungarian-hardstyle-newsroom/app/main.py
 - my_application.cc
-- events_screen.dart
+- favorites_screen.dart
 - organizer_submission_screen.dart
 - artist_detail_screen.dart
 - push_notification_service.dart
@@ -224,17 +224,17 @@ Nodes (21): BaseHTTPMiddleware, create_wordpress_draft(), custom_openapi(), heal
 Cohesion: 0.09
 Nodes (22): FlPluginRegistry, FlView, GApplication, gboolean, gchar, GObject, GtkApplication, fl_register_plugins() (+14 more)
 
-### Community 21 - "events_screen.dart"
-Cohesion: 0.11
-Nodes (19): ../artists/artist_detail_screen.dart, event_submission_screen.dart, ../events/event_detail_screen.dart, communityAuthProvider, eventsProvider, build, _EventsHeader, EventsScreen (+11 more)
+### Community 21 - "favorites_screen.dart"
+Cohesion: 0.10
+Nodes (24): ../artists/artist_detail_screen.dart, ConsumerWidget, ../events/event_detail_screen.dart, communityAuthProvider, eventsProvider, FavoriteKind, favoritesProvider, _PostAuthorAvatar (+16 more)
 
 ### Community 22 - "organizer_submission_screen.dart"
 Cohesion: 0.08
 Nodes (25): class, build, _city, _contactEmail, _country, createState, _description, dispose (+17 more)
 
 ### Community 23 - "artist_detail_screen.dart"
-Cohesion: 0.12
-Nodes (17): Artist, artistDetailProvider, artistClaimStatusProvider, artist, _ArtistContent, ArtistDetailScreen, artistId, _biographyHtml (+9 more)
+Cohesion: 0.09
+Nodes (24): event_submission_screen.dart, Artist, artistDetailProvider, artistClaimStatusProvider, artist, _ArtistContent, ArtistDetailScreen, artistId (+16 more)
 
 ### Community 24 - "push_notification_service.dart"
 Cohesion: 0.08
@@ -349,8 +349,8 @@ Cohesion: 0.14
 Nodes (14): FormState, build, _consent, createState, dispose, _emailController, _formKey, _hostedSignupUrl (+6 more)
 
 ### Community 52 - "organizer_detail_screen.dart"
-Cohesion: 0.08
-Nodes (26): ConsumerWidget, OrganizerProfile, FavoriteKind, favoritesProvider, organizerDetailProvider, _PostAuthorAvatar, build, build (+18 more)
+Cohesion: 0.14
+Nodes (14): OrganizerProfile, organizerDetailProvider, build, _descriptionHtml, _escapeHtml, fallbackName, _MissingOrganizer, name (+6 more)
 
 ### Community 53 - "artists_provider.dart"
 Cohesion: 0.14
