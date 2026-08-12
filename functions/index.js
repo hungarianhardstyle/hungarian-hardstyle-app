@@ -464,26 +464,47 @@ exports.getLabelDownloadUrl = functions
     return { downloadUrl: body.download_url, expiresIn: Number(body.expires_in || 300) };
   });
 
-exports.unlockLabel128 = functions.https.onCall(async (data, context) => {
-  if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
-    throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
+  try {
+    const rawQuery = String(req.originalUrl || '').split('?')[1] || '';
+    const signatureMarker = '&signature=';
+    const keyMarker = '&key_id=';
+    const signatureStart = rawQuery.indexOf(signatureMarker);
+    if (signatureStart < 0) return res.status(400).send('missing signature');
+    const signedQuery = rawQuery.slice(0, signatureStart);
+    const signatureAndKey = rawQuery.slice(signatureStart + signatureMarker.length);
+    const keyStart = signatureAndKey.indexOf(keyMarker);
+    if (keyStart < 0) return res.status(400).send('missing key id');
+    const signature = decodeURIComponent(signatureAndKey.slice(0, keyStart));
+    const keyId = Number(signatureAndKey.slice(keyStart + keyMarker.length));
+    const keyResponse = await fetch('https://www.gstatic.com/admob/reward/verifier-keys.json');
+    const keyBody = await keyResponse.json();
+    const key = (keyBody.keys || []).find((item) => Number(item.keyId) === keyId);
+    if (!key?.pem || !signature) return res.status(400).send('unknown signing key');
+    const valid = crypto.verify('sha256', Buffer.from(signedQuery, 'utf8'), { key: key.pem, dsaEncoding: 'der' }, Buffer.from(signature, 'base64url'));
+    if (!valid) return res.status(400).send('invalid signature');
+    const params = new URLSearchParams(rawQuery);
+    const transactionId = String(params.get('transaction_id') || '').trim();
+    const customData = String(params.get('custom_data') || '').trim();
+    if (!transactionId || !customData) return res.status(400).send('missing reward data');
+    const decoded = JSON.parse(Buffer.from(decodeURIComponent(customData), 'base64url').toString('utf8'));
+    const uid = String(decoded.uid || '').trim();
+    const releaseId = Number(decoded.releaseId || 0);
+    if (!uid || !Number.isInteger(releaseId) || releaseId < 1) return res.status(400).send('invalid reward data');
+    const transaction = db.collection('admob_reward_transactions').doc(transactionId);
+    await db.runTransaction(async (tx) => {
+      if ((await tx.get(transaction)).exists) return;
+      tx.set(transaction, { uid, releaseId, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+      tx.set(db.collection('label_ad_unlocks').doc(`${uid}_${releaseId}`), {
+        uid, releaseId, expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+        transactionId, createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+    return res.status(200).send('ok');
+  } catch (error) {
+    console.warn(JSON.stringify({ event: 'admob_ssv_failed', message: String(error?.message || error) }));
+    return res.status(400).send('invalid callback');
   }
-  if (!allowCall(context.auth.uid, 'label_ad_unlock', 5)) {
-    throw new HttpsError('resource-exhausted', 'Túl sok reklámos feloldási kérés.');
-  }
-  const releaseId = Number(data?.releaseId || 0);
-  if (!Number.isInteger(releaseId) || releaseId < 1) {
-    throw new HttpsError('invalid-argument', 'Érvényes release szükséges.');
-  }
-  // AdMob client-side reward is the available Android gate; production SSV can
-  // replace this short-lived entitlement when the AdMob server callback is configured.
-  await db.collection('label_ad_unlocks').doc(`${context.auth.uid}_${releaseId}`).set({
-    uid: context.auth.uid,
-    releaseId,
-    expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
-  return { unlocked: true, releaseId };
 });
 
 exports.sendPersonalizedPush = functions.https.onCall(async (data, context) => {

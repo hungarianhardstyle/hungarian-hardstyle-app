@@ -561,4 +561,5 @@ FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces previ
 - A Firebase `verifyLabelPurchase` és letöltési Functionök telepítése a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` Secret Manager-secret hiánya miatt áll meg.
 - A valódi Play Billing teszthez a Play Console-ban létre kell hozni a release-enkénti `huhs_release_<id>_wav` és `huhs_release_<id>_mp3_320` termékeket.
 - A végleges publikus APK-hoz valódi AdMob App/Banner/Rewarded azonosítók szükségesek; a helyi teszt APK szándékosan tesztazonosítókat használ.
+- A 128 kbps feloldás AdMob SSV callbacket használ; az AdMob jutalmazott hirdetésén be kell állítani az `admobRewardedSsv` HTTPS callback URL-t, és a callback csak hitelesített aláírás után írhat feloldást.
 - A fenti három külső feltétel és az új release APK telefonos ellenőrzése nélkül az 1.0 nem tekinthető késznek.

@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../providers/ads_provider.dart';
 
@@ -73,19 +75,21 @@ class LabelPurchaseService {
     return data['downloadUrl'] as String;
   }
 
-  Future<void> unlock128(int releaseId) async {
-    await FirebaseFunctions.instance.httpsCallable('unlockLabel128').call({
-      'releaseId': releaseId,
-    });
-  }
-
-  Future<bool> showRewardedAd() async {
+  Future<bool> showRewardedAd(int releaseId) async {
     final unitId = enableTestAds
         ? 'ca-app-pub-3940256099942544/5224354917'
         : productionRewardedAdUnitId;
     if (unitId.isEmpty) return false;
     final rewarded = await _loadRewarded(unitId);
     if (rewarded == null) return false;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous) return false;
+    final customData = base64UrlEncode(
+      utf8.encode(jsonEncode({'uid': user.uid, 'releaseId': releaseId})),
+    );
+    await rewarded.setServerSideOptions(
+      ServerSideVerificationOptions(customData: customData),
+    );
     final result = Completer<bool>();
     rewarded.fullScreenContentCallback = FullScreenContentCallback(
       onAdDismissedFullScreenContent: (ad) {

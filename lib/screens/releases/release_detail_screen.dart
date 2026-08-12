@@ -241,24 +241,33 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
 
   Future<void> _unlock128() async {
     try {
-      final earned = await _purchases.showRewardedAd();
+      final earned = await _purchases.showRewardedAd(widget.release.id);
       if (!earned) throw StateError('A reklám megtekintése nem fejeződött be.');
-      await _purchases.unlock128(widget.release.id);
-      await _download('mp3_128');
+      var downloaded = false;
+      for (var attempt = 0; attempt < 6 && !downloaded; attempt++) {
+        await Future<void>.delayed(const Duration(seconds: 2));
+        downloaded = await _download('mp3_128');
+      }
+      if (!downloaded) {
+        throw StateError(
+          'A reklámos feloldás még nem érkezett meg, próbáld újra később.',
+        );
+      }
     } catch (error) {
       if (mounted) setState(() => _message = '$error');
     }
   }
 
-  Future<void> _download(String variant) async {
+  Future<bool> _download(String variant) async {
     try {
       final url = await _purchases.getDownloadUrl(
         releaseId: widget.release.id,
         variant: variant,
       );
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      return launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } catch (error) {
       if (mounted) setState(() => _message = '$error');
+      return false;
     }
   }
 
