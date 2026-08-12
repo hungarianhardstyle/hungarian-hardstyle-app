@@ -1,7 +1,7 @@
 # Graph Report - hungarian_hardstyle_app  (2026-08-12)
 
 ## Corpus Check
-- 184 files · ~385,960 words
+- 184 files · ~385,919 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5d77e712`
+- Built from commit: `8767fb92`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -42,7 +42,6 @@
 - my_application.cc
 - organizer_submission_screen.dart
 - voting.dart
-- communityServiceProvider
 - package:flutter_test/flutter_test.dart
 - RadioPlaybackService
 - main_navigation.dart
@@ -50,6 +49,7 @@
 - newsroom/app/main.py
 - artists_screen.dart
 - kozponti-cegregiszter.php
+- communityServiceProvider
 - release_detail_screen.dart
 - event_detail_screen.dart
 - post_embed_card.dart
@@ -67,11 +67,11 @@
 - artist_detail_screen.dart
 - releases_screen.dart
 - push_notification_service.dart
+- ConsumerState
 - mobile_ad_banner.dart
 - news_detail_screen.dart
 - voting_screen.dart
 - startup_gate.dart
-- ConsumerWidget
 - MaterialPageRoute
 - package:flutter/material.dart
 - faq_screen.dart
@@ -151,9 +151,9 @@
   windows/runner/main.cpp → windows/runner/utils.cpp
 - `Win32Window::Win32Window()` --calls--> `Destroy`  [INFERRED]
   windows/runner/win32_window.cpp → windows/runner/win32_window.h
-- `build` --references--> `communityServiceProvider`  [EXTRACTED]
+- `_CommunityAdminScreenState` --references--> `communityServiceProvider`  [EXTRACTED]
   lib/screens/community/community_screen.dart → lib/providers/community_provider.dart
-- `CommunityAvatarButton` --references--> `communityServiceProvider`  [EXTRACTED]
+- `_CommunityProfileScreenState` --references--> `communityServiceProvider`  [EXTRACTED]
   lib/screens/community/community_screen.dart → lib/providers/community_provider.dart
 - `_delete` --references--> `communityServiceProvider`  [EXTRACTED]
   lib/screens/community/community_screen.dart → lib/providers/community_provider.dart
@@ -271,37 +271,37 @@ Nodes (25): class, build, _city, _contactEmail, _country, createState, _descript
 Cohesion: 0.08
 Nodes (24): int get, active, artist, candidates, categories, fromJson, id, image (+16 more)
 
-### Community 27 - "communityServiceProvider"
-Cohesion: 0.12
-Nodes (25): ConsumerState, ConsumerStatefulWidget, communityServiceProvider, CommunityAdminScreen, _CommunityAdminScreenState, CommunityProfileScreen, _CommunityProfileScreenState, _delete (+17 more)
-
-### Community 28 - "package:flutter_test/flutter_test.dart"
+### Community 27 - "package:flutter_test/flutter_test.dart"
 Cohesion: 0.08
 Nodes (17): package:flutter_test/flutter_test.dart, package:hungarian_hardstyle_app/core/content/html_linkifier.dart, package:hungarian_hardstyle_app/models/artist.dart, package:hungarian_hardstyle_app/models/event.dart, package:hungarian_hardstyle_app/models/event_submission.dart, package:hungarian_hardstyle_app/models/organizer.dart, package:hungarian_hardstyle_app/models/post.dart, package:hungarian_hardstyle_app/models/profile_submission.dart (+9 more)
 
-### Community 29 - "RadioPlaybackService"
+### Community 28 - "RadioPlaybackService"
 Cohesion: 0.13
 Nodes (9): MainActivity, RadioPlaybackService, FlutterEngine, FlutterFragmentActivity, IBinder, Intent, MediaPlayer, Notification (+1 more)
 
-### Community 30 - "main_navigation.dart"
+### Community 29 - "main_navigation.dart"
 Cohesion: 0.09
 Nodes (22): community/community_screen.dart, events/events_screen.dart, home/home_screen.dart, appNavigatorKey, appScaffoldMessengerKey, build, createState, _currentIndex (+14 more)
 
-### Community 31 - "settings_screen.dart"
+### Community 30 - "settings_screen.dart"
 Cohesion: 0.09
 Nodes (23): _biometricEnabled, build, _clearCache, _clearingCache, createState, _eventNotificationsEnabled, _eventNotificationsKey, initState (+15 more)
 
-### Community 32 - "newsroom/app/main.py"
+### Community 31 - "newsroom/app/main.py"
 Cohesion: 0.14
 Nodes (20): cover(), fetch(), generate(), Image, Path, render_psd(), create_wordpress_draft(), custom_openapi() (+12 more)
 
-### Community 33 - "artists_screen.dart"
+### Community 32 - "artists_screen.dart"
 Cohesion: 0.09
 Nodes (22): artist_detail_screen.dart, ArtistListQuery get, artistsProvider, artist, _ArtistCard, _ArtistError, ArtistsScreen, _ArtistsScreenState (+14 more)
 
-### Community 34 - "kozponti-cegregiszter.php"
+### Community 33 - "kozponti-cegregiszter.php"
 Cohesion: 0.11
 Nodes (6): kcr_fields(), kcr_item(), kcr_meta_box_html(), kcr_routes(), kcr_save(), kcr_schema()
+
+### Community 34 - "communityServiceProvider"
+Cohesion: 0.11
+Nodes (22): ConsumerWidget, communityAuthProvider, communityPostsProvider, communityServiceProvider, watch, build, CommunityAvatarButton, _delete (+14 more)
 
 ### Community 35 - "release_detail_screen.dart"
 Cohesion: 0.09
@@ -371,25 +371,25 @@ Nodes (17): HuhsRelease, releasesProvider, artistId, artistName, build, createSt
 Cohesion: 0.11
 Nodes (17): _api, _authSubscription, initialize, _initialized, PushNotificationService, _showForegroundMessage, _storeToken, _syncStoredToken (+9 more)
 
-### Community 52 - "mobile_ad_banner.dart"
+### Community 52 - "ConsumerState"
+Cohesion: 0.16
+Nodes (17): ConsumerState, ConsumerStatefulWidget, CommunityAdminScreen, _CommunityAdminScreenState, CommunityProfileScreen, _CommunityProfileScreenState, LiveFeedScreen, _PostCard (+9 more)
+
+### Community 53 - "mobile_ad_banner.dart"
 Cohesion: 0.15
 Nodes (15): BannerAd?, int?, adsEnabledProvider, _ad, build, createState, dispose, _ensureAd (+7 more)
 
-### Community 53 - "news_detail_screen.dart"
+### Community 54 - "news_detail_screen.dart"
 Cohesion: 0.12
 Nodes (14): ../../core/content/html_linkifier.dart, ../gallery/gallery_screen.dart, formatEventDate, formatHungarianDate, build, _formatDate, NewsDetailScreen, _openLink (+6 more)
 
-### Community 54 - "voting_screen.dart"
+### Community 55 - "voting_screen.dart"
 Cohesion: 0.15
 Nodes (15): wordpressServiceProvider, votingServiceProvider, _busyCategory, _category, createState, _link, _newsletterAsked, _newsletterConsent (+7 more)
 
-### Community 55 - "startup_gate.dart"
+### Community 56 - "startup_gate.dart"
 Cohesion: 0.12
 Nodes (15): _animationDuration, _announcementUrl, build, _controller, createState, didChangeDependencies, _dismissedAnnouncementUrl, dispose (+7 more)
-
-### Community 56 - "ConsumerWidget"
-Cohesion: 0.15
-Nodes (14): ConsumerWidget, communityAuthProvider, communityPostsProvider, watch, build, CommunityAvatarButton, _PostAuthorAvatar, EventsScreen (+6 more)
 
 ### Community 57 - "MaterialPageRoute"
 Cohesion: 0.14
@@ -595,9 +595,9 @@ Nodes (3): ReleaseQuery, ../models/release.dart, typedef
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `CommunityService` connect `ConsumerWidget` to `community_service.dart`, `community_screen.dart`, `community_users_screen.dart`?**
+- **Why does `CommunityService` connect `communityServiceProvider` to `community_service.dart`, `community_screen.dart`, `community_users_screen.dart`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
-- **Why does `communityServiceProvider` connect `communityServiceProvider` to `ConsumerWidget`, `MaterialPageRoute`, `event_submission_screen.dart`, `voting_screen.dart`?**
+- **Why does `communityServiceProvider` connect `communityServiceProvider` to `MaterialPageRoute`, `ConsumerState`, `event_submission_screen.dart`, `voting_screen.dart`?**
   _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **Why does `Artist` connect `artist_detail_screen.dart` to `artists_screen.dart`, `artist.dart`?**
   _High betweenness centrality (0.003) - this node is a cross-community bridge._

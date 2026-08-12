@@ -127,12 +127,12 @@ As of the current project state:
 - News search UI exists.
 - News item tap/click opens the news detail view.
 - News cards display remote images, title, date, and featured state.
-- The WordPress API plugin source is present locally as deployable ZIPs in `build/`; package `2.4.45` is deployed and live-verified on `hungarianhardstyle.hu` (the public release API returns separate Radio/Extended versions and `audio_status: ready`). Locally prepared follow-up `build/huhs-mobile-api-2.4.46.zip` adds native Release admin fields for the four Google Play product IDs/prices.
-- The locally prepared 2.4.46 package retains the live voting and release APIs, uses separate Radio and Extended upload fields, generates the preview from Radio, creates private WAV/320 kbps derivatives from both versions, and exposes the four Play product ID/price fields in the native admin API. Private audio paths are never returned by the public release API.
+- The WordPress API plugin source is present locally as deployable ZIPs in `build/`; package `2.4.46` is deployed and live-verified on `hungarianhardstyle.hu` (the public release API returns separate Radio/Extended versions, `audio_status: ready`, and the four Play product fields).
+- The deployed 2.4.46 package retains the live voting and release APIs, uses separate Radio and Extended upload fields, generates the preview from Radio, creates private WAV/320 kbps derivatives from both versions, and exposes the four Play product ID/price fields in the native admin API. Private audio paths are never returned by the public release API.
 - v1.0 remains open only for final owner phone verification of the production Android artifact. The Firebase Play secret, Play service-account permission, WordPress release product metadata, production AdMob identifiers and rewarded SSV are configured.
 - The 128 kbps rewarded unlock must use the `admobRewardedSsv` HTTPS Function; do not restore a client-only unlock callable, because it would allow fabricated rewards.
 - The final Android package name is `hu.hungarianhardstyle.app`; Firebase Android configuration and release SHA certificates are registered for this package, and the Play Console app has been created.
-- The v1.0 BILLING permission is included in the Android manifest. Release AAB `build/app/outputs/bundle/release/app-release.aab` has been uploaded to the Play Console closed-test draft; Play product creation is now available.
+- The v1.0 BILLING permission is included in the Android manifest. Production artifacts are `build/HUHS-v1.0.0+1-arm64-release.apk` and `build/HUHS-v1.0.0+1-release.aab`; the Play Console closed-test draft and four active Hungary products are configured.
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
@@ -482,7 +482,7 @@ Firebase rules and the `claimArtistProfile`/`sendPersonalizedPush`/`getArtistCla
 
 - [x] Show one `Saját DJ-adatlap megnyitása` button on the user's profile; it opens the native in-app DJ detail screen through the deployed `getMyClaimedArtists` callable.
 
-The v0.99.999 security-hardening and Android public-QA pass owns R8/resource shrinking, Dart obfuscation, release signing, HTTPS-only networking, backup disablement and verification of existing backend rate limits. Paid purchase/store work remains v1.0+; the Label release catalog is closed in v0.99.89.
+The v0.99.999 security-hardening and Android public-QA pass owns R8/resource shrinking, Dart obfuscation, release signing, HTTPS-only networking, backup disablement and verification of existing backend rate limits. The paid Label purchase extension is part of the current v1.0 release; the Label preview catalog is closed in v0.99.89.
 
 ### v0.99.8 closure (2026-08-06)
 

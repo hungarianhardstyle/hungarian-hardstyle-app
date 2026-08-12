@@ -431,21 +431,21 @@ Small, low-risk finishing work that can be released independently before the lar
 
 Core release quality:
 
-- [x] prepare the WordPress-managed FAQ refresh with the new v0.99.999/v1.0 features and current user guidance (API 2.4.44 seeds only missing entries; live deployment pending)
+- [x] refresh the WordPress-managed FAQ with the new v0.99.999/v1.0 features and current user guidance (live-verified)
 - [x] reorganize `Több` into `Felfedezés`, `Közösség`, `Beküldés`, `Kapcsolat és támogatás`, and `Alkalmazás`; keep Label only in its dedicated tab
 - [x] add a `Több`-menu search and collapsible category sections, with Admin functions in a separate admin-only block
-- moved to v0.99.90: final UX polish covering consistent card sizes, spacing, icons, loading/empty/error states, tap targets, back behavior, tab history, and accessibility scaling
-- [x] configure production release signing and obfuscated ARM64 release packaging; final public packaging remains blocked by production AdMob configuration
-- [ ] stabilize news, events, DJs and organizers for public release
+- [x] complete final UX polish covering consistent card sizes, spacing, icons, loading/empty/error states, tap targets, back behavior, tab history, and accessibility scaling (v0.99.90)
+- [x] configure production release signing and obfuscated ARM64 release packaging with production AdMob configuration
+- [x] stabilize news, events, DJs and organizers for public release
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches
 - [x] make artist/DJ profile genre tags open the same grouped `Események`, `DJ-k` and `Hírek` discovery view with the complete paginated result set
 - [x] complete the Label release catalog in v0.99.89, including preview playback, WordPress release records, multi-artist links, cover art and external release links
-- [x] extend the existing Label tab with paid products; no separate store/catalog is planned (client/API implementation complete; live Play products verified, Firebase/WordPress wiring pending)
+- [x] extend the existing Label tab with paid products; no separate store/catalog is planned (client/API, WordPress, Firebase and live Play products verified)
 - [x] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
 - [x] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background (complete)
 - [x] introduce a persistent navigation shell with per-tab history
 - [x] add the Chat tab to the persistent bottom-navigation shell
-- [ ] polish and publish the Android release; iOS preparation is deferred until an Apple Developer account is available
+- [ ] perform the final owner phone verification and publish the Android release; iOS preparation is deferred until an Apple Developer account is available
 
 Authentication and community:
 
@@ -471,7 +471,7 @@ Authentication and community:
 
 App administration:
 
-- [ ] keep WordPress as the editorial source of truth and enforce admin permissions server-side
+- [x] keep WordPress as the editorial source of truth and enforce admin permissions server-side
 
 News, events, DJs and organizers should remain readable without registration. Event, DJ and organizer submission forms remain public until authentication launches. After that, only signed-in users may see and use them, and the backend must reject unauthenticated submissions.
 
@@ -507,15 +507,15 @@ The Label preview catalog is already complete in v0.99.89; this section covers o
 - [x] run `flutter test` successfully (27 tests)
 - [x] build and verify a signed ARM64 release APK
 
-Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign-in with the release certificate, Android QA and signing-key backup are complete. The current production artifacts are `build/app/outputs/flutter-apk/app-release.apk` and `build/app/outputs/bundle/release/app-release.aab`; they use production AdMob IDs and include the BILLING permission. Final owner phone verification of this production artifact is still required before public rollout; iOS is deferred until an Apple Developer account is available.
+Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. The hardening and QA scope is complete. The final v1.0 production artifacts are `build/HUHS-v1.0.0+1-arm64-release.apk` and `build/HUHS-v1.0.0+1-release.aab`; they use production AdMob IDs and include the BILLING permission. Final owner phone verification of the production artifact is still required before public rollout; iOS is deferred until an Apple Developer account is available.
 
-- [x] let each existing WordPress Label release accept one uploaded WAV master, generate its preview, and offer configurable Radio and Extended versions (local API package ready; live deployment pending)
-- [x] let the editor set separate prices for the WAV/lossless and 320 kbps MP3 products (local API package ready; Play product creation pending)
-- requested first-release prices: WAV `700 HUF`, 320 kbps MP3 `550 HUF` for both Radio and Extended versions
-- [x] sell the WAV/lossless and 320 kbps MP3 products through Google Play Billing (client and verification Function ready; all four Play products active, live Function/WordPress verification pending)
-- [x] generate a 128 kbps MP3 derivative that is unlocked after a rewarded advertisement (client and AdMob SSV Function ready; live AdMob callback pending)
-- [x] process all derivatives in a background job and keep the WAV master private (local API package ready; live server end-to-end test pending)
-- [x] verify Websupport FFmpeg support (`/usr/bin/ffmpeg` 4.4.2 with `libmp3lame`); background-job execution still needs an end-to-end test
+- [x] let each existing WordPress Label release accept one uploaded WAV master, generate its preview, and offer configurable Radio and Extended versions (live API 2.4.46 verified)
+- [x] let the editor set separate prices for the WAV/lossless and 320 kbps MP3 products (live WordPress fields and Play pricing verified)
+- [x] use the requested first-release prices: WAV `700 HUF`, 320 kbps MP3 `550 HUF` for both Radio and Extended versions
+- [x] sell the WAV/lossless and 320 kbps MP3 products through Google Play Billing (all four Play products active in Hungary; live verification Function and WordPress download path deployed)
+- [x] generate a 128 kbps MP3 derivative that is unlocked after a rewarded advertisement (production AdMob SSV callback validated and saved)
+- [x] process all derivatives in a background job and keep the WAV master private (live release 12123 audio status is `ready`)
+- [x] verify Websupport FFmpeg support (`/usr/bin/ffmpeg` 4.4.2 with `libmp3lame`) and the live derivative path
 - [ ] optional purchase and download history
 
 The rewarded-ad revenue target is approximately 300 HUF per 128 kbps unlock, but actual revenue depends on AdMob eCPM, geography, fill rate and user demand; it cannot be guaranteed per impression.
