@@ -30,8 +30,9 @@ function huhs_release_meta_box($post)
     huhs_text_field($post, 'wav_price', 'WAV/lossless price');
     huhs_text_field($post, 'mp3_product_id', 'Google Play 320 kbps MP3 product ID');
     huhs_text_field($post, 'mp3_price', '320 kbps MP3 price');
-    huhs_audio_url_field($post, 'radio_audio_url', 'Radio version source');
-    huhs_audio_url_field($post, 'extended_audio_url', 'Extended version source');
+    huhs_audio_url_field($post, 'radio_audio_url', 'Radio version source – opcionális változat');
+    huhs_audio_url_field($post, 'extended_audio_url', 'Extended version source – opcionális változat');
+    echo '<p><em>A WAV/lossless és 320 kbps MP3 termékfájlok nem kerülnek a nyilvános API-válaszba. A vásárlás és letöltési jogosultságot a Firebase ellenőrző szolgáltatása kezeli.</em></p>';
     $preview_url = esc_url(get_post_meta($post->ID, 'preview_url', true));
     if ($preview_url) echo '<p><strong>Elkészült preview:</strong> <a href="' . $preview_url . '" target="_blank" rel="noopener">Lejátszás</a></p>';
     echo '<p><em>A feltöltött teljes MP3/WAV a preview elkészülése után automatikusan törlődik.</em></p>';
@@ -83,6 +84,19 @@ function huhs_release_generate_preview($post_id)
     $ffmpeg = trim((string) shell_exec('command -v ffmpeg 2>/dev/null'));
     if (!$source || !is_file($source) || $ffmpeg === '') return;
     $upload = wp_upload_dir();
+    $private_dir = function_exists('huhs_release_private_dir') ? huhs_release_private_dir() : '';
+    if ($private_dir !== '') {
+        $extension = strtolower(pathinfo($source, PATHINFO_EXTENSION));
+        $master = trailingslashit($private_dir) . 'release-' . (int) $post_id . '-master.' . ($extension === 'wav' ? 'wav' : 'mp3');
+        if (!is_file($master)) copy($source, $master);
+        update_post_meta($post_id, 'private_wav_path', $master);
+        $mp3_320 = trailingslashit($private_dir) . 'release-' . (int) $post_id . '-320.mp3';
+        $mp3_128 = trailingslashit($private_dir) . 'release-' . (int) $post_id . '-128.mp3';
+        shell_exec(escapeshellarg($ffmpeg) . ' -y -i ' . escapeshellarg($source) . ' -vn -codec:a libmp3lame -b:a 320k ' . escapeshellarg($mp3_320) . ' 2>/dev/null');
+        shell_exec(escapeshellarg($ffmpeg) . ' -y -i ' . escapeshellarg($source) . ' -vn -codec:a libmp3lame -b:a 128k ' . escapeshellarg($mp3_128) . ' 2>/dev/null');
+        if (is_file($mp3_320)) update_post_meta($post_id, 'private_mp3_320_path', $mp3_320);
+        if (is_file($mp3_128)) update_post_meta($post_id, 'private_mp3_128_path', $mp3_128);
+    }
     $filename = wp_unique_filename($upload['path'], 'huhs-release-' . $post_id . '-preview-' . time() . '.mp3');
     $target = trailingslashit($upload['path']) . $filename;
     shell_exec(escapeshellarg($ffmpeg) . ' -y -ss 30 -i ' . escapeshellarg($source) . ' -t 60 -vn -codec:a libmp3lame ' . escapeshellarg($target) . ' 2>/dev/null');
@@ -93,5 +107,6 @@ function huhs_release_generate_preview($post_id)
         update_post_meta($post_id, 'preview_url', $preview_url ?: trailingslashit($upload['url']) . $filename);
         if ($attachment_id && $attachment_id !== (int) $attachment) wp_delete_attachment($attachment_id, true);
         delete_post_meta($post_id, 'audio_url');
+        update_post_meta($post_id, 'audio_processing_status', 'ready');
     }
 }

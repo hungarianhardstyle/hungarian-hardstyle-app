@@ -2,6 +2,7 @@ const functions = require('firebase-functions/v1');
 const { onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { HttpsError } = functions.https;
 const { defineSecret } = require('firebase-functions/params');
+const crypto = require('crypto');
 const admin = require('firebase-admin');
 const { getFirestore } = require('firebase-admin/firestore');
 const { google } = require('googleapis');
@@ -378,7 +379,8 @@ exports.verifyLabelPurchase = functions
     const productId = String(data?.productId || '').trim();
     const purchaseToken = String(data?.purchaseToken || '').trim();
     const releaseId = Number(data?.releaseId || 0);
-    if (!/^huhs_release_[0-9]+_(wav|mp3_320)$/.test(productId) || !purchaseToken || !Number.isInteger(releaseId) || releaseId < 1) {
+    const productMatch = productId.match(/^huhs_release_([0-9]+)_(wav|mp3_320)$/);
+    if (!productMatch || !purchaseToken || !Number.isInteger(releaseId) || releaseId < 1 || Number(productMatch[1]) !== releaseId) {
       throw new HttpsError('invalid-argument', 'Érvénytelen Label-vásárlási adat.');
     }
     let serviceAccount;
@@ -410,13 +412,79 @@ exports.verifyLabelPurchase = functions
       uid: context.auth.uid,
       releaseId,
       productId,
-      purchaseToken,
+      purchaseTokenHash: crypto.createHash('sha256').update(purchaseToken).digest('hex'),
       orderId: String(purchase.data.orderId || ''),
       verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
     await db.collection('label_entitlements').doc(`${context.auth.uid}_${productId}`).set(entitlement, { merge: true });
     return { verified: true, releaseId, productId };
   });
+
+exports.getLabelDownloadUrl = functions
+  .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] })
+  .https.onCall(async (data, context) => {
+    if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
+      throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a letöltéshez.');
+    }
+    if (!allowCall(context.auth.uid, 'label_download', 10)) {
+      throw new HttpsError('resource-exhausted', 'Túl sok letöltési kérés.');
+    }
+    const releaseId = Number(data?.releaseId || 0);
+    const variant = String(data?.variant || '').trim();
+    if (!Number.isInteger(releaseId) || releaseId < 1 || !['wav', 'mp3_320', 'mp3_128', 'radio', 'extended'].includes(variant)) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen Label-letöltési adat.');
+    }
+    const paid = variant === 'wav' || variant === 'mp3_320';
+    const entitlement = await db.collection('label_entitlements')
+      .doc(`${context.auth.uid}_huhs_release_${releaseId}_${variant}`)
+      .get();
+    if (paid && (!entitlement.exists || entitlement.data()?.releaseId !== releaseId)) {
+      throw new HttpsError('permission-denied', 'Ehhez a fájlhoz nincs vásárlási jogosultság.');
+    }
+    if (!paid && variant === 'mp3_128') {
+      const unlock = await db.collection('label_ad_unlocks').doc(`${context.auth.uid}_${releaseId}`).get();
+      if (!unlock.exists || unlock.data()?.releaseId !== releaseId || Number(unlock.data()?.expiresAt || 0) < Date.now()) {
+        throw new HttpsError('permission-denied', 'A 128 kbps változat feloldása szükséges.');
+      }
+    }
+    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+    const response = await fetch(`${WORDPRESS_BASE_URL}/private-download-token`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ releaseId, variant }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || typeof body.download_url !== 'string') {
+      throw new HttpsError('failed-precondition', body?.message || 'A Label-letöltés nem érhető el.');
+    }
+    return { downloadUrl: body.download_url, expiresIn: Number(body.expires_in || 300) };
+  });
+
+exports.unlockLabel128 = functions.https.onCall(async (data, context) => {
+  if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
+    throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+  }
+  if (!allowCall(context.auth.uid, 'label_ad_unlock', 5)) {
+    throw new HttpsError('resource-exhausted', 'Túl sok reklámos feloldási kérés.');
+  }
+  const releaseId = Number(data?.releaseId || 0);
+  if (!Number.isInteger(releaseId) || releaseId < 1) {
+    throw new HttpsError('invalid-argument', 'Érvényes release szükséges.');
+  }
+  // AdMob client-side reward is the available Android gate; production SSV can
+  // replace this short-lived entitlement when the AdMob server callback is configured.
+  await db.collection('label_ad_unlocks').doc(`${context.auth.uid}_${releaseId}`).set({
+    uid: context.auth.uid,
+    releaseId,
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+  return { unlocked: true, releaseId };
+});
 
 exports.sendPersonalizedPush = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new HttpsError('permission-denied', 'Bejelentkezés szükséges.');

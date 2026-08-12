@@ -22,6 +22,18 @@ class ReleaseTrack {
   );
 }
 
+class ReleaseVersion {
+  final String type;
+  final bool available;
+
+  const ReleaseVersion({required this.type, required this.available});
+
+  factory ReleaseVersion.fromJson(Map<String, dynamic> json) => ReleaseVersion(
+    type: _readString(json['type']),
+    available: json['available'] == true,
+  );
+}
+
 class HuhsRelease {
   final int id;
   final String title;
@@ -31,6 +43,7 @@ class HuhsRelease {
   final List<ReleaseTrack> tracks;
   final Map<String, String> links;
   final List<ReleaseProduct> products;
+  final List<ReleaseVersion> versions;
 
   const HuhsRelease({
     required this.id,
@@ -41,6 +54,7 @@ class HuhsRelease {
     required this.tracks,
     required this.links,
     required this.products,
+    required this.versions,
   });
 
   factory HuhsRelease.fromJson(Map<String, dynamic> json) {
@@ -48,6 +62,7 @@ class HuhsRelease {
     final trackValues = json['tracks'];
     final linkValues = json['links'];
     final productValues = json['products'];
+    final versionValues = json['versions'];
     final links = <String, String>{};
     if (linkValues is Map<String, dynamic>) {
       for (final entry in linkValues.entries) {
@@ -80,6 +95,15 @@ class HuhsRelease {
                 .whereType<Map<String, dynamic>>()
                 .map(ReleaseProduct.fromJson)
                 .where((product) => product.id.isNotEmpty)
+                .toList(growable: false)
+          : const [],
+      versions: versionValues is List
+          ? versionValues
+                .whereType<Map<String, dynamic>>()
+                .map(ReleaseVersion.fromJson)
+                .where(
+                  (version) => version.type.isNotEmpty && version.available,
+                )
                 .toList(growable: false)
           : const [],
     );

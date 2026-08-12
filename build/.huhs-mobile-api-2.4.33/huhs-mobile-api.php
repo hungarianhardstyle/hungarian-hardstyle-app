@@ -3,7 +3,7 @@
  * Plugin Name: HUHS Mobile API
  * Plugin URI: https://hungarianhardstyle.hu
  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
- * Version: 2.4.42
+ * Version: 2.4.43
  * Author: Denoiser
  */
 
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('HUHS_API_VERSION', '2.4.42');
+define('HUHS_API_VERSION', '2.4.43');
 define('HUHS_API_PATH', plugin_dir_path(__FILE__));
 define('HUHS_API_URL', plugin_dir_url(__FILE__));
 
@@ -26,6 +26,7 @@ require_once HUHS_API_PATH . 'includes/gallery.php';
 require_once HUHS_API_PATH . 'includes/posts.php';
 require_once HUHS_API_PATH . 'includes/faq.php';
 require_once HUHS_API_PATH . 'includes/releases.php';
+require_once HUHS_API_PATH . 'includes/private-download.php';
 require_once HUHS_API_PATH . 'includes/api-releases.php';
 
 /*

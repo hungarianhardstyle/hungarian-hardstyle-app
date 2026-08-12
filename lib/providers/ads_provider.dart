@@ -8,6 +8,7 @@ const enableTestAds = bool.fromEnvironment(
 final adsEnabledProvider = Provider<bool>((ref) => enableTestAds);
 
 const productionAdMobAppId = String.fromEnvironment('HUHS_ADMOB_APP_ID');
-const productionBannerAdUnitId = String.fromEnvironment(
-  'HUHS_ADMOB_BANNER_ID',
+const productionBannerAdUnitId = String.fromEnvironment('HUHS_ADMOB_BANNER_ID');
+const productionRewardedAdUnitId = String.fromEnvironment(
+  'HUHS_ADMOB_REWARDED_ID',
 );

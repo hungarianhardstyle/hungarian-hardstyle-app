@@ -9,6 +9,7 @@ import '../../widgets/release_preview_player.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../services/label_purchase_service.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ReleaseDetailScreen extends StatefulWidget {
   final HuhsRelease release;
@@ -24,6 +25,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   List<ProductDetails> _products = const [];
   StreamSubscription<PurchaseDetails>? _updates;
   String? _message;
+  final Set<String> _verifiedProducts = <String>{};
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
         } catch (_) {}
       }
       setState(() {
+        if (verified) _verifiedProducts.add(purchase.productID);
         _message = verified
             ? 'A vásárlás ellenőrzése sikeres.'
             : purchase.status == PurchaseStatus.purchased
@@ -140,20 +143,38 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            ..._products.map(
-              (product) => Card(
-                child: ListTile(
-                  title: Text(_productLabel(product.id)),
-                  subtitle: Text(product.description),
-                  trailing: FilledButton(
-                    onPressed: () => _purchases.buy(product),
-                    child: Text(product.price),
-                  ),
-                ),
-              ),
-            ),
+            ..._products.map(_productCard),
             if (_message != null)
               Text(_message!, style: const TextStyle(color: Colors.white70)),
+          ],
+          const SizedBox(height: 18),
+          Card(
+            child: ListTile(
+              title: const Text('128 kbps MP3 feloldása reklámmal'),
+              subtitle: const Text(
+                'A jutalmazott reklám megtekintése után a fájl letölthető.',
+              ),
+              trailing: FilledButton(
+                onPressed: _unlock128,
+                child: const Text('Feloldás'),
+              ),
+            ),
+          ),
+          if (release.versions.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              'Elérhető változatok',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: release.versions
+                  .map(
+                    (version) => Chip(label: Text(_versionLabel(version.type))),
+                  )
+                  .toList(growable: false),
+            ),
           ],
           if (release.links.isNotEmpty) ...[
             const SizedBox(height: 20),
@@ -186,6 +207,56 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       : id.endsWith('_mp3_320')
       ? 'MP3 320 kbps'
       : id;
+
+  Widget _productCard(ProductDetails product) {
+    final verified = _verifiedProducts.contains(product.id);
+    return Card(
+      child: ListTile(
+        title: Text(_productLabel(product.id)),
+        subtitle: Text(product.description),
+        trailing: verified
+            ? IconButton(
+                tooltip: 'Letöltés',
+                icon: const Icon(Icons.download),
+                onPressed: () =>
+                    _download(product.id.endsWith('_wav') ? 'wav' : 'mp3_320'),
+              )
+            : FilledButton(
+                onPressed: () => _purchases.buy(product),
+                child: Text(product.price),
+              ),
+      ),
+    );
+  }
+
+  Future<void> _unlock128() async {
+    try {
+      final earned = await _purchases.showRewardedAd();
+      if (!earned) throw StateError('A reklám megtekintése nem fejeződött be.');
+      await _purchases.unlock128(widget.release.id);
+      await _download('mp3_128');
+    } catch (error) {
+      if (mounted) setState(() => _message = '$error');
+    }
+  }
+
+  Future<void> _download(String variant) async {
+    try {
+      final url = await _purchases.getDownloadUrl(
+        releaseId: widget.release.id,
+        variant: variant,
+      );
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (error) {
+      if (mounted) setState(() => _message = '$error');
+    }
+  }
+
+  String _versionLabel(String type) => switch (type) {
+    'radio' => 'Radio verzió',
+    'extended' => 'Extended verzió',
+    _ => type,
+  };
 
   String _label(String key) => switch (key) {
     'spotify' => 'Spotify',

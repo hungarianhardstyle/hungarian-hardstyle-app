@@ -1,5 +1,40 @@
 # Hungarian Hardstyle App
 
+## Központi Cégregiszter – tervezett WordPress projekt
+
+Ez a projektmemória tartalmazza a `szakmaiceg.sql` alapján tervezett, önálló WordPress cégregiszter követelményeit is.
+
+- Céloldal: `https://kozponticegregiszter.hu/`
+- A Mosets Tree SQL teljes importja WordPressbe.
+- Saját `Cég` tartalomtípus, backend cégfeltöltő és saját Business API.
+- A főoldalon a kategóriák legyenek a központi, kattintható elemek.
+- Kattintható kategóriák, cégek, céges adatlapok és térképes cégek.
+- Keresés és szűrés cégnév, kulcsszó, város, megye és kategória alapján.
+- Interaktív, beágyazott OpenStreetMap/Leaflet térkép céges adatlapokon és összesített térképes nézetben.
+- A Mosets Tree meglévő GPS-koordinátáinak megtartása.
+- A látványterv csak vizuális irányadó; képként nem kerül beillesztésre.
+- Fehér–kék–türkiz, modern, üzleti és mobilbarát business-directory megjelenés.
+
+### Importálandó cégmezők
+
+Név, alias, leírás, kulcsszavak, kategória, alkategória, kapcsolattartó, telephely/cím, város, megye, ország, irányítószám, telefon, mobil, fax, e-mail, másodlagos e-mail, weboldal, Facebook, képek és fájlok, szélességi/hosszúsági koordináta, térképzoom, térkép megjelenítése, kiemelt és publikációs státusz, SEO metaadatok, létrehozási és módosítási adatok.
+
+Az SQL-ben található képhivatkozások teljes átviteléhez a Mosets Tree tényleges képmappája is szükséges. A WordPress telepítés és alkalmazásjelszó elkészülte után következhet a plugin, az importáló és az API telepítése.
+
+### SEO-követelmények a meglévő cégekhez
+
+- Minden céghez egyedi, kulcsszóbarát SEO title és meta description készüljön.
+- A cég neve, fő tevékenysége, városa és releváns kategóriája jelenjen meg természetesen a metaadatokban.
+- Legyen SEO-barát, stabil céges URL és canonical URL.
+- A Mosets Tree régi céges URL-jeihez 301-es átirányítási lista készüljön.
+- A céges adatlapok kapjanak `LocalBusiness`/megfelelő üzleti `schema.org` strukturált adatot, névvel, címmel, telefonnal, weboldallal, kategóriával és koordinátákkal.
+- A kategória- és városoldalak indexelhető, egyedi title-lel és leírással készüljenek.
+- A céges képekhez értelmes fájlnév, ALT-szöveg és cím kerüljön.
+- Legyen XML sitemap a céges adatlapokhoz és kategóriaoldalakhoz.
+- A duplikált, üres vagy nem publikált rekordok ne kerüljenek indexelésre.
+- A meglévő Mosets meta keywords és meta description mezőket importáljuk, majd szabályosan tisztítjuk és kiegészítjük.
+- Az import végén SEO-ellenőrző riport készüljön hiányzó title, description, koordináta, kép-ALT és canonical URL esetekről.
+
 The official cross-platform application of **Hungarian Hardstyle**, built as a central hub for the Hungarian harder styles scene.
 
 WordPress is the source of truth for editorial content. Flutter consumes the public REST API for news, events, DJs, organizers and the Label release catalog.
@@ -38,7 +73,7 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles and Chat messages, and moderators cannot edit or delete Chat messages.
 
-The current WordPress backend package is **2.4.37**. `build/huhs-mobile-api-2.4.37.zip` is the same HUHS Mobile API with the Vezérlőközpont editor fix; the Label release catalog remains live. Uploaded MP3/WAV files are temporary sources only, converted from the 30th second to a maximum 60-second preview, then deleted. The API exposes preview audio only; full MP3 downloads are not part of the app.
+The current locally prepared WordPress backend package is **2.4.43** in `build/huhs-mobile-api-2.4.43.zip`. It includes the live voting module, Label product metadata, Radio/Extended availability, private derivative storage and one-time download-token endpoint. It is prepared locally but still needs deployment to WordPress. The public release API never exposes WAV/320 kbps file paths.
 
 ### v0.99.2 — next test build
 
@@ -516,5 +551,6 @@ FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces previ
 #### Android/Label release beállítások
 
 - A Google Play termékazonosítókat release-enként a WordPress Label-adatlapján kell megadni (`wav_product_id`, `mp3_product_id`); az alkalmazás ezeket csak a nyilvános release API-ból olvassa.
+- A helyi API `2.4.43` a WAV, MP3 320, MP3 128, Radio és Extended változatokat privát fájlútvonalon kezeli, egyszer használatos letöltési tokennel; ezt a WordPressen telepíteni és élesben tesztelni kell.
 - A vásárlást a `verifyLabelPurchase` Firebase Function ellenőrzi a Google Play Developer API-val. Deploy előtt a Firebase Secret Managerben be kell állítani a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secretet; a JSON-kulcs nem kerülhet a repóba vagy az APK-ba.
 - Production buildnél a `HUHS_ADMOB_APP_ID` Gradle property és a `HUHS_ADMOB_BANNER_ID` dart-define szükséges. Teszt buildnél maradhat a Google tesztazonosító.

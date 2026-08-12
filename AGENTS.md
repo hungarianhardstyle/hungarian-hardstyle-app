@@ -1,5 +1,46 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+## Központi Cégregiszter – külön WordPress migrációs követelmények
+
+A projektben külön, tervezett WordPress cégregiszter-migráció is szerepel. Célja a `G:\szakmaiceg.sql` Mosets Tree SQL-export teljes átültetése a `https://kozponticegregiszter.hu/` friss WordPress-oldalára.
+
+### Kötelező irányelvek
+
+- Saját WordPress `Cég` tartalomtípus és saját Business API készüljön; Business Directory plugin csak alternatíva lehet.
+- A Mosets Tree kategóriahierarchia, cégek, egyedi mezők, státuszok, kapcsolatok, koordináták és képhivatkozások maradjanak meg.
+- A főoldalon a kategóriák legyenek a legfontosabb elemek, és minden kategória/alkategória legyen kattintható.
+- A cégek, adatlapok, keresési eredmények és térképpontok legyenek kattinthatók.
+- Legyen cégnév-, kulcsszó-, város-, megye- és kategóriaalapú keresés/szűrés.
+- Legyen beágyazott, interaktív OpenStreetMap + Leaflet térkép a céges adatlapokon és összesített térképes nézetben.
+- A Mosets Tree meglévő `lat`, `lng` és `zoom` értékeit használjuk, ahol rendelkezésre állnak.
+- A látványterv csak designreferencia; ne képként kerüljön a WordPress-oldalra.
+- A design modern, üzleti, fehér–kék–türkiz és mobilbarát legyen.
+
+### Backend cégfeltöltő mezői
+
+A backend cégfeltöltő a SQL-ben felismert mezőket kezelje: cégnév, alias, leírás, kulcsszavak, kategória/alkategória, kapcsolattartó, cím/telephely, város, megye, ország, irányítószám, telefon, mobil, fax, e-mail, másodlagos e-mail, weboldal, Facebook, képek és fájlok, térkép megjelenítése, szélességi és hosszúsági koordináta, térképzoom, kiemelt státusz, publikációs státusz, SEO metaadatok, létrehozási és módosítási dátum.
+
+### API- és importelvárások
+
+- Az API adjon listázó, részletező, kategória- és keresési végpontokat.
+- Az API legyen frontend- és későbbi mobilapp-kompatibilis.
+- A teljes import legyen újrafuttatható, naplózható és hibajelentéssel ellenőrizhető.
+- A Mosets Tree képekhez a SQL mellett szükséges a tényleges képmappa/ZIP is.
+- A magyar karakterkódolást import közben ellenőrizni és javítani kell.
+- Az éles telepítés előtt friss WordPress és alkalmazásjelszó szükséges; jelszót chatben nem szabad elküldeni.
+
+### SEO-irányelvek a meglévő cégekhez
+
+- Importkor minden publikált cég kapjon egyedi SEO title-t, meta descriptiont és canonical URL-t.
+- A title és description tartalmazza a cég nevét, fő szolgáltatását/tevékenységét, valamint ahol értelmes, a várost vagy megyét; kulcsszóhalmozás tilos.
+- A Mosets Tree régi URL-jeit 301-es átirányításokkal kell az új céges URL-ekre vezetni.
+- A cégadatlapokhoz a megfelelő `schema.org` üzleti strukturált adatot kell kiadni, legalább név, cím, telefon, weboldal, kategória és GPS-koordináták mezőkkel, ha elérhetők.
+- Kategória- és városoldalakhoz egyedi, indexelhető title, meta description és canonical URL készüljön.
+- A céges képekhez beszédes fájlnév és magyar ALT-szöveg szükséges.
+- A publikált cégek és kategóriaoldalak kerüljenek XML sitemapbe; nem publikált, üres vagy duplikált rekordok ne indexelődjenek.
+- A Mosets `metakey` és `metadesc` értékeket meg kell őrizni/importálni, de a tényleges SEO-kimenetben tisztítani és szükség esetén kiegészíteni kell.
+- Az import végén készüljön SEO-audit: hiányzó title/description, duplikáció, canonical, átirányítás, kép-ALT, koordináta és indexelhetőség.
+
 This file is the project memory for Codex and other AI coding agents working on the Hungarian Hardstyle app. Keep it up to date when architectural decisions, roadmap priorities, API contracts, or brand rules change.
 
 ## Project Summary
@@ -86,8 +127,8 @@ As of the current project state:
 - News search UI exists.
 - News item tap/click opens the news detail view.
 - News cards display remote images, title, date, and featured state.
-- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, currently through `build/huhs-mobile-api-2.4.37.zip`; the latest package has been extracted and reviewed locally.
-- The latest package version is 2.4.37. It is the existing HUHS Mobile API with the native controller editor fixes, and it retains the live `huhs_release` records and public releases endpoint. It generates only a maximum 60-second preview from a temporary MP3/WAV source, then deletes the source; full audio is never exposed.
+- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, with the locally prepared v1 package at `build/huhs-mobile-api-2.4.43.zip`; it has not yet been deployed to production.
+- The locally prepared 2.4.43 package retains the live voting and release APIs, adds Label product metadata and Radio/Extended availability, and adds private derivative storage plus one-time download-token handling. WAV/320 kbps paths are never returned by the public release API.
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
 - Backend package `2.4.1` is deployed. It adds multipart image upload for event flyers and DJ profile images. Files are limited to 5 MB and JPG/PNG/WebP, stored in the WordPress Media Library, attached to the pending submission, and never auto-published.
@@ -96,7 +137,7 @@ As of the current project state:
 - Backend package `2.4.7` is deployed. It fixes the invalid nested admin approval form that prevented DJ and organizer draft creation, removes the misleading native publish box from submissions, and adds the same one-click draft creation flow for event submissions. The approval flow still requires a live WordPress admin test.
 - Backend package `2.4.8` is historical. Its multipart image path remains documented for compatibility; the active app upload path is Cloudinary and direct multipart uploads are not a current WAF/deployment status.
 - Backend package `2.4.12` is deployed and live-verified. It exposes published IRP related-post records and a public post-detail endpoint; a real "Kapcsolódó cikk" target was verified. Flutter opens returned related articles plus normal WordPress "Kapcsolódó cikk", "Kapcsolódó", and "Ez is érdekelhet" links in the native news detail screen and falls back to the in-app browser when IDs are unavailable.
-- Backend package 2.4.31, 2.4.33 and 2.4.36 are historical; the current uploaded package is 2.4.37.
+- Backend package 2.4.31, 2.4.33, 2.4.36 and 2.4.37 are historical; 2.4.42 is the last previously prepared voting package and 2.4.43 is the current locally prepared v1 package awaiting deployment.
 - Backend package `2.4.16` also contains the FCM HTTP v1 sender: mobile token registration, news/event/link targets, automatic HUHS URL resolution, foreground display support, per-device notification preferences, publish-time news/event pushes, scheduled event reminders, and an admin custom-push form. Custom push and news/event publishing pushes are live-tested; the first natural event-day reminder did not arrive and the cron/timezone/filter path needs investigation.
 - Event-day reminder delivery is now live-verified; it is not an open v0.99.8 or v1.0 investigation.
 - The custom-push admin form lists recent published news and events by title and validates the selected post type, so editors do not need to look up event IDs manually.
