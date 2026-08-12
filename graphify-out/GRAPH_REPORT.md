@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6512ac44`
+- Built from commit: `1b42a41c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -49,11 +49,11 @@
 - label_purchase_service.dart
 - html_linkifier.dart
 - main_navigation.dart
-- ConsumerState
 - index.js
 - event_submission.dart
 - tagged_news_screen.dart
 - GeneratedPluginRegistrant.swift
+- ConsumerState
 - submission_image_picker.dart
 - releases_screen.dart
 - artist_detail_screen.dart
@@ -73,10 +73,10 @@
 - package.json
 - static const
 - brand_loading_indicator.dart
+- communityServiceProvider
 - main.dart
 - wWinMain
 - organizers_screen.dart
-- communityServiceProvider
 - event_card.dart
 - voting_service.dart
 - ios/RunnerTests/RunnerTests.swift
@@ -288,25 +288,25 @@ Nodes (19): blocked, blockedTags, candidates, closing, cursor, end, linkifyPlain
 Cohesion: 0.11
 Nodes (18): community/community_screen.dart, events/events_screen.dart, home/home_screen.dart, build, createState, _currentIndex, MainNavigation, _MainNavigationState (+10 more)
 
-### Community 35 - "ConsumerState"
-Cohesion: 0.16
-Nodes (18): ConsumerState, ConsumerStatefulWidget, CommunityAdminScreen, _CommunityAdminScreenState, CommunityProfileScreen, _CommunityProfileScreenState, _PostCard, _PostCardState (+10 more)
-
-### Community 36 - "index.js"
+### Community 35 - "index.js"
 Cohesion: 0.11
 Nodes (14): admin, callWindows, crypto, db, { defineSecret }, functions, { getFirestore }, { google } (+6 more)
 
-### Community 37 - "event_submission.dart"
+### Community 36 - "event_submission.dart"
 Cohesion: 0.11
 Nodes (18): contactEmail, description, endDate, endTime, EventSubmission, eventUrl, flyerUrl, genres (+10 more)
 
-### Community 38 - "tagged_news_screen.dart"
+### Community 37 - "tagged_news_screen.dart"
 Cohesion: 0.11
 Nodes (18): build, createState, dispose, _error, _hasMore, _hasTag, initState, _loading (+10 more)
 
-### Community 39 - "GeneratedPluginRegistrant.swift"
+### Community 38 - "GeneratedPluginRegistrant.swift"
 Cohesion: 0.11
 Nodes (17): audio_session, cloud_firestore, cloud_functions, file_selector_macos, firebase_auth, firebase_core, firebase_messaging, Foundation (+9 more)
+
+### Community 39 - "ConsumerState"
+Cohesion: 0.15
+Nodes (19): ConsumerState, ConsumerStatefulWidget, CommunityAdminScreen, _CommunityAdminScreenState, CommunityProfileScreen, _CommunityProfileScreenState, _PostCard, _PostCardState (+11 more)
 
 ### Community 40 - "submission_image_picker.dart"
 Cohesion: 0.11
@@ -384,21 +384,21 @@ Nodes (11): AppTheme, backgroundDecoration, _channel, _dio, ImageSaver, saveFrom
 Cohesion: 0.18
 Nodes (11): AnimationController, BrandLoadingIndicator, _BrandLoadingIndicatorState, build, _controller, createState, didChangeDependencies, dispose (+3 more)
 
-### Community 59 - "main.dart"
+### Community 59 - "communityServiceProvider"
+Cohesion: 0.25
+Nodes (11): communityAuthProvider, communityPostsProvider, communityServiceProvider, build, CommunityAvatarButton, _delete, LiveFeedScreen, _LiveFeedScreenState (+3 more)
+
+### Community 60 - "main.dart"
 Cohesion: 0.17
 Nodes (11): core/navigation/app_navigator.dart, core/theme/app_theme.dart, build, HungarianHardstyleApp, initializeDateFormatting, _initializePushNotifications, main, package:flutter_localizations/flutter_localizations.dart (+3 more)
 
-### Community 60 - "wWinMain"
+### Community 61 - "wWinMain"
 Cohesion: 0.24
 Nodes (9): _In_, _In_opt_, vector, wWinMain(), string, wchar_t, CreateAndAttachConsole(), GetCommandLineArguments() (+1 more)
 
-### Community 61 - "organizers_screen.dart"
+### Community 62 - "organizers_screen.dart"
 Cohesion: 0.17
 Nodes (11): createState, dispose, onRetry, _onSearchChanged, organizer, _OrganizerCard, _OrganizerError, _search (+3 more)
-
-### Community 62 - "communityServiceProvider"
-Cohesion: 0.23
-Nodes (12): communityAuthProvider, communityPostsProvider, communityServiceProvider, build, CommunityAvatarButton, _delete, LiveFeedScreen, _LiveFeedScreenState (+4 more)
 
 ### Community 63 - "event_card.dart"
 Cohesion: 0.18
