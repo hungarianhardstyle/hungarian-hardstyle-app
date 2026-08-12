@@ -127,9 +127,9 @@ As of the current project state:
 - News search UI exists.
 - News item tap/click opens the news detail view.
 - News cards display remote images, title, date, and featured state.
-- The WordPress API plugin source is present locally as deployable ZIPs in `build/`; package `2.4.45` is deployed and live-verified on `hungarianhardstyle.hu` (the public release API returns separate Radio/Extended versions and `audio_status: ready`).
-- The locally prepared 2.4.45 package retains the live voting and release APIs, uses separate Radio and Extended upload fields, generates the preview from Radio, creates private WAV/320 kbps derivatives from both versions, and seeds only missing v1.0 FAQ entries. Private audio paths are never returned by the public release API.
-- v1.0 is not closed while the Firebase Play secret is missing, Play Billing products are not created, and production AdMob identifiers are not configured. The current ARM64 release APK is a phone-test artifact, not a final public Play artifact.
+- The WordPress API plugin source is present locally as deployable ZIPs in `build/`; package `2.4.45` is deployed and live-verified on `hungarianhardstyle.hu` (the public release API returns separate Radio/Extended versions and `audio_status: ready`). Locally prepared follow-up `build/huhs-mobile-api-2.4.46.zip` adds native Release admin fields for the four Google Play product IDs/prices.
+- The locally prepared 2.4.46 package retains the live voting and release APIs, uses separate Radio and Extended upload fields, generates the preview from Radio, creates private WAV/320 kbps derivatives from both versions, and exposes the four Play product ID/price fields in the native admin API. Private audio paths are never returned by the public release API.
+- v1.0 is not closed while the Firebase Play secret is missing, WordPress release product metadata is not populated, production AdMob identifiers are not configured, and the final public release artifact is not verified. The current ARM64 release APK is a phone-test artifact, not a final public Play artifact.
 - The 128 kbps rewarded unlock must use the `admobRewardedSsv` HTTPS Function; do not restore a client-only unlock callable, because it would allow fabricated rewards.
 - The final Android package name is `hu.hungarianhardstyle.app`; Firebase Android configuration and release SHA certificates are registered for this package, and the Play Console app has been created.
 - The v1.0 BILLING permission is included in the Android manifest. Release AAB `build/app/outputs/bundle/release/app-release.aab` has been uploaded to the Play Console closed-test draft; Play product creation is now available.
@@ -758,6 +758,8 @@ Focus:
 - rewarded-ad full MP3 download at 128 kbps only
 - paid 320 kbps MP3 and WAV/lossless products must use Google Play Billing; Google Pay is not the correct in-app product API
 - purchase/download history if needed
+
+Current status: the Flutter purchase/download flow and local WordPress API package are implemented, and all four Wellerman Play products (Radio/Extended WAV and 320 kbps MP3) are active in Hungary. Live completion still requires the four product IDs in WordPress release 12123, the Google Play service-account secret and permissions, production AdMob units/SSV, and final release verification.
 
 ## Release And Store Business Model (later, not in v0.99.89)
 

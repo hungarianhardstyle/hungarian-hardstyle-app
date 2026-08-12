@@ -73,7 +73,7 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles and Chat messages, and moderators cannot edit or delete Chat messages.
 
-The current locally prepared WordPress backend package is **2.4.45** in `build/huhs-mobile-api-2.4.45.zip`. It includes the live voting module, separate Radio/Extended Label uploads, Radio preview generation, private WAV/320 kbps derivatives for both versions, one-time download-token handling, and a one-time seed for the new v1.0 FAQ guidance. It is prepared locally but still needs deployment to WordPress. The public release API never exposes private audio paths.
+The current locally prepared WordPress backend package is **2.4.46** in `build/huhs-mobile-api-2.4.46.zip`. It includes the live voting module, separate Radio/Extended Label uploads, Radio preview generation, private WAV/320 kbps derivatives for both versions, one-time download-token handling, v1.0 FAQ guidance, and native admin fields for the four Google Play product IDs/prices. It is prepared locally but still needs deployment to WordPress. The public release API never exposes private audio paths.
 
 ### v0.99.2 — next test build
 
@@ -440,7 +440,7 @@ Core release quality:
 - [x] make genre chips clickable and add a genre discovery screen with separate `Események`, `DJ-k` and `Hírek` result sections, using paginated infinite scroll for DJ/news matches
 - [x] make artist/DJ profile genre tags open the same grouped `Események`, `DJ-k` and `Hírek` discovery view with the complete paginated result set
 - [x] complete the Label release catalog in v0.99.89, including preview playback, WordPress release records, multi-artist links, cover art and external release links
-- [x] extend the existing Label tab with paid products; no separate store/catalog is planned (local client/API implementation; live Play/Firebase/WordPress verification pending)
+- [x] extend the existing Label tab with paid products; no separate store/catalog is planned (client/API implementation complete; live Play products verified, Firebase/WordPress wiring pending)
 - [x] add a purposeful Hungarian Hardstyle-branded loading animation without artificial startup delay, with reduced-motion support
 - [x] refine the Android startup animation to use the full HUHS logo on a transparent/no-white background (complete)
 - [x] introduce a persistent navigation shell with per-tab history
@@ -512,7 +512,7 @@ Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. Phone testing, Google sign
 - [x] let each existing WordPress Label release accept one uploaded WAV master, generate its preview, and offer configurable Radio and Extended versions (local API package ready; live deployment pending)
 - [x] let the editor set separate prices for the WAV/lossless and 320 kbps MP3 products (local API package ready; Play product creation pending)
 - requested first-release prices: WAV `700 HUF`, 320 kbps MP3 `550 HUF` for both Radio and Extended versions
-- [x] sell the WAV/lossless and 320 kbps MP3 products through Google Play Billing (client and verification Function ready; live Function/Play product verification pending)
+- [x] sell the WAV/lossless and 320 kbps MP3 products through Google Play Billing (client and verification Function ready; all four Play products active, live Function/WordPress verification pending)
 - [x] generate a 128 kbps MP3 derivative that is unlocked after a rewarded advertisement (client and AdMob SSV Function ready; live AdMob callback pending)
 - [x] process all derivatives in a background job and keep the WAV master private (local API package ready; live server end-to-end test pending)
 - [x] verify Websupport FFmpeg support (`/usr/bin/ffmpeg` 4.4.2 with `libmp3lame`); background-job execution still needs an end-to-end test
@@ -552,15 +552,15 @@ FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces previ
 #### Android/Label release beállítások
 
 - A Google Play termékazonosítókat release-enként a WordPress Label-adatlapján kell megadni (`wav_product_id`, `mp3_product_id`); az alkalmazás ezeket csak a nyilvános release API-ból olvassa.
-- A helyi API `2.4.45` külön Radio és Extended forrásból készít preview-t, WAV-ot és MP3 320-at privát fájlban, a Radio forrásból pedig reklámos MP3 128-at; egyszer használatos letöltési tokent használ, és csak a hiányzó v1.0 FAQ-bejegyzéseket seedeli. Ezt a WordPressen telepíteni és élesben tesztelni kell.
+- A helyi API `2.4.46` külön Radio és Extended forrásból készít preview-t, WAV-ot és MP3 320-at privát fájlban, a Radio forrásból pedig reklámos MP3 128-at; egyszer használatos letöltési tokent használ, és a natív Release-ek adminban kezeli a négy Play product ID/ár mezőt. Ezt a WordPressen telepíteni és élesben tesztelni kell.
 - A vásárlást a `verifyLabelPurchase` Firebase Function ellenőrzi a Google Play Developer API-val. Deploy előtt a Firebase Secret Managerben be kell állítani a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secretet; a JSON-kulcs nem kerülhet a repóba vagy az APK-ba.
 - Production buildnél a `HUHS_ADMOB_APP_ID` Gradle property és a `HUHS_ADMOB_BANNER_ID` dart-define szükséges. Teszt buildnél maradhat a Google tesztazonosító.
 
 #### v1.0 aktuális élesítési akadályok
 
-- A WordPress API `2.4.45` telepítve és live-ellenőrizve van; a `/releases` válasz külön Radio/Extended verziókat és `audio_status: ready` állapotot ad. A telepíthető csomag: `build/huhs-mobile-api-2.4.45.zip`.
+- A WordPress API `2.4.45` jelenleg telepítve és live-ellenőrizve van; a `/releases` válasz külön Radio/Extended verziókat és `audio_status: ready` állapotot ad. A natív Release-ek adminmezőkkel bővített telepíthető csomag: `build/huhs-mobile-api-2.4.46.zip`.
 - A Firebase `verifyLabelPurchase` és letöltési Functionök telepítése a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` Secret Manager-secret hiánya miatt áll meg.
-- A valódi Play Billing teszthez a Play Console-ban létre kell hozni a release-enkénti `huhs_release_<id>_radio_wav`, `huhs_release_<id>_radio_mp3_320`, `huhs_release_<id>_extended_wav` és `huhs_release_<id>_extended_mp3_320` termékeket, majd ezeket a WordPress release-adatlapon meg kell adni.
+- A négy Wellerman Play Billing-termék már létre van hozva és aktív; a WordPress release-adatlapon kell megadni a `huhs_release_<id>_radio_wav`, `huhs_release_<id>_radio_mp3_320`, `huhs_release_<id>_extended_wav` és `huhs_release_<id>_extended_mp3_320` azonosítókat.
 - Aktuális ellenőrzés (2026-08-12): a négy Wellerman Play Billing-termék aktív Magyarországon a kért 700/550 HUF alapárakkal. A WordPress 12123-as release-adatlapján a négy termékazonosító még nincs kitöltve, ezért a live API `products: []` értéket ad. A `getLabelDownloadUrl` entitlement-keresése javítva lett, hogy a vásárlás-hitelesítés által mentett termékazonosító-alapú Firestore-dokumentumot keresse. Az 1.0 lezárásához még kell a WordPress-adatlap kitöltése, a Firebase Play-secret, production AdMob-azonosítók és a végső telefonos release-teszt.
 - A végleges publikus APK-hoz valódi AdMob App/Banner/Rewarded azonosítók szükségesek; a helyi teszt APK szándékosan tesztazonosítókat használ.
 - A Play Console alkalmazás létrejött a végleges `hu.hungarianhardstyle.app` Android csomagnévvel; a Firebase Android-app és a release SHA-k ehhez vannak konfigurálva.

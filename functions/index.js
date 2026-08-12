@@ -211,6 +211,7 @@ const WORDPRESS_ADMIN_PATHS = new Set([
   '/wp/v2/huhs_event',
   '/wp/v2/huhs_artist',
   '/wp/v2/huhs_organizer',
+  '/wp/v2/huhs_release',
   '/wp/v2/huhs_submission',
   '/huhs/v1/admin',
 ]);

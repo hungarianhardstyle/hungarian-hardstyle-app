@@ -26,6 +26,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
 
   static const _sections = <String, String>{
     'dashboard': 'Áttekintés',
+    'huhs_release': 'Release-ek',
     'submissions': 'Beküldések',
     'huhs_event': 'Események',
     'huhs_artist': 'DJ-k',
@@ -39,6 +40,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     'huhs_event',
     'huhs_artist',
     'huhs_organizer',
+    'huhs_release',
   };
 
   @override
@@ -157,29 +159,58 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                 initialValue: kind,
                 items: const [
                   DropdownMenuItem(value: 'event', child: Text('EsemĂ©ny')),
-                  DropdownMenuItem(value: 'organizer', child: Text('SzervezĹ‘')),
+                  DropdownMenuItem(
+                    value: 'organizer',
+                    child: Text('SzervezĹ‘'),
+                  ),
                 ],
-                onChanged: (value) => setDialogState(() => kind = value ?? kind),
+                onChanged: (value) =>
+                    setDialogState(() => kind = value ?? kind),
                 decoration: const InputDecoration(labelText: 'CĂ©ltĂ­pus'),
               ),
-              TextField(onChanged: (value) => id = value, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ID')),
-              TextField(onChanged: (value) => title = value, decoration: const InputDecoration(labelText: 'CĂ­m')),
-              TextField(onChanged: (value) => body = value, decoration: const InputDecoration(labelText: 'Ăśzenet')),
+              TextField(
+                onChanged: (value) => id = value,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'ID'),
+              ),
+              TextField(
+                onChanged: (value) => title = value,
+                decoration: const InputDecoration(labelText: 'CĂ­m'),
+              ),
+              TextField(
+                onChanged: (value) => body = value,
+                decoration: const InputDecoration(labelText: 'Ăśzenet'),
+              ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('MĂ©gse')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('KĂĽldĂ©s')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('MĂ©gse'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('KĂĽldĂ©s'),
+          ),
         ],
       ),
     );
     final parsedId = int.tryParse(id.trim());
-    if (result != true || parsedId == null || title.trim().isEmpty || body.trim().isEmpty) return;
+    if (result != true ||
+        parsedId == null ||
+        title.trim().isEmpty ||
+        body.trim().isEmpty)
+      return;
     try {
-      final sent = await ref.read(communityServiceProvider).sendPersonalizedPush(
-        kind: kind, id: parsedId, title: title.trim(), body: body.trim(),
-      );
+      final sent = await ref
+          .read(communityServiceProvider)
+          .sendPersonalizedPush(
+            kind: kind,
+            id: parsedId,
+            title: title.trim(),
+            body: body.trim(),
+          );
       _message('CĂ©lzottsĂ©gi push elkĂĽldve ($sent eszkĂ¶z).');
     } catch (error) {
       _message('A cĂ©lzottsĂ©gi push nem sikerĂĽlt: ${_errorText(error)}');
@@ -337,7 +368,9 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                         controller: content,
                         minLines: 4,
                         maxLines: 12,
-                        decoration: const InputDecoration(labelText: 'Tartalom'),
+                        decoration: const InputDecoration(
+                          labelText: 'Tartalom',
+                        ),
                       ),
                     ),
                     for (final field in fields)
@@ -910,7 +943,11 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       children: [
         if (_section == 'dashboard')
           OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const VotingSummaryScreen())),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const VotingSummaryScreen(),
+              ),
+            ),
             icon: const Icon(Icons.bar_chart_outlined),
             label: const Text('Szavazási összesítő'),
           ),
