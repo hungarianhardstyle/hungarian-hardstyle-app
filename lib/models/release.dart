@@ -44,6 +44,7 @@ class HuhsRelease {
   final Map<String, String> links;
   final List<ReleaseProduct> products;
   final List<ReleaseVersion> versions;
+  final String audioStatus;
 
   const HuhsRelease({
     required this.id,
@@ -55,6 +56,7 @@ class HuhsRelease {
     required this.links,
     required this.products,
     required this.versions,
+    required this.audioStatus,
   });
 
   factory HuhsRelease.fromJson(Map<String, dynamic> json) {
@@ -106,6 +108,7 @@ class HuhsRelease {
                 )
                 .toList(growable: false)
           : const [],
+      audioStatus: _readString(json['audio_status']),
     );
   }
 }

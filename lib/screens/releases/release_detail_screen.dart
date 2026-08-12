@@ -136,6 +136,16 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
             (entry) =>
                 ReleasePreviewPlayer(track: entry.value, index: entry.key),
           ),
+          if (release.audioStatus == 'queued')
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text('A hanganyag feldolgozása folyamatban van.'),
+            ),
+          if (release.audioStatus == 'failed')
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text('A hanganyag feldolgozása nem sikerült.'),
+            ),
           if (_products.isNotEmpty) ...[
             const SizedBox(height: 20),
             const Text(

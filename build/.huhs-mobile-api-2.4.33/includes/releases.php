@@ -78,14 +78,34 @@ add_action('save_post_huhs_release', function ($post_id) {
 function huhs_release_generate_preview($post_id)
 {
     $audio_url = esc_url_raw(get_post_meta($post_id, 'audio_url', true));
-    if ($audio_url === '' || get_post_meta($post_id, 'preview_url', true) !== '' || !function_exists('shell_exec')) return;
+    if ($audio_url === '' || !function_exists('shell_exec')) return;
+    update_post_meta($post_id, 'audio_processing_status', 'queued');
+    if (!wp_next_scheduled('huhs_release_process_audio', array((int) $post_id))) {
+        wp_schedule_single_event(time() + 5, 'huhs_release_process_audio', array((int) $post_id));
+    }
+}
+
+add_action('huhs_release_process_audio', 'huhs_release_process_audio');
+
+function huhs_release_process_audio($post_id)
+{
+    $audio_url = esc_url_raw(get_post_meta($post_id, 'audio_url', true));
+    if ($audio_url === '' || !function_exists('shell_exec')) return;
     $attachment_id = attachment_url_to_postid($audio_url);
     $source = $attachment_id ? get_attached_file($attachment_id) : '';
     $ffmpeg = trim((string) shell_exec('command -v ffmpeg 2>/dev/null'));
-    if (!$source || !is_file($source) || $ffmpeg === '') return;
+    if (!$source || !is_file($source) || $ffmpeg === '') {
+        update_post_meta($post_id, 'audio_processing_status', 'failed');
+        return;
+    }
     $upload = wp_upload_dir();
     $private_dir = function_exists('huhs_release_private_dir') ? huhs_release_private_dir() : '';
     if ($private_dir !== '') {
+        foreach (array('wav', 'mp3_320', 'mp3_128', 'radio', 'extended') as $variant) {
+            $old = get_post_meta($post_id, 'private_' . $variant . '_path', true);
+            if (is_string($old) && is_file($old)) unlink($old);
+            delete_post_meta($post_id, 'private_' . $variant . '_path');
+        }
         $extension = strtolower(pathinfo($source, PATHINFO_EXTENSION));
         $master = trailingslashit($private_dir) . 'release-' . (int) $post_id . '-master.' . ($extension === 'wav' ? 'wav' : 'mp3');
         if (!is_file($master)) copy($source, $master);
@@ -96,6 +116,16 @@ function huhs_release_generate_preview($post_id)
         shell_exec(escapeshellarg($ffmpeg) . ' -y -i ' . escapeshellarg($source) . ' -vn -codec:a libmp3lame -b:a 128k ' . escapeshellarg($mp3_128) . ' 2>/dev/null');
         if (is_file($mp3_320)) update_post_meta($post_id, 'private_mp3_320_path', $mp3_320);
         if (is_file($mp3_128)) update_post_meta($post_id, 'private_mp3_128_path', $mp3_128);
+        foreach (array('radio', 'extended') as $variant) {
+            $variant_url = esc_url_raw(get_post_meta($post_id, $variant . '_audio_url', true));
+            $variant_id = $variant_url ? attachment_url_to_postid($variant_url) : 0;
+            $variant_source = $variant_id ? get_attached_file($variant_id) : '';
+            if (!$variant_source || !is_file($variant_source)) continue;
+            $variant_path = trailingslashit($private_dir) . 'release-' . (int) $post_id . '-' . $variant . '.mp3';
+            shell_exec(escapeshellarg($ffmpeg) . ' -y -i ' . escapeshellarg($variant_source) . ' -vn -codec:a libmp3lame -b:a 320k ' . escapeshellarg($variant_path) . ' 2>/dev/null');
+            if (is_file($variant_path)) update_post_meta($post_id, 'private_' . $variant . '_path', $variant_path);
+            if ($variant_id) wp_delete_attachment($variant_id, true);
+        }
     }
     $filename = wp_unique_filename($upload['path'], 'huhs-release-' . $post_id . '-preview-' . time() . '.mp3');
     $target = trailingslashit($upload['path']) . $filename;

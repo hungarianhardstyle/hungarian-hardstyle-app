@@ -47,5 +47,5 @@ function huhs_build_release_response($post)
         $source = esc_url_raw(get_post_meta($id, $meta_key, true));
         if ($source !== '') $versions[] = array('type' => $type, 'available' => true);
     }
-    return array('id' => $id, 'title' => huhs_clean_title($post->post_title), 'cover' => $cover_id ? wp_get_attachment_image_url($cover_id, 'large') : '', 'genre' => sanitize_text_field(get_post_meta($id, 'genre', true)), 'artists' => $artists, 'tracks' => $tracks, 'links' => $links, 'products' => $products, 'versions' => $versions);
+    return array('id' => $id, 'title' => huhs_clean_title($post->post_title), 'cover' => $cover_id ? wp_get_attachment_image_url($cover_id, 'large') : '', 'genre' => sanitize_text_field(get_post_meta($id, 'genre', true)), 'artists' => $artists, 'tracks' => $tracks, 'links' => $links, 'products' => $products, 'versions' => $versions, 'audio_status' => sanitize_key(get_post_meta($id, 'audio_processing_status', true)));
 }
