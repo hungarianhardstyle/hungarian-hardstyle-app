@@ -557,7 +557,7 @@ FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces previ
 
 #### v1.0 aktuális élesítési akadályok
 
-- A helyi WordPress API-csomag kész: `build/huhs-mobile-api-2.4.45.zip`; a live `hungarianhardstyle.hu` API jelenleg még nem ezt futtatja.
+- A WordPress API `2.4.45` telepítve és live-ellenőrizve van; a `/releases` válasz külön Radio/Extended verziókat és `audio_status: ready` állapotot ad. A telepíthető csomag: `build/huhs-mobile-api-2.4.45.zip`.
 - A Firebase `verifyLabelPurchase` és letöltési Functionök telepítése a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` Secret Manager-secret hiánya miatt áll meg.
 - A valódi Play Billing teszthez a Play Console-ban létre kell hozni a release-enkénti `huhs_release_<id>_wav` és `huhs_release_<id>_mp3_320` termékeket.
 - A végleges publikus APK-hoz valódi AdMob App/Banner/Rewarded azonosítók szükségesek; a helyi teszt APK szándékosan tesztazonosítókat használ.

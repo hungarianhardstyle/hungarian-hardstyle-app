@@ -127,9 +127,9 @@ As of the current project state:
 - News search UI exists.
 - News item tap/click opens the news detail view.
 - News cards display remote images, title, date, and featured state.
-- The WordPress API plugin source is present locally as deployable ZIPs in `build/`, with the locally prepared v1 package at `build/huhs-mobile-api-2.4.45.zip`; it has not yet been deployed to production.
+- The WordPress API plugin source is present locally as deployable ZIPs in `build/`; package `2.4.45` is deployed and live-verified on `hungarianhardstyle.hu` (the public release API returns separate Radio/Extended versions and `audio_status: ready`).
 - The locally prepared 2.4.45 package retains the live voting and release APIs, uses separate Radio and Extended upload fields, generates the preview from Radio, creates private WAV/320 kbps derivatives from both versions, and seeds only missing v1.0 FAQ entries. Private audio paths are never returned by the public release API.
-- v1.0 is not closed while 2.4.45 is not deployed, the Firebase Play secret is missing, Play Billing products are not created, and production AdMob identifiers are not configured. The current ARM64 release APK is a phone-test artifact, not a final public Play artifact.
+- v1.0 is not closed while the Firebase Play secret is missing, Play Billing products are not created, and production AdMob identifiers are not configured. The current ARM64 release APK is a phone-test artifact, not a final public Play artifact.
 - The 128 kbps rewarded unlock must use the `admobRewardedSsv` HTTPS Function; do not restore a client-only unlock callable, because it would allow fabricated rewards.
 - Backend package `2.3.0` is deployed and confirmed working. It includes organizer list/detail REST endpoints, organizer search, logo/social data, and organizer upcoming-event relations.
 - Backend package `2.4.0` is deployed and live-verified. It adds moderated DJ and organizer submissions, a one-click admin approval flow that creates non-public draft profiles, and DJ booking fields including the optional Hungarian Hardstyle-managed booking route.
