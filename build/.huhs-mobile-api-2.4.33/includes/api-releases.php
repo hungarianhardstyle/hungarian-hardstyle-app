@@ -32,6 +32,16 @@ function huhs_build_release_response($post)
     $preview = esc_url_raw(get_post_meta($id, 'preview_url', true));
     $tracks = $preview ? array(array('title' => huhs_clean_title($post->post_title), 'preview_url' => $preview)) : array();
     $products = array();
+    foreach (array(
+        'radio_wav' => array('Radio WAV', 'radio_wav_product_id', 'radio_wav_price'),
+        'radio_mp3_320' => array('Radio MP3 320 kbps', 'radio_mp3_product_id', 'radio_mp3_price'),
+        'extended_wav' => array('Extended WAV', 'extended_wav_product_id', 'extended_wav_price'),
+        'extended_mp3_320' => array('Extended MP3 320 kbps', 'extended_mp3_product_id', 'extended_mp3_price'),
+    ) as $type => $definition) {
+        $product_id = sanitize_text_field(get_post_meta($id, $definition[1], true));
+        if ($product_id !== '') $products[] = array('id' => $product_id, 'type' => $type, 'label' => $definition[0], 'price' => sanitize_text_field(get_post_meta($id, $definition[2], true)));
+    }
+    // Backward compatibility for releases created with the old single-source editor.
     foreach (array('wav' => 'WAV / lossless', 'mp3_320' => 'MP3 320 kbps') as $key => $label) {
         $product_id = sanitize_text_field(get_post_meta($id, $key . '_product_id', true));
         if ($product_id !== '') $products[] = array('id' => $product_id, 'type' => $key, 'label' => $label, 'price' => sanitize_text_field(get_post_meta($id, $key . '_price', true)));
@@ -45,7 +55,8 @@ function huhs_build_release_response($post)
     $versions = array();
     foreach (array('radio' => 'radio_audio_url', 'extended' => 'extended_audio_url') as $type => $meta_key) {
         $source = esc_url_raw(get_post_meta($id, $meta_key, true));
-        if ($source !== '') $versions[] = array('type' => $type, 'available' => true);
+        $available = $source !== '' || trim((string) get_post_meta($id, 'private_' . $type . '_wav_path', true)) !== '';
+        if ($available) $versions[] = array('type' => $type, 'available' => true);
     }
     return array('id' => $id, 'title' => huhs_clean_title($post->post_title), 'cover' => $cover_id ? wp_get_attachment_image_url($cover_id, 'large') : '', 'genre' => sanitize_text_field(get_post_meta($id, 'genre', true)), 'artists' => $artists, 'tracks' => $tracks, 'links' => $links, 'products' => $products, 'versions' => $versions, 'audio_status' => sanitize_key(get_post_meta($id, 'audio_processing_status', true)));
 }

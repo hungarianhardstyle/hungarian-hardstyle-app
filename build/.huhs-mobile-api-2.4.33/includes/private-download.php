@@ -14,9 +14,14 @@ function huhs_release_private_dir()
 
 function huhs_release_private_variant($release_id, $variant)
 {
-    $allowed = array('wav', 'mp3_320', 'mp3_128', 'radio', 'extended');
+    $allowed = array('wav', 'mp3_320', 'mp3_128', 'radio_wav', 'radio_mp3_320', 'extended_wav', 'extended_mp3_320');
     if (!in_array($variant, $allowed, true)) return '';
-    $path = get_post_meta($release_id, 'private_' . $variant . '_path', true);
+    $meta_key = in_array($variant, array('radio_wav', 'radio_mp3_320', 'extended_wav', 'extended_mp3_320'), true)
+        ? 'private_' . str_replace(array('_wav', '_mp3_320'), array('_wav_path', '_mp3_320_path'), $variant)
+        : 'private_' . $variant . '_path';
+    $path = get_post_meta($release_id, $meta_key, true);
+    if ($variant === 'wav') $path = get_post_meta($release_id, 'private_wav_path', true) ?: get_post_meta($release_id, 'private_radio_wav_path', true);
+    if ($variant === 'mp3_320') $path = get_post_meta($release_id, 'private_mp3_320_path', true) ?: get_post_meta($release_id, 'private_radio_mp3_320_path', true);
     return is_string($path) && is_file($path) ? $path : '';
 }
 

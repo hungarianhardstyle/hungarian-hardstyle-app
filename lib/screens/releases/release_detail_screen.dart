@@ -228,8 +228,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
             ? IconButton(
                 tooltip: 'Letöltés',
                 icon: const Icon(Icons.download),
-                onPressed: () =>
-                    _download(product.id.endsWith('_wav') ? 'wav' : 'mp3_320'),
+                onPressed: () => _download(_downloadVariant(product.id)),
               )
             : FilledButton(
                 onPressed: () => _purchases.buy(product),
@@ -237,6 +236,11 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
               ),
       ),
     );
+  }
+
+  String _downloadVariant(String productId) {
+    final match = RegExp(r'^huhs_release_[0-9]+_(.+)$').firstMatch(productId);
+    return match?.group(1) ?? (productId.endsWith('_wav') ? 'wav' : 'mp3_320');
   }
 
   Future<void> _unlock128() async {

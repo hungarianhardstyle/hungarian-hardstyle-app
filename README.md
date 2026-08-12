@@ -73,7 +73,7 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles and Chat messages, and moderators cannot edit or delete Chat messages.
 
-The current locally prepared WordPress backend package is **2.4.44** in `build/huhs-mobile-api-2.4.44.zip`. It includes the live voting module, Label product metadata, Radio/Extended availability, private derivative storage, one-time download-token handling, and a one-time seed for the new v1.0 FAQ guidance. It is prepared locally but still needs deployment to WordPress. The public release API never exposes WAV/320 kbps file paths.
+The current locally prepared WordPress backend package is **2.4.45** in `build/huhs-mobile-api-2.4.45.zip`. It includes the live voting module, separate Radio/Extended Label uploads, Radio preview generation, private WAV/320 kbps derivatives for both versions, one-time download-token handling, and a one-time seed for the new v1.0 FAQ guidance. It is prepared locally but still needs deployment to WordPress. The public release API never exposes private audio paths.
 
 ### v0.99.2 — next test build
 
@@ -551,13 +551,13 @@ FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces previ
 #### Android/Label release beállítások
 
 - A Google Play termékazonosítókat release-enként a WordPress Label-adatlapján kell megadni (`wav_product_id`, `mp3_product_id`); az alkalmazás ezeket csak a nyilvános release API-ból olvassa.
-- A helyi API `2.4.44` a WAV, MP3 320, MP3 128, Radio és Extended változatokat privát fájlútvonalon kezeli, egyszer használatos letöltési tokennel, és csak a hiányzó v1.0 FAQ-bejegyzéseket seedeli; ezt a WordPressen telepíteni és élesben tesztelni kell.
+- A helyi API `2.4.45` külön Radio és Extended forrásból készít preview-t, WAV-ot és MP3 320-at privát fájlban, a Radio forrásból pedig reklámos MP3 128-at; egyszer használatos letöltési tokent használ, és csak a hiányzó v1.0 FAQ-bejegyzéseket seedeli. Ezt a WordPressen telepíteni és élesben tesztelni kell.
 - A vásárlást a `verifyLabelPurchase` Firebase Function ellenőrzi a Google Play Developer API-val. Deploy előtt a Firebase Secret Managerben be kell állítani a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secretet; a JSON-kulcs nem kerülhet a repóba vagy az APK-ba.
 - Production buildnél a `HUHS_ADMOB_APP_ID` Gradle property és a `HUHS_ADMOB_BANNER_ID` dart-define szükséges. Teszt buildnél maradhat a Google tesztazonosító.
 
 #### v1.0 aktuális élesítési akadályok
 
-- A helyi WordPress API-csomag kész: `build/huhs-mobile-api-2.4.44.zip`; a live `hungarianhardstyle.hu` API jelenleg még nem ezt futtatja.
+- A helyi WordPress API-csomag kész: `build/huhs-mobile-api-2.4.45.zip`; a live `hungarianhardstyle.hu` API jelenleg még nem ezt futtatja.
 - A Firebase `verifyLabelPurchase` és letöltési Functionök telepítése a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` Secret Manager-secret hiánya miatt áll meg.
 - A valódi Play Billing teszthez a Play Console-ban létre kell hozni a release-enkénti `huhs_release_<id>_wav` és `huhs_release_<id>_mp3_320` termékeket.
 - A végleges publikus APK-hoz valódi AdMob App/Banner/Rewarded azonosítók szükségesek; a helyi teszt APK szándékosan tesztazonosítókat használ.

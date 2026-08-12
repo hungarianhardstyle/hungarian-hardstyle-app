@@ -379,7 +379,7 @@ exports.verifyLabelPurchase = functions
     const productId = String(data?.productId || '').trim();
     const purchaseToken = String(data?.purchaseToken || '').trim();
     const releaseId = Number(data?.releaseId || 0);
-    const productMatch = productId.match(/^huhs_release_([0-9]+)_(wav|mp3_320)$/);
+    const productMatch = productId.match(/^huhs_release_([0-9]+)_(radio_wav|radio_mp3_320|extended_wav|extended_mp3_320|wav|mp3_320)$/);
     if (!productMatch || !purchaseToken || !Number.isInteger(releaseId) || releaseId < 1 || Number(productMatch[1]) !== releaseId) {
       throw new HttpsError('invalid-argument', 'Érvénytelen Label-vásárlási adat.');
     }
@@ -431,10 +431,10 @@ exports.getLabelDownloadUrl = functions
     }
     const releaseId = Number(data?.releaseId || 0);
     const variant = String(data?.variant || '').trim();
-    if (!Number.isInteger(releaseId) || releaseId < 1 || !['wav', 'mp3_320', 'mp3_128', 'radio', 'extended'].includes(variant)) {
+    if (!Number.isInteger(releaseId) || releaseId < 1 || !['wav', 'mp3_320', 'mp3_128', 'radio_wav', 'radio_mp3_320', 'extended_wav', 'extended_mp3_320'].includes(variant)) {
       throw new HttpsError('invalid-argument', 'Érvénytelen Label-letöltési adat.');
     }
-    const paid = variant === 'wav' || variant === 'mp3_320';
+    const paid = variant !== 'mp3_128';
     const entitlement = await db.collection('label_entitlements')
       .doc(`${context.auth.uid}_huhs_release_${releaseId}_${variant}`)
       .get();
