@@ -200,8 +200,9 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     if (result != true ||
         parsedId == null ||
         title.trim().isEmpty ||
-        body.trim().isEmpty)
+        body.trim().isEmpty) {
       return;
+    }
     try {
       final sent = await ref
           .read(communityServiceProvider)
