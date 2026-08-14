@@ -35,7 +35,18 @@ String _chatError(Object error) {
   if (raw.contains('failed-precondition') || raw.contains('unavailable')) {
     return 'A Chat az alapértelmezett Firestore-adatbázist nem éri el. Ellenőrizd, hogy a `(default)` adatbázis létre van-e hozva.';
   }
-  return raw.replaceFirst('Exception: ', '');
+  if (raw.contains('network-request-failed') || raw.contains('unavailable')) {
+    return 'Nem sikerült kapcsolódni. Ellenőrizd az internetkapcsolatot.';
+  }
+  if (raw.contains('invalid-email')) return 'Érvénytelen e-mail-cím.';
+  if (raw.contains('email-already-in-use'))
+    return 'Ez az e-mail-cím már használatban van.';
+  if (raw.contains('wrong-password') || raw.contains('invalid-credential')) {
+    return 'A megadott e-mail-cím vagy jelszó hibás.';
+  }
+  if (raw.contains('permission-denied'))
+    return 'Ehhez a művelethez nincs jogosultságod.';
+  return 'A művelet nem sikerült. Próbáld újra később.';
 }
 
 class _ProfileAvatar extends StatelessWidget {
@@ -547,46 +558,37 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                               ),
                             ],
                           ),
-                          trailing: DropdownButton<String>(
-                            value:
-                                const {
-                                  'dj',
-                                  'organizer',
-                                  'partygoer',
-                                }.contains(role)
-                                ? role
-                                : 'partygoer',
-                            items: [
+                          trailing: PopupMenuButton<String>(
+                            enabled: doc.id != service.auth.currentUser?.uid,
+                            itemBuilder: (_) => [
                               for (final entry in const {
                                 'dj': 'DJ',
                                 'organizer': 'Szervező',
                                 'partygoer': 'Bulizó',
                               }.entries)
-                                DropdownMenuItem(
+                                PopupMenuItem(
                                   value: entry.key,
                                   child: Text(entry.value),
                                 ),
                             ],
-                            onChanged: doc.id == service.auth.currentUser?.uid
-                                ? null
-                                : (value) async {
-                                    if (value == null) return;
-                                    try {
-                                      await service.setAccountRole(
-                                        doc.id,
-                                        value,
-                                      );
-                                    } catch (error) {
-                                      if (!context.mounted) return;
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(_chatError(error)),
-                                        ),
-                                      );
-                                    }
-                                  },
+                            onSelected: (value) async {
+                              try {
+                                await service.setAccountRole(doc.id, value);
+                              } catch (error) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(_chatError(error))),
+                                );
+                              }
+                            },
+                            child: Text(
+                              const {
+                                    'dj': 'DJ',
+                                    'organizer': 'Szervező',
+                                    'partygoer': 'Bulizó',
+                                  }[role] ??
+                                  role,
+                            ),
                           ),
                         ),
                       );
@@ -729,9 +731,9 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 8)),
+    );
   }
 
   Future<void> _openProfile() async {
@@ -1250,6 +1252,7 @@ class _CommunityProfileScreenState
     extends ConsumerState<CommunityProfileScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _passwordConfirmation = TextEditingController();
   final _name = TextEditingController();
   final _bio = TextEditingController();
   final Map<String, TextEditingController> _social = {
@@ -1293,6 +1296,7 @@ class _CommunityProfileScreenState
     _authSubscription?.cancel();
     _email.dispose();
     _password.dispose();
+    _passwordConfirmation.dispose();
     _name.dispose();
     _bio.dispose();
     for (final controller in _social.values) {
@@ -1316,6 +1320,10 @@ class _CommunityProfileScreenState
       _message('Töltsd ki a mezőket; a jelszó legalább 6 karakter legyen.');
       return;
     }
+    if (_register && _password.text != _passwordConfirmation.text) {
+      _message('A két jelszó nem egyezik.');
+      return;
+    }
     setState(() => _busy = true);
     try {
       if (_register) {
@@ -1326,6 +1334,10 @@ class _CommunityProfileScreenState
           role: _role,
           socialLinks: _socialValues(),
         );
+        await _service.signOut();
+        _message(
+          'Megerősítő e-mailt küldtünk. A profil használatához erősítsd meg a címedet.',
+        );
       } else {
         await _service.signIn(email: _email.text, password: _password.text);
       }
@@ -1333,7 +1345,7 @@ class _CommunityProfileScreenState
       await _loadProfile();
       if (mounted) setState(() {});
     } catch (error) {
-      _message(error.toString().replaceFirst('Exception: ', ''));
+      _message(_chatError(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -1345,12 +1357,7 @@ class _CommunityProfileScreenState
     if (user == null || user.isAnonymous || _loadedUid == user.uid) return;
     _loadingProfile = true;
     try {
-      if (await _service.biometricEnabled()) {
-        if (!await _service.unlockBiometricSession(user.uid)) {
-          if (mounted) _message('A profil feloldása sikertelen.');
-          return;
-        }
-      }
+      if (!await _unlockProfile(user)) return;
       final snapshot = await _service.profile();
       final data = snapshot.data() ?? const <String, dynamic>{};
       final claimedArtistIds = await _service.myClaimedArtists().catchError(
@@ -1382,6 +1389,54 @@ class _CommunityProfileScreenState
     }
   }
 
+  Future<bool> _unlockProfile(User user) async {
+    final passwordAccount = user.providerData.any(
+      (p) => p.providerId == 'password',
+    );
+    final biometric = await _service.biometricEnabled();
+    final deviceCode = await _service.deviceCodeEnabled();
+    final authenticator =
+        passwordAccount && await _service.authenticatorEnabled();
+    if (!biometric && !deviceCode && !authenticator) return true;
+    return _service.unlockProfileSession(user.uid, () async {
+      if (biometric && !await _service.authenticateBiometric()) return false;
+      if (deviceCode && !await _service.authenticateDeviceCode()) return false;
+      if (authenticator) {
+        if (!mounted) return false;
+        final controller = TextEditingController();
+        final code = await showDialog<String>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Authenticator-kód'),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: '6 számjegyű kód'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Mégse'),
+              ),
+              FilledButton(
+                onPressed: () =>
+                    Navigator.pop(dialogContext, controller.text.trim()),
+                child: const Text('Feloldás'),
+              ),
+            ],
+          ),
+        );
+        controller.dispose();
+        if (code == null || !await _service.verifyAuthenticatorCode(code)) {
+          if (mounted) _message('Az authenticator-kód hibás.');
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
   Future<void> _saveProfile() async {
     final user = _service.auth.currentUser;
     if (user == null || user.isAnonymous) return;
@@ -1400,7 +1455,7 @@ class _CommunityProfileScreenState
           .collection('community_profiles')
           .doc(user.uid)
           .set({
-            'displayName': _name.text.trim(),
+            if (_service.isAdmin) 'displayName': _name.text.trim(),
             'bio': _bio.text.trim(),
             'socialLinks': _socialValues(),
             'profileFocusX': savedFocusX,
@@ -1413,7 +1468,9 @@ class _CommunityProfileScreenState
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
       // Firestore is the source of truth; an Auth refresh must not turn a saved profile into a failure.
-      await user.updateDisplayName(_name.text.trim()).catchError((_) {});
+      if (_service.isAdmin) {
+        await user.updateDisplayName(_name.text.trim()).catchError((_) {});
+      }
       if (uploadedImageUrl.isNotEmpty) {
         await user.updatePhotoURL(uploadedImageUrl).catchError((_) {});
       }
@@ -1463,6 +1520,78 @@ class _CommunityProfileScreenState
     setState(() => _passwordVisible = true);
   }
 
+  Future<void> _changePassword() async {
+    final current = TextEditingController();
+    final next = TextEditingController();
+    final confirm = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Jelszó módosítása'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: current,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Jelenlegi jelszó',
+                ),
+              ),
+              TextField(
+                controller: next,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Új jelszó'),
+              ),
+              TextField(
+                controller: confirm,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Új jelszó megerősítése',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Mégse'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Mentés'),
+          ),
+        ],
+      ),
+    );
+    if (result != true || !mounted) {
+      current.dispose();
+      next.dispose();
+      confirm.dispose();
+      return;
+    }
+    if (next.text.length < 6 || next.text != confirm.text) {
+      _message(
+        'Az új jelszó legalább 6 karakter legyen, és a két mező egyezzen.',
+      );
+    } else {
+      try {
+        await _service.changePassword(
+          currentPassword: current.text,
+          newPassword: next.text,
+        );
+        _message('A jelszó módosítása sikerült.');
+      } catch (error) {
+        _message(_chatError(error));
+      }
+    }
+    current.dispose();
+    next.dispose();
+    confirm.dispose();
+  }
+
   Map<String, String> _socialValues() => {
     for (final entry in _social.entries)
       if (entry.value.text.trim().isNotEmpty)
@@ -1506,6 +1635,30 @@ class _CommunityProfileScreenState
         'partygoer': 'Bulizó',
       }[role] ??
       'Bulizó';
+
+  Future<void> _chooseRole() async {
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Szerepkör'),
+        children: [
+          for (final option in const {
+            'dj': 'DJ',
+            'organizer': 'Szervező',
+            'partygoer': 'Bulizó',
+          }.entries)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(dialogContext).pop(option.key),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(option.value),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (selected != null && mounted) setState(() => _role = selected);
+  }
 
   void _message(String message) {
     ScaffoldMessenger.of(
@@ -1891,6 +2044,7 @@ class _CommunityProfileScreenState
                       ],
                       TextField(
                         controller: _name,
+                        readOnly: !_service.isAdmin,
                         decoration: const InputDecoration(
                           labelText: 'Megjelenő név',
                         ),
@@ -1911,6 +2065,16 @@ class _CommunityProfileScreenState
                         icon: const Icon(Icons.save_outlined),
                         label: const Text('Profil mentése'),
                       ),
+                      if (user.providerData.any(
+                        (provider) => provider.providerId == 'password',
+                      )) ...[
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: _busy ? null : _changePassword,
+                          icon: const Icon(Icons.password_outlined),
+                          label: const Text('Jelszó módosítása'),
+                        ),
+                      ],
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
                         onPressed: () => Navigator.of(context).push(
@@ -2028,7 +2192,25 @@ class _CommunityProfileScreenState
                   ),
                 ),
                 if (_register) ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _passwordConfirmation,
+                    obscureText: !_passwordVisible,
+                    decoration: const InputDecoration(
+                      labelText: 'Jelszó megerősítése',
+                    ),
+                  ),
+                  const Text(
+                    'A regisztrĂˇciĂł utĂˇn megerĹ‘sĂ­tĹ‘ e-mailt kĂĽldĂĽnk. '
+                    'A profil hasznĂˇlatĂˇhoz erĹ‘sĂ­tsd meg a cĂ­medet.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                   ..._socialFields(),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'A profil védelméhez a regisztráció után opcionális kétfaktoros védelem kapcsolható be a Beállításokban.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton.icon(
@@ -2038,22 +2220,16 @@ class _CommunityProfileScreenState
                     ),
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: _role,
-                    decoration: const InputDecoration(labelText: 'Szerepkör'),
-                    items: const [
-                      DropdownMenuItem(value: 'dj', child: Text('DJ')),
-                      DropdownMenuItem(
-                        value: 'organizer',
-                        child: Text('Szervező'),
+                  InkWell(
+                    onTap: _busy ? null : _chooseRole,
+                    borderRadius: BorderRadius.circular(12),
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Szerepkör',
+                        suffixIcon: Icon(Icons.arrow_drop_down),
                       ),
-                      DropdownMenuItem(
-                        value: 'partygoer',
-                        child: Text('Bulizó'),
-                      ),
-                    ],
-                    onChanged: (value) =>
-                        setState(() => _role = value ?? 'partygoer'),
+                      child: Text(_roleLabel(_role)),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 18),
@@ -2091,6 +2267,29 @@ class _CommunityProfileScreenState
                             }
                           },
                     child: const Text('Jelszó visszaállítása'),
+                  ),
+                if (!_register)
+                  TextButton(
+                    onPressed: _busy
+                        ? null
+                        : () async {
+                            if (_email.text.trim().isEmpty ||
+                                _password.text.isEmpty) {
+                              _message('Add meg az e-mail-címet és a jelszót.');
+                              return;
+                            }
+                            try {
+                              await _service
+                                  .resendEmailVerificationForCredentials(
+                                    email: _email.text,
+                                    password: _password.text,
+                                  );
+                              _message('Az ellenőrző e-mailt újraküldtük.');
+                            } catch (error) {
+                              _message(_chatError(error));
+                            }
+                          },
+                    child: const Text('Ellenőrző e-mail újraküldése'),
                   ),
                 TextButton(
                   onPressed: _busy

@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:in_app_update/in_app_update.dart';
 import '../screens/main_navigation.dart';
+import '../services/app_update_service.dart';
 
 class StartupGate extends StatefulWidget {
   const StartupGate({super.key});
@@ -22,6 +24,7 @@ class _StartupGateState extends State<StartupGate>
   bool _ready = false;
   String? _announcementUrl;
   String? _dismissedAnnouncementUrl;
+  AppUpdateInfo? _availableUpdate;
 
   @override
   void initState() {
@@ -37,6 +40,12 @@ class _StartupGateState extends State<StartupGate>
       if (mounted) setState(() => _ready = true);
     });
     _loadAnnouncement();
+    _checkForUpdate();
+  }
+
+  Future<void> _checkForUpdate() async {
+    final update = await AppUpdateService().check();
+    if (mounted && update != null) setState(() => _availableUpdate = update);
   }
 
   Future<void> _loadAnnouncement() async {
@@ -83,12 +92,54 @@ class _StartupGateState extends State<StartupGate>
   Widget build(BuildContext context) {
     if (_ready) {
       final home = const MainNavigation();
-      if (_announcementUrl == null) return home;
+      if (_announcementUrl == null && _availableUpdate == null) return home;
+      final update = _availableUpdate;
+      final announcement = _announcementUrl;
       return Stack(
         children: [
           home,
-          Positioned.fill(
-            child: ColoredBox(
+          if (update != null)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black87,
+                child: Center(
+                  child: Card(
+                    margin: const EdgeInsets.all(24),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.system_update_outlined, size: 48),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Új verzió érhető el',
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('Frissítsd az alkalmazást a legújabb javításokért.'),
+                          const SizedBox(height: 18),
+                          FilledButton(
+                            onPressed: () async {
+                              final updated = await AppUpdateService().start(update);
+                              if (updated && mounted) setState(() => _availableUpdate = null);
+                            },
+                            child: const Text('Frissítés'),
+                          ),
+                          TextButton(
+                            onPressed: () => setState(() => _availableUpdate = null),
+                            child: const Text('Most nem'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (update == null && announcement != null)
+            Positioned.fill(
+              child: ColoredBox(
               color: Colors.black87,
               child: Center(
                 child: Card(
@@ -104,7 +155,7 @@ class _StartupGateState extends State<StartupGate>
                             maxHeight: MediaQuery.sizeOf(context).height * .62,
                           ),
                           child: Image.network(
-                            _announcementUrl!,
+                            announcement,
                             fit: BoxFit.contain,
                             errorBuilder: (_, _, _) => const Icon(
                               Icons.image_not_supported_outlined,
@@ -117,7 +168,7 @@ class _StartupGateState extends State<StartupGate>
                           onPressed: () {
                             if (mounted) {
                               setState(() {
-                                _dismissedAnnouncementUrl = _announcementUrl;
+                                _dismissedAnnouncementUrl = announcement;
                                 _announcementUrl = null;
                               });
                             }
@@ -129,8 +180,8 @@ class _StartupGateState extends State<StartupGate>
                   ),
                 ),
               ),
+              ),
             ),
-          ),
         ],
       );
     }

@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:otp/otp.dart';
 
 import '../models/community_post.dart';
 
@@ -21,6 +23,10 @@ class CommunityService {
   static const maxUploadBytes = 5 * 1024 * 1024;
   static String? _biometricSessionUid;
   static Future<bool>? _biometricRequest;
+  static String? _profileSessionUid;
+  static Future<bool>? _profileUnlockRequest;
+  static const _secureStorage = FlutterSecureStorage();
+  static const _totpSecretKey = 'huhs_totp_secret';
 
   final FirebaseAuth auth;
   final FirebaseFirestore firestore;
@@ -88,6 +94,7 @@ class CommunityService {
       );
       final user = credential.user!;
       await user.updateDisplayName(displayName.trim());
+      await user.sendEmailVerification();
       final accountRole = _isAdmin(email)
           ? 'organizer'
           : this.accountRole(role);
@@ -112,6 +119,13 @@ class CommunityService {
         password: password,
       );
       final user = credential.user!;
+      await user.reload();
+      if (auth.currentUser?.emailVerified != true) {
+        await auth.signOut();
+        throw StateError(
+          'Erősítsd meg az e-mail-címedet a kapott levélben, majd próbáld újra.',
+        );
+      }
       await _ensureAdminProfile(user);
       await _cacheProfileRole();
     } on FirebaseAuthException catch (error) {
@@ -119,9 +133,54 @@ class CommunityService {
     }
   }
 
+  Future<void> resendEmailVerification() async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous)
+      throw StateError('Nincs ellenőrizhető e-mailes fiók.');
+    await user.sendEmailVerification();
+  }
+
+  Future<void> resendEmailVerificationForCredentials({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final credential = await auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+      await credential.user!.sendEmailVerification();
+    } on FirebaseAuthException catch (error) {
+      throw StateError(_authError(error.code));
+    } finally {
+      await auth.signOut();
+    }
+  }
+
   Future<void> sendPasswordReset(String email) async {
     try {
       await auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (error) {
+      throw StateError(_authError(error.code));
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = auth.currentUser;
+    final email = user?.email;
+    if (user == null || user.isAnonymous || email == null) {
+      throw StateError('Ehhez e-mailes bejelentkezés szükséges.');
+    }
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
     } on FirebaseAuthException catch (error) {
       throw StateError(_authError(error.code));
     }
@@ -134,6 +193,7 @@ class CommunityService {
     'invalid-email' => 'Érvénytelen e-mail-cím.',
     'email-already-in-use' => 'Ez az e-mail-cím már használatban van.',
     'weak-password' => 'A jelszó túl gyenge.',
+    'requires-recent-login' => 'A módosításhoz jelentkezz be újra.',
     'network-request-failed' => 'Hálózati hiba. Próbáld újra később.',
     _ => 'A bejelentkezés nem sikerült. Próbáld újra.',
   };
@@ -640,6 +700,67 @@ class CommunityService {
     return prefs.getBool('biometric_unlock') ?? false;
   }
 
+  Future<bool> deviceCodeEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('device_code_unlock') ?? false;
+  }
+
+  Future<void> setDeviceCodeEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('device_code_unlock', value);
+  }
+
+  Future<bool> authenticatorEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('authenticator_unlock') ?? false;
+  }
+
+  Future<String?> authenticatorSecret() =>
+      _secureStorage.read(key: _totpSecretKey);
+
+  Future<void> setAuthenticatorSecret(String secret) async {
+    await _secureStorage.write(key: _totpSecretKey, value: secret);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('authenticator_unlock', true);
+  }
+
+  Future<void> setAuthenticatorEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('authenticator_unlock', value);
+  }
+
+  Future<bool> authenticateDeviceCode() async {
+    try {
+      return await LocalAuthentication().authenticate(
+        localizedReason: 'Oldd fel a Hungarian Hardstyle profilodat',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: false,
+          useErrorDialogs: true,
+        ),
+      );
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  Future<bool> verifyAuthenticatorCode(String code) async {
+    final secret = await authenticatorSecret();
+    if (secret == null || secret.isEmpty) return false;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final offset in const [-30, 0, 30]) {
+      final expected = OTP.generateTOTPCodeString(
+        secret,
+        now + offset * 1000,
+        interval: 30,
+        algorithm: Algorithm.SHA1,
+        isGoogle: true,
+      );
+      if (OTP.constantTimeVerification(expected, code.trim())) return true;
+    }
+    return false;
+  }
+
   Future<void> setBiometricEnabled(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('biometric_unlock', value);
@@ -671,8 +792,25 @@ class CommunityService {
     return unlocked;
   }
 
+  Future<bool> unlockProfileSession(
+    String userId,
+    Future<bool> Function() unlock,
+  ) async {
+    if (_profileSessionUid == userId) return true;
+    final active = _profileUnlockRequest;
+    if (active != null) return active;
+    final request = unlock();
+    _profileUnlockRequest = request;
+    final unlocked = await request.whenComplete(
+      () => _profileUnlockRequest = null,
+    );
+    if (unlocked) _profileSessionUid = userId;
+    return unlocked;
+  }
+
   static void resetBiometricSession() {
     _biometricSessionUid = null;
+    _profileSessionUid = null;
   }
 
   Future<String?> connectionStatus(String otherUserId) async {

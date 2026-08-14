@@ -16,15 +16,24 @@ class LabelPurchaseService {
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   final _updates = StreamController<PurchaseDetails>.broadcast();
 
+  bool lastStoreAvailable = false;
+  Set<String> lastNotFoundProductIds = const {};
+  String? lastProductQueryError;
+
   Stream<PurchaseDetails> get purchaseUpdates => _updates.stream;
 
   Future<List<ProductDetails>> loadProducts(Iterable<String> productIds) async {
     final available = await _store.isAvailable();
+    lastStoreAvailable = available;
+    lastNotFoundProductIds = const {};
+    lastProductQueryError = null;
     if (!available) return const [];
     final response = await _store.queryProductDetails(productIds.toSet());
     if (response.error != null) {
+      lastProductQueryError = response.error!.message;
       throw StateError(response.error!.message);
     }
+    lastNotFoundProductIds = response.notFoundIDs.toSet();
     return response.productDetails;
   }
 
@@ -42,6 +51,17 @@ class LabelPurchaseService {
   Future<bool> buy(ProductDetails product) => _store.buyNonConsumable(
     purchaseParam: PurchaseParam(productDetails: product),
   );
+
+  String purchaseErrorMessage(PurchaseDetails purchase) {
+    final error = purchase.error;
+    if (error == null) return 'A Google Play-vásárlás nem sikerült.';
+    return switch (error.code) {
+      'item_already_owned' => 'Ezt a kiadást már megvásároltad. A letöltés hamarosan elérhető lesz.',
+      'user_canceled' => 'A vásárlást megszakítottad.',
+      'billing_unavailable' => 'A Google Play vásárlási szolgáltatása most nem érhető el.',
+      _ => 'A Google Play nem tudta elindítani a vásárlást. Próbáld újra később.',
+    };
+  }
 
   Future<bool> verifyPurchase({
     required PurchaseDetails purchase,
@@ -75,18 +95,51 @@ class LabelPurchaseService {
     return data['downloadUrl'] as String;
   }
 
+  Future<bool> waitForAdUnlock({
+    required int releaseId,
+    Duration timeout = const Duration(seconds: 20),
+  }) async {
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'getLabelAdUnlockStatus',
+    );
+    final deadline = DateTime.now().add(timeout);
+    while (DateTime.now().isBefore(deadline)) {
+      try {
+        final result = await callable.call({'releaseId': releaseId});
+        final data = result.data;
+        if (data is Map && data['unlocked'] == true) return true;
+      } catch (_) {
+        // The SSV callback is asynchronous; keep polling until the timeout.
+      }
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
+    return false;
+  }
+
+  Future<bool> hasAdUnlock(int releaseId) async {
+    final result = await FirebaseFunctions.instance
+        .httpsCallable('getLabelAdUnlockStatus')
+        .call({'releaseId': releaseId});
+    return result.data is Map && result.data['unlocked'] == true;
+  }
+
   Future<bool> showRewardedAd(int releaseId) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.isAnonymous) return false;
+    if (user == null || user.isAnonymous) {
+      throw StateError('A reklámos feloldáshoz be kell jelentkezni.');
+    }
     final unitId = enableTestAds
         ? 'ca-app-pub-3940256099942544/5224354917'
         : productionRewardedAdUnitId;
-    if (unitId.isEmpty) return false;
+    if (unitId.isEmpty) {
+      throw StateError('A jutalmazott reklám azonosítója nincs beállítva.');
+    }
     final rewarded = await _loadRewarded(unitId).timeout(
       const Duration(seconds: 15),
-      onTimeout: () => null,
+      onTimeout: () => throw TimeoutException(
+        'A jutalmazott reklám betöltése túllépte a 15 másodpercet.',
+      ),
     );
-    if (rewarded == null) return false;
     final customData = base64UrlEncode(
       utf8.encode(jsonEncode({'uid': user.uid, 'releaseId': releaseId})),
     );
@@ -99,9 +152,15 @@ class LabelPurchaseService {
         ad.dispose();
         if (!result.isCompleted) result.complete(false);
       },
-      onAdFailedToShowFullScreenContent: (ad, _) {
+      onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
-        if (!result.isCompleted) result.complete(false);
+        if (!result.isCompleted) {
+          result.completeError(
+            StateError(
+              'AdMob megjelenítési hiba (${error.code}): ${error.message}',
+            ),
+          );
+        }
       },
     );
     rewarded.show(
@@ -112,17 +171,29 @@ class LabelPurchaseService {
     return result.future;
   }
 
-  Future<RewardedAd?> _loadRewarded(String unitId) {
-    final completer = Completer<RewardedAd?>();
+  Future<RewardedAd> _loadRewarded(String unitId) {
+    final completer = Completer<RewardedAd>();
     RewardedAd.load(
       adUnitId: unitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: completer.complete,
-        onAdFailedToLoad: (_) => completer.complete(null),
+        onAdFailedToLoad: (error) => completer.completeError(
+          StateError(_admobLoadMessage(error)),
+        ),
       ),
     );
     return completer.future;
+  }
+
+  static String _admobLoadMessage(LoadAdError error) {
+    return switch (error.code) {
+      0 => 'A reklám kérése érvénytelen. Ellenőrizd az alkalmazás beállításait.',
+      1 => 'Nem sikerült betölteni a reklámot. Ellenőrizd az internetkapcsolatot.',
+      2 => 'A reklámszolgáltatás jelenleg nem érhető el. Próbáld újra később.',
+      3 => 'Most nincs elérhető reklám. Próbáld újra később.',
+      _ => 'A reklámot most nem sikerült betölteni. Próbáld újra később.',
+    };
   }
 
   Future<void> dispose() async {

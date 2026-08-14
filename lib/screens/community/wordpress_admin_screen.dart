@@ -504,6 +504,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       return Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: DropdownButtonFormField<int>(
+          isExpanded: true,
           initialValue: validCurrent,
           decoration: InputDecoration(labelText: label),
           items: options.map((option) {

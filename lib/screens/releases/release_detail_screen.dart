@@ -26,6 +26,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   StreamSubscription<PurchaseDetails>? _updates;
   String? _message;
   bool _unlocking = false;
+  bool _adUnlocked = false;
+  bool _checkingAdUnlock = true;
   final Set<String> _verifiedProducts = <String>{};
 
   @override
@@ -50,11 +52,23 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
             : purchase.status == PurchaseStatus.purchased
             ? 'A vásárlás ellenőrzése sikertelen.'
             : purchase.status == PurchaseStatus.error
-            ? 'A vásárlás sikertelen.'
+            ? _purchases.purchaseErrorMessage(purchase)
             : null;
       });
     });
     _loadProducts();
+    _loadAdUnlockStatus();
+  }
+
+  Future<void> _loadAdUnlockStatus() async {
+    try {
+      final unlocked = await _purchases.hasAdUnlock(widget.release.id);
+      if (mounted && unlocked) setState(() => _adUnlocked = true);
+    } catch (_) {
+      // A gomb előtt ismét ellenőrizzük; itt elég feloldani a betöltési állapotot.
+    } finally {
+      if (mounted) setState(() => _checkingAdUnlock = false);
+    }
   }
 
   Future<void> _loadProducts() async {
@@ -64,7 +78,18 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       );
       if (mounted) setState(() => _products = products);
     } catch (_) {
-      if (mounted) setState(() => _products = const []);
+      if (mounted) {
+        setState(() {
+          _products = const [];
+          _message = 'A Google Play terméklista most nem tölthető be. Próbáld újra később.';
+        });
+      }
+    }
+    if (!mounted || _products.isNotEmpty) return;
+    if (_purchases.lastNotFoundProductIds.isNotEmpty) {
+      setState(() => _message = 'Ehhez a kiadáshoz a Google Play-termék még nem érhető el vásárlásra.');
+    } else if (!_purchases.lastStoreAvailable) {
+      setState(() => _message = 'A vásárlás csak a Google Play Áruházból telepített alkalmazásban érhető el.');
     }
   }
 
@@ -172,8 +197,12 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 'A jutalmazott reklám megtekintése után a fájl letölthető.',
               ),
               trailing: FilledButton(
-                onPressed: _unlocking ? null : _unlock128,
-                child: const Text('Feloldás'),
+                onPressed: _unlocking || _checkingAdUnlock
+                    ? null
+                    : _adUnlocked
+                    ? () => _download('mp3_128')
+                    : _unlock128,
+                child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
               ),
             ),
           ),
@@ -252,12 +281,12 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 onPressed: () => _download(_downloadVariant(configured.id)),
               )
             : FilledButton(
-                onPressed: product == null
+                onPressed: product == null ? null : () => _buy(product), /*
                     ? () => setState(
                         () => _message =
                             'A vásárlás a Google Playből telepített alkalmazásban érhető el.',
                       )
-                    : () => _buy(product),
+                    : () => _buy(product), */
                 child: Text(product?.price ?? '${configured.price} Ft'),
               ),
       ),
@@ -292,20 +321,40 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       _message = 'A jutalmazott reklám betöltése…';
     });
     try {
+      if (await _purchases.hasAdUnlock(widget.release.id)) {
+        if (mounted) {
+          setState(() {
+            _adUnlocked = true;
+            _message = 'Ez a release már fel van oldva.';
+          });
+        }
+        return;
+      }
       final earned = await _purchases.showRewardedAd(widget.release.id);
       if (!earned) throw StateError('A reklám megtekintése nem fejeződött be.');
-      var downloaded = false;
-      for (var attempt = 0; attempt < 6 && !downloaded; attempt++) {
-        await Future<void>.delayed(const Duration(seconds: 2));
-        downloaded = await _download('mp3_128');
+      if (mounted) {
+        setState(() => _message = 'A reklám jóváírásának ellenőrzése…');
       }
-      if (!downloaded) {
+      final unlocked = await _purchases.waitForAdUnlock(
+        releaseId: widget.release.id,
+      );
+      if (!unlocked) {
         throw StateError(
-          'A reklámos feloldás még nem érkezett meg, próbáld újra később.',
+          'A reklám lefutott, de a feloldás nem érkezett meg. Próbáld újra később.',
+        );
+      }
+      if (mounted) setState(() => _adUnlocked = true);
+      final downloaded = await _download('mp3_128');
+      if (mounted) {
+        setState(
+          () => _message = downloaded
+              ? 'Feloldva, a letöltés elindult.'
+              : 'Feloldva, de a letöltést nem sikerült elindítani.',
         );
       }
     } catch (error) {
-      if (mounted) setState(() => _message = '$error');
+      final message = error is StateError ? error.message.toString() : '$error';
+      if (mounted) setState(() => _message = message);
     } finally {
       if (mounted) setState(() => _unlocking = false);
     }

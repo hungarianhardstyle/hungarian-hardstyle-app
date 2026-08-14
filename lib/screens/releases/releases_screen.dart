@@ -19,6 +19,7 @@ class ReleasesScreen extends ConsumerStatefulWidget {
 }
 
 class _ReleasesScreenState extends ConsumerState<ReleasesScreen> {
+  final _searchController = TextEditingController();
   String _search = '';
   Timer? _timer;
 
@@ -27,6 +28,7 @@ class _ReleasesScreenState extends ConsumerState<ReleasesScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -68,15 +70,28 @@ class _ReleasesScreenState extends ConsumerState<ReleasesScreen> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
                   child: TextField(
+                    controller: _searchController,
                     onChanged: (value) {
                       _timer?.cancel();
+                      setState(() {});
                       _timer = Timer(const Duration(milliseconds: 300), () {
-                        if (mounted) setState(() => _search = value.trim());
+                        if (mounted) setState(() => _search = value);
                       });
                     },
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       prefixIcon: Icon(Icons.search),
                       hintText: 'Release keresése',
+                      suffixIcon: _searchController.text.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: 'Keresés törlése',
+                              onPressed: () {
+                                _timer?.cancel();
+                                _searchController.clear();
+                                setState(() => _search = '');
+                              },
+                              icon: const Icon(Icons.clear),
+                            ),
                     ),
                   ),
                 ),

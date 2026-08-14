@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:otp/otp.dart';
 
 import '../../services/push_notification_service.dart';
 import '../../services/community_service.dart';
@@ -27,6 +28,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _loading = true;
   bool _clearingCache = false;
   bool _biometricEnabled = false;
+  bool _deviceCodeEnabled = false;
+  bool _authenticatorEnabled = false;
 
   @override
   void initState() {
@@ -47,8 +50,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _reminderNotificationsEnabled =
           preferences.getBool(_reminderNotificationsKey) ?? true;
       _biometricEnabled = preferences.getBool('biometric_unlock') ?? false;
+      _deviceCodeEnabled = preferences.getBool('device_code_unlock') ?? false;
+      _authenticatorEnabled = preferences.getBool('authenticator_unlock') ?? false;
       _loading = false;
     });
+  }
+
+  Future<void> _setDeviceCode(bool value) async {
+    if (value && !await CommunityService().authenticateDeviceCode()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('A telefonos kódos feloldás nem sikerült.')),
+        );
+      }
+      return;
+    }
+    await CommunityService().setDeviceCodeEnabled(value);
+    if (mounted) setState(() => _deviceCodeEnabled = value);
+  }
+
+  Future<void> _setupAuthenticator() async {
+    final service = CommunityService();
+    var secret = await service.authenticatorSecret();
+    if (secret == null || secret.isEmpty) {
+      secret = OTP.randomSecret();
+      await service.setAuthenticatorSecret(secret);
+    }
+    if (!mounted) return;
+    final controller = TextEditingController();
+    final verified = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Authenticator beállítása'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Add meg ezt a kulcsot a Google Authenticatorban:'),
+            const SizedBox(height: 10),
+            SelectableText(secret!, style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 14),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: '6 számjegyű kód'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Mégse')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim().length == 6), child: const Text('Ellenőrzés')),
+        ],
+      ),
+    );
+    final valid = verified == true && await service.verifyAuthenticatorCode(controller.text);
+    controller.dispose();
+    if (!valid) {
+      await service.setAuthenticatorEnabled(false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('A kód nem érvényes. Az authenticator nem lett bekapcsolva.')),
+        );
+      }
+      return;
+    }
+    if (mounted) setState(() => _authenticatorEnabled = true);
+  }
+
+  Future<void> _setAuthenticator(bool value) async {
+    if (value) {
+      await _setupAuthenticator();
+    } else {
+      await CommunityService().setAuthenticatorEnabled(false);
+      if (mounted) setState(() => _authenticatorEnabled = false);
+    }
   }
 
   Future<void> _setBiometric(bool value) async {
@@ -122,6 +197,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 value: _notificationsEnabled,
                 onChanged: _loading ? null : _setNotifications,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: SwitchListTile(
+                secondary: const Icon(Icons.password_outlined),
+                title: const Text('Android-kódos feloldás'),
+                subtitle: const Text('A telefon PIN-kódjával, jelszavával vagy mintájával'),
+                value: _deviceCodeEnabled,
+                onChanged: _loading ? null : _setDeviceCode,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: SwitchListTile(
+                secondary: const Icon(Icons.lock_clock_outlined),
+                title: const Text('Google Authenticator'),
+                subtitle: const Text('Csak e-mail/jelszavas fióknál használható'),
+                value: _authenticatorEnabled,
+                onChanged: _loading ? null : _setAuthenticator,
               ),
             ),
             const SizedBox(height: 12),

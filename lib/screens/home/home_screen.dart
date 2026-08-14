@@ -99,25 +99,31 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 18),
-              ref.watch(votingProvider).when(
-                loading: () => const SizedBox.shrink(),
-                error: (_, _) => const SizedBox.shrink(),
-                data: (season) => season.active
-                    ? Padding(
-                        padding: const EdgeInsets.only(bottom: 18),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(builder: (_) => const VotingScreen()),
+              ref
+                  .watch(votingProvider)
+                  .when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
+                    data: (season) => season.active
+                        ? Padding(
+                            padding: const EdgeInsets.only(bottom: 18),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const VotingScreen(),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.how_to_vote_outlined),
+                                label: Text(
+                                  'Szavazz a HUHS ${season.year} jelöltjeire',
+                                ),
+                              ),
                             ),
-                            icon: const Icon(Icons.how_to_vote_outlined),
-                            label: Text('Szavazz a HUHS ${season.year} jelöltjeire'),
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
               const SizedBox(height: 24),
               const Text(
                 'Legfrissebb hírek',
@@ -296,36 +302,50 @@ class _NewsSliderState extends State<_NewsSlider> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 250,
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: widget.posts.length,
-            onPageChanged: (page) => _page = page,
-            itemBuilder: (_, index) =>
-                FeaturedNewsCard(post: widget.posts[index]),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            widget.posts.length,
-            (index) => AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              height: 6,
-              width: index == _page ? 20 : 6,
-              decoration: BoxDecoration(
-                color: index == _page ? Colors.redAccent : Colors.white24,
-                borderRadius: BorderRadius.circular(4),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth.clamp(0.0, 820.0);
+        final cardHeight = (cardWidth * 9 / 16).clamp(250.0, 460.0);
+
+        return Column(
+          children: [
+            SizedBox(
+              height: cardHeight,
+              child: Center(
+                child: SizedBox(
+                  width: cardWidth,
+                  child: PageView.builder(
+                    controller: _controller,
+                    itemCount: widget.posts.length,
+                    onPageChanged: (page) {
+                      if (mounted) setState(() => _page = page);
+                    },
+                    itemBuilder: (_, index) =>
+                        FeaturedNewsCard(post: widget.posts[index]),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                widget.posts.length,
+                (index) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  height: 6,
+                  width: index == _page ? 20 : 6,
+                  decoration: BoxDecoration(
+                    color: index == _page ? Colors.redAccent : Colors.white24,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

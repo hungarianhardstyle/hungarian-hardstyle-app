@@ -1,5 +1,6 @@
 const functions = require('firebase-functions/v1');
 const { onDocumentWritten } = require('firebase-functions/v2/firestore');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { HttpsError } = functions.https;
 const { defineSecret } = require('firebase-functions/params');
 const crypto = require('crypto');
@@ -16,29 +17,41 @@ const WORDPRESS_USERNAME = defineSecret('WORDPRESS_USERNAME');
 const WORDPRESS_APPLICATION_PASSWORD = defineSecret('WORDPRESS_APPLICATION_PASSWORD');
 const GOOGLE_PLAY_SERVICE_ACCOUNT_JSON = defineSecret('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON');
 const GOOGLE_PLAY_PACKAGE_NAME = 'hu.hungarianhardstyle.app';
-const callWindows = new Map();
+const GOOGLE_PLAY_REGIONS_VERSION = '2022/02';
+let labelProductSyncRunning = false;
 const wordPressCall = (handler) => functions
   .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] })
   .https.onCall(handler);
 
-// ponytail: process-local limit; move to a shared counter only if traffic exceeds one instance.
-function allowCall(uid, key, limit = 20) {
-  const now = Date.now();
-  const bucketKey = `${key}:${uid}`;
-  const current = callWindows.get(bucketKey) || { started: now, count: 0 };
-  if (now - current.started >= 60_000) {
-    callWindows.set(bucketKey, { started: now, count: 1 });
-    return true;
-  }
-  if (current.count >= limit) return false;
-  current.count += 1;
-  callWindows.set(bucketKey, current);
-  return true;
+const labelProductSyncSecrets = [
+  WORDPRESS_USERNAME,
+  WORDPRESS_APPLICATION_PASSWORD,
+  GOOGLE_PLAY_SERVICE_ACCOUNT_JSON,
+];
+
+async function allowCall(uid, key, limit = 20) {
+  const bucket = Math.floor(Date.now() / 60_000);
+  const ref = db.collection('rate_limits').doc(crypto
+    .createHash('sha256').update(`${key}:${uid}:${bucket}`).digest('hex'));
+  let allowed = false;
+  await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    const count = Number(snapshot.data()?.count || 0);
+    allowed = count < limit;
+    if (allowed) {
+      transaction.set(ref, { key, uid, bucket, count: count + 1, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+    }
+  });
+  return allowed;
 }
 
 function securityLog(event, context) {
   const uid = String(context.auth?.uid || 'anonymous');
   console.warn(JSON.stringify({ event, uid: uid.slice(0, 8) }));
+}
+
+function activeAdUnlock(data, releaseId) {
+  return Boolean(data && data.releaseId === releaseId);
 }
 
 const submissionRoutes = {
@@ -52,12 +65,31 @@ function isAdmin(context, profile) {
     || profile.accessRole === 'admin';
 }
 
+async function notifySubmissionAdmins(kind, title, id) {
+  const profiles = await db.collection('community_profiles').get();
+  const tokens = [];
+  for (const profileDoc of profiles.docs) {
+    const profile = profileDoc.data() || {};
+    if (String(profile.email || '').toLowerCase() !== ADMIN_EMAIL && profile.accessRole !== 'admin') continue;
+    const raw = profile.fcmTokens;
+    if (Array.isArray(raw)) tokens.push(...raw.filter((token) => typeof token === 'string'));
+  }
+  const uniqueTokens = [...new Set(tokens.map((token) => token.trim()).filter(Boolean))].slice(0, 500);
+  if (!uniqueTokens.length) return { sent: 0 };
+  const result = await admin.messaging().sendEachForMulticast({
+    tokens: uniqueTokens,
+    notification: { title: `Új ${kind}beküldés`, body: title },
+    data: { type: 'submission', kind, id: String(id) },
+  });
+  return { sent: result.successCount, failed: result.failureCount };
+}
+
 exports.submitWordPressContent = wordPressCall(
   async (data, context) => {
     if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
       throw new HttpsError('permission-denied', 'Regisztráció szükséges a beküldéshez.');
     }
-    if (!allowCall(context.auth.uid, 'submission')) {
+    if (!await allowCall(context.auth.uid, 'submission')) {
       securityLog('submission_rate_limited', context);
       throw new HttpsError('resource-exhausted', 'Túl sok beküldés, próbáld később.');
     }
@@ -71,9 +103,33 @@ exports.submitWordPressContent = wordPressCall(
       throw new HttpsError('invalid-argument', 'A beküldés túl nagy.');
     }
 
+    const requestHash = crypto.createHash('sha256')
+      .update(`${context.auth.uid}:${data.kind}:${JSON.stringify(payload)}`)
+      .digest('hex');
+    const requestRef = db.collection('submission_requests').doc(requestHash);
+    let duplicateResponse;
+    let duplicateInProgress = false;
+    await db.runTransaction(async (transaction) => {
+      const existing = await transaction.get(requestRef);
+      if (existing.exists) {
+        duplicateResponse = existing.data()?.response;
+        duplicateInProgress = !duplicateResponse;
+        return;
+      }
+      transaction.create(requestRef, {
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        kind: data.kind,
+      });
+    });
+    if (duplicateResponse) return duplicateResponse;
+    if (duplicateInProgress) {
+      throw new HttpsError('already-exists', 'Ezt a beküldést már feldolgozzuk.');
+    }
+
     const profileSnapshot = await db.collection('community_profiles').doc(context.auth.uid).get();
     const profile = profileSnapshot.data() || {};
     if (!isAdmin(context, profile) && route.role && profile.role !== route.role) {
+      await requestRef.delete().catch(() => {});
       throw new HttpsError('permission-denied', 'Ehhez a beküldéshez nincs jogosultságod.');
     }
 
@@ -84,12 +140,20 @@ exports.submitWordPressContent = wordPressCall(
         Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'X-HUHS-Skip-Submission-Push': '1',
       },
       body: JSON.stringify(payload),
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) {
+      await requestRef.delete().catch(() => {});
       throw new HttpsError('failed-precondition', body.message || 'A WordPress beküldés sikertelen.');
+    }
+    await requestRef.set({ response: body, completedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    if (body?.id) {
+      const label = data.kind === 'artist' ? 'DJ' : data.kind === 'organizer' ? 'szervező' : 'esemény';
+      await notifySubmissionAdmins(label, body.title || payload.title || '', body.id)
+        .catch((error) => console.warn('submission admin push failed', error));
     }
     return body;
   },
@@ -104,7 +168,7 @@ exports.listWordPressSubmissions = wordPressCall(
     if (!isAdmin(context, profile)) {
       throw new HttpsError('permission-denied', 'Csak admin tekintheti meg a beküldéseket.');
     }
-    if (!allowCall(context.auth.uid, 'wp_admin')) {
+    if (!await allowCall(context.auth.uid, 'wp_admin')) {
       securityLog('wp_admin_rate_limited', context);
       throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
     }
@@ -138,7 +202,7 @@ exports.manageWordPressSubmission = wordPressCall(
     if (!isAdmin(context, profile)) {
       throw new HttpsError('permission-denied', 'Csak admin kezelheti a beküldéseket.');
     }
-    if (!allowCall(context.auth.uid, 'wp_admin')) {
+    if (!await allowCall(context.auth.uid, 'wp_admin')) {
       securityLog('wp_admin_rate_limited', context);
       throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
     }
@@ -178,7 +242,7 @@ exports.updateWordPressSubmission = wordPressCall(
     if (!isAdmin(context, profile)) {
       throw new HttpsError('permission-denied', 'Csak admin szerkeszthet beküldést.');
     }
-    if (!allowCall(context.auth.uid, 'wp_admin')) {
+    if (!await allowCall(context.auth.uid, 'wp_admin')) {
       securityLog('wp_admin_rate_limited', context);
       throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
     }
@@ -221,7 +285,7 @@ exports.wordPressAdminRequest = wordPressCall(
     if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin használhatja a WordPress vezérlőközpontot.');
     const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
     if (!isAdmin(context, profile)) throw new HttpsError('permission-denied', 'Csak admin használhatja a WordPress vezérlőközpontot.');
-    if (!allowCall(context.auth.uid, 'wp_admin_request')) {
+    if (!await allowCall(context.auth.uid, 'wp_admin_request')) {
       securityLog('wp_admin_request_rate_limited', context);
       throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
     }
@@ -256,7 +320,7 @@ exports.deleteCommunityUser = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new HttpsError('permission-denied', 'Csak admin törölhet felhasználót.');
   }
-  if (!allowCall(context.auth.uid, 'user_delete', 10)) {
+    if (!await allowCall(context.auth.uid, 'user_delete', 10)) {
     securityLog('user_delete_rate_limited', context);
     throw new HttpsError('resource-exhausted', 'Túl sok törlési művelet, próbáld később.');
   }
@@ -321,7 +385,7 @@ exports.claimArtistProfile = functions.https.onCall(async (data, context) => {
   if (!Number.isInteger(artistId) || artistId <= 0 || !email || email === 'info@hungarianhardstyle.hu') {
     throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap és e-mail szükséges.');
   }
-  if (!allowCall(context.auth.uid, 'artist_claim', 5)) {
+    if (!await allowCall(context.auth.uid, 'artist_claim', 5)) {
     throw new HttpsError('resource-exhausted', 'Túl sok claim-kérés, próbáld később.');
   }
   const claimRef = db.collection('artist_claims').doc(String(artistId));
@@ -374,7 +438,7 @@ exports.verifyLabelPurchase = functions
     if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
       throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a vásárláshoz.');
     }
-    if (!allowCall(context.auth.uid, 'label_purchase', 10)) {
+    if (!await allowCall(context.auth.uid, 'label_purchase', 10)) {
       throw new HttpsError('resource-exhausted', 'Túl sok vásárlási ellenőrzés.');
     }
     const productId = String(data?.productId || '').trim();
@@ -427,7 +491,7 @@ exports.getLabelDownloadUrl = functions
     if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
       throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a letöltéshez.');
     }
-    if (!allowCall(context.auth.uid, 'label_download', 10)) {
+    if (!await allowCall(context.auth.uid, 'label_download', 10)) {
       throw new HttpsError('resource-exhausted', 'Túl sok letöltési kérés.');
     }
     const releaseId = Number(data?.releaseId || 0);
@@ -447,7 +511,7 @@ exports.getLabelDownloadUrl = functions
     }
     if (!paid && variant === 'mp3_128') {
       const unlock = await db.collection('label_ad_unlocks').doc(`${context.auth.uid}_${releaseId}`).get();
-      if (!unlock.exists || unlock.data()?.releaseId !== releaseId || Number(unlock.data()?.expiresAt || 0) < Date.now()) {
+      if (!unlock.exists || !activeAdUnlock(unlock.data(), releaseId)) {
         throw new HttpsError('permission-denied', 'A 128 kbps változat feloldása szükséges.');
       }
     }
@@ -468,43 +532,324 @@ exports.getLabelDownloadUrl = functions
     return { downloadUrl: body.download_url, expiresIn: Number(body.expires_in || 300) };
   });
 
-exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
+const labelProductDefinitions = [
+  { type: 'radio_wav', label: 'Radio WAV' },
+  { type: 'radio_mp3_320', label: 'Radio MP3 320 kbps' },
+  { type: 'extended_wav', label: 'Extended WAV' },
+  { type: 'extended_mp3_320', label: 'Extended MP3 320 kbps' },
+];
+
+function parseHufPrice(value) {
+  const match = String(value || '').replace(/\s/g, '').match(/\d+/);
+  const price = Number(match?.[0] || 0);
+  return Number.isInteger(price) && price > 0 ? price : 0;
+}
+
+function productIdForRelease(releaseId, type) {
+  return `huhs_release_${releaseId}_${type}`;
+}
+
+function productIdFromResponse(product) {
+  return String(product?.productId || '').trim();
+}
+
+async function upsertPlayProduct(androidPublisher, release, definition, productId, price) {
+  let current = null;
   try {
-    const rawQuery = String(req.originalUrl || '').split('?')[1] || '';
+    current = (await androidPublisher.monetization.onetimeproducts.get({
+      packageName: GOOGLE_PLAY_PACKAGE_NAME,
+      productId,
+    })).data;
+  } catch (error) {
+    if (error?.response?.status !== 404) throw error;
+  }
+
+  const purchaseOptionId = String(current?.purchaseOptions?.[0]?.purchaseOptionId || 'default');
+  const title = `${String(release.title || 'HUHS Release')} – ${definition.label}`.slice(0, 55);
+  const description = `Hungarian Hardstyle ${definition.label} letöltés: ${String(release.title || 'Release')}`.slice(0, 200);
+  const product = {
+    packageName: GOOGLE_PLAY_PACKAGE_NAME,
+    productId,
+    listings: [{ languageCode: 'hu-HU', title, description }],
+    purchaseOptions: [{
+      purchaseOptionId,
+      buyOption: { legacyCompatible: true, multiQuantityEnabled: false },
+      regionalPricingAndAvailabilityConfigs: [{
+        regionCode: 'HU',
+        price: { currencyCode: 'HUF', units: String(price), nanos: 0 },
+        availability: 'AVAILABLE',
+      }],
+    }],
+  };
+  const result = await androidPublisher.monetization.onetimeproducts.batchUpdate({
+    packageName: GOOGLE_PLAY_PACKAGE_NAME,
+    requestBody: {
+      requests: [{
+        oneTimeProduct: product,
+        updateMask: 'listings,purchaseOptions',
+        regionsVersion: { version: GOOGLE_PLAY_REGIONS_VERSION },
+        allowMissing: true,
+        latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE',
+      }],
+    },
+  });
+  const saved = result.data?.oneTimeProducts?.[0] || product;
+  const savedOption = saved.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId)
+    || saved.purchaseOptions?.[0];
+  if (savedOption && savedOption.state !== 'ACTIVE') {
+    await androidPublisher.monetization.onetimeproducts.purchaseOptions.batchUpdateStates({
+      packageName: GOOGLE_PLAY_PACKAGE_NAME,
+      productId,
+      requestBody: {
+        requests: [{
+          activatePurchaseOptionRequest: {
+            packageName: GOOGLE_PLAY_PACKAGE_NAME,
+            productId,
+            purchaseOptionId: savedOption.purchaseOptionId || purchaseOptionId,
+          },
+        }],
+      },
+    });
+  }
+  return productIdFromResponse(saved) || productId;
+}
+
+async function updateWordPressReleaseProducts(credentials, releaseId, products) {
+  const response = await fetch(`${WORDPRESS_BASE_URL}/releases/${releaseId}/play-products`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ products }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body?.message || `WordPress Play-termék frissítés: HTTP ${response.status}`);
+  return body;
+}
+
+async function syncReleasePlayProducts(release, credentials, androidPublisher) {
+  const products = {};
+  if (String(release.audio_status || '') !== 'ready') {
+    return { releaseId: Number(release.id), products, skipped: 'audio-not-ready' };
+  }
+  const existing = new Map((Array.isArray(release.products) ? release.products : []).map((item) => [String(item.type), item]));
+  const prices = release.product_prices || {};
+  const available = new Set((Array.isArray(release.versions) ? release.versions : []).filter((item) => item.available).map((item) => String(item.type)));
+  const errors = [];
+  for (const definition of labelProductDefinitions) {
+    const known = existing.get(definition.type);
+    const price = parseHufPrice(prices[definition.type] || known?.price);
+    const sourceType = definition.type.startsWith('radio_') ? 'radio' : 'extended';
+    if (!known?.id && (!available.has(sourceType) || !price)) continue;
+    if (known?.id && !price) {
+      products[definition.type] = String(known.id);
+      continue;
+    }
+    const productId = String(known?.id || productIdForRelease(release.id, definition.type));
+    try {
+      products[definition.type] = await upsertPlayProduct(androidPublisher, release, definition, productId, price);
+      console.info('label_product_sync_item', {
+        releaseId: Number(release.id), type: definition.type,
+        productId: products[definition.type], price, status: 'ok',
+      });
+    } catch (error) {
+      const detail = {
+        releaseId: Number(release.id), type: definition.type, productId, price,
+        status: error?.response?.status || null, message: error?.message || String(error),
+      };
+      errors.push(detail);
+      console.error('label_product_sync_item_failed', detail);
+    }
+  }
+  if (Object.keys(products).length) await updateWordPressReleaseProducts(credentials, release.id, products);
+  return { releaseId: Number(release.id), products, errors };
+}
+
+async function syncWordPressLabelProducts(releaseId = 0) {
+  if (labelProductSyncRunning) return { skipped: true, reason: 'already-running' };
+  labelProductSyncRunning = true;
+  try {
+    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+    let serviceAccount;
+    try {
+      serviceAccount = JSON.parse(GOOGLE_PLAY_SERVICE_ACCOUNT_JSON.value());
+    } catch (_) {
+      throw new Error('A Google Play service account secret érvénytelen.');
+    }
+    const auth = new google.auth.GoogleAuth({
+      credentials: serviceAccount,
+      scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+    });
+    const androidPublisher = google.androidpublisher({ version: 'v3', auth });
+    const response = await fetch(`${WORDPRESS_BASE_URL}/releases`, { headers: { Accept: 'application/json' } });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || !Array.isArray(body.items)) throw new Error('A WordPress release-lista nem tölthető be.');
+    const releases = body.items.filter((release) => !releaseId || Number(release.id) === releaseId);
+    const results = [];
+    for (const release of releases) {
+      try {
+        const result = await syncReleasePlayProducts(release, credentials, androidPublisher);
+        results.push(result);
+        console.info('label_product_sync_release', result);
+      } catch (error) {
+        console.error('label_product_sync_failed', {
+          releaseId: release.id, title: release.title,
+          message: error?.message || String(error), status: error?.response?.status || null,
+        });
+      }
+    }
+    return { processed: results.length, results };
+  } finally {
+    labelProductSyncRunning = false;
+  }
+}
+
+exports.syncLabelProducts = functions
+  .runWith({ secrets: labelProductSyncSecrets })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin indíthatja a Play-termékszinkront.');
+    const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+    if (!isAdmin(context, profile)) throw new HttpsError('permission-denied', 'Csak admin indíthatja a Play-termékszinkront.');
+    const releaseId = Number(data?.releaseId || 0);
+    if (releaseId && (!Number.isInteger(releaseId) || releaseId < 1)) throw new HttpsError('invalid-argument', 'Érvénytelen release-azonosító.');
+    return syncWordPressLabelProducts(releaseId);
+  });
+
+exports.syncWordPressLabelProducts = onSchedule({
+  schedule: 'every 5 minutes',
+  timeZone: 'Europe/Budapest',
+  secrets: labelProductSyncSecrets,
+}, async () => syncWordPressLabelProducts());
+
+exports.getLabelAdUnlockStatus = functions.https.onCall(async (data, context) => {
+  if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
+    throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+  }
+    if (!await allowCall(context.auth.uid, 'label_ad_unlock_status', 40)) {
+    throw new HttpsError('resource-exhausted', 'Túl sok feloldási ellenőrzés.');
+  }
+  const releaseId = Number(data?.releaseId || 0);
+  if (!Number.isInteger(releaseId) || releaseId < 1) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen release azonosító.');
+  }
+  const snapshot = await db.collection('label_ad_unlocks')
+    .doc(`${context.auth.uid}_${releaseId}`)
+    .get();
+  const unlock = snapshot.data() || {};
+  const unlocked = snapshot.exists && activeAdUnlock(unlock, releaseId);
+  return { unlocked };
+});
+
+exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
+  const reject = (reason) => {
+    console.warn(JSON.stringify({ event: 'admob_ssv_rejected', reason }));
+    return res.status(400).send(reason);
+  };
+  try {
+    const originalUrl = String(req.originalUrl || '');
+    const requestUrl = String(req.url || '');
+    const rawQuery = originalUrl.split('?')[1] || '';
     const params = new URLSearchParams(rawQuery);
     const transactionId = String(params.get('transaction_id') || '').trim();
     const customData = String(params.get('custom_data') || '').trim();
     // AdMob's dashboard validator does not create a real reward transaction.
     // Return success for that probe without granting anything. A probe may
     // also omit the signed callback fields entirely.
-    if (params.get('user_id') || !transactionId || !params.get('signature')) {
+    if (!transactionId && !params.get('signature')) {
       return res.status(200).send('validated');
     }
-    const signatureMarker = '&signature=';
-    const signatureStart = rawQuery.indexOf(signatureMarker);
-    if (signatureStart < 0) return res.status(400).send('missing signature');
-    const signedQuery = rawQuery.slice(0, signatureStart);
+    const signatureMatch = /(?:^|&)signature=([^&]*)/.exec(rawQuery);
+    if (!signatureMatch) return reject('missing signature');
     const signature = String(params.get('signature') || '').trim();
     const keyId = Number(params.get('key_id') || 0);
-    if (!keyId) return res.status(400).send('missing key id');
+    if (!keyId) return reject('missing key id');
     const keyResponse = await fetch('https://www.gstatic.com/admob/reward/verifier-keys.json');
     const keyBody = await keyResponse.json();
     const key = (keyBody.keys || []).find((item) => Number(item.keyId) === keyId);
-    if (!key?.pem || !signature) return res.status(400).send('unknown signing key');
-    const valid = crypto.verify('sha256', Buffer.from(signedQuery, 'utf8'), { key: key.pem, dsaEncoding: 'der' }, Buffer.from(signature, 'base64url'));
-    if (!valid) return res.status(400).send('invalid signature');
-    if (!customData) return res.status(400).send('missing reward data');
-    const decoded = JSON.parse(Buffer.from(decodeURIComponent(customData), 'base64url').toString('utf8'));
+    if (!key?.pem || !signature) return reject('unknown signing key');
+    // Google signs the query exactly as received, up to (but excluding) the
+    // `&signature=` separator. Do not decode, reorder, or remove key_id.
+    const signedQuery = rawQuery.slice(0, signatureMatch.index);
+    const signatureBytes = [
+      Buffer.from(signature, 'base64url'),
+      Buffer.from(signature, 'base64'),
+    ];
+    const normalizedSignature = signature.replace(/-/g, '+').replace(/_/g, '/');
+    const publicKeys = [key.pem];
+    if (key.base64) {
+      publicKeys.push(crypto.createPublicKey({
+        key: Buffer.from(key.base64, 'base64'),
+        format: 'der',
+        type: 'spki',
+      }));
+    }
+    const queryFromUrl = requestUrl.split('?')[1] || '';
+    const urlSignatureMatch = /(?:^|&)signature=([^&]*)/.exec(queryFromUrl);
+    const verificationInputs = [
+      { label: 'original-excluding-separator', value: signedQuery },
+      ...(urlSignatureMatch
+        ? [{ label: 'url-excluding-separator', value: queryFromUrl.slice(0, urlSignatureMatch.index) }]
+        : []),
+    ];
+    const decodeQuery = (value) => value.split('&').map((part) => {
+      const separator = part.indexOf('=');
+      if (separator < 0) return decodeURIComponent(part);
+      return `${decodeURIComponent(part.slice(0, separator))}=${decodeURIComponent(part.slice(separator + 1))}`;
+    }).join('&');
+    verificationInputs.push({
+      label: 'decoded-query',
+      value: decodeQuery(signedQuery),
+    });
+    const verificationResults = [];
+    for (const input of verificationInputs) {
+      for (const [keyIndex, publicKey] of publicKeys.entries()) {
+        for (const [signatureIndex, bytes] of signatureBytes.entries()) {
+          verificationResults.push({
+            input: input.label,
+            keyIndex,
+            signatureIndex,
+            valid: crypto.verify(
+              'sha256',
+              Buffer.from(input.value, 'utf8'),
+              { key: publicKey, dsaEncoding: 'der' },
+              bytes,
+            ),
+          });
+        }
+      }
+    }
+    for (const input of verificationInputs) {
+      for (const [keyIndex, publicKey] of publicKeys.entries()) {
+        const verifier = crypto.createVerify('sha256');
+        verifier.update(input.value, 'utf8');
+        verificationResults.push({
+          input: `${input.label}-createVerify`,
+          keyIndex,
+          valid: verifier.verify(publicKey, normalizedSignature, 'base64'),
+        });
+      }
+    }
+    const valid = verificationResults.some((result) => result.valid);
+    if (!valid) return reject('invalid signature');
+    if (!customData) return reject('missing reward data');
+    let decoded;
+    try {
+      decoded = JSON.parse(Buffer.from(customData, 'base64url').toString('utf8'));
+    } catch (_) {
+      decoded = JSON.parse(Buffer.from(decodeURIComponent(customData), 'base64url').toString('utf8'));
+    }
     const uid = String(decoded.uid || '').trim();
     const releaseId = Number(decoded.releaseId || 0);
-    if (!uid || !Number.isInteger(releaseId) || releaseId < 1) return res.status(400).send('invalid reward data');
+    if (!uid || !Number.isInteger(releaseId) || releaseId < 1) return reject('invalid reward data');
     const transaction = db.collection('admob_reward_transactions').doc(transactionId);
     await db.runTransaction(async (tx) => {
       if ((await tx.get(transaction)).exists) return;
       tx.set(transaction, { uid, releaseId, createdAt: admin.firestore.FieldValue.serverTimestamp() });
       tx.set(db.collection('label_ad_unlocks').doc(`${uid}_${releaseId}`), {
-        uid, releaseId, expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-        transactionId, createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        uid, releaseId, transactionId,
+        unlockedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
     });
     return res.status(200).send('ok');

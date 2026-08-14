@@ -341,6 +341,16 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                   spacing: 8,
                                   children: [
                                     FilledButton.icon(
+                                      style: selected == 'attending'
+                                          ? null
+                                          : FilledButton.styleFrom(
+                                              backgroundColor:
+                                                  Colors.transparent,
+                                              foregroundColor: Colors.white70,
+                                              side: const BorderSide(
+                                                color: Colors.white54,
+                                              ),
+                                            ),
                                       onPressed: _attendanceBusy
                                           ? null
                                           : () => _setAttendance('attending'),
@@ -352,6 +362,15 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                       label: const Text('Ott leszek'),
                                     ),
                                     OutlinedButton(
+                                      style: selected == 'not_attending'
+                                          ? OutlinedButton.styleFrom(
+                                              backgroundColor: Colors.redAccent,
+                                              foregroundColor: Colors.black,
+                                              side: const BorderSide(
+                                                color: Colors.redAccent,
+                                              ),
+                                            )
+                                          : null,
                                       onPressed: _attendanceBusy
                                           ? null
                                           : () =>

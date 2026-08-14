@@ -19,7 +19,10 @@ import 'wordpress_service.dart';
 
 class PushNotificationService {
   static const _tokenKey = 'fcm_token';
-  static const _tokenRefreshKey = 'fcm_token_refresh_v2';
+  // A Play-telepítés és a korábbi tesztAPK-k között az FCM-token cserélődhet.
+  // Verzióváltáskor egyszer kötelezően új token készül, így nem marad bent
+  // olyan token, amelyre a Cloud Function már nem tud kézbesíteni.
+  static const _tokenRefreshKey = 'fcm_token_refresh_v3';
   static bool _initialized = false;
   static StreamSubscription<User?>? _authSubscription;
   static final Dio _api = Dio(
@@ -51,8 +54,8 @@ class PushNotificationService {
       await preferences.setBool(_tokenRefreshKey, true);
     }
     await _storeToken(await messaging.getToken());
-    _authSubscription ??= FirebaseAuth.instance.authStateChanges().listen((_) {
-      unawaited(_syncStoredToken());
+    _authSubscription ??= FirebaseAuth.instance.idTokenChanges().listen((_) {
+      unawaited(_refreshAndStoreToken());
     });
     await _syncStoredToken();
     messaging.onTokenRefresh.listen(_storeToken);
@@ -151,14 +154,27 @@ class PushNotificationService {
     if (token == null || token.isEmpty) return;
     if (kDebugMode) debugPrint('HUHS FCM registration token: $token');
     final preferences = await SharedPreferences.getInstance();
+    final previousToken = preferences.getString(_tokenKey);
     await preferences.setString(_tokenKey, token);
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && !user.isAnonymous && Firebase.apps.isNotEmpty) {
       try {
-        await FirebaseFirestore.instanceFor(
+        final profileRef = FirebaseFirestore.instanceFor(
           app: Firebase.app(),
           databaseId: 'hungarian-hardstyle',
-        ).collection('community_profiles').doc(user.uid).set({
+        ).collection('community_profiles').doc(user.uid);
+        if (previousToken != null &&
+            previousToken.isNotEmpty &&
+            previousToken != token) {
+          try {
+            await profileRef.update({
+              'fcmTokens': FieldValue.arrayRemove([previousToken]),
+            });
+          } catch (_) {
+            // A missing legacy profile must not prevent the new token save.
+          }
+        }
+        await profileRef.set({
           'fcmTokens': FieldValue.arrayUnion([token]),
         }, SetOptions(merge: true));
       } catch (error) {
@@ -178,6 +194,15 @@ class PushNotificationService {
   static Future<void> _syncStoredToken() async {
     final preferences = await SharedPreferences.getInstance();
     await _storeToken(preferences.getString(_tokenKey));
+  }
+
+  static Future<void> _refreshAndStoreToken() async {
+    try {
+      await _storeToken(await FirebaseMessaging.instance.getToken());
+    } catch (error) {
+      debugPrint('HUHS FCM token refresh failed: $error');
+      await _syncStoredToken();
+    }
   }
 
   static Future<void> updatePreferences({

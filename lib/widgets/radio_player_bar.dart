@@ -11,6 +11,12 @@ class RadioPlayerBar extends StatefulWidget {
   State<RadioPlayerBar> createState() => _RadioPlayerBarState();
 }
 
+Future<void> stopRadioPlayback() async {
+  try {
+    await const MethodChannel('hu_hs/radio').invokeMethod<void>('stop');
+  } catch (_) {}
+}
+
 class _RadioPlayerBarState extends State<RadioPlayerBar> {
   static const _channel = MethodChannel('hu_hs/radio');
   static final _streamUri = Uri.parse('https://stream.realhardstyle.nl');

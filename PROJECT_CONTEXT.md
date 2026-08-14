@@ -2,6 +2,41 @@
 
 # Hungarian Hardstyle App
 
+## Következő build – felülvizsgálandó biztonság és kompatibilitás
+
+- Új következő-build feladat: az emailes regisztráció hitelesítését teljesen auditálni és javítani. Ellenőrizni kell a Firebase Auth Email/Password szolgáltatást, verification template-et, küldési logokat és korlátokat; az appban pedig a hitelesített állapot frissítését, a látható újraküldési lehetőséget és a nem hitelesített fiókok korlátozását. A forrásban a `sendEmailVerification()` már szerepel, de a teljes folyamat tulajdonosi teszt szerint nem működött.
+- Új következő-build feladat: fióktörlés után teljes kijelentkeztetés és lokális profil-/munkamenet-állapot törlése, hogy az user ne maradjon belépve és újraindítás után se töltődjön vissza.
+- Új következő-build feladat: a release preview legyen többször lejátszható; preview indításakor a Real Hardstyle FM rádió automatikusan álljon le, ha szól.
+- Új következő-build feladat: a release preview lejátszóján lehessen a 60 másodperces anyagban előre- és visszatekerni.
+
+- Elkészült: az opcionális Google Authenticator MFA, az Android PIN/jelkódos profilvédelem, a biometria/PIN/Authenticator külön beállításai, a munkamenetenkénti egyszeri azonosítás és a teljes appbezárás utáni újraazonosítás. Google-belépéshez nem kell Authenticator.
+
+- Rate limiting: a jelenlegi példányonkénti memóriás megoldást meg kell vizsgálni központi, több példányon konzisztens számláló irányába.
+- Firestore: célzottan auditálni kell a széles olvasási szabályokat, a meglévő közösségi funkciók megtartásával.
+- Android: széleskörű kompatibilitási teszt szükséges több Android-verzión, gyártón és rendszerfelületen (Samsung/One UI, Xiaomi/HyperOS, Pixel/stock Android és más elérhető eszközök), telefonon, tableten, eltérő kijelzőméreteken és fekvő nézetben; külön a Play Billing, AdMob, push és biometria ellenőrzésével. A háttér-rádió működő funkció, nem nyitott kompatibilitási feladat.
+- Release-védelem: az obfuszkációt és hardeninget újra kell ellenőrizni, de feltörhetetlenség nem garantálható; titkok és jogosultsági döntések szerveren maradnak.
+- Tanúsítvány-pinning: csak megvalósíthatósági és kompatibilitási audit után vezethető be.
+- Tulajdonosi hibajegy a következő buildre: az AdMob banner/csík hirdetések nem töltődnek be a Playről telepített zárt tesztben, miközben a rewarded reklám működik; ezt ki kell vizsgálni és javítani.
+- Tulajdonosi hibajegy: a sima e-mail/jelszavas regisztráció e-mailes hitelesítését Firebase- és appoldalon is javítani kell, a regisztrációs kétfaktoros figyelmeztetés és az érintett auth-üzenetek magyar karakterkódolásával együtt.
+- Tulajdonosi hibajegy: fióktörlés után az usert teljesen ki kell léptetni, és törölni kell a lokális profil-/munkamenet-állapotot.
+- Tulajdonosi hibajegy: a release preview korlátlanul újraindítható legyen, preview indításakor álljon le a rádió, és a 60 másodperces anyagban lehessen előre- és visszatekerni.
+- Külön döntési pont: opcionálisan három külön rewarded reklám egymás utáni lejátszása egy feloldásért; ezt ne tekintsük kész funkciónak, amíg nincs külön jóváhagyva és tesztelve.
+- Eseményrészvételi UI-hiba a következő buildre: csak az aktív választás legyen piros. „Ott leszek” választásnál az „Ott leszek”, „Nem leszek ott” választásnál a „Nem leszek ott” legyen piros, a másik gomb semleges maradjon.
+- Eseménybeküldő űrlap UI-hiba a következő buildre: a szervezőválasztó/lenyíló menü ráúszik a cím-, szervező- és műfajmezőkre. A mezők és műfajgombok ne fedjék egymást, telefonon és tableten is legyenek jól olvashatók.
+- Következő build backend-hiba: ugyanaz az eseménybeküldés kétszer került be a WordPress API-ba. Idempotencia-védelem szükséges az esemény-, DJ- és szervezőbeküldésnél, hogy ismételt HTTP-kérés ne hozzon létre újabb rekordot.
+- Következő build backend-hiba: a custom push kétszer ment ki. Auditálni kell az admin küldési útvonalat és az FCM-tokenek deduplikációját, hogy egy küldési művelet eszközönként csak egyszer kézbesítsen.
+- Következő build backend-hiba: az eseménybeküldésről mindenki kap push értesítést. Az esemény-, DJ- és szervezőbeküldési értesítéseket csak az admin címzettnek szabad elküldeni; normál felhasználói tokenekre nem.
+- Következő build UI-hiba: a Közösségi adminisztráció szerepkör-lenyíló menüje rossz rétegen jelenik meg és ráúszik a szomszédos felhasználói kártyákra/szövegekre. A lista maradjon az aktív kártyához kötve, telefonon és tableten is olvashatóan.
+- Következő build UX-hiba: a főoldali hírszlider alsó lapozási pontjai nem követik a látható hírt. A pontok indexe legyen szinkronban a kézi lapozással és az automatikus váltással.
+- Következő build jogosultsági hiba: normál regisztrált felhasználó módosítani tudja a profilnevét. A Flutter szerkesztési útvonalát és a Firestore/szerveroldali engedélyezést is ellenőrizni kell, majd a névmódosítást a megfelelő admin-joghoz kötni vagy tiltani.
+- Következő build Android navigációs szabály: a rendszer-vissza gomb csak a főoldalon léptetheti ki az alkalmazást. Minden más képernyőn, nested navigatorban és modalnál az előző képernyőre kell visszalépni.
+- Következő build Label-keresési hiba: a találatok frissítése után a beírt keresőkifejezés eltűnik és nem törölhető/visszaállítható. A keresőmező állapota maradjon meg, és legyen megbízható törlési lehetőség.
+- A javítás technikai feltétele: az API jelenleg tulajdonosazonosítás nélkül tárolja az FCM-tokeneket, ezért a következő buildben a tokenregisztrációt Firebase-felhasználóhoz/adminhoz kell kötni, és címzett-alapú push útvonalat kell hozzáadni. Ehhez Flutter APK- és WordPress API-módosítás együtt szükséges; a broadcast küldést globálisan nem szabad kikapcsolni.
+- Következő build UX-hiba: az alsó átlátszó visszajelző buborék egyes műveletek, például eseményfeltöltés után nem tűnik el magától. A sikeres és hibás üzenetek 7–8 másodperc után automatikusan záródjanak, de maradjanak kézzel lehúzhatók.
+- Következő build auth-feladat: bejelentkezett e-mail/jelszavas felhasználó az appban módosíthassa a jelszavát, szükség esetén Firebase-újrahitelesítéssel.
+- Következő build auth-validáció: e-mailes regisztrációnál legyen külön jelszó-megerősítő mező, és eltérő jelszavakkal ne lehessen fiókot létrehozni.
+- A következő build utáni UX-feladat: fekvő mobilnézet teljes újrarendezése. A telefon fekvő módban ne a portré-layout elforgatott változatát használja; a rádió, navigáció, kártyák, űrlapok, adatlapok és modalok kapjanak valóban használható landscape-elrendezést.
+
 > AI Project Context
 > Read this document before making any code changes.
 
@@ -562,7 +597,9 @@ Requirements:
 
 v0.99.99 is complete and phone-verified: one WordPress season editor provides category-level candidate fields, WordPress manages unlimited candidates per category, DJ and organizer candidates do not use Spotify/YouTube links, the Hungarian hardstyle track category supports optional Spotify/YouTube, Flutter enforces category selection limits of 5/3/2/1/3, displays the active Home entry and voting categories with a 5-second API timeout, registered-user votes are protected by Firestore rules, the newsletter question is separate and explicit, and the native admin summary uses the deployed Firebase API function `getVotingSummary`. ARM64 debug APK: `build/HUHS-v0.99.99+6-arm64-debug.apk`; the current locally prepared follow-up API package is `build/huhs-mobile-api-2.4.43.zip` and still requires WordPress deployment/live verification. Test votes were cleared from Firebase after verification.
 
-The v1.0 Label delivery path is implemented and WordPress API `2.4.46` is deployed and live-verified; it adds native Release admin fields for the four Play product IDs/prices, while the public release API returns separate Radio/Extended versions and `audio_status: ready`. The Play Console app is created with Android package `hu.hungarianhardstyle.app`, and Firebase has the matching Android app and release SHA certificates. As of 2026-08-12 all four Wellerman Play Billing products are active in Hungary with the requested 700/550 HUF base prices, and WordPress release 12123 returns all four configured products. The `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret is enabled, the Play permission is active, purchase/download/SSV Functions are deployed, and production AdMob Banner/Rewarded units plus SSV are configured. v1.0.0+2 additionally keeps configured Label prices visible when Play product details are unavailable and reports rewarded-ad loading failures. The production ARM64 APK/AAB are built; only final owner phone verification remains. Apple sign-in and iOS preparation remain explicitly out of scope.
+The v1.0 Label delivery path is implemented and WordPress API `2.4.48` is deployed and live-verified. API `2.4.49` is prepared locally as a backend-only Mailchimp double-opt-in fix; no APK change is required. The Firebase `syncWordPressLabelProducts` scheduler runs every five minutes after audio processing is ready, creates or updates the four Hungarian one-time products from the WordPress editor prices, activates their purchase options, and writes deterministic IDs to WordPress. The rewarded 128 kbps derivative is not a Play product. Both current audio-ready releases (12123 and 12185) return all four configured products at the requested 700/550 HUF prices. The `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret is enabled, the Play service account has Admin access, purchase/download/SSV Functions are deployed, and production AdMob Banner/Rewarded units plus SSV are configured. v1.0.0+9 is rebuilt as the final signed ARM64 APK and AAB (`versionCode 2009`); the remaining v1.0 gate is the project owner's final phone smoke test of that exact production artifact. Apple sign-in and iOS preparation remain explicitly out of scope.
+
+v1.0.0+9 fixes the post-unlock Label state: an already rewarded-unlocked 128 kbps release presents an active `Letöltés` action instead of a disabled `Feloldva` button, while the permanent entitlement prevents repeat ads for the same user and release. Verified ARM64 release artifact: `build/HUHS-v1.0.0+9-arm64-release.apk` (`versionCode 2009`).
 
 ## v0.99.999 Android security and public QA
 
@@ -695,7 +732,7 @@ The final v0.99.3 source pass separates the read-only community profile from its
 
 The Android radio foreground service now retries the Real Hardstyle FM stream after an unexpected playback error or stream completion instead of remaining silently marked as playing. Explicit Stop and full app closure still cancel pending reconnects.
 
-The owner will perform final production phone verification separately. Firebase proxy Functions are deployed. The live WordPress package is `build/huhs-mobile-api-2.4.46.zip`, which includes the Label release endpoint, Radio/Extended preview and derivative generation, and native Play product fields. Security hardening and signing/obfuscation are complete in v0.99.999; paid Label sales are implemented in v1.0.
+The owner will perform final production phone verification separately. Firebase proxy Functions are deployed. The live WordPress package is `build/huhs-mobile-api-2.4.46.zip`; the locally prepared update is `build/huhs-mobile-api-2.4.47.zip`, which also gives protected audio downloads release-title filenames. Security hardening and signing/obfuscation are complete in v0.99.999; paid Label sales are implemented in v1.0.
 
 
 Cloudinary is the only active image-upload path for the app. The dedicated Facebook Event URL field is deployed in backend 2.4.3 and tested.
@@ -997,3 +1034,7 @@ A korábbi build-ek késznek és lezártnak tekintendők. A következő hibákat
 - [x] A célzott UX-, accessibility- és layout-polish elkészült.
 
 Telefonon ellenőrizve és lezárva. ARM64 debug APK: `build/HUHS-v0.99.90+3-arm64-debug.apk`. Az aktív, meglévő HUHS Mobile API frissített csomagja `2.4.37` (`build/huhs-mobile-api-2.4.37.zip`).
+
+### v1.0.0+14 javítási kör
+
+A következő Android build célja a profil- és e-mail-authentikáció, preview-lejátszás, Label-keresés, slider/back-navigation, esemény- és adminűrlapok, attendance, AdMob banner retry, duplikált beküldések és admin-only beküldési pushok javítása. A Firebase Functionök és Firestore-szabályok módosítása élesítve; a WordPress API frissített csomagja `build/huhs-mobile-api-2.4.49.zip`.

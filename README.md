@@ -41,6 +41,41 @@ WordPress is the source of truth for editorial content. Flutter consumes the pub
 
 ## Current status
 
+### Következő build – biztonsági és kompatibilitási audit
+
+- [ ] Fióktörlés után teljes kijelentkeztetés: Firebase Auth-munkamenet, lokális profil-/session-állapot és visszatöltés ellenőrzése.
+- [ ] Release preview javítása: ugyanaz a preview többször is lejátszható legyen, és preview indításakor a Real Hardstyle FM rádió álljon le, ha éppen szól.
+- [ ] A release preview lejátszóján lehessen a 60 másodperces anyagban előre- és visszatekerni.
+- [ ] Rate limiting felülvizsgálata: megvizsgálni a példányonkénti memóriás számláló központi, több példányon is konzisztens megoldásra cserélését.
+- [ ] Firestore-olvasási szabályok célzott auditja és szűkítése úgy, hogy a meglévő profil-, ismerős-, esemény-, Chat- és moderációs funkciók ne törjenek el.
+- [ ] Széleskörű Android-kompatibilitási ellenőrzés több Android-verzión, gyártón és rendszerfelületen (például Samsung/One UI, Xiaomi/HyperOS, Pixel/stock Android és más elérhető készülékeken), telefonon, tableten, eltérő kijelzőméreteken és fekvő nézetben; külön Play Billing, AdMob, push és biometria tesztekkel. A háttér-rádió működő funkció, nem nyitott feladat.
+- [ ] Obfuszkáció és release-hardening újraellenőrzése; az APK visszafejthetetlensége nem garantálható, ezért titok és jogosultsági döntés továbbra sem kerülhet kliensoldalra.
+- [ ] Tanúsítvány-pinning megvalósíthatóságának vizsgálata külön kompatibilitási teszttel; csak akkor bevezetni, ha a Firebase, WordPress, CDN/WAF és AdMob tanúsítványcseréi mellett biztonságosan fenntartható.
+- [ ] AdMob banner/csík hirdetések kivizsgálása és javítása a Playről telepített zárt tesztverzióban; a működő jutalmazott reklámfolyamat ne törjön el.
+- [ ] Sima e-mail/jelszavas regisztráció e-mailes hitelesítésének teljes javítása: Firebase-küldés, sablon, logok/korlátok, appoldali állapotfrissítés és látható újraküldés.
+- [ ] A regisztrációs kétfaktoros figyelmeztetés és az érintett auth-üzenetek magyar karakterkódolásának javítása; ne jelenjen meg mojibake vagy technikai hiba.
+- [ ] Fióktörlés után teljes kijelentkeztetés és lokális profil-/session-állapot törlése.
+- [ ] A release-preview legyen korlátlanul újraindítható, indításakor álljon le a rádió, és a 60 másodperces preview-ban működjön az előre- és visszatekerés.
+- [ ] Külön, még eldöntendő monetizációs módosítás: egy feloldásért három külön rewarded reklám egymás utáni lejátszása, egyértelmű állapot- és jutalom-visszajelzéssel.
+- [ ] Eseményrészvétel színjavítása: az aktív választás legyen piros. „Ott leszek” esetén csak az „Ott leszek”, „Nem leszek ott” esetén csak a „Nem leszek ott” legyen piros; a másik maradjon semleges.
+- [ ] Eseménybeküldő űrlap layout-hibája: a szervezőválasztó/lenyíló réteg ne ússzon rá a cím-, szervező- és műfajmezőkre; a mezők, címkék és műfajgombok legyenek egymástól jól olvashatóan elválasztva telefonon és tableten is.
+- [ ] Közösségi admin szerepkör-választó layout-hibája: a lenyíló lista ne ússzon rá a többi felhasználói kártyára vagy szövegére; minden szerepkör jól olvashatóan és a megfelelő kártyához kötve jelenjen meg.
+- [ ] Főoldali hírszlider UX-hibája: az alsó lapozási pontok kövessék a ténylegesen megjelenő hírt, és lapozáskor megfelelően mozogjanak.
+- [ ] Profilnév jogosultsági hiba: normál regisztrált felhasználó jelenleg módosíthatja a profilnevét; ellenőrizni és szerveroldalon is tiltani kell, ha a név csak adminisztrációból módosítható.
+- [ ] Android rendszer-vissza navigációs hiba: csak a főoldalon léptesse ki az alkalmazást; minden más képernyőn az előző oldalra navigáljon a kilépés helyett.
+- [ ] Label-kereső hibája: a beírt keresőkifejezés ne tűnjön el a találatok frissítésekor, és maradjon törölhető/szerkeszthető; például a „COS” keresés után is lehessen visszaállítani a teljes listát.
+- [ ] Beküldések duplikációjának auditja és javítása: ugyanaz az eseménybeküldés ne jöhessen létre kétszer ismételt kérés miatt; ellenőrizni kell ugyanezt a DJ- és szervezőbeküldésnél is, szerveroldali idempotencia-védelemmel.
+- [ ] Custom push duplikációjának auditja és javítása: egy admini küldési műveletből csak egy értesítés menjen ki; ellenőrizni kell a dupla admin-kérést és az FCM-tokenlista deduplikációját.
+- [ ] Beküldési értesítések címzésének javítása: esemény-, DJ- és szervezőbeküldésről csak az admin kapjon push értesítést; normál felhasználók ne kapják meg ezeket.
+- [ ] Admin-címzett push technikai javítása: az FCM-token regisztráció legyen felhasználóhoz kötött, hogy az esemény-, DJ- és szervezőbeküldési értesítést az API kizárólag az admin tokenjére küldhesse; ehhez Flutter APK- és WordPress API-módosítás is szükséges.
+- [ ] Alsó értesítési buborékok UX-hibája: a sikeres vagy hibás műveletek után megjelenő átlátszó üzenet 7–8 másodperc után automatikusan tűnjön el, de maradjon kézzel lehúzható.
+- [ ] Bejelentkezett felhasználó jelszómódosítása: a regisztrált e-mail/jelszavas fiók tulajdonosa az appban, újrabejelentkezés nélkül módosíthassa a jelszavát megfelelő újrahitelesítéssel.
+- [ ] E-mailes regisztrációs jelszó-megerősítés: legyen külön „Jelszó megerősítése” mező, és eltérő jelszavaknál ne lehessen létrehozni a fiókot.
+
+### A következő build utáni UX-feladat
+
+- [ ] Teljes fekvő mobil-layout: a jelenlegi portré-elrendezés helyett fekvő telefonon is használható nézet kell kompakt rádióval és navigációval, kétoszlopos hír-/eseménykártyákkal, kétoszlopos űrlapmezőkkel, megfelelő adatlap-elrendezéssel és jól méretezett modalokkal.
+
 ### v0.99.3 — complete and closed (2026-07-30)
 
 - Current Flutter build: `0.99.999+1`; v0.99.3 through v0.99.90, v0.99.89 and v0.99.99 are closed. Older APK references are historical.
@@ -73,7 +108,7 @@ Chat message deletion and the in-app role-management panel are implemented. The 
 Push notification text also needs an encoding fix because HTML entities can appear literally in the notification body.
 Community permissions are server-enforced: the owner keeps admin access, account roles are final for normal users, admins manage account/access roles and Chat messages, and moderators cannot edit or delete Chat messages.
 
-The WordPress backend package is **2.4.46** in `build/huhs-mobile-api-2.4.46.zip`. It includes the live voting module, separate Radio/Extended Label uploads, Radio preview generation, private WAV/320 kbps derivatives for both versions, one-time download-token handling, v1.0 FAQ guidance, and native admin fields for the four Google Play product IDs/prices. Release 12123 is populated and the live release API returns all four configured products. The public release API never exposes private audio paths.
+The WordPress backend package **2.4.48** is deployed and live-verified. Package **2.4.49** is prepared locally as a backend-only Mailchimp double-opt-in fix: new contacts use `POST` with `status: pending`, while existing non-active contacts are explicitly changed to `pending` so the confirmation flow can start. The app does not need a new APK for this change. The package retains the live voting module, separate Radio/Extended Label uploads, Radio preview generation, private WAV/320 kbps derivatives for both versions, one-time download-token handling, release-title filenames for rewarded and purchased downloads, v1.0 FAQ guidance, native admin fields for the four Google Play product IDs/prices, and the protected route for the Firebase Play-product synchronizer. The public release API never exposes private audio paths.
 
 ### v0.99.2 — next test build
 
@@ -507,7 +542,7 @@ The Label preview catalog is already complete in v0.99.89; this section covers o
 - [x] run `flutter test` successfully (27 tests)
 - [x] build and verify a signed ARM64 release APK
 
-Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. The hardening and QA scope is complete. The final v1.0 production artifacts are `build/HUHS-v1.0.0+1-arm64-release.apk` and `build/HUHS-v1.0.0+1-release.aab`; they use production AdMob IDs and include the BILLING permission. Final owner phone verification of the production artifact is still required before public rollout; iOS is deferred until an Apple Developer account is available.
+Artifact: `build/HUHS-v0.99.999+1-arm64-release.apk`. The hardening and QA scope is complete. The final v1.0 production artifacts are `build/HUHS-v1.0.0+9-arm64-release.apk` and `build/HUHS-v1.0.0+9-arm64-release.aab`; they use production AdMob IDs and include the BILLING permission. Final owner phone verification of the production artifact is still required before public rollout; iOS is deferred until an Apple Developer account is available.
 
 - [x] let each existing WordPress Label release accept one uploaded WAV master, generate its preview, and offer configurable Radio and Extended versions (live API 2.4.46 verified)
 - [x] let the editor set separate prices for the WAV/lossless and 320 kbps MP3 products (live WordPress fields and Play pricing verified)
@@ -552,21 +587,42 @@ FAQ v1.0 kiegészítések: a Label oldalon csak legfeljebb 60 másodperces previ
 #### Android/Label release beállítások
 
 - A Google Play termékazonosítókat release-enként a WordPress Label-adatlapján kell megadni (`wav_product_id`, `mp3_product_id`); az alkalmazás ezeket csak a nyilvános release API-ból olvassa.
-- A helyi API `2.4.46` külön Radio és Extended forrásból készít preview-t, WAV-ot és MP3 320-at privát fájlban, a Radio forrásból pedig reklámos MP3 128-at; egyszer használatos letöltési tokent használ, és a natív Release-ek adminban kezeli a négy Play product ID/ár mezőt. Ezt a WordPressen telepíteni és élesben tesztelni kell.
+- Az API `2.4.48` külön Radio és Extended forrásból készít preview-t, WAV-ot és MP3 320-at privát fájlban, a Radio forrásból pedig reklámos MP3 128-at; egyszer használatos letöltési tokent használ, a letöltött fájlokat a release címe és változata alapján nevezi el, és a natív Release-ek adminban kezeli a négy Play product ID/ár mezőt. A védett Play-termékfrissítési útvonal élesben tesztelt.
 - A vásárlást a `verifyLabelPurchase` Firebase Function ellenőrzi a Google Play Developer API-val. Deploy előtt a Firebase Secret Managerben be kell állítani a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secretet; a JSON-kulcs nem kerülhet a repóba vagy az APK-ba.
 - Production buildnél a `HUHS_ADMOB_APP_ID` Gradle property és a `HUHS_ADMOB_BANNER_ID` dart-define szükséges. Teszt buildnél maradhat a Google tesztazonosító.
 
 #### v1.0 aktuális élesítési akadályok
 
-- v1.0.0+2 bugfix: a Label vásárlási kártyák a WordPressben beállított 700/550 HUF árral akkor is megjelennek, ha a Play terméklekérdezés még nem ad vissza adatot; a Play-vásárlás egyértelmű állapotüzenetet ad. A jutalmazott reklám betöltési állapotot, timeoutot és látható hibát kezel.
-- A +2 production APK emulátoron telepítve és elindítva lett; a valódi Google Play Billing- és jutalmazott reklámtranzakció továbbra is Playből telepített APK-val és valós tesztfiókkal ellenőrizendő.
+- v1.0.0+5 bugfix: a production AdMob App/Banner/Rewarded azonosítók most a Flutter Dart-kódba és az Android manifestbe is bekerülnek. A +4-ben a Gradle azonosítók megvoltak, de a Flutter rewarded ID üres maradt, ezért a gomb azonnal sikertelen állapotot adott. A production ARM64 APK: `build/HUHS-v1.0.0+5-arm64-release.apk`.
+- v1.0.0+9 bugfix: a már reklámmal feloldott 128 kbps fájlnál a letiltott `Feloldva` gomb helyett aktív `Letöltés` gomb jelenik meg. A feloldás release-enként végleges, ezért újabb reklám nem indul. Ellenőrzött ARM64 release APK: `build/HUHS-v1.0.0+9-arm64-release.apk` (`versionCode 2009`).
+- A +9 production APK és AAB újra lett építve a production AdMob-azonosítókkal; a pontos +9 ARM64 APK aláírása ellenőrzött. A valódi Google Play Billing- és jutalmazott reklámtranzakció Playből telepített APK-val és valós tesztfiókkal ellenőrizendő.
 
 - A WordPress API `2.4.45` jelenleg telepítve és live-ellenőrizve van; a `/releases` válasz külön Radio/Extended verziókat és `audio_status: ready` állapotot ad. A natív Release-ek adminmezőkkel bővített telepíthető csomag: `build/huhs-mobile-api-2.4.46.zip`.
 - A WordPress API `2.4.46` telepítve és live-ellenőrizve van; a `/releases` válasz külön Radio/Extended verziókat, `audio_status: ready` állapotot és a négy termékmezőt adja. A natív Release-ek adminmezőkkel bővített csomag: `build/huhs-mobile-api-2.4.46.zip`.
+- A WordPress API `2.4.48` telepítve és live-ellenőrizve van: `build/huhs-mobile-api-2.4.48.zip`. A reklámos és megvásárolt fájlok letöltési nevét a release címéből, valamint a Radio/Extended és formátum jelölésből képezi.
 - A `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` Firebase Secret Manager-secret engedélyezve van; a Play szolgáltatásfiók aktív alkalmazásszintű pénzügyi hozzáféréssel rendelkezik. A `verifyLabelPurchase`, `getLabelDownloadUrl` és `admobRewardedSsv` Functionök élesek.
-- A négy Wellerman Play Billing-termék aktív Magyarországon a kért 700/550 HUF alapárakkal, és a WordPress 12123-as release-adatlapja mind a négy azonosítót tartalmazza.
+- A 12123-as és 12185-ös release mind a négy Play Billing-terméket tartalmazza; ezek aktívak Magyarországon a kért 700/550 HUF alapárakkal.
 - A produkciós AdMob App ID, Banner és Rewarded egység létrejött; a jutalmazott egység SSV callbackje ellenőrzött és mentett.
 - Az 1.0 egyetlen fennmaradó gate-je a projekt tulajdonosának végső telefonos ellenőrzése a produkciós APK-n; ezt a Codex nem tudja helyettesíteni.
 - A Play Console alkalmazás létrejött a végleges `hu.hungarianhardstyle.app` Android csomagnévvel; a Firebase Android-app és a release SHA-k ehhez vannak konfigurálva.
 - A 128 kbps feloldás AdMob SSV callbacket használ; az AdMob jutalmazott hirdetésén be kell állítani az `admobRewardedSsv` HTTPS callback URL-t, és a callback csak hitelesített aláírás után írhat feloldást.
+
+#### Következő Android-frissítés nyitott feladatai
+
+- [ ] Emailes regisztráció hitelesítésének teljes auditja: Firebase Auth levélkézbesítés, template-ek, logok és korlátok; az appban a hitelesített állapot frissítése és látható megerősítőlevél-újraküldés. A nem hitelesített fiók ne kapjon teljes hozzáférést.
+
+v1.0.0+13 előkészítve: az FCM-token Play-telepítés utáni újraregisztrációja és a régi tokenek takarítása bekerült, a `notifyConnectionRequest` Cloud Function élesben frissült, az AdMob hibák rövid felhasználói üzenetet adnak, valamint az e-mailes regisztráció megerősítő levelet küld és erre figyelmeztet. A production ARM64 release APK és AAB elkészült; a Play-feltöltés és a tulajdonosi telefonos ellenőrzés még külön lépés.
+
+- [ ] Kivizsgálni és javítani, hogy a production AdMob banner/jutalmazott hirdetés Playből telepített verzióban is megbízhatóan betöltődjön és a jutalom jóváírása megtörténjen.
+- [ ] E-mail-cím megerősítése a jelszavas regisztráció részeként; a nem megerősített fiók ne kapjon teljes hozzáférést.
+- [x] Opcionális Google Authenticator MFA, Android PIN/jelkódos profilvédelem, külön kapcsolók és munkamenetenkénti azonosítás elkészült. Google-belépéshez nem kell authenticator.
 - A fenti három külső feltétel és az új release APK telefonos ellenőrzése nélkül az 1.0 nem tekinthető késznek.
+
+### v1.0.0+14 javítási napló
+
+- A profilvédelem, e-mailes regisztráció, jelszó-megerősítés és jelszóváltás javításai bekerültek; a Firebase e-mail sablonját és kézbesítését külön Firebase-konzol teszttel kell véglegesíteni.
+- A preview újraindítható, 60 másodpercen belül tekerhető, és indításkor leállítja a rádiót.
+- Javítva a slider-jelző, az Android visszalépés, a Label-keresés törlése, az attendance színállapota, az admin dropdownok és az automatikus üzenet-eltűnés.
+- A beküldési duplikációk és a beküldési pushok szerveroldali idempotencia- és címzettvédelemmel készültek; a módosított Firebase Functionök és Firestore-szabályok élesítve vannak.
+- A banner AdMob átmeneti betöltési hibánál kontrolláltan újrapróbálkozik. Tartós no-fill vagy AdMob-fiókállapot csak Play/AdMob környezetben ellenőrizhető.
+- A WordPress API frissített telepíthető csomagja: `build/huhs-mobile-api-2.4.49.zip`.

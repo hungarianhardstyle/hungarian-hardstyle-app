@@ -60,7 +60,9 @@ class _MainNavigationState extends State<MainNavigation> {
 
     return PopScope<void>(
       // A rendszer-vissza ne zárja be az appot a fő navigációs héjból.
-      canPop: false,
+      canPop:
+          _currentIndex == 0 &&
+          !(_navigatorKeys[_currentIndex].currentState?.canPop() ?? false),
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 

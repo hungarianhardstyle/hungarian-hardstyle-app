@@ -206,9 +206,9 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 8)),
+    );
   }
 
   String? _required(String? value) {
@@ -501,6 +501,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
         data: (page) {
           final items = page.items as List;
           return DropdownButtonFormField<int?>(
+            isExpanded: true,
             initialValue: _selectedOrganizerId,
             decoration: const InputDecoration(
               labelText: 'Szervező',

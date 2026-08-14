@@ -59,6 +59,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1030187737487-c87qbk739rcp925j365vrkllgqgc3lod.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "hu.hungarianhardstyle.app",
+            "certificate_hash": "80a0cb056e0108abc6deeb7102cb00fff4b135c7"
+          }
+        },
+        {
           "client_id": "1030187737487-qg32egacudk4hf1b0n7ggo0lihke13m7.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

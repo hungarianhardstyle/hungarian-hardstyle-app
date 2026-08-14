@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../models/release.dart';
+import 'radio_player_bar.dart';
 
 class ReleasePreviewPlayer extends StatefulWidget {
   final ReleaseTrack track;
@@ -35,6 +36,20 @@ class _ReleasePreviewPlayerState extends State<ReleasePreviewPlayer> {
     super.dispose();
   }
 
+  Future<void> _toggle() async {
+    if (_player.position >=
+        (_player.duration ?? const Duration(minutes: 1)) -
+            const Duration(milliseconds: 300)) {
+      await _player.seek(Duration.zero);
+    }
+    if (_player.playing) {
+      await _player.pause();
+    } else {
+      await stopRadioPlayback();
+      await _player.play();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.track.previewUrl.isEmpty) {
@@ -56,15 +71,24 @@ class _ReleasePreviewPlayerState extends State<ReleasePreviewPlayer> {
                 color: Colors.redAccent,
                 size: 34,
               ),
-              onPressed: () => playing ? _player.pause() : _player.play(),
+              onPressed: _toggle,
             ),
             title: Text('${widget.index + 1}. ${widget.track.title}'),
             subtitle: StreamBuilder<Duration>(
               stream: _player.positionStream,
-              builder: (context, position) => LinearProgressIndicator(
-                value: (position.data?.inMilliseconds ?? 0) / 60000,
-                minHeight: 4,
-              ),
+              builder: (context, position) {
+                final duration = _player.duration ?? const Duration(minutes: 1);
+                final value = (position.data ?? Duration.zero).inMilliseconds
+                    .clamp(0, duration.inMilliseconds)
+                    .toDouble();
+                return Slider(
+                  min: 0,
+                  max: duration.inMilliseconds.toDouble().clamp(1, 60000),
+                  value: value,
+                  onChanged: (next) =>
+                      _player.seek(Duration(milliseconds: next.round())),
+                );
+              },
             ),
           );
         },
