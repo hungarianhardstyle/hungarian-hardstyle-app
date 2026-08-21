@@ -9,12 +9,12 @@ class GenreChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ActionChip(
-        label: Text(genre),
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(
-            builder: (_) => GenreDiscoveryScreen(genre: genre),
-          ),
-        ),
-      );
+    label: Text(genre),
+    onPressed: () => Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => GenreDiscoveryScreen(genre: genre),
+      ),
+    ),
+  );
 }

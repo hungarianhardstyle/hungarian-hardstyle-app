@@ -54,6 +54,22 @@ function activeAdUnlock(data, releaseId) {
   return Boolean(data && data.releaseId === releaseId);
 }
 
+async function sendMulticastToAllTokens(message, tokens) {
+  let successCount = 0;
+  let failureCount = 0;
+  const responses = [];
+  for (let offset = 0; offset < tokens.length; offset += 500) {
+    const result = await admin.messaging().sendEachForMulticast({
+      ...message,
+      tokens: tokens.slice(offset, offset + 500),
+    });
+    successCount += result.successCount;
+    failureCount += result.failureCount;
+    responses.push(...result.responses);
+  }
+  return { successCount, failureCount, responses };
+}
+
 const submissionRoutes = {
   event: { path: '/event-submissions', role: null },
   artist: { path: '/artist-submissions', role: 'dj' },
@@ -74,13 +90,12 @@ async function notifySubmissionAdmins(kind, title, id) {
     const raw = profile.fcmTokens;
     if (Array.isArray(raw)) tokens.push(...raw.filter((token) => typeof token === 'string'));
   }
-  const uniqueTokens = [...new Set(tokens.map((token) => token.trim()).filter(Boolean))].slice(0, 500);
+  const uniqueTokens = [...new Set(tokens.map((token) => token.trim()).filter(Boolean))];
   if (!uniqueTokens.length) return { sent: 0 };
-  const result = await admin.messaging().sendEachForMulticast({
-    tokens: uniqueTokens,
+  const result = await sendMulticastToAllTokens({
     notification: { title: `Új ${kind}beküldés`, body: title },
     data: { type: 'submission', kind, id: String(id) },
-  });
+  }, uniqueTokens);
   return { sent: result.successCount, failed: result.failureCount };
 }
 
@@ -496,10 +511,10 @@ exports.getLabelDownloadUrl = functions
     }
     const releaseId = Number(data?.releaseId || 0);
     const variant = String(data?.variant || '').trim();
-    if (!Number.isInteger(releaseId) || releaseId < 1 || !['wav', 'mp3_320', 'mp3_128', 'radio_wav', 'radio_mp3_320', 'extended_wav', 'extended_mp3_320'].includes(variant)) {
+    if (!Number.isInteger(releaseId) || releaseId < 1 || !['free_wav', 'wav', 'mp3_320', 'mp3_128', 'radio_wav', 'radio_mp3_320', 'extended_wav', 'extended_mp3_320'].includes(variant)) {
       throw new HttpsError('invalid-argument', 'Érvénytelen Label-letöltési adat.');
     }
-    const paid = variant !== 'mp3_128';
+    const paid = !['free_wav', 'mp3_128'].includes(variant);
     const productId = `huhs_release_${releaseId}_${variant}`;
     const entitlement = paid
       ? await db.collection('label_entitlements')
@@ -859,37 +874,6 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
   }
 });
 
-exports.sendPersonalizedPush = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new HttpsError('permission-denied', 'Bejelentkezés szükséges.');
-  const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
-  if (!isAdmin(context, profile)) throw new HttpsError('permission-denied', 'Csak admin küldhet célzott értesítést.');
-  const kind = String(data?.kind || '');
-  const id = Number(data?.id);
-  const title = String(data?.title || '').trim();
-  const body = String(data?.body || '').trim();
-  if (!['event', 'organizer'].includes(kind) || !Number.isInteger(id) || !title || !body) {
-    throw new HttpsError('invalid-argument', 'Érvényes esemény/szervező és üzenet szükséges.');
-  }
-  const favorites = await db.collectionGroup('favorites').where('kind', '==', kind).get();
-  const tokens = [];
-  for (const favorite of favorites.docs) {
-    if (Number(favorite.data().id) !== id) continue;
-    const userId = favorite.ref.parent.parent?.id;
-    if (!userId) continue;
-    const profile = (await db.collection('community_profiles').doc(userId).get()).data() || {};
-    const userTokens = profile.fcmTokens;
-    if (Array.isArray(userTokens)) tokens.push(...userTokens.filter((token) => typeof token === 'string'));
-  }
-  const uniqueTokens = [...new Set(tokens)].slice(0, 500);
-  if (!uniqueTokens.length) return { sent: 0 };
-  const result = await admin.messaging().sendEachForMulticast({
-    tokens: uniqueTokens,
-    notification: { title, body },
-    data: { type: kind, id: String(id) },
-  });
-  return { sent: result.successCount, failed: result.failureCount };
-});
-
 exports.getVotingSummary = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin tekintheti meg az összesítőt.');
   const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
@@ -944,7 +928,7 @@ exports.notifyConnectionRequest = onDocumentWritten(
       tokens
         .filter((token) => typeof token === 'string' && token.trim())
         .map((token) => token.trim()),
-    )].slice(0, 500);
+    )];
     if (!uniqueTokens.length) {
       console.warn(JSON.stringify({
         event: 'connection_request_no_target_token',
@@ -955,11 +939,10 @@ exports.notifyConnectionRequest = onDocumentWritten(
     }
     const sender = (await db.collection('community_profiles').doc(String(request.from)).get()).data() || {};
     const name = String(sender.displayName || 'Egy felhasználó').trim();
-    const result = await admin.messaging().sendEachForMulticast({
-      tokens: uniqueTokens,
+    const result = await sendMulticastToAllTokens({
       notification: { title: 'Új ismerősnek jelölés', body: `${name} ismerősnek jelölt.` },
       data: { type: 'connection_request', senderId: String(request.from) },
-    });
+    }, uniqueTokens);
     console.log(JSON.stringify({
       event: 'connection_request_push_result',
       requestId,

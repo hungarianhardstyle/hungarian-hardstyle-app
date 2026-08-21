@@ -106,174 +106,216 @@ class _OrganizerContent extends StatelessWidget {
           colors: [Color(0xFF080808), Color(0xFF220000), Color(0xFF080808)],
         ),
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Hero(
-                tag: 'organizer_${organizer.id}',
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 280),
-                  width: double.infinity,
-                  height: 220,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: organizer.logoUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: organizer.logoUrl,
-                          fit: BoxFit.contain,
-                        )
-                      : const Icon(
-                          Icons.groups,
-                          size: 88,
-                          color: Color(0xFFE53935),
-                        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final landscape =
+              MediaQuery.orientationOf(context) == Orientation.landscape;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: landscape ? 1100 : double.infinity,
                 ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              organizer.title,
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Consumer(
-              builder: (context, ref, child) {
-                final favorites = ref.watch(favoritesProvider);
-                final isFavorite = favorites.contains(
-                  FavoriteKind.organizer,
-                  organizer.id,
-                );
-                return Align(
-                  alignment: Alignment.centerLeft,
-                  child: OutlinedButton.icon(
-                    onPressed: () => ref.read(favoritesProvider).toggle(
-                          FavoriteKind.organizer,
-                          organizer.id,
-                          organizer.title,
-                        ),
-                    icon: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: Colors.redAccent,
-                    ),
-                    label: Text(isFavorite ? 'Kedvenc' : 'Kedvencekhez adom'),
-                  ),
-                );
-              },
-            ),
-            if (organizer.location.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.location_on_outlined,
-                    color: Colors.redAccent,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(organizer.location)),
-                ],
-              ),
-            ],
-            if (organizer.genres.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: organizer.genres
-                      .map((genre) => GenreChip(genre: genre))
-                      .toList(),
-                ),
-              ),
-            if (organizer.socialLinks.isNotEmpty || organizer.webUrl.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 18),
-                child: Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ...organizer.socialLinks.entries.map(
-                      (entry) => OutlinedButton.icon(
-                        onPressed: () => openSocialLink(
-                          context,
-                          entry.value,
-                          title: _socialLabel(entry.key),
+                    Center(
+                      child: Hero(
+                        tag: 'organizer_${organizer.id}',
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 280),
+                          width: double.infinity,
+                          height: 220,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: organizer.logoUrl.isNotEmpty
+                              ? CachedNetworkImage(
+                                  imageUrl: organizer.logoUrl,
+                                  fit: BoxFit.contain,
+                                )
+                              : const Icon(
+                                  Icons.groups,
+                                  size: 88,
+                                  color: Color(0xFFE53935),
+                                ),
                         ),
-                        icon: Icon(
-                          entry.key == 'website'
-                              ? Icons.language
-                              : Icons.alternate_email,
-                        ),
-                        label: Text(_socialLabel(entry.key)),
                       ),
                     ),
-                    if (organizer.webUrl.isNotEmpty)
-                      OutlinedButton.icon(
-                        onPressed: () =>
-                            openInAppBrowser(context, organizer.webUrl),
-                        icon: const Icon(Icons.badge_outlined),
-                        label: const Text('Webes adatlap'),
+                    const SizedBox(height: 24),
+                    Text(
+                      organizer.title,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
+                    const SizedBox(height: 10),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final favorites = ref.watch(favoritesProvider);
+                        final enabled = favorites.canUseFavorites;
+                        final isFavorite =
+                            enabled &&
+                            favorites.contains(
+                              FavoriteKind.organizer,
+                              organizer.id,
+                            );
+                        return Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton.icon(
+                            onPressed: enabled
+                                ? () => ref
+                                      .read(favoritesProvider)
+                                      .toggle(
+                                        FavoriteKind.organizer,
+                                        organizer.id,
+                                        organizer.title,
+                                      )
+                                : null,
+                            icon: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: Colors.redAccent,
+                            ),
+                            label: Text(
+                              enabled
+                                  ? (isFavorite
+                                        ? 'Kedvenc'
+                                        : 'Kedvencekhez adom')
+                                  : 'Regisztráció szükséges',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    if (organizer.location.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on_outlined,
+                            color: Colors.redAccent,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(organizer.location)),
+                        ],
+                      ),
+                    ],
+                    if (organizer.genres.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: organizer.genres
+                              .map((genre) => GenreChip(genre: genre))
+                              .toList(),
+                        ),
+                      ),
+                    if (organizer.socialLinks.isNotEmpty ||
+                        organizer.webUrl.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 18),
+                        child: Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            ...organizer.socialLinks.entries.map(
+                              (entry) => OutlinedButton.icon(
+                                onPressed: () => openSocialLink(
+                                  context,
+                                  entry.value,
+                                  title: _socialLabel(entry.key),
+                                ),
+                                icon: Icon(
+                                  entry.key == 'website'
+                                      ? Icons.language
+                                      : Icons.alternate_email,
+                                ),
+                                label: Text(_socialLabel(entry.key)),
+                              ),
+                            ),
+                            if (organizer.webUrl.isNotEmpty)
+                              OutlinedButton.icon(
+                                onPressed: () =>
+                                    openInAppBrowser(context, organizer.webUrl),
+                                icon: const Icon(Icons.badge_outlined),
+                                label: const Text('Webes adatlap'),
+                              ),
+                          ],
+                        ),
+                      ),
+                    if (description.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.only(top: 28, bottom: 4),
+                        child: Text(
+                          'Bemutatkozás',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Html(
+                        data: description,
+                        onLinkTap: (url, attributes, element) =>
+                            openInAppBrowser(
+                              context,
+                              resolveHtmlLinkTarget(
+                                callbackUrl: url,
+                                attributes: attributes,
+                                visibleText: element?.text,
+                              ),
+                            ),
+                        style: {
+                          'body': Style(
+                            margin: Margins.zero,
+                            padding: HtmlPaddings.symmetric(vertical: 16),
+                            fontSize: FontSize(17),
+                            lineHeight: const LineHeight(1.65),
+                            color: Colors.white,
+                          ),
+                          'p': Style(margin: Margins.only(bottom: 16)),
+                          'a': Style(
+                            color: Colors.redAccent,
+                            textDecoration: TextDecoration.none,
+                          ),
+                        },
+                      ),
+                    ],
+                    if (organizer.upcomingEvents.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.only(top: 24, bottom: 16),
+                        child: Text(
+                          'Közelgő események',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      ...organizer.upcomingEvents.map(
+                        (event) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: EventCard(event: event),
+                        ),
+                      ),
+                    ],
+                    SizedBox(
+                      height: MediaQuery.viewPaddingOf(context).bottom + 28,
+                    ),
                   ],
                 ),
               ),
-            if (description.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.only(top: 28, bottom: 4),
-                child: Text(
-                  'Bemutatkozás',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Html(
-                data: description,
-                onLinkTap: (url, attributes, element) => openInAppBrowser(
-                  context,
-                  resolveHtmlLinkTarget(
-                    callbackUrl: url,
-                    attributes: attributes,
-                    visibleText: element?.text,
-                  ),
-                ),
-                style: {
-                  'body': Style(
-                    margin: Margins.zero,
-                    padding: HtmlPaddings.symmetric(vertical: 16),
-                    fontSize: FontSize(17),
-                    lineHeight: const LineHeight(1.65),
-                    color: Colors.white,
-                  ),
-                  'p': Style(margin: Margins.only(bottom: 16)),
-                  'a': Style(
-                    color: Colors.redAccent,
-                    textDecoration: TextDecoration.none,
-                  ),
-                },
-              ),
-            ],
-            if (organizer.upcomingEvents.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.only(top: 24, bottom: 16),
-                child: Text(
-                  'Közelgő események',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ),
-              ...organizer.upcomingEvents.map(
-                (event) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: EventCard(event: event),
-                ),
-              ),
-            ],
-            SizedBox(height: MediaQuery.viewPaddingOf(context).bottom + 28),
-          ],
-        ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:html/parser.dart' as html_parser;
-import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../models/submission_image.dart';
+import '../../core/errors/user_facing_error.dart';
 import '../../providers/community_provider.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../voting/voting_summary_screen.dart';
@@ -20,6 +20,7 @@ class WordPressAdminScreen extends ConsumerStatefulWidget {
 
 class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
   final Set<int> _busyIds = <int>{};
+  bool _sendingPush = false;
   String _section = 'dashboard';
   String _search = '';
   late Future<dynamic> _request;
@@ -87,6 +88,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
   }
 
   Future<void> _sendPush() async {
+    if (_sendingPush) return;
     var title = '';
     var body = '';
     final result = await showDialog<(String, String)>(
@@ -122,6 +124,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       ),
     );
     if (result == null || result.$1.isEmpty || result.$2.isEmpty) return;
+    if (mounted) setState(() => _sendingPush = true);
     try {
       await ref
           .read(communityServiceProvider)
@@ -137,84 +140,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       _message('A push elküldve.');
     } catch (error) {
       _message('A push nem sikerült: ${_errorText(error)}');
-    }
-  }
-
-  // Legacy callable retained for backend compatibility; not exposed in the UI.
-  // ignore: unused_element
-  Future<void> _sendPersonalizedPush() async {
-    var kind = 'event';
-    var id = '';
-    var title = '';
-    var body = '';
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('SzemĂ©lyre szabott push'),
-        content: StatefulBuilder(
-          builder: (context, setDialogState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                initialValue: kind,
-                items: const [
-                  DropdownMenuItem(value: 'event', child: Text('EsemĂ©ny')),
-                  DropdownMenuItem(
-                    value: 'organizer',
-                    child: Text('SzervezĹ‘'),
-                  ),
-                ],
-                onChanged: (value) =>
-                    setDialogState(() => kind = value ?? kind),
-                decoration: const InputDecoration(labelText: 'CĂ©ltĂ­pus'),
-              ),
-              TextField(
-                onChanged: (value) => id = value,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'ID'),
-              ),
-              TextField(
-                onChanged: (value) => title = value,
-                decoration: const InputDecoration(labelText: 'CĂ­m'),
-              ),
-              TextField(
-                onChanged: (value) => body = value,
-                decoration: const InputDecoration(labelText: 'Ăśzenet'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('MĂ©gse'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('KĂĽldĂ©s'),
-          ),
-        ],
-      ),
-    );
-    final parsedId = int.tryParse(id.trim());
-    if (result != true ||
-        parsedId == null ||
-        title.trim().isEmpty ||
-        body.trim().isEmpty) {
-      return;
-    }
-    try {
-      final sent = await ref
-          .read(communityServiceProvider)
-          .sendPersonalizedPush(
-            kind: kind,
-            id: parsedId,
-            title: title.trim(),
-            body: body.trim(),
-          );
-      _message('CĂ©lzottsĂ©gi push elkĂĽldve ($sent eszkĂ¶z).');
-    } catch (error) {
-      _message('A cĂ©lzottsĂ©gi push nem sikerĂĽlt: ${_errorText(error)}');
+    } finally {
+      if (mounted) setState(() => _sendingPush = false);
     }
   }
 
@@ -501,20 +428,48 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       final validCurrent = options.any((item) => item['id'] == current)
           ? current
           : null;
+      final currentLabel = options
+          .where((item) => item['id'] == validCurrent)
+          .map((item) => '${item['label'] ?? item['id'] ?? ''}')
+          .cast<String>()
+          .toList();
       return Padding(
         padding: const EdgeInsets.only(bottom: 16),
-        child: DropdownButtonFormField<int>(
-          isExpanded: true,
-          initialValue: validCurrent,
-          decoration: InputDecoration(labelText: label),
-          items: options.map((option) {
-            final optionId = (option['id'] as num?)?.toInt() ?? 0;
-            return DropdownMenuItem<int>(
-              value: optionId,
-              child: Text('${option['label'] ?? optionId}'),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () async {
+            final selected = await showModalBottomSheet<int>(
+              context: context,
+              showDragHandle: true,
+              builder: (sheetContext) => SafeArea(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    ListTile(title: Text(label)),
+                    for (final option in options)
+                      ListTile(
+                        leading: const Icon(Icons.groups_outlined),
+                        title: Text('${option['label'] ?? option['id'] ?? ''}'),
+                        selected: option['id'] == validCurrent,
+                        onTap: () => Navigator.pop(
+                          sheetContext,
+                          (option['id'] as num?)?.toInt(),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             );
-          }).toList(),
-          onChanged: (value) => controllers[key]?.text = '${value ?? 0}',
+            if (selected != null) {
+              setDialogState(() => controllers[key]?.text = '$selected');
+            }
+          },
+          child: InputDecorator(
+            decoration: InputDecoration(labelText: label),
+            child: Text(
+              currentLabel.isEmpty ? 'Nincs kiválasztva' : currentLabel.first,
+            ),
+          ),
         ),
       );
     }
@@ -815,17 +770,26 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
 
   void _message(String text) {
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(text.split('\n#0').first.trim())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(text.split('\n#0').first.trim()),
+          duration: const Duration(seconds: 8),
+        ),
+      );
     }
   }
 
   String _errorText(Object? error) {
+    return userFacingError(error);
+    /* Legacy technical error formatting is intentionally unreachable. */
+    /*
     if (error is FirebaseFunctionsException) {
       return error.message ?? 'A művelet nem sikerült.';
     }
     return '${error ?? ''}'.split('\n#0').first.trim();
+  }
+
+    */
   }
 
   List<Map<String, dynamic>> _items(dynamic data) {
@@ -955,7 +919,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           ),
         if (_section == 'push')
           FilledButton.icon(
-            onPressed: _sendPush,
+            onPressed: _sendingPush ? null : _sendPush,
             icon: const Icon(Icons.send),
             label: const Text('Egyedi push létrehozása'),
           ),

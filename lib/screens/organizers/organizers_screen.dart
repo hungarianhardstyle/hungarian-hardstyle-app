@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/organizer.dart';
+import '../../providers/favorites_provider.dart';
 import '../../providers/organizers_provider.dart';
+import '../../widgets/favorite_button.dart';
 import 'organizer_detail_screen.dart';
 
 class OrganizersScreen extends ConsumerStatefulWidget {
@@ -143,13 +145,13 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
   }
 }
 
-class _OrganizerCard extends StatelessWidget {
+class _OrganizerCard extends ConsumerWidget {
   final OrganizerProfile organizer;
 
   const _OrganizerCard({required this.organizer});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Material(
       color: const Color(0xFF171717),
       shape: RoundedRectangleBorder(
@@ -214,6 +216,11 @@ class _OrganizerCard extends StatelessWidget {
                             size: 18,
                             color: Colors.redAccent,
                           ),
+                        FavoriteButton(
+                          kind: FavoriteKind.organizer,
+                          id: organizer.id,
+                          title: organizer.title,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),

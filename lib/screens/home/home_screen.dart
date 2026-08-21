@@ -12,6 +12,7 @@ import '../../widgets/featured_news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../community/community_screen.dart';
+import '../more/community_users_screen.dart';
 import '../voting/voting_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -39,18 +40,29 @@ class HomeScreen extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: CommunityAvatarButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const CommunityProfileScreen(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CommunityAvatarButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CommunityProfileScreen(),
+                      ),
                     ),
                   ),
-                ),
+                  FilledButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CommunityHubScreen(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.people_outline),
+                    label: const Text('Közösség'),
+                  ),
+                ],
               ),
+              const SizedBox(height: 12),
               Container(
-                margin: const EdgeInsets.only(top: 4),
                 padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
@@ -73,7 +85,7 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     Image.asset(
                       'assets/logos/huhs_logo.png',
-                      width: width * 0.86,
+                      width: width > 900 ? 780 : width * 0.86,
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 10),
@@ -283,9 +295,10 @@ class _NewsSliderState extends State<_NewsSlider> {
     if (widget.posts.length > 1) {
       _timer = Timer.periodic(const Duration(seconds: 10), (_) {
         if (!mounted || !_controller.hasClients) return;
-        _page = (_page + 1) % widget.posts.length;
+        final nextPage = (_page + 1) % widget.posts.length;
+        setState(() => _page = nextPage);
         _controller.animateToPage(
-          _page,
+          nextPage,
           duration: const Duration(milliseconds: 350),
           curve: Curves.easeOut,
         );

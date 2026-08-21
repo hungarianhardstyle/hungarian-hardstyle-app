@@ -15,6 +15,25 @@ final eventsProvider = FutureProvider<List<HuhsEvent>>((ref) async {
   return service.getEvents();
 });
 
+final pastEventsProvider = FutureProvider<List<HuhsEvent>>((ref) async {
+  final service = ref.watch(wordpressServiceProvider);
+  final events = await service.getEvents(includePast: true);
+  final past = events.where((event) => event.isPast).toList();
+  past.sort((a, b) => _eventDateTime(b).compareTo(_eventDateTime(a)));
+  return List.unmodifiable(past);
+});
+
+DateTime _eventDateTime(HuhsEvent event) {
+  final date = event.endDate.trim().isNotEmpty
+      ? event.endDate.trim()
+      : event.startDate.trim();
+  final time = event.endDate.trim().isNotEmpty
+      ? event.endTime.trim()
+      : event.startTime.trim();
+  return DateTime.tryParse('$date ${time.isEmpty ? '23:59' : time}') ??
+      DateTime.fromMillisecondsSinceEpoch(0);
+}
+
 final eventSubmissionGenresProvider = FutureProvider<List<String>>((ref) async {
   final service = ref.watch(wordpressServiceProvider);
   return service.getEventSubmissionGenres();

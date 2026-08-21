@@ -57,7 +57,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders["adMobAppId"] = if (testAdsRequested) {
+        manifestPlaceholders["adMobAppId"] = if (testAdsRequested || productionAdMobAppId.isNullOrBlank()) {
             "ca-app-pub-3940256099942544~3347511713"
         } else {
             productionAdMobAppId.orEmpty()

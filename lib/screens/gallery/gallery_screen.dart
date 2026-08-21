@@ -8,11 +8,7 @@ class GalleryScreen extends StatefulWidget {
   final List<GalleryImage> images;
   final int initialIndex;
 
-  const GalleryScreen({
-    super.key,
-    required this.images,
-    this.initialIndex = 0,
-  });
+  const GalleryScreen({super.key, required this.images, this.initialIndex = 0});
 
   @override
   State<GalleryScreen> createState() => _GalleryScreenState();
@@ -29,9 +25,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
 
     _current = widget.initialIndex;
 
-    _controller = PageController(
-      initialPage: widget.initialIndex,
-    );
+    _controller = PageController(initialPage: widget.initialIndex);
   }
 
   @override
@@ -49,9 +43,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
         backgroundColor: Colors.black,
         elevation: 0,
 
-        title: Text(
-          "${_current + 1} / ${widget.images.length}",
-        ),
+        title: Text("${_current + 1} / ${widget.images.length}"),
         actions: [
           IconButton(
             tooltip: 'Kép mentése',
@@ -69,7 +61,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
               } catch (error) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('A kép mentése sikertelen: $error')),
+                  const SnackBar(
+                    content: Text(
+                      'A kép mentése nem sikerült. Ellenőrizd a tárhelyengedélyt, majd próbáld újra.',
+                    ),
+                  ),
                 );
               }
             },

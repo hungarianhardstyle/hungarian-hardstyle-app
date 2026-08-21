@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/errors/user_facing_error.dart';
+
 import '../../core/navigation/in_app_browser.dart';
 import '../../services/wordpress_service.dart';
 
@@ -51,11 +53,9 @@ class _NewsletterScreenState extends State<NewsletterScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString().replaceFirst('Exception: ', '')),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/navigation/in_app_browser.dart';
+import '../../core/errors/user_facing_error.dart';
 import '../../models/event.dart';
 import '../../providers/community_provider.dart';
 import '../../services/community_service.dart';
@@ -10,6 +11,8 @@ import '../../services/wordpress_service.dart';
 import '../events/event_detail_screen.dart';
 import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
+import 'favorites_screen.dart';
+import 'newsletter_screen.dart';
 
 class CommunityUsersScreen extends ConsumerStatefulWidget {
   const CommunityUsersScreen({super.key});
@@ -117,32 +120,27 @@ class _UserTile extends StatelessWidget {
       'moderator' => 'Moderátor',
       _ => null,
     };
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: service.watchConnections(profile.id),
-      builder: (context, connections) {
-        final friendCount = connections.data?.docs.length ?? 0;
-        final subtitle = access != null && showAccessRole
-            ? '$role · $access · $friendCount ismerős'
-            : '$role · $friendCount ismerős';
-        return Card(
-          child: ListTile(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) =>
-                    CommunityPublicProfileScreen(userId: profile.id),
-              ),
-            ),
-            leading: CircleAvatar(
-              backgroundImage: imageUrl.isEmpty ? null : NetworkImage(imageUrl),
-              child: imageUrl.isEmpty
-                  ? Text(safeName.characters.first.toUpperCase())
-                  : null,
-            ),
-            title: Text(safeName),
-            subtitle: Text(subtitle),
+    final subtitle = !showAccessRole
+        ? role
+        : access != null
+        ? '$role · $access'
+        : role;
+    return Card(
+      child: ListTile(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => CommunityPublicProfileScreen(userId: profile.id),
           ),
-        );
-      },
+        ),
+        leading: CircleAvatar(
+          backgroundImage: imageUrl.isEmpty ? null : NetworkImage(imageUrl),
+          child: imageUrl.isEmpty
+              ? Text(safeName.characters.first.toUpperCase())
+              : null,
+        ),
+        title: Text(safeName),
+        subtitle: Text(subtitle),
+      ),
     );
   }
 }
@@ -344,15 +342,15 @@ class _CommunityPublicProfileScreenState
                 ),
               ],
               const SizedBox(height: 18),
-              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: service.watchConnections(widget.userId),
-                builder: (context, connections) {
-                  final friends = connections.data?.docs ?? const [];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Ismerősök: ${friends.length}'),
-                      if (isRegistered) ...[
+              if (isRegistered)
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: service.watchConnections(widget.userId),
+                  builder: (context, connections) {
+                    final friends = connections.data?.docs ?? const [];
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Ismerősök: ${friends.length}'),
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
                           onPressed: () => Navigator.of(context).push(
@@ -366,20 +364,25 @@ class _CommunityPublicProfileScreenState
                           label: const Text('Ismerősök megnyitása'),
                         ),
                       ],
-                    ],
-                  );
-                },
-              ),
+                    );
+                  },
+                )
+              else
+                const Text(
+                  'Az ismerőslista regisztrált felhasználóknak érhető el.',
+                ),
               if (isRegistered) ...[
                 const SizedBox(height: 18),
                 const Text(
-                  'Tervezett események',
+                  'Események, ahol ott leszek',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: service.watchPlannedEventsFor(widget.userId),
+                StreamBuilder<
+                  List<QueryDocumentSnapshot<Map<String, dynamic>>>
+                >(
+                  stream: service.watchActivePlannedEventsFor(widget.userId),
                   builder: (context, planned) {
-                    final items = planned.data?.docs ?? const [];
+                    final items = planned.data ?? const [];
                     if (items.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.only(top: 8),
@@ -644,6 +647,88 @@ class _LegacyCommunityConnectionsScreen extends StatelessWidget {
   }
 }
 
+class CommunityHubScreen extends StatelessWidget {
+  const CommunityHubScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final service = CommunityService();
+    final user = service.auth.currentUser;
+    final registered = user != null && !user.isAnonymous;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Közösség')),
+      body: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          _hubTile(
+            context,
+            Icons.people_outline,
+            'Ismerősök és felkérések',
+            'Ismerőslista, felkérések és státuszok',
+            registered ? const CommunityConnectionsScreen() : null,
+          ),
+          _hubTile(
+            context,
+            Icons.favorite_outline,
+            'Kedvencek',
+            'Kedvenc hírek, események, DJ-k és szervezők',
+            const FavoritesScreen(),
+          ),
+          _hubTile(
+            context,
+            Icons.mail_outline,
+            'Hírlevél',
+            'Iratkozz fel a Hungarian Hardstyle hírlevelére',
+            const NewsletterScreen(),
+          ),
+          _hubTile(
+            context,
+            Icons.search,
+            'Felhasználók keresése',
+            'Publikus profilok és ismerősnek jelölés',
+            registered ? const CommunityUsersScreen() : null,
+          ),
+          _hubTile(
+            context,
+            Icons.block_outlined,
+            'Blokkolt felhasználók',
+            'Tiltások megtekintése és feloldása',
+            registered ? const CommunityBlockedUsersScreen() : null,
+          ),
+          if (!registered)
+            const Padding(
+              padding: EdgeInsets.only(top: 12),
+              child: Text('A közösségi funkciókhoz regisztráció szükséges.'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _hubTile(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String subtitle,
+    Widget? screen,
+  ) {
+    return Card(
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        enabled: screen != null,
+        trailing: const Icon(Icons.chevron_right),
+        onTap: screen == null
+            ? null
+            : () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute<void>(builder: (_) => screen)),
+      ),
+    );
+  }
+}
+
 class CommunityBlockedUsersScreen extends StatelessWidget {
   const CommunityBlockedUsersScreen({super.key});
 
@@ -664,7 +749,22 @@ class CommunityBlockedUsersScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final userId = users[index].id;
               return ListTile(
-                title: Text(userId),
+                title: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                  future: service.firestore
+                      .collection('community_profiles')
+                      .doc(userId)
+                      .get(),
+                  builder: (context, profile) {
+                    final name =
+                        (profile.data?.data()?['displayName'] as String?)
+                            ?.trim();
+                    return Text(
+                      name == null || name.isEmpty
+                          ? 'Ismeretlen felhasználó'
+                          : name,
+                    );
+                  },
+                ),
                 trailing: TextButton(
                   onPressed: () => service.unblockUser(userId),
                   child: const Text('Feloldás'),
@@ -690,7 +790,7 @@ class CommunityReportsScreen extends StatelessWidget {
         stream: service.watchReports(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text('${snapshot.error}'));
+            return Center(child: Text(userFacingError(snapshot.error)));
           }
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -968,6 +1068,12 @@ class _FriendTile extends StatelessWidget {
           .doc(userId)
           .get(),
       builder: (context, snapshot) {
+        if (snapshot.hasData && !snapshot.data!.exists) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            service.pruneStaleConnections(service.auth.currentUser?.uid ?? '');
+          });
+          return const SizedBox.shrink();
+        }
         final profile = snapshot.data?.data() ?? const <String, dynamic>{};
         final name =
             (profile['displayName'] as String? ??

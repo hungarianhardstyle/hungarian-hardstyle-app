@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../models/event_submission.dart';
 import '../../models/submission_image.dart';
+import '../../core/errors/user_facing_error.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/organizers_provider.dart';
@@ -99,6 +100,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
   }
 
   Future<void> _submit() async {
+    if (_isSubmitting) return;
     FocusScope.of(context).unfocus();
 
     final user = ref.read(communityServiceProvider).auth.currentUser;
@@ -196,7 +198,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
       }
     } catch (error) {
       if (mounted) {
-        _showMessage(error.toString().replaceFirst('Exception: ', ''));
+        _showMessage(userFacingError(error));
       }
     } finally {
       if (mounted) {
@@ -206,7 +208,9 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 8)),
     );
   }
@@ -270,187 +274,217 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
           top: false,
           child: Form(
             key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(18, 20, 18, 40),
-              children: [
-                const Text(
-                  'Küldd be az eseményed',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'A beküldés ellenőrzés után kerülhet fel az oldalra és az alkalmazásba.',
-                  style: TextStyle(color: Colors.white70, height: 1.4),
-                ),
-                const SizedBox(height: 24),
-                _field(
-                  controller: _titleController,
-                  label: 'Esemény neve *',
-                  icon: Icons.event,
-                  validator: _required,
-                ),
-                _pickerTile(
-                  icon: Icons.calendar_month,
-                  label: 'Dátum *',
-                  value: _startDate == null
-                      ? 'Válassz dátumot'
-                      : DateFormat('yyyy. MM. dd.').format(_startDate!),
-                  onTap: _pickDate,
-                ),
-                _pickerTile(
-                  icon: Icons.schedule,
-                  label: 'Kezdés',
-                  value: _startTime?.format(context) ?? 'Válassz időpontot',
-                  onTap: _pickTime,
-                  trailing: _startTime == null
-                      ? null
-                      : IconButton(
-                          tooltip: 'Időpont törlése',
-                          onPressed: () => setState(() => _startTime = null),
-                          icon: const Icon(Icons.close),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final landscape =
+                    MediaQuery.orientationOf(context) == Orientation.landscape;
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: landscape ? 980 : double.infinity,
+                    ),
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(18, 20, 18, 40),
+                      children: [
+                        const Text(
+                          'Küldd be az eseményed',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                ),
-                _pickerTile(
-                  icon: Icons.event_available,
-                  label: 'Esemény vége',
-                  value: _endDate == null
-                      ? 'Opcionális – válassz napot'
-                      : DateFormat('yyyy. MM. dd.').format(_endDate!),
-                  onTap: _pickEndDate,
-                  trailing: _endDate == null
-                      ? null
-                      : IconButton(
-                          tooltip: 'Vége törlése',
-                          onPressed: () => setState(() {
-                            _endDate = null;
-                            _endTime = null;
-                          }),
-                          icon: const Icon(Icons.close),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'A beküldés ellenőrzés után kerülhet fel az oldalra és az alkalmazásba.',
+                          style: TextStyle(color: Colors.white70, height: 1.4),
                         ),
-                ),
-                _pickerTile(
-                  icon: Icons.schedule,
-                  label: 'Esemény vége – óra',
-                  value:
-                      _endTime?.format(context) ??
-                      'Opcionális – válassz időpontot',
-                  onTap: _pickEndTime,
-                ),
-                _field(
-                  controller: _venueController,
-                  label: 'Helyszín *',
-                  icon: Icons.location_on,
-                  validator: _required,
-                ),
-                _field(
-                  controller: _cityController,
-                  label: 'Város *',
-                  icon: Icons.location_city,
-                  validator: _required,
-                ),
-                _field(
-                  controller: _zipController,
-                  label: 'Irányítószám *',
-                  icon: Icons.markunread_mailbox,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: _validatePostalCode,
-                ),
-                _field(
-                  controller: _addressController,
-                  label: 'Cím *',
-                  icon: Icons.home,
-                  validator: _required,
-                ),
-                _organizerDropdown(ref.watch(organizersProvider(''))),
-                const SizedBox(height: 4),
-                const Text(
-                  'Műfajok *',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                genres.when(
-                  loading: () => const Align(
-                    alignment: Alignment.centerLeft,
-                    child: CircularProgressIndicator(),
-                  ),
-                  error: (error, stack) => Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Nem sikerült betölteni a műfajokat.',
-                          style: TextStyle(color: Colors.white70),
+                        const SizedBox(height: 24),
+                        _field(
+                          controller: _titleController,
+                          label: 'Esemény neve *',
+                          icon: Icons.event,
+                          validator: _required,
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () =>
-                            ref.invalidate(eventSubmissionGenresProvider),
-                        child: const Text('Újra'),
-                      ),
-                    ],
+                        _pickerTile(
+                          icon: Icons.calendar_month,
+                          label: 'Dátum *',
+                          value: _startDate == null
+                              ? 'Válassz dátumot'
+                              : DateFormat('yyyy. MM. dd.').format(_startDate!),
+                          onTap: _pickDate,
+                        ),
+                        _pickerTile(
+                          icon: Icons.schedule,
+                          label: 'Kezdés',
+                          value:
+                              _startTime?.format(context) ??
+                              'Válassz időpontot',
+                          onTap: _pickTime,
+                          trailing: _startTime == null
+                              ? null
+                              : IconButton(
+                                  tooltip: 'Időpont törlése',
+                                  onPressed: () =>
+                                      setState(() => _startTime = null),
+                                  icon: const Icon(Icons.close),
+                                ),
+                        ),
+                        _pickerTile(
+                          icon: Icons.event_available,
+                          label: 'Esemény vége',
+                          value: _endDate == null
+                              ? 'Opcionális – válassz napot'
+                              : DateFormat('yyyy. MM. dd.').format(_endDate!),
+                          onTap: _pickEndDate,
+                          trailing: _endDate == null
+                              ? null
+                              : IconButton(
+                                  tooltip: 'Vége törlése',
+                                  onPressed: () => setState(() {
+                                    _endDate = null;
+                                    _endTime = null;
+                                  }),
+                                  icon: const Icon(Icons.close),
+                                ),
+                        ),
+                        _pickerTile(
+                          icon: Icons.schedule,
+                          label: 'Esemény vége – óra',
+                          value:
+                              _endTime?.format(context) ??
+                              'Opcionális – válassz időpontot',
+                          onTap: _pickEndTime,
+                        ),
+                        _field(
+                          controller: _venueController,
+                          label: 'Helyszín *',
+                          icon: Icons.location_on,
+                          validator: _required,
+                        ),
+                        _field(
+                          controller: _cityController,
+                          label: 'Város *',
+                          icon: Icons.location_city,
+                          validator: _required,
+                        ),
+                        _field(
+                          controller: _zipController,
+                          label: 'Irányítószám *',
+                          icon: Icons.markunread_mailbox,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: _validatePostalCode,
+                        ),
+                        _field(
+                          controller: _addressController,
+                          label: 'Cím *',
+                          icon: Icons.home,
+                          validator: _required,
+                        ),
+                        _organizerDropdown(ref.watch(organizersProvider(''))),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Műfajok *',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        genres.when(
+                          loading: () => const Align(
+                            alignment: Alignment.centerLeft,
+                            child: CircularProgressIndicator(),
+                          ),
+                          error: (error, stack) => Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'Nem sikerült betölteni a műfajokat.',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => ref.invalidate(
+                                  eventSubmissionGenresProvider,
+                                ),
+                                child: const Text('Újra'),
+                              ),
+                            ],
+                          ),
+                          data: (items) => Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: items.map((genre) {
+                              final selected = _selectedGenres.contains(genre);
+                              return FilterChip(
+                                selected: selected,
+                                label: Text(genre),
+                                onSelected: (value) {
+                                  setState(() {
+                                    value
+                                        ? _selectedGenres.add(genre)
+                                        : _selectedGenres.remove(genre);
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        _field(
+                          controller: _emailController,
+                          label: 'Kapcsolattartó e-mail *',
+                          icon: Icons.email,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: _validateEmail,
+                        ),
+                        _field(
+                          controller: _urlController,
+                          label: 'Facebook- vagy eseménylink',
+                          icon: Icons.link,
+                          keyboardType: TextInputType.url,
+                          validator: _validateUrl,
+                        ),
+                        SubmissionImagePicker(
+                          image: _flyer,
+                          title: 'Flyer feltöltése',
+                          helperText:
+                              'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
+                          onChanged: (image) => setState(() => _flyer = image),
+                        ),
+                        _field(
+                          controller: _descriptionController,
+                          label: 'Rövid leírás',
+                          icon: Icons.notes,
+                          maxLines: 5,
+                        ),
+                        const SizedBox(height: 8),
+                        FilledButton.icon(
+                          onPressed: _isSubmitting ? null : _submit,
+                          icon: _isSubmitting
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.send),
+                          label: Text(
+                            _isSubmitting ? 'Küldés…' : 'Esemény elküldése',
+                          ),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(54),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  data: (items) => Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: items.map((genre) {
-                      final selected = _selectedGenres.contains(genre);
-                      return FilterChip(
-                        selected: selected,
-                        label: Text(genre),
-                        onSelected: (value) {
-                          setState(() {
-                            value
-                                ? _selectedGenres.add(genre)
-                                : _selectedGenres.remove(genre);
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _field(
-                  controller: _emailController,
-                  label: 'Kapcsolattartó e-mail *',
-                  icon: Icons.email,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: _validateEmail,
-                ),
-                _field(
-                  controller: _urlController,
-                  label: 'Facebook- vagy eseménylink',
-                  icon: Icons.link,
-                  keyboardType: TextInputType.url,
-                  validator: _validateUrl,
-                ),
-                SubmissionImagePicker(
-                  image: _flyer,
-                  title: 'Flyer feltöltése',
-                  helperText:
-                      'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
-                  onChanged: (image) => setState(() => _flyer = image),
-                ),
-                _field(
-                  controller: _descriptionController,
-                  label: 'Rövid leírás',
-                  icon: Icons.notes,
-                  maxLines: 5,
-                ),
-                const SizedBox(height: 8),
-                FilledButton.icon(
-                  onPressed: _isSubmitting ? null : _submit,
-                  icon: _isSubmitting
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.send),
-                  label: Text(_isSubmitting ? 'Küldés…' : 'Esemény elküldése'),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(54),
-                  ),
-                ),
-              ],
+                );
+              },
             ),
           ),
         ),
@@ -500,34 +534,45 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
         ),
         data: (page) {
           final items = page.items as List;
-          return DropdownButtonFormField<int?>(
-            isExpanded: true,
-            initialValue: _selectedOrganizerId,
-            decoration: const InputDecoration(
-              labelText: 'Szervező',
-              prefixIcon: Icon(Icons.groups),
-            ),
-            items: [
-              const DropdownMenuItem<int?>(
-                value: null,
-                child: Text('Nincs kiválasztva'),
-              ),
-              ...items.map(
-                (organizer) => DropdownMenuItem<int?>(
-                  value: organizer.id as int,
-                  child: Text(
-                    organizer.title as String,
-                    overflow: TextOverflow.ellipsis,
+          return _pickerTile(
+            icon: Icons.groups,
+            label: 'Szervező',
+            value: _selectedOrganizerName.isEmpty
+                ? 'Nincs kiválasztva'
+                : _selectedOrganizerName,
+            onTap: () async {
+              final selected = await showModalBottomSheet<int?>(
+                context: context,
+                showDragHandle: true,
+                builder: (sheetContext) => SafeArea(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      const ListTile(title: Text('Szervező kiválasztása')),
+                      ListTile(
+                        leading: const Icon(Icons.clear),
+                        title: const Text('Nincs kiválasztva'),
+                        onTap: () => Navigator.pop(sheetContext),
+                      ),
+                      for (final organizer in items)
+                        ListTile(
+                          leading: const Icon(Icons.groups_outlined),
+                          title: Text(organizer.title as String),
+                          selected: organizer.id == _selectedOrganizerId,
+                          onTap: () =>
+                              Navigator.pop(sheetContext, organizer.id as int),
+                        ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-            onChanged: (id) {
-              final matches = items.where((item) => item.id == id);
-              final match = matches.isEmpty ? null : matches.first;
+              );
+              if (!mounted) return;
+              final match = items.where((item) => item.id == selected);
               setState(() {
-                _selectedOrganizerId = id;
-                _selectedOrganizerName = match?.title as String? ?? '';
+                _selectedOrganizerId = selected;
+                _selectedOrganizerName = match.isEmpty
+                    ? ''
+                    : match.first.title as String;
               });
             },
           );

@@ -15,6 +15,7 @@ import '../models/event.dart';
 import '../screens/events/event_detail_screen.dart';
 import '../screens/more/community_users_screen.dart';
 import '../screens/news/news_detail_screen.dart';
+import '../screens/community/wordpress_admin_screen.dart';
 import 'wordpress_service.dart';
 
 class PushNotificationService {
@@ -24,6 +25,7 @@ class PushNotificationService {
   // olyan token, amelyre a Cloud Function már nem tud kézbesíteni.
   static const _tokenRefreshKey = 'fcm_token_refresh_v3';
   static bool _initialized = false;
+  static OverlayEntry? _foregroundEntry;
   static StreamSubscription<User?>? _authSubscription;
   static final Dio _api = Dio(
     BaseOptions(
@@ -77,7 +79,8 @@ class PushNotificationService {
     final url = message.data['url']?.toString().trim() ?? '';
     if (url.isEmpty &&
         senderId.isEmpty &&
-        (id == null || (type != 'news' && type != 'event'))) {
+        (id == null ||
+            (type != 'news' && type != 'event' && type != 'submission'))) {
       return;
     }
 
@@ -91,6 +94,13 @@ class PushNotificationService {
           MaterialPageRoute<void>(
             builder: (_) => CommunityPublicProfileScreen(userId: senderId),
           ),
+        );
+        return;
+      }
+
+      if (type == 'submission') {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const WordPressAdminScreen()),
         );
         return;
       }
@@ -133,21 +143,50 @@ class PushNotificationService {
   }
 
   static Future<void> _showForegroundMessage(RemoteMessage message) async {
-    final messenger = appScaffoldMessengerKey.currentState;
-    if (messenger == null) return;
-    final title = message.notification?.title?.trim() ?? 'Új értesítés';
-    final body = message.notification?.body?.trim() ?? '';
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(body.isEmpty ? title : '$title\n$body'),
-        action: SnackBarAction(
-          label: 'Megnyitás',
-          onPressed: () => _handleOpenedMessage(message),
-        ),
-        duration: const Duration(seconds: 8),
+    final overlay = appNavigatorKey.currentState?.overlay;
+    if (overlay == null) return;
+    _foregroundEntry?.remove();
+    final dataTitle = message.data['title']?.toString().trim() ?? '';
+    final dataBody = message.data['body']?.toString().trim() ?? '';
+    final title = message.notification?.title?.trim().isNotEmpty == true
+        ? message.notification!.title!.trim()
+        : (dataTitle.isEmpty ? 'Új értesítés' : dataTitle);
+    final body = (message.notification?.body?.trim().isNotEmpty == true
+        ? message.notification!.body!.trim()
+        : dataBody);
+    final canOpen = _hasOpenTarget(message);
+    final entry = OverlayEntry(
+      builder: (_) => _ForegroundPushBanner(
+        title: title,
+        body: body,
+        canOpen: canOpen,
+        onOpen: () {
+          _dismissForegroundEntry();
+          if (canOpen) unawaited(_handleOpenedMessage(message));
+        },
+        onDismiss: _dismissForegroundEntry,
       ),
     );
+    _foregroundEntry = entry;
+    overlay.insert(entry);
+  }
+
+  static void _dismissForegroundEntry() {
+    _foregroundEntry?.remove();
+    _foregroundEntry = null;
+  }
+
+  static bool _hasOpenTarget(RemoteMessage message) {
+    final type = message.data['type']?.toString().trim() ?? '';
+    final senderId =
+        (message.data['senderId'] ?? message.data['from'])?.toString().trim() ??
+        '';
+    final id = int.tryParse(message.data['id']?.toString() ?? '');
+    final url = message.data['url']?.toString().trim() ?? '';
+    return type == 'submission' ||
+        (type == 'connection_request' && senderId.isNotEmpty) ||
+        ((type == 'news' || type == 'event') && id != null) ||
+        url.isNotEmpty;
   }
 
   static Future<void> _storeToken(String? token) async {
@@ -228,5 +267,130 @@ class PushNotificationService {
     } catch (_) {
       // Preference sync must never block the settings screen.
     }
+  }
+}
+
+class _ForegroundPushBanner extends StatefulWidget {
+  const _ForegroundPushBanner({
+    required this.title,
+    required this.body,
+    required this.canOpen,
+    required this.onOpen,
+    required this.onDismiss,
+  });
+
+  final String title;
+  final String body;
+  final bool canOpen;
+  final VoidCallback? onOpen;
+  final VoidCallback onDismiss;
+
+  @override
+  State<_ForegroundPushBanner> createState() => _ForegroundPushBannerState();
+}
+
+class _ForegroundPushBannerState extends State<_ForegroundPushBanner> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(const Duration(seconds: 7), widget.onDismiss);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom + 142;
+    return Positioned(
+      left: 16,
+      right: 16,
+      bottom: bottom,
+      child: Dismissible(
+        key: const ValueKey('huhs-foreground-push'),
+        direction: DismissDirection.vertical,
+        onDismissed: (_) => widget.onDismiss(),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onOpen ?? widget.onDismiss,
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF21191A),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFF8F2D31)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x66000000),
+                    blurRadius: 16,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2, right: 12),
+                    child: Icon(
+                      Icons.notifications_active_outlined,
+                      color: Color(0xFFFF3D43),
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (widget.body.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.body,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ],
+                        if (widget.canOpen) ...[
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Koppints a megnyitáshoz',
+                            style: TextStyle(
+                              color: Color(0xFFFF555A),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Bezárás',
+                    onPressed: widget.onDismiss,
+                    icon: const Icon(Icons.close, color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

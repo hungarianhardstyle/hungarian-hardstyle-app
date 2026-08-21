@@ -48,10 +48,8 @@ class _BrandLoadingIndicatorState extends State<BrandLoadingIndicator>
       label: 'Betöltés',
       child: AnimatedBuilder(
         animation: _controller,
-        builder: (context, child) => Transform.scale(
-          scale: _controller.value,
-          child: child,
-        ),
+        builder: (context, child) =>
+            Transform.scale(scale: _controller.value, child: child),
         child: Image.asset(
           'assets/logos/huhs_full_logo.png',
           width: widget.size,

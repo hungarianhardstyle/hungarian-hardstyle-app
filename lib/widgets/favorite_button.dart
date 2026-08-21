@@ -17,13 +17,17 @@ class FavoriteButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(favoritesProvider).contains(kind, id);
+    final favorites = ref.watch(favoritesProvider);
+    final enabled = favorites.canUseFavorites;
+    final selected = enabled && favorites.contains(kind, id);
 
     return IconButton(
       tooltip: selected
           ? 'Eltávolítás a kedvencekből'
           : 'Hozzáadás a kedvencekhez',
-      onPressed: () => ref.read(favoritesProvider).toggle(kind, id, title),
+      onPressed: enabled
+          ? () => ref.read(favoritesProvider).toggle(kind, id, title)
+          : null,
       icon: Icon(
         selected ? Icons.favorite : Icons.favorite_border,
         color: selected ? Colors.redAccent : Colors.white54,

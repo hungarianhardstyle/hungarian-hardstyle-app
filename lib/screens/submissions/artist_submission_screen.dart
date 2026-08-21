@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/profile_submission.dart';
 import '../../models/submission_image.dart';
+import '../../core/errors/user_facing_error.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/profile_submission_provider.dart';
 import '../../widgets/submission_image_picker.dart';
@@ -93,7 +94,7 @@ class _ArtistSubmissionScreenState
       if (mounted) Navigator.of(context).pop();
     } catch (error) {
       if (mounted) {
-        _message(error.toString().replaceFirst('Exception: ', ''));
+        _message(userFacingError(error));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -107,153 +108,189 @@ class _ArtistSubmissionScreenState
     return Scaffold(
       appBar: AppBar(title: const Text('DJ beküldése')),
       body: _background(
-        Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(18, 20, 18, 40),
-            children: [
-              const Text(
-                'DJ / előadó beküldése',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Az adatlap csak szerkesztői ellenőrzés és jóváhagyás után jelenhet meg.',
-                style: TextStyle(color: Colors.white70, height: 1.4),
-              ),
-              const SizedBox(height: 22),
-              _field(_name, 'DJ-név *', Icons.graphic_eq, validator: _required),
-              _field(_realName, 'Valódi név', Icons.person_outline),
-              options.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => ListTile(
-                  title: const Text('Nem sikerült betölteni a kategóriákat.'),
-                  trailing: TextButton(
-                    onPressed: () =>
-                        ref.invalidate(profileSubmissionOptionsProvider),
-                    child: const Text('Újra'),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final landscape =
+                MediaQuery.orientationOf(context) == Orientation.landscape;
+            return Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: landscape ? 980 : double.infinity,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(18, 20, 18, 40),
+                    children: [
+                      const Text(
+                        'DJ / előadó beküldése',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Az adatlap csak szerkesztői ellenőrzés és jóváhagyás után jelenhet meg.',
+                        style: TextStyle(color: Colors.white70, height: 1.4),
+                      ),
+                      const SizedBox(height: 22),
+                      _field(
+                        _name,
+                        'DJ-név *',
+                        Icons.graphic_eq,
+                        validator: _required,
+                      ),
+                      _field(_realName, 'Valódi név', Icons.person_outline),
+                      options.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (error, stack) => ListTile(
+                          title: const Text(
+                            'Nem sikerült betölteni a kategóriákat.',
+                          ),
+                          trailing: TextButton(
+                            onPressed: () => ref.invalidate(
+                              profileSubmissionOptionsProvider,
+                            ),
+                            child: const Text('Újra'),
+                          ),
+                        ),
+                        data: (value) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Kategória *',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              children: value.artistCategories.map((category) {
+                                return FilterChip(
+                                  selected: _categories.contains(category.slug),
+                                  label: Text(category.name),
+                                  onSelected: (selected) => setState(() {
+                                    selected
+                                        ? _categories.add(category.slug)
+                                        : _categories.remove(category.slug);
+                                  }),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Műfajok *',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: value.genres.map((genre) {
+                                return FilterChip(
+                                  selected: _genres.contains(genre),
+                                  label: Text(genre),
+                                  onSelected: (selected) => setState(() {
+                                    selected
+                                        ? _genres.add(genre)
+                                        : _genres.remove(genre);
+                                  }),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 18),
+                          ],
+                        ),
+                      ),
+                      _field(_city, 'Város', Icons.location_city),
+                      _field(_country, 'Ország', Icons.public),
+                      _field(
+                        _contactEmail,
+                        'Privát kapcsolattartó e-mail *',
+                        Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: _emailRequired,
+                        helper:
+                            'Csak az admin látja, nem kerül ki az adatlapra.',
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _bookingViaHuhs,
+                        onChanged: (value) =>
+                            setState(() => _bookingViaHuhs = value),
+                        title: const Text(
+                          'Fellépésszervezés a Hungarian Hardstyle-on keresztül',
+                        ),
+                        subtitle: const Text(
+                          'A booking levelek az info@hungarianhardstyle.hu címre érkeznek.',
+                        ),
+                      ),
+                      if (!_bookingViaHuhs)
+                        _field(
+                          _bookingEmail,
+                          'Nyilvános booking e-mail',
+                          Icons.mark_email_read_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: _optionalEmail,
+                        ),
+                      SubmissionImagePicker(
+                        image: _profileImage,
+                        title: 'Profilkép feltöltése',
+                        helperText:
+                            'Opcionális · álló portré ajánlott · legfeljebb 5 MB',
+                        onChanged: (image) =>
+                            setState(() => _profileImage = image),
+                      ),
+                      SubmissionImagePicker(
+                        image: _logo,
+                        title: 'DJ-logó feltöltése',
+                        helperText:
+                            'Opcionális · négyzetes, átlátszó PNG ajánlott · legfeljebb 5 MB',
+                        onChanged: (image) => setState(() => _logo = image),
+                      ),
+                      _field(
+                        _biography,
+                        'Bemutatkozás',
+                        Icons.notes,
+                        maxLines: 6,
+                      ),
+                      ExpansionTile(
+                        tilePadding: EdgeInsets.zero,
+                        title: const Text('Közösségi és zenei linkek'),
+                        children: _social.entries.map((entry) {
+                          return _field(
+                            entry.value,
+                            _linkLabel(entry.key),
+                            Icons.link,
+                            keyboardType: TextInputType.url,
+                            validator: _optionalUrl,
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 18),
+                      FilledButton.icon(
+                        onPressed: _submitting ? null : _submit,
+                        icon: _submitting
+                            ? const SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.send),
+                        label: Text(_submitting ? 'Küldés…' : 'DJ beküldése'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(54),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                data: (value) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Kategória *',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children: value.artistCategories.map((category) {
-                        return FilterChip(
-                          selected: _categories.contains(category.slug),
-                          label: Text(category.name),
-                          onSelected: (selected) => setState(() {
-                            selected
-                                ? _categories.add(category.slug)
-                                : _categories.remove(category.slug);
-                          }),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Műfajok *',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: value.genres.map((genre) {
-                        return FilterChip(
-                          selected: _genres.contains(genre),
-                          label: Text(genre),
-                          onSelected: (selected) => setState(() {
-                            selected
-                                ? _genres.add(genre)
-                                : _genres.remove(genre);
-                          }),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 18),
-                  ],
-                ),
               ),
-              _field(_city, 'Város', Icons.location_city),
-              _field(_country, 'Ország', Icons.public),
-              _field(
-                _contactEmail,
-                'Privát kapcsolattartó e-mail *',
-                Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-                validator: _emailRequired,
-                helper: 'Csak az admin látja, nem kerül ki az adatlapra.',
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _bookingViaHuhs,
-                onChanged: (value) => setState(() => _bookingViaHuhs = value),
-                title: const Text(
-                  'Fellépésszervezés a Hungarian Hardstyle-on keresztül',
-                ),
-                subtitle: const Text(
-                  'A booking levelek az info@hungarianhardstyle.hu címre érkeznek.',
-                ),
-              ),
-              if (!_bookingViaHuhs)
-                _field(
-                  _bookingEmail,
-                  'Nyilvános booking e-mail',
-                  Icons.mark_email_read_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: _optionalEmail,
-                ),
-              SubmissionImagePicker(
-                image: _profileImage,
-                title: 'Profilkép feltöltése',
-                helperText:
-                    'Opcionális · álló portré ajánlott · legfeljebb 5 MB',
-                onChanged: (image) => setState(() => _profileImage = image),
-              ),
-              SubmissionImagePicker(
-                image: _logo,
-                title: 'DJ-logó feltöltése',
-                helperText:
-                    'Opcionális · négyzetes, átlátszó PNG ajánlott · legfeljebb 5 MB',
-                onChanged: (image) => setState(() => _logo = image),
-              ),
-              _field(_biography, 'Bemutatkozás', Icons.notes, maxLines: 6),
-              ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                title: const Text('Közösségi és zenei linkek'),
-                children: _social.entries.map((entry) {
-                  return _field(
-                    entry.value,
-                    _linkLabel(entry.key),
-                    Icons.link,
-                    keyboardType: TextInputType.url,
-                    validator: _optionalUrl,
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 18),
-              FilledButton.icon(
-                onPressed: _submitting ? null : _submit,
-                icon: _submitting
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.send),
-                label: Text(_submitting ? 'Küldés…' : 'DJ beküldése'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(54),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -332,7 +369,11 @@ class _ArtistSubmissionScreenState
   };
 
   void _message(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(content: Text(value), duration: const Duration(seconds: 8)),
+    );
   }
 
   Future<void> _success(String message) => showDialog<void>(

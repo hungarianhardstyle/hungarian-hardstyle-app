@@ -51,7 +51,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           preferences.getBool(_reminderNotificationsKey) ?? true;
       _biometricEnabled = preferences.getBool('biometric_unlock') ?? false;
       _deviceCodeEnabled = preferences.getBool('device_code_unlock') ?? false;
-      _authenticatorEnabled = preferences.getBool('authenticator_unlock') ?? false;
+      _authenticatorEnabled =
+          preferences.getBool('authenticator_unlock') ?? false;
       _loading = false;
     });
   }
@@ -60,7 +61,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (value && !await CommunityService().authenticateDeviceCode()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A telefonos kódos feloldás nem sikerült.')),
+          const SnackBar(
+            content: Text('A telefonos kódos feloldás nem sikerült.'),
+          ),
         );
       }
       return;
@@ -88,7 +91,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             const Text('Add meg ezt a kulcsot a Google Authenticatorban:'),
             const SizedBox(height: 10),
-            SelectableText(secret!, style: const TextStyle(fontWeight: FontWeight.bold)),
+            SelectableText(
+              secret!,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 14),
             TextField(
               controller: controller,
@@ -98,18 +104,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Mégse')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim().length == 6), child: const Text('Ellenőrzés')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Mégse'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(
+              dialogContext,
+              controller.text.trim().length == 6,
+            ),
+            child: const Text('Ellenőrzés'),
+          ),
         ],
       ),
     );
-    final valid = verified == true && await service.verifyAuthenticatorCode(controller.text);
+    final valid =
+        verified == true &&
+        await service.verifyAuthenticatorCode(controller.text);
     controller.dispose();
     if (!valid) {
       await service.setAuthenticatorEnabled(false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A kód nem érvényes. Az authenticator nem lett bekapcsolva.')),
+          const SnackBar(
+            content: Text(
+              'A kód nem érvényes. Az authenticator nem lett bekapcsolva.',
+            ),
+          ),
         );
       }
       return;
@@ -130,7 +151,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (value && !await CommunityService().authenticateBiometric()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A biometrikus feloldás nem érhető el. Engedélyezd a telefon beállításaiban.')),
+          const SnackBar(
+            content: Text(
+              'A biometrikus feloldás nem érhető el. Engedélyezd a telefon beállításaiban.',
+            ),
+          ),
         );
       }
       return;
@@ -183,121 +208,148 @@ class _SettingsScreenState extends State<SettingsScreen> {
             colors: [Color(0xFF080808), Color(0xFF220000), Color(0xFF080808)],
           ),
         ),
-        child: ListView(
-          padding: const EdgeInsets.all(18),
-          children: [
-            Card(
-              child: SwitchListTile(
-                secondary: const Icon(Icons.notifications_outlined),
-                title: const Text('Értesítések'),
-                subtitle: Text(
-                  _loading
-                      ? 'Beállítás betöltése…'
-                      : 'Összes értesítés ki- és bekapcsolása',
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final landscape =
+                MediaQuery.orientationOf(context) == Orientation.landscape;
+            return Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: landscape ? 900 : double.infinity,
                 ),
-                value: _notificationsEnabled,
-                onChanged: _loading ? null : _setNotifications,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: SwitchListTile(
-                secondary: const Icon(Icons.password_outlined),
-                title: const Text('Android-kódos feloldás'),
-                subtitle: const Text('A telefon PIN-kódjával, jelszavával vagy mintájával'),
-                value: _deviceCodeEnabled,
-                onChanged: _loading ? null : _setDeviceCode,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: SwitchListTile(
-                secondary: const Icon(Icons.lock_clock_outlined),
-                title: const Text('Google Authenticator'),
-                subtitle: const Text('Csak e-mail/jelszavas fióknál használható'),
-                value: _authenticatorEnabled,
-                onChanged: _loading ? null : _setAuthenticator,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: SwitchListTile(
-                secondary: const Icon(Icons.fingerprint),
-                title: const Text('Biometrikus feloldás'),
-                subtitle: const Text(
-                  'A mentett profil feloldása ujjlenyomattal vagy arcfelismeréssel',
+                child: ListView(
+                  padding: const EdgeInsets.all(18),
+                  children: [
+                    Card(
+                      child: SwitchListTile(
+                        secondary: const Icon(Icons.notifications_outlined),
+                        title: const Text('Értesítések'),
+                        subtitle: Text(
+                          _loading
+                              ? 'Beállítás betöltése…'
+                              : 'Összes értesítés ki- és bekapcsolása',
+                        ),
+                        value: _notificationsEnabled,
+                        onChanged: _loading ? null : _setNotifications,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: SwitchListTile(
+                        secondary: const Icon(Icons.password_outlined),
+                        title: const Text('Android-kódos feloldás'),
+                        subtitle: const Text(
+                          'A telefon PIN-kódjával, jelszavával vagy mintájával',
+                        ),
+                        value: _deviceCodeEnabled,
+                        onChanged: _loading ? null : _setDeviceCode,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: SwitchListTile(
+                        secondary: const Icon(Icons.lock_clock_outlined),
+                        title: const Text('Google Authenticator'),
+                        subtitle: const Text(
+                          'Csak e-mail/jelszavas fióknál használható',
+                        ),
+                        value: _authenticatorEnabled,
+                        onChanged: _loading ? null : _setAuthenticator,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: SwitchListTile(
+                        secondary: const Icon(Icons.fingerprint),
+                        title: const Text('Biometrikus feloldás'),
+                        subtitle: const Text(
+                          'A mentett profil feloldása ujjlenyomattal vagy arcfelismeréssel',
+                        ),
+                        value: _biometricEnabled,
+                        onChanged: _loading ? null : _setBiometric,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: Column(
+                        children: [
+                          SwitchListTile(
+                            secondary: const Icon(Icons.article_outlined),
+                            title: const Text('Új hírek'),
+                            subtitle: const Text(
+                              'Értesítés új hír közzétételekor',
+                            ),
+                            value: _newsNotificationsEnabled,
+                            onChanged: _loading || !_notificationsEnabled
+                                ? null
+                                : (value) {
+                                    setState(
+                                      () => _newsNotificationsEnabled = value,
+                                    );
+                                    _setNotificationPreference(
+                                      _newsNotificationsKey,
+                                      value,
+                                    );
+                                  },
+                          ),
+                          SwitchListTile(
+                            secondary: const Icon(Icons.event_outlined),
+                            title: const Text('Új események'),
+                            subtitle: const Text(
+                              'Értesítés új esemény közzétételekor',
+                            ),
+                            value: _eventNotificationsEnabled,
+                            onChanged: _loading || !_notificationsEnabled
+                                ? null
+                                : (value) {
+                                    setState(
+                                      () => _eventNotificationsEnabled = value,
+                                    );
+                                    _setNotificationPreference(
+                                      _eventNotificationsKey,
+                                      value,
+                                    );
+                                  },
+                          ),
+                          SwitchListTile(
+                            secondary: const Icon(Icons.alarm_outlined),
+                            title: const Text('Esemény-emlékeztetők'),
+                            subtitle: const Text('Egy héttel előtte és aznap'),
+                            value: _reminderNotificationsEnabled,
+                            onChanged: _loading || !_notificationsEnabled
+                                ? null
+                                : (value) {
+                                    setState(
+                                      () =>
+                                          _reminderNotificationsEnabled = value,
+                                    );
+                                    _setNotificationPreference(
+                                      _reminderNotificationsKey,
+                                      value,
+                                    );
+                                  },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: ListTile(
+                        leading: Icon(Icons.cleaning_services_outlined),
+                        title: Text('Gyorsítótár'),
+                        subtitle: Text(
+                          'A képek gyorsítótárát az app automatikusan kezeli.',
+                        ),
+                        trailing: Icon(Icons.delete_outline),
+                        onTap: _clearingCache ? null : _clearCache,
+                      ),
+                    ),
+                  ],
                 ),
-                value: _biometricEnabled,
-                onChanged: _loading ? null : _setBiometric,
               ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: Column(
-                children: [
-                  SwitchListTile(
-                    secondary: const Icon(Icons.article_outlined),
-                    title: const Text('Új hírek'),
-                    subtitle: const Text('Értesítés új hír közzétételekor'),
-                    value: _newsNotificationsEnabled,
-                    onChanged: _loading || !_notificationsEnabled
-                        ? null
-                        : (value) {
-                            setState(() => _newsNotificationsEnabled = value);
-                            _setNotificationPreference(
-                              _newsNotificationsKey,
-                              value,
-                            );
-                          },
-                  ),
-                  SwitchListTile(
-                    secondary: const Icon(Icons.event_outlined),
-                    title: const Text('Új események'),
-                    subtitle: const Text('Értesítés új esemény közzétételekor'),
-                    value: _eventNotificationsEnabled,
-                    onChanged: _loading || !_notificationsEnabled
-                        ? null
-                        : (value) {
-                            setState(() => _eventNotificationsEnabled = value);
-                            _setNotificationPreference(
-                              _eventNotificationsKey,
-                              value,
-                            );
-                          },
-                  ),
-                  SwitchListTile(
-                    secondary: const Icon(Icons.alarm_outlined),
-                    title: const Text('Esemény-emlékeztetők'),
-                    subtitle: const Text('Egy héttel előtte és aznap'),
-                    value: _reminderNotificationsEnabled,
-                    onChanged: _loading || !_notificationsEnabled
-                        ? null
-                        : (value) {
-                            setState(
-                              () => _reminderNotificationsEnabled = value,
-                            );
-                            _setNotificationPreference(
-                              _reminderNotificationsKey,
-                              value,
-                            );
-                          },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.cleaning_services_outlined),
-                title: Text('Gyorsítótár'),
-                subtitle: Text(
-                  'A képek gyorsítótárát az app automatikusan kezeli.',
-                ),
-                trailing: Icon(Icons.delete_outline),
-                onTap: _clearingCache ? null : _clearCache,
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

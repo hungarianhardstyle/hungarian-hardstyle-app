@@ -27,6 +27,11 @@ service cloud.firestore {
       return role == 'admin' || role == 'moderator' ? role : 'none';
     }
 
+    function isRegistered() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
     match /live_feed_posts/{postId} {
       allow read: if true;
       allow create: if request.auth != null
@@ -76,7 +81,8 @@ service cloud.firestore {
     }
 
     match /community_profiles/{userId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+        && (request.auth.uid == userId || isRegistered());
       allow create: if request.auth != null
         && request.auth.uid == userId
         && (request.auth.token.email == 'djdeeroy@gmail.com'
@@ -121,18 +127,27 @@ service cloud.firestore {
         && request.resource.data.title is string;
     }
 
+    match /news_reactions/{postId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['count', 'likedBy'])
+        && request.resource.data.count is int
+        && request.resource.data.count >= 0
+        && request.resource.data.likedBy is map;
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['count', 'likedBy'])
+        && request.resource.data.count is int
+        && request.resource.data.count >= 0
+        && request.resource.data.likedBy is map;
+      allow delete: if isAdmin();
+    }
+
     match /community_profiles/{userId}/blocked_users/{blockedId} {
       allow read: if request.auth != null && request.auth.uid == userId;
       allow create, update: if request.auth != null && request.auth.uid == userId
         && request.resource.data.createdAt is timestamp;
       allow delete: if request.auth != null && request.auth.uid == userId;
-    }
-
-    match /community_profiles/{userId}/favorites/{favoriteId} {
-      allow read: if request.auth != null
-        && request.auth.token.firebase.sign_in_provider != 'anonymous';
-      allow create, update, delete: if request.auth != null
-        && request.auth.uid == userId;
     }
 
     match /community_profiles/{userId}/planned_events/{eventId} {
@@ -154,19 +169,19 @@ service cloud.firestore {
     }
 
     match /community_profiles/{userId}/connections/{otherUserId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin() || (request.auth != null
+      allow read: if isRegistered();
+      allow write: if isAdmin() || (isRegistered()
         && (request.auth.uid == userId || request.auth.uid == otherUserId));
     }
 
     match /connection_requests/{requestId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null
+      allow read: if isRegistered();
+      allow create: if isRegistered()
         && request.resource.data.from == request.auth.uid
         && request.resource.data.to is string
         && request.resource.data.to != request.auth.uid
         && request.resource.data.status == 'pending';
-      allow update: if request.auth != null
+      allow update: if isRegistered()
         && ((resource.data.to == request.auth.uid
               && request.resource.data.status in ['accepted', 'rejected'])
             || (resource.data.from == request.auth.uid
@@ -175,7 +190,7 @@ service cloud.firestore {
               && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                 'notificationRequestedAt']))
             || isAdmin());
-      allow delete: if request.auth != null
+      allow delete: if isRegistered()
         && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid || isAdmin());
     }
 

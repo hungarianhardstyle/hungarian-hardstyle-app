@@ -9,11 +9,8 @@ import '../organizers/organizers_screen.dart';
 import '../submissions/artist_submission_screen.dart';
 import '../submissions/organizer_submission_screen.dart';
 import 'about_screen.dart';
-import 'community_users_screen.dart';
 import 'donate_screen.dart';
-import 'favorites_screen.dart';
 import 'faq_screen.dart';
-import 'newsletter_screen.dart';
 import 'privacy_screen.dart';
 import 'radio_provider_screen.dart';
 import 'settings_screen.dart';
@@ -31,7 +28,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   final _search = TextEditingController();
   final _expanded = <String>{
     'Felfedezés',
-    'Közösség',
     'Beküldés',
     'Kapcsolat és támogatás',
     'Alkalmazás',
@@ -95,27 +91,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 'Válogatások a keményebb stílusokból',
                 const SpotifyPlaylistsScreen(),
               ),
-            ]),
-            _section('Közösség', [
-              _item(
-                Icons.favorite_outline,
-                'Kedvencek',
-                'Mentett hírek, események és DJ-k',
-                const FavoritesScreen(),
-              ),
-              _item(
-                Icons.mark_email_unread_outlined,
-                'Hírlevél',
-                'Iratkozz fel a Hungarian Hardstyle híreire',
-                const NewsletterScreen(),
-              ),
-              if (registered)
-                _item(
-                  Icons.people_outline,
-                  'Felhasználók',
-                  'Regisztrált felhasználók keresése és listája',
-                  const CommunityUsersScreen(),
-                ),
             ]),
             _section('Beküldés', [
               if (canArtist)

@@ -15,6 +15,7 @@ class LabelPurchaseService {
   final InAppPurchase _store;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   final _updates = StreamController<PurchaseDetails>.broadcast();
+  final Set<String> _completedPurchases = <String>{};
 
   bool lastStoreAvailable = false;
   Set<String> lastNotFoundProductIds = const {};
@@ -28,7 +29,16 @@ class LabelPurchaseService {
     lastNotFoundProductIds = const {};
     lastProductQueryError = null;
     if (!available) return const [];
-    final response = await _store.queryProductDetails(productIds.toSet());
+    final ids = productIds.toSet();
+    ProductDetailsResponse? response;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      response = await _store.queryProductDetails(ids);
+      if (response.error == null && response.productDetails.isNotEmpty) break;
+      if (attempt < 2) {
+        await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+      }
+    }
+    if (response == null) return const [];
     if (response.error != null) {
       lastProductQueryError = response.error!.message;
       throw StateError(response.error!.message);
@@ -41,11 +51,34 @@ class LabelPurchaseService {
     _subscription ??= _store.purchaseStream.listen((items) async {
       for (final purchase in items) {
         _updates.add(purchase);
-        if (purchase.pendingCompletePurchase) {
-          await _store.completePurchase(purchase);
+        if ((purchase.status == PurchaseStatus.error ||
+                purchase.status == PurchaseStatus.canceled) &&
+            purchase.pendingCompletePurchase) {
+          await completePurchase(purchase);
         }
       }
     });
+  }
+
+  Future<bool> completePurchase(PurchaseDetails purchase) async {
+    if (!purchase.pendingCompletePurchase) return true;
+    final key = _purchaseKey(purchase);
+    if (_completedPurchases.contains(key)) return true;
+    try {
+      await _store.completePurchase(purchase);
+      _completedPurchases.add(key);
+      return true;
+    } catch (error) {
+      // Keep the transaction pending so Google Play can deliver it again.
+      // This avoids falsely marking a purchase as finished when the
+      // acknowledgement request actually failed.
+      return false;
+    }
+  }
+
+  String _purchaseKey(PurchaseDetails purchase) {
+    final token = purchase.verificationData.serverVerificationData;
+    return '${purchase.productID}:$token';
   }
 
   Future<bool> buy(ProductDetails product) => _store.buyNonConsumable(
@@ -56,10 +89,13 @@ class LabelPurchaseService {
     final error = purchase.error;
     if (error == null) return 'A Google Play-vásárlás nem sikerült.';
     return switch (error.code) {
-      'item_already_owned' => 'Ezt a kiadást már megvásároltad. A letöltés hamarosan elérhető lesz.',
+      'item_already_owned' =>
+        'Ezt a kiadást már megvásároltad. A letöltés hamarosan elérhető lesz.',
       'user_canceled' => 'A vásárlást megszakítottad.',
-      'billing_unavailable' => 'A Google Play vásárlási szolgáltatása most nem érhető el.',
-      _ => 'A Google Play nem tudta elindítani a vásárlást. Próbáld újra később.',
+      'billing_unavailable' =>
+        'A Google Play vásárlási szolgáltatása most nem érhető el.',
+      _ =>
+        'A Google Play nem tudta elindítani a vásárlást. Próbáld újra később.',
     };
   }
 
@@ -157,7 +193,7 @@ class LabelPurchaseService {
         if (!result.isCompleted) {
           result.completeError(
             StateError(
-              'AdMob megjelenítési hiba (${error.code}): ${error.message}',
+              'A jutalmazott reklámot nem sikerült megjeleníteni. Próbáld újra később.',
             ),
           );
         }
@@ -178,9 +214,8 @@ class LabelPurchaseService {
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: completer.complete,
-        onAdFailedToLoad: (error) => completer.completeError(
-          StateError(_admobLoadMessage(error)),
-        ),
+        onAdFailedToLoad: (error) =>
+            completer.completeError(StateError(_admobLoadMessage(error))),
       ),
     );
     return completer.future;
@@ -188,8 +223,10 @@ class LabelPurchaseService {
 
   static String _admobLoadMessage(LoadAdError error) {
     return switch (error.code) {
-      0 => 'A reklám kérése érvénytelen. Ellenőrizd az alkalmazás beállításait.',
-      1 => 'Nem sikerült betölteni a reklámot. Ellenőrizd az internetkapcsolatot.',
+      0 =>
+        'A reklám kérése érvénytelen. Ellenőrizd az alkalmazás beállításait.',
+      1 =>
+        'Nem sikerült betölteni a reklámot. Ellenőrizd az internetkapcsolatot.',
       2 => 'A reklámszolgáltatás jelenleg nem érhető el. Próbáld újra később.',
       3 => 'Most nincs elérhető reklám. Próbáld újra később.',
       _ => 'A reklámot most nem sikerült betölteni. Próbáld újra később.',

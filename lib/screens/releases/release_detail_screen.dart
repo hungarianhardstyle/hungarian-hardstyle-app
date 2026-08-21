@@ -8,6 +8,7 @@ import 'releases_screen.dart';
 import '../../widgets/release_preview_player.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../services/label_purchase_service.dart';
+import '../../core/errors/user_facing_error.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -28,36 +29,83 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   bool _unlocking = false;
   bool _adUnlocked = false;
   bool _checkingAdUnlock = true;
+  bool _loadingProducts = false;
   final Set<String> _verifiedProducts = <String>{};
+  final Set<String> _knownProductIds = <String>{};
+  final Set<String> _handlingPurchaseKeys = <String>{};
 
   @override
   void initState() {
     super.initState();
+    _knownProductIds.addAll(
+      widget.release.products.map((product) => product.id),
+    );
     _purchases.listen();
-    _updates = _purchases.purchaseUpdates.listen((purchase) async {
-      if (!mounted) return;
-      var verified = false;
-      if (purchase.status == PurchaseStatus.purchased) {
-        try {
-          verified = await _purchases.verifyPurchase(
-            purchase: purchase,
-            releaseId: widget.release.id,
-          );
-        } catch (_) {}
-      }
-      setState(() {
-        if (verified) _verifiedProducts.add(purchase.productID);
-        _message = verified
-            ? 'A vásárlás ellenőrzése sikeres.'
-            : purchase.status == PurchaseStatus.purchased
-            ? 'A vásárlás ellenőrzése sikertelen.'
-            : purchase.status == PurchaseStatus.error
-            ? _purchases.purchaseErrorMessage(purchase)
-            : null;
-      });
-    });
+    _updates = _purchases.purchaseUpdates.listen(_handlePurchase);
     _loadProducts();
     _loadAdUnlockStatus();
+    _restorePurchases();
+  }
+
+  Future<void> _handlePurchase(PurchaseDetails purchase) async {
+    if (!_knownProductIds.contains(purchase.productID)) {
+      if (purchase.status == PurchaseStatus.error ||
+          purchase.status == PurchaseStatus.canceled) {
+        await _purchases.completePurchase(purchase);
+      }
+      return;
+    }
+    final key =
+        '${purchase.productID}:${purchase.verificationData.serverVerificationData}';
+    if (!_handlingPurchaseKeys.add(key)) return;
+
+    var verified = false;
+    final needsVerification =
+        purchase.status == PurchaseStatus.purchased ||
+        purchase.status == PurchaseStatus.restored;
+    if (needsVerification) {
+      try {
+        verified = await _purchases.verifyPurchase(
+          purchase: purchase,
+          releaseId: widget.release.id,
+        );
+      } catch (_) {
+        verified = false;
+      }
+    }
+
+    final canComplete = !needsVerification || verified;
+    final completed = canComplete
+        ? await _purchases.completePurchase(purchase)
+        : false;
+    if (!completed || !verified) _handlingPurchaseKeys.remove(key);
+    if (!mounted) return;
+    setState(() {
+      if (verified && completed) _verifiedProducts.add(purchase.productID);
+      _message = verified && completed
+          ? 'A vásárlás ellenőrzése és véglegesítése sikeres.'
+          : purchase.status == PurchaseStatus.purchased ||
+                purchase.status == PurchaseStatus.restored
+          ? completed
+                ? 'A vásárlás ellenőrzése sikertelen.'
+                : 'A vásárlás ellenőrzése vagy véglegesítése még nem sikerült.'
+          : purchase.status == PurchaseStatus.error
+          ? _purchases.purchaseErrorMessage(purchase)
+          : null;
+    });
+  }
+
+  Future<void> _restorePurchases() async {
+    try {
+      await _purchases.restore();
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _message =
+              'A korábbi Google Play-vásárlások visszaállítása nem sikerült.',
+        );
+      }
+    }
   }
 
   Future<void> _loadAdUnlockStatus() async {
@@ -72,6 +120,11 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   }
 
   Future<void> _loadProducts() async {
+    // Free releases intentionally have no Google Play product IDs. Do not
+    // query Billing with an empty ID set or show a misleading product error.
+    if (widget.release.products.isEmpty) return;
+    if (_loadingProducts) return;
+    if (mounted) setState(() => _loadingProducts = true);
     try {
       final products = await _purchases.loadProducts(
         widget.release.products.map((product) => product.id),
@@ -81,15 +134,24 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       if (mounted) {
         setState(() {
           _products = const [];
-          _message = 'A Google Play terméklista most nem tölthető be. Próbáld újra később.';
+          _message =
+              'A Google Play terméklista most nem tölthető be. Próbáld újra később.';
         });
       }
+    } finally {
+      if (mounted) setState(() => _loadingProducts = false);
     }
     if (!mounted || _products.isNotEmpty) return;
     if (_purchases.lastNotFoundProductIds.isNotEmpty) {
-      setState(() => _message = 'Ehhez a kiadáshoz a Google Play-termék még nem érhető el vásárlásra.');
+      setState(
+        () => _message =
+            'Ehhez a kiadáshoz a Google Play-termék még nem érhető el vásárlásra.',
+      );
     } else if (!_purchases.lastStoreAvailable) {
-      setState(() => _message = 'A vásárlás csak a Google Play Áruházból telepített alkalmazásban érhető el.');
+      setState(
+        () => _message =
+            'A vásárlás csak a Google Play Áruházból telepített alkalmazásban érhető el.',
+      );
     }
   }
 
@@ -131,6 +193,14 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
               padding: const EdgeInsets.only(top: 6),
               child: Text(
                 release.genre,
+                style: const TextStyle(color: Colors.white70),
+              ),
+            ),
+          if (release.releaseDate.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                'Megjelenés: ${release.releaseDate}',
                 style: const TextStyle(color: Colors.white70),
               ),
             ),
@@ -188,24 +258,57 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
             }),
             if (_message != null)
               Text(_message!, style: const TextStyle(color: Colors.white70)),
+            if (_products.isEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: _loadingProducts ? null : _loadProducts,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(
+                    _loadingProducts ? 'Termékek betöltése…' : 'Újrapróbálás',
+                  ),
+                ),
+              ),
           ],
           const SizedBox(height: 18),
-          Card(
-            child: ListTile(
-              title: const Text('128 kbps MP3 feloldása reklámmal'),
-              subtitle: const Text(
-                'A jutalmazott reklám megtekintése után a fájl letölthető.',
+          if (release.isFree)
+            Card(
+              child: ListTile(
+                title: const Text('WAV letöltése'),
+                subtitle: const Text(
+                  'Az ingyenes kiadvány WAV formátumban tölthető le.',
+                ),
+                trailing: FilledButton(
+                  onPressed: () => _download('free_wav'),
+                  child: const Text('Letöltés'),
+                ),
               ),
-              trailing: FilledButton(
-                onPressed: _unlocking || _checkingAdUnlock
-                    ? null
-                    : _adUnlocked
-                    ? () => _download('mp3_128')
-                    : _unlock128,
-                child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
+            )
+          else
+            Card(
+              child: ListTile(
+                title: const Text('128 kbps MP3 feloldása reklámmal'),
+                subtitle: const Text(
+                  'A jutalmazott reklám megtekintése után a fájl letölthető.',
+                ),
+                trailing: FilledButton(
+                  onPressed: _unlocking || _checkingAdUnlock
+                      ? null
+                      : _adUnlocked
+                      ? () => _download('mp3_128')
+                      : _unlock128,
+                  child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
+                ),
               ),
             ),
-          ),
+          if (release.products.isEmpty && _message != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _message!,
+                style: const TextStyle(color: Colors.white70),
+              ),
+            ),
           if (release.versions.isNotEmpty) ...[
             const SizedBox(height: 16),
             const Text(
@@ -281,7 +384,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 onPressed: () => _download(_downloadVariant(configured.id)),
               )
             : FilledButton(
-                onPressed: product == null ? null : () => _buy(product), /*
+                onPressed: product == null ? null : () => _buy(product),
+                /*
                     ? () => setState(
                         () => _message =
                             'A vásárlás a Google Playből telepített alkalmazásban érhető el.',
@@ -353,7 +457,9 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
         );
       }
     } catch (error) {
-      final message = error is StateError ? error.message.toString() : '$error';
+      final message = error is StateError
+          ? error.message.toString()
+          : userFacingError(error);
       if (mounted) setState(() => _message = message);
     } finally {
       if (mounted) setState(() => _unlocking = false);
@@ -368,7 +474,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       );
       return launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } catch (error) {
-      if (mounted) setState(() => _message = '$error');
+      if (mounted) setState(() => _message = userFacingError(error));
       return false;
     }
   }

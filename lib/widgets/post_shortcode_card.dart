@@ -38,7 +38,7 @@ class PostShortcodeCard extends StatelessWidget {
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
-            if (related.isNotEmpty) {
+          if (related.isNotEmpty) {
             if (related.length == 1) {
               await Navigator.push(
                 context,
@@ -75,7 +75,11 @@ class PostShortcodeCard extends StatelessWidget {
             }
             return;
           }
-          await openInAppBrowser(context, uri.toString(), title: shortcode.label);
+          await openInAppBrowser(
+            context,
+            uri.toString(),
+            title: shortcode.label,
+          );
         },
       ),
     );

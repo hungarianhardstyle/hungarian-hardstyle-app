@@ -193,7 +193,7 @@ class Post {
       date: json['date'] ?? '',
       link: json['link'] ?? '',
       categoryIds: _readCategoryIds(json),
-      categories: const [],
+      categories: _readCategories(json),
       tags: _readTags(json),
       galleryId: 0,
       galleryImages: const [],
@@ -211,6 +211,10 @@ class Post {
   }
 
   bool get hasGallery => galleryImages.isNotEmpty;
+
+  List<String> get articleCategories => categories
+      .where((category) => category.trim().toLowerCase() != 'cikkek')
+      .toList(growable: false);
 
   static final RegExp _supportedShortcodePattern = RegExp(
     r'\[(ays_poll|irp|FinalTilesGallery)\b[^\]]*\]',

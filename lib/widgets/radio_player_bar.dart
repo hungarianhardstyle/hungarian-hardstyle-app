@@ -11,10 +11,14 @@ class RadioPlayerBar extends StatefulWidget {
   State<RadioPlayerBar> createState() => _RadioPlayerBarState();
 }
 
+final radioPlayingState = ValueNotifier<bool>(false);
+final releasePreviewPlayingState = ValueNotifier<bool>(false);
+
 Future<void> stopRadioPlayback() async {
   try {
     await const MethodChannel('hu_hs/radio').invokeMethod<void>('stop');
   } catch (_) {}
+  radioPlayingState.value = false;
 }
 
 class _RadioPlayerBarState extends State<RadioPlayerBar> {
@@ -23,13 +27,45 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
   String _title = 'Real Hardstyle FM';
   bool _muted = false;
   bool _playing = false;
+  bool _toggleBusy = false;
   bool _readingMetadata = false;
   Timer? _metadataTimer;
+  VoidCallback? _previewListener;
 
   @override
   void initState() {
     super.initState();
+    _previewListener = () {
+      if (releasePreviewPlayingState.value) {
+        // Reset the visual state immediately as well as stopping the native
+        // player. This prevents a rapid tap from leaving the bar on Stop
+        // while a release preview is playing.
+        if (mounted && _playing) {
+          setState(() {
+            _playing = false;
+            _title = 'Real Hardstyle FM';
+          });
+          _stopMetadataRefresh();
+        }
+        unawaited(stopRadioPlayback());
+      }
+    };
+    releasePreviewPlayingState.addListener(_previewListener!);
+    radioPlayingState.addListener(_syncExternalRadioState);
     unawaited(_syncPlaying());
+  }
+
+  void _syncExternalRadioState() {
+    if (!mounted || radioPlayingState.value == _playing) return;
+    setState(() {
+      _playing = radioPlayingState.value;
+      if (!_playing) _title = 'Real Hardstyle FM';
+    });
+    if (_playing) {
+      _startMetadataRefresh();
+    } else {
+      _stopMetadataRefresh();
+    }
   }
 
   Future<void> _syncPlaying() async {
@@ -37,6 +73,7 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
       final playing = await _channel.invokeMethod<bool>('isPlaying') ?? false;
       if (!mounted) return;
       setState(() => _playing = playing);
+      radioPlayingState.value = playing;
       if (playing) _startMetadataRefresh();
     } catch (_) {}
   }
@@ -56,10 +93,26 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
   }
 
   Future<void> _togglePlay() async {
+    if (_toggleBusy || releasePreviewPlayingState.value) return;
+    _toggleBusy = true;
     try {
       final isPlaying =
           await _channel.invokeMethod<bool>('isPlaying') ?? _playing;
       if (isPlaying) {
+        // A preview can stop the native player while this widget still has a
+        // stale snapshot. If the UI says stopped, clear that stale native
+        // state before handling the user's new Play tap.
+        if (!_playing) {
+          await _channel.invokeMethod<void>('stop');
+          radioPlayingState.value = false;
+        }
+        if (!_playing) {
+          await _channel.invokeMethod<void>('play', _streamUri.toString());
+          if (mounted) setState(() => _playing = true);
+          radioPlayingState.value = true;
+          _startMetadataRefresh();
+          return;
+        }
         await _channel.invokeMethod<void>('stop');
         _stopMetadataRefresh();
         if (mounted) {
@@ -68,12 +121,24 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
             _title = 'Real Hardstyle FM';
           });
         }
+        radioPlayingState.value = false;
       } else {
+        // The preview may have started while the native radio call was
+        // awaiting. Never allow the radio to win that race.
+        if (releasePreviewPlayingState.value) return;
         await _channel.invokeMethod<void>('play', _streamUri.toString());
+        if (releasePreviewPlayingState.value) {
+          await stopRadioPlayback();
+          return;
+        }
         if (mounted) setState(() => _playing = true);
+        radioPlayingState.value = true;
         _startMetadataRefresh();
       }
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      _toggleBusy = false;
+    }
   }
 
   Future<void> _readMetadata() async {
@@ -118,18 +183,23 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
   @override
   void dispose() {
     _stopMetadataRefresh();
+    if (_previewListener != null) {
+      releasePreviewPlayingState.removeListener(_previewListener!);
+    }
+    radioPlayingState.removeListener(_syncExternalRadioState);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final trackTitle = _title == 'Real Hardstyle FM' ? 'Élő adás' : _title;
+    final compact = MediaQuery.orientationOf(context) == Orientation.landscape;
 
     return ColoredBox(
       color: const Color(0xFF111111),
       child: Container(
-        height: 70,
-        margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+        height: compact ? 56 : 70,
+        margin: EdgeInsets.fromLTRB(compact ? 8 : 12, 4, compact ? 8 : 12, 4),
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           color: const Color(0xFF1B1B1B),
@@ -154,11 +224,11 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
                   borderRadius: BorderRadius.circular(8),
                   onTap: _togglePlay,
                   child: SizedBox.square(
-                    dimension: 44,
+                    dimension: compact ? 36 : 44,
                     child: Icon(
                       _playing ? Icons.stop_rounded : Icons.play_arrow_rounded,
                       color: Colors.black,
-                      size: 30,
+                      size: compact ? 24 : 30,
                     ),
                   ),
                 ),

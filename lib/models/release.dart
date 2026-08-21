@@ -45,6 +45,8 @@ class HuhsRelease {
   final List<ReleaseProduct> products;
   final List<ReleaseVersion> versions;
   final String audioStatus;
+  final String releaseDate;
+  final bool isFree;
 
   const HuhsRelease({
     required this.id,
@@ -57,6 +59,8 @@ class HuhsRelease {
     required this.products,
     required this.versions,
     required this.audioStatus,
+    required this.releaseDate,
+    required this.isFree,
   });
 
   factory HuhsRelease.fromJson(Map<String, dynamic> json) {
@@ -109,6 +113,10 @@ class HuhsRelease {
                 .toList(growable: false)
           : const [],
       audioStatus: _readString(json['audio_status']),
+      releaseDate: _readString(
+        json['release_date'] ?? json['releaseDate'] ?? json['date'],
+      ),
+      isFree: json['is_free'] == true || json['isFree'] == true,
     );
   }
 }

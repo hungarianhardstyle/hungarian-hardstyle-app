@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/errors/user_facing_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/artist.dart';
@@ -199,7 +201,7 @@ class _GenreDiscoveryScreenState extends ConsumerState<GenreDiscoveryScreen> {
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: Text('A lista nem tölthető be.\n$_error'),
+                  child: Text(userFacingError(_error)),
                 ),
               if (_loading || _artistHasMore || _postHasMore)
                 const Padding(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/profile_submission.dart';
 import '../../models/submission_image.dart';
+import '../../core/errors/user_facing_error.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/profile_submission_provider.dart';
 import '../../widgets/submission_image_picker.dart';
@@ -92,11 +93,9 @@ class _OrganizerSubmissionScreenState
       if (mounted) Navigator.of(context).pop();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.toString().replaceFirst('Exception: ', '')),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -117,113 +116,143 @@ class _OrganizerSubmissionScreenState
         ),
         child: SafeArea(
           top: false,
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(18, 20, 18, 40),
-              children: [
-                const Text(
-                  'Szervező beküldése',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'A szervezői adatlap csak ellenőrzés és jóváhagyás után jelenhet meg.',
-                  style: TextStyle(color: Colors.white70, height: 1.4),
-                ),
-                const SizedBox(height: 22),
-                _field(_name, 'Szervező neve *', Icons.groups, _required),
-                _field(_city, 'Város', Icons.location_city, null),
-                _field(_country, 'Ország', Icons.public, null),
-                _field(
-                  _contactEmail,
-                  'Privát kapcsolattartó e-mail *',
-                  Icons.email_outlined,
-                  _emailRequired,
-                  keyboardType: TextInputType.emailAddress,
-                  helper: 'Csak az admin látja.',
-                ),
-                ref
-                    .watch(profileSubmissionOptionsProvider)
-                    .when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (error, stack) =>
-                          const Text('A műfajok betöltése sikertelen.'),
-                      data: (options) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Műfajok *',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final landscape =
+                  MediaQuery.orientationOf(context) == Orientation.landscape;
+              return Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: landscape ? 980 : double.infinity,
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(18, 20, 18, 40),
+                      children: [
+                        const Text(
+                          'Szervező beküldése',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: options.genres
-                                .map(
-                                  (genre) => FilterChip(
-                                    selected: _genres.contains(genre),
-                                    label: Text(genre),
-                                    onSelected: (selected) => setState(() {
-                                      selected
-                                          ? _genres.add(genre)
-                                          : _genres.remove(genre);
-                                    }),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'A szervezői adatlap csak ellenőrzés és jóváhagyás után jelenhet meg.',
+                          style: TextStyle(color: Colors.white70, height: 1.4),
+                        ),
+                        const SizedBox(height: 22),
+                        _field(
+                          _name,
+                          'Szervező neve *',
+                          Icons.groups,
+                          _required,
+                        ),
+                        _field(_city, 'Város', Icons.location_city, null),
+                        _field(_country, 'Ország', Icons.public, null),
+                        _field(
+                          _contactEmail,
+                          'Privát kapcsolattartó e-mail *',
+                          Icons.email_outlined,
+                          _emailRequired,
+                          keyboardType: TextInputType.emailAddress,
+                          helper: 'Csak az admin látja.',
+                        ),
+                        ref
+                            .watch(profileSubmissionOptionsProvider)
+                            .when(
+                              loading: () => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                              error: (error, stack) =>
+                                  const Text('A műfajok betöltése sikertelen.'),
+                              data: (options) => Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Műfajok *',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: options.genres
+                                        .map(
+                                          (genre) => FilterChip(
+                                            selected: _genres.contains(genre),
+                                            label: Text(genre),
+                                            onSelected: (selected) =>
+                                                setState(() {
+                                                  selected
+                                                      ? _genres.add(genre)
+                                                      : _genres.remove(genre);
+                                                }),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                  const SizedBox(height: 14),
+                                ],
+                              ),
+                            ),
+                        SubmissionImagePicker(
+                          image: _logo,
+                          title: 'Szervezői logó feltöltése',
+                          helperText:
+                              'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
+                          onChanged: (image) => setState(() => _logo = image),
+                        ),
+                        _field(
+                          _description,
+                          'Bemutatkozás',
+                          Icons.notes,
+                          null,
+                          maxLines: 6,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Weboldal és közösségi linkek',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 12),
+                        ..._links.entries.map(
+                          (entry) => _field(
+                            entry.value,
+                            _label(entry.key),
+                            Icons.link,
+                            _optionalUrl,
+                            keyboardType: TextInputType.url,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FilledButton.icon(
+                          onPressed: _submitting ? null : _submit,
+                          icon: _submitting
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
                                   ),
                                 )
-                                .toList(),
+                              : const Icon(Icons.send),
+                          label: Text(
+                            _submitting ? 'Küldés…' : 'Szervező beküldése',
                           ),
-                          const SizedBox(height: 14),
-                        ],
-                      ),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(54),
+                          ),
+                        ),
+                      ],
                     ),
-                SubmissionImagePicker(
-                  image: _logo,
-                  title: 'Szervezői logó feltöltése',
-                  helperText:
-                      'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
-                  onChanged: (image) => setState(() => _logo = image),
-                ),
-                _field(
-                  _description,
-                  'Bemutatkozás',
-                  Icons.notes,
-                  null,
-                  maxLines: 6,
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Weboldal és közösségi linkek',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                ..._links.entries.map(
-                  (entry) => _field(
-                    entry.value,
-                    _label(entry.key),
-                    Icons.link,
-                    _optionalUrl,
-                    keyboardType: TextInputType.url,
                   ),
                 ),
-                const SizedBox(height: 8),
-                FilledButton.icon(
-                  onPressed: _submitting ? null : _submit,
-                  icon: _submitting
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.send),
-                  label: Text(_submitting ? 'Küldés…' : 'Szervező beküldése'),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(54),
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),

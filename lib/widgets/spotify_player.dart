@@ -44,16 +44,10 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
               });
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.graphic_eq,
-                    color: Colors.green,
-                  ),
+                  const Icon(Icons.graphic_eq, color: Colors.green),
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
@@ -85,9 +79,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
                 borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(18),
                 ),
-                child: WebViewWidget(
-                  controller: _controller,
-                ),
+                child: WebViewWidget(controller: _controller),
               ),
             ),
           ),

@@ -60,7 +60,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       if (mounted) {
         setState(() => _attendanceState = null);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('A részvétel mentése sikertelen: $error')),
+          const SnackBar(
+            content: Text(
+              'A részvétel mentése nem sikerült. Próbáld újra később.',
+            ),
+          ),
         );
       }
     } finally {
@@ -189,251 +193,297 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           overflow: TextOverflow.ellipsis,
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (event.flyerUrl.isNotEmpty)
-              Hero(
-                tag: 'event_${event.id}',
-                child: CachedNetworkImage(
-                  imageUrl: event.flyerUrl,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final landscape =
+              MediaQuery.orientationOf(context) == Orientation.landscape;
+          return SingleChildScrollView(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: landscape ? 1100 : double.infinity,
                 ),
-              ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event.title,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      height: 1.15,
-                    ),
-                  ),
-                  if (event.genres.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: event.genres
-                          .map((genre) => GenreChip(genre: genre))
-                          .toList(),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  _InfoRow(icon: Icons.calendar_today, text: _formatDate()),
-                  if (event.venueLine.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    _InfoRow(
-                      icon: Icons.location_on_outlined,
-                      text: event.venueLine,
-                    ),
-                  ],
-                  if (event.organizer.name.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    _InfoRow(
-                      icon: Icons.groups_outlined,
-                      text: event.organizer.name,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => OrganizerDetailScreen(
-                            organizerId: event.organizer.id,
-                            fallbackName: event.organizer.name,
-                          ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (event.flyerUrl.isNotEmpty)
+                      Hero(
+                        tag: 'event_${event.id}',
+                        child: CachedNetworkImage(
+                          imageUrl: event.flyerUrl,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                    ),
-                  ],
-                  if (event.artists.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    _ArtistLinks(artists: event.artists),
-                  ],
-                  if (event.hasTicket ||
-                      event.hasGoogleMaps ||
-                      event.hasFacebookEvent) ...[
-                    const SizedBox(height: 22),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        if (event.hasFacebookEvent)
-                          FilledButton.icon(
-                            onPressed: () => openSocialLink(
-                              context,
-                              event.facebookEventUrl,
-                              title: 'Facebook',
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            event.title,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              height: 1.15,
                             ),
-                            icon: const Icon(Icons.facebook),
-                            label: const Text('Facebook'),
                           ),
-                        if (event.hasTicket)
-                          FilledButton.icon(
-                            onPressed: () =>
-                                openInAppBrowser(context, event.ticketUrl),
-                            icon: const Icon(Icons.confirmation_number),
-                            label: const Text('Jegyvásárlás'),
+                          if (event.genres.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: event.genres
+                                  .map((genre) => GenreChip(genre: genre))
+                                  .toList(),
+                            ),
+                          ],
+                          const SizedBox(height: 16),
+                          _InfoRow(
+                            icon: Icons.calendar_today,
+                            text: _formatDate(),
                           ),
-                        if (event.hasGoogleMaps)
-                          OutlinedButton.icon(
-                            onPressed: () =>
-                                _openExternalUrl(context, event.googleMapsUrl),
-                            icon: const Icon(Icons.map_outlined),
-                            label: const Text('Térkép'),
-                          ),
-                      ],
-                    ),
-                  ],
-                  const SizedBox(height: 18),
-                  StreamBuilder(
-                    stream: ref
-                        .read(communityServiceProvider)
-                        .watchEventAttendance(event.id),
-                    builder: (context, snapshot) {
-                      final docs = snapshot.data?.docs ?? const [];
-                      final attending = docs
-                          .where((doc) => doc.data()['state'] == 'attending')
-                          .length;
-                      final user = ref
-                          .read(communityServiceProvider)
-                          .auth
-                          .currentUser;
-                      return FutureBuilder<String?>(
-                        future: _attendanceFuture,
-                        builder: (context, stateSnapshot) {
-                          final selected =
-                              _attendanceState ?? stateSnapshot.data;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Ott leszek: $attending résztvevő'),
-                              if (user != null && !user.isAnonymous)
-                                FutureBuilder<List<Map<String, String>>>(
-                                  future: _friendAttendanceFuture,
-                                  builder: (context, friends) {
-                                    final names = (friends.data ?? const [])
-                                        .map((friend) => friend['name']!.trim())
-                                        .where((name) => name.isNotEmpty)
-                                        .toList();
-                                    if (names.isEmpty) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Text(
-                                        'Ismerőseid is jönnek: ${names.join(', ')}',
-                                      ),
-                                    );
-                                  },
+                          if (event.venueLine.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            _InfoRow(
+                              icon: Icons.location_on_outlined,
+                              text: event.venueLine,
+                            ),
+                          ],
+                          if (event.organizer.name.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            _InfoRow(
+                              icon: Icons.groups_outlined,
+                              text: event.organizer.name,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => OrganizerDetailScreen(
+                                    organizerId: event.organizer.id,
+                                    fallbackName: event.organizer.name,
+                                  ),
                                 ),
-                              const SizedBox(height: 8),
-                              if (user == null || user.isAnonymous)
-                                const Text(
-                                  'A részvétel jelöléséhez regisztráció szükséges.',
-                                ),
-                              if (user != null && !user.isAnonymous)
-                                Wrap(
-                                  spacing: 8,
-                                  children: [
-                                    FilledButton.icon(
-                                      style: selected == 'attending'
-                                          ? null
-                                          : FilledButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.transparent,
-                                              foregroundColor: Colors.white70,
-                                              side: const BorderSide(
-                                                color: Colors.white54,
+                              ),
+                            ),
+                          ],
+                          if (event.artists.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            _ArtistLinks(artists: event.artists),
+                          ],
+                          if (event.hasTicket ||
+                              event.hasGoogleMaps ||
+                              event.hasFacebookEvent) ...[
+                            const SizedBox(height: 22),
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: [
+                                if (event.hasFacebookEvent)
+                                  FilledButton.icon(
+                                    onPressed: () => openSocialLink(
+                                      context,
+                                      event.facebookEventUrl,
+                                      title: 'Facebook',
+                                    ),
+                                    icon: const Icon(Icons.facebook),
+                                    label: const Text('Facebook'),
+                                  ),
+                                if (event.hasTicket)
+                                  FilledButton.icon(
+                                    onPressed: () => openInAppBrowser(
+                                      context,
+                                      event.ticketUrl,
+                                    ),
+                                    icon: const Icon(Icons.confirmation_number),
+                                    label: const Text('Jegyvásárlás'),
+                                  ),
+                                if (event.hasGoogleMaps)
+                                  OutlinedButton.icon(
+                                    onPressed: () => _openExternalUrl(
+                                      context,
+                                      event.googleMapsUrl,
+                                    ),
+                                    icon: const Icon(Icons.map_outlined),
+                                    label: const Text('Térkép'),
+                                  ),
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 18),
+                          StreamBuilder(
+                            stream: ref
+                                .read(communityServiceProvider)
+                                .watchEventAttendance(event.id),
+                            builder: (context, snapshot) {
+                              final docs = snapshot.data?.docs ?? const [];
+                              final attending = docs
+                                  .where(
+                                    (doc) => doc.data()['state'] == 'attending',
+                                  )
+                                  .length;
+                              final user = ref
+                                  .read(communityServiceProvider)
+                                  .auth
+                                  .currentUser;
+                              return FutureBuilder<String?>(
+                                future: _attendanceFuture,
+                                builder: (context, stateSnapshot) {
+                                  final selected =
+                                      _attendanceState ?? stateSnapshot.data;
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Ott leszek: $attending résztvevő'),
+                                      if (user != null && !user.isAnonymous)
+                                        FutureBuilder<
+                                          List<Map<String, String>>
+                                        >(
+                                          future: _friendAttendanceFuture,
+                                          builder: (context, friends) {
+                                            final names =
+                                                (friends.data ?? const [])
+                                                    .map(
+                                                      (friend) =>
+                                                          friend['name']!
+                                                              .trim(),
+                                                    )
+                                                    .where(
+                                                      (name) => name.isNotEmpty,
+                                                    )
+                                                    .toList();
+                                            if (names.isEmpty) {
+                                              return const SizedBox.shrink();
+                                            }
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 4,
+                                              ),
+                                              child: Text(
+                                                'Ismerőseid is jönnek: ${names.join(', ')}',
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      const SizedBox(height: 8),
+                                      if (user == null || user.isAnonymous)
+                                        const Text(
+                                          'A részvétel jelöléséhez regisztráció szükséges.',
+                                        ),
+                                      if (user != null && !user.isAnonymous)
+                                        Wrap(
+                                          spacing: 8,
+                                          children: [
+                                            FilledButton.icon(
+                                              style: selected == 'attending'
+                                                  ? null
+                                                  : FilledButton.styleFrom(
+                                                      backgroundColor:
+                                                          Colors.transparent,
+                                                      foregroundColor:
+                                                          Colors.white70,
+                                                      side: const BorderSide(
+                                                        color: Colors.white54,
+                                                      ),
+                                                    ),
+                                              onPressed: _attendanceBusy
+                                                  ? null
+                                                  : () => _setAttendance(
+                                                      'attending',
+                                                    ),
+                                              icon: Icon(
+                                                selected == 'attending'
+                                                    ? Icons.check
+                                                    : Icons.event_available,
+                                              ),
+                                              label: const Text('Ott leszek'),
+                                            ),
+                                            OutlinedButton(
+                                              style: selected == 'not_attending'
+                                                  ? OutlinedButton.styleFrom(
+                                                      backgroundColor:
+                                                          Colors.redAccent,
+                                                      foregroundColor:
+                                                          Colors.black,
+                                                      side: const BorderSide(
+                                                        color: Colors.redAccent,
+                                                      ),
+                                                    )
+                                                  : null,
+                                              onPressed: _attendanceBusy
+                                                  ? null
+                                                  : () => _setAttendance(
+                                                      'not_attending',
+                                                    ),
+                                              child: const Text(
+                                                'Nem leszek ott',
                                               ),
                                             ),
-                                      onPressed: _attendanceBusy
-                                          ? null
-                                          : () => _setAttendance('attending'),
-                                      icon: Icon(
-                                        selected == 'attending'
-                                            ? Icons.check
-                                            : Icons.event_available,
-                                      ),
-                                      label: const Text('Ott leszek'),
-                                    ),
-                                    OutlinedButton(
-                                      style: selected == 'not_attending'
-                                          ? OutlinedButton.styleFrom(
-                                              backgroundColor: Colors.redAccent,
-                                              foregroundColor: Colors.black,
-                                              side: const BorderSide(
-                                                color: Colors.redAccent,
-                                              ),
-                                            )
-                                          : null,
-                                      onPressed: _attendanceBusy
-                                          ? null
-                                          : () =>
-                                                _setAttendance('not_attending'),
-                                      child: const Text('Nem leszek ott'),
-                                    ),
-                                  ],
-                                ),
-                            ],
-                          );
+                                          ],
+                                        ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (descriptionHtml.isNotEmpty)
+                      Html(
+                        data: linkifyPlainUrls(descriptionHtml),
+                        onLinkTap: (url, attributes, element) =>
+                            openInAppBrowser(
+                              context,
+                              resolveHtmlLinkTarget(
+                                callbackUrl: url,
+                                attributes: attributes,
+                                visibleText: element?.text,
+                              ),
+                            ),
+                        style: {
+                          'body': Style(
+                            margin: Margins.zero,
+                            padding: HtmlPaddings.all(20),
+                            fontSize: FontSize(18),
+                            lineHeight: const LineHeight(1.7),
+                            color: Colors.white,
+                          ),
+                          'p': Style(margin: Margins.only(bottom: 18)),
+                          'br': Style(margin: Margins.only(bottom: 6)),
+                          'h2': Style(
+                            margin: Margins.only(top: 12, bottom: 12),
+                            fontSize: FontSize(24),
+                            fontWeight: FontWeight.bold,
+                          ),
+                          'h3': Style(
+                            margin: Margins.only(top: 10, bottom: 10),
+                            fontSize: FontSize(21),
+                            fontWeight: FontWeight.bold,
+                          ),
+                          'ul': Style(margin: Margins.only(bottom: 18)),
+                          'ol': Style(margin: Margins.only(bottom: 18)),
+                          'li': Style(margin: Margins.only(bottom: 8)),
+                          'strong': Style(fontWeight: FontWeight.bold),
+                          'a': Style(
+                            color: Colors.redAccent,
+                            textDecoration: TextDecoration.none,
+                          ),
                         },
-                      );
-                    },
-                  ),
-                ],
+                      )
+                    else
+                      const SizedBox(height: 24),
+                    SizedBox(
+                      height: MediaQuery.viewPaddingOf(context).bottom + 24,
+                    ),
+                  ],
+                ),
               ),
             ),
-            if (descriptionHtml.isNotEmpty)
-              Html(
-                data: linkifyPlainUrls(descriptionHtml),
-                onLinkTap: (url, attributes, element) => openInAppBrowser(
-                  context,
-                  resolveHtmlLinkTarget(
-                    callbackUrl: url,
-                    attributes: attributes,
-                    visibleText: element?.text,
-                  ),
-                ),
-                style: {
-                  'body': Style(
-                    margin: Margins.zero,
-                    padding: HtmlPaddings.all(20),
-                    fontSize: FontSize(18),
-                    lineHeight: const LineHeight(1.7),
-                    color: Colors.white,
-                  ),
-                  'p': Style(margin: Margins.only(bottom: 18)),
-                  'br': Style(margin: Margins.only(bottom: 6)),
-                  'h2': Style(
-                    margin: Margins.only(top: 12, bottom: 12),
-                    fontSize: FontSize(24),
-                    fontWeight: FontWeight.bold,
-                  ),
-                  'h3': Style(
-                    margin: Margins.only(top: 10, bottom: 10),
-                    fontSize: FontSize(21),
-                    fontWeight: FontWeight.bold,
-                  ),
-                  'ul': Style(margin: Margins.only(bottom: 18)),
-                  'ol': Style(margin: Margins.only(bottom: 18)),
-                  'li': Style(margin: Margins.only(bottom: 8)),
-                  'strong': Style(fontWeight: FontWeight.bold),
-                  'a': Style(
-                    color: Colors.redAccent,
-                    textDecoration: TextDecoration.none,
-                  ),
-                },
-              )
-            else
-              const SizedBox(height: 24),
-            SizedBox(height: MediaQuery.viewPaddingOf(context).bottom + 24),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

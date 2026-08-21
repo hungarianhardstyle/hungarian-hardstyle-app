@@ -1,0 +1,32 @@
+String userFacingError(Object? error) {
+  final raw = '${error ?? ''}'.toLowerCase();
+  if (raw.contains('network-request-failed') ||
+      raw.contains('socketexception') ||
+      raw.contains('connection refused') ||
+      raw.contains('timed out')) {
+    return 'Nem sikerült kapcsolódni. Ellenőrizd az internetkapcsolatot.';
+  }
+  if (raw.contains('permission-denied') || raw.contains('permission denied')) {
+    return 'Ehhez a művelethez nincs megfelelő jogosultság.';
+  }
+  if (raw.contains('already-exists') || raw.contains('already in use')) {
+    return 'Ez az adat már létezik.';
+  }
+  if (raw.contains('invalid-email')) return 'Érvénytelen e-mail-cím.';
+  if (raw.contains('wrong-password') || raw.contains('invalid-credential')) {
+    return 'A megadott e-mail-cím vagy jelszó hibás.';
+  }
+  if (raw.contains('unavailable') || raw.contains('failed-precondition')) {
+    return 'A szolgáltatás átmenetileg nem érhető el. Próbáld újra később.';
+  }
+  if (raw.contains('cloudinary') || raw.contains('upload')) {
+    return 'A kép feltöltése nem sikerült. Ellenőrizd a fájlt és az internetkapcsolatot.';
+  }
+  if (raw.contains('firebase') ||
+      raw.contains('cloud_firestore') ||
+      raw.contains('cloud_functions') ||
+      raw.contains('dioexception')) {
+    return 'A szolgáltatás nem válaszolt megfelelően. Próbáld újra később.';
+  }
+  return 'A művelet nem sikerült. Próbáld újra később.';
+}

@@ -1,6 +1,188 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Aktuális build: +167 — production AAB elkészült; zárt tesztbe feltöltésre vár
+
+### +167 — production AAB elkészült, optimalizálás alkalmazva
+
+- A +167-ben a Flutter asset-bundből kikerült a nem használt `assets/icons/` könyvtár; a forrásfájlok megmaradtak, működő funkció nem változott.
+- Az R8 teljes módja, a kód-/erőforrás-csökkentés és az osztály-újracsomagolás már korábban aktív volt; túl széles keep-szabályt nem módosítottunk a WorkManager/Room indulás védelme miatt.
+- `flutter analyze --no-pub`, `flutter test` és `git diff --check` sikeres; a production AAB: `build/HUHS-v1.0.0+167-release.aab`.
+- A Play zárt tesztbe feltöltés ebben a munkamenetben még nincs végrehajtva. A „Közepes” Play Console-mutató az AAB feldolgozása után ellenőrizendő.
+
+### +166 — production AAB elkészült, emulátoron ellenőrizve
+
+- A production AAB elkészült: `build/HUHS-v1.0.0+166-release.aab`; versionCode 166. A korábbi production AdMob App/Banner/Rewarded azonosítók az AAB-ban ellenőrizve.
+- Android 15 emulátoron a production release APK elindult, a főképernyő megjelent, a folyamat futva maradt; R8/WorkManager/Room indulási hiba nem jelentkezett.
+- A hír-like mentés emulátoron ellenőrizve: a kedvelésszám változott, és nem jelent meg reakciómentési vagy Firestore jogosultsági hiba.
+- A Play zárt tesztbe feltöltés ebben a munkamenetben még nincs végrehajtva; a Play Console optimalizálási mutatója csak a feldolgozás után ellenőrizhető.
+
+### +165 — rögzített javítás, AAB elkészült
+
+- A production AAB elkészült: `build/HUHS-v1.0.0+165-release.aab`; versionCode 165. A production AdMob App/Banner/Rewarded azonosítók a korábbi release-konfigurációból visszaállítva és az AAB-ban ellenőrizve.
+- `flutter analyze --no-pub`, Gradle release build és `git diff --check` sikeres. A Play zárt tesztbe feltöltés még nincs végrehajtva, mert az interaktív Play Console-vezérlés ebben a munkamenetben nem csatlakozott.
+
+### +166 végrehajtási ellenőrzés
+
+- Play Console „Alkalmazásoptimalizálás: Közepes”: az R8 osztály-újracsomagolása és a szükséges keep-szabályok a +166-ban beépítve; az optimalizálási mutató az új AAB feldolgozása után ellenőrizendő.
+- +165 indulási crash: a WorkManager/Room `WorkDatabase` keep-szabálya a +166-ban megmaradt; production release APK-ból emulátoron az indulás ellenőrizve.
+- Helyi állapot: az R8 osztály-újracsomagolása bekapcsolva (`-repackageclasses ''`, `-allowaccessmodification`), a WorkManager/Room keep-szabályok megmaradtak. A +166 release APK emulátoros indulása ellenőrizve; a Play optimalizálási mutató csak az új AAB feldolgozása után zárható le.
+- Hír-like mentés: a reakciódokumentum merge-elt írást használ, a Firestore szabály pedig create és update esetén külön kezeli a meglévő extra mezőket; a szabály élesítve és a +166 production APK-val emulátoron ellenőrizve.
+
+### +167 — ellenőrzés és szükség szerinti javítás
+
+- Play Console „Alkalmazásoptimalizálás: Közepes” mutató kivizsgálása az új AAB feldolgozása után.
+- Ellenőrizni, hogy az R8 teljes mód, kód- és erőforráscsökkentés, obfuszkáció, valamint az osztályok újracsomagolása ténylegesen érvényesül-e.
+- R8-riportok alapján megkeresni a túl széles `keep` szabályokat és a felesleges Android/Flutter függőségeket vagy erőforrásokat; csak biztonságos, regressziómentes javítás alkalmazható.
+- A Flutter AOT/native kód arányát figyelembe venni: a Play-mutató javulása nem garantálható pusztán újabb Gradle-kapcsolóval.
+- Ha indokolt és biztonságos, Startup Profile és további méret-/teljesítmény-optimalizálás beépítése.
+- Új AAB készítése után Play Console-ban ismét ellenőrizni a mutatót; a meglévő működő funkciók és az indulás nem romolhatnak.
+- Regressziós alapelv: működő funkciót nem szabad elrontani vagy önkényesen módosítani; minden +167-es optimalizálás után a meglévő működéseket vissza kell ellenőrizni.
+- Ingyenes kiadvány WAV-letöltés: a WordPress API `2.4.54` csomagban a `free_wav` variáns külön kezelést kapott, az `is_free` ellenőrzés kompatibilisebb lett, és a régi/új WAV-metaútvonalak fallbackje is bekerült. Feltöltés után Playből telepítve ellenőrizendő.
+- Ingyenes kiadvány adatlapján a Billing-terméklista üres lekérdezése letiltva; a fizetős kiadványok termékbetöltése változatlan. Új APK/AAB után ellenőrizendő, hogy a hamis terméklista-hiba eltűnt.
+
+### További, később rögzítendő feladatok
+
+- Ingyenes kiadvány letöltése: a letöltött hangfájl WAV legyen, ne 128 kbps MP3; a módosítást Playből telepítve is ellenőrizni kell. Ez csak az ingyenes kiadványra vonatkozik; a normál release marad 128 kbps MP3 reklámért.
+- Helyi állapot: az ingyenes kiadvány kliens- és letöltési útvonala külön `free_wav` változatra állítva; a WordPress-végpont csak `is_free` kiadványnál engedi ezt. A normál `mp3_128` jutalmazott útvonal változatlan. Playből telepített ellenőrzés és backend-élesítés még hátra van.
+- Play Console „Alkalmazásoptimalizálás: Közepes”: a +164 AAB-nál a Play Console két hiányzó optimalizálást jelzett (optimalizált erőforráscsökkentés és osztályok újracsomagolása). A buildlánc AGP 9.0.1-re és Gradle 9.1.0-ra, az AGP 9-kompatibilis `google_mobile_ads` csomag 9.1.0-ra frissítve; az elavult adaptív banner API is lecserélve. A Gradle-konfiguráció és a statikus ellenőrzés sikeres; új AAB feldolgozása után kell visszaellenőrizni, hogy a mutató javult-e.
+- Chat: az adminfunkciók kerüljenek a hárompontos üzenetmenübe, a blokkolás és jelentés mellé.
+- Helyi állapot: a Chat adminműveletei (szerkesztés, törlés, rögzítés) a hárompontos üzenetmenübe kerültek; a blokkolás és jelentés ugyanebben a menüben maradt. Futásidejű/emulátoros ellenőrzés még hátra van.
+- Profil: a kedvenc hírek megjelenítése kerüljön ki a felhasználói adatlapról; a kedvenc DJ-k és szervezők maradjanak láthatók.
+- Hírek: a kedvencnek jelölés kerüljön le a hírekről; helyette opcionális like/reakció jelenjen meg látható kedvelésszámmal. A DJ-k és szervezők kedvencként jelölhetők maradjanak.
+- Cikkek: a kártyán és a cikk részletező oldalán jelenjen meg az alkategória; a fő „Cikkek” kategóriát ne írja ki kategóriaként.
+- Helyi állapot: a hírkedvencek betöltéskor kiszűrésre kerülnek, a hírkártyák és a részletező like-számot jelenít meg Firebase-ből, az alkategória pedig a kártyán és a részletezőn látszik a „Cikkek” főnév nélkül. Futásidejű ellenőrzés és szabályélesítés még hátra van.
+- Ingyenes kiadványok: a kiadványkártyán és az adatlaphoz kapcsolódó nézetben is jelenjen meg a borító kép; a kliensoldali javítás elkészült, futásidejű/Playből telepített ellenőrzés még hátra van.
+- Release-kártyák: a kliensben visszaállítva az egységes, fix magasságú fekvő listaelrendezés; a cím legfeljebb két soros, túlcsordulás esetén rövidített. Futásidejű ellenőrzés még hátra van.
+- Események: a kedvencnek jelölés a listakártyáról eltávolítva; az „Ott leszek” és a „Nem leszek ott” részvételi lehetőség változatlan maradt. A felhasználói profilt nem módosítottam; futásidejű ellenőrzés még hátra van.
+- Hírlevél: a Közösség menüben marad, a felhasználói profil read-only és szerkesztési nézeteiből kliensoldalon eltávolítva; futásidejű ellenőrzés még hátra van.
+- AdMob banner: a Playből telepített verzióban stabilan és az első megjelenítéskor, lehetőleg azonnal töltsön be; a consent- és `canRequestAds()`-állapot legyen helyesen kezelve, ne legyenek duplikált kérések, a sikertelen betöltés kapjon rövid, kontrollált újrapróbálást és diagnosztikát, a production Play-release konfiguráció pedig legyen ellenőrizve. A +164-ben továbbra is időszakosan vagy késve jelenik meg.
+- Google Play Billing: a vásárlás után a nem fogyó termék acknowledgementje ténylegesen sikerüljön; a `completePurchase()` eredményét/hibáját kezelni és ellenőrizni kell, a vásárlást nem szabad consume-olni. Playből telepítve végponttól végpontig ellenőrizni kell, valamint a korábbi vásárlás visszaállítását is. A megoldásnak a már feltöltött kiadásokkal és minden jövőbeli feltöltéssel is működnie kell.
+- A Billing kódjavítása elkészült: a nem fogyó vásárlás szerveres ellenőrzés után, hibakezeléssel kerül `completePurchase()`-ba; consume nincs, a `restored` vásárlások visszaállítása is feldolgozott. Playből telepített kiadáson az acknowledgement és a korábbi vásárlás még ellenőrizendő.
+
+### +164 — végrehajtási állapot
+
+- A fő Label-lista már kiszűri az `is_free` kiadványokat; az ingyenesek külön „Ingyenes kiadványok” nézetben maradnak. Playből telepített +164-es ellenőrzés szükséges.
+- Az ingyenes kiadványok kártyája most már a WordPress API-ból érkező borítóképet jeleníti meg, az adatlap borítóképes nézete megmaradt; `flutter analyze` sikeres, teljes futásidejű ellenőrzés még nincs.
+- A release-kártyák hosszú című megjelenítési javítása helyben elkészült: álló és fekvő nézetben is ugyanaz a fix magasságú fekvő listaelrendezés fut, a cím legfeljebb két soros. Playből telepítve még ellenőrizni kell.
+- Az ingyenes kiadvány feloldása és letöltése Playből telepítve működik; ez a +164-ben tulajdonos által visszaigazolt.
+- A Közösség főmenübe bekerült a Kedvencek és a Hírlevél; a „Több” menüben nem maradtak külön menüpontként. +164-ben ellenőrizendő.
+- A Hírlevél a Közösség menüben megmaradt, és kikerült a saját felhasználói profil read-only és szerkesztési nézetéből; futásidejű ellenőrzés még nincs.
+- Az AdMob banner betöltési útvonala kódoldalon javítva: a consent és az SDK inicializálása folyamat-szinten egyszer fut, az elavult/párhuzamos kérések kiesnek, a sikertelen betöltés 5 másodperc után kontrolláltan újrapróbálkozik; Playből telepítve a tényleges betöltés még ellenőrizendő.
+- A telefonos és kompatibilitási tesztek utólagos validációk, nem blokkolják a +164 cél elérését.
+- Release AAB: `build/HUHS-v1.0.0+164-release.aab`; statikus ellenőrzések sikeresek. A Play zárt tesztbe feltöltve, 100%-os kiadásként beküldve; a gyorsellenőrzés/felülvizsgálat még folyamatban.
+
+### +163 helyi állapot — 2026-08-18
+
+- A +163-ben kért alkalmazásoldali javítások és regressziókezelések helyben beépítve; Android 15 Pixel emulátoron a rendszer-visszagomb, a kezdőlapi kilépési kérdés, a kilépés utáni task-eltávolítás, a fekvő Chat és a kijelentkezett Chat-avatar ellenőrizve.
+- A hosszú release-címek kártyaméretezése egységesítve, az ingyenes kiadvány `is_free` modelltesztjei bekerültek.
+- `flutter analyze`: sikeres; `flutter test`: 29/29 sikeres; `git diff --check`: whitespace-hiba nélkül.
+- A +163 production AAB elkészült: `build/HUHS-v1.0.0+163-release.aab` (73.8 MB), a korábbi +161 production AdMob-konfiguráció visszaállított azonosítóival és release-aláírással. A Play Console zárt tesztcsatornájába feltöltve és felülvizsgálatra beküldve; jelenleg „Felülvizsgálat alatt álló módosítások”.
+- Az ingyenes kiadványok UI-ja és explicit API-mezője elkészült; a WordPress `huhs-mobile-api-2.4.53` csomagban az „Ingyenes kiadvány” jelölő és a külön médiafeltöltő mező bekerült, az API élesben telepítve és a `/wp-json/huhs/v1/releases` végponton `is_free` mezővel ellenőrizve.
+- A telefonos és kompatibilitási tesztek utólagos tulajdonosi validációk; ezek nem blokkolják a +163 cél elérését vagy a release-folyamatot.
+
+### +163 — végrehajtási állapot
+
+- A +163 feltöltött alkalmazásoldali feladatköre elkészült; a +163 után az ingyenes kiadványok főlistából való kizárása külön +164 javításként került rögzítésre.
+- Ellenőrizve: `flutter analyze`, 29/29 Flutter-teszt, `git diff --check`, valamint Android 15 Pixel emulátoron a visszagomb teljes útvonala.
+- A +163 release-feltöltés kész; ezt a telefonos/kompatibilitási teszt nem blokkolta.
+- Utólagos ellenőrzés: Playből telepített ingyenes kiadvány-letöltés, Play Console „Közepes” optimalizálási mutató újraellenőrzése és a további tulajdonosi készüléktesztek.
+
+### +162 végrehajtási állapot — 2026-08-18
+
+- A felsorolt alkalmazásoldali +162 javítások elkészültek: Android vissza/bezárás, tablet fekvő rádió-inset, telefonos fekvő Chat, kijelentkezett Chat ikon, korábbi események, Közösség áthelyezés, AdMob banner, Label megjelenési dátum kliensoldali megjelenítése, Chat kamera/galéria/válasz és szervezői kedvenc ikon.
+- A WordPress release-date mező és API módosítása a `huhs-mobile-api-2.4.52` csomagban elkészült és élesben ellenőrizve: a `GET /wp-json/huhs/v1/releases` válasz `release_date` mezőt ad vissza.
+- A production AAB elkészült: `build/HUHS-v1.0.0+162-release.aab`; a belső versionCode 162.
+- `flutter analyze`: sikeres, csak 3 korábbi stílus-információ maradt; `flutter test`: 27/27 sikeres; `git diff --check`: whitespace-hiba nélkül futott.
+- A +162 AAB a Google Play zárt tesztcsatornájába feltöltve és felülvizsgálatra beküldve; a Play Console jelenleg „Ellenőrzés alatt” állapotot mutat.
+- Külső ellenőrzésre maradt: tesztelői eszközökön a széles Android-/tablet-/gyártói kompatibilitás. A Play Console „Közepes” optimalizálási mutató újraellenőrzése átkerült a +163 feladatai közé.
+- A Pixel Tablet API 35 emulátoros fekvő ellenőrzés sikeres: az alsó rádió a rendszer navigációs sávja fölött marad; valódi gyártói eszközök további ellenőrzése még szükséges.
+
+- A főoldali Androidos kilépési megerősítés tényleges bezárása: a megerősítő párbeszéd jelenjen meg, és az „Igen” választ követően az alkalmazás valóban záródjon be, ne csak háttérbe kerüljön.
+- Tablet fekvő nézet: az Android rendszer-/eszköz-navigáció ne takarja el az alsó rádiólejátszót. A telefonos fekvő nézet tulajdonosi teszt szerint rendben van.
+- Telefonos és tabletes fekvő Chat/Hírek/radio nézet: tulajdonosi teszt szerint rendben van.
+- Kijelentkezett Chat: a jobb felső profilikon a főoldali piros körös fej/profil ikonnal egyezzen meg; a jelenlegi fehér fejikon cserélendő.
+- Események: legyen lenyitható „Korábbi események” szekció a már lejárt események listájával.
+- Korábbi események: a lenyíló listában dátum szerint, a legutóbbitól visszafelé jelenjenek meg; a kiemelés ebben a listában ne befolyásolja a sorrendet.
+- A közelgő „Kiemelt események” és „Események” szekciók ne tartalmazzanak egymást átfedő elemeket.
+- Közösség menü: a Kedvencek és a Hírlevél opció kerüljön át a „Több” tabról a Közösség menübe; a „Több” tab külön Közösség része szűnjön meg.
+- AdMob banner: vizsgálni és javítani kell, hogy a banner ne véletlenszerűen jelenjen meg, hanem stabilan töltsön be.
+- Label kiadványok: legyen megjelenési dátum mező, és a dátum jelenjen meg az app kiadványadatlapján.
+- Chat: a kamera ikon ténylegesen nyissa meg a kamerát, és legyen külön fotó-/galéria-megosztási ikon.
+- Chat: üzenetekhez legyen „Válasz” művelet, amely idézetként megjeleníti a megválaszolt üzenetet.
+- Szervezők: a listaelemekben közvetlenül is jelenjen meg a kedvencnek jelölés szíve, ne csak az adatlap megnyitása után.
+- Széles Android-kompatibilitás: a tesztelők telefonmodelljei és rendszerverziói alapján kell ellenőrizni.
+  Eddig tesztelve: Samsung S23 Ultra (One UI 8.0), Samsung S25 Ultra (One UI 8.5), Samsung Tab A9+ (One UI 8.0), Samsung A53 (One UI 8.0), Samsung S24 (One UI 8.5), Poco X6 (HyperOS 3.0.8.0), Samsung A52s 5G (One UI 6.1, Android 14), Xiaomi Redmi Note 11 (MIUI Global 13.0.5), Xiaomi Redmi Note 14 5G (Android 15). A kompatibilitási ellenőrzés részben teljesült; további eltérő gyártó/verzió tesztje még nyitott.
+
+### v1.0.0+161 hotfix — technikai versionCode 161
+
+A +161 a +160 Play-regresszióját javítja: az adaptív AdMob banner szélességi kérése ismét legalább 320 px-es használható szélességgel indul, így a 0/1 px-es átmeneti layoutból nem készül érvénytelen bannerkérés. A rewarded reklám- és consent-logika változatlan. A release AAB elkészült: `build/HUHS-v1.0.0+161-release.aab`. `flutter analyze`, mind a 27 Flutter-teszt és `git diff --check` sikeres. A tulajdonosi teszt szerint az AdMob, az Android visszagomb, a preview végi vezérlő-visszaállítása és a preview utáni rádió-újraindítás működik; a főoldali kilépési megerősítés tényleges bezárása +162-re marad.
+
+### v1.0.0+160 release — technikai versionCode 160
+
+A +160 ugyanazt a javított forrásállapotot tartalmazza, mint a +159, új Play-kompatibilis versionCode-dal. A helyi AAB elkészült: `build/HUHS-v1.0.0+160-release.aab`; a helyi ellenőrzések hibamentesek. A +159-es Play-piszkozat törölve lett, majd a +160-as AAB zárt tesztbe feltöltve és felülvizsgálatra beküldve. A Play Console jelenleg a gyors ellenőrzéseket/felülvizsgálatot futtatja.
+
+Tulajdonosi visszajelzés: a +158-ban az AdMob banner működött, a +160-ban a Playből telepített változatban nem jelenik meg, miközben a jutalmazott reklám működik. Ez +160 regresszióként nyitott; a banner consent/`canRequestAds()` útvonalát és a release konfigurációját össze kell vetni a +158-cal, majd új buildben javítani és Playből ellenőrizni.
+
+A +161 ezt a banner-szélességi regressziót javítja. Az AAB a zárt tesztcsatornába feltöltve és felülvizsgálatra beküldve; a tulajdonosi teszt szerint az AdMob banner működik.
+
+### Archív v1.0.0+159 release — technikai versionCode 159
+
+A +159 a jelenlegi javításokra épülő release build. A fekvő tablet/telefon nézetben a rendszer alsó navigációja már nem takarja el a rádiót: a landscape tartalom `SafeArea`-ban jelenik meg, a NavigationRail pedig görgethető. A release AAB elkészült: `build/HUHS-v1.0.0+159-release.aab`; a csomag belső versionCode-ja ellenőrzötten 159.
+
+- A Google Play zárt tesztfeltöltése nem fejezhető be ezzel a csomaggal: a Play Console jelezte, hogy a 159-es verziókódot már felhasználták. Az AAB helyi buildje hibátlan, de a +159 nem került új kiadásként beküldésre; a következő szabad versionCode várhatóan 160.
+
+- Android visszagomb: a tabgyökér, belső aloldal és főoldali kilépési kérdés kezelése a +158-ban javítva, a +159 változatlanul tartalmazza.
+- Fekvő tablet/telefon: az Android rendszer-navigáció nem takarja el a rádiót, a fekvő navigációs rail nem túlcsorduló.
+- Statikus ellenőrzés: `flutter analyze` hibamentes, mind a 27 Flutter-teszt átment, `git diff --check` rendben.
+- Graphify-index: a +159 forrásállapotra frissítve.
+
+### v1.0.0+154 hotfix — technikai versionCode 154
+
+A +154 hotfix a +153 javításaira épít: a lejárt események eltűnnek a profil „Események, ahol ott leszek” listájából és a kedvencekből is; a Label-preview kézi leállítása és szüneteltetése nem marad a lejátszás végéig zárolva, és a leállítás akkor is végrehajtja az állapot-visszaállítást, ha a lejátszó átmeneti állapotban van. A production AAB elkészült: `build/HUHS-v1.0.0+154-release.aab`; a kiadás éles a Google Play zárt tesztcsatornáján.
+
+### Archív v1.0.0+158 hotfix végrehajtási és ellenőrzési állapot
+
+A +158 hotfix a +157 visszajelzett hibáját javítja: az Android rendszer-visszagomb kezelését egyetlen központi `PopScope` kezeli, így a tabgyökér nem ürül ki, a belső oldal visszalép, a nem kezdőlap tabgyökeréről a Kezdőlap nyílik meg, a Kezdőlap gyökerén pedig kilépési megerősítés jelenik meg. A release AAB elkészült: `build/HUHS-v1.0.0+158-release.aab`; a Play Console zárt tesztkiadásába feltöltve és felülvizsgálatra beküldve, az automatikus ellenőrzés folyamatban.
+
+- Android visszagomb: kódoldalon javítva; a tabgyökér, belső aloldal és főoldali kilépési kérdés tulajdonosi/emulátoros ellenőrzése szükséges.
+- Törölt vagy már nem elérhető hírek, DJ-k és szervezők kedvencből való eltávolítása: +154-ben kész és tulajdonosi teszttel visszaigazolt.
+- AdMob banner: kódoldalon javítva consent-várakozással, `canRequestAds()` ellenőrzéssel, hibaloggal és kontrollált újrapróbálással; Playből telepített változaton még ellenőrizni kell.
+- Preview végi vezérlő-visszaállítás és preview utáni rádió-újraindítás: kódoldalon javítva; eszközön ellenőrizni kell.
+- Telefonos fekvő Hírek-nézet: kódoldali javítás jelen van; új AAB-bal ellenőrizni kell.
+- Telefonos fekvő Chat/Hírek/radio UX és széles Android/tablet/gyártói kompatibilitás: külső eszközteszt szükséges.
+- Ponytail-alapú kódtakarítás: a célzott, biztonságos takarítás ebben a körben elvégezve; új funkciót nem törölt.
+- A Play Console „Alkalmazásoptimalizálás: Közepes” mutatójának kivizsgálása és javítása: memóriahasználat, teljesítmény, obfuszkáció és méretcsökkentés ellenőrzése, majd új Play-feldolgozási eredmény alapján visszaellenőrzése.
+
+### Archív +16 állapot — technikai versionCode 152 (nem aktuális build)
+
+A +16 kódoldali javításai elkészültek. A release AAB: `build/app/outputs/bundle/release/app-release.aab`. A release R8/minify, resource shrink, Dart-obfuszkáció és split-debug-info beállításokkal készült. 4467 releváns fájl UTF-8-validációja hibátlan. A Play Console „Közepes” optimalizálási mutatója csak feltöltés/feldolgozás után lesz újra mérhető.
+
+Külső tesztelendő marad: Playből telepített AdMob banner és a telefonos fekvő Hírek/Chat/radio UX. Tableten a fekvő Hírek olvasható; a széles Android-/gyártó-/tablet-kompatibilitás további eszközökön ellenőrizendő. Az Android visszagomb tulajdonosi hibája a +155-be került. A Play Billing, push és biometria már működőként igazolt, nem nyitott feladat.
+
+### Archív +16 feladatlista és ellenőrzési állapot (nem aktuális build, csak történeti nyilvántartás)
+
+- Play Console alkalmazásoptimalizálás javítása: memóriahasználat, általános teljesítmény, obfuszkációs és méretcsökkentési mutatók felülvizsgálata. A Play Console ezt jelenleg „Közepes” szintű optimalizálásként jelzi; a jelenlegi ellenőrzési státuszt a +156 blokk tartalmazza.
+- Az események két külön szekcióban jelenjenek meg: „Kiemelt események” és „Események”.
+- A profil-adatlapon a „Tervezett események” cím helyett „Események, ahol ott leszek” jelenjen meg.
+- A lejárt események eltűnése a profil „Események, ahol ott leszek” listájából és a kedvencekből is — +154-ben elkészült és tulajdonos által működőként visszaigazolva.
+- Minden jövőbeli frissítésnél és buildnél ellenőrizni kell a karakterkódolást, különösen a magyar ékezeteket, hogy ne jelenjenek meg krikszkrakszok.
+- A történeti +16 körben a külön „Közösség” menü legyen teljes: az ismerőslista mellett tartalmazza az ismerős kérelmeket és státuszokat, a felhasználókeresést, a publikus profilokat, az ismerősök kezelését/törlését, a blokkolt felhasználókat és a jogosultság szerinti közösségi adminisztrációt; ezek kerüljenek ki a „Több” menüből.
+- Az alkalmazáson belüli új verziójelző késését vagy esetleges eltűnését auditálni kell: ellenőrizni kell, hogy új frissítés esetén az app megnyitásakor megjelenik-e, és a frissítés indítása működőképes marad-e. Lehet, hogy csak a Play késleltetett frissítésjelzése okozta.
+- Android visszagomb: a korábbi +16 állapotjelentésben még nyitott volt; a jelenlegi javítás a +155-ben található.
+- Label preview: a korábbi +16 állapotjelentés történeti állapotot rögzít; a preview végi vezérlő-visszaállítás és rádió-újraindítás javítása a +155-ben található.
+- Törölt felhasználó maradhat az ismerőslistában és „HUHS user” néven nyílhat meg; a törölt profilt az ismerőslistából és a kapcsolódó ismerős-adatokból ki kell takarítani vagy frissíteni.
+- Playből telepítve az AdMob banner/csík nem tölt be, miközben a jutalmazott reklám működik; a +155 kódjavítása elkészült, az éles Play-ellenőrzés külső teszt.
+- Fekvő telefonon a Chat és a Hírek használhatatlan, a rádiólejátszó túl nagy; a +155-ben kódoldali javítások vannak, az éles eszközteszt külső ellenőrzés.
+- Széles Android-kompatibilitás külön +16-os tesztelendő pont: tablet és minden elérhető eltérő Android-verzió/gyártói rendszerfelület ellenőrzése; teljes laborlefedettség jelenleg nem áll rendelkezésre.
+
 ## Központi Cégregiszter – külön WordPress migrációs követelmények
+
+## Külön projekt: Hungarian Hardstyle Ticketing
+
+- A jegyértékesítés önálló WordPress-modul/szolgáltatás és külön REST API lesz; nem kerül közvetlenül a jelenlegi `huhs-mobile-api` mobil API-ba.
+- A cél egy külön, mobilbarát ticketing aloldal, például `jegy.hungarianhardstyle.hu`, későbbi natív Flutter-app- és scanner-integrációval.
+- Partnerenként backendből konfigurálható legyen a Stripe vagy Barion, a saját Billingo-kapcsolat, számlázási adatok, kezelési költség és egyéb fizetési beállítások.
+- A projekt része: esemény- és jegytípus-kezelés, névre szóló jegy, vendéglista, PDF-jegy, egyedi vonalkód, szerveroldali scanner-validáció és belépési státusz.
 
 A projektben külön, tervezett WordPress cégregiszter-migráció is szerepel. Célja a `G:\szakmaiceg.sql` Mosets Tree SQL-export teljes átültetése a `https://kozponticegregiszter.hu/` friss WordPress-oldalára.
 
@@ -42,6 +224,17 @@ A backend cégfeltöltő a SQL-ben felismert mezőket kezelje: cégnév, alias, 
 - Az import végén készüljön SEO-audit: hiányzó title/description, duplikáció, canonical, átirányítás, kép-ALT, koordináta és indexelhetőség.
 
 This file is the project memory for Codex and other AI coding agents working on the Hungarian Hardstyle app. Keep it up to date when architectural decisions, roadmap priorities, API contracts, or brand rules change.
+
+## Kötelező kontextus-ellenőrzés minden munkánál
+
+Minden feladat, kérdés, státuszlekérdezés, visszaigazolás vagy dokumentációs módosítás előtt teljes egészében ellenőrizni kell az elsődleges projektforrásokat:
+
+- `AGENTS.md`
+- `PROJECT_CONTEXT.md`, ha létezik
+- `README.md`
+- `graphify-out/GRAPH_REPORT.md`
+
+Ezek tartalma elsőbbséget élvez a korábbi beszélgetési emlékekkel és feltételezésekkel szemben. A kész, nyitott és tesztelésre váró feladatokat ezek, valamint a felhasználó legutóbbi konkrét visszajelzése alapján kell szétválasztani. Minden tényleges kód- vagy dokumentációváltozás után a Graphify-indexet frissíteni kell.
 
 ## Project Summary
 
@@ -117,8 +310,6 @@ Expected data flow:
 
 ## Current State
 
-### Következő build ellenőrzési lista
-
 - Fióktörlés után az user teljes kijelentkeztetése és minden lokális profil-/munkamenet-állapot törlése; újraindítás után se maradjon visszatölthető belépett állapot.
 - Release preview: a preview lejátszása legyen újraindítható/többször lejátszható; preview indításakor álljon le az éppen szóló Real Hardstyle FM rádió.
 - Release preview: a 60 másodperces anyag lejátszósávján legyen működő előre- és visszatekerés.
@@ -127,10 +318,6 @@ Expected data flow:
 - Széleskörű Android-kompatibilitási próba: több Android-verzió, gyártó és rendszerfelület (Samsung/One UI, Xiaomi/HyperOS, Pixel/stock Android és más elérhető eszközök), telefonok, tabletek és kijelzőméretek, álló/fekvő nézet; Play Billing, AdMob, push és biometria. A háttér-rádió működő funkció, külön nyitott feladat nélkül.
 - Release-obfuszkáció és hardening ellenőrzése; kliensoldali titkok és jogosultsági döntések továbbra is tiltottak.
 - Tanúsítvány-pinning megvalósíthatósági vizsgálata és csak kompatibilitási teszt után történő bevezetése.
-
-### v1.0.0+14 végrehajtási állapot
-
-A következő build javítási köre a profil-/e-mail-authentikációt, preview-lejátszást és tekerést, Label-keresést, Android visszalépést, esemény- és adminűrlapokat, attendance állapotot, AdMob banner retry-t, valamint a beküldések és pushok szerveroldali duplikáció- és címzettvédelmét tartalmazza. A Firebase Functionök és Firestore-szabályok élesítve; a WordPress csomag `build/huhs-mobile-api-2.4.49.zip`.
 
 As of the current project state:
 
@@ -142,7 +329,7 @@ As of the current project state:
 - News search UI exists.
 - News item tap/click opens the news detail view.
 - News cards display remote images, title, date, and featured state.
-- The WordPress API plugin source is present locally as deployable ZIPs in `build/`; package `2.4.46` remains the previously live-verified base, package `2.4.48` is deployed and live-verified on `hungarianhardstyle.hu`, and package `2.4.49` is locally prepared for the Mailchimp double-opt-in fix.
+- The WordPress API plugin source is present locally as deployable ZIPs in `build/`; package `2.4.46` is historical, package `2.4.48` is historical, and package `2.4.49` is deployed and live-verified on `hungarianhardstyle.hu`.
 - Package `2.4.48` retains the live voting and release APIs, uses separate Radio and Extended upload fields, generates the preview from Radio, creates private WAV/320 kbps derivatives from both versions, and exposes the four Play product ID/price fields in the native admin API. Private audio paths are never returned by the public release API. Its protected download response names both rewarded-ad and purchased files from the release title plus the version/format suffix, and its protected product-ID route is live-tested.
 - v1.0 remains open only for final owner phone verification of the production Android artifact. The Firebase Play secret, Play service-account permission, WordPress release product metadata, production AdMob identifiers and rewarded SSV are configured.
 - v1.0.0+13 is prepared locally: FCM token refresh/re-registration and stale-token cleanup are included, `notifyConnectionRequest` is deployed to `europe-central2`, AdMob load failures use short user-facing messages, and ordinary e-mail registration requires verification. Production ARM64 APK/AAB are built; Play upload and owner phone verification remain external checks.
@@ -368,6 +555,24 @@ Prefer API responses that are easy for Flutter to parse:
 - explicit nullable fields
 
 ## Roadmap
+
+### KCR mobilapp – cégmegjelenési időszak
+
+- A mobilappban a cégmegjelenéshez tartozó kezdő- és lejárati dátumot a KCR API adja vissza; a telepíthető KCR 1.9.24 csomag ezt a `listing_starts`, `listing_expires` és `listing_active` mezőkkel, valamint a `/wp-json/kcr/v1/companies/{id}/listing-period` végponttal biztosítja.
+- A sikeres megrendelés/Google Pay/Apple Pay vagy más jóváhagyott fizetés után a backend állítja be az időszakot; a kliens nem dönthet jogosultságról.
+- Lejáratkor a webes backend a céget piszkozatba teszi, ezért az appból is eltűnik a nyilvános listából.
+- A dátum nélküli, korábban importált cégek aktívak maradnak, őket az automatikus lejártatás nem érinti.
+- Az admin és a cég tulajdonosa a megfelelő jogosultsággal láthatja a lejárati állapotot; tulajdonosi szerkesztésnél a dátum nem hosszabbítható meg fizetés nélkül.
+
+### KCR mobilapp – navigáció és design
+
+- A mobilapp vizuális világa a kozponticegregiszter.hu weboldal üzleti, fehér–kék–türkiz designjához igazodjon.
+- A fő navigáció alsó menüsávban legyen.
+- Az alsó menük: `Cégek`, `Megrendelés`, `Cégünkről`, `ÁSZF`, `Hírlevél`.
+- A `Belépés` a felső bal sarokból legyen elérhető; belépés után ugyanott a felhasználói fiók/állapot jelenjen meg, és a belépési pont a `Fiók` felületére vezessen.
+- A céges böngészés hierarchikus legyen: fő kategória → alkategória → ízléses, kártyás céglista → cégadatlap.
+- A céglista és a cégadatlap a weboldal meglévő kártya-, szín-, tipográfia- és képkezelési rendszerét kövesse, reszponzív mobilhasználattal.
+- A mobilapp ne tartson külön, eltérő cégadatbázist; a WordPress/KCR API maradjon az egyetlen adatforrás.
 
 ### v0.99.1 implementation note
 
@@ -937,6 +1142,25 @@ For major product or architecture decisions with meaningful alternatives, use th
 
 Use the installed Ponytail plugin/rules for implementation work: prefer deleting or skipping unnecessary work, reuse existing project code, then standard/native platform features, then installed dependencies, and only write the minimum custom code that safely solves the task. Never trade away validation, security, accessibility, or data-loss protection merely to reduce code or token usage.
 
+## Központi Cégregiszter WordPress frissítési szabály
+
+- A Központi Cégregiszterhez a jövőben egyetlen egységes, verziózott, teljesen telepíthető WordPress-frissítőcsomag készüljön.
+- Tilos minden apró javításhoz új, külön `kcr-*` pluginmappát és külön feltöltési csomagot létrehozni.
+- A frissítőcsomag mindig ugyanazt a stabil plugin-slugot használja, és a meglévő plugin frissítéseként települjön.
+- A csomag tartsa meg a meglévő adatokat, beállításokat, médiát, REST API-végpontokat és működő funkciókat.
+- Csomagolás előtt kötelező ellenőrizni: ZIP-struktúra, fő pluginfájl, plugin fejléc, PHP szintaxis, UTF-8 karakterkódolás, verziószám és aktiválhatóság.
+- A csomagot telepítés előtt helyi ellenőrzéssel, telepítés után pedig éles oldalon alapfunkciókkal kell tesztelni.
+- Régi csomagok csak akkor törölhetők, ha az éles WordPress pluginlistája alapján biztosan inaktívak; az aktív jelenlegi verziót nem szabad felülírni vagy törölni.
+- A leadás része legyen a pontos fájlnév, verziószám, rövid változáslista és egyértelmű telepítési utasítás.
+
+### Aktuális KCR-takarítási emlékeztető
+
+- FTP-n csak a WordPress adminban igazoltan inaktív, régi KCR-verziók törölhetők.
+- A jelenlegi működő főplugin: `kcr-plugin-1.9.30`; ezt és az aktív pluginokat tilos törölni.
+- A korábban azonosított régi/inaktív mappák: `kcr-plugin-1.9.25`, `kcr-plugin-1.9.26`, `kcr-plugin-1.9.27`, `kcr-plugin-1.9.28`, `kcr-plugin-1.9.29`, `kcr-account-ui-fix-1.0.5`, `kcr-account-ui-fix-1.0.6`, `kcr-account-ui-fix-correct-1.0.6`, `kcr-account-ui-fix-correct-1.0.7`, `kcr-account-ui-fix-correct-1.0.8`.
+- A `kcr-account-1`, `kcr-account-ui-fix-correct-1.0.9` és `kozponti-cegregiszter` mappákat nem szabad találomra törölni; csak az éles pluginlistából egyértelműen igazolt inaktivitás után.
+- Minden frissítés előtt meg kell őrizni a már működő kategória-, cég-, keresési-, térkép-, galéria-, üzenetküldési-, fiók- és hírlevél-funkciókat.
+
 ## Important Current Implementation Priorities
 
 Likely next useful tasks:
@@ -957,7 +1181,6 @@ Product decisions confirmed by the user:
 - Follow-up tasks for the next Android update: investigate the still-failing production AdMob flow on the Play-installed build and fix ordinary e-mail/password registration verification. Optional Google Authenticator MFA, Android PIN/password/pattern protection, independent Settings toggles, session-level authentication, and the Google-sign-in exclusion are complete. Do not remove the existing biometric flow.
 - The e-mail-verification task must include a Firebase-side delivery/template/log audit and an app-side verified-state refresh plus visible resend flow; the current source calls `sendEmailVerification`, but ordinary e-mail registration was reported as not working end to end.
 - Owner-reported next-build fixes: investigate and fix AdMob banner ads not loading in the Play-installed closed test while preserving the working rewarded flow; fix the Hungarian mojibake in the registration two-factor warning and related auth messages; complete the ordinary e-mail/password verification flow; fully sign out and clear local state after account deletion; make release previews replayable, stop the radio when a preview starts, and support seeking within the 60-second preview.
-- Separate decision item, not to be treated as completed: optionally play three distinct rewarded ads consecutively for one rewarded unlock, with explicit progress and reward handling.
 - Owner-reported UI bug: event attendance buttons must color only the active choice red — `Ott leszek` when selected, or `Nem leszek ott` when selected — while the inactive choice remains neutral.
 - Owner-reported UI bug: the event-submission organizer dropdown/menu overlays the address, organizer and genre fields. Fix the menu/field layout so labels, values and genre chips never overlap and remain readable on phones and tablets.
 - Owner-reported backend bug: an event submission was received twice by WordPress. Audit and add idempotency protection so repeated requests cannot create duplicate event submissions; apply the same review to DJ and organizer submissions.

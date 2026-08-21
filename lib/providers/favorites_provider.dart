@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/wordpress_service.dart';
+
 enum FavoriteKind { news, event, artist, organizer }
 
 class FavoriteEntry {
@@ -33,6 +35,7 @@ class FavoritesNotifier extends ChangeNotifier {
   StreamSubscription<User?>? _authSubscription;
   String? _userId;
   bool _hadAuthenticatedUser = false;
+  bool _pruning = false;
 
   FavoritesNotifier() {
     // Widget tests and offline startup can render favorites before Firebase is
@@ -50,10 +53,18 @@ class FavoritesNotifier extends ChangeNotifier {
   bool contains(FavoriteKind kind, int id) =>
       _items.containsKey(_key(kind, id));
 
-  List<FavoriteEntry> get entries => _items.values.toList(growable: false);
+  bool get canUseFavorites {
+    final user = _auth?.currentUser;
+    return user != null && !user.isAnonymous;
+  }
+
+  List<FavoriteEntry> get entries => _items.values
+      .where((entry) => entry.kind != FavoriteKind.news)
+      .toList(growable: false);
 
   Future<void> toggle(FavoriteKind kind, int id, String title) async {
     await _ready;
+    if (!canUseFavorites || kind == FavoriteKind.news) return;
     final key = _key(kind, id);
     if (_items.containsKey(key)) {
       _items.remove(key);
@@ -111,6 +122,10 @@ class FavoritesNotifier extends ChangeNotifier {
     for (final document in snapshot.docs) {
       try {
         final data = document.data();
+        if (FavoriteKind.values.byName(data['kind'] as String) ==
+            FavoriteKind.news) {
+          continue;
+        }
         final entry = FavoriteEntry(
           kind: FavoriteKind.values.byName(data['kind'] as String),
           id: (data['id'] as num).toInt(),
@@ -124,6 +139,50 @@ class FavoritesNotifier extends ChangeNotifier {
     await _saveLocal();
     await _saveCloud();
     notifyListeners();
+    unawaited(pruneUnavailable());
+  }
+
+  Future<void> pruneUnavailable() async {
+    if (_pruning || !canUseFavorites || _items.isEmpty) return;
+    _pruning = true;
+    try {
+      final kinds = _items.values.map((entry) => entry.kind).toSet();
+      final service = WordpressService();
+      final results = await Future.wait<Object>([
+        if (kinds.contains(FavoriteKind.news)) service.getAllPostIds(),
+        if (kinds.contains(FavoriteKind.event))
+          service.getEvents().then(
+            (items) => items.map((item) => item.id).toSet(),
+          ),
+        if (kinds.contains(FavoriteKind.artist)) service.getAllArtistIds(),
+        if (kinds.contains(FavoriteKind.organizer))
+          service.getAllOrganizerIds(),
+      ]);
+      var resultIndex = 0;
+      final available = <FavoriteKind, Set<int>>{};
+      for (final kind in FavoriteKind.values) {
+        if (kinds.contains(kind)) {
+          available[kind] = (results[resultIndex++] as Set<int>);
+        }
+      }
+      final stale = _items.entries
+          .where(
+            (entry) => !available[entry.value.kind]!.contains(entry.value.id),
+          )
+          .map((entry) => entry.key)
+          .toList(growable: false);
+      if (stale.isEmpty) return;
+      for (final key in stale) {
+        _items.remove(key);
+      }
+      await _saveLocal();
+      await _saveCloud();
+      notifyListeners();
+    } catch (_) {
+      // A temporary API/network failure must never delete valid favorites.
+    } finally {
+      _pruning = false;
+    }
   }
 
   Future<void> _loadLocal() async {
@@ -133,6 +192,10 @@ class FavoritesNotifier extends ChangeNotifier {
       try {
         final json = jsonDecode(value) as Map<String, dynamic>;
         final kind = FavoriteKind.values.byName(json['kind'] as String);
+        if (FavoriteKind.values.byName(json['kind'] as String) ==
+            FavoriteKind.news) {
+          continue;
+        }
         final entry = FavoriteEntry(
           kind: kind,
           id: (json['id'] as num).toInt(),

@@ -147,10 +147,22 @@ class WordpressService {
         hasMore: hasMore,
       );
     } on DioException catch (e) {
-      throw Exception('Nem sikerult betolteni a hireket.\n\n${e.message}');
-    } catch (e) {
-      throw Exception('Ismeretlen hiba tortent.\n\n$e');
+      throw Exception(_readApiError(e, 'Nem sikerült betölteni a híreket.'));
+    } catch (_) {
+      throw Exception('Nem sikerült betölteni a híreket.');
     }
+  }
+
+  Future<Set<int>> getAllPostIds() async {
+    final ids = <int>{};
+    var page = 1;
+    while (true) {
+      final result = await getPosts(page: page, perPage: 100);
+      ids.addAll(result.items.map((post) => post.id));
+      if (!result.hasMore || result.items.isEmpty) break;
+      page++;
+    }
+    return ids;
   }
 
   Future<List<Post>> getLatestPosts() async {
@@ -256,35 +268,42 @@ class WordpressService {
     }
   }
 
-  Future<List<HuhsEvent>> getEvents() async {
+  Future<List<HuhsEvent>> getEvents({bool includePast = false}) async {
     try {
       final response = await _dio.get<String>(
         '/events',
+        queryParameters: includePast ? const {'include_past': true} : null,
         options: Options(responseType: ResponseType.plain),
       );
       final data = _decodePossiblyPrefixedJson(response.data ?? '');
 
       if (data is List<dynamic>) {
-        return data
+        final events = data
             .map((json) => HuhsEvent.fromJson(json as Map<String, dynamic>))
-            .where((event) => !event.isPast)
             .toList();
+        return includePast
+            ? events
+            : events.where((event) => !event.isPast).toList();
       }
 
       if (data is Map<String, dynamic>) {
         final items = data['items'] as List<dynamic>? ?? [];
 
-        return items
+        final events = items
             .map((json) => HuhsEvent.fromJson(json as Map<String, dynamic>))
-            .where((event) => !event.isPast)
             .toList();
+        return includePast
+            ? events
+            : events.where((event) => !event.isPast).toList();
       }
 
       return const [];
     } on DioException catch (e) {
-      throw Exception('Nem sikerult betolteni az esemenyeket.\n\n${e.message}');
-    } catch (e) {
-      throw Exception('Ismeretlen hiba tortent.\n\n$e');
+      throw Exception(
+        _readApiError(e, 'Nem sikerült betölteni az eseményeket.'),
+      );
+    } catch (_) {
+      throw Exception('Nem sikerült betölteni az eseményeket.');
     }
   }
 
@@ -313,9 +332,21 @@ class WordpressService {
       throw const FormatException('Hibás DJ-lista válasz.');
     } on DioException catch (e) {
       throw Exception(_readApiError(e, 'Nem sikerült betölteni a DJ-ket.'));
-    } catch (e) {
-      throw Exception('Nem sikerült betölteni a DJ-ket.\n\n$e');
+    } catch (_) {
+      throw Exception('Nem sikerült betölteni a DJ-ket.');
     }
+  }
+
+  Future<Set<int>> getAllArtistIds() async {
+    final ids = <int>{};
+    var page = 1;
+    while (true) {
+      final result = await getArtists(page: page, perPage: 100);
+      ids.addAll(result.items.map((artist) => artist.id));
+      if (!result.hasMore || result.items.isEmpty) break;
+      page++;
+    }
+    return ids;
   }
 
   Future<Artist> getArtist(int artistId) async {
@@ -332,8 +363,8 @@ class WordpressService {
       throw Exception(
         _readApiError(e, 'Nem sikerült betölteni a DJ-adatlapot.'),
       );
-    } catch (e) {
-      throw Exception('Nem sikerült betölteni a DJ-adatlapot.\n\n$e');
+    } catch (_) {
+      throw Exception('Nem sikerült betölteni a DJ-adatlapot.');
     }
   }
 
@@ -362,9 +393,21 @@ class WordpressService {
       throw Exception(
         _readApiError(e, 'Nem sikerült betölteni a szervezőket.'),
       );
-    } catch (e) {
-      throw Exception('Nem sikerült betölteni a szervezőket.\n\n$e');
+    } catch (_) {
+      throw Exception('Nem sikerült betölteni a szervezőket.');
     }
+  }
+
+  Future<Set<int>> getAllOrganizerIds() async {
+    final ids = <int>{};
+    var page = 1;
+    while (true) {
+      final result = await getOrganizers(page: page, perPage: 100);
+      ids.addAll(result.items.map((organizer) => organizer.id));
+      if (!result.hasMore || result.items.isEmpty) break;
+      page++;
+    }
+    return ids;
   }
 
   Future<OrganizerProfile> getOrganizer(int organizerId) async {
@@ -381,8 +424,8 @@ class WordpressService {
       throw Exception(
         _readApiError(e, 'Nem sikerült betölteni a szervezői adatlapot.'),
       );
-    } catch (e) {
-      throw Exception('Nem sikerült betölteni a szervezői adatlapot.\n\n$e');
+    } catch (_) {
+      throw Exception('Nem sikerült betölteni a szervezői adatlapot.');
     }
   }
 
@@ -450,8 +493,8 @@ class WordpressService {
       throw Exception(
         _readApiError(e, 'Nem sikerült betölteni a beküldési adatokat.'),
       );
-    } catch (e) {
-      throw Exception('Nem sikerült betölteni a beküldési adatokat.\n\n$e');
+    } catch (_) {
+      throw Exception('Nem sikerült betölteni a beküldési adatokat.');
     }
   }
 
@@ -494,8 +537,8 @@ class WordpressService {
       return 'Köszönjük, a beküldést elküldtük ellenőrzésre.';
     } on DioException catch (e) {
       throw Exception(_readApiError(e, 'A beküldés nem sikerült.'));
-    } catch (e) {
-      throw Exception('A beküldés nem sikerült.\n\n$e');
+    } catch (_) {
+      throw Exception('A beküldés nem sikerült.');
     }
   }
 
@@ -512,8 +555,8 @@ class WordpressService {
           .toList(growable: false);
     } on DioException catch (e) {
       throw Exception(_readApiError(e, 'Nem sikerült betölteni a műfajokat.'));
-    } catch (e) {
-      throw Exception('Nem sikerült betölteni a műfajokat.\n\n$e');
+    } catch (_) {
+      throw Exception('Nem sikerült betölteni a műfajokat.');
     }
   }
 
@@ -540,8 +583,8 @@ class WordpressService {
       return 'Köszönjük, az eseményt elküldtük ellenőrzésre.';
     } on DioException catch (e) {
       throw Exception(_readApiError(e, 'Az eseményt nem sikerült elküldeni.'));
-    } catch (e) {
-      throw Exception('Az eseményt nem sikerült elküldeni.\n\n$e');
+    } catch (_) {
+      throw Exception('Az eseményt nem sikerült elküldeni.');
     }
   }
 
@@ -715,9 +758,9 @@ class WordpressService {
         hasMore: page < totalPages,
       );
     } on DioException catch (e) {
-      throw Exception('Nem sikerult betolteni a hireket.\n\n${e.message}');
-    } catch (e) {
-      throw Exception('Ismeretlen hiba tortent.\n\n$e');
+      throw Exception(_readApiError(e, 'Nem sikerült betölteni a híreket.'));
+    } catch (_) {
+      throw Exception('Nem sikerült betölteni a híreket.');
     }
   }
 

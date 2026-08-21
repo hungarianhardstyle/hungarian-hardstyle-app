@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/content/html_linkifier.dart';
 import '../../core/navigation/in_app_browser.dart';
+import '../../core/errors/user_facing_error.dart';
 import '../../models/artist.dart';
 import '../../widgets/genre_chip.dart';
 import '../../providers/artists_provider.dart';
@@ -125,277 +126,309 @@ class _ArtistContent extends ConsumerWidget {
           colors: [Color(0xFF080808), Color(0xFF220000), Color(0xFF080808)],
         ),
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (imageUrl.isNotEmpty)
-              Hero(
-                tag: 'artist_${artist.id}',
-                child: AspectRatio(
-                  aspectRatio: 16 / 11,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.cover,
-                        alignment: const Alignment(0, -0.5),
-                      ),
-                      if (artist.logoUrl.isNotEmpty &&
-                          artist.profileImageUrl.isNotEmpty)
-                        Positioned(
-                          top: 16,
-                          right: 16,
-                          child: Container(
-                            width: 76,
-                            height: 76,
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.72),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: CachedNetworkImage(
-                              imageUrl: artist.logoUrl,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final landscape =
+              MediaQuery.orientationOf(context) == Orientation.landscape;
+          return SingleChildScrollView(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: landscape ? 1100 : double.infinity,
                 ),
-              ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    artist.title,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (artist.realName.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      artist.realName,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 17,
-                      ),
-                    ),
-                  ],
-                  if (artist.location.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          color: Colors.redAccent,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 7),
-                        Expanded(child: Text(artist.location)),
-                      ],
-                    ),
-                  ],
-                  if (artist.categories.isNotEmpty || artist.genres.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          ...artist.categories.map(
-                            (category) => Chip(label: Text(category.name)),
-                          ),
-                          ...artist.genres.map(
-                            (genre) => GenreChip(genre: genre),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (artist.socialLinks.isNotEmpty || artist.webUrl.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 18),
-                      child: Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          ...artist.socialLinks.entries.map(
-                            (entry) => OutlinedButton.icon(
-                              onPressed: () => openSocialLink(
-                                context,
-                                entry.value,
-                                title: _socialLabel(entry.key),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (imageUrl.isNotEmpty)
+                      Hero(
+                        tag: 'artist_${artist.id}',
+                        child: AspectRatio(
+                          aspectRatio: 16 / 11,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                fit: BoxFit.cover,
+                                alignment: const Alignment(0, -0.5),
                               ),
-                              icon: Icon(_socialIcon(entry.key)),
-                              label: Text(_socialLabel(entry.key)),
+                              if (artist.logoUrl.isNotEmpty &&
+                                  artist.profileImageUrl.isNotEmpty)
+                                Positioned(
+                                  top: 16,
+                                  right: 16,
+                                  child: Container(
+                                    width: 76,
+                                    height: 76,
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.72,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: CachedNetworkImage(
+                                      imageUrl: artist.logoUrl,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            artist.title,
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          if (artist.webUrl.isNotEmpty && claimed.value != true)
-                            OutlinedButton.icon(
-                              onPressed: () =>
-                                  openInAppBrowser(context, artist.webUrl),
-                              icon: const Icon(Icons.language),
-                              label: const Text('Webes adatlap'),
+                          if (artist.realName.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              artist.realName,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 17,
+                              ),
                             ),
-                        ],
-                      ),
-                    ),
-                  if (claimed.value != true &&
-                      ref
-                              .read(communityServiceProvider)
-                              .auth
-                              .currentUser
-                              ?.emailVerified ==
-                          true)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          try {
-                            await ref
-                                .read(communityServiceProvider)
-                                .claimArtist(artist.id);
-                            ref.invalidate(
-                              artistClaimStatusProvider(artist.id),
-                            );
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'A DJ-adatlap claimelése sikeres.',
+                          ],
+                          if (artist.location.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on_outlined,
+                                  color: Colors.redAccent,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 7),
+                                Expanded(child: Text(artist.location)),
+                              ],
+                            ),
+                          ],
+                          if (artist.categories.isNotEmpty ||
+                              artist.genres.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  ...artist.categories.map(
+                                    (category) =>
+                                        Chip(label: Text(category.name)),
+                                  ),
+                                  ...artist.genres.map(
+                                    (genre) => GenreChip(genre: genre),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (artist.socialLinks.isNotEmpty ||
+                              artist.webUrl.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 18),
+                              child: Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: [
+                                  ...artist.socialLinks.entries.map(
+                                    (entry) => OutlinedButton.icon(
+                                      onPressed: () => openSocialLink(
+                                        context,
+                                        entry.value,
+                                        title: _socialLabel(entry.key),
+                                      ),
+                                      icon: Icon(_socialIcon(entry.key)),
+                                      label: Text(_socialLabel(entry.key)),
+                                    ),
+                                  ),
+                                  if (artist.webUrl.isNotEmpty &&
+                                      claimed.value != true)
+                                    OutlinedButton.icon(
+                                      onPressed: () => openInAppBrowser(
+                                        context,
+                                        artist.webUrl,
+                                      ),
+                                      icon: const Icon(Icons.language),
+                                      label: const Text('Webes adatlap'),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          if (claimed.value != true &&
+                              ref
+                                      .read(communityServiceProvider)
+                                      .auth
+                                      .currentUser
+                                      ?.emailVerified ==
+                                  true)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: OutlinedButton.icon(
+                                onPressed: () async {
+                                  try {
+                                    await ref
+                                        .read(communityServiceProvider)
+                                        .claimArtist(artist.id);
+                                    ref.invalidate(
+                                      artistClaimStatusProvider(artist.id),
+                                    );
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'A DJ-adatlap claimelése sikeres.',
+                                        ),
+                                      ),
+                                    );
+                                  } catch (error) {
+                                    if (!context.mounted) return;
+                                    final raw = error.toString().toLowerCase();
+                                    final message =
+                                        raw.contains('permission-denied')
+                                        ? 'A bejelentkezési e-mail nem egyezik a booking e-maillel.'
+                                        : userFacingError(error);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(message)),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.verified_user_outlined),
+                                label: const Text('DJ-adatlap claimelése'),
+                              ),
+                            ),
+                          if (bookingEmail.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 20),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF171717),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.white12),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Booking',
+                                      style: TextStyle(
+                                        fontSize: 19,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 7),
+                                    if (artist.bookingViaHuhs) ...[
+                                      const Text(
+                                        'A fellépés a Hungarian Hardstyle-on keresztül szervezhető.',
+                                        style: TextStyle(color: Colors.white70),
+                                      ),
+                                      const SizedBox(height: 8),
+                                    ],
+                                    SelectableText(
+                                      bookingEmail,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 14),
+                                    FilledButton.icon(
+                                      onPressed: () =>
+                                          _openBookingEmail(context),
+                                      icon: const Icon(Icons.email_outlined),
+                                      label: Text(
+                                        artist.bookingViaHuhs
+                                            ? 'Szervezés a Hungarian Hardstyle-on keresztül'
+                                            : 'Fellépés lekötése e-mailben',
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            );
-                          } catch (error) {
-                            if (!context.mounted) return;
-                            final raw = error.toString();
-                            final message = raw.contains('permission-denied')
-                                ? 'A bejelentkezési e-mail nem egyezik a booking e-maillel.'
-                                : raw.replaceFirst('Exception: ', '');
-                            ScaffoldMessenger.of(
-                              context,
-                            ).showSnackBar(SnackBar(content: Text(message)));
-                          }
-                        },
-                        icon: const Icon(Icons.verified_user_outlined),
-                        label: const Text('DJ-adatlap claimelése'),
+                            ),
+                        ],
                       ),
                     ),
-                  if (bookingEmail.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF171717),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white12),
+                    if (biography.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
+                        child: Text(
+                          'Bemutatkozás',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                      ),
+                      Html(
+                        data: biography,
+                        onLinkTap: (url, attributes, element) =>
+                            openInAppBrowser(
+                              context,
+                              resolveHtmlLinkTarget(
+                                callbackUrl: url,
+                                attributes: attributes,
+                                visibleText: element?.text,
+                              ),
+                            ),
+                        style: {
+                          'body': Style(
+                            margin: Margins.zero,
+                            padding: HtmlPaddings.all(20),
+                            fontSize: FontSize(17),
+                            lineHeight: const LineHeight(1.65),
+                            color: Colors.white,
+                          ),
+                          'p': Style(margin: Margins.only(bottom: 16)),
+                          'a': Style(
+                            color: Colors.redAccent,
+                            textDecoration: TextDecoration.none,
+                          ),
+                        },
+                      ),
+                    ],
+                    if (artist.upcomingEvents.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Booking',
+                              'Közelgő események',
                               style: TextStyle(
-                                fontSize: 19,
+                                fontSize: 24,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 7),
-                            if (artist.bookingViaHuhs) ...[
-                              const Text(
-                                'A fellépés a Hungarian Hardstyle-on keresztül szervezhető.',
-                                style: TextStyle(color: Colors.white70),
-                              ),
-                              const SizedBox(height: 8),
-                            ],
-                            SelectableText(
-                              bookingEmail,
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                            const SizedBox(height: 14),
-                            FilledButton.icon(
-                              onPressed: () => _openBookingEmail(context),
-                              icon: const Icon(Icons.email_outlined),
-                              label: Text(
-                                artist.bookingViaHuhs
-                                    ? 'Szervezés a Hungarian Hardstyle-on keresztül'
-                                    : 'Fellépés lekötése e-mailben',
+                            const SizedBox(height: 16),
+                            ...artist.upcomingEvents.map(
+                              (event) => Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: EventCard(event: event),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            if (biography.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: Text(
-                  'Bemutatkozás',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Html(
-                data: biography,
-                onLinkTap: (url, attributes, element) => openInAppBrowser(
-                  context,
-                  resolveHtmlLinkTarget(
-                    callbackUrl: url,
-                    attributes: attributes,
-                    visibleText: element?.text,
-                  ),
-                ),
-                style: {
-                  'body': Style(
-                    margin: Margins.zero,
-                    padding: HtmlPaddings.all(20),
-                    fontSize: FontSize(17),
-                    lineHeight: const LineHeight(1.65),
-                    color: Colors.white,
-                  ),
-                  'p': Style(margin: Margins.only(bottom: 16)),
-                  'a': Style(
-                    color: Colors.redAccent,
-                    textDecoration: TextDecoration.none,
-                  ),
-                },
-              ),
-            ],
-            if (artist.upcomingEvents.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Közelgő események',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ...artist.upcomingEvents.map(
-                      (event) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: EventCard(event: event),
-                      ),
+                    SizedBox(
+                      height: MediaQuery.viewPaddingOf(context).bottom + 28,
                     ),
                   ],
                 ),
               ),
-            SizedBox(height: MediaQuery.viewPaddingOf(context).bottom + 28),
-          ],
-        ),
+            ),
+          );
+        },
       ),
     );
   }

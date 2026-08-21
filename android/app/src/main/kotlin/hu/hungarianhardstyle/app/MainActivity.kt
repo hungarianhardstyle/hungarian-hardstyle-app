@@ -7,14 +7,30 @@ import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.window.OnBackInvokedCallback
+import android.window.OnBackInvokedDispatcher
 import java.io.File
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterFragmentActivity() {
+    private var systemBackCallback: OnBackInvokedCallback? = null
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val callback = OnBackInvokedCallback {
+                // Android 13+ otherwise finishes this Flutter Activity before
+                // PopScope receives the system-back event.
+                flutterEngine.navigationChannel.popRoute()
+            }
+            systemBackCallback = callback
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_OVERLAY,
+                callback,
+            )
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/radio")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -52,6 +68,10 @@ class MainActivity : FlutterFragmentActivity() {
                                 .setAction(RadioPlaybackService.ACTION_VOLUME)
                                 .putExtra(RadioPlaybackService.EXTRA_VOLUME, volume),
                         )
+                        result.success(null)
+                    }
+                    "closeApp" -> {
+                        finishAndRemoveTask()
                         result.success(null)
                     }
                     else -> result.notImplemented()
@@ -122,6 +142,14 @@ class MainActivity : FlutterFragmentActivity() {
                     result.error("write_failed", error.message, null)
                 }
             }
+    }
+
+    override fun onDestroy() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            systemBackCallback?.let { onBackInvokedDispatcher.unregisterOnBackInvokedCallback(it) }
+        }
+        systemBackCallback = null
+        super.onDestroy()
     }
 
 }

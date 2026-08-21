@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/news_provider.dart';
+import '../../core/errors/user_facing_error.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
@@ -172,7 +173,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 14),
                                 child: Text(
-                                  state.error.toString(),
+                                  userFacingError(state.error),
                                   style: const TextStyle(
                                     color: Colors.redAccent,
                                   ),
@@ -207,7 +208,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                             child: Column(
                               children: [
                                 Text(
-                                  state.error.toString(),
+                                  userFacingError(state.error),
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 14),
@@ -252,7 +253,21 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
 
                       final postIndex =
                           index - 2 - (hasMidAd && index > midAdIndex ? 1 : 0);
-                      return NewsCard(post: posts[postIndex]);
+                      final landscape =
+                          MediaQuery.orientationOf(context) ==
+                          Orientation.landscape;
+                      return Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: landscape ? 760 : double.infinity,
+                          ),
+                          child: NewsCard(
+                            post: posts[postIndex],
+                            compact: landscape,
+                          ),
+                        ),
+                      );
                     },
                   ),
           ),

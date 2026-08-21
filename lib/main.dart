@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'core/theme/app_theme.dart';
@@ -25,35 +24,18 @@ Future<void> main() async {
     // Keep the rest of the app usable when a platform Firebase config is
     // missing; the affected community feature will report its own error.
   }
-  if (refineAdsConfigured()) {
-    // Ads are opt-in; a provider/configuration problem must never block startup.
-    try {
-      await MobileAds.instance.initialize();
-    } catch (_) {}
-  }
   try {
-    final consent = ConsentInformation.instance;
-    await Future<void>.sync(() {
-      consent.requestConsentInfoUpdate(
-        ConsentRequestParameters(),
-        () {
-          ConsentForm.loadAndShowConsentFormIfRequired((_) {});
-        },
-        (_) {},
-      );
-    });
+    await prepareAdConsent();
   } catch (_) {
     // Consent configuration must never make the app unusable.
   }
+  // Initialize the SDK once, after consent preparation. The provider caches
+  // this future so banners cannot race each other during the first frame.
+  try {
+    await initializeMobileAds();
+  } catch (_) {}
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
   unawaited(_initializePushNotifications());
-}
-
-bool refineAdsConfigured() {
-  return enableTestAds ||
-      (productionAdMobAppId.isNotEmpty &&
-          productionBannerAdUnitId.isNotEmpty &&
-          productionRewardedAdUnitId.isNotEmpty);
 }
 
 Future<void> _initializePushNotifications() async {

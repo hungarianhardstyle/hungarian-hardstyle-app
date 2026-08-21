@@ -114,20 +114,30 @@ class _StartupGateState extends State<StartupGate>
                           const SizedBox(height: 12),
                           const Text(
                             'Új verzió érhető el',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          const Text('Frissítsd az alkalmazást a legújabb javításokért.'),
+                          const Text(
+                            'Frissítsd az alkalmazást a legújabb javításokért.',
+                          ),
                           const SizedBox(height: 18),
                           FilledButton(
                             onPressed: () async {
-                              final updated = await AppUpdateService().start(update);
-                              if (updated && mounted) setState(() => _availableUpdate = null);
+                              final updated = await AppUpdateService().start(
+                                update,
+                              );
+                              if (updated && mounted) {
+                                setState(() => _availableUpdate = null);
+                              }
                             },
                             child: const Text('Frissítés'),
                           ),
                           TextButton(
-                            onPressed: () => setState(() => _availableUpdate = null),
+                            onPressed: () =>
+                                setState(() => _availableUpdate = null),
                             child: const Text('Most nem'),
                           ),
                         ],
@@ -140,46 +150,47 @@ class _StartupGateState extends State<StartupGate>
           if (update == null && announcement != null)
             Positioned.fill(
               child: ColoredBox(
-              color: Colors.black87,
-              child: Center(
-                child: Card(
-                  margin: const EdgeInsets.all(24),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.sizeOf(context).width * .82,
-                            maxHeight: MediaQuery.sizeOf(context).height * .62,
-                          ),
-                          child: Image.network(
-                            announcement,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, _, _) => const Icon(
-                              Icons.image_not_supported_outlined,
-                              size: 56,
+                color: Colors.black87,
+                child: Center(
+                  child: Card(
+                    margin: const EdgeInsets.all(24),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: MediaQuery.sizeOf(context).width * .82,
+                              maxHeight:
+                                  MediaQuery.sizeOf(context).height * .62,
+                            ),
+                            child: Image.network(
+                              announcement,
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, _, _) => const Icon(
+                                Icons.image_not_supported_outlined,
+                                size: 56,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        FilledButton(
-                          onPressed: () {
-                            if (mounted) {
-                              setState(() {
-                                _dismissedAnnouncementUrl = announcement;
-                                _announcementUrl = null;
-                              });
-                            }
-                          },
-                          child: const Text('Bezárás'),
-                        ),
-                      ],
+                          const SizedBox(height: 10),
+                          FilledButton(
+                            onPressed: () {
+                              if (mounted) {
+                                setState(() {
+                                  _dismissedAnnouncementUrl = announcement;
+                                  _announcementUrl = null;
+                                });
+                              }
+                            },
+                            child: const Text('Bezárás'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
               ),
             ),
         ],

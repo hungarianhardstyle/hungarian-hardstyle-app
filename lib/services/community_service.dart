@@ -11,6 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:otp/otp.dart';
 
 import '../models/community_post.dart';
+import 'wordpress_service.dart';
 
 class CommunityService {
   static const cloudName = 'fjxo93em';
@@ -87,35 +88,40 @@ class CommunityService {
     required String role,
     Map<String, String>? socialLinks,
   }) async {
+    final normalizedEmail = email.trim().toLowerCase();
     try {
       final credential = await auth.createUserWithEmailAndPassword(
-        email: email.trim(),
+        email: normalizedEmail,
         password: password,
       );
       final user = credential.user!;
       await user.updateDisplayName(displayName.trim());
-      await user.sendEmailVerification();
-      final accountRole = _isAdmin(email)
+      final accountRole = _isAdmin(normalizedEmail)
           ? 'organizer'
           : this.accountRole(role);
       await firestore.collection('community_profiles').doc(user.uid).set({
         'displayName': displayName.trim(),
         'role': accountRole,
         'accessRole': _isAdmin(user.email) ? accessAdmin : accessNone,
-        'email': email.trim(),
+        'email': normalizedEmail,
         ...?(socialLinks == null ? null : {'socialLinks': socialLinks}),
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+      // Save the profile before sending the mail. Otherwise a profile-write
+      // failure can surface as a false registration error after the mail was
+      // already delivered.
+      await user.sendEmailVerification();
     } on FirebaseAuthException catch (error) {
       throw StateError(_authError(error.code));
     }
   }
 
   Future<void> signIn({required String email, required String password}) async {
+    final normalizedEmail = email.trim().toLowerCase();
     try {
       final credential = await auth.signInWithEmailAndPassword(
-        email: email.trim(),
+        email: normalizedEmail,
         password: password,
       );
       final user = credential.user!;
@@ -135,8 +141,9 @@ class CommunityService {
 
   Future<void> resendEmailVerification() async {
     final user = auth.currentUser;
-    if (user == null || user.isAnonymous)
+    if (user == null || user.isAnonymous) {
       throw StateError('Nincs ellenőrizhető e-mailes fiók.');
+    }
     await user.sendEmailVerification();
   }
 
@@ -144,9 +151,10 @@ class CommunityService {
     required String email,
     required String password,
   }) async {
+    final normalizedEmail = email.trim().toLowerCase();
     try {
       final credential = await auth.signInWithEmailAndPassword(
-        email: email.trim(),
+        email: normalizedEmail,
         password: password,
       );
       await credential.user!.sendEmailVerification();
@@ -159,7 +167,7 @@ class CommunityService {
 
   Future<void> sendPasswordReset(String email) async {
     try {
-      await auth.sendPasswordResetEmail(email: email.trim());
+      await auth.sendPasswordResetEmail(email: email.trim().toLowerCase());
     } on FirebaseAuthException catch (error) {
       throw StateError(_authError(error.code));
     }
@@ -186,6 +194,21 @@ class CommunityService {
     }
   }
 
+  Future<void> reauthenticateWithPassword(String password) async {
+    final user = auth.currentUser;
+    final email = user?.email;
+    if (user == null || user.isAnonymous || email == null) {
+      throw StateError('E-mailes újrahitelesítés szükséges.');
+    }
+    try {
+      await user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: email, password: password),
+      );
+    } on FirebaseAuthException catch (error) {
+      throw StateError(_authError(error.code));
+    }
+  }
+
   String _authError(String code) => switch (code) {
     'invalid-credential' ||
     'wrong-password' ||
@@ -198,13 +221,15 @@ class CommunityService {
     _ => 'A bejelentkezés nem sikerült. Próbáld újra.',
   };
 
-  Future<void> signInWithGoogle({
+  Future<bool> signInWithGoogle({
     String? role,
+    String? displayName,
     Map<String, String>? socialLinks,
+    Future<String?> Function()? requestDisplayName,
   }) async {
     try {
       final account = await GoogleSignIn().signIn();
-      if (account == null) return;
+      if (account == null) return false;
       final tokens = await account.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: tokens.accessToken,
@@ -216,12 +241,28 @@ class CommunityService {
       try {
         final existing = await profile.get();
         final existingData = existing.data() ?? const <String, dynamic>{};
+        var chosenDisplayName = displayName?.trim() ?? '';
+        final savedDisplayName = (existingData['displayName'] as String? ?? '')
+            .trim();
+        if (chosenDisplayName.isEmpty && savedDisplayName.isEmpty) {
+          chosenDisplayName = (await requestDisplayName?.call() ?? '').trim();
+          if (chosenDisplayName.isEmpty) {
+            await signOut();
+            return false;
+          }
+        }
         final existingRole = existingData['role'] as String?;
         final existingAccessRole =
             existingData['accessRole'] as String? ??
             (existingRole == accessAdmin ? accessAdmin : accessNone);
         await profile.set({
-          'displayName': user.displayName ?? 'Hungarian Hardstyle user',
+          if (!existing.exists ||
+              ((existingData['displayName'] as String?) ?? '').trim().isEmpty)
+            'displayName': (displayName?.trim().isNotEmpty == true
+                ? displayName!.trim()
+                : (savedDisplayName.isNotEmpty
+                      ? savedDisplayName
+                      : chosenDisplayName)),
           'email': user.email,
           if (_isAdmin(user.email)) 'role': 'organizer',
           if (_isAdmin(user.email)) 'accessRole': accessAdmin,
@@ -246,6 +287,7 @@ class CommunityService {
       }
       await _ensureAdminProfile(user);
       await _cacheProfileRole();
+      return true;
     } on PlatformException catch (error) {
       if (error.code == 'sign_in_failed' || error.code == '10') {
         throw StateError(
@@ -509,21 +551,6 @@ class CommunityService {
     return ids.whereType<num>().map((id) => id.toInt()).toList();
   }
 
-  Future<int> sendPersonalizedPush({
-    required String kind,
-    required int id,
-    required String title,
-    required String body,
-  }) async {
-    if (!isAdmin) {
-      throw StateError('Csak admin küldhet célzott értesítést.');
-    }
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('sendPersonalizedPush')
-        .call({'kind': kind, 'id': id, 'title': title, 'body': body});
-    return (result.data as Map?)?['sent'] as int? ?? 0;
-  }
-
   Future<void> setPostPinned(String postId, bool pinned) async {
     if (!isAdmin) {
       throw StateError('Csak admin rögzíthet Chat-üzenetet.');
@@ -651,12 +678,76 @@ class CommunityService {
         .snapshots();
   }
 
+  Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+  watchActivePlannedEventsFor(String userId) {
+    return watchPlannedEventsFor(userId).asyncMap((snapshot) async {
+      try {
+        final activeIds = (await WordpressService().getEvents())
+            .where((event) => !event.isPast)
+            .map((event) => event.id)
+            .toSet();
+        return snapshot.docs
+            .where((doc) {
+              final value = doc.data()['eventId'];
+              final eventId = value is num
+                  ? value.toInt()
+                  : int.tryParse('$value');
+              return eventId != null && activeIds.contains(eventId);
+            })
+            .toList(growable: false);
+      } catch (_) {
+        return const <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+      }
+    });
+  }
+
+  Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+  watchActivePlannedEvents() {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      return const Stream.empty();
+    }
+    return watchActivePlannedEventsFor(user.uid);
+  }
+
   Stream<QuerySnapshot<Map<String, dynamic>>> watchConnections(String userId) {
+    final viewer = auth.currentUser;
+    if (viewer == null || viewer.isAnonymous) return const Stream.empty();
     return firestore
         .collection('community_profiles')
         .doc(userId)
         .collection('connections')
         .snapshots();
+  }
+
+  Future<void> pruneStaleConnections(String userId) async {
+    final viewer = auth.currentUser;
+    if (viewer == null || viewer.isAnonymous || userId.isEmpty) return;
+    final connections = await firestore
+        .collection('community_profiles')
+        .doc(userId)
+        .collection('connections')
+        .get();
+    final stale = <String>[];
+    for (final connection in connections.docs) {
+      final profile = await firestore
+          .collection('community_profiles')
+          .doc(connection.id)
+          .get();
+      if (!profile.exists) stale.add(connection.id);
+    }
+    if (stale.isEmpty) return;
+    final batch = firestore.batch();
+    for (final otherUserId in stale) {
+      batch.delete(
+        firestore
+            .collection('community_profiles')
+            .doc(userId)
+            .collection('connections')
+            .doc(otherUserId),
+      );
+    }
+    await batch.commit();
   }
 
   Future<List<Map<String, String>>> getFriendAttendees(int eventId) async {
@@ -1032,7 +1123,25 @@ class CommunityService {
     await FirebaseFunctions.instance.httpsCallable('deleteCommunityUser').call(
       <String, dynamic>{'uid': user.uid},
     );
-    await signOut();
+    await _clearDeletedAccountState();
+  }
+
+  Future<void> _clearDeletedAccountState() async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final key in const [
+      'biometric_unlock',
+      'device_code_unlock',
+      'authenticator_unlock',
+      'fcm_token',
+      'fcm_token_refresh_v3',
+    ]) {
+      await prefs.remove(key);
+    }
+    await _secureStorage.delete(key: _totpSecretKey);
+    _cachedRole = '';
+    _cachedAccessRole = accessNone;
+    resetBiometricSession();
+    await auth.signOut();
   }
 
   Future<dynamic> wordPressAdminRequest({

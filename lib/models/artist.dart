@@ -103,9 +103,7 @@ class Artist {
           : const [],
       logoUrl: _readString(json['logo']),
       profileImageUrl: _readString(
-        json['profile_image'] ??
-            json['hero_image'] ??
-            json['featured_image'],
+        json['profile_image'] ?? json['hero_image'] ?? json['featured_image'],
       ),
       featured: _readBool(json['featured']),
       visible: _readBool(json['visible']),
@@ -123,15 +121,11 @@ class Artist {
   }
 
   String get location {
-    return [
-      city,
-      country,
-    ].where((value) => value.trim().isNotEmpty).join(', ');
+    return [city, country].where((value) => value.trim().isNotEmpty).join(', ');
   }
 
-  String get effectiveBookingEmail => bookingViaHuhs
-      ? 'info@hungarianhardstyle.hu'
-      : bookingEmail.trim();
+  String get effectiveBookingEmail =>
+      bookingViaHuhs ? 'info@hungarianhardstyle.hu' : bookingEmail.trim();
 }
 
 class ArtistsPage {

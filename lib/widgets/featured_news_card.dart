@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../core/content/date_formatters.dart';
 import '../models/post.dart';
-import '../providers/favorites_provider.dart';
 import '../screens/news/news_detail_screen.dart';
-import 'favorite_button.dart';
+import 'news_reaction_button.dart';
 
 class FeaturedNewsCard extends StatelessWidget {
   final Post post;
@@ -129,6 +128,18 @@ class FeaturedNewsCard extends StatelessWidget {
                       height: 1.25,
                     ),
                   ),
+                  if (post.articleCategories.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      post.articleCategories.join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 14),
 
@@ -149,11 +160,7 @@ class FeaturedNewsCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      FavoriteButton(
-                        kind: FavoriteKind.news,
-                        id: post.id,
-                        title: post.title,
-                      ),
+                      NewsReactionButton(postId: post.id),
                       const Icon(
                         Icons.arrow_forward_rounded,
                         color: Colors.white,
