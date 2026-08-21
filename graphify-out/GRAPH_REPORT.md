@@ -1,16 +1,16 @@
 # Graph Report - hungarian_hardstyle_app  (2026-08-21)
 
 ## Corpus Check
-- 385 files · ~2,436,163 words
+- 385 files · ~2,436,272 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3956 nodes · 5339 edges · 337 communities (302 shown, 35 thin omitted)
+- 3956 nodes · 5339 edges · 338 communities (303 shown, 35 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 41 edges (avg confidence: 0.77)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c07755cd`
+- Built from commit: `0b9a5217`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -131,6 +131,7 @@
 - _kcr-account-flat/kcr-account.php
 - verify_live_category_images.py
 - spotify_player.dart
+- RunnerTests
 - wWinMain
 - artist_detail_screen.dart
 - ios/RunnerTests/RunnerTests.swift
@@ -261,7 +262,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (337 total, 35 thin omitted)
+## Communities (338 total, 35 thin omitted)
 
 ### Community 0 - "community_service.dart"
 Cohesion: 0.02
@@ -723,6 +724,10 @@ Nodes (9): active_theme(), add_cache_buster(), bulk_sync(), canonical_url(), Cat
 Cohesion: 0.22
 Nodes (9): build, _controller, createState, _expanded, initState, SpotifyPlayer, _SpotifyPlayerState, package:webview_flutter/webview_flutter.dart (+1 more)
 
+### Community 116 - "RunnerTests"
+Cohesion: 0.40
+Nodes (3): RunnerTests, RunnerTests, XCTestCase
+
 ### Community 117 - "wWinMain"
 Cohesion: 0.24
 Nodes (9): _In_, _In_opt_, vector, wWinMain(), string, wchar_t, CreateAndAttachConsole(), GetCommandLineArguments() (+1 more)
@@ -732,8 +737,8 @@ Cohesion: 0.10
 Nodes (21): Artist, artistDetailProvider, ArtistListQuery, getArtist, service, artistClaimStatusProvider, artist, _ArtistContent (+13 more)
 
 ### Community 119 - "ios/RunnerTests/RunnerTests.swift"
-Cohesion: 0.22
-Nodes (7): Flutter, FlutterSceneDelegate, SceneDelegate, RunnerTests, UIKit, XCTest, XCTestCase
+Cohesion: 0.38
+Nodes (4): Flutter, FlutterSceneDelegate, SceneDelegate, UIKit
 
 ### Community 120 - "gallery_screen.dart"
 Cohesion: 0.17
@@ -864,8 +869,8 @@ Cohesion: 0.38
 Nodes (4): kcr_category_image_item(), kcr_category_image_manifest(), kcr_keyword_cloud(), kcr_render_keyword_cloud()
 
 ### Community 156 - "FlutterMacOS"
-Cohesion: 0.38
-Nodes (3): Cocoa, FlutterMacOS, RunnerTests
+Cohesion: 0.47
+Nodes (3): Cocoa, FlutterMacOS, XCTest
 
 ### Community 157 - "kcr_create_order"
 Cohesion: 0.33

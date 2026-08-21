@@ -8,6 +8,8 @@
 
 Az ingyenes `free_wav` letöltés Firebase-útvonala vendég/névtelen kérést is elfogad; a fizetős és reklámos MP3-változatok hitelesítése változatlan. A `getLabelDownloadUrl` funkció élesítve, a WordPress WAV-token végpont ellenőrizve.
 
+Következő build feladata: ingyenes kiadványhoz opcionális külső feloldási link, például Hypeddit. A link reklám után legyen elérhető, de ne generáljon WAV-ot; az ingyenes WAV- és normál 128 kbps MP3-útvonal változatlan maradjon.
+
 ## +167 állapot — production AAB elkészült; zárt tesztbe feltöltésre vár
 
 ## +167 — production AAB elkészült, optimalizálás alkalmazva
