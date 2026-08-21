@@ -503,14 +503,20 @@ exports.verifyLabelPurchase = functions
 exports.getLabelDownloadUrl = functions
   .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] })
   .https.onCall(async (data, context) => {
-    if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
-      throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a letöltéshez.');
-    }
-    if (!await allowCall(context.auth.uid, 'label_download', 10)) {
-      throw new HttpsError('resource-exhausted', 'Túl sok letöltési kérés.');
-    }
     const releaseId = Number(data?.releaseId || 0);
     const variant = String(data?.variant || '').trim();
+    const isFreeWav = variant === 'free_wav';
+    const isAnonymous = !context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous';
+    if (isAnonymous && !isFreeWav) {
+      throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a letöltéshez.');
+    }
+    const callerKey = context.auth?.uid
+      || context.rawRequest?.ip
+      || context.rawRequest?.socket?.remoteAddress
+      || 'anonymous';
+    if (!await allowCall(callerKey, 'label_download', 10)) {
+      throw new HttpsError('resource-exhausted', 'Túl sok letöltési kérés.');
+    }
     if (!Number.isInteger(releaseId) || releaseId < 1 || !['free_wav', 'wav', 'mp3_320', 'mp3_128', 'radio_wav', 'radio_mp3_320', 'extended_wav', 'extended_mp3_320'].includes(variant)) {
       throw new HttpsError('invalid-argument', 'Érvénytelen Label-letöltési adat.');
     }

@@ -39,6 +39,7 @@
 - Regressziós alapelv: működő funkciót nem szabad elrontani vagy önkényesen módosítani; minden +167-es optimalizálás után a meglévő működéseket vissza kell ellenőrizni.
 - Ingyenes kiadvány WAV-letöltés: a WordPress API `2.4.54` csomagban a `free_wav` variáns külön kezelést kapott, az `is_free` ellenőrzés kompatibilisebb lett, és a régi/új WAV-metaútvonalak fallbackje is bekerült. Feltöltés után Playből telepítve ellenőrizendő.
 - Ingyenes kiadvány adatlapján a Billing-terméklista üres lekérdezése letiltva; a fizetős kiadványok termékbetöltése változatlan. Új APK/AAB után ellenőrizendő, hogy a hamis terméklista-hiba eltűnt.
+- Ingyenes `free_wav` letöltésnél a Firebase callable vendég/névtelen kérést is elfogad; a fizetős és reklámos MP3-változatok hitelesítése és jogosultság-ellenőrzése változatlan. A `getLabelDownloadUrl` Firebase-funkció élesítve, a WordPress WAV-token végpont a 12242-es kiadvánnyal ellenőrizve.
 
 ### További, később rögzítendő feladatok
 

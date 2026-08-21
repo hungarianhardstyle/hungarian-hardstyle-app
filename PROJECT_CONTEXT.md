@@ -9,6 +9,11 @@
 - Partnerenként backendből választható és konfigurálható Stripe vagy Barion, saját Billingo-kapcsolat, számlázási adatok és kezelési költség.
 - Tervezett funkciók: esemény- és jegytípus-kezelés, névre szóló jegyek, vendéglista, PDF-jegy, egyedi vonalkód és szerveroldali beléptetés.
 
+## +167 utólagos backend-javítás
+
+- Az ingyenes `free_wav` letöltési útvonal Firebase callable-je vendég/névtelen kérést is elfogad; a fizetős és reklámos MP3-változatok hitelesítése változatlan.
+- A `getLabelDownloadUrl` funkció élesítve, a WordPress WAV-token végpont a 12242-es kiadvánnyal ellenőrizve.
+
 ## Aktuális build: +167 — production AAB elkészült; zárt tesztbe feltöltésre vár
 
 ## +167 — production AAB elkészült, optimalizálás alkalmazva

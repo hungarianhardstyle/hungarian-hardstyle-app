@@ -4,6 +4,10 @@
 
 Önálló WordPress ticketing modul és REST API készülhet `jegy.hungarianhardstyle.hu` alatt. A rendszer nem a jelenlegi mobil API-ba kerül közvetlenül; később a Flutter app és a scanner ugyanazt a ticketing API-t használja. Partnerenként konfigurálható lesz a Stripe vagy Barion, a Billingo-kapcsolat, a számlázási adatok és a kezelési költség. A tervezett funkciók közé tartozik az esemény- és jegytípus-kezelés, névre szóló PDF-jegy, egyedi vonalkód, vendéglista és szerveroldali beléptetés.
 
+## +167 utólagos backend-javítás
+
+Az ingyenes `free_wav` letöltés Firebase-útvonala vendég/névtelen kérést is elfogad; a fizetős és reklámos MP3-változatok hitelesítése változatlan. A `getLabelDownloadUrl` funkció élesítve, a WordPress WAV-token végpont ellenőrizve.
+
 ## +167 állapot — production AAB elkészült; zárt tesztbe feltöltésre vár
 
 ## +167 — production AAB elkészült, optimalizálás alkalmazva
