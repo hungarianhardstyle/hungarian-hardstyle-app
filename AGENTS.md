@@ -4,6 +4,16 @@
 
 ### +167 — production AAB elkészült, optimalizálás alkalmazva
 
+### Kiemelt biztonsági javítás — felhasználóhoz kötött Label-jogosultságok
+
+- A Label-vásárlások és a reklámért kapott feloldások kizárólag a Firebase-felhasználó UID-jához tartozhatnak; készülékhez vagy megmaradt lokális képernyőállapothoz nem.
+- A `free_wav` letöltés többé nem érhető el névtelenül: az ingyenes kiadvány WAV-ja is csak az adott felhasználóhoz tartozó, sikeres reklámos feloldás után adható ki.
+- A reklámos feloldás változatonként (`free_wav` / `mp3_128`) kerül tárolásra; a régi, változat nélküli feloldások csak a korábbi `mp3_128` jogosultságként maradnak kompatibilisek.
+- A Google Play-vásárlási token nem köthető hozzá másik Firebase-felhasználóhoz; az ellenőrző végpont eltérő UID esetén megtagadja az átadást.
+- Fiókváltáskor a kliens törli az előző felhasználó feloldási és vásárlási állapotát, majd az új UID-re tölti vissza az állapotot.
+- A négy Firebase-funkció élesítve: `getLabelDownloadUrl`, `getLabelAdUnlockStatus`, `admobRewardedSsv`, `verifyLabelPurchase`.
+- Lokális ellenőrzés sikeres: `flutter analyze`, 29/29 Flutter-teszt, `git diff --check`, `node --check functions/index.js`. Új kliens build és Playből telepített, két külön felhasználós végponttól végpontig teszt még szükséges.
+
 - A +167-ben a Flutter asset-bundből kikerült a nem használt `assets/icons/` könyvtár; a forrásfájlok megmaradtak, működő funkció nem változott.
 - Az R8 teljes módja, a kód-/erőforrás-csökkentés és az osztály-újracsomagolás már korábban aktív volt; túl széles keep-szabályt nem módosítottunk a WorkManager/Room indulás védelme miatt.
 - `flutter analyze --no-pub`, `flutter test` és `git diff --check` sikeres; a production AAB: `build/HUHS-v1.0.0+167-release.aab`.

@@ -50,8 +50,13 @@ function securityLog(event, context) {
   console.warn(JSON.stringify({ event, uid: uid.slice(0, 8) }));
 }
 
-function activeAdUnlock(data, releaseId) {
-  return Boolean(data && data.releaseId === releaseId);
+function activeAdUnlock(data, releaseId, variant = 'mp3_128') {
+  if (!data || data.releaseId !== releaseId) return false;
+  // Older unlock documents predate variant-specific rewards and are valid for
+  // the original 128 kbps reward only. New rewards must name their variant.
+  if (variant === 'mp3_128' && !data.variants && !data.variant) return true;
+  if (data.variant === variant) return true;
+  return data.variants?.[variant] === true;
 }
 
 async function sendMulticastToAllTokens(message, tokens) {
@@ -488,11 +493,20 @@ exports.verifyLabelPurchase = functions
     if (Number(purchase.data.purchaseState) !== 0) {
       throw new HttpsError('permission-denied', 'A vásárlás nincs teljesítve.');
     }
+    const purchaseTokenHash = crypto.createHash('sha256').update(purchaseToken).digest('hex');
+    const previousOwner = await db.collection('label_entitlements')
+      .where('purchaseTokenHash', '==', purchaseTokenHash)
+      .limit(1)
+      .get();
+    if (!previousOwner.empty && previousOwner.docs[0].data()?.uid !== context.auth.uid) {
+      securityLog('label_purchase_user_mismatch', context);
+      throw new HttpsError('permission-denied', 'Ez a vásárlás már másik felhasználóhoz tartozik.');
+    }
     const entitlement = {
       uid: context.auth.uid,
       releaseId,
       productId,
-      purchaseTokenHash: crypto.createHash('sha256').update(purchaseToken).digest('hex'),
+      purchaseTokenHash,
       orderId: String(purchase.data.orderId || ''),
       verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
@@ -505,9 +519,8 @@ exports.getLabelDownloadUrl = functions
   .https.onCall(async (data, context) => {
     const releaseId = Number(data?.releaseId || 0);
     const variant = String(data?.variant || '').trim();
-    const isFreeWav = variant === 'free_wav';
     const isAnonymous = !context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous';
-    if (isAnonymous && !isFreeWav) {
+    if (isAnonymous) {
       throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a letöltéshez.');
     }
     const callerKey = context.auth?.uid
@@ -530,10 +543,10 @@ exports.getLabelDownloadUrl = functions
     if (paid && (!entitlement || !entitlement.exists || entitlement.data()?.releaseId !== releaseId)) {
       throw new HttpsError('permission-denied', 'Ehhez a fájlhoz nincs vásárlási jogosultság.');
     }
-    if (!paid && variant === 'mp3_128') {
+    if (!paid && ['free_wav', 'mp3_128'].includes(variant)) {
       const unlock = await db.collection('label_ad_unlocks').doc(`${context.auth.uid}_${releaseId}`).get();
-      if (!unlock.exists || !activeAdUnlock(unlock.data(), releaseId)) {
-        throw new HttpsError('permission-denied', 'A 128 kbps változat feloldása szükséges.');
+      if (!unlock.exists || !activeAdUnlock(unlock.data(), releaseId, variant)) {
+        throw new HttpsError('permission-denied', 'A reklámos feloldás szükséges ehhez a változathoz.');
       }
     }
     const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
@@ -752,6 +765,10 @@ exports.getLabelAdUnlockStatus = functions.https.onCall(async (data, context) =>
     throw new HttpsError('resource-exhausted', 'Túl sok feloldási ellenőrzés.');
   }
   const releaseId = Number(data?.releaseId || 0);
+  const variant = String(data?.variant || 'mp3_128').trim();
+  if (!['free_wav', 'mp3_128'].includes(variant)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen reklámos feloldási változat.');
+  }
   if (!Number.isInteger(releaseId) || releaseId < 1) {
     throw new HttpsError('invalid-argument', 'Érvénytelen release azonosító.');
   }
@@ -759,7 +776,7 @@ exports.getLabelAdUnlockStatus = functions.https.onCall(async (data, context) =>
     .doc(`${context.auth.uid}_${releaseId}`)
     .get();
   const unlock = snapshot.data() || {};
-  const unlocked = snapshot.exists && activeAdUnlock(unlock, releaseId);
+  const unlocked = snapshot.exists && activeAdUnlock(unlock, releaseId, variant);
   return { unlocked };
 });
 
@@ -863,15 +880,18 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
     }
     const uid = String(decoded.uid || '').trim();
     const releaseId = Number(decoded.releaseId || 0);
-    if (!uid || !Number.isInteger(releaseId) || releaseId < 1) return reject('invalid reward data');
+    const variant = String(decoded.variant || 'mp3_128').trim();
+    if (!uid || !Number.isInteger(releaseId) || releaseId < 1
+      || !['free_wav', 'mp3_128'].includes(variant)) return reject('invalid reward data');
     const transaction = db.collection('admob_reward_transactions').doc(transactionId);
     await db.runTransaction(async (tx) => {
       if ((await tx.get(transaction)).exists) return;
       tx.set(transaction, { uid, releaseId, createdAt: admin.firestore.FieldValue.serverTimestamp() });
       tx.set(db.collection('label_ad_unlocks').doc(`${uid}_${releaseId}`), {
         uid, releaseId, transactionId,
+        variants: { [variant]: true },
         unlockedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      }, { merge: true });
     });
     return res.status(200).send('ok');
   } catch (error) {

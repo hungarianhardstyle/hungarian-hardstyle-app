@@ -133,6 +133,7 @@ class LabelPurchaseService {
 
   Future<bool> waitForAdUnlock({
     required int releaseId,
+    String variant = 'mp3_128',
     Duration timeout = const Duration(seconds: 20),
   }) async {
     final callable = FirebaseFunctions.instance.httpsCallable(
@@ -141,7 +142,10 @@ class LabelPurchaseService {
     final deadline = DateTime.now().add(timeout);
     while (DateTime.now().isBefore(deadline)) {
       try {
-        final result = await callable.call({'releaseId': releaseId});
+        final result = await callable.call({
+          'releaseId': releaseId,
+          'variant': variant,
+        });
         final data = result.data;
         if (data is Map && data['unlocked'] == true) return true;
       } catch (_) {
@@ -152,14 +156,17 @@ class LabelPurchaseService {
     return false;
   }
 
-  Future<bool> hasAdUnlock(int releaseId) async {
+  Future<bool> hasAdUnlock(int releaseId, {String variant = 'mp3_128'}) async {
     final result = await FirebaseFunctions.instance
         .httpsCallable('getLabelAdUnlockStatus')
-        .call({'releaseId': releaseId});
+        .call({'releaseId': releaseId, 'variant': variant});
     return result.data is Map && result.data['unlocked'] == true;
   }
 
-  Future<bool> showRewardedAd(int releaseId) async {
+  Future<bool> showRewardedAd(
+    int releaseId, {
+    String variant = 'mp3_128',
+  }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.isAnonymous) {
       throw StateError('A reklámos feloldáshoz be kell jelentkezni.');
@@ -177,7 +184,13 @@ class LabelPurchaseService {
       ),
     );
     final customData = base64UrlEncode(
-      utf8.encode(jsonEncode({'uid': user.uid, 'releaseId': releaseId})),
+      utf8.encode(
+        jsonEncode({
+          'uid': user.uid,
+          'releaseId': releaseId,
+          'variant': variant,
+        }),
+      ),
     );
     await rewarded.setServerSideOptions(
       ServerSideVerificationOptions(customData: customData),

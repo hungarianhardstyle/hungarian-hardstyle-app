@@ -2,6 +2,10 @@
 
 # Hungarian Hardstyle App
 
+## Kiemelt biztonsági javítás — felhasználóhoz kötött Label-jogosultságok
+
+A vásárlási jogosultság és a reklámos feloldás nem lehet készülékhez vagy kliensoldali állapothoz kötve. A következő kliens buildben a `free_wav` is bejelentkezett felhasználóhoz kötött reklámos feloldást használ; a backend UID alapján ellenőriz, a vásárlási token UID-közi átadását tiltja, és fiókváltáskor törli a korábbi képernyőállapotot. A négy érintett Firebase-funkció élesítve, a Flutter statikus és tesztellenőrzés sikeres. Playből telepített új builden két külön Firebase-felhasználóval végponttól végpontig ellenőrizendő.
+
 ## Külön projekt: Hungarian Hardstyle Ticketing
 
 - Önálló WordPress ticketing modul/szolgáltatás és külön REST API készül; a jelenlegi mobil API-ba nem kerül közvetlenül.

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../models/release.dart';
 import 'releases_screen.dart';
@@ -25,6 +26,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   final _purchases = LabelPurchaseService();
   List<ProductDetails> _products = const [];
   StreamSubscription<PurchaseDetails>? _updates;
+  StreamSubscription<User?>? _authUpdates;
   String? _message;
   bool _unlocking = false;
   bool _adUnlocked = false;
@@ -42,9 +44,25 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     );
     _purchases.listen();
     _updates = _purchases.purchaseUpdates.listen(_handlePurchase);
+    _authUpdates = FirebaseAuth.instance.authStateChanges().listen(
+      _handleAuthChange,
+    );
     _loadProducts();
     _loadAdUnlockStatus();
     _restorePurchases();
+  }
+
+  Future<void> _handleAuthChange(User? user) async {
+    if (!mounted) return;
+    setState(() {
+      _adUnlocked = false;
+      _checkingAdUnlock = user != null && !user.isAnonymous;
+      _verifiedProducts.clear();
+      _handlingPurchaseKeys.clear();
+    });
+    if (user == null || user.isAnonymous) return;
+    await _loadAdUnlockStatus(user.uid);
+    if (mounted) await _restorePurchases();
   }
 
   Future<void> _handlePurchase(PurchaseDetails purchase) async {
@@ -108,16 +126,29 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     }
   }
 
-  Future<void> _loadAdUnlockStatus() async {
+  Future<void> _loadAdUnlockStatus([String? expectedUid]) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous) {
+      if (mounted) setState(() => _checkingAdUnlock = false);
+      return;
+    }
     try {
-      final unlocked = await _purchases.hasAdUnlock(widget.release.id);
-      if (mounted && unlocked) setState(() => _adUnlocked = true);
+      final unlocked = await _purchases.hasAdUnlock(
+        widget.release.id,
+        variant: _rewardVariant,
+      );
+      if (mounted &&
+          FirebaseAuth.instance.currentUser?.uid == (expectedUid ?? user.uid)) {
+        setState(() => _adUnlocked = unlocked);
+      }
     } catch (_) {
       // A gomb előtt ismét ellenőrizzük; itt elég feloldani a betöltési állapotot.
     } finally {
       if (mounted) setState(() => _checkingAdUnlock = false);
     }
   }
+
+  String get _rewardVariant => widget.release.isFree ? 'free_wav' : 'mp3_128';
 
   Future<void> _loadProducts() async {
     // Free releases intentionally have no Google Play product IDs. Do not
@@ -157,6 +188,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
 
   @override
   void dispose() {
+    _authUpdates?.cancel();
     _updates?.cancel();
     _purchases.dispose();
     super.dispose();
@@ -274,13 +306,17 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
           if (release.isFree)
             Card(
               child: ListTile(
-                title: const Text('WAV letöltése'),
+                title: const Text('WAV feloldása reklámmal'),
                 subtitle: const Text(
-                  'Az ingyenes kiadvány WAV formátumban tölthető le.',
+                  'A jutalmazott reklám megtekintése után a WAV letölthető.',
                 ),
                 trailing: FilledButton(
-                  onPressed: () => _download('free_wav'),
-                  child: const Text('Letöltés'),
+                  onPressed: _unlocking || _checkingAdUnlock
+                      ? null
+                      : _adUnlocked
+                      ? () => _download('free_wav')
+                      : _unlockRewarded,
+                  child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
                 ),
               ),
             )
@@ -296,7 +332,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                       ? null
                       : _adUnlocked
                       ? () => _download('mp3_128')
-                      : _unlock128,
+                      : _unlockRewarded,
                   child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
                 ),
               ),
@@ -418,14 +454,20 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     return match?.group(1) ?? (productId.endsWith('_wav') ? 'wav' : 'mp3_320');
   }
 
-  Future<void> _unlock128() async {
+  Future<void> _unlockRewarded() async {
     if (_unlocking) return;
     setState(() {
       _unlocking = true;
       _message = 'A jutalmazott reklám betöltése…';
     });
     try {
-      if (await _purchases.hasAdUnlock(widget.release.id)) {
+      final variant = _rewardVariant;
+      final currentUid = FirebaseAuth.instance.currentUser?.uid;
+      if (currentUid == null ||
+          FirebaseAuth.instance.currentUser!.isAnonymous) {
+        throw StateError('A reklámos feloldáshoz be kell jelentkezni.');
+      }
+      if (await _purchases.hasAdUnlock(widget.release.id, variant: variant)) {
         if (mounted) {
           setState(() {
             _adUnlocked = true;
@@ -434,21 +476,27 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
         }
         return;
       }
-      final earned = await _purchases.showRewardedAd(widget.release.id);
+      final earned = await _purchases.showRewardedAd(
+        widget.release.id,
+        variant: variant,
+      );
       if (!earned) throw StateError('A reklám megtekintése nem fejeződött be.');
       if (mounted) {
         setState(() => _message = 'A reklám jóváírásának ellenőrzése…');
       }
       final unlocked = await _purchases.waitForAdUnlock(
         releaseId: widget.release.id,
+        variant: variant,
       );
       if (!unlocked) {
         throw StateError(
           'A reklám lefutott, de a feloldás nem érkezett meg. Próbáld újra később.',
         );
       }
-      if (mounted) setState(() => _adUnlocked = true);
-      final downloaded = await _download('mp3_128');
+      if (mounted && FirebaseAuth.instance.currentUser?.uid == currentUid) {
+        setState(() => _adUnlocked = true);
+      }
+      final downloaded = await _download(variant);
       if (mounted) {
         setState(
           () => _message = downloaded
@@ -467,6 +515,13 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   }
 
   Future<bool> _download(String variant) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous) {
+      if (mounted) {
+        setState(() => _message = 'A letöltéshez be kell jelentkezni.');
+      }
+      return false;
+    }
     try {
       final url = await _purchases.getDownloadUrl(
         releaseId: widget.release.id,
