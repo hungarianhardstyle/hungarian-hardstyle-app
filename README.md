@@ -4,6 +4,10 @@
 
 A Label-vásárlások és reklámos feloldások felhasználóhoz kötöttek, nem készülékhez. Az ingyenes kiadvány `free_wav` letöltése is csak a bejelentkezett Firebase-felhasználó saját reklámos feloldásával engedélyezett. Fiókváltáskor a kliens újratölti az UID-hoz tartozó állapotot, a backend pedig megakadályozza a vásárlási token másik felhasználóhoz kötését. A következő kliens buildet két külön fiókkal, ugyanazon készüléken is ellenőrizni kell.
 
+## Ingyenes kiadvány külső linkje
+
+Az ingyenes release-ekhez opcionálisan megadható külső link, például Hypeddit. A link csak reklámos feloldás után nyitható meg; WAV-ot nem generál és nem változtatja meg a meglévő ingyenes WAV- vagy normál 128 kbps MP3-útvonalat. A WordPress API-csomag elkészült: `build/huhs-mobile-api-2.4.55.zip`.
+
 ## Külön projekt: Hungarian Hardstyle Ticketing
 
 Önálló WordPress ticketing modul és REST API készülhet `jegy.hungarianhardstyle.hu` alatt. A rendszer nem a jelenlegi mobil API-ba kerül közvetlenül; később a Flutter app és a scanner ugyanazt a ticketing API-t használja. Partnerenként konfigurálható lesz a Stripe vagy Barion, a Billingo-kapcsolat, a számlázási adatok és a kezelési költség. A tervezett funkciók közé tartozik az esemény- és jegytípus-kezelés, névre szóló PDF-jegy, egyedi vonalkód, vendéglista és szerveroldali beléptetés.

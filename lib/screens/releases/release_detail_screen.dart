@@ -30,6 +30,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   String? _message;
   bool _unlocking = false;
   bool _adUnlocked = false;
+  bool _externalLinkUnlocked = false;
   bool _checkingAdUnlock = true;
   bool _loadingProducts = false;
   final Set<String> _verifiedProducts = <String>{};
@@ -56,6 +57,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     if (!mounted) return;
     setState(() {
       _adUnlocked = false;
+      _externalLinkUnlocked = false;
       _checkingAdUnlock = user != null && !user.isAnonymous;
       _verifiedProducts.clear();
       _handlingPurchaseKeys.clear();
@@ -137,9 +139,16 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
         widget.release.id,
         variant: _rewardVariant,
       );
+      final externalUnlocked =
+          widget.release.isFree &&
+          widget.release.freeExternalLink.isNotEmpty &&
+          await _purchases.hasAdUnlock(widget.release.id, variant: 'free_link');
       if (mounted &&
           FirebaseAuth.instance.currentUser?.uid == (expectedUid ?? user.uid)) {
-        setState(() => _adUnlocked = unlocked);
+        setState(() {
+          _adUnlocked = unlocked;
+          _externalLinkUnlocked = externalUnlocked;
+        });
       }
     } catch (_) {
       // A gomb előtt ismét ellenőrizzük; itt elég feloldani a betöltési állapotot.
@@ -345,6 +354,23 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 style: const TextStyle(color: Colors.white70),
               ),
             ),
+          if (release.isFree && release.freeExternalLink.isNotEmpty)
+            Card(
+              child: ListTile(
+                title: const Text('Ingyenes külső link'),
+                subtitle: const Text(
+                  'A jutalmazott reklám megtekintése után megnyitható.',
+                ),
+                trailing: FilledButton(
+                  onPressed: _unlocking || _checkingAdUnlock
+                      ? null
+                      : _externalLinkUnlocked
+                      ? _openFreeExternalLink
+                      : _unlockExternalLink,
+                  child: Text(_externalLinkUnlocked ? 'Megnyitás' : 'Feloldás'),
+                ),
+              ),
+            ),
           if (release.versions.isNotEmpty) ...[
             const SizedBox(height: 16),
             const Text(
@@ -454,27 +480,20 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     return match?.group(1) ?? (productId.endsWith('_wav') ? 'wav' : 'mp3_320');
   }
 
-  Future<void> _unlockRewarded() async {
-    if (_unlocking) return;
+  Future<bool> _claimReward(String variant) async {
+    if (_unlocking) return false;
     setState(() {
       _unlocking = true;
       _message = 'A jutalmazott reklám betöltése…';
     });
     try {
-      final variant = _rewardVariant;
       final currentUid = FirebaseAuth.instance.currentUser?.uid;
       if (currentUid == null ||
           FirebaseAuth.instance.currentUser!.isAnonymous) {
         throw StateError('A reklámos feloldáshoz be kell jelentkezni.');
       }
       if (await _purchases.hasAdUnlock(widget.release.id, variant: variant)) {
-        if (mounted) {
-          setState(() {
-            _adUnlocked = true;
-            _message = 'Ez a release már fel van oldva.';
-          });
-        }
-        return;
+        return true;
       }
       final earned = await _purchases.showRewardedAd(
         widget.release.id,
@@ -494,23 +513,50 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
         );
       }
       if (mounted && FirebaseAuth.instance.currentUser?.uid == currentUid) {
-        setState(() => _adUnlocked = true);
+        return true;
       }
-      final downloaded = await _download(variant);
-      if (mounted) {
-        setState(
-          () => _message = downloaded
-              ? 'Feloldva, a letöltés elindult.'
-              : 'Feloldva, de a letöltést nem sikerült elindítani.',
-        );
-      }
+      return false;
     } catch (error) {
       final message = error is StateError
           ? error.message.toString()
           : userFacingError(error);
       if (mounted) setState(() => _message = message);
+      return false;
     } finally {
       if (mounted) setState(() => _unlocking = false);
+    }
+  }
+
+  Future<void> _unlockRewarded() async {
+    final unlocked = await _claimReward(_rewardVariant);
+    if (!unlocked || !mounted) return;
+    setState(() => _adUnlocked = true);
+    final downloaded = await _download(_rewardVariant);
+    if (mounted) {
+      setState(
+        () => _message = downloaded
+            ? 'Feloldva, a letöltés elindult.'
+            : 'Feloldva, de a letöltést nem sikerült elindítani.',
+      );
+    }
+  }
+
+  Future<void> _unlockExternalLink() async {
+    final unlocked = await _claimReward('free_link');
+    if (!unlocked || !mounted) return;
+    setState(() => _externalLinkUnlocked = true);
+    await _openFreeExternalLink();
+  }
+
+  Future<void> _openFreeExternalLink() async {
+    final uri = Uri.tryParse(widget.release.freeExternalLink);
+    if (uri == null || !{'http', 'https'}.contains(uri.scheme)) {
+      setState(() => _message = 'Az ingyenes külső link érvénytelen.');
+      return;
+    }
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      setState(() => _message = 'A linket nem sikerült megnyitni.');
     }
   }
 

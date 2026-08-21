@@ -14,6 +14,14 @@
 - A négy Firebase-funkció élesítve: `getLabelDownloadUrl`, `getLabelAdUnlockStatus`, `admobRewardedSsv`, `verifyLabelPurchase`.
 - Lokális ellenőrzés sikeres: `flutter analyze`, 29/29 Flutter-teszt, `git diff --check`, `node --check functions/index.js`. Új kliens build és Playből telepített, két külön felhasználós végponttól végpontig teszt még szükséges.
 
+### Következő build — ingyenes kiadvány opcionális külső linkje
+
+- Az ingyenes kiadványhoz opcionális `free_external_link` mező került a WordPress API-ba és az admin felületre; például Hypeddit-link adható meg.
+- A link csak ingyenes kiadványnál jelenik meg, reklámos `free_link` feloldás után nyitható meg, és a feloldás Firebase UID-hoz kötött.
+- Ehhez nem készül és nem jelenik meg WAV; az ingyenes WAV-letöltés külön, változatlan `free_wav` útvonal marad.
+- A normál release 128 kbps MP3 reklámos útvonala változatlan.
+- Elkészült a WordPress API `build/huhs-mobile-api-2.4.55.zip` csomag; működő útvonalakat nem módosítottam. Kliens build és Playből telepített ellenőrzés még szükséges.
+
 - A +167-ben a Flutter asset-bundből kikerült a nem használt `assets/icons/` könyvtár; a forrásfájlok megmaradtak, működő funkció nem változott.
 - Az R8 teljes módja, a kód-/erőforrás-csökkentés és az osztály-újracsomagolás már korábban aktív volt; túl széles keep-szabályt nem módosítottunk a WorkManager/Room indulás védelme miatt.
 - `flutter analyze --no-pub`, `flutter test` és `git diff --check` sikeres; a production AAB: `build/HUHS-v1.0.0+167-release.aab`.

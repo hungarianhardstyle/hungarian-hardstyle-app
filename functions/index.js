@@ -766,7 +766,7 @@ exports.getLabelAdUnlockStatus = functions.https.onCall(async (data, context) =>
   }
   const releaseId = Number(data?.releaseId || 0);
   const variant = String(data?.variant || 'mp3_128').trim();
-  if (!['free_wav', 'mp3_128'].includes(variant)) {
+  if (!['free_wav', 'free_link', 'mp3_128'].includes(variant)) {
     throw new HttpsError('invalid-argument', 'Érvénytelen reklámos feloldási változat.');
   }
   if (!Number.isInteger(releaseId) || releaseId < 1) {
@@ -882,7 +882,7 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
     const releaseId = Number(decoded.releaseId || 0);
     const variant = String(decoded.variant || 'mp3_128').trim();
     if (!uid || !Number.isInteger(releaseId) || releaseId < 1
-      || !['free_wav', 'mp3_128'].includes(variant)) return reject('invalid reward data');
+      || !['free_wav', 'free_link', 'mp3_128'].includes(variant)) return reject('invalid reward data');
     const transaction = db.collection('admob_reward_transactions').doc(transactionId);
     await db.runTransaction(async (tx) => {
       if ((await tx.get(transaction)).exists) return;

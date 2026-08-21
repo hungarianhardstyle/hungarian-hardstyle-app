@@ -47,6 +47,7 @@ class HuhsRelease {
   final String audioStatus;
   final String releaseDate;
   final bool isFree;
+  final String freeExternalLink;
 
   const HuhsRelease({
     required this.id,
@@ -61,6 +62,7 @@ class HuhsRelease {
     required this.audioStatus,
     required this.releaseDate,
     required this.isFree,
+    required this.freeExternalLink,
   });
 
   factory HuhsRelease.fromJson(Map<String, dynamic> json) {
@@ -117,6 +119,9 @@ class HuhsRelease {
         json['release_date'] ?? json['releaseDate'] ?? json['date'],
       ),
       isFree: json['is_free'] == true || json['isFree'] == true,
+      freeExternalLink: _readString(
+        json['free_external_link'] ?? json['freeExternalLink'],
+      ),
     );
   }
 }

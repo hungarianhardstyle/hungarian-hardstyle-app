@@ -6,6 +6,10 @@
 
 A vásárlási jogosultság és a reklámos feloldás nem lehet készülékhez vagy kliensoldali állapothoz kötve. A következő kliens buildben a `free_wav` is bejelentkezett felhasználóhoz kötött reklámos feloldást használ; a backend UID alapján ellenőriz, a vásárlási token UID-közi átadását tiltja, és fiókváltáskor törli a korábbi képernyőállapotot. A négy érintett Firebase-funkció élesítve, a Flutter statikus és tesztellenőrzés sikeres. Playből telepített új builden két külön Firebase-felhasználóval végponttól végpontig ellenőrizendő.
 
+## Ingyenes kiadvány opcionális külső linkje
+
+A WordPress release-admin és API támogatja az opcionális `free_external_link` mezőt, amely csak `is_free` kiadványnál kerül ki az API-ba. A Flutter kliens a linket külön `free_link` reklámos feloldással védi; ez nem generál WAV-ot és nem módosítja az ingyenes `free_wav` vagy a normál `mp3_128` útvonalat. A csomag: `build/huhs-mobile-api-2.4.55.zip`.
+
 ## Külön projekt: Hungarian Hardstyle Ticketing
 
 - Önálló WordPress ticketing modul/szolgáltatás és külön REST API készül; a jelenlegi mobil API-ba nem kerül közvetlenül.
