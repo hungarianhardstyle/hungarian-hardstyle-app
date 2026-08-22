@@ -10,6 +10,8 @@ A vásárlási jogosultság és a reklámos feloldás nem lehet készülékhez v
 
 A WordPress release-admin és API támogatja az opcionális `free_external_link` mezőt, amely csak `is_free` kiadványnál kerül ki az API-ba. A Flutter kliens a linket külön `free_link` reklámos feloldással védi; ez nem generál WAV-ot és nem módosítja az ingyenes `free_wav` vagy a normál `mp3_128` útvonalat. A csomag: `build/huhs-mobile-api-2.4.55.zip`.
 
+Az ingyenes kiadvány adatlapján a „Radio verzió” változatfelirat nem jelenik meg; a normál release-ek változatjelölése változatlan.
+
 ## Külön projekt: Hungarian Hardstyle Ticketing
 
 - Önálló WordPress ticketing modul/szolgáltatás és külön REST API készül; a jelenlegi mobil API-ba nem kerül közvetlenül.
@@ -23,7 +25,22 @@ A WordPress release-admin és API támogatja az opcionális `free_external_link`
 - A `getLabelDownloadUrl` funkció élesítve, a WordPress WAV-token végpont a 12242-es kiadvánnyal ellenőrizve.
 - Következő build feladata: ingyenes kiadványhoz opcionális külső feloldási link (például Hypeddit), amely reklám után válik elérhetővé, de nem generál és nem kínál WAV-ot. A meglévő WAV- és normál 128 kbps MP3-útvonalhoz nem szabad hozzányúlni.
 
-## Aktuális build: +167 — production AAB elkészült; zárt tesztbe feltöltésre vár
+## Aktuális build: +169 — zárt teszt felülvizsgálatra beküldve
+
+## +169 — production AAB elkészült és beküldve
+
+- A production AAB: `build/HUHS-v1.0.0+169-release.aab`, versionCode 169.
+- A kiadás a privát üzenetek menüjét és a címzettnek küldött push értesítést tartalmazza.
+- `flutter analyze --no-pub`, `flutter test` (29/29) és `git diff --check` sikeres.
+- A Play Console zárt teszt Alpha csatornájába feltöltve és felülvizsgálatra elküldve; a módosítások jelenleg felülvizsgálat alatt állnak.
+- A Play „Közepes” optimalizálási mutatója az AAB feldolgozása után ellenőrizendő.
+
+## +168 — production AAB elkészült
+
+- A production AAB: `build/HUHS-v1.0.0+168-release.aab`, versionCode 168.
+- Az aláírt AAB tartalmazza a korábbi production AdMob App/Banner/Rewarded azonosítókat.
+- Az ingyenes kiadványoknál a „Radio verzió” felirat elrejtve; normál release-ek változatlanok.
+- Play zárt tesztfeltöltés és Play-optimalizálási mutató ellenőrzése még hátra van.
 
 ## +167 — production AAB elkészült, optimalizálás alkalmazva
 

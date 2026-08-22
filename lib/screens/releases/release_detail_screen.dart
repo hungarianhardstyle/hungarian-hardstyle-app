@@ -371,7 +371,9 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 ),
               ),
             ),
-          if (release.versions.isNotEmpty) ...[
+          if (release.versions
+              .where((version) => !(release.isFree && version.type == 'radio'))
+              .isNotEmpty) ...[
             const SizedBox(height: 16),
             const Text(
               'Elérhető változatok',
@@ -381,6 +383,9 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
             Wrap(
               spacing: 8,
               children: release.versions
+                  .where(
+                    (version) => !(release.isFree && version.type == 'radio'),
+                  )
                   .map(
                     (version) => Chip(label: Text(_versionLabel(version.type))),
                   )

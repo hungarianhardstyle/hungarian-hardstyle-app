@@ -1,5 +1,5 @@
 const functions = require('firebase-functions/v1');
-const { onDocumentWritten } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { HttpsError } = functions.https;
 const { defineSecret } = require('firebase-functions/params');
@@ -989,6 +989,93 @@ exports.notifyConnectionRequest = onDocumentWritten(
     });
     if (invalidTokens.length) {
       await db.collection('community_profiles').doc(String(request.to)).update({
+        fcmTokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
+      });
+    }
+    return result;
+  },
+);
+
+exports.notifyPrivateMessage = onDocumentCreated(
+  {
+    document: 'private_conversations/{conversationId}/messages/{messageId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  async (event) => {
+    const message = event.data?.data() || {};
+    const senderId = String(message.senderId || '').trim();
+    const recipientId = String(message.recipientId || '').trim();
+    const conversationId = String(event.params.conversationId || '').trim();
+    const text = String(message.text || '').trim();
+    if (!senderId || !recipientId || !conversationId || !text || senderId === recipientId) {
+      return null;
+    }
+
+    const conversation = (await db.collection('private_conversations').doc(conversationId).get()).data() || {};
+    const participantIds = Array.isArray(conversation.participantIds)
+      ? conversation.participantIds.map((id) => String(id))
+      : [];
+    if (!participantIds.includes(senderId) || !participantIds.includes(recipientId)) {
+      console.warn(JSON.stringify({
+        event: 'private_message_invalid_participants',
+        conversationId,
+      }));
+      return null;
+    }
+
+    const target = (await db.collection('community_profiles').doc(recipientId).get()).data() || {};
+    const rawTokens = target.fcmTokens;
+    const tokens = Array.isArray(rawTokens)
+      ? rawTokens
+      : rawTokens && typeof rawTokens === 'object'
+        ? Object.values(rawTokens)
+        : typeof rawTokens === 'string'
+          ? [rawTokens]
+          : [];
+    if (typeof target.fcmToken === 'string') tokens.push(target.fcmToken);
+    const uniqueTokens = [...new Set(
+      tokens
+        .filter((token) => typeof token === 'string' && token.trim())
+        .map((token) => token.trim()),
+    )];
+    if (!uniqueTokens.length) {
+      console.log(JSON.stringify({
+        event: 'private_message_no_target_token',
+        conversationId,
+        recipientId,
+      }));
+      return null;
+    }
+
+    const participantNames = conversation.participantNames || {};
+    const senderName = String(participantNames[senderId] || 'Egy felhasználó').trim();
+    const result = await sendMulticastToAllTokens({
+      notification: {
+        title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
+        body: text.slice(0, 160),
+      },
+      data: {
+        type: 'private_message',
+        conversationId,
+        senderId,
+      },
+    }, uniqueTokens);
+    console.log(JSON.stringify({
+      event: 'private_message_push_result',
+      conversationId,
+      recipientId,
+      tokenCount: uniqueTokens.length,
+      successCount: result.successCount,
+      failureCount: result.failureCount,
+    }));
+
+    const invalidTokens = uniqueTokens.filter((_, index) => {
+      const error = result.responses[index].error;
+      return error?.code === 'messaging/registration-token-not-registered';
+    });
+    if (invalidTokens.length) {
+      await db.collection('community_profiles').doc(recipientId).update({
         fcmTokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
       });
     }

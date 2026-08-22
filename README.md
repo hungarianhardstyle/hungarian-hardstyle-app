@@ -8,6 +8,8 @@ A Label-vásárlások és reklámos feloldások felhasználóhoz kötöttek, nem
 
 Az ingyenes release-ekhez opcionálisan megadható külső link, például Hypeddit. A link csak reklámos feloldás után nyitható meg; WAV-ot nem generál és nem változtatja meg a meglévő ingyenes WAV- vagy normál 128 kbps MP3-útvonalat. A WordPress API-csomag elkészült: `build/huhs-mobile-api-2.4.55.zip`.
 
+Az ingyenes kiadvány adatlapján a „Radio verzió” felirat rejtve marad; a normál release-ek megjelenítése nem változott.
+
 ## Külön projekt: Hungarian Hardstyle Ticketing
 
 Önálló WordPress ticketing modul és REST API készülhet `jegy.hungarianhardstyle.hu` alatt. A rendszer nem a jelenlegi mobil API-ba kerül közvetlenül; később a Flutter app és a scanner ugyanazt a ticketing API-t használja. Partnerenként konfigurálható lesz a Stripe vagy Barion, a Billingo-kapcsolat, a számlázási adatok és a kezelési költség. A tervezett funkciók közé tartozik az esemény- és jegytípus-kezelés, névre szóló PDF-jegy, egyedi vonalkód, vendéglista és szerveroldali beléptetés.
@@ -18,7 +20,22 @@ Az ingyenes `free_wav` letöltés Firebase-útvonala vendég/névtelen kérést 
 
 Következő build feladata: ingyenes kiadványhoz opcionális külső feloldási link, például Hypeddit. A link reklám után legyen elérhető, de ne generáljon WAV-ot; az ingyenes WAV- és normál 128 kbps MP3-útvonal változatlan maradjon.
 
-## +167 állapot — production AAB elkészült; zárt tesztbe feltöltésre vár
+## +169 állapot — zárt teszt felülvizsgálatra beküldve
+
+## +169 — production AAB elkészült és beküldve
+
+- A production AAB: `build/HUHS-v1.0.0+169-release.aab`, versionCode 169.
+- A +169 a privát üzenetek újranyitható menüjét és a címzettnek küldött push értesítést tartalmazza.
+- `flutter analyze --no-pub`, `flutter test` (29/29) és `git diff --check` sikeres.
+- A Play Console zárt teszt Alpha kiadásába feltöltve és felülvizsgálatra beküldve; a módosítások jelenleg felülvizsgálat alatt állnak.
+- A Play „Közepes” optimalizálási mutatója az AAB feldolgozása után ellenőrizendő.
+
+## +168 — production AAB elkészült
+
+- A production AAB: `build/HUHS-v1.0.0+168-release.aab`, versionCode 168.
+- Az aláírt AAB-ban a korábbi production AdMob-azonosítók ellenőrizve.
+- Az ingyenes kiadványoknál a „Radio verzió” felirat nem jelenik meg; normál release-ek változatlanok.
+- A Play zárt tesztfeltöltése és az optimalizálási mutató újraellenőrzése még hátra van.
 
 ## +167 — production AAB elkészült, optimalizálás alkalmazva
 

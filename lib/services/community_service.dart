@@ -81,6 +81,103 @@ class CommunityService {
         });
   }
 
+  String privateConversationId(String firstUserId, String secondUserId) {
+    final ids = [firstUserId, secondUserId]..sort();
+    return '${ids[0]}_${ids[1]}';
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchPrivateConversations() {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return const Stream.empty();
+    return firestore
+        .collection('private_conversations')
+        .where('participantIds', arrayContains: user.uid)
+        .limit(50)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchPrivateMessages(
+    String conversationId,
+  ) {
+    return firestore
+        .collection('private_conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .orderBy('createdAt')
+        .limit(100)
+        .snapshots();
+  }
+
+  Future<void> sendPrivateMessage({
+    required String otherUserId,
+    required String text,
+  }) async {
+    final user = auth.currentUser;
+    final trimmed = text.trim();
+    if (user == null || user.isAnonymous) {
+      throw StateError('Privát üzenet küldéséhez regisztráció szükséges.');
+    }
+    if (otherUserId.isEmpty || otherUserId == user.uid) {
+      throw ArgumentError('Érvénytelen címzett.');
+    }
+    if (trimmed.isEmpty || trimmed.length > 2000) {
+      throw ArgumentError('Az üzenet 1–2000 karakter lehet.');
+    }
+
+    final blockedByMe = await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('blocked_users')
+        .doc(otherUserId)
+        .get();
+    final blockedMe = await firestore
+        .collection('community_profiles')
+        .doc(otherUserId)
+        .collection('blocked_users')
+        .doc(user.uid)
+        .get();
+    if (blockedByMe.exists || blockedMe.exists) {
+      throw StateError(
+        'A privát üzenetküldés ennél a felhasználónál nem érhető el.',
+      );
+    }
+
+    final otherProfile = await firestore
+        .collection('community_profiles')
+        .doc(otherUserId)
+        .get();
+    if (!otherProfile.exists) throw StateError('A felhasználó nem található.');
+    final ownProfile = await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .get();
+    final ownData = ownProfile.data() ?? const <String, dynamic>{};
+    final otherData = otherProfile.data() ?? const <String, dynamic>{};
+    final conversationId = privateConversationId(user.uid, otherUserId);
+    final conversation = firestore
+        .collection('private_conversations')
+        .doc(conversationId);
+    await conversation.set({
+      'participantIds': [user.uid, otherUserId]..sort(),
+      'participantNames': {
+        user.uid:
+            (ownData['displayName'] as String? ??
+            user.displayName ??
+            'HUHS user'),
+        otherUserId: otherData['displayName'] as String? ?? 'HUHS user',
+      },
+      'lastMessage': trimmed,
+      'lastSenderId': user.uid,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    await conversation.collection('messages').add({
+      'senderId': user.uid,
+      'recipientId': otherUserId,
+      'text': trimmed,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Future<void> register({
     required String email,
     required String password,

@@ -16,6 +16,7 @@ import '../screens/events/event_detail_screen.dart';
 import '../screens/more/community_users_screen.dart';
 import '../screens/news/news_detail_screen.dart';
 import '../screens/community/wordpress_admin_screen.dart';
+import '../screens/community/private_messages_screen.dart';
 import 'wordpress_service.dart';
 
 class PushNotificationService {
@@ -93,6 +94,24 @@ class PushNotificationService {
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => CommunityPublicProfileScreen(userId: senderId),
+          ),
+        );
+        return;
+      }
+
+      if (type == 'private_message' &&
+          senderId.isNotEmpty &&
+          message.data['conversationId']?.toString().trim().isNotEmpty == true) {
+        final senderName = message.notification?.title
+                ?.replaceFirst(RegExp(r' üzenetet küldött$'), '')
+                .trim() ??
+            'HUHS user';
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => PrivateConversationScreen(
+              otherUserId: senderId,
+              otherUserName: senderName.isEmpty ? 'HUHS user' : senderName,
+            ),
           ),
         );
         return;
@@ -185,6 +204,9 @@ class PushNotificationService {
     final url = message.data['url']?.toString().trim() ?? '';
     return type == 'submission' ||
         (type == 'connection_request' && senderId.isNotEmpty) ||
+        (type == 'private_message' &&
+            senderId.isNotEmpty &&
+            message.data['conversationId']?.toString().trim().isNotEmpty == true) ||
         ((type == 'news' || type == 'event') && id != null) ||
         url.isNotEmpty;
   }

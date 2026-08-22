@@ -23,6 +23,7 @@ import '../more/community_users_screen.dart';
 import '../artists/artist_detail_screen.dart';
 import '../events/event_detail_screen.dart';
 import 'wordpress_admin_screen.dart';
+import 'private_messages_screen.dart';
 
 String _chatError(Object error) {
   final raw = error.toString().toLowerCase();
@@ -135,8 +136,9 @@ class _ProfileAvatar extends StatelessWidget {
 
 class _PostAuthorAvatar extends ConsumerWidget {
   final CommunityPost post;
+  final bool compact;
 
-  const _PostAuthorAvatar(this.post);
+  const _PostAuthorAvatar(this.post, {this.compact = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -147,7 +149,7 @@ class _PostAuthorAvatar extends ConsumerWidget {
       return _ProfileAvatar(
         imageUrl: post.authorImageUrl,
         initial: initial,
-        size: 34,
+        size: compact ? 30 : 34,
       );
     }
     final service = ref.watch(communityServiceProvider);
@@ -161,7 +163,7 @@ class _PostAuthorAvatar extends ConsumerWidget {
         return _ProfileAvatar(
           imageUrl: service.resolveProfileImage(data, post.authorImageUrl),
           initial: initial,
-          size: 34,
+          size: compact ? 30 : 34,
           focusX: (data['profileFocusX'] as num?)?.toDouble() ?? 50,
           focusY: (data['profileFocusY'] as num?)?.toDouble() ?? 25,
           zoom: (data['profileZoom'] as num?)?.toDouble() ?? 1,
@@ -661,6 +663,7 @@ class LiveFeedScreen extends ConsumerStatefulWidget {
 
 class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   final _textController = TextEditingController();
+  final _composerFocusNode = FocusNode();
   Uint8List? _image;
   bool _sending = false;
   String? _replyQuote;
@@ -735,6 +738,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   void dispose() {
     _authSubscription?.cancel();
     _textController.dispose();
+    _composerFocusNode.dispose();
     super.dispose();
   }
 
@@ -810,6 +814,15 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
         title: const Text('Chat'),
         actions: [
           IconButton(
+            tooltip: 'Privát üzenetek',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const PrivateMessagesScreen(),
+              ),
+            ),
+            icon: const Icon(Icons.forum_outlined),
+          ),
+          IconButton(
             onPressed: _openProfile,
             icon: _anonymous
                 ? const _ProfileAvatar(imageUrl: '', initial: 'H', size: 36)
@@ -831,6 +844,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
           final landscape = constraints.maxWidth > constraints.maxHeight;
           final composer = _Composer(
             controller: _textController,
+            focusNode: _composerFocusNode,
             image: _image,
             anonymous: _anonymous,
             sending: _sending,
@@ -860,6 +874,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                         itemCount: items.length,
                         itemBuilder: (_, index) => _PostCard(
                           post: items[index],
+                          compact: !landscape,
                           onReply: () => setState(() {
                             _replyQuote = items[index].text.trim();
                           }),
@@ -872,19 +887,6 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
             direction: landscape ? Axis.horizontal : Axis.vertical,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (!landscape)
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Ha hibát találsz, írd meg nekünk a Kapcsolat menüpontban található címen.',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.white54, fontSize: 11),
-                    ),
-                  ),
-                ),
               if (landscape)
                 SizedBox(
                   width: constraints.maxWidth < 700
@@ -907,6 +909,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
 
 class _Composer extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode focusNode;
   final Uint8List? image;
   final bool anonymous;
   final bool sending;
@@ -919,6 +922,7 @@ class _Composer extends StatelessWidget {
 
   const _Composer({
     required this.controller,
+    required this.focusNode,
     required this.image,
     required this.anonymous,
     required this.sending,
@@ -952,6 +956,8 @@ class _Composer extends StatelessWidget {
               ),
             TextField(
               controller: controller,
+              focusNode: focusNode,
+              onTap: focusNode.requestFocus,
               minLines: 1,
               maxLines: 4,
               textInputAction: TextInputAction.newline,
@@ -996,15 +1002,6 @@ class _Composer extends StatelessWidget {
                   onPressed: onPickGallery,
                   icon: const Icon(Icons.photo_library_outlined),
                 ),
-                Expanded(
-                  child: Text(
-                    'Emoji a billentyűzetről is használható · '
-                    '${anonymous ? 'Névtelenül: Unknown User ####' : 'Regisztrált felhasználóként'}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white54, fontSize: 9),
-                  ),
-                ),
               ],
             ),
             SizedBox(
@@ -1029,8 +1026,13 @@ class _Composer extends StatelessWidget {
 
 class _PostCard extends ConsumerStatefulWidget {
   final CommunityPost post;
+  final bool compact;
   final VoidCallback onReply;
-  const _PostCard({required this.post, required this.onReply});
+  const _PostCard({
+    required this.post,
+    required this.compact,
+    required this.onReply,
+  });
 
   @override
   ConsumerState<_PostCard> createState() => _PostCardState();
@@ -1192,7 +1194,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(widget.compact ? 10 : 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1201,8 +1203,8 @@ class _PostCardState extends ConsumerState<_PostCard> {
               borderRadius: BorderRadius.circular(8),
               child: Row(
                 children: [
-                  _PostAuthorAvatar(post),
-                  const SizedBox(width: 9),
+                  _PostAuthorAvatar(post, compact: widget.compact),
+                  SizedBox(width: widget.compact ? 7 : 9),
                   Expanded(
                     child: _PostAuthorLabels(
                       post: post,
@@ -1271,11 +1273,11 @@ class _PostCardState extends ConsumerState<_PostCard> {
                 ),
               ),
             if (post.text.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              SizedBox(height: widget.compact ? 7 : 10),
               Text(post.text),
             ],
             if (post.imageUrl.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              SizedBox(height: widget.compact ? 7 : 10),
               GestureDetector(
                 onTap: () => showDialog<void>(
                   context: context,
@@ -1311,11 +1313,13 @@ class _PostCardState extends ConsumerState<_PostCard> {
                 ),
               ),
             ],
-            const SizedBox(height: 6),
+            SizedBox(height: widget.compact ? 3 : 6),
             Wrap(
               spacing: 6,
+              runSpacing: widget.compact ? 0 : 6,
               children: [
                 ActionChip(
+                  visualDensity: widget.compact ? VisualDensity.compact : null,
                   avatar: const Icon(Icons.reply, size: 16),
                   label: const Text('Válasz'),
                   onPressed: widget.onReply,
@@ -1323,6 +1327,9 @@ class _PostCardState extends ConsumerState<_PostCard> {
                 ...['❤️', '🔥', '🙌'].map((emoji) {
                   final count = post.reactions[emoji] ?? 0;
                   return ActionChip(
+                    visualDensity: widget.compact
+                        ? VisualDensity.compact
+                        : null,
                     label: Text('$emoji${count > 0 ? ' $count' : ''}'),
                     backgroundColor: _selectedReaction == emoji
                         ? Theme.of(

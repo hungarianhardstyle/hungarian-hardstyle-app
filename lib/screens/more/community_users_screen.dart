@@ -13,6 +13,7 @@ import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
 import 'favorites_screen.dart';
 import 'newsletter_screen.dart';
+import '../community/private_messages_screen.dart';
 
 class CommunityUsersScreen extends ConsumerStatefulWidget {
   const CommunityUsersScreen({super.key});
@@ -284,6 +285,19 @@ class _CommunityPublicProfileScreenState
                 ),
               if (isRegistered && !isOwnProfile) ...[
                 const SizedBox(height: 18),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => PrivateConversationScreen(
+                        otherUserId: widget.userId,
+                        otherUserName: name.isEmpty ? 'HUHS user' : name,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.mail_outline),
+                  label: const Text('Privát üzenet'),
+                ),
+                const SizedBox(height: 8),
                 FutureBuilder<String?>(
                   future: _connectionStatus,
                   builder: (context, status) {
@@ -666,6 +680,13 @@ class CommunityHubScreen extends StatelessWidget {
             'Ismerősök és felkérések',
             'Ismerőslista, felkérések és státuszok',
             registered ? const CommunityConnectionsScreen() : null,
+          ),
+          _hubTile(
+            context,
+            Icons.forum_outlined,
+            'Privát üzenetek',
+            'A neked küldött és általad küldött privát beszélgetések',
+            registered ? const PrivateMessagesScreen() : null,
           ),
           _hubTile(
             context,

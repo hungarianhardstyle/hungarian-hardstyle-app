@@ -1,6 +1,21 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
-### Aktuális build: +167 — production AAB elkészült; zárt tesztbe feltöltésre vár
+### Aktuális build: +169 — zárt teszt felülvizsgálatra beküldve
+
+### +169 — production AAB elkészült és beküldve
+
+- A production AAB elkészült: `build/HUHS-v1.0.0+169-release.aab`; versionCode 169.
+- A +169 a privát üzenetek újranyitható menüjét és a címzettnek küldött push értesítést tartalmazza.
+- `flutter analyze --no-pub`, `flutter test` (29/29) és `git diff --check` sikeres.
+- A Play Console zárt teszt Alpha kiadásába feltöltve, majd felülvizsgálatra beküldve; a módosítások jelenleg felülvizsgálat alatt állnak.
+- A Play „Közepes” optimalizálási mutatója az új AAB feldolgozása után ellenőrizendő.
+
+### +168 — production AAB elkészült
+
+- A +168 production AAB elkészült: `build/HUHS-v1.0.0+168-release.aab`; versionCode 168.
+- A korábbi production AdMob App/Banner/Rewarded azonosítók az aláírt AAB-ban ellenőrizve.
+- A változtatás az ingyenes kiadvány „Radio verzió” feliratának elrejtése; normál release-megjelenítés változatlan.
+- A Play zárt tesztbe feltöltés és a Play Console „Közepes” mutatójának újraellenőrzése még hátra van.
 
 ### +167 — production AAB elkészült, optimalizálás alkalmazva
 
@@ -21,6 +36,7 @@
 - Ehhez nem készül és nem jelenik meg WAV; az ingyenes WAV-letöltés külön, változatlan `free_wav` útvonal marad.
 - A normál release 128 kbps MP3 reklámos útvonala változatlan.
 - Elkészült a WordPress API `build/huhs-mobile-api-2.4.55.zip` csomag; működő útvonalakat nem módosítottam. Kliens build és Playből telepített ellenőrzés még szükséges.
+- Ingyenes kiadványnál az „Elérhető változatok” listából kikerült a „Radio verzió” felirat; a normál release-ek megjelenítése változatlan.
 
 - A +167-ben a Flutter asset-bundből kikerült a nem használt `assets/icons/` könyvtár; a forrásfájlok megmaradtak, működő funkció nem változott.
 - Az R8 teljes módja, a kód-/erőforrás-csökkentés és az osztály-újracsomagolás már korábban aktív volt; túl széles keep-szabályt nem módosítottunk a WorkManager/Room indulás védelme miatt.
