@@ -2,15 +2,15 @@
 
 # Hungarian Hardstyle App
 
-## Aktuális Play-build: +180 — zárt Alpha tesztben felülvizsgálat alatt
+## Aktuális Play-build: +182 — zárt Alpha tesztbe felülvizsgálatra beküldve
 
-- A `build/HUHS-v1.0.0+180-release.aab` elkészült; a Play Console a tényleges versionCode 180-at elfogadta.
-- A +180 a privát chat küldési és szerkesztési útvonalán káromkodásszűrést tartalmaz; a meglévő normál chat-szűrés változatlan.
-- `flutter analyze --no-pub`, `flutter test` (33/33) és `git diff --check` sikeres.
-- A +180 zárt Alpha kiadás a Play Console-ban felülvizsgálat alatt álló módosításként megjelent.
-- A Play „Közepes” optimalizálási mutatója a feldolgozás után ellenőrizendő.
+- A `build/HUHS-v1.0.0+182-release.aab` elkészült; a Play Console a tényleges versionCode 182-t elfogadta.
+- A +182 tartalmazza az AdMob elhelyezési, kibővített káromkodásszűrési és hír-like stabilitási javításokat.
+- `flutter analyze --no-pub`, `flutter test` (34/34) és `git diff --check` sikeres.
+- A +182 a Play zárt Alpha csatornájába feltöltve, 1 módosítás felülvizsgálatra beküldve.
+- A gyorsellenőrzések még futnak; a Play „Közepes” optimalizálási mutatója feldolgozás után ellenőrizendő.
 
-## Következő build: +181 — AdMob, káromkodásszűrés és hír-like javítások
+## Következő build: még nincs kijelölve
 
 - AdMob: a főoldalon az események alatt, a Hírekben felül és a 4. hír után jelenjen meg a tartalomfolyamban, a kártyákat ne takarja.
 - AdMob: a meglévő consent-, betöltési és kontrollált újrapróbálási logika maradjon; a három elhelyezés görgetéskor se okozzon hibás duplikált kérést.
@@ -22,7 +22,7 @@
 - A banner a tényleges rendelkezésre álló szélességből anchored-adaptive méretet kér, érvénytelen átmeneti szélességnél nem indít kérést.
 - Az UMP-consent, `canRequestAds()`, SDK-indítás és banner-hibák naplózása javítva; a sikertelen betöltés kontrolláltan újrapróbálható.
 - Működő Billing/Chat/rewarded útvonalhoz nem nyúltunk. `flutter analyze --no-pub`, `flutter test` (29/29), `git diff --check` sikeres.
-- Playből telepített +181 futásidejű ellenőrzés és a feldolgozás utáni Play-optimalizálási ellenőrzés még szükséges.
+- Playből telepített +182 futásidejű ellenőrzés és a feldolgozás utáni Play-optimalizálási ellenőrzés még szükséges.
 - AdMob-audit: az éles alkalmazás 613 kérést és 63 megjelenést mutat (13,87% egyezési arány), tehát a kérések eljutnak az AdMobhoz; az AdMob-fiókban kifizetési ellenőrzési figyelmeztetés és „Véleményezést igényel” állapot látszik. Az Irányelvközpont nem jelez hirdetéskorlátozást.
 
 ## +174 — Play-optimalizálás biztonságos javítása
@@ -33,7 +33,7 @@
 - Erőforrás- és függőségcsökkentés csak használati bizonyíték alapján végezhető.
 - A módosítás után Flutter-teszt, release-build, regressziós ellenőrzés és Play-feldolgozás utáni újramérés szükséges.
 
-## Aktuális Play-build: +173 — zárt Alpha tesztben felülvizsgálat alatt
+## Történeti Play-build: +173 — korábbi zárt Alpha kiadás
 
 - A `build/HUHS-v1.0.0+173-release.aab` elkészült, versionCode 173.
 - A privát üzenetekben látszik a partner avatárja, a becenév megnyitja a publikus profilt, törölhető a beszélgetés és a saját üzenet, valamint a partner blokkolható.

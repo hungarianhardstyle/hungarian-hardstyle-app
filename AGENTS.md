@@ -1,14 +1,14 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
-### Aktuális Play-build: +180 — zárt Alpha tesztben felülvizsgálat alatt
+### Aktuális Play-build: +182 — zárt Alpha tesztbe felülvizsgálatra beküldve
 
-- A `build/HUHS-v1.0.0+180-release.aab` elkészült; a Play Console a csomag belsejében a tényleges versionCode 180-at fogadta el.
-- A +180 a privát chat küldési és szerkesztési útvonalán káromkodásszűrést tartalmaz; a meglévő normál chat-szűrés változatlan.
-- `flutter analyze --no-pub`, `flutter test` (33/33) és `git diff --check` sikeres.
-- A Play Console-ban a +180 zárt Alpha kiadás felülvizsgálat alatt álló módosításként megjelent.
-- A Play „Közepes” optimalizálási mutatója továbbra is külön, feldolgozás utáni ellenőrzés.
+- A `build/HUHS-v1.0.0+182-release.aab` elkészült; a Play Console a tényleges versionCode 182-t elfogadta.
+- A +182 tartalmazza az AdMob elhelyezési, kibővített káromkodásszűrési és hír-like stabilitási javításokat.
+- A helyi ellenőrzések korábban sikeresek: `flutter analyze --no-pub`, `flutter test` (34/34) és `git diff --check`.
+- A +182 a Play Console zárt Alpha csatornájába fel lett töltve, és 1 módosítás felülvizsgálatra be lett küldve.
+- A Play gyorsellenőrzései még futnak; a Play „Közepes” optimalizálási mutatója feldolgozás után ellenőrizendő.
 
-### Következő build: +181 — AdMob, káromkodásszűrés és hír-like javítások
+### Következő build: még nincs kijelölve
 
 - AdMob: a főoldalon az események alatt, a Hírekben felül és a 4. hír után jelenjen meg a tartalomfolyamban, a kártyákat ne takarja.
 - AdMob: a meglévő consent-, betöltési és kontrollált újrapróbálási logika maradjon; a három elhelyezés görgetéskor se okozzon hibás duplikált kérést.
@@ -20,7 +20,7 @@
 - A banner érvényes rendelkezésre álló szélességből számolt anchored-adaptive méretet kér; 200 px alatti átmeneti layoutból nem küld hibás kérést.
 - Az UMP-consent, `canRequestAds()`, SDK-indítás és banner betöltési hibák diagnosztikája már nem nyelődik el; rövid, kontrollált újrapróbálás marad.
 - A jutalmazott reklám, Billing, Chat és egyéb működő útvonalakhoz nem nyúltunk.
-- Playből telepített +181 futásidejű ellenőrzés és a feldolgozás utáni Play-optimalizálási ellenőrzés még szükséges.
+- Playből telepített +182 futásidejű ellenőrzés és a feldolgozás utáni Play-optimalizálási ellenőrzés még szükséges.
 - AdMob-audit: az éles alkalmazás 613 kérést és 63 megjelenést mutat (13,87% egyezési arány), tehát a kérések eljutnak az AdMobhoz; az AdMob-fiókban kifizetési ellenőrzési figyelmeztetés és „Véleményezést igényel” állapot látszik. Az Irányelvközpont nem jelez hirdetéskorlátozást.
 
 ### +174 — Play-optimalizálás biztonságos javítása
@@ -31,7 +31,7 @@
 - Erőforrás- és függőségcsökkentés csak használati bizonyíték alapján végezhető.
 - A változtatások után kötelező a Flutter teszt, release-build, indulási/regressziós ellenőrzés és az új AAB Play-feldolgozása utáni mutató-ellenőrzés.
 
-### Aktuális Play-build: +173 — zárt Alpha tesztben felülvizsgálat alatt
+### Történeti Play-build: +173 — korábbi zárt Alpha kiadás
 
 - A `build/HUHS-v1.0.0+173-release.aab` elkészült, a belső versionCode 173.
 - A +173 tartalmazza a privát üzenetek partner-avatarját, a becenévprofil-megnyitást, a beszélgetés- és saját üzenettörlést, valamint a privát beszélgetésből indítható blokkolást.
@@ -100,7 +100,7 @@
 - A négy Firebase-funkció élesítve: `getLabelDownloadUrl`, `getLabelAdUnlockStatus`, `admobRewardedSsv`, `verifyLabelPurchase`.
 - Lokális ellenőrzés sikeres: `flutter analyze`, 29/29 Flutter-teszt, `git diff --check`, `node --check functions/index.js`. Új kliens build és Playből telepített, két külön felhasználós végponttól végpontig teszt még szükséges.
 
-### Következő build — ingyenes kiadvány opcionális külső linkje
+### Történeti következő build — ingyenes kiadvány opcionális külső linkje
 
 - Az ingyenes kiadványhoz opcionális `free_external_link` mező került a WordPress API-ba és az admin felületre; például Hypeddit-link adható meg.
 - A link csak ingyenes kiadványnál jelenik meg, reklámos `free_link` feloldás után nyitható meg, és a feloldás Firebase UID-hoz kötött.
