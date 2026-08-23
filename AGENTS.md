@@ -8,16 +8,19 @@
 - A Play Console-ban a +180 zárt Alpha kiadás felülvizsgálat alatt álló módosításként megjelent.
 - A Play „Közepes” optimalizálási mutatója továbbra is külön, feldolgozás utáni ellenőrzés.
 
-### Következő build: még nincs kijelölve
+### Következő build: +181 — AdMob, káromkodásszűrés és hír-like javítások
 
-- AdMob statikus elhelyezés: a főoldalon 1, a Hírek képernyőn 2 banner maradjon a görgethető tartalmon kívül, hogy görgetésre ne tűnjenek el és ne takarják a kártyákat.
+- AdMob: a főoldalon az események alatt, a Hírekben felül és a 4. hír után jelenjen meg a tartalomfolyamban, a kártyákat ne takarja.
+- AdMob: a meglévő consent-, betöltési és kontrollált újrapróbálási logika maradjon; a három elhelyezés görgetéskor se okozzon hibás duplikált kérést.
+- Privát chat káromkodásszűrés: magyar és angol gyakori alakok, ragozott formák, összetételek és alapvető leetspeak-változatok küldéskor és szerkesztéskor.
+- Hír-like: saját kedvelési állapot és stabil számláló tranzakciós mentéssel, hiányos régi reakcióadatok biztonságos kezelésével.
 - Chat és privát chat: a beviteli mező mondatkezdéskor és pont után automatikusan nagybetűvel kezdjen.
 - Közösség menü → Kedvencek leírása: a kedvenc hírek említése kikerült; a leírás a kedvenc DJ-ket és szervezőket jelzi.
 - A production App ID, Banner ID és Rewarded ID egyezését a release Gradle-ellenőrzés már kötelezően vizsgálja; felcserélés esetén a build leáll.
 - A banner érvényes rendelkezésre álló szélességből számolt anchored-adaptive méretet kér; 200 px alatti átmeneti layoutból nem küld hibás kérést.
 - Az UMP-consent, `canRequestAds()`, SDK-indítás és banner betöltési hibák diagnosztikája már nem nyelődik el; rövid, kontrollált újrapróbálás marad.
 - A jutalmazott reklám, Billing, Chat és egyéb működő útvonalakhoz nem nyúltunk.
-- Playből telepített +180 futásidejű ellenőrzés és a feldolgozás utáni Play-optimalizálási ellenőrzés még szükséges.
+- Playből telepített +181 futásidejű ellenőrzés és a feldolgozás utáni Play-optimalizálási ellenőrzés még szükséges.
 - AdMob-audit: az éles alkalmazás 613 kérést és 63 megjelenést mutat (13,87% egyezési arány), tehát a kérések eljutnak az AdMobhoz; az AdMob-fiókban kifizetési ellenőrzési figyelmeztetés és „Véleményezést igényel” állapot látszik. Az Irányelvközpont nem jelez hirdetéskorlátozást.
 
 ### +174 — Play-optimalizálás biztonságos javítása

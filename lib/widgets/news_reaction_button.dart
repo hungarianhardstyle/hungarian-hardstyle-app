@@ -33,13 +33,18 @@ class _NewsReactionButtonState extends State<NewsReactionButton> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<int>(
-      stream: _service.watchCount(widget.postId),
-      initialData: 0,
+    return StreamBuilder<NewsReactionState>(
+      stream: _service.watchState(widget.postId),
+      initialData: const NewsReactionState(),
       builder: (context, snapshot) => TextButton.icon(
         onPressed: _busy ? null : _toggle,
-        icon: const Icon(Icons.thumb_up_alt_outlined, size: 17),
-        label: Text('${snapshot.data ?? 0}'),
+        icon: Icon(
+          snapshot.data?.liked == true
+              ? Icons.thumb_up_alt
+              : Icons.thumb_up_alt_outlined,
+          size: 17,
+        ),
+        label: Text('${snapshot.data?.count ?? 0}'),
         style: TextButton.styleFrom(
           foregroundColor: Colors.redAccent,
           padding: const EdgeInsets.symmetric(horizontal: 6),

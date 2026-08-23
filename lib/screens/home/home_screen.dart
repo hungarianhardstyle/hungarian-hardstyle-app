@@ -286,13 +286,13 @@ class HomeScreen extends ConsumerWidget {
                         );
                       },
                     ),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Center(child: MobileAdBanner()),
+                    ),
                   ],
                 ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Center(child: MobileAdBanner()),
             ),
           ],
         ),

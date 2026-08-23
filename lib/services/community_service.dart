@@ -711,11 +711,58 @@ class CommunityService {
   }
 
   static String maskProfanity(String text) {
-    const words = ['kurva', 'fasz', 'geci', 'bazdmeg', 'picsa', 'szar'];
+    const words = [
+      // Hungarian roots and common compounds.
+      'kurva',
+      'kurvaanyad',
+      'kurvaisten',
+      'fasz',
+      'faszfej',
+      'faszkalap',
+      'faszopó',
+      'fasszopó',
+      'geci',
+      'gecifej',
+      'bazdmeg',
+      'basz',
+      'picsa',
+      'szar',
+      'szarházi',
+      'buzi',
+      'buzeráns',
+      'seggfej',
+      'köcsög',
+      // English words and common compounds.
+      'fuck',
+      'fck',
+      'shit',
+      'bitch',
+      'cunt',
+      'dick',
+      'pussy',
+      'whore',
+      'slut',
+      'bastard',
+      'asshole',
+      'bullshit',
+      'dumbass',
+      'motherfucker',
+      // Common leetspeak spellings.
+      'f4sz',
+      'b4sz',
+      'g3ci',
+      'sh1t',
+      'fck',
+    ];
     var result = text;
     for (final word in words) {
       result = result.replaceAllMapped(
-        RegExp('\\b${RegExp.escape(word)}\\w*', caseSensitive: false),
+        RegExp(
+          r'(?<![A-Za-zÀ-ÖØ-öø-ÿ0-9_])' +
+              RegExp.escape(word) +
+              r'[A-Za-zÀ-ÖØ-öø-ÿ0-9_]*',
+          caseSensitive: false,
+        ),
         (match) => '*' * match.group(0)!.length,
       );
     }

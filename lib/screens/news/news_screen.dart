@@ -62,6 +62,11 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(paginatedNewsProvider);
     final posts = state.visiblePosts;
+    final hasPosts = posts.isNotEmpty;
+    final hasSecondAd = posts.length >= 4;
+    final postStartIndex = 1 + (hasPosts ? 1 : 0);
+    final secondAdIndex = hasSecondAd ? postStartIndex + 4 : -1;
+    final footerIndex = postStartIndex + posts.length + (hasSecondAd ? 1 : 0);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -88,7 +93,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                             horizontal: 18,
                             vertical: 18,
                           ),
-                          itemCount: posts.length + 2,
+                          itemCount: footerIndex + 1,
                           itemBuilder: (context, index) {
                             if (index == 0) {
                               return Column(
@@ -197,7 +202,21 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                               );
                             }
 
-                            if (index == posts.length + 1) {
+                            if (hasPosts && index == 1) {
+                              return const Padding(
+                                padding: EdgeInsets.only(bottom: 18),
+                                child: Center(child: MobileAdBanner()),
+                              );
+                            }
+
+                            if (hasSecondAd && index == secondAdIndex) {
+                              return const Padding(
+                                padding: EdgeInsets.only(bottom: 18),
+                                child: Center(child: MobileAdBanner()),
+                              );
+                            }
+
+                            if (index == footerIndex) {
                               if (state.error != null && state.posts.isEmpty) {
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -253,7 +272,10 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                               return const SizedBox(height: 24);
                             }
 
-                            final postIndex = index - 1;
+                            final postIndex =
+                                index -
+                                postStartIndex -
+                                (hasSecondAd && index > secondAdIndex ? 1 : 0);
                             final landscape =
                                 MediaQuery.orientationOf(context) ==
                                 Orientation.landscape;
@@ -272,18 +294,6 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                           },
                         ),
                 ),
-              ),
-              const Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Center(child: MobileAdBanner()),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Center(child: MobileAdBanner()),
-                  ),
-                ],
               ),
             ],
           ),

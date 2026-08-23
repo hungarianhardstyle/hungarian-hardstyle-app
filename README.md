@@ -7,15 +7,18 @@
 - `flutter analyze --no-pub`, `flutter test` (33/33) és `git diff --check` sikeres; a +180 a Play zárt Alpha kiadásában felülvizsgálat alatt áll.
 - A Play „Közepes” optimalizálási mutatója a feldolgozás után ellenőrizendő.
 
-## Következő build: még nincs kijelölve
+## Következő build: +181 — AdMob, káromkodásszűrés és hír-like javítások
 
-- AdMob statikus elhelyezés: a főoldalon 1, a Hírek képernyőn 2 banner maradjon a görgethető tartalmon kívül, hogy görgetésre ne tűnjenek el és ne takarják a kártyákat.
+- AdMob: a főoldalon az események alatt, a Hírekben felül és a 4. hír után jelenjen meg a tartalomfolyamban, a kártyákat ne takarja.
+- A consent-, betöltési és kontrollált újrapróbálási logika megmarad; az elhelyezések nem indíthatnak hibás duplikált kéréseket.
+- Privát chat: bővített magyar/angol káromkodásszűrés küldéskor és szerkesztéskor.
+- Hír-like: stabil saját liked állapot- és számlálókezelés tranzakciós mentéssel.
 - Chat és privát chat: a beviteli mező mondatkezdéskor és pont után automatikusan nagybetűvel kezdjen.
 - Közösség menü → Kedvencek leírása: a kedvenc hírek említése kikerült; a leírás a kedvenc DJ-ket és szervezőket jelzi.
 - A release build most ellenőrzi, hogy a production App ID, Banner ID és Rewarded ID nem cserélődött-e fel.
 - A banner érvényes szélességből anchored-adaptive méretet használ; hibás, átmeneti layout-szélességnél nem kér reklámot.
 - A consent/SDK/banner hibák naplózása és kontrollált újrapróbálása javítva; működő Billing, Chat és rewarded útvonal változatlan.
-- Playből telepített +180 futásidejű ellenőrzés és a feldolgozás utáni Play-optimalizálási ellenőrzés még szükséges.
+- Playből telepített +181 futásidejű ellenőrzés és a feldolgozás utáni Play-optimalizálási ellenőrzés még szükséges.
 - AdMob-audit: az éles alkalmazás 613 kérést és 63 megjelenést mutat (13,87% egyezési arány), tehát a kérések eljutnak az AdMobhoz; az AdMob-fiókban kifizetési ellenőrzési figyelmeztetés és „Véleményezést igényel” állapot látszik. Az Irányelvközpont nem jelez hirdetéskorlátozást.
 
 ## +174 — Play-optimalizálás biztonságos javítása
