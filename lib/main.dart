@@ -20,7 +20,8 @@ Future<void> main() async {
   // previous fire-and-forget initialization raced the first Chat navigation.
   try {
     await Firebase.initializeApp();
-  } catch (_) {
+  } catch (error) {
+    debugPrint('Firebase inicializálási hiba: $error');
     // Keep the rest of the app usable when a platform Firebase config is
     // missing; the affected community feature will report its own error.
   }
@@ -33,7 +34,9 @@ Future<void> main() async {
   // this future so banners cannot race each other during the first frame.
   try {
     await initializeMobileAds();
-  } catch (_) {}
+  } catch (error) {
+    debugPrint('AdMob SDK indulási hiba: $error');
+  }
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
   unawaited(_initializePushNotifications());
 }

@@ -108,12 +108,68 @@ class CommunityService {
         .snapshots();
   }
 
+  Future<DocumentSnapshot<Map<String, dynamic>>> getPrivateConversation(
+    String conversationId,
+  ) {
+    return firestore
+        .collection('private_conversations')
+        .doc(conversationId)
+        .get();
+  }
+
+  Future<void> deletePrivateConversation(String conversationId) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      throw StateError('A beszélgetés törléséhez bejelentkezés szükséges.');
+    }
+    await FirebaseFunctions.instance
+        .httpsCallable('deletePrivateConversation')
+        .call({'conversationId': conversationId});
+  }
+
+  Future<void> deletePrivateMessage({
+    required String conversationId,
+    required String messageId,
+  }) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      throw StateError('Az üzenet törléséhez bejelentkezés szükséges.');
+    }
+    await firestore
+        .collection('private_conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .doc(messageId)
+        .delete();
+  }
+
+  Future<void> editPrivateMessage({
+    required String conversationId,
+    required String messageId,
+    required String text,
+  }) async {
+    final user = auth.currentUser;
+    final trimmed = maskProfanity(text.trim());
+    if (user == null || user.isAnonymous) {
+      throw StateError('Az üzenet szerkesztéséhez bejelentkezés szükséges.');
+    }
+    if (trimmed.isEmpty || trimmed.length > 2000) {
+      throw ArgumentError('Az üzenet 1–2000 karakter lehet.');
+    }
+    await firestore
+        .collection('private_conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .doc(messageId)
+        .update({'text': trimmed});
+  }
+
   Future<void> sendPrivateMessage({
     required String otherUserId,
     required String text,
   }) async {
     final user = auth.currentUser;
-    final trimmed = text.trim();
+    final trimmed = maskProfanity(text.trim());
     if (user == null || user.isAnonymous) {
       throw StateError('Privát üzenet küldéséhez regisztráció szükséges.');
     }
@@ -130,13 +186,10 @@ class CommunityService {
         .collection('blocked_users')
         .doc(otherUserId)
         .get();
-    final blockedMe = await firestore
-        .collection('community_profiles')
-        .doc(otherUserId)
-        .collection('blocked_users')
-        .doc(user.uid)
-        .get();
-    if (blockedByMe.exists || blockedMe.exists) {
+    // The recipient's blocked_users document is intentionally unreadable by
+    // another user.  The Firestore message rule enforces the reverse-block
+    // check server-side, so reading it here only caused permission-denied.
+    if (blockedByMe.exists) {
       throw StateError(
         'A privát üzenetküldés ennél a felhasználónál nem érhető el.',
       );
@@ -657,7 +710,7 @@ class CommunityService {
     });
   }
 
-  String maskProfanity(String text) {
+  static String maskProfanity(String text) {
     const words = ['kurva', 'fasz', 'geci', 'bazdmeg', 'picsa', 'szar'];
     var result = text;
     for (final word in words) {

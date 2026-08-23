@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -16,6 +17,10 @@ class LabelPurchaseService {
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   final _updates = StreamController<PurchaseDetails>.broadcast();
   final Set<String> _completedPurchases = <String>{};
+  RewardedAd? _preloadedRewarded;
+  String? _preloadedRewardedUnitId;
+  bool _preloadingRewarded = false;
+  bool _rewardedInFlight = false;
 
   bool lastStoreAvailable = false;
   Set<String> lastNotFoundProductIds = const {};
@@ -167,29 +172,54 @@ class LabelPurchaseService {
     int releaseId, {
     String variant = 'mp3_128',
   }) async {
+    if (_rewardedInFlight) {
+      throw StateError('A jutalmazott reklám már folyamatban van.');
+    }
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.isAnonymous) {
       throw StateError('A reklámos feloldáshoz be kell jelentkezni.');
     }
-    final unitId = enableTestAds
+    final unitId = useTestAds
         ? 'ca-app-pub-3940256099942544/5224354917'
         : productionRewardedAdUnitId;
     if (unitId.isEmpty) {
       throw StateError('A jutalmazott reklám azonosítója nincs beállítva.');
     }
-    final rewarded = await _loadRewarded(unitId).timeout(
-      const Duration(seconds: 15),
-      onTimeout: () => throw TimeoutException(
-        'A jutalmazott reklám betöltése túllépte a 15 másodpercet.',
-      ),
-    );
+    _rewardedInFlight = true;
+    try {
+      await prepareAdConsent();
+      await initializeMobileAds();
+      if (!await canRequestAds()) {
+        throw StateError(
+          'A reklámokhoz szükséges hozzájárulás még nem áll rendelkezésre.',
+        );
+      }
+      final rewarded = await _takeOrLoadRewarded(unitId);
+      return await _showRewarded(
+        rewarded,
+        releaseId: releaseId,
+        variant: variant,
+        unitId: unitId,
+        uid: user.uid,
+      );
+    } finally {
+      _rewardedInFlight = false;
+    }
+  }
+
+  Future<bool> _showRewarded(
+    RewardedAd rewarded, {
+    required int releaseId,
+    required String variant,
+    required String unitId,
+    required String uid,
+  }) async {
+    // The reward is granted only from onUserEarnedReward below. Loading or
+    // dismissing the ad alone never unlocks a file.
+    debugPrint('AdMob rewarded betöltve: variant=$variant');
     final customData = base64UrlEncode(
       utf8.encode(
-        jsonEncode({
-          'uid': user.uid,
-          'releaseId': releaseId,
-          'variant': variant,
-        }),
+        jsonEncode({'uid': uid, 'releaseId': releaseId, 'variant': variant}),
       ),
     );
     await rewarded.setServerSideOptions(
@@ -197,12 +227,21 @@ class LabelPurchaseService {
     );
     final result = Completer<bool>();
     rewarded.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (_) =>
+          debugPrint('AdMob rewarded megjelenítve.'),
       onAdDismissedFullScreenContent: (ad) {
+        debugPrint('AdMob rewarded bezárva reward nélkül.');
         ad.dispose();
+        unawaited(_preloadRewarded(unitId));
         if (!result.isCompleted) result.complete(false);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
+        debugPrint(
+          'AdMob rewarded megjelenítési hiba: '
+          'code=${error.code}, domain=${error.domain}, message=${error.message}',
+        );
         ad.dispose();
+        unawaited(_preloadRewarded(unitId));
         if (!result.isCompleted) {
           result.completeError(
             StateError(
@@ -214,10 +253,45 @@ class LabelPurchaseService {
     );
     rewarded.show(
       onUserEarnedReward: (_, _) {
+        debugPrint('AdMob reward megszerezve: variant=$variant');
         if (!result.isCompleted) result.complete(true);
       },
     );
     return result.future;
+  }
+
+  Future<RewardedAd> _takeOrLoadRewarded(String unitId) async {
+    final cached = _preloadedRewarded;
+    if (cached != null && _preloadedRewardedUnitId == unitId) {
+      _preloadedRewarded = null;
+      _preloadedRewardedUnitId = null;
+      return cached;
+    }
+    return _loadRewarded(unitId).timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => throw TimeoutException(
+        'A jutalmazott reklám betöltése túllépte a 15 másodpercet.',
+      ),
+    );
+  }
+
+  Future<void> _preloadRewarded(String unitId) async {
+    if (_preloadingRewarded || _preloadedRewarded != null) return;
+    _preloadingRewarded = true;
+    try {
+      if (!await canRequestAds()) return;
+      final ad = await _loadRewarded(
+        unitId,
+      ).timeout(const Duration(seconds: 15));
+      _preloadedRewarded?.dispose();
+      _preloadedRewarded = ad;
+      _preloadedRewardedUnitId = unitId;
+      debugPrint('AdMob következő rewarded reklám előtöltve.');
+    } catch (error) {
+      debugPrint('AdMob rewarded előtöltési hiba: $error');
+    } finally {
+      _preloadingRewarded = false;
+    }
   }
 
   Future<RewardedAd> _loadRewarded(String unitId) {
@@ -226,9 +300,17 @@ class LabelPurchaseService {
       adUnitId: unitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: completer.complete,
-        onAdFailedToLoad: (error) =>
-            completer.completeError(StateError(_admobLoadMessage(error))),
+        onAdLoaded: (ad) {
+          debugPrint('AdMob rewarded load sikeres.');
+          completer.complete(ad);
+        },
+        onAdFailedToLoad: (error) {
+          debugPrint(
+            'AdMob rewarded betöltési hiba: '
+            'code=${error.code}, domain=${error.domain}, message=${error.message}',
+          );
+          completer.completeError(StateError(_admobLoadMessage(error)));
+        },
       ),
     );
     return completer.future;
@@ -247,6 +329,8 @@ class LabelPurchaseService {
   }
 
   Future<void> dispose() async {
+    _preloadedRewarded?.dispose();
+    _preloadedRewarded = null;
     await _subscription?.cancel();
     await _updates.close();
   }

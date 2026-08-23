@@ -13,6 +13,8 @@ import '../../models/community_post.dart';
 import '../../models/event.dart';
 import '../../models/submission_image.dart';
 import '../../core/navigation/in_app_browser.dart';
+import '../../core/errors/user_facing_error.dart';
+import '../../core/input/sentence_capitalization_formatter.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/favorites_provider.dart';
@@ -26,45 +28,10 @@ import 'wordpress_admin_screen.dart';
 import 'private_messages_screen.dart';
 
 String _chatError(Object error) {
-  final raw = error.toString().toLowerCase();
-  if (raw.contains('network-request-failed') ||
-      raw.contains('socketexception') ||
-      raw.contains('connection refused') ||
-      raw.contains('timed out')) {
-    return 'Nem sikerült kapcsolódni. Ellenőrizd az internetkapcsolatot.';
-  }
-  if (raw.contains('admin-restricted-operation')) {
-    return 'A névtelen Chat-hozzáférés nincs engedélyezve a Firebase-ben.';
-  }
-  if (raw.contains('permission-denied')) {
-    return 'A Chat-művelethez nincs megfelelő jogosultság.';
-  }
-  if (raw.contains('failed-precondition')) {
-    return 'A Chat az alapértelmezett Firestore-adatbázist nem éri el. Ellenőrizd, hogy a `(default)` adatbázis létre van-e hozva.';
-  }
-  if (raw.contains('unavailable')) {
-    return 'A szolgáltatás átmenetileg nem érhető el. Próbáld újra később.';
-  }
-  if (raw.contains('invalid-email')) return 'Érvénytelen e-mail-cím.';
-  if (raw.contains('email-already-in-use')) {
-    return 'Ez az e-mail-cím már használatban van.';
-  }
-  if (raw.contains('wrong-password') || raw.contains('invalid-credential')) {
-    return 'A megadott e-mail-cím vagy jelszó hibás.';
-  }
-  if (raw.contains('cloudinary') || raw.contains('upload')) {
-    return 'A kép feltöltése nem sikerült. Ellenőrizd a fájlt és az internetkapcsolatot.';
-  }
-  if (raw.contains('firebase') ||
-      raw.contains('cloud_firestore') ||
-      raw.contains('cloud_functions') ||
-      raw.contains('dioexception')) {
-    return 'A szolgáltatás nem válaszolt megfelelően. Próbáld újra később.';
-  }
-  return 'A művelet nem sikerült. Próbáld újra később.';
+  return userFacingError(error);
 }
 
-class _ProfileAvatar extends StatelessWidget {
+class ProfileAvatar extends StatelessWidget {
   final String imageUrl;
   final String initial;
   final double size;
@@ -75,7 +42,7 @@ class _ProfileAvatar extends StatelessWidget {
   final double panY;
   final Uint8List? imageBytes;
 
-  const _ProfileAvatar({
+  const ProfileAvatar({
     required this.imageUrl,
     required this.initial,
     required this.size,
@@ -146,7 +113,7 @@ class _PostAuthorAvatar extends ConsumerWidget {
         ? '?'
         : post.authorName.trim().characters.first.toUpperCase();
     if (post.authorId.isEmpty) {
-      return _ProfileAvatar(
+      return ProfileAvatar(
         imageUrl: post.authorImageUrl,
         initial: initial,
         size: compact ? 30 : 34,
@@ -160,7 +127,7 @@ class _PostAuthorAvatar extends ConsumerWidget {
           .snapshots(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? const <String, dynamic>{};
-        return _ProfileAvatar(
+        return ProfileAvatar(
           imageUrl: service.resolveProfileImage(data, post.authorImageUrl),
           initial: initial,
           size: compact ? 30 : 34,
@@ -185,7 +152,7 @@ class CommunityAvatarButton extends ConsumerWidget {
     final fallback = IconButton(
       tooltip: 'Profil',
       onPressed: onPressed,
-      icon: const _ProfileAvatar(imageUrl: '', initial: 'H', size: 36),
+      icon: const ProfileAvatar(imageUrl: '', initial: 'H', size: 36),
     );
     if (Firebase.apps.isEmpty) return fallback;
     ref.watch(communityAuthProvider);
@@ -212,7 +179,7 @@ class CommunityAvatarButton extends ConsumerWidget {
         return IconButton(
           tooltip: 'Profil',
           onPressed: onPressed,
-          icon: _ProfileAvatar(
+          icon: ProfileAvatar(
             imageUrl: rawUrl,
             initial: initial,
             size: 36,
@@ -825,8 +792,8 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
           IconButton(
             onPressed: _openProfile,
             icon: _anonymous
-                ? const _ProfileAvatar(imageUrl: '', initial: 'H', size: 36)
-                : _ProfileAvatar(
+                ? const ProfileAvatar(imageUrl: '', initial: 'H', size: 36)
+                : ProfileAvatar(
                     imageUrl: _avatarUrl,
                     initial: _avatarLetter,
                     size: 32,
@@ -841,7 +808,13 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final landscape = constraints.maxWidth > constraints.maxHeight;
+          // A keyboard opening reduces the available height.  Deriving the
+          // orientation from the LayoutBuilder constraints therefore flips a
+          // portrait phone into the landscape branch while typing, which
+          // moves the composer and drops its focus.  Use the device
+          // orientation instead; it remains stable while insets change.
+          final landscape =
+              MediaQuery.orientationOf(context) == Orientation.landscape;
           final composer = _Composer(
             controller: _textController,
             focusNode: _composerFocusNode,
@@ -957,7 +930,9 @@ class _Composer extends StatelessWidget {
             TextField(
               controller: controller,
               focusNode: focusNode,
-              onTap: focusNode.requestFocus,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              inputFormatters: const [SentenceCapitalizationFormatter()],
               minLines: 1,
               maxLines: 4,
               textInputAction: TextInputAction.newline,
@@ -2038,7 +2013,7 @@ class _CommunityProfileScreenState
         .toList(growable: false);
     return [
       Center(
-        child: _ProfileAvatar(
+        child: ProfileAvatar(
           imageUrl: _profileImageUrl,
           initial: initial,
           size: 84,
@@ -2261,7 +2236,7 @@ class _CommunityProfileScreenState
                     ? (widget.editing
                           ? [
                               Center(
-                                child: _ProfileAvatar(
+                                child: ProfileAvatar(
                                   imageUrl: _profileImageUrl,
                                   initial: profileInitial,
                                   size: 84,
@@ -2374,7 +2349,7 @@ class _CommunityProfileScreenState
                                                 .clamp(-1, 1);
                                       });
                                     },
-                                    child: _ProfileAvatar(
+                                    child: ProfileAvatar(
                                       imageUrl: _profileImageUrl,
                                       imageBytes: _profileImage?.bytes,
                                       initial: profileInitial,
@@ -2607,6 +2582,14 @@ class _CommunityProfileScreenState
                           ),
                         ),
                         if (_register) ...[
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: _busy ? null : _suggestPassword,
+                              icon: const Icon(Icons.auto_fix_high_outlined),
+                              label: const Text('Erős jelszó ajánlása'),
+                            ),
+                          ),
                           const SizedBox(height: 12),
                           TextField(
                             controller: _passwordConfirmation,
@@ -2625,14 +2608,6 @@ class _CommunityProfileScreenState
                           const Text(
                             'A profil védelméhez a regisztráció után opcionális kétfaktoros védelem kapcsolható be a Beállításokban.',
                             style: TextStyle(color: Colors.white70),
-                          ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton.icon(
-                              onPressed: _busy ? null : _suggestPassword,
-                              icon: const Icon(Icons.auto_fix_high_outlined),
-                              label: const Text('Erős jelszó ajánlása'),
-                            ),
                           ),
                           const SizedBox(height: 12),
                           InkWell(

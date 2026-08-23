@@ -13,12 +13,12 @@ class MobileAdBanner extends ConsumerStatefulWidget {
 }
 
 class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
-    with WidgetsBindingObserver {
+    with AutomaticKeepAliveClientMixin<MobileAdBanner>, WidgetsBindingObserver {
   BannerAd? _ad;
   bool _loaded = false;
   int? _requestedWidth;
-  int? _adWidth;
   Timer? _retryTimer;
+  Timer? _loadTimeout;
   int _loadGeneration = 0;
 
   @override
@@ -40,12 +40,12 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
       return;
     }
     if (_requestedWidth == width && _ad == null) return;
-    if (_adWidth == width && _ad != null) return;
+    if (_ad != null) return;
     _ad?.dispose();
     _ad = null;
     _loaded = false;
-    _adWidth = null;
     _retryTimer?.cancel();
+    _loadTimeout?.cancel();
     _requestedWidth = width;
     final generation = ++_loadGeneration;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -77,32 +77,36 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
         });
         return;
       }
-      final size =
-          await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
+      if (!mounted ||
+          _requestedWidth != width ||
+          _loadGeneration != generation) {
+        return;
+      }
+      final size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
       if (!mounted ||
           _requestedWidth != width ||
           _loadGeneration != generation) {
         return;
       }
       if (size == null) {
-        // A banner can be laid out once with no usable width while an
-        // IndexedStack/landscape shell is settling. Do not permanently lock
-        // that invalid request; allow the next real layout to retry.
+        debugPrint('AdMob banner méret nem kérhető: width=$width');
         _requestedWidth = null;
         _retryTimer?.cancel();
-        _retryTimer = Timer(const Duration(milliseconds: 300), () {
+        _retryTimer = Timer(const Duration(seconds: 5), () {
           if (mounted) setState(() {});
         });
         return;
       }
       final ad = BannerAd(
-        adUnitId: enableTestAds
+        adUnitId: useTestAds
             ? 'ca-app-pub-3940256099942544/6300978111'
             : productionBannerAdUnitId,
         size: size,
         request: const AdRequest(),
         listener: BannerAdListener(
           onAdLoaded: (ad) {
+            _loadTimeout?.cancel();
+            debugPrint('AdMob banner betöltve.');
             if (!mounted || _loadGeneration != generation) {
               ad.dispose();
               return;
@@ -110,10 +114,10 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
             setState(() {
               _ad = ad as BannerAd;
               _loaded = true;
-              _adWidth = width;
             });
           },
           onAdFailedToLoad: (ad, error) {
+            _loadTimeout?.cancel();
             ad.dispose();
             debugPrint(
               'AdMob banner betöltési hiba: '
@@ -131,6 +135,17 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
         ),
       );
       ad.load();
+      _loadTimeout = Timer(const Duration(seconds: 15), () {
+        if (!mounted || _loadGeneration != generation || _loaded) return;
+        _loadGeneration++;
+        _requestedWidth = null;
+        _loadTimeout = null;
+        ad.dispose();
+        _retryTimer?.cancel();
+        _retryTimer = Timer(const Duration(seconds: 5), () {
+          if (mounted) setState(() {});
+        });
+      });
     });
   }
 
@@ -139,23 +154,22 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
     WidgetsBinding.instance.removeObserver(this);
     _loadGeneration++;
     _retryTimer?.cancel();
+    _loadTimeout?.cancel();
     _ad?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final enabled = ref.watch(adsEnabledProvider);
     if (!enabled) return const SizedBox.shrink();
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth.isFinite
-            // Adaptive banner requests need a usable layout width. A
-            // transient zero/very-small constraint must not become a 1 px
-            // ad request; that made the production banner disappear after
-            // the +160 release while rewarded ads still worked.
-            ? constraints.maxWidth.floor().clamp(320, 640).toInt()
-            : 320;
+            ? constraints.maxWidth.floor()
+            : 0;
+        if (width < 200) return const SizedBox(height: 50);
         _ensureAd(width);
         if (!_loaded || _ad == null) return const SizedBox(height: 50);
         return SizedBox(
@@ -166,4 +180,7 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
       },
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

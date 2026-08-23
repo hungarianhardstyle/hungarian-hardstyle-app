@@ -692,7 +692,7 @@ class CommunityHubScreen extends StatelessWidget {
             context,
             Icons.favorite_outline,
             'Kedvencek',
-            'Kedvenc hírek, események, DJ-k és szervezők',
+            'Kedvenc DJ-k és szervezők',
             const FavoritesScreen(),
           ),
           _hubTile(

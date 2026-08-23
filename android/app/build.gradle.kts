@@ -21,6 +21,11 @@ val testAdsRequested = providers.gradleProperty("HUHS_ENABLE_TEST_ADS")
 val productionAdMobAppId = providers.gradleProperty("HUHS_ADMOB_APP_ID").orNull
 val productionAdMobBannerId = providers.gradleProperty("HUHS_ADMOB_BANNER_ID").orNull
 val productionAdMobRewardedId = providers.gradleProperty("HUHS_ADMOB_REWARDED_ID").orNull
+// Keep the two production units type-safe at build time. AdMob returns
+// `Ad unit doesn't match format` when these IDs are accidentally swapped.
+val expectedProductionBannerId = "ca-app-pub-7714662594685378/5219184964"
+val expectedProductionRewardedId = "ca-app-pub-7714662594685378/5286829694"
+val expectedProductionAppId = "ca-app-pub-7714662594685378~1123886696"
 val isReleaseTask = gradle.startParameter.taskNames.any {
     it.contains("Release", ignoreCase = true)
 }
@@ -35,6 +40,17 @@ if (isReleaseTask && !testAdsRequested) {
         throw GradleException(
             "Production release build requires: ${missing.joinToString()}. " +
                 "Use -PHUHS_ENABLE_TEST_ADS=true only for an explicit test build."
+        )
+    }
+    if (productionAdMobAppId != expectedProductionAppId ||
+        productionAdMobBannerId != expectedProductionBannerId ||
+        productionAdMobRewardedId != expectedProductionRewardedId
+    ) {
+        throw GradleException(
+            "Production AdMob identifiers are invalid or mismatched. " +
+                "App must be $expectedProductionAppId; " +
+                "Banner must be $expectedProductionBannerId; " +
+                "Rewarded must be $expectedProductionRewardedId."
         )
     }
 }

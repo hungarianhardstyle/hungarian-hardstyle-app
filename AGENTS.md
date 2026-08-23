@@ -1,6 +1,74 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
-### Aktuális build: +169 — zárt teszt felülvizsgálatra beküldve
+### Aktuális Play-build: +180 — zárt Alpha tesztben felülvizsgálat alatt
+
+- A `build/HUHS-v1.0.0+180-release.aab` elkészült; a Play Console a csomag belsejében a tényleges versionCode 180-at fogadta el.
+- A +180 a privát chat küldési és szerkesztési útvonalán káromkodásszűrést tartalmaz; a meglévő normál chat-szűrés változatlan.
+- `flutter analyze --no-pub`, `flutter test` (33/33) és `git diff --check` sikeres.
+- A Play Console-ban a +180 zárt Alpha kiadás felülvizsgálat alatt álló módosításként megjelent.
+- A Play „Közepes” optimalizálási mutatója továbbra is külön, feldolgozás utáni ellenőrzés.
+
+### Következő build: még nincs kijelölve
+
+- AdMob statikus elhelyezés: a főoldalon 1, a Hírek képernyőn 2 banner maradjon a görgethető tartalmon kívül, hogy görgetésre ne tűnjenek el és ne takarják a kártyákat.
+- Chat és privát chat: a beviteli mező mondatkezdéskor és pont után automatikusan nagybetűvel kezdjen.
+- Közösség menü → Kedvencek leírása: a kedvenc hírek említése kikerült; a leírás a kedvenc DJ-ket és szervezőket jelzi.
+- A production App ID, Banner ID és Rewarded ID egyezését a release Gradle-ellenőrzés már kötelezően vizsgálja; felcserélés esetén a build leáll.
+- A banner érvényes rendelkezésre álló szélességből számolt anchored-adaptive méretet kér; 200 px alatti átmeneti layoutból nem küld hibás kérést.
+- Az UMP-consent, `canRequestAds()`, SDK-indítás és banner betöltési hibák diagnosztikája már nem nyelődik el; rövid, kontrollált újrapróbálás marad.
+- A jutalmazott reklám, Billing, Chat és egyéb működő útvonalakhoz nem nyúltunk.
+- Playből telepített +180 futásidejű ellenőrzés és a feldolgozás utáni Play-optimalizálási ellenőrzés még szükséges.
+- AdMob-audit: az éles alkalmazás 613 kérést és 63 megjelenést mutat (13,87% egyezési arány), tehát a kérések eljutnak az AdMobhoz; az AdMob-fiókban kifizetési ellenőrzési figyelmeztetés és „Véleményezést igényel” állapot látszik. Az Irányelvközpont nem jelez hirdetéskorlátozást.
+
+### +174 — Play-optimalizálás biztonságos javítása
+
+- Az R8 Configuration Analyzer alapján felül kell vizsgálni a 36%-os optimalizálási, obfuszkálási és csökkentési mutatót.
+- Csak bizonyítottan túl széles keep-szabályokat szabad szűkíteni; a WorkManager/Room, Firebase, AdMob és Billing működése nem romolhat.
+- A Flutter natív AOT-kódját és a működő útvonalakat nem szabad kockázatosan módosítani.
+- Erőforrás- és függőségcsökkentés csak használati bizonyíték alapján végezhető.
+- A változtatások után kötelező a Flutter teszt, release-build, indulási/regressziós ellenőrzés és az új AAB Play-feldolgozása utáni mutató-ellenőrzés.
+
+### Aktuális Play-build: +173 — zárt Alpha tesztben felülvizsgálat alatt
+
+- A `build/HUHS-v1.0.0+173-release.aab` elkészült, a belső versionCode 173.
+- A +173 tartalmazza a privát üzenetek partner-avatarját, a becenévprofil-megnyitást, a beszélgetés- és saját üzenettörlést, valamint a privát beszélgetésből indítható blokkolást.
+- A Firestore-szabályok élesítve lettek a `hungarian-hardstyle` projekten; a saját üzenet törlése és a résztvevői beszélgetéstörlés szerveroldalon védett.
+- `flutter test`: 29/29 sikeres; `flutter analyze --no-pub`: csak egy korábbi, ettől független konstruktor-lint információ maradt; `git diff --check` sikeres.
+- A Play Console visszaigazolta: a +173 zárt Alpha kiadás felülvizsgálatra elküldve. A Play gyorsellenőrzése még folyamatban lehet.
+
+### +173-ban lezárt Chat és privát üzenet javítások
+
+- A Chat composer fekvő/álló elágazása most a tényleges készülék-orientációból dönt, nem a billentyűzet felnyílásakor változó LayoutBuilder-magasságból; így a billentyűzet megnyitása nem ejti el a fókuszt.
+- A privát beszélgetés első megnyitása már nem próbálja olvasni a címzett tiltási listáját; a kölcsönös tiltást a Firestore üzenetszabály ellenőrzi.
+- A privát beszélgetés dokumentumának saját UID-t tartalmazó, még nem létező azonosítója olvasható az üres beszélgetés megjelenítéséhez; az üzenetek továbbra is csak tényleges résztvevőknek olvashatók.
+- A Firestore-szabályok élesítve lettek a `hungarian-hardstyle` projekten; az új kliens build elkészült és a Play zárt Alpha tesztébe felülvizsgálatra be lett küldve.
+
+### +172 — történeti Play-build
+
+> Ez a blokk az aktuális állapot. Az alábbi +164–+171 részek történeti naplók; azok „ellenőrizendő” pontjai nem aktuális feladatok.
+
+- Tulajdonosi visszajelzés alapján a +172 helyes AAB-ja feltöltve és működőként visszaigazolva.
+- Ellenőrzöttként lezárva: Chat billentyűzet, privát üzenetek, Billing, ingyenes kiadványok, release-kártyák, Közösség/profil és események.
+- AdMob banner: a viewportból kikerülő hírszűrő-listaelem már megtartja a betöltött banner állapotát, így visszagörgetéskor nem semmisül meg és nem indul újra véletlenszerűen. A production Banner/Rewarded azonosítók felcserélését build-time ellenőrzés akadályozza meg; `flutter analyze`, 29/29 Flutter-teszt és helyi release APK build sikeres. Playből telepített új builden a tulajdonosi ellenőrzés még szükséges.
+- Emulátoron reprodukált ok: az AdMob `format mismatch` (`Ad failed to load: 3`) hibát ad, mert a +172 buildben a banner és a rewarded production azonosítója fel volt cserélve. Az AdMob konzol szerinti helyes párosítás beépült a Gradle release-ellenőrzésébe: Banner `ca-app-pub-7714662594685378/5219184964`, Rewarded `ca-app-pub-7714662594685378/5286829694`; felcserélt azonosítóval a release build leáll. Új build és emulátoros/Play-ellenőrzés még szükséges.
+- Nyitott: AdMob Play-beli stabilitásának tulajdonosi visszaellenőrzése és a Play Console „Közepes” optimalizálási mutatója.
+- A további készülék-/gyártó-kompatibilitás nem nyitott kiadási akadály; ezt a nyílt tesztben kell figyelni.
+
+### +171 — production AAB helyben elkészült
+
+- A következő szabad versionCode-ra épített production AAB elkészült: `build/HUHS-v1.0.0+171-release.aab`.
+- A +171 ugyanazt a stabil AdMob banner-javítást tartalmazza; a production App/Banner/Rewarded azonosítók megmaradtak.
+- `flutter analyze --no-pub`, `flutter test` (29/29) és `git diff --check` sikeres.
+- A +171 AAB a Play Console zárt Alpha tesztcsatornájában elérhető, 100%-os közzététellel és 19 081 támogatott eszközzel.
+- A Play Console állapota: a kiválasztott tesztelők számára hozzáférhető; a Play „Közepes” optimalizálási mutatója az AAB feldolgozása után továbbra is külön ellenőrzendő.
+
+### +170 — production AAB feltöltve és felülvizsgálatra beküldve
+
+- A `build/HUHS-v1.0.0+170-release.aab` a Play zárt Alpha tesztcsatornájába feltöltve és felülvizsgálatra beküldve.
+- A Play Console státusza: „Felülvizsgálat alatt álló módosítások”; a gyors ellenőrzések még futhatnak.
+- A kiadás kibocsátási megjegyzése: AdMob, Chat és privát üzenet hibajavítások.
+
+### +169 — korábbi production AAB
 
 ### +169 — production AAB elkészült és beküldve
 

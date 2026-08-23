@@ -395,6 +395,42 @@ exports.deleteCommunityUser = functions.https.onCall(async (data, context) => {
   return { deleted: true, uid };
 });
 
+exports.deletePrivateConversation = functions.https.onCall(async (data, context) => {
+  const uid = String(context.auth?.uid || '').trim();
+  if (!uid || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
+    throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a beszélgetés törléséhez.');
+  }
+  if (!await allowCall(uid, 'private_conversation_delete', 10)) {
+    securityLog('private_conversation_delete_rate_limited', context);
+    throw new HttpsError('resource-exhausted', 'Túl sok törlési művelet, próbáld később.');
+  }
+
+  const conversationId = String(data?.conversationId || '').trim();
+  if (!conversationId || !/^[^_]+_[^_]+$/.test(conversationId)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen beszélgetésazonosító.');
+  }
+
+  const conversationRef = db.collection('private_conversations').doc(conversationId);
+  const conversation = await conversationRef.get();
+  if (!conversation.exists) return { deleted: true };
+  const participants = Array.isArray(conversation.data()?.participantIds)
+    ? conversation.data().participantIds.map((id) => String(id))
+    : [];
+  if (!participants.includes(uid)) {
+    securityLog('private_conversation_delete_denied', context);
+    throw new HttpsError('permission-denied', 'Csak a beszélgetés résztvevője törölheti azt.');
+  }
+
+  const messages = await conversationRef.collection('messages').get();
+  for (let offset = 0; offset < messages.docs.length; offset += 400) {
+    const batch = db.batch();
+    messages.docs.slice(offset, offset + 400).forEach((message) => batch.delete(message.ref));
+    await batch.commit();
+  }
+  await conversationRef.delete();
+  return { deleted: true };
+});
+
 exports.claimArtistProfile = functions.https.onCall(async (data, context) => {
   if (!context.auth || context.auth.token.email_verified !== true) {
     throw new HttpsError('permission-denied', 'Hitelesített e-mailes fiók szükséges.');
