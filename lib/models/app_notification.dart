@@ -10,6 +10,7 @@ class AppNotification {
     required this.targetId,
     required this.createdAt,
     required this.readAt,
+    required this.archivedAt,
   });
 
   final String id;
@@ -20,8 +21,10 @@ class AppNotification {
   final String targetId;
   final DateTime? createdAt;
   final DateTime? readAt;
+  final DateTime? archivedAt;
 
   bool get isRead => readAt != null;
+  bool get isArchived => archivedAt != null;
 
   factory AppNotification.fromSnapshot(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
@@ -29,6 +32,7 @@ class AppNotification {
     final data = snapshot.data() ?? const <String, dynamic>{};
     final timestamp = data['createdAt'];
     final readTimestamp = data['readAt'];
+    final archivedTimestamp = data['archivedAt'];
     return AppNotification(
       id: snapshot.id,
       type: data['type']?.toString() ?? 'general',
@@ -38,6 +42,9 @@ class AppNotification {
       targetId: data['targetId']?.toString().trim() ?? '',
       createdAt: timestamp is Timestamp ? timestamp.toDate() : null,
       readAt: readTimestamp is Timestamp ? readTimestamp.toDate() : null,
+      archivedAt: archivedTimestamp is Timestamp
+          ? archivedTimestamp.toDate()
+          : null,
     );
   }
 }

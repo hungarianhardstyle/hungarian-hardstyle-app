@@ -14,7 +14,23 @@ import '../releases/release_detail_screen.dart';
 class NotificationCenterScreen extends StatelessWidget {
   const NotificationCenterScreen({super.key});
 
+  static DateTime? _lastArchiveSweepAt;
+
   static Future<void> show(BuildContext context) {
+    // Read notifications older than 30 days are hidden from the inbox without
+    // deleting them. This keeps the list compact while preserving history.
+    final now = DateTime.now();
+    final shouldSweep =
+        _lastArchiveSweepAt == null ||
+        now.difference(_lastArchiveSweepAt!) >= const Duration(minutes: 10);
+    if (shouldSweep) {
+      _lastArchiveSweepAt = now;
+      unawaited(
+        NotificationService()
+            .archiveReadOlderThan(const Duration(days: 30))
+            .catchError((_) {}),
+      );
+    }
     return showDialog<void>(
       context: context,
       barrierColor: Colors.black54,
@@ -27,6 +43,79 @@ class NotificationCenterScreen extends StatelessWidget {
         child: NotificationCenterScreen(),
       ),
     );
+  }
+
+  Future<void> _handleAction(
+    BuildContext context,
+    AppNotification notification,
+    String action,
+  ) async {
+    final service = NotificationService();
+    try {
+      if (action == 'read') {
+        await service.markRead(notification);
+      } else if (action == 'archive') {
+        await service.archive(notification);
+      } else if (action == 'delete') {
+        await service.delete(notification);
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Értesítés-művelet sikertelen: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('A művelet nem sikerült.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteAll(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Értesítések törlése'),
+        content: const Text('Biztosan törlöd az összes értesítést?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Mégse'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Törlés'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await NotificationService().deleteAll();
+    } catch (error, stackTrace) {
+      debugPrint('Összes értesítés törlése sikertelen: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Az értesítések törlése nem sikerült.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _markAllRead(BuildContext context) async {
+    try {
+      await NotificationService().markAllRead();
+    } catch (error, stackTrace) {
+      debugPrint('Összes értesítés olvasottra jelölése sikertelen: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Az értesítések frissítése nem sikerült.'),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _open(BuildContext context, AppNotification notification) async {
@@ -126,6 +215,16 @@ class NotificationCenterScreen extends StatelessWidget {
                         ),
                       ),
                       IconButton(
+                        tooltip: 'Összes olvasottra jelölése',
+                        onPressed: () => unawaited(_markAllRead(context)),
+                        icon: const Icon(Icons.done_all),
+                      ),
+                      IconButton(
+                        tooltip: 'Összes törlése',
+                        onPressed: () => unawaited(_deleteAll(context)),
+                        icon: const Icon(Icons.delete_sweep_outlined),
+                      ),
+                      IconButton(
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.close),
                       ),
@@ -171,13 +270,38 @@ class NotificationCenterScreen extends StatelessWidget {
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                trailing: item.isRead
-                                    ? null
-                                    : const Icon(
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (!item.isRead)
+                                      const Icon(
                                         Icons.circle,
                                         size: 10,
                                         color: Colors.redAccent,
                                       ),
+                                    PopupMenuButton<String>(
+                                      tooltip: 'Értesítés műveletei',
+                                      onSelected: (action) => unawaited(
+                                        _handleAction(context, item, action),
+                                      ),
+                                      itemBuilder: (_) => [
+                                        if (!item.isRead)
+                                          const PopupMenuItem(
+                                            value: 'read',
+                                            child: Text('Olvasottnak jelölés'),
+                                          ),
+                                        const PopupMenuItem(
+                                          value: 'archive',
+                                          child: Text('Archiválás'),
+                                        ),
+                                        const PopupMenuItem(
+                                          value: 'delete',
+                                          child: Text('Törlés'),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           },
