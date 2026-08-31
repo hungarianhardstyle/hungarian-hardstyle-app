@@ -15,14 +15,17 @@ class NotificationCenterScreen extends StatelessWidget {
   const NotificationCenterScreen({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet<void>(
+    return showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF17090B),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      barrierColor: Colors.black54,
+      builder: (_) => const Dialog(
+        insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 48),
+        backgroundColor: Color(0xFF17090B),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(26)),
+        ),
+        child: NotificationCenterScreen(),
       ),
-      builder: (_) => const NotificationCenterScreen(),
     );
   }
 
@@ -95,6 +98,7 @@ class NotificationCenterScreen extends StatelessWidget {
     return SafeArea(
       child: SizedBox(
         height: MediaQuery.of(context).size.height * .72,
+        width: double.infinity,
         child: StreamBuilder<List<AppNotification>>(
           stream: NotificationService().watchNotifications(),
           builder: (context, snapshot) {
