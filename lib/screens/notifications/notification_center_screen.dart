@@ -102,6 +102,13 @@ class NotificationCenterScreen extends StatelessWidget {
         child: StreamBuilder<List<AppNotification>>(
           stream: NotificationService().watchNotifications(),
           builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              debugPrint(
+                'Értesítések Firestore-lekérdezési hiba: '
+                '${snapshot.error}',
+              );
+              debugPrintStack(stackTrace: snapshot.stackTrace);
+            }
             final items = snapshot.data ?? const <AppNotification>[];
             return Column(
               children: [

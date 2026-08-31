@@ -1839,7 +1839,6 @@ exports.notifyMeetupInterest = onDocumentWritten(
       .doc(meetupUserId).collection('blocked_users').get();
     const blockedIds = new Set(targetBlocked.docs.map((doc) => doc.id));
     const targetTokens = await getPushTokens(meetupUserId);
-    if (!targetTokens.length) return null;
     const eventTitle = String(after.eventTitle || 'az esemény').trim();
     const results = [];
     for (const senderId of newInterests) {
@@ -1850,6 +1849,7 @@ exports.notifyMeetupInterest = onDocumentWritten(
       const sender = (await db.collection('community_profiles').doc(senderId).get()).data() || {};
       const senderName = String(sender.displayName || 'Egy felhasználó').trim();
       await createNotificationBestEffort({ recipientUid: meetupUserId, type: 'meetup_interest', title: 'Új Meetup érdeklődés', body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`, targetType: 'event', targetId: eventId, dedupeKey: `meetup_interest:${eventId}:${meetupUserId}:${senderId}` });
+      if (!targetTokens.length) continue;
       const result = await sendMulticastToAllTokens({
         notification: {
           title: 'Új Meetup érdeklődés',
@@ -1898,6 +1898,9 @@ exports.notifyPrivateMessage = onDocumentCreated(
       return null;
     }
 
+    const participantNames = conversation.participantNames || {};
+    const senderName = String(participantNames[senderId] || 'Egy felhasználó').trim();
+    await createNotificationBestEffort({ recipientUid: recipientId, type: 'private_message', title: `${senderName || 'Egy felhasználó'} üzenetet küldött`, body: text, targetType: 'private_conversation', targetId: conversationId, dedupeKey: `private_message:${conversationId}:${event.params.messageId}` });
     const uniqueTokens = await getPushTokens(recipientId);
     if (!uniqueTokens.length) {
       console.log(JSON.stringify({
@@ -1907,10 +1910,6 @@ exports.notifyPrivateMessage = onDocumentCreated(
       }));
       return null;
     }
-
-    const participantNames = conversation.participantNames || {};
-    const senderName = String(participantNames[senderId] || 'Egy felhasználó').trim();
-    await createNotificationBestEffort({ recipientUid: recipientId, type: 'private_message', title: `${senderName || 'Egy felhasználó'} üzenetet küldött`, body: text, targetType: 'private_conversation', targetId: conversationId, dedupeKey: `private_message:${conversationId}:${event.params.messageId}` });
     const result = await sendMulticastToAllTokens({
       notification: {
         title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
@@ -1964,16 +1963,15 @@ exports.notifyChatReport = onDocumentCreated(
       })
       .map((profileDoc) => profileDoc.id);
 
+    const reporterName = String(report.reporterName || 'Egy felhasználó').trim();
+    const reason = String(report.reason || '').trim();
+    await Promise.all(recipientIds.map((recipientUid) => createNotificationBestEffort({ recipientUid, type: 'chat_report', title: 'Új chatjelentés', body: reason ? `${reporterName}: ${reason}` : `${reporterName} új chatjelentést küldött.`, targetType: 'chat_report', targetId: reportId, dedupeKey: `chat_report:${reportId}:${recipientUid}` })));
     const tokenLists = await Promise.all(recipientIds.map((uid) => getPushTokens(uid)));
     const uniqueTokens = [...new Set(tokenLists.flat().map((token) => token.trim()).filter(Boolean))];
     if (!uniqueTokens.length) {
       console.log(JSON.stringify({ event: 'chat_report_no_recipient_token', reportId }));
       return null;
     }
-
-    const reporterName = String(report.reporterName || 'Egy felhasználó').trim();
-    const reason = String(report.reason || '').trim();
-    await Promise.all(recipientIds.map((recipientUid) => createNotificationBestEffort({ recipientUid, type: 'chat_report', title: 'Új chatjelentés', body: reason ? `${reporterName}: ${reason}` : `${reporterName} új chatjelentést küldött.`, targetType: 'chat_report', targetId: reportId, dedupeKey: `chat_report:${reportId}:${recipientUid}` })));
     const result = await sendMulticastToAllTokens({
       notification: {
         title: 'Új chatjelentés',
