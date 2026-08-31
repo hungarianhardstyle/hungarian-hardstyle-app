@@ -449,7 +449,11 @@ class WordpressService {
   }
 
   Future<List<Post>> getLatestPosts() async {
-    final page = await getPosts();
+    // The homepage is the public editorial surface. Do not serve the
+    // persistent five-minute snapshot here: an editor can withdraw a
+    // featured article at any time and drafts must disappear on the next
+    // homepage load.
+    final page = await getPosts(forceRefresh: true);
     return page.items;
   }
 

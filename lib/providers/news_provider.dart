@@ -7,7 +7,9 @@ final wordpressServiceProvider = Provider<WordpressService>((ref) {
   return WordpressService();
 });
 
-final newsProvider = FutureProvider<List<Post>>((ref) async {
+// Home news must be recreated after leaving the screen so a withdrawn/draft
+// post cannot remain in the long-lived provider state.
+final newsProvider = FutureProvider.autoDispose<List<Post>>((ref) async {
   final service = ref.watch(wordpressServiceProvider);
   return service.getLatestPosts();
 });
