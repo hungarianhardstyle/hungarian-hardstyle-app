@@ -137,6 +137,8 @@ class _OrganizerContent extends StatelessWidget {
                               ? CachedNetworkImage(
                                   imageUrl: organizer.logoUrl,
                                   fit: BoxFit.contain,
+                                  memCacheWidth: 440,
+                                  maxWidthDiskCache: 440,
                                 )
                               : const Icon(
                                   Icons.groups,

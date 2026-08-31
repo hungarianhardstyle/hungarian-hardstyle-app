@@ -3,6 +3,7 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
+    id("androidx.baselineprofile")
     id("com.google.gms.google-services")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
@@ -106,6 +107,17 @@ android {
             }
         }
     }
+}
+
+baselineProfile {
+    mergeIntoMain = true
+}
+
+dependencies {
+    // Compiles and installs the generated profile on supported local devices.
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
+    implementation("com.android.installreferrer:installreferrer:2.2")
+    baselineProfile(project(":baselineprofile"))
 }
 
 kotlin {

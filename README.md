@@ -1,6 +1,16 @@
 # Hungarian Hardstyle App
 
-## Aktuális Play-build: +182 — zárt Alpha tesztbe felülvizsgálatra beküldve
+## Aktuális Play-build: +225 — zárt Alpha tesztbe felülvizsgálatra beküldve
+
+- A +225 AAB elkészült és a zárt tesztbe feltöltve; a Play automatikus ellenőrzései még futhatnak.
+- Billing stabilizálás: közös folyamat-szintű vásárlásfigyelő, hiányzó termékek kontrollált újrapróbálása, szerveres token-tulajdonjog és acknowledgement-hibakezelés.
+- Ellenőrzések: `flutter test` 47/47, `flutter analyze --no-pub`, `node --check functions/index.js` és `git diff --check` sikeres.
+
+## Következő ellenőrzések / roadmap
+
+- Playből telepítve végponttól végpontig ellenőrizni a vásárlást, visszaállítást és letöltést; a Play-termék megjelenését az app csak a Billing tényleges válasza alapján jelezze.
+- Ingyenes kiadványoknál ne jelenjenjen meg Billing-hiány státusz; a reklámos feloldás és saját WAV-/külső linkes útvonal maradjon működő.
+- Nyitott auditok: Play-vásárlási export egyeztetése, értesítések, AdMob stabilitás és natív HUHS API-admin.
 
 - A `build/HUHS-v1.0.0+182-release.aab` elkészült; a Play Console a tényleges versionCode 182-t elfogadta.
 - A +182 tartalmazza az AdMob elhelyezési, kibővített káromkodásszűrési és hír-like stabilitási javításokat.

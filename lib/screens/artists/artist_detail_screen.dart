@@ -151,6 +151,8 @@ class _ArtistContent extends ConsumerWidget {
                               CachedNetworkImage(
                                 imageUrl: imageUrl,
                                 fit: BoxFit.cover,
+                                memCacheWidth: 900,
+                                maxWidthDiskCache: 1200,
                                 alignment: const Alignment(0, -0.5),
                               ),
                               if (artist.logoUrl.isNotEmpty &&
@@ -171,6 +173,8 @@ class _ArtistContent extends ConsumerWidget {
                                     child: CachedNetworkImage(
                                       imageUrl: artist.logoUrl,
                                       fit: BoxFit.contain,
+                                      memCacheWidth: 180,
+                                      maxWidthDiskCache: 180,
                                     ),
                                   ),
                                 ),

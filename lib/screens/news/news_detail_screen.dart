@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -13,10 +15,23 @@ import '../../widgets/news_reaction_button.dart';
 import '../gallery/gallery_screen.dart';
 import 'tagged_news_screen.dart';
 
-class NewsDetailScreen extends StatelessWidget {
+class NewsDetailScreen extends StatefulWidget {
   final Post post;
 
   const NewsDetailScreen({super.key, required this.post});
+
+  @override
+  State<NewsDetailScreen> createState() => _NewsDetailScreenState();
+}
+
+class _NewsDetailScreenState extends State<NewsDetailScreen> {
+  Post get post => widget.post;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(WordpressService().recordPostView(post.id));
+  }
 
   String _formatDate(String date) {
     try {

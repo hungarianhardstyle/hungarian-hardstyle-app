@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 class NewsReactionState {
   final int count;
@@ -11,6 +14,25 @@ class NewsReactionState {
 
 class NewsReactionService {
   static const _databaseId = 'hungarian-hardstyle';
+
+  static Map<String, bool> normalizeLikedBy(Object? rawLikedBy) {
+    if (rawLikedBy is Map) {
+      return <String, bool>{
+        for (final entry in rawLikedBy.entries)
+          if (entry.key is String && entry.value == true)
+            entry.key as String: true,
+      };
+    }
+
+    // Older documents may contain a UID list instead of the current map.
+    if (rawLikedBy is List) {
+      return <String, bool>{
+        for (final uid in rawLikedBy.whereType<String>()) uid: true,
+      };
+    }
+
+    return <String, bool>{};
+  }
 
   FirebaseFirestore? get _firestore {
     if (Firebase.apps.isEmpty) return null;
@@ -25,55 +47,62 @@ class NewsReactionService {
     if (firestore == null) {
       return Stream.value(const NewsReactionState());
     }
-    return firestore
-        .collection('news_reactions')
-        .doc('$postId')
-        .snapshots()
-        .map((snapshot) {
-          final data = snapshot.data() ?? const <String, dynamic>{};
-          final rawLikedBy = data['likedBy'];
-          final likedBy = rawLikedBy is Map
-              ? Map<String, dynamic>.from(rawLikedBy)
-              : <String, dynamic>{};
-          final userId = FirebaseAuth.instance.currentUser?.uid;
-          final storedCount = (data['count'] as num?)?.toInt() ?? 0;
-          final count = likedBy.isEmpty
-              ? storedCount
-              : likedBy.values.where((value) => value == true).length;
-          return NewsReactionState(
-            count: count,
-            liked: userId != null && likedBy[userId] == true,
-          );
-        });
+    return Stream.multi((controller) {
+      StreamSubscription<User?>? authSubscription;
+      StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      documentSubscription;
+
+      authSubscription = FirebaseAuth.instance.authStateChanges().listen((
+        user,
+      ) {
+        documentSubscription?.cancel();
+        documentSubscription = firestore
+            .collection('news_reactions')
+            .doc('$postId')
+            .snapshots()
+            .listen((snapshot) {
+              final data = snapshot.data() ?? const <String, dynamic>{};
+              final likedBy = normalizeLikedBy(data['likedBy']);
+              controller.add(
+                NewsReactionState(
+                  count: likedBy.length,
+                  liked: user != null && likedBy[user.uid] == true,
+                ),
+              );
+            }, onError: controller.addError);
+      }, onError: controller.addError);
+
+      controller.onCancel = () async {
+        await authSubscription?.cancel();
+        await documentSubscription?.cancel();
+      };
+    });
   }
 
   Stream<int> watchCount(int postId) =>
       watchState(postId).map((state) => state.count);
 
-  Future<void> toggle(int postId) async {
-    final firestore = _firestore;
-    if (firestore == null) return;
+  Future<NewsReactionState> toggle(int postId) async {
+    if (postId <= 0) {
+      throw ArgumentError.value(
+        postId,
+        'postId',
+        'Érvényes hír-azonosító kell.',
+      );
+    }
     final auth = FirebaseAuth.instance;
     final user = auth.currentUser ?? (await auth.signInAnonymously()).user;
-    if (user == null) return;
-    final reference = firestore.collection('news_reactions').doc('$postId');
-    await firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(reference);
-      final data = snapshot.data() ?? const <String, dynamic>{};
-      final likedBy = Map<String, dynamic>.from(
-        data['likedBy'] as Map? ?? const <String, dynamic>{},
-      );
-      final liked = likedBy[user.uid] == true;
-      if (liked) {
-        likedBy.remove(user.uid);
-      } else {
-        likedBy[user.uid] = true;
-      }
-      final count = likedBy.values.where((value) => value == true).length;
-      transaction.set(reference, {
-        'count': liked ? (count > 0 ? count - 1 : 0) : count + 1,
-        'likedBy': likedBy,
-      }, SetOptions(merge: true));
-    });
+    if (user == null) {
+      throw StateError('A reakcióhoz nem sikerült felhasználót azonosítani.');
+    }
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'toggleNewsReaction',
+    );
+    final response = await callable.call(<String, dynamic>{'postId': postId});
+    final data = Map<String, dynamic>.from(response.data as Map);
+    return NewsReactionState(
+      count: (data['count'] as num?)?.toInt() ?? 0,
+      liked: data['liked'] == true,
+    );
   }
 }

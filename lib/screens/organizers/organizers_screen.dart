@@ -186,6 +186,8 @@ class _OrganizerCard extends ConsumerWidget {
                       ? CachedNetworkImage(
                           imageUrl: organizer.logoUrl,
                           fit: BoxFit.contain,
+                          memCacheWidth: 180,
+                          maxWidthDiskCache: 180,
                         )
                       : const Icon(
                           Icons.groups,

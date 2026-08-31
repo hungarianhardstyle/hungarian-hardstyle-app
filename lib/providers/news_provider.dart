@@ -92,7 +92,7 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
     );
 
     try {
-      final response = await _getPostsPage(page: 1);
+      final response = await _getPostsPage(page: 1, forceRefresh: true);
 
       if (_isStale(requestId)) {
         return;
@@ -147,12 +147,16 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
     }
   }
 
-  Future<PostsPage> _getPostsPage({required int page}) {
+  Future<PostsPage> _getPostsPage({
+    required int page,
+    bool forceRefresh = false,
+  }) {
     return _service.getPosts(
       search: state.search,
       categoryId: state.selectedCategoryId,
       page: page,
       perPage: _perPage,
+      forceRefresh: forceRefresh,
     );
   }
 

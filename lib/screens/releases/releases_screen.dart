@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/release.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/releases_provider.dart';
+import '../../providers/news_provider.dart';
 import 'release_detail_screen.dart';
 import 'free_releases_screen.dart';
 
@@ -17,19 +18,60 @@ class ReleasesScreen extends ConsumerStatefulWidget {
   const ReleasesScreen({super.key, this.artistId = 0, this.artistName = ''});
 
   @override
-  ConsumerState<ReleasesScreen> createState() => _ReleasesScreenState();
+  ConsumerState<ReleasesScreen> createState() => ReleasesScreenState();
 }
 
-class _ReleasesScreenState extends ConsumerState<ReleasesScreen> {
+class ReleasesScreenState extends ConsumerState<ReleasesScreen>
+    with WidgetsBindingObserver {
   final _searchController = TextEditingController();
   String _search = '';
   Timer? _timer;
+  Timer? _releaseRefreshTimer;
+  DateTime? _lastRefreshAt;
 
   ReleaseQuery get _query => (search: _search, artistId: widget.artistId);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _lastRefreshAt = DateTime.now();
+    _releaseRefreshTimer = Timer.periodic(const Duration(seconds: 45), (_) {
+      if (mounted) unawaited(_refreshInBackground());
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !mounted) return;
+    final last = _lastRefreshAt;
+    if (last != null && DateTime.now().difference(last).inSeconds < 30) {
+      return;
+    }
+    _lastRefreshAt = DateTime.now();
+    unawaited(_refreshInBackground());
+  }
+
+  Future<void> _refreshInBackground() async {
+    try {
+      await refreshNow();
+    } catch (_) {
+      // The existing list remains visible when a background refresh fails.
+    }
+  }
+
+  Future<void> refreshNow() async {
+    final service = ref.read(wordpressServiceProvider);
+    service.clearReleasesCache(search: _search, artistId: widget.artistId);
+    ref.invalidate(releasesProvider(_query));
+    await ref.read(releasesProvider(_query).future);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
+    _releaseRefreshTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -64,7 +106,7 @@ class _ReleasesScreenState extends ConsumerState<ReleasesScreen> {
             : null,
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(releasesProvider(_query).future),
+        onRefresh: refreshNow,
         child: releases.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => ListView(
@@ -156,12 +198,12 @@ class _ReleaseCard extends StatelessWidget {
           ),
         ),
         child: SizedBox(
-          height: 190,
+          height: 150,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(
-                width: 118,
+                width: 150,
                 child: release.coverUrl.isEmpty
                     ? const ColoredBox(
                         color: Color(0xFF242424),
@@ -174,47 +216,30 @@ class _ReleaseCard extends StatelessWidget {
                     : CachedNetworkImage(
                         imageUrl: release.coverUrl,
                         fit: BoxFit.cover,
+                        memCacheWidth: 300,
+                        maxWidthDiskCache: 300,
                       ),
               ),
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        release.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        release.artists
-                            .map((artist) => artist.name)
-                            .join(' · '),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (release.releaseDate.isNotEmpty) ...[
-                        const SizedBox(height: 5),
-                        Text(
-                          'Megjelenés: ${release.releaseDate}',
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                      ],
-                      if (release.genre.isNotEmpty) ...[
-                        const SizedBox(height: 7),
-                        Text(
-                          release.genre,
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                      ],
-                    ],
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                  title: Text(
+                    release.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                  subtitle: Text(
+                    [
+                      if (release.artists.isNotEmpty)
+                        release.artists.map((artist) => artist.name).join(' · '),
+                      if (release.releaseDate.isNotEmpty)
+                        'Megjelenés: ${release.releaseDate}',
+                      if (release.genre.isNotEmpty) release.genre,
+                    ].join('\n'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
                 ),
               ),
             ],

@@ -28,6 +28,7 @@ class _MainNavigationState extends State<MainNavigation>
     _tabCount,
     (_) => GlobalKey<NavigatorState>(),
   );
+  final _releasesKey = GlobalKey<ReleasesScreenState>();
   final _tabs = List<Widget?>.filled(_tabCount, null);
   bool _checkingUpdate = false;
   bool _updateDialogOpen = false;
@@ -92,6 +93,10 @@ class _MainNavigationState extends State<MainNavigation>
   }
 
   void _setCurrentIndex(int index) {
+    if (index == 4) {
+      final releasesState = _releasesKey.currentState;
+      if (releasesState != null) unawaited(releasesState.refreshNow());
+    }
     if (mounted) setState(() => _currentIndex = index);
   }
 
@@ -112,7 +117,7 @@ class _MainNavigationState extends State<MainNavigation>
             case 3:
               return const LiveFeedScreen();
             case 4:
-              return const ReleasesScreen();
+              return ReleasesScreen(key: _releasesKey);
             default:
               return const MoreScreen();
           }

@@ -12,8 +12,8 @@ Az események, hírek, DJ-k és szervezők adatai a Hungarian Hardstyle WordPres
 
 ## Hírek és címkék
 
-### Hogyan menthetek el egy hírt?
-A szív ikon megnyomásával a hír bekerül a Kedvencek közé.
+### Hogyan reagálhatok egy hírre?
+A hírreakcióval felhasználónként egy reakció adható. A saját reakciódat visszavonhatod vagy módosíthatod; más felhasználók reakciói ettől nem törlődnek.
 
 ### Mire használhatók a címkék?
 A címkére kattintva megjelennek az ugyanahhoz a témához tartozó további cikkek.
@@ -63,13 +63,25 @@ A Google-fiókoddal gyorsan létrehozhatsz vagy megnyithatsz egy profilt.
 ### Elfelejtettem a jelszavam. Mit tegyek?
 A bejelentkezési oldalon válaszd a Jelszó visszaállítása lehetőséget.
 
+### Mi az achievement- és jelvényrendszer?
+A közösségi aktivitásért pontokat gyűjthetsz, amelyekkel magasabb HUHS-rangokat és jelvényeket érhetsz el. A pontszámot a szerver számolja, ezért ugyanazért a tevékenységért nem lehet többször jogosulatlanul pontot szerezni.
+
+### Miért van jelvényem akkor is, ha még nincs pontom?
+Minden regisztrált felhasználó megkapja a nulla pontos „Kezdő ütem” alapjelvényt. A további jelvények a szükséges pontszám elérése után jelennek meg a profilodon.
+
+### Milyen tevékenységekért jár pont?
+Pont járhat például eseményen való részvétel jelzéséért, Meetup-jelzésért, kölcsönös Meetup-érdeklődésért, hír kedveléséért, a profil első teljes kitöltéséért és egy új felhasználó meghívásáért. A meghívásért járó +50 pontot a szerver csak egyszer, az új regisztráció ellenőrzése után írja jóvá.
+
+### Ki tölti fel a jelvények grafikáját?
+A jelvénygrafikákat a HUHS kezeli és tölti fel. Az app nem generál hozzájuk véletlenszerű vagy AI-képet.
+
 ## Chat
 
 ### Használható a Chat regisztráció nélkül?
-Igen, olvasni és szöveges üzenetet küldeni lehet. Képfeltöltéshez regisztráció szükséges.
+A publikus tartalmak egy része regisztráció nélkül is megtekinthető, de a Chathez, privát üzenetekhez és képfeltöltéshez bejelentkezett fiók szükséges.
 
 ### Miért jelenik meg Unknown User név?
-A regisztráció nélküli üzenetek automatikus névvel jelennek meg.
+Ez akkor fordulhat elő, ha egy korábbi vagy hiányos profiladatú közösségi bejegyzéshez nem tartozik megjeleníthető név.
 
 ### Ki törölheti a chatüzeneteket?
 Az adminisztrátorok és a moderátorok.
@@ -96,11 +108,11 @@ A Több menü Spotify Playlistek részében.
 ### Megnyílik a Spotify alkalmazás?
 Igen, ha telepítve van; egyébként böngészőben nyílik meg.
 
-### Lesz online rádió az appban?
-Igen, az 1.0-s verzió tervei között szerepel háttérlejátszással és kikapcsolható lejátszóval.
+### Van online rádió az appban?
+Igen. A Real Hardstyle FM az alkalmazás rádiólejátszójában érhető el; a külső stream szolgáltatásának feltételei is irányadók.
 
-### Lesznek letölthető zenék?
-A későbbi release-katalógusban rádió- és extended verziók, előnézeti lejátszó, valamint ingyenes vagy megvásárolható kiadványok szerepelhetnek.
+### Hogyan működik a kiadványok vásárlása és letöltése?
+A Label oldalon rövid preview hallgatható meg. A támogatott Radio és Extended WAV/lossless, illetve 320 kbps MP3 változatok Google Playen vásárolhatók meg, a 128 kbps MP3 és egyes ingyenes változatok jutalmazott reklám után oldhatók fel. Vásárlás után a szerver ellenőrzi a jogosultságot; sikeres ellenőrzés után a Letöltés gomb jelenik meg.
 
 ## Adatvédelem
 
@@ -108,10 +120,10 @@ A későbbi release-katalógusban rádió- és extended verziók, előnézeti le
 A regisztrációhoz, profilhoz, értesítésekhez és közösségi funkciókhoz szükséges adatokat.
 
 ### Kérhetem a profilom törlését?
-Igen, törlési kérést a Kapcsolat menüponton keresztül lehet küldeni.
+Igen. A saját profil adatlapján a Profil törlése művelet indítja a fiók és a kapcsolódó közösségi adatok törlését. Ha az önkiszolgáló törlés nem használható, kérés küldhető az info@hungarianhardstyle.hu címen.
 
 ### Hogyan védjük az adatokat?
-Firebase jogosultsági szabályokkal, szerveroldali ellenőrzésekkel és korlátozott hozzáférésű backend-műveletekkel.
+Firebase jogosultsági szabályokkal, szerveroldali ellenőrzésekkel, felhasználóhoz kötött jogosultságokkal, korlátozott hozzáférésű backend-műveletekkel és a vásárlási/letöltési tokenek védett kezelésével. A részletes tájékoztató az alkalmazás Adatvédelem és GDPR menüpontjában olvasható.
 
 ## Hibabejelentés és kapcsolat
 

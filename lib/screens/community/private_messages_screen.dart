@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -18,11 +19,7 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
   final _service = CommunityService();
 
   Future<Map<String, dynamic>> _profile(String id) async {
-    final snapshot = await _service.firestore
-        .collection('community_profiles')
-        .doc(id)
-        .get();
-    return snapshot.data() ?? const {};
+    return _service.getPublicProfile(id);
   }
 
   Future<void> _deleteConversation(String id) async {
@@ -220,8 +217,8 @@ class _PrivateMessageUserSearchScreenState
     final currentUid = _service.auth.currentUser?.uid;
     return Scaffold(
       appBar: AppBar(title: const Text('Új privát üzenet')),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _service.watchRegisteredProfiles(),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _service.getRegisteredPublicProfiles(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
@@ -233,17 +230,15 @@ class _PrivateMessageUserSearchScreenState
           }
           final query = _search.text.trim().toLowerCase();
           final profiles =
-              snapshot.data!.docs.where((profile) {
-                if (profile.id == currentUid) return false;
-                final name = (profile.data()['displayName'] as String? ?? '')
+              snapshot.data!.where((profile) {
+                if (profile['userId'] == currentUid) return false;
+                final name = (profile['displayName'] as String? ?? '')
                     .trim()
                     .toLowerCase();
                 return query.isEmpty || name.contains(query);
               }).toList()..sort((a, b) {
-                final aName = (a.data()['displayName'] as String? ?? '')
-                    .toLowerCase();
-                final bName = (b.data()['displayName'] as String? ?? '')
-                    .toLowerCase();
+                final aName = (a['displayName'] as String? ?? '').toLowerCase();
+                final bName = (b['displayName'] as String? ?? '').toLowerCase();
                 return aName.compareTo(bName);
               });
           return Column(
@@ -265,7 +260,7 @@ class _PrivateMessageUserSearchScreenState
                   itemCount: profiles.length,
                   itemBuilder: (context, index) {
                     final profile = profiles[index];
-                    final data = profile.data();
+                    final data = profile;
                     final name = (data['displayName'] as String? ?? '').trim();
                     final safeName = name.isEmpty ? 'HUHS user' : name;
                     return ListTile(
@@ -273,7 +268,10 @@ class _PrivateMessageUserSearchScreenState
                       title: Text(safeName),
                       onTap: () => Navigator.pop(
                         context,
-                        _SelectedUser(profile.id, safeName),
+                        _SelectedUser(
+                          data['userId'] as String? ?? '',
+                          safeName,
+                        ),
                       ),
                     );
                   },
@@ -314,11 +312,7 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
   );
 
   Future<Map<String, dynamic>> get _partnerProfile async {
-    final snapshot = await _service.firestore
-        .collection('community_profiles')
-        .doc(widget.otherUserId)
-        .get();
-    return snapshot.data() ?? const {};
+    return _service.getPublicProfile(widget.otherUserId);
   }
 
   @override
@@ -660,7 +654,9 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
                       focusNode: _focusNode,
                       keyboardType: TextInputType.multiline,
                       textCapitalization: TextCapitalization.sentences,
-                      inputFormatters: const [SentenceCapitalizationFormatter()],
+                      inputFormatters: const [
+                        SentenceCapitalizationFormatter(),
+                      ],
                       minLines: 1,
                       maxLines: 3,
                       textInputAction: TextInputAction.newline,
@@ -705,7 +701,9 @@ class _Avatar extends StatelessWidget {
         : trimmed.characters.first.toUpperCase();
     return CircleAvatar(
       radius: radius,
-      backgroundImage: imageUrl.isEmpty ? null : NetworkImage(imageUrl),
+      backgroundImage: imageUrl.isEmpty
+          ? null
+          : CachedNetworkImageProvider(imageUrl),
       child: imageUrl.isEmpty ? Text(initial) : null,
     );
   }

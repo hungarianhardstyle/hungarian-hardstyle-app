@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
@@ -11,9 +12,54 @@ import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
+import '../../services/notification_service.dart';
+import '../notifications/notification_center_screen.dart';
 import '../community/community_screen.dart';
 import '../more/community_users_screen.dart';
 import '../voting/voting_screen.dart';
+
+class _NotificationButton extends StatelessWidget {
+  const _NotificationButton({required this.count, required this.onPressed});
+
+  final int count;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          tooltip: 'Értesítések',
+          onPressed: onPressed,
+          icon: const Icon(Icons.notifications_none, size: 30),
+        ),
+        if (count > 0)
+          Positioned(
+            right: 0,
+            top: -2,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF17090B), width: 2),
+              ),
+              child: Text(
+                count > 99 ? '99+' : '$count',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 class HomeScreen extends ConsumerWidget {
   final VoidCallback onShowMoreNews;
@@ -36,8 +82,10 @@ class HomeScreen extends ConsumerWidget {
                 onRefresh: () async {
                   ref.invalidate(newsProvider);
                   ref.invalidate(eventsProvider);
-                  await ref.read(newsProvider.future);
-                  await ref.read(eventsProvider.future);
+                  await Future.wait<void>([
+                    ref.read(newsProvider.future),
+                    ref.read(eventsProvider.future),
+                  ]);
                 },
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -56,18 +104,41 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        FilledButton.icon(
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const CommunityHubScreen(),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            StreamBuilder(
+                              stream: Firebase.apps.isEmpty
+                                  ? Stream.value(const <dynamic>[])
+                                  : NotificationService().watchNotifications(),
+                              builder: (context, snapshot) {
+                                final count = snapshot.data is List
+                                    ? (snapshot.data as List)
+                                          .where((item) => !item.isRead)
+                                          .length
+                                    : 0;
+                                return _NotificationButton(
+                                  count: count,
+                                  onPressed: () =>
+                                      NotificationCenterScreen.show(context),
+                                );
+                              },
                             ),
-                          ),
-                          icon: const Icon(Icons.people_outline),
-                          label: const Text('Közösség'),
+                            const SizedBox(width: 8),
+                            FilledButton.icon(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const CommunityHubScreen(),
+                                ),
+                              ),
+                              icon: const Icon(Icons.people_outline),
+                              label: const Text('Közösség'),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
                       decoration: BoxDecoration(
@@ -286,10 +357,13 @@ class HomeScreen extends ConsumerWidget {
                         );
                       },
                     ),
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8),
-                      child: Center(child: MobileAdBanner()),
-                    ),
+                    // Keep the home banner below the content, next to the
+                    // persistent radio bar, instead of placing an ad above
+                    // the HUHS header. It remains independent from the
+                    // news/events futures and starts loading when the home
+                    // screen is laid out.
+                    const SizedBox(height: 24),
+                    const Center(child: MobileAdBanner()),
                   ],
                 ),
               ),

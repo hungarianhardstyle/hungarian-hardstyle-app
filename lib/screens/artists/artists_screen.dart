@@ -255,6 +255,8 @@ class _ArtistCard extends StatelessWidget {
                             imageUrl: imageUrl,
                             width: double.infinity,
                             fit: BoxFit.cover,
+                            memCacheWidth: 900,
+                            maxWidthDiskCache: 1200,
                             alignment: const Alignment(0, -0.5),
                           )
                         : Container(

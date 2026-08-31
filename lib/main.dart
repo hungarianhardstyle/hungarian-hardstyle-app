@@ -10,10 +10,17 @@ import 'core/theme/app_theme.dart';
 import 'core/navigation/app_navigator.dart';
 import 'providers/ads_provider.dart';
 import 'services/push_notification_service.dart';
+import 'services/referral_link_service.dart';
+import 'services/label_purchase_service.dart';
 import 'widgets/startup_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Start the independent AdMob prerequisites immediately. Banners still
+  // wait for consent and canRequestAds() before requesting an ad, but app
+  // startup and consent/SDK initialization no longer block one another.
+  unawaited(_initializeAdsInBackground());
 
   await initializeDateFormatting('hu_HU');
   // Firebase must be ready before a community screen/provider is built.  The
@@ -25,20 +32,20 @@ Future<void> main() async {
     // Keep the rest of the app usable when a platform Firebase config is
     // missing; the affected community feature will report its own error.
   }
-  try {
-    await prepareAdConsent();
-  } catch (_) {
-    // Consent configuration must never make the app unusable.
-  }
-  // Initialize the SDK once, after consent preparation. The provider caches
-  // this future so banners cannot race each other during the first frame.
-  try {
-    await initializeMobileAds();
-  } catch (error) {
-    debugPrint('AdMob SDK indulási hiba: $error');
-  }
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
+  LabelPurchaseService.shared.listen();
   unawaited(_initializePushNotifications());
+  unawaited(ReferralLinkService.initialize());
+}
+
+Future<void> _initializeAdsInBackground() async {
+  try {
+    await bootstrapAds();
+  } catch (error) {
+    // Consent/configuration problems must not prevent the app from starting;
+    // the banner keeps its controlled retry path for a later attempt.
+    debugPrint('AdMob háttér-inicializálási hiba: $error');
+  }
 }
 
 Future<void> _initializePushNotifications() async {

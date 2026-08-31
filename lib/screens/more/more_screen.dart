@@ -9,9 +9,11 @@ import '../organizers/organizers_screen.dart';
 import '../submissions/artist_submission_screen.dart';
 import '../submissions/organizer_submission_screen.dart';
 import 'about_screen.dart';
+import 'achievement_guide_screen.dart';
 import 'donate_screen.dart';
 import 'faq_screen.dart';
 import 'privacy_screen.dart';
+import 'referral_screen.dart';
 import 'radio_provider_screen.dart';
 import 'settings_screen.dart';
 import 'social_contact_screen.dart';
@@ -141,6 +143,19 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ),
             ]),
             _section('Alkalmazás', [
+              _item(
+                Icons.workspace_premium_outlined,
+                'Achievementek',
+                'Pontok, szintek és jelvények részletesen',
+                const AchievementGuideScreen(),
+              ),
+              if (registered)
+                _item(
+                  Icons.group_add_outlined,
+                  'Ajánlás',
+                  'Hívd meg ismerőseidet és szerezz 50 pontot',
+                  const ReferralScreen(),
+                ),
               _item(
                 Icons.settings_outlined,
                 'Beállítások',

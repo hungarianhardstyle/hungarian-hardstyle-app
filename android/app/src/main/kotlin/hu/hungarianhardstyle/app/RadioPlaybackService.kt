@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Build
@@ -118,7 +119,8 @@ class RadioPlaybackService : Service() {
         return builder
             .setContentTitle("Real Hardstyle FM")
             .setContentText("Real Hardstyle FM")
-            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setSmallIcon(R.drawable.ic_stat_huhs)
+            .setColor(Color.rgb(242, 56, 61))
             .setOngoing(true)
             .build()
     }

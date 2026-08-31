@@ -1,26 +1,86 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
-### Aktuális Play-build: +182 — zárt Alpha tesztbe felülvizsgálatra beküldve
+### Aktuális build: +225 (1.0.0) — AAB a zárt tesztbe feltöltve, felülvizsgálatra beküldve
 
-- A `build/HUHS-v1.0.0+182-release.aab` elkészült; a Play Console a tényleges versionCode 182-t elfogadta.
-- A +182 tartalmazza az AdMob elhelyezési, kibővített káromkodásszűrési és hír-like stabilitási javításokat.
-- A helyi ellenőrzések korábban sikeresek: `flutter analyze --no-pub`, `flutter test` (34/34) és `git diff --check`.
-- A +182 a Play Console zárt Alpha csatornájába fel lett töltve, és 1 módosítás felülvizsgálatra be lett küldve.
+- A +225 AAB elkészült és a Play zárt tesztébe feltöltve; a Play automatikus ellenőrzései még folyamatban lehetnek.
+- Billing-javítások: megosztott folyamat-szintű listener, tartós pending-event kezelés, kontrollált acknowledgement-újrapróbálás, valamint szerveres purchase-token tulajdonjog-ellenőrzés.
+- Ellenőrzések sikeresek: Flutter tesztek 47/47, `flutter analyze --no-pub`, `node --check functions/index.js`, `git diff --check`.
+
+### Következő ellenőrzések
+
+- Playből telepített builden végponttól végpontig ellenőrizni a vásárlást, visszaállítást és letöltést.
+- Ingyenes kiadványoknál Billing-hiány státusz ne jelenjen meg; a fizetős Billing-útvonal változatlan maradjon.
+- Nyitott: Play-vásárlási export egyeztetés, értesítések, AdMob és natív HUHS API-admin futásidejű auditja.
+
+- A `build/app/outputs/bundle/release/app-release.aab` a kért versionCode 223-mal elkészült.
+- A +223 AAB a Play Console zárt teszt kiadásába feltöltve, 100%-os terjesztésre beállítva és felülvizsgálatra beküldve; a magyar change log bekerült.
+- A +223 AAB SHA-256 ellenőrzőösszege: `83F6940DE9285B3F029EF8B73ED4BABCFFF6E893B90531515ED97F6C1BBCF890`.
+- A Firestore-szabályok és az esemény-/meetup-pontozó Firebase-funkciók élesek; meetup-kapcsolat törlésekor a +15 pont visszavonódik.
+- A Label Billing kliens batch-lekérdezés után minden hiányzó product ID-t egyenként is lekérdez, az egyetlen ID-s release sem marad ki, és átmeneti Billing-hibánál is automatikus újrapróbálás fut.
+- A chatben a bekapcsolható achievement-megjelenítés a feltöltött jelvénygrafikát is mutatja a név mellett, egy sorban; a publikus achievement-lekérdezés UID szerint gyorsítótárazott.
+- A `getPublicAchievement` Firebase callable élesítve van. A Play-termék megjelenését az app nem hamisítja: csak a Billing által ténylegesen visszaadott termék vásárolható.
+
+### Következő build — ingyenes kiadvány Play-termék státuszának elrejtése
+
+- Az ingyenes kiadványokhoz nem tartozik Google Play Billing-termék; ezeknél ne jelenjen meg a „Play-termékazonosító nem érkezett meg” hiba vagy más Billing-várakozási státusz.
+- Az ingyenes kiadványok maradjanak elérhetők a saját WAV-/külső linkes feloldási útvonalukon, a fizetős release-ek Billing-kezelése változatlanul működjön.
+
+### Aktuális Play-build: +211 — zárt Alpha tesztbe felülvizsgálatra beküldve
+
+- A +211 AAB elkészült és a Play Console zárt Alpha csatornájába feltöltve, majd felülvizsgálatra beküldve.
+- A +211 tartalmazza a release-termékek friss WordPress-lekérdezését, a Billing-lekérdezés hiányzó termékekre és hibákra kezelhető újrapróbálását, valamint az achievement/jelvény mobilapp-felületét.
+- A change log a Play Console-ban rögzítve; a Play gyorsellenőrzése még folyamatban van.
+
+### Aktuális Play-build: +191 — zárt Alpha tesztbe felülvizsgálatra beküldve
+
+### Következő tervezett funkció — Achievement- és jelvényrendszer
+
+- A tulajdonos készíti és tölti fel a jelvénygrafikákat; automatikus vagy AI-jelvénygenerálás nem része a funkciónak.
+- Minden felhasználó 0 pontnál alapjelvényt kap; a magasabb rangok ne legyenek gyorsan kifarmolhatók.
+- A jelvénykatalógus WordPress-adminból kezelendő, a pontledger és az összesített felhasználói állapot Firebase-ben marad.
+- Pontot csak szerveroldali, idempotens művelet adhat; a kliens nem küldhet szabadon pontértéket vagy rangot.
+- A részletes terv a `docs/ACHIEVEMENTS_DESIGN_HU.md` fájlban van. A GYIK frissítése csak a végleges, működő implementáció után történjen.
+
+### Achievement-rendszer — jelenlegi állapot
+
+- A mobilapp saját és nyilvános profilnézetében megjelenik a pontszám és a szerver által adott jelvény; hiányzó adatoknál a 0 pontos „Kezdő ütem” alapállapot látszik.
+- A Firebase `hungarian-hardstyle` projektben élesítve vannak a részvétel-, Meetup-, hír-like- és profilkitöltés-pontozó triggerei.
+- A pontozás `achievement_ledger` idempotens bejegyzésekkel működik; a kliensoldali profilmentés nem írhat pontot vagy ledger-adatot.
+- A HUHS Mobile API-hoz elkészült a `build/huhs-mobile-api-achievements-20260829.zip` csomag, benne a HUHS Mobile → Achievementek adminoldallal, médiatár-választóval és a `/huhs/v1/achievements/badges` végponttal.
+- A jelvénygrafikákat a tulajdonos tölti fel; az app és a backend nem generál véletlenszerű vagy AI-jelvényt.
+- A pontforrások és jelvények FAQ-tervezete frissítve; az élő WordPress GYIK a csomag telepítése után ellenőrizendő.
+
+- A `build/app/outputs/bundle/release/app-release.aab` elkészült; a Play Console a tényleges versionCode 191-et elfogadta.
+- A +189 tartalmazza a hír-like javítását: saját like visszavehető, más user like-ja megmarad, nincs 4/5 darabos korlát.
+- A korábbi hír-like reakciódokumentumok törölve lettek, az új Firestore-szabályok élesítve.
+- A helyi ellenőrzések sikeresek: `flutter test` (39/39), `git diff --check`; az analyze csak egy korábbi, ettől független információs lintet jelez.
+- A +191 a Play Console zárt Alpha csatornájába feltöltve és felülvizsgálatra beküldve.
 - A Play gyorsellenőrzései még futnak; a Play „Közepes” optimalizálási mutatója feldolgozás után ellenőrizendő.
+- A +191 a +190 javításaira épülő új technikai versionCode; a kiadás a zárt Alpha csatornában gyorsellenőrzés alatt áll.
+- Az eseménybeküldés utáni admin-push javítva, élesítve és tulajdonosi teszttel visszaigazolva: a `submitWordPressContent` most a privát `private_user_data/{uid}` tokeneket is feloldja, nem csak a régi publikus mezőt.
 
-### Következő build: még nincs kijelölve
+### Lezárt Play-katalógus probléma — Freak release
 
-- AdMob: a főoldalon az események alatt, a Hírekben felül és a 4. hír után jelenjen meg a tartalomfolyamban, a kártyákat ne takarja.
-- AdMob: a meglévő consent-, betöltési és kontrollált újrapróbálási logika maradjon; a három elhelyezés görgetéskor se okozzon hibás duplikált kérést.
-- Privát chat káromkodásszűrés: magyar és angol gyakori alakok, ragozott formák, összetételek és alapvető leetspeak-változatok küldéskor és szerkesztéskor.
-- Hír-like: saját kedvelési állapot és stabil számláló tranzakciós mentéssel, hiányos régi reakcióadatok biztonságos kezelésével.
-- Chat és privát chat: a beviteli mező mondatkezdéskor és pont után automatikusan nagybetűvel kezdjen.
-- Közösség menü → Kedvencek leírása: a kedvenc hírek említése kikerült; a leírás a kedvenc DJ-ket és szervezőket jelzi.
-- A production App ID, Banner ID és Rewarded ID egyezését a release Gradle-ellenőrzés már kötelezően vizsgálja; felcserélés esetén a build leáll.
-- A banner érvényes rendelkezésre álló szélességből számolt anchored-adaptive méretet kér; 200 px alatti átmeneti layoutból nem küld hibás kérést.
-- Az UMP-consent, `canRequestAds()`, SDK-indítás és banner betöltési hibák diagnosztikája már nem nyelődik el; rövid, kontrollált újrapróbálás marad.
-- A jutalmazott reklám, Billing, Chat és egyéb működő útvonalakhoz nem nyúltunk.
-- Playből telepített +182 futásidejű ellenőrzés és a feldolgozás utáni Play-optimalizálási ellenőrzés még szükséges.
+- A WordPress release `12327` helyes árai: `radio_wav` 700 Ft, `radio_mp3_320` 550 Ft, `extended_wav` 700 Ft, `extended_mp3_320` 550 Ft.
+- A hiba oka bizonyítva: az egyedi termékeket a Function a `batchUpdate` végponton küldte, amely ezeknél HTTP 500 `backendError` választ adott.
+- A javított Function a dokumentált `monetization.onetimeproducts.patch` upsert végpontot használja `allowMissing=true` mellett; deploy után a Freak megvásárolható termékei létrejöttek.
+- A `2025/03` régióverzió, a determinisztikus product-ID-k és a WordPress-ID-visszaírási folyamat megmaradt; ezt a működő megoldást nem szabad visszacserélni per-product `batchUpdate`-re.
+- A 700/550 Ft célárakat minden új release-nél Play-visszaolvasással kell ellenőrizni; a WordPressben tárolt ár önmagában nem bizonyítja a magyar vevői végösszeget.
+
+### Label Billing kliensvédelme — jövőbeli release-ek
+
+- A Play-katalógusban létrejött új termékek rövid ideig részlegesen vagy üresen érkezhetnek vissza a Billing-lekérdezésből; ezt a kliens nem tekintheti azonnal végleges „nem érhető el” állapotnak.
+- A `LabelPurchaseService.loadProducts` öt, fokozatosan hosszabbodó tömbös lekérdezést végez, majd a hiányzó ID-ket egyenként is lekéri; a már megtalált termékeket mindig megtartja.
+- A 12353-as release négy terméke a javított szinkron után 700/550/700/550 áron `status: ok` eredménnyel szinkronizálódott, ezért ezt a Play- és WordPress-oldali szerződést minden jövőbeli release-nél meg kell őrizni.
+
+### Következő build: még nincs kijelölve; nyitott pontok
+
+- Play Console „Közepes” optimalizálási mutató kivizsgálása az új AAB feldolgozása után.
+- A +190-ben a „bazd meget” és „baszd meget” alakok szűrése célzottan javítva, teszttel lefedve.
+- A push-tokenek új verzióban a `private_user_data/{uid}` dokumentumba kerülnek; a szabályok és a két push Cloud Function élesítve. A régi profil-tokenek átmeneti fallbackként megmaradtak.
+- Az igazoltan nem használt `cupertino_icons` közvetlen függőség eltávolítva; működő funkcióhoz nem nyúlt.
+- Működő AdMob-, like-, chat- és egyéb útvonalakhoz nem szabad hozzányúlni, kivéve ha a célzott javítás bizonyíthatóan szükségessé teszi.
+- A +189 Playből telepített futásidejű ellenőrzése megtörtént; a mutató ellenőrzése továbbra is nyitott.
 - AdMob-audit: az éles alkalmazás 613 kérést és 63 megjelenést mutat (13,87% egyezési arány), tehát a kérések eljutnak az AdMobhoz; az AdMob-fiókban kifizetési ellenőrzési figyelmeztetés és „Véleményezést igényel” állapot látszik. Az Irányelvközpont nem jelez hirdetéskorlátozást.
 
 ### +174 — Play-optimalizálás biztonságos javítása
@@ -1284,6 +1344,7 @@ Product decisions confirmed by the user:
 - v1.0 focuses on purchase/store work and remaining Android public-release quality. Apple account sign-in and iOS remain deferred until an Apple Developer Program membership is available.
 - Label purchase verification uses the Firebase `verifyLabelPurchase` callable and Google Play Developer API. The `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` value is a Firebase Secret Manager secret only; never commit it or expose it to Flutter. Product IDs remain WordPress release metadata.
 - Label Play-product synchronization is implemented through the Firebase `syncWordPressLabelProducts` scheduled function (every five minutes) and the admin-only `syncLabelProducts` callable. It reads visible, audio-ready WordPress releases, creates or updates the four configured Hungarian one-time products at the WordPress editor prices, activates their purchase option, and writes the deterministic product IDs back through the authenticated WordPress API. The 128 kbps rewarded-ad derivative is intentionally not a Play product. WordPress API `2.4.48` contains the protected metadata update route; the route and both current audio-ready releases are live-verified. After the Play service account was granted Admin access, the scheduled sync no longer reports the earlier 403 permission failures.
+- Critical Play catalog fixes (2026-08-28): the individual one-time-product upsert must use `monetization.onetimeproducts.patch` with `allowMissing=true`, not the previous per-product `batchUpdate` route. In the Node `googleapis` client, the required REST query field must be passed as the flattened `'regionsVersion.version'` parameter; passing `{ regionsVersion: { version: '2025/03' } }` serializes to `regionsVersion[version]` and causes HTTP 400 `INVALID_ARGUMENT`. The previous route also returned HTTP 500 `backendError` for both existing-product updates and new-product creation. After deploying the flattened PATCH parameter, release 12353 (Denoiser - Can't Stop Me) produced four `status: 'ok'` items at 700/550/700/550 HUF and completed the WordPress product-ID writeback. Do not regress this back to per-product `batchUpdate` or object-form `regionsVersion`; preserve the four deterministic product IDs and verify Play readback before WordPress ID writeback.
 - Current 1.0 live status (2026-08-13): all four Play Billing products for releases 12123 and 12185 are active in Hungary with the requested 700/550 HUF base prices. The `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret is enabled, the Play service account has Admin access, `verifyLabelPurchase`/`getLabelDownloadUrl`/`admobRewardedSsv` and the scheduled product synchronizer are deployed, and production AdMob Banner/Rewarded units plus the SSV callback are configured. The final signed ARM64 APK and AAB for v1.0.0+9 were rebuilt and verified; the remaining gate is the project owner's final phone smoke test of that exact artifact.
 - Follow-up tasks for the next Android update: investigate the still-failing production AdMob flow on the Play-installed build and fix ordinary e-mail/password registration verification. Optional Google Authenticator MFA, Android PIN/password/pattern protection, independent Settings toggles, session-level authentication, and the Google-sign-in exclusion are complete. Do not remove the existing biometric flow.
 - The e-mail-verification task must include a Firebase-side delivery/template/log audit and an app-side verified-state refresh plus visible resend flow; the current source calls `sendEmailVerification`, but ordinary e-mail registration was reported as not working end to end.

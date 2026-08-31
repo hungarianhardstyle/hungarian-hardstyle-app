@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/artist.dart';
 import '../models/event.dart';
@@ -68,39 +71,319 @@ class PostsPage {
   });
 }
 
+class _PostsCacheEntry {
+  const _PostsCacheEntry(this.value, this.expiresAt);
+
+  final PostsPage value;
+  final DateTime expiresAt;
+}
+
+class _ReleasesCacheEntry {
+  const _ReleasesCacheEntry(this.value, this.expiresAt);
+
+  final List<HuhsRelease> value;
+  final DateTime expiresAt;
+}
+
+class _TimedCacheEntry<T> {
+  const _TimedCacheEntry(this.value, this.expiresAt);
+
+  final T value;
+  final DateTime expiresAt;
+}
+
 class WordpressService {
+  static final WordpressService instance = WordpressService._internal();
+
+  factory WordpressService() => instance;
+
+  WordpressService._internal();
+
   static const _cloudinaryCloudName = 'fjxo93em';
   static const _cloudinaryUploadPreset = 'Hun_hs_Mobile';
   static const _maxUploadBytes = 5 * 1024 * 1024;
   static const _allowedImageExtensions = {'jpg', 'jpeg', 'png', 'webp'};
 
-  final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: 'https://hungarianhardstyle.hu/wp-json/huhs/v1',
-      connectTimeout: const Duration(seconds: 20),
-      receiveTimeout: const Duration(seconds: 20),
-      responseType: ResponseType.json,
-    ),
-  );
+  final Dio _dio =
+      Dio(
+          BaseOptions(
+            baseUrl: 'https://hungarianhardstyle.hu/wp-json/huhs/v1',
+            connectTimeout: const Duration(seconds: 20),
+            receiveTimeout: const Duration(seconds: 20),
+            responseType: ResponseType.json,
+          ),
+        )
+        ..interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              if (kDebugMode) {
+                options.extra['_huhsStartedAt'] = Stopwatch()..start();
+              }
+              handler.next(options);
+            },
+            onResponse: (response, handler) {
+              _logApiTiming(
+                response.requestOptions,
+                response.statusCode,
+                response.data,
+              );
+              handler.next(response);
+            },
+            onError: (error, handler) {
+              _logApiTiming(
+                error.requestOptions,
+                error.response?.statusCode,
+                error.response?.data,
+              );
+              handler.next(error);
+            },
+          ),
+        );
+
+  static void _logApiTiming(
+    RequestOptions options,
+    int? statusCode,
+    Object? data,
+  ) {
+    if (!kDebugMode) return;
+    final stopwatch = options.extra['_huhsStartedAt'];
+    if (stopwatch is Stopwatch) stopwatch.stop();
+    final elapsedMs = stopwatch is Stopwatch
+        ? stopwatch.elapsedMilliseconds
+        : -1;
+    var bytes = 0;
+    if (data != null) {
+      try {
+        bytes = utf8.encode(jsonEncode(data)).length;
+      } catch (_) {
+        bytes = -1;
+      }
+    }
+    debugPrint(
+      '[HUHS API] ${options.method} ${options.path} '
+      '${statusCode ?? 'error'} ${elapsedMs}ms ${bytes}B',
+    );
+  }
+
+  static const _listCacheDuration = Duration(seconds: 30);
+  final Map<String, _PostsCacheEntry> _postsCache = {};
+  final Map<String, Future<PostsPage>> _postsInFlight = {};
+  final Map<String, _ReleasesCacheEntry> _releasesCache = {};
+  final Map<String, Future<List<HuhsRelease>>> _releasesInFlight = {};
+  final Map<String, _TimedCacheEntry<List<HuhsEvent>>> _eventsCache = {};
+  final Map<String, Future<List<HuhsEvent>>> _eventsInFlight = {};
+  final Map<String, _TimedCacheEntry<List<FaqItem>>> _faqCache = {};
+  final Map<String, Future<List<FaqItem>>> _faqInFlight = {};
+  final Map<String, _TimedCacheEntry<ArtistsPage>> _artistsCache = {};
+  final Map<String, Future<ArtistsPage>> _artistsInFlight = {};
+  final Map<int, _TimedCacheEntry<Artist>> _artistCache = {};
+  final Map<int, Future<Artist>> _artistInFlight = {};
+  final Map<String, _TimedCacheEntry<OrganizersPage>> _organizersCache = {};
+  final Map<String, Future<OrganizersPage>> _organizersInFlight = {};
+  final Map<int, _TimedCacheEntry<OrganizerProfile>> _organizerCache = {};
+  final Map<int, Future<OrganizerProfile>> _organizerInFlight = {};
+  final Map<int, _TimedCacheEntry<HuhsRelease>> _releaseDetailCache = {};
+  final Map<int, Future<HuhsRelease>> _releaseDetailInFlight = {};
+
+  static const _persistentCacheTtl = Duration(minutes: 5);
+  Future<SharedPreferences>? _preferencesFuture;
+  final Map<String, _TimedCacheEntry<Object?>> _persistentJsonCache = {};
+
+  Future<SharedPreferences> _preferences() {
+    return _preferencesFuture ??= SharedPreferences.getInstance();
+  }
+
+  Future<Object?> _readPersistentJson(String key) async {
+    final now = DateTime.now();
+    final memory = _persistentJsonCache[key];
+    if (memory != null && memory.expiresAt.isAfter(now)) return memory.value;
+
+    final preferences = await _preferences();
+    final savedAt = preferences.getInt('$key.savedAt');
+    final payload = preferences.getString(key);
+    if (savedAt == null || payload == null) return null;
+    final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+      savedAt,
+    ).add(_persistentCacheTtl);
+    if (!expiresAt.isAfter(now)) {
+      _persistentJsonCache.remove(key);
+      return null;
+    }
+    try {
+      final value = jsonDecode(payload);
+      _persistentJsonCache[key] = _TimedCacheEntry(value, expiresAt);
+      return value;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _writePersistentJson(String key, Object value) async {
+    final now = DateTime.now();
+    _persistentJsonCache[key] = _TimedCacheEntry(
+      value,
+      now.add(_persistentCacheTtl),
+    );
+    final preferences = await _preferences();
+    await preferences.setString(key, jsonEncode(value));
+    await preferences.setInt('$key.savedAt', now.millisecondsSinceEpoch);
+  }
+
+  Future<void> _removePersistentJson(String key) async {
+    _persistentJsonCache.remove(key);
+    final preferences = await _preferences();
+    await preferences.remove(key);
+    await preferences.remove('$key.savedAt');
+  }
+
+  /// Clears only public WordPress API caches; user purchases and preferences
+  /// stay untouched.
+  Future<void> clearPublicCache() async {
+    _postsCache.clear();
+    _releasesCache.clear();
+    _eventsCache.clear();
+    _faqCache.clear();
+    _artistsCache.clear();
+    _artistCache.clear();
+    _organizersCache.clear();
+    _organizerCache.clear();
+    _releaseDetailCache.clear();
+    _releaseDetailInFlight.clear();
+    _persistentJsonCache.clear();
+
+    final preferences = await _preferences();
+    final keys = preferences
+        .getKeys()
+        .where((key) => key.startsWith('huhs.wp.'))
+        .toList(growable: false);
+    for (final key in keys) {
+      await preferences.remove(key);
+    }
+  }
+
+  Future<T> _cached<T>({
+    required String key,
+    required Duration ttl,
+    required Map<String, _TimedCacheEntry<T>> cache,
+    required Map<String, Future<T>> inFlight,
+    required Future<T> Function() loader,
+  }) async {
+    final now = DateTime.now();
+    final existingValue = cache[key];
+    if (existingValue != null && existingValue.expiresAt.isAfter(now)) {
+      return existingValue.value;
+    }
+    final existingRequest = inFlight[key];
+    if (existingRequest != null) return existingRequest;
+
+    final request = loader();
+    inFlight[key] = request;
+    try {
+      final value = await request;
+      cache[key] = _TimedCacheEntry(value, DateTime.now().add(ttl));
+      return value;
+    } finally {
+      if (identical(inFlight[key], request)) inFlight.remove(key);
+    }
+  }
+
+  Future<T> _cachedById<T>({
+    required int key,
+    required Duration ttl,
+    required Map<int, _TimedCacheEntry<T>> cache,
+    required Map<int, Future<T>> inFlight,
+    required Future<T> Function() loader,
+  }) async {
+    final now = DateTime.now();
+    final existingValue = cache[key];
+    if (existingValue != null && existingValue.expiresAt.isAfter(now)) {
+      return existingValue.value;
+    }
+    final existingRequest = inFlight[key];
+    if (existingRequest != null) return existingRequest;
+
+    final request = loader();
+    inFlight[key] = request;
+    try {
+      final value = await request;
+      cache[key] = _TimedCacheEntry(value, DateTime.now().add(ttl));
+      return value;
+    } finally {
+      if (identical(inFlight[key], request)) inFlight.remove(key);
+    }
+  }
+
+  void clearReleasesCache({String search = '', int artistId = 0}) {
+    final cacheKey = '${search.trim()}|$artistId';
+    _releasesCache.remove(cacheKey);
+    unawaited(_removePersistentJson('huhs.wp.releases.$cacheKey'));
+  }
 
   Future<PostsPage> getPosts({
     int page = 1,
     int perPage = 10,
     String search = '',
     int categoryId = 0,
+    bool forceRefresh = false,
+  }) async {
+    final key = '$page|$perPage|${search.trim()}|$categoryId';
+    final now = DateTime.now();
+    final cached = _postsCache[key];
+    if (!forceRefresh && cached != null && cached.expiresAt.isAfter(now)) {
+      return cached.value;
+    }
+    final existing = _postsInFlight[key];
+    if (existing != null) return existing;
+
+    final request = _fetchPosts(
+      page: page,
+      perPage: perPage,
+      search: search,
+      categoryId: categoryId,
+      allowPersistentCache: !forceRefresh,
+    );
+    _postsInFlight[key] = request;
+    try {
+      final value = await request;
+      _postsCache[key] = _PostsCacheEntry(
+        value,
+        DateTime.now().add(_listCacheDuration),
+      );
+      return value;
+    } finally {
+      if (identical(_postsInFlight[key], request)) {
+        _postsInFlight.remove(key);
+      }
+    }
+  }
+
+  Future<PostsPage> _fetchPosts({
+    int page = 1,
+    int perPage = 10,
+    String search = '',
+    int categoryId = 0,
+    bool allowPersistentCache = true,
   }) async {
     try {
-      final response = await _dio.get(
-        '/posts',
-        queryParameters: {
-          'page': page,
-          'per_page': perPage,
-          if (search.trim().isNotEmpty) 'search': search.trim(),
-          if (categoryId > 0) 'category': categoryId,
-        },
-      );
-
-      final data = response.data;
+      final persistentKey =
+          'huhs.wp.posts.$page.$perPage.${search.trim()}.$categoryId';
+      Object? data = allowPersistentCache
+          ? await _readPersistentJson(persistentKey)
+          : null;
+      if (data == null) {
+        final response = await _dio.get(
+          '/posts',
+          queryParameters: {
+            'page': page,
+            'per_page': perPage,
+            'summary': true,
+            if (search.trim().isNotEmpty) 'search': search.trim(),
+            if (categoryId > 0) 'category': categoryId,
+          },
+        );
+        data = response.data;
+        unawaited(_writePersistentJson(persistentKey, data!));
+      }
 
       if (data is List<dynamic>) {
         final rawPosts = data.whereType<Map<String, dynamic>>().toList();
@@ -171,31 +454,70 @@ class WordpressService {
   }
 
   Future<List<FaqItem>> getFaq() async {
+    return _cached<List<FaqItem>>(
+      key: 'faq',
+      ttl: const Duration(minutes: 10),
+      cache: _faqCache,
+      inFlight: _faqInFlight,
+      loader: _fetchFaq,
+    );
+  }
+
+  Future<List<FaqItem>> _fetchFaq() async {
     try {
+      final persistent = await _readPersistentJson('huhs.wp.faq');
+      if (persistent is List) {
+        return persistent
+            .whereType<Map<String, dynamic>>()
+            .map(FaqItem.fromJson)
+            .where((item) => item.question.trim().isNotEmpty)
+            .toList(growable: false);
+      }
       final response = await _dio.get('/faq');
       final data = response.data;
       final raw = data is List<dynamic>
           ? data
           : (data is Map<String, dynamic> ? data['items'] : null);
       if (raw is! List<dynamic>) return const [];
-      return raw
+      final result = raw
           .whereType<Map<String, dynamic>>()
           .map(FaqItem.fromJson)
           .where((item) => item.question.trim().isNotEmpty)
           .toList(growable: false);
+      unawaited(_writePersistentJson('huhs.wp.faq', raw));
+      return result;
     } on DioException catch (e) {
       throw Exception(_readApiError(e, 'Nem sikerült betölteni a GYIK-et.'));
     }
   }
 
   Future<Post> getPost(int postId) async {
-    final response = await _dio.get('/posts/$postId');
-    final data = response.data;
+    final key = 'huhs.wp.post.$postId';
+    final cached = await _readPersistentJson(key);
+    final data = cached ?? (await _dio.get('/posts/$postId')).data;
+    if (cached == null) unawaited(_writePersistentJson(key, data));
     if (data is Map<String, dynamic>) {
       final hydrated = await _hydratePostTags([data]);
       return Post.fromJson(hydrated.first);
     }
     throw const FormatException('Hibás hír válasz.');
+  }
+
+  /// Registers a native-app article open in the WordPress view counter.
+  ///
+  /// This is deliberately best-effort: a missing/temporarily unavailable
+  /// counter must never prevent the article from being displayed.
+  Future<bool> recordPostView(int postId) async {
+    if (postId <= 0) return false;
+
+    try {
+      final response = await _dio.post('/posts/$postId/view');
+      return response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300;
+    } on DioException {
+      return false;
+    }
   }
 
   Future<List<Map<String, dynamic>>> _hydratePostTags(
@@ -269,10 +591,37 @@ class WordpressService {
   }
 
   Future<List<HuhsEvent>> getEvents({bool includePast = false}) async {
+    final key = includePast ? 'past' : 'upcoming';
+    return _cached<List<HuhsEvent>>(
+      key: key,
+      ttl: const Duration(seconds: 45),
+      cache: _eventsCache,
+      inFlight: _eventsInFlight,
+      loader: () => _fetchEvents(includePast: includePast),
+    );
+  }
+
+  Future<List<HuhsEvent>> _fetchEvents({required bool includePast}) async {
     try {
+      final persistentKey = includePast
+          ? 'huhs.wp.events.past'
+          : 'huhs.wp.events.upcoming';
+      final persistent = await _readPersistentJson(persistentKey);
+      if (persistent is List) {
+        final events = persistent
+            .whereType<Map<String, dynamic>>()
+            .map(HuhsEvent.fromJson)
+            .toList(growable: false);
+        return includePast
+            ? events
+            : events.where((event) => !event.isPast).toList(growable: false);
+      }
       final response = await _dio.get<String>(
         '/events',
-        queryParameters: includePast ? const {'include_past': true} : null,
+        queryParameters: {
+          if (includePast) 'include_past': true,
+          'summary': true,
+        },
         options: Options(responseType: ResponseType.plain),
       );
       final data = _decodePossiblyPrefixedJson(response.data ?? '');
@@ -281,6 +630,7 @@ class WordpressService {
         final events = data
             .map((json) => HuhsEvent.fromJson(json as Map<String, dynamic>))
             .toList();
+        unawaited(_writePersistentJson(persistentKey, data));
         return includePast
             ? events
             : events.where((event) => !event.isPast).toList();
@@ -292,6 +642,7 @@ class WordpressService {
         final events = items
             .map((json) => HuhsEvent.fromJson(json as Map<String, dynamic>))
             .toList();
+        unawaited(_writePersistentJson(persistentKey, items));
         return includePast
             ? events
             : events.where((event) => !event.isPast).toList();
@@ -307,18 +658,56 @@ class WordpressService {
     }
   }
 
+  Future<HuhsEvent> getEvent(int eventId) async {
+    final response = await _dio.get('/events/$eventId');
+    final data = response.data;
+    if (data is Map<String, dynamic>) return HuhsEvent.fromJson(data);
+    throw const FormatException('Hibás esemény-adatlap válasz.');
+  }
+
   Future<ArtistsPage> getArtists({
     String search = '',
     String category = '',
     int page = 1,
     int perPage = 50,
   }) async {
+    final key =
+        '$page|$perPage|${search.trim().toLowerCase()}|${category.trim().toLowerCase()}';
+    return _cached<ArtistsPage>(
+      key: key,
+      ttl: const Duration(minutes: 10),
+      cache: _artistsCache,
+      inFlight: _artistsInFlight,
+      loader: () => _fetchArtists(
+        search: search,
+        category: category,
+        page: page,
+        perPage: perPage,
+      ),
+    );
+  }
+
+  Future<ArtistsPage> _fetchArtists({
+    String search = '',
+    String category = '',
+    int page = 1,
+    int perPage = 50,
+  }) async {
     try {
+      final canUsePersistentCache =
+          page == 1 && perPage == 50 && search == '' && category == '';
+      if (canUsePersistentCache) {
+        final persistent = await _readPersistentJson('huhs.wp.artists');
+        if (persistent is Map<String, dynamic>) {
+          return ArtistsPage.fromJson(persistent);
+        }
+      }
       final response = await _dio.get(
         '/artists',
         queryParameters: {
           'page': page,
           'per_page': perPage,
+          'summary': true,
           if (search.trim().isNotEmpty) 'search': search.trim(),
           if (category.trim().isNotEmpty) 'category': category.trim(),
         },
@@ -326,6 +715,9 @@ class WordpressService {
       final data = response.data;
 
       if (data is Map<String, dynamic>) {
+        if (canUsePersistentCache) {
+          unawaited(_writePersistentJson('huhs.wp.artists', data));
+        }
         return ArtistsPage.fromJson(data);
       }
 
@@ -350,11 +742,23 @@ class WordpressService {
   }
 
   Future<Artist> getArtist(int artistId) async {
+    return _cachedById<Artist>(
+      key: artistId,
+      ttl: const Duration(minutes: 10),
+      cache: _artistCache,
+      inFlight: _artistInFlight,
+      loader: () => _fetchArtist(artistId),
+    );
+  }
+
+  Future<Artist> _fetchArtist(int artistId) async {
     try {
-      final response = await _dio.get('/artists/$artistId');
-      final data = response.data;
+      final key = 'huhs.wp.artist.$artistId';
+      final cached = await _readPersistentJson(key);
+      final data = cached ?? (await _dio.get('/artists/$artistId')).data;
 
       if (data is Map<String, dynamic>) {
+        if (cached == null) unawaited(_writePersistentJson(key, data));
         return Artist.fromJson(data);
       }
 
@@ -373,18 +777,45 @@ class WordpressService {
     int page = 1,
     int perPage = 50,
   }) async {
+    final key = '$page|$perPage|${search.trim().toLowerCase()}';
+    return _cached<OrganizersPage>(
+      key: key,
+      ttl: const Duration(minutes: 10),
+      cache: _organizersCache,
+      inFlight: _organizersInFlight,
+      loader: () =>
+          _fetchOrganizers(search: search, page: page, perPage: perPage),
+    );
+  }
+
+  Future<OrganizersPage> _fetchOrganizers({
+    String search = '',
+    int page = 1,
+    int perPage = 50,
+  }) async {
     try {
+      final canUsePersistentCache = page == 1 && perPage == 50 && search == '';
+      if (canUsePersistentCache) {
+        final persistent = await _readPersistentJson('huhs.wp.organizers');
+        if (persistent is Map<String, dynamic>) {
+          return OrganizersPage.fromJson(persistent);
+        }
+      }
       final response = await _dio.get(
         '/organizers',
         queryParameters: {
           'page': page,
           'per_page': perPage,
+          'summary': true,
           if (search.trim().isNotEmpty) 'search': search.trim(),
         },
       );
       final data = response.data;
 
       if (data is Map<String, dynamic>) {
+        if (canUsePersistentCache) {
+          unawaited(_writePersistentJson('huhs.wp.organizers', data));
+        }
         return OrganizersPage.fromJson(data);
       }
 
@@ -411,11 +842,23 @@ class WordpressService {
   }
 
   Future<OrganizerProfile> getOrganizer(int organizerId) async {
+    return _cachedById<OrganizerProfile>(
+      key: organizerId,
+      ttl: const Duration(minutes: 10),
+      cache: _organizerCache,
+      inFlight: _organizerInFlight,
+      loader: () => _fetchOrganizer(organizerId),
+    );
+  }
+
+  Future<OrganizerProfile> _fetchOrganizer(int organizerId) async {
     try {
-      final response = await _dio.get('/organizers/$organizerId');
-      final data = response.data;
+      final key = 'huhs.wp.organizer.$organizerId';
+      final cached = await _readPersistentJson(key);
+      final data = cached ?? (await _dio.get('/organizers/$organizerId')).data;
 
       if (data is Map<String, dynamic>) {
+        if (cached == null) unawaited(_writePersistentJson(key, data));
         return OrganizerProfile.fromJson(data);
       }
 
@@ -432,11 +875,88 @@ class WordpressService {
   Future<List<HuhsRelease>> getReleases({
     String search = '',
     int artistId = 0,
+    bool forceRefresh = false,
+  }) async {
+    final key = '${search.trim()}|$artistId';
+    final now = DateTime.now();
+    final cached = _releasesCache[key];
+    if (!forceRefresh && cached != null && cached.expiresAt.isAfter(now)) {
+      return cached.value;
+    }
+    final existing = _releasesInFlight[key];
+    if (existing != null) return existing;
+
+    final request = _fetchReleases(
+      search: search,
+      artistId: artistId,
+      allowPersistentCache: !forceRefresh,
+    );
+    _releasesInFlight[key] = request;
+    try {
+      final value = await request;
+      _releasesCache[key] = _ReleasesCacheEntry(
+        value,
+        DateTime.now().add(_listCacheDuration),
+      );
+      return value;
+    } finally {
+      if (identical(_releasesInFlight[key], request)) {
+        _releasesInFlight.remove(key);
+      }
+    }
+  }
+
+  Future<HuhsRelease> getRelease(int releaseId) async {
+    return _cachedById<HuhsRelease>(
+      key: releaseId,
+      ttl: const Duration(minutes: 5),
+      cache: _releaseDetailCache,
+      inFlight: _releaseDetailInFlight,
+      loader: () async {
+        // The live HUHS API exposes the complete release records through the
+        // collection endpoint. There is no reliable /releases/{id} route;
+        // calling it makes the detail screen fall back to the summary item,
+        // which intentionally has no versions or free download metadata.
+        final response = await _dio.get('/releases');
+        final data = response.data;
+        final values = data is List
+            ? data
+            : data is Map<String, dynamic>
+            ? data['items']
+            : null;
+        if (values is List) {
+          for (final value in values) {
+            if (value is Map<String, dynamic> &&
+                _readInt(value['id']) == releaseId) {
+              return HuhsRelease.fromJson(value);
+            }
+          }
+        }
+        throw const FormatException('Hibás release-adatlap válasz.');
+      },
+    );
+  }
+
+  Future<List<HuhsRelease>> _fetchReleases({
+    String search = '',
+    int artistId = 0,
+    bool allowPersistentCache = false,
   }) async {
     try {
+      final persistentKey = 'huhs.wp.releases.${search.trim()}.$artistId';
+      if (allowPersistentCache) {
+        final cached = await _readPersistentJson(persistentKey);
+        if (cached is List) {
+          return cached
+              .whereType<Map<String, dynamic>>()
+              .map(HuhsRelease.fromJson)
+              .toList(growable: false);
+        }
+      }
       final response = await _dio.get(
         '/releases',
         queryParameters: {
+          'summary': true,
           if (search.trim().isNotEmpty) 'search': search.trim(),
           if (artistId > 0) 'artist': artistId,
         },
@@ -448,10 +968,12 @@ class WordpressService {
           ? data['items']
           : null;
       if (values is! List) return const [];
-      return values
+      final releases = values
           .whereType<Map<String, dynamic>>()
           .map(HuhsRelease.fromJson)
           .toList(growable: false);
+      unawaited(_writePersistentJson(persistentKey, values));
+      return releases;
     } on DioException catch (e) {
       throw Exception(
         _readApiError(e, 'Nem sikerült betölteni a release-eket.'),
@@ -654,16 +1176,20 @@ class WordpressService {
 
   Future<List<NewsCategory>> getCategories() async {
     try {
-      final response = await _dio.get(
-        'https://hungarianhardstyle.hu/wp-json/wp/v2/categories',
-        queryParameters: {
-          'per_page': 100,
-          'hide_empty': true,
-          '_fields': 'id,name,slug,count',
-        },
-      );
-
-      final data = response.data as List<dynamic>;
+      const key = 'huhs.wp.categories';
+      final cached = await _readPersistentJson(key);
+      final data = cached is List
+          ? cached
+          : (await _dio.get(
+                  'https://hungarianhardstyle.hu/wp-json/wp/v2/categories',
+                  queryParameters: {
+                    'per_page': 100,
+                    'hide_empty': true,
+                    '_fields': 'id,name,slug,count',
+                  },
+                )).data
+                as List<dynamic>;
+      if (cached == null) unawaited(_writePersistentJson(key, data));
 
       return data
           .map((json) => NewsCategory.fromJson(json as Map<String, dynamic>))

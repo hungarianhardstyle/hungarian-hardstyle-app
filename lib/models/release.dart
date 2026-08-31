@@ -65,6 +65,17 @@ class HuhsRelease {
     required this.freeExternalLink,
   });
 
+  /// A free release only has a downloadable WAV when the API reports an
+  /// available audio version. A free external link is independent from this.
+  bool get hasFreeWav =>
+      isFree &&
+      versions.any(
+        (version) =>
+            version.type == 'radio' ||
+            version.type == 'free_wav' ||
+            version.type == 'wav',
+      );
+
   factory HuhsRelease.fromJson(Map<String, dynamic> json) {
     final artistValues = json['artists'];
     final trackValues = json['tracks'];
@@ -124,6 +135,24 @@ class HuhsRelease {
       ),
     );
   }
+}
+
+/// Returns releases in descending publication-date order.
+///
+/// Releases without a valid date stay at the end, while preserving their
+/// original order. This keeps the paid and free Label lists consistent.
+List<HuhsRelease> sortReleasesByReleaseDate(Iterable<HuhsRelease> releases) {
+  final indexed = releases.toList().asMap().entries.toList();
+  indexed.sort((a, b) {
+    final aDate = DateTime.tryParse(a.value.releaseDate.trim());
+    final bDate = DateTime.tryParse(b.value.releaseDate.trim());
+    if (aDate == null && bDate == null) return a.key.compareTo(b.key);
+    if (aDate == null) return 1;
+    if (bDate == null) return -1;
+    final dateOrder = bDate.compareTo(aDate);
+    return dateOrder == 0 ? a.key.compareTo(b.key) : dateOrder;
+  });
+  return indexed.map((entry) => entry.value).toList(growable: false);
 }
 
 class ReleaseProduct {

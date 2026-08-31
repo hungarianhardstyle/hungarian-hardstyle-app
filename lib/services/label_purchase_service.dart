@@ -1,21 +1,31 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/widgets.dart';
 
 import '../providers/ads_provider.dart';
 
-class LabelPurchaseService {
+class LabelPurchaseService with WidgetsBindingObserver {
+  static final LabelPurchaseService shared = LabelPurchaseService();
+  static final Map<String, ProductDetails> _catalogCache = {};
+
   LabelPurchaseService({InAppPurchase? store})
-    : _store = store ?? InAppPurchase.instance;
+    : _store = store ?? InAppPurchase.instance {
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   final InAppPurchase _store;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   final _updates = StreamController<PurchaseDetails>.broadcast();
+  final Map<String, PurchaseDetails> _pendingUpdates =
+      <String, PurchaseDetails>{};
+  final Map<String, Future<bool>> _completionAttempts =
+      <String, Future<bool>>{};
+  final Map<String, Timer> _completionRetryTimers = <String, Timer>{};
   final Set<String> _completedPurchases = <String>{};
   RewardedAd? _preloadedRewarded;
   String? _preloadedRewardedUnitId;
@@ -25,37 +35,169 @@ class LabelPurchaseService {
   bool lastStoreAvailable = false;
   Set<String> lastNotFoundProductIds = const {};
   String? lastProductQueryError;
+  Set<String> lastProductQueryIds = const {};
+  final Set<String> _backgroundProductIds = <String>{};
+  Timer? _backgroundRetryTimer;
+  bool _backgroundSyncRunning = false;
+  int _backgroundRetryAttempts = 0;
+  Future<void>? _restoreInFlight;
 
-  Stream<PurchaseDetails> get purchaseUpdates => _updates.stream;
+  Stream<PurchaseDetails> get purchaseUpdates async* {
+    for (final purchase in _pendingUpdates.values.toList(growable: false)) {
+      yield purchase;
+    }
+    yield* _updates.stream;
+  }
+
+  /// Warms the Play catalog independently from any release detail screen.
+  /// Newly-created products can take time to propagate; keeping their IDs
+  /// here means navigating away does not stop the retry loop.
+  void registerProductIds(Iterable<String> productIds) {
+    final ids = productIds.map((id) => id.trim()).where((id) => id.isNotEmpty);
+    final before = _backgroundProductIds.length;
+    _backgroundProductIds.addAll(ids);
+    if (_backgroundProductIds.length == before &&
+        (_backgroundRetryTimer != null || _backgroundSyncRunning)) {
+      return;
+    }
+    _backgroundRetryAttempts = 0;
+    _backgroundRetryTimer?.cancel();
+    _backgroundRetryTimer = Timer(Duration.zero, () {
+      _backgroundRetryTimer = null;
+      unawaited(_syncBackgroundProducts());
+    });
+  }
+
+  Future<void> _syncBackgroundProducts() async {
+    if (_backgroundSyncRunning || _backgroundProductIds.isEmpty) return;
+    _backgroundSyncRunning = true;
+    try {
+      final ids = Set<String>.from(_backgroundProductIds);
+      final products = await loadProducts(ids);
+      _backgroundProductIds.removeAll(products.map((product) => product.id));
+      if (_backgroundProductIds.isNotEmpty) _scheduleBackgroundRetry();
+    } catch (_) {
+      _scheduleBackgroundRetry();
+    } finally {
+      _backgroundSyncRunning = false;
+    }
+  }
+
+  void _scheduleBackgroundRetry() {
+    if (_backgroundRetryTimer != null || _backgroundProductIds.isEmpty) return;
+    const delays = [
+      Duration(seconds: 5),
+      Duration(seconds: 15),
+      Duration(seconds: 30),
+      Duration(minutes: 1),
+      Duration(minutes: 2),
+      Duration(minutes: 5),
+    ];
+    final delay = delays[_backgroundRetryAttempts.clamp(0, delays.length - 1)];
+    _backgroundRetryAttempts++;
+    _backgroundRetryTimer = Timer(delay, () {
+      _backgroundRetryTimer = null;
+      unawaited(_syncBackgroundProducts());
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed ||
+        _backgroundProductIds.isEmpty ||
+        _backgroundSyncRunning) {
+      return;
+    }
+    _backgroundRetryTimer?.cancel();
+    _backgroundRetryTimer = Timer(Duration.zero, () {
+      _backgroundRetryTimer = null;
+      unawaited(_syncBackgroundProducts());
+    });
+  }
 
   Future<List<ProductDetails>> loadProducts(Iterable<String> productIds) async {
     final available = await _store.isAvailable();
     lastStoreAvailable = available;
     lastNotFoundProductIds = const {};
     lastProductQueryError = null;
+    lastProductQueryIds = productIds.toSet();
     if (!available) return const [];
-    final ids = productIds.toSet();
-    ProductDetailsResponse? response;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      response = await _store.queryProductDetails(ids);
-      if (response.error == null && response.productDetails.isNotEmpty) break;
-      if (attempt < 2) {
+    final ids = lastProductQueryIds;
+    if (ids.isEmpty) return const [];
+
+    final found = <String, ProductDetails>{
+      for (final id in ids)
+        if (_catalogCache.containsKey(id)) id: _catalogCache[id]!,
+    };
+    String? lastError;
+
+    // Play can briefly return an incomplete catalog while a newly-created
+    // one-time product is propagating. Keep the bounded fast retries here so
+    // the screen does not need to wait for its long background retry schedule.
+    for (var attempt = 0; attempt < 3 && found.length < ids.length; attempt++) {
+      try {
+        final batch = await _store.queryProductDetails(ids);
+        if (batch.error != null) {
+          lastError = batch.error!.message;
+        } else {
+          for (final product in batch.productDetails) {
+            found[product.id] = product;
+            _catalogCache[product.id] = product;
+          }
+
+          // The Android Billing bridge can report a sibling as unfetched in a
+          // batch even though the same product is immediately available when
+          // queried alone. Recover those IDs without discarding the products
+          // already returned by the successful batch.
+          final missing = ids.difference(found.keys.toSet());
+          for (final productId in missing) {
+            try {
+              final single = await _store.queryProductDetails({productId});
+              if (single.error != null) {
+                lastError = single.error!.message;
+                continue;
+              }
+              for (final product in single.productDetails) {
+                found[product.id] = product;
+                _catalogCache[product.id] = product;
+              }
+            } catch (error) {
+              lastError = error.toString();
+            }
+          }
+        }
+      } catch (error) {
+        lastError = error.toString();
+      }
+
+      if (found.length < ids.length && attempt < 2) {
         await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
       }
     }
-    if (response == null) return const [];
-    if (response.error != null) {
-      lastProductQueryError = response.error!.message;
-      throw StateError(response.error!.message);
+
+    lastNotFoundProductIds = ids.difference(found.keys.toSet());
+    if (found.isEmpty && lastError != null) {
+      lastProductQueryError = lastError;
+      throw StateError(lastError);
     }
-    lastNotFoundProductIds = response.notFoundIDs.toSet();
-    return response.productDetails;
+    debugPrint(
+      'Google Play terméklekérdezés: '
+      'found=${found.keys.toList()} notFound=$lastNotFoundProductIds',
+    );
+    return found.values.toList(growable: false);
   }
 
   void listen() {
     _subscription ??= _store.purchaseStream.listen((items) async {
       for (final purchase in items) {
-        _updates.add(purchase);
+        final key = _purchaseKey(purchase);
+        // Retain every event until the release screen confirms both server
+        // verification and Play completion. This also covers a screen that
+        // is opened after the purchase was delivered.
+        _pendingUpdates[key] = purchase;
+        if (_updates.hasListener) {
+          _updates.add(purchase);
+        }
         if ((purchase.status == PurchaseStatus.error ||
                 purchase.status == PurchaseStatus.canceled) &&
             purchase.pendingCompletePurchase) {
@@ -69,16 +211,43 @@ class LabelPurchaseService {
     if (!purchase.pendingCompletePurchase) return true;
     final key = _purchaseKey(purchase);
     if (_completedPurchases.contains(key)) return true;
+    return _completionAttempts[key] ??= _completeWithRetry(purchase, key);
+  }
+
+  Future<bool> _completeWithRetry(PurchaseDetails purchase, String key) async {
     try {
-      await _store.completePurchase(purchase);
-      _completedPurchases.add(key);
-      return true;
-    } catch (error) {
-      // Keep the transaction pending so Google Play can deliver it again.
-      // This avoids falsely marking a purchase as finished when the
-      // acknowledgement request actually failed.
+      for (var attempt = 0; attempt < 3; attempt++) {
+        try {
+          await _store.completePurchase(purchase);
+          _completedPurchases.add(key);
+          return true;
+        } catch (_) {
+          if (attempt < 2) {
+            await Future<void>.delayed(
+              Duration(milliseconds: 500 * (attempt + 1)),
+            );
+          }
+        }
+      }
+      _scheduleCompletionRetry(purchase, key);
       return false;
+    } finally {
+      _completionAttempts.remove(key);
     }
+  }
+
+  void acknowledgePurchaseEvent(PurchaseDetails purchase) {
+    final key = _purchaseKey(purchase);
+    _pendingUpdates.remove(key);
+    _completionRetryTimers.remove(key)?.cancel();
+  }
+
+  void _scheduleCompletionRetry(PurchaseDetails purchase, String key) {
+    if (_completionRetryTimers.containsKey(key)) return;
+    _completionRetryTimers[key] = Timer(const Duration(seconds: 30), () {
+      _completionRetryTimers.remove(key);
+      unawaited(completePurchase(purchase));
+    });
   }
 
   String _purchaseKey(PurchaseDetails purchase) {
@@ -90,12 +259,23 @@ class LabelPurchaseService {
     purchaseParam: PurchaseParam(productDetails: product),
   );
 
+  bool isAlreadyOwned(PurchaseDetails purchase) {
+    final error = purchase.error;
+    final values = <String>[
+      error?.code ?? '',
+      error?.message ?? '',
+      error?.details?.toString() ?? '',
+    ].map((value) => value.toLowerCase().replaceAll('_', '')).toList();
+    return values.any((value) => value.contains('itemalreadyowned'));
+  }
+
   String purchaseErrorMessage(PurchaseDetails purchase) {
     final error = purchase.error;
     if (error == null) return 'A Google Play-vásárlás nem sikerült.';
+    if (isAlreadyOwned(purchase)) {
+      return 'Ezt a kiadást már megvásároltad. A letöltés hamarosan elérhető lesz.';
+    }
     return switch (error.code) {
-      'item_already_owned' =>
-        'Ezt a kiadást már megvásároltad. A letöltés hamarosan elérhető lesz.',
       'user_canceled' => 'A vásárlást megszakítottad.',
       'billing_unavailable' =>
         'A Google Play vásárlási szolgáltatása most nem érhető el.',
@@ -120,7 +300,11 @@ class LabelPurchaseService {
     return result.data is Map && result.data['verified'] == true;
   }
 
-  Future<void> restore() => _store.restorePurchases();
+  Future<void> restore() {
+    return _restoreInFlight ??= _store.restorePurchases().whenComplete(() {
+      _restoreInFlight = null;
+    });
+  }
 
   Future<String> getDownloadUrl({
     required int releaseId,
@@ -329,6 +513,13 @@ class LabelPurchaseService {
   }
 
   Future<void> dispose() async {
+    WidgetsBinding.instance.removeObserver(this);
+    _backgroundRetryTimer?.cancel();
+    _backgroundRetryTimer = null;
+    for (final timer in _completionRetryTimers.values) {
+      timer.cancel();
+    }
+    _completionRetryTimers.clear();
     _preloadedRewarded?.dispose();
     _preloadedRewarded = null;
     await _subscription?.cancel();

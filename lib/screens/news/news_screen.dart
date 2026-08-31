@@ -62,9 +62,11 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(paginatedNewsProvider);
     final posts = state.visiblePosts;
-    final hasPosts = posts.isNotEmpty;
     final hasSecondAd = posts.length >= 4;
-    final postStartIndex = 1 + (hasPosts ? 1 : 0);
+    // The first banner lives in the eagerly-built header above. Posts can
+    // therefore start directly after the header; only the second banner is a
+    // list slot.
+    const postStartIndex = 1;
     final secondAdIndex = hasSecondAd ? postStartIndex + 4 : -1;
     final footerIndex = postStartIndex + posts.length + (hasSecondAd ? 1 : 0);
 
@@ -184,6 +186,12 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                       ),
                                     ),
                                   ],
+                                  const SizedBox(height: 14),
+                                  // This slot is part of the immediately
+                                  // visible header, so the news banner starts
+                                  // loading on screen creation instead of
+                                  // waiting for a later lazy-list child.
+                                  const Center(child: MobileAdBanner()),
                                   const SizedBox(height: 22),
                                   if (state.error != null &&
                                       state.posts.isNotEmpty)
@@ -199,13 +207,6 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                       ),
                                     ),
                                 ],
-                              );
-                            }
-
-                            if (hasPosts && index == 1) {
-                              return const Padding(
-                                padding: EdgeInsets.only(bottom: 18),
-                                child: Center(child: MobileAdBanner()),
                               );
                             }
 

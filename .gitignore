@@ -1,5 +1,7 @@
 # Miscellaneous
 wp-import.local.json
+newsroom/wp-import.local.json
+hungarian-hardstyle-newsroom/wp-import.local.json
 *.class
 *.log
 *.pyc

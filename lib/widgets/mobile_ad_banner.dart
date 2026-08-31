@@ -48,103 +48,97 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
     _loadTimeout?.cancel();
     _requestedWidth = width;
     final generation = ++_loadGeneration;
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        await prepareAdConsent();
-      } catch (_) {
-        // The retry path below still checks the current consent state.
-      }
-      try {
-        await initializeMobileAds();
-      } catch (_) {
-        if (!mounted || _requestedWidth != width) return;
-        _requestedWidth = null;
-        _retryTimer = Timer(const Duration(seconds: 5), () {
-          if (mounted) setState(() {});
-        });
-        return;
-      }
-      if (!await canRequestAds()) {
-        if (!mounted ||
-            _requestedWidth != width ||
-            _loadGeneration != generation) {
-          return;
-        }
-        _requestedWidth = null;
-        _retryTimer?.cancel();
-        _retryTimer = Timer(const Duration(seconds: 5), () {
-          if (mounted) setState(() {});
-        });
-        return;
-      }
+    unawaited(_loadAd(width, generation));
+  }
+
+  Future<void> _loadAd(int width, int generation) async {
+    try {
+      await bootstrapAds();
+    } catch (_) {
+      // The retry path below still checks the current consent state.
+      if (!mounted || _requestedWidth != width) return;
+      _requestedWidth = null;
+      _retryTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted) setState(() {});
+      });
+      return;
+    }
+    if (!await canRequestAds()) {
       if (!mounted ||
           _requestedWidth != width ||
           _loadGeneration != generation) {
         return;
       }
-      final size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
-      if (!mounted ||
-          _requestedWidth != width ||
-          _loadGeneration != generation) {
-        return;
-      }
-      if (size == null) {
-        debugPrint('AdMob banner méret nem kérhető: width=$width');
-        _requestedWidth = null;
-        _retryTimer?.cancel();
-        _retryTimer = Timer(const Duration(seconds: 5), () {
-          if (mounted) setState(() {});
-        });
-        return;
-      }
-      final ad = BannerAd(
-        adUnitId: useTestAds
-            ? 'ca-app-pub-3940256099942544/6300978111'
-            : productionBannerAdUnitId,
-        size: size,
-        request: const AdRequest(),
-        listener: BannerAdListener(
-          onAdLoaded: (ad) {
-            _loadTimeout?.cancel();
-            debugPrint('AdMob banner betöltve.');
-            if (!mounted || _loadGeneration != generation) {
-              ad.dispose();
-              return;
-            }
-            setState(() {
-              _ad = ad as BannerAd;
-              _loaded = true;
-            });
-          },
-          onAdFailedToLoad: (ad, error) {
-            _loadTimeout?.cancel();
+      _requestedWidth = null;
+      _retryTimer?.cancel();
+      _retryTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted) setState(() {});
+      });
+      return;
+    }
+    if (!mounted || _requestedWidth != width || _loadGeneration != generation) {
+      return;
+    }
+    final size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
+    if (!mounted || _requestedWidth != width || _loadGeneration != generation) {
+      return;
+    }
+    if (size == null) {
+      debugPrint('AdMob banner méret nem kérhető: width=$width');
+      _requestedWidth = null;
+      _retryTimer?.cancel();
+      _retryTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted) setState(() {});
+      });
+      return;
+    }
+    final ad = BannerAd(
+      adUnitId: useTestAds
+          ? 'ca-app-pub-3940256099942544/6300978111'
+          : productionBannerAdUnitId,
+      size: size,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          _loadTimeout?.cancel();
+          debugPrint('AdMob banner betöltve.');
+          if (!mounted || _loadGeneration != generation) {
             ad.dispose();
-            debugPrint(
-              'AdMob banner betöltési hiba: '
-              'code=${error.code}, domain=${error.domain}, '
-              'message=${error.message}',
-            );
-            if (!mounted) return;
-            if (_loadGeneration != generation) return;
-            _requestedWidth = null;
-            _retryTimer?.cancel();
-            _retryTimer = Timer(const Duration(seconds: 5), () {
-              if (mounted) setState(() {});
-            });
-          },
-        ),
-      );
-      ad.load();
-      _loadTimeout = Timer(const Duration(seconds: 15), () {
-        if (!mounted || _loadGeneration != generation || _loaded) return;
-        _loadGeneration++;
-        _requestedWidth = null;
-        _loadTimeout = null;
-        ad.dispose();
-        _retryTimer?.cancel();
-        _retryTimer = Timer(const Duration(seconds: 5), () {
-          if (mounted) setState(() {});
-        });
+            return;
+          }
+          setState(() {
+            _ad = ad as BannerAd;
+            _loaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          _loadTimeout?.cancel();
+          ad.dispose();
+          debugPrint(
+            'AdMob banner betöltési hiba: '
+            'code=${error.code}, domain=${error.domain}, '
+            'message=${error.message}',
+          );
+          if (!mounted) return;
+          if (_loadGeneration != generation) return;
+          _requestedWidth = null;
+          _retryTimer?.cancel();
+          _retryTimer = Timer(const Duration(seconds: 5), () {
+            if (mounted) setState(() {});
+          });
+        },
+      ),
+    );
+    ad.load();
+    _loadTimeout = Timer(const Duration(seconds: 15), () {
+      if (!mounted || _loadGeneration != generation || _loaded) return;
+      _loadGeneration++;
+      _requestedWidth = null;
+      _loadTimeout = null;
+      ad.dispose();
+      _retryTimer?.cancel();
+      _retryTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted) setState(() {});
       });
     });
   }

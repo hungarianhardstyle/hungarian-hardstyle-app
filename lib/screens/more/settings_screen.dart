@@ -7,6 +7,8 @@ import 'package:otp/otp.dart';
 
 import '../../services/push_notification_service.dart';
 import '../../services/community_service.dart';
+import '../../services/chat_display_preferences.dart';
+import '../../services/wordpress_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -19,11 +21,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static const _notificationsKey = 'notifications_enabled';
   static const _newsNotificationsKey = 'news_notifications_enabled';
   static const _eventNotificationsKey = 'event_notifications_enabled';
+  static const _releaseNotificationsKey = 'release_notifications_enabled';
   static const _reminderNotificationsKey = 'event_reminders_enabled';
 
   bool _notificationsEnabled = true;
   bool _newsNotificationsEnabled = true;
   bool _eventNotificationsEnabled = true;
+  bool _releaseNotificationsEnabled = true;
   bool _reminderNotificationsEnabled = true;
   bool _loading = true;
   bool _clearingCache = false;
@@ -34,6 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    ChatDisplayPreferences.load();
     _loadSettings();
   }
 
@@ -47,6 +52,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           preferences.getBool(_newsNotificationsKey) ?? true;
       _eventNotificationsEnabled =
           preferences.getBool(_eventNotificationsKey) ?? true;
+      _releaseNotificationsEnabled =
+          preferences.getBool(_releaseNotificationsKey) ?? true;
       _reminderNotificationsEnabled =
           preferences.getBool(_reminderNotificationsKey) ?? true;
       _biometricEnabled = preferences.getBool('biometric_unlock') ?? false;
@@ -182,6 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         enabled: _notificationsEnabled,
         news: _newsNotificationsEnabled,
         events: _eventNotificationsEnabled,
+        releases: _releaseNotificationsEnabled,
         reminders: _reminderNotificationsEnabled,
       );
 
@@ -189,6 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _clearingCache = true);
     await DefaultCacheManager().emptyCache();
     PaintingBinding.instance.imageCache.clear();
+    await WordpressService().clearPublicCache();
     if (!mounted) return;
     setState(() => _clearingCache = false);
     ScaffoldMessenger.of(
@@ -232,6 +241,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         value: _notificationsEnabled,
                         onChanged: _loading ? null : _setNotifications,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable:
+                            ChatDisplayPreferences.achievementInChat,
+                        builder: (context, enabled, child) => SwitchListTile(
+                          secondary: const Icon(
+                            Icons.workspace_premium_outlined,
+                          ),
+                          title: const Text('Achievement a chatben'),
+                          subtitle: const Text(
+                            'A jelvény a felhasználó neve elé kerül, egy sorban',
+                          ),
+                          value: enabled,
+                          onChanged:
+                              ChatDisplayPreferences.setAchievementInChat,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -308,6 +336,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     );
                                     _setNotificationPreference(
                                       _eventNotificationsKey,
+                                      value,
+                                    );
+                                  },
+                          ),
+                          SwitchListTile(
+                            secondary: const Icon(Icons.album_outlined),
+                            title: const Text('Új release-ek'),
+                            subtitle: const Text(
+                              'Értesítés új release közzétételekor',
+                            ),
+                            value: _releaseNotificationsEnabled,
+                            onChanged: _loading || !_notificationsEnabled
+                                ? null
+                                : (value) {
+                                    setState(
+                                      () =>
+                                          _releaseNotificationsEnabled = value,
+                                    );
+                                    _setNotificationPreference(
+                                      _releaseNotificationsKey,
                                       value,
                                     );
                                   },

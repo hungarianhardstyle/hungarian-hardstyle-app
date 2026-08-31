@@ -12,9 +12,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/navigation/app_navigator.dart';
 import '../core/navigation/in_app_browser.dart';
 import '../models/event.dart';
+import '../models/release.dart';
 import '../screens/events/event_detail_screen.dart';
 import '../screens/more/community_users_screen.dart';
 import '../screens/news/news_detail_screen.dart';
+import '../screens/releases/release_detail_screen.dart';
 import '../screens/community/wordpress_admin_screen.dart';
 import '../screens/community/private_messages_screen.dart';
 import 'wordpress_service.dart';
@@ -35,6 +37,42 @@ class PushNotificationService {
       receiveTimeout: const Duration(seconds: 10),
     ),
   );
+
+  static const _contentRefreshDelays = <Duration>[
+    Duration.zero,
+    Duration(seconds: 2),
+    Duration(seconds: 5),
+  ];
+
+  static Future<HuhsEvent?> _findEventWithRetry(int id) async {
+    for (final delay in _contentRefreshDelays) {
+      if (delay > Duration.zero) await Future<void>.delayed(delay);
+      try {
+        final events = await WordpressService().getEvents();
+        for (final event in events) {
+          if (event.id == id) return event;
+        }
+      } catch (_) {
+        // A newly published item may not be visible to the API immediately.
+      }
+    }
+    return null;
+  }
+
+  static Future<HuhsRelease?> _findReleaseWithRetry(int id) async {
+    for (final delay in _contentRefreshDelays) {
+      if (delay > Duration.zero) await Future<void>.delayed(delay);
+      try {
+        final releases = await WordpressService().getReleases();
+        for (final release in releases) {
+          if (release.id == id) return release;
+        }
+      } catch (_) {
+        // A newly published item may not be visible to the API immediately.
+      }
+    }
+    return null;
+  }
 
   static Future<void> initialize() async {
     if (_initialized) return;
@@ -81,7 +119,10 @@ class PushNotificationService {
     if (url.isEmpty &&
         senderId.isEmpty &&
         (id == null ||
-            (type != 'news' && type != 'event' && type != 'submission'))) {
+            (type != 'news' &&
+                type != 'event' &&
+                type != 'release' &&
+                type != 'submission'))) {
       return;
     }
 
@@ -99,10 +140,21 @@ class PushNotificationService {
         return;
       }
 
+      if (type == 'meetup_interest' && senderId.isNotEmpty) {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => CommunityPublicProfileScreen(userId: senderId),
+          ),
+        );
+        return;
+      }
+
       if (type == 'private_message' &&
           senderId.isNotEmpty &&
-          message.data['conversationId']?.toString().trim().isNotEmpty == true) {
-        final senderName = message.notification?.title
+          message.data['conversationId']?.toString().trim().isNotEmpty ==
+              true) {
+        final senderName =
+            message.notification?.title
                 ?.replaceFirst(RegExp(r' üzenetet küldött$'), '')
                 .trim() ??
             'HUHS user';
@@ -134,19 +186,23 @@ class PushNotificationService {
       }
 
       if (type == 'event' && id != null) {
-        final events = await WordpressService().getEvents();
-        HuhsEvent? event;
-        for (final candidate in events) {
-          if (candidate.id == id) {
-            event = candidate;
-            break;
-          }
-        }
-        final selectedEvent = event;
+        final selectedEvent = await _findEventWithRetry(id);
         if (selectedEvent != null && context.mounted) {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => EventDetailScreen(event: selectedEvent),
+            ),
+          );
+          return;
+        }
+      }
+
+      if (type == 'release' && id != null) {
+        final selectedRelease = await _findReleaseWithRetry(id);
+        if (selectedRelease != null && context.mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ReleaseDetailScreen(release: selectedRelease),
             ),
           );
           return;
@@ -204,10 +260,13 @@ class PushNotificationService {
     final url = message.data['url']?.toString().trim() ?? '';
     return type == 'submission' ||
         (type == 'connection_request' && senderId.isNotEmpty) ||
+        (type == 'meetup_interest' && senderId.isNotEmpty) ||
         (type == 'private_message' &&
             senderId.isNotEmpty &&
-            message.data['conversationId']?.toString().trim().isNotEmpty == true) ||
-        ((type == 'news' || type == 'event') && id != null) ||
+            message.data['conversationId']?.toString().trim().isNotEmpty ==
+                true) ||
+        ((type == 'news' || type == 'event' || type == 'release') &&
+            id != null) ||
         url.isNotEmpty;
   }
 
@@ -220,23 +279,24 @@ class PushNotificationService {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && !user.isAnonymous && Firebase.apps.isNotEmpty) {
       try {
-        final profileRef = FirebaseFirestore.instanceFor(
+        final privateRef = FirebaseFirestore.instanceFor(
           app: Firebase.app(),
           databaseId: 'hungarian-hardstyle',
-        ).collection('community_profiles').doc(user.uid);
+        ).collection('private_user_data').doc(user.uid);
         if (previousToken != null &&
             previousToken.isNotEmpty &&
             previousToken != token) {
           try {
-            await profileRef.update({
+            await privateRef.update({
               'fcmTokens': FieldValue.arrayRemove([previousToken]),
             });
           } catch (_) {
             // A missing legacy profile must not prevent the new token save.
           }
         }
-        await profileRef.set({
+        await privateRef.set({
           'fcmTokens': FieldValue.arrayUnion([token]),
+          'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       } catch (error) {
         debugPrint('HUHS FCM profile token sync failed: $error');
@@ -270,6 +330,7 @@ class PushNotificationService {
     required bool enabled,
     required bool news,
     required bool events,
+    required bool releases,
     required bool reminders,
   }) async {
     final preferences = await SharedPreferences.getInstance();
@@ -283,6 +344,7 @@ class PushNotificationService {
           'enabled': enabled,
           'news': news,
           'events': events,
+          'releases': releases,
           'reminders': reminders,
         },
       );

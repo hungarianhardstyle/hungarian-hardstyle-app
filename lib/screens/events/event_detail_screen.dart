@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -12,6 +14,8 @@ import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
 import '../../widgets/genre_chip.dart';
 import '../../providers/community_provider.dart';
+import '../../services/wordpress_service.dart';
+import 'event_meetup_screen.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
   final HuhsEvent event;
@@ -23,7 +27,8 @@ class EventDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
-  HuhsEvent get event => widget.event;
+  late HuhsEvent _event;
+  HuhsEvent get event => _event;
   String? _attendanceState;
   bool _attendanceBusy = false;
   late Future<String?> _attendanceFuture;
@@ -32,6 +37,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _event = widget.event;
+    unawaited(_loadFullEvent());
     _attendanceFuture = ref
         .read(communityServiceProvider)
         .getMyAttendance(event.id);
@@ -40,8 +47,25 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
         .getFriendAttendees(event.id);
   }
 
+  Future<void> _loadFullEvent() async {
+    try {
+      final fullEvent = await WordpressService().getEvent(widget.event.id);
+      if (mounted) setState(() => _event = fullEvent);
+    } catch (_) {
+      // The summary remains usable if the detail request is temporarily unavailable.
+    }
+  }
+
   Future<void> _setAttendance(String state) async {
     if (_attendanceBusy) return;
+    if (event.isPast) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lejárt eseményen már nem módosítható a részvétel.'),
+        ),
+      );
+      return;
+    }
     setState(() {
       _attendanceBusy = true;
       _attendanceState = state;
@@ -56,6 +80,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       _friendAttendanceFuture = ref
           .read(communityServiceProvider)
           .getFriendAttendees(event.id);
+      if (state == 'not_attending') {
+        await ref
+            .read(communityServiceProvider)
+            .setMeetup(event.id, title: event.title, enabled: false);
+      }
     } catch (error) {
       if (mounted) {
         setState(() => _attendanceState = null);
@@ -89,6 +118,24 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
       return '${event.startDate} - ${event.startTime}';
     }
+  }
+
+  Widget _meetupButton() {
+    final service = ref.read(communityServiceProvider);
+    final user = service.auth.currentUser;
+    if (user == null || user.isAnonymous) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: OutlinedButton.icon(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => EventMeetupScreen(event: event),
+          ),
+        ),
+        icon: const Icon(Icons.groups_outlined),
+        label: const Text('Meetup az eseményen'),
+      ),
+    );
   }
 
   Future<void> _openExternalUrl(BuildContext context, String url) async {
@@ -356,12 +403,17 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                             if (names.isEmpty) {
                                               return const SizedBox.shrink();
                                             }
+                                            final mutualAttendance =
+                                                selected == 'attending' &&
+                                                !event.isPast;
                                             return Padding(
                                               padding: const EdgeInsets.only(
                                                 top: 4,
                                               ),
                                               child: Text(
-                                                'Ismerőseid is jönnek: ${names.join(', ')}',
+                                                mutualAttendance
+                                                    ? 'Közös esemény: te és ${names.join(', ')} is ott lesztek.'
+                                                    : 'Ismerőseid is jönnek: ${names.join(', ')}',
                                               ),
                                             );
                                           },
@@ -387,7 +439,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                                         color: Colors.white54,
                                                       ),
                                                     ),
-                                              onPressed: _attendanceBusy
+                                              onPressed:
+                                                  _attendanceBusy ||
+                                                      event.isPast
                                                   ? null
                                                   : () => _setAttendance(
                                                       'attending',
@@ -411,7 +465,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                                       ),
                                                     )
                                                   : null,
-                                              onPressed: _attendanceBusy
+                                              onPressed:
+                                                  _attendanceBusy ||
+                                                      event.isPast
                                                   ? null
                                                   : () => _setAttendance(
                                                       'not_attending',
@@ -422,6 +478,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                             ),
                                           ],
                                         ),
+                                      _meetupButton(),
                                     ],
                                   );
                                 },

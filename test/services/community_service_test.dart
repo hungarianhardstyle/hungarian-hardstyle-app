@@ -17,6 +17,13 @@ void main() {
     expect(masked, '**** **** ******* ******** ***** *******');
   });
 
+  test('a szóközzel írt bazd meget alakot is maszkolja', () {
+    expect(
+      CommunityService.maskProfanity('bazd meget'),
+      '**** *****',
+    );
+  });
+
   test('a normál szöveget változatlanul hagyja', () {
     const text = 'Ez egy normális privát üzenet.';
     expect(CommunityService.maskProfanity(text), text);

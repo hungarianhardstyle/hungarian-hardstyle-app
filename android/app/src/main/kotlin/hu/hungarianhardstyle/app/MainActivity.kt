@@ -13,6 +13,8 @@ import java.io.File
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import com.android.installreferrer.api.InstallReferrerClient
+import com.android.installreferrer.api.InstallReferrerStateListener
 
 class MainActivity : FlutterFragmentActivity() {
     private var systemBackCallback: OnBackInvokedCallback? = null
@@ -76,6 +78,33 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     else -> result.notImplemented()
                 }
+            }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/install_referrer")
+            .setMethodCallHandler { call, result ->
+                if (call.method != "getInstallReferrer") {
+                    result.notImplemented()
+                    return@setMethodCallHandler
+                }
+                val client = InstallReferrerClient.newBuilder(this).build()
+                client.startConnection(object : InstallReferrerStateListener {
+                    override fun onInstallReferrerSetupFinished(responseCode: Int) {
+                        try {
+                            if (responseCode == InstallReferrerClient.InstallReferrerResponse.OK) {
+                                result.success(client.installReferrer.installReferrer)
+                            } else {
+                                result.success(null)
+                            }
+                        } catch (_: Exception) {
+                            result.success(null)
+                        } finally {
+                            client.endConnection()
+                        }
+                    }
+
+                    override fun onInstallReferrerServiceDisconnected() {
+                        result.success(null)
+                    }
+                })
             }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/media")
             .setMethodCallHandler { call, result ->

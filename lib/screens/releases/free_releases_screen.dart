@@ -56,6 +56,8 @@ class FreeReleasesScreen extends ConsumerWidget {
                               : CachedNetworkImage(
                                   imageUrl: release.coverUrl,
                                   fit: BoxFit.cover,
+                                  memCacheWidth: 300,
+                                  maxWidthDiskCache: 300,
                                   placeholder: (_, _) => const ColoredBox(
                                     color: Color(0xFF242424),
                                     child: Center(

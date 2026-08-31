@@ -74,6 +74,13 @@ Future<void> initializeMobileAds() {
   return _mobileAdsInitialization!;
 }
 
+/// Starts both process-wide prerequisites together. Consent is still checked
+/// before any ad request; only the independent SDK initialization is no
+/// longer unnecessarily serialized behind it.
+Future<void> bootstrapAds() async {
+  await Future.wait<void>([prepareAdConsent(), initializeMobileAds()]);
+}
+
 Future<void> _initializeMobileAdsOnce() async {
   try {
     await MobileAds.instance.initialize();
@@ -86,6 +93,17 @@ Future<void> _initializeMobileAdsOnce() async {
 }
 
 Future<void> _prepareAdConsent() async {
+  // UMP persists the consent decision. Once ads are already allowed, do not
+  // start another consent-form load and wait for its callback before the
+  // banner can call load(); that callback can otherwise hit the 10s timeout.
+  try {
+    if (await ConsentInformation.instance.canRequestAds()) {
+      _consentResolved = true;
+      return;
+    }
+  } catch (_) {
+    // Continue with the regular consent-info update below.
+  }
   final completed = Completer<void>();
   final consent = ConsentInformation.instance;
   consent.requestConsentInfoUpdate(

@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/navigation/in_app_browser.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../models/event.dart';
+import '../../models/achievement.dart';
 import '../../providers/community_provider.dart';
 import '../../services/community_service.dart';
 import '../../services/wordpress_service.dart';
@@ -14,6 +16,7 @@ import '../organizers/organizer_detail_screen.dart';
 import 'favorites_screen.dart';
 import 'newsletter_screen.dart';
 import '../community/private_messages_screen.dart';
+import '../../widgets/achievement_badge_card.dart';
 
 class CommunityUsersScreen extends ConsumerStatefulWidget {
   const CommunityUsersScreen({super.key});
@@ -39,8 +42,8 @@ class _CommunityUsersScreenState extends ConsumerState<CommunityUsersScreen> {
     final isRegistered = viewer != null && !viewer.isAnonymous;
     return Scaffold(
       appBar: AppBar(title: const Text('Felhasználók')),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: service.watchRegisteredProfiles(),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: service.getRegisteredPublicProfiles(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
@@ -52,17 +55,15 @@ class _CommunityUsersScreenState extends ConsumerState<CommunityUsersScreen> {
           }
           final query = _search.text.trim().toLowerCase();
           final profiles =
-              snapshot.data!.docs.where((doc) {
-                final name = (doc.data()['displayName'] as String? ?? '')
+              snapshot.data!.where((profile) {
+                final name = (profile['displayName'] as String? ?? '')
                     .toLowerCase();
                 return query.isEmpty || name.contains(query);
               }).toList()..sort(
-                (a, b) =>
-                    ((a.data()['displayName'] as String? ?? '').toLowerCase())
-                        .compareTo(
-                          (b.data()['displayName'] as String? ?? '')
-                              .toLowerCase(),
-                        ),
+                (a, b) => ((a['displayName'] as String? ?? '').toLowerCase())
+                    .compareTo(
+                      (b['displayName'] as String? ?? '').toLowerCase(),
+                    ),
               );
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -81,7 +82,7 @@ class _CommunityUsersScreenState extends ConsumerState<CommunityUsersScreen> {
               for (final profile in profiles)
                 _UserTile(
                   profile: profile,
-                  imageUrl: service.resolveProfileImage(profile.data()),
+                  imageUrl: service.resolveProfileImage(profile),
                   service: service,
                   showAccessRole: isRegistered,
                 ),
@@ -94,7 +95,7 @@ class _CommunityUsersScreenState extends ConsumerState<CommunityUsersScreen> {
 }
 
 class _UserTile extends StatelessWidget {
-  final QueryDocumentSnapshot<Map<String, dynamic>> profile;
+  final Map<String, dynamic> profile;
   final String imageUrl;
   final CommunityService service;
   final bool showAccessRole;
@@ -108,7 +109,7 @@ class _UserTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = profile.data();
+    final data = profile;
     final name = (data['displayName'] as String? ?? 'HUHS user').trim();
     final safeName = name.isEmpty ? 'HUHS user' : name;
     final role = switch (data['role'] as String?) {
@@ -130,11 +131,15 @@ class _UserTile extends StatelessWidget {
       child: ListTile(
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (_) => CommunityPublicProfileScreen(userId: profile.id),
+            builder: (_) => CommunityPublicProfileScreen(
+              userId: profile['userId'] as String? ?? '',
+            ),
           ),
         ),
         leading: CircleAvatar(
-          backgroundImage: imageUrl.isEmpty ? null : NetworkImage(imageUrl),
+          backgroundImage: imageUrl.isEmpty
+              ? null
+              : CachedNetworkImageProvider(imageUrl),
           child: imageUrl.isEmpty
               ? Text(safeName.characters.first.toUpperCase())
               : null,
@@ -160,12 +165,17 @@ class _CommunityPublicProfileScreenState
     extends State<CommunityPublicProfileScreen> {
   late final CommunityService service;
   late Future<String?> _connectionStatus;
+  late Future<Map<String, dynamic>> _profileFuture;
+  late Future<AchievementSummary> _achievementFuture;
+  bool _blocking = false;
 
   @override
   void initState() {
     super.initState();
     service = CommunityService();
     _connectionStatus = service.connectionStatus(widget.userId);
+    _profileFuture = service.getPublicProfile(widget.userId);
+    _achievementFuture = service.getPublicAchievement(widget.userId);
   }
 
   Future<void> _requestConnection() async {
@@ -204,20 +214,58 @@ class _CommunityPublicProfileScreenState
     }
   }
 
+  Future<void> _blockUser() async {
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Felhasználó blokkolása'),
+            content: const Text(
+              'Nem tudtok majd egymásnak privát üzenetet küldeni. A blokkolás később a blokkolt felhasználók listájából visszavonható.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Mégse'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Blokkolás'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed || !mounted) return;
+
+    setState(() => _blocking = true);
+    try {
+      await service.blockUser(widget.userId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Felhasználó blokkolva.')));
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _blocking = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Profil')),
-      body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        future: service.firestore
-            .collection('community_profiles')
-            .doc(widget.userId)
-            .get(),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _profileFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final data = snapshot.data!.data() ?? const <String, dynamic>{};
+          final data = snapshot.data ?? const <String, dynamic>{};
           final viewer = service.auth.currentUser;
           final isRegistered = viewer != null && !viewer.isAnonymous;
           final isOwnProfile = viewer?.uid == widget.userId;
@@ -226,20 +274,53 @@ class _CommunityPublicProfileScreenState
           final links = Map<String, dynamic>.from(
             data['socialLinks'] as Map? ?? const {},
           );
+          final achievement = AchievementSummary.fromProfile(data);
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
               Center(
-                child: CircleAvatar(
-                  radius: 48,
-                  backgroundImage: image.isEmpty ? null : NetworkImage(image),
-                  child: image.isEmpty
-                      ? Text(
-                          name.isEmpty
-                              ? 'H'
-                              : name.characters.first.toUpperCase(),
-                        )
-                      : null,
+                child: SizedBox.square(
+                  dimension: 96,
+                  child: ClipOval(
+                    child: image.isEmpty
+                        ? ColoredBox(
+                            color: Theme.of(context).colorScheme.primary,
+                            child: Center(
+                              child: Text(
+                                name.isEmpty
+                                    ? 'H'
+                                    : name.characters.first.toUpperCase(),
+                              ),
+                            ),
+                          )
+                        : CachedNetworkImage(
+                            imageUrl: image,
+                            fit: BoxFit.cover,
+                            memCacheWidth: 192,
+                            maxWidthDiskCache: 192,
+                            placeholder: (_, __) => ColoredBox(
+                              color: Theme.of(context).colorScheme.primary,
+                              child: const Center(
+                                child: SizedBox.square(
+                                  dimension: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            errorWidget: (_, __, ___) => ColoredBox(
+                              color: Theme.of(context).colorScheme.primary,
+                              child: Center(
+                                child: Text(
+                                  name.isEmpty
+                                      ? 'H'
+                                      : name.characters.first.toUpperCase(),
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -250,6 +331,15 @@ class _CommunityPublicProfileScreenState
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              FutureBuilder<AchievementSummary>(
+                future: _achievementFuture,
+                initialData: achievement,
+                builder: (context, achievementSnapshot) => AchievementBadgeCard(
+                  achievement:
+                      achievementSnapshot.data ?? AchievementSummary.empty,
                 ),
               ),
               const SizedBox(height: 8),
@@ -353,6 +443,12 @@ class _CommunityPublicProfileScreenState
                       label: const Text('Ismerősnek jelölés'),
                     );
                   },
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _blocking ? null : _blockUser,
+                  icon: const Icon(Icons.block_outlined),
+                  label: const Text('Blokkolás / letiltás'),
                 ),
               ],
               const SizedBox(height: 18),
@@ -770,15 +866,11 @@ class CommunityBlockedUsersScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final userId = users[index].id;
               return ListTile(
-                title: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                  future: service.firestore
-                      .collection('community_profiles')
-                      .doc(userId)
-                      .get(),
+                title: FutureBuilder<Map<String, dynamic>>(
+                  future: service.getPublicProfile(userId),
                   builder: (context, profile) {
-                    final name =
-                        (profile.data?.data()?['displayName'] as String?)
-                            ?.trim();
+                    final name = (profile.data?['displayName'] as String?)
+                        ?.trim();
                     return Text(
                       name == null || name.isEmpty
                           ? 'Ismeretlen felhasználó'
@@ -1083,19 +1175,16 @@ class _FriendTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      future: service.firestore
-          .collection('community_profiles')
-          .doc(userId)
-          .get(),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: service.getPublicProfile(userId),
       builder: (context, snapshot) {
-        if (snapshot.hasData && !snapshot.data!.exists) {
+        if (snapshot.hasData && snapshot.data!.isEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             service.pruneStaleConnections(service.auth.currentUser?.uid ?? '');
           });
           return const SizedBox.shrink();
         }
-        final profile = snapshot.data?.data() ?? const <String, dynamic>{};
+        final profile = snapshot.data ?? const <String, dynamic>{};
         final name =
             (profile['displayName'] as String? ??
                     connectionData?['displayName'] as String? ??
@@ -1113,7 +1202,9 @@ class _FriendTile extends StatelessWidget {
             ),
           ),
           leading: CircleAvatar(
-            backgroundImage: image.isEmpty ? null : NetworkImage(image),
+            backgroundImage: image.isEmpty
+                ? null
+                : CachedNetworkImageProvider(image),
             child: image.isEmpty
                 ? Text(name.isEmpty ? 'F' : name.characters.first.toUpperCase())
                 : null,
@@ -1136,13 +1227,10 @@ class _ConnectionRequestTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = request.data();
     final from = data['from'] as String? ?? '';
-    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      future: service.firestore
-          .collection('community_profiles')
-          .doc(from)
-          .get(),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: service.getPublicProfile(from),
       builder: (context, snapshot) {
-        final profile = snapshot.data?.data() ?? const <String, dynamic>{};
+        final profile = snapshot.data ?? const <String, dynamic>{};
         final name =
             (profile['displayName'] as String? ??
                     data['fromName'] as String? ??
@@ -1161,7 +1249,9 @@ class _ConnectionRequestTile extends StatelessWidget {
                   ),
                 ),
           leading: CircleAvatar(
-            backgroundImage: image.isEmpty ? null : NetworkImage(image),
+            backgroundImage: image.isEmpty
+                ? null
+                : CachedNetworkImageProvider(image),
             child: image.isEmpty
                 ? Text(name.isEmpty ? 'F' : name.characters.first.toUpperCase())
                 : null,

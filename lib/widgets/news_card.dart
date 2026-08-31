@@ -53,6 +53,8 @@ class NewsCard extends StatelessWidget {
                             ? CachedNetworkImage(
                                 imageUrl: post.imageUrl,
                                 fit: BoxFit.cover,
+                                memCacheWidth: 800,
+                                maxWidthDiskCache: 800,
                               )
                             : Container(
                                 color: Colors.grey.shade900,
@@ -155,7 +157,12 @@ class _CompactNewsCardContent extends StatelessWidget {
               left: Radius.circular(12),
             ),
             child: post.imageUrl.isNotEmpty
-                ? CachedNetworkImage(imageUrl: post.imageUrl, fit: BoxFit.cover)
+                ? CachedNetworkImage(
+                    imageUrl: post.imageUrl,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 480,
+                    maxWidthDiskCache: 480,
+                  )
                 : Container(
                     color: Colors.grey.shade900,
                     child: const Icon(Icons.article, color: Colors.white54),

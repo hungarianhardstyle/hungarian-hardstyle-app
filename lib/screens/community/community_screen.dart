@@ -1,15 +1,17 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../../models/community_post.dart';
+import '../../models/achievement.dart';
 import '../../models/event.dart';
 import '../../models/submission_image.dart';
 import '../../core/navigation/in_app_browser.dart';
@@ -19,7 +21,10 @@ import '../../providers/community_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../services/community_service.dart';
+import '../../services/chat_display_preferences.dart';
+import '../../services/referral_link_service.dart';
 import '../../widgets/submission_image_picker.dart';
+import '../../widgets/achievement_badge_card.dart';
 import '../more/favorites_screen.dart';
 import '../more/community_users_screen.dart';
 import '../artists/artist_detail_screen.dart';
@@ -82,8 +87,8 @@ class ProfileAvatar extends StatelessWidget {
                             ),
                             errorBuilder: (_, _, _) => fallback,
                           )
-                        : Image.network(
-                            imageUrl,
+                        : CachedNetworkImage(
+                            imageUrl: imageUrl,
                             width: size,
                             height: size,
                             fit: BoxFit.cover,
@@ -91,7 +96,9 @@ class ProfileAvatar extends StatelessWidget {
                               (focusX.clamp(0, 100) - 50) / 50,
                               (focusY.clamp(0, 100) - 50) / 50,
                             ),
-                            errorBuilder: (_, _, _) => fallback,
+                            memCacheWidth: (size * 2).round(),
+                            maxWidthDiskCache: (size * 2).round(),
+                            errorWidget: (_, _, _) => fallback,
                           ),
                   ),
                 ),
@@ -120,13 +127,10 @@ class _PostAuthorAvatar extends ConsumerWidget {
       );
     }
     final service = ref.watch(communityServiceProvider);
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: service.firestore
-          .collection('community_profiles')
-          .doc(post.authorId)
-          .snapshots(),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: service.getPublicProfile(post.authorId),
       builder: (context, snapshot) {
-        final data = snapshot.data?.data() ?? const <String, dynamic>{};
+        final data = snapshot.data ?? const <String, dynamic>{};
         return ProfileAvatar(
           imageUrl: service.resolveProfileImage(data, post.authorImageUrl),
           initial: initial,
@@ -1284,7 +1288,12 @@ class _PostCardState extends ConsumerState<_PostCard> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(post.imageUrl, fit: BoxFit.cover),
+                  child: CachedNetworkImage(
+                    imageUrl: post.imageUrl,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 720,
+                    maxWidthDiskCache: 720,
+                  ),
                 ),
               ),
             ],
@@ -1332,79 +1341,172 @@ class _PostCardState extends ConsumerState<_PostCard> {
   }
 }
 
-class _PostAuthorLabels extends StatelessWidget {
+class _PostAuthorLabels extends StatefulWidget {
   final CommunityPost post;
   final CommunityService service;
 
   const _PostAuthorLabels({required this.post, required this.service});
 
   @override
-  Widget build(BuildContext context) {
-    if (post.authorId.isEmpty) {
-      return _labels(post.authorRole, post.authorAccessRole);
+  State<_PostAuthorLabels> createState() => _PostAuthorLabelsState();
+}
+
+class _PostAuthorLabelsState extends State<_PostAuthorLabels> {
+  Future<Map<String, dynamic>>? _profileFuture;
+  Future<AchievementSummary>? _achievementFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAuthor(widget.post.authorId);
+  }
+
+  @override
+  void didUpdateWidget(covariant _PostAuthorLabels oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.post.authorId != widget.post.authorId) {
+      _loadAuthor(widget.post.authorId);
     }
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: service.watchProfile(post.authorId),
-      builder: (context, snapshot) {
-        final data = snapshot.data?.data();
-        return _labels(
-          data?['role'] as String? ?? post.authorRole,
-          data?['accessRole'] as String? ?? CommunityService.accessNone,
+  }
+
+  void _loadAuthor(String authorId) {
+    if (authorId.trim().isEmpty) {
+      _profileFuture = null;
+      _achievementFuture = null;
+      return;
+    }
+    // Keep one stable Future for this row. CommunityService still owns the
+    // shared UID cache and in-flight deduplication across all rows/screens.
+    _profileFuture = widget.service.getPublicProfile(authorId);
+    _achievementFuture = widget.service.getPublicAchievement(authorId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: ChatDisplayPreferences.achievementInChat,
+      builder: (context, showAchievement, child) {
+        return _buildLabels(showAchievement);
+      },
+    );
+  }
+
+  Widget _buildLabels(bool showAchievement) {
+    final post = widget.post;
+    if (post.authorId.isEmpty || _profileFuture == null) {
+      return _labels(
+        post.authorRole,
+        post.authorAccessRole,
+        AchievementSummary.empty,
+        showAchievement,
+      );
+    }
+    return FutureBuilder<AchievementSummary>(
+      future: showAchievement ? _achievementFuture : null,
+      initialData: AchievementSummary.empty,
+      builder: (context, achievementSnapshot) {
+        final publicAchievement =
+            achievementSnapshot.data ?? AchievementSummary.empty;
+        return FutureBuilder<Map<String, dynamic>>(
+          future: _profileFuture,
+          builder: (context, snapshot) {
+            final data = snapshot.data;
+            final localAchievement = data == null
+                ? AchievementSummary.empty
+                : AchievementSummary.fromProfile(data);
+            final role = data?['role'] as String? ?? post.authorRole;
+            final accessRole =
+                data?['accessRole'] as String? ?? CommunityService.accessNone;
+            final achievement = localAchievement.badgeImageUrl.isNotEmpty
+                ? localAchievement
+                : publicAchievement;
+            return _labels(role, accessRole, achievement, showAchievement);
+          },
         );
       },
     );
   }
 
-  Widget _labels(String role, String accessRole) {
-    return Row(
-      children: [
-        Flexible(
-          child: Text(
-            post.authorName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+  Widget _labels(
+    String role,
+    String accessRole,
+    AchievementSummary achievement,
+    bool showAchievement,
+  ) {
+    final roleLabel = role == 'dj'
+        ? 'DJ'
+        : role == 'organizer'
+        ? 'Szervező'
+        : role.isNotEmpty
+        ? 'Bulizó'
+        : '';
+    final accessLabel = accessRole == CommunityService.accessAdmin
+        ? 'Admin'
+        : accessRole == CommunityService.accessModerator
+        ? 'Moderátor'
+        : '';
+
+    final badgeImage = achievement.badgeImageUrl.trim();
+    return Text.rich(
+      TextSpan(
+        children: [
+          if (showAchievement)
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 3),
+                child: badgeImage.isEmpty
+                    ? const Icon(
+                        Icons.workspace_premium_outlined,
+                        size: 14,
+                        color: Colors.amberAccent,
+                      )
+                    : ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: badgeImage,
+                          width: 14,
+                          height: 14,
+                          fit: BoxFit.cover,
+                          memCacheWidth: 42,
+                          maxWidthDiskCache: 42,
+                          errorWidget: (_, __, ___) => const Icon(
+                            Icons.workspace_premium_outlined,
+                            size: 14,
+                            color: Colors.amberAccent,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+          if (showAchievement)
+            TextSpan(
+              text: '${achievement.badgeName} • ',
+              style: const TextStyle(color: Colors.amberAccent, fontSize: 11),
+            ),
+          TextSpan(
+            text: widget.post.authorName,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-        ),
-        if (role.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(left: 6),
-            child: Text(
-              role == 'dj'
-                  ? 'DJ'
-                  : role == 'organizer'
-                  ? 'Szervező'
-                  : 'Bulizó',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          if (roleLabel.isNotEmpty)
+            TextSpan(
+              text: ' • $roleLabel',
               style: const TextStyle(color: Colors.white60, fontSize: 11),
             ),
-          ),
-        if (accessRole == CommunityService.accessAdmin)
-          const Padding(
-            padding: EdgeInsets.only(left: 6),
-            child: Text(
-              'Admin',
+          if (accessLabel.isNotEmpty)
+            TextSpan(
+              text: ' • $accessLabel',
               style: TextStyle(
-                color: Colors.redAccent,
+                color: accessRole == CommunityService.accessAdmin
+                    ? Colors.redAccent
+                    : Colors.orangeAccent,
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
               ),
             ),
-          )
-        else if (accessRole == CommunityService.accessModerator)
-          const Padding(
-            padding: EdgeInsets.only(left: 6),
-            child: Text(
-              'Moderátor',
-              style: TextStyle(
-                color: Colors.orangeAccent,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-      ],
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }
@@ -1424,6 +1526,7 @@ class _CommunityProfileScreenState
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _passwordConfirmation = TextEditingController();
+  final _referralCode = TextEditingController();
   final _name = TextEditingController();
   final _bio = TextEditingController();
   final Map<String, TextEditingController> _social = {
@@ -1446,6 +1549,7 @@ class _CommunityProfileScreenState
   double _panY = 0;
   double _gestureStartZoom = 1;
   List<int> _claimedArtistIds = const [];
+  AchievementSummary _achievement = AchievementSummary.empty;
   String? _loadedUid;
   bool _loadingProfile = false;
   StreamSubscription<User?>? _authSubscription;
@@ -1460,6 +1564,13 @@ class _CommunityProfileScreenState
       _loadProfile();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadProfile());
+    _loadPendingReferralCode();
+  }
+
+  Future<void> _loadPendingReferralCode() async {
+    final code = await ReferralLinkService.pendingCode();
+    if (!mounted || code == null || _referralCode.text.isNotEmpty) return;
+    setState(() => _referralCode.text = code);
   }
 
   @override
@@ -1468,6 +1579,7 @@ class _CommunityProfileScreenState
     _email.dispose();
     _password.dispose();
     _passwordConfirmation.dispose();
+    _referralCode.dispose();
     _name.dispose();
     _bio.dispose();
     for (final controller in _social.values) {
@@ -1505,6 +1617,18 @@ class _CommunityProfileScreenState
           role: _role,
           socialLinks: _socialValues(),
         );
+        if (_referralCode.text.trim().isNotEmpty) {
+          // A bad/expired code must never turn a successful registration into
+          // a false registration error.
+          try {
+            final claimed = await _service.claimReferralCode(
+              _referralCode.text,
+            );
+            if (claimed) await ReferralLinkService.clearPendingCode();
+          } catch (_) {
+            // The account was created; the referral can simply be omitted.
+          }
+        }
         // Registration succeeded and the verification mail was sent. A cleanup
         // sign-out must not turn that successful registration into a false error.
         try {
@@ -1535,6 +1659,7 @@ class _CommunityProfileScreenState
     _loadingProfile = true;
     try {
       if (!await _unlockProfile(user)) return;
+      await _service.refreshMyAchievementBadge().catchError((_) {});
       final snapshot = await _service.profile();
       final data = snapshot.data() ?? const <String, dynamic>{};
       final claimedArtistIds = await _service.myClaimedArtists().catchError(
@@ -1559,6 +1684,7 @@ class _CommunityProfileScreenState
             : _service.accountRole(data['role'] as String?);
         _loadedUid = user.uid;
         _claimedArtistIds = claimedArtistIds;
+        _achievement = AchievementSummary.fromProfile(data);
       });
     } catch (_) {
     } finally {
@@ -1713,6 +1839,14 @@ class _CommunityProfileScreenState
         requestDisplayName: _register ? null : _requestGoogleDisplayName,
       );
       if (!signedIn) return;
+      if (_register && _referralCode.text.trim().isNotEmpty) {
+        try {
+          final claimed = await _service.claimReferralCode(_referralCode.text);
+          if (claimed) await ReferralLinkService.clearPendingCode();
+        } catch (_) {
+          // Google registration remains successful if the optional code fails.
+        }
+      }
       _loadedUid = null;
       await _loadProfile();
       if (mounted) setState(() {});
@@ -2044,6 +2178,8 @@ class _CommunityProfileScreenState
               : _roleLabel(_role),
         ),
       ),
+      AchievementBadgeCard(achievement: _achievement),
+      const SizedBox(height: 12),
       if (_bio.text.trim().isNotEmpty)
         ListTile(
           contentPadding: EdgeInsets.zero,
@@ -2619,6 +2755,22 @@ class _CommunityProfileScreenState
                                 suffixIcon: Icon(Icons.arrow_drop_down),
                               ),
                               child: Text(_roleLabel(_role)),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _referralCode,
+                            textCapitalization: TextCapitalization.characters,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp('[A-Za-z0-9]'),
+                              ),
+                              LengthLimitingTextInputFormatter(16),
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'Ajánlókód (opcionális)',
+                              helperText:
+                                  'Ha kaptál kódot egy HUHS-felhasználótól.',
                             ),
                           ),
                         ],
