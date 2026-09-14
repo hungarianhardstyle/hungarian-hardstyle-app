@@ -13,12 +13,31 @@ class RadioPlayerBar extends StatefulWidget {
 
 final radioPlayingState = ValueNotifier<bool>(false);
 final releasePreviewPlayingState = ValueNotifier<bool>(false);
+const _radioStreamUrl = 'https://stream.realhardstyle.nl';
 
 Future<void> stopRadioPlayback() async {
   try {
     await const MethodChannel('hu_hs/radio').invokeMethod<void>('stop');
   } catch (_) {}
   radioPlayingState.value = false;
+}
+
+Future<void> resumeRadioPlayback() async {
+  try {
+    await const MethodChannel('hu_hs/radio')
+        .invokeMethod<void>('play', _radioStreamUrl);
+    radioPlayingState.value = true;
+  } catch (_) {}
+}
+
+Future<bool> isRadioPlaybackActive() async {
+  try {
+    return await const MethodChannel('hu_hs/radio')
+            .invokeMethod<bool>('isPlaying') ??
+        radioPlayingState.value;
+  } catch (_) {
+    return radioPlayingState.value;
+  }
 }
 
 class _RadioPlayerBarState extends State<RadioPlayerBar> {
@@ -47,7 +66,8 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
           });
           _stopMetadataRefresh();
         }
-        unawaited(stopRadioPlayback());
+        // ReleasePreviewPlayer stops the native radio before it starts the
+        // preview. This listener only keeps the visible radio state in sync.
       }
     };
     releasePreviewPlayingState.addListener(_previewListener!);
@@ -168,9 +188,10 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
       final metadata = String.fromCharCodes(
         bytes.skip(interval + 1).take(length),
       ).replaceAll('\u0000', '');
-      final title = RegExp(
-        r"StreamTitle='([^']*)'",
-      ).firstMatch(metadata)?.group(1)?.trim();
+      final title = RegExp(r"StreamTitle='([^']*)'")
+          .firstMatch(metadata)
+          ?.group(1)
+          ?.trim();
       if (mounted && title != null && title.isNotEmpty) {
         setState(() => _title = title);
       }
@@ -195,46 +216,40 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
     final trackTitle = _title == 'Real Hardstyle FM' ? 'Élő adás' : _title;
     final compact = MediaQuery.orientationOf(context) == Orientation.landscape;
 
+    final scheme = Theme.of(context).colorScheme;
     return ColoredBox(
-      color: const Color(0xFF111111),
+      color: Colors.transparent,
       child: Container(
-        height: compact ? 56 : 70,
-        margin: EdgeInsets.fromLTRB(compact ? 8 : 12, 4, compact ? 8 : 12, 4),
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        height: compact ? 46 : 52,
+        margin: EdgeInsets.fromLTRB(compact ? 6 : 10, 3, compact ? 6 : 10, 3),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFF1B1B1B),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF7A2929)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33000000),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
+          color: scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: scheme.outlineVariant),
         ),
         child: Row(
           children: [
             Tooltip(
               message: _playing ? 'Leállítás' : 'Lejátszás',
               child: Material(
-                color: const Color(0xFFF03A37),
-                borderRadius: BorderRadius.circular(8),
+                color: scheme.primary,
+                shape: const CircleBorder(),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
+                  customBorder: const CircleBorder(),
                   onTap: _togglePlay,
                   child: SizedBox.square(
-                    dimension: compact ? 36 : 44,
+                    dimension: compact ? 34 : 38,
                     child: Icon(
                       _playing ? Icons.stop_rounded : Icons.play_arrow_rounded,
                       color: Colors.black,
-                      size: compact ? 24 : 30,
+                      size: compact ? 21 : 24,
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -247,20 +262,20 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
                         height: 6,
                         decoration: BoxDecoration(
                           color: _playing
-                              ? const Color(0xFFF03A37)
-                              : Colors.white38,
+                              ? scheme.primary
+                              : scheme.onSurfaceVariant,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 7),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'REAL HARDSTYLE FM',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
+                            color: scheme.onSurface,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1,
                           ),
@@ -273,7 +288,10 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
                     trackTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white60, fontSize: 13),
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -286,10 +304,9 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
                 _channel.invokeMethod<void>('volume', _muted ? 0.0 : 1.0);
               },
               style: IconButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF5A5A5A)),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                side: BorderSide.none,
+                visualDensity: VisualDensity.compact,
+                shape: const CircleBorder(),
               ),
               icon: Icon(
                 _muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,

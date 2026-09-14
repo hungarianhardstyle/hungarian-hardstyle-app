@@ -110,6 +110,9 @@ class _OrganizerContent extends StatelessWidget {
         builder: (context, constraints) {
           final landscape =
               MediaQuery.orientationOf(context) == Orientation.landscape;
+          final logoCacheWidth = (280 * MediaQuery.devicePixelRatioOf(context))
+              .round()
+              .clamp(560, 1120);
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
             child: Align(
@@ -137,8 +140,8 @@ class _OrganizerContent extends StatelessWidget {
                               ? CachedNetworkImage(
                                   imageUrl: organizer.logoUrl,
                                   fit: BoxFit.contain,
-                                  memCacheWidth: 440,
-                                  maxWidthDiskCache: 440,
+                                  memCacheWidth: logoCacheWidth,
+                                  maxWidthDiskCache: logoCacheWidth,
                                 )
                               : const Icon(
                                   Icons.groups,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/post.dart';
@@ -7,11 +8,31 @@ final wordpressServiceProvider = Provider<WordpressService>((ref) {
   return WordpressService();
 });
 
+final publicContentRefreshProvider = ChangeNotifierProvider<ValueNotifier<int>>(
+  (ref) {
+    return WordpressService.publicContentRefreshGeneration;
+  },
+);
+
 // Home news must be recreated after leaving the screen so a withdrawn/draft
 // post cannot remain in the long-lived provider state.
 final newsProvider = FutureProvider.autoDispose<List<Post>>((ref) async {
+  ref.watch(publicContentRefreshProvider);
   final service = ref.watch(wordpressServiceProvider);
   return service.getLatestPosts();
+});
+
+final stickyNewsProvider = FutureProvider.autoDispose<List<Post>>((ref) async {
+  ref.watch(publicContentRefreshProvider);
+  final service = ref.watch(wordpressServiceProvider);
+  // Pagination state changes for every loaded page. Only the filters affect
+  // the sticky query; watching the whole state caused needless refetches.
+  final (search, categoryId) = ref.watch(
+    paginatedNewsProvider.select(
+      (state) => (state.search, state.selectedCategoryId),
+    ),
+  );
+  return service.getStickyPosts(search: search, categoryId: categoryId);
 });
 
 class PaginatedNewsState {
@@ -133,8 +154,12 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
         return;
       }
 
+      final knownIds = state.posts.map((post) => post.id).toSet();
+      final newItems = response.items
+          .where((post) => knownIds.add(post.id))
+          .toList(growable: false);
       state = state.copyWith(
-        posts: [...state.posts, ...response.items],
+        posts: [...state.posts, ...newItems],
         isLoadingMore: false,
         hasMore: response.hasMore,
         page: response.page,
@@ -156,6 +181,7 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
     return _service.getPosts(
       search: state.search,
       categoryId: state.selectedCategoryId,
+      sticky: false,
       page: page,
       perPage: _perPage,
       forceRefresh: forceRefresh,
@@ -189,7 +215,10 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
 }
 
 final paginatedNewsProvider =
-    StateNotifierProvider<PaginatedNewsNotifier, PaginatedNewsState>((ref) {
+    StateNotifierProvider.autoDispose<
+      PaginatedNewsNotifier,
+      PaginatedNewsState
+    >((ref) {
       final service = ref.watch(wordpressServiceProvider);
       return PaginatedNewsNotifier(service);
     });

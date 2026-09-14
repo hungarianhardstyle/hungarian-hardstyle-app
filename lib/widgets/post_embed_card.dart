@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../core/navigation/in_app_browser.dart';
 import '../models/post.dart';
 
 class PostEmbedCard extends StatefulWidget {
@@ -163,14 +164,14 @@ class _ExternalLink extends StatelessWidget {
 
 Future<void> _openExternal(String url) async {
   final uri = Uri.tryParse(_normalizeEmbedUrl(url));
-  if (uri != null) {
+  if (uri != null && isSafeInAppUri(uri)) {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
 
 Uri? _embedUri(PostEmbed embed) {
   final source = Uri.tryParse(_normalizeEmbedUrl(embed.url));
-  if (source == null || !source.isAbsolute) return null;
+  if (source == null || !isSafeInAppUri(source)) return null;
   switch (embed.type) {
     case 'youtube':
       final id = source.host.contains('youtu.be')

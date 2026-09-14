@@ -11,6 +11,7 @@ import '../../core/navigation/in_app_browser.dart';
 import '../../services/label_purchase_service.dart';
 import '../../services/wordpress_service.dart';
 import '../../core/errors/user_facing_error.dart';
+
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -270,7 +271,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   String _adCacheKey(String uid) =>
       'label_ad_unlock_${uid}_${_release.id}_$_rewardVariant';
 
-  String get _rewardVariant => _release.isFree ? 'free_wav' : 'mp3_128';
+  String get _rewardVariant => _release.isFree ? 'free_wav' : 'mp3_96';
 
   Future<void> _loadProducts() async {
     // Free releases intentionally have no Google Play product IDs. Do not
@@ -301,8 +302,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       if (_release.products.isEmpty) {
         if (mounted) {
           setState(
-            () => _message =
-                'A Play-termékazonosítók még nem érkeztek meg. Újrapróbálom automatikusan.',
+            () => _message = 'A Play-termékazonosítók még nem érkeztek meg. Újrapróbálom automatikusan.',
           );
         }
         _scheduleProductRetry();
@@ -331,8 +331,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       if (mounted) {
         setState(() {
           _products = const [];
-          _message =
-              'A Google Play terméklista most nem tölthető be. Próbáld újra később.';
+          _message = 'A Google Play terméklista most nem tölthető be. Próbáld újra később.';
         });
       }
     } finally {
@@ -345,20 +344,17 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     if (allConfiguredProductsFound) return;
     if (_purchases.lastNotFoundProductIds.isNotEmpty) {
       setState(
-        () => _message =
-            'A Google Play Billing ezen az eszközön még nem adta vissza a kiadvány termékét. Újrapróbálom automatikusan.',
+        () => _message = 'A Google Play Billing ezen az eszközön még nem adta vissza a kiadvány termékét. Újrapróbálom automatikusan.',
       );
       _scheduleProductRetry();
     } else if (!_purchases.lastStoreAvailable) {
       setState(
-        () => _message =
-            'A Google Play Billing szolgáltatás még nem áll készen. Újrapróbálom automatikusan.',
+        () => _message = 'A Google Play Billing szolgáltatás még nem áll készen. Újrapróbálom automatikusan.',
       );
       _scheduleProductRetry();
     } else {
       setState(
-        () => _message =
-            'A Google Play Billing lekérdezése nem adott vissza terméket. Újrapróbálom automatikusan.',
+        () => _message = 'A Google Play Billing lekérdezése nem adott vissza terméket. Újrapróbálom automatikusan.',
       );
       _scheduleProductRetry();
     }
@@ -421,6 +417,11 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final release = _release;
+    final coverCacheWidth =
+        (MediaQuery.sizeOf(context).width *
+                MediaQuery.devicePixelRatioOf(context))
+            .round()
+            .clamp(1080, 1600);
     return Scaffold(
       appBar: AppBar(title: Text(release.title)),
       body: ListView(
@@ -434,8 +435,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 child: CachedNetworkImage(
                   imageUrl: release.coverUrl,
                   fit: BoxFit.contain,
-                  memCacheWidth: 900,
-                  maxWidthDiskCache: 1200,
+                  memCacheWidth: coverCacheWidth,
+                  maxWidthDiskCache: coverCacheWidth,
                   color: const Color(0xFF171717),
                   colorBlendMode: BlendMode.dstOver,
                 ),
@@ -550,7 +551,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
           else if (!release.isFree)
             Card(
               child: ListTile(
-                title: const Text('128 kbps MP3 feloldása reklámmal'),
+                title: const Text('96 kbps MP3 feloldása reklámmal'),
                 subtitle: const Text(
                   'A jutalmazott reklám megtekintése után a fájl letölthető.',
                 ),
@@ -558,7 +559,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                   onPressed: _unlocking || _checkingAdUnlock
                       ? null
                       : _adUnlocked
-                      ? () => _download('mp3_128')
+                      ? () => _download('mp3_96')
                       : _unlockRewarded,
                   child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
                 ),
@@ -773,7 +774,11 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   Future<void> _unlockRewarded() async {
     final unlocked = await _claimReward(_rewardVariant);
     if (!unlocked || !mounted) return;
-    setState(() => _adUnlocked = true);
+    setState(() {
+      _adUnlocked = true;
+      _message = 'A jutalom jóváírva. A letöltés indul…';
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 350));
     final downloaded = await _download(_rewardVariant);
     if (mounted) {
       setState(
@@ -816,7 +821,10 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
         releaseId: _release.id,
         variant: variant,
       );
-      return launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      return await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
     } catch (error) {
       if (mounted) setState(() => _message = userFacingError(error));
       return false;

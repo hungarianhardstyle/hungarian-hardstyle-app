@@ -4,6 +4,7 @@ class CommunityPost {
   final String id;
   final String authorName;
   final String authorId;
+  final bool isAnonymous;
   final String authorImageUrl;
   final String authorRole;
   final String authorAccessRole;
@@ -17,6 +18,7 @@ class CommunityPost {
     required this.id,
     required this.authorName,
     required this.authorId,
+    required this.isAnonymous,
     required this.authorImageUrl,
     required this.authorRole,
     required this.authorAccessRole,
@@ -36,6 +38,9 @@ class CommunityPost {
       id: doc.id,
       authorId: data['authorId'] as String? ?? '',
       authorName: data['authorName'] as String? ?? 'Unknown User',
+      isAnonymous:
+          data['isAnonymous'] == true ||
+          (data['authorName'] as String? ?? '').startsWith('Unknown User '),
       authorImageUrl: data['authorImageUrl'] as String? ?? '',
       authorRole: data['authorRole'] as String? ?? '',
       authorAccessRole: data['authorAccessRole'] as String? ?? '',

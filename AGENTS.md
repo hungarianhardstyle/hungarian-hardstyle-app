@@ -1,5 +1,22 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Következő folytatandó feladat — teljes cache-first adatbetöltés
+
+- Minden hálózatról vagy Firebase-ből letöltött adatnál a korábbi állapot azonnal legyen látható.
+- A menüpont megnyitásakor induljon háttérfrissítés; sikeres válasznál frissüljön a cache és a képernyő.
+- Következő appindításkor is maradjon meg a legutóbbi adat, ne legyen üres lap vagy felesleges töltőképernyő.
+- Érintett területek: hírek, események, DJ-k, szervezők, kiadványok, játékok, toplisták, ajánlások, kommentek, chat, profilok és adminadatok.
+- Hibánál a használható korábbi cache maradjon látható; fiókváltáskor UID-kötötten ne keveredjenek az adatok.
+- A profil cache-first javítás már elkészült; a teljes többi adatbetöltési láncot a következő munkamenetben kell végigvezetni és tesztelni.
+
+### Tartós munkamenet-jegyzet — 2026-09-04
+
+- Profil törlés után a kliens törli a jelenlegi felhasználóhoz kötött profil-, achievement-, admin- és WordPress-cache állapotot, a helyi kedvenceket és biztonsági/token adatokat, majd kijelentkezik és a Kezdőlapra vált.
+- Ismerős-jelölés elfogadásakor a jelölő Notification-bejegyzést és push értesítést kap; a Firebase `notifyConnectionRequest` trigger élesítve van, determinisztikus duplikációvédelemmel.
+- Push értesítés elfogadáskor az elfogadó profiljára navigál; az appoldali változás a következő APK/AAB buildben érvényesül.
+- A hírek-, DJ- és szervezőkeresés API-válaszait a kliens valódi szöveges egyezéssel is szűri, ezért értelmetlen keresés nem adhat hamis találatot.
+- A projekt tartós „second brain” forrásai: ez az `AGENTS.md`, a gyökér `README.md`, valamint a Graphify-index (`graphify-out/`). Működő funkciót és meglévő menüpontot célzott javítás miatt sem szabad regressziósan eltávolítani.
+
 ### Aktuális build: +225 (1.0.0) — AAB a zárt tesztbe feltöltve, felülvizsgálatra beküldve
 
 - A +225 AAB elkészült és a Play zárt tesztébe feltöltve; a Play automatikus ellenőrzései még folyamatban lehetnek.

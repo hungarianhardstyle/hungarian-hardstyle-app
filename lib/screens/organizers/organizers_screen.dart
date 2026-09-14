@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/organizer.dart';
 import '../../providers/favorites_provider.dart';
+import '../../providers/news_provider.dart';
 import '../../providers/organizers_provider.dart';
 import '../../widgets/favorite_button.dart';
 import 'organizer_detail_screen.dart';
@@ -53,7 +54,13 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
         child: SafeArea(
           top: false,
           child: RefreshIndicator(
-            onRefresh: () => ref.refresh(organizersProvider(_search).future),
+            onRefresh: () async {
+              await ref
+                  .read(wordpressServiceProvider)
+                  .getOrganizers(search: _search, forceRefresh: true);
+              ref.invalidate(organizersProvider(_search));
+              await ref.read(organizersProvider(_search).future);
+            },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
@@ -152,6 +159,9 @@ class _OrganizerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final logoCacheWidth = (88 * MediaQuery.devicePixelRatioOf(context))
+        .round()
+        .clamp(176, 352);
     return Material(
       color: const Color(0xFF171717),
       shape: RoundedRectangleBorder(
@@ -186,8 +196,8 @@ class _OrganizerCard extends ConsumerWidget {
                       ? CachedNetworkImage(
                           imageUrl: organizer.logoUrl,
                           fit: BoxFit.contain,
-                          memCacheWidth: 180,
-                          maxWidthDiskCache: 180,
+                          memCacheWidth: logoCacheWidth,
+                          maxWidthDiskCache: logoCacheWidth,
                         )
                       : const Icon(
                           Icons.groups,

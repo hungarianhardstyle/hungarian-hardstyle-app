@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +31,7 @@ class _MainNavigationState extends State<MainNavigation>
   final _tabs = List<Widget?>.filled(_tabCount, null);
   bool _checkingUpdate = false;
   bool _updateDialogOpen = false;
+  bool _updateRetryScheduled = false;
   bool _exitDialogOpen = false;
   bool _backHandling = false;
   DateTime? _lastSystemBackAt;
@@ -56,12 +56,22 @@ class _MainNavigationState extends State<MainNavigation>
     }
   }
 
-  Future<void> _checkForUpdate() async {
+  Future<void> _checkForUpdate({bool retryWhenMissing = true}) async {
     if (_checkingUpdate || _updateDialogOpen || !mounted) return;
     _checkingUpdate = true;
     try {
       final info = await AppUpdateService().check();
-      if (info == null || !mounted || _updateDialogOpen) return;
+      if (info == null) {
+        if (retryWhenMissing && mounted && !_updateRetryScheduled) {
+          _updateRetryScheduled = true;
+          Future<void>.delayed(const Duration(seconds: 4), () {
+            _updateRetryScheduled = false;
+            if (mounted) _checkForUpdate(retryWhenMissing: false);
+          });
+        }
+        return;
+      }
+      if (!mounted || _updateDialogOpen) return;
       _updateDialogOpen = true;
       await showDialog<void>(
         context: context,
@@ -100,7 +110,10 @@ class _MainNavigationState extends State<MainNavigation>
     if (mounted) setState(() => _currentIndex = index);
   }
 
-  void _openNewsTab() => _setCurrentIndex(1);
+  void _openNewsTab() {
+    _navigatorKeys[1].currentState?.popUntil((route) => route.isFirst);
+    _setCurrentIndex(1);
+  }
 
   Widget _tabNavigator(int index) {
     final navigator = Navigator(
@@ -115,7 +128,9 @@ class _MainNavigationState extends State<MainNavigation>
             case 2:
               return const EventsScreen();
             case 3:
-              return const LiveFeedScreen();
+              return LiveFeedScreen(
+                onProfileDeleted: () => _setCurrentIndex(0),
+              );
             case 4:
               return ReleasesScreen(key: _releasesKey);
             default:
@@ -165,9 +180,8 @@ class _MainNavigationState extends State<MainNavigation>
       );
       if (exit == true) {
         try {
-          await const MethodChannel(
-            'hu_hs/radio',
-          ).invokeMethod<void>('closeApp');
+          await const MethodChannel('hu_hs/radio')
+              .invokeMethod<void>('closeApp');
         } on MissingPluginException {
           await SystemNavigator.pop();
         }
@@ -215,37 +229,59 @@ class _MainNavigationState extends State<MainNavigation>
     }
   }
 
-  Widget _portraitNavigationBar() => NavigationBar(
-    selectedIndex: _currentIndex,
-    onDestinationSelected: _selectTab,
-    destinations: const [
-      NavigationDestination(
-        icon: Icon(Icons.home_outlined),
-        selectedIcon: Icon(Icons.home),
-        label: 'Kezdőlap',
+  Widget _navGraphic(String asset, {bool selected = false}) => Opacity(
+    opacity: selected ? 1 : .72,
+    child: Image.asset(
+      'assets/images/$asset.png',
+      width: 34,
+      height: 34,
+      fit: BoxFit.contain,
+    ),
+  );
+
+  Widget _portraitNavigationBar() => Container(
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      border: Border(
+        top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
-      NavigationDestination(
-        icon: Icon(Icons.article_outlined),
-        selectedIcon: Icon(Icons.article),
-        label: 'Hírek',
-      ),
-      NavigationDestination(
-        icon: Icon(Icons.event_outlined),
-        selectedIcon: Icon(Icons.event),
-        label: 'Események',
-      ),
-      NavigationDestination(
-        icon: Icon(Icons.forum_outlined),
-        selectedIcon: Icon(Icons.forum),
-        label: 'Chat',
-      ),
-      NavigationDestination(
-        icon: Icon(Icons.album_outlined),
-        selectedIcon: Icon(Icons.album),
-        label: 'Label',
-      ),
-      NavigationDestination(icon: Icon(Icons.menu), label: 'Több'),
-    ],
+    ),
+    child: NavigationBar(
+      selectedIndex: _currentIndex,
+      onDestinationSelected: _selectTab,
+      destinations: [
+        NavigationDestination(
+          icon: _navGraphic('nav_home'),
+          selectedIcon: _navGraphic('nav_home', selected: true),
+          label: 'Kezdőlap',
+        ),
+        NavigationDestination(
+          icon: _navGraphic('nav_news'),
+          selectedIcon: _navGraphic('nav_news', selected: true),
+          label: 'Hírek',
+        ),
+        NavigationDestination(
+          icon: _navGraphic('nav_events'),
+          selectedIcon: _navGraphic('nav_events', selected: true),
+          label: 'Események',
+        ),
+        NavigationDestination(
+          icon: _navGraphic('nav_chat'),
+          selectedIcon: _navGraphic('nav_chat', selected: true),
+          label: 'Chat',
+        ),
+        NavigationDestination(
+          icon: _navGraphic('nav_label'),
+          selectedIcon: _navGraphic('nav_label', selected: true),
+          label: 'Label',
+        ),
+        NavigationDestination(
+          icon: _navGraphic('nav_more'),
+          selectedIcon: _navGraphic('nav_more', selected: true),
+          label: 'Több',
+        ),
+      ],
+    ),
   );
 
   Widget _landscapeNavigationRail() => NavigationRail(
@@ -254,43 +290,38 @@ class _MainNavigationState extends State<MainNavigation>
     scrollable: true,
     labelType: NavigationRailLabelType.all,
     useIndicator: true,
-    destinations: const [
+    destinations: [
       NavigationRailDestination(
-        icon: Icon(Icons.home_outlined),
-        selectedIcon: Icon(Icons.home),
+        icon: _navGraphic('nav_home'),
+        selectedIcon: _navGraphic('nav_home', selected: true),
         label: Text('Kezdőlap'),
       ),
       NavigationRailDestination(
-        icon: Icon(Icons.article_outlined),
-        selectedIcon: Icon(Icons.article),
+        icon: _navGraphic('nav_news'),
+        selectedIcon: _navGraphic('nav_news', selected: true),
         label: Text('Hírek'),
       ),
       NavigationRailDestination(
-        icon: Icon(Icons.event_outlined),
-        selectedIcon: Icon(Icons.event),
+        icon: _navGraphic('nav_events'),
+        selectedIcon: _navGraphic('nav_events', selected: true),
         label: Text('Események'),
       ),
       NavigationRailDestination(
-        icon: Icon(Icons.forum_outlined),
-        selectedIcon: Icon(Icons.forum),
+        icon: _navGraphic('nav_chat'),
+        selectedIcon: _navGraphic('nav_chat', selected: true),
         label: Text('Chat'),
       ),
       NavigationRailDestination(
-        icon: Icon(Icons.album_outlined),
-        selectedIcon: Icon(Icons.album),
+        icon: _navGraphic('nav_label'),
+        selectedIcon: _navGraphic('nav_label', selected: true),
         label: Text('Label'),
       ),
-      NavigationRailDestination(icon: Icon(Icons.menu), label: Text('Több')),
+      NavigationRailDestination(
+        icon: _navGraphic('nav_more'),
+        label: Text('Több'),
+      ),
     ],
   );
-
-  double _landscapeBottomInset(BuildContext context) {
-    final media = MediaQuery.of(context);
-    return math.max(
-      media.viewPadding.bottom,
-      math.max(media.padding.bottom, media.systemGestureInsets.bottom),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -312,25 +343,13 @@ class _MainNavigationState extends State<MainNavigation>
                       children: [
                         _landscapeNavigationRail(),
                         const SizedBox(width: 1, height: 1),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              Expanded(child: _contentStack()),
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  bottom: _landscapeBottomInset(context) + 12,
-                                ),
-                                child: const RadioPlayerBar(),
-                              ),
-                            ],
-                          ),
-                        ),
+                        Expanded(child: _contentStack()),
                       ],
                     ),
                   )
                 : _contentStack(),
             bottomNavigationBar: landscape
-                ? SizedBox(width: 1, height: 1, child: _portraitNavigationBar())
+                ? const SafeArea(top: false, child: RadioPlayerBar())
                 : Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

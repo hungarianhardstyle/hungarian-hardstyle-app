@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/artist.dart';
 import '../../providers/artists_provider.dart';
 import '../../providers/favorites_provider.dart';
+import '../../providers/news_provider.dart';
 import '../../widgets/favorite_button.dart';
 import 'artist_detail_screen.dart';
 
@@ -56,7 +57,17 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
         child: SafeArea(
           top: false,
           child: RefreshIndicator(
-            onRefresh: () => ref.refresh(artistsProvider(_query).future),
+            onRefresh: () async {
+              await ref
+                  .read(wordpressServiceProvider)
+                  .getArtists(
+                    search: _search,
+                    category: _category,
+                    forceRefresh: true,
+                  );
+              ref.invalidate(artistsProvider(_query));
+              await ref.read(artistsProvider(_query).future);
+            },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [

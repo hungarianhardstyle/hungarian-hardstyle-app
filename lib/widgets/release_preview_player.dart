@@ -34,6 +34,7 @@ class _ReleasePreviewPlayerState extends State<ReleasePreviewPlayer>
   StreamSubscription<PlayerState>? _stateSubscription;
   bool _toggleBusy = false;
   bool _completionResetBusy = false;
+  bool _resumeRadioAfterStop = false;
 
   @override
   void initState() {
@@ -59,6 +60,7 @@ class _ReleasePreviewPlayerState extends State<ReleasePreviewPlayer>
       if (identical(_activePlayer, this)) {
         _activePlayer = null;
         releasePreviewPlayingState.value = false;
+        _resumeRadioAfterStop = false;
       }
       await _player.stop();
       if (mounted) setState(() {});
@@ -73,35 +75,37 @@ class _ReleasePreviewPlayerState extends State<ReleasePreviewPlayer>
     if (identical(_activePlayer, this)) {
       _activePlayer = null;
       releasePreviewPlayingState.value = false;
+      _resumeRadioAfterStop = false;
     }
     _player.dispose();
     super.dispose();
   }
 
-  Future<void> _toggle() async {
+  Future<void> _playPreview() async {
     if (_toggleBusy) return;
     _toggleBusy = true;
     try {
+      if (_player.playing) return;
+      // Read the native player as well as the Flutter notifier. The notifier
+      // can briefly lag behind while the radio service is starting/stopping.
+      _resumeRadioAfterStop = await isRadioPlaybackActive();
+      if (_resumeRadioAfterStop) {
+        await stopRadioPlayback();
+      }
       if (_player.position >=
           (_player.duration ?? const Duration(minutes: 1)) -
               const Duration(milliseconds: 300)) {
         await _player.seek(Duration.zero);
       }
-      if (_player.playing) {
-        await _player.pause();
-      } else {
-        final previous = _activePlayer;
-        if (previous != null && !identical(previous, this)) {
-          await previous._player.pause();
-        }
-        _activePlayer = this;
-        await stopRadioPlayback();
-        releasePreviewPlayingState.value = true;
-        // `play()` completes when playback ends. Do not keep the toggle lock
-        // for the whole 60-second preview; otherwise pause and stop taps are
-        // ignored until the preview finishes.
-        unawaited(_playSafely());
+      final previous = _activePlayer;
+      if (previous != null && !identical(previous, this)) {
+        await previous._player.pause();
       }
+      _activePlayer = this;
+      releasePreviewPlayingState.value = true;
+      // `play()` completes when playback ends. Do not keep the toggle lock
+      // for the whole 60-second preview.
+      unawaited(_playSafely());
     } finally {
       _toggleBusy = false;
     }
@@ -122,11 +126,17 @@ class _ReleasePreviewPlayerState extends State<ReleasePreviewPlayer>
     if (_toggleBusy) return;
     _toggleBusy = true;
     try {
+      final resumeRadio =
+          identical(_activePlayer, this) && _resumeRadioAfterStop;
       if (identical(_activePlayer, this)) {
         _activePlayer = null;
         releasePreviewPlayingState.value = false;
       }
       await _player.stop();
+      _resumeRadioAfterStop = false;
+      if (resumeRadio) {
+        await resumeRadioPlayback();
+      }
     } finally {
       _toggleBusy = false;
     }
@@ -151,19 +161,21 @@ class _ReleasePreviewPlayerState extends State<ReleasePreviewPlayer>
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  tooltip: playing ? 'Szünet' : 'Preview lejátszása',
-                  icon: Icon(
-                    playing
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_fill,
+                  tooltip: 'Preview lejátszása',
+                  icon: const Icon(
+                    Icons.play_circle_fill,
                     color: Colors.redAccent,
                     size: 34,
                   ),
-                  onPressed: _toggle,
+                  onPressed: playing ? null : _playPreview,
                 ),
                 IconButton(
                   tooltip: 'Preview leállítása',
-                  icon: Icon(Icons.stop_circle_outlined, color: Colors.white),
+                  icon: const Icon(
+                    Icons.stop_circle,
+                    color: Colors.redAccent,
+                    size: 34,
+                  ),
                   onPressed: _stop,
                 ),
               ],

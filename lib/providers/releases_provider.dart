@@ -8,6 +8,7 @@ typedef ReleaseQuery = ({String search, int artistId});
 
 final releasesProvider = FutureProvider.autoDispose
     .family<List<HuhsRelease>, ReleaseQuery>((ref, query) async {
+      ref.watch(publicContentRefreshProvider);
       ref.keepAlive();
       final releases = await ref
           .watch(wordpressServiceProvider)

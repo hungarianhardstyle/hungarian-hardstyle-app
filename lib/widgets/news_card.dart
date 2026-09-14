@@ -14,22 +14,20 @@ class NewsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final imageCacheWidth = (MediaQuery.sizeOf(context).width * dpr)
+        .round()
+        .clamp(720, 1600);
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
       decoration: BoxDecoration(
-        color: const Color(0xFF171717),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF5A2424)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFF03A37).withValues(alpha: .12),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: colors.surfaceContainer,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colors.outlineVariant),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         onTap: () {
           Navigator.push(
             context,
@@ -45,7 +43,7 @@ class NewsCard extends StatelessWidget {
                     tag: "post_${post.id}",
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(12),
+                        top: Radius.circular(8),
                       ),
                       child: AspectRatio(
                         aspectRatio: 16 / 9,
@@ -53,8 +51,8 @@ class NewsCard extends StatelessWidget {
                             ? CachedNetworkImage(
                                 imageUrl: post.imageUrl,
                                 fit: BoxFit.cover,
-                                memCacheWidth: 800,
-                                maxWidthDiskCache: 800,
+                                memCacheWidth: imageCacheWidth,
+                                maxWidthDiskCache: imageCacheWidth,
                               )
                             : Container(
                                 color: Colors.grey.shade900,
@@ -76,7 +74,8 @@ class NewsCard extends StatelessWidget {
                           post.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
+                            color: colors.onSurface,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             height: 1.25,
@@ -88,8 +87,8 @@ class NewsCard extends StatelessWidget {
                             post.articleCategories.join(' · '),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.redAccent,
+                            style: TextStyle(
+                              color: colors.primary,
                               fontSize: 13,
                             ),
                           ),
@@ -107,25 +106,25 @@ class NewsCard extends StatelessWidget {
                         const SizedBox(height: 14),
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.calendar_today,
                               size: 16,
-                              color: Colors.redAccent,
+                              color: colors.primary,
                             ),
                             const SizedBox(width: 8),
                             Text(
                               formatHungarianDate(post.date),
                               style: TextStyle(
-                                color: Colors.grey.shade400,
+                                color: colors.onSurfaceVariant,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             NewsReactionButton(postId: post.id),
                             const Spacer(),
-                            const Icon(
+                            Icon(
                               Icons.arrow_forward_ios,
                               size: 16,
-                              color: Colors.redAccent,
+                              color: colors.primary,
                             ),
                           ],
                         ),
@@ -146,6 +145,9 @@ class _CompactNewsCardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageCacheWidth = (240 * MediaQuery.devicePixelRatioOf(context))
+        .round()
+        .clamp(480, 1200);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -160,8 +162,8 @@ class _CompactNewsCardContent extends StatelessWidget {
                 ? CachedNetworkImage(
                     imageUrl: post.imageUrl,
                     fit: BoxFit.cover,
-                    memCacheWidth: 480,
-                    maxWidthDiskCache: 480,
+                    memCacheWidth: imageCacheWidth,
+                    maxWidthDiskCache: imageCacheWidth,
                   )
                 : Container(
                     color: Colors.grey.shade900,
@@ -179,7 +181,7 @@ class _CompactNewsCardContent extends StatelessWidget {
                   post.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     height: 1.2,
@@ -191,10 +193,7 @@ class _CompactNewsCardContent extends StatelessWidget {
                     post.articleCategories.join(' · '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.redAccent,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.redAccent, fontSize: 12),
                   ),
                 ],
                 const SizedBox(height: 8),

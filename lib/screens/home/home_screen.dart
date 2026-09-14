@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/voting_provider.dart';
+import '../../providers/games_provider.dart';
 import '../../models/post.dart';
+import '../../models/game.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
@@ -17,6 +20,7 @@ import '../notifications/notification_center_screen.dart';
 import '../community/community_screen.dart';
 import '../more/community_users_screen.dart';
 import '../voting/voting_screen.dart';
+import '../games/game_screen.dart';
 
 class _NotificationButton extends StatelessWidget {
   const _NotificationButton({required this.count, required this.onPressed});
@@ -32,7 +36,17 @@ class _NotificationButton extends StatelessWidget {
         IconButton(
           tooltip: 'Értesítések',
           onPressed: onPressed,
-          icon: const Icon(Icons.notifications_none, size: 30),
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+            foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          icon: const Icon(Icons.notifications_none_rounded, size: 24),
         ),
         if (count > 0)
           Positioned(
@@ -70,8 +84,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final news = ref.watch(newsProvider);
     final events = ref.watch(eventsProvider);
-    final width = MediaQuery.of(context).size.width;
-
+    final activeGame = ref.watch(activeGameProvider);
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -138,95 +151,165 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 18),
                     Container(
-                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFF16090B), Color(0xFF2A080D)],
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Theme.of(context).colorScheme.surfaceContainer,
+                            Theme.of(context).colorScheme.surfaceContainerHigh,
+                          ],
                         ),
-                        border: Border.all(color: Colors.white12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x331F0005),
-                            blurRadius: 22,
-                            offset: Offset(0, 8),
+                        border: Border(
+                          left: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 4,
                           ),
-                        ],
+                          top: BorderSide(
+                            color: Theme.of(context).colorScheme.primary
+                                .withValues(alpha: .55),
+                          ),
+                          bottom: BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
                       ),
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Image.asset(
-                            'assets/logos/huhs_logo.png',
-                            width: width > 900 ? 780 : width * 0.86,
-                            fit: BoxFit.contain,
+                          Row(
+                            children: [
+                              Text(
+                                'HUNGARIAN HARDSTYLE',
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      letterSpacing: 1.5,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                              ),
+                              const Spacer(),
+                            ],
                           ),
-                          const SizedBox(height: 10),
-                          Container(
-                            width: 42,
-                            height: 2,
-                            decoration: BoxDecoration(
-                              color: Colors.redAccent,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                          const SizedBox(height: 9),
-                          Text(
-                            'A magyar hardstyle otthona',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  color: Colors.white70,
-                                  letterSpacing: 1.4,
-                                  fontWeight: FontWeight.w500,
+                          const SizedBox(height: 12),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                flex: 7,
+                                child: Transform.translate(
+                                  offset: const Offset(-38, 0),
+                                  child: Transform.scale(
+                                    scale: 1.28,
+                                    alignment: Alignment.centerLeft,
+                                    child: Image.asset(
+                                      'assets/logos/huhs_logo.png',
+                                      height: 96,
+                                      width: double.infinity,
+                                      alignment: Alignment.centerLeft,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
                                 ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 5,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'KICK  /  CULTURE  /  COMMUNITY',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            letterSpacing: 1.4,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      'A magyar hardstyle otthona',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Legfrissebb hírek',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
                     ref
                         .watch(votingProvider)
                         .when(
                           loading: () => const SizedBox.shrink(),
                           error: (_, _) => const SizedBox.shrink(),
-                          data: (season) => season.active
+                          data: (season) => season.active || season.isClosed
                               ? Padding(
-                                  padding: const EdgeInsets.only(bottom: 18),
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    child: FilledButton.icon(
-                                      onPressed: () =>
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        backgroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainer,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 10,
+                                        ),
+                                        minimumSize: Size.zero,
+                                      ),
+                                      onPressed: () {
+                                        if (season.hasPublishedResults) {
+                                          launchUrl(
+                                            Uri.parse(season.resultsUrl),
+                                            mode:
+                                                LaunchMode.externalApplication,
+                                          );
+                                        } else {
                                           Navigator.of(context).push(
                                             MaterialPageRoute<void>(
                                               builder: (_) =>
                                                   const VotingScreen(),
                                             ),
-                                          ),
+                                          );
+                                        }
+                                      },
                                       icon: const Icon(
                                         Icons.how_to_vote_outlined,
+                                        size: 20,
                                       ),
                                       label: Text(
-                                        'Szavazz a HUHS ${season.year} jelöltjeire',
+                                        season.hasPublishedResults
+                                            ? 'Eredmények megtekintése'
+                                            : season.isClosed
+                                            ? 'A szavazás véget ért'
+                                            : 'Szavazz a HUHS ${season.year} jelöltjeire',
                                       ),
                                     ),
                                   ),
                                 )
                               : const SizedBox.shrink(),
                         ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Legfrissebb hírek',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 6),
                     news.when(
                       loading: () => const Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),
@@ -273,28 +356,51 @@ class HomeScreen extends ConsumerWidget {
                         return Column(
                           children: [
                             _NewsSlider(posts: latestPosts),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 16),
                             SizedBox(
                               width: double.infinity,
-                              child: FilledButton.icon(
+                              child: OutlinedButton.icon(
                                 onPressed: onShowMoreNews,
-                                icon: const Icon(Icons.article_outlined),
+                                icon: const Icon(Icons.arrow_forward_rounded),
                                 label: const Text('További hírek'),
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainer,
+                                  foregroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .primary,
+                                  side: BorderSide(
+                                    color: Theme.of(context).colorScheme.primary
+                                        .withValues(alpha: .7),
+                                  ),
+                                  alignment: Alignment.centerLeft,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                ),
                               ),
+                            ),
+                            activeGame.when(
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, _) => const SizedBox.shrink(),
+                              data: (game) => game == null
+                                  ? const SizedBox.shrink()
+                                  : Padding(
+                                      padding: const EdgeInsets.only(top: 16),
+                                      child: _ActiveGameCard(game: game),
+                                    ),
                             ),
                           ],
                         );
                       },
                     ),
                     const SizedBox(height: 35),
-                    const Text(
+                    Text(
                       'Közelgő események',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 14),
                     events.when(
                       loading: () => const SizedBox(
                         height: 210,
@@ -366,6 +472,84 @@ class HomeScreen extends ConsumerWidget {
                     const Center(child: MobileAdBanner()),
                   ],
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActiveGameCard extends StatelessWidget {
+  const _ActiveGameCard({required this.game});
+
+  final HuhsGame game;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => GameScreen(game: game))),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: .65),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (game.artwork.isNotEmpty)
+              Container(
+                color: Colors.black,
+                child: Image.network(
+                  game.artwork,
+                  width: double.infinity,
+                  fit: BoxFit.fitWidth,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'JÁTÉK',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      letterSpacing: 1.4,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    game.title,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  if (game.summary.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      game.summary,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.play_circle_outline_rounded, size: 20),
+                      const SizedBox(width: 6),
+                      Text('Játék megnyitása'),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],

@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/errors/user_facing_error.dart';
 import '../../services/community_service.dart';
 
 class ReferralScreen extends StatefulWidget {
@@ -12,26 +14,34 @@ class ReferralScreen extends StatefulWidget {
 }
 
 class _ReferralScreenState extends State<ReferralScreen> {
-  late final Future<String> _codeFuture = CommunityService().getMyReferralCode();
+  late Future<String> _codeFuture;
 
-  String _inviteUrl(String code) => Uri.https(
-        'play.google.com',
-        '/store/apps/details',
-        <String, String>{
-          'id': 'hu.hungarianhardstyle.app',
-          'referrer': 'referral_code=$code',
-        },
-      ).toString();
+  @override
+  void initState() {
+    super.initState();
+    _codeFuture = _loadCode();
+  }
+
+  Future<String> _loadCode() async {
+    await FirebaseAuth.instance.authStateChanges().first;
+    return CommunityService().getMyReferralCode();
+  }
+
+  void _retry() {
+    setState(() => _codeFuture = _loadCode());
+  }
+
+  String _inviteUrl(String code) =>
+      Uri.https('play.google.com', '/store/apps/details', <String, String>{
+        'id': 'hu.hungarianhardstyle.app',
+        'referrer': 'referral_code=$code',
+      }).toString();
 
   String _inviteText(String code) =>
       'Csatlakozz a HUHS közösséghez! Regisztrálj az ajánlólinkkel: ${_inviteUrl(code)}';
 
   Future<void> _copy(String code) async {
-    await Clipboard.setData(
-      ClipboardData(
-        text: _inviteText(code),
-      ),
-    );
+    await Clipboard.setData(ClipboardData(text: _inviteText(code)));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Az ajánlószöveg a vágólapra másolva.')),
@@ -57,7 +67,25 @@ class _ReferralScreenState extends State<ReferralScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError || !snapshot.hasData) {
-            return const Center(child: Text('Az ajánlókód nem tölthető be.'));
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    snapshot.hasError
+                        ? userFacingError(snapshot.error)
+                        : 'Az ajánlókód nem tölthető be.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: _retry,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Újrapróbálás'),
+                  ),
+                ],
+              ),
+            );
           }
           final code = snapshot.data!;
           return ListView(

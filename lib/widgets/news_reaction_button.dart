@@ -56,7 +56,17 @@ class _NewsReactionButtonState extends State<NewsReactionButton> {
 
   Future<void> _toggle() async {
     if (_busy) return;
-    setState(() => _busy = true);
+    final previous = _state;
+    final optimistic = NewsReactionState(
+      count: (previous.count + (previous.liked ? -1 : 1))
+          .clamp(0, 1 << 31)
+          .toInt(),
+      liked: !previous.liked,
+    );
+    setState(() {
+      _busy = true;
+      _state = optimistic;
+    });
     try {
       final state = await _service.toggle(widget.postId);
       if (mounted) {
@@ -69,9 +79,9 @@ class _NewsReactionButtonState extends State<NewsReactionButton> {
         });
         setState(() => _state = state);
       }
-    } catch (error, stackTrace) {
-      debugPrint('Hír-like mentési hiba: $error\n$stackTrace');
+    } catch (_) {
       if (mounted) {
+        setState(() => _state = previous);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('A reakció mentése nem sikerült.')),
         );

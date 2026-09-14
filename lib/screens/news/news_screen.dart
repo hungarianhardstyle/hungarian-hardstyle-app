@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/news_provider.dart';
+import '../../models/post.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../widgets/brand_loading_indicator.dart';
+import '../../widgets/huhs_corner_logo.dart';
 import '../../widgets/news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
 
@@ -61,6 +63,8 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(paginatedNewsProvider);
+    final stickyState = ref.watch(stickyNewsProvider);
+    final stickyPosts = stickyState.valueOrNull ?? const <Post>[];
     final posts = state.visiblePosts;
     final hasSecondAd = posts.length >= 4;
     // The first banner lives in the eagerly-built header above. Posts can
@@ -85,8 +89,13 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
             children: [
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: () =>
+                  onRefresh: () async {
+                    ref.invalidate(stickyNewsProvider);
+                    await Future.wait<void>([
                       ref.read(paginatedNewsProvider.notifier).refresh(),
+                      ref.read(stickyNewsProvider.future),
+                    ]);
+                  },
                   child: state.isLoading && state.posts.isEmpty
                       ? const Center(child: BrandLoadingIndicator(size: 220))
                       : ListView.builder(
@@ -101,12 +110,19 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Hírek',
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  const Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          'Hírek',
+                                          style: TextStyle(
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      HuhsCornerLogo(),
+                                    ],
                                   ),
                                   const SizedBox(height: 16),
                                   TextField(
@@ -186,6 +202,27 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                       ),
                                     ),
                                   ],
+                                  if (stickyPosts.isNotEmpty) ...[
+                                    const SizedBox(height: 18),
+                                    const Text(
+                                      'Kiemelt hírek',
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    for (final post in stickyPosts)
+                                      NewsCard(post: post),
+                                  ],
+                                  const SizedBox(height: 18),
+                                  const Text(
+                                    'Friss hírek',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                   const SizedBox(height: 14),
                                   // This slot is part of the immediately
                                   // visible header, so the news banner starts

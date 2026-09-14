@@ -4,5 +4,6 @@ import '../models/voting.dart';
 import 'news_provider.dart';
 
 final votingProvider = FutureProvider<VotingSeason>((ref) async {
+  ref.watch(publicContentRefreshProvider);
   return ref.watch(wordpressServiceProvider).getActiveVoting();
 });

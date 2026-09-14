@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event.dart';
 import 'news_provider.dart';
 
-final eventsProvider = FutureProvider<List<HuhsEvent>>((ref) async {
+final eventsProvider = FutureProvider.autoDispose<List<HuhsEvent>>((ref) async {
+  ref.keepAlive();
+  ref.watch(publicContentRefreshProvider);
   final refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
     ref.invalidateSelf();
   });
@@ -15,7 +17,11 @@ final eventsProvider = FutureProvider<List<HuhsEvent>>((ref) async {
   return service.getEvents();
 });
 
-final pastEventsProvider = FutureProvider<List<HuhsEvent>>((ref) async {
+final pastEventsProvider = FutureProvider.autoDispose<List<HuhsEvent>>((
+  ref,
+) async {
+  ref.keepAlive();
+  ref.watch(publicContentRefreshProvider);
   final service = ref.watch(wordpressServiceProvider);
   final events = await service.getEvents(includePast: true);
   final past = events.where((event) => event.isPast).toList();
@@ -34,7 +40,9 @@ DateTime _eventDateTime(HuhsEvent event) {
       DateTime.fromMillisecondsSinceEpoch(0);
 }
 
-final eventSubmissionGenresProvider = FutureProvider<List<String>>((ref) async {
+final eventSubmissionGenresProvider = FutureProvider.autoDispose<List<String>>((
+  ref,
+) async {
   final service = ref.watch(wordpressServiceProvider);
   return service.getEventSubmissionGenres();
 });

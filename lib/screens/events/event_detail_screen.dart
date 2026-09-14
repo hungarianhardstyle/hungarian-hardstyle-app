@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -15,6 +16,7 @@ import '../organizers/organizer_detail_screen.dart';
 import '../../widgets/genre_chip.dart';
 import '../../providers/community_provider.dart';
 import '../../services/wordpress_service.dart';
+import '../../core/errors/user_facing_error.dart';
 import 'event_meetup_screen.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
@@ -33,6 +35,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   bool _attendanceBusy = false;
   late Future<String?> _attendanceFuture;
   late Future<List<Map<String, String>>> _friendAttendanceFuture;
+  late Future<Map<String, dynamic>> _ratingFuture;
 
   @override
   void initState() {
@@ -45,6 +48,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     _friendAttendanceFuture = ref
         .read(communityServiceProvider)
         .getFriendAttendees(event.id);
+    _ratingFuture = ref.read(communityServiceProvider).getEventRating(event.id);
   }
 
   Future<void> _loadFullEvent() async {
@@ -135,6 +139,103 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
         icon: const Icon(Icons.groups_outlined),
         label: const Text('Meetup az eseményen'),
       ),
+    );
+  }
+
+  Future<void> _rateEvent() async {
+    final service = ref.read(communityServiceProvider);
+    final user = service.auth.currentUser;
+    if (user == null || user.isAnonymous || !event.isPast) return;
+    final current = await _ratingFuture;
+    if (current['myScore'] != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ezt az eseményt már értékelted.')),
+        );
+      }
+      return;
+    }
+    if (!mounted) return;
+    final score = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Esemény értékelése'),
+        content: const Text('Hány csillagot adsz az eseménynek?'),
+        actions: [
+          for (var value = 1; value <= 5; value++)
+            TextButton(
+              onPressed: () => Navigator.pop(context, value),
+              child: Text('$value ★'),
+            ),
+        ],
+      ),
+    );
+    if (score == null || !mounted) return;
+    try {
+      await service.rateEvent(eventId: event.id, score: score);
+      if (mounted) {
+        setState(() {
+          _ratingFuture = service.getEventRating(event.id);
+        });
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Köszönjük az értékelést! +10 achipont.'),
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+      }
+    }
+  }
+
+  Widget _ratingSection(User? user) {
+    if (!event.isPast || user == null || user.isAnonymous) {
+      return const SizedBox.shrink();
+    }
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _ratingFuture,
+      builder: (context, snapshot) {
+        final data = snapshot.data;
+        final myScore = (data?['myScore'] as num?)?.toInt();
+        final average = (data?['average'] as num?)?.toDouble() ?? 0;
+        final count = (data?['count'] as num?)?.toInt() ?? 0;
+        return Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (count > 0)
+                Row(
+                  children: [
+                    Text(
+                      List.filled(5, '★').join(),
+                      style: const TextStyle(color: Colors.amber, fontSize: 20),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${average.toStringAsFixed(1)} / 5 ($count értékelés)',
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 6),
+              if (myScore != null)
+                Text('Már értékelted: ${List.filled(myScore, '★').join()}')
+              else
+                OutlinedButton.icon(
+                  onPressed: _rateEvent,
+                  icon: const Icon(Icons.star_border),
+                  label: const Text('Esemény értékelése'),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -260,7 +361,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                         child: CachedNetworkImage(
                           imageUrl: event.flyerUrl,
                           width: double.infinity,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                          color: const Color(0xFF101010),
+                          colorBlendMode: BlendMode.dstOver,
                         ),
                       ),
                     Padding(
@@ -479,6 +583,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                           ],
                                         ),
                                       _meetupButton(),
+                                      _ratingSection(user),
                                     ],
                                   );
                                 },

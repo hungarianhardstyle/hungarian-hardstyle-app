@@ -1,9 +1,13 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,35 +16,137 @@ import 'package:otp/otp.dart';
 
 import '../models/community_post.dart';
 import '../models/achievement.dart';
+import '../core/firebase/firebase_callable.dart';
 import 'wordpress_service.dart';
 
 class _AchievementCacheEntry {
-  const _AchievementCacheEntry(this.value, this.expiresAt);
+  _AchievementCacheEntry(this.value) : fetchedAt = DateTime.now();
 
   final AchievementSummary value;
-  final DateTime expiresAt;
+  final DateTime fetchedAt;
+
+  bool get isFresh =>
+      DateTime.now().difference(fetchedAt) <
+      CommunityService._publicAchievementCacheTtl;
 }
 
 class _PublicProfileCacheEntry {
-  const _PublicProfileCacheEntry(this.data, this.exists, this.expiresAt);
+  _PublicProfileCacheEntry(this.data, this.exists) : fetchedAt = DateTime.now();
 
   final Map<String, dynamic> data;
   final bool exists;
-  final DateTime expiresAt;
+  final DateTime fetchedAt;
+
+  bool get isFresh =>
+      DateTime.now().difference(fetchedAt) < CommunityService._publicCacheTtl;
+}
+
+class _AdminCacheEntry {
+  _AdminCacheEntry(this.value) : fetchedAt = DateTime.now();
+
+  final dynamic value;
+  final DateTime fetchedAt;
+
+  bool get isFresh =>
+      DateTime.now().difference(fetchedAt) < CommunityService._adminCacheTtl;
+}
+
+class CloudinaryUploadResult {
+  const CloudinaryUploadResult({required this.url, required this.publicId});
+
+  final String url;
+  final String publicId;
+}
+
+enum GoogleProfileBootstrapStatus { saved, missingName, invalidName, nameTaken }
+
+bool _validProfileName(String value) =>
+    value.length >= 2 &&
+    value.length <= 40 &&
+    !value.contains('@') &&
+    RegExp(r"^[\p{L}\p{N}][\p{L}\p{N} ._'-]*$", unicode: true).hasMatch(value);
+
+@visibleForTesting
+Future<GoogleProfileBootstrapStatus> bootstrapGoogleProfile({
+  required Map<String, dynamic> existingProfile,
+  required String? requestedDisplayName,
+  required String? googleDisplayName,
+  required String role,
+  required Future<void> Function(String displayName) claimDisplayName,
+  required Future<Map<String, dynamic>> Function(String role)
+  saveAndReadProfile,
+}) async {
+  final savedName = (existingProfile['displayName'] as String? ?? '').trim();
+  if (!_validProfileName(savedName)) {
+    final candidate =
+        (requestedDisplayName?.trim().isNotEmpty == true
+                ? requestedDisplayName
+                : googleDisplayName)
+            ?.trim()
+            .replaceAll(RegExp(r'\s+'), ' ');
+    if (candidate == null || candidate.isEmpty) {
+      return GoogleProfileBootstrapStatus.missingName;
+    }
+    if (!_validProfileName(candidate)) {
+      return GoogleProfileBootstrapStatus.invalidName;
+    }
+    try {
+      await claimDisplayName(candidate);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code == 'already-exists') {
+        return GoogleProfileBootstrapStatus.nameTaken;
+      }
+      rethrow;
+    }
+  }
+
+  final stored = await saveAndReadProfile(role);
+  final storedName = (stored['displayName'] as String? ?? '').trim();
+  if (!_validProfileName(storedName) || stored['role'] != role) {
+    throw StateError(
+      'GOOGLE/profile-incomplete: A név vagy a szerepkör nem mentődött el. Próbáld újra.',
+    );
+  }
+  return GoogleProfileBootstrapStatus.saved;
 }
 
 class CommunityService {
-  static const _publicProfileCacheTtl = Duration(minutes: 2);
+  static const _authChannel = MethodChannel('hu_hs/auth');
+  static const _publicProfileCacheLimit = 128;
   static final Map<String, _PublicProfileCacheEntry> _publicProfileCache = {};
   static final Map<String, Future<_PublicProfileCacheEntry>>
   _publicProfileRequests = {};
+  static final Map<String, Future<_PublicProfileCacheEntry>>
+  _publicProfileRefreshRequests = {};
   static List<Map<String, dynamic>>? _publicProfilesCache;
-  static DateTime? _publicProfilesCacheExpiresAt;
   static Future<List<Map<String, dynamic>>>? _publicProfilesRequest;
-  static const _publicAchievementCacheTtl = Duration(minutes: 5);
+  static int _publicProfilesEpoch = 0;
   static final Map<String, _AchievementCacheEntry> _publicAchievementCache = {};
   static final Map<String, Future<AchievementSummary>>
   _publicAchievementRequests = {};
+  static final Map<String, Future<AchievementSummary>>
+  _publicAchievementRefreshRequests = {};
+  static final Map<String, DocumentSnapshot<Map<String, dynamic>>>
+  _profileCache = {};
+  static final Map<String, DateTime> _profileCacheFetchedAt = {};
+  static final Map<String, Future<DocumentSnapshot<Map<String, dynamic>>>>
+  _profileRefreshRequests = {};
+  static final Map<String, int> _publicCacheEpochs = {};
+  static int _publicCacheEpoch = 0;
+  static final ValueNotifier<int> publicProfileRefreshGeneration =
+      ValueNotifier<int>(0);
+  static String? _publicCacheOwnerUid;
+  // Keep the fast in-memory profile cache, but revisit it often enough for a
+  // changed badge artwork/rank to become visible without a manual logout.
+  // Persistent data is still rendered immediately and revalidated in the
+  // background, so this does not turn profile rows into blocking requests.
+  static const _publicCacheTtl = Duration(seconds: 30);
+  static const _publicPersistentCacheTtl = Duration(hours: 24);
+  static const _publicAchievementCacheTtl = Duration(minutes: 2);
+  static const _profileCacheTtl = Duration(seconds: 30);
+  static const _adminCacheTtl = Duration(seconds: 20);
+  static final Map<String, _AdminCacheEntry> _adminCache = {};
+  static final Map<String, Future<dynamic>> _adminRequests = {};
   static const cloudName = 'fjxo93em';
   static const uploadPreset = 'Hun_hs_Mobile';
   static const adminEmail = 'djdeeroy@gmail.com';
@@ -49,6 +155,38 @@ class CommunityService {
   static const accessModerator = 'moderator';
   static const accessAdmin = 'admin';
   static const maxUploadBytes = 5 * 1024 * 1024;
+
+  static bool isSupportedImageBytes(Uint8List bytes) {
+    final jpeg =
+        bytes.length >= 3 &&
+        bytes[0] == 0xFF &&
+        bytes[1] == 0xD8 &&
+        bytes[2] == 0xFF;
+    final png =
+        bytes.length >= 8 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47 &&
+        bytes[4] == 0x0D &&
+        bytes[5] == 0x0A &&
+        bytes[6] == 0x1A &&
+        bytes[7] == 0x0A;
+    final webp =
+        bytes.length >= 12 &&
+        String.fromCharCodes(bytes.sublist(0, 4)) == 'RIFF' &&
+        String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP';
+    return jpeg || png || webp;
+  }
+
+  static bool isSafeCloudinaryImageUrl(String value) {
+    final uri = Uri.tryParse(value.trim());
+    return uri != null &&
+        uri.scheme == 'https' &&
+        uri.host == 'res.cloudinary.com' &&
+        uri.path.startsWith('/fjxo93em/image/upload/');
+  }
+
   static String? _biometricSessionUid;
   static Future<bool>? _biometricRequest;
   static String? _profileSessionUid;
@@ -62,6 +200,7 @@ class CommunityService {
   String _cachedRole = '';
   String _cachedAccessRole = accessNone;
   String? _cachedRoleUid;
+  String? _googleProfileCompletionNotice;
 
   CommunityService({FirebaseAuth? auth, FirebaseFirestore? firestore, Dio? dio})
     : auth = auth ?? FirebaseAuth.instance,
@@ -150,9 +289,10 @@ class CommunityService {
     if (user == null || user.isAnonymous) {
       throw StateError('A beszélgetés törléséhez bejelentkezés szükséges.');
     }
-    await FirebaseFunctions.instance
-        .httpsCallable('deletePrivateConversation')
-        .call({'conversationId': conversationId});
+    await callFirebaseCallable<void>(
+      'deletePrivateConversation',
+      parameters: {'conversationId': conversationId},
+    );
   }
 
   Future<void> deletePrivateMessage({
@@ -195,6 +335,10 @@ class CommunityService {
   Future<void> sendPrivateMessage({
     required String otherUserId,
     required String text,
+    String? replyToMessageId,
+    String? replyToText,
+    Uint8List? imageBytes,
+    String? imageFilename,
   }) async {
     final user = auth.currentUser;
     final trimmed = maskProfanity(text.trim());
@@ -204,7 +348,10 @@ class CommunityService {
     if (otherUserId.isEmpty || otherUserId == user.uid) {
       throw ArgumentError('Érvénytelen címzett.');
     }
-    if (trimmed.isEmpty || trimmed.length > 2000) {
+    if (trimmed.isEmpty && imageBytes == null) {
+      throw ArgumentError('Írj üzenetet vagy válassz egy képet.');
+    }
+    if (trimmed.length > 2000) {
       throw ArgumentError('Az üzenet 1–2000 karakter lehet.');
     }
 
@@ -225,6 +372,16 @@ class CommunityService {
 
     final otherData = await getPublicProfile(otherUserId);
     if (otherData.isEmpty) throw StateError('A felhasználó nem található.');
+    CloudinaryUploadResult? uploadedImage;
+    final imageUrl = imageBytes == null
+        ? ''
+        : (uploadedImage = await uploadImageWithMetadata(
+            imageBytes,
+            filename: imageFilename?.trim().isNotEmpty == true
+                ? imageFilename!.trim()
+                : 'private-message.jpg',
+            userScoped: true,
+          )).url;
     final ownProfile = await firestore
         .collection('community_profiles')
         .doc(user.uid)
@@ -243,7 +400,7 @@ class CommunityService {
             'HUHS user'),
         otherUserId: otherData['displayName'] as String? ?? 'HUHS user',
       },
-      'lastMessage': trimmed,
+      'lastMessage': trimmed.isEmpty ? 'Kép' : trimmed,
       'lastSenderId': user.uid,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
@@ -251,8 +408,68 @@ class CommunityService {
       'senderId': user.uid,
       'recipientId': otherUserId,
       'text': trimmed,
+      'imageUrl': imageUrl,
+      if (uploadedImage?.publicId.isNotEmpty == true)
+        'imagePublicId': uploadedImage!.publicId,
       'createdAt': FieldValue.serverTimestamp(),
+      if (replyToMessageId != null && replyToMessageId.trim().isNotEmpty)
+        'replyToMessageId': replyToMessageId.trim(),
+      if (replyToText != null && replyToText.trim().isNotEmpty)
+        'replyToText': replyToText.trim().substring(
+          0,
+          replyToText.trim().length > 200 ? 200 : replyToText.trim().length,
+        ),
     });
+  }
+
+  Future<void> togglePrivateMessageReaction({
+    required String conversationId,
+    required String messageId,
+  }) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      throw StateError('A reakcióhoz bejelentkezés szükséges.');
+    }
+    await callFirebaseCallable<void>(
+      'togglePrivateMessageReaction',
+      parameters: {'conversationId': conversationId, 'messageId': messageId},
+    );
+  }
+
+  Future<void> rateEvent({required int eventId, required int score}) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      throw StateError('Az értékeléshez regisztráció szükséges.');
+    }
+    await callFirebaseCallable<void>(
+      'rateEvent',
+      parameters: {'eventId': eventId, 'score': score},
+    );
+  }
+
+  Future<Map<String, dynamic>> getEventRating(int eventId) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return const {};
+    final snapshot = await firestore
+        .collection('event_ratings')
+        .doc('$eventId')
+        .collection('users')
+        .get();
+    var total = 0;
+    var count = 0;
+    int? myScore;
+    for (final doc in snapshot.docs) {
+      final score = (doc.data()['score'] as num?)?.toInt();
+      if (score == null || score < 1 || score > 5) continue;
+      total += score;
+      count++;
+      if (doc.id == user.uid) myScore = score;
+    }
+    return {
+      'count': count,
+      'average': count == 0 ? 0.0 : total / count,
+      'myScore': myScore,
+    };
   }
 
   Future<void> register({
@@ -263,31 +480,118 @@ class CommunityService {
     Map<String, String>? socialLinks,
   }) async {
     final normalizedEmail = email.trim().toLowerCase();
+    var createdNow = false;
+    var resumedPartialAccount = false;
+    String? verificationWarning;
     try {
-      final credential = await auth.createUserWithEmailAndPassword(
+      _authStage('pre_auth_check');
+      await callFirebaseCallable<void>(
+        'checkRegistrationEligibility',
+        parameters: {'email': normalizedEmail},
+      );
+      final current = auth.currentUser;
+      final emailCredential = EmailAuthProvider.credential(
         email: normalizedEmail,
         password: password,
       );
-      final user = credential.user!;
+      final resumesExistingSession =
+          current != null &&
+          !current.isAnonymous &&
+          normalizedEmail == (current.email ?? '').trim().toLowerCase();
+      late final User user;
+      if (resumesExistingSession) {
+        user = current;
+      } else if (current?.isAnonymous == true) {
+        user = (await current!.linkWithCredential(emailCredential)).user!;
+      } else {
+        try {
+          user = (await auth.createUserWithEmailAndPassword(
+            email: normalizedEmail,
+            password: password,
+          )).user!;
+        } on FirebaseAuthException catch (error) {
+          _authStage('email_create_user', error: error);
+          if (error.code != 'email-already-in-use') rethrow;
+          // A previous attempt may have created Auth successfully and failed
+          // while sending verification or creating the profile. Continue that
+          // account instead of creating a duplicate or leaving it stranded.
+          user = (await auth.signInWithEmailAndPassword(
+            email: normalizedEmail,
+            password: password,
+          )).user!;
+          resumedPartialAccount = true;
+        }
+      }
+      createdNow = !resumesExistingSession && !resumedPartialAccount;
+      _authStage('email_create_user', isNewUser: createdNow);
+      // Linking the anonymous session changes the provider, but the first
+      // callable can otherwise still receive the old anonymous ID token.
+      await user.getIdToken(true);
+      final profileRef = firestore
+          .collection('community_profiles')
+          .doc(user.uid);
+      final existingProfile = await profileRef.get();
+      final profileData = existingProfile.data() ?? const <String, dynamic>{};
+      final existingName = (profileData['displayName'] as String? ?? '').trim();
+      final isPlaceholderName = RegExp(
+        r'^HUHS user(?: \d+)?$',
+        caseSensitive: false,
+      ).hasMatch(existingName);
+      if (!createdNow && existingName.isNotEmpty && !isPlaceholderName) {
+        throw StateError(
+          'Ez az e-mail-cím már használatban van. Jelentkezz be.',
+        );
+      }
+      _authStage('display_name_claim', isNewUser: createdNow);
+      await claimDisplayName(displayName);
       await user.updateDisplayName(displayName.trim());
       final accountRole = _isAdmin(normalizedEmail)
           ? 'organizer'
           : this.accountRole(role);
-      await firestore.collection('community_profiles').doc(user.uid).set({
-        'displayName': displayName.trim(),
+      await profileRef.set({
+        // claimDisplayName already creates/updates displayName atomically;
+        // Firestore rules intentionally reject a second client-side write.
         'role': accountRole,
         'accessRole': _isAdmin(user.email) ? accessAdmin : accessNone,
         'email': normalizedEmail,
-        ...?(socialLinks == null ? null : {'socialLinks': socialLinks}),
-        'createdAt': FieldValue.serverTimestamp(),
+        if (socialLinks != null && profileData['socialLinks'] == null)
+          'socialLinks': socialLinks,
+        if (!existingProfile.exists) 'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      // Save the profile before sending the mail. Otherwise a profile-write
-      // failure can surface as a false registration error after the mail was
-      // already delivered.
-      await user.sendEmailVerification();
+      _authStage('profile_creation', isNewUser: createdNow);
+      // A slow or unavailable SMTP server must not strand a newly created
+      // Auth account before its server-owned name and required role are saved.
+      if (!user.emailVerified) {
+        _authStage('email_verification', isNewUser: createdNow);
+        try {
+          await callFirebaseCallable<void>(
+            'sendAuthEmail',
+            parameters: {'action': 'verification'},
+          );
+        } catch (error) {
+          _authStage('email_verification', error: error, isNewUser: true);
+          verificationWarning = _verificationError(
+            error is FirebaseFunctionsException ? error.code : 'unknown',
+          );
+        }
+      }
+      if (verificationWarning != null) throw StateError(verificationWarning);
+      _authStage('registration_complete', isNewUser: createdNow);
     } on FirebaseAuthException catch (error) {
+      _authStage('email_create_user', error: error, isNewUser: createdNow);
       throw StateError(_authError(error.code));
+    } catch (error) {
+      _authStage(
+        'email_registration_followup',
+        error: error,
+        isNewUser: createdNow,
+      );
+      if (error is StateError) rethrow;
+      final code = error is FirebaseException ? error.code : 'unknown';
+      throw StateError(
+        'AUTH/registration-$code: A fiók létrejött, de a profil befejezése nem sikerült. Próbáld újra.',
+      );
     }
   }
 
@@ -296,13 +600,10 @@ class CommunityService {
     if (user == null || user.isAnonymous) {
       throw StateError('Az ajánlókód megtekintéséhez jelentkezz be.');
     }
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('getMyReferralCode')
-        .call();
-    final code = (result.data is Map ? result.data['code'] : null)
-        ?.toString()
-        .trim()
-        .toUpperCase();
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'getMyReferralCode',
+    );
+    final code = result.data['code']?.toString().trim().toUpperCase();
     if (code == null || code.isEmpty) {
       throw StateError('Az ajánlókód nem tölthető be.');
     }
@@ -312,30 +613,58 @@ class CommunityService {
   Future<bool> claimReferralCode(String code) async {
     final normalized = code.trim().toUpperCase();
     if (normalized.isEmpty) return false;
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('claimReferralCode')
-        .call({'code': normalized});
-    return result.data is Map && result.data['claimed'] == true;
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'claimReferralCode',
+      parameters: {'code': normalized},
+    );
+    return result.data['claimed'] == true;
   }
+
+  Future<void> claimDisplayName(String displayName) async {
+    final value = displayName.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (value.length < 2 ||
+        value.length > 40 ||
+        !RegExp(
+          r"^[\p{L}\p{N}][\p{L}\p{N} ._'-]*$",
+          unicode: true,
+        ).hasMatch(value)) {
+      throw StateError(
+        'AUTH/claimDisplayName-invalid-argument: Adj meg 2–40 karakteres, érvényes megjelenítési nevet.',
+      );
+    }
+    // The backend grants the owner account unlimited name changes from the
+    // verified Auth email claim. Refresh it before profile saves so a stale
+    // Google/Auth token cannot be mistaken for a regular account.
+    await auth.currentUser?.getIdToken(true);
+    await callFirebaseCallable<void>(
+      'claimDisplayName',
+      parameters: {'displayName': value},
+    );
+    final uid = auth.currentUser?.uid;
+    if (uid != null) {
+      clearProfileCache(uid);
+      clearPublicProfileCache(uid);
+    }
+  }
+
+  String? get googleProfileCompletionNotice => _googleProfileCompletionNotice;
 
   Future<void> signIn({required String email, required String password}) async {
     final normalizedEmail = email.trim().toLowerCase();
     try {
+      _authStage('email_sign_in');
       final credential = await auth.signInWithEmailAndPassword(
         email: normalizedEmail,
         password: password,
       );
       final user = credential.user!;
       await user.reload();
-      if (auth.currentUser?.emailVerified != true) {
-        await auth.signOut();
-        throw StateError(
-          'Erősítsd meg az e-mail-címedet a kapott levélben, majd próbáld újra.',
-        );
-      }
+      // Unverified users may sign in; the UI keeps the persistent warning and
+      // the resend action visible until verification succeeds.
       await _ensureAdminProfile(user);
       await _cacheProfileRole();
     } on FirebaseAuthException catch (error) {
+      _authStage('email_sign_in', error: error);
       throw StateError(_authError(error.code));
     }
   }
@@ -345,7 +674,40 @@ class CommunityService {
     if (user == null || user.isAnonymous) {
       throw StateError('Nincs ellenőrizhető e-mailes fiók.');
     }
-    await user.sendEmailVerification();
+    try {
+      await callFirebaseCallable<void>(
+        'sendAuthEmail',
+        parameters: {'action': 'verification'},
+      );
+    } on FirebaseFunctionsException catch (error) {
+      throw StateError(_verificationError(error.code));
+    }
+  }
+
+  Future<void> requestEmailChange(String email) async {
+    final user = auth.currentUser;
+    final normalized = email.trim().toLowerCase();
+    if (user == null || user.isAnonymous || user.email == null) {
+      throw StateError('Ehhez e-mailes bejelentkezés szükséges.');
+    }
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(normalized)) {
+      throw StateError('Érvénytelen e-mail-cím.');
+    }
+    await callFirebaseCallable<void>(
+      'requestEmailChange',
+      parameters: {'email': normalized},
+    );
+    try {
+      await user.verifyBeforeUpdateEmail(normalized);
+    } on FirebaseAuthException catch (error) {
+      throw StateError(_authError(error.code));
+    }
+  }
+
+  Future<void> syncEmailChange() async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return;
+    await callFirebaseCallable<void>('syncEmailChange');
   }
 
   Future<void> resendEmailVerificationForCredentials({
@@ -354,11 +716,14 @@ class CommunityService {
   }) async {
     final normalizedEmail = email.trim().toLowerCase();
     try {
-      final credential = await auth.signInWithEmailAndPassword(
+      await auth.signInWithEmailAndPassword(
         email: normalizedEmail,
         password: password,
       );
-      await credential.user!.sendEmailVerification();
+      await callFirebaseCallable<void>(
+        'sendAuthEmail',
+        parameters: {'action': 'verification'},
+      );
     } on FirebaseAuthException catch (error) {
       throw StateError(_authError(error.code));
     } finally {
@@ -368,8 +733,14 @@ class CommunityService {
 
   Future<void> sendPasswordReset(String email) async {
     try {
-      await auth.sendPasswordResetEmail(email: email.trim().toLowerCase());
-    } on FirebaseAuthException catch (error) {
+      await callFirebaseCallable<void>(
+        'sendAuthEmail',
+        parameters: {
+          'action': 'passwordReset',
+          'email': email.trim().toLowerCase(),
+        },
+      );
+    } on FirebaseFunctionsException catch (error) {
       throw StateError(_authError(error.code));
     }
   }
@@ -410,93 +781,227 @@ class CommunityService {
     }
   }
 
-  String _authError(String code) => switch (code) {
-    'invalid-credential' ||
-    'wrong-password' ||
-    'user-not-found' => 'A megadott e-mail-cím vagy jelszó hibás.',
-    'invalid-email' => 'Érvénytelen e-mail-cím.',
-    'email-already-in-use' => 'Ez az e-mail-cím már használatban van.',
-    'weak-password' => 'A jelszó túl gyenge.',
-    'requires-recent-login' => 'A módosításhoz jelentkezz be újra.',
-    'network-request-failed' => 'Hálózati hiba. Próbáld újra később.',
-    _ => 'A bejelentkezés nem sikerült. Próbáld újra.',
-  };
+  String _authError(String code) =>
+      'AUTH/$code: ${switch (code) {
+        'invalid-credential' || 'wrong-password' || 'user-not-found' => 'A megadott e-mail-cím vagy jelszó hibás.',
+        'invalid-email' => 'Érvénytelen e-mail-cím.',
+        'email-already-in-use' => 'Ez az e-mail-cím már használatban van.',
+        'weak-password' => 'A jelszó túl gyenge.',
+        'requires-recent-login' => 'A módosításhoz jelentkezz be újra.',
+        'network-request-failed' => 'Hálózati hiba. Próbáld újra később.',
+        'too-many-requests' => 'Túl sok próbálkozás történt. Próbáld újra később.',
+        'account-exists-with-different-credential' => 'Ehhez a Google-fiókhoz már más bejelentkezési mód tartozik. Előbb azzal lépj be.',
+        'credential-already-in-use' => 'Ez a Google-fiók már egy másik HUHS-fiókhoz tartozik.',
+        _ => 'A bejelentkezés nem sikerült. Próbáld újra.',
+      }}';
+
+  String _verificationError(String code) =>
+      'AUTH/$code: ${switch (code) {
+        'too-many-requests' => 'A fiók létrejött, de túl sok ellenőrző-e-mailt kértél. A profilban később újraküldheted.',
+        'network-request-failed' => 'A fiók létrejött, de az ellenőrző e-mail küldése hálózati hiba miatt nem sikerült. A profilban újraküldheted.',
+        'unavailable' => 'A fiók létrejött, de az ellenőrző e-mail küldése nem sikerült. A profilban újraküldheted.',
+        _ => 'A fiók létrejött, de az ellenőrző e-mail küldése nem sikerült. A profilban újraküldheted.',
+      }}';
+
+  String _googleAuthError(String code) =>
+      'GOOGLE/$code: ${switch (code) {
+        'account-exists-with-different-credential' => 'Ehhez a Google-fiókhoz már más bejelentkezési mód tartozik. Előbb azzal lépj be.',
+        'credential-already-in-use' => 'Ez a Google-fiók már egy másik HUHS-fiókhoz tartozik.',
+        'invalid-credential' => 'A Google-hitelesítő adat lejárt vagy érvénytelen. Válassz fiókot újra.',
+        'network-request-failed' => 'A Google-belépéshez nem sikerült kapcsolódni. Ellenőrizd az internetkapcsolatot.',
+        _ => 'A Google-belépés nem sikerült. Próbáld újra.',
+      }}';
+
+  void _authStage(String stage, {Object? error, bool? isNewUser}) {
+    if (!kDebugMode) return;
+    final currentUser = auth.currentUser;
+    final operationId =
+        error is FirebaseFunctionsException && error.details is Map
+        ? (error.details as Map)['operationId']?.toString()
+        : null;
+    final details = error is FirebaseException
+        ? ':code=${error.code}:type=${error.runtimeType}${operationId == null ? '' : ':operationId=$operationId'}'
+        : error == null
+        ? ''
+        : ':type=${error.runtimeType}';
+    debugPrint(
+      'Auth stage=$stage:hasUser=${currentUser != null}:anonymous=${currentUser?.isAnonymous ?? false}:isNewUser=${isNewUser ?? false}$details',
+    );
+  }
 
   Future<bool> signInWithGoogle({
     String? role,
     String? displayName,
     Map<String, String>? socialLinks,
-    Future<String?> Function()? requestDisplayName,
   }) async {
+    _googleProfileCompletionNotice = null;
     try {
-      final account = await GoogleSignIn().signIn();
+      _authStage('google_account_selection');
+      // Request the Firebase web OAuth audience explicitly. Relying only on
+      // google-services.json can return a Google account without an ID token
+      // on Play-signed builds, which makes Firebase reject the sign-in.
+      final googleSignIn = GoogleSignIn(
+        serverClientId: '1030187737487-7cpgfu99rdngge4ine087ltlr339drkt.apps.googleusercontent.com',
+      );
+      // Clear only the local Google session so the account chooser is shown;
+      // do not revoke the user's Google grant.
+      await googleSignIn.signOut();
+      final account = await googleSignIn.signIn();
       if (account == null) return false;
+      final googleEmail = account.email.trim().toLowerCase();
       final tokens = await account.authentication;
+      _authStage('google_firebase_credential');
+      if (tokens.idToken == null || tokens.idToken!.trim().isEmpty) {
+        throw StateError(
+          'GOOGLE/missing-id-token: A Google-fiók nem adott érvényes azonosító tokent.',
+        );
+      }
       final credential = GoogleAuthProvider.credential(
         accessToken: tokens.accessToken,
         idToken: tokens.idToken,
       );
-      final result = await auth.signInWithCredential(credential);
+      final current = auth.currentUser;
+      UserCredential result;
+      if (current?.isAnonymous == true) {
+        try {
+          result = await current!.linkWithCredential(credential);
+        } on FirebaseAuthException catch (error) {
+          // If the Google identity already belongs to an account, signing
+          // into that account still lets the server-side device claim block
+          // a second annual vote on this installation.
+          if (error.code != 'credential-already-in-use' &&
+              error.code != 'provider-already-linked') {
+            rethrow;
+          }
+          result = await auth.signInWithCredential(credential);
+        }
+      } else {
+        result = await auth.signInWithCredential(credential);
+      }
       final user = result.user!;
+      final isNewAuthAccount = result.additionalUserInfo?.isNewUser ?? false;
+      _authStage('google_firebase_auth', isNewUser: isNewAuthAccount);
+      // Keep the callable context in sync when an anonymous session was
+      // upgraded to Google; otherwise the backend can still see it as guest.
+      await user.getIdToken(true);
+      // The screen can still be in registration mode when the user selects a
+      // Google account that already exists in Firebase.  That is a login, not
+      // a new registration, so it must never trigger the display-name dialog.
       final profile = firestore.collection('community_profiles').doc(user.uid);
       try {
-        final existing = await profile.get();
+        final existing = await profile.get(
+          const GetOptions(source: Source.server),
+        );
         final existingData = existing.data() ?? const <String, dynamic>{};
-        var chosenDisplayName = displayName?.trim() ?? '';
         final savedDisplayName = (existingData['displayName'] as String? ?? '')
             .trim();
-        if (chosenDisplayName.isEmpty && savedDisplayName.isEmpty) {
-          chosenDisplayName = (await requestDisplayName?.call() ?? '').trim();
-          if (chosenDisplayName.isEmpty) {
-            await signOut();
-            return false;
-          }
-        }
+        final savedNameIsValid =
+            savedDisplayName.length >= 2 &&
+            savedDisplayName.length <= 40 &&
+            !savedDisplayName.contains('@');
         final existingRole = existingData['role'] as String?;
+        final profileComplete =
+            existing.exists &&
+            savedNameIsValid &&
+            const {'dj', 'organizer', 'partygoer'}.contains(existingRole);
+        if (!profileComplete) {
+          final requiredRole = accountRole(role);
+          final bootstrap = await bootstrapGoogleProfile(
+            existingProfile: existingData,
+            requestedDisplayName: displayName,
+            googleDisplayName: account.displayName,
+            role: requiredRole,
+            claimDisplayName: claimDisplayName,
+            saveAndReadProfile: (savedRole) async {
+              await profile.set({
+                'role': savedRole,
+                'accessRole': accessNone,
+                'email': googleEmail,
+                'createdAt': FieldValue.serverTimestamp(),
+                'updatedAt': FieldValue.serverTimestamp(),
+              }, SetOptions(merge: true));
+              final saved = await profile.get(
+                const GetOptions(source: Source.server),
+              );
+              return saved.data() ?? const <String, dynamic>{};
+            },
+          );
+          _googleProfileCompletionNotice = switch (bootstrap) {
+            GoogleProfileBootstrapStatus.missingName => 'A Google-fiók nem adott használható nyilvános nevet. Adj meg egyet a profilban.',
+            GoogleProfileBootstrapStatus.invalidName => 'A Google-fiók neve nem felel meg a névszabályoknak. Adj meg másik nyilvános nevet.',
+            GoogleProfileBootstrapStatus.nameTaken =>
+              'Ez a Google-név már foglalt. Adj meg másik nyilvános nevet.',
+            GoogleProfileBootstrapStatus.saved => null,
+          };
+          clearProfileCache(user.uid);
+          if (bootstrap == GoogleProfileBootstrapStatus.saved) {
+            _cachedRole = requiredRole;
+            _cachedAccessRole = accessNone;
+            _cachedRoleUid = user.uid;
+          }
+          return true;
+        }
         final existingAccessRole =
             existingData['accessRole'] as String? ??
             (existingRole == accessAdmin ? accessAdmin : accessNone);
         await profile.set({
-          if (!existing.exists ||
-              ((existingData['displayName'] as String?) ?? '').trim().isEmpty)
-            'displayName': (displayName?.trim().isNotEmpty == true
-                ? displayName!.trim()
-                : (savedDisplayName.isNotEmpty
-                      ? savedDisplayName
-                      : chosenDisplayName)),
-          'email': user.email,
-          if (_isAdmin(user.email)) 'role': 'organizer',
-          if (_isAdmin(user.email)) 'accessRole': accessAdmin,
-          if (!_isAdmin(user.email) && existingRole == null && role != null)
+          'email': googleEmail,
+          if (_isAdmin(googleEmail)) 'role': 'organizer',
+          if (_isAdmin(googleEmail)) 'accessRole': accessAdmin,
+          if (!_isAdmin(googleEmail) && existingRole == null && role != null)
             'role': role,
-          if (!_isAdmin(user.email) &&
+          if (!_isAdmin(googleEmail) &&
               existingRole == null &&
               socialLinks != null)
             'socialLinks': socialLinks,
-          if (!_isAdmin(user.email) && existingData['accessRole'] == null)
+          if (!_isAdmin(googleEmail) && existingData['accessRole'] == null)
             'accessRole': existingAccessRole,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-        _cachedRole = _isAdmin(user.email)
+        _cachedRole = _isAdmin(googleEmail)
             ? 'organizer'
             : accountRole(existingRole ?? role);
-        _cachedAccessRole = _isAdmin(user.email)
+        _cachedAccessRole = _isAdmin(googleEmail)
             ? accessAdmin
             : existingAccessRole;
         _cachedRoleUid = user.uid;
-      } catch (_) {
-        // Authentication remains successful if Firestore is temporarily unavailable.
+      } catch (error) {
+        _authStage(
+          'profile_creation',
+          error: error,
+          isNewUser: isNewAuthAccount,
+        );
+        if (error is StateError) rethrow;
+        final code = error is FirebaseException ? error.code : 'unknown';
+        throw StateError(
+          'GOOGLE/profile-$code: ${isNewAuthAccount ? 'A Google-fiók létrejött, de a profil befejezése szükséges.' : 'A Google-belépés sikerült, de a profil nem tölthető be.'} Próbáld újra.',
+        );
       }
       await _ensureAdminProfile(user);
       await _cacheProfileRole();
       return true;
+    } on FirebaseAuthException catch (error) {
+      _authStage('google_firebase_auth', error: error);
+      throw StateError(_googleAuthError(error.code));
     } on PlatformException catch (error) {
-      if (error.code == 'sign_in_failed' || error.code == '10') {
+      _authStage('google_account_selection', error: error);
+      if (error.code == GoogleSignIn.kNetworkError ||
+          error.code == 'network-request-failed') {
         throw StateError(
-          'A Google-belépés Firebase-beállítása hiányos. Engedélyezd a Google szolgáltatót, add hozzá az Android SHA-1/SHA-256 kulcsot, majd töltsd le újra a google-services.json fájlt.',
+          'GOOGLE/${error.code}: A Google-belépéshez nem sikerült kapcsolódni. Ellenőrizd az internetkapcsolatot.',
         );
       }
-      rethrow;
+      if (error.code == GoogleSignIn.kSignInCanceledError) return false;
+      final platformDetails = '${error.message ?? ''} ${error.details ?? ''}';
+      if (error.code == '10' ||
+          RegExp(r'ApiException\s*:\s*10').hasMatch(platformDetails)) {
+        throw StateError(
+          'GOOGLE/10: A Google-belépés elutasította az OAuth-kérést.',
+        );
+      }
+      throw StateError(
+        'GOOGLE/${error.code}: A Google-belépés nem sikerült. Próbáld újra.',
+      );
     }
   }
 
@@ -550,82 +1055,36 @@ class CommunityService {
       throw StateError('A Chat-hozzáférésed le van tiltva.');
     }
     String imageUrl = '';
+    CloudinaryUploadResult? uploadedImage;
     if (imageBytes != null) {
-      imageUrl = await uploadImage(imageBytes, filename: 'chat.jpg');
+      uploadedImage = await uploadImageWithMetadata(
+        imageBytes,
+        filename: 'chat.jpg',
+        userScoped: true,
+      );
+      imageUrl = uploadedImage.url;
     }
-    final profile = await firestore
-        .collection('community_profiles')
-        .doc(user.uid)
-        .get();
-    final profileData = profile.data() ?? const <String, dynamic>{};
-    final displayName = isAnonymous
-        ? 'Unknown User ${_anonymousNumber(user.uid)}'
-        : (profileData['displayName'] as String? ??
-              user.displayName ??
-              'HUHS user');
-    await firestore.collection('live_feed_posts').add({
-      'authorId': user.uid,
-      'authorName': displayName,
-      'authorImageUrl': isAnonymous ? '' : resolveProfileImage(profileData),
-      'authorRole': isAnonymous
-          ? ''
-          : accountRole(profileData['role'] as String?),
-      'authorAccessRole': isAnonymous
-          ? ''
-          : (profileData['accessRole'] == accessAdmin ||
-                    profileData['accessRole'] == accessModerator
-                ? profileData['accessRole'] as String
-                : accessNone),
-      'text': trimmed,
-      'imageUrl': imageUrl,
-      'reactions': <String, int>{},
-      'reactionBy': <String, String>{},
-      'pinned': pinned,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    await callFirebaseCallable<void>(
+      'publishChatPost',
+      parameters: {
+        'text': trimmed,
+        'imageUrl': imageUrl,
+        if (uploadedImage?.publicId.isNotEmpty == true)
+          'imagePublicId': uploadedImage!.publicId,
+        if (pinned) 'pinned': true,
+      },
+    );
   }
 
   Future<void> toggleReaction({
     required String postId,
     required String emoji,
   }) async {
-    final user = await ensureAnonymousUser();
-    final reference = firestore.collection('live_feed_posts').doc(postId);
-    await firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(reference);
-      final data = snapshot.data() ?? <String, dynamic>{};
-      final reactions = Map<String, dynamic>.from(
-        data['reactions'] as Map? ?? <String, dynamic>{},
-      );
-      final reactionBy = Map<String, dynamic>.from(
-        data['reactionBy'] as Map? ?? <String, dynamic>{},
-      );
-      final previous = reactionBy[user.uid] as String?;
-      if (previous == emoji) {
-        final count = (reactions[emoji] as num?)?.toInt() ?? 0;
-        if (count <= 1) {
-          reactions.remove(emoji);
-        } else {
-          reactions[emoji] = count - 1;
-        }
-        reactionBy.remove(user.uid);
-      } else {
-        if (previous != null) {
-          final count = (reactions[previous] as num?)?.toInt() ?? 0;
-          if (count <= 1) {
-            reactions.remove(previous);
-          } else {
-            reactions[previous] = count - 1;
-          }
-        }
-        reactions[emoji] = ((reactions[emoji] as num?)?.toInt() ?? 0) + 1;
-        reactionBy[user.uid] = emoji;
-      }
-      transaction.update(reference, {
-        'reactions': reactions,
-        'reactionBy': reactionBy,
-      });
-    });
+    await ensureAnonymousUser();
+    await callFirebaseCallable<void>(
+      'toggleChatReaction',
+      parameters: {'postId': postId, 'emoji': emoji},
+    );
   }
 
   Future<void> deletePost(String postId) async {
@@ -707,40 +1166,16 @@ class CommunityService {
     if (user.isAnonymous || userId.isEmpty || userId == user.uid) {
       throw StateError('A blokkoláshoz regisztráció szükséges.');
     }
-    final batch = firestore.batch();
-    batch.set(
-      firestore
-          .collection('community_profiles')
-          .doc(user.uid)
-          .collection('blocked_users')
-          .doc(userId),
-      {'createdAt': FieldValue.serverTimestamp()},
+    await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('blocked_users')
+        .doc(userId)
+        .set({'createdAt': FieldValue.serverTimestamp()});
+    await callFirebaseCallable<void>(
+      'manageConnection',
+      parameters: {'action': 'remove', 'otherUid': userId},
     );
-    batch.delete(
-      firestore
-          .collection('community_profiles')
-          .doc(user.uid)
-          .collection('connections')
-          .doc(userId),
-    );
-    batch.delete(
-      firestore
-          .collection('community_profiles')
-          .doc(userId)
-          .collection('connections')
-          .doc(user.uid),
-    );
-    final requestRefs = [
-      firestore.collection('connection_requests').doc('${user.uid}_$userId'),
-      firestore.collection('connection_requests').doc('${userId}_${user.uid}'),
-    ];
-    final requestSnapshots = await Future.wait(
-      requestRefs.map((reference) => reference.get()),
-    );
-    for (var index = 0; index < requestRefs.length; index++) {
-      if (requestSnapshots[index].exists) batch.delete(requestRefs[index]);
-    }
-    await batch.commit();
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> watchBlockedUsers() {
@@ -768,22 +1203,24 @@ class CommunityService {
     if (auth.currentUser?.emailVerified != true) {
       throw StateError('Hitelesített e-mailes fiók szükséges.');
     }
-    await FirebaseFunctions.instance.httpsCallable('claimArtistProfile').call({
-      'artistId': artistId,
-    });
+    await callFirebaseCallable<void>(
+      'claimArtistProfile',
+      parameters: {'artistId': artistId},
+    );
   }
 
   Future<bool> isArtistClaimed(int artistId) async {
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('getArtistClaimStatus')
-        .call({'artistId': artistId});
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'getArtistClaimStatus',
+      parameters: {'artistId': artistId},
+    );
     return (result.data as Map?)?['claimed'] == true;
   }
 
   Future<List<int>> myClaimedArtists() async {
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('getMyClaimedArtists')
-        .call();
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'getMyClaimedArtists',
+    );
     final ids = (result.data as Map?)?['artistIds'];
     if (ids is! List) return const [];
     return ids.whereType<num>().map((id) => id.toInt()).toList();
@@ -876,9 +1313,24 @@ class CommunityService {
   Future<void> refreshMyAchievementBadge() async {
     final user = auth.currentUser;
     if (user == null || user.isAnonymous) return;
-    await FirebaseFunctions.instance
-        .httpsCallable('refreshAchievementBadge')
-        .call();
+    await callFirebaseCallable<void>('refreshAchievementBadge');
+    // The chat may already hold this user's public profile for up to the
+    // normal profile-cache lifetime. Invalidate only this UID immediately
+    // after the server recalculates the badge so the next chat rebuild gets
+    // the new rank without disabling caching for everybody else.
+    clearPublicProfileCache(user.uid);
+    clearProfileCache(user.uid);
+  }
+
+  /// Refreshes the signed-in profile without making the caller lose the
+  /// already-rendered local snapshot.
+  Future<DocumentSnapshot<Map<String, dynamic>>> refreshOwnProfile() async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      throw StateError('A profil megtekintéséhez regisztráció szükséges.');
+    }
+    clearProfileCache(user.uid);
+    return _refreshProfileInBackground(user);
   }
 
   /// Returns a public profile from a shared in-memory cache.
@@ -886,85 +1338,274 @@ class CommunityService {
   /// Profile screens used to create a new Firestore `get()` Future in
   /// `build()`. Apart from refetching after every rebuild, that made opening
   /// the same profile again wait for the network every time. The cache is
-  /// process-local and short-lived, so profile edits are not persisted as
-  /// stale data across app launches.
+  /// process-local and scoped to the authenticated user session; sign-out or
+  /// account switching clears it.
   Future<Map<String, dynamic>> getPublicProfile(
     String userId, {
     bool forceRefresh = false,
   }) async {
     final normalizedUserId = userId.trim();
     if (normalizedUserId.isEmpty) return const <String, dynamic>{};
-    final now = DateTime.now();
+    _preparePublicCacheForCurrentUser();
     final cached = _publicProfileCache[normalizedUserId];
-    if (!forceRefresh && cached != null && cached.expiresAt.isAfter(now)) {
+    if (!forceRefresh &&
+        cached != null &&
+        cached.isFresh &&
+        !_hasUnnumberedPlaceholderName(cached.data)) {
+      _touchPublicProfileCache(normalizedUserId, cached);
       return Map<String, dynamic>.from(cached.data);
     }
+    if (cached != null && !cached.isFresh) {
+      _publicProfileCache.remove(normalizedUserId);
+    }
+    if (!forceRefresh) {
+      final persistent = await _readPersistentPublicProfile(normalizedUserId);
+      if (persistent != null && !_hasUnnumberedPlaceholderName(persistent)) {
+        final entry = _PublicProfileCacheEntry(persistent, true);
+        _publicProfileCache[normalizedUserId] = entry;
+        // Stale-while-revalidate: render the persisted profile immediately,
+        // then refresh it in the background without blanking the UI.
+        unawaited(getPublicProfile(normalizedUserId, forceRefresh: true));
+        return Map<String, dynamic>.from(persistent);
+      }
+    }
+    // Normal reads use the fast public projection. A forced refresh must
+    // bypass it so changed badge artwork can be reconciled with WordPress by
+    // the callable instead of reading the same stale projection again.
+    if (!forceRefresh) {
+      try {
+        final snapshot = await firestore
+            .collection('public_profiles')
+            .doc(normalizedUserId)
+            .get();
+        if (snapshot.exists && snapshot.data() != null) {
+          final data = Map<String, dynamic>.from(snapshot.data()!);
+          if (_hasUnnumberedPlaceholderName(data)) {
+            // Older public projections may still contain the generic label;
+            // let the callable assign and persist the stable user number.
+          } else {
+            final entry = _PublicProfileCacheEntry(data, true);
+            _storePublicProfileCache(normalizedUserId, entry);
+            unawaited(
+              _writePersistentPublicProfile(
+                normalizedUserId,
+                data,
+                ownerUid: _publicCacheOwnerUid,
+              ),
+            );
+            return data;
+          }
+        }
+      } catch (_) {
+        // Rules/deployment lag or legacy installations use the callable below.
+      }
+    }
+    final existingRefresh = _publicProfileRefreshRequests[normalizedUserId];
+    if (existingRefresh != null) return (await existingRefresh).data;
     if (!forceRefresh) {
       final existing = _publicProfileRequests[normalizedUserId];
       if (existing != null) return (await existing).data;
     }
+    final requestEpoch = _cacheEpochFor(normalizedUserId);
+    final requestOwnerUid = _publicCacheOwnerUid;
     final request = () async {
-      try {
-        final result = await FirebaseFunctions.instance
-            .httpsCallable('getPublicProfile')
-            .call({'userId': normalizedUserId});
-        final data = result.data is Map
-            ? Map<String, dynamic>.from(result.data as Map)
-            : const <String, dynamic>{};
-        final entry = _PublicProfileCacheEntry(
-          data,
-          data.isNotEmpty,
-          DateTime.now().add(_publicProfileCacheTtl),
-        );
-        _publicProfileCache[normalizedUserId] = entry;
-        return entry;
-      } catch (_) {
-        final entry = _PublicProfileCacheEntry(
-          <String, dynamic>{},
-          false,
-          DateTime.now(),
-        );
-        return entry;
+      for (var attempt = 0; attempt < 3; attempt++) {
+        try {
+          final result = await callFirebaseCallable<Map<String, dynamic>>(
+            'getPublicProfile',
+            parameters: {'userId': normalizedUserId},
+          );
+          final data = result.data;
+          final entry = _PublicProfileCacheEntry(data, data.isNotEmpty);
+          // A response started before invalidation must never resurrect stale
+          // profile/rank data after the newer request has completed.
+          if (data.isNotEmpty &&
+              _cacheEpochFor(normalizedUserId) == requestEpoch) {
+            _storePublicProfileCache(normalizedUserId, entry);
+            unawaited(
+              _writePersistentPublicProfile(
+                normalizedUserId,
+                data,
+                ownerUid: requestOwnerUid,
+              ),
+            );
+          }
+          return entry;
+        } catch (error) {
+          if (error is FirebaseFunctionsException &&
+              error.code == 'not-found') {
+            clearPublicProfileCache(normalizedUserId);
+            await _removePersistentPublicProfile(normalizedUserId);
+            return _PublicProfileCacheEntry(<String, dynamic>{}, true);
+          }
+          if (attempt == 2) {
+            if (kDebugMode) {
+              debugPrint(
+                'Publikus profil lekérése sikertelen: ${error.runtimeType}',
+              );
+            }
+            return _PublicProfileCacheEntry(<String, dynamic>{}, false);
+          }
+          await Future<void>.delayed(
+            Duration(milliseconds: 250 * (attempt + 1)),
+          );
+        }
       }
+      return _PublicProfileCacheEntry(<String, dynamic>{}, false);
     }();
     _publicProfileRequests[normalizedUserId] = request;
+    if (forceRefresh) {
+      _publicProfileRefreshRequests[normalizedUserId] = request;
+    }
     try {
       return (await request).data;
     } finally {
       if (identical(_publicProfileRequests[normalizedUserId], request)) {
         _publicProfileRequests.remove(normalizedUserId);
       }
+      if (identical(_publicProfileRefreshRequests[normalizedUserId], request)) {
+        _publicProfileRefreshRequests.remove(normalizedUserId);
+      }
     }
   }
 
-  Future<List<Map<String, dynamic>>> getRegisteredPublicProfiles() async {
-    final now = DateTime.now();
+  bool _hasUnnumberedPlaceholderName(Map<String, dynamic> data) {
+    final name =
+        (data['displayName'] as String?)?.trim().toLowerCase().replaceAll(
+          RegExp(r'\s+'),
+          ' ',
+        ) ??
+        '';
+    final number = int.tryParse('${data['huhsUserNumber'] ?? ''}');
+    return (name.isEmpty ||
+            const {'hun hs', 'hs hu', 'hu hs', 'huhs user'}.contains(name)) &&
+        (number == null || number < 1000);
+  }
+
+  Stream<Map<String, dynamic>> watchPublicProfile(String userId) {
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) return const Stream.empty();
+    _preparePublicCacheForCurrentUser();
+    return firestore
+        .collection('public_profiles')
+        .doc(normalizedUserId)
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final data = snapshot.data();
+          if (!snapshot.exists || data == null) {
+            clearPublicProfileCache(normalizedUserId);
+            await _removePersistentPublicProfile(normalizedUserId);
+            return <String, dynamic>{};
+          }
+          final value = Map<String, dynamic>.from(data);
+          if (_hasUnnumberedPlaceholderName(value)) {
+            // Older projections may still contain the generic label. The
+            // callable assigns the stable number and rewrites the projection.
+            return getPublicProfile(normalizedUserId, forceRefresh: true);
+          }
+          final entry = _PublicProfileCacheEntry(value, true);
+          _storePublicProfileCache(normalizedUserId, entry);
+          await _writePersistentPublicProfile(
+            normalizedUserId,
+            value,
+            ownerUid: _publicCacheOwnerUid,
+          );
+          return value;
+        });
+  }
+
+  String _persistentPublicProfileKey(String userId, {String? ownerUid}) {
+    final owner = (ownerUid ?? auth.currentUser?.uid)?.trim();
+    final ownerKey = owner == null || owner.isEmpty ? 'anonymous' : owner;
+    return 'huhs.public.profile.$ownerKey.$userId';
+  }
+
+  Future<Map<String, dynamic>?> _readPersistentPublicProfile(
+    String userId,
+  ) async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final key = _persistentPublicProfileKey(userId);
+      final savedAt = preferences.getInt('$key.savedAt');
+      final payload = preferences.getString(key);
+      if (savedAt == null || payload == null) return null;
+      final age = DateTime.now().difference(
+        DateTime.fromMillisecondsSinceEpoch(savedAt),
+      );
+      if (age > _publicPersistentCacheTtl) {
+        unawaited(preferences.remove(key));
+        unawaited(preferences.remove('$key.savedAt'));
+        return null;
+      }
+      final decoded = jsonDecode(payload);
+      return decoded is Map ? Map<String, dynamic>.from(decoded) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _writePersistentPublicProfile(
+    String userId,
+    Map<String, dynamic> data, {
+    String? ownerUid,
+  }) async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final key = _persistentPublicProfileKey(userId, ownerUid: ownerUid);
+      await preferences.setString(key, jsonEncode(data));
+      await preferences.setInt(
+        '$key.savedAt',
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (_) {
+      // The memory cache remains the source for this session if persistence
+      // is unavailable (for example on a restricted platform).
+    }
+  }
+
+  Future<void> _removePersistentPublicProfile(String userId) async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final key = _persistentPublicProfileKey(userId);
+      await preferences.remove(key);
+      await preferences.remove('$key.savedAt');
+    } catch (_) {}
+  }
+
+  Future<List<Map<String, dynamic>>> getRegisteredPublicProfiles({
+    bool forceRefresh = false,
+  }) async {
+    _preparePublicCacheForCurrentUser();
+    if (forceRefresh) {
+      _publicProfilesEpoch++;
+      _publicProfilesCache = null;
+      _publicProfilesRequest = null;
+    }
     final cached = _publicProfilesCache;
-    final expiresAt = _publicProfilesCacheExpiresAt;
-    if (cached != null && expiresAt != null && expiresAt.isAfter(now)) {
-      return cached
+    if (cached != null) {
+      return _visiblePublicProfiles(cached)
           .map((profile) => Map<String, dynamic>.from(profile))
           .toList(growable: false);
     }
     final existing = _publicProfilesRequest;
     if (existing != null) return existing;
+    final requestEpoch = _publicProfilesEpoch;
     final Future<List<Map<String, dynamic>>> request = () async {
-      final result = await FirebaseFunctions.instance
-          .httpsCallable('getPublicProfiles')
-          .call();
+      final result = await callFirebaseCallable<Map<String, dynamic>>(
+        'getPublicProfiles',
+      );
       final data = result.data;
-      if (data is! Map || data['profiles'] is! List) {
+      if (data['profiles'] is! List) {
         return const <Map<String, dynamic>>[];
       }
       final profiles = (data['profiles'] as List)
           .whereType<Map>()
           .map((item) => Map<String, dynamic>.from(item))
           .toList(growable: false);
-      _publicProfilesCache = profiles;
-      _publicProfilesCacheExpiresAt = DateTime.now().add(
-        _publicProfileCacheTtl,
-      );
-      return profiles;
+      if (_publicProfilesEpoch == requestEpoch) {
+        _publicProfilesCache = profiles;
+      }
+      return _visiblePublicProfiles(profiles).toList(growable: false);
     }();
     _publicProfilesRequest = request;
     try {
@@ -976,56 +1617,310 @@ class CommunityService {
     }
   }
 
+  Stream<List<Map<String, dynamic>>> watchRegisteredPublicProfiles() =>
+      firestore
+          .collection('public_profiles')
+          .orderBy('displayName')
+          .snapshots()
+          .map(
+            (snapshot) =>
+                _visiblePublicProfiles(
+                      snapshot.docs.map(
+                        (document) => {
+                          ...document.data(),
+                          'userId': document.id,
+                        },
+                      ),
+                    )
+                    .map((profile) => Map<String, dynamic>.from(profile))
+                    .toList(growable: false),
+          );
+
+  Future<Map<String, dynamic>> getAchievementLeaderboardPage({
+    int pageSize = 50,
+    int? cursorPoints,
+    String? cursorUserId,
+    int offset = 0,
+  }) async {
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'getAchievementLeaderboard',
+      parameters: <String, dynamic>{
+        'pageSize': pageSize,
+        'offset': offset,
+        ...?(cursorPoints == null
+            ? null
+            : <String, dynamic>{'cursorPoints': cursorPoints}),
+        ...?(cursorUserId?.isNotEmpty == true
+            ? <String, dynamic>{'cursorUserId': cursorUserId}
+            : null),
+      },
+    );
+    return Map<String, dynamic>.from(result.data);
+  }
+
+  static Iterable<Map<String, dynamic>> _visiblePublicProfiles(
+    Iterable<Map<String, dynamic>> profiles,
+  ) {
+    return profiles.where((profile) {
+      final deleted =
+          profile['deleted'] == true ||
+          profile['isDeleted'] == true ||
+          profile['deletedAt'] != null ||
+          (profile['accountStatus'] as String? ?? '').trim().toLowerCase() ==
+              'deleted';
+      return !deleted;
+    });
+  }
+
   static void clearPublicProfileCache([String? userId]) {
     final normalizedUserId = userId?.trim();
     if (normalizedUserId == null || normalizedUserId.isEmpty) {
       _publicProfileCache.clear();
+      _publicProfileRequests.clear();
+      _publicProfileRefreshRequests.clear();
       _publicProfilesCache = null;
-      _publicProfilesCacheExpiresAt = null;
+      _publicProfilesRequest = null;
+      _publicProfilesEpoch++;
       _publicAchievementCache.clear();
       _publicAchievementRequests.clear();
+      _publicAchievementRefreshRequests.clear();
+      _publicCacheEpochs.clear();
+      _publicCacheEpoch++;
+      _publicCacheOwnerUid = null;
+      publicProfileRefreshGeneration.value++;
+      // Public profile persistence is scoped to the current auth owner. Do
+      // not synchronously block logout or account switching on cleanup.
       return;
     }
+    _publicCacheEpochs[normalizedUserId] =
+        (_publicCacheEpochs[normalizedUserId] ?? 0) + 1;
     _publicProfileCache.remove(normalizedUserId);
+    _publicProfileRequests.remove(normalizedUserId);
+    _publicProfileRefreshRequests.remove(normalizedUserId);
+    _publicProfilesCache = null;
+    _publicProfilesEpoch++;
+    _publicAchievementCache.remove(normalizedUserId);
+    _publicAchievementRequests.remove(normalizedUserId);
+    _publicAchievementRefreshRequests.remove(normalizedUserId);
+    publicProfileRefreshGeneration.value++;
+    // The persistent entry is intentionally retained: it is public data and
+    // is used for the next fast first paint; a forced server refresh follows.
   }
 
-  Future<AchievementSummary> getPublicAchievement(String userId) {
+  Future<AchievementSummary> getPublicAchievement(
+    String userId, {
+    bool forceRefresh = false,
+  }) {
     final normalizedUserId = userId.trim();
     if (normalizedUserId.isEmpty) return Future.value(AchievementSummary.empty);
+    _preparePublicCacheForCurrentUser();
     final cached = _publicAchievementCache[normalizedUserId];
-    if (cached != null && cached.expiresAt.isAfter(DateTime.now())) {
+    if (cached != null && cached.isFresh) {
+      _touchAchievementCache(normalizedUserId, cached);
       return Future.value(cached.value);
     }
-    final existing = _publicAchievementRequests[normalizedUserId];
-    if (existing != null) return existing;
-    final request = () async {
-      try {
-        final result = await FirebaseFunctions.instance
-            .httpsCallable('getPublicAchievement')
-            .call({'userId': normalizedUserId});
-        final data = result.data is Map
-            ? Map<String, dynamic>.from(result.data as Map)
-            : const <String, dynamic>{};
-        final value = AchievementSummary.fromProfile(data);
+    if (cached != null) _publicAchievementCache.remove(normalizedUserId);
+    if (!forceRefresh) {
+      final persistent = _readPersistentPublicAchievement(normalizedUserId);
+      return persistent.then((value) {
+        if (value == null) {
+          return _loadPublicAchievement(normalizedUserId, forceRefresh: false);
+        }
         _publicAchievementCache[normalizedUserId] = _AchievementCacheEntry(
           value,
-          DateTime.now().add(_publicAchievementCacheTtl),
         );
+        unawaited(_loadPublicAchievement(normalizedUserId, forceRefresh: true));
         return value;
-      } catch (_) {
-        // Public profiles still render their Firestore snapshot when the
-        // callable is unavailable (for example for an anonymous viewer).
-        return AchievementSummary.empty;
+      });
+    }
+    return _loadPublicAchievement(normalizedUserId, forceRefresh: true);
+  }
+
+  Future<AchievementSummary> _loadPublicAchievement(
+    String normalizedUserId, {
+    required bool forceRefresh,
+  }) {
+    final existingRefresh = _publicAchievementRefreshRequests[normalizedUserId];
+    if (existingRefresh != null) return existingRefresh;
+    final existing = _publicAchievementRequests[normalizedUserId];
+    if (existing != null && !forceRefresh) return existing;
+    final requestEpoch = _cacheEpochFor(normalizedUserId);
+    final request = () async {
+      for (var attempt = 0; attempt < 3; attempt++) {
+        try {
+          final result = await callFirebaseCallable<Map<String, dynamic>>(
+            'getPublicAchievement',
+            parameters: {'userId': normalizedUserId},
+          );
+          final data = result.data;
+          final value = AchievementSummary.fromProfile(data);
+          if (_cacheEpochFor(normalizedUserId) == requestEpoch) {
+            _storeAchievementCache(
+              normalizedUserId,
+              _AchievementCacheEntry(value),
+            );
+            unawaited(
+              _writePersistentPublicAchievement(
+                normalizedUserId,
+                value,
+                ownerUid: _publicCacheOwnerUid,
+              ),
+            );
+          }
+          return value;
+        } catch (error) {
+          if (attempt == 2) {
+            if (kDebugMode) {
+              debugPrint(
+                'Publikus achievement lekérése sikertelen: ${error.runtimeType}',
+              );
+            }
+            return AchievementSummary.empty;
+          }
+          await Future<void>.delayed(
+            Duration(milliseconds: 250 * (attempt + 1)),
+          );
+        }
       }
+      return AchievementSummary.empty;
     }();
     _publicAchievementRequests[normalizedUserId] = request;
+    if (forceRefresh) {
+      _publicAchievementRefreshRequests[normalizedUserId] = request;
+    }
     request.whenComplete(() {
       if (identical(_publicAchievementRequests[normalizedUserId], request)) {
         _publicAchievementRequests.remove(normalizedUserId);
       }
+      if (identical(
+        _publicAchievementRefreshRequests[normalizedUserId],
+        request,
+      )) {
+        _publicAchievementRefreshRequests.remove(normalizedUserId);
+      }
     });
     return request;
   }
+
+  String _persistentPublicAchievementKey(String userId, {String? ownerUid}) {
+    final owner = (ownerUid ?? auth.currentUser?.uid)?.trim();
+    final ownerKey = owner == null || owner.isEmpty ? 'anonymous' : owner;
+    return 'huhs.public.achievement.$ownerKey.$userId';
+  }
+
+  Future<AchievementSummary?> _readPersistentPublicAchievement(
+    String userId,
+  ) async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final key = _persistentPublicAchievementKey(userId);
+      final payload = preferences.getString(key);
+      final savedAt = preferences.getInt('$key.savedAt');
+      if (payload == null || savedAt == null) return null;
+      final age = DateTime.now().difference(
+        DateTime.fromMillisecondsSinceEpoch(savedAt),
+      );
+      if (age > _publicPersistentCacheTtl) {
+        await preferences.remove(key);
+        await preferences.remove('$key.savedAt');
+        return null;
+      }
+      final decoded = jsonDecode(payload);
+      return decoded is Map
+          ? AchievementSummary.fromProfile(Map<String, dynamic>.from(decoded))
+          : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _writePersistentPublicAchievement(
+    String userId,
+    AchievementSummary value, {
+    String? ownerUid,
+  }) async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final key = _persistentPublicAchievementKey(userId, ownerUid: ownerUid);
+      await preferences.setString(
+        key,
+        jsonEncode({
+          'achievementPoints': value.points,
+          'achievementBadge': {
+            'name': value.badgeName,
+            'description': value.badgeDescription,
+            'imageUrl': value.badgeImageUrl,
+            'slug': value.badgeSlug,
+          },
+        }),
+      );
+      await preferences.setInt(
+        '$key.savedAt',
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (_) {
+      // The memory cache remains the source for this session if persistence
+      // is unavailable.
+    }
+  }
+
+  void _preparePublicCacheForCurrentUser() {
+    final uid = auth.currentUser?.uid.trim();
+    if (uid == null || uid.isEmpty || uid == _publicCacheOwnerUid) return;
+    _publicCacheEpoch++;
+    _publicProfileCache.clear();
+    _publicProfileRequests.clear();
+    _publicProfileRefreshRequests.clear();
+    _publicProfilesCache = null;
+    _publicProfilesRequest = null;
+    _publicProfilesEpoch++;
+    _publicAchievementCache.clear();
+    _publicAchievementRequests.clear();
+    _publicCacheOwnerUid = uid;
+  }
+
+  static int _cacheEpochFor(String userId) =>
+      _publicCacheEpoch + (_publicCacheEpochs[userId] ?? 0);
+
+  static void _storePublicProfileCache(
+    String userId,
+    _PublicProfileCacheEntry entry,
+  ) {
+    _publicProfileCache.remove(userId);
+    _publicProfileCache[userId] = entry;
+    while (_publicProfileCache.length > _publicProfileCacheLimit) {
+      _publicProfileCache.remove(_publicProfileCache.keys.first);
+    }
+  }
+
+  static void _touchPublicProfileCache(
+    String userId,
+    _PublicProfileCacheEntry entry,
+  ) {
+    _storePublicProfileCache(userId, entry);
+  }
+
+  static void _storeAchievementCache(
+    String userId,
+    _AchievementCacheEntry entry,
+  ) {
+    _publicAchievementCache.remove(userId);
+    _publicAchievementCache[userId] = entry;
+    while (_publicAchievementCache.length > _publicProfileCacheLimit) {
+      _publicAchievementCache.remove(_publicAchievementCache.keys.first);
+    }
+  }
+
+  static void _touchAchievementCache(
+    String userId,
+    _AchievementCacheEntry entry,
+  ) {
+    _storeAchievementCache(userId, entry);
+  }
+
+  @visibleForTesting
+  static int publicCacheEpochForTesting(String userId) =>
+      _cacheEpochFor(userId.trim());
 
   Stream<QuerySnapshot<Map<String, dynamic>>> watchReports() {
     if (!isAdmin) return const Stream.empty();
@@ -1072,26 +1967,14 @@ class CommunityService {
     if (!{'attending', 'not_attending'}.contains(state)) {
       throw ArgumentError('Érvénytelen részvételi állapot.');
     }
-    await _attendance(eventId).doc(user.uid).set({
-      'eventId': eventId,
-      'state': state,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-    final planned = firestore
-        .collection('community_profiles')
-        .doc(user.uid)
-        .collection('planned_events')
-        .doc('$eventId');
-    if (state == 'attending') {
-      await planned.set({
+    await callFirebaseCallable<void>(
+      'setEventAttendance',
+      parameters: {
         'eventId': eventId,
-        if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
         'state': state,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } else {
-      await planned.delete();
-    }
+        if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
+      },
+    );
   }
 
   CollectionReference<Map<String, dynamic>> _eventMeetups(int eventId) =>
@@ -1241,32 +2124,11 @@ class CommunityService {
 
   Future<void> pruneStaleConnections(String userId) async {
     final viewer = auth.currentUser;
-    if (viewer == null || viewer.isAnonymous || userId.isEmpty) return;
-    final connections = await firestore
-        .collection('community_profiles')
-        .doc(userId)
-        .collection('connections')
-        .get();
-    final stale = <String>[];
-    for (final connection in connections.docs) {
-      final profile = await firestore
-          .collection('community_profiles')
-          .doc(connection.id)
-          .get();
-      if (!profile.exists) stale.add(connection.id);
-    }
-    if (stale.isEmpty) return;
-    final batch = firestore.batch();
-    for (final otherUserId in stale) {
-      batch.delete(
-        firestore
-            .collection('community_profiles')
-            .doc(userId)
-            .collection('connections')
-            .doc(otherUserId),
-      );
-    }
-    await batch.commit();
+    if (viewer == null || viewer.isAnonymous || userId != viewer.uid) return;
+    await callFirebaseCallable<void>(
+      'manageConnection',
+      parameters: {'action': 'prune'},
+    );
   }
 
   Future<List<Map<String, String>>> getFriendAttendees(int eventId) async {
@@ -1283,21 +2145,23 @@ class CommunityService {
         .where((doc) => doc.data()['state'] == 'attending')
         .map((doc) => doc.id)
         .toSet();
-    final result = <Map<String, String>>[];
-    for (final connection in connections.docs) {
-      if (!attendeeIds.contains(connection.id)) continue;
-      final data = connection.data();
-      var name = (data['displayName'] as String? ?? '').trim();
-      var image = (data['imageUrl'] as String? ?? '').trim();
-      if (name.isEmpty || image.isEmpty) {
-        final profileData = await getPublicProfile(connection.id);
-        name = name.isEmpty
-            ? (profileData['displayName'] as String? ?? '').trim()
-            : name;
-        image = image.isEmpty ? resolveProfileImage(profileData) : image;
-      }
-      result.add({'id': connection.id, 'name': name, 'image': image});
-    }
+    final result = await Future.wait(
+      connections.docs
+          .where((connection) => attendeeIds.contains(connection.id))
+          .map((connection) async {
+            final data = connection.data();
+            var name = (data['displayName'] as String? ?? '').trim();
+            var image = (data['imageUrl'] as String? ?? '').trim();
+            if (name.isEmpty || image.isEmpty) {
+              final profileData = await getPublicProfile(connection.id);
+              name = name.isEmpty
+                  ? (profileData['displayName'] as String? ?? '').trim()
+                  : name;
+              image = image.isEmpty ? resolveProfileImage(profileData) : image;
+            }
+            return {'id': connection.id, 'name': name, 'image': image};
+          }),
+    );
     return result;
   }
 
@@ -1314,6 +2178,7 @@ class CommunityService {
   Future<void> setDeviceCodeEnabled(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('device_code_unlock', value);
+    if (value) await prefs.setBool('biometric_unlock', false);
   }
 
   Future<bool> authenticatorEnabled() async {
@@ -1336,6 +2201,16 @@ class CommunityService {
   }
 
   Future<bool> authenticateDeviceCode() async {
+    try {
+      final nativeResult = await _authChannel.invokeMethod<bool>(
+        'deviceCredential',
+      );
+      if (nativeResult != null) return nativeResult;
+    } on PlatformException {
+      // Other platforms use the local_auth fallback below.
+    } on MissingPluginException {
+      // Other platforms use the local_auth fallback below.
+    }
     try {
       return await LocalAuthentication().authenticate(
         localizedReason: 'Oldd fel a Hungarian Hardstyle profilodat',
@@ -1370,6 +2245,7 @@ class CommunityService {
   Future<void> setBiometricEnabled(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('biometric_unlock', value);
+    if (value) await prefs.setBool('device_code_unlock', false);
   }
 
   Future<bool> authenticateBiometric() async {
@@ -1457,51 +2333,10 @@ class CommunityService {
     if (user == null || user.isAnonymous || otherUserId == user.uid) {
       throw StateError('Ismerős-jelöléshez regisztráció szükséges.');
     }
-    final ownConnection = firestore
-        .collection('community_profiles')
-        .doc(user.uid)
-        .collection('connections')
-        .doc(otherUserId);
-    final otherConnection = firestore
-        .collection('community_profiles')
-        .doc(otherUserId)
-        .collection('connections')
-        .doc(user.uid);
-    if ((await ownConnection.get()).exists ||
-        (await otherConnection.get()).exists) {
-      return;
-    }
-    final requestRef = firestore
-        .collection('connection_requests')
-        .doc('${user.uid}_$otherUserId');
-    final existing = await requestRef.get();
-    if (existing.data()?['status'] == 'pending') {
-      await requestRef.update({
-        'notificationRequestedAt': FieldValue.serverTimestamp(),
-      });
-      return;
-    }
-    if (existing.exists) await requestRef.delete();
-    final profile = await firestore
-        .collection('community_profiles')
-        .doc(user.uid)
-        .get();
-    final profileData = profile.data() ?? const <String, dynamic>{};
-    final senderName =
-        (profileData['displayName'] as String? ??
-                user.displayName ??
-                user.email ??
-                'Felhasználó')
-            .trim();
-    await requestRef.set({
-      'from': user.uid,
-      'to': otherUserId,
-      'fromName': senderName,
-      'fromImageUrl': resolveProfileImage(profileData, user.photoURL ?? ''),
-      'status': 'pending',
-      'createdAt': FieldValue.serverTimestamp(),
-      'notificationRequestedAt': FieldValue.serverTimestamp(),
-    });
+    await callFirebaseCallable<void>(
+      'manageConnection',
+      parameters: {'action': 'request', 'otherUid': otherUserId},
+    );
   }
 
   Future<void> respondConnection(String fromUserId, bool accept) async {
@@ -1509,53 +2344,14 @@ class CommunityService {
     if (user == null || user.isAnonymous) {
       throw StateError('Regisztráció szükséges.');
     }
-    final status = accept ? 'accepted' : 'rejected';
-    final requestRef = firestore
-        .collection('connection_requests')
-        .doc('${fromUserId}_${user.uid}');
-    final requestSnapshot = await requestRef.get();
-    if (!requestSnapshot.exists) {
-      throw StateError('Az ismerős-kérés már nem érhető el.');
-    }
-    final batch = firestore.batch();
-    batch.update(requestRef, {
-      'status': status,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-    if (accept) {
-      batch.set(
-        firestore
-            .collection('community_profiles')
-            .doc(user.uid)
-            .collection('connections')
-            .doc(fromUserId),
-        {
-          'userId': fromUserId,
-          'displayName': requestSnapshot.data()?['fromName'] ?? '',
-          'imageUrl': requestSnapshot.data()?['fromImageUrl'] ?? '',
-          'createdAt': FieldValue.serverTimestamp(),
-        },
-      );
-      final targetProfile = await firestore
-          .collection('community_profiles')
-          .doc(user.uid)
-          .get();
-      final targetData = targetProfile.data() ?? const <String, dynamic>{};
-      batch.set(
-        firestore
-            .collection('community_profiles')
-            .doc(fromUserId)
-            .collection('connections')
-            .doc(user.uid),
-        {
-          'userId': user.uid,
-          'displayName': targetData['displayName'] ?? '',
-          'imageUrl': resolveProfileImage(targetData, user.photoURL ?? ''),
-          'createdAt': FieldValue.serverTimestamp(),
-        },
-      );
-    }
-    await batch.commit();
+    await callFirebaseCallable<void>(
+      'manageConnection',
+      parameters: {
+        'action': 'respond',
+        'otherUid': fromUserId,
+        'accept': accept,
+      },
+    );
   }
 
   Future<void> removeConnection(String otherUserId) async {
@@ -1563,36 +2359,10 @@ class CommunityService {
     if (user == null || user.isAnonymous || otherUserId == user.uid) {
       throw StateError('Regisztráció szükséges.');
     }
-    final batch = firestore.batch();
-    batch.delete(
-      firestore
-          .collection('community_profiles')
-          .doc(user.uid)
-          .collection('connections')
-          .doc(otherUserId),
+    await callFirebaseCallable<void>(
+      'manageConnection',
+      parameters: {'action': 'remove', 'otherUid': otherUserId},
     );
-    batch.delete(
-      firestore
-          .collection('community_profiles')
-          .doc(otherUserId)
-          .collection('connections')
-          .doc(user.uid),
-    );
-    final requestRefs = [
-      firestore
-          .collection('connection_requests')
-          .doc('${user.uid}_$otherUserId'),
-      firestore
-          .collection('connection_requests')
-          .doc('${otherUserId}_${user.uid}'),
-    ];
-    final requestSnapshots = await Future.wait(
-      requestRefs.map((reference) => reference.get()),
-    );
-    for (var index = 0; index < requestRefs.length; index++) {
-      if (requestSnapshots[index].exists) batch.delete(requestRefs[index]);
-    }
-    await batch.commit();
   }
 
   Future<void> setUserRole(String userId, String role) async {
@@ -1621,41 +2391,67 @@ class CommunityService {
     }, SetOptions(merge: true));
   }
 
-  Future<void> deleteUser(String userId) async {
+  Future<String> deleteUser(String userId) async {
     if (!isAdmin) {
       throw StateError('Csak admin törölhet felhasználót.');
     }
-    await FirebaseFunctions.instance.httpsCallable('deleteCommunityUser').call(
-      <String, dynamic>{'uid': userId},
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'deleteCommunityUser',
+      parameters: <String, dynamic>{'uid': userId},
     );
+    return result.data['cleanupStatus']?.toString() ?? 'completed';
   }
 
-  Future<void> deleteOwnProfile() async {
+  Future<String> deleteOwnProfile() async {
     final user = auth.currentUser;
     if (user == null || user.isAnonymous) {
       throw StateError('Nincs törölhető profil.');
     }
-    await FirebaseFunctions.instance.httpsCallable('deleteCommunityUser').call(
-      <String, dynamic>{'uid': user.uid},
+    final uid = user.uid;
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'deleteCommunityUser',
+      parameters: <String, dynamic>{'uid': uid},
     );
-    await _clearDeletedAccountState();
+    await _clearDeletedAccountState(uid);
+    return result.data['cleanupStatus']?.toString() ?? 'completed';
   }
 
-  Future<void> _clearDeletedAccountState() async {
+  Future<void> _clearDeletedAccountState(String uid) async {
+    // Drop both the in-memory projections and the persisted profile/achievement
+    // snapshots before signing out. Otherwise a deleted account can briefly
+    // reappear when the app returns to the anonymous home screen.
+    clearPublicProfileCache();
+    _adminCache.clear();
+    _adminRequests.clear();
     final prefs = await SharedPreferences.getInstance();
-    for (final key in const [
+    final userCacheKeys = prefs.getKeys().where(
+      (key) =>
+          key == 'favorite_items' ||
+          key.contains(uid) ||
+          key.startsWith('huhs.public.profile.$uid.') ||
+          key.startsWith('huhs.public.achievement.$uid.'),
+    );
+    for (final key in <String>{
+      ...userCacheKeys,
       'biometric_unlock',
       'device_code_unlock',
       'authenticator_unlock',
       'fcm_token',
       'fcm_token_refresh_v3',
-    ]) {
+    }) {
       await prefs.remove(key);
     }
     await _secureStorage.delete(key: _totpSecretKey);
     _cachedRole = '';
     _cachedAccessRole = accessNone;
     resetBiometricSession();
+    await WordpressService().clearPublicCache();
+    try {
+      await GoogleSignIn().disconnect();
+    } on PlatformException {
+      // No revocable Google grant is a valid state; local and Firebase
+      // cleanup must still complete.
+    }
     await auth.signOut();
   }
 
@@ -1664,23 +2460,74 @@ class CommunityService {
     String method = 'GET',
     Map<String, dynamic>? body,
   }) async {
-    if (!isAdmin) {
-      throw StateError('Csak admin használhatja a WordPress vezérlőközpontot.');
+    final currentUser = auth.currentUser;
+    if (currentUser == null || currentUser.isAnonymous) {
+      throw StateError('A vezérlőközpont használatához jelentkezz be.');
     }
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('wordPressAdminRequest')
-        .call({'path': path, 'method': method, 'body': ?body});
+    final normalizedMethod = method.toUpperCase();
+    final uid = auth.currentUser?.uid.trim();
+    final cacheKey = uid == null || uid.isEmpty ? null : '$uid:$path';
+    if (normalizedMethod == 'GET' && cacheKey != null) {
+      final cached = _adminCache[cacheKey];
+      if (cached != null && cached.isFresh) return cached.value;
+      final existing = _adminRequests[cacheKey];
+      if (existing != null) return existing;
+      final request = _fetchWordPressAdmin(
+        path: path,
+        method: normalizedMethod,
+        body: body,
+      );
+      _adminRequests[cacheKey] = request;
+      try {
+        final value = await request;
+        _adminCache[cacheKey] = _AdminCacheEntry(value);
+        return value;
+      } finally {
+        if (identical(_adminRequests[cacheKey], request)) {
+          _adminRequests.remove(cacheKey);
+        }
+      }
+    }
+    final value = await _fetchWordPressAdmin(
+      path: path,
+      method: normalizedMethod,
+      body: body,
+    );
+    if (normalizedMethod != 'GET' && uid != null && uid.isNotEmpty) {
+      _adminCache.removeWhere((key, _) => key.startsWith('$uid:'));
+    }
+    return value;
+  }
+
+  /// Forces the next HUHS admin request to read the current WordPress data.
+  /// A manual refresh must refresh the current voting state as well as rebuild
+  /// the screen.
+  void clearAdminCache() {
+    _adminCache.clear();
+    _adminRequests.clear();
+  }
+
+  Future<dynamic> _fetchWordPressAdmin({
+    required String path,
+    required String method,
+    Map<String, dynamic>? body,
+  }) async {
+    final result = await callFirebaseCallable<dynamic>(
+      'wordPressAdminRequest',
+      parameters: {'path': path, 'method': method, 'body': ?body},
+    );
     return result.data;
   }
 
   Future<List<Map<String, dynamic>>> wordPressSubmissions() async {
-    if (!isAdmin) {
-      throw StateError('Csak admin tekintheti meg a beküldéseket.');
+    final currentUser = auth.currentUser;
+    if (currentUser == null || currentUser.isAnonymous) {
+      throw StateError('A beküldések megtekintéséhez jelentkezz be.');
     }
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('listWordPressSubmissions')
-        .call();
-    final items = result.data is List ? result.data as List : const [];
+    final result = await callFirebaseCallable<List<dynamic>>(
+      'listWordPressSubmissions',
+    );
+    final items = result.data;
     return items
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
@@ -1691,12 +2538,14 @@ class CommunityService {
     required int id,
     required String action,
   }) async {
-    if (!isAdmin) {
-      throw StateError('Csak admin kezelheti a beküldéseket.');
+    final currentUser = auth.currentUser;
+    if (currentUser == null || currentUser.isAnonymous) {
+      throw StateError('A beküldések kezeléséhez jelentkezz be.');
     }
-    await FirebaseFunctions.instance
-        .httpsCallable('manageWordPressSubmission')
-        .call({'id': id, 'action': action});
+    await callFirebaseCallable<void>(
+      'manageWordPressSubmission',
+      parameters: {'id': id, 'action': action},
+    );
   }
 
   Future<void> updateWordPressSubmission({
@@ -1704,31 +2553,59 @@ class CommunityService {
     required String title,
     required String content,
   }) async {
-    if (!isAdmin) throw StateError('Csak admin szerkeszthet beküldést.');
-    await FirebaseFunctions.instance
-        .httpsCallable('updateWordPressSubmission')
-        .call({'id': id, 'title': title, 'content': content});
+    final currentUser = auth.currentUser;
+    if (currentUser == null || currentUser.isAnonymous) {
+      throw StateError('A beküldések szerkesztéséhez jelentkezz be.');
+    }
+    await callFirebaseCallable<void>(
+      'updateWordPressSubmission',
+      parameters: {'id': id, 'title': title, 'content': content},
+    );
   }
 
   Future<String> uploadImage(
     Uint8List bytes, {
     String filename = 'upload.jpg',
   }) async {
-    if (bytes.isEmpty || bytes.length > maxUploadBytes) {
-      throw StateError('A kép legfeljebb 5 MB lehet.');
+    if (bytes.isEmpty ||
+        bytes.length > maxUploadBytes ||
+        !isSupportedImageBytes(bytes)) {
+      throw StateError(
+        'Csak érvényes JPG, PNG vagy WebP kép tölthető fel (max. 5 MB).',
+      );
+    }
+    return (await uploadImageWithMetadata(bytes, filename: filename)).url;
+  }
+
+  Future<CloudinaryUploadResult> uploadImageWithMetadata(
+    Uint8List bytes, {
+    String filename = 'upload.jpg',
+    bool userScoped = false,
+  }) async {
+    if (bytes.isEmpty ||
+        bytes.length > maxUploadBytes ||
+        !isSupportedImageBytes(bytes)) {
+      throw StateError(
+        'Csak érvényes JPG, PNG vagy WebP kép tölthető fel (max. 5 MB).',
+      );
     }
     final response = await _dio.post<Map<String, dynamic>>(
       'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
       data: FormData.fromMap({
         'file': MultipartFile.fromBytes(bytes, filename: filename),
         'upload_preset': uploadPreset,
+        if (userScoped && auth.currentUser?.uid != null)
+          'folder': 'huhs_users/${auth.currentUser!.uid}',
       }),
     );
     final url = response.data?['secure_url'];
     if (url is! String || url.isEmpty) {
       throw StateError('A kép feltöltése sikertelen.');
     }
-    return url;
+    return CloudinaryUploadResult(
+      url: url,
+      publicId: (response.data?['public_id'] as String? ?? '').trim(),
+    );
   }
 
   String resolveProfileImage(
@@ -1737,23 +2614,105 @@ class CommunityService {
   ]) {
     for (final key in const ['profileSourceImageUrl', 'profileImageUrl']) {
       final value = data[key];
-      if (value is String && value.trim().isNotEmpty) return value.trim();
+      if (value is String && value.trim().isNotEmpty) {
+        final version = (data['profileVersion'] ?? '').toString().trim();
+        if (version.isEmpty) return value.trim();
+        final separator = value.contains('?') ? '&' : '?';
+        return '${value.trim()}${separator}huhs_profile_v=${Uri.encodeComponent(version)}';
+      }
     }
     return fallback.trim();
   }
 
-  Future<DocumentSnapshot<Map<String, dynamic>>> profile() async {
+  /// Adds a Cloudinary thumbnail transformation without changing non-
+  /// Cloudinary URLs. The server still owns the original image URL.
+  static String optimizedImageUrl(String url, {required int width}) {
+    final value = url.trim();
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.host.contains('cloudinary.com')) return value;
+    final marker = '/image/upload/';
+    final index = uri.path.indexOf(marker);
+    if (index < 0) return value;
+    final afterUpload = index + marker.length;
+    final remainder = uri.path.substring(afterUpload);
+    if (remainder.startsWith('f_auto,q_auto,')) return value;
+    final safeWidth = width.clamp(42, 720);
+    final transformedPath =
+        '${uri.path.substring(0, afterUpload)}'
+        'f_auto,q_auto,w_$safeWidth,c_limit/$remainder';
+    return uri.replace(path: transformedPath).toString();
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> profile({
+    bool forceServer = false,
+  }) async {
     final user = auth.currentUser;
     if (user == null || user.isAnonymous) {
       throw StateError('A profil megtekintéséhez regisztráció szükséges.');
     }
-    if (_isAdmin(user.email)) {
-      await _ensureAdminProfile(user);
+    final uid = user.uid;
+    final cached = _profileCache[uid];
+    final cachedAt = _profileCacheFetchedAt[uid];
+    if (!forceServer &&
+        cached != null &&
+        cachedAt != null &&
+        DateTime.now().difference(cachedAt) < _profileCacheTtl) {
+      unawaited(_refreshProfileInBackground(user));
+      _cacheProfileRoleFromSnapshot(user, cached);
+      return cached;
     }
-    var snapshot = await firestore
+    if (_isAdmin(user.email)) {
+      // Admin role is derived from the authenticated account immediately;
+      // keeping this merge in the background prevents an admin profile paint
+      // from waiting on a write round trip.
+      unawaited(_ensureAdminProfile(user));
+    }
+    DocumentSnapshot<Map<String, dynamic>> snapshot;
+    try {
+      snapshot = await firestore
+          .collection('community_profiles')
+          .doc(uid)
+          .get(const GetOptions(source: Source.cache));
+      if (snapshot.exists && !forceServer) {
+        _storeProfileCache(uid, snapshot);
+        _cacheProfileRoleFromSnapshot(user, snapshot);
+        unawaited(_refreshProfileInBackground(user));
+        return snapshot;
+      }
+    } catch (_) {
+      // No local snapshot yet; fall through to the server request.
+    }
+    return _refreshProfileInBackground(user);
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> _refreshProfileInBackground(
+    User user,
+  ) async {
+    final existing = _profileRefreshRequests[user.uid];
+    if (existing != null) return existing;
+    final request = firestore
         .collection('community_profiles')
         .doc(user.uid)
-        .get();
+        .get(const GetOptions(source: Source.server));
+    _profileRefreshRequests[user.uid] = request;
+    try {
+      final snapshot = await request;
+      if (auth.currentUser?.uid == user.uid) {
+        _storeProfileCache(user.uid, snapshot);
+        _cacheProfileRoleFromSnapshot(user, snapshot);
+      }
+      return snapshot;
+    } finally {
+      if (identical(_profileRefreshRequests[user.uid], request)) {
+        _profileRefreshRequests.remove(user.uid);
+      }
+    }
+  }
+
+  void _cacheProfileRoleFromSnapshot(
+    User user,
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) {
     final data = snapshot.data() ?? const <String, dynamic>{};
     final role = _isAdmin(user.email) ? 'organizer' : data['role'] as String?;
     _cachedRole = accountRole(role);
@@ -1762,7 +2721,75 @@ class CommunityService {
         : (data['accessRole'] as String? ??
               (role == accessAdmin ? accessAdmin : accessNone));
     _cachedRoleUid = user.uid;
-    return snapshot;
+    final displayName = (data['displayName'] as String? ?? '').trim();
+    final profileIsComplete =
+        displayName.length >= 2 &&
+        displayName.length <= 40 &&
+        !displayName.contains('@') &&
+        const {'dj', 'organizer', 'partygoer'}.contains(role);
+    if (!profileIsComplete) return;
+    // This one-time achievement check must not delay the profile's first
+    // paint. The server-side operation is idempotent and can complete in the
+    // background while the already available profile is rendered.
+    unawaited(_claimProfileCompletionAchievement());
+  }
+
+  static void _storeProfileCache(
+    String uid,
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    _profileCache[uid] = snapshot;
+    _profileCacheFetchedAt[uid] = DateTime.now();
+  }
+
+  static void clearProfileCache([String? uid]) {
+    if (uid == null || uid.trim().isEmpty) {
+      _profileCache.clear();
+      _profileCacheFetchedAt.clear();
+      return;
+    }
+    final normalizedUid = uid.trim();
+    _profileCache.remove(normalizedUid);
+    _profileCacheFetchedAt.remove(normalizedUid);
+  }
+
+  Future<void> _claimProfileCompletionAchievement() async {
+    try {
+      await callFirebaseCallable<void>('claimProfileCompletionAchievement');
+    } catch (_) {
+      // Profile loading remains available if the one-time reward check is unavailable.
+    }
+  }
+
+  /// Warms the signed-in user's profile while the startup screen is visible.
+  /// The profile screen can therefore render from the fast Firestore path
+  /// instead of waiting for its first network round trip.
+  Future<void> preloadOwnProfile() async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return;
+    try {
+      await Future.wait<void>([
+        profile().then<void>((_) {}),
+        getPublicProfile(user.uid).then<void>((_) {}),
+      ]);
+    } catch (_) {
+      // Startup preloading is opportunistic and must never block app launch.
+    }
+  }
+
+  /// Warms the first HUHS controller response during the startup screen.
+  /// This is opportunistic and only runs after the signed-in account's role
+  /// has been loaded, so regular users do not make an admin request.
+  Future<void> preloadWordPressAdmin() async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return;
+    try {
+      await profile();
+      if (!isAdmin) return;
+      await wordPressAdminRequest(path: '/huhs/v1/admin?action=dashboard');
+    } catch (_) {
+      // Admin preloading must never delay or break app startup.
+    }
   }
 
   Future<void> signOut() async {
@@ -1771,11 +2798,60 @@ class CommunityService {
     // appear to have stale community state. Clear both the per-user entries
     // and the in-flight/list cache at the session boundary.
     clearPublicProfileCache();
+    clearProfileCache();
     _cachedRole = '';
     _cachedAccessRole = accessNone;
     _cachedRoleUid = null;
     resetBiometricSession();
-    await auth.signOut();
+    // Firebase sign-out alone leaves Google Sign-In's last account selected,
+    // so the next Google registration silently reuses the previous account.
+    try {
+      await GoogleSignIn().signOut();
+    } finally {
+      await auth.signOut();
+    }
+  }
+
+  /// Refreshes the restored Auth session without treating transient network
+  /// failures or a missing Firestore profile as account deletion.
+  Future<Map<String, bool>> refreshCurrentSession() async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      return const {'active': true, 'emailVerifiedChanged': false};
+    }
+    final wasVerified = user.emailVerified;
+    try {
+      await user.reload();
+    } on FirebaseAuthException catch (error) {
+      if (!{
+        'user-not-found',
+        'user-disabled',
+        'invalid-user-token',
+        'user-token-expired',
+      }.contains(error.code)) {
+        rethrow;
+      }
+      await _clearDeletedAccountState(user.uid);
+      return {
+        'active': false,
+        'deleted': error.code == 'user-not-found',
+        'emailVerifiedChanged': false,
+      };
+    }
+    final refreshed = auth.currentUser;
+    final emailVerifiedChanged =
+        !wasVerified && refreshed?.emailVerified == true;
+    if (emailVerifiedChanged) {
+      try {
+        await syncEmailChange();
+      } catch (_) {
+        // Retry on the next session refresh; verification itself succeeded.
+      }
+    }
+    return {
+      'active': refreshed != null,
+      'emailVerifiedChanged': emailVerifiedChanged,
+    };
   }
 
   Future<void> _cacheProfileRole() async {
@@ -1794,10 +2870,5 @@ class CommunityService {
       'email': user.email,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
-  }
-
-  static String _anonymousNumber(String uid) {
-    final value = uid.codeUnits.fold<int>(17, (hash, code) => hash * 31 + code);
-    return (value.abs() % 9000 + 1000).toString();
   }
 }

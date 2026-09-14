@@ -10,6 +10,9 @@ class FreeReleasesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final coverCacheWidth = (150 * MediaQuery.devicePixelRatioOf(context))
+        .round()
+        .clamp(300, 600);
     final releases = ref.watch(releasesProvider((search: '', artistId: 0)));
     return Scaffold(
       appBar: AppBar(title: const Text('Ingyenes kiadványok')),
@@ -56,8 +59,8 @@ class FreeReleasesScreen extends ConsumerWidget {
                               : CachedNetworkImage(
                                   imageUrl: release.coverUrl,
                                   fit: BoxFit.cover,
-                                  memCacheWidth: 300,
-                                  maxWidthDiskCache: 300,
+                                  memCacheWidth: coverCacheWidth,
+                                  maxWidthDiskCache: coverCacheWidth,
                                   placeholder: (_, _) => const ColoredBox(
                                     color: Color(0xFF242424),
                                     child: Center(

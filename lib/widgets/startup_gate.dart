@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:in_app_update/in_app_update.dart';
+
 import '../screens/main_navigation.dart';
-import '../services/app_update_service.dart';
+import '../services/community_service.dart';
+import '../services/startup_announcement_cooldown.dart';
+import '../core/navigation/in_app_browser.dart';
 
 class StartupGate extends StatefulWidget {
   const StartupGate({super.key});
@@ -15,16 +18,27 @@ class StartupGate extends StatefulWidget {
 
 class _StartupGateState extends State<StartupGate>
     with SingleTickerProviderStateMixin {
+  static final Dio _announcementClient = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
   static const _animationDuration = Duration(milliseconds: 850);
   static const _startupDelay = Duration(milliseconds: 700);
   static const _logoAsset = 'assets/logos/huhs_full_logo.png';
+  static const _repeatAnnouncementForUxTesting = false;
+  static const _announcementCooldown = StartupAnnouncementCooldown();
 
   late final AnimationController _controller;
   Timer? _timer;
   bool _ready = false;
   String? _announcementUrl;
+  String? _announcementButtonLabel;
+  String? _announcementButtonUrl;
   String? _dismissedAnnouncementUrl;
-  AppUpdateInfo? _availableUpdate;
+  StreamSubscription<User?>? _authSubscription;
+  String? _preloadedUid;
 
   @override
   void initState() {
@@ -36,36 +50,88 @@ class _StartupGateState extends State<StartupGate>
       upperBound: 1,
       value: .88,
     )..repeat(reverse: true);
+    // Widget tests and fallback startup can run without Firebase platform
+    // initialization. Preloading is optional and must never break the gate.
+    try {
+      final service = CommunityService();
+      _authSubscription = service.auth.userChanges().listen((user) {
+        if (user != null && !user.isAnonymous) {
+          _preloadUserData(service, user);
+        }
+      });
+      // userChanges normally emits the restored session, but warm it
+      // immediately as well so an already signed-in user does not wait for
+      // the stream callback before profile data starts loading.
+      final currentUser = service.auth.currentUser;
+      if (currentUser != null && !currentUser.isAnonymous) {
+        _preloadUserData(service, currentUser);
+      }
+    } catch (_) {}
     _timer = Timer(_startupDelay, () {
       if (mounted) setState(() => _ready = true);
     });
     _loadAnnouncement();
-    _checkForUpdate();
   }
 
-  Future<void> _checkForUpdate() async {
-    final update = await AppUpdateService().check();
-    if (mounted && update != null) setState(() => _availableUpdate = update);
+  void _preloadUserData(CommunityService service, User user) {
+    if (_preloadedUid == user.uid) return;
+    _preloadedUid = user.uid;
+    unawaited(service.preloadOwnProfile());
+    unawaited(service.preloadWordPressAdmin());
   }
 
   Future<void> _loadAnnouncement() async {
     try {
-      final response = await Dio().get<Map<String, dynamic>>(
+      final response = await _announcementClient.get<Map<String, dynamic>>(
         'https://hungarianhardstyle.hu/wp-json/huhs/v1/startup-announcement',
         queryParameters: {'_': DateTime.now().millisecondsSinceEpoch},
         options: Options(headers: const {'Cache-Control': 'no-cache'}),
       );
       final data = response.data;
       final imageUrl = (data?['imageUrl'] as String?)?.trim();
+      final buttonLabel = (data?['buttonLabel'] as String?)?.trim();
+      final buttonUrl = (data?['buttonUrl'] as String?)?.trim();
+      final parsedButtonUrl = Uri.tryParse(buttonUrl ?? '');
+      final validButton =
+          buttonLabel != null &&
+          buttonLabel.isNotEmpty &&
+          buttonUrl != null &&
+          parsedButtonUrl != null &&
+          parsedButtonUrl.scheme == 'https' &&
+          parsedButtonUrl.host.isNotEmpty;
+      final enabled = data?['enabled'] == true;
+      final validImage = imageUrl != null && imageUrl.isNotEmpty;
+      final identity = [
+        imageUrl ?? '',
+        validButton ? buttonLabel : '',
+        validButton ? buttonUrl : '',
+      ].join('|');
+      String ownerId = 'device';
+      try {
+        final uid = FirebaseAuth.instance.currentUser?.uid.trim();
+        if (uid != null && uid.isNotEmpty) ownerId = uid;
+      } catch (_) {}
+      final canShow = enabled && validImage
+          ? (_repeatAnnouncementForUxTesting ||
+                await _announcementCooldown.canShow(
+                  identity: identity,
+                  ownerId: ownerId,
+                ))
+          : false;
+      if (!mounted) return;
+      if (canShow) {
+        await _announcementCooldown.markShown(
+          identity: identity,
+          ownerId: ownerId,
+        );
+      }
       if (!mounted) return;
       setState(() {
-        _announcementUrl =
-            data?['enabled'] == true &&
-                imageUrl != null &&
-                imageUrl.isNotEmpty &&
-                imageUrl != _dismissedAnnouncementUrl
+        _announcementUrl = canShow && imageUrl != _dismissedAnnouncementUrl
             ? imageUrl
             : null;
+        _announcementButtonLabel = validButton ? buttonLabel : null;
+        _announcementButtonUrl = validButton ? buttonUrl : null;
       });
     } catch (_) {}
   }
@@ -83,6 +149,7 @@ class _StartupGateState extends State<StartupGate>
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     _timer?.cancel();
     _controller.dispose();
     super.dispose();
@@ -92,101 +159,111 @@ class _StartupGateState extends State<StartupGate>
   Widget build(BuildContext context) {
     if (_ready) {
       final home = const MainNavigation();
-      if (_announcementUrl == null && _availableUpdate == null) return home;
-      final update = _availableUpdate;
+      if (_announcementUrl == null) return home;
       final announcement = _announcementUrl;
       return Stack(
         children: [
           home,
-          if (update != null)
+          if (announcement != null)
             Positioned.fill(
               child: ColoredBox(
-                color: Colors.black87,
-                child: Center(
-                  child: Card(
-                    margin: const EdgeInsets.all(24),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.system_update_outlined, size: 48),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Új verzió érhető el',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Frissítsd az alkalmazást a legújabb javításokért.',
-                          ),
-                          const SizedBox(height: 18),
-                          FilledButton(
-                            onPressed: () async {
-                              final updated = await AppUpdateService().start(
-                                update,
-                              );
-                              if (updated && mounted) {
-                                setState(() => _availableUpdate = null);
-                              }
-                            },
-                            child: const Text('Frissítés'),
-                          ),
-                          TextButton(
-                            onPressed: () =>
-                                setState(() => _availableUpdate = null),
-                            child: const Text('Most nem'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          if (update == null && announcement != null)
-            Positioned.fill(
-              child: ColoredBox(
-                color: Colors.black87,
-                child: Center(
-                  child: Card(
-                    margin: const EdgeInsets.all(24),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: MediaQuery.sizeOf(context).width * .82,
-                              maxHeight:
-                                  MediaQuery.sizeOf(context).height * .62,
-                            ),
-                            child: Image.network(
-                              announcement,
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, _, _) => const Icon(
-                                Icons.image_not_supported_outlined,
-                                size: 56,
+                color: Colors.black.withValues(alpha: .68),
+                child: SafeArea(
+                  child: Center(
+                    child: Card(
+                      clipBehavior: Clip.antiAlias,
+                      margin: const EdgeInsets.symmetric(horizontal: 18),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.sizeOf(context).height * .84,
+                          maxWidth: 390,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Expanded(
+                                    child: Text(
+                                      'KIEMELT ESEMÉNY',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Bezárás',
+                                    onPressed: () => setState(() {
+                                      _dismissedAnnouncementUrl = announcement;
+                                      _announcementUrl = null;
+                                    }),
+                                    icon: const Icon(Icons.close),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                          FilledButton(
-                            onPressed: () {
-                              if (mounted) {
-                                setState(() {
-                                  _dismissedAnnouncementUrl = announcement;
-                                  _announcementUrl = null;
-                                });
-                              }
-                            },
-                            child: const Text('Bezárás'),
-                          ),
-                        ],
+                            Flexible(
+                              child: Image.network(
+                                announcement,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, _, _) => const SizedBox(
+                                  height: 96,
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.image_not_supported_outlined,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(14, 8, 8, 10),
+                              child: Row(
+                                children: [
+                                  const Spacer(),
+                                  if (_announcementButtonLabel != null &&
+                                      _announcementButtonUrl != null)
+                                    TextButton.icon(
+                                      icon: const Icon(
+                                        Icons.open_in_new,
+                                        size: 18,
+                                      ),
+                                      label: Text(_announcementButtonLabel!),
+                                      onPressed: () async {
+                                        final uri = Uri.tryParse(
+                                          _announcementButtonUrl!,
+                                        );
+                                        if (uri == null ||
+                                            uri.scheme != 'https' ||
+                                            uri.host.isEmpty ||
+                                            !mounted) {
+                                          return;
+                                        }
+                                        await openInAppBrowser(
+                                          context,
+                                          uri.toString(),
+                                        );
+                                      },
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

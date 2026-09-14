@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,12 +9,15 @@ import '../models/artist.dart';
 import '../models/event.dart';
 import '../models/event_submission.dart';
 import '../models/faq.dart';
+import '../models/game.dart';
 import '../models/organizer.dart';
 import '../models/post.dart';
 import '../models/profile_submission.dart';
 import '../models/release.dart';
 import '../models/submission_image.dart';
+import '../core/firebase/firebase_callable.dart';
 import '../models/voting.dart';
+import 'wordpress_head_cache.dart';
 
 int _readInt(Object? value, {int fallback = 0}) {
   if (value is int) return value;
@@ -28,6 +30,29 @@ String? _readResponseMessage(Object? responseData) {
   if (responseData is! Map<String, dynamic>) return null;
   final message = responseData['message'];
   return message is String && message.trim().isNotEmpty ? message.trim() : null;
+}
+
+bool _isSupportedImageBytes(Uint8List bytes) {
+  final jpeg =
+      bytes.length >= 3 &&
+      bytes[0] == 0xFF &&
+      bytes[1] == 0xD8 &&
+      bytes[2] == 0xFF;
+  final png =
+      bytes.length >= 8 &&
+      bytes[0] == 0x89 &&
+      bytes[1] == 0x50 &&
+      bytes[2] == 0x4E &&
+      bytes[3] == 0x47 &&
+      bytes[4] == 0x0D &&
+      bytes[5] == 0x0A &&
+      bytes[6] == 0x1A &&
+      bytes[7] == 0x0A;
+  final webp =
+      bytes.length >= 12 &&
+      String.fromCharCodes(bytes.sublist(0, 4)) == 'RIFF' &&
+      String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP';
+  return jpeg || png || webp;
 }
 
 class NewsCategory {
@@ -71,6 +96,22 @@ class PostsPage {
   });
 }
 
+class EventsPage {
+  final List<HuhsEvent> items;
+  final int page;
+  final int perPage;
+  final int total;
+  final bool hasMore;
+
+  const EventsPage({
+    required this.items,
+    required this.page,
+    required this.perPage,
+    required this.total,
+    required this.hasMore,
+  });
+}
+
 class _PostsCacheEntry {
   const _PostsCacheEntry(this.value, this.expiresAt);
 
@@ -104,11 +145,12 @@ class WordpressService {
   static const _maxUploadBytes = 5 * 1024 * 1024;
   static const _allowedImageExtensions = {'jpg', 'jpeg', 'png', 'webp'};
 
-  final Dio _dio =
+  late final Dio _dio =
       Dio(
           BaseOptions(
             baseUrl: 'https://hungarianhardstyle.hu/wp-json/huhs/v1',
             connectTimeout: const Duration(seconds: 20),
+            sendTimeout: const Duration(seconds: 20),
             receiveTimeout: const Duration(seconds: 20),
             responseType: ResponseType.json,
           ),
@@ -129,13 +171,28 @@ class WordpressService {
               );
               handler.next(response);
             },
-            onError: (error, handler) {
+            onError: (error, handler) async {
+              var currentError = error;
+              final request = currentError.requestOptions;
+              final retryCount = request.extra['_huhsRetryCount'] as int? ?? 0;
+              if (_isRetryableGet(currentError) && retryCount < 2) {
+                request.extra['_huhsRetryCount'] = retryCount + 1;
+                await Future<void>.delayed(
+                  Duration(milliseconds: retryCount == 0 ? 250 : 750),
+                );
+                try {
+                  handler.resolve(await _dio.fetch<dynamic>(request));
+                  return;
+                } on DioException catch (retryError) {
+                  currentError = retryError;
+                }
+              }
               _logApiTiming(
-                error.requestOptions,
-                error.response?.statusCode,
-                error.response?.data,
+                currentError.requestOptions,
+                currentError.response?.statusCode,
+                currentError.response?.data,
               );
-              handler.next(error);
+              handler.next(currentError);
             },
           ),
         );
@@ -170,8 +227,12 @@ class WordpressService {
   final Map<String, Future<PostsPage>> _postsInFlight = {};
   final Map<String, _ReleasesCacheEntry> _releasesCache = {};
   final Map<String, Future<List<HuhsRelease>>> _releasesInFlight = {};
-  final Map<String, _TimedCacheEntry<List<HuhsEvent>>> _eventsCache = {};
-  final Map<String, Future<List<HuhsEvent>>> _eventsInFlight = {};
+  final Map<String, _TimedCacheEntry<EventsPage>> _eventsCache = {};
+  final Map<String, Future<EventsPage>> _eventsInFlight = {};
+  final Map<int, _TimedCacheEntry<HuhsEvent>> _eventDetailCache = {};
+  final Map<int, Future<HuhsEvent>> _eventDetailInFlight = {};
+  final Map<int, _TimedCacheEntry<Post>> _postDetailCache = {};
+  final Map<int, Future<Post>> _postDetailInFlight = {};
   final Map<String, _TimedCacheEntry<List<FaqItem>>> _faqCache = {};
   final Map<String, Future<List<FaqItem>>> _faqInFlight = {};
   final Map<String, _TimedCacheEntry<ArtistsPage>> _artistsCache = {};
@@ -184,10 +245,78 @@ class WordpressService {
   final Map<int, Future<OrganizerProfile>> _organizerInFlight = {};
   final Map<int, _TimedCacheEntry<HuhsRelease>> _releaseDetailCache = {};
   final Map<int, Future<HuhsRelease>> _releaseDetailInFlight = {};
+  final Map<String, _TimedCacheEntry<HuhsGame?>> _activeGameCache = {};
+  final Map<String, Future<HuhsGame?>> _activeGameInFlight = {};
 
   static const _persistentCacheTtl = Duration(minutes: 5);
   Future<SharedPreferences>? _preferencesFuture;
   final Map<String, _TimedCacheEntry<Object?>> _persistentJsonCache = {};
+  final Set<String> _persistentRefreshInFlight = {};
+
+  late final WordpressHeadCache _headCache = WordpressHeadCache(
+    read: (key) async => (await _preferences()).getString(key),
+    write: (key, value) async {
+      await (await _preferences()).setString(key, value);
+    },
+    remove: (key) async {
+      await (await _preferences()).remove(key);
+    },
+    request: (method, uri) async {
+      final response = await _dio.requestUri<String>(
+        uri,
+        options: Options(method: method, responseType: ResponseType.plain),
+      );
+      return WordpressCacheResponse(
+        statusCode: response.statusCode ?? 0,
+        etag: response.headers.value('etag'),
+        data: method == 'HEAD'
+            ? null
+            : _decodePossiblyPrefixedJson(response.data ?? ''),
+      );
+    },
+    onUpdated: () => publicContentRefreshGeneration.value++,
+  );
+
+  static final ValueNotifier<int> publicContentRefreshGeneration =
+      ValueNotifier<int>(0);
+
+  Future<Object?> _getHeadCached(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    bool forceRefresh = false,
+  }) {
+    final query = queryParameters?.map(
+      (key, value) => MapEntry(key, value.toString()),
+    );
+    final uri = Uri.parse('${_dio.options.baseUrl}$path')
+        .replace(queryParameters: query);
+    return _headCache.get(
+      uri,
+      cacheContext: PlatformDispatcher.instance.locale.toLanguageTag(),
+      forceRefresh: forceRefresh,
+    );
+  }
+
+  static bool _isRetryableGet(DioException error) {
+    if (error.requestOptions.method.toUpperCase() != 'GET') return false;
+    if (error.type == DioExceptionType.cancel ||
+        error.type == DioExceptionType.badCertificate) {
+      return false;
+    }
+    if (error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.connectionError) {
+      return true;
+    }
+    final status = error.response?.statusCode;
+    return status == 408 ||
+        status == 429 ||
+        status == 500 ||
+        status == 502 ||
+        status == 503 ||
+        status == 504;
+  }
 
   Future<SharedPreferences> _preferences() {
     return _preferencesFuture ??= SharedPreferences.getInstance();
@@ -202,9 +331,8 @@ class WordpressService {
     final savedAt = preferences.getInt('$key.savedAt');
     final payload = preferences.getString(key);
     if (savedAt == null || payload == null) return null;
-    final expiresAt = DateTime.fromMillisecondsSinceEpoch(
-      savedAt,
-    ).add(_persistentCacheTtl);
+    final expiresAt = DateTime.fromMillisecondsSinceEpoch(savedAt)
+        .add(_persistentCacheTtl);
     if (!expiresAt.isAfter(now)) {
       _persistentJsonCache.remove(key);
       return null;
@@ -236,12 +364,31 @@ class WordpressService {
     await preferences.remove('$key.savedAt');
   }
 
+  void _schedulePersistentRefresh(String key, Future<void> Function() refresh) {
+    if (!_persistentRefreshInFlight.add(key)) return;
+    // Show the persisted value first, then refresh once the current request
+    // has released its in-flight entry.
+    unawaited(
+      Future<void>.delayed(const Duration(milliseconds: 1), () async {
+        try {
+          await refresh();
+        } finally {
+          _persistentRefreshInFlight.remove(key);
+        }
+      }),
+    );
+  }
+
   /// Clears only public WordPress API caches; user purchases and preferences
   /// stay untouched.
   Future<void> clearPublicCache() async {
     _postsCache.clear();
     _releasesCache.clear();
     _eventsCache.clear();
+    _eventDetailCache.clear();
+    _eventDetailInFlight.clear();
+    _postDetailCache.clear();
+    _postDetailInFlight.clear();
     _faqCache.clear();
     _artistsCache.clear();
     _artistCache.clear();
@@ -249,7 +396,11 @@ class WordpressService {
     _organizerCache.clear();
     _releaseDetailCache.clear();
     _releaseDetailInFlight.clear();
+    _activeGameCache.clear();
+    _activeGameInFlight.clear();
     _persistentJsonCache.clear();
+    await _headCache.clear();
+    _persistentRefreshInFlight.clear();
 
     final preferences = await _preferences();
     final keys = preferences
@@ -259,6 +410,61 @@ class WordpressService {
     for (final key in keys) {
       await preferences.remove(key);
     }
+  }
+
+  Future<HuhsGame?> getActiveGame({bool forceRefresh = false}) async {
+    if (forceRefresh) _activeGameCache.remove('active');
+    return _cached<HuhsGame?>(
+      key: 'active',
+      ttl: const Duration(minutes: 1),
+      cache: _activeGameCache,
+      inFlight: _activeGameInFlight,
+      loader: () async {
+        final data = await _getHeadCached('/games/active');
+        if (data == null || data is! Map) return null;
+        return HuhsGame.fromJson(Map<String, dynamic>.from(data));
+      },
+    );
+  }
+
+  Future<String> getGameAudioClipUrl(int gameId) async {
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'getGameAudioClip',
+      parameters: {'gameId': gameId},
+    );
+    final data = result.data;
+    if (data['url'] is! String || (data['url'] as String).isEmpty) {
+      throw StateError('A játék hangrészlete nem érhető el.');
+    }
+    return data['url'] as String;
+  }
+
+  Future<Map<String, dynamic>> submitGameAttempt({
+    required int gameId,
+    List<int>? answers,
+    List<String>? orderedIds,
+  }) async {
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'submitGameAttempt',
+      parameters: {
+        'gameId': gameId,
+        ...?(answers == null ? null : <String, dynamic>{'answers': answers}),
+        ...?(orderedIds == null
+            ? null
+            : <String, dynamic>{'orderedIds': orderedIds}),
+      },
+    );
+    final data = result.data;
+    return Map<String, dynamic>.from(data);
+  }
+
+  Future<Map<String, dynamic>> getGameAttemptStatus(int gameId) async {
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'getGameAttemptStatus',
+      parameters: {'gameId': gameId},
+    );
+    final data = result.data;
+    return Map<String, dynamic>.from(data);
   }
 
   Future<T> _cached<T>({
@@ -324,9 +530,10 @@ class WordpressService {
     int perPage = 10,
     String search = '',
     int categoryId = 0,
+    bool? sticky,
     bool forceRefresh = false,
   }) async {
-    final key = '$page|$perPage|${search.trim()}|$categoryId';
+    final key = '$page|$perPage|${search.trim()}|$categoryId|$sticky';
     final now = DateTime.now();
     final cached = _postsCache[key];
     if (!forceRefresh && cached != null && cached.expiresAt.isAfter(now)) {
@@ -340,6 +547,7 @@ class WordpressService {
       perPage: perPage,
       search: search,
       categoryId: categoryId,
+      sticky: sticky,
       allowPersistentCache: !forceRefresh,
     );
     _postsInFlight[key] = request;
@@ -362,44 +570,36 @@ class WordpressService {
     int perPage = 10,
     String search = '',
     int categoryId = 0,
+    bool? sticky,
     bool allowPersistentCache = true,
   }) async {
     try {
-      final persistentKey =
-          'huhs.wp.posts.$page.$perPage.${search.trim()}.$categoryId';
-      Object? data = allowPersistentCache
-          ? await _readPersistentJson(persistentKey)
-          : null;
-      if (data == null) {
-        final response = await _dio.get(
-          '/posts',
-          queryParameters: {
-            'page': page,
-            'per_page': perPage,
-            'summary': true,
-            if (search.trim().isNotEmpty) 'search': search.trim(),
-            if (categoryId > 0) 'category': categoryId,
-          },
-        );
-        data = response.data;
-        unawaited(_writePersistentJson(persistentKey, data!));
-      }
+      final normalizedSearch = search.trim();
+      final hasSearch = normalizedSearch.isNotEmpty;
+      final data = await _getHeadCached(
+        '/posts',
+        queryParameters: {
+          'page': page,
+          // Search needs the full article body. The summary response has an
+          // empty `content` field and cannot be filtered safely on-device.
+          'per_page': hasSearch ? 100 : perPage,
+          'summary': !hasSearch,
+          if (hasSearch) 'search': normalizedSearch,
+          if (categoryId > 0) 'category': categoryId,
+          if (sticky != null) 'sticky': sticky ? 1 : 0,
+        },
+        forceRefresh: !allowPersistentCache,
+      );
 
       if (data is List<dynamic>) {
         final rawPosts = data.whereType<Map<String, dynamic>>().toList();
-        final allPosts = (await _hydratePostTags(
-          rawPosts,
-        )).map(Post.fromJson).toList();
-        final query = search.trim().toLowerCase();
-        final posts = query.isEmpty
+        final allPosts = (await _hydratePostTags(rawPosts))
+            .map(Post.fromJson)
+            .toList();
+        final posts = normalizedSearch.isEmpty
             ? allPosts
             : allPosts
-                  .where(
-                    (post) =>
-                        post.title.toLowerCase().contains(query) ||
-                        post.excerpt.toLowerCase().contains(query) ||
-                        post.content.toLowerCase().contains(query),
-                  )
+                  .where((post) => _matchesNewsSearch(post, normalizedSearch))
                   .toList();
 
         return PostsPage(
@@ -417,15 +617,23 @@ class WordpressService {
           .whereType<Map<String, dynamic>>()
           .toList();
       final hydratedItems = await _hydratePostTags(items);
+      final parsedItems = hydratedItems.map(Post.fromJson).toList();
+      final visibleItems = normalizedSearch.isEmpty
+          ? parsedItems
+          : parsedItems
+                .where((post) => _matchesNewsSearch(post, normalizedSearch))
+                .toList(growable: false);
       final currentPage = _readInt(json['page'], fallback: page);
       final totalPages = _readInt(json['total_pages'], fallback: 1);
       final hasMore = _readBool(json['has_more']) || currentPage < totalPages;
 
       return PostsPage(
-        items: hydratedItems.map(Post.fromJson).toList(),
+        items: visibleItems,
         page: currentPage,
         perPage: _readInt(json['per_page'], fallback: perPage),
-        total: _readInt(json['total']),
+        total: normalizedSearch.isEmpty
+            ? _readInt(json['total'])
+            : visibleItems.length,
         totalPages: totalPages,
         hasMore: hasMore,
       );
@@ -434,6 +642,13 @@ class WordpressService {
     } catch (_) {
       throw Exception('Nem sikerült betölteni a híreket.');
     }
+  }
+
+  bool _matchesNewsSearch(Post post, String search) {
+    final query = search.toLowerCase();
+    final plainContent = post.content.replaceAll(RegExp(r'<[^>]*>'), ' ');
+    return post.title.toLowerCase().contains(query) ||
+        plainContent.toLowerCase().contains(query);
   }
 
   Future<Set<int>> getAllPostIds() async {
@@ -449,36 +664,45 @@ class WordpressService {
   }
 
   Future<List<Post>> getLatestPosts() async {
-    // The homepage is the public editorial surface. Do not serve the
-    // persistent five-minute snapshot here: an editor can withdraw a
-    // featured article at any time and drafts must disappear on the next
-    // homepage load.
-    final page = await getPosts(forceRefresh: true);
+    // Use the short-lived memory/persistent cache for a fast first render.
+    // The News screen still has explicit refresh and forceRefresh paths, so
+    // new or withdrawn articles are not hidden indefinitely.
+    final page = await getPosts();
     return page.items;
   }
 
-  Future<List<FaqItem>> getFaq() async {
+  Future<List<Post>> getStickyPosts({
+    String search = '',
+    int categoryId = 0,
+  }) async {
+    final page = await getPosts(
+      page: 1,
+      perPage: 50,
+      search: search,
+      categoryId: categoryId,
+      sticky: true,
+      forceRefresh: true,
+    );
+    return page.items;
+  }
+
+  Future<List<FaqItem>> getFaq({bool forceRefresh = false}) async {
+    if (forceRefresh) _faqCache.remove('faq');
     return _cached<List<FaqItem>>(
       key: 'faq',
       ttl: const Duration(minutes: 10),
       cache: _faqCache,
       inFlight: _faqInFlight,
-      loader: _fetchFaq,
+      loader: () => _fetchFaq(allowPersistentCache: !forceRefresh),
     );
   }
 
-  Future<List<FaqItem>> _fetchFaq() async {
+  Future<List<FaqItem>> _fetchFaq({bool allowPersistentCache = true}) async {
     try {
-      final persistent = await _readPersistentJson('huhs.wp.faq');
-      if (persistent is List) {
-        return persistent
-            .whereType<Map<String, dynamic>>()
-            .map(FaqItem.fromJson)
-            .where((item) => item.question.trim().isNotEmpty)
-            .toList(growable: false);
-      }
-      final response = await _dio.get('/faq');
-      final data = response.data;
+      final data = await _getHeadCached(
+        '/faq',
+        forceRefresh: !allowPersistentCache,
+      );
       final raw = data is List<dynamic>
           ? data
           : (data is Map<String, dynamic> ? data['items'] : null);
@@ -488,23 +712,31 @@ class WordpressService {
           .map(FaqItem.fromJson)
           .where((item) => item.question.trim().isNotEmpty)
           .toList(growable: false);
-      unawaited(_writePersistentJson('huhs.wp.faq', raw));
       return result;
     } on DioException catch (e) {
       throw Exception(_readApiError(e, 'Nem sikerült betölteni a GYIK-et.'));
     }
   }
 
-  Future<Post> getPost(int postId) async {
-    final key = 'huhs.wp.post.$postId';
-    final cached = await _readPersistentJson(key);
-    final data = cached ?? (await _dio.get('/posts/$postId')).data;
-    if (cached == null) unawaited(_writePersistentJson(key, data));
-    if (data is Map<String, dynamic>) {
-      final hydrated = await _hydratePostTags([data]);
-      return Post.fromJson(hydrated.first);
-    }
-    throw const FormatException('Hibás hír válasz.');
+  Future<Post> getPost(int postId, {bool forceRefresh = false}) async {
+    if (forceRefresh) _postDetailCache.remove(postId);
+    return _cachedById<Post>(
+      key: postId,
+      ttl: const Duration(minutes: 5),
+      cache: _postDetailCache,
+      inFlight: _postDetailInFlight,
+      loader: () async {
+        final data = await _getHeadCached(
+          '/posts/$postId',
+          forceRefresh: forceRefresh,
+        );
+        if (data is Map<String, dynamic>) {
+          final hydrated = await _hydratePostTags([data]);
+          return Post.fromJson(hydrated.first);
+        }
+        throw const FormatException('Hibás hír válasz.');
+      },
+    );
   }
 
   /// Registers a native-app article open in the WordPress view counter.
@@ -594,50 +826,84 @@ class WordpressService {
     }
   }
 
-  Future<List<HuhsEvent>> getEvents({bool includePast = false}) async {
-    final key = includePast ? 'past' : 'upcoming';
-    return _cached<List<HuhsEvent>>(
+  Future<List<HuhsEvent>> getEvents({
+    bool includePast = false,
+    int page = 1,
+    int perPage = 12,
+    bool forceRefresh = false,
+  }) async {
+    final result = await getEventsPage(
+      includePast: includePast,
+      page: page,
+      perPage: perPage,
+      forceRefresh: forceRefresh,
+    );
+    return result.items;
+  }
+
+  Future<EventsPage> getEventsPage({
+    bool includePast = false,
+    int page = 1,
+    int perPage = 12,
+    bool forceRefresh = false,
+  }) async {
+    final safePage = page < 1 ? 1 : page;
+    final safePerPage = perPage.clamp(1, 25);
+    final key = '${includePast ? 'past' : 'upcoming'}|$safePage|$safePerPage';
+    if (forceRefresh) _eventsCache.remove(key);
+    return _cached<EventsPage>(
       key: key,
       ttl: const Duration(seconds: 45),
       cache: _eventsCache,
       inFlight: _eventsInFlight,
-      loader: () => _fetchEvents(includePast: includePast),
+      loader: () => _fetchEventsPage(
+        includePast: includePast,
+        page: safePage,
+        perPage: safePerPage,
+        forceRefresh: forceRefresh,
+      ),
     );
   }
 
-  Future<List<HuhsEvent>> _fetchEvents({required bool includePast}) async {
+  Future<EventsPage> _fetchEventsPage({
+    required bool includePast,
+    required int page,
+    required int perPage,
+    bool forceRefresh = false,
+  }) async {
     try {
-      final persistentKey = includePast
-          ? 'huhs.wp.events.past'
-          : 'huhs.wp.events.upcoming';
-      final persistent = await _readPersistentJson(persistentKey);
-      if (persistent is List) {
-        final events = persistent
-            .whereType<Map<String, dynamic>>()
-            .map(HuhsEvent.fromJson)
-            .toList(growable: false);
-        return includePast
-            ? events
-            : events.where((event) => !event.isPast).toList(growable: false);
-      }
-      final response = await _dio.get<String>(
+      // Events are editable in WordPress, so persistent caching can keep an
+      // old title or venue visible for minutes after an admin update. The
+      // in-memory cache above is enough and is cleared by pull-to-refresh.
+      final data = await _getHeadCached(
         '/events',
         queryParameters: {
-          if (includePast) 'include_past': true,
           'summary': true,
+          'page': page,
+          'per_page': perPage,
+          // The API's default upcoming filter incorrectly drops events whose
+          // start date is today, even when their end time is still future.
+          // Fetch the same paged data without that server-side cutoff and
+          // apply the authoritative local start/end-time filter below.
+          'include_past': true,
         },
-        options: Options(responseType: ResponseType.plain),
+        forceRefresh: forceRefresh,
       );
-      final data = _decodePossiblyPrefixedJson(response.data ?? '');
 
       if (data is List<dynamic>) {
         final events = data
             .map((json) => HuhsEvent.fromJson(json as Map<String, dynamic>))
             .toList();
-        unawaited(_writePersistentJson(persistentKey, data));
-        return includePast
+        final filtered = includePast
             ? events
             : events.where((event) => !event.isPast).toList();
+        return EventsPage(
+          items: filtered,
+          page: page,
+          perPage: perPage,
+          total: filtered.length,
+          hasMore: false,
+        );
       }
 
       if (data is Map<String, dynamic>) {
@@ -646,13 +912,31 @@ class WordpressService {
         final events = items
             .map((json) => HuhsEvent.fromJson(json as Map<String, dynamic>))
             .toList();
-        unawaited(_writePersistentJson(persistentKey, items));
-        return includePast
+        final filtered = includePast
             ? events
             : events.where((event) => !event.isPast).toList();
+        final currentPage = _readInt(data['page'], fallback: page);
+        final currentPerPage = _readInt(data['per_page'], fallback: perPage);
+        final total = _readInt(data['total'], fallback: filtered.length);
+        final hasMore = data.containsKey('has_more')
+            ? _readBool(data['has_more'])
+            : filtered.length >= currentPerPage;
+        return EventsPage(
+          items: filtered,
+          page: currentPage,
+          perPage: currentPerPage,
+          total: total,
+          hasMore: hasMore,
+        );
       }
 
-      return const [];
+      return EventsPage(
+        items: const [],
+        page: page,
+        perPage: perPage,
+        total: 0,
+        hasMore: false,
+      );
     } on DioException catch (e) {
       throw Exception(
         _readApiError(e, 'Nem sikerült betölteni az eseményeket.'),
@@ -663,10 +947,39 @@ class WordpressService {
   }
 
   Future<HuhsEvent> getEvent(int eventId) async {
-    final response = await _dio.get('/events/$eventId');
-    final data = response.data;
-    if (data is Map<String, dynamic>) return HuhsEvent.fromJson(data);
-    throw const FormatException('Hibás esemény-adatlap válasz.');
+    return _cachedById<HuhsEvent>(
+      key: eventId,
+      ttl: const Duration(minutes: 2),
+      cache: _eventDetailCache,
+      inFlight: _eventDetailInFlight,
+      loader: () async {
+        Object? data;
+        try {
+          data = await _getHeadCached('/events/$eventId');
+          if (data is Map<String, dynamic>) return HuhsEvent.fromJson(data);
+        } catch (_) {
+          // Compatibility with HUHS Mobile API versions before 2.4.102.
+        }
+        data = await _getHeadCached(
+          '/events',
+          queryParameters: {'include_past': true},
+        );
+        final values = data is List
+            ? data
+            : data is Map<String, dynamic>
+            ? data['items']
+            : null;
+        if (values is List) {
+          for (final value in values) {
+            if (value is Map<String, dynamic> &&
+                _readInt(value['id']) == eventId) {
+              return HuhsEvent.fromJson(value);
+            }
+          }
+        }
+        throw const FormatException('Hibás esemény-adatlap válasz.');
+      },
+    );
   }
 
   Future<ArtistsPage> getArtists({
@@ -674,9 +987,11 @@ class WordpressService {
     String category = '',
     int page = 1,
     int perPage = 50,
+    bool forceRefresh = false,
   }) async {
     final key =
         '$page|$perPage|${search.trim().toLowerCase()}|${category.trim().toLowerCase()}';
+    if (forceRefresh) _artistsCache.remove(key);
     return _cached<ArtistsPage>(
       key: key,
       ttl: const Duration(minutes: 10),
@@ -687,6 +1002,7 @@ class WordpressService {
         category: category,
         page: page,
         perPage: perPage,
+        allowPersistentCache: !forceRefresh,
       ),
     );
   }
@@ -696,17 +1012,10 @@ class WordpressService {
     String category = '',
     int page = 1,
     int perPage = 50,
+    bool allowPersistentCache = true,
   }) async {
     try {
-      final canUsePersistentCache =
-          page == 1 && perPage == 50 && search == '' && category == '';
-      if (canUsePersistentCache) {
-        final persistent = await _readPersistentJson('huhs.wp.artists');
-        if (persistent is Map<String, dynamic>) {
-          return ArtistsPage.fromJson(persistent);
-        }
-      }
-      final response = await _dio.get(
+      final data = await _getHeadCached(
         '/artists',
         queryParameters: {
           'page': page,
@@ -715,14 +1024,30 @@ class WordpressService {
           if (search.trim().isNotEmpty) 'search': search.trim(),
           if (category.trim().isNotEmpty) 'category': category.trim(),
         },
+        forceRefresh: !allowPersistentCache,
       );
-      final data = response.data;
 
       if (data is Map<String, dynamic>) {
-        if (canUsePersistentCache) {
-          unawaited(_writePersistentJson('huhs.wp.artists', data));
-        }
-        return ArtistsPage.fromJson(data);
+        final pageResult = ArtistsPage.fromJson(data);
+        final query = search.trim().toLowerCase();
+        if (query.isEmpty) return pageResult;
+        final items = pageResult.items
+            .where(
+              (artist) =>
+                  '${artist.title} ${artist.slug} ${artist.realName} '
+                          '${artist.city} ${artist.country}'
+                      .toLowerCase()
+                      .contains(query),
+            )
+            .toList(growable: false);
+        return ArtistsPage(
+          items: items,
+          page: pageResult.page,
+          perPage: pageResult.perPage,
+          total: items.length,
+          totalPages: pageResult.totalPages,
+          hasMore: pageResult.hasMore,
+        );
       }
 
       throw const FormatException('Hibás DJ-lista válasz.');
@@ -745,24 +1070,28 @@ class WordpressService {
     return ids;
   }
 
-  Future<Artist> getArtist(int artistId) async {
+  Future<Artist> getArtist(int artistId, {bool forceRefresh = false}) async {
+    if (forceRefresh) _artistCache.remove(artistId);
     return _cachedById<Artist>(
       key: artistId,
       ttl: const Duration(minutes: 10),
       cache: _artistCache,
       inFlight: _artistInFlight,
-      loader: () => _fetchArtist(artistId),
+      loader: () => _fetchArtist(artistId, allowPersistentCache: !forceRefresh),
     );
   }
 
-  Future<Artist> _fetchArtist(int artistId) async {
+  Future<Artist> _fetchArtist(
+    int artistId, {
+    bool allowPersistentCache = true,
+  }) async {
     try {
-      final key = 'huhs.wp.artist.$artistId';
-      final cached = await _readPersistentJson(key);
-      final data = cached ?? (await _dio.get('/artists/$artistId')).data;
+      final data = await _getHeadCached(
+        '/artists/$artistId',
+        forceRefresh: !allowPersistentCache,
+      );
 
       if (data is Map<String, dynamic>) {
-        if (cached == null) unawaited(_writePersistentJson(key, data));
         return Artist.fromJson(data);
       }
 
@@ -780,15 +1109,21 @@ class WordpressService {
     String search = '',
     int page = 1,
     int perPage = 50,
+    bool forceRefresh = false,
   }) async {
     final key = '$page|$perPage|${search.trim().toLowerCase()}';
+    if (forceRefresh) _organizersCache.remove(key);
     return _cached<OrganizersPage>(
       key: key,
       ttl: const Duration(minutes: 10),
       cache: _organizersCache,
       inFlight: _organizersInFlight,
-      loader: () =>
-          _fetchOrganizers(search: search, page: page, perPage: perPage),
+      loader: () => _fetchOrganizers(
+        search: search,
+        page: page,
+        perPage: perPage,
+        allowPersistentCache: !forceRefresh,
+      ),
     );
   }
 
@@ -796,16 +1131,10 @@ class WordpressService {
     String search = '',
     int page = 1,
     int perPage = 50,
+    bool allowPersistentCache = true,
   }) async {
     try {
-      final canUsePersistentCache = page == 1 && perPage == 50 && search == '';
-      if (canUsePersistentCache) {
-        final persistent = await _readPersistentJson('huhs.wp.organizers');
-        if (persistent is Map<String, dynamic>) {
-          return OrganizersPage.fromJson(persistent);
-        }
-      }
-      final response = await _dio.get(
+      final data = await _getHeadCached(
         '/organizers',
         queryParameters: {
           'page': page,
@@ -813,14 +1142,30 @@ class WordpressService {
           'summary': true,
           if (search.trim().isNotEmpty) 'search': search.trim(),
         },
+        forceRefresh: !allowPersistentCache,
       );
-      final data = response.data;
 
       if (data is Map<String, dynamic>) {
-        if (canUsePersistentCache) {
-          unawaited(_writePersistentJson('huhs.wp.organizers', data));
-        }
-        return OrganizersPage.fromJson(data);
+        final pageResult = OrganizersPage.fromJson(data);
+        final query = search.trim().toLowerCase();
+        if (query.isEmpty) return pageResult;
+        final items = pageResult.items
+            .where(
+              (organizer) =>
+                  '${organizer.title} ${organizer.slug} ${organizer.city} '
+                          '${organizer.country}'
+                      .toLowerCase()
+                      .contains(query),
+            )
+            .toList(growable: false);
+        return OrganizersPage(
+          items: items,
+          page: pageResult.page,
+          perPage: pageResult.perPage,
+          total: items.length,
+          totalPages: pageResult.totalPages,
+          hasMore: pageResult.hasMore,
+        );
       }
 
       throw const FormatException('Hibás szervezőlista-válasz.');
@@ -845,24 +1190,32 @@ class WordpressService {
     return ids;
   }
 
-  Future<OrganizerProfile> getOrganizer(int organizerId) async {
+  Future<OrganizerProfile> getOrganizer(
+    int organizerId, {
+    bool forceRefresh = false,
+  }) async {
+    if (forceRefresh) _organizerCache.remove(organizerId);
     return _cachedById<OrganizerProfile>(
       key: organizerId,
       ttl: const Duration(minutes: 10),
       cache: _organizerCache,
       inFlight: _organizerInFlight,
-      loader: () => _fetchOrganizer(organizerId),
+      loader: () =>
+          _fetchOrganizer(organizerId, allowPersistentCache: !forceRefresh),
     );
   }
 
-  Future<OrganizerProfile> _fetchOrganizer(int organizerId) async {
+  Future<OrganizerProfile> _fetchOrganizer(
+    int organizerId, {
+    bool allowPersistentCache = true,
+  }) async {
     try {
-      final key = 'huhs.wp.organizer.$organizerId';
-      final cached = await _readPersistentJson(key);
-      final data = cached ?? (await _dio.get('/organizers/$organizerId')).data;
+      final data = await _getHeadCached(
+        '/organizers/$organizerId',
+        forceRefresh: !allowPersistentCache,
+      );
 
       if (data is Map<String, dynamic>) {
-        if (cached == null) unawaited(_writePersistentJson(key, data));
         return OrganizerProfile.fromJson(data);
       }
 
@@ -921,8 +1274,7 @@ class WordpressService {
         // collection endpoint. There is no reliable /releases/{id} route;
         // calling it makes the detail screen fall back to the summary item,
         // which intentionally has no versions or free download metadata.
-        final response = await _dio.get('/releases');
-        final data = response.data;
+        final data = await _getHeadCached('/releases');
         final values = data is List
             ? data
             : data is Map<String, dynamic>
@@ -947,25 +1299,15 @@ class WordpressService {
     bool allowPersistentCache = false,
   }) async {
     try {
-      final persistentKey = 'huhs.wp.releases.${search.trim()}.$artistId';
-      if (allowPersistentCache) {
-        final cached = await _readPersistentJson(persistentKey);
-        if (cached is List) {
-          return cached
-              .whereType<Map<String, dynamic>>()
-              .map(HuhsRelease.fromJson)
-              .toList(growable: false);
-        }
-      }
-      final response = await _dio.get(
+      final data = await _getHeadCached(
         '/releases',
         queryParameters: {
           'summary': true,
           if (search.trim().isNotEmpty) 'search': search.trim(),
           if (artistId > 0) 'artist': artistId,
         },
+        forceRefresh: !allowPersistentCache,
       );
-      final data = response.data;
       final values = data is List
           ? data
           : data is Map<String, dynamic>
@@ -976,7 +1318,6 @@ class WordpressService {
           .whereType<Map<String, dynamic>>()
           .map(HuhsRelease.fromJson)
           .toList(growable: false);
-      unawaited(_writePersistentJson(persistentKey, values));
       return releases;
     } on DioException catch (e) {
       throw Exception(
@@ -987,15 +1328,9 @@ class WordpressService {
 
   Future<VotingSeason> getActiveVoting() async {
     try {
-      final response = await _dio.get(
-        '/voting/active',
-        options: Options(
-          connectTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 5),
-        ),
-      );
-      if (response.data is Map<String, dynamic>) {
-        return VotingSeason.fromJson(response.data as Map<String, dynamic>);
+      final data = await _getHeadCached('/voting/active');
+      if (data is Map) {
+        return VotingSeason.fromJson(Map<String, dynamic>.from(data));
       }
       return const VotingSeason.inactive();
     } on DioException {
@@ -1007,8 +1342,7 @@ class WordpressService {
 
   Future<ProfileSubmissionOptions> getProfileSubmissionOptions() async {
     try {
-      final response = await _dio.get('/profile-submission-options');
-      final data = response.data;
+      final data = await _getHeadCached('/profile-submission-options');
 
       if (data is Map<String, dynamic>) {
         return ProfileSubmissionOptions.fromJson(data);
@@ -1052,11 +1386,10 @@ class WordpressService {
 
   Future<String> _submitProfile(String kind, Map<String, dynamic> data) async {
     try {
-      final responseData =
-          (await FirebaseFunctions.instance
-                  .httpsCallable('submitWordPressContent')
-                  .call<Map<String, dynamic>>({'kind': kind, 'payload': data}))
-              .data;
+      final responseData = (await callFirebaseCallable<Map<String, dynamic>>(
+        'submitWordPressContent',
+        parameters: {'kind': kind, 'payload': data},
+      )).data;
       final message = _readResponseMessage(responseData);
       if (message != null) return message;
 
@@ -1070,9 +1403,10 @@ class WordpressService {
 
   Future<List<String>> getEventSubmissionGenres() async {
     try {
-      final response = await _dio.get('/event-submission-options');
-      final data = response.data as Map<String, dynamic>;
-      final genres = data['genres'] as List<dynamic>? ?? const [];
+      final data = await _getHeadCached('/event-submission-options');
+      if (data is! Map) throw const FormatException('Hibás műfajlista.');
+      final values = Map<String, dynamic>.from(data);
+      final genres = values['genres'] as List<dynamic>? ?? const [];
 
       return genres
           .whereType<String>()
@@ -1095,14 +1429,10 @@ class WordpressService {
       if (image != null) {
         payload['flyer_url'] = await _uploadCloudinaryImage(image);
       }
-      final responseData =
-          (await FirebaseFunctions.instance
-                  .httpsCallable('submitWordPressContent')
-                  .call<Map<String, dynamic>>({
-                    'kind': 'event',
-                    'payload': payload,
-                  }))
-              .data;
+      final responseData = (await callFirebaseCallable<Map<String, dynamic>>(
+        'submitWordPressContent',
+        parameters: {'kind': 'event', 'payload': payload},
+      )).data;
       final message = _readResponseMessage(responseData);
       if (message != null) return message;
 
@@ -1119,14 +1449,16 @@ class WordpressService {
       final extension = image.name.split('.').last.toLowerCase();
       if (image.bytes.isEmpty ||
           image.bytes.length > _maxUploadBytes ||
-          !_allowedImageExtensions.contains(extension)) {
+          !_allowedImageExtensions.contains(extension) ||
+          !_isSupportedImageBytes(image.bytes)) {
         throw const FormatException(
           'JPG, PNG vagy WebP kép szükséges, legfeljebb 5 MB méretben.',
         );
       }
-      final upload = Dio();
-      final response = await upload.post(
-        'https://api.cloudinary.com/v1_1/$_cloudinaryCloudName/image/upload',
+      final response = await _dio.postUri(
+        Uri.parse(
+          'https://api.cloudinary.com/v1_1/$_cloudinaryCloudName/image/upload',
+        ),
         data: FormData.fromMap({
           'file': MultipartFile.fromBytes(image.bytes, filename: image.name),
           'upload_preset': _cloudinaryUploadPreset,
@@ -1178,10 +1510,15 @@ class WordpressService {
     return jsonDecode(value.substring(starts.reduce((a, b) => a < b ? a : b)));
   }
 
-  Future<List<NewsCategory>> getCategories() async {
+  Future<List<NewsCategory>> getCategories({bool forceRefresh = false}) async {
     try {
       const key = 'huhs.wp.categories';
-      final cached = await _readPersistentJson(key);
+      final cached = forceRefresh ? null : await _readPersistentJson(key);
+      if (cached is List) {
+        _schedulePersistentRefresh(key, () async {
+          await getCategories(forceRefresh: true);
+        });
+      }
       final data = cached is List
           ? cached
           : (await _dio.get(

@@ -45,18 +45,30 @@ class VotingCategory {
     'hungarian_hardcore_dj' => 3,
     'hungarian_track' => 2,
     'hungarian_organizer' => 1,
-    'international_dj' => 3,
+    'international_dj' => 5,
     _ => 1,
   };
 
-  factory VotingCategory.fromJson(Map<String, dynamic> json) => VotingCategory(
-    key: '${json['key'] ?? ''}',
-    label: '${json['label'] ?? ''}',
-    candidates: (json['candidates'] as List<dynamic>? ?? const [])
-        .whereType<Map<String, dynamic>>()
-        .map(VotingCandidate.fromJson)
-        .toList(growable: false),
-  );
+  int get minVotes => maxVotes;
+
+  factory VotingCategory.fromJson(Map<String, dynamic> json) {
+    final rawCandidates = json['candidates'];
+    final candidateItems = rawCandidates is List
+        ? rawCandidates
+        : rawCandidates is Map
+        ? rawCandidates.values.toList(growable: false)
+        : const <dynamic>[];
+    return VotingCategory(
+      key: '${json['key'] ?? json['slug'] ?? ''}',
+      label: '${json['label'] ?? json['name'] ?? ''}',
+      candidates: candidateItems
+          .whereType<Map>()
+          .map(
+            (item) => VotingCandidate.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .toList(growable: false),
+    );
+  }
 }
 
 class VotingSeason {
@@ -65,6 +77,8 @@ class VotingSeason {
   final int year;
   final String title;
   final List<VotingCategory> categories;
+  final String resultsUrl;
+  final bool resultsApproved;
 
   const VotingSeason({
     required this.active,
@@ -72,6 +86,8 @@ class VotingSeason {
     required this.year,
     required this.title,
     required this.categories,
+    this.resultsUrl = '',
+    this.resultsApproved = false,
   });
 
   const VotingSeason.inactive()
@@ -79,16 +95,49 @@ class VotingSeason {
       seasonId = 0,
       year = 0,
       title = '',
-      categories = const [];
+      categories = const [],
+      resultsUrl = '',
+      resultsApproved = false;
 
-  factory VotingSeason.fromJson(Map<String, dynamic> json) => VotingSeason(
-    active: json['active'] == true,
-    seasonId: int.tryParse('${json['seasonId']}') ?? 0,
-    year: int.tryParse('${json['year']}') ?? 0,
-    title: '${json['title'] ?? ''}',
-    categories: (json['categories'] as List<dynamic>? ?? const [])
-        .whereType<Map<String, dynamic>>()
-        .map(VotingCategory.fromJson)
-        .toList(growable: false),
-  );
+  bool get isClosed => !active && seasonId > 0;
+
+  bool get hasPublishedResults =>
+      resultsApproved && resultsUrl.trim().isNotEmpty;
+
+  factory VotingSeason.fromJson(Map<String, dynamic> json) {
+    final rawCategories = json['categories'];
+    final categoryItems = rawCategories is List
+        ? rawCategories
+        : rawCategories is Map
+        ? rawCategories.entries
+              .map((entry) {
+                final value = entry.value;
+                if (value is Map) {
+                  return <String, dynamic>{
+                    ...Map<String, dynamic>.from(value),
+                    'key': value['key'] ?? entry.key,
+                  };
+                }
+                return <String, dynamic>{'key': entry.key, 'label': entry.key};
+              })
+              .toList(growable: false)
+        : const <dynamic>[];
+    return VotingSeason(
+      active: json['active'] == true,
+      seasonId: int.tryParse('${json['seasonId'] ?? json['id']}') ?? 0,
+      year: int.tryParse('${json['year']}') ?? 0,
+      title: '${json['title'] ?? json['name'] ?? ''}',
+      categories: categoryItems
+          .whereType<Map>()
+          .map(
+            (item) => VotingCategory.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .where((category) => category.key.isNotEmpty)
+          .toList(growable: false),
+      resultsUrl:
+          '${json['results_url'] ?? json['resultsUrl'] ?? json['summary_url'] ?? json['summaryUrl'] ?? ''}',
+      resultsApproved:
+          json['results_approved'] == true || json['resultsApproved'] == true,
+    );
+  }
 }

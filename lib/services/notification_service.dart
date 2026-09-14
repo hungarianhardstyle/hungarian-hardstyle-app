@@ -17,10 +17,13 @@ class NotificationService {
   final FirebaseAuth auth;
   final FirebaseFirestore firestore;
 
-  Stream<List<AppNotification>> watchNotifications({int limit = 50}) {
+  Stream<List<AppNotification>> watchNotifications({
+    int limit = 50,
+    bool includeArchived = false,
+  }) {
     final uid = auth.currentUser?.uid;
     if (uid == null || auth.currentUser?.isAnonymous == true) {
-      return Stream<List<AppNotification>>.value(const []);
+      return Stream<List<AppNotification>>.value(const []).asBroadcastStream();
     }
     // Sort locally so this read does not require a new composite Firestore index.
     return firestore
@@ -31,7 +34,9 @@ class NotificationService {
         .map((snapshot) {
           final items = snapshot.docs
               .map(AppNotification.fromSnapshot)
-              .where((item) => !item.isArchived)
+              .where(
+                (item) => includeArchived ? item.isArchived : !item.isArchived,
+              )
               .toList();
           items.sort(
             (a, b) => (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
@@ -40,7 +45,8 @@ class NotificationService {
                 ),
           );
           return items;
-        });
+        })
+        .asBroadcastStream();
   }
 
   Future<void> markRead(AppNotification notification) async {

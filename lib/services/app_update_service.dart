@@ -1,9 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:in_app_update/in_app_update.dart';
 
 class AppUpdateService {
   Future<AppUpdateInfo?> check() async {
     try {
-      final info = await InAppUpdate.checkForUpdate();
+      // Keep update detection from holding up the first screen when Play is
+      // slow or the app was installed outside Google Play.
+      final check = InAppUpdate.checkForUpdate();
+      final info = kDebugMode || defaultTargetPlatform != TargetPlatform.android
+          ? await check
+          : await check.timeout(const Duration(seconds: 6));
       if (info.updateAvailability == UpdateAvailability.updateAvailable) {
         return info;
       }

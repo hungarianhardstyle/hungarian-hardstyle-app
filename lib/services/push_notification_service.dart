@@ -110,31 +110,48 @@ class PushNotificationService {
   }
 
   static Future<void> _handleOpenedMessage(RemoteMessage message) async {
-    final type = message.data['type']?.toString().trim() ?? '';
+    final type =
+        (message.data['type'] ?? message.data['targetType'])
+            ?.toString()
+            .trim() ??
+        '';
     final senderId =
         (message.data['senderId'] ?? message.data['from'])?.toString().trim() ??
         '';
-    final id = int.tryParse(message.data['id']?.toString() ?? '');
-    final url = message.data['url']?.toString().trim() ?? '';
+    final targetUserId =
+        (message.data['targetId'] ?? senderId)?.toString().trim() ?? '';
+    final id = int.tryParse(
+      (message.data['id'] ??
+                  message.data['postId'] ??
+                  message.data['articleId'] ??
+                  message.data['eventId'] ??
+                  message.data['targetId'])
+              ?.toString() ??
+          '',
+    );
+    final url =
+        (message.data['url'] ?? message.data['link'])?.toString().trim() ?? '';
     if (url.isEmpty &&
         senderId.isEmpty &&
+        targetUserId.isEmpty &&
         (id == null ||
             (type != 'news' &&
                 type != 'event' &&
                 type != 'release' &&
+                type != 'achievement_points' &&
                 type != 'submission'))) {
       return;
     }
 
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    final context = appNavigatorKey.currentContext;
+    final context = await _waitForNavigationContext();
     if (context == null || !context.mounted) return;
 
     try {
-      if (type == 'connection_request' && senderId.isNotEmpty) {
+      if ((type == 'connection_request' || type == 'connection_accepted') &&
+          targetUserId.isNotEmpty) {
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (_) => CommunityPublicProfileScreen(userId: senderId),
+            builder: (_) => CommunityPublicProfileScreen(userId: targetUserId),
           ),
         );
         return;
@@ -176,6 +193,15 @@ class PushNotificationService {
         return;
       }
 
+      if (type == 'achievement_points' && targetUserId.isNotEmpty) {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => CommunityPublicProfileScreen(userId: targetUserId),
+          ),
+        );
+        return;
+      }
+
       if (type == 'news' && id != null) {
         final post = await WordpressService().getPost(id);
         if (!context.mounted) return;
@@ -185,7 +211,7 @@ class PushNotificationService {
         return;
       }
 
-      if (type == 'event' && id != null) {
+      if ((type == 'event' || type == 'event_rating_request') && id != null) {
         final selectedEvent = await _findEventWithRetry(id);
         if (selectedEvent != null && context.mounted) {
           await Navigator.of(context).push(
@@ -215,6 +241,15 @@ class PushNotificationService {
     if (context.mounted && url.isNotEmpty) {
       await openInAppBrowser(context, url, title: message.notification?.title);
     }
+  }
+
+  static Future<BuildContext?> _waitForNavigationContext() async {
+    for (var attempt = 0; attempt < 20; attempt++) {
+      final context = appNavigatorKey.currentContext;
+      if (context != null && context.mounted) return context;
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    return null;
   }
 
   static Future<void> _showForegroundMessage(RemoteMessage message) async {
@@ -252,12 +287,25 @@ class PushNotificationService {
   }
 
   static bool _hasOpenTarget(RemoteMessage message) {
-    final type = message.data['type']?.toString().trim() ?? '';
+    final type =
+        (message.data['type'] ?? message.data['targetType'])
+            ?.toString()
+            .trim() ??
+        '';
     final senderId =
         (message.data['senderId'] ?? message.data['from'])?.toString().trim() ??
         '';
-    final id = int.tryParse(message.data['id']?.toString() ?? '');
-    final url = message.data['url']?.toString().trim() ?? '';
+    final id = int.tryParse(
+      (message.data['id'] ??
+                  message.data['postId'] ??
+                  message.data['articleId'] ??
+                  message.data['eventId'] ??
+                  message.data['targetId'])
+              ?.toString() ??
+          '',
+    );
+    final url =
+        (message.data['url'] ?? message.data['link'])?.toString().trim() ?? '';
     return type == 'submission' ||
         (type == 'connection_request' && senderId.isNotEmpty) ||
         (type == 'meetup_interest' && senderId.isNotEmpty) ||
@@ -272,7 +320,6 @@ class PushNotificationService {
 
   static Future<void> _storeToken(String? token) async {
     if (token == null || token.isEmpty) return;
-    if (kDebugMode) debugPrint('HUHS FCM registration token: $token');
     final preferences = await SharedPreferences.getInstance();
     final previousToken = preferences.getString(_tokenKey);
     await preferences.setString(_tokenKey, token);
@@ -299,7 +346,11 @@ class PushNotificationService {
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       } catch (error) {
-        debugPrint('HUHS FCM profile token sync failed: $error');
+        if (kDebugMode) {
+          debugPrint(
+            'HUHS FCM profile token sync failed: ${error.runtimeType}',
+          );
+        }
       }
     }
     try {
@@ -321,7 +372,9 @@ class PushNotificationService {
     try {
       await _storeToken(await FirebaseMessaging.instance.getToken());
     } catch (error) {
-      debugPrint('HUHS FCM token refresh failed: $error');
+      if (kDebugMode) {
+        debugPrint('HUHS FCM token refresh failed: ${error.runtimeType}');
+      }
       await _syncStoredToken();
     }
   }
@@ -332,6 +385,7 @@ class PushNotificationService {
     required bool events,
     required bool releases,
     required bool reminders,
+    required bool achievements,
   }) async {
     final preferences = await SharedPreferences.getInstance();
     final token = preferences.getString(_tokenKey);
@@ -346,6 +400,7 @@ class PushNotificationService {
           'events': events,
           'releases': releases,
           'reminders': reminders,
+          'achievements': achievements,
         },
       );
     } catch (_) {

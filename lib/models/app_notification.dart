@@ -11,6 +11,7 @@ class AppNotification {
     required this.createdAt,
     required this.readAt,
     required this.archivedAt,
+    this.senderId = '',
   });
 
   final String id;
@@ -22,6 +23,7 @@ class AppNotification {
   final DateTime? createdAt;
   final DateTime? readAt;
   final DateTime? archivedAt;
+  final String senderId;
 
   bool get isRead => readAt != null;
   bool get isArchived => archivedAt != null;
@@ -45,6 +47,7 @@ class AppNotification {
       archivedAt: archivedTimestamp is Timestamp
           ? archivedTimestamp.toDate()
           : null,
+      senderId: data['senderId']?.toString().trim() ?? '',
     );
   }
 }

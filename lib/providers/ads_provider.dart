@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+
 import 'dart:async';
 
 const enableTestAds = bool.fromEnvironment(
@@ -84,9 +85,7 @@ Future<void> bootstrapAds() async {
 Future<void> _initializeMobileAdsOnce() async {
   try {
     await MobileAds.instance.initialize();
-    debugPrint('AdMob SDK inicializálva.');
-  } catch (error) {
-    debugPrint('AdMob SDK inicializálási hiba: $error');
+  } catch (_) {
     _mobileAdsInitialization = null;
     rethrow;
   }
@@ -110,22 +109,10 @@ Future<void> _prepareAdConsent() async {
     ConsentRequestParameters(),
     () {
       ConsentForm.loadAndShowConsentFormIfRequired((formError) {
-        if (formError != null) {
-          debugPrint(
-            'AdMob hozzájárulási űrlap hiba: '
-            'code=${formError.errorCode}, message=${formError.message}',
-          );
-        } else {
-          debugPrint('AdMob hozzájárulási folyamat befejeződött.');
-        }
         if (!completed.isCompleted) completed.complete();
       });
     },
     (error) {
-      debugPrint(
-        'AdMob hozzájárulási információ nem frissíthető: '
-        'code=${error.errorCode}, message=${error.message}',
-      );
       if (!completed.isCompleted) completed.complete();
     },
   );
@@ -136,11 +123,8 @@ Future<bool> canRequestAds() async {
   if (useTestAds) return true;
   if (_consentResolved) return true;
   try {
-    final allowed = await ConsentInformation.instance.canRequestAds();
-    debugPrint('AdMob canRequestAds=$allowed');
-    return allowed;
-  } catch (error) {
-    debugPrint('AdMob canRequestAds ellenőrzési hiba: $error');
+    return await ConsentInformation.instance.canRequestAds();
+  } catch (_) {
     return false;
   }
 }

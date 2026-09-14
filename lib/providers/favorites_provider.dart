@@ -98,6 +98,14 @@ class FavoritesNotifier extends ChangeNotifier {
     await _clearCloud();
   }
 
+  Future<void> clearLocalCache() async {
+    await _ready;
+    _items.clear();
+    notifyListeners();
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove(_storageKey);
+  }
+
   Future<void> _initialize() async {
     await _loadLocal();
     final auth = _auth;

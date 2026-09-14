@@ -5,10 +5,27 @@ import '../../providers/events_provider.dart';
 import '../../providers/community_provider.dart';
 import '../../models/event.dart';
 import '../../widgets/event_card.dart';
+import '../../widgets/huhs_corner_logo.dart';
+import '../../services/wordpress_service.dart';
 import 'event_submission_screen.dart';
 
-class EventsScreen extends ConsumerWidget {
+class EventsScreen extends ConsumerStatefulWidget {
   const EventsScreen({super.key});
+
+  @override
+  ConsumerState<EventsScreen> createState() => _EventsScreenState();
+}
+
+class _EventsScreenState extends ConsumerState<EventsScreen> {
+  static const _eventPageSize = 12;
+  final _extraUpcoming = <HuhsEvent>[];
+  final _extraPast = <HuhsEvent>[];
+  int _upcomingPage = 1;
+  int _pastPage = 1;
+  bool _hasMoreUpcoming = false;
+  bool _hasMorePast = false;
+  bool _loadingMoreUpcoming = false;
+  bool _loadingMorePast = false;
 
   void _openSubmission(BuildContext context) {
     Navigator.of(context).push(
@@ -18,8 +35,63 @@ class EventsScreen extends ConsumerWidget {
     );
   }
 
+  List<HuhsEvent> _mergeEvents(List<HuhsEvent> first, List<HuhsEvent> second) {
+    final merged = <HuhsEvent>[];
+    final ids = <int>{};
+    for (final event in [...first, ...second]) {
+      if (ids.add(event.id)) merged.add(event);
+    }
+    return merged;
+  }
+
+  Future<void> _loadMore({required bool past}) async {
+    if (past ? _loadingMorePast : _loadingMoreUpcoming) return;
+    final nextPage = (past ? _pastPage : _upcomingPage) + 1;
+    setState(() {
+      if (past) {
+        _loadingMorePast = true;
+      } else {
+        _loadingMoreUpcoming = true;
+      }
+    });
+    try {
+      final result = await WordpressService().getEventsPage(
+        includePast: past,
+        page: nextPage,
+        perPage: _eventPageSize,
+      );
+      if (!mounted) return;
+      setState(() {
+        if (past) {
+          _pastPage = result.page;
+          _extraPast
+            ..clear()
+            ..addAll(_mergeEvents(_extraPast, result.items));
+          _hasMorePast = result.hasMore;
+          _loadingMorePast = false;
+        } else {
+          _upcomingPage = result.page;
+          _extraUpcoming
+            ..clear()
+            ..addAll(_mergeEvents(_extraUpcoming, result.items));
+          _hasMoreUpcoming = result.hasMore;
+          _loadingMoreUpcoming = false;
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        if (past) {
+          _loadingMorePast = false;
+        } else {
+          _loadingMoreUpcoming = false;
+        }
+      });
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final events = ref.watch(eventsProvider);
     final pastEvents = ref.watch(pastEventsProvider);
     final user = ref.watch(communityAuthProvider).valueOrNull;
@@ -38,9 +110,23 @@ class EventsScreen extends ConsumerWidget {
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: () async {
+              _extraUpcoming.clear();
+              _extraPast.clear();
+              _upcomingPage = 1;
+              _pastPage = 1;
+              _hasMoreUpcoming = false;
+              _hasMorePast = false;
+              final service = WordpressService();
+              await Future.wait([
+                service.getEvents(forceRefresh: true),
+                service.getEvents(includePast: true, forceRefresh: true),
+              ]);
               ref.invalidate(eventsProvider);
               ref.invalidate(pastEventsProvider);
-              await ref.read(eventsProvider.future);
+              await Future.wait<void>([
+                ref.read(eventsProvider.future).then<void>((_) {}),
+                ref.read(pastEventsProvider.future).then<void>((_) {}),
+              ]);
             },
             child: events.when(
               loading: () => ListView(
@@ -86,7 +172,22 @@ class EventsScreen extends ConsumerWidget {
                 ],
               ),
               data: (items) {
-                final pastSection = _PastEventsSection(events: pastEvents);
+                final mergedItems = _mergeEvents(items, _extraUpcoming);
+                final mergedPast = _mergeEvents(
+                  pastEvents.valueOrNull ?? const [],
+                  _extraPast,
+                );
+                final canLoadUpcoming =
+                    _hasMoreUpcoming || items.length >= _eventPageSize;
+                final canLoadPast =
+                    _hasMorePast ||
+                    (pastEvents.valueOrNull?.length ?? 0) >= _eventPageSize;
+                final pastSection = _PastEventsSection(
+                  events: mergedPast,
+                  hasMore: canLoadPast,
+                  loadingMore: _loadingMorePast,
+                  onLoadMore: () => _loadMore(past: true),
+                );
                 if (items.isEmpty) {
                   return ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -111,10 +212,10 @@ class EventsScreen extends ConsumerWidget {
                   );
                 }
 
-                final featured = items
+                final featured = mergedItems
                     .where((event) => event.featured)
                     .toList();
-                final regular = items
+                final regular = mergedItems
                     .where((event) => !event.featured)
                     .toList();
                 final landscape =
@@ -132,6 +233,11 @@ class EventsScreen extends ConsumerWidget {
                     const _EventsSectionTitle('Események'),
                     ...regular.map((event) => EventCard(event: event)),
                   ],
+                  if (canLoadUpcoming)
+                    _LoadMoreEventsButton(
+                      loading: _loadingMoreUpcoming,
+                      onPressed: () => _loadMore(past: false),
+                    ),
                   pastSection,
                 ];
                 if (!landscape) {
@@ -159,6 +265,11 @@ class EventsScreen extends ConsumerWidget {
                       const _EventsSectionTitle('Események'),
                       _EventGrid(events: regular),
                     ],
+                    if (canLoadUpcoming)
+                      _LoadMoreEventsButton(
+                        loading: _loadingMoreUpcoming,
+                        onPressed: () => _loadMore(past: false),
+                      ),
                     pastSection,
                   ],
                 );
@@ -182,9 +293,16 @@ class _EventsHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Események',
-          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+        const Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Események',
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              ),
+            ),
+            HuhsCornerLogo(),
+          ],
         ),
         const SizedBox(height: 14),
         if (showSubmit)
@@ -214,27 +332,58 @@ class _EventsSectionTitle extends StatelessWidget {
 }
 
 class _PastEventsSection extends StatelessWidget {
-  final AsyncValue<List<HuhsEvent>> events;
+  final List<HuhsEvent> events;
+  final bool hasMore;
+  final bool loadingMore;
+  final VoidCallback onLoadMore;
 
-  const _PastEventsSection({required this.events});
+  const _PastEventsSection({
+    required this.events,
+    required this.hasMore,
+    required this.loadingMore,
+    required this.onLoadMore,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final items = events.valueOrNull;
-    if (items == null || items.isEmpty) return const SizedBox.shrink();
+    if (events.isEmpty) return const SizedBox.shrink();
     return ExpansionTile(
       tilePadding: EdgeInsets.zero,
       title: const Text('Korábbi események'),
-      subtitle: Text('${items.length} lejárt esemény'),
+      subtitle: Text('${events.length}${hasMore ? '+' : ''} lejárt esemény'),
       children: [
-        for (final event in items)
+        for (final event in events)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: EventCard(event: event),
           ),
+        if (hasMore)
+          _LoadMoreEventsButton(loading: loadingMore, onPressed: onLoadMore),
       ],
     );
   }
+}
+
+class _LoadMoreEventsButton extends StatelessWidget {
+  final bool loading;
+  final VoidCallback onPressed;
+
+  const _LoadMoreEventsButton({required this.loading, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 2),
+    child: OutlinedButton.icon(
+      onPressed: loading ? null : onPressed,
+      icon: loading
+          ? const SizedBox.square(
+              dimension: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.expand_more),
+      label: Text(loading ? 'Betöltés…' : 'További események'),
+    ),
+  );
 }
 
 class _EventGrid extends StatelessWidget {

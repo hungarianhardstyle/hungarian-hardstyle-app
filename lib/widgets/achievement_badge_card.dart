@@ -11,6 +11,9 @@ class AchievementBadgeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final image = achievement.badgeImageUrl;
+    final imageCacheWidth = (72 * MediaQuery.devicePixelRatioOf(context))
+        .round()
+        .clamp(144, 288);
     return Card(
       margin: EdgeInsets.zero,
       child: ListTile(
@@ -27,10 +30,12 @@ class AchievementBadgeCard extends StatelessWidget {
                     ),
                   )
                 : CachedNetworkImage(
+                    // Keep the original image URL so profile surfaces never
+                    // display a lower-quality badge rendition.
                     imageUrl: image,
                     fit: BoxFit.cover,
-                    memCacheWidth: 192,
-                    maxWidthDiskCache: 192,
+                    memCacheWidth: imageCacheWidth,
+                    maxWidthDiskCache: imageCacheWidth,
                     placeholder: (context, url) => const ColoredBox(
                       color: Color(0xFFE53935),
                       child: Center(
@@ -40,13 +45,15 @@ class AchievementBadgeCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    errorWidget: (context, url, error) => const ColoredBox(
-                      color: Color(0xFFE53935),
-                      child: Icon(
-                        Icons.workspace_premium_outlined,
-                        color: Colors.white,
-                      ),
-                    ),
+                    errorWidget: (context, url, error) {
+                      return const ColoredBox(
+                        color: Color(0xFFE53935),
+                        child: Icon(
+                          Icons.workspace_premium_outlined,
+                          color: Colors.white,
+                        ),
+                      );
+                    },
                   ),
           ),
         ),

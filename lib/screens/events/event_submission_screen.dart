@@ -234,11 +234,9 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
     if (url.isEmpty) return null;
 
     final uri = Uri.tryParse(url);
-    return uri != null &&
-            (uri.scheme == 'http' || uri.scheme == 'https') &&
-            uri.host.isNotEmpty
+    return uri != null && uri.scheme == 'https' && uri.host.isNotEmpty
         ? null
-        : 'Teljes http:// vagy https:// linket adj meg.';
+        : 'Teljes https:// linket adj meg.';
   }
 
   String? _validatePostalCode(String? value) {
@@ -452,8 +450,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                         SubmissionImagePicker(
                           image: _flyer,
                           title: 'Flyer feltöltése',
-                          helperText:
-                              'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
+                          helperText: 'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
                           onChanged: (image) => setState(() => _flyer = image),
                         ),
                         _field(

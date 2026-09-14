@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hungarian Hardstyle – művelet kész</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center;
+      background: #0b0c0f; color: #f3f3f3; font: 16px system-ui, sans-serif; }
+    main { max-width: 34rem; padding: 2rem; text-align: center; }
+    h1 { color: #ff3d4d; font-size: 1.6rem; }
+    a { color: #ff7180; }
+  </style>
+</head>
+<body>
+<main>
+  <h1 id="title">A művelet befejeződött</h1>
+  <p id="message">Visszatérhetsz a Hungarian Hardstyle alkalmazásba.</p>
+  <p>Ha az alkalmazás nem nyílik meg automatikusan, nyisd meg újra kézzel.</p>
+</main>
+<script>
+  const mode = new URLSearchParams(location.search).get('mode');
+  if (mode === 'resetPassword') {
+    document.querySelector('#title').textContent = 'Jelszó-visszaállítás';
+    document.querySelector('#message').textContent = 'A jelszó-visszaállítási művelet befejeződött. Nyisd meg újra az alkalmazást.';
+  } else if (mode === 'recoverEmail') {
+    document.querySelector('#title').textContent = 'E-mail-cím visszaállítva';
+    document.querySelector('#message').textContent = 'Az e-mail-cím visszaállítása befejeződött.';
+  } else if (mode === 'verifyEmail') {
+    document.querySelector('#title').textContent = 'Köszönjük!';
+    document.querySelector('#message').textContent = 'Az e-mail-címedet sikeresen megerősítetted. Visszatérhetsz a Hungarian Hardstyle alkalmazásba.';
+  }
+</script>
+</body>
+</html>

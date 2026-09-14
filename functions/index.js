@@ -5,30 +5,598 @@ const { HttpsError } = functions.https;
 const { defineSecret } = require('firebase-functions/params');
 const crypto = require('crypto');
 const admin = require('firebase-admin');
-const { getFirestore } = require('firebase-admin/firestore');
+const { getApps } = require('firebase-admin/app');
+const { getAuth } = require('firebase-admin/auth');
+const { getFirestore, FieldPath, FieldValue } = require('firebase-admin/firestore');
 const { google } = require('googleapis');
+const { selectOwnedCloudinaryAssets, destroyCloudinaryAsset, listOwnedCloudinaryAssets } = require('./cloudinary');
+const { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, sendMail } = require('./email_service');
+const { generateAuthActionLink } = require('./auth_action_link');
 
 admin.initializeApp();
 
-const db = getFirestore(admin.app(), 'hungarian-hardstyle');
+const db = getFirestore(getApps()[0], 'hungarian-hardstyle');
+const auth = getAuth(getApps()[0]);
 const ADMIN_EMAIL = 'djdeeroy@gmail.com';
+const EMAIL_ACTION_URL = 'https://hungarian-hardstyle.firebaseapp.com';
+const HUHS_SMTP_HOST = defineSecret('HUHS_SMTP_HOST');
+const HUHS_SMTP_PORT = defineSecret('HUHS_SMTP_PORT');
+const HUHS_SMTP_SECURE = defineSecret('HUHS_SMTP_SECURE');
+const HUHS_SMTP_USER = defineSecret('HUHS_SMTP_USER');
+const HUHS_SMTP_PASSWORD = defineSecret('HUHS_SMTP_PASSWORD');
+const SMTP_SECRETS = [HUHS_SMTP_HOST, HUHS_SMTP_PORT, HUHS_SMTP_SECURE, HUHS_SMTP_USER, HUHS_SMTP_PASSWORD];
+
+function normalizedEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function normalizedAccountRole(role) {
+  return role === 'organizer' || role === 'admin' ? 'organizer' : role === 'dj' ? 'dj' : 'partygoer';
+}
+
+function normalizedAccessRole(role) {
+  return role === 'admin' || role === 'moderator' ? role : 'none';
+}
+
+function deletedIdentityKey(email) {
+  // Only a one-way identity marker is retained after deletion. It is used
+  // solely by the Auth blocking hook and never returned to clients.
+  return crypto.createHash('sha256').update(`huhs-deleted:${normalizedEmail(email)}`).digest('hex');
+}
+
+function isExplicitIdentityBan(marker) {
+  return marker?.blocked === true
+    && ['administrator-ban', 'abuse'].includes(String(marker.reason || '').trim())
+    && ['admin', 'abuse-system'].includes(String(marker.source || '').trim())
+    && marker.deletionType === 'identity-ban';
+}
+
+// Registration is intentionally checked before Auth creation so a deleted
+// identity cannot silently return as a new account. This callable has no Auth
+// requirement; the one-way identity marker is the only identity it receives.
+exports.checkRegistrationEligibility = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data) => {
+  const email = normalizedEmail(data?.email);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen e-mail-cím.');
+  }
+  const deletedIdentity = await db
+    .collection('deleted_identity_hashes')
+    .doc(deletedIdentityKey(email))
+    .get();
+  // Legacy records only contained deletedAt and represented account cleanup,
+  // not a moderation ban. Only an explicit administrator/abuse marker may
+  // block a later registration with the same identity.
+  const deletedIdentityData = deletedIdentity.data() || {};
+  const registrationBlocked = isExplicitIdentityBan(deletedIdentityData);
+  if (registrationBlocked) {
+    throw new HttpsError(
+      'permission-denied',
+      'Ehhez az e-mail-címhez tiltott fiók tartozik.',
+    );
+  }
+  return { allowed: true };
+});
+
+exports.banCommunityIdentity = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const callerEmail = normalizedEmail(context.auth?.token?.email);
+  if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin tilthat identitást.');
+  const callerProfile = await db.collection('community_profiles').doc(context.auth.uid).get();
+  const callerData = callerProfile.data() || {};
+  if (callerEmail !== ADMIN_EMAIL && callerData.accessRole !== 'admin' && callerData.role !== 'admin') {
+    throw new HttpsError('permission-denied', 'Csak admin tilthat identitást.');
+  }
+  const uid = String(data?.uid || '').trim();
+  const reason = String(data?.reason || '').trim();
+  const source = String(data?.source || '').trim();
+  if (!uid || !['administrator-ban', 'abuse'].includes(reason) || !['admin', 'abuse-system'].includes(source)) {
+    throw new HttpsError('invalid-argument', 'Érvényes identitás-tiltási ok szükséges.');
+  }
+  const targetUser = await auth.getUser(uid);
+  const email = normalizedEmail(targetUser.email);
+  if (!email) throw new HttpsError('failed-precondition', 'A fiókhoz nem tartozik e-mail-cím.');
+  await db.collection('deleted_identity_hashes').doc(deletedIdentityKey(email)).set({
+    blocked: true,
+    reason,
+    source,
+    deletionType: 'identity-ban',
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  return { blocked: true };
+});
+
+exports.requestEmailChange = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'Jelentkezz be az e-mail módosításához.');
+  const email = normalizedEmail(data?.email);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new HttpsError('invalid-argument', 'Érvénytelen e-mail-cím.');
+  const user = await auth.getUser(uid);
+  const currentEmail = normalizedEmail(user.email);
+  if (!currentEmail || currentEmail === email) throw new HttpsError('invalid-argument', 'Adj meg új e-mail-címet.');
+  const profileRef = db.collection('community_profiles').doc(uid);
+  const profile = (await profileRef.get()).data() || {};
+  const currentYear = new Date().getUTCFullYear();
+  const emailChangeYear = Number(profile.emailChangeYear || (Number(profile.emailChangeCount || 0) > 0 ? currentYear : 0));
+  if (emailChangeYear === currentYear) throw new HttpsError('failed-precondition', 'E-mail-címet évente egyszer lehet módosítani.');
+  try {
+    const owner = await auth.getUserByEmail(email);
+    if (owner.uid !== uid) throw new HttpsError('already-exists', 'Ez az e-mail-cím már használatban van.');
+  } catch (error) {
+    if (error.code !== 'auth/user-not-found') throw error;
+  }
+  const identityMarker = await db.collection('deleted_identity_hashes')
+    .doc(deletedIdentityKey(email)).get();
+  if (isExplicitIdentityBan(identityMarker.data() || {})) {
+    throw new HttpsError('permission-denied', 'Ehhez az e-mail-címhez tiltott identitás tartozik.');
+  }
+  await profileRef.set({
+    previousEmail: currentEmail,
+    pendingEmail: email,
+    pendingEmailExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  return { requested: true };
+});
+
+exports.syncEmailChange = functions.runWith({ secrets: SMTP_SECRETS, enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'Jelentkezz be.');
+  const email = normalizedEmail((await auth.getUser(uid)).email);
+  const ref = db.collection('community_profiles').doc(uid);
+  const profile = (await ref.get()).data() || {};
+  if (!email || profile.pendingEmail !== email) return { synced: false };
+  await ref.set({
+    email,
+    pendingEmail: FieldValue.delete(),
+    pendingEmailExpiresAt: FieldValue.delete(),
+    emailChangeCount: 1,
+    emailChangeYear: new Date().getUTCFullYear(),
+    previousEmail: FieldValue.delete(),
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  if (profile.previousEmail && profile.previousEmail !== email) {
+    await sendIdentityEmailOnce({
+      key: `email-change:${uid}:${email}`,
+      to: profile.previousEmail,
+      template: emailChangeEmailTemplate(),
+    });
+  }
+  return { synced: true };
+});
+
+async function sendIdentityEmailOnce({ key, to, template, operationId = crypto.randomUUID(), deliveryType = 'identity' }) {
+  const resendDeduplicationWindowMs = 60 * 1000;
+  const jobRef = db.collection('email_delivery_jobs').doc(crypto.createHash('sha256').update(key).digest('hex'));
+  const leaseId = crypto.randomUUID();
+  const leaseUntil = new Date(Date.now() + 5 * 60 * 1000);
+  const claim = await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(jobRef);
+    const job = snapshot.data() || {};
+    if (job.status === 'sent') {
+      const sentAt = job.sentAt?.toDate?.()?.getTime?.();
+      const recentAuthVerification = deliveryType === 'auth-verification'
+        && Number.isFinite(sentAt)
+        && Date.now() - sentAt < resendDeduplicationWindowMs;
+      if (recentAuthVerification || deliveryType !== 'auth-verification' || !Number.isFinite(sentAt)) {
+        return { claimed: false, outcome: 'already_sent' };
+      }
+    }
+    if (job.status === 'sending' && job.leaseUntil?.toDate?.()?.getTime() > Date.now()) {
+      return { claimed: false, outcome: 'in_flight' };
+    }
+    transaction.set(jobRef, {
+      status: 'sending',
+      operationId,
+      deliveryType,
+      recipientHash: crypto.createHash('sha256').update(normalizedEmail(to)).digest('hex'),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      leaseId,
+      leaseUntil,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return { claimed: true };
+  });
+  if (!claim.claimed) {
+    console.info(JSON.stringify({ event: 'email_delivery_skipped', operationId, deliveryType, result: claim.outcome }));
+    return { sent: claim.outcome === 'already_sent', outcome: claim.outcome };
+  }
+  try {
+    const delivery = await sendMail({ to, ...template });
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(jobRef);
+      if (snapshot.data()?.leaseId !== leaseId) return;
+      transaction.set(jobRef, {
+        status: 'sent',
+        sentAt: FieldValue.serverTimestamp(),
+        smtpResponseCode: Number.isInteger(delivery.responseCode) ? delivery.responseCode : null,
+        messageId: delivery.messageId || FieldValue.delete(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        leaseId: FieldValue.delete(),
+        leaseUntil: FieldValue.delete(),
+      }, { merge: true });
+    });
+    console.info(JSON.stringify({
+      event: 'email_delivery_finished', operationId, deliveryType, attempts: delivery.attempts,
+      smtpResponseCode: delivery.responseCode, messageId: delivery.messageId || undefined, result: 'smtp_accepted',
+    }));
+    return { sent: true, outcome: 'smtp_accepted', attempts: delivery.attempts };
+  } catch (error) {
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(jobRef);
+      if (snapshot.data()?.leaseId === leaseId) transaction.set(jobRef, {
+        status: 'failed',
+        operationId,
+        deliveryType,
+        attempts: Number(error?.attempts || 1),
+        failureCode: String(error?.smtpCode || 'unknown'),
+        failureCommand: String(error?.command || 'unknown'),
+        failureResponseCode: Number.isInteger(error?.responseCode) ? error.responseCode : null,
+        failureStage: String(error?.stage || 'unknown'),
+        failedAt: FieldValue.serverTimestamp(),
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        leaseId: FieldValue.delete(),
+        leaseUntil: FieldValue.delete(),
+      }, { merge: true });
+    });
+    console.warn(JSON.stringify({
+      event: 'email_delivery_failed', operationId, deliveryType, attempts: Number(error?.attempts || 1), result: 'smtp_rejected',
+      smtpCode: String(error?.smtpCode || 'unknown'), command: String(error?.command || 'unknown'),
+      responseCode: Number.isInteger(error?.responseCode) ? error.responseCode : null,
+      stage: String(error?.stage || 'unknown'),
+    }));
+    return { sent: false, outcome: 'smtp_rejected', operationId };
+  }
+}
+
+exports.sendAuthEmail = functions.runWith({ secrets: SMTP_SECRETS, enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const action = String(data?.action || '').trim();
+  const email = normalizedEmail(data?.email || context.auth?.token?.email);
+  if (!['verification', 'passwordReset'].includes(action) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen e-mailes művelet.');
+  }
+  if (action !== 'passwordReset' && !context.auth) throw new HttpsError('unauthenticated', 'Jelentkezz be.');
+  if (action !== 'passwordReset' && normalizedEmail(context.auth.token.email) !== email) {
+    throw new HttpsError('permission-denied', 'Csak a saját e-mail-címedre kérhetsz levelet.');
+  }
+  if (action === 'verification') {
+    const authUser = await auth.getUser(context.auth.uid);
+    const hasPasswordProvider = authUser.providerData.some((provider) => provider.providerId === 'password');
+    if (!hasPasswordProvider) {
+      throw new HttpsError('failed-precondition', 'Google-fiókhoz nem szükséges e-mail-megerősítés.');
+    }
+  }
+  const identity = action === 'passwordReset' ? email : context.auth.uid;
+  if (!await allowCall(`email:${identity}`, `auth_email_${action}`, 3)) {
+    throw new HttpsError('resource-exhausted', 'Kérlek, próbáld később.');
+  }
+  if (action === 'passwordReset') {
+    try {
+      await auth.getUserByEmail(email);
+    } catch (error) {
+      if (error?.code === 'auth/user-not-found') return { sent: true };
+      throw new HttpsError('internal', 'A levélküldés nem sikerült.');
+    }
+  }
+  let link;
+  try {
+    const settings = { url: EMAIL_ACTION_URL, handleCodeInApp: false };
+    const generated = await generateAuthActionLink({ auth, action, email, settings });
+    link = generated.link;
+    if (generated.attempts > 1) {
+      console.info(JSON.stringify({ event: 'auth_action_link_retried', action, attempts: generated.attempts }));
+    }
+  } catch (error) {
+    console.warn(JSON.stringify({
+      event: 'auth_action_link_failed',
+      code: String(error?.code || 'unknown'),
+      attempts: Number(error?.attempts || 1),
+    }));
+    throw new HttpsError('internal', 'A levélküldés nem sikerült.');
+  }
+  const template = authEmailTemplate(action, link);
+  const operationId = crypto.randomUUID();
+  const delivery = await sendIdentityEmailOnce({
+    key: `${action}:${identity}:${link.split('?')[0]}`,
+    to: email,
+    template,
+    operationId,
+    deliveryType: `auth-${action}`,
+  });
+  if (!delivery.sent && delivery.outcome !== 'already_sent') {
+    throw new HttpsError(
+      'unavailable',
+      'A levélküldés nem sikerült. Próbáld újra később.',
+      { operationId },
+    );
+  }
+  return { sent: true };
+});
+// Article comments are accessed only through this callable (Admin SDK).
+// Keep compatibility with already distributed Play builds until a verified
+// App Check enforcement is intentionally disabled; active clients must remain
+// compatible while Auth and server-side authorization continue to protect calls.
+exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const postId = Number(data?.postId);
+  if (!Number.isSafeInteger(postId) || postId <= 0) throw new HttpsError('invalid-argument', 'Érvénytelen cikk.');
+  const collection = db.collection('article_comments').doc(String(postId)).collection('comments');
+  const action = data?.action || 'list';
+  const uid = context.auth?.uid;
+  const profile = uid ? (await db.collection('community_profiles').doc(uid).get()).data() || {} : {};
+  const moderator = isAdmin(context, profile) || profile.accessRole === 'moderator';
+  if (action === 'list') {
+    let query = collection.orderBy('createdAt', 'desc').orderBy(FieldPath.documentId(), 'desc');
+    if (data.cursor) {
+      if (typeof data.cursor !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(data.cursor)) throw new HttpsError('invalid-argument', 'Érvénytelen lapozás.');
+      const cursor = await collection.doc(data.cursor).get();
+      if (cursor.exists) query = query.startAfter(cursor);
+    }
+    const result = await query.limit(21).get();
+    const docs = result.docs.slice(0, 20);
+    return { moderator, hasMore: result.size > 20, items: docs.map(doc => {
+      const value = doc.data();
+      return { id: doc.id, authorId: value.authorId, authorName: value.authorName,
+        imageUrl: value.imageUrl, text: value.text, createdAt: value.createdAt?.toMillis() || 0 };
+    }) };
+  }
+  if (!uid) throw new HttpsError('unauthenticated', 'Próbáld újra a küldést.');
+  if ((await db.collection('community_bans').doc(uid).get()).exists) throw new HttpsError('permission-denied', 'Jelenleg nem hozzászólhatsz.');
+  const id = data?.id;
+  if (typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(id)) throw new HttpsError('invalid-argument', 'Érvénytelen hozzászólás.');
+  const ref = collection.doc(id);
+  if (action === 'create') {
+    const text = typeof data.text === 'string' ? data.text.trim() : '';
+    if (!text || text.length > 2000) throw new HttpsError('invalid-argument', 'Írj 1–2000 karakteres hozzászólást.');
+    const existing = await ref.get();
+    if (existing.exists) {
+      if (existing.data().authorId === uid && existing.data().text === text) return { ok: true };
+      throw new HttpsError('already-exists', 'Ez a hozzászólás már létezik.');
+    }
+    if (!await allowCall(uid, 'article-comment', 5)) throw new HttpsError('resource-exhausted', 'Kérlek, várj egy percet az újabb hozzászólással.');
+    const response = await fetch(`https://hungarianhardstyle.hu/wp-json/huhs/v1/posts/${postId}`, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) throw new HttpsError('unavailable', 'A cikk most nem érhető el. Próbáld újra később.');
+    const article = await response.json();
+    if (Number(article.id) !== postId) throw new HttpsError('not-found', 'A cikk nem található.');
+    let commentCreated = false;
+    await db.runTransaction(async tx => {
+      const current = await tx.get(ref);
+      if (current.exists) {
+        if (current.data().authorId !== uid || current.data().text !== text) throw new HttpsError('already-exists', 'Ez a hozzászólás már létezik.');
+        return;
+      }
+      const anonymous = context.auth.token.firebase?.sign_in_provider === 'anonymous';
+      let hash = 17n;
+      for (let i = 0; i < uid.length; i++) hash = BigInt.asIntN(64, hash * 31n + BigInt(uid.charCodeAt(i)));
+      const number = Number((hash < 0n ? -hash : hash) % 9000n) + 1000;
+      tx.create(ref, { authorId: uid, authorName: anonymous ? `Unknown User ${number}` : profile.displayName || 'HUHS tag',
+        imageUrl: anonymous ? '' : profile.profileImageUrl || '', text, createdAt: FieldValue.serverTimestamp() });
+      commentCreated = true;
+    });
+    if (commentCreated) {
+      // One point per article comment, with the daily limit enforced inside
+      // the idempotent server-side achievement ledger.
+      await awardAchievementPoints(uid, 1, `article-comment:${postId}:${id}`);
+    }
+  } else if (action === 'delete') {
+    await db.runTransaction(async tx => {
+      const comment = await tx.get(ref);
+      if (!comment.exists) return;
+      if (comment.data().authorId !== uid && !moderator) throw new HttpsError('permission-denied', 'Ezt a hozzászólást nem törölheted.');
+      tx.delete(ref);
+    });
+  } else if (action === 'report') {
+    const comment = await ref.get();
+    if (!comment.exists) throw new HttpsError('not-found', 'A hozzászólás már nem található.');
+    if (!await allowCall(uid, 'article-report', 10)) throw new HttpsError('resource-exhausted', 'Kérlek, próbáld később.');
+    await db.collection('chat_reports').doc(crypto.createHash('sha256').update(`article:${postId}:${id}:${uid}`).digest('hex')).set({
+      postId: id, articleId: postId, type: 'article_comment', reporterId: uid, reporterName: profile.displayName || 'Vendég',
+      reportedUserId: comment.data().authorId, reportedUserName: comment.data().authorName,
+      reportedText: comment.data().text, reason: 'Cikkhozzászólás jelentése', status: 'open',
+      createdAt: FieldValue.serverTimestamp(),
+    });
+  } else throw new HttpsError('invalid-argument', 'Ismeretlen művelet.');
+  return { ok: true };
+});
 const WORDPRESS_BASE_URL = 'https://hungarianhardstyle.hu/wp-json/huhs/v1';
 const WORDPRESS_USERNAME = defineSecret('WORDPRESS_USERNAME');
 const WORDPRESS_APPLICATION_PASSWORD = defineSecret('WORDPRESS_APPLICATION_PASSWORD');
 const GOOGLE_PLAY_SERVICE_ACCOUNT_JSON = defineSecret('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON');
+const CLOUDINARY_API_KEY = defineSecret('CLOUDINARY_API_KEY');
+const CLOUDINARY_API_SECRET = defineSecret('CLOUDINARY_API_SECRET');
+const CLOUDINARY_CLOUD_NAME = 'fjxo93em';
 const GOOGLE_PLAY_PACKAGE_NAME = 'hu.hungarianhardstyle.app';
 // Match the region schema returned by the current Play catalog.
 const GOOGLE_PLAY_REGIONS_VERSION = '2025/03';
 let labelProductSyncRunning = false;
 let achievementBadgesCache = null;
 let achievementBadgesCacheAt = 0;
-const ACHIEVEMENT_BADGES_CACHE_TTL_MS = 5 * 60 * 1000;
+// Badge artwork can be replaced in WordPress without changing its media URL.
+// Keep the catalog cache short enough to notice that change, while still
+// deduplicating concurrent profile/chat requests.
+const ACHIEVEMENT_BADGES_CACHE_TTL_MS = 30 * 1000;
 let eventExpiryCacheAt = 0;
 let eventExpiryCache = null;
 const VALID_EVENT_IDS_CACHE_TTL_MS = 5 * 60 * 1000;
 const wordPressCall = (handler) => functions
-  .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] })
+  .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD], enforceAppCheck: false })
   .https.onCall(handler);
+function isAnonymousAuth(context) {
+  return context.auth?.token?.firebase?.sign_in_provider === 'anonymous'
+    || context.auth?.token?.is_anonymous === true;
+}
+
+exports.getGameAudioClip = wordPressCall(async (data, context) => {
+  if (!context.auth?.uid) throw new HttpsError('unauthenticated', 'A játék használatához be kell jelentkezned.');
+  if (isAnonymousAuth(context)) throw new HttpsError('unauthenticated', 'A játék használatához regisztráció szükséges.');
+  const gameId = Number(data?.gameId);
+  if (!Number.isSafeInteger(gameId) || gameId <= 0) throw new HttpsError('invalid-argument', 'Érvénytelen játék.');
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const response = await fetch(`${WORDPRESS_BASE_URL}/games/${gameId}/clip-token`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+      Accept: 'application/json',
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (response.status === 409) throw new HttpsError('unavailable', 'A hangrészlet még készül. Próbáld újra pár másodperc múlva.');
+  if (!response.ok || typeof body.download_url !== 'string') throw new HttpsError('failed-precondition', 'A játék hangrészlete most nem érhető el.');
+  return { url: body.download_url, expiresIn: Number(body.expires_in) || 300 };
+});
+
+function gameRewardPoints(game, correctAnswers, totalAnswers) {
+  const type = String(game?.type || '');
+  if (type === 'hardstyle_quiz' || type === 'festival_quiz' || type === 'hungarian_hardstyle_quiz') {
+    const percent = totalAnswers > 0 ? Math.floor((correctAnswers / totalAnswers) * 100) : 0;
+    const band = Array.isArray(game.reward_bands)
+      ? game.reward_bands.find((item) => percent >= Number(item.min || 0) && percent <= Number(item.max || 0))
+      : null;
+    return Math.max(0, Number(band?.points || 0));
+  }
+  return correctAnswers === totalAnswers && totalAnswers > 0
+    ? Math.max(0, Number(game.reward_points || 0))
+    : 0;
+}
+
+async function syncGameStatsToWordPress(gameId, stats) {
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const response = await fetch(`${WORDPRESS_BASE_URL}/games/${gameId}/stats`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      submissions: Number(stats.submissions || 0),
+      correct_answers: Number(stats.correctAnswers || 0),
+      total_answers: Number(stats.totalAnswers || 0),
+    }),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error(`WordPress játékstatisztika frissítése sikertelen: ${response.status}`);
+}
+
+exports.submitGameAttempt = wordPressCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'A játék használatához be kell jelentkezned.');
+  if (isAnonymousAuth(context)) throw new HttpsError('unauthenticated', 'A játékhoz regisztráció szükséges.');
+  const gameId = Number(data?.gameId);
+  if (!Number.isSafeInteger(gameId) || gameId <= 0) throw new HttpsError('invalid-argument', 'Érvénytelen játék.');
+
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const response = await fetch(`${WORDPRESS_BASE_URL}/games/${gameId}/private`, {
+    headers: {
+      Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+      Accept: 'application/json',
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  const game = await response.json().catch(() => ({}));
+  if (!response.ok || !game || game.type === undefined) throw new HttpsError('not-found', 'A játék nem található.');
+  if (game.status !== 'active') throw new HttpsError('failed-precondition', 'Ez a játék már nem fogad válaszokat.');
+
+  const timeline = game.type === 'timeline';
+  let correctAnswers = 0;
+  let totalAnswers = 0;
+  let submittedAnswers = null;
+  let submittedOrderedIds = null;
+  if (timeline) {
+    const orderedIds = Array.isArray(data?.orderedIds) ? data.orderedIds.map(String) : [];
+    const expected = Array.isArray(game.timeline_items) ? [...game.timeline_items].sort((a, b) => String(a.date || '').localeCompare(String(b.date || ''))).map((item) => String(item.id || '')) : [];
+    if (expected.length < 2 || orderedIds.length !== expected.length || new Set(orderedIds).size !== orderedIds.length) throw new HttpsError('invalid-argument', 'A teljes idővonalat add meg.');
+    if (orderedIds.some((id) => !expected.includes(id))) throw new HttpsError('invalid-argument', 'Érvénytelen idővonal-válasz.');
+    totalAnswers = 1;
+    correctAnswers = orderedIds.every((id, index) => id === expected[index]) ? 1 : 0;
+    submittedOrderedIds = orderedIds;
+  } else {
+    const answers = Array.isArray(data?.answers) ? data.answers.map(Number) : [];
+    const questions = Array.isArray(game.questions) ? game.questions : [];
+    if (!questions.length || answers.length !== questions.length) throw new HttpsError('invalid-argument', 'Minden kérdésre válaszolj.');
+    if (answers.some((answer, index) => !Number.isInteger(answer) || answer < 0 || answer >= (Array.isArray(questions[index]?.options) ? questions[index].options.length : 0))) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen válasz érkezett.');
+    }
+    totalAnswers = questions.length;
+    correctAnswers = questions.reduce((total, question, index) => {
+      const correct = Number(question.correct);
+      const answer = Number(answers[index]);
+      return total + (Number.isInteger(answer) && answer === correct ? 1 : 0);
+    }, 0);
+    submittedAnswers = answers;
+  }
+
+  const attemptId = crypto.createHash('sha256').update(`game:${gameId}:${uid}`).digest('hex');
+  const attemptRef = db.collection('game_attempts').doc(attemptId);
+  const statsRef = db.collection('game_stats').doc(String(gameId));
+  let result;
+  await db.runTransaction(async (transaction) => {
+    const existing = await transaction.get(attemptRef);
+    if (existing.exists) {
+      const saved = existing.data() || {};
+      result = {
+        alreadySubmitted: true,
+        correctAnswers: Number(saved.correctAnswers || 0),
+        totalAnswers: Number(saved.totalAnswers || 0),
+        achievementPoints: Number(saved.achievementPoints || 0),
+        answers: Array.isArray(saved.answers) ? saved.answers.map(Number) : null,
+        orderedIds: Array.isArray(saved.orderedIds) ? saved.orderedIds.map(String) : null,
+      };
+      return;
+    }
+    const achievementPoints = gameRewardPoints(game, correctAnswers, totalAnswers);
+    transaction.create(attemptRef, {
+      gameId,
+      uid,
+      correctAnswers,
+      totalAnswers,
+      achievementPoints,
+      answers: submittedAnswers,
+      orderedIds: submittedOrderedIds,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    transaction.set(statsRef, {
+      gameId,
+      submissions: FieldValue.increment(1),
+      correctAnswers: FieldValue.increment(correctAnswers),
+      totalAnswers: FieldValue.increment(totalAnswers),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    result = { alreadySubmitted: false, correctAnswers, totalAnswers, achievementPoints };
+  });
+
+  if (!result.alreadySubmitted && result.achievementPoints > 0) {
+    await awardAchievementPoints(uid, result.achievementPoints, `game:${gameId}:reward`);
+  }
+  const stats = (await statsRef.get()).data() || {};
+  try {
+    await syncGameStatsToWordPress(gameId, stats);
+  } catch (error) {
+    console.warn(JSON.stringify({ event: 'game_stats_sync_failed', gameId, message: error?.message || String(error) }));
+  }
+  return result;
+});
+
+exports.getGameAttemptStatus = wordPressCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'A játék használatához be kell jelentkezned.');
+  if (isAnonymousAuth(context)) throw new HttpsError('unauthenticated', 'A játékhoz regisztráció szükséges.');
+  const gameId = Number(data?.gameId);
+  if (!Number.isSafeInteger(gameId) || gameId <= 0) throw new HttpsError('invalid-argument', 'Érvénytelen játék.');
+
+  const attemptId = crypto.createHash('sha256').update(`game:${gameId}:${uid}`).digest('hex');
+  const snapshot = await db.collection('game_attempts').doc(attemptId).get();
+  if (!snapshot.exists) return { submitted: false };
+  const saved = snapshot.data() || {};
+  return {
+    submitted: true,
+    correctAnswers: Number(saved.correctAnswers || 0),
+    totalAnswers: Number(saved.totalAnswers || 0),
+    achievementPoints: Number(saved.achievementPoints || 0),
+    answers: Array.isArray(saved.answers) ? saved.answers.map(Number) : null,
+    orderedIds: Array.isArray(saved.orderedIds) ? saved.orderedIds.map(String) : null,
+    submittedAt: saved.createdAt?.toMillis?.() || null,
+  };
+});
 
 const labelProductSyncSecrets = [
   WORDPRESS_USERNAME,
@@ -46,7 +614,7 @@ async function allowCall(uid, key, limit = 20) {
     const count = Number(snapshot.data()?.count || 0);
     allowed = count < limit;
     if (allowed) {
-      transaction.set(ref, { key, uid, bucket, count: count + 1, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+      transaction.set(ref, { key, uid, bucket, count: count + 1, updatedAt: FieldValue.serverTimestamp() });
     }
   });
   return allowed;
@@ -64,23 +632,50 @@ const defaultAchievementBadges = [
 
 async function getAchievementBadges() {
   if (achievementBadgesCache && Date.now() - achievementBadgesCacheAt < ACHIEVEMENT_BADGES_CACHE_TTL_MS) return achievementBadgesCache;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2500);
   try {
-    const response = await fetch(`${WORDPRESS_BASE_URL}/achievements/badges`, { headers: { Accept: 'application/json' } });
+    const response = await fetch(`${WORDPRESS_BASE_URL}/achievements/badges`, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    });
     const body = await response.json();
     if (response.ok && Array.isArray(body) && body.length) {
+      const catalogVersion = String(
+        response.headers.get('etag') ||
+        response.headers.get('last-modified') ||
+        body.map((badge) => `${badge?.slug || ''}:${badge?.image_url || ''}:${badge?.updated_at || ''}`).join('|'),
+      ).trim();
+      const versionToken = crypto.createHash('sha1').update(catalogVersion).digest('hex').slice(0, 16);
       achievementBadgesCache = body.filter((badge) => badge.active !== 0).map((badge) => ({
         slug: String(badge.slug || '').trim(), name: String(badge.name || 'HUHS jelvény').trim(),
         min_points: Math.max(0, Number(badge.min_points || 0)),
-        description: String(badge.description || '').trim(), image_url: String(badge.image_url || '').trim(),
+        description: String(badge.description || '').trim(),
+        image_url: versionBadgeImageUrl(String(badge.image_url || '').trim(), versionToken),
       })).filter((badge) => badge.slug);
       achievementBadgesCacheAt = Date.now();
+      return achievementBadgesCache;
     }
   } catch (error) {
     console.warn(JSON.stringify({ event: 'achievement_catalog_fallback', message: error?.message || String(error) }));
+  } finally {
+    clearTimeout(timeout);
   }
-  achievementBadgesCache = achievementBadgesCache || defaultAchievementBadges;
-  achievementBadgesCacheAt = Date.now();
-  return achievementBadgesCache;
+  // Keep the last valid catalog if one exists. Do not cache the image-less
+  // emergency defaults: the next request must be allowed to retry WordPress.
+  return achievementBadgesCache || defaultAchievementBadges;
+}
+
+function versionBadgeImageUrl(imageUrl, versionToken) {
+  if (!imageUrl || !versionToken) return imageUrl;
+  try {
+    const parsed = new URL(imageUrl);
+    parsed.searchParams.set('huhs_badge_v', versionToken);
+    return parsed.toString();
+  } catch (_) {
+    const separator = imageUrl.includes('?') ? '&' : '?';
+    return `${imageUrl}${separator}huhs_badge_v=${encodeURIComponent(versionToken)}`;
+  }
 }
 
 async function getValidEventIds() {
@@ -149,10 +744,18 @@ async function awardAchievementPoints(uid, delta, sourceKey) {
   const ledgerId = crypto.createHash('sha256').update(`${uid}:${sourceKey}:${delta > 0 ? 'grant' : 'revoke'}`).digest('hex').slice(0, 40);
   const ledgerRef = db.collection('achievement_ledger').doc(ledgerId);
   const profileRef = db.collection('community_profiles').doc(uid);
+  const isNewsLikeGrant = delta > 0 && sourceKey.startsWith('news-like:');
+  const isArticleCommentGrant = delta > 0 && sourceKey.startsWith('article-comment:');
+  const dailyLimit = isNewsLikeGrant || isArticleCommentGrant ? 5 : null;
+  const dailyLimitRef = dailyLimit == null ? null : db.collection(
+    isNewsLikeGrant ? 'achievement_news_like_limits' : 'achievement_article_comment_limits',
+  ).doc(`${uid}_${new Date().toISOString().slice(0, 10)}`);
   let result = { changed: false };
   await db.runTransaction(async (transaction) => {
     const ledger = await transaction.get(ledgerRef);
     if (ledger.exists) return;
+    const dailyActivity = dailyLimitRef ? await transaction.get(dailyLimitRef) : null;
+    if (dailyActivity && Number(dailyActivity.data()?.count || 0) >= dailyLimit) return;
     const profile = await transaction.get(profileRef);
     // Anonymous interactions may still use public features such as news
     // reactions, but they never have an achievement profile and must not
@@ -168,16 +771,74 @@ async function awardAchievementPoints(uid, delta, sourceKey) {
         slug: badge.slug, name: badge.name, description: badge.description,
         imageUrl: badge.image_url || '',
       },
-      achievementUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      achievementUpdatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
     transaction.create(ledgerRef, {
       uid, sourceKey, delta, pointsAfter: points,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
-    result = { changed: true, points, badge: badge.slug };
+    if (dailyLimitRef) {
+      transaction.set(dailyLimitRef, {
+        uid,
+        date: new Date().toISOString().slice(0, 10),
+        count: Number(dailyActivity?.data()?.count || 0) + 1,
+        updatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+    result = { changed: true, points, badge: badge.slug, badgeName: badge.name };
   });
+  if (result.changed && delta > 0) {
+    await createNotificationBestEffort({
+      recipientUid: uid,
+      type: 'achievement_points',
+      title: 'Achievement pontot kaptál',
+      body: `+${delta} pont – Megkaptad a „${result.badgeName || 'Achievement'}” achievementet. Új összpontszám: ${result.points}.`,
+      targetType: 'achievement',
+      targetId: uid,
+      dedupeKey: `achievement-points:${ledgerId}`,
+    });
+  }
   return result;
 }
+
+exports.reconcileAchievementPoints = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin futtathatja az újraszámolást.');
+  const caller = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+  if (!isAdmin(context, caller)) throw new HttpsError('permission-denied', 'Csak admin futtathatja az újraszámolást.');
+  const dryRun = data?.dryRun !== false;
+  const [ledgerSnapshot, profileSnapshot] = await Promise.all([
+    db.collection('achievement_ledger').get(),
+    db.collection('community_profiles').get(),
+  ]);
+  const totals = new Map();
+  for (const document of ledgerSnapshot.docs) {
+    const entry = document.data() || {};
+    const uid = String(entry.uid || '').trim();
+    const delta = Number(entry.delta || 0);
+    if (!uid || !Number.isInteger(delta)) continue;
+      totals.set(uid, (totals.get(uid) || 0) + delta);
+  }
+  const badges = await getAchievementBadges();
+  const changes = [];
+  for (const profileDocument of profileSnapshot.docs) {
+    const uid = profileDocument.id;
+    const profile = profileDocument.data() || {};
+      const points = Math.max(0, totals.get(uid) || 0);
+    const badge = badges.filter((item) => points >= item.min_points)
+      .sort((a, b) => b.min_points - a.min_points)[0] || defaultAchievementBadges[0];
+    const current = Math.max(0, Number(profile.achievementPoints || 0));
+    const currentBadge = profile.achievementBadge || {};
+    if (current !== points || currentBadge.slug !== badge.slug || currentBadge.imageUrl !== (badge.image_url || '')) {
+      changes.push({ uid, from: current, to: points, badge: badge.slug });
+      if (!dryRun) await profileDocument.ref.set({
+        achievementPoints: points,
+        achievementBadge: { slug: badge.slug, name: badge.name, description: badge.description, imageUrl: badge.image_url || '' },
+        achievementUpdatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+  }
+  return { dryRun, ledgerEntries: ledgerSnapshot.size, profiles: profileSnapshot.size, changed: changes.length, changes: changes.slice(0, 100) };
+});
 
 function normalizeReferralCode(value) {
   return String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
@@ -187,7 +848,7 @@ function referralCodeForUid(uid) {
   return crypto.createHash('sha256').update(`huhs-referral:${uid}`).digest('hex').slice(0, 8).toUpperCase();
 }
 
-exports.getMyReferralCode = functions.https.onCall(async (data, context) => {
+exports.getMyReferralCode = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = String(context.auth?.uid || '').trim();
   if (!uid || context.auth?.token?.firebase?.sign_in_provider === 'anonymous') {
     throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
@@ -205,14 +866,14 @@ exports.getMyReferralCode = functions.https.onCall(async (data, context) => {
   return { code };
 });
 
-exports.claimReferralCode = functions.https.onCall(async (data, context) => {
+exports.claimReferralCode = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = String(context.auth?.uid || '').trim();
   if (!uid || context.auth?.token?.firebase?.sign_in_provider === 'anonymous') {
     throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
   }
   const code = normalizeReferralCode(data?.code);
   if (code.length < 6) throw new HttpsError('invalid-argument', 'Érvénytelen ajánlókód.');
-  const authUser = await admin.auth().getUser(uid);
+  const authUser = await auth.getUser(uid);
   const createdAt = authUser.metadata.creationTime ? new Date(authUser.metadata.creationTime) : null;
   if (!createdAt || Date.now() - createdAt.getTime() > 24 * 60 * 60 * 1000) {
     throw new HttpsError('failed-precondition', 'Ajánlókód csak új regisztrációnál használható.');
@@ -228,7 +889,7 @@ exports.claimReferralCode = functions.https.onCall(async (data, context) => {
     if (current.referredBy) return;
     transaction.set(inviteeRef, {
       referredBy: inviter.id,
-      referralClaimedAt: admin.firestore.FieldValue.serverTimestamp(),
+      referralClaimedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
   });
   return { claimed: true };
@@ -245,13 +906,13 @@ exports.awardAchievementFromReferral = onDocumentWritten({
   const result = await awardAchievementPoints(invitedBy, 50, `referral:${userId}`);
   await event.data.after.ref.update({
     referralRewardGranted: true,
-    referralRewardGrantedAt: admin.firestore.FieldValue.serverTimestamp(),
+    referralRewardGrantedAt: FieldValue.serverTimestamp(),
   });
-  console.log(JSON.stringify({ event: 'achievement_referral', inviterUid: invitedBy, invitedUid: userId, result }));
+  console.log(JSON.stringify({ event: 'achievement_referral', result }));
   return result;
 });
 
-exports.refreshAchievementBadge = functions.https.onCall(async (data, context) => {
+exports.refreshAchievementBadge = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = String(context.auth?.uid || '').trim();
   if (!uid) throw new functions.https.HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
 
@@ -278,7 +939,7 @@ exports.refreshAchievementBadge = functions.https.onCall(async (data, context) =
         current.name !== achievementBadge.name || current.description !== achievementBadge.description) {
       transaction.set(profileRef, {
         achievementBadge,
-        achievementUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        achievementUpdatedAt: FieldValue.serverTimestamp(),
       }, { merge: true });
     }
     return { achievementPoints: points, achievementBadge };
@@ -290,13 +951,8 @@ exports.refreshAchievementBadge = functions.https.onCall(async (data, context) =
 // separate from refreshAchievementBadge so viewing somebody else's profile
 // never gets access to private profile fields and does not depend on the
 // client having a freshly populated community_profiles document.
-exports.getPublicAchievement = functions.https.onCall(async (data, context) => {
-  const viewerUid = String(context.auth?.uid || '').trim();
+exports.getPublicAchievement = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const targetUid = String(data?.userId || '').trim();
-  const provider = context.auth?.token?.firebase?.sign_in_provider;
-  if (!viewerUid || provider === 'anonymous') {
-    throw new functions.https.HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
-  }
   if (!targetUid || targetUid.length > 128) {
     throw new functions.https.HttpsError('invalid-argument', 'Érvénytelen felhasználó.');
   }
@@ -306,45 +962,195 @@ exports.getPublicAchievement = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('not-found', 'A profil nem található.');
   }
   const profile = profileSnapshot.data() || {};
-  const points = Math.max(0, Number(profile.achievementPoints || 0));
   const catalog = await getAchievementBadges();
-  const stored = profile.achievementBadge && typeof profile.achievementBadge === 'object'
-    ? profile.achievementBadge : {};
-  const badge = catalog
+  const achievement = publicAchievementData(profile, catalog);
+  await persistPublicAchievementIfNeeded(profileSnapshot.ref, profile, achievement);
+  return achievement;
+});
+
+exports.getAchievementLeaderboard = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data) => {
+  const requestedSize = Number(data?.pageSize || 50);
+  const pageSize = Number.isInteger(requestedSize) ? Math.min(100, Math.max(10, requestedSize)) : 50;
+  const cursorPoints = Number(data?.cursorPoints);
+  const cursorUserId = String(data?.cursorUserId || '').trim();
+  const requestedOffset = Number(data?.offset || 0);
+  const offset = Number.isSafeInteger(requestedOffset) && requestedOffset >= 0 ? requestedOffset : 0;
+  let query = db.collection('public_profiles')
+    .orderBy('achievementPoints', 'desc')
+    .orderBy(FieldPath.documentId(), 'asc');
+  if (Number.isFinite(cursorPoints) && cursorUserId) {
+    query = query.startAfter(cursorPoints, cursorUserId);
+  }
+  const snapshot = await query.limit(pageSize + 1).get();
+  const pageDocs = snapshot.docs.slice(0, pageSize);
+  const items = pageDocs.map((document, index) => {
+    const profile = document.data() || {};
+    const badge = profile.achievementBadge && typeof profile.achievementBadge === 'object'
+      ? profile.achievementBadge : {};
+    return {
+      userId: document.id,
+      displayName: String(profile.displayName || '').trim(),
+      points: Math.max(0, Number(profile.achievementPoints || 0)),
+      badgeName: String(badge.name || 'Kezdő ütem').trim(),
+      badgeImageUrl: String(badge.imageUrl || badge.image_url || '').trim(),
+      rank: offset + index + 1,
+    };
+  });
+  const last = pageDocs.at(-1);
+  return {
+    items,
+    hasMore: snapshot.size > pageSize,
+    nextCursor: last ? {
+      points: Math.max(0, Number(last.data()?.achievementPoints || 0)),
+      userId: last.id,
+      offset: offset + pageDocs.length,
+    } : null,
+  };
+});
+
+function badgeForPoints(catalog, points) {
+  return catalog
     .filter((item) => points >= item.min_points)
     .sort((a, b) => b.min_points - a.min_points)[0] || defaultAchievementBadges[0];
+}
+
+function publicAchievementData(profile, catalog) {
+  const points = Math.max(0, Number(profile?.achievementPoints || 0));
+  const badge = badgeForPoints(catalog, points);
+  const stored = profile?.achievementBadge && typeof profile.achievementBadge === 'object'
+    ? profile.achievementBadge : {};
+  const storedImage = String(stored.imageUrl || stored.image_url || '').trim();
   return {
     achievementPoints: points,
     achievementBadge: {
       slug: badge.slug,
       name: badge.name,
       description: badge.description,
-      imageUrl: badge.image_url || String(stored.imageUrl || '').trim(),
+      // Keep an already stored image as a safe fallback if the WordPress
+      // catalog is temporarily missing the media URL, but only for the same
+      // badge. A starter image must never be attached to a higher rank.
+      imageUrl: badge.image_url || (stored.slug === badge.slug ? storedImage : ''),
     },
   };
-});
+}
 
-function publicProfileData(profile, userId) {
+async function persistPublicAchievementIfNeeded(profileRef, profile, achievement) {
+  const next = achievement.achievementBadge || {};
+  const current = profile?.achievementBadge && typeof profile.achievementBadge === 'object'
+    ? profile.achievementBadge : {};
+  if (!String(next.imageUrl || '').trim()) return;
+  if (current.slug === next.slug && current.name === next.name &&
+      current.description === next.description &&
+      String(current.imageUrl || current.image_url || '').trim() === next.imageUrl) return;
+  await profileRef.set({
+    achievementBadge: next,
+    achievementUpdatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+
+function publicProfileData(profile, userId, achievement = null) {
   const socialLinks = profile.socialLinks && typeof profile.socialLinks === 'object'
     ? Object.fromEntries(Object.entries(profile.socialLinks)
       .filter(([key, value]) => typeof key === 'string' && typeof value === 'string')
       .map(([key, value]) => [key, String(value).trim()]))
     : {};
   const numberOr = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+  const publicAchievement = achievement || {
+    achievementPoints: Math.max(0, numberOr(profile.achievementPoints, 0)),
+    achievementBadge: profile.achievementBadge && typeof profile.achievementBadge === 'object'
+      ? profile.achievementBadge : {},
+  };
+  const achievementBadge = publicAchievement.achievementBadge || {};
+  // The badge artwork may change without changing the rest of the profile.
+  // Always use the newest profile/achievement timestamp for the public image
+  // cache key; using `updatedAt` first could otherwise keep an old badge URL
+  // forever when `achievementUpdatedAt` was newer.
+  const versionCandidates = [
+    profile.updatedAt,
+    profile.achievementUpdatedAt,
+  ].map((value) => {
+    if (value?.toMillis instanceof Function) return value.toMillis();
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : 0;
+  });
+  const profileVersion = String(Math.max(...versionCandidates, 0));
+  const badgeImageUrl = String(
+    achievementBadge.imageUrl || achievementBadge.image_url || '',
+  ).trim();
+  const profileImageUrl = [
+    profile.profileSourceImageUrl,
+    profile.profileImageUrl,
+    // Keep older profile records visible while they are migrated.
+    profile.imageUrl,
+    profile.photoURL,
+    profile.photoUrl,
+  ].find((value) => typeof value === 'string' && value.trim().length > 0) || '';
   return {
     userId,
-    displayName: String(profile.displayName || '').trim(),
+    displayName: String(profile.displayName || '').trim() || `HUHS user ${Number(profile.huhsUserNumber) || ''}`.trim(),
     role: String(profile.role || 'partygoer').trim(),
     accessRole: ['admin', 'moderator'].includes(profile.accessRole) ? profile.accessRole : 'none',
     bio: String(profile.bio || '').trim(),
-    profileImageUrl: String(profile.profileImageUrl || '').trim(),
+    profileImageUrl: String(profileImageUrl).trim(),
     profileFocusX: numberOr(profile.profileFocusX, 50),
     profileFocusY: numberOr(profile.profileFocusY, 25),
     profileZoom: numberOr(profile.profileZoom, 1),
     profilePanX: numberOr(profile.profilePanX, 0),
     profilePanY: numberOr(profile.profilePanY, 0),
+    // A public projection uses this value to invalidate image caches without
+    // reducing image quality or exposing private profile fields.
+    profileVersion,
     socialLinks,
+    // Include the already materialized public achievement state so profile
+    // and chat can render it with the same callable response.
+    achievementPoints: Math.max(0, numberOr(publicAchievement.achievementPoints, 0)),
+    achievementBadge: {
+      slug: String(achievementBadge.slug || '').trim(),
+      name: String(achievementBadge.name || '').trim(),
+      description: String(achievementBadge.description || '').trim(),
+      // Make a changed badge design a new cache key without resizing or
+      // reducing the original image quality.
+      imageUrl: versionBadgeImageUrl(badgeImageUrl, profileVersion),
+    },
   };
+}
+
+function isUnnumberedPlaceholderDisplayName(value) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return !normalized || /^(?:hun hs|hs hu|hu hs|huhs user)$/.test(normalized);
+}
+
+async function ensureHuhsUserNumber(userId) {
+  const profileRef = db.collection('community_profiles').doc(userId);
+  const counterRef = db.collection('app_settings').doc('huhs_user_number_counter');
+  let assignedNumber = 0;
+  await db.runTransaction(async (transaction) => {
+    const [profileSnapshot, counterSnapshot] = await Promise.all([
+      transaction.get(profileRef),
+      transaction.get(counterRef),
+    ]);
+    const profile = profileSnapshot.data() || {};
+    if (!profileSnapshot.exists) return;
+    const existing = Number(profile.huhsUserNumber || 0);
+    const currentName = String(profile.displayName || '').trim();
+    if (Number.isInteger(existing) && existing >= 1000 && !isUnnumberedPlaceholderDisplayName(currentName)) {
+      assignedNumber = existing;
+      return;
+    }
+    const next = Number.isInteger(existing) && existing >= 1000
+      ? existing
+      : Math.max(1000, Number(counterSnapshot.data()?.nextNumber || 1000));
+    assignedNumber = next;
+    transaction.set(profileRef, {
+      huhsUserNumber: next,
+      displayName: `HUHS user ${next}`,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    if (!(Number.isInteger(existing) && existing >= 1000)) {
+      transaction.set(counterRef, { nextNumber: next + 1 }, { merge: true });
+    }
+  });
+  return assignedNumber;
 }
 
 function requireRegisteredViewer(context) {
@@ -355,11 +1161,281 @@ function requireRegisteredViewer(context) {
   return String(context.auth.uid).trim();
 }
 
+function normalizeDisplayName(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('hu-HU');
+}
+
+function displayNameKey(value) {
+  return crypto.createHash('sha256').update(normalizeDisplayName(value)).digest('hex');
+}
+
+// Reserves a display name atomically so two users cannot claim the same name
+// during concurrent registration or profile saves.
+exports.claimDisplayName = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = requireRegisteredViewer(context);
+  if ((await db.collection('deleted_user_ids').doc(uid).get()).exists) {
+    throw new functions.https.HttpsError('permission-denied', 'A korábbi fiók törölve lett. Regisztrálj új fiókot.');
+  }
+  const displayName = String(data?.displayName || '').trim().replace(/\s+/g, ' ');
+  if (displayName.length < 2 || displayName.length > 40) {
+    console.warn(JSON.stringify({ event: 'claim_display_name_rejected', step: 'validate', errorCode: 'invalid-argument', reason: 'length', length: displayName.length }));
+    throw new functions.https.HttpsError('invalid-argument', 'A név 2–40 karakter hosszú legyen.');
+  }
+  if (!/^[\p{L}\p{N}][\p{L}\p{N} ._'-]*$/u.test(displayName) ||
+      /(?:kurva|fasz|geci|buzi|cigány|nigger)/iu.test(displayName)) {
+    console.warn(JSON.stringify({ event: 'claim_display_name_rejected', step: 'validate', errorCode: 'invalid-argument', reason: 'format' }));
+    throw new functions.https.HttpsError('invalid-argument', 'Ez a felhasználónév nem használható.');
+  }
+  const key = displayNameKey(displayName);
+  const indexRef = db.collection('display_name_index').doc(key);
+  const profileRef = db.collection('community_profiles').doc(uid);
+  try {
+    await db.runTransaction(async (transaction) => {
+    const [indexSnapshot, profileSnapshot] = await Promise.all([
+      transaction.get(indexRef),
+      transaction.get(profileRef),
+    ]);
+    const ownerUid = String(indexSnapshot.data()?.uid || '').trim();
+    if (ownerUid && ownerUid !== uid) {
+      throw new functions.https.HttpsError('already-exists', 'display-name-already-in-use');
+    }
+    const oldName = String(profileSnapshot.data()?.displayName || '').trim();
+    const oldPlaceholder = isUnnumberedPlaceholderDisplayName(oldName) || /^HUHS user \d+$/i.test(oldName);
+    const isOwnerAdmin = String(context.auth?.token?.email || '').trim().toLowerCase() === ADMIN_EMAIL;
+    const currentYear = new Date().getUTCFullYear();
+    const storedChangeCount = Math.max(0, Number(profileSnapshot.data()?.usernameChangeCount || 0));
+    const changeYear = Number(profileSnapshot.data()?.usernameChangeYear || (storedChangeCount > 0 ? currentYear : 0));
+    const changeCount = changeYear === currentYear ? storedChangeCount : 0;
+    if (!isOwnerAdmin && oldName && !oldPlaceholder && normalizeDisplayName(oldName) !== normalizeDisplayName(displayName) && changeCount >= 1) {
+      throw new functions.https.HttpsError('failed-precondition', 'A felhasználónevet évente egyszer lehet módosítani.');
+    }
+    const oldKey = oldName ? displayNameKey(oldName) : '';
+    const oldIndexSnapshot = oldKey && oldKey !== key
+      ? await transaction.get(db.collection('display_name_index').doc(oldKey))
+      : null;
+    transaction.set(indexRef, {
+      uid,
+      displayName,
+      normalizedName: normalizeDisplayName(displayName),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    if (oldIndexSnapshot && String(oldIndexSnapshot.data()?.uid || '').trim() === uid) {
+      transaction.delete(db.collection('display_name_index').doc(oldKey));
+    }
+    transaction.set(profileRef, {
+      displayName,
+      usernameChangeCount: isOwnerAdmin ? 0 : (oldName && !oldPlaceholder && normalizeDisplayName(oldName) !== normalizeDisplayName(displayName)
+        ? changeCount + 1 : changeCount),
+      ...(isOwnerAdmin ? { usernameChangeYear: FieldValue.delete() } : (oldName && !oldPlaceholder && normalizeDisplayName(oldName) !== normalizeDisplayName(displayName)
+        ? { usernameChangeYear: currentYear } : {})),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    });
+  } catch (error) {
+    console.error(JSON.stringify({
+      event: 'claim_display_name_failed',
+      step: 'transaction',
+      errorCode: error?.code || 'unknown',
+    }));
+    throw error;
+  }
+  return { displayName };
+});
+
+exports.toggleChatReaction = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = String(context.auth?.uid || '').trim();
+  const postId = String(data?.postId || '').trim();
+  const emoji = String(data?.emoji || '').trim();
+  const allowedReactions = new Set(['❤️', '🔥', '🙌']);
+  if (!uid) throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+  if (!/^[a-zA-Z0-9_-]{1,128}$/.test(postId) || !allowedReactions.has(emoji)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen reakció.');
+  }
+  if (!await allowCall(uid, 'chat_reaction', 60)) {
+    throw new HttpsError('resource-exhausted', 'Túl sok reakció, próbáld később.');
+  }
+  const postRef = db.collection('live_feed_posts').doc(postId);
+  let selected = '';
+  await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(postRef);
+    if (!snapshot.exists) throw new HttpsError('not-found', 'A bejegyzés nem található.');
+    const current = snapshot.data() || {};
+    const source = current.reactionBy && typeof current.reactionBy === 'object'
+      ? current.reactionBy
+      : {};
+    const reactionBy = {};
+    for (const [userId, value] of Object.entries(source)) {
+      if (typeof userId === 'string' && userId.length <= 128 && allowedReactions.has(value)) {
+        reactionBy[userId] = value;
+      }
+    }
+    if (reactionBy[uid] === emoji) delete reactionBy[uid];
+    else reactionBy[uid] = emoji;
+    selected = reactionBy[uid] || '';
+    const reactions = {};
+    for (const value of Object.values(reactionBy)) reactions[value] = Number(reactions[value] || 0) + 1;
+    transaction.update(postRef, { reactions, reactionBy });
+  });
+  return { selected };
+});
+
+exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = String(context.auth?.uid || '').trim();
+  if (!uid) throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+  if (!await allowCall(uid, 'chat_post', 20)) {
+    throw new HttpsError('resource-exhausted', 'Túl sok üzenet, próbáld később.');
+  }
+  if ((await db.collection('community_bans').doc(uid).get()).exists) {
+    throw new HttpsError('permission-denied', 'Jelenleg nem írhatsz a Chatbe.');
+  }
+  const text = typeof data?.text === 'string' ? data.text.trim() : '';
+  const imageUrl = typeof data?.imageUrl === 'string' ? data.imageUrl.trim() : '';
+  const imagePublicId = typeof data?.imagePublicId === 'string' ? data.imagePublicId.trim() : '';
+  const isAnonymous = context.auth.token.firebase?.sign_in_provider === 'anonymous';
+  if ((!text && !imageUrl) || text.length > 2000) {
+    throw new HttpsError('invalid-argument', 'Az üzenet nem lehet üres vagy túl hosszú.');
+  }
+  if (isAnonymous && imageUrl) {
+    throw new HttpsError('permission-denied', 'Névtelen felhasználó nem tölthet fel képet.');
+  }
+  if (imageUrl && !/^https:\/\/res\.cloudinary\.com\/fjxo93em\/image\/upload\/.+/.test(imageUrl)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen képforrás.');
+  }
+  if (imagePublicId && !imagePublicId.startsWith(`huhs_users/${uid}/`)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen képazonosító.');
+  }
+  const profile = (await db.collection('community_profiles').doc(uid).get()).data() || {};
+  const admin = isAdmin(context, profile);
+  const displayName = isAnonymous
+    ? `Unknown User ${uid.slice(-4)}`
+    : String(profile.displayName || `HUHS user ${profile.huhsUserNumber || ''}`).trim() || 'HUHS user';
+  const role = isAnonymous ? '' : normalizedAccountRole(profile.role);
+  const accessRole = isAnonymous ? '' : normalizedAccessRole(profile.accessRole);
+  const profileImage = String(profile.profileImageUrl || profile.profileSourceImageUrl || '').trim();
+  const authorImageUrl = /^https:\/\/res\.cloudinary\.com\/fjxo93em\/image\/upload\/.+/.test(profileImage)
+    ? profileImage : '';
+  const ref = db.collection('live_feed_posts').doc();
+  await ref.set({
+    authorId: uid,
+    authorName: displayName,
+    authorImageUrl: isAnonymous ? '' : authorImageUrl,
+    authorRole: role,
+    authorAccessRole: accessRole,
+    isAnonymous,
+    text,
+    imageUrl,
+    ...(imagePublicId ? { imagePublicId } : {}),
+    reactions: {},
+    reactionBy: {},
+    pinned: admin && data?.pinned === true,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  return { id: ref.id };
+});
+
+exports.manageConnection = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = requireRegisteredViewer(context);
+  const action = String(data?.action || '').trim();
+  const otherUid = String(data?.otherUid || '').trim();
+  if (!['request', 'respond', 'remove', 'prune'].includes(action)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen ismerős-művelet.');
+  }
+  if (action !== 'prune' && (!otherUid || otherUid === uid || otherUid.length > 128)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen felhasználó.');
+  }
+  if (!await allowCall(uid, `connection_${action}`, action === 'prune' ? 5 : 30)) {
+    throw new HttpsError('resource-exhausted', 'Túl sok ismerős-művelet, próbáld később.');
+  }
+
+  if (action === 'prune') {
+    const connections = await db.collection('community_profiles').doc(uid).collection('connections').get();
+    const stale = [];
+    for (const connection of connections.docs) {
+      if (!(await db.collection('community_profiles').doc(connection.id).get()).exists) stale.push(connection.ref);
+    }
+    for (let offset = 0; offset < stale.length; offset += 400) {
+      const batch = db.batch();
+      stale.slice(offset, offset + 400).forEach((reference) => batch.delete(reference));
+      await batch.commit();
+    }
+    return { removed: stale.length };
+  }
+
+  const ownConnection = db.collection('community_profiles').doc(uid).collection('connections').doc(otherUid);
+  const otherConnection = db.collection('community_profiles').doc(otherUid).collection('connections').doc(uid);
+  const outgoingRequest = db.collection('connection_requests').doc(`${uid}_${otherUid}`);
+  const incomingRequest = db.collection('connection_requests').doc(`${otherUid}_${uid}`);
+
+  if (action === 'remove') {
+    const batch = db.batch();
+    batch.delete(ownConnection);
+    batch.delete(otherConnection);
+    batch.delete(outgoingRequest);
+    batch.delete(incomingRequest);
+    await batch.commit();
+    return { status: 'removed' };
+  }
+
+  if (action === 'request') {
+    const [target, own, reverse, blockedByMe, blockedByOther] = await Promise.all([
+      db.collection('community_profiles').doc(otherUid).get(),
+      ownConnection.get(),
+      otherConnection.get(),
+      db.collection('community_profiles').doc(uid).collection('blocked_users').doc(otherUid).get(),
+      db.collection('community_profiles').doc(otherUid).collection('blocked_users').doc(uid).get(),
+    ]);
+    if (!target.exists) throw new HttpsError('not-found', 'A felhasználó nem található.');
+    if (blockedByMe.exists || blockedByOther.exists) throw new HttpsError('permission-denied', 'Az ismerős-jelölés nem elérhető.');
+    if (own.exists || reverse.exists) return { status: 'accepted' };
+    const existing = await outgoingRequest.get();
+    if (existing.data()?.status === 'pending') {
+      await outgoingRequest.update({ notificationRequestedAt: FieldValue.serverTimestamp() });
+      return { status: 'pending' };
+    }
+    const profile = (await db.collection('community_profiles').doc(uid).get()).data() || {};
+    await outgoingRequest.set({
+      from: uid,
+      to: otherUid,
+      fromName: String(profile.displayName || context.auth.token.name || 'Felhasználó').trim(),
+      fromImageUrl: String(profile.profileImageUrl || '').trim(),
+      status: 'pending',
+      createdAt: FieldValue.serverTimestamp(),
+      notificationRequestedAt: FieldValue.serverTimestamp(),
+    });
+    return { status: 'pending' };
+  }
+
+  const accept = data?.accept === true;
+  const request = await incomingRequest.get();
+  const requestData = request.data() || {};
+  if (!request.exists || requestData.from !== otherUid || requestData.to !== uid || requestData.status !== 'pending') {
+    throw new HttpsError('failed-precondition', 'Az ismerős-kérés már nem érhető el.');
+  }
+  const batch = db.batch();
+  batch.update(incomingRequest, { status: accept ? 'accepted' : 'rejected', updatedAt: FieldValue.serverTimestamp() });
+  if (accept) {
+    const targetProfile = (await db.collection('community_profiles').doc(uid).get()).data() || {};
+    batch.set(ownConnection, {
+      userId: otherUid,
+      displayName: String(requestData.fromName || ''),
+      imageUrl: String(requestData.fromImageUrl || ''),
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    batch.set(otherConnection, {
+      userId: uid,
+      displayName: String(targetProfile.displayName || context.auth.token.name || ''),
+      imageUrl: String(targetProfile.profileImageUrl || ''),
+      createdAt: FieldValue.serverTimestamp(),
+    });
+  }
+  await batch.commit();
+  return { status: accept ? 'accepted' : 'rejected' };
+});
+
 // Public profile fields are deliberately projected server-side.  Do not
 // return the source community_profiles document: it contains private email
 // and push-token data needed by account and notification code.
-exports.getPublicProfile = functions.https.onCall(async (data, context) => {
-  requireRegisteredViewer(context);
+exports.getPublicProfile = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const targetUid = String(data?.userId || '').trim();
   if (!targetUid || targetUid.length > 128) {
     throw new functions.https.HttpsError('invalid-argument', 'Érvénytelen felhasználó.');
@@ -368,14 +1444,133 @@ exports.getPublicProfile = functions.https.onCall(async (data, context) => {
   if (!snapshot.exists) {
     throw new functions.https.HttpsError('not-found', 'A profil nem található.');
   }
-  return publicProfileData(snapshot.data() || {}, targetUid);
+  let profile = snapshot.data() || {};
+  if (isUnnumberedPlaceholderDisplayName(profile.displayName)) {
+    profile = { ...profile, huhsUserNumber: await ensureHuhsUserNumber(targetUid) };
+  }
+  // This is the fallback when the realtime public projection has not arrived
+  // yet. Keep it Firebase-only: waiting for the WordPress badge catalog here
+  // made opening a profile or a private message needlessly slow.
+  const result = publicProfileData(profile, targetUid);
+  await persistPublicProfileProjection(targetUid, result);
+  return result;
 });
 
-exports.getPublicProfiles = functions.https.onCall(async (data, context) => {
+async function persistPublicProfileProjection(userId, data) {
+  if (!userId || !data || typeof data !== 'object') return;
+  await db.collection('public_profiles').doc(userId).set(data, { merge: true });
+}
+
+async function commitReferenceUpdates(references, data) {
+  for (let offset = 0; offset < references.length; offset += 400) {
+    const batch = db.batch();
+    references.slice(offset, offset + 400).forEach((reference) =>
+      batch.set(reference, data, { merge: true }));
+    await batch.commit();
+  }
+}
+
+async function syncDenormalizedProfileReferences(userId, publicData) {
+  const displayName = String(publicData.displayName || '').trim();
+  const imageUrl = String(publicData.profileImageUrl || '').trim();
+  const [posts, meetups, ownConnections, conversations, comments] = await Promise.all([
+    db.collection('live_feed_posts').where('authorId', '==', userId).get(),
+    db.collectionGroup('users').where('userId', '==', userId).get(),
+    db.collection('community_profiles').doc(userId).collection('connections').get(),
+    db.collection('private_conversations').where('participantIds', 'array-contains', userId).get(),
+    db.collectionGroup('comments').where('authorId', '==', userId).get(),
+  ]);
+  await Promise.all([
+    commitReferenceUpdates(posts.docs.map((doc) => doc.ref), { authorName: displayName, authorImageUrl: imageUrl }),
+    commitReferenceUpdates(meetups.docs
+      .filter((doc) => doc.ref.path.startsWith('event_meetups/'))
+      .map((doc) => doc.ref), { displayName, imageUrl }),
+    commitReferenceUpdates(ownConnections.docs.map((doc) =>
+      db.collection('community_profiles').doc(doc.id).collection('connections').doc(userId)), {
+      displayName,
+      imageUrl,
+    }),
+    commitReferenceUpdates(comments.docs
+      .filter((doc) => doc.ref.path.startsWith('article_comments/'))
+      .map((doc) => doc.ref), { authorName: displayName, imageUrl }),
+  ]);
+  for (const conversation of conversations.docs) {
+    const value = conversation.data() || {};
+    await conversation.ref.set({
+      participantNames: { ...(value.participantNames || {}), [userId]: displayName },
+      participantImages: { ...(value.participantImages || {}), [userId]: imageUrl },
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+  }
+}
+
+// Keep a public-only, realtime-friendly projection in Firestore. Chat and
+// profile surfaces can read this document directly without touching the
+// WordPress API or the private community_profiles document.
+exports.syncPublicProfileProjection = onDocumentWritten({
+  document: 'community_profiles/{userId}', database: 'hungarian-hardstyle', region: 'europe-central2',
+}, async (event) => {
+  const after = event.data?.after;
+  const uid = String(event.params.userId || '').trim();
+  if (!uid) return null;
+  if ((await db.collection('deleted_user_ids').doc(uid).get()).exists) {
+    if (after?.exists) await db.recursiveDelete(after.ref);
+    await db.collection('public_profiles').doc(uid).delete();
+    return null;
+  }
+  if (!after?.exists) {
+    await db.collection('public_profiles').doc(uid).delete();
+    return null;
+  }
+  const profile = after.data() || {};
+  if (isUnnumberedPlaceholderDisplayName(profile.displayName)) {
+    await ensureHuhsUserNumber(uid);
+    return null;
+  }
+  const publicData = publicProfileData(profile, uid);
+  await persistPublicProfileProjection(uid, publicData);
+  const before = event.data?.before?.data() || {};
+  const beforePublic = publicProfileData(before, uid);
+  if (beforePublic.displayName !== publicData.displayName ||
+      beforePublic.profileImageUrl !== publicData.profileImageUrl) {
+    await syncDenormalizedProfileReferences(uid, publicData);
+  }
+  return null;
+});
+
+exports.repairCommunityProfileProjections = onSchedule({
+  schedule: 'every day 03:00',
+  timeZone: 'Europe/Budapest',
+  region: 'europe-central2',
+}, async () => {
+  const snapshot = await db.collection('community_profiles').get();
+  let repaired = 0;
+  for (const document of snapshot.docs) {
+    const profile = document.data() || {};
+    if (isUnnumberedPlaceholderDisplayName(profile.displayName)) {
+      await ensureHuhsUserNumber(document.id);
+      repaired++;
+      continue;
+    }
+    const publicData = publicProfileData(profile, document.id);
+    await persistPublicProfileProjection(document.id, publicData);
+    await syncDenormalizedProfileReferences(document.id, publicData);
+  }
+  console.info('community_profile_projection_repair', { profiles: snapshot.size, repaired });
+});
+
+exports.getPublicProfiles = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   requireRegisteredViewer(context);
-  const snapshot = await db.collection('community_profiles').limit(200).get();
+  // The callable is used by the private-message user picker. Read the
+  // already-denormalized public projection instead of downloading every
+  // private profile (including email and moderation fields) and recalculating
+  // badges one document at a time.
+  const snapshot = await db.collection('public_profiles').get();
+  const profiles = snapshot.docs
+    .map((doc) => ({ ...doc.data(), userId: doc.id }))
+    .filter((profile) => !isUnnumberedPlaceholderDisplayName(profile.displayName));
   return {
-    profiles: snapshot.docs.map((doc) => publicProfileData(doc.data() || {}, doc.id)),
+    profiles,
   };
 });
 
@@ -402,7 +1597,7 @@ exports.awardAchievementFromAttendance = onDocumentWritten({
   const afterAttending = after.state === 'attending';
   if (beforeAttending === afterAttending) return null;
   const result = await awardAchievementPoints(uid, afterAttending ? 10 : -10, `attendance:${eventId}`);
-  console.log(JSON.stringify({ event: 'achievement_attendance', uid, eventId, result }));
+  console.log(JSON.stringify({ event: 'achievement_attendance', eventId, result }));
   return result;
 });
 
@@ -451,6 +1646,106 @@ exports.awardAchievementFromNewsReaction = onDocumentWritten({
   return results;
 });
 
+exports.rateEvent = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid || context.auth.token.firebase.sign_in_provider === 'anonymous') {
+    throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+  }
+  const eventId = Number(data?.eventId);
+  const score = Number(data?.score);
+  if (!Number.isInteger(eventId) || eventId < 1 || !Number.isInteger(score) || score < 1 || score > 5) {
+    throw new HttpsError('invalid-argument', 'Érvényes esemény és 1–5 közötti értékelés szükséges.');
+  }
+  const validEvents = await getValidEventIds();
+  if (!validEvents || validEvents.has(eventId)) {
+    throw new HttpsError('failed-precondition', 'Az esemény még nem értékelhető.');
+  }
+  const attendance = await db.collection('event_attendance').doc(String(eventId)).collection('users').doc(uid).get();
+  if (attendance.data()?.state !== 'attending') {
+    throw new HttpsError('failed-precondition', 'Csak a részvételüket jelző felhasználók értékelhetik az eseményt.');
+  }
+  const ref = db.collection('event_ratings').doc(String(eventId)).collection('users').doc(uid);
+  const existing = await ref.get();
+  if (existing.exists) {
+    throw new HttpsError('already-exists', 'Ezt az eseményt már értékelted.');
+  }
+  await ref.create({ eventId, userId: uid, score, createdAt: FieldValue.serverTimestamp() });
+  return { saved: true, score };
+});
+
+exports.setEventAttendance = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid || context.auth.token.firebase.sign_in_provider === 'anonymous') {
+    throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+  }
+  const eventId = Number(data?.eventId);
+  const state = String(data?.state || '').trim();
+  const title = String(data?.title || '').trim().slice(0, 300);
+  if (!Number.isInteger(eventId) || eventId < 1 || !['attending', 'not_attending'].includes(state)) {
+    throw new HttpsError('invalid-argument', 'Érvényes esemény és részvételi állapot szükséges.');
+  }
+  const validEvents = await getValidEventIds();
+  if (!validEvents || !validEvents.has(eventId)) {
+    throw new HttpsError('failed-precondition', 'Lejárt eseményen már nem módosítható a részvétel.');
+  }
+  const attendanceRef = db.collection('event_attendance').doc(String(eventId)).collection('users').doc(uid);
+  const plannedRef = db.collection('community_profiles').doc(uid).collection('planned_events').doc(String(eventId));
+  const attendanceData = { eventId, state, updatedAt: FieldValue.serverTimestamp() };
+  await db.runTransaction(async (transaction) => {
+    transaction.set(attendanceRef, attendanceData, { merge: true });
+    if (state === 'attending') {
+      transaction.set(plannedRef, {
+        eventId, ...(title ? { title } : {}), state, updatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } else {
+      transaction.delete(plannedRef);
+    }
+  });
+  return { saved: true, state };
+});
+
+exports.awardAchievementFromEventRating = onDocumentWritten({
+  document: 'event_ratings/{eventId}/users/{userId}', database: 'hungarian-hardstyle', region: 'europe-central2',
+}, async (event) => {
+  if (event.data?.before?.exists || !event.data?.after?.exists) return null;
+  const eventId = String(event.params.eventId || '').trim();
+  const uid = String(event.params.userId || '').trim();
+  return awardAchievementPoints(uid, 10, `event-rating:${eventId}`);
+});
+
+exports.togglePrivateMessageReaction = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid || context.auth.token.firebase.sign_in_provider === 'anonymous') {
+    throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+  }
+  const conversationId = String(data?.conversationId || '').trim();
+  const messageId = String(data?.messageId || '').trim();
+  if (!conversationId || !messageId) throw new HttpsError('invalid-argument', 'Érvényes üzenet szükséges.');
+  const conversationRef = db.collection('private_conversations').doc(conversationId);
+  const messageRef = conversationRef.collection('messages').doc(messageId);
+  let liked = false;
+  await db.runTransaction(async (transaction) => {
+    const conversation = await transaction.get(conversationRef);
+    const message = await transaction.get(messageRef);
+    const participants = conversation.data()?.participantIds || [];
+    if (!conversation.exists || !message.exists || !participants.includes(uid)) {
+      throw new HttpsError('permission-denied', 'Az üzenet nem érhető el.');
+    }
+    const reactionBy = { ...(message.data()?.reactionBy || {}) };
+    const reactions = { ...(message.data()?.reactions || {}) };
+    liked = reactionBy[uid] === '❤️';
+    if (liked) {
+      delete reactionBy[uid];
+      reactions['❤️'] = Math.max(0, Number(reactions['❤️'] || 1) - 1);
+    } else {
+      reactionBy[uid] = '❤️';
+      reactions['❤️'] = Number(reactions['❤️'] || 0) + 1;
+    }
+    transaction.update(messageRef, { reactions, reactionBy });
+  });
+  return { liked: !liked };
+});
+
 exports.awardAchievementFromProfile = onDocumentWritten({
   document: 'community_profiles/{userId}', database: 'hungarian-hardstyle', region: 'europe-central2',
 }, async (event) => {
@@ -461,9 +1756,9 @@ exports.awardAchievementFromProfile = onDocumentWritten({
   const profileEmail = String(profile.email || '').trim().toLowerCase();
   let authEmail = '';
   try {
-    authEmail = String((await admin.auth().getUser(uid)).email || '').trim().toLowerCase();
+    authEmail = String((await auth.getUser(uid)).email || '').trim().toLowerCase();
   } catch (error) {
-    console.warn(JSON.stringify({ event: 'profile_achievement_auth_lookup_failed', uid: uid.slice(0, 8), message: error?.message || String(error) }));
+    console.warn(JSON.stringify({ event: 'profile_achievement_auth_lookup_failed', message: error?.message || String(error) }));
     return null;
   }
   const complete = String(profile.displayName || '').trim()
@@ -475,12 +1770,33 @@ exports.awardAchievementFromProfile = onDocumentWritten({
   return awardAchievementPoints(uid, 30, 'profile-complete');
 });
 
+// Backfill the one-time profile-completion reward for profiles created before
+// the trigger existed. The ledger key makes repeated app starts harmless.
+exports.claimProfileCompletionAchievement = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = requireRegisteredViewer(context);
+  const profile = (await db.collection('community_profiles').doc(uid).get()).data() || {};
+  const profileEmail = String(profile.email || '').trim().toLowerCase();
+  let authEmail = '';
+  try {
+    authEmail = String((await auth.getUser(uid)).email || '').trim().toLowerCase();
+  } catch (_) {
+    throw new HttpsError('failed-precondition', 'A profil ellenőrzése nem sikerült.');
+  }
+  const complete = String(profile.displayName || '').trim()
+    && String(profile.bio || '').trim()
+    && profileEmail
+    && authEmail
+    && profileEmail === authEmail;
+  if (!complete) return { awarded: false };
+  const result = await awardAchievementPoints(uid, 30, 'profile-complete');
+  return { awarded: result.changed === true, points: 30 };
+});
+
 function securityLog(event, context) {
-  const uid = String(context.auth?.uid || 'anonymous');
-  console.warn(JSON.stringify({ event, uid: uid.slice(0, 8) }));
+  console.warn(JSON.stringify({ event, result: 'recorded' }));
 }
 
-exports.toggleNewsReaction = functions.https.onCall(async (data, context) => {
+exports.toggleNewsReaction = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = context.auth?.uid;
   if (!uid) throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
 
@@ -538,6 +1854,7 @@ async function sendMulticastToAllTokens(message, tokens) {
     ...message,
     android: {
       ...(message.android || {}),
+      priority: 'high',
       notification: {
         ...(message.android?.notification || {}),
         icon: 'ic_stat_huhs',
@@ -572,10 +1889,10 @@ async function getPushTokens(uid) {
 }
 
 // Backend-only durable inbox entries. The hash makes retries idempotent.
-async function createNotification({ recipientUid, type, title, body, targetType, targetId, dedupeKey }) {
+async function createNotification({ recipientUid, type, title, body, targetType, targetId, dedupeKey, senderId }) {
   const recipient = String(recipientUid || '').trim();
   const key = String(dedupeKey || '').trim();
-  if (!recipient || !key) return;
+  if (!recipient || !key) return false;
   const notificationId = crypto.createHash('sha256').update(key).digest('hex');
   try {
     await db.collection('notifications').doc(notificationId).create({
@@ -585,17 +1902,20 @@ async function createNotification({ recipientUid, type, title, body, targetType,
       body: String(body || '').trim().slice(0, 500),
       targetType: String(targetType || '').trim(),
       targetId: String(targetId || '').trim(),
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      senderId: String(senderId || '').trim().slice(0, 128),
+      createdAt: FieldValue.serverTimestamp(),
       readAt: null,
     });
+    return true;
   } catch (error) {
-    if (error?.code !== 6 && error?.code !== 'already-exists') throw error;
+    if (error?.code === 6 || error?.code === 'already-exists') return false;
+    throw error;
   }
 }
 
 async function createNotificationBestEffort(payload) {
   try {
-    await createNotification(payload);
+    return await createNotification(payload);
   } catch (error) {
     console.warn(JSON.stringify({
       event: 'notification_write_failed',
@@ -603,8 +1923,74 @@ async function createNotificationBestEffort(payload) {
       recipientUid: String(payload?.recipientUid || '').slice(0, 8),
       message: error?.message || String(error),
     }));
+    return false;
   }
 }
+
+async function notifyUsersToRateCompletedEvents() {
+  const response = await fetch(`${WORDPRESS_BASE_URL}/events?include_past=true`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) throw new Error(`WordPress eseménylista: HTTP ${response.status}`);
+  const body = await response.json();
+  const events = Array.isArray(body) ? body : Array.isArray(body?.items) ? body.items : [];
+  const now = Date.now();
+  let created = 0;
+  let pushed = 0;
+
+  for (const item of events) {
+    const eventId = Number(item?.id);
+    const expiry = eventExpiryTimestamp(item);
+    if (!Number.isInteger(eventId) || !Number.isFinite(expiry) || expiry >= now) continue;
+    const eventTitle = String(item?.title?.rendered || item?.title || item?.name || 'Az esemény').trim();
+    const attendance = await db.collection('event_attendance').doc(String(eventId)).collection('users').get();
+    for (const attendanceDoc of attendance.docs) {
+      if (attendanceDoc.data()?.state !== 'attending') continue;
+      const uid = attendanceDoc.id;
+      const rating = await db.collection('event_ratings').doc(String(eventId)).collection('users').doc(uid).get();
+      if (rating.exists) continue;
+      const dedupeKey = `event-rating-request:${eventId}:${uid}`;
+      const notificationCreated = await createNotificationBestEffort({
+        recipientUid: uid,
+        type: 'event_rating_request',
+        title: 'Értékeld az eseményt',
+        body: `${eventTitle} véget ért. Értékeld az eseményt az appban.`,
+        targetType: 'event',
+        targetId: String(eventId),
+        dedupeKey,
+      });
+      if (!notificationCreated) continue;
+      created += 1;
+      const tokens = await getPushTokens(uid);
+      if (!tokens.length) continue;
+      const result = await sendMulticastToAllTokens({
+        notification: {
+          title: 'Értékeld az eseményt',
+          body: `${eventTitle} véget ért. Értékeld az eseményt az appban.`,
+        },
+        data: { type: 'event_rating_request', eventId: String(eventId) },
+      }, tokens);
+      pushed += result.successCount;
+    }
+  }
+  return { created, pushed };
+}
+
+exports.notifyUsersToRateCompletedEvents = onSchedule({
+  schedule: 'every 5 minutes',
+  timeZone: 'Europe/Budapest',
+  region: 'europe-central2',
+}, async () => {
+  try {
+    const result = await notifyUsersToRateCompletedEvents();
+    console.info('event_rating_notifications', result);
+  } catch (error) {
+    console.warn(JSON.stringify({
+      event: 'event_rating_notifications_failed',
+      message: error?.message || String(error),
+    }));
+  }
+});
 
 // WordPress content is managed outside Firestore, so there is no Firestore
 // create trigger to generate inbox entries. Poll only the public lightweight
@@ -642,7 +2028,7 @@ async function pollWordPressContentNotifications() {
     }
   }
 
-  await stateRef.set({ ids: current, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  await stateRef.set({ ids: current, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
   if (!newlyPublished.length) return { baseline: !stateSnapshot.exists, created: 0 };
 
   const profiles = await db.collection('community_profiles').select().get();
@@ -685,12 +2071,12 @@ exports.pollWordPressContentNotifications = onSchedule({
 async function removePushTokens(uid, tokens) {
   if (!tokens.length) return;
   await db.collection('private_user_data').doc(uid).set({
-    fcmTokens: admin.firestore.FieldValue.arrayRemove(...tokens),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    fcmTokens: FieldValue.arrayRemove(...tokens),
+    updatedAt: FieldValue.serverTimestamp(),
   }, { merge: true });
   // Keep legacy cleanup for tokens written by older app versions.
   await db.collection('community_profiles').doc(uid).update({
-    fcmTokens: admin.firestore.FieldValue.arrayRemove(...tokens),
+    fcmTokens: FieldValue.arrayRemove(...tokens),
   }).catch(() => {});
 }
 
@@ -758,7 +2144,7 @@ exports.submitWordPressContent = wordPressCall(
         return;
       }
       transaction.create(requestRef, {
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
         kind: data.kind,
       });
     });
@@ -790,7 +2176,7 @@ exports.submitWordPressContent = wordPressCall(
       await requestRef.delete().catch(() => {});
       throw new HttpsError('failed-precondition', body.message || 'A WordPress beküldés sikertelen.');
     }
-    await requestRef.set({ response: body, completedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await requestRef.set({ response: body, completedAt: FieldValue.serverTimestamp() }, { merge: true });
     if (body?.id) {
       const label = data.kind === 'artist' ? 'DJ' : data.kind === 'organizer' ? 'szervező' : 'esemény';
       await notifySubmissionAdmins(label, body.title || payload.title || '', body.id)
@@ -966,7 +2352,214 @@ exports.wordPressAdminRequest = wordPressCall(
     return body;
   },
 );
-exports.deleteCommunityUser = functions.https.onCall(async (data, context) => {
+async function deleteDocumentReferences(documents) {
+  const uniqueDocuments = [...new Map(documents.map((document) => [document.ref.path, document])).values()];
+  for (let offset = 0; offset < uniqueDocuments.length; offset += 400) {
+    const batch = db.batch();
+    uniqueDocuments.slice(offset, offset + 400).forEach((document) => batch.delete(document.ref));
+    await batch.commit();
+  }
+}
+
+async function removeUserReactions(uid) {
+  const [posts, news] = await Promise.all([
+    db.collection('live_feed_posts').get(),
+    db.collection('news_reactions').get(),
+  ]);
+  const writes = [];
+  for (const document of posts.docs) {
+    const data = document.data() || {};
+    const reactionBy = { ...(data.reactionBy || {}) };
+    if (!Object.prototype.hasOwnProperty.call(reactionBy, uid)) continue;
+    delete reactionBy[uid];
+    const reactions = {};
+    for (const value of Object.values(reactionBy)) {
+      reactions[value] = Number(reactions[value] || 0) + 1;
+    }
+    writes.push({ ref: document.ref, data: { reactionBy, reactions } });
+  }
+  for (const document of news.docs) {
+    const data = document.data() || {};
+    const likedBy = Array.isArray(data.likedBy)
+      ? Object.fromEntries(data.likedBy.filter((value) => typeof value === 'string').map((value) => [value, true]))
+      : { ...(data.likedBy || {}) };
+    if (!Object.prototype.hasOwnProperty.call(likedBy, uid)) continue;
+    delete likedBy[uid];
+    writes.push({ ref: document.ref, data: { likedBy, count: Object.keys(likedBy).length } });
+  }
+  for (let offset = 0; offset < writes.length; offset += 400) {
+    const batch = db.batch();
+    writes.slice(offset, offset + 400).forEach(({ ref, data }) => batch.set(ref, data, { merge: true }));
+    await batch.commit();
+  }
+}
+
+async function deleteUserReferences(uid, profileData = {}) {
+  const [relatedUserDocs, connectionRequestsFrom, connectionRequestsTo,
+    conversations, comments, notifications, gameAttempts, ledgerEntries,
+    votes, deviceClaims, reportsByUser, reportsAboutUser, artistClaims,
+    labelEntitlements, labelPurchaseClaims, labelAdUnlocks,
+    rewardedTransactions, referringProfiles, ownPosts] = await Promise.all([
+    db.collectionGroup('users').get(),
+    db.collection('connection_requests').where('from', '==', uid).get(),
+    db.collection('connection_requests').where('to', '==', uid).get(),
+    db.collection('private_conversations').where('participantIds', 'array-contains', uid).get(),
+    db.collectionGroup('comments').where('authorId', '==', uid).get(),
+    db.collection('notifications').where('recipientUid', '==', uid).get(),
+    db.collection('game_attempts').where('uid', '==', uid).get(),
+    db.collection('achievement_ledger').where('uid', '==', uid).get(),
+    db.collection('voting_votes').where('userId', '==', uid).get(),
+    db.collection('voting_device_claims').where('userId', '==', uid).get(),
+    db.collection('chat_reports').where('reporterId', '==', uid).get(),
+    db.collection('chat_reports').where('reportedUserId', '==', uid).get(),
+    db.collection('artist_claims').where('uid', '==', uid).get(),
+    db.collection('label_entitlements').where('uid', '==', uid).get(),
+    db.collection('label_purchase_claims').where('uid', '==', uid).get(),
+    db.collection('label_ad_unlocks').where('uid', '==', uid).get(),
+    db.collection('admob_reward_transactions').where('uid', '==', uid).get(),
+    db.collection('community_profiles').where('referredBy', '==', uid).get(),
+    db.collection('live_feed_posts').where('authorId', '==', uid).get(),
+  ]);
+  const cloudinaryAssets = [];
+  for (const [publicIdKey, urlKey] of [
+    ['profileImagePublicId', 'profileImageUrl'],
+    ['profileSourceImagePublicId', 'profileSourceImageUrl'],
+  ]) cloudinaryAssets.push({ ownerUid: uid, publicId: profileData[publicIdKey], secureUrl: profileData[urlKey] });
+  ownPosts.docs.forEach((post) => {
+    const value = post.data() || {};
+    cloudinaryAssets.push({ ownerUid: uid, publicId: value.imagePublicId, secureUrl: value.imageUrl });
+  });
+  for (const conversation of conversations.docs) {
+    const messages = await conversation.ref.collection('messages').get();
+    messages.docs.forEach((message) => {
+      const value = message.data() || {};
+      if (value.senderId === uid) cloudinaryAssets.push({ ownerUid: uid, publicId: value.imagePublicId, secureUrl: value.imageUrl });
+    });
+  }
+  const selectedCloudinary = selectOwnedCloudinaryAssets(uid, cloudinaryAssets);
+  let listedCloudinary = [];
+  let cloudinaryListPending = false;
+  try {
+    listedCloudinary = await listOwnedCloudinaryAssets({
+      cloudName: CLOUDINARY_CLOUD_NAME,
+      apiKey: CLOUDINARY_API_KEY.value(),
+      apiSecret: CLOUDINARY_API_SECRET.value(),
+      uid,
+    });
+  } catch (error) {
+    cloudinaryListPending = true;
+    console.warn(JSON.stringify({
+      event: 'account_deletion_cloudinary_list_failed',
+      step: 'list_owned_assets',
+      uidHash: crypto.createHash('sha256').update(uid).digest('hex').slice(0, 16),
+      errorCode: error?.code || error?.message || 'unknown',
+    }));
+  }
+  const allCloudinaryAssets = [...selectedCloudinary.assets, ...listedCloudinary]
+    .filter((asset, index, assets) => assets.findIndex((other) => other.publicId === asset.publicId) === index);
+  for (const asset of allCloudinaryAssets) {
+    await destroyCloudinaryAsset({
+      cloudName: CLOUDINARY_CLOUD_NAME,
+      apiKey: CLOUDINARY_API_KEY.value(),
+      apiSecret: CLOUDINARY_API_SECRET.value(),
+      publicId: asset.publicId,
+    });
+  }
+  const cleanupOperations = [];
+  for (const document of relatedUserDocs.docs) {
+    const path = document.ref.path.split('/');
+    if (path.length !== 4) continue;
+    const rootCollection = path[0];
+    const value = document.data() || {};
+    if ((rootCollection === 'event_meetups' && (document.id === uid || value.userId === uid))
+        || (rootCollection === 'event_attendance' && document.id === uid)
+        || (rootCollection === 'event_ratings' && document.id === uid)) {
+      cleanupOperations.push({ type: 'delete', ref: document.ref });
+    } else if (rootCollection === 'event_meetups' && value.interestedBy?.[uid] === true) {
+      const interestedBy = { ...value.interestedBy };
+      delete interestedBy[uid];
+      cleanupOperations.push({ type: 'set', ref: document.ref, data: {
+        interestedBy, updatedAt: FieldValue.serverTimestamp(),
+      } });
+    }
+  }
+  const ownConnections = await db.collection('community_profiles').doc(uid).collection('connections').get();
+  ownConnections.docs.forEach((connection) => cleanupOperations.push({
+    type: 'delete',
+    ref: db.collection('community_profiles').doc(connection.id).collection('connections').doc(uid),
+  }));
+  for (let offset = 0; offset < cleanupOperations.length; offset += 400) {
+    const batch = db.batch();
+    cleanupOperations.slice(offset, offset + 400).forEach((operation) => {
+      if (operation.type === 'delete') batch.delete(operation.ref);
+      else batch.set(operation.ref, operation.data, { merge: true });
+    });
+    await batch.commit();
+  }
+  await Promise.all([
+    removeUserReactions(uid),
+    deleteDocumentReferences([...connectionRequestsFrom.docs, ...connectionRequestsTo.docs]),
+    deleteDocumentReferences(comments.docs.filter((doc) => doc.ref.path.startsWith('article_comments/'))),
+    deleteDocumentReferences(notifications.docs),
+    deleteDocumentReferences(gameAttempts.docs),
+    deleteDocumentReferences(ledgerEntries.docs),
+    deleteDocumentReferences(votes.docs),
+    deleteDocumentReferences(deviceClaims.docs),
+    deleteDocumentReferences([...reportsByUser.docs, ...reportsAboutUser.docs]),
+    deleteDocumentReferences(artistClaims.docs),
+    deleteDocumentReferences(labelEntitlements.docs),
+    deleteDocumentReferences(labelPurchaseClaims.docs),
+    deleteDocumentReferences(labelAdUnlocks.docs),
+    deleteDocumentReferences(rewardedTransactions.docs),
+    ...conversations.docs.map((conversation) => db.recursiveDelete(conversation.ref)),
+    ...ownPosts.docs.map((post) => post.ref.delete()),
+  ]);
+  if (referringProfiles.size) {
+    const batch = db.batch();
+    referringProfiles.docs.forEach((profile) => batch.set(profile.ref, {
+      referredBy: FieldValue.delete(),
+      referralRewardGranted: FieldValue.delete(),
+      referralRewardGrantedAt: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true }));
+    await batch.commit();
+  }
+  for (const attempt of gameAttempts.docs) {
+    const value = attempt.data() || {};
+    const gameId = Number(value.gameId || 0);
+    if (!Number.isSafeInteger(gameId) || gameId <= 0) continue;
+    await db.collection('game_stats').doc(String(gameId)).set({
+      submissions: FieldValue.increment(-1),
+      correctAnswers: FieldValue.increment(-Math.max(0, Number(value.correctAnswers || 0))),
+      totalAnswers: FieldValue.increment(-Math.max(0, Number(value.totalAnswers || 0))),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+  }
+  const oldName = String(profileData.displayName || '').trim();
+  if (oldName) {
+    const indexRef = db.collection('display_name_index').doc(displayNameKey(oldName));
+    const index = await indexRef.get();
+    if (String(index.data()?.uid || '').trim() === uid) await indexRef.delete();
+  }
+  await db.recursiveDelete(db.collection('community_profiles').doc(uid));
+  await Promise.all([
+    db.collection('public_profiles').doc(uid).delete(),
+    db.collection('private_user_data').doc(uid).delete(),
+    db.collection('community_bans').doc(uid).delete(),
+  ]);
+  return {
+    manualCleanupRequired: selectedCloudinary.manualCleanupRequired,
+    cloudinaryListPending,
+  };
+}
+
+// Keep this compatible with the currently released Play client until its
+// Play Integrity attestation is verified end-to-end. Admin authorization,
+// rate limiting and the protected primary-admin account remain server-side.
+exports.deleteCommunityUser = functions.runWith({
+  secrets: [CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, ...SMTP_SECRETS],
+  enforceAppCheck: false,
+}).https.onCall(async (data, context) => {
   const email = String(context.auth?.token?.email || '').trim().toLowerCase();
   if (!context.auth) {
     throw new HttpsError('permission-denied', 'Csak admin törölhet felhasználót.');
@@ -993,9 +2586,20 @@ exports.deleteCommunityUser = functions.https.onCall(async (data, context) => {
     }
   }
 
+  const selfDelete = uid === context.auth.uid;
+  const deletionRef = db.collection('account_deletions').doc(uid);
+  await deletionRef.set({
+    status: 'pending',
+    selfDelete,
+    deletionType: 'account-deletion',
+    source: 'deleteCommunityUser',
+    expiresAt: FieldValue.delete(),
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+
   let targetUser;
   try {
-    targetUser = await admin.auth().getUser(uid);
+    targetUser = await auth.getUser(uid);
   } catch (error) {
     if (error?.code === 'auth/user-not-found') targetUser = null; else throw error;
   }
@@ -1003,30 +2607,184 @@ exports.deleteCommunityUser = functions.https.onCall(async (data, context) => {
     throw new HttpsError('failed-precondition', 'A fő adminisztrátori fiók nem törölhető.');
   }
 
+  const profileSnapshot = await db.collection('community_profiles').doc(uid).get();
+  const profileData = profileSnapshot.data() || {};
   try {
-    await admin.auth().deleteUser(uid);
+    await auth.deleteUser(uid);
   } catch (error) {
     // Make retries safe when Auth was already deleted but Firestore cleanup did not finish.
     if (error?.code !== 'auth/user-not-found') throw error;
   }
-  await db.collection('community_profiles').doc(uid).delete();
+  await db.collection('deleted_user_ids').doc(uid).set({
+    deletedAt: FieldValue.serverTimestamp(),
+  });
+  let cleanup;
+  try {
+    cleanup = await deleteUserReferences(uid, profileData);
+  } catch (error) {
+    // Auth is already gone; preserve a retryable deletion record instead of
+    // turning partial cleanup into a misleading hard failure.
+    await deletionRef.set({
+      status: 'pending',
+      lastError: error?.code || 'cleanup-failed',
+      expiresAt: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    securityLog('community_user_core_deleted_cleanup_pending', context);
+    return { deleted: true, uid, cleanupStatus: 'cleanup_pending' };
+  }
 
-  const posts = await db
-    .collection('live_feed_posts')
-    .where('authorId', '==', uid)
-    .get();
-  for (let index = 0; index < posts.docs.length; index += 400) {
-    const batch = db.batch();
-    posts.docs.slice(index, index + 400).forEach((post) => batch.delete(post.ref));
-    await batch.commit();
+  const authStillExists = await auth.getUser(uid).then(() => true).catch((error) => {
+    if (error?.code === 'auth/user-not-found') return false;
+    throw error;
+  });
+  const profileStillExists = (await db.collection('community_profiles').doc(uid).get()).exists;
+  if (authStillExists || profileStillExists) {
+    await deletionRef.set({
+      status: 'pending',
+      lastError: 'required-account-data-remains',
+      expiresAt: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    throw new HttpsError('aborted', 'A fiók törlése nem fejeződött be, próbáld újra.');
+  }
+  if (cleanup.cloudinaryListPending) {
+    if (!selfDelete && targetUser?.email) {
+      await sendIdentityEmailOnce({
+        key: `admin-deletion:${uid}`,
+        to: targetUser.email,
+        template: deletionEmailTemplate(),
+      });
+    }
+    await deletionRef.set({
+      status: 'pending',
+      lastError: 'cloudinary-list-temporary-failure',
+      expiresAt: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    securityLog('community_user_core_deleted_cleanup_pending', context);
+    return { deleted: true, uid, cleanupStatus: 'cleanup_pending' };
+  }
+  await deletionRef.set({
+    status: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
+    ...(cleanup.manualCleanupRequired ? { lastError: 'legacy-cloudinary-public-id-missing' } : { completedAt: FieldValue.serverTimestamp() }),
+    expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  if (!selfDelete && targetUser?.email) {
+    await sendIdentityEmailOnce({
+      key: `admin-deletion:${uid}`,
+      to: targetUser.email,
+      template: deletionEmailTemplate(),
+    });
   }
 
   securityLog('community_user_deleted', context);
 
-  return { deleted: true, uid };
+  return { deleted: true, uid, cleanupStatus: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed' };
 });
 
-exports.deletePrivateConversation = functions.https.onCall(async (data, context) => {
+exports.cleanupIncompleteAccounts = onSchedule({
+  schedule: 'every 15 minutes',
+  timeZone: 'Europe/Budapest',
+  region: 'europe-central2',
+  secrets: [CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET],
+}, async () => {
+  const expiredEmailJobs = await db.collection('email_delivery_jobs')
+    .where('expiresAt', '<=', new Date())
+    .limit(100)
+    .get();
+  await deleteDocumentReferences(expiredEmailJobs.docs);
+
+  let pageToken;
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  do {
+    const page = await auth.listUsers(1000, pageToken);
+    for (const authUser of page.users) {
+      if (normalizedEmail(authUser.email) === ADMIN_EMAIL) continue;
+      const created = authUser.metadata.creationTime ? new Date(authUser.metadata.creationTime).getTime() : 0;
+      if (!created || created > cutoff) continue;
+      const profileSnapshot = await db.collection('community_profiles').doc(authUser.uid).get();
+      const profile = profileSnapshot.data() || {};
+      const name = String(profile.displayName || '').trim();
+      const incompleteName = !name || isUnnumberedPlaceholderDisplayName(name) || /^HUHS user \d+$/i.test(name);
+      const pendingEmail = normalizedEmail(profile.pendingEmail);
+      const pendingExpiry = profile.pendingEmailExpiresAt?.toDate?.();
+      const pendingExpiryTime = pendingExpiry?.getTime?.();
+      const pendingEmailExpired = Boolean(
+        pendingEmail && Number.isFinite(pendingExpiryTime) && pendingExpiryTime <= Date.now(),
+      );
+      const hasGoogleProvider = authUser.providerData.some((provider) => provider.providerId === 'google.com');
+      if ((authUser.emailVerified || hasGoogleProvider) && !incompleteName) {
+        if (pendingEmailExpired) {
+          await profileSnapshot.ref.set({
+            pendingEmail: FieldValue.delete(),
+            pendingEmailExpiresAt: FieldValue.delete(),
+            updatedAt: FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
+        continue;
+      }
+      const email = normalizedEmail(authUser.email || profile.email);
+      if (email) {
+        const markerRef = db.collection('deleted_identity_hashes').doc(deletedIdentityKey(email));
+        const markerSnapshot = await markerRef.get();
+        if (!isExplicitIdentityBan(markerSnapshot.data() || {})) {
+          await markerRef.set({
+            blocked: false,
+            reason: 'incomplete-account-cleanup',
+            source: 'cleanupIncompleteAccounts',
+            deletionType: 'account-deletion',
+            createdAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
+      }
+      try { await auth.deleteUser(authUser.uid); } catch (error) {
+        if (error?.code !== 'auth/user-not-found') throw error;
+      }
+      await db.collection('deleted_user_ids').doc(authUser.uid).set({ deletedAt: FieldValue.serverTimestamp() });
+      await deleteUserReferences(authUser.uid, profile);
+    }
+    pageToken = page.pageToken;
+  } while (pageToken);
+
+  const pendingDeletions = await db.collection('account_deletions')
+    .where('status', '==', 'pending')
+    .limit(50)
+    .get();
+  for (const deletion of pendingDeletions.docs) {
+    const uid = deletion.id;
+    const authStillExists = await auth.getUser(uid).then(() => true).catch((error) => {
+      if (error?.code === 'auth/user-not-found') return false;
+      throw error;
+    });
+    if (authStillExists) continue;
+    const profileSnapshot = await db.collection('community_profiles').doc(uid).get();
+    try {
+      const cleanup = await deleteUserReferences(uid, profileSnapshot.data() || {});
+      if (cleanup.cloudinaryListPending) continue;
+      await deletion.ref.set({
+        status: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
+        ...(cleanup.manualCleanupRequired
+          ? { lastError: 'legacy-cloudinary-public-id-missing' }
+          : { completedAt: FieldValue.serverTimestamp() }),
+        expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        updatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } catch (error) {
+      console.error(JSON.stringify({
+        event: 'account_deletion_retry_failed',
+        step: 'retry_pending_cleanup',
+        uidHash: crypto.createHash('sha256').update(uid).digest('hex').slice(0, 16),
+        errorCode: error?.code || error?.message || 'unknown',
+      }));
+    }
+  }
+});
+
+exports.deletePrivateConversation = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = String(context.auth?.uid || '').trim();
   if (!uid || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
     throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a beszélgetés törléséhez.');
@@ -1062,7 +2820,7 @@ exports.deletePrivateConversation = functions.https.onCall(async (data, context)
   return { deleted: true };
 });
 
-exports.claimArtistProfile = functions.https.onCall(async (data, context) => {
+exports.claimArtistProfile = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   if (!context.auth || context.auth.token.email_verified !== true) {
     throw new HttpsError('permission-denied', 'Hitelesített e-mailes fiók szükséges.');
   }
@@ -1090,12 +2848,12 @@ exports.claimArtistProfile = functions.https.onCall(async (data, context) => {
     uid: context.auth.uid,
     email,
     status: 'claimed',
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   });
   return { claimed: true, artistId };
 });
 
-exports.getArtistClaimStatus = functions.https.onCall(async (data) => {
+exports.getArtistClaimStatus = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data) => {
   const artistId = Number(data?.artistId);
   if (!Number.isInteger(artistId) || artistId <= 0) {
     throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap szükséges.');
@@ -1104,7 +2862,7 @@ exports.getArtistClaimStatus = functions.https.onCall(async (data) => {
   return { claimed: claim.exists };
 });
 
-exports.getMyClaimedArtists = functions.https.onCall(async (data, context) => {
+exports.getMyClaimedArtists = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   if (!context.auth || context.auth.token.email_verified !== true) {
     throw new HttpsError('permission-denied', 'Bejelentkezés szükséges.');
   }
@@ -1120,7 +2878,7 @@ exports.getMyClaimedArtists = functions.https.onCall(async (data, context) => {
 });
 
 exports.verifyLabelPurchase = functions
-  .runWith({ secrets: [GOOGLE_PLAY_SERVICE_ACCOUNT_JSON] })
+  .runWith({ secrets: [GOOGLE_PLAY_SERVICE_ACCOUNT_JSON], enforceAppCheck: false })
   .https.onCall(async (data, context) => {
     if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
       throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a vásárláshoz.');
@@ -1175,7 +2933,7 @@ exports.verifyLabelPurchase = functions
       productId,
       purchaseTokenHash,
       orderId: String(purchase.data.orderId || ''),
-      verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+      verifiedAt: FieldValue.serverTimestamp(),
     };
     const claimRef = db.collection('label_purchase_claims').doc(purchaseTokenHash);
     const entitlementRef = db.collection('label_entitlements').doc(`${context.auth.uid}_${productId}`);
@@ -1190,10 +2948,10 @@ exports.verifyLabelPurchase = functions
           uid: context.auth.uid,
           productId,
           purchaseTokenHash,
-          claimedAt: admin.firestore.FieldValue.serverTimestamp(),
+          claimedAt: FieldValue.serverTimestamp(),
         });
       } else {
-        tx.set(claimRef, { lastVerifiedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        tx.set(claimRef, { lastVerifiedAt: FieldValue.serverTimestamp() }, { merge: true });
       }
       tx.set(entitlementRef, entitlement, { merge: true });
     });
@@ -1201,7 +2959,7 @@ exports.verifyLabelPurchase = functions
   });
 
 exports.getLabelDownloadUrl = functions
-  .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] })
+  .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD], enforceAppCheck: false })
   .https.onCall(async (data, context) => {
     const releaseId = Number(data?.releaseId || 0);
     const variant = String(data?.variant || '').trim();
@@ -1216,10 +2974,10 @@ exports.getLabelDownloadUrl = functions
     if (!await allowCall(callerKey, 'label_download', 10)) {
       throw new HttpsError('resource-exhausted', 'Túl sok letöltési kérés.');
     }
-    if (!Number.isInteger(releaseId) || releaseId < 1 || !['free_wav', 'wav', 'mp3_320', 'mp3_128', 'radio_wav', 'radio_mp3_320', 'extended_wav', 'extended_mp3_320'].includes(variant)) {
+    if (!Number.isInteger(releaseId) || releaseId < 1 || !['free_wav', 'wav', 'mp3_320', 'mp3_96', 'mp3_128', 'radio_wav', 'radio_mp3_320', 'extended_wav', 'extended_mp3_320'].includes(variant)) {
       throw new HttpsError('invalid-argument', 'Érvénytelen Label-letöltési adat.');
     }
-    const paid = !['free_wav', 'mp3_128'].includes(variant);
+    const paid = !['free_wav', 'mp3_96', 'mp3_128'].includes(variant);
     const productId = `huhs_release_${releaseId}_${variant}`;
     const entitlement = paid
       ? await db.collection('label_entitlements')
@@ -1229,7 +2987,7 @@ exports.getLabelDownloadUrl = functions
     if (paid && (!entitlement || !entitlement.exists || entitlement.data()?.releaseId !== releaseId)) {
       throw new HttpsError('permission-denied', 'Ehhez a fájlhoz nincs vásárlási jogosultság.');
     }
-    if (!paid && ['free_wav', 'mp3_128'].includes(variant)) {
+    if (!paid && ['free_wav', 'mp3_96', 'mp3_128'].includes(variant)) {
       const unlock = await db.collection('label_ad_unlocks').doc(`${context.auth.uid}_${releaseId}`).get();
       if (!unlock.exists || !activeAdUnlock(unlock.data(), releaseId, variant)) {
         throw new HttpsError('permission-denied', 'A reklámos feloldás szükséges ehhez a változathoz.');
@@ -1553,7 +3311,7 @@ async function syncWordPressLabelProducts(releaseId = 0) {
 }
 
 exports.syncLabelProducts = functions
-  .runWith({ secrets: labelProductSyncSecrets })
+  .runWith({ secrets: labelProductSyncSecrets, enforceAppCheck: false })
   .https.onCall(async (data, context) => {
     if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin indíthatja a Play-termékszinkront.');
     const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
@@ -1584,7 +3342,7 @@ exports.syncQueuedWordPressLabelProducts = onDocumentCreated({
   console.info('label_product_sync_queued_request', { releaseId, result });
 });
 
-exports.getLabelAdUnlockStatus = functions.https.onCall(async (data, context) => {
+exports.getLabelAdUnlockStatus = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
     throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
   }
@@ -1593,7 +3351,7 @@ exports.getLabelAdUnlockStatus = functions.https.onCall(async (data, context) =>
   }
   const releaseId = Number(data?.releaseId || 0);
   const variant = String(data?.variant || 'mp3_128').trim();
-  if (!['free_wav', 'free_link', 'mp3_128'].includes(variant)) {
+  if (!['free_wav', 'free_link', 'mp3_96', 'mp3_128'].includes(variant)) {
     throw new HttpsError('invalid-argument', 'Érvénytelen reklámos feloldási változat.');
   }
   if (!Number.isInteger(releaseId) || releaseId < 1) {
@@ -1709,7 +3467,7 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
     const releaseId = Number(decoded.releaseId || 0);
     const variant = String(decoded.variant || 'mp3_128').trim();
     if (!uid || !Number.isInteger(releaseId) || releaseId < 1
-      || !['free_wav', 'free_link', 'mp3_128'].includes(variant)) return reject('invalid reward data');
+      || !['free_wav', 'free_link', 'mp3_96', 'mp3_128'].includes(variant)) return reject('invalid reward data');
     const transaction = db.collection('admob_reward_transactions').doc(transactionId);
     await db.runTransaction(async (tx) => {
       if ((await tx.get(transaction)).exists) return;
@@ -1718,11 +3476,11 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
       const existingVariants = unlock.exists && unlock.data()?.variants && typeof unlock.data().variants === 'object'
         ? unlock.data().variants
         : {};
-      tx.set(transaction, { uid, releaseId, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+      tx.set(transaction, { uid, releaseId, createdAt: FieldValue.serverTimestamp() });
       tx.set(unlockRef, {
         uid, releaseId, transactionId,
         variants: { ...existingVariants, [variant]: true },
-        unlockedAt: admin.firestore.FieldValue.serverTimestamp(),
+        unlockedAt: FieldValue.serverTimestamp(),
       }, { merge: true });
     });
     return res.status(200).send('ok');
@@ -1732,7 +3490,7 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
   }
 });
 
-exports.getVotingSummary = functions.https.onCall(async (data, context) => {
+exports.getVotingSummary = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin tekintheti meg az összesítőt.');
   const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
   if (!isAdmin(context, profile)) throw new HttpsError('permission-denied', 'Csak admin tekintheti meg az összesítőt.');
@@ -1751,6 +3509,180 @@ exports.getVotingSummary = functions.https.onCall(async (data, context) => {
   return { totalVotes: snapshot.size, counts };
 });
 
+const VOTING_REQUIRED_COUNTS = Object.freeze({
+  hungarian_hardstyle_dj: 5,
+  hungarian_hardcore_dj: 3,
+  hungarian_track: 2,
+  hungarian_organizer: 1,
+  international_dj: 5,
+});
+
+function requireVotingUser(context) {
+  if (!context.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'A szavazáshoz az appnak azonosítania kell a felhasználót.');
+  }
+  return context.auth.uid;
+}
+
+function normalizeVotingDeviceId(rawDeviceId) {
+  const value = String(rawDeviceId || '').trim();
+  if (!/^[A-Za-z0-9_-]{24,128}$/.test(value)) {
+    throw new HttpsError('invalid-argument', 'Érvényes készülékazonosító szükséges.');
+  }
+  return value;
+}
+
+function votingDeviceIdForRequest(context, rawDeviceId) {
+  const value = String(rawDeviceId || '').trim();
+  if (!value && context.auth.token.firebase?.sign_in_provider !== 'anonymous') {
+    // Keep already released registered clients compatible until they receive
+    // the build that starts sending the installation ID.
+    return `legacy-user-${context.auth.uid}`;
+  }
+  return normalizeVotingDeviceId(value);
+}
+
+function votingDeviceRef(seasonId, deviceId) {
+  const deviceHash = crypto.createHash('sha256').update(deviceId).digest('hex').slice(0, 40);
+  return db.collection('voting_device_claims').doc(`${seasonId}_${deviceHash}`);
+}
+
+function normalizeVotingBallot(rawVotes) {
+  if (!rawVotes || typeof rawVotes !== 'object' || Array.isArray(rawVotes)) {
+    throw new HttpsError('invalid-argument', 'Érvényes szavazólap szükséges.');
+  }
+  const votes = {};
+  for (const [category, rawIds] of Object.entries(rawVotes)) {
+    if (!Object.prototype.hasOwnProperty.call(VOTING_REQUIRED_COUNTS, category)) {
+      throw new HttpsError('invalid-argument', 'Ismeretlen szavazási kategória.');
+    }
+    if (!Array.isArray(rawIds)) throw new HttpsError('invalid-argument', 'A jelöltek listája érvénytelen.');
+    const ids = rawIds.map(Number);
+    const required = VOTING_REQUIRED_COUNTS[category];
+    if (ids.length !== required || ids.some((id) => !Number.isSafeInteger(id) || id <= 0)
+      || new Set(ids).size !== ids.length) {
+      throw new HttpsError('invalid-argument', `${category} kategóriában pontosan ${required} különböző jelölt szükséges.`);
+    }
+    votes[category] = ids;
+  }
+  return votes;
+}
+
+exports.getVotingStatus = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = requireVotingUser(context);
+  const seasonId = Number(data?.seasonId);
+  if (!Number.isSafeInteger(seasonId) || seasonId <= 0) throw new HttpsError('invalid-argument', 'Érvényes szezon szükséges.');
+  const deviceId = votingDeviceIdForRequest(context, data?.deviceId);
+  const categories = Object.keys(VOTING_REQUIRED_COUNTS);
+  const refs = categories.map((category) => db.collection('voting_votes').doc(`${seasonId}_${category}_${uid}`));
+  const [voteSnapshots, deviceSnapshot] = await Promise.all([
+    Promise.all(refs.map((ref) => ref.get())),
+    votingDeviceRef(seasonId, deviceId).get(),
+  ]);
+  const votedCategories = new Set();
+  const selectedCandidateIds = {};
+  voteSnapshots.forEach((snapshot, index) => {
+    if (snapshot.exists) {
+      const category = categories[index];
+      votedCategories.add(category);
+      const ids = snapshot.data()?.candidateIds;
+      if (Array.isArray(ids)) {
+        selectedCandidateIds[category] = ids
+          .map(Number)
+          .filter((id) => Number.isSafeInteger(id) && id > 0);
+      }
+    }
+  });
+  const deviceData = deviceSnapshot.exists ? deviceSnapshot.data() || {} : {};
+  const deviceCategories = Array.isArray(deviceData.categories) ? deviceData.categories : [];
+  deviceCategories.forEach((category) => {
+    if (Object.prototype.hasOwnProperty.call(VOTING_REQUIRED_COUNTS, category)) {
+      votedCategories.add(category);
+      const ids = deviceData.selections?.[category];
+      if (!selectedCandidateIds[category] && Array.isArray(ids)) {
+        selectedCandidateIds[category] = ids
+          .map(Number)
+          .filter((id) => Number.isSafeInteger(id) && id > 0);
+      }
+    }
+  });
+  return { seasonId, votedCategories: [...votedCategories], selectedCandidateIds };
+});
+
+exports.submitVotingBallot = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = requireVotingUser(context);
+  const seasonId = Number(data?.seasonId);
+  if (!Number.isSafeInteger(seasonId) || seasonId <= 0) throw new HttpsError('invalid-argument', 'Érvényes szezon szükséges.');
+  const deviceId = votingDeviceIdForRequest(context, data?.deviceId);
+  const votes = normalizeVotingBallot(data?.votes);
+  const refs = Object.keys(VOTING_REQUIRED_COUNTS).map((category) => ({
+    category,
+    ref: db.collection('voting_votes').doc(`${seasonId}_${category}_${uid}`),
+  }));
+  const deviceRef = votingDeviceRef(seasonId, deviceId);
+  const createdCategories = [];
+  let ballotComplete = false;
+  await db.runTransaction(async (transaction) => {
+    const current = new Map();
+    for (const item of refs) current.set(item.category, await transaction.get(item.ref));
+    const deviceClaim = await transaction.get(deviceRef);
+    const deviceData = deviceClaim.exists ? deviceClaim.data() || {} : {};
+    const selections = deviceData.selections && typeof deviceData.selections === 'object'
+      ? { ...deviceData.selections } : {};
+    const claimedCategories = new Set(
+      Array.isArray(deviceData.categories)
+        ? deviceData.categories.filter((category) => Object.prototype.hasOwnProperty.call(VOTING_REQUIRED_COUNTS, category))
+        : [],
+    );
+    if (deviceClaim.exists && deviceData.userId && deviceData.userId !== uid) {
+      throw new HttpsError('already-exists', 'Erről a készülékről erre az évadra már érkezett szavazat.');
+    }
+    const missing = refs
+      .filter((item) => !current.get(item.category).exists
+        && !claimedCategories.has(item.category)
+        && !votes[item.category])
+      .map((item) => item.category);
+    if (missing.length) {
+      throw new HttpsError('invalid-argument', `Hiányzó kötelező kategória: ${missing.join(', ')}.`);
+    }
+    for (const item of refs) {
+      if (!votes[item.category]) continue;
+      if (current.get(item.category).exists || claimedCategories.has(item.category)) {
+        throw new HttpsError('already-exists', 'Ebben az éves szavazásban már szavaztál.');
+      }
+      transaction.create(item.ref, {
+        seasonId,
+        category: item.category,
+        candidateIds: votes[item.category],
+        userId: uid,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      selections[item.category] = votes[item.category];
+      createdCategories.push(item.category);
+    }
+    const allCategories = [...new Set([...claimedCategories, ...refs
+      .filter((item) => current.get(item.category).exists)
+      .map((item) => item.category), ...createdCategories])];
+    ballotComplete = refs.every((item) => allCategories.includes(item.category));
+    transaction.set(deviceRef, {
+      seasonId,
+      userId: uid,
+      categories: allCategories,
+      createdAt: deviceClaim.exists
+        ? deviceData.createdAt || FieldValue.serverTimestamp()
+        : FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+      selections,
+    }, { merge: true });
+  });
+  const isRegistered = context.auth.token.firebase?.sign_in_provider !== 'anonymous';
+  let achievement = { changed: false };
+  if (ballotComplete && isRegistered) {
+    achievement = await awardAchievementPoints(uid, 10, `voting:${seasonId}`);
+  }
+  return { ok: true, seasonId, createdCategories, achievementPoints: achievement.changed ? 10 : 0 };
+});
+
 exports.notifyConnectionRequest = onDocumentWritten(
   {
     document: 'connection_requests/{requestId}',
@@ -1763,35 +3695,68 @@ exports.notifyConnectionRequest = onDocumentWritten(
     const request = event.data?.after?.data() || {};
     console.log(JSON.stringify({
       event: 'connection_request_received',
-      requestId,
       status: request.status || null,
-      from: request.from || null,
-      to: request.to || null,
     }));
-    if (request.status !== 'pending' || !request.from || !request.to) return null;
+    if (!request.from || !request.to) return null;
+    const from = String(request.from);
+    const to = String(request.to);
+    const beforeStatus = String(before.status || '');
+
+    if (request.status === 'accepted') {
+      // The accepter's status transition is the single source of truth. The
+      // deterministic notification key keeps Firestore and push delivery
+      // idempotent when the trigger is retried.
+      if (beforeStatus === 'accepted') return null;
+      const accepter = (await db.collection('community_profiles').doc(to).get()).data() || {};
+      const name = String(accepter.displayName || 'Egy felhasználó').trim();
+      const title = 'Ismerős-jelölés elfogadva';
+      const body = `${name} elfogadta az ismerős-jelölésedet.`;
+      const created = await createNotificationBestEffort({
+        recipientUid: from,
+        type: 'connection_accepted',
+        title,
+        body,
+        targetType: 'profile',
+        targetId: to,
+        dedupeKey: `connection_accepted:${requestId}`,
+      });
+      if (!created) return null;
+      const tokens = await getPushTokens(from);
+      if (!tokens.length) return null;
+      const result = await sendMulticastToAllTokens({
+        notification: { title, body },
+        data: { type: 'connection_accepted', targetId: to },
+      }, tokens);
+      const invalidTokens = tokens.filter((_, index) => {
+        const error = result.responses[index].error;
+        return error?.code === 'messaging/registration-token-not-registered';
+      });
+      if (invalidTokens.length) await removePushTokens(from, invalidTokens);
+      return result;
+    }
+
+    if (request.status !== 'pending') return null;
     const beforeNotification = before.notificationRequestedAt?.toMillis?.();
     const notification = request.notificationRequestedAt?.toMillis?.();
     if (!notification || beforeNotification === notification) return null;
-    const sender = (await db.collection('community_profiles').doc(String(request.from)).get()).data() || {};
+    const sender = (await db.collection('community_profiles').doc(from).get()).data() || {};
     const name = String(sender.displayName || 'Egy felhasználó').trim();
-    await createNotificationBestEffort({ recipientUid: String(request.to), type: 'connection_request', title: 'Új ismerősnek jelölés', body: `${name} ismerősnek jelölt.`, targetType: 'profile', targetId: String(request.from), dedupeKey: `connection_request:${requestId}:${notification}` });
-    const uniqueTokens = await getPushTokens(String(request.to));
+    await createNotificationBestEffort({ recipientUid: to, type: 'connection_request', title: 'Új ismerősnek jelölés', body: `${name} ismerősnek jelölt.`, targetType: 'profile', targetId: from, dedupeKey: `connection_request:${requestId}:${notification}` });
+    const uniqueTokens = await getPushTokens(to);
     if (!uniqueTokens.length) {
       console.warn(JSON.stringify({
         event: 'connection_request_no_target_token',
         requestId,
-        target: String(request.to),
       }));
       return null;
     }
     const result = await sendMulticastToAllTokens({
       notification: { title: 'Új ismerősnek jelölés', body: `${name} ismerősnek jelölt.` },
-      data: { type: 'connection_request', senderId: String(request.from) },
+      data: { type: 'connection_request', senderId: from },
     }, uniqueTokens);
     console.log(JSON.stringify({
       event: 'connection_request_push_result',
       requestId,
-      target: String(request.to),
       tokenCount: uniqueTokens.length,
       successCount: result.successCount,
       failureCount: result.failureCount,
@@ -1882,9 +3847,11 @@ exports.notifyPrivateMessage = onDocumentCreated(
     const recipientId = String(message.recipientId || '').trim();
     const conversationId = String(event.params.conversationId || '').trim();
     const text = String(message.text || '').trim();
-    if (!senderId || !recipientId || !conversationId || !text || senderId === recipientId) {
+    const imageUrl = String(message.imageUrl || '').trim();
+    if (!senderId || !recipientId || !conversationId || (!text && !imageUrl) || senderId === recipientId) {
       return null;
     }
+    const notificationBody = text || 'Képet küldött.';
 
     const conversation = (await db.collection('private_conversations').doc(conversationId).get()).data() || {};
     const participantIds = Array.isArray(conversation.participantIds)
@@ -1900,20 +3867,25 @@ exports.notifyPrivateMessage = onDocumentCreated(
 
     const participantNames = conversation.participantNames || {};
     const senderName = String(participantNames[senderId] || 'Egy felhasználó').trim();
-    await createNotificationBestEffort({ recipientUid: recipientId, type: 'private_message', title: `${senderName || 'Egy felhasználó'} üzenetet küldött`, body: text, targetType: 'private_conversation', targetId: conversationId, dedupeKey: `private_message:${conversationId}:${event.params.messageId}` });
+    const [blockedBySender, blockedByRecipient] = await Promise.all([
+      db.collection('community_profiles').doc(senderId).collection('blocked_users').doc(recipientId).get(),
+      db.collection('community_profiles').doc(recipientId).collection('blocked_users').doc(senderId).get(),
+    ]);
+    if (blockedBySender.exists || blockedByRecipient.exists) return null;
+    await createNotificationBestEffort({ recipientUid: recipientId, type: 'private_message', title: `${senderName || 'Egy felhasználó'} üzenetet küldött`, body: notificationBody, targetType: 'private_conversation', targetId: conversationId, senderId, dedupeKey: `private_message:${conversationId}:${event.params.messageId}` });
     const uniqueTokens = await getPushTokens(recipientId);
     if (!uniqueTokens.length) {
       console.log(JSON.stringify({
         event: 'private_message_no_target_token',
         conversationId,
-        recipientId,
+
       }));
       return null;
     }
     const result = await sendMulticastToAllTokens({
       notification: {
         title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
-        body: text.slice(0, 160),
+        body: notificationBody.slice(0, 160),
       },
       data: {
         type: 'private_message',
@@ -1924,7 +3896,6 @@ exports.notifyPrivateMessage = onDocumentCreated(
     console.log(JSON.stringify({
       event: 'private_message_push_result',
       conversationId,
-      recipientId,
       tokenCount: uniqueTokens.length,
       successCount: result.successCount,
       failureCount: result.failureCount,

@@ -29,24 +29,37 @@ service cloud.firestore {
 
     function isRegistered() {
       return request.auth != null
-        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && !exists(/databases/$(database)/documents/deleted_user_ids/$(request.auth.uid));
+    }
+
+    function isAllowedUploadedImage(url) {
+      return url is string
+        && (url == ''
+          || url.matches('^https://res\\.cloudinary\\.com/fjxo93em/image/upload/.+'));
     }
 
     match /live_feed_posts/{postId} {
       allow read: if true;
       allow create: if request.auth != null
+        && !exists(/databases/$(database)/documents/deleted_user_ids/$(request.auth.uid))
         && !exists(/databases/$(database)/documents/community_bans/$(request.auth.uid))
         && request.resource.data.keys().hasOnly([
           'authorId', 'authorName', 'authorImageUrl', 'authorRole',
-          'authorAccessRole', 'text', 'imageUrl',
+          'authorAccessRole', 'isAnonymous', 'text', 'imageUrl', 'imagePublicId',
           'reactions', 'reactionBy', 'pinned', 'createdAt'
         ])
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.authorName is string
-        && request.resource.data.authorImageUrl is string
+        && (!request.resource.data.keys().hasAny(['isAnonymous'])
+            || request.resource.data.isAnonymous is bool)
+        && isAllowedUploadedImage(request.resource.data.authorImageUrl)
         && request.resource.data.text is string
         && request.resource.data.text.size() <= 2000
-        && request.resource.data.imageUrl is string
+        && isAllowedUploadedImage(request.resource.data.imageUrl)
+        && (!request.resource.data.keys().hasAny(['imagePublicId'])
+            || (request.resource.data.imagePublicId is string
+                && request.resource.data.imagePublicId.matches('^huhs_users/' + request.auth.uid + '/.+')))
         && request.resource.data.reactions is map
         && request.resource.data.reactionBy is map
         && !exists(/databases/$(database)/documents/community_bans/$(request.auth.uid))
@@ -54,22 +67,17 @@ service cloud.firestore {
         && (request.auth.token.firebase.sign_in_provider == 'anonymous'
             ? request.resource.data.authorRole == ''
               && request.resource.data.authorAccessRole == ''
+              && (!request.resource.data.keys().hasAny(['isAnonymous'])
+                  || request.resource.data.isAnonymous == true)
             : (!exists(/databases/$(database)/documents/community_profiles/$(request.auth.uid))
                 ? request.resource.data.authorRole == 'partygoer'
                   && request.resource.data.authorAccessRole == 'none'
                 : request.resource.data.authorRole == normalizedAccountRole(get(/databases/$(database)/documents/community_profiles/$(request.auth.uid)).data.role)
-                  && request.resource.data.authorAccessRole == normalizedAccessRole(get(/databases/$(database)/documents/community_profiles/$(request.auth.uid)).data.accessRole)))
+                  && request.resource.data.authorAccessRole == normalizedAccessRole(get(/databases/$(database)/documents/community_profiles/$(request.auth.uid)).data.accessRole))
+              && (!request.resource.data.keys().hasAny(['isAnonymous'])
+                  || request.resource.data.isAnonymous == false))
         && (request.auth.token.firebase.sign_in_provider != 'anonymous'
             || request.resource.data.imageUrl == '');
-      allow update: if request.auth != null
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'reactions', 'reactionBy'
-        ])
-        && request.resource.data.authorId == resource.data.authorId
-        && request.resource.data.text == resource.data.text
-        && request.resource.data.imageUrl == resource.data.imageUrl
-        && request.resource.data.reactions is map
-        && request.resource.data.reactionBy is map;
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pinned'])
         && request.resource.data.pinned is bool;
@@ -84,33 +92,83 @@ service cloud.firestore {
       allow read: if request.auth != null
         && (request.auth.uid == userId || isAdmin());
       allow create: if request.auth != null
+        && !exists(/databases/$(database)/documents/deleted_user_ids/$(request.auth.uid))
         && request.auth.uid == userId
         && request.resource.data.keys().hasOnly([
-          'displayName', 'email', 'role', 'accessRole', 'socialLinks', 'updatedAt'
+          'displayName', 'email', 'role', 'accessRole', 'socialLinks', 'bio',
+          'profileImageUrl', 'profileImagePublicId', 'profileFocusX', 'profileFocusY',
+          'profileSourceImageUrl', 'profileSourceImagePublicId', 'profileZoom', 'profilePanX', 'profilePanY',
+          'createdAt', 'updatedAt', 'fcmTokens'
         ])
-        && (request.auth.token.email == 'djdeeroy@gmail.com'
-            ? request.resource.data.role == 'organizer' && request.resource.data.accessRole == 'admin'
-            : isAdmin()
-            || (request.resource.data.role in ['dj', 'organizer', 'partygoer']
-              && (!request.resource.data.keys().hasAny(['accessRole'])
-                || request.resource.data.accessRole == 'none')));
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() >= 2
+        && request.resource.data.displayName.size() <= 40
+        && (!request.resource.data.keys().hasAny(['email'])
+          || (request.resource.data.email is string
+            && request.resource.data.email == request.auth.token.email))
+        && (!request.resource.data.keys().hasAny(['bio'])
+          || (request.resource.data.bio is string
+            && request.resource.data.bio.size() <= 2000))
+        && (!request.resource.data.keys().hasAny(['profileImageUrl'])
+          || isAllowedUploadedImage(request.resource.data.profileImageUrl))
+        && (!request.resource.data.keys().hasAny(['profileSourceImageUrl'])
+          || isAllowedUploadedImage(request.resource.data.profileSourceImageUrl))
+        && (!request.resource.data.keys().hasAny(['profileImagePublicId'])
+          || (request.resource.data.profileImagePublicId is string
+            && request.resource.data.profileImagePublicId.matches('^huhs_users/' + request.auth.uid + '/.+')))
+        && (!request.resource.data.keys().hasAny(['profileSourceImagePublicId'])
+          || (request.resource.data.profileSourceImagePublicId is string
+            && request.resource.data.profileSourceImagePublicId.matches('^huhs_users/' + request.auth.uid + '/.+')))
+        && (!request.resource.data.keys().hasAny(['socialLinks'])
+          || request.resource.data.socialLinks is map)
+        && (!request.resource.data.keys().hasAny(['fcmTokens'])
+          || request.resource.data.fcmTokens is list)
+        && (!request.resource.data.keys().hasAny(['role'])
+          || (isAdmin()
+            ? request.resource.data.role in ['dj', 'organizer', 'partygoer']
+            : request.resource.data.role in ['dj', 'organizer', 'partygoer']))
+        && (!request.resource.data.keys().hasAny(['accessRole'])
+          || (isAdmin()
+            ? request.resource.data.accessRole in ['none', 'moderator', 'admin']
+            : request.resource.data.accessRole == 'none'));
       allow update: if request.auth != null
+        && !exists(/databases/$(database)/documents/deleted_user_ids/$(request.auth.uid))
         && ((request.auth.uid == userId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'email', 'socialLinks', 'bio', 'profileImageUrl',
-            'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileZoom', 'profilePanX', 'profilePanY', 'updatedAt', 'fcmTokens'
+            'email', 'socialLinks', 'bio', 'profileImageUrl', 'profileImagePublicId',
+            'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileSourceImagePublicId', 'profileZoom', 'profilePanX', 'profilePanY', 'createdAt', 'updatedAt', 'fcmTokens', 'role', 'accessRole'
           ])
-          && (request.resource.data.role == resource.data.role
+          && (!request.resource.data.keys().hasAny(['email'])
+            || request.resource.data.email == request.auth.token.email)
+          && (!request.resource.data.keys().hasAny(['profileImageUrl'])
+            || isAllowedUploadedImage(request.resource.data.profileImageUrl))
+          && (!request.resource.data.keys().hasAny(['profileSourceImageUrl'])
+            || isAllowedUploadedImage(request.resource.data.profileSourceImageUrl))
+          && (!request.resource.data.keys().hasAny(['profileImagePublicId'])
+            || (request.resource.data.profileImagePublicId is string
+              && request.resource.data.profileImagePublicId.matches('^huhs_users/' + request.auth.uid + '/.+')))
+          && (!request.resource.data.keys().hasAny(['profileSourceImagePublicId'])
+            || (request.resource.data.profileSourceImagePublicId is string
+              && request.resource.data.profileSourceImagePublicId.matches('^huhs_users/' + request.auth.uid + '/.+')))
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt'])
+            || (!resource.data.keys().hasAny(['createdAt'])
+              && request.resource.data.createdAt is timestamp))
+          && ((!request.resource.data.keys().hasAny(['role'])
+                && !resource.data.keys().hasAny(['role']))
+            || request.resource.data.role == resource.data.role
             || (!resource.data.keys().hasAny(['role'])
                 && request.resource.data.role in ['dj', 'organizer', 'partygoer']))
-          && (!request.resource.data.keys().hasAny(['accessRole'])
-            || request.resource.data.accessRole == resource.data.accessRole)
+          && ((!request.resource.data.keys().hasAny(['accessRole'])
+                && !resource.data.keys().hasAny(['accessRole']))
+            || request.resource.data.accessRole == resource.data.accessRole
+            || (!resource.data.keys().hasAny(['accessRole'])
+              && request.resource.data.accessRole == 'none'))
           && (!request.resource.data.keys().hasAny(['fcmTokens'])
             || request.resource.data.fcmTokens is list))
           || (isAdmin()
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-              'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl',
-              'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileZoom', 'profilePanX', 'profilePanY', 'updatedAt', 'role', 'accessRole', 'fcmTokens'
+              'displayName', 'email', 'socialLinks', 'bio', 'profileImageUrl', 'profileImagePublicId',
+              'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileSourceImagePublicId', 'profileZoom', 'profilePanX', 'profilePanY', 'updatedAt', 'role', 'accessRole', 'fcmTokens'
             ])
             && (request.auth.uid == userId
               && request.auth.token.email == 'djdeeroy@gmail.com'
@@ -122,17 +180,40 @@ service cloud.firestore {
               || request.resource.data.fcmTokens is list)));
     }
 
-    // The mobile app reads public profile projections through callable
-    // functions. This collection is reserved for a future projection cache;
-    // clients must never write it directly.
+    // This is a public-only projection: it contains no email, push token or
+    // private moderation data. It is readable without login so chat badges
+    // and public profiles can render immediately for signed-out users.
     match /public_profiles/{userId} {
-      allow read: if isRegistered();
+      allow read: if true;
       allow write: if false;
+    }
+
+    // Blocks already-issued tokens for a deleted UID. Re-registering the same
+    // email or Google identity creates a new UID and remains allowed.
+    match /deleted_user_ids/{userId} {
+      allow read, write: if false;
+    }
+
+    // One-way markers retained solely to prevent re-registration after a
+    // complete account deletion. The raw email is never stored.
+    match /deleted_identity_hashes/{identityHash} {
+      allow read, write: if false;
     }
 
     // Achievement points and the ledger are server-managed. Clients may read
     // the public profile summary, but can never award themselves points.
     match /achievement_ledger/{entryId} {
+      allow read, write: if false;
+    }
+
+    // Game attempts and aggregate results are written only by Cloud
+    // Functions. The client can submit through the callable, never directly
+    // to these collections.
+    match /game_attempts/{attemptId} {
+      allow read, write: if false;
+    }
+
+    match /game_stats/{gameId} {
       allow read, write: if false;
     }
 
@@ -156,21 +237,12 @@ service cloud.firestore {
 
     match /news_reactions/{postId} {
       allow read: if true;
-      allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['count', 'likedBy'])
-        && request.resource.data.count is int
-        && request.resource.data.count >= 0
-        && request.resource.data.likedBy is map
-        && request.resource.data.likedBy.keys().hasOnly([request.auth.uid]);
-      allow update: if request.auth != null
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['count', 'likedBy'])
-        && request.resource.data.count is int
-        && request.resource.data.count >= 0
-        && request.resource.data.likedBy is map
-        && request.resource.data.likedBy.diff(resource.data.likedBy)
-          .affectedKeys().hasOnly([request.auth.uid]);
-      allow delete: if isAdmin();
+      allow write: if false;
+    }
+
+    match /event_ratings/{eventId}/users/{userId} {
+      allow read: if isRegistered();
+      allow write: if false;
     }
 
     match /community_profiles/{userId}/blocked_users/{blockedId} {
@@ -193,13 +265,7 @@ service cloud.firestore {
 
     match /event_attendance/{eventId}/users/{userId} {
       allow read: if isRegistered();
-      allow create, update: if request.auth != null
-        && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['state', 'eventId', 'updatedAt'])
-        && request.resource.data.eventId is int
-        && request.resource.data.eventId == int(eventId)
-        && request.resource.data.state in ['attending', 'not_attending'];
-      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
     }
 
     // Meetup is scoped to one event. Registered users can read the list;
@@ -232,28 +298,17 @@ service cloud.firestore {
 
     match /community_profiles/{userId}/connections/{otherUserId} {
       allow read: if isRegistered();
-      allow write: if isAdmin() || (isRegistered()
-        && (request.auth.uid == userId || request.auth.uid == otherUserId));
+      allow write: if false;
     }
 
     match /connection_requests/{requestId} {
-      allow read: if isRegistered();
-      allow create: if isRegistered()
-        && request.resource.data.from == request.auth.uid
-        && request.resource.data.to is string
-        && request.resource.data.to != request.auth.uid
-        && request.resource.data.status == 'pending';
-      allow update: if isRegistered()
-        && ((resource.data.to == request.auth.uid
-              && request.resource.data.status in ['accepted', 'rejected'])
-            || (resource.data.from == request.auth.uid
-              && resource.data.status == 'pending'
-              && request.resource.data.status == 'pending'
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-                'notificationRequestedAt']))
-            || isAdmin());
-      allow delete: if isRegistered()
-        && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid || isAdmin());
+      allow read: if isRegistered()
+        && (requestId.matches('^' + request.auth.uid + '_.+$')
+          || requestId.matches('^.+_' + request.auth.uid + '$')
+          || resource.data.from == request.auth.uid
+          || resource.data.to == request.auth.uid
+          || isAdmin());
+      allow write: if false;
     }
 
     match /chat_reports/{reportId} {
@@ -307,8 +362,9 @@ service cloud.firestore {
             /databases/$(database)/documents/private_conversations/$(conversationId)
           ).data.participantIds
           && request.resource.data.keys().hasOnly([
-            'senderId', 'recipientId', 'text', 'createdAt'
-          ])
+             'senderId', 'recipientId', 'text', 'imageUrl', 'imagePublicId', 'createdAt',
+             'replyToMessageId', 'replyToText', 'reactions', 'reactionBy'
+           ])
           && request.resource.data.senderId == request.auth.uid
           && request.resource.data.recipientId is string
           && request.resource.data.recipientId != request.auth.uid
@@ -318,9 +374,19 @@ service cloud.firestore {
           && !exists(/databases/$(database)/documents/community_profiles/$(request.auth.uid)/blocked_users/$(request.resource.data.recipientId))
           && !exists(/databases/$(database)/documents/community_profiles/$(request.resource.data.recipientId)/blocked_users/$(request.auth.uid))
           && request.resource.data.text is string
-          && request.resource.data.text.size() > 0
           && request.resource.data.text.size() <= 2000
-          && request.resource.data.createdAt is timestamp;
+          && (!request.resource.data.keys().hasAny(['imageUrl'])
+              || (request.resource.data.imageUrl is string
+                  && request.resource.data.imageUrl.size() <= 2048
+                  && (request.resource.data.imageUrl == ''
+                  || request.resource.data.imageUrl.matches('^https://res\\.cloudinary\\.com/fjxo93em/image/upload/.+'))))
+          && (!request.resource.data.keys().hasAny(['imagePublicId'])
+              || (request.resource.data.imagePublicId is string
+                  && request.resource.data.imagePublicId.matches('^huhs_users/' + request.auth.uid + '/.+')))
+          && (request.resource.data.text.size() > 0
+              || (request.resource.data.keys().hasAny(['imageUrl'])
+                  && request.resource.data.imageUrl.size() > 0))
+           && request.resource.data.createdAt is timestamp;
          allow update: if isRegistered()
            && request.auth.uid in get(
              /databases/$(database)/documents/private_conversations/$(conversationId)
@@ -373,24 +439,16 @@ service cloud.firestore {
 
     match /voting_votes/{voteId} {
       allow read: if isAdmin();
-      allow create: if request.auth != null
-        && request.auth.token.firebase.sign_in_provider != 'anonymous'
-        && voteId == string(request.resource.data.seasonId) + '_' + request.resource.data.category + '_' + request.auth.uid
-        && request.resource.data.keys().hasOnly(['seasonId', 'category', 'candidateIds', 'userId', 'createdAt'])
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.seasonId is int
-        && request.resource.data.category is string
-        && request.resource.data.candidateIds is list
-        && request.resource.data.candidateIds.size() > 0
-        && (
-          (request.resource.data.category == 'hungarian_organizer' && request.resource.data.candidateIds.size() <= 1)
-          || (request.resource.data.category == 'hungarian_hardstyle_dj' && request.resource.data.candidateIds.size() <= 5)
-          || (request.resource.data.category == 'hungarian_hardcore_dj' && request.resource.data.candidateIds.size() <= 3)
-          || (request.resource.data.category == 'hungarian_track' && request.resource.data.candidateIds.size() <= 2)
-          || (request.resource.data.category == 'international_dj' && request.resource.data.candidateIds.size() <= 3)
-        )
-        && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if false;
+      // Votes are written only by the validated submitVotingBallot callable.
+      // This prevents a client from bypassing the all-required-categories rule.
+      allow create, update, delete: if false;
+    }
+
+    match /voting_device_claims/{claimId} {
+      // Device claims are server-only. The callable stores only a one-way
+      // hash-derived document ID and the minimum data needed to prevent a
+      // second account on the same app installation from voting again.
+      allow read, create, update, delete: if false;
     }
   }
 }

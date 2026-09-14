@@ -13,8 +13,16 @@ class FeaturedNewsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final imageCacheWidth =
+        (MediaQuery.sizeOf(context).width *
+                MediaQuery.devicePixelRatioOf(context) *
+                0.42)
+            .round()
+            .clamp(360, 1600);
+
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(8),
       onTap: () {
         Navigator.push(
           context,
@@ -22,153 +30,125 @@ class FeaturedNewsCard extends StatelessWidget {
         );
       },
       child: Container(
+        height: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFF171717),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF5A2424)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFF03A37).withValues(alpha: .15),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          color: colors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: colors.outlineVariant),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Stack(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Hero(
-              tag: "post_${post.id}",
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
+            Expanded(
+              flex: 5,
+              child: Hero(
+                tag: "post_${post.id}",
                 child: post.imageUrl.isNotEmpty
                     ? CachedNetworkImage(
                         imageUrl: post.imageUrl,
                         fit: BoxFit.cover,
+                        memCacheWidth: imageCacheWidth,
+                        maxWidthDiskCache: imageCacheWidth,
                       )
                     : Container(
-                        color: Colors.grey.shade900,
+                        color: colors.surfaceContainerHighest,
                         child: const Icon(
                           Icons.article,
                           color: Colors.white54,
-                          size: 70,
+                          size: 60,
                         ),
                       ),
               ),
             ),
-
-            // Gradient
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: .35),
-                      Colors.black.withValues(alpha: .95),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Badge
-            Positioned(
-              left: 16,
-              top: 16,
+            Expanded(
+              flex: 7,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 18, 14, 14),
                 decoration: BoxDecoration(
-                  color: Colors.redAccent,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.local_fire_department,
-                      color: Colors.white,
-                      size: 15,
-                    ),
-                    SizedBox(width: 5),
-                    Text(
-                      "KIEMELT HÍR",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                        letterSpacing: .5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            Positioned(
-              left: 20,
-              right: 20,
-              bottom: 18,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    post.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      height: 1.25,
-                    ),
+                  color: colors.surfaceContainer,
+                  border: Border(
+                    left: BorderSide(color: colors.primary, width: 3),
                   ),
-                  if (post.articleCategories.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      post.articleCategories.join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 14),
-
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today_rounded,
-                        size: 15,
-                        color: Colors.white70,
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer,
+                        borderRadius: BorderRadius.circular(3),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        formatHungarianDate(post.date),
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 13,
+                      child: Text(
+                        post.isSticky ? 'KIEMELT HÍR' : 'FRISS HÍR',
+                        style: TextStyle(
+                          color: colors.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                          letterSpacing: 1,
                         ),
                       ),
-                      const Spacer(),
-                      NewsReactionButton(postId: post.id),
-                      const Icon(
-                        Icons.arrow_forward_rounded,
-                        color: Colors.white,
-                        size: 22,
+                    ),
+                    const Spacer(),
+                    Text(
+                      post.title,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: colors.onSurface,
+                        fontWeight: FontWeight.w800,
+                        height: 1.05,
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black54,
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (post.articleCategories.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        post.articleCategories.join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.onSurfaceVariant,
+                          fontSize: 11,
+                          letterSpacing: .3,
+                        ),
                       ),
                     ],
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            formatHungarianDate(post.date),
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: colors.onSurfaceVariant,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        NewsReactionButton(postId: post.id),
+                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          color: colors.primary,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

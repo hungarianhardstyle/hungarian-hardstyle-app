@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'dart:async';
 
 import '../providers/ads_provider.dart';
@@ -84,7 +85,6 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
       return;
     }
     if (size == null) {
-      debugPrint('AdMob banner méret nem kérhető: width=$width');
       _requestedWidth = null;
       _retryTimer?.cancel();
       _retryTimer = Timer(const Duration(seconds: 5), () {
@@ -101,7 +101,6 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
       listener: BannerAdListener(
         onAdLoaded: (ad) {
           _loadTimeout?.cancel();
-          debugPrint('AdMob banner betöltve.');
           if (!mounted || _loadGeneration != generation) {
             ad.dispose();
             return;
@@ -111,14 +110,9 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
             _loaded = true;
           });
         },
-        onAdFailedToLoad: (ad, error) {
+        onAdFailedToLoad: (ad, _) {
           _loadTimeout?.cancel();
           ad.dispose();
-          debugPrint(
-            'AdMob banner betöltési hiba: '
-            'code=${error.code}, domain=${error.domain}, '
-            'message=${error.message}',
-          );
           if (!mounted) return;
           if (_loadGeneration != generation) return;
           _requestedWidth = null;

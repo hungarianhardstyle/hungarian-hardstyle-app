@@ -62,7 +62,11 @@ class ReleasesScreenState extends ConsumerState<ReleasesScreen>
 
   Future<void> refreshNow() async {
     final service = ref.read(wordpressServiceProvider);
-    service.clearReleasesCache(search: _search, artistId: widget.artistId);
+    await service.getReleases(
+      search: _search,
+      artistId: widget.artistId,
+      forceRefresh: true,
+    );
     ref.invalidate(releasesProvider(_query));
     await ref.read(releasesProvider(_query).future);
   }
@@ -189,6 +193,9 @@ class _ReleaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final coverCacheWidth = (150 * MediaQuery.devicePixelRatioOf(context))
+        .round()
+        .clamp(300, 600);
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -216,8 +223,8 @@ class _ReleaseCard extends StatelessWidget {
                     : CachedNetworkImage(
                         imageUrl: release.coverUrl,
                         fit: BoxFit.cover,
-                        memCacheWidth: 300,
-                        maxWidthDiskCache: 300,
+                        memCacheWidth: coverCacheWidth,
+                        maxWidthDiskCache: coverCacheWidth,
                       ),
               ),
               Expanded(
@@ -231,7 +238,9 @@ class _ReleaseCard extends StatelessWidget {
                   subtitle: Text(
                     [
                       if (release.artists.isNotEmpty)
-                        release.artists.map((artist) => artist.name).join(' · '),
+                        release.artists
+                            .map((artist) => artist.name)
+                            .join(' · '),
                       if (release.releaseDate.isNotEmpty)
                         'Megjelenés: ${release.releaseDate}',
                       if (release.genre.isNotEmpty) release.genre,

@@ -35,6 +35,12 @@ class _CommunityUsersScreenState extends ConsumerState<CommunityUsersScreen> {
     super.dispose();
   }
 
+  Future<void> _refreshProfiles() async {
+    await ref
+        .read(communityServiceProvider)
+        .getRegisteredPublicProfiles(forceRefresh: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final service = ref.watch(communityServiceProvider);
@@ -42,8 +48,8 @@ class _CommunityUsersScreenState extends ConsumerState<CommunityUsersScreen> {
     final isRegistered = viewer != null && !viewer.isAnonymous;
     return Scaffold(
       appBar: AppBar(title: const Text('Felhasználók')),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: service.getRegisteredPublicProfiles(),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: service.watchRegisteredPublicProfiles(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
@@ -65,28 +71,33 @@ class _CommunityUsersScreenState extends ConsumerState<CommunityUsersScreen> {
                       (b['displayName'] as String? ?? '').toLowerCase(),
                     ),
               );
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            children: [
-              TextField(
-                controller: _search,
-                onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  labelText: 'Felhasználó keresése',
-                  hintText: 'Már egy betűre is keres',
-                  prefixIcon: Icon(Icons.search),
+          return RefreshIndicator(
+            onRefresh: _refreshProfiles,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              children: [
+                TextField(
+                  controller: _search,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    labelText: 'Felhasználó keresése',
+                    hintText: 'Már egy betűre is keres',
+                    prefixIcon: Icon(Icons.search),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              if (profiles.isEmpty) const Center(child: Text('Nincs találat.')),
-              for (final profile in profiles)
-                _UserTile(
-                  profile: profile,
-                  imageUrl: service.resolveProfileImage(profile),
-                  service: service,
-                  showAccessRole: isRegistered,
-                ),
-            ],
+                const SizedBox(height: 16),
+                if (profiles.isEmpty)
+                  const Center(child: Text('Nincs találat.')),
+                for (final profile in profiles)
+                  _UserTile(
+                    profile: profile,
+                    imageUrl: service.resolveProfileImage(profile),
+                    service: service,
+                    showAccessRole: isRegistered,
+                  ),
+              ],
+            ),
           );
         },
       ),
@@ -174,8 +185,12 @@ class _CommunityPublicProfileScreenState
     super.initState();
     service = CommunityService();
     _connectionStatus = service.connectionStatus(widget.userId);
+    // Paint cached public data immediately; the projection is refreshed by
+    // Firebase whenever the profile or achievement state changes.
     _profileFuture = service.getPublicProfile(widget.userId);
-    _achievementFuture = service.getPublicAchievement(widget.userId);
+    // getPublicProfile already contains the public achievement projection.
+    // Reusing it removes a second callable request from profile opening.
+    _achievementFuture = _profileFuture.then(AchievementSummary.fromProfile);
   }
 
   Future<void> _requestConnection() async {
@@ -203,9 +218,8 @@ class _CommunityPublicProfileScreenState
       setState(() {
         _connectionStatus = Future.value(null);
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Ismerős törölve.')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Ismerős törölve.')));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -249,9 +263,8 @@ class _CommunityPublicProfileScreenState
     } catch (error) {
       if (!mounted) return;
       setState(() => _blocking = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(userFacingError(error))));
     }
   }
 
@@ -269,6 +282,9 @@ class _CommunityPublicProfileScreenState
           final viewer = service.auth.currentUser;
           final isRegistered = viewer != null && !viewer.isAnonymous;
           final isOwnProfile = viewer?.uid == widget.userId;
+          final avatarCacheWidth = (96 * MediaQuery.devicePixelRatioOf(context))
+              .round()
+              .clamp(192, 384);
           final name = (data['displayName'] as String? ?? 'HUHS user').trim();
           final image = service.resolveProfileImage(data);
           final links = Map<String, dynamic>.from(
@@ -294,11 +310,14 @@ class _CommunityPublicProfileScreenState
                             ),
                           )
                         : CachedNetworkImage(
-                            imageUrl: image,
+                            imageUrl: CommunityService.optimizedImageUrl(
+                              image,
+                              width: avatarCacheWidth,
+                            ),
                             fit: BoxFit.cover,
-                            memCacheWidth: 192,
-                            maxWidthDiskCache: 192,
-                            placeholder: (_, __) => ColoredBox(
+                            memCacheWidth: avatarCacheWidth,
+                            maxWidthDiskCache: avatarCacheWidth,
+                            placeholder: (_, _) => ColoredBox(
                               color: Theme.of(context).colorScheme.primary,
                               child: const Center(
                                 child: SizedBox.square(
@@ -309,7 +328,7 @@ class _CommunityPublicProfileScreenState
                                 ),
                               ),
                             ),
-                            errorWidget: (_, __, ___) => ColoredBox(
+                            errorWidget: (_, _, _) => ColoredBox(
                               color: Theme.of(context).colorScheme.primary,
                               child: Center(
                                 child: Text(
@@ -838,9 +857,9 @@ class CommunityHubScreen extends StatelessWidget {
         trailing: const Icon(Icons.chevron_right),
         onTap: screen == null
             ? null
-            : () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute<void>(builder: (_) => screen)),
+            : () =>
+                  Navigator.of(context)
+                      .push(MaterialPageRoute<void>(builder: (_) => screen)),
       ),
     );
   }

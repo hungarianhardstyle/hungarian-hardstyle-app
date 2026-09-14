@@ -1,5 +1,12 @@
 # Hungarian Hardstyle App
 
+## Legutóbbi tartós állapot — 2026-09-04
+
+- Profil törlés után a felhasználói cache és helyi állapot kiürül, a fiók kijelentkezik, majd az app a Kezdőlapra vált.
+- Elfogadott ismerős-jelölésről a jelölő Notification- és push értesítést kap; az értesítés az elfogadó profilját nyitja meg.
+- A hírek, DJ-k és szervezők keresése csak valódi tartalmi egyezést ad vissza; értelmetlen keresésnél nincs találat.
+- Ezek a projekt tartós megjegyzései; a részletes agent-kontextust az `AGENTS.md`, a kapcsolati tudást a `graphify-out/` index tartalmazza.
+
 ## Aktuális Play-build: +225 — zárt Alpha tesztbe felülvizsgálatra beküldve
 
 - A +225 AAB elkészült és a zárt tesztbe feltöltve; a Play automatikus ellenőrzései még futhatnak.

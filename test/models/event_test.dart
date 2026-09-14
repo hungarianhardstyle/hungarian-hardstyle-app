@@ -24,11 +24,55 @@ void main() {
     expect(event.genres, ['Hardstyle', 'Hardcore']);
   });
 
+  test('a flyer teljes képe megelőzi a thumbnail URL-t', () {
+    final event = HuhsEvent.fromJson({
+      'flyer': {
+        'url': 'https://example.com/flyer-300x200.jpg',
+        'source_url': 'https://example.com/flyer-original.jpg',
+        'full': 'https://example.com/flyer-full.jpg',
+        'thumbnail': 'https://example.com/flyer-thumb.jpg',
+      },
+    });
+
+    expect(event.flyerUrl, 'https://example.com/flyer-original.jpg');
+  });
+
+  test('a régi, egyszerű flyer URL formátum továbbra is működik', () {
+    final event = HuhsEvent.fromJson({
+      'flyer': 'https://example.com/flyer.jpg',
+    });
+
+    expect(event.flyerUrl, 'https://example.com/flyer.jpg');
+  });
+
+  test('a WordPress méretezett flyer URL-jéből az eredeti képet használja', () {
+    final event = HuhsEvent.fromJson({
+      'flyer':
+          'https://hungarianhardstyle.hu/wp-content/uploads/2026/08/flyer-1024x433.jpg',
+    });
+
+    expect(
+      event.flyerUrl,
+      'https://hungarianhardstyle.hu/wp-content/uploads/2026/08/flyer.jpg',
+    );
+  });
+
   test('kiszűri a lejárt eseményeket a dátum alapján', () {
     final past = HuhsEvent.fromJson({'start_date': '2000-01-01'});
     final future = HuhsEvent.fromJson({'start_date': '2099-01-01'});
 
     expect(past.isPast, isTrue);
     expect(future.isPast, isFalse);
+  });
+
+  test('hibás, kezdődátumnál korábbi záródátum nem teszi lejárttá', () {
+    final event = HuhsEvent.fromJson({
+      'start_date': '2099-10-17',
+      'start_time': '23:00',
+      'end_date': '2099-02-18',
+      'end_time': '05:00',
+    });
+
+    expect(event.isPast, isFalse);
   });
 }

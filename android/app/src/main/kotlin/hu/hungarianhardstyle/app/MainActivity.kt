@@ -9,6 +9,9 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
+import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
 import java.io.File
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -29,7 +32,9 @@ class MainActivity : FlutterFragmentActivity() {
             }
             systemBackCallback = callback
             onBackInvokedDispatcher.registerOnBackInvokedCallback(
-                OnBackInvokedDispatcher.PRIORITY_OVERLAY,
+                // Let the IME consume the first back press while it is open;
+                // Flutter still receives back normally once it is dismissed.
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT,
                 callback,
             )
         }
@@ -78,6 +83,38 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     else -> result.notImplemented()
                 }
+            }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/auth")
+            .setMethodCallHandler { call, result ->
+                if (call.method != "deviceCredential") {
+                    result.notImplemented()
+                    return@setMethodCallHandler
+                }
+                val executor = ContextCompat.getMainExecutor(this)
+                val prompt = BiometricPrompt(
+                    this,
+                    executor,
+                    object : BiometricPrompt.AuthenticationCallback() {
+                        override fun onAuthenticationSucceeded(
+                            authResult: BiometricPrompt.AuthenticationResult,
+                        ) {
+                            result.success(true)
+                        }
+
+                        override fun onAuthenticationError(
+                            errorCode: Int,
+                            errString: CharSequence,
+                        ) {
+                            result.success(false)
+                        }
+                    },
+                )
+                val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                    .setTitle("Android-kódos feloldás")
+                    .setSubtitle("PIN-kód, jelszó vagy mintarajz szükséges")
+                    .setAllowedAuthenticators(DEVICE_CREDENTIAL)
+                    .build()
+                prompt.authenticate(promptInfo)
             }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/install_referrer")
             .setMethodCallHandler { call, result ->

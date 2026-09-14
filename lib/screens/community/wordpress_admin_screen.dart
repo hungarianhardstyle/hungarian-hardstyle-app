@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:html/parser.dart' as html_parser;
@@ -27,6 +28,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
 
   static const _sections = <String, String>{
     'dashboard': 'Áttekintés',
+    'games': 'Játékok',
+    'voting_summary': 'Szavazási állás',
     'huhs_release': 'Release-ek',
     'submissions': 'Beküldések',
     'huhs_event': 'Események',
@@ -43,6 +46,23 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     'huhs_organizer',
     'huhs_release',
   };
+  static const _adminFieldLabels = <String, String>{
+    'apiVersion': 'API-verzió',
+    'artists': 'DJ-k száma',
+    'organizers': 'Szervezők száma',
+    'events': 'Események száma',
+    'submissions': 'Függőben lévő beküldések',
+    'baseUrl': 'API-cím',
+    'imageUpload': 'Képfeltöltés',
+    'moderatedSubmissions': 'Beküldések moderálása',
+    'project': 'Projekt',
+    'developer': 'Fejlesztő',
+    'website': 'Weboldal',
+    'configured': 'Beállítás állapota',
+    'registeredDevices': 'Regisztrált eszközök',
+    'audienceId': 'Célközönség azonosítója',
+    'dataCenter': 'Adatközpont',
+  };
 
   @override
   void initState() {
@@ -50,10 +70,12 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     _request = _load();
   }
 
-  Future<dynamic> _load() {
+  Future<dynamic> _load() async {
+    await FirebaseAuth.instance.authStateChanges().first;
     final service = ref.read(communityServiceProvider);
     if (_section == 'submissions') return service.wordPressSubmissions();
     if (_section == 'dashboard' ||
+        _section == 'games' ||
         _section == 'push' ||
         _section == 'newsletter' ||
         _section == 'shortcodes' ||
@@ -81,49 +103,241 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
 
   void _select(String section) {
     if (!mounted || _section == section) return;
+    if (section == 'voting_summary') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const VotingSummaryScreen()),
+      );
+      return;
+    }
     setState(() {
       _section = section;
       _request = _load();
     });
   }
 
-  Future<void> _sendPush() async {
+  String _pushTargetLabel(String value, List<Map<String, dynamic>> targets) {
+    if (value == 'none') return 'Nincs cél';
+    if (value == 'url') return 'Egyedi link';
+    for (final item in targets) {
+      final id = (item['id'] as num?)?.toInt();
+      final type = item['type']?.toString() ?? '';
+      if (id == null || '$type:$id' != value) continue;
+      final kind = switch (type) {
+        'news' => 'Cikk',
+        'event' => 'Esemény',
+        'release' => 'Release',
+        _ => 'Tartalom',
+      };
+      return '$kind: ${item['title'] ?? id}';
+    }
+    return 'Nincs cél';
+  }
+
+  Future<String?> _selectPushTarget(List<Map<String, dynamic>> targets) async {
+    final searchController = TextEditingController();
+    var query = '';
+    try {
+      return await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final normalizedQuery = query.trim().toLowerCase();
+            final filtered = targets
+                .where((item) {
+                  if (normalizedQuery.isEmpty) return true;
+                  return '${item['title'] ?? ''}'.toLowerCase().contains(
+                    normalizedQuery,
+                  );
+                })
+                .toList(growable: false);
+            return AlertDialog(
+              title: const Text('Megnyitandó tartalom'),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: MediaQuery.sizeOf(dialogContext).height * .62,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: searchController,
+                      onChanged: (value) => setDialogState(() => query = value),
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.search),
+                        labelText: 'Keresés a címek között',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: ListView(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.notifications_none),
+                            title: const Text('Nincs cél'),
+                            onTap: () => Navigator.pop(dialogContext, 'none'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.link),
+                            title: const Text('Egyedi link'),
+                            subtitle: const Text('HTTPS-link megadása'),
+                            onTap: () => Navigator.pop(dialogContext, 'url'),
+                          ),
+                          const Divider(),
+                          ...filtered.map((item) {
+                            final id = (item['id'] as num).toInt();
+                            final type = item['type'].toString();
+                            final kind = switch (type) {
+                              'news' => 'Cikk',
+                              'event' => 'Esemény',
+                              'release' => 'Release',
+                              _ => 'Tartalom',
+                            };
+                            return ListTile(
+                              leading: Icon(
+                                type == 'news'
+                                    ? Icons.article_outlined
+                                    : type == 'event'
+                                    ? Icons.event_outlined
+                                    : Icons.album_outlined,
+                              ),
+                              title: Text(
+                                '$kind: ${item['title'] ?? id}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onTap: () =>
+                                  Navigator.pop(dialogContext, '$type:$id'),
+                            );
+                          }),
+                          if (filtered.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Text('Nincs találat.'),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Mégse'),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } finally {
+      searchController.dispose();
+    }
+  }
+
+  Future<void> _sendPush(Map<String, dynamic> pushData) async {
     if (_sendingPush) return;
     var title = '';
     var body = '';
-    final result = await showDialog<(String, String)>(
+    var selectedTarget = 'none';
+    var customUrl = '';
+    final targets = (pushData['targets'] as List? ?? const [])
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .where(
+          (item) =>
+              (item['id'] as num?) != null &&
+              (item['type']?.toString().trim().isNotEmpty ?? false),
+        )
+        .toList(growable: false);
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Egyedi push'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              onChanged: (value) => title = value,
-              decoration: const InputDecoration(labelText: 'Cím'),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Egyedi push'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  onChanged: (value) => title = value,
+                  decoration: const InputDecoration(labelText: 'Cím'),
+                ),
+                TextField(
+                  onChanged: (value) => body = value,
+                  minLines: 2,
+                  maxLines: 5,
+                  decoration: const InputDecoration(labelText: 'Üzenet'),
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () async {
+                    final value = await _selectPushTarget(targets);
+                    if (value != null) {
+                      setDialogState(() => selectedTarget = value);
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Megnyitandó tartalom',
+                      suffixIcon: Icon(Icons.open_in_new),
+                    ),
+                    child: Text(
+                      _pushTargetLabel(selectedTarget, targets),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                if (selectedTarget == 'url') ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    onChanged: (value) => customUrl = value,
+                    keyboardType: TextInputType.url,
+                    decoration: const InputDecoration(
+                      labelText: 'HTTPS-link',
+                      hintText: 'https://...',
+                    ),
+                  ),
+                ],
+              ],
             ),
-            TextField(
-              onChanged: (value) => body = value,
-              minLines: 2,
-              maxLines: 5,
-              decoration: const InputDecoration(labelText: 'Üzenet'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Mégse'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final parts = selectedTarget.split(':');
+                Navigator.pop(dialogContext, {
+                  'title': title.trim(),
+                  'body': body.trim(),
+                  'targetType': parts.first,
+                  'targetId': parts.length == 2
+                      ? int.tryParse(parts.last) ?? 0
+                      : 0,
+                  'url': selectedTarget == 'url' ? customUrl.trim() : '',
+                });
+              },
+              child: const Text('Küldés'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Mégse'),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.pop(context, (title.trim(), body.trim())),
-            child: const Text('Küldés'),
-          ),
-        ],
       ),
     );
-    if (result == null || result.$1.isEmpty || result.$2.isEmpty) return;
+    if (result == null ||
+        (result['title'] as String).isEmpty ||
+        (result['body'] as String).isEmpty) {
+      return;
+    }
+    if (result['targetType'] == 'url') {
+      final uri = Uri.tryParse(result['url'] as String);
+      if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
+        _message('Érvényes HTTPS-linket adj meg.');
+        return;
+      }
+    }
     if (mounted) setState(() => _sendingPush = true);
     try {
       await ref
@@ -133,8 +347,11 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
             method: 'POST',
             body: {
               'action': 'send_push',
-              'title': result.$1,
-              'body': result.$2,
+              'title': result['title'],
+              'body': result['body'],
+              'targetType': result['targetType'],
+              'targetId': result['targetId'],
+              'url': result['url'],
             },
           );
       _message('A push elküldve.');
@@ -806,64 +1023,103 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
   String _plainText(Object? value) =>
       html_parser.parseFragment('${value ?? ''}').text?.trim() ?? '';
 
+  String _adminFieldLabel(Object key) =>
+      _adminFieldLabels[key.toString()] ?? key.toString();
+
+  String _adminFieldValue(Object? value) {
+    if (value == true) return 'Igen';
+    if (value == false) return 'Nem';
+    return '$value';
+  }
+
   Future<void> _editStartup(Map<String, dynamic> data) async {
     final service = ref.read(communityServiceProvider);
     final url = TextEditingController(text: data['imageUrl']?.toString() ?? '');
+    final buttonLabel = TextEditingController(
+      text: data['buttonLabel']?.toString() ?? '',
+    );
+    final buttonUrl = TextEditingController(
+      text: data['buttonUrl']?.toString() ?? '',
+    );
     var enabled = data['enabled'] == true;
     SubmissionImage? image;
-    final result = await showDialog<(String, bool, SubmissionImage?)>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Indítási kép'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SubmissionImagePicker(
-                  image: image,
-                  title: 'Kép feltöltése',
-                  helperText:
-                      'A kép Cloudinary-ra kerül, és az app indulásakor bezárható.',
-                  onChanged: (value) => setDialogState(() => image = value),
+    final result =
+        await showDialog<(String, bool, SubmissionImage?, String, String?)>(
+          context: context,
+          builder: (dialogContext) => StatefulBuilder(
+            builder: (context, setDialogState) => AlertDialog(
+              title: const Text('Indítási kép'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SubmissionImagePicker(
+                      image: image,
+                      title: 'Kép feltöltése',
+                      helperText: 'A kép Cloudinary-ra kerül, és az app indulásakor bezárható.',
+                      onChanged: (value) => setDialogState(() => image = value),
+                    ),
+                    TextField(
+                      controller: url,
+                      decoration: const InputDecoration(
+                        labelText: 'Kép URL-je',
+                      ),
+                      keyboardType: TextInputType.url,
+                    ),
+                    TextField(
+                      controller: buttonLabel,
+                      decoration: const InputDecoration(
+                        labelText: 'Gomb felirata (például: Jegyek)',
+                      ),
+                      maxLength: 40,
+                    ),
+                    TextField(
+                      controller: buttonUrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Gomb linkje (HTTPS)',
+                      ),
+                      keyboardType: TextInputType.url,
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Megjelenítés engedélyezése'),
+                      value: enabled,
+                      onChanged: (value) =>
+                          setDialogState(() => enabled = value),
+                    ),
+                  ],
                 ),
-                TextField(
-                  controller: url,
-                  decoration: const InputDecoration(labelText: 'Kép URL-je'),
-                  keyboardType: TextInputType.url,
+              ),
+              actions: [
+                TextButton.icon(
+                  onPressed: () =>
+                      Navigator.pop(dialogContext, ('', false, null, '', null)),
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Kép törlése'),
                 ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Megjelenítés engedélyezése'),
-                  value: enabled,
-                  onChanged: (value) => setDialogState(() => enabled = value),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Mégse'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(dialogContext, (
+                    url.text.trim(),
+                    enabled,
+                    image,
+                    buttonLabel.text.trim(),
+                    buttonUrl.text.trim().isEmpty
+                        ? null
+                        : buttonUrl.text.trim(),
+                  )),
+                  child: const Text('Mentés'),
                 ),
               ],
             ),
           ),
-          actions: [
-            TextButton.icon(
-              onPressed: () => Navigator.pop(dialogContext, ('', false, null)),
-              icon: const Icon(Icons.delete_outline),
-              label: const Text('Kép törlése'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Mégse'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, (
-                url.text.trim(),
-                enabled,
-                image,
-              )),
-              child: const Text('Mentés'),
-            ),
-          ],
-        ),
-      ),
-    );
+        );
     url.dispose();
+    buttonLabel.dispose();
+    buttonUrl.dispose();
     if (result == null) return;
     try {
       var imageUrl = result.$1;
@@ -877,6 +1133,20 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         _message('Bekapcsolva csak kép URL-lel menthető.');
         return;
       }
+      final buttonLabelValue = result.$4.trim();
+      final buttonUrlValue = result.$5?.trim() ?? '';
+      final parsedButtonUrl = Uri.tryParse(buttonUrlValue);
+      if (buttonUrlValue.isNotEmpty &&
+          (buttonLabelValue.isEmpty ||
+              buttonLabelValue.length > 40 ||
+              parsedButtonUrl == null ||
+              parsedButtonUrl.scheme != 'https' ||
+              parsedButtonUrl.host.isEmpty)) {
+        _message(
+          'A gombhoz érvényes HTTPS-link és 1–40 karakteres felirat kell.',
+        );
+        return;
+      }
       await service.wordPressAdminRequest(
         path: '/huhs/v1/admin',
         method: 'POST',
@@ -884,6 +1154,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           'action': 'save_startup',
           'imageUrl': imageUrl,
           'enabled': result.$2,
+          'buttonLabel': buttonUrlValue.isEmpty ? '' : buttonLabelValue,
+          'buttonUrl': buttonUrlValue,
         },
       );
       _message(
@@ -901,6 +1173,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
 
   Widget _special(dynamic data) {
     if (data is! Map) return const Center(child: Text('Nincs adat.'));
+    if (_section == 'games') return _gameAdminList(data);
     final entries = data.entries
         .where((entry) => entry.key != 'items' && entry.key != 'sections')
         .toList();
@@ -919,7 +1192,9 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           ),
         if (_section == 'push')
           FilledButton.icon(
-            onPressed: _sendingPush ? null : _sendPush,
+            onPressed: _sendingPush
+                ? null
+                : () => _sendPush(Map<String, dynamic>.from(data)),
             icon: const Icon(Icons.send),
             label: const Text('Egyedi push létrehozása'),
           ),
@@ -935,14 +1210,15 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
             icon: const Icon(Icons.delete_forever),
             label: const Text('Lomtár ürítése'),
           ),
-        ...entries.map(
-          (entry) => Card(
-            child: ListTile(
-              title: Text('${entry.key}'),
-              subtitle: Text('${entry.value}'),
+        if (_section != 'push')
+          ...entries.map(
+            (entry) => Card(
+              child: ListTile(
+                title: Text(_adminFieldLabel(entry.key)),
+                subtitle: Text(_adminFieldValue(entry.value)),
+              ),
             ),
           ),
-        ),
         if (_section == 'shortcodes' && data['items'] is List)
           ..._items(data['items']).map(
             (item) => Card(
@@ -956,6 +1232,74 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           ..._items(data['items']).map(_item),
       ],
     );
+  }
+
+  Widget _gameAdminList(Map<dynamic, dynamic> data) {
+    final games = _items(data['items']);
+    if (games.isEmpty) {
+      return const Center(child: Text('Nincs még játék az adatbázisban.'));
+    }
+    return RefreshIndicator(
+      onRefresh: () async => _reload(),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(12),
+        itemCount: games.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 10),
+        itemBuilder: (context, index) {
+          final game = games[index];
+          final status = '${game['status_label'] ?? game['status'] ?? ''}';
+          final artwork = '${game['artwork'] ?? ''}';
+          return Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (artwork.isNotEmpty)
+                  Image.network(
+                    artwork,
+                    height: 120,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                ListTile(
+                  title: Text(
+                    '${game['title'] ?? 'Játék'}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    '${game['type_label'] ?? 'Játék'}  •  $status\n'
+                    'Beküldések: ${game['submissions'] ?? 0}  •  '
+                    'Helyes válaszok: ${game['correct_answers'] ?? 0}/'
+                    '${game['total_answers'] ?? 0}',
+                  ),
+                  isThreeLine: true,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                  child: Text(
+                    'Időszak: ${_adminDate(game['start_at'])} – ${_adminDate(game['end_at'])}\n'
+                    'Jutalom: ${game['reward_points'] ?? 0} pont  •  '
+                    'Kérdések: ${game['question_count'] ?? 0}  •  '
+                    'Idővonal-elemek: ${game['timeline_count'] ?? 0}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  String _adminDate(Object? value) {
+    final raw = '$value'.trim();
+    if (raw.isEmpty || raw == 'null') return '—';
+    final parsed = DateTime.tryParse(raw)?.toLocal();
+    if (parsed == null) return raw;
+    final minute = parsed.minute.toString().padLeft(2, '0');
+    return '${parsed.year}.${parsed.month.toString().padLeft(2, '0')}.${parsed.day.toString().padLeft(2, '0')} ${parsed.hour}:$minute';
   }
 
   Widget _submissionItem(Map<String, dynamic> item) {
@@ -1089,6 +1433,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
   Widget build(BuildContext context) {
     final special = {
       'dashboard',
+      'games',
       'settings',
       'push',
       'newsletter',

@@ -93,9 +93,8 @@ class _OrganizerSubmissionScreenState
       if (mounted) Navigator.of(context).pop();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -203,8 +202,7 @@ class _OrganizerSubmissionScreenState
                         SubmissionImagePicker(
                           image: _logo,
                           title: 'Szervezői logó feltöltése',
-                          helperText:
-                              'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
+                          helperText: 'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
                           onChanged: (image) => setState(() => _logo = image),
                         ),
                         _field(
@@ -303,11 +301,9 @@ class _OrganizerSubmissionScreenState
     final text = value?.trim() ?? '';
     if (text.isEmpty) return null;
     final uri = Uri.tryParse(text);
-    return uri != null &&
-            (uri.scheme == 'http' || uri.scheme == 'https') &&
-            uri.host.isNotEmpty
+    return uri != null && uri.scheme == 'https' && uri.host.isNotEmpty
         ? null
-        : 'Teljes http:// vagy https:// linket adj meg.';
+        : 'Teljes https:// linket adj meg.';
   }
 
   String _label(String key) => switch (key) {

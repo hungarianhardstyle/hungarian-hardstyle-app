@@ -238,16 +238,14 @@ class _ArtistSubmissionScreenState
                       SubmissionImagePicker(
                         image: _profileImage,
                         title: 'Profilkép feltöltése',
-                        helperText:
-                            'Opcionális · álló portré ajánlott · legfeljebb 5 MB',
+                        helperText: 'Opcionális · álló portré ajánlott · legfeljebb 5 MB',
                         onChanged: (image) =>
                             setState(() => _profileImage = image),
                       ),
                       SubmissionImagePicker(
                         image: _logo,
                         title: 'DJ-logó feltöltése',
-                        helperText:
-                            'Opcionális · négyzetes, átlátszó PNG ajánlott · legfeljebb 5 MB',
+                        helperText: 'Opcionális · négyzetes, átlátszó PNG ajánlott · legfeljebb 5 MB',
                         onChanged: (image) => setState(() => _logo = image),
                       ),
                       _field(
@@ -354,11 +352,9 @@ class _ArtistSubmissionScreenState
     final text = value?.trim() ?? '';
     if (text.isEmpty) return null;
     final uri = Uri.tryParse(text);
-    return uri != null &&
-            (uri.scheme == 'http' || uri.scheme == 'https') &&
-            uri.host.isNotEmpty
+    return uri != null && uri.scheme == 'https' && uri.host.isNotEmpty
         ? null
-        : 'Teljes http:// vagy https:// linket adj meg.';
+        : 'Teljes https:// linket adj meg.';
   }
 
   String _linkLabel(String key) => key[0].toUpperCase() + key.substring(1);

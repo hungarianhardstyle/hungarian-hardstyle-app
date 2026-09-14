@@ -1,12 +1,34 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'dart:typed_data';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/errors/user_facing_error.dart';
 import '../../core/input/sentence_capitalization_formatter.dart';
 import '../../services/community_service.dart';
 import '../more/community_users_screen.dart';
+
+const _privateMessageEmojis = [
+  '🙂',
+  '😂',
+  '🤣',
+  '😭',
+  '😡',
+  '😢',
+  '😮',
+  '😍',
+  '😎',
+  '🤔',
+  '❤️',
+  '🔥',
+  '👍',
+  '🙌',
+  '🎉',
+];
 
 class PrivateMessagesScreen extends StatefulWidget {
   const PrivateMessagesScreen({super.key});
@@ -45,9 +67,8 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
       await _service.deletePrivateConversation(id);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     }
   }
@@ -304,7 +325,14 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
   final _service = CommunityService();
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
+  final _imagePicker = ImagePicker();
   bool _sending = false;
+  Uint8List? _pendingImageBytes;
+  String? _pendingImageName;
+  String? _replyMessageId;
+  String? _replyText;
+  final Map<String, bool> _heartOverrides = {};
+  final Set<String> _heartBusy = {};
 
   String get _conversationId => _service.privateConversationId(
     _service.auth.currentUser!.uid,
@@ -315,6 +343,11 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
     return _service.getPublicProfile(widget.otherUserId);
   }
 
+  String _partnerName(Map<String, dynamic> profile) {
+    final name = profile['displayName']?.toString().trim();
+    return name?.isNotEmpty == true ? name! : widget.otherUserName;
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -323,23 +356,92 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
   }
 
   Future<void> _send() async {
-    if (_sending || _controller.text.trim().isEmpty) return;
+    if (_sending ||
+        (_controller.text.trim().isEmpty && _pendingImageBytes == null)) {
+      return;
+    }
     setState(() => _sending = true);
     try {
       await _service.sendPrivateMessage(
         otherUserId: widget.otherUserId,
         text: _controller.text,
+        replyToMessageId: _replyMessageId,
+        replyToText: _replyText,
+        imageBytes: _pendingImageBytes,
+        imageFilename: _pendingImageName,
       );
       _controller.clear();
+      if (mounted) {
+        setState(() {
+          _replyMessageId = null;
+          _replyText = null;
+          _pendingImageBytes = null;
+          _pendingImageName = null;
+        });
+      }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final file = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1600,
+        maxHeight: 1600,
+      );
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      if (bytes.length > CommunityService.maxUploadBytes) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('A kép legfeljebb 5 MB lehet.')),
+          );
+        }
+        return;
+      }
+      if (mounted) {
+        setState(() {
+          _pendingImageBytes = bytes;
+          _pendingImageName = file.name;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
+      }
+    }
+  }
+
+  void _showImageLightbox(String imageUrl) {
+    if (!CommunityService.isSafeCloudinaryImageUrl(imageUrl)) return;
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(12),
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            InteractiveViewer(child: CachedNetworkImage(imageUrl: imageUrl)),
+            IconButton(
+              tooltip: 'Bezárás',
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<bool> _confirm(String title, String message) async {
@@ -375,9 +477,8 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
       if (mounted) Navigator.pop(context);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     }
   }
@@ -394,9 +495,8 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
       if (mounted) Navigator.pop(context);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     }
   }
@@ -410,20 +510,33 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
       );
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     }
   }
 
-  Future<void> _messageActions(String id, String text) async {
+  Future<void> _messageActions(
+    String id,
+    String text,
+    bool currentLiked,
+  ) async {
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            ListTile(
+              leading: const Icon(Icons.reply),
+              title: const Text('Válasz'),
+              onTap: () => Navigator.pop(context, 'reply'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.favorite_border),
+              title: const Text('Szívecske'),
+              onTap: () => Navigator.pop(context, 'heart'),
+            ),
             ListTile(
               leading: const Icon(Icons.edit),
               title: const Text('Üzenet szerkesztése'),
@@ -443,7 +556,108 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
       await _deleteMessage(id);
     } else if (action == 'edit') {
       await _editMessage(id, text);
+    } else if (action == 'reply') {
+      setState(() {
+        _replyMessageId = id;
+        _replyText = text;
+      });
+      _focusNode.requestFocus();
+    } else if (action == 'heart') {
+      await _toggleHeart(id, currentLiked: currentLiked);
     }
+  }
+
+  Future<void> _toggleHeart(String id, {bool? currentLiked}) async {
+    if (_heartBusy.contains(id)) return;
+    final previous = _heartOverrides[id] ?? currentLiked ?? false;
+    final optimistic = !previous;
+    if (mounted) {
+      setState(() {
+        _heartBusy.add(id);
+        _heartOverrides[id] = optimistic;
+      });
+    }
+    try {
+      await _service.togglePrivateMessageReaction(
+        conversationId: _conversationId,
+        messageId: id,
+      );
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _heartBusy.remove(id);
+          _heartOverrides.remove(id);
+        });
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
+      }
+    } finally {
+      if (mounted) setState(() => _heartBusy.remove(id));
+    }
+  }
+
+  void _insertEmoji(String emoji) {
+    final value = _controller.value;
+    final text = value.text;
+    final start = value.selection.start < 0
+        ? text.length
+        : value.selection.start;
+    final end = value.selection.end < 0 ? text.length : value.selection.end;
+    _controller.value = value.copyWith(
+      text: text.replaceRange(start, end, emoji),
+      selection: TextSelection.collapsed(offset: start + emoji.length),
+    );
+    _focusNode.requestFocus();
+  }
+
+  Future<void> _showEmojiPicker() async {
+    final emoji = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 8,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 1,
+            ),
+            itemCount: _privateMessageEmojis.length,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              final emoji = _privateMessageEmojis[index];
+              return Semantics(
+                button: true,
+                label: emoji,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => Navigator.pop(context, emoji),
+                  child: Center(
+                    // FittedBox keeps platform emoji glyphs inside their
+                    // square cell; some Android emoji fonts have a larger
+                    // ascent/descent than their visual artwork.
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: Text(
+                        emoji,
+                        style: const TextStyle(fontSize: 26, height: 1),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    if (emoji != null && mounted) _insertEmoji(emoji);
   }
 
   Future<void> _editMessage(String id, String text) async {
@@ -481,9 +695,8 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
       );
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     }
   }
@@ -526,6 +739,27 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
                   final document = messages[messages.length - 1 - index];
                   final data = document.data();
                   final mine = data['senderId'] == user.uid;
+                  final replyText =
+                      data['replyToText']?.toString().trim() ?? '';
+                  final heartCount =
+                      ((data['reactions'] as Map?)?['❤️'] as num?)?.toInt() ??
+                      0;
+                  final currentLiked =
+                      ((data['reactionBy'] as Map?)?[user.uid]) == '❤️';
+                  final liked = _heartOverrides[document.id] ?? currentLiked;
+                  final visibleHeartCount =
+                      heartCount +
+                      (liked == currentLiked
+                          ? 0
+                          : liked
+                          ? 1
+                          : -1);
+                  final rawImageUrl = data['imageUrl']?.toString().trim() ?? '';
+                  final imageUrl =
+                      CommunityService.isSafeCloudinaryImageUrl(rawImageUrl)
+                      ? rawImageUrl
+                      : '';
+                  final messageText = data['text']?.toString().trim() ?? '';
                   final content = Row(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -535,21 +769,94 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
                           padding: const EdgeInsets.only(right: 6),
                           child: _Avatar(
                             data: profileSnapshot.data ?? const {},
-                            name: widget.otherUserName,
+                            name: _partnerName(
+                              profileSnapshot.data ?? const {},
+                            ),
                             radius: 16,
                           ),
                         ),
                       Flexible(
                         child: Card(
-                          color: mine
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : null,
+                          // Keep outgoing bubbles on the same dark surface as the
+                          // rest of the chat. `primaryContainer` resolves to a
+                          // saturated red in the dark theme, which makes the
+                          // light Rajdhani text difficult to read.
+                          color: mine ? const Color(0xFF2B1717) : null,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
                               vertical: 7,
                             ),
-                            child: Text(data['text']?.toString() ?? ''),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (replyText.isNotEmpty)
+                                  Text(
+                                    '↪ $replyText',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white60,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                if (imageUrl.isNotEmpty)
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: GestureDetector(
+                                      onTap: () => _showImageLightbox(imageUrl),
+                                      child: CachedNetworkImage(
+                                        imageUrl: imageUrl,
+                                        width: 240,
+                                        memCacheWidth:
+                                            (240 *
+                                                    MediaQuery.devicePixelRatioOf(
+                                                      context,
+                                                    ))
+                                                .round(),
+                                        maxWidthDiskCache:
+                                            (240 *
+                                                    MediaQuery.devicePixelRatioOf(
+                                                      context,
+                                                    ))
+                                                .round(),
+                                        fit: BoxFit.contain,
+                                        placeholder: (_, _) => const SizedBox(
+                                          width: 240,
+                                          height: 160,
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        ),
+                                        errorWidget: (_, _, _) =>
+                                            const SizedBox(
+                                              width: 240,
+                                              height: 80,
+                                              child: Center(
+                                                child: Icon(Icons.broken_image),
+                                              ),
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                if (imageUrl.isNotEmpty &&
+                                    messageText.isNotEmpty)
+                                  const SizedBox(height: 6),
+                                if (messageText.isNotEmpty)
+                                  Text(
+                                    messageText,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                if (visibleHeartCount > 0)
+                                  Text(
+                                    '❤️ $visibleHeartCount',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -560,12 +867,13 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
                         ? Alignment.centerRight
                         : Alignment.centerLeft,
                     child: GestureDetector(
-                      onLongPress: mine
-                          ? () => _messageActions(
-                              document.id,
-                              data['text']?.toString() ?? '',
-                            )
-                          : null,
+                      onDoubleTap: () =>
+                          _toggleHeart(document.id, currentLiked: currentLiked),
+                      onLongPress: () => _messageActions(
+                        document.id,
+                        data['text']?.toString() ?? '',
+                        currentLiked,
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 6),
                         child: content,
@@ -606,13 +914,13 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
               children: [
                 _Avatar(
                   data: snapshot.data ?? const {},
-                  name: widget.otherUserName,
+                  name: _partnerName(snapshot.data ?? const {}),
                   radius: 16,
                 ),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    widget.otherUserName,
+                    _partnerName(snapshot.data ?? const {}),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -649,22 +957,88 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      keyboardType: TextInputType.multiline,
-                      textCapitalization: TextCapitalization.sentences,
-                      inputFormatters: const [
-                        SentenceCapitalizationFormatter(),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_replyText != null)
+                          ListTile(
+                            dense: true,
+                            leading: const Icon(Icons.reply, size: 18),
+                            title: Text(
+                              'Válasz: $_replyText',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: IconButton(
+                              onPressed: () => setState(() {
+                                _replyMessageId = null;
+                                _replyText = null;
+                              }),
+                              icon: const Icon(Icons.close, size: 18),
+                            ),
+                          ),
+                        if (_pendingImageBytes != null)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.memory(
+                                      _pendingImageBytes!,
+                                      width: 88,
+                                      height: 64,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: -8,
+                                    top: -8,
+                                    child: IconButton(
+                                      tooltip: 'Kép eltávolítása',
+                                      onPressed: () => setState(() {
+                                        _pendingImageBytes = null;
+                                        _pendingImageName = null;
+                                      }),
+                                      icon: const Icon(Icons.cancel, size: 20),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        TextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          keyboardType: TextInputType.multiline,
+                          textCapitalization: TextCapitalization.sentences,
+                          inputFormatters: const [
+                            SentenceCapitalizationFormatter(),
+                          ],
+                          minLines: 1,
+                          maxLines: 3,
+                          textInputAction: TextInputAction.newline,
+                          style: const TextStyle(fontSize: 16),
+                          decoration: const InputDecoration(
+                            hintText: 'Üzenet…',
+                            hintStyle: TextStyle(fontSize: 16),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
                       ],
-                      minLines: 1,
-                      maxLines: 3,
-                      textInputAction: TextInputAction.newline,
-                      decoration: const InputDecoration(
-                        hintText: 'Üzenet…',
-                        border: OutlineInputBorder(),
-                      ),
                     ),
+                  ),
+                  IconButton(
+                    onPressed: _sending ? null : _pickImage,
+                    icon: const Icon(Icons.image_outlined),
+                    tooltip: 'Kép küldése',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.emoji_emotions_outlined),
+                    tooltip: 'Emotikon',
+                    onPressed: _showEmojiPicker,
                   ),
                   IconButton(
                     onPressed: _sending ? null : _send,
@@ -703,7 +1077,12 @@ class _Avatar extends StatelessWidget {
       radius: radius,
       backgroundImage: imageUrl.isEmpty
           ? null
-          : CachedNetworkImageProvider(imageUrl),
+          : CachedNetworkImageProvider(
+              CommunityService.optimizedImageUrl(
+                imageUrl,
+                width: (radius * 2).round(),
+              ),
+            ),
       child: imageUrl.isEmpty ? Text(initial) : null,
     );
   }

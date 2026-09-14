@@ -68,6 +68,17 @@ class AchievementGuideScreen extends StatelessWidget {
       detail: 'A saját reakciód visszavonásakor a pont is visszavonódik.',
     ),
     (
+      title: 'Cikk kommentelése',
+      points: '+1 pont',
+      detail:
+          'Naponta legfeljebb 5 sikeresen elküldött cikkkommentért jár pont.',
+    ),
+    (
+      title: 'Éves HUHS szavazás',
+      points: '+10 pont',
+      detail: 'A teljes, kötelező kategóriákat tartalmazó szavazólap után jár.',
+    ),
+    (
       title: 'Közösségi aktivitás',
       points: '+5–20 pont',
       detail: 'Az ellenőrzött, hasznos aktivitás típusától függ.',
@@ -86,6 +97,11 @@ class AchievementGuideScreen extends StatelessWidget {
       title: 'Kiadvány megvásárlása',
       points: '+20 pont',
       detail: 'A vásárlást a szerver ellenőrzi.',
+    ),
+    (
+      title: 'HUHS játékok',
+      points: 'Pont járhat érte',
+      detail: 'A játékok teljesítésével és a helyes válaszokkal is szerezhetsz achievement pontot.',
     ),
   ];
 
@@ -167,9 +183,8 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     title,
-    style: Theme.of(
-      context,
-    ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+    style: Theme.of(context).textTheme.titleLarge
+        ?.copyWith(fontWeight: FontWeight.bold),
   );
 }
 

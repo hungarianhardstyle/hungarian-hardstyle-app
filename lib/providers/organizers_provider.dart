@@ -5,6 +5,7 @@ import 'news_provider.dart';
 
 final organizersProvider = FutureProvider.autoDispose
     .family<OrganizersPage, String>((ref, search) async {
+      ref.watch(publicContentRefreshProvider);
       ref.keepAlive();
       final service = ref.watch(wordpressServiceProvider);
       return service.getOrganizers(search: search);
@@ -12,6 +13,7 @@ final organizersProvider = FutureProvider.autoDispose
 
 final organizerDetailProvider = FutureProvider.autoDispose
     .family<OrganizerProfile, int>((ref, organizerId) async {
+      ref.watch(publicContentRefreshProvider);
       ref.keepAlive();
       final service = ref.watch(wordpressServiceProvider);
       return service.getOrganizer(organizerId);

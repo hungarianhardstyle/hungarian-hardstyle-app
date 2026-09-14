@@ -93,6 +93,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -116,6 +120,7 @@ baselineProfile {
 dependencies {
     // Compiles and installs the generated profile on supported local devices.
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
+    implementation("androidx.biometric:biometric:1.1.0")
     implementation("com.android.installreferrer:installreferrer:2.2")
     baselineProfile(project(":baselineprofile"))
 }

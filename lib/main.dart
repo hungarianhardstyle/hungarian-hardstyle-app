@@ -1,10 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/navigation/app_navigator.dart';
@@ -13,6 +13,12 @@ import 'services/push_notification_service.dart';
 import 'services/referral_link_service.dart';
 import 'services/label_purchase_service.dart';
 import 'widgets/startup_gate.dart';
+import 'widgets/session_watcher.dart';
+import 'widgets/profile_access_gate.dart';
+import 'screens/community/community_screen.dart';
+import 'services/community_service.dart';
+import 'screens/main_navigation.dart';
+import 'core/firebase/firebase_callable.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,15 +29,7 @@ Future<void> main() async {
   unawaited(_initializeAdsInBackground());
 
   await initializeDateFormatting('hu_HU');
-  // Firebase must be ready before a community screen/provider is built.  The
-  // previous fire-and-forget initialization raced the first Chat navigation.
-  try {
-    await Firebase.initializeApp();
-  } catch (error) {
-    debugPrint('Firebase inicializálási hiba: $error');
-    // Keep the rest of the app usable when a platform Firebase config is
-    // missing; the affected community feature will report its own error.
-  }
+  await initializeFirebaseRuntime();
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
   LabelPurchaseService.shared.listen();
   unawaited(_initializePushNotifications());
@@ -44,7 +42,9 @@ Future<void> _initializeAdsInBackground() async {
   } catch (error) {
     // Consent/configuration problems must not prevent the app from starting;
     // the banner keeps its controlled retry path for a later attempt.
-    debugPrint('AdMob háttér-inicializálási hiba: $error');
+    if (kDebugMode) {
+      debugPrint('AdMob háttér-inicializálási hiba: ${error.runtimeType}');
+    }
   }
 }
 
@@ -66,7 +66,7 @@ class HungarianHardstyleApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
 
       theme: AppTheme.darkTheme,
-      builder: (context, child) => DecoratedBox(
+      builder: (_, child) => DecoratedBox(
         decoration: AppTheme.backgroundDecoration,
         child: child ?? const SizedBox.shrink(),
       ),
@@ -81,7 +81,83 @@ class HungarianHardstyleApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      home: const StartupGate(),
+      // ProfileAccessGate contains editable TextFields. It must remain below
+      // the root Navigator so EditableText can access Navigator.overlay.
+      home: _watchSession(const StartupGate()),
     );
+  }
+
+  Widget _watchSession(Widget child) {
+    try {
+      final service = CommunityService();
+      return SessionWatcher(
+        users: service.auth.userChanges().map(
+          (user) => user?.isAnonymous == false ? user!.uid : null,
+        ),
+        refresh: service.refreshCurrentSession,
+        onEnded: (deleted) {
+          appNavigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute<void>(builder: (_) => const MainNavigation()),
+            (_) => false,
+          );
+          if (deleted) {
+            appScaffoldMessengerKey.currentState?.showSnackBar(
+              const SnackBar(
+                content: Text('A fiókodat törölték. Kijelentkeztettünk.'),
+              ),
+            );
+          }
+        },
+        onVerified: () => appScaffoldMessengerKey.currentState?.showSnackBar(
+          const SnackBar(content: Text('Az e-mail-címed megerősítve.')),
+        ),
+        child: StreamBuilder(
+          stream: service.auth.userChanges(),
+          initialData: service.auth.currentUser,
+          builder: (_, state) {
+            final user = state.data;
+            if (user == null || user.isAnonymous) return child;
+            return ProfileAccessGate(
+              uid: user.uid,
+              profile: service.firestore
+                  .collection('community_profiles')
+                  .doc(user.uid)
+                  .snapshots(includeMetadataChanges: true)
+                  .map(
+                    (snapshot) => ProfileAccessState(
+                      snapshot.data(),
+                      fromCache: snapshot.metadata.isFromCache,
+                    ),
+                  ),
+              completion: const CommunityProfileScreen(editing: true),
+              onServerProfileMissing: () async {
+                final result = await service.refreshCurrentSession();
+                if (result['active'] == false) {
+                  appNavigatorKey.currentState?.pushAndRemoveUntil(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const MainNavigation(),
+                    ),
+                    (_) => false,
+                  );
+                  if (result['deleted'] == true) {
+                    appScaffoldMessengerKey.currentState?.showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'A fiókodat törölték. Kijelentkeztettünk.',
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: child,
+            );
+          },
+        ),
+      );
+    } catch (_) {
+      // Startup/widget tests can run before Firebase is initialized.
+      return child;
+    }
   }
 }

@@ -59,6 +59,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1030187737487-5qpmn6ccfvbko746ibcqf9boihqeifou.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "hu.hungarianhardstyle.app",
+            "certificate_hash": "a33ef9c4a0e1adebc7a9fc5c62ac75f82133a6b6"
+          }
+        },
+        {
           "client_id": "1030187737487-c87qbk739rcp925j365vrkllgqgc3lod.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -72,6 +80,43 @@
           "android_info": {
             "package_name": "hu.hungarianhardstyle.app",
             "certificate_hash": "e11f2f612cccab0baf626aa9c9dfe3d042674ad1"
+          }
+        },
+        {
+          "client_id": "1030187737487-7cpgfu99rdngge4ine087ltlr339drkt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVlVkSsBu39kvOWRtCLon9M3_QNb6aDio"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1030187737487-7cpgfu99rdngge4ine087ltlr339drkt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1030187737487:android:805043a99909429378ebfa",
+        "android_client_info": {
+          "package_name": "hu.hungarianhardstyle.app.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1030187737487-o531b36qc3j84qonnbtc3q7ghv2669j2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "hu.hungarianhardstyle.app.debug",
+            "certificate_hash": "a33ef9c4a0e1adebc7a9fc5c62ac75f82133a6b6"
           }
         },
         {

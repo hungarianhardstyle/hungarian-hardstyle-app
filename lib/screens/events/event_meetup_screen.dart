@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/event.dart';
 import '../../providers/community_provider.dart';
+import '../../core/errors/user_facing_error.dart';
 
 class EventMeetupScreen extends ConsumerStatefulWidget {
   final HuhsEvent event;
@@ -12,6 +13,52 @@ class EventMeetupScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<EventMeetupScreen> createState() => _EventMeetupScreenState();
+}
+
+class _MeetupUserTile extends ConsumerWidget {
+  const _MeetupUserTile({
+    required this.userId,
+    required this.fallbackName,
+    required this.fallbackImageUrl,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  final String userId;
+  final String fallbackName;
+  final String fallbackImageUrl;
+  final String subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) =>
+      StreamBuilder<Map<String, dynamic>>(
+        stream: ref.read(communityServiceProvider).watchPublicProfile(userId),
+        builder: (context, snapshot) {
+          final profile = snapshot.data ?? const <String, dynamic>{};
+          final name = (profile['displayName'] as String? ?? '').trim();
+          final imageUrl = (profile['profileImageUrl'] as String? ?? '').trim();
+          final resolvedImage = imageUrl.isNotEmpty
+              ? imageUrl
+              : fallbackImageUrl;
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundImage: resolvedImage.isEmpty
+                  ? null
+                  : NetworkImage(resolvedImage),
+              child: resolvedImage.isEmpty
+                  ? Text(
+                      (name.isNotEmpty ? name : fallbackName).characters.first
+                          .toUpperCase(),
+                    )
+                  : null,
+            ),
+            title: Text(name.isNotEmpty ? name : fallbackName),
+            subtitle: Text(subtitle),
+            trailing: trailing,
+          );
+        },
+      );
 }
 
 class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
@@ -49,11 +96,8 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
       _meetupFuture = Future.value(enabled);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.toString().replaceFirst('Exception: ', '')),
-          ),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -73,11 +117,8 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
       if (mounted) setState(() {});
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.toString().replaceFirst('Exception: ', '')),
-          ),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     }
   }
@@ -139,11 +180,6 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
                   return Column(
                     children: entries.map((entry) {
                       final data = entry.data();
-                      final name =
-                          (data['displayName'] as String? ?? 'HUHS user')
-                              .trim();
-                      final imageUrl = (data['imageUrl'] as String? ?? '')
-                          .trim();
                       final interestedBy = Map<String, dynamic>.from(
                         data['interestedBy'] as Map? ?? const {},
                       );
@@ -151,24 +187,14 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
                       final count = interestedBy.values
                           .where((value) => value == true)
                           .length;
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: CircleAvatar(
-                          backgroundImage: imageUrl.isEmpty
-                              ? null
-                              : NetworkImage(imageUrl),
-                          child: imageUrl.isEmpty
-                              ? Text(
-                                  name.isEmpty
-                                      ? 'H'
-                                      : name.characters.first.toUpperCase(),
-                                )
-                              : null,
-                        ),
-                        title: Text(name.isEmpty ? 'HUHS user' : name),
-                        subtitle: Text(
-                          count == 0 ? 'Meetup' : '$count érdeklődő',
-                        ),
+                      return _MeetupUserTile(
+                        userId: entry.id,
+                        fallbackName:
+                            (data['displayName'] as String? ?? 'HUHS user')
+                                .trim(),
+                        fallbackImageUrl: (data['imageUrl'] as String? ?? '')
+                            .trim(),
+                        subtitle: count == 0 ? 'Meetup' : '$count érdeklődő',
                         trailing:
                             !widget.event.isPast &&
                                 attending &&

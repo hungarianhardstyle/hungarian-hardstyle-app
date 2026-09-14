@@ -23,24 +23,23 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final imageCacheWidth =
+        ((width ?? MediaQuery.sizeOf(context).width) *
+                MediaQuery.devicePixelRatioOf(context))
+            .round()
+            .clamp(360, 1600);
     return SizedBox(
       width: width,
       height: height,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF171717),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF5A2424)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFF03A37).withValues(alpha: .12),
-              blurRadius: 12,
-              offset: const Offset(0, 5),
-            ),
-          ],
+          color: colors.surfaceContainer,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: colors.outlineVariant),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           onTap: () {
             Navigator.push(
               context,
@@ -56,20 +55,25 @@ class EventCard extends StatelessWidget {
                 tag: 'event_${event.id}',
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
+                    top: Radius.circular(8),
                   ),
                   child: AspectRatio(
                     aspectRatio: 16 / 10,
                     child: event.flyerUrl.isNotEmpty
                         ? CachedNetworkImage(
                             imageUrl: event.flyerUrl,
-                            fit: BoxFit.cover,
+                            fit: BoxFit.contain,
+                            alignment: Alignment.center,
+                            memCacheWidth: imageCacheWidth,
+                            maxWidthDiskCache: imageCacheWidth,
+                            color: colors.surfaceContainerHighest,
+                            colorBlendMode: BlendMode.dstOver,
                           )
                         : Container(
                             color: Colors.grey.shade900,
-                            child: const Icon(
+                            child: Icon(
                               Icons.festival,
-                              color: Colors.redAccent,
+                              color: colors.primary,
                               size: 54,
                             ),
                           ),
@@ -85,7 +89,8 @@ class EventCard extends StatelessWidget {
                       event.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
+                        color: colors.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         height: 1.2,
@@ -115,10 +120,10 @@ class EventCard extends StatelessWidget {
                     if (event.venueCity.isNotEmpty) ...[
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.location_on_outlined,
                             size: 16,
-                            color: Colors.redAccent,
+                            color: colors.primary,
                           ),
                           const SizedBox(width: 6),
                           Expanded(
@@ -135,10 +140,10 @@ class EventCard extends StatelessWidget {
                     ],
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.calendar_today,
                           size: 16,
-                          color: Colors.redAccent,
+                          color: colors.primary,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -147,15 +152,15 @@ class EventCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: Colors.grey.shade400,
+                              color: colors.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.arrow_forward_ios,
                           size: 15,
-                          color: Colors.redAccent,
+                          color: colors.primary,
                         ),
                       ],
                     ),

@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+/// Remote content from WordPress, notifications and profile links must not
+/// downgrade to cleartext or invoke arbitrary application schemes.
+bool isSafeInAppUri(Uri uri) =>
+    uri.scheme.toLowerCase() == 'https' && uri.host.isNotEmpty;
+
+bool _isAllowedExternalUri(Uri uri) =>
+    const {'mailto', 'tel', 'geo'}.contains(uri.scheme.toLowerCase());
+
 Future<void> openInAppBrowser(
   BuildContext context,
   String url, {
@@ -12,14 +20,8 @@ Future<void> openInAppBrowser(
       .replaceAll(RegExp(r'[\u200B-\u200D\uFEFF]'), '')
       .trim();
   final uri = Uri.tryParse(normalizedUrl);
-  if (uri == null || uri.scheme.isEmpty) {
+  if (uri == null || !isSafeInAppUri(uri)) {
     _showOpenError(context);
-    return;
-  }
-
-  if (uri.scheme != 'http' && uri.scheme != 'https') {
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && context.mounted) _showOpenError(context);
     return;
   }
 
@@ -40,7 +42,7 @@ Future<void> openSocialLink(
   String? title,
 }) async {
   final uri = Uri.tryParse(url.trim());
-  if (uri == null || uri.scheme.isEmpty) {
+  if (uri == null || !isSafeInAppUri(uri)) {
     _showOpenError(context);
     return;
   }
@@ -88,11 +90,13 @@ class _InAppBrowserScreenState extends State<InAppBrowserScreen> {
           },
           onNavigationRequest: (request) async {
             final uri = Uri.tryParse(request.url);
-            if (uri == null || uri.scheme == 'http' || uri.scheme == 'https') {
+            if (uri != null && isSafeInAppUri(uri)) {
               return NavigationDecision.navigate;
             }
 
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
+            if (uri != null && _isAllowedExternalUri(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
             return NavigationDecision.prevent;
           },
         ),
@@ -124,7 +128,7 @@ class _InAppBrowserScreenState extends State<InAppBrowserScreen> {
               onPressed: () async {
                 final url = await _controller.currentUrl();
                 final uri = Uri.tryParse(url ?? '');
-                if (uri != null) {
+                if (uri != null && isSafeInAppUri(uri)) {
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                 }
               },

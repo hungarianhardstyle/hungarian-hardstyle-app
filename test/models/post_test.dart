@@ -2,6 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hungarian_hardstyle_app/models/post.dart';
 
 void main() {
+  test('beolvassa a WordPress ragadós jelölését', () {
+    final post = Post.fromJson({'is_sticky': true});
+
+    expect(post.isSticky, isTrue);
+  });
+
   test('custom API excerptből eltávolítja a HTML tageket', () {
     final post = Post.fromJson({
       'excerpt':
@@ -19,23 +25,26 @@ void main() {
     expect(post.excerpt, 'Rövid összefoglaló.');
   });
 
-  test('standard WordPress beágyazott post_tag termekből beolvassa a címkéket', () {
-    final post = Post.fromWordpressJson({
-      'tags': [42],
-      '_embedded': {
-        'wp:term': [
-          [
-            {'taxonomy': 'category', 'name': 'Hírek'},
+  test(
+    'standard WordPress beágyazott post_tag termekből beolvassa a címkéket',
+    () {
+      final post = Post.fromWordpressJson({
+        'tags': [42],
+        '_embedded': {
+          'wp:term': [
+            [
+              {'taxonomy': 'category', 'name': 'Hírek'},
+            ],
+            [
+              {'taxonomy': 'post_tag', 'name': 'Hardcore'},
+            ],
           ],
-          [
-            {'taxonomy': 'post_tag', 'name': 'Hardcore'},
-          ],
-        ],
-      },
-    });
+        },
+      });
 
-    expect(post.tags, ['Hardcore']);
-  });
+      expect(post.tags, ['Hardcore']);
+    },
+  );
 
   test('beolvassa és kiszűri a duplikált embedeket', () {
     final post = Post.fromJson({

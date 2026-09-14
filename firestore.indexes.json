@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "public_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "achievementPoints", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "chat_reports",
       "queryScope": "COLLECTION",
       "fields": [

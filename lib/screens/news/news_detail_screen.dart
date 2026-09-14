@@ -12,6 +12,7 @@ import '../../services/wordpress_service.dart';
 import '../../widgets/post_embed_card.dart';
 import '../../widgets/post_shortcode_card.dart';
 import '../../widgets/news_reaction_button.dart';
+import '../../widgets/article_comments.dart';
 import '../gallery/gallery_screen.dart';
 import 'tagged_news_screen.dart';
 
@@ -25,12 +26,28 @@ class NewsDetailScreen extends StatefulWidget {
 }
 
 class _NewsDetailScreenState extends State<NewsDetailScreen> {
-  Post get post => widget.post;
+  late Post _post;
+
+  Post get post => _post;
 
   @override
   void initState() {
     super.initState();
+    _post = widget.post;
     unawaited(WordpressService().recordPostView(post.id));
+    if (post.contentForDisplay.trim().isEmpty) {
+      unawaited(_loadFullPost());
+    }
+  }
+
+  Future<void> _loadFullPost() async {
+    try {
+      final fullPost = await WordpressService().getPost(post.id);
+      if (!mounted || fullPost.contentForDisplay.trim().isEmpty) return;
+      setState(() => _post = fullPost);
+    } catch (_) {
+      // Keep the summary visible if the detail request is temporarily unavailable.
+    }
   }
 
   String _formatDate(String date) {
@@ -294,6 +311,10 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
 
                       const SizedBox(height: 30),
                     ],
+                    ArticleComments(
+                      key: ValueKey('comments_${post.id}'),
+                      postId: post.id,
+                    ),
                   ],
                 ),
               ),

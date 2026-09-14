@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_functions/cloud_functions.dart';
+
+import '../core/firebase/firebase_callable.dart';
 
 class NewsReactionState {
   final int count;
@@ -95,10 +96,10 @@ class NewsReactionService {
     if (user == null) {
       throw StateError('A reakcióhoz nem sikerült felhasználót azonosítani.');
     }
-    final callable = FirebaseFunctions.instance.httpsCallable(
+    final response = await callFirebaseCallable<Map<String, dynamic>>(
       'toggleNewsReaction',
+      parameters: <String, dynamic>{'postId': postId},
     );
-    final response = await callable.call(<String, dynamic>{'postId': postId});
     final data = Map<String, dynamic>.from(response.data as Map);
     return NewsReactionState(
       count: (data['count'] as num?)?.toInt() ?? 0,

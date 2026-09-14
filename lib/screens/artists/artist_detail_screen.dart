@@ -130,6 +130,14 @@ class _ArtistContent extends ConsumerWidget {
         builder: (context, constraints) {
           final landscape =
               MediaQuery.orientationOf(context) == Orientation.landscape;
+          final heroCacheWidth =
+              (MediaQuery.sizeOf(context).width *
+                      MediaQuery.devicePixelRatioOf(context))
+                  .round()
+                  .clamp(1080, 1600);
+          final logoCacheWidth = (76 * MediaQuery.devicePixelRatioOf(context))
+              .round()
+              .clamp(152, 304);
           return SingleChildScrollView(
             child: Align(
               alignment: Alignment.topCenter,
@@ -151,8 +159,8 @@ class _ArtistContent extends ConsumerWidget {
                               CachedNetworkImage(
                                 imageUrl: imageUrl,
                                 fit: BoxFit.cover,
-                                memCacheWidth: 900,
-                                maxWidthDiskCache: 1200,
+                                memCacheWidth: heroCacheWidth,
+                                maxWidthDiskCache: heroCacheWidth,
                                 alignment: const Alignment(0, -0.5),
                               ),
                               if (artist.logoUrl.isNotEmpty &&
@@ -173,8 +181,8 @@ class _ArtistContent extends ConsumerWidget {
                                     child: CachedNetworkImage(
                                       imageUrl: artist.logoUrl,
                                       fit: BoxFit.contain,
-                                      memCacheWidth: 180,
-                                      maxWidthDiskCache: 180,
+                                      memCacheWidth: logoCacheWidth,
+                                      maxWidthDiskCache: logoCacheWidth,
                                     ),
                                   ),
                                 ),

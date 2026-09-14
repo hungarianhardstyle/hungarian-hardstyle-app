@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../models/voting.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/voting_provider.dart';
 import '../../providers/voting_service_provider.dart';
 import '../../providers/news_provider.dart';
+import '../../services/voting_service.dart';
 
 class VotingScreen extends ConsumerStatefulWidget {
   const VotingScreen({super.key});
@@ -17,24 +19,109 @@ class VotingScreen extends ConsumerStatefulWidget {
 class _VotingScreenState extends ConsumerState<VotingScreen> {
   final Map<String, Set<int>> _selected = {};
   final Set<String> _voted = {};
-  String? _busyCategory;
+  int? _statusSeasonId;
+  bool _loadingVoteStatus = false;
+  bool _ballotSubmitted = false;
+  bool _busy = false;
   bool _newsletterAsked = false;
   bool _newsletterConsent = false;
 
-  Future<void> _vote(dynamic season, dynamic category) async {
-    if (_busyCategory != null || _voted.contains(category.key)) return;
-    final user = ref.read(communityServiceProvider).auth.currentUser;
-    if (user == null || user.isAnonymous) {
+  void _ensureVoteStatus(VotingSeason season) {
+    if (!season.active ||
+        _statusSeasonId == season.seasonId ||
+        _loadingVoteStatus) {
+      return;
+    }
+    _statusSeasonId = season.seasonId;
+    _loadingVoteStatus = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final service = ref.read(votingServiceProvider);
+      final cachedFuture = service.cachedVotingStatus(
+        seasonId: season.seasonId,
+      );
+      final serverFuture = service.votingStatus(seasonId: season.seasonId);
+
+      try {
+        final cached = await cachedFuture;
+        if (mounted && cached != null && _statusSeasonId == season.seasonId) {
+          setState(() {
+            _applyVotingStatus(cached, season);
+          });
+        }
+      } catch (_) {
+        // A corrupt or unavailable local cache must not block the server read.
+      }
+
+      try {
+        final status = await serverFuture;
+        try {
+          await service.cacheVotingStatus(
+            seasonId: season.seasonId,
+            status: status,
+          );
+        } catch (_) {
+          // The cache is optional and must not affect the server result.
+        }
+        if (mounted) {
+          setState(() {
+            _applyVotingStatus(status, season);
+          });
+        }
+      } catch (_) {
+        // The server still prevents duplicate votes if this optional lookup
+        // is temporarily unavailable.
+      } finally {
+        _loadingVoteStatus = false;
+      }
+    });
+  }
+
+  void _applyVotingStatus(VotingStatus status, VotingSeason season) {
+    _voted
+      ..clear()
+      ..addAll(status.votedCategories);
+    for (final category in season.categories) {
+      if (!status.votedCategories.contains(category.key)) {
+        _selected.remove(category.key);
+        continue;
+      }
+      final selected = status.selectedCandidateIds[category.key];
+      if (selected != null) {
+        _selected[category.key] = {...selected};
+      }
+    }
+    _ballotSubmitted = season.categories.every(
+      (category) => status.votedCategories.contains(category.key),
+    );
+  }
+
+  Future<void> _voteAll(VotingSeason season) async {
+    if (_busy) return;
+    final missing = season.categories
+        .where(
+          (category) =>
+              !_voted.contains(category.key) &&
+              (_selected[category.key]?.length ?? 0) != category.minVotes,
+        )
+        .toList(growable: false);
+    if (missing.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'A szavazáshoz regisztráció és bejelentkezés szükséges.',
+            'Még hiányzik:\n${missing.map((category) => '${category.label}: ${category.minVotes} választás').join('\n')}',
           ),
         ),
       );
       return;
     }
-    if (!_newsletterAsked) {
+    final votes = <String, List<int>>{};
+    for (final category in season.categories) {
+      if (_voted.contains(category.key)) continue;
+      votes[category.key] = (_selected[category.key] ?? const <int>{}).toList();
+    }
+    if (votes.isEmpty) return;
+    final user = ref.read(communityServiceProvider).auth.currentUser;
+    if (!_newsletterAsked && user != null && !user.isAnonymous) {
       _newsletterConsent =
           await showDialog<bool>(
             context: context,
@@ -58,23 +145,36 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
           false;
       _newsletterAsked = true;
     }
-    setState(() => _busyCategory = category.key);
+    setState(() => _busy = true);
     try {
-      await ref
-          .read(votingServiceProvider)
-          .submitVotes(
-            seasonId: season.seasonId,
-            category: category.key,
-            candidateIds: _selected[category.key]!.toList(),
-            newsletterConsent: _newsletterConsent,
-            wordpress: ref.read(wordpressServiceProvider),
-          );
-      if (mounted) setState(() => _voted.add(category.key));
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('A szavazatod rögzítve.')));
+      final service = ref.read(votingServiceProvider);
+      await service.submitBallot(
+        seasonId: season.seasonId,
+        votes: votes,
+        newsletterConsent: _newsletterConsent,
+        wordpress: ref.read(wordpressServiceProvider),
+      );
+      _voted.addAll(votes.keys);
+      try {
+        await service.cacheVotingStatus(
+          seasonId: season.seasonId,
+          status: VotingStatus(
+            votedCategories: {..._voted},
+            selectedCandidateIds: {
+              for (final entry in _selected.entries)
+                entry.key: {...entry.value},
+            },
+          ),
+        );
+      } catch (_) {
+        // The vote was already accepted by the server; caching is optional.
       }
+      if (mounted) {
+        setState(() {
+          _ballotSubmitted = true;
+        });
+      }
+      if (mounted) await _showVoteSuccessDialog();
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -86,7 +186,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _busyCategory = null);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -104,8 +204,25 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
           ),
         ),
         data: (season) {
+          _ensureVoteStatus(season);
           if (!season.active) {
-            return const Center(child: Text('Jelenleg nincs aktív szavazás.'));
+            return Center(
+              child: season.hasPublishedResults
+                  ? FilledButton.icon(
+                      onPressed: () => launchUrl(
+                        Uri.parse(season.resultsUrl),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      icon: const Icon(Icons.poll_outlined),
+                      label: const Text('Eredmények megtekintése'),
+                    )
+                  : season.isClosed
+                  ? const Text(
+                      'A szavazás véget ért. Az összesítő az adminisztrátori engedély után lesz elérhető.',
+                      textAlign: TextAlign.center,
+                    )
+                  : const Text('Jelenleg nincs aktív szavazás.'),
+            );
           }
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -116,9 +233,15 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                     : season.title,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
+              const SizedBox(height: 6),
+              Text(
+                'Regisztráció nélkül is szavazhatsz. Egy készülékről ebben az évadban csak egyszer lehet leadni a szavazatot.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
               const SizedBox(height: 18),
               for (final category in season.categories)
                 _category(season, category),
+              _ballotAction(season),
             ],
           );
         },
@@ -126,8 +249,9 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
     );
   }
 
-  Widget _category(dynamic season, dynamic category) {
-    final voted = _voted.contains(category.key);
+  Widget _category(VotingSeason season, VotingCategory category) {
+    final voted = _ballotSubmitted;
+    final selected = _selected[category.key] ?? const <int>{};
     return Card(
       margin: const EdgeInsets.only(bottom: 18),
       child: Padding(
@@ -137,72 +261,288 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
           children: [
             Text(category.label, style: Theme.of(context).textTheme.titleLarge),
             Text(
-              'Legfeljebb ${category.maxVotes} jelölt választható',
+              'Válassz pontosan ${category.minVotes} jelöltet (${selected.length}/${category.minVotes})',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 10),
             if (category.candidates.isEmpty)
               const Text('A jelöltek hamarosan érkeznek.'),
-            for (final candidate in category.candidates)
-              CheckboxListTile(
-                value: _selected[category.key]?.contains(candidate.id) ?? false,
-                onChanged: voted
-                    ? null
-                    : (value) {
-                        final selected = {...?_selected[category.key]};
-                        if (value == true) {
-                          if (selected.length >= category.maxVotes) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Legfeljebb ${category.maxVotes} jelöltet választhatsz.',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-                          selected.add(candidate.id);
-                        } else {
-                          selected.remove(candidate.id);
-                        }
-                        setState(() => _selected[category.key] = selected);
-                      },
-                title: Text(candidate.name),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (candidate.artist.isNotEmpty) Text(candidate.artist),
-                    if (candidate.spotify.isNotEmpty ||
-                        candidate.youtube.isNotEmpty)
-                      Wrap(
-                        spacing: 6,
-                        children: [
-                          if (candidate.spotify.isNotEmpty)
-                            _link('Spotify', candidate.spotify),
-                          if (candidate.youtube.isNotEmpty)
-                            _link('YouTube', candidate.youtube),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-            if (category.candidates.isNotEmpty)
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton(
-                  onPressed:
-                      voted ||
-                          (_selected[category.key]?.isEmpty ?? true) ||
-                          _busyCategory == category.key
+            if (category.key == 'international_dj')
+              _internationalPicker(category, voted, selected)
+            else
+              for (final candidate in category.candidates)
+                CheckboxListTile(
+                  value: selected.contains(candidate.id),
+                  activeColor: Theme.of(context).colorScheme.primary,
+                  checkColor: Theme.of(context).colorScheme.onPrimary,
+                  onChanged: voted
                       ? null
-                      : () => _vote(season, category),
-                  child: Text(voted ? 'Szavazat rögzítve' : 'Szavazok'),
+                      : (value) {
+                          final next = {...selected};
+                          if (value == true) {
+                            if (next.length >= category.maxVotes) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Legfeljebb ${category.maxVotes} jelöltet választhatsz.',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                            next.add(candidate.id);
+                          } else {
+                            next.remove(candidate.id);
+                          }
+                          setState(() => _selected[category.key] = next);
+                        },
+                  title: Text(candidate.name),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (candidate.artist.isNotEmpty) Text(candidate.artist),
+                      if (candidate.spotify.isNotEmpty ||
+                          candidate.youtube.isNotEmpty)
+                        Wrap(
+                          spacing: 6,
+                          children: [
+                            if (candidate.spotify.isNotEmpty)
+                              _link('Spotify', candidate.spotify),
+                            if (candidate.youtube.isNotEmpty)
+                              _link('YouTube', candidate.youtube),
+                          ],
+                        ),
+                    ],
+                  ),
                 ),
-              ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _ballotAction(VotingSeason season) {
+    final missing = season.categories
+        .where(
+          (category) =>
+              !_voted.contains(category.key) &&
+              (_selected[category.key]?.length ?? 0) != category.minVotes,
+        )
+        .toList(growable: false);
+    final remaining = season.categories.any(
+      (category) => !_voted.contains(category.key),
+    );
+    return Card(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_loadingVoteStatus) const LinearProgressIndicator(minHeight: 2),
+            if (missing.isNotEmpty)
+              Text(
+                'A szavazás elküldéséhez minden kötelező kategóriát ki kell tölteni.\n\n${missing.map((category) => '• ${category.label}: ${category.minVotes} jelölt').join('\n')}',
+              )
+            else if (!remaining)
+              const Text('Minden kategóriában leadtad a szavazatodat.'),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: _busy || missing.isNotEmpty || !remaining
+                  ? null
+                  : () => _voteAll(season),
+              icon: _busy
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.how_to_vote_outlined),
+              label: const Text('Szavazok'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showVoteSuccessDialog() => showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      title: const Text('Köszönjük a szavazatod!'),
+      content: const Text(
+        'A szavazatod sikeresen rögzítettük. Ebben az éves szavazásban erről a készülékről már nem adhatsz le újabb szavazatot.',
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Bezárás'),
+        ),
+      ],
+    ),
+  );
+
+  Widget _internationalPicker(
+    VotingCategory category,
+    bool voted,
+    Set<int> selected,
+  ) {
+    final selectedCandidates = category.candidates
+        .where((candidate) => selected.contains(candidate.id))
+        .toList(growable: false);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OutlinedButton.icon(
+          onPressed: voted ? null : () => _chooseInternational(category),
+          icon: const Icon(Icons.arrow_drop_down),
+          label: Text(
+            selected.isEmpty
+                ? 'Külföldi DJ-k kiválasztása'
+                : '${selected.length} kiválasztva',
+          ),
+        ),
+        if (selectedCandidates.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Kiválasztott jelöltek:',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              for (final candidate in selectedCandidates)
+                Chip(
+                  label: Text(candidate.name),
+                  visualDensity: VisualDensity.compact,
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _chooseInternational(dynamic category) async {
+    final result = await showModalBottomSheet<Set<int>>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      // The app scaffold is intentionally transparent for the branded
+      // background.  A modal picker must remain opaque, otherwise the voting
+      // cards underneath bleed through and the list becomes unreadable.
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (context) {
+        var query = '';
+        var selected = {...?_selected[category.key]};
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final candidates = (category.candidates as List<VotingCandidate>)
+                .where(
+                  (VotingCandidate candidate) => candidate.name
+                      .toLowerCase()
+                      .contains(query.trim().toLowerCase()),
+                );
+            return Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * .86,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).dividerColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Külföldi hardstyle DJ-k',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Bezárás',
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                      TextField(
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.search),
+                          hintText: 'Keresés név szerint',
+                        ),
+                        onChanged: (value) =>
+                            setDialogState(() => query = value),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Kiválasztva: ${selected.length}/5'),
+                      ),
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: candidates.length,
+                          itemBuilder: (context, index) {
+                            final candidate = candidates.elementAt(index);
+                            return CheckboxListTile(
+                              dense: true,
+                              value: selected.contains(candidate.id),
+                              title: Text(candidate.name),
+                              onChanged: (value) {
+                                final next = {...selected};
+                                if (value == true && next.length >= 5) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Pontosan 5 jelölt választható.',
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                value == true
+                                    ? next.add(candidate.id)
+                                    : next.remove(candidate.id);
+                                setDialogState(() => selected = next);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: selected.length == 5
+                              ? () => Navigator.pop(context, selected)
+                              : null,
+                          child: const Text('Kiválasztás'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    if (result != null && mounted) {
+      setState(() => _selected[category.key] = result);
+    }
   }
 
   Widget _link(String label, String value) => OutlinedButton(

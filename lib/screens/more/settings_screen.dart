@@ -23,12 +23,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static const _eventNotificationsKey = 'event_notifications_enabled';
   static const _releaseNotificationsKey = 'release_notifications_enabled';
   static const _reminderNotificationsKey = 'event_reminders_enabled';
+  static const _achievementNotificationsKey =
+      'achievement_notifications_enabled';
 
   bool _notificationsEnabled = true;
   bool _newsNotificationsEnabled = true;
   bool _eventNotificationsEnabled = true;
   bool _releaseNotificationsEnabled = true;
   bool _reminderNotificationsEnabled = true;
+  bool _achievementNotificationsEnabled = true;
   bool _loading = true;
   bool _clearingCache = false;
   bool _biometricEnabled = false;
@@ -46,6 +49,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final preferences = await SharedPreferences.getInstance();
     if (!mounted) return;
 
+    var biometricEnabled = preferences.getBool('biometric_unlock') ?? false;
+    var deviceCodeEnabled = preferences.getBool('device_code_unlock') ?? false;
+    if (biometricEnabled && deviceCodeEnabled) {
+      deviceCodeEnabled = false;
+      await preferences.setBool('device_code_unlock', false);
+    }
+
     setState(() {
       _notificationsEnabled = preferences.getBool(_notificationsKey) ?? true;
       _newsNotificationsEnabled =
@@ -56,8 +66,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           preferences.getBool(_releaseNotificationsKey) ?? true;
       _reminderNotificationsEnabled =
           preferences.getBool(_reminderNotificationsKey) ?? true;
-      _biometricEnabled = preferences.getBool('biometric_unlock') ?? false;
-      _deviceCodeEnabled = preferences.getBool('device_code_unlock') ?? false;
+      _achievementNotificationsEnabled =
+          preferences.getBool(_achievementNotificationsKey) ?? true;
+      _biometricEnabled = biometricEnabled;
+      _deviceCodeEnabled = deviceCodeEnabled;
       _authenticatorEnabled =
           preferences.getBool('authenticator_unlock') ?? false;
       _loading = false;
@@ -76,7 +88,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     await CommunityService().setDeviceCodeEnabled(value);
-    if (mounted) setState(() => _deviceCodeEnabled = value);
+    if (mounted) {
+      setState(() {
+        _deviceCodeEnabled = value;
+        if (value) _biometricEnabled = false;
+      });
+    }
   }
 
   Future<void> _setupAuthenticator() async {
@@ -168,7 +185,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     await CommunityService().setBiometricEnabled(value);
-    if (mounted) setState(() => _biometricEnabled = value);
+    if (mounted) {
+      setState(() {
+        _biometricEnabled = value;
+        if (value) _deviceCodeEnabled = false;
+      });
+    }
   }
 
   Future<void> _setNotifications(bool value) async {
@@ -191,6 +213,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         events: _eventNotificationsEnabled,
         releases: _releaseNotificationsEnabled,
         reminders: _reminderNotificationsEnabled,
+        achievements: _achievementNotificationsEnabled,
       );
 
   Future<void> _clearCache() async {
@@ -200,9 +223,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await WordpressService().clearPublicCache();
     if (!mounted) return;
     setState(() => _clearingCache = false);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('A gyorsítótár törölve.')));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('A gyorsítótár törölve.')));
   }
 
   @override
@@ -267,10 +289,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: SwitchListTile(
                         secondary: const Icon(Icons.password_outlined),
                         title: const Text('Android-kódos feloldás'),
-                        subtitle: const Text(
-                          'A telefon PIN-kódjával, jelszavával vagy mintájával',
+                        subtitle: Text(
+                          _deviceCodeEnabled
+                              ? 'A telefon PIN-kódjával, jelszavával vagy mintájával'
+                              : 'Kikapcsolva – koppints a bekapcsoláshoz',
                         ),
                         value: _deviceCodeEnabled,
+                        inactiveThumbColor: Colors.white,
+                        inactiveTrackColor: const Color(0xFF555555),
                         onChanged: _loading ? null : _setDeviceCode,
                       ),
                     ),
@@ -291,10 +317,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: SwitchListTile(
                         secondary: const Icon(Icons.fingerprint),
                         title: const Text('Biometrikus feloldás'),
-                        subtitle: const Text(
-                          'A mentett profil feloldása ujjlenyomattal vagy arcfelismeréssel',
+                        subtitle: Text(
+                          _biometricEnabled
+                              ? 'A mentett profil feloldása ujjlenyomattal vagy arcfelismeréssel'
+                              : 'Kikapcsolva – koppints a bekapcsoláshoz',
                         ),
                         value: _biometricEnabled,
+                        inactiveThumbColor: Colors.white,
+                        inactiveTrackColor: const Color(0xFF555555),
                         onChanged: _loading ? null : _setBiometric,
                       ),
                     ),
@@ -374,6 +404,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     );
                                     _setNotificationPreference(
                                       _reminderNotificationsKey,
+                                      value,
+                                    );
+                                  },
+                          ),
+                          SwitchListTile(
+                            secondary: const Icon(
+                              Icons.workspace_premium_outlined,
+                            ),
+                            title: const Text('Achievement-szintlépések'),
+                            subtitle: const Text(
+                              'Értesítés új rang vagy jelvény elérésekor',
+                            ),
+                            value: _achievementNotificationsEnabled,
+                            onChanged: _loading || !_notificationsEnabled
+                                ? null
+                                : (value) {
+                                    setState(
+                                      () => _achievementNotificationsEnabled =
+                                          value,
+                                    );
+                                    _setNotificationPreference(
+                                      _achievementNotificationsKey,
                                       value,
                                     );
                                   },

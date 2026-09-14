@@ -152,14 +152,21 @@ class HuhsEvent {
 
   bool get hasFacebookEvent => facebookEventUrl.trim().isNotEmpty;
 
-  bool get isPast {
-    final dateText = endDate.trim().isNotEmpty ? endDate : startDate;
-    final timeText = endDate.trim().isNotEmpty ? endTime : startTime;
-    final date = DateTime.tryParse(dateText);
+  bool get isPast => isPastAt(DateTime.now());
+
+  bool isPastAt(DateTime now) {
+    final start = DateTime.tryParse(startDate.trim());
+    final end = DateTime.tryParse(endDate.trim());
+    // A malformed WordPress end date must not move a future event into the
+    // past list. Use the end date only when it is a valid date on/after the
+    // event start; otherwise evaluate the event from its start.
+    final useEnd = end != null && (start == null || !end.isBefore(start));
+    final date = useEnd ? end : start;
+    final timeText = useEnd ? endTime : startTime;
     if (date == null) return false;
     if (timeText.trim().isEmpty) {
       final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
-      return endOfDay.isBefore(DateTime.now());
+      return endOfDay.isBefore(now);
     }
     final parts = timeText.split(':');
     final hour = int.tryParse(parts.first) ?? 23;
@@ -170,7 +177,7 @@ class HuhsEvent {
       date.day,
       hour,
       minute,
-    ).isBefore(DateTime.now());
+    ).isBefore(now);
   }
 }
 
@@ -260,20 +267,38 @@ bool _readBool(Object? value) {
 
 String _readImageUrl(Object? value) {
   if (value is String) {
-    return value;
+    return _restoreOriginalWordPressImageUrl(value);
   }
 
   if (value is Map<String, dynamic>) {
-    return _readString(
-      value['url'] ??
-          value['source_url'] ??
-          value['full'] ??
-          value['medium'] ??
-          value['thumbnail'],
+    return _restoreOriginalWordPressImageUrl(
+      _readString(
+        value['source_url'] ??
+            value['full'] ??
+            value['original'] ??
+            value['url'] ??
+            value['medium'] ??
+            value['thumbnail'],
+      ),
     );
   }
 
   return '';
+}
+
+String _restoreOriginalWordPressImageUrl(String value) {
+  final uri = Uri.tryParse(value);
+  if (uri == null ||
+      uri.host != 'hungarianhardstyle.hu' ||
+      !uri.path.contains('/wp-content/uploads/')) {
+    return value;
+  }
+
+  final originalPath = uri.path.replaceFirst(
+    RegExp(r'-\d+x\d+(?=\.[^/]+$)'),
+    '',
+  );
+  return uri.replace(path: originalPath).toString();
 }
 
 String _decodeHtmlText(String value) {

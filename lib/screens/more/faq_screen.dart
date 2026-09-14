@@ -5,6 +5,7 @@ import '../../models/faq.dart';
 import '../../providers/news_provider.dart';
 
 final faqProvider = FutureProvider<List<FaqItem>>((ref) {
+  ref.watch(publicContentRefreshProvider);
   return ref.watch(wordpressServiceProvider).getFaq();
 });
 

@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 
 import '../providers/ads_provider.dart';
+import '../core/firebase/firebase_callable.dart';
 
 class LabelPurchaseService with WidgetsBindingObserver {
   static final LabelPurchaseService shared = LabelPurchaseService();
@@ -180,10 +180,6 @@ class LabelPurchaseService with WidgetsBindingObserver {
       lastProductQueryError = lastError;
       throw StateError(lastError);
     }
-    debugPrint(
-      'Google Play terméklekérdezés: '
-      'found=${found.keys.toList()} notFound=$lastNotFoundProductIds',
-    );
     return found.values.toList(growable: false);
   }
 
@@ -290,14 +286,15 @@ class LabelPurchaseService with WidgetsBindingObserver {
   }) async {
     final token = purchase.verificationData.serverVerificationData;
     if (token.isEmpty) return false;
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('verifyLabelPurchase')
-        .call({
-          'releaseId': releaseId,
-          'productId': purchase.productID,
-          'purchaseToken': token,
-        });
-    return result.data is Map && result.data['verified'] == true;
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'verifyLabelPurchase',
+      parameters: {
+        'releaseId': releaseId,
+        'productId': purchase.productID,
+        'purchaseToken': token,
+      },
+    );
+    return result.data['verified'] == true;
   }
 
   Future<void> restore() {
@@ -310,11 +307,12 @@ class LabelPurchaseService with WidgetsBindingObserver {
     required int releaseId,
     required String variant,
   }) async {
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('getLabelDownloadUrl')
-        .call({'releaseId': releaseId, 'variant': variant});
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'getLabelDownloadUrl',
+      parameters: {'releaseId': releaseId, 'variant': variant},
+    );
     final data = result.data;
-    if (data is! Map || data['downloadUrl'] is! String) {
+    if (data['downloadUrl'] is! String) {
       throw StateError('A letöltési hivatkozás nem érhető el.');
     }
     return data['downloadUrl'] as String;
@@ -322,21 +320,18 @@ class LabelPurchaseService with WidgetsBindingObserver {
 
   Future<bool> waitForAdUnlock({
     required int releaseId,
-    String variant = 'mp3_128',
+    String variant = 'mp3_96',
     Duration timeout = const Duration(seconds: 20),
   }) async {
-    final callable = FirebaseFunctions.instance.httpsCallable(
-      'getLabelAdUnlockStatus',
-    );
     final deadline = DateTime.now().add(timeout);
     while (DateTime.now().isBefore(deadline)) {
       try {
-        final result = await callable.call({
-          'releaseId': releaseId,
-          'variant': variant,
-        });
+        final result = await callFirebaseCallable<Map<String, dynamic>>(
+          'getLabelAdUnlockStatus',
+          parameters: {'releaseId': releaseId, 'variant': variant},
+        );
         final data = result.data;
-        if (data is Map && data['unlocked'] == true) return true;
+        if (data['unlocked'] == true) return true;
       } catch (_) {
         // The SSV callback is asynchronous; keep polling until the timeout.
       }
@@ -345,16 +340,17 @@ class LabelPurchaseService with WidgetsBindingObserver {
     return false;
   }
 
-  Future<bool> hasAdUnlock(int releaseId, {String variant = 'mp3_128'}) async {
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('getLabelAdUnlockStatus')
-        .call({'releaseId': releaseId, 'variant': variant});
-    return result.data is Map && result.data['unlocked'] == true;
+  Future<bool> hasAdUnlock(int releaseId, {String variant = 'mp3_96'}) async {
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'getLabelAdUnlockStatus',
+      parameters: {'releaseId': releaseId, 'variant': variant},
+    );
+    return result.data['unlocked'] == true;
   }
 
   Future<bool> showRewardedAd(
     int releaseId, {
-    String variant = 'mp3_128',
+    String variant = 'mp3_96',
   }) async {
     if (_rewardedInFlight) {
       throw StateError('A jutalmazott reklám már folyamatban van.');
@@ -400,7 +396,6 @@ class LabelPurchaseService with WidgetsBindingObserver {
   }) async {
     // The reward is granted only from onUserEarnedReward below. Loading or
     // dismissing the ad alone never unlocks a file.
-    debugPrint('AdMob rewarded betöltve: variant=$variant');
     final customData = base64UrlEncode(
       utf8.encode(
         jsonEncode({'uid': uid, 'releaseId': releaseId, 'variant': variant}),
@@ -410,20 +405,24 @@ class LabelPurchaseService with WidgetsBindingObserver {
       ServerSideVerificationOptions(customData: customData),
     );
     final result = Completer<bool>();
+    var rewardEarned = false;
+    var adDismissed = false;
+    void completeWhenAdIsFinished() {
+      if (rewardEarned && adDismissed && !result.isCompleted) {
+        result.complete(true);
+      }
+    }
+
     rewarded.fullScreenContentCallback = FullScreenContentCallback(
-      onAdShowedFullScreenContent: (_) =>
-          debugPrint('AdMob rewarded megjelenítve.'),
+      onAdShowedFullScreenContent: (_) {},
       onAdDismissedFullScreenContent: (ad) {
-        debugPrint('AdMob rewarded bezárva reward nélkül.');
+        adDismissed = true;
         ad.dispose();
         unawaited(_preloadRewarded(unitId));
-        if (!result.isCompleted) result.complete(false);
+        if (!rewardEarned && !result.isCompleted) result.complete(false);
+        completeWhenAdIsFinished();
       },
-      onAdFailedToShowFullScreenContent: (ad, error) {
-        debugPrint(
-          'AdMob rewarded megjelenítési hiba: '
-          'code=${error.code}, domain=${error.domain}, message=${error.message}',
-        );
+      onAdFailedToShowFullScreenContent: (ad, _) {
         ad.dispose();
         unawaited(_preloadRewarded(unitId));
         if (!result.isCompleted) {
@@ -437,8 +436,8 @@ class LabelPurchaseService with WidgetsBindingObserver {
     );
     rewarded.show(
       onUserEarnedReward: (_, _) {
-        debugPrint('AdMob reward megszerezve: variant=$variant');
-        if (!result.isCompleted) result.complete(true);
+        rewardEarned = true;
+        completeWhenAdIsFinished();
       },
     );
     return result.future;
@@ -464,15 +463,12 @@ class LabelPurchaseService with WidgetsBindingObserver {
     _preloadingRewarded = true;
     try {
       if (!await canRequestAds()) return;
-      final ad = await _loadRewarded(
-        unitId,
-      ).timeout(const Duration(seconds: 15));
+      final ad = await _loadRewarded(unitId)
+          .timeout(const Duration(seconds: 15));
       _preloadedRewarded?.dispose();
       _preloadedRewarded = ad;
       _preloadedRewardedUnitId = unitId;
-      debugPrint('AdMob következő rewarded reklám előtöltve.');
-    } catch (error) {
-      debugPrint('AdMob rewarded előtöltési hiba: $error');
+    } catch (_) {
     } finally {
       _preloadingRewarded = false;
     }
@@ -485,14 +481,9 @@ class LabelPurchaseService with WidgetsBindingObserver {
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          debugPrint('AdMob rewarded load sikeres.');
           completer.complete(ad);
         },
         onAdFailedToLoad: (error) {
-          debugPrint(
-            'AdMob rewarded betöltési hiba: '
-            'code=${error.code}, domain=${error.domain}, message=${error.message}',
-          );
           completer.completeError(StateError(_admobLoadMessage(error)));
         },
       ),

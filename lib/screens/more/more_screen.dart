@@ -4,12 +4,14 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/community_provider.dart';
+import '../../widgets/huhs_corner_logo.dart';
 import '../artists/artists_screen.dart';
 import '../organizers/organizers_screen.dart';
 import '../submissions/artist_submission_screen.dart';
 import '../submissions/organizer_submission_screen.dart';
 import 'about_screen.dart';
 import 'achievement_guide_screen.dart';
+import 'achievement_leaderboard_screen.dart';
 import 'donate_screen.dart';
 import 'faq_screen.dart';
 import 'privacy_screen.dart';
@@ -59,9 +61,16 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 22, 18, 30),
           children: [
-            const Text(
-              'Több',
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            const Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Több',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                HuhsCornerLogo(),
+              ],
             ),
             const SizedBox(height: 16),
             TextField(
@@ -143,6 +152,12 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ),
             ]),
             _section('Alkalmazás', [
+              _item(
+                Icons.leaderboard_outlined,
+                'HUHS Legenda toplista',
+                'A legtöbb achievement pontot gyűjtő tagok',
+                const AchievementLeaderboardScreen(),
+              ),
               _item(
                 Icons.workspace_premium_outlined,
                 'Achievementek',
@@ -238,9 +253,9 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
 
   Widget _notice(String text) => _Notice(text);
 
-  void _open(Widget screen) => Navigator.of(
-    context,
-  ).push(MaterialPageRoute<void>(builder: (_) => screen));
+  void _open(Widget screen) =>
+      Navigator.of(context)
+          .push(MaterialPageRoute<void>(builder: (_) => screen));
 
   Future<void> _sendFeedback() async {
     final info = await PackageInfo.fromPlatform();

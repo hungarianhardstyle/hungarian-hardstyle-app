@@ -52,3 +52,34 @@ app.*.map.json
 # Központi Cégregiszter WordPress hitelesítő adatok
 business/wp-application-password.json
 business/pexels-api.json
+
+# Local Codex/Firebase/Gradle diagnostics and generated inspection artifacts.
+# Keep these files on disk for local debugging, but do not treat them as app
+# source or accidentally include them in the working tree.
+/%SystemDrive%/
+/.aab-inspect*/
+/.appdata/
+/.audit_scope.txt
+/.codex-remote-attachments/
+/.firebase-config/
+/.gradle-user/
+/.localappdata/
+/.tmp-*/
+/.tmp-*
+/analyze*.out
+/analyze*.txt
+/build-*.out
+/build_current.*
+/build_log.txt
+/flutter_verbose.txt
+/gradle_*.txt
+/test*.txt
+/emulator-*.png
+/GPT-KNOWLEDGE-FILES.zip
+/HUHS-GPT-CLEAN-SETUP.zip
+/newsroom-deploy.zip
+/android/app/src/main/generated/
+/android/build/
+/functions/node_modules/
+/node_modules/
+/graphify-out/

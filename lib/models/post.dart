@@ -1,6 +1,15 @@
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' as html_parser;
 
+bool _readBool(Object? value) {
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) {
+    return {'1', 'true', 'yes', 'on'}.contains(value.trim().toLowerCase());
+  }
+  return false;
+}
+
 String _decodeHtmlText(Object? value) {
   if (value is! String) {
     return '';
@@ -134,6 +143,7 @@ class Post {
   final String imageUrl;
   final String date;
   final String link;
+  final bool isSticky;
   final List<int> categoryIds;
   final List<String> categories;
   final List<String> tags;
@@ -151,6 +161,7 @@ class Post {
     required this.imageUrl,
     required this.date,
     required this.link,
+    required this.isSticky,
     required this.categoryIds,
     required this.categories,
     required this.tags,
@@ -171,6 +182,7 @@ class Post {
       imageUrl: json['featured_image'] ?? '',
       date: json['date'] ?? '',
       link: json['link'] ?? '',
+      isSticky: _readBool(json['is_sticky'] ?? json['sticky']),
       categoryIds: _readCategoryIds(json),
       categories: _readCategories(json),
       tags: _readTags(json),
@@ -192,6 +204,7 @@ class Post {
       imageUrl: _readFeaturedImage(json),
       date: json['date'] ?? '',
       link: json['link'] ?? '',
+      isSticky: _readBool(json['is_sticky'] ?? json['sticky']),
       categoryIds: _readCategoryIds(json),
       categories: _readCategories(json),
       tags: _readTags(json),
@@ -249,9 +262,9 @@ class Post {
         .toList();
 
     for (final element in candidates.reversed) {
-      final text = _decodeHtmlText(
-        element.text,
-      ).replaceAll(r'\u0026', '&').trim();
+      final text = _decodeHtmlText(element.text)
+          .replaceAll(r'\u0026', '&')
+          .trim();
       final candidateUrl = text.startsWith('http')
           ? text
           : element.classes.contains('instagram-media')
