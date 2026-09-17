@@ -17,6 +17,7 @@ import 'favorites_screen.dart';
 import 'newsletter_screen.dart';
 import '../community/private_messages_screen.dart';
 import '../../widgets/achievement_badge_card.dart';
+import '../../widgets/profile_content_card.dart';
 
 class CommunityUsersScreen extends ConsumerStatefulWidget {
   const CommunityUsersScreen({super.key});
@@ -540,12 +541,11 @@ class _CommunityPublicProfileScreenState
                     return Column(
                       children: [
                         for (final item in items)
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.event_outlined),
-                            title: Text(
-                              item.data()['title'] as String? ?? 'Esemény',
-                            ),
+                          ProfileContentCard(
+                            icon: Icons.event_outlined,
+                            title:
+                                item.data()['title'] as String? ?? 'Esemény',
+                            subtitle: 'Esemény, ahol ott lesz',
                             onTap: () async {
                               final eventId = (item.data()['eventId'] as num?)
                                   ?.toInt();
@@ -639,6 +639,7 @@ class _FavoriteProfilesSection extends StatelessWidget {
                 context,
                 item,
                 icon: Icons.album_outlined,
+                subtitle: 'Kedvenc DJ',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => ArtistDetailScreen(
@@ -652,6 +653,7 @@ class _FavoriteProfilesSection extends StatelessWidget {
                 context,
                 item,
                 icon: Icons.groups_outlined,
+                subtitle: 'Kedvenc szervező',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => OrganizerDetailScreen(
@@ -671,12 +673,13 @@ class _FavoriteProfilesSection extends StatelessWidget {
     BuildContext context,
     Map<String, dynamic> item, {
     required IconData icon,
+    required String subtitle,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon),
-      title: Text(item['title'] as String? ?? 'Ismeretlen'),
+    return ProfileContentCard(
+      icon: icon,
+      title: item['title'] as String? ?? 'Ismeretlen',
+      subtitle: subtitle,
       onTap: onTap,
     );
   }

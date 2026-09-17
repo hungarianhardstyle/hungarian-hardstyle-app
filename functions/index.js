@@ -456,6 +456,8 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
           authorName: value.authorName,
           imageUrl: value.imageUrl,
           text: value.text,
+          replyToName: value.replyToName || '',
+          replyToText: value.replyToText || '',
           createdAt: value.createdAt?.toMillis() || 0,
         };
       }),
@@ -486,6 +488,24 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
     if (!response.ok) throw new HttpsError('unavailable', 'A cikk most nem érhető el. Próbáld újra később.');
     const article = await response.json();
     if (Number(article.id) !== postId) throw new HttpsError('not-found', 'A cikk nem található.');
+    // Replies quote only the targeted comment (no chains): the author name and
+    // a short text snapshot are copied onto the new comment, and the quoted
+    // author is notified.
+    const replyToCommentId = typeof data?.replyToCommentId === 'string' ? data.replyToCommentId.trim() : '';
+    let replyToName = '';
+    let replyToText = '';
+    let replyToAuthorId = '';
+    if (replyToCommentId) {
+      if (!/^[a-zA-Z0-9_-]{1,128}$/.test(replyToCommentId))
+        throw new HttpsError('invalid-argument', 'Érvénytelen válaszcél.');
+      const target = await collection.doc(replyToCommentId).get();
+      if (target.exists) {
+        const targetData = target.data() || {};
+        replyToAuthorId = String(targetData.authorId || '').trim();
+        replyToName = String(targetData.authorName || '').trim().slice(0, 80);
+        replyToText = String(targetData.text || '').trim().slice(0, 200);
+      }
+    }
     let commentCreated = false;
     await db.runTransaction(async (tx) => {
       const current = await tx.get(ref);
@@ -499,6 +519,7 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
         authorName: profile.displayName || 'HUHS tag',
         imageUrl: profile.profileImageUrl || '',
         text,
+        ...(replyToName && replyToText ? { replyToCommentId, replyToName, replyToText } : {}),
         createdAt: FieldValue.serverTimestamp(),
       });
       commentCreated = true;
@@ -524,6 +545,18 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
       // One point per article comment, with the daily limit enforced inside
       // the idempotent server-side achievement ledger.
       await awardAchievementPoints(uid, 1, `article-comment:${postId}:${id}`);
+      if (replyToAuthorId && replyToAuthorId !== uid) {
+        await createNotificationBestEffort({
+          recipientUid: replyToAuthorId,
+          type: 'article_comment_reply',
+          title: 'Válaszoltak a hozzászólásodra',
+          body: `${profile.displayName || 'Egy HUHS tag'} válaszolt a hozzászólásodra egy cikknél.`,
+          targetType: 'article',
+          targetId: String(postId),
+          dedupeKey: `article-comment-reply:${postId}:${id}:${replyToAuthorId}`,
+          senderId: uid,
+        });
+      }
     }
   } else if (action === 'delete') {
     await db.runTransaction(async (tx) => {
@@ -1831,6 +1864,7 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
   const text = typeof data?.text === 'string' ? data.text.trim() : '';
   const imageUrl = typeof data?.imageUrl === 'string' ? data.imageUrl.trim() : '';
   const replyToText = typeof data?.replyToText === 'string' ? data.replyToText.trim().slice(0, 200) : '';
+  const replyToName = typeof data?.replyToName === 'string' ? data.replyToName.trim().slice(0, 80) : '';
   const imagePublicId = typeof data?.imagePublicId === 'string' ? data.imagePublicId.trim() : '';
   const isAnonymous = context.auth.token.firebase?.sign_in_provider === 'anonymous';
   if ((!text && !imageUrl) || text.length > 2000) {
@@ -1866,6 +1900,7 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
     isAnonymous,
     text,
     ...(replyToText ? { replyToText } : {}),
+    ...(replyToText && replyToName ? { replyToName } : {}),
     imageUrl,
     ...(imagePublicId ? { imagePublicId } : {}),
     reactions: {},

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../providers/community_provider.dart';
+import 'community_users_screen.dart';
 
 class AchievementLeaderboardScreen extends ConsumerStatefulWidget {
   const AchievementLeaderboardScreen({super.key});
@@ -199,6 +200,7 @@ class _LeaderboardTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final rank = (item['rank'] as num?)?.toInt() ?? index + 1;
     final points = (item['points'] as num?)?.toInt() ?? 0;
+    final userId = (item['userId'] as String?)?.trim() ?? '';
     final name = (item['displayName'] as String?)?.trim();
     final badge = (item['badgeName'] as String?)?.trim();
     final imageUrl = (item['badgeImageUrl'] as String?)?.trim() ?? '';
@@ -206,7 +208,15 @@ class _LeaderboardTile extends StatelessWidget {
         .round()
         .clamp(56, 112);
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: ListTile(
+        onTap: userId.isEmpty
+            ? null
+            : () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => CommunityPublicProfileScreen(userId: userId),
+                ),
+              ),
         leading: CircleAvatar(
           backgroundColor: const Color(0xFFE53935),
           child: Text('$rank', style: const TextStyle(color: Colors.white)),

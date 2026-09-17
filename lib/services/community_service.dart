@@ -1112,6 +1112,7 @@ class CommunityService {
     Uint8List? imageBytes,
     bool pinned = false,
     String? replyToText,
+    String? replyToName,
   }) async {
     final user = await ensureAnonymousUser();
     final isAnonymous = user.isAnonymous;
@@ -1148,6 +1149,12 @@ class CommunityService {
           'replyToText': replyToText!.trim().substring(
             0,
             replyToText.trim().length > 200 ? 200 : replyToText.trim().length,
+          ),
+        if (replyToText?.trim().isNotEmpty == true &&
+            replyToName?.trim().isNotEmpty == true)
+          'replyToName': replyToName!.trim().substring(
+            0,
+            replyToName.trim().length > 80 ? 80 : replyToName.trim().length,
           ),
         'imageUrl': imageUrl,
         if (uploadedImage?.publicId.isNotEmpty == true)

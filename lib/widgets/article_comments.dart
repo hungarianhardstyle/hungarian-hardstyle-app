@@ -23,6 +23,7 @@ class _ArticleCommentsState extends State<ArticleComments> {
   StreamSubscription<User?>? _auth;
   bool _loading = false, _sending = false, _more = false, _moderator = false;
   String? _error, _pendingId, _pendingText;
+  String? _replyToId, _replyToName, _replyToText;
   int _generation = 0;
 
   @override
@@ -99,13 +100,21 @@ class _ArticleCommentsState extends State<ArticleComments> {
     }
     setState(() => _sending = true);
     try {
-      await _call({'action': 'create', 'id': _pendingId, 'text': text});
+      await _call({
+        'action': 'create',
+        'id': _pendingId,
+        'text': text,
+        if (_replyToId != null) 'replyToCommentId': _replyToId,
+      });
       if (!mounted || FirebaseAuth.instance.currentUser?.uid != user.uid) {
         return;
       }
       _input.clear();
       _pendingId = null;
       _pendingText = null;
+      _replyToId = null;
+      _replyToName = null;
+      _replyToText = null;
       await _load();
     } catch (e) {
       if (mounted) {
@@ -115,6 +124,14 @@ class _ArticleCommentsState extends State<ArticleComments> {
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  void _replyTo(Map<String, dynamic> item) {
+    setState(() {
+      _replyToId = item['id'] as String?;
+      _replyToName = (item['authorName'] as String? ?? '').trim();
+      _replyToText = (item['text'] as String? ?? '').trim();
+    });
   }
 
   Future<void> _action(Map<String, dynamic> item, String action) async {
@@ -230,8 +247,15 @@ class _ArticleCommentsState extends State<ArticleComments> {
                         ),
                         if (registered)
                           PopupMenuButton<String>(
-                            onSelected: (action) => _action(item, action),
+                            onSelected: (action) => action == 'reply'
+                                ? _replyTo(item)
+                                : _action(item, action),
                             itemBuilder: (_) => [
+                              if (item['authorId'] != user.uid)
+                                const PopupMenuItem(
+                                  value: 'reply',
+                                  child: Text('Válasz'),
+                                ),
                               if (item['authorId'] == user.uid || _moderator)
                                 const PopupMenuItem(
                                   value: 'delete',
@@ -247,6 +271,37 @@ class _ArticleCommentsState extends State<ArticleComments> {
                       ],
                     ),
                     const SizedBox(height: 8),
+                    if ((item['replyToName'] as String? ?? '').trim().isNotEmpty)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: (item['replyToName'] as String).trim(),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const TextSpan(text: ' hozzászólására: '),
+                              TextSpan(
+                                text: (item['replyToText'] as String? ?? '')
+                                    .trim(),
+                              ),
+                            ],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     Text(item['text'] as String? ?? ''),
                   ],
                 ),
@@ -260,6 +315,24 @@ class _ArticleCommentsState extends State<ArticleComments> {
             ),
           const SizedBox(height: 12),
           ...[
+            if (_replyToText != null && _replyToText!.isNotEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: InputChip(
+                  label: Text(
+                    _replyToName?.isNotEmpty == true
+                        ? 'Válasz $_replyToName hozzászólására: $_replyToText'
+                        : 'Válasz erre: $_replyToText',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onDeleted: () => setState(() {
+                    _replyToId = null;
+                    _replyToName = null;
+                    _replyToText = null;
+                  }),
+                ),
+              ),
             TextField(
               controller: _input,
               enabled: !_sending,

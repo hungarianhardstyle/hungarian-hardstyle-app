@@ -27,6 +27,7 @@ import '../../services/referral_link_service.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../../widgets/achievement_badge_card.dart';
 import '../../widgets/community_profile_form_fields.dart';
+import '../../widgets/profile_content_card.dart';
 import '../more/favorites_screen.dart';
 import '../more/community_users_screen.dart';
 import '../artists/artist_detail_screen.dart';
@@ -722,6 +723,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   Uint8List? _image;
   bool _sending = false;
   String? _replyToText;
+  String? _replyToName;
   bool _anonymous = true;
   String _avatarUrl = '';
   String _avatarLetter = 'H';
@@ -861,12 +863,14 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
         text: _textController.text,
         imageBytes: _image,
         replyToText: _replyToText,
+        replyToName: _replyToName,
       );
       _textController.clear();
       if (mounted) {
         setState(() {
           _image = null;
           _replyToText = null;
+          _replyToName = null;
         });
       }
     } catch (error) {
@@ -884,7 +888,10 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   }
 
   void _replyTo(CommunityPost post) {
-    setState(() => _replyToText = post.text.trim());
+    setState(() {
+      _replyToText = post.text.trim();
+      _replyToName = post.authorName.trim();
+    });
     _composerFocusNode.requestFocus();
   }
 
@@ -973,7 +980,11 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
               onSend: _send,
               onRemoveImage: () => setState(() => _image = null),
               replyToText: _replyToText,
-              onClearReply: () => setState(() => _replyToText = null),
+              replyToName: _replyToName,
+              onClearReply: () => setState(() {
+                _replyToText = null;
+                _replyToName = null;
+              }),
             );
             final postList = Expanded(
               child: posts.when(
@@ -1033,6 +1044,7 @@ class _Composer extends StatelessWidget {
   final bool anonymous;
   final bool sending;
   final String? replyToText;
+  final String? replyToName;
   final VoidCallback onClearReply;
   final VoidCallback onTakePhoto;
   final VoidCallback onPickGallery;
@@ -1046,6 +1058,7 @@ class _Composer extends StatelessWidget {
     required this.anonymous,
     required this.sending,
     required this.replyToText,
+    required this.replyToName,
     required this.onClearReply,
     required this.onTakePhoto,
     required this.onPickGallery,
@@ -1066,7 +1079,9 @@ class _Composer extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: InputChip(
                   label: Text(
-                    'Válasz erre: ${replyToText!}',
+                    replyToName?.isNotEmpty == true
+                        ? 'Válasz $replyToName üzenetére: $replyToText'
+                        : 'Válasz erre: $replyToText',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1445,8 +1460,20 @@ class _PostCardState extends ConsumerState<_PostCard> {
                   color: Theme.of(context).colorScheme.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  'Válasz: ${widget.post.replyToText}',
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      if (widget.post.replyToName.isNotEmpty) ...[
+                        TextSpan(
+                          text: widget.post.replyToName,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const TextSpan(text: ' üzenetére: '),
+                      ] else
+                        const TextSpan(text: 'Válasz: '),
+                      TextSpan(text: widget.post.replyToText),
+                    ],
+                  ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2752,20 +2779,21 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         for (final entry in profileFavorites)
-          Card(
-            margin: const EdgeInsets.only(top: 6),
-            child: ListTile(
-              leading: const Icon(Icons.favorite, color: Colors.redAccent),
-              title: Text(entry.title),
-              onTap: () => FavoritesScreen.openEntry(context, ref, entry),
-              subtitle: Text(switch (entry.kind) {
-                FavoriteKind.event => 'Esemény',
-                FavoriteKind.artist => 'DJ',
-                FavoriteKind.organizer => 'Szervező',
-                FavoriteKind.news => 'Hír',
-              }),
-              trailing: const Icon(Icons.chevron_right),
-            ),
+          ProfileContentCard(
+            icon: switch (entry.kind) {
+              FavoriteKind.event => Icons.event_outlined,
+              FavoriteKind.artist => Icons.album_outlined,
+              FavoriteKind.organizer => Icons.groups_outlined,
+              FavoriteKind.news => Icons.article_outlined,
+            },
+            title: entry.title,
+            subtitle: switch (entry.kind) {
+              FavoriteKind.event => 'Esemény',
+              FavoriteKind.artist => 'DJ',
+              FavoriteKind.organizer => 'Szervező',
+              FavoriteKind.news => 'Hír',
+            },
+            onTap: () => FavoritesScreen.openEntry(context, ref, entry),
           ),
       ],
       StreamBuilder<List<QueryDocumentSnapshot<Map<String, dynamic>>>>(
@@ -2782,20 +2810,16 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               for (final event in events)
-                Card(
-                  margin: const EdgeInsets.only(top: 6),
-                  child: ListTile(
-                    leading: const Icon(Icons.event_outlined),
-                    title: Text(event.data()['title'] as String? ?? 'Esemény'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      final eventId = (event.data()['eventId'] as num?)
-                          ?.toInt();
-                      if (eventId != null) {
-                        _openPlannedEvent(context, ref, eventId);
-                      }
-                    },
-                  ),
+                ProfileContentCard(
+                  icon: Icons.event_outlined,
+                  title: event.data()['title'] as String? ?? 'Esemény',
+                  subtitle: 'Esemény, ahol ott leszek',
+                  onTap: () {
+                    final eventId = (event.data()['eventId'] as num?)?.toInt();
+                    if (eventId != null) {
+                      _openPlannedEvent(context, ref, eventId);
+                    }
+                  },
                 ),
             ],
           );
