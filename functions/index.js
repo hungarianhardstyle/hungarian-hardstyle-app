@@ -69,7 +69,10 @@ function isExplicitIdentityBan(marker) {
 // Registration is intentionally checked before Auth creation so a deleted
 // identity cannot silently return as a new account. This callable has no Auth
 // requirement; the one-way identity marker is the only identity it receives.
-exports.checkRegistrationEligibility = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data) => {
+exports.checkRegistrationEligibility = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  if (!(await allowCallByIp(context, 'registration_eligibility', 30))) {
+    throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
+  }
   const email = normalizedEmail(data?.email);
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     throw new HttpsError('invalid-argument', 'Érvénytelen e-mail-cím.');
@@ -866,7 +869,10 @@ exports.getGameAttemptStatus = wordPressCall(async (data, context) => {
   };
 });
 
-exports.getGameResults = wordPressCall(async (data) => {
+exports.getGameResults = wordPressCall(async (data, context) => {
+  if (!(await allowCallByIp(context, 'game_results', 60))) {
+    throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
+  }
   const gameId = Number(data?.gameId);
   if (!Number.isSafeInteger(gameId) || gameId <= 0) throw new HttpsError('invalid-argument', 'Érvénytelen játék.');
 
@@ -930,6 +936,20 @@ async function allowCall(uid, key, limit = 20) {
     }
   });
   return allowed;
+}
+
+function callerIp(context) {
+  return String(context?.rawRequest?.ip || context?.rawRequest?.socket?.remoteAddress || '').trim();
+}
+
+// IP-scoped rate limit for public (unauthenticated) readers. The IP is hashed
+// before it becomes part of the rate-limit key so no raw address is persisted.
+// Fails open only when no IP is available (Firebase always provides one).
+async function allowCallByIp(context, key, limit = 30) {
+  const ip = callerIp(context);
+  if (!ip) return true;
+  const ipHash = crypto.createHash('sha256').update(`huhs-ip:${ip}`).digest('hex').slice(0, 16);
+  return allowCall(`ip:${ipHash}`, key, limit);
 }
 
 const defaultAchievementBadges = [
@@ -1419,7 +1439,10 @@ exports.getPublicAchievement = functions.runWith({ enforceAppCheck: false }).htt
   return achievement;
 });
 
-exports.getAchievementLeaderboard = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data) => {
+exports.getAchievementLeaderboard = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  if (!(await allowCallByIp(context, 'achievement_leaderboard', 120))) {
+    throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
+  }
   const requestedSize = Number(data?.pageSize || 50);
   const pageSize = Number.isInteger(requestedSize) ? Math.min(100, Math.max(10, requestedSize)) : 50;
   const cursorPoints = Number(data?.cursorPoints);
@@ -1661,7 +1684,10 @@ function validatedDisplayName(value) {
 
 // This is only an early UX check. claimDisplayName remains the authoritative
 // transaction because another account may reserve the name between calls.
-exports.checkDisplayNameAvailability = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data) => {
+exports.checkDisplayNameAvailability = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  if (!(await allowCallByIp(context, 'display_name_availability', 30))) {
+    throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
+  }
   const displayName = validatedDisplayName(data?.displayName);
   const snapshot = await db.collection('display_name_index').doc(displayNameKey(displayName)).get();
   return { available: !snapshot.exists };
@@ -3716,7 +3742,10 @@ exports.claimArtistProfile = functions.runWith({ enforceAppCheck: false }).https
   return { claimed: true, artistId };
 });
 
-exports.getArtistClaimStatus = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data) => {
+exports.getArtistClaimStatus = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  if (!(await allowCallByIp(context, 'artist_claim_status', 60))) {
+    throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
+  }
   const artistId = Number(data?.artistId);
   if (!Number.isInteger(artistId) || artistId <= 0) {
     throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap szükséges.');
