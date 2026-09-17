@@ -164,8 +164,9 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
   Future<void> _readMetadata() async {
     if (_readingMetadata || !_playing) return;
     _readingMetadata = true;
+    HttpClient? client;
     try {
-      final client = HttpClient();
+      client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 5);
       final request = await client.getUrl(_streamUri);
       request.headers.set('Icy-MetaData', '1');
@@ -173,16 +174,12 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
       final interval = int.tryParse(
         response.headers.value('icy-metaint') ?? '',
       );
-      if (interval == null) {
-        client.close(force: true);
-        return;
-      }
+      if (interval == null) return;
       final bytes = <int>[];
       await for (final chunk in response) {
         bytes.addAll(chunk);
         if (bytes.length >= interval + 1) break;
       }
-      client.close(force: true);
       if (bytes.length <= interval) return;
       final length = bytes[interval] * 16;
       final metadata = String.fromCharCodes(
@@ -197,6 +194,7 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
       }
     } catch (_) {
     } finally {
+      client?.close(force: true);
       _readingMetadata = false;
     }
   }
