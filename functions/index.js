@@ -569,7 +569,6 @@ const CLOUDINARY_CLOUD_NAME = 'fjxo93em';
 const GOOGLE_PLAY_PACKAGE_NAME = 'hu.hungarianhardstyle.app';
 // Match the region schema returned by the current Play catalog.
 const GOOGLE_PLAY_REGIONS_VERSION = '2025/03';
-let labelProductSyncRunning = false;
 let achievementBadgesCache = null;
 let achievementBadgesCacheAt = 0;
 // Badge artwork can be replaced in WordPress without changing its media URL.
@@ -4238,9 +4237,35 @@ async function syncReleasePlayProducts(release, credentials, androidPublisher) {
   return { releaseId: Number(release.id), products, errors };
 }
 
+const LABEL_SYNC_LEASE_MS = 4 * 60 * 1000;
+
+// A Firestore-based lease serializes the label sync across concurrent function
+// instances, unlike the previous per-instance boolean which only worked on a
+// single warm instance.
+async function acquireLabelSyncLease() {
+  const ref = db.collection('sync_locks').doc('label_product_sync');
+  const now = Date.now();
+  let acquired = false;
+  await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    const leaseUntil = snapshot.data()?.leaseUntil?.toDate?.()?.getTime?.() || 0;
+    if (now >= leaseUntil) {
+      transaction.set(ref, {
+        leaseUntil: new Date(now + LABEL_SYNC_LEASE_MS),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      acquired = true;
+    }
+  });
+  return acquired;
+}
+
+async function releaseLabelSyncLease() {
+  await db.collection('sync_locks').doc('label_product_sync').delete().catch(() => {});
+}
+
 async function syncWordPressLabelProducts(releaseId = 0) {
-  if (labelProductSyncRunning) return { skipped: true, reason: 'already-running' };
-  labelProductSyncRunning = true;
+  if (!(await acquireLabelSyncLease())) return { skipped: true, reason: 'already-running' };
   try {
     const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
     let serviceAccount;
@@ -4277,7 +4302,7 @@ async function syncWordPressLabelProducts(releaseId = 0) {
     }
     return { processed: results.length, results };
   } finally {
-    labelProductSyncRunning = false;
+    await releaseLabelSyncLease();
   }
 }
 
