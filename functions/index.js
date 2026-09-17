@@ -2780,7 +2780,9 @@ async function pollWordPressContentNotifications() {
   await stateRef.set({ ids: current, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
   if (!newlyPublished.length) return { baseline: !stateSnapshot.exists, created: 0 };
 
-  const profiles = await db.collection('community_profiles').select().get();
+  // The fan-out only needs each profile's document id, so select just that
+  // instead of reading every profile field (including private data) into memory.
+  const profiles = await db.collection('community_profiles').select(FieldPath.documentId()).get();
   let created = 0;
   for (const item of newlyPublished) {
     const name = String(item.item?.title?.rendered || item.item?.title || item.item?.name || '').trim();
