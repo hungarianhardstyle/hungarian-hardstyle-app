@@ -11,3 +11,11 @@
 -keep class androidx.work.impl.WorkDatabase { *; }
 -keep class androidx.work.impl.WorkDatabase_Impl { *; }
 -keep class androidx.work.impl.model.** { *; }
+
+# Firebase's ComponentDiscovery instantiates ComponentRegistrar classes through
+# reflection. R8 full mode kept the class names but removed their no-arg
+# constructors, so Firebase App Check (Play Integrity attestation) silently
+# failed to register in release builds:
+#   NoSuchMethodException: ...FirebaseAppCheckPlayIntegrityRegistrar.<init> []
+-keep class * implements com.google.firebase.components.ComponentRegistrar { *; }
+-keep class com.google.firebase.appcheck.** { *; }
