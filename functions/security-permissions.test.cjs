@@ -41,7 +41,7 @@ test('callable-k alapból enforcement nélkül; csak az engedélyezett olvasók 
     'getArtistClaimStatus',
   ];
   const blocks = [...functionsSource.matchAll(
-    /^exports\.(?<name>[A-Za-z0-9_]+)\s*=\s*(?<body>.*?)(?=^exports\.|(?![\s\S]))/gms,
+    /^exports\.(?<name>[A-Za-z0-9_]+)\s*=\s*(?<body>.*?)(?=^exports\.|^const wordPressCall|(?![\s\S]))/gms,
   )].filter(({ groups }) => /https\.onCall|wordPressCall\(/.test(groups.body));
   assert.ok(blocks.length >= 44);
   assert.ok(blocks.some(({ groups }) => groups.name === 'getGameResults'));
@@ -50,7 +50,7 @@ test('callable-k alapból enforcement nélkül; csak az engedélyezett olvasók 
     if (body.includes('wordPressCall(')) {
       assert.match(
         functionsSource.slice(0, functionsSource.indexOf('exports.' + name)),
-        /wordPressCall = \(handler\) =>\s*functions[\s\S]*?enforceAppCheck:\s*false/,
+        /wordPressCall = \(handler\) =>\s*functions[\s\S]*?enforceAppCheck:\s*true/,
         name,
       );
     } else if (appCheckEnforced.includes(name)) {
@@ -60,8 +60,10 @@ test('callable-k alapból enforcement nélkül; csak az engedélyezett olvasók 
       assert.doesNotMatch(body, /enforceAppCheck:\s*true/, name);
     }
   }
+  // The shared wordPressCall wrapper enables App Check for every WP-proxy
+  // function, plus the allow-listed direct callables below.
   const enforcedCount = (functionsSource.match(/enforceAppCheck:\s*true/g) || []).length;
-  assert.strictEqual(enforcedCount, appCheckEnforced.length);
+  assert.strictEqual(enforcedCount, appCheckEnforced.length + 1);
   assert.match(functionsSource, /function requireRegisteredViewer\(context\)/);
   assert.match(functionsSource, /function isAdmin\(context, profile\)/);
 });

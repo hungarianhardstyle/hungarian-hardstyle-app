@@ -580,7 +580,7 @@ const wordPressCall = (handler) =>
   functions
     .runWith({
       secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
-      enforceAppCheck: false,
+      enforceAppCheck: true,
     })
     .https.onCall(handler);
 function isAnonymousAuth(context) {
