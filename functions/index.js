@@ -462,6 +462,8 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
     };
   }
   if (!uid) throw new HttpsError('unauthenticated', 'Próbáld újra a küldést.');
+  if (isAnonymousAuth(context))
+    throw new HttpsError('unauthenticated', 'A hozzászóláshoz regisztráció szükséges.');
   if ((await db.collection('community_bans').doc(uid).get()).exists)
     throw new HttpsError('permission-denied', 'Jelenleg nem hozzászólhatsz.');
   const id = data?.id;
@@ -492,14 +494,10 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
           throw new HttpsError('already-exists', 'Ez a hozzászólás már létezik.');
         return;
       }
-      const anonymous = context.auth.token.firebase?.sign_in_provider === 'anonymous';
-      let hash = 17n;
-      for (let i = 0; i < uid.length; i++) hash = BigInt.asIntN(64, hash * 31n + BigInt(uid.charCodeAt(i)));
-      const number = Number((hash < 0n ? -hash : hash) % 9000n) + 1000;
       tx.create(ref, {
         authorId: uid,
-        authorName: anonymous ? `Unknown User ${number}` : profile.displayName || 'HUHS tag',
-        imageUrl: anonymous ? '' : profile.profileImageUrl || '',
+        authorName: profile.displayName || 'HUHS tag',
+        imageUrl: profile.profileImageUrl || '',
         text,
         createdAt: FieldValue.serverTimestamp(),
       });

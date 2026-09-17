@@ -84,13 +84,21 @@ class _ArticleCommentsState extends State<ArticleComments> {
   Future<void> _send() async {
     final text = CommunityService.maskProfanity(_input.text.trim());
     if (_sending || text.isEmpty) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('A hozzászóláshoz jelentkezz be.')),
+        );
+      }
+      return;
+    }
     if (_pendingText != text) {
       _pendingText = text;
       _pendingId = FirebaseFirestore.instance.collection('unused').doc().id;
     }
     setState(() => _sending = true);
     try {
-      final user = await CommunityService().ensureAnonymousUser();
       await _call({'action': 'create', 'id': _pendingId, 'text': text});
       if (!mounted || FirebaseAuth.instance.currentUser?.uid != user.uid) {
         return;
@@ -159,7 +167,7 @@ class _ArticleCommentsState extends State<ArticleComments> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final registered = user != null;
+    final registered = user != null && !user.isAnonymous;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
