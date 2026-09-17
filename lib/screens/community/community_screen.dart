@@ -1406,8 +1406,8 @@ class _PostCardState extends ConsumerState<_PostCard> {
                         InteractiveViewer(
                           minScale: .8,
                           maxScale: 4,
-                          child: Image.network(
-                            post.imageUrl,
+                          child: CachedNetworkImage(
+                            imageUrl: post.imageUrl,
                             fit: BoxFit.contain,
                           ),
                         ),

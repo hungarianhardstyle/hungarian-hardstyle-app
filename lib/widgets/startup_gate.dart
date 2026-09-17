@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -217,10 +218,10 @@ class _StartupGateState extends State<StartupGate>
                               ),
                             ),
                             Flexible(
-                              child: Image.network(
-                                announcement,
+                              child: CachedNetworkImage(
+                                imageUrl: announcement,
                                 fit: BoxFit.contain,
-                                errorBuilder: (_, _, _) => const SizedBox(
+                                errorWidget: (_, _, _) => const SizedBox(
                                   height: 96,
                                   child: Center(
                                     child: Icon(

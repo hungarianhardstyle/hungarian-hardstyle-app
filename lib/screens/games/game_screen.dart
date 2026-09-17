@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -193,11 +194,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               const SizedBox(height: 14),
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: Image.network(
-                  game.clueImageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: game.clueImageUrl,
                   height: 180,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  errorWidget: (_, _, _) => const SizedBox.shrink(),
                 ),
               ),
             ],
@@ -482,11 +483,11 @@ class _GameHero extends StatelessWidget {
           if (game.artwork.isNotEmpty)
             Container(
               color: Colors.black,
-              child: Image.network(
-                game.artwork,
+              child: CachedNetworkImage(
+                imageUrl: game.artwork,
                 width: double.infinity,
                 fit: BoxFit.fitWidth,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                errorWidget: (_, _, _) => const SizedBox.shrink(),
               ),
             ),
           Padding(

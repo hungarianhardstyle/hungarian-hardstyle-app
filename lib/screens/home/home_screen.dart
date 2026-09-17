@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -529,11 +530,11 @@ class _ActiveGameCard extends StatelessWidget {
             if (game.artwork.isNotEmpty)
               Container(
                 color: Colors.black,
-                child: Image.network(
-                  game.artwork,
+                child: CachedNetworkImage(
+                  imageUrl: game.artwork,
                   width: double.infinity,
                   fit: BoxFit.fitWidth,
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  errorWidget: (_, _, _) => const SizedBox.shrink(),
                 ),
               ),
             Padding(

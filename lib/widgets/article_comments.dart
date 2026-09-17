@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -202,12 +203,12 @@ class _ArticleCommentsState extends State<ArticleComments> {
                       children: [
                         CircleAvatar(
                           child: ClipOval(
-                            child: Image.network(
-                              item['imageUrl'] as String? ?? '',
+                            child: CachedNetworkImage(
+                              imageUrl: item['imageUrl'] as String? ?? '',
                               width: 40,
                               height: 40,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, error, stack) =>
+                              errorWidget: (_, error, stack) =>
                                   const Icon(Icons.person),
                             ),
                           ),
