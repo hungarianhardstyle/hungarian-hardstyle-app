@@ -58,18 +58,16 @@ Future<void> _initializePushNotifications() async {
 
 Future<void> _initializeAppCheck() async {
   try {
-    if (kDebugMode) {
-      // Debug builds use the debug provider so local/emulator testing works
-      // without Firebase Console registration.
-      await FirebaseAppCheck.instance.activate(
-        androidProvider: AndroidProvider.debug,
-      );
-    }
-    // Release builds deliberately do NOT activate App Check yet. Play Integrity
-    // activation requires the app's SHA-256 to be registered in Firebase
-    // Console → App Check, and enforcement must then be enabled gradually
-    // (monitoring before enforcing). Activating too early would make every
-    // callable fail, which previously broke content loading.
+    // Debug builds use the debug provider (no console registration needed).
+    // Release builds use Play Integrity: its config is registered for this app
+    // and the Play Integrity API is enabled. Backend enforcement is still OFF
+    // (enforceAppCheck: false), so attaching tokens here cannot block content
+    // loading. Enforcement can be enabled later, after this build ships.
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: kDebugMode
+          ? AndroidProvider.debug
+          : AndroidProvider.playIntegrity,
+    );
   } catch (_) {
     // App Check must never block startup or content loading.
   }
