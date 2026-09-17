@@ -172,6 +172,7 @@ test('username changes are server-limited and audit logs are anonymized', () => 
   assert.match(functionsSource, /usernameChangeCount/);
   assert.match(functionsSource, /évente egyszer lehet módosítani/);
   assert.match(functionsSource, /result: 'recorded'/);
+  assert.match(functionsSource, /function securityLog\(event, context\)[\s\S]{0,400}uidHash/);
   assert.doesNotMatch(functionsSource, /console\.warn\(JSON\.stringify\(\{ event, uid:/);
 });
 

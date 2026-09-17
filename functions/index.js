@@ -1124,6 +1124,10 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
           .collection(isNewsLikeGrant ? 'achievement_news_like_limits' : 'achievement_article_comment_limits')
           .doc(`${uid}_${new Date().toISOString().slice(0, 10)}`);
   let result = { changed: false };
+  // A WordPress fetch must never run inside a Firestore transaction: it can
+  // hold the document lock for the full 2.5s HTTP timeout and cause contention.
+  // Load the badge catalog first (it is cached for 30s and falls back safely).
+  const badges = await getAchievementBadges();
   await db.runTransaction(async (transaction) => {
     const ledger = await transaction.get(ledgerRef);
     if (ledger.exists) return;
@@ -1137,7 +1141,6 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
     const current = Math.max(0, Number(profile.data()?.achievementPoints || 0));
     const previousBadgeSlug = String(profile.data()?.achievementBadge?.slug || '').trim();
     const points = Math.max(0, current + delta);
-    const badges = await getAchievementBadges();
     const badge =
       badges.filter((item) => points >= item.min_points).sort((a, b) => b.min_points - a.min_points)[0] ||
       defaultAchievementBadges[0];
@@ -2416,7 +2419,13 @@ exports.claimProfileCompletionAchievement = functions
   });
 
 function securityLog(event, context) {
-  console.warn(JSON.stringify({ event, result: 'recorded' }));
+  const uid = context?.auth?.uid;
+  // One-way hash keeps the audit trail attributable without logging the raw
+  // UID, preserving the anonymization guarantee for deleted users.
+  const uidHash = uid
+    ? crypto.createHash('sha256').update(`huhs-security:${uid}`).digest('hex').slice(0, 16)
+    : undefined;
+  console.warn(JSON.stringify({ event, uidHash, result: 'recorded' }));
 }
 
 exports.toggleNewsReaction = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
