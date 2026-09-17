@@ -202,7 +202,7 @@ class PushNotificationService {
         return;
       }
 
-      if (type == 'news' && id != null) {
+      if ((type == 'news' || type == 'article_comment') && id != null) {
         final post = await WordpressService().getPost(id);
         if (!context.mounted) return;
         await Navigator.of(context).push(

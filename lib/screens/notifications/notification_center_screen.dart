@@ -197,7 +197,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       }
       final id = int.tryParse(target);
       if (id == null) return;
-      if (notification.targetType == 'news') {
+      if (notification.targetType == 'news' ||
+          notification.targetType == 'article') {
         final post = await WordpressService().getPost(id);
         if (navigator.mounted) {
           await navigator.push(
