@@ -30,7 +30,8 @@ const wordpressSource = fs.readFileSync(
   'utf8',
 );
 
-test('minden callable enforcement nélkül marad, amíg a kliens kompatibilis nem lesz', () => {
+test('callable-k alapból enforcement nélkül; csak az engedélyezett olvasók App Check-kel', () => {
+  const appCheckEnforced = ['getAchievementLeaderboard'];
   const blocks = [...functionsSource.matchAll(
     /^exports\.(?<name>[A-Za-z0-9_]+)\s*=\s*(?<body>.*?)(?=^exports\.|(?![\s\S]))/gms,
   )].filter(({ groups }) => /https\.onCall|wordPressCall\(/.test(groups.body));
@@ -44,12 +45,15 @@ test('minden callable enforcement nélkül marad, amíg a kliens kompatibilis ne
         /wordPressCall = \(handler\) =>\s*functions[\s\S]*?enforceAppCheck:\s*false/,
         name,
       );
+    } else if (appCheckEnforced.includes(name)) {
+      assert.match(body, /enforceAppCheck:\s*true/, name);
     } else {
       assert.match(body, /enforceAppCheck:\s*false/, name);
       assert.doesNotMatch(body, /enforceAppCheck:\s*true/, name);
     }
   }
-  assert.doesNotMatch(functionsSource, /enforceAppCheck:\s*true/);
+  const enforcedCount = (functionsSource.match(/enforceAppCheck:\s*true/g) || []).length;
+  assert.strictEqual(enforcedCount, appCheckEnforced.length);
   assert.match(functionsSource, /function requireRegisteredViewer\(context\)/);
   assert.match(functionsSource, /function isAdmin\(context, profile\)/);
 });

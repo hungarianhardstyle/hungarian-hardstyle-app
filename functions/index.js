@@ -1436,7 +1436,7 @@ exports.getPublicAchievement = functions.runWith({ enforceAppCheck: false }).htt
   return achievement;
 });
 
-exports.getAchievementLeaderboard = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+exports.getAchievementLeaderboard = functions.runWith({ enforceAppCheck: true }).https.onCall(async (data, context) => {
   if (!(await allowCallByIp(context, 'achievement_leaderboard', 120))) {
     throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
   }
