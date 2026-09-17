@@ -390,6 +390,23 @@ class PushNotificationService {
     final preferences = await SharedPreferences.getInstance();
     final token = preferences.getString(_tokenKey);
     if (token == null || token.isEmpty) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && !user.isAnonymous && Firebase.apps.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instanceFor(
+          app: Firebase.app(),
+          databaseId: 'hungarian-hardstyle',
+        ).collection('private_user_data').doc(user.uid).set({
+          'notificationPreferences': {
+            'enabled': enabled,
+            'achievements': achievements,
+          },
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } catch (_) {
+        // The WordPress preference sync below remains available to older clients.
+      }
+    }
     try {
       await _api.post(
         '/push/preferences',

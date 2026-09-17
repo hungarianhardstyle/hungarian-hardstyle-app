@@ -187,7 +187,12 @@ class _CommunityPublicProfileScreenState
     _connectionStatus = service.connectionStatus(widget.userId);
     // Paint cached public data immediately; the projection is refreshed by
     // Firebase whenever the profile or achievement state changes.
-    _profileFuture = service.getPublicProfile(widget.userId);
+    _profileFuture = service.getPublicProfile(widget.userId).then((profile) {
+      // Older public projections predate memberSince. Refresh only those
+      // profiles through the callable; current projections remain cached.
+      if (profile['memberSince'] is num) return profile;
+      return service.getPublicProfile(widget.userId, forceRefresh: true);
+    });
     // getPublicProfile already contains the public achievement projection.
     // Reusing it removes a second callable request from profile opening.
     _achievementFuture = _profileFuture.then(AchievementSummary.fromProfile);
@@ -291,6 +296,10 @@ class _CommunityPublicProfileScreenState
             data['socialLinks'] as Map? ?? const {},
           );
           final achievement = AchievementSummary.fromProfile(data);
+          final memberSinceMillis = (data['memberSince'] as num?)?.toInt();
+          final memberSince = memberSinceMillis != null && memberSinceMillis > 0
+              ? DateTime.fromMillisecondsSinceEpoch(memberSinceMillis).toLocal()
+              : null;
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
@@ -352,6 +361,16 @@ class _CommunityPublicProfileScreenState
                   ),
                 ),
               ),
+              if (memberSince != null)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.calendar_month_outlined),
+                  title: const Text('A közösség tagja'),
+                  subtitle: Text(
+                    MaterialLocalizations.of(context)
+                        .formatMediumDate(memberSince),
+                  ),
+                ),
               const SizedBox(height: 16),
               FutureBuilder<AchievementSummary>(
                 future: _achievementFuture,

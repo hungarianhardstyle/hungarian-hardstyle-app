@@ -201,6 +201,9 @@ class CommunityService {
   String _cachedAccessRole = accessNone;
   String? _cachedRoleUid;
   String? _googleProfileCompletionNotice;
+  String? _blockedUsersUid;
+  Set<String> _blockedUserIds = <String>{};
+  Future<Set<String>>? _blockedUsersRequest;
 
   CommunityService({FirebaseAuth? auth, FirebaseFirestore? firestore, Dio? dio})
     : auth = auth ?? FirebaseAuth.instance,
@@ -226,16 +229,7 @@ class CommunityService {
         .limit(60)
         .snapshots()
         .asyncMap((snapshot) async {
-          final user = auth.currentUser;
-          final blocked = <String>{};
-          if (user != null && !user.isAnonymous) {
-            final blockedSnapshot = await firestore
-                .collection('community_profiles')
-                .doc(user.uid)
-                .collection('blocked_users')
-                .get();
-            blocked.addAll(blockedSnapshot.docs.map((doc) => doc.id));
-          }
+          final blocked = await _loadBlockedUserIds();
           final posts = snapshot.docs.map(CommunityPost.fromDocument).toList();
           posts.removeWhere((post) => blocked.contains(post.authorId));
           posts.sort((a, b) {
@@ -246,6 +240,26 @@ class CommunityService {
           });
           return posts;
         });
+  }
+
+  Future<Set<String>> _loadBlockedUserIds() {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return Future.value(<String>{});
+    if (_blockedUsersUid == user.uid && _blockedUsersRequest != null) {
+      return _blockedUsersRequest!;
+    }
+    _blockedUsersUid = user.uid;
+    final request = firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('blocked_users')
+        .get()
+        .then((snapshot) {
+          _blockedUserIds = snapshot.docs.map((doc) => doc.id).toSet();
+          return _blockedUserIds;
+        });
+    _blockedUsersRequest = request;
+    return request;
   }
 
   String privateConversationId(String firstUserId, String secondUserId) {
@@ -489,6 +503,9 @@ class CommunityService {
         'checkRegistrationEligibility',
         parameters: {'email': normalizedEmail},
       );
+      // This avoids creating Auth for a known-taken name. The atomic claim
+      // below remains authoritative because the name can change meanwhile.
+      await checkDisplayNameAvailability(displayName);
       final current = auth.currentUser;
       final emailCredential = EmailAuthProvider.credential(
         email: normalizedEmail,
@@ -542,24 +559,32 @@ class CommunityService {
           'Ez az e-mail-cím már használatban van. Jelentkezz be.',
         );
       }
-      _authStage('display_name_claim', isNewUser: createdNow);
-      await claimDisplayName(displayName);
-      await user.updateDisplayName(displayName.trim());
-      final accountRole = _isAdmin(normalizedEmail)
-          ? 'organizer'
-          : this.accountRole(role);
-      await profileRef.set({
-        // claimDisplayName already creates/updates displayName atomically;
-        // Firestore rules intentionally reject a second client-side write.
-        'role': accountRole,
-        'accessRole': _isAdmin(user.email) ? accessAdmin : accessNone,
-        'email': normalizedEmail,
-        if (socialLinks != null && profileData['socialLinks'] == null)
-          'socialLinks': socialLinks,
-        if (!existingProfile.exists) 'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      _authStage('profile_creation', isNewUser: createdNow);
+      Object? profileError;
+      try {
+        _authStage('display_name_claim', isNewUser: createdNow);
+        await claimDisplayName(displayName);
+        await user.updateDisplayName(displayName.trim());
+        final accountRole = _isAdmin(normalizedEmail)
+            ? 'organizer'
+            : this.accountRole(role);
+        await profileRef.set({
+          // claimDisplayName already creates/updates displayName atomically;
+          // Firestore rules intentionally reject a second client-side write.
+          'role': accountRole,
+          'accessRole': _isAdmin(user.email) ? accessAdmin : accessNone,
+          'email': normalizedEmail,
+          if (socialLinks != null && profileData['socialLinks'] == null)
+            'socialLinks': socialLinks,
+          if (!existingProfile.exists)
+            'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        _authStage('profile_creation', isNewUser: createdNow);
+      } catch (error) {
+        // Auth now exists. Always attempt verification below; the same signed-in
+        // partial account can continue with another name without duplication.
+        profileError = error;
+      }
       // A slow or unavailable SMTP server must not strand a newly created
       // Auth account before its server-owned name and required role are saved.
       if (!user.emailVerified) {
@@ -573,8 +598,18 @@ class CommunityService {
           _authStage('email_verification', error: error, isNewUser: true);
           verificationWarning = _verificationError(
             error is FirebaseFunctionsException ? error.code : 'unknown',
+            duringRegistration: true,
           );
         }
+      }
+      if (profileError != null) {
+        if (profileError is FirebaseFunctionsException &&
+            profileError.code == 'already-exists') {
+          throw StateError(
+            'Ez a felhasználónév már foglalt. Válassz másikat. A megerősítő e-mailt elküldtük.',
+          );
+        }
+        throw profileError;
       }
       if (verificationWarning != null) throw StateError(verificationWarning);
       _authStage('registration_complete', isNewUser: createdNow);
@@ -647,6 +682,25 @@ class CommunityService {
     }
   }
 
+  Future<void> checkDisplayNameAvailability(String displayName) async {
+    final value = displayName.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (value.length < 2 ||
+        value.length > 40 ||
+        !RegExp(
+          r"^[\p{L}\p{N}][\p{L}\p{N} ._'-]*$",
+          unicode: true,
+        ).hasMatch(value)) {
+      throw StateError('Adj meg 2–40 karakteres, érvényes felhasználónevet.');
+    }
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'checkDisplayNameAvailability',
+      parameters: {'displayName': value},
+    );
+    if (result.data['available'] != true) {
+      throw StateError('Ez a felhasználónév már foglalt. Válassz másikat.');
+    }
+  }
+
   String? get googleProfileCompletionNotice => _googleProfileCompletionNotice;
 
   Future<void> signIn({required String email, required String password}) async {
@@ -669,16 +723,22 @@ class CommunityService {
     }
   }
 
-  Future<void> resendEmailVerification() async {
+  Future<String> resendEmailVerification() async {
     final user = auth.currentUser;
     if (user == null || user.isAnonymous) {
       throw StateError('Nincs ellenőrizhető e-mailes fiók.');
     }
     try {
-      await callFirebaseCallable<void>(
+      // A közvetlenül regisztráció után megnyitott profil még régi ID tokent
+      // hordozhat. A callable az Auth-token e-mailjét ellenőrzi.
+      await user.getIdToken(true);
+      final result = await callFirebaseCallable<Map<String, dynamic>>(
         'sendAuthEmail',
         parameters: {'action': 'verification'},
       );
+      return result.data['outcome'] as String? ?? 'smtp_accepted';
+    } on FirebaseAuthException catch (error) {
+      throw StateError(_authError(error.code));
     } on FirebaseFunctionsException catch (error) {
       throw StateError(_verificationError(error.code));
     }
@@ -720,6 +780,11 @@ class CommunityService {
         email: normalizedEmail,
         password: password,
       );
+      final signedInUser = auth.currentUser;
+      if (signedInUser == null) {
+        throw StateError('A bejelentkezett fiók nem érhető el. Próbáld újra.');
+      }
+      await signedInUser.getIdToken(true);
       await callFirebaseCallable<void>(
         'sendAuthEmail',
         parameters: {'action': 'verification'},
@@ -795,13 +860,24 @@ class CommunityService {
         _ => 'A bejelentkezés nem sikerült. Próbáld újra.',
       }}';
 
-  String _verificationError(String code) =>
-      'AUTH/$code: ${switch (code) {
-        'too-many-requests' => 'A fiók létrejött, de túl sok ellenőrző-e-mailt kértél. A profilban később újraküldheted.',
-        'network-request-failed' => 'A fiók létrejött, de az ellenőrző e-mail küldése hálózati hiba miatt nem sikerült. A profilban újraküldheted.',
-        'unavailable' => 'A fiók létrejött, de az ellenőrző e-mail küldése nem sikerült. A profilban újraküldheted.',
-        _ => 'A fiók létrejött, de az ellenőrző e-mail küldése nem sikerült. A profilban újraküldheted.',
-      }}';
+  String _verificationError(String code, {bool duringRegistration = false}) {
+    if (duringRegistration) {
+      return switch (code) {
+        'too-many-requests' => 'A fiók létrejött, de túl sok ellenőrző e-mailt kértél. Próbáld újra később.',
+        'network-request-failed' => 'A fiók létrejött, de az ellenőrző e-mail küldése hálózati hiba miatt nem sikerült. Próbáld újra.',
+        _ => 'A fiók létrejött, de az ellenőrző e-mail küldése most nem sikerült. Próbáld újra később.',
+      };
+    }
+    return switch (code) {
+      'too-many-requests' =>
+        'A megerősítő e-mail kérését most korlátozzuk. Próbáld újra később.',
+      'network-request-failed' => 'A megerősítő e-mail küldése hálózati hiba miatt nem sikerült. Próbáld újra.',
+      'unauthenticated' =>
+        'Az újraküldéshez jelentkezz be újra, majd próbáld meg ismét.',
+      _ =>
+        'A megerősítő e-mail küldése most nem sikerült. Próbáld újra később.',
+    };
+  }
 
   String _googleAuthError(String code) =>
       'GOOGLE/$code: ${switch (code) {
@@ -929,8 +1005,7 @@ class CommunityService {
           _googleProfileCompletionNotice = switch (bootstrap) {
             GoogleProfileBootstrapStatus.missingName => 'A Google-fiók nem adott használható nyilvános nevet. Adj meg egyet a profilban.',
             GoogleProfileBootstrapStatus.invalidName => 'A Google-fiók neve nem felel meg a névszabályoknak. Adj meg másik nyilvános nevet.',
-            GoogleProfileBootstrapStatus.nameTaken =>
-              'Ez a Google-név már foglalt. Adj meg másik nyilvános nevet.',
+            GoogleProfileBootstrapStatus.nameTaken => 'A Google-fiók automatikus neve már foglalt. Adj meg másik nyilvános nevet a profilban.',
             GoogleProfileBootstrapStatus.saved => null,
           };
           clearProfileCache(user.uid);
@@ -1036,6 +1111,7 @@ class CommunityService {
     required String text,
     Uint8List? imageBytes,
     bool pinned = false,
+    String? replyToText,
   }) async {
     final user = await ensureAnonymousUser();
     final isAnonymous = user.isAnonymous;
@@ -1068,6 +1144,11 @@ class CommunityService {
       'publishChatPost',
       parameters: {
         'text': trimmed,
+        if (replyToText?.trim().isNotEmpty == true)
+          'replyToText': replyToText!.trim().substring(
+            0,
+            replyToText.trim().length > 200 ? 200 : replyToText.trim().length,
+          ),
         'imageUrl': imageUrl,
         if (uploadedImage?.publicId.isNotEmpty == true)
           'imagePublicId': uploadedImage!.publicId,
@@ -1172,6 +1253,7 @@ class CommunityService {
         .collection('blocked_users')
         .doc(userId)
         .set({'createdAt': FieldValue.serverTimestamp()});
+    _blockedUserIds = {..._blockedUserIds, userId};
     await callFirebaseCallable<void>(
       'manageConnection',
       parameters: {'action': 'remove', 'otherUid': userId},
@@ -1197,6 +1279,15 @@ class CommunityService {
         .collection('blocked_users')
         .doc(userId)
         .delete();
+    _blockedUserIds = {..._blockedUserIds}..remove(userId);
+  }
+
+  Future<void> adminSetDisplayName(String userId, String displayName) async {
+    if (!isAdmin) throw StateError('Csak admin módosíthat nevet.');
+    await callFirebaseCallable<void>(
+      'claimDisplayName',
+      parameters: {'targetUid': userId, 'displayName': displayName},
+    );
   }
 
   Future<void> claimArtist(int artistId) async {

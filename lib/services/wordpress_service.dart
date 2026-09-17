@@ -247,6 +247,10 @@ class WordpressService {
   final Map<int, Future<HuhsRelease>> _releaseDetailInFlight = {};
   final Map<String, _TimedCacheEntry<HuhsGame?>> _activeGameCache = {};
   final Map<String, Future<HuhsGame?>> _activeGameInFlight = {};
+  final Map<String, _TimedCacheEntry<HuhsGame?>> _latestGameResultsCache = {};
+  final Map<String, Future<HuhsGame?>> _latestGameResultsInFlight = {};
+  final Map<int, _TimedCacheEntry<List<HuhsGameResult>>> _gameResultsCache = {};
+  final Map<int, Future<List<HuhsGameResult>>> _gameResultsInFlight = {};
 
   static const _persistentCacheTtl = Duration(minutes: 5);
   Future<SharedPreferences>? _preferencesFuture;
@@ -398,6 +402,10 @@ class WordpressService {
     _releaseDetailInFlight.clear();
     _activeGameCache.clear();
     _activeGameInFlight.clear();
+    _latestGameResultsCache.clear();
+    _latestGameResultsInFlight.clear();
+    _gameResultsCache.clear();
+    _gameResultsInFlight.clear();
     _persistentJsonCache.clear();
     await _headCache.clear();
     _persistentRefreshInFlight.clear();
@@ -421,6 +429,21 @@ class WordpressService {
       inFlight: _activeGameInFlight,
       loader: () async {
         final data = await _getHeadCached('/games/active');
+        if (data == null || data is! Map) return null;
+        return HuhsGame.fromJson(Map<String, dynamic>.from(data));
+      },
+    );
+  }
+
+  Future<HuhsGame?> getLatestGameResults({bool forceRefresh = false}) async {
+    if (forceRefresh) _latestGameResultsCache.remove('latest');
+    return _cached<HuhsGame?>(
+      key: 'latest',
+      ttl: const Duration(minutes: 1),
+      cache: _latestGameResultsCache,
+      inFlight: _latestGameResultsInFlight,
+      loader: () async {
+        final data = await _getHeadCached('/games/results/latest');
         if (data == null || data is! Map) return null;
         return HuhsGame.fromJson(Map<String, dynamic>.from(data));
       },
@@ -465,6 +488,35 @@ class WordpressService {
     );
     final data = result.data;
     return Map<String, dynamic>.from(data);
+  }
+
+  Future<List<HuhsGameResult>> getGameResults(int gameId) async {
+    return _cachedById<List<HuhsGameResult>>(
+      key: gameId,
+      // A lezárt játék végeredménye nem változik; egy nap után a meglévő
+      // lejárati útvonal újra lekérheti, illetve a nyilvános cache ürítésekor
+      // azonnal eldobható.
+      ttl: const Duration(days: 1),
+      cache: _gameResultsCache,
+      inFlight: _gameResultsInFlight,
+      loader: () async {
+        final result = await callFirebaseCallable<Map<String, dynamic>>(
+          'getGameResults',
+          parameters: {'gameId': gameId},
+        );
+        final items = result.data['items'];
+        return items is List
+            ? items
+                  .whereType<Map>()
+                  .map(
+                    (item) => HuhsGameResult.fromJson(
+                      Map<String, dynamic>.from(item),
+                    ),
+                  )
+                  .toList(growable: false)
+            : const [];
+      },
+    );
   }
 
   Future<T> _cached<T>({

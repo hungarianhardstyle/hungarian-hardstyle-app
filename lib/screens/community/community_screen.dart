@@ -308,6 +308,47 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
     }
   }
 
+  Future<void> _changeAdminDisplayName(
+    CommunityService service,
+    String uid,
+    String current,
+  ) async {
+    final controller = TextEditingController(text: current);
+    final value = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Felhasználónév módosítása'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 40,
+          decoration: const InputDecoration(labelText: 'Új nyilvános név'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Mégse'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Mentés'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (value == null || value.trim() == current.trim() || !mounted) return;
+    try {
+      await service.adminSetDisplayName(uid, value);
+      if (mounted) setState(() {});
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(_chatError(error))));
+      }
+    }
+  }
+
   @override
   void dispose() {
     _search.dispose();
@@ -591,8 +632,22 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                                     }
                                   },
                           ),
-                          title: Text(
-                            data['displayName'] as String? ?? 'HUHS user',
+                          title: TextButton(
+                            onPressed: () => _changeAdminDisplayName(
+                              service,
+                              doc.id,
+                              data['displayName'] as String? ?? 'HUHS user',
+                            ),
+                            style: TextButton.styleFrom(
+                              alignment: Alignment.centerLeft,
+                              padding: EdgeInsets.zero,
+                            ),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                data['displayName'] as String? ?? 'HUHS user',
+                              ),
+                            ),
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -665,6 +720,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   final _composerFocusNode = FocusNode();
   Uint8List? _image;
   bool _sending = false;
+  String? _replyToText;
   bool _anonymous = true;
   String _avatarUrl = '';
   String _avatarLetter = 'H';
@@ -803,11 +859,13 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       await _service.publishPost(
         text: _textController.text,
         imageBytes: _image,
+        replyToText: _replyToText,
       );
       _textController.clear();
       if (mounted) {
         setState(() {
           _image = null;
+          _replyToText = null;
         });
       }
     } catch (error) {
@@ -825,15 +883,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   }
 
   void _replyTo(CommunityPost post) {
-    final mention = '@${post.authorName.trim()} ';
-    final current = _textController.text;
-    final text = current.trim().isEmpty
-        ? mention
-        : '$mention${current.trimLeft()}';
-    _textController.value = TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
-    );
+    setState(() => _replyToText = post.text.trim());
     _composerFocusNode.requestFocus();
   }
 
@@ -921,6 +971,8 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
               onPickGallery: () => _pickImage(source: ImageSource.gallery),
               onSend: _send,
               onRemoveImage: () => setState(() => _image = null),
+              replyToText: _replyToText,
+              onClearReply: () => setState(() => _replyToText = null),
             );
             final postList = Expanded(
               child: posts.when(
@@ -979,6 +1031,8 @@ class _Composer extends StatelessWidget {
   final Uint8List? image;
   final bool anonymous;
   final bool sending;
+  final String? replyToText;
+  final VoidCallback onClearReply;
   final VoidCallback onTakePhoto;
   final VoidCallback onPickGallery;
   final VoidCallback onSend;
@@ -990,6 +1044,8 @@ class _Composer extends StatelessWidget {
     required this.image,
     required this.anonymous,
     required this.sending,
+    required this.replyToText,
+    required this.onClearReply,
     required this.onTakePhoto,
     required this.onPickGallery,
     required this.onSend,
@@ -1004,6 +1060,18 @@ class _Composer extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
+            if (replyToText?.isNotEmpty == true)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: InputChip(
+                  label: Text(
+                    'Válasz erre: ${replyToText!}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onDeleted: onClearReply,
+                ),
+              ),
             TextField(
               controller: controller,
               focusNode: focusNode,
@@ -1367,6 +1435,21 @@ class _PostCardState extends ConsumerState<_PostCard> {
               ),
             ],
             SizedBox(height: widget.compact ? 3 : 6),
+            if (widget.post.replyToText.isNotEmpty)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Válasz: ${widget.post.replyToText}',
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             Wrap(
               spacing: 6,
               runSpacing: widget.compact ? 0 : 6,
@@ -1659,8 +1742,8 @@ class CommunityProfileScreen extends ConsumerStatefulWidget {
       _CommunityProfileScreenState();
 }
 
-class _CommunityProfileScreenState
-    extends ConsumerState<CommunityProfileScreen> {
+class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
+    with WidgetsBindingObserver {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _passwordConfirmation = TextEditingController();
@@ -1696,11 +1779,14 @@ class _CommunityProfileScreenState
   final Set<String> _dirtyFields = <String>{};
   String? _formUid;
   String _savedProfileName = '';
+  DateTime? _memberSince;
   int _profileSaveAttempt = 0;
   Future<void>? _profileLoadRequest;
   int _usernameChangesUsed = 0;
   int _emailChangesUsed = 0;
   StreamSubscription<User?>? _authSubscription;
+  Timer? _nameAvailabilityTimer;
+  String? _registrationNameError;
 
   CommunityService get _service => ref.read(communityServiceProvider);
   TextEditingController get _name => _profileDraft.name;
@@ -1709,6 +1795,7 @@ class _CommunityProfileScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _formUid = _service.auth.currentUser?.uid;
     _profileDraft.bindUid(_formUid);
     for (final entry in _social.entries) {
@@ -1737,6 +1824,7 @@ class _CommunityProfileScreenState
       setState(() {});
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadProfile());
+    unawaited(_refreshVerificationStatus());
     _loadPendingReferralCode();
   }
 
@@ -1748,7 +1836,9 @@ class _CommunityProfileScreenState
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _authSubscription?.cancel();
+    _nameAvailabilityTimer?.cancel();
     _email.dispose();
     _password.dispose();
     _passwordConfirmation.dispose();
@@ -1758,6 +1848,24 @@ class _CommunityProfileScreenState
       controller.dispose();
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_refreshVerificationStatus());
+    }
+  }
+
+  Future<void> _refreshVerificationStatus() async {
+    final user = _service.auth.currentUser;
+    if (user == null || user.isAnonymous) return;
+    final result = await _service.refreshCurrentSession();
+    if (!mounted || _service.auth.currentUser?.uid != user.uid) return;
+    if (result['emailVerifiedChanged'] == true) {
+      _message('Az e-mail-címed megerősítve.');
+    }
+    setState(() {});
   }
 
   void _resetImageTransform() {
@@ -1783,6 +1891,18 @@ class _CommunityProfileScreenState
     if (_register && _password.text != _passwordConfirmation.text) {
       _message('A két jelszó nem egyezik.');
       return;
+    }
+    if (_register) {
+      try {
+        await _service.checkDisplayNameAvailability(_name.text);
+      } catch (error) {
+        if (mounted) {
+          setState(
+            () => _registrationNameError = _registrationNameMessage(error),
+          );
+        }
+        return;
+      }
     }
     setState(() => _busy = true);
     try {
@@ -1824,10 +1944,41 @@ class _CommunityProfileScreenState
       await _loadProfile(force: true);
       if (mounted) setState(() {});
     } catch (error) {
+      if (_register && _registrationNameMessage(error) != null && mounted) {
+        setState(
+          () => _registrationNameError = _registrationNameMessage(error),
+        );
+      }
       _message(_chatError(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  String? _registrationNameMessage(Object error) {
+    final message = _chatError(error).toLowerCase();
+    return message.contains('felhasználónév már foglalt') ||
+            message.contains('display-name-already-in-use')
+        ? 'Ez a felhasználónév már foglalt. Válassz másikat.'
+        : null;
+  }
+
+  void _checkRegistrationName(String value) {
+    _nameAvailabilityTimer?.cancel();
+    if (!_register) return;
+    setState(() => _registrationNameError = null);
+    final candidate = value.trim();
+    if (candidate.length < 2) return;
+    _nameAvailabilityTimer = Timer(const Duration(milliseconds: 350), () async {
+      try {
+        await _service.checkDisplayNameAvailability(candidate);
+      } catch (error) {
+        final message = _registrationNameMessage(error);
+        if (mounted && _name.text.trim() == candidate && message != null) {
+          setState(() => _registrationNameError = message);
+        }
+      }
+    });
   }
 
   Future<void> _loadProfile({bool force = false}) async {
@@ -1915,6 +2066,8 @@ class _CommunityProfileScreenState
     }
     _formUid = user.uid;
     _savedProfileName = storedName;
+    final createdAt = data['createdAt'];
+    _memberSince = createdAt is Timestamp ? createdAt.toDate() : null;
     _profileImageUrl = _service.resolveProfileImage(data);
     _focusX = (data['profileFocusX'] as num?)?.toDouble() ?? 50;
     _focusY = (data['profileFocusY'] as num?)?.toDouble() ?? 25;
@@ -2135,7 +2288,9 @@ class _CommunityProfileScreenState
       debugPrint(
         'Profile save attempt=$attempt stage=failed errorType=${error.runtimeType}',
       );
-      if (mounted) _message('A profil mentése sikertelen: ${_chatError(error)}');
+      if (mounted) {
+        _message('A profil mentése sikertelen: ${_chatError(error)}');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -2180,7 +2335,12 @@ class _CommunityProfileScreenState
   }
 
   Future<void> _google() async {
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      // A Google-fiók automatikus neve külön folyamat; a korábbi e-mailes
+      // űrlap aszinkron ellenőrzésének hibája nem tartozhat hozzá.
+      _registrationNameError = null;
+    });
     try {
       final signedIn = await _service.signInWithGoogle(
         role: _register ? _role : null,
@@ -2530,6 +2690,16 @@ class _CommunityProfileScreenState
               : _roleLabel(_role),
         ),
       ),
+      if (_memberSince != null)
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.calendar_month_outlined),
+          title: const Text('A közösség tagja'),
+          subtitle: Text(
+            MaterialLocalizations.of(context)
+                .formatMediumDate(_memberSince!.toLocal()),
+          ),
+        ),
       AchievementBadgeCard(achievement: _achievement),
       const SizedBox(height: 12),
       if (_bio.text.trim().isNotEmpty)
@@ -2577,17 +2747,20 @@ class _CommunityProfileScreenState
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         for (final entry in profileFavorites)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.favorite, color: Colors.redAccent),
-            title: Text(entry.title),
-            onTap: () => FavoritesScreen.openEntry(context, ref, entry),
-            subtitle: Text(switch (entry.kind) {
-              FavoriteKind.event => 'Esemény',
-              FavoriteKind.artist => 'DJ',
-              FavoriteKind.organizer => 'Szervező',
-              FavoriteKind.news => 'Hír',
-            }),
+          Card(
+            margin: const EdgeInsets.only(top: 6),
+            child: ListTile(
+              leading: const Icon(Icons.favorite, color: Colors.redAccent),
+              title: Text(entry.title),
+              onTap: () => FavoritesScreen.openEntry(context, ref, entry),
+              subtitle: Text(switch (entry.kind) {
+                FavoriteKind.event => 'Esemény',
+                FavoriteKind.artist => 'DJ',
+                FavoriteKind.organizer => 'Szervező',
+                FavoriteKind.news => 'Hír',
+              }),
+              trailing: const Icon(Icons.chevron_right),
+            ),
           ),
       ],
       StreamBuilder<List<QueryDocumentSnapshot<Map<String, dynamic>>>>(
@@ -2604,16 +2777,20 @@ class _CommunityProfileScreenState
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               for (final event in events)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.event_outlined),
-                  title: Text(event.data()['title'] as String? ?? 'Esemény'),
-                  onTap: () {
-                    final eventId = (event.data()['eventId'] as num?)?.toInt();
-                    if (eventId != null) {
-                      _openPlannedEvent(context, ref, eventId);
-                    }
-                  },
+                Card(
+                  margin: const EdgeInsets.only(top: 6),
+                  child: ListTile(
+                    leading: const Icon(Icons.event_outlined),
+                    title: Text(event.data()['title'] as String? ?? 'Esemény'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      final eventId = (event.data()['eventId'] as num?)
+                          ?.toInt();
+                      if (eventId != null) {
+                        _openPlannedEvent(context, ref, eventId);
+                      }
+                    },
+                  ),
                 ),
             ],
           );
@@ -2787,56 +2964,85 @@ class _CommunityProfileScreenState
                                       Card(
                                         color: Theme.of(context)
                                             .colorScheme
-                                            .errorContainer,
+                                            .error,
                                         child: Padding(
                                           padding: const EdgeInsets.all(12),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              if (_name.text.trim().isEmpty)
-                                                const Text(
-                                                  'A felhasználónév megadása kötelező.',
-                                                ),
-                                              if (user.email == null ||
-                                                  user.email!.trim().isEmpty)
-                                                const Text(
-                                                  'Adj meg e-mail-címet és erősítsd meg 24 órán belül.',
-                                                )
-                                              else if (user.emailVerified !=
-                                                  true) ...[
-                                                const Text(
-                                                  'Erősítsd meg az e-mail-címedet 24 órán belül.',
-                                                ),
-                                                TextButton.icon(
-                                                  onPressed: _busy
-                                                      ? null
-                                                      : () async {
-                                                          try {
-                                                            await _service
-                                                                .resendEmailVerification();
-                                                            _message(
-                                                              'A megerősítő e-mailt újraküldtük.',
-                                                            );
-                                                          } catch (error) {
-                                                            _message(
-                                                              _chatError(error),
-                                                            );
-                                                          }
-                                                        },
-                                                  icon: const Icon(
-                                                    Icons
-                                                        .mark_email_read_outlined,
+                                          child: DefaultTextStyle.merge(
+                                            style: TextStyle(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onError,
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                if (_name.text.trim().isEmpty)
+                                                  const Text(
+                                                    'A felhasználónév megadása kötelező.',
                                                   ),
-                                                  label: const Text(
-                                                    'Megerősítő e-mail újraküldése',
+                                                if (user.email == null ||
+                                                    user.email!.trim().isEmpty)
+                                                  const Text(
+                                                    'Adj meg e-mail-címet és erősítsd meg 24 órán belül.',
+                                                  )
+                                                else if (user.emailVerified !=
+                                                    true) ...[
+                                                  const Text(
+                                                    'Erősítsd meg az e-mail-címedet 24 órán belül.',
                                                   ),
-                                                ),
-                                              ] else
-                                                const Text(
-                                                  'Adj meg egy megjelenési nevet.',
-                                                ),
-                                            ],
+                                                  OutlinedButton.icon(
+                                                    style:
+                                                        OutlinedButton.styleFrom(
+                                                          foregroundColor:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onError,
+                                                          side: BorderSide(
+                                                            color:
+                                                                Theme.of(
+                                                                      context,
+                                                                    )
+                                                                    .colorScheme
+                                                                    .onError,
+                                                          ),
+                                                        ),
+                                                    onPressed: _busy
+                                                        ? null
+                                                        : () async {
+                                                            try {
+                                                              final outcome =
+                                                                  await _service
+                                                                      .resendEmailVerification();
+                                                              _message(
+                                                                outcome == 'already_sent'
+                                                                    ? 'A megerősítő e-mailt már elküldtük.'
+                                                                    : outcome == 'in_flight'
+                                                                    ? 'A megerősítő e-mail küldése folyamatban van.'
+                                                                    : 'A megerősítő e-mailt újraküldtük.',
+                                                              );
+                                                            } catch (error) {
+                                                              _message(
+                                                                _chatError(
+                                                                  error,
+                                                                ),
+                                                              );
+                                                            }
+                                                          },
+                                                    icon: const Icon(
+                                                      Icons
+                                                          .mark_email_read_outlined,
+                                                    ),
+                                                    label: const Text(
+                                                      'Megerősítő e-mail újraküldése',
+                                                    ),
+                                                  ),
+                                                ] else
+                                                  const Text(
+                                                    'Adj meg egy megjelenési nevet.',
+                                                  ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -3201,8 +3407,10 @@ class _CommunityProfileScreenState
                                 TextField(
                                   controller: _name,
                                   textCapitalization: TextCapitalization.words,
-                                  decoration: const InputDecoration(
+                                  onChanged: _checkRegistrationName,
+                                  decoration: InputDecoration(
                                     labelText: 'Megjelenő név',
+                                    errorText: _registrationNameError,
                                   ),
                                 ),
                               if (_register) const SizedBox(height: 12),

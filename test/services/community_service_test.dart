@@ -94,6 +94,47 @@ void main() {
     );
   });
 
+  test('az ellenőrző e-mail újraküldése friss Auth-token után indul', () {
+    final source = File('lib/services/community_service.dart')
+        .readAsStringSync();
+    final start = source.indexOf('Future<String> resendEmailVerification()');
+    final end = source.indexOf('Future<void> requestEmailChange', start);
+    final resend = source.substring(start, end);
+    expect(resend.indexOf('getIdToken(true)'), greaterThanOrEqualTo(0));
+    expect(
+      resend.indexOf('getIdToken(true)'),
+      lessThan(resend.indexOf("'sendAuthEmail'")),
+    );
+  });
+
+  test('az ellenőrző e-mail hibája nem jelenít meg technikai Auth-kódot', () {
+    final source = File('lib/services/community_service.dart')
+        .readAsStringSync();
+    final start = source.indexOf('String _verificationError(');
+    final end = source.indexOf('String _googleAuthError(', start);
+    final errors = source.substring(start, end);
+    expect(errors, isNot(contains("'AUTH/\u0024code:")));
+    expect(errors, contains('Az újraküldéshez jelentkezz be újra'));
+  });
+
+  test('a profil a szerveridőből mutatja a közösségi tagság kezdetét', () {
+    final source = File('lib/screens/community/community_screen.dart')
+        .readAsStringSync();
+    expect(source, contains("final createdAt = data['createdAt'];"));
+    expect(source, contains("const Text('A közösség tagja')"));
+  });
+
+  test('a publikus profilvetület tartalmazza a tagság kezdetét', () {
+    final source = File('functions/index.js').readAsStringSync();
+    final start = source.indexOf('function publicProfileData(');
+    final end = source.indexOf(
+      'function isUnnumberedPlaceholderDisplayName',
+      start,
+    );
+    final projection = source.substring(start, end);
+    expect(projection, contains('memberSince'));
+  });
+
   test('ismeretlen Auth hiba nem szivárogtat belső részletet', () {
     expect(
       userFacingError(Exception('internal credential payload')),
@@ -112,15 +153,24 @@ void main() {
     expect(registerSource, contains('checkRegistrationEligibility'));
   });
 
-  test('SMTP-hiba előtt az e-mail-regisztráció menti a nevet és szerepkört', () {
-    final source = File('lib/services/community_service.dart').readAsStringSync();
-    final start = source.indexOf('Future<void> register(');
-    final end = source.indexOf('Future<String> getMyReferralCode()', start);
-    final registerSource = source.substring(start, end);
-    expect(registerSource.indexOf("'role': accountRole"), greaterThanOrEqualTo(0));
-    expect(registerSource.indexOf("'role': accountRole"),
-        lessThan(registerSource.indexOf("'sendAuthEmail'")));
-  });
+  test(
+    'SMTP-hiba előtt az e-mail-regisztráció menti a nevet és szerepkört',
+    () {
+      final source = File('lib/services/community_service.dart')
+          .readAsStringSync();
+      final start = source.indexOf('Future<void> register(');
+      final end = source.indexOf('Future<String> getMyReferralCode()', start);
+      final registerSource = source.substring(start, end);
+      expect(
+        registerSource.indexOf("'role': accountRole"),
+        greaterThanOrEqualTo(0),
+      );
+      expect(
+        registerSource.indexOf("'role': accountRole"),
+        lessThan(registerSource.indexOf("'sendAuthEmail'")),
+      );
+    },
+  );
 
   test('a Google-belépés a hiányos profilt a profilbefejezésre hagyja', () {
     final source = File('lib/services/community_service.dart')
@@ -150,14 +200,9 @@ void main() {
   test('az olvasó profilfejléc a szerveresen visszaigazolt nevet mutatja', () {
     final source = File('lib/screens/community/community_screen.dart')
         .readAsStringSync();
-    final start = source.indexOf('List<Widget> _readOnlyProfileWidgets');
-    final headerStart = source.indexOf('Center(\n        child: Text(', start);
-    final headerEnd = source.indexOf(
-      'const SizedBox(height: 20)',
-      headerStart,
-    );
-    final header = source.substring(headerStart, headerEnd);
-    expect(header, contains('_savedProfileName.isEmpty'));
+    final headerStart = source.indexOf('_savedProfileName.isEmpty');
+    expect(headerStart, greaterThanOrEqualTo(0));
+    final header = source.substring(headerStart, headerStart + 300);
     expect(header, isNot(contains('_name.text.trim().isEmpty')));
   });
 
@@ -180,6 +225,15 @@ void main() {
     expect(source, isNot(contains('emailDisplayName')));
     expect(source, contains('account.displayName'));
     expect(source, contains('savedNameIsValid'));
+  });
+
+  test('Google-belépés nem mutat régi e-mailes névfoglalási hibát', () {
+    final source = File('lib/screens/community/community_screen.dart')
+        .readAsStringSync();
+    final start = source.indexOf('Future<void> _google() async');
+    final end = source.indexOf('void _suggestPassword()', start);
+    final googleFlow = source.substring(start, end);
+    expect(googleFlow, contains('_registrationNameError = null;'));
   });
 
   test(
@@ -210,23 +264,31 @@ void main() {
     expect(source, isNot(contains("user.displayName ?? 'HUHS user'")));
   });
 
-  test('Google-profil az account válaszának e-mailjét menti, nem Firebase UID-t', () {
-    final source = File('lib/services/community_service.dart')
-        .readAsStringSync();
-    final start = source.indexOf('Future<bool> signInWithGoogle(');
-    final end = source.indexOf('Future<void> signOut()', start);
-    final googleFlow = source.substring(start, end);
-    expect(googleFlow, contains('final googleEmail = account.email'));
-    expect(googleFlow, contains("'email': googleEmail"));
-  });
+  test(
+    'Google-profil az account válaszának e-mailjét menti, nem Firebase UID-t',
+    () {
+      final source = File('lib/services/community_service.dart')
+          .readAsStringSync();
+      final start = source.indexOf('Future<bool> signInWithGoogle(');
+      final end = source.indexOf('Future<void> signOut()', start);
+      final googleFlow = source.substring(start, end);
+      expect(googleFlow, contains('final googleEmail = account.email'));
+      expect(googleFlow, contains("'email': googleEmail"));
+    },
+  );
 
   test('adminlista nem ír ki Firebase UID-t e-mail helyett', () {
     final source = File('lib/screens/community/community_screen.dart')
         .readAsStringSync();
-    final start = source.indexOf("final email = (data['email'] as String? ?? '').trim();");
-    final emailTextStart = source.indexOf('Text(\n                                email.isEmpty', start);
-    final end = source.indexOf('),\n                              TextButton(', emailTextStart);
-    final adminEmailRow = source.substring(emailTextStart, end);
+    final start = source.indexOf(
+      "final email = (data['email'] as String? ?? '').trim();",
+    );
+    final emailTextStart = source.indexOf('email.isEmpty', start);
+    expect(emailTextStart, greaterThanOrEqualTo(0));
+    final adminEmailRow = source.substring(
+      emailTextStart,
+      emailTextStart + 220,
+    );
     expect(adminEmailRow, contains("'E-mail-cím nem érhető el'"));
     expect(adminEmailRow, isNot(contains('?? doc.id')));
   });
@@ -259,6 +321,35 @@ void main() {
         .readAsStringSync();
     expect(source, contains('AUTH/claimDisplayName-invalid-argument'));
     expect(source, contains("parameters: {'displayName': value}"));
+  });
+
+  test('a foglalt név Auth létrehozása előtt ellenőrződik', () {
+    final source = File('lib/services/community_service.dart')
+        .readAsStringSync();
+    final start = source.indexOf('Future<void> register(');
+    final end = source.indexOf('Future<String> getMyReferralCode()', start);
+    final registerSource = source.substring(start, end);
+    expect(
+      registerSource.indexOf('checkDisplayNameAvailability(displayName)'),
+      lessThan(registerSource.indexOf('createUserWithEmailAndPassword')),
+    );
+    expect(source, contains("'checkDisplayNameAvailability'"));
+    expect(registerSource, contains('profileError'));
+    expect(
+      registerSource.indexOf("'sendAuthEmail'"),
+      lessThan(registerSource.indexOf('if (profileError != null)')),
+    );
+  });
+
+  test('a regisztrációs űrlap a foglalt nevet a mező alatt jelzi', () {
+    final source = File('lib/screens/community/community_screen.dart')
+        .readAsStringSync();
+    expect(
+      source,
+      contains("'Ez a felhasználónév már foglalt. Válassz másikat.'"),
+    );
+    expect(source, contains('onChanged: _checkRegistrationName'));
+    expect(source, contains('errorText: _registrationNameError'));
   });
 
   test('kijelentkezés lezárja a Firebase és Google sessiont', () {

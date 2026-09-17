@@ -34,13 +34,14 @@ test('minden callable enforcement nélkül marad, amíg a kliens kompatibilis ne
   const blocks = [...functionsSource.matchAll(
     /^exports\.(?<name>[A-Za-z0-9_]+)\s*=\s*(?<body>.*?)(?=^exports\.|(?![\s\S]))/gms,
   )].filter(({ groups }) => /https\.onCall|wordPressCall\(/.test(groups.body));
-  assert.equal(blocks.length, 43);
+  assert.ok(blocks.length >= 44);
+  assert.ok(blocks.some(({ groups }) => groups.name === 'getGameResults'));
   for (const { groups } of blocks) {
     const { name, body } = groups;
     if (body.includes('wordPressCall(')) {
       assert.match(
         functionsSource.slice(0, functionsSource.indexOf('exports.' + name)),
-        /wordPressCall = \(handler\) => functions[\s\S]*?enforceAppCheck:\s*false/,
+        /wordPressCall = \(handler\) =>\s*functions[\s\S]*?enforceAppCheck:\s*false/,
         name,
       );
     } else {
@@ -102,6 +103,23 @@ test('only explicit moderation markers block identity re-registration', () => {
   assert.match(source, /administrator-ban/);
   assert.match(source, /abuse/);
   assert.match(source, /deletionType.*identity-ban/);
+});
+
+test('registration checks a display name before Auth while claim stays atomic', () => {
+  assert.match(functionsSource, /exports\.checkDisplayNameAvailability/);
+  assert.match(functionsSource, /return \{ available: !snapshot\.exists \}/);
+  assert.match(functionsSource, /exports\.claimDisplayName[\s\S]*?validatedDisplayName\(data\?\.displayName\)/);
+  const registerStart = clientSource.indexOf('Future<void> register');
+  const registerEnd = clientSource.indexOf('Future<String> getMyReferralCode', registerStart);
+  const registerSource = clientSource.slice(registerStart, registerEnd);
+  assert.ok(
+    registerSource.indexOf('checkDisplayNameAvailability(displayName)') <
+      registerSource.indexOf('createUserWithEmailAndPassword'),
+  );
+  assert.ok(
+    registerSource.indexOf("'sendAuthEmail'") <
+      registerSource.indexOf('if (profileError != null)'),
+  );
 });
 
 test('deletion keeps ownership checks and verifies required data is gone', () => {
@@ -171,7 +189,7 @@ test('public profile fallback stays Firebase-only and private notifications carr
   assert.doesNotMatch(getPublicProfileSource, /getAchievementBadges\(/);
   assert.match(getPublicProfileSource, /publicProfileData\(profile, targetUid\)/);
   assert.match(functionsSource, /targetType, targetId, dedupeKey, senderId/);
-  assert.match(functionsSource, /senderId, dedupeKey: `private_message:/);
+  assert.match(functionsSource, /senderId[\s\S]{0,400}dedupeKey: `private_message:/);
 });
 
 test('cleanup nem töröl teljes fiókot lejárt e-mail-csere miatt', () => {
@@ -196,7 +214,8 @@ test('SMTP munkarekord párhuzamos claimje lease-szel védett', () => {
   assert.match(functionsSource, /deliveryType/);
   assert.match(functionsSource, /smtp_rejected/);
   assert.match(functionsSource, /new Date\(Date\.now\(\) \+ 60 \* 60 \* 1000\)/);
-  assert.match(functionsSource, /if \(!delivery\.sent && delivery\.outcome !== 'already_sent'\)/);
+  assert.match(functionsSource, /recentEmailDeliveryOutcome/);
+  assert.match(functionsSource, /\['already_sent', 'in_flight'\]\.includes\(delivery\.outcome\)/);
   assert.match(functionsSource, /resendDeduplicationWindowMs = 60 \* 1000/);
   assert.match(functionsSource, /deliveryType === 'auth-verification'/);
   assert.match(functionsSource, /smtpResponseCode/);

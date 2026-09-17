@@ -46,7 +46,7 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/community_bans/$(request.auth.uid))
         && request.resource.data.keys().hasOnly([
           'authorId', 'authorName', 'authorImageUrl', 'authorRole',
-          'authorAccessRole', 'isAnonymous', 'text', 'imageUrl', 'imagePublicId',
+          'authorAccessRole', 'isAnonymous', 'text', 'replyToText', 'imageUrl', 'imagePublicId',
           'reactions', 'reactionBy', 'pinned', 'createdAt'
         ])
         && request.resource.data.authorId == request.auth.uid
@@ -56,6 +56,9 @@ service cloud.firestore {
         && isAllowedUploadedImage(request.resource.data.authorImageUrl)
         && request.resource.data.text is string
         && request.resource.data.text.size() <= 2000
+        && (!request.resource.data.keys().hasAny(['replyToText'])
+            || (request.resource.data.replyToText is string
+                && request.resource.data.replyToText.size() <= 200))
         && isAllowedUploadedImage(request.resource.data.imageUrl)
         && (!request.resource.data.keys().hasAny(['imagePublicId'])
             || (request.resource.data.imagePublicId is string
@@ -222,8 +225,14 @@ service cloud.firestore {
       allow read: if isRegistered() && request.auth.uid == userId;
       allow create, update: if isRegistered()
         && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['fcmTokens', 'updatedAt'])
-        && request.resource.data.fcmTokens is list;
+        && request.resource.data.keys().hasOnly(['fcmTokens', 'notificationPreferences', 'updatedAt'])
+        && (!request.resource.data.keys().hasAny(['fcmTokens'])
+          || request.resource.data.fcmTokens is list)
+        && (!request.resource.data.keys().hasAny(['notificationPreferences'])
+          || (request.resource.data.notificationPreferences is map
+            && request.resource.data.notificationPreferences.keys().hasOnly(['enabled', 'achievements'])
+            && request.resource.data.notificationPreferences.enabled is bool
+            && request.resource.data.notificationPreferences.achievements is bool));
       allow delete: if isRegistered() && request.auth.uid == userId;
     }
 

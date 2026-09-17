@@ -146,8 +146,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ),
               _item(
                 Icons.help_outline,
-                'GYIK / FAQ',
-                'Gyakori kérdések és válaszok',
+                'Segítség',
+                'Rövid válaszok az app használatához',
                 const FaqScreen(),
               ),
             ]),

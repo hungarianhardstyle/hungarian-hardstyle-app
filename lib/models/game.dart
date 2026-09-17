@@ -146,6 +146,30 @@ class HuhsRewardBand {
   }
 }
 
+class HuhsGameResult {
+  const HuhsGameResult({
+    required this.rank,
+    required this.displayName,
+    required this.correctAnswers,
+    required this.totalAnswers,
+    required this.percent,
+  });
+
+  final int rank;
+  final String displayName;
+  final int correctAnswers;
+  final int totalAnswers;
+  final int percent;
+
+  factory HuhsGameResult.fromJson(Map<String, dynamic> json) => HuhsGameResult(
+    rank: _gameInt(json['rank']),
+    displayName: _gameString(json['displayName']),
+    correctAnswers: _gameInt(json['correctAnswers']),
+    totalAnswers: _gameInt(json['totalAnswers']),
+    percent: _gameInt(json['percent']),
+  );
+}
+
 String _gameString(Object? value) => value is String ? value : '';
 
 int _gameInt(Object? value) {

@@ -24,11 +24,11 @@ class _FaqScreenState extends ConsumerState<FaqScreen> {
   Widget build(BuildContext context) {
     final asyncFaq = ref.watch(faqProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('GYIK / FAQ')),
+      appBar: AppBar(title: const Text('Segítség')),
       body: asyncFaq.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorState(
-          message: 'A GYIK nem tölthető be.',
+          message: 'A segítség most nem tölthető be.',
           onRetry: () => ref.invalidate(faqProvider),
         ),
         data: (items) {
@@ -50,7 +50,7 @@ class _FaqScreenState extends ConsumerState<FaqScreen> {
                 onChanged: (value) => setState(() => _query = value),
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search),
-                  hintText: 'Keresés a GYIK-ben...',
+                  hintText: 'Kérdés keresése...',
                 ),
               ),
               if (categories.length > 1) ...[

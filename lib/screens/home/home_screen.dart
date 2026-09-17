@@ -85,6 +85,7 @@ class HomeScreen extends ConsumerWidget {
     final news = ref.watch(newsProvider);
     final events = ref.watch(eventsProvider);
     final activeGame = ref.watch(activeGameProvider);
+    final latestGameResults = ref.watch(latestGameResultsProvider);
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -384,12 +385,29 @@ class HomeScreen extends ConsumerWidget {
                             activeGame.when(
                               loading: () => const SizedBox.shrink(),
                               error: (_, _) => const SizedBox.shrink(),
-                              data: (game) => game == null
-                                  ? const SizedBox.shrink()
-                                  : Padding(
-                                      padding: const EdgeInsets.only(top: 16),
-                                      child: _ActiveGameCard(game: game),
-                                    ),
+                              data: (game) {
+                                if (game != null) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 16),
+                                    child: _ActiveGameCard(game: game),
+                                  );
+                                }
+                                return latestGameResults.when(
+                                  loading: () => const SizedBox.shrink(),
+                                  error: (_, _) => const SizedBox.shrink(),
+                                  data: (resultsGame) => resultsGame == null
+                                      ? const SizedBox.shrink()
+                                      : Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 16,
+                                          ),
+                                          child: _ActiveGameCard(
+                                            game: resultsGame,
+                                            resultsOnly: true,
+                                          ),
+                                        ),
+                                );
+                              },
                             ),
                           ],
                         );
@@ -482,17 +500,20 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _ActiveGameCard extends StatelessWidget {
-  const _ActiveGameCard({required this.game});
+  const _ActiveGameCard({required this.game, this.resultsOnly = false});
 
   final HuhsGame game;
+  final bool resultsOnly;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(18),
-      onTap: () => Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => GameScreen(game: game))),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => GameScreen(game: game, resultsOnly: resultsOnly),
+        ),
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainer,
@@ -521,7 +542,7 @@ class _ActiveGameCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'JÁTÉK',
+                    resultsOnly ? 'JÁTÉK EREDMÉNYEI' : 'JÁTÉK',
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       letterSpacing: 1.4,
@@ -544,9 +565,18 @@ class _ActiveGameCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.play_circle_outline_rounded, size: 20),
+                      Icon(
+                        resultsOnly
+                            ? Icons.leaderboard_outlined
+                            : Icons.play_circle_outline_rounded,
+                        size: 20,
+                      ),
                       const SizedBox(width: 6),
-                      Text('Játék megnyitása'),
+                      Text(
+                        resultsOnly
+                            ? 'Eredménylista megnyitása'
+                            : 'Játék megnyitása',
+                      ),
                     ],
                   ),
                 ],

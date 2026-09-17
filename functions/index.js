@@ -12,6 +12,8 @@ const { google } = require('googleapis');
 const { selectOwnedCloudinaryAssets, destroyCloudinaryAsset, listOwnedCloudinaryAssets } = require('./cloudinary');
 const { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, sendMail } = require('./email_service');
 const { generateAuthActionLink } = require('./auth_action_link');
+const { buildGameLeaderboard } = require('./game_results');
+const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 
 admin.initializeApp();
 
@@ -27,7 +29,9 @@ const HUHS_SMTP_PASSWORD = defineSecret('HUHS_SMTP_PASSWORD');
 const SMTP_SECRETS = [HUHS_SMTP_HOST, HUHS_SMTP_PORT, HUHS_SMTP_SECURE, HUHS_SMTP_USER, HUHS_SMTP_PASSWORD];
 
 function normalizedEmail(value) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 function normalizedAccountRole(role) {
@@ -41,14 +45,19 @@ function normalizedAccessRole(role) {
 function deletedIdentityKey(email) {
   // Only a one-way identity marker is retained after deletion. It is used
   // solely by the Auth blocking hook and never returned to clients.
-  return crypto.createHash('sha256').update(`huhs-deleted:${normalizedEmail(email)}`).digest('hex');
+  return crypto
+    .createHash('sha256')
+    .update(`huhs-deleted:${normalizedEmail(email)}`)
+    .digest('hex');
 }
 
 function isExplicitIdentityBan(marker) {
-  return marker?.blocked === true
-    && ['administrator-ban', 'abuse'].includes(String(marker.reason || '').trim())
-    && ['admin', 'abuse-system'].includes(String(marker.source || '').trim())
-    && marker.deletionType === 'identity-ban';
+  return (
+    marker?.blocked === true &&
+    ['administrator-ban', 'abuse'].includes(String(marker.reason || '').trim()) &&
+    ['admin', 'abuse-system'].includes(String(marker.source || '').trim()) &&
+    marker.deletionType === 'identity-ban'
+  );
 }
 
 // Registration is intentionally checked before Auth creation so a deleted
@@ -59,20 +68,14 @@ exports.checkRegistrationEligibility = functions.runWith({ enforceAppCheck: fals
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     throw new HttpsError('invalid-argument', 'Érvénytelen e-mail-cím.');
   }
-  const deletedIdentity = await db
-    .collection('deleted_identity_hashes')
-    .doc(deletedIdentityKey(email))
-    .get();
+  const deletedIdentity = await db.collection('deleted_identity_hashes').doc(deletedIdentityKey(email)).get();
   // Legacy records only contained deletedAt and represented account cleanup,
   // not a moderation ban. Only an explicit administrator/abuse marker may
   // block a later registration with the same identity.
   const deletedIdentityData = deletedIdentity.data() || {};
   const registrationBlocked = isExplicitIdentityBan(deletedIdentityData);
   if (registrationBlocked) {
-    throw new HttpsError(
-      'permission-denied',
-      'Ehhez az e-mail-címhez tiltott fiók tartozik.',
-    );
+    throw new HttpsError('permission-denied', 'Ehhez az e-mail-címhez tiltott fiók tartozik.');
   }
   return { allowed: true };
 });
@@ -94,14 +97,17 @@ exports.banCommunityIdentity = functions.runWith({ enforceAppCheck: false }).htt
   const targetUser = await auth.getUser(uid);
   const email = normalizedEmail(targetUser.email);
   if (!email) throw new HttpsError('failed-precondition', 'A fiókhoz nem tartozik e-mail-cím.');
-  await db.collection('deleted_identity_hashes').doc(deletedIdentityKey(email)).set({
-    blocked: true,
-    reason,
-    source,
-    deletionType: 'identity-ban',
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
+  await db.collection('deleted_identity_hashes').doc(deletedIdentityKey(email)).set(
+    {
+      blocked: true,
+      reason,
+      source,
+      deletionType: 'identity-ban',
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
   return { blocked: true };
 });
 
@@ -116,57 +122,94 @@ exports.requestEmailChange = functions.runWith({ enforceAppCheck: false }).https
   const profileRef = db.collection('community_profiles').doc(uid);
   const profile = (await profileRef.get()).data() || {};
   const currentYear = new Date().getUTCFullYear();
-  const emailChangeYear = Number(profile.emailChangeYear || (Number(profile.emailChangeCount || 0) > 0 ? currentYear : 0));
-  if (emailChangeYear === currentYear) throw new HttpsError('failed-precondition', 'E-mail-címet évente egyszer lehet módosítani.');
+  const emailChangeYear = Number(
+    profile.emailChangeYear || (Number(profile.emailChangeCount || 0) > 0 ? currentYear : 0),
+  );
+  if (emailChangeYear === currentYear)
+    throw new HttpsError('failed-precondition', 'E-mail-címet évente egyszer lehet módosítani.');
   try {
     const owner = await auth.getUserByEmail(email);
     if (owner.uid !== uid) throw new HttpsError('already-exists', 'Ez az e-mail-cím már használatban van.');
   } catch (error) {
     if (error.code !== 'auth/user-not-found') throw error;
   }
-  const identityMarker = await db.collection('deleted_identity_hashes')
-    .doc(deletedIdentityKey(email)).get();
+  const identityMarker = await db.collection('deleted_identity_hashes').doc(deletedIdentityKey(email)).get();
   if (isExplicitIdentityBan(identityMarker.data() || {})) {
     throw new HttpsError('permission-denied', 'Ehhez az e-mail-címhez tiltott identitás tartozik.');
   }
-  await profileRef.set({
-    previousEmail: currentEmail,
-    pendingEmail: email,
-    pendingEmailExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    updatedAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
+  await profileRef.set(
+    {
+      previousEmail: currentEmail,
+      pendingEmail: email,
+      pendingEmailExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
   return { requested: true };
 });
 
-exports.syncEmailChange = functions.runWith({ secrets: SMTP_SECRETS, enforceAppCheck: false }).https.onCall(async (data, context) => {
-  const uid = context.auth?.uid;
-  if (!uid) throw new HttpsError('unauthenticated', 'Jelentkezz be.');
-  const email = normalizedEmail((await auth.getUser(uid)).email);
-  const ref = db.collection('community_profiles').doc(uid);
-  const profile = (await ref.get()).data() || {};
-  if (!email || profile.pendingEmail !== email) return { synced: false };
-  await ref.set({
-    email,
-    pendingEmail: FieldValue.delete(),
-    pendingEmailExpiresAt: FieldValue.delete(),
-    emailChangeCount: 1,
-    emailChangeYear: new Date().getUTCFullYear(),
-    previousEmail: FieldValue.delete(),
-    updatedAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
-  if (profile.previousEmail && profile.previousEmail !== email) {
-    await sendIdentityEmailOnce({
-      key: `email-change:${uid}:${email}`,
-      to: profile.previousEmail,
-      template: emailChangeEmailTemplate(),
-    });
-  }
-  return { synced: true };
-});
+exports.syncEmailChange = functions
+  .runWith({ secrets: SMTP_SECRETS, enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    const uid = context.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Jelentkezz be.');
+    const email = normalizedEmail((await auth.getUser(uid)).email);
+    const ref = db.collection('community_profiles').doc(uid);
+    const profile = (await ref.get()).data() || {};
+    if (!email || profile.pendingEmail !== email) return { synced: false };
+    await ref.set(
+      {
+        email,
+        pendingEmail: FieldValue.delete(),
+        pendingEmailExpiresAt: FieldValue.delete(),
+        emailChangeCount: 1,
+        emailChangeYear: new Date().getUTCFullYear(),
+        previousEmail: FieldValue.delete(),
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+    if (profile.previousEmail && profile.previousEmail !== email) {
+      await sendIdentityEmailOnce({
+        key: `email-change:${uid}:${email}`,
+        to: profile.previousEmail,
+        template: emailChangeEmailTemplate(),
+      });
+    }
+    return { synced: true };
+  });
 
-async function sendIdentityEmailOnce({ key, to, template, operationId = crypto.randomUUID(), deliveryType = 'identity' }) {
+function emailDeliveryJobRef(key) {
+  return db.collection('email_delivery_jobs').doc(crypto.createHash('sha256').update(key).digest('hex'));
+}
+
+async function recentEmailDeliveryOutcome(key, deliveryType) {
+  const job = (await emailDeliveryJobRef(key).get()).data() || {};
+  const sentAt = job.sentAt?.toDate?.()?.getTime?.();
+  if (
+    job.status === 'sent' &&
+    deliveryType === 'auth-verification' &&
+    Number.isFinite(sentAt) &&
+    Date.now() - sentAt < 60 * 1000
+  ) {
+    return 'already_sent';
+  }
+  if (job.status === 'sending' && job.leaseUntil?.toDate?.()?.getTime() > Date.now()) {
+    return 'in_flight';
+  }
+  return null;
+}
+
+async function sendIdentityEmailOnce({
+  key,
+  to,
+  template,
+  operationId = crypto.randomUUID(),
+  deliveryType = 'identity',
+}) {
   const resendDeduplicationWindowMs = 60 * 1000;
-  const jobRef = db.collection('email_delivery_jobs').doc(crypto.createHash('sha256').update(key).digest('hex'));
+  const jobRef = emailDeliveryJobRef(key);
   const leaseId = crypto.randomUUID();
   const leaseUntil = new Date(Date.now() + 5 * 60 * 1000);
   const claim = await db.runTransaction(async (transaction) => {
@@ -174,9 +217,10 @@ async function sendIdentityEmailOnce({ key, to, template, operationId = crypto.r
     const job = snapshot.data() || {};
     if (job.status === 'sent') {
       const sentAt = job.sentAt?.toDate?.()?.getTime?.();
-      const recentAuthVerification = deliveryType === 'auth-verification'
-        && Number.isFinite(sentAt)
-        && Date.now() - sentAt < resendDeduplicationWindowMs;
+      const recentAuthVerification =
+        deliveryType === 'auth-verification' &&
+        Number.isFinite(sentAt) &&
+        Date.now() - sentAt < resendDeduplicationWindowMs;
       if (recentAuthVerification || deliveryType !== 'auth-verification' || !Number.isFinite(sentAt)) {
         return { claimed: false, outcome: 'already_sent' };
       }
@@ -184,20 +228,31 @@ async function sendIdentityEmailOnce({ key, to, template, operationId = crypto.r
     if (job.status === 'sending' && job.leaseUntil?.toDate?.()?.getTime() > Date.now()) {
       return { claimed: false, outcome: 'in_flight' };
     }
-    transaction.set(jobRef, {
-      status: 'sending',
-      operationId,
-      deliveryType,
-      recipientHash: crypto.createHash('sha256').update(normalizedEmail(to)).digest('hex'),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      leaseId,
-      leaseUntil,
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
+    transaction.set(
+      jobRef,
+      {
+        status: 'sending',
+        operationId,
+        deliveryType,
+        recipientHash: crypto.createHash('sha256').update(normalizedEmail(to)).digest('hex'),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        leaseId,
+        leaseUntil,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
     return { claimed: true };
   });
   if (!claim.claimed) {
-    console.info(JSON.stringify({ event: 'email_delivery_skipped', operationId, deliveryType, result: claim.outcome }));
+    console.info(
+      JSON.stringify({
+        event: 'email_delivery_skipped',
+        operationId,
+        deliveryType,
+        result: claim.outcome,
+      }),
+    );
     return { sent: claim.outcome === 'already_sent', outcome: claim.outcome };
   }
   try {
@@ -205,112 +260,160 @@ async function sendIdentityEmailOnce({ key, to, template, operationId = crypto.r
     await db.runTransaction(async (transaction) => {
       const snapshot = await transaction.get(jobRef);
       if (snapshot.data()?.leaseId !== leaseId) return;
-      transaction.set(jobRef, {
-        status: 'sent',
-        sentAt: FieldValue.serverTimestamp(),
-        smtpResponseCode: Number.isInteger(delivery.responseCode) ? delivery.responseCode : null,
-        messageId: delivery.messageId || FieldValue.delete(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        leaseId: FieldValue.delete(),
-        leaseUntil: FieldValue.delete(),
-      }, { merge: true });
+      transaction.set(
+        jobRef,
+        {
+          status: 'sent',
+          sentAt: FieldValue.serverTimestamp(),
+          smtpResponseCode: Number.isInteger(delivery.responseCode) ? delivery.responseCode : null,
+          messageId: delivery.messageId || FieldValue.delete(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          leaseId: FieldValue.delete(),
+          leaseUntil: FieldValue.delete(),
+        },
+        { merge: true },
+      );
     });
-    console.info(JSON.stringify({
-      event: 'email_delivery_finished', operationId, deliveryType, attempts: delivery.attempts,
-      smtpResponseCode: delivery.responseCode, messageId: delivery.messageId || undefined, result: 'smtp_accepted',
-    }));
-    return { sent: true, outcome: 'smtp_accepted', attempts: delivery.attempts };
+    console.info(
+      JSON.stringify({
+        event: 'email_delivery_finished',
+        operationId,
+        deliveryType,
+        attempts: delivery.attempts,
+        smtpResponseCode: delivery.responseCode,
+        messageId: delivery.messageId || undefined,
+        result: 'smtp_accepted',
+      }),
+    );
+    return {
+      sent: true,
+      outcome: 'smtp_accepted',
+      attempts: delivery.attempts,
+    };
   } catch (error) {
     await db.runTransaction(async (transaction) => {
       const snapshot = await transaction.get(jobRef);
-      if (snapshot.data()?.leaseId === leaseId) transaction.set(jobRef, {
-        status: 'failed',
+      if (snapshot.data()?.leaseId === leaseId)
+        transaction.set(
+          jobRef,
+          {
+            status: 'failed',
+            operationId,
+            deliveryType,
+            attempts: Number(error?.attempts || 1),
+            failureCode: String(error?.smtpCode || 'unknown'),
+            failureCommand: String(error?.command || 'unknown'),
+            failureResponseCode: Number.isInteger(error?.responseCode) ? error.responseCode : null,
+            failureStage: String(error?.stage || 'unknown'),
+            failedAt: FieldValue.serverTimestamp(),
+            expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+            leaseId: FieldValue.delete(),
+            leaseUntil: FieldValue.delete(),
+          },
+          { merge: true },
+        );
+    });
+    console.warn(
+      JSON.stringify({
+        event: 'email_delivery_failed',
         operationId,
         deliveryType,
         attempts: Number(error?.attempts || 1),
-        failureCode: String(error?.smtpCode || 'unknown'),
-        failureCommand: String(error?.command || 'unknown'),
-        failureResponseCode: Number.isInteger(error?.responseCode) ? error.responseCode : null,
-        failureStage: String(error?.stage || 'unknown'),
-        failedAt: FieldValue.serverTimestamp(),
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
-        leaseId: FieldValue.delete(),
-        leaseUntil: FieldValue.delete(),
-      }, { merge: true });
-    });
-    console.warn(JSON.stringify({
-      event: 'email_delivery_failed', operationId, deliveryType, attempts: Number(error?.attempts || 1), result: 'smtp_rejected',
-      smtpCode: String(error?.smtpCode || 'unknown'), command: String(error?.command || 'unknown'),
-      responseCode: Number.isInteger(error?.responseCode) ? error.responseCode : null,
-      stage: String(error?.stage || 'unknown'),
-    }));
+        result: 'smtp_rejected',
+        smtpCode: String(error?.smtpCode || 'unknown'),
+        command: String(error?.command || 'unknown'),
+        responseCode: Number.isInteger(error?.responseCode) ? error.responseCode : null,
+        stage: String(error?.stage || 'unknown'),
+      }),
+    );
     return { sent: false, outcome: 'smtp_rejected', operationId };
   }
 }
 
-exports.sendAuthEmail = functions.runWith({ secrets: SMTP_SECRETS, enforceAppCheck: false }).https.onCall(async (data, context) => {
-  const action = String(data?.action || '').trim();
-  const email = normalizedEmail(data?.email || context.auth?.token?.email);
-  if (!['verification', 'passwordReset'].includes(action) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    throw new HttpsError('invalid-argument', 'Érvénytelen e-mailes művelet.');
-  }
-  if (action !== 'passwordReset' && !context.auth) throw new HttpsError('unauthenticated', 'Jelentkezz be.');
-  if (action !== 'passwordReset' && normalizedEmail(context.auth.token.email) !== email) {
-    throw new HttpsError('permission-denied', 'Csak a saját e-mail-címedre kérhetsz levelet.');
-  }
-  if (action === 'verification') {
-    const authUser = await auth.getUser(context.auth.uid);
-    const hasPasswordProvider = authUser.providerData.some((provider) => provider.providerId === 'password');
-    if (!hasPasswordProvider) {
-      throw new HttpsError('failed-precondition', 'Google-fiókhoz nem szükséges e-mail-megerősítés.');
+exports.sendAuthEmail = functions
+  .runWith({ secrets: SMTP_SECRETS, enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    const action = String(data?.action || '').trim();
+    const email = normalizedEmail(data?.email || context.auth?.token?.email);
+    if (!['verification', 'passwordReset'].includes(action) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen e-mailes művelet.');
     }
-  }
-  const identity = action === 'passwordReset' ? email : context.auth.uid;
-  if (!await allowCall(`email:${identity}`, `auth_email_${action}`, 3)) {
-    throw new HttpsError('resource-exhausted', 'Kérlek, próbáld később.');
-  }
-  if (action === 'passwordReset') {
+    if (action !== 'passwordReset' && !context.auth) throw new HttpsError('unauthenticated', 'Jelentkezz be.');
+    if (action !== 'passwordReset' && normalizedEmail(context.auth.token.email) !== email) {
+      throw new HttpsError('permission-denied', 'Csak a saját e-mail-címedre kérhetsz levelet.');
+    }
+    if (action === 'verification') {
+      const authUser = await auth.getUser(context.auth.uid);
+      const hasPasswordProvider = authUser.providerData.some((provider) => provider.providerId === 'password');
+      if (!hasPasswordProvider) {
+        throw new HttpsError('failed-precondition', 'Google-fiókhoz nem szükséges e-mail-megerősítés.');
+      }
+    }
+    const identity = action === 'passwordReset' ? email : context.auth.uid;
+    const verificationDeliveryKey = `auth:verification:${identity}`;
+    if (action === 'verification') {
+      const recentOutcome = await recentEmailDeliveryOutcome(verificationDeliveryKey, 'auth-verification');
+      if (recentOutcome) {
+        return {
+          sent: recentOutcome === 'already_sent',
+          outcome: recentOutcome,
+        };
+      }
+    }
+    if (!(await allowCall(`email:${identity}`, `auth_email_${action}`, 3))) {
+      throw new HttpsError('resource-exhausted', 'Kérlek, próbáld később.');
+    }
+    if (action === 'passwordReset') {
+      try {
+        await auth.getUserByEmail(email);
+      } catch (error) {
+        if (error?.code === 'auth/user-not-found') return { sent: true };
+        throw new HttpsError('internal', 'A levélküldés nem sikerült.');
+      }
+    }
+    let link;
     try {
-      await auth.getUserByEmail(email);
+      const settings = { url: EMAIL_ACTION_URL, handleCodeInApp: false };
+      const generated = await generateAuthActionLink({
+        auth,
+        action,
+        email,
+        settings,
+      });
+      link = generated.link;
+      if (generated.attempts > 1) {
+        console.info(
+          JSON.stringify({
+            event: 'auth_action_link_retried',
+            action,
+            attempts: generated.attempts,
+          }),
+        );
+      }
     } catch (error) {
-      if (error?.code === 'auth/user-not-found') return { sent: true };
+      console.warn(
+        JSON.stringify({
+          event: 'auth_action_link_failed',
+          code: String(error?.code || 'unknown'),
+          attempts: Number(error?.attempts || 1),
+        }),
+      );
       throw new HttpsError('internal', 'A levélküldés nem sikerült.');
     }
-  }
-  let link;
-  try {
-    const settings = { url: EMAIL_ACTION_URL, handleCodeInApp: false };
-    const generated = await generateAuthActionLink({ auth, action, email, settings });
-    link = generated.link;
-    if (generated.attempts > 1) {
-      console.info(JSON.stringify({ event: 'auth_action_link_retried', action, attempts: generated.attempts }));
+    const template = authEmailTemplate(action, link);
+    const operationId = crypto.randomUUID();
+    const delivery = await sendIdentityEmailOnce({
+      key: action === 'verification' ? verificationDeliveryKey : `${action}:${identity}:${link.split('?')[0]}`,
+      to: email,
+      template,
+      operationId,
+      deliveryType: `auth-${action}`,
+    });
+    if (!delivery.sent && !['already_sent', 'in_flight'].includes(delivery.outcome)) {
+      throw new HttpsError('unavailable', 'A levélküldés nem sikerült. Próbáld újra később.', { operationId });
     }
-  } catch (error) {
-    console.warn(JSON.stringify({
-      event: 'auth_action_link_failed',
-      code: String(error?.code || 'unknown'),
-      attempts: Number(error?.attempts || 1),
-    }));
-    throw new HttpsError('internal', 'A levélküldés nem sikerült.');
-  }
-  const template = authEmailTemplate(action, link);
-  const operationId = crypto.randomUUID();
-  const delivery = await sendIdentityEmailOnce({
-    key: `${action}:${identity}:${link.split('?')[0]}`,
-    to: email,
-    template,
-    operationId,
-    deliveryType: `auth-${action}`,
+    return { sent: delivery.sent, outcome: delivery.outcome };
   });
-  if (!delivery.sent && delivery.outcome !== 'already_sent') {
-    throw new HttpsError(
-      'unavailable',
-      'A levélküldés nem sikerült. Próbáld újra később.',
-      { operationId },
-    );
-  }
-  return { sent: true };
-});
 // Article comments are accessed only through this callable (Admin SDK).
 // Keep compatibility with already distributed Play builds until a verified
 // App Check enforcement is intentionally disabled; active clients must remain
@@ -326,22 +429,35 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
   if (action === 'list') {
     let query = collection.orderBy('createdAt', 'desc').orderBy(FieldPath.documentId(), 'desc');
     if (data.cursor) {
-      if (typeof data.cursor !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(data.cursor)) throw new HttpsError('invalid-argument', 'Érvénytelen lapozás.');
+      if (typeof data.cursor !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(data.cursor))
+        throw new HttpsError('invalid-argument', 'Érvénytelen lapozás.');
       const cursor = await collection.doc(data.cursor).get();
       if (cursor.exists) query = query.startAfter(cursor);
     }
     const result = await query.limit(21).get();
     const docs = result.docs.slice(0, 20);
-    return { moderator, hasMore: result.size > 20, items: docs.map(doc => {
-      const value = doc.data();
-      return { id: doc.id, authorId: value.authorId, authorName: value.authorName,
-        imageUrl: value.imageUrl, text: value.text, createdAt: value.createdAt?.toMillis() || 0 };
-    }) };
+    return {
+      moderator,
+      hasMore: result.size > 20,
+      items: docs.map((doc) => {
+        const value = doc.data();
+        return {
+          id: doc.id,
+          authorId: value.authorId,
+          authorName: value.authorName,
+          imageUrl: value.imageUrl,
+          text: value.text,
+          createdAt: value.createdAt?.toMillis() || 0,
+        };
+      }),
+    };
   }
   if (!uid) throw new HttpsError('unauthenticated', 'Próbáld újra a küldést.');
-  if ((await db.collection('community_bans').doc(uid).get()).exists) throw new HttpsError('permission-denied', 'Jelenleg nem hozzászólhatsz.');
+  if ((await db.collection('community_bans').doc(uid).get()).exists)
+    throw new HttpsError('permission-denied', 'Jelenleg nem hozzászólhatsz.');
   const id = data?.id;
-  if (typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(id)) throw new HttpsError('invalid-argument', 'Érvénytelen hozzászólás.');
+  if (typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(id))
+    throw new HttpsError('invalid-argument', 'Érvénytelen hozzászólás.');
   const ref = collection.doc(id);
   if (action === 'create') {
     const text = typeof data.text === 'string' ? data.text.trim() : '';
@@ -351,48 +467,86 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
       if (existing.data().authorId === uid && existing.data().text === text) return { ok: true };
       throw new HttpsError('already-exists', 'Ez a hozzászólás már létezik.');
     }
-    if (!await allowCall(uid, 'article-comment', 5)) throw new HttpsError('resource-exhausted', 'Kérlek, várj egy percet az újabb hozzászólással.');
-    const response = await fetch(`https://hungarianhardstyle.hu/wp-json/huhs/v1/posts/${postId}`, { signal: AbortSignal.timeout(15000) });
+    if (!(await allowCall(uid, 'article-comment', 5)))
+      throw new HttpsError('resource-exhausted', 'Kérlek, várj egy percet az újabb hozzászólással.');
+    const response = await fetch(`https://hungarianhardstyle.hu/wp-json/huhs/v1/posts/${postId}`, {
+      signal: AbortSignal.timeout(15000),
+    });
     if (!response.ok) throw new HttpsError('unavailable', 'A cikk most nem érhető el. Próbáld újra később.');
     const article = await response.json();
     if (Number(article.id) !== postId) throw new HttpsError('not-found', 'A cikk nem található.');
     let commentCreated = false;
-    await db.runTransaction(async tx => {
+    await db.runTransaction(async (tx) => {
       const current = await tx.get(ref);
       if (current.exists) {
-        if (current.data().authorId !== uid || current.data().text !== text) throw new HttpsError('already-exists', 'Ez a hozzászólás már létezik.');
+        if (current.data().authorId !== uid || current.data().text !== text)
+          throw new HttpsError('already-exists', 'Ez a hozzászólás már létezik.');
         return;
       }
       const anonymous = context.auth.token.firebase?.sign_in_provider === 'anonymous';
       let hash = 17n;
       for (let i = 0; i < uid.length; i++) hash = BigInt.asIntN(64, hash * 31n + BigInt(uid.charCodeAt(i)));
       const number = Number((hash < 0n ? -hash : hash) % 9000n) + 1000;
-      tx.create(ref, { authorId: uid, authorName: anonymous ? `Unknown User ${number}` : profile.displayName || 'HUHS tag',
-        imageUrl: anonymous ? '' : profile.profileImageUrl || '', text, createdAt: FieldValue.serverTimestamp() });
+      tx.create(ref, {
+        authorId: uid,
+        authorName: anonymous ? `Unknown User ${number}` : profile.displayName || 'HUHS tag',
+        imageUrl: anonymous ? '' : profile.profileImageUrl || '',
+        text,
+        createdAt: FieldValue.serverTimestamp(),
+      });
       commentCreated = true;
     });
     if (commentCreated) {
+      const admins = (await db.collection('community_profiles').get()).docs.filter(
+        (admin) => admin.data()?.accessRole === 'admin',
+      );
+      await Promise.all(
+        admins.map((admin) =>
+          createNotificationBestEffort({
+            recipientUid: admin.id,
+            type: 'article_comment',
+            title: 'Új hozzászólás érkezett',
+            body: 'Új hozzászólás érkezett egy cikkhez. Ellenőrizd a közösségi tartalmak között.',
+            targetType: 'article',
+            targetId: String(postId),
+            dedupeKey: `article-comment-notification:${postId}:${id}:${admin.id}`,
+            senderId: uid,
+          }),
+        ),
+      );
       // One point per article comment, with the daily limit enforced inside
       // the idempotent server-side achievement ledger.
       await awardAchievementPoints(uid, 1, `article-comment:${postId}:${id}`);
     }
   } else if (action === 'delete') {
-    await db.runTransaction(async tx => {
+    await db.runTransaction(async (tx) => {
       const comment = await tx.get(ref);
       if (!comment.exists) return;
-      if (comment.data().authorId !== uid && !moderator) throw new HttpsError('permission-denied', 'Ezt a hozzászólást nem törölheted.');
+      if (comment.data().authorId !== uid && !moderator)
+        throw new HttpsError('permission-denied', 'Ezt a hozzászólást nem törölheted.');
       tx.delete(ref);
     });
   } else if (action === 'report') {
     const comment = await ref.get();
     if (!comment.exists) throw new HttpsError('not-found', 'A hozzászólás már nem található.');
-    if (!await allowCall(uid, 'article-report', 10)) throw new HttpsError('resource-exhausted', 'Kérlek, próbáld később.');
-    await db.collection('chat_reports').doc(crypto.createHash('sha256').update(`article:${postId}:${id}:${uid}`).digest('hex')).set({
-      postId: id, articleId: postId, type: 'article_comment', reporterId: uid, reporterName: profile.displayName || 'Vendég',
-      reportedUserId: comment.data().authorId, reportedUserName: comment.data().authorName,
-      reportedText: comment.data().text, reason: 'Cikkhozzászólás jelentése', status: 'open',
-      createdAt: FieldValue.serverTimestamp(),
-    });
+    if (!(await allowCall(uid, 'article-report', 10)))
+      throw new HttpsError('resource-exhausted', 'Kérlek, próbáld később.');
+    await db
+      .collection('chat_reports')
+      .doc(crypto.createHash('sha256').update(`article:${postId}:${id}:${uid}`).digest('hex'))
+      .set({
+        postId: id,
+        articleId: postId,
+        type: 'article_comment',
+        reporterId: uid,
+        reporterName: profile.displayName || 'Vendég',
+        reportedUserId: comment.data().authorId,
+        reportedUserName: comment.data().authorName,
+        reportedText: comment.data().text,
+        reason: 'Cikkhozzászólás jelentése',
+        status: 'open',
+        createdAt: FieldValue.serverTimestamp(),
+      });
   } else throw new HttpsError('invalid-argument', 'Ismeretlen művelet.');
   return { ok: true };
 });
@@ -416,17 +570,21 @@ const ACHIEVEMENT_BADGES_CACHE_TTL_MS = 30 * 1000;
 let eventExpiryCacheAt = 0;
 let eventExpiryCache = null;
 const VALID_EVENT_IDS_CACHE_TTL_MS = 5 * 60 * 1000;
-const wordPressCall = (handler) => functions
-  .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD], enforceAppCheck: false })
-  .https.onCall(handler);
+const wordPressCall = (handler) =>
+  functions
+    .runWith({
+      secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+      enforceAppCheck: false,
+    })
+    .https.onCall(handler);
 function isAnonymousAuth(context) {
-  return context.auth?.token?.firebase?.sign_in_provider === 'anonymous'
-    || context.auth?.token?.is_anonymous === true;
+  return context.auth?.token?.firebase?.sign_in_provider === 'anonymous' || context.auth?.token?.is_anonymous === true;
 }
 
 exports.getGameAudioClip = wordPressCall(async (data, context) => {
   if (!context.auth?.uid) throw new HttpsError('unauthenticated', 'A játék használatához be kell jelentkezned.');
-  if (isAnonymousAuth(context)) throw new HttpsError('unauthenticated', 'A játék használatához regisztráció szükséges.');
+  if (isAnonymousAuth(context))
+    throw new HttpsError('unauthenticated', 'A játék használatához regisztráció szükséges.');
   const gameId = Number(data?.gameId);
   if (!Number.isSafeInteger(gameId) || gameId <= 0) throw new HttpsError('invalid-argument', 'Érvénytelen játék.');
   const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
@@ -439,24 +597,12 @@ exports.getGameAudioClip = wordPressCall(async (data, context) => {
     signal: AbortSignal.timeout(15000),
   });
   const body = await response.json().catch(() => ({}));
-  if (response.status === 409) throw new HttpsError('unavailable', 'A hangrészlet még készül. Próbáld újra pár másodperc múlva.');
-  if (!response.ok || typeof body.download_url !== 'string') throw new HttpsError('failed-precondition', 'A játék hangrészlete most nem érhető el.');
+  if (response.status === 409)
+    throw new HttpsError('unavailable', 'A hangrészlet még készül. Próbáld újra pár másodperc múlva.');
+  if (!response.ok || typeof body.download_url !== 'string')
+    throw new HttpsError('failed-precondition', 'A játék hangrészlete most nem érhető el.');
   return { url: body.download_url, expiresIn: Number(body.expires_in) || 300 };
 });
-
-function gameRewardPoints(game, correctAnswers, totalAnswers) {
-  const type = String(game?.type || '');
-  if (type === 'hardstyle_quiz' || type === 'festival_quiz' || type === 'hungarian_hardstyle_quiz') {
-    const percent = totalAnswers > 0 ? Math.floor((correctAnswers / totalAnswers) * 100) : 0;
-    const band = Array.isArray(game.reward_bands)
-      ? game.reward_bands.find((item) => percent >= Number(item.min || 0) && percent <= Number(item.max || 0))
-      : null;
-    return Math.max(0, Number(band?.points || 0));
-  }
-  return correctAnswers === totalAnswers && totalAnswers > 0
-    ? Math.max(0, Number(game.reward_points || 0))
-    : 0;
-}
 
 async function syncGameStatsToWordPress(gameId, stats) {
   const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
@@ -503,17 +649,31 @@ exports.submitGameAttempt = wordPressCall(async (data, context) => {
   let submittedOrderedIds = null;
   if (timeline) {
     const orderedIds = Array.isArray(data?.orderedIds) ? data.orderedIds.map(String) : [];
-    const expected = Array.isArray(game.timeline_items) ? [...game.timeline_items].sort((a, b) => String(a.date || '').localeCompare(String(b.date || ''))).map((item) => String(item.id || '')) : [];
-    if (expected.length < 2 || orderedIds.length !== expected.length || new Set(orderedIds).size !== orderedIds.length) throw new HttpsError('invalid-argument', 'A teljes idővonalat add meg.');
-    if (orderedIds.some((id) => !expected.includes(id))) throw new HttpsError('invalid-argument', 'Érvénytelen idővonal-válasz.');
+    const expected = Array.isArray(game.timeline_items)
+      ? [...game.timeline_items]
+          .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))
+          .map((item) => String(item.id || ''))
+      : [];
+    if (expected.length < 2 || orderedIds.length !== expected.length || new Set(orderedIds).size !== orderedIds.length)
+      throw new HttpsError('invalid-argument', 'A teljes idővonalat add meg.');
+    if (orderedIds.some((id) => !expected.includes(id)))
+      throw new HttpsError('invalid-argument', 'Érvénytelen idővonal-válasz.');
     totalAnswers = 1;
     correctAnswers = orderedIds.every((id, index) => id === expected[index]) ? 1 : 0;
     submittedOrderedIds = orderedIds;
   } else {
     const answers = Array.isArray(data?.answers) ? data.answers.map(Number) : [];
     const questions = Array.isArray(game.questions) ? game.questions : [];
-    if (!questions.length || answers.length !== questions.length) throw new HttpsError('invalid-argument', 'Minden kérdésre válaszolj.');
-    if (answers.some((answer, index) => !Number.isInteger(answer) || answer < 0 || answer >= (Array.isArray(questions[index]?.options) ? questions[index].options.length : 0))) {
+    if (!questions.length || answers.length !== questions.length)
+      throw new HttpsError('invalid-argument', 'Minden kérdésre válaszolj.');
+    if (
+      answers.some(
+        (answer, index) =>
+          !Number.isInteger(answer) ||
+          answer < 0 ||
+          answer >= (Array.isArray(questions[index]?.options) ? questions[index].options.length : 0),
+      )
+    ) {
       throw new HttpsError('invalid-argument', 'Érvénytelen válasz érkezett.');
     }
     totalAnswers = questions.length;
@@ -554,27 +714,129 @@ exports.submitGameAttempt = wordPressCall(async (data, context) => {
       orderedIds: submittedOrderedIds,
       createdAt: FieldValue.serverTimestamp(),
     });
-    transaction.set(statsRef, {
-      gameId,
-      submissions: FieldValue.increment(1),
-      correctAnswers: FieldValue.increment(correctAnswers),
-      totalAnswers: FieldValue.increment(totalAnswers),
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
-    result = { alreadySubmitted: false, correctAnswers, totalAnswers, achievementPoints };
+    transaction.set(
+      statsRef,
+      {
+        gameId,
+        submissions: FieldValue.increment(1),
+        correctAnswers: FieldValue.increment(correctAnswers),
+        totalAnswers: FieldValue.increment(totalAnswers),
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+    result = {
+      alreadySubmitted: false,
+      correctAnswers,
+      totalAnswers,
+      achievementPoints,
+    };
   });
 
-  if (!result.alreadySubmitted && result.achievementPoints > 0) {
-    await awardAchievementPoints(uid, result.achievementPoints, `game:${gameId}:reward`);
-  }
   const stats = (await statsRef.get()).data() || {};
   try {
     await syncGameStatsToWordPress(gameId, stats);
   } catch (error) {
-    console.warn(JSON.stringify({ event: 'game_stats_sync_failed', gameId, message: error?.message || String(error) }));
+    console.warn(
+      JSON.stringify({
+        event: 'game_stats_sync_failed',
+        gameId,
+        message: error?.message || String(error),
+      }),
+    );
   }
   return result;
 });
+
+async function finalizeClosedGameRewards(game) {
+  const gameId = Number(game?.id);
+  if (!Number.isSafeInteger(gameId) || gameId <= 0 || game?.status !== 'closed')
+    return { finalized: false, reason: 'not_closed' };
+  const statsRef = db.collection('game_stats').doc(String(gameId));
+  const stats = (await statsRef.get()).data() || {};
+  if (stats.rewardsFinalized === true) return { finalized: false, reason: 'already_finalized' };
+
+  const attempts = await db.collection('game_attempts').where('gameId', '==', gameId).get();
+  const uids = [...new Set(attempts.docs.map((attempt) => String(attempt.data()?.uid || '').trim()).filter(Boolean))];
+  const profiles = uids.length
+    ? await db.getAll(...uids.map((uid) => db.collection('community_profiles').doc(uid)))
+    : [];
+  const namesByUid = new Map(
+    profiles
+      .filter((profile) => profile.exists)
+      .map((profile) => [profile.id, String(profile.data()?.displayName || '').trim()]),
+  );
+  const ranked = buildRankedGameEntries(
+    attempts.docs.map((attempt) => {
+      const value = attempt.data() || {};
+      return {
+        uid: String(value.uid || '').trim(),
+        displayName: namesByUid.get(String(value.uid || '').trim()) || '',
+        correctAnswers: Number(value.correctAnswers || 0),
+        totalAnswers: Number(value.totalAnswers || 0),
+        submittedAt: value.createdAt?.toMillis?.() || 0,
+      };
+    }),
+  );
+  const ranksByUid = new Map(ranked.map((entry) => [entry.uid, entry.rank]));
+  const title = String(game.title || 'HUHS játék').trim();
+  const awards = attempts.docs.map(async (attempt) => {
+    const value = attempt.data() || {};
+    const uid = String(value.uid || '').trim();
+    const points = Math.max(0, Number(value.achievementPoints || 0));
+    if (!uid || points <= 0) return;
+    const won = ranksByUid.get(uid) === 1;
+    await awardAchievementPoints(uid, points, `game:${gameId}:reward`, {
+      title: won ? 'Megnyerted a HUHS játékot!' : 'Elkészült a játékod eredménye',
+      body: won
+        ? `Megnyerted a „${title}” játékot, és +${points} achievement pontot kaptál.`
+        : `A „${title}” játékban elért eredményedért +${points} achievement pontot kaptál.`,
+    });
+  });
+  const results = await Promise.allSettled(awards);
+  const failed = results.find((result) => result.status === 'rejected');
+  if (failed) throw failed.reason;
+  await statsRef.set(
+    {
+      resultsAvailable: true,
+      resultsAvailableAt: FieldValue.serverTimestamp(),
+      rewardsFinalized: true,
+      rewardsFinalizedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+  return { finalized: true, attempts: attempts.size };
+}
+
+async function loadLatestClosedGame() {
+  const response = await fetch(`${WORDPRESS_BASE_URL}/games/results/latest`, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error(`WordPress játéklezárás: HTTP ${response.status}`);
+  const game = await response.json().catch(() => null);
+  return game && game.status === 'closed' ? game : null;
+}
+
+exports.finalizeClosedGameRewards = onSchedule(
+  {
+    schedule: 'every 5 minutes',
+    timeZone: 'Europe/Budapest',
+    region: 'europe-central2',
+  },
+  async () => {
+    const game = await loadLatestClosedGame();
+    if (!game) return;
+    const result = await finalizeClosedGameRewards(game);
+    console.info(
+      JSON.stringify({
+        event: 'game_rewards_finalized',
+        gameId: Number(game.id),
+        ...result,
+      }),
+    );
+  },
+);
 
 exports.getGameAttemptStatus = wordPressCall(async (data, context) => {
   const uid = context.auth?.uid;
@@ -598,40 +860,127 @@ exports.getGameAttemptStatus = wordPressCall(async (data, context) => {
   };
 });
 
-const labelProductSyncSecrets = [
-  WORDPRESS_USERNAME,
-  WORDPRESS_APPLICATION_PASSWORD,
-  GOOGLE_PLAY_SERVICE_ACCOUNT_JSON,
-];
+exports.getGameResults = wordPressCall(async (data) => {
+  const gameId = Number(data?.gameId);
+  if (!Number.isSafeInteger(gameId) || gameId <= 0) throw new HttpsError('invalid-argument', 'Érvénytelen játék.');
+
+  const statsRef = db.collection('game_stats').doc(String(gameId));
+  const stats = await statsRef.get();
+  if (stats.data()?.resultsAvailable !== true || stats.data()?.rewardsFinalized !== true) {
+    const response = await fetch(`${WORDPRESS_BASE_URL}/games/${gameId}`, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(15000),
+    });
+    const game = await response.json().catch(() => ({}));
+    if (!response.ok || game?.status !== 'closed') {
+      throw new HttpsError('failed-precondition', 'Az eredménylista jelenleg nem érhető el.');
+    }
+    await finalizeClosedGameRewards(game);
+  }
+
+  const attempts = await db.collection('game_attempts').where('gameId', '==', gameId).get();
+  const profileRefs = attempts.docs
+    .map((attempt) => String(attempt.data()?.uid || '').trim())
+    .filter(Boolean)
+    .map((uid) => db.collection('community_profiles').doc(uid));
+  const profiles = profileRefs.length ? await db.getAll(...profileRefs) : [];
+  const namesByUid = new Map(
+    profiles
+      .filter((profile) => profile.exists)
+      .map((profile) => [profile.id, String(profile.data()?.displayName || '').trim()]),
+  );
+  const entries = attempts.docs.map((attempt) => {
+    const value = attempt.data() || {};
+    return {
+      displayName: namesByUid.get(String(value.uid || '')) || '',
+      correctAnswers: Number(value.correctAnswers || 0),
+      totalAnswers: Number(value.totalAnswers || 0),
+      submittedAt: value.createdAt?.toMillis?.() || 0,
+    };
+  });
+  return { items: buildGameLeaderboard(entries) };
+});
+
+const labelProductSyncSecrets = [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD, GOOGLE_PLAY_SERVICE_ACCOUNT_JSON];
 
 async function allowCall(uid, key, limit = 20) {
   const bucket = Math.floor(Date.now() / 60_000);
-  const ref = db.collection('rate_limits').doc(crypto
-    .createHash('sha256').update(`${key}:${uid}:${bucket}`).digest('hex'));
+  const ref = db
+    .collection('rate_limits')
+    .doc(crypto.createHash('sha256').update(`${key}:${uid}:${bucket}`).digest('hex'));
   let allowed = false;
   await db.runTransaction(async (transaction) => {
     const snapshot = await transaction.get(ref);
     const count = Number(snapshot.data()?.count || 0);
     allowed = count < limit;
     if (allowed) {
-      transaction.set(ref, { key, uid, bucket, count: count + 1, updatedAt: FieldValue.serverTimestamp() });
+      transaction.set(ref, {
+        key,
+        uid,
+        bucket,
+        count: count + 1,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
     }
   });
   return allowed;
 }
 
 const defaultAchievementBadges = [
-  { slug: 'starter', name: 'Kezdő ütem', min_points: 0, description: 'A HUHS közösség alapjelvénye.', image_url: '' },
-  { slug: 'first-step', name: 'Első lépés', min_points: 100, description: 'Az első közösségi mérföldkő.', image_url: '' },
-  { slug: 'regular', name: 'Rendszeres látogató', min_points: 300, description: 'Rendszeresen jelen van a közösségben.', image_url: '' },
-  { slug: 'hardstyle-face', name: 'Hardstyle arc', min_points: 700, description: 'Láthatóan aktív HUHS-közösségi tag.', image_url: '' },
-  { slug: 'community', name: 'Közösségi ember', min_points: 1500, description: 'Sokat tesz a közösségi jelenlétért.', image_url: '' },
-  { slug: 'scene-veteran', name: 'Scene veteran', min_points: 3000, description: 'Hosszú távon aktív színtértag.', image_url: '' },
-  { slug: 'huhs-legend', name: 'HUHS legenda', min_points: 6000, description: 'Kiemelkedő, tartós közösségi aktivitás.', image_url: '' },
+  {
+    slug: 'starter',
+    name: 'Kezdő ütem',
+    min_points: 0,
+    description: 'A HUHS közösség alapjelvénye.',
+    image_url: '',
+  },
+  {
+    slug: 'first-step',
+    name: 'Első lépés',
+    min_points: 100,
+    description: 'Az első közösségi mérföldkő.',
+    image_url: '',
+  },
+  {
+    slug: 'regular',
+    name: 'Rendszeres látogató',
+    min_points: 300,
+    description: 'Rendszeresen jelen van a közösségben.',
+    image_url: '',
+  },
+  {
+    slug: 'hardstyle-face',
+    name: 'Hardstyle arc',
+    min_points: 700,
+    description: 'Láthatóan aktív HUHS-közösségi tag.',
+    image_url: '',
+  },
+  {
+    slug: 'community',
+    name: 'Közösségi ember',
+    min_points: 1500,
+    description: 'Sokat tesz a közösségi jelenlétért.',
+    image_url: '',
+  },
+  {
+    slug: 'scene-veteran',
+    name: 'Scene veteran',
+    min_points: 3000,
+    description: 'Hosszú távon aktív színtértag.',
+    image_url: '',
+  },
+  {
+    slug: 'huhs-legend',
+    name: 'HUHS legenda',
+    min_points: 6000,
+    description: 'Kiemelkedő, tartós közösségi aktivitás.',
+    image_url: '',
+  },
 ];
 
 async function getAchievementBadges() {
-  if (achievementBadgesCache && Date.now() - achievementBadgesCacheAt < ACHIEVEMENT_BADGES_CACHE_TTL_MS) return achievementBadgesCache;
+  if (achievementBadgesCache && Date.now() - achievementBadgesCacheAt < ACHIEVEMENT_BADGES_CACHE_TTL_MS)
+    return achievementBadgesCache;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 2500);
   try {
@@ -643,21 +992,30 @@ async function getAchievementBadges() {
     if (response.ok && Array.isArray(body) && body.length) {
       const catalogVersion = String(
         response.headers.get('etag') ||
-        response.headers.get('last-modified') ||
-        body.map((badge) => `${badge?.slug || ''}:${badge?.image_url || ''}:${badge?.updated_at || ''}`).join('|'),
+          response.headers.get('last-modified') ||
+          body.map((badge) => `${badge?.slug || ''}:${badge?.image_url || ''}:${badge?.updated_at || ''}`).join('|'),
       ).trim();
       const versionToken = crypto.createHash('sha1').update(catalogVersion).digest('hex').slice(0, 16);
-      achievementBadgesCache = body.filter((badge) => badge.active !== 0).map((badge) => ({
-        slug: String(badge.slug || '').trim(), name: String(badge.name || 'HUHS jelvény').trim(),
-        min_points: Math.max(0, Number(badge.min_points || 0)),
-        description: String(badge.description || '').trim(),
-        image_url: versionBadgeImageUrl(String(badge.image_url || '').trim(), versionToken),
-      })).filter((badge) => badge.slug);
+      achievementBadgesCache = body
+        .filter((badge) => badge.active !== 0)
+        .map((badge) => ({
+          slug: String(badge.slug || '').trim(),
+          name: String(badge.name || 'HUHS jelvény').trim(),
+          min_points: Math.max(0, Number(badge.min_points || 0)),
+          description: String(badge.description || '').trim(),
+          image_url: versionBadgeImageUrl(String(badge.image_url || '').trim(), versionToken),
+        }))
+        .filter((badge) => badge.slug);
       achievementBadgesCacheAt = Date.now();
       return achievementBadgesCache;
     }
   } catch (error) {
-    console.warn(JSON.stringify({ event: 'achievement_catalog_fallback', message: error?.message || String(error) }));
+    console.warn(
+      JSON.stringify({
+        event: 'achievement_catalog_fallback',
+        message: error?.message || String(error),
+      }),
+    );
   } finally {
     clearTimeout(timeout);
   }
@@ -681,27 +1039,34 @@ function versionBadgeImageUrl(imageUrl, versionToken) {
 async function getValidEventIds() {
   const now = Date.now();
   if (eventExpiryCache && now - eventExpiryCacheAt < VALID_EVENT_IDS_CACHE_TTL_MS) {
-    return new Set([...eventExpiryCache.entries()]
-      .filter(([, expiry]) => expiry >= now)
-      .map(([id]) => id));
+    return new Set([...eventExpiryCache.entries()].filter(([, expiry]) => expiry >= now).map(([id]) => id));
   }
   try {
-    const response = await fetch(`${WORDPRESS_BASE_URL}/events?summary=true&include_past=true`, { headers: { Accept: 'application/json' } });
+    const response = await fetch(`${WORDPRESS_BASE_URL}/events?summary=true&include_past=true`, {
+      headers: { Accept: 'application/json' },
+    });
     const body = await response.json();
     // An unavailable WordPress endpoint is not proof that every event is
     // invalid. Keep this distinct from an empty, successfully loaded catalog
     // so a transient outage cannot roll back legitimate user writes.
     if (!response.ok || !Array.isArray(body)) return null;
-    eventExpiryCache = new Map(body
-      .map((event) => [Number(event?.id), eventExpiryTimestamp(event)])
-      .filter(([id, expiry]) => Number.isInteger(id) && id > 0 && Number.isFinite(expiry)));
-    const validEventIds = new Set([...eventExpiryCache.entries()]
-      .filter(([, expiry]) => expiry >= now)
-      .map(([id]) => id));
+    eventExpiryCache = new Map(
+      body
+        .map((event) => [Number(event?.id), eventExpiryTimestamp(event)])
+        .filter(([id, expiry]) => Number.isInteger(id) && id > 0 && Number.isFinite(expiry)),
+    );
+    const validEventIds = new Set(
+      [...eventExpiryCache.entries()].filter(([, expiry]) => expiry >= now).map(([id]) => id),
+    );
     eventExpiryCacheAt = Date.now();
     return validEventIds;
   } catch (error) {
-    console.warn(JSON.stringify({ event: 'event_validation_failed', message: error?.message || String(error) }));
+    console.warn(
+      JSON.stringify({
+        event: 'event_validation_failed',
+        message: error?.message || String(error),
+      }),
+    );
     return null;
   }
 }
@@ -709,24 +1074,25 @@ async function getValidEventIds() {
 function eventExpiryTimestamp(event) {
   const dateText = String(event?.end_date || event?.start_date || '').trim();
   if (!dateText) return NaN;
-  const timeText = String(
-    event?.end_date ? (event?.end_time || '') : (event?.start_time || ''),
-  ).trim();
+  const timeText = String(event?.end_date ? event?.end_time || '' : event?.start_time || '').trim();
   return Date.parse(`${dateText}T${timeText || '23:59:59'}`);
 }
 
 function sameEventState(before, after) {
-  const comparable = (data) => Object.fromEntries(Object.entries(data || {})
-    .filter(([key]) => key !== 'updatedAt' && key !== '_huhsExpiredEventReverted')
-    .sort(([first], [second]) => first.localeCompare(second)));
+  const comparable = (data) =>
+    Object.fromEntries(
+      Object.entries(data || {})
+        .filter(([key]) => key !== 'updatedAt' && key !== '_huhsExpiredEventReverted')
+        .sort(([first], [second]) => first.localeCompare(second)),
+    );
   return JSON.stringify(comparable(before)) === JSON.stringify(comparable(after));
 }
 
 async function restoreExpiredEventWrite(event, before, after) {
   const afterExists = event.data?.after?.exists === true;
   const beforeExists = event.data?.before?.exists === true;
-  if (afterExists && after?._huhsExpiredEventReverted === true &&
-      before?._huhsExpiredEventReverted !== true) return true;
+  if (afterExists && after?._huhsExpiredEventReverted === true && before?._huhsExpiredEventReverted !== true)
+    return true;
   if (!beforeExists && !afterExists) return true;
   if (beforeExists && afterExists && sameEventState(before, after)) return true;
   const reference = event.data?.after?.ref || event.data?.before?.ref;
@@ -739,17 +1105,24 @@ async function restoreExpiredEventWrite(event, before, after) {
   return true;
 }
 
-async function awardAchievementPoints(uid, delta, sourceKey) {
+async function awardAchievementPoints(uid, delta, sourceKey, notification = null) {
   if (!uid || !Number.isInteger(delta) || delta === 0 || !sourceKey) return { changed: false };
-  const ledgerId = crypto.createHash('sha256').update(`${uid}:${sourceKey}:${delta > 0 ? 'grant' : 'revoke'}`).digest('hex').slice(0, 40);
+  const ledgerId = crypto
+    .createHash('sha256')
+    .update(`${uid}:${sourceKey}:${delta > 0 ? 'grant' : 'revoke'}`)
+    .digest('hex')
+    .slice(0, 40);
   const ledgerRef = db.collection('achievement_ledger').doc(ledgerId);
   const profileRef = db.collection('community_profiles').doc(uid);
   const isNewsLikeGrant = delta > 0 && sourceKey.startsWith('news-like:');
   const isArticleCommentGrant = delta > 0 && sourceKey.startsWith('article-comment:');
   const dailyLimit = isNewsLikeGrant || isArticleCommentGrant ? 5 : null;
-  const dailyLimitRef = dailyLimit == null ? null : db.collection(
-    isNewsLikeGrant ? 'achievement_news_like_limits' : 'achievement_article_comment_limits',
-  ).doc(`${uid}_${new Date().toISOString().slice(0, 10)}`);
+  const dailyLimitRef =
+    dailyLimit == null
+      ? null
+      : db
+          .collection(isNewsLikeGrant ? 'achievement_news_like_limits' : 'achievement_article_comment_limits')
+          .doc(`${uid}_${new Date().toISOString().slice(0, 10)}`);
   let result = { changed: false };
   await db.runTransaction(async (transaction) => {
     const ledger = await transaction.get(ledgerRef);
@@ -762,86 +1135,138 @@ async function awardAchievementPoints(uid, delta, sourceKey) {
     // receive points or cause one to be created implicitly.
     if (!profile.exists) return;
     const current = Math.max(0, Number(profile.data()?.achievementPoints || 0));
+    const previousBadgeSlug = String(profile.data()?.achievementBadge?.slug || '').trim();
     const points = Math.max(0, current + delta);
     const badges = await getAchievementBadges();
-    const badge = badges.filter((item) => points >= item.min_points).sort((a, b) => b.min_points - a.min_points)[0] || defaultAchievementBadges[0];
-    transaction.set(profileRef, {
-      achievementPoints: points,
-      achievementBadge: {
-        slug: badge.slug, name: badge.name, description: badge.description,
-        imageUrl: badge.image_url || '',
+    const badge =
+      badges.filter((item) => points >= item.min_points).sort((a, b) => b.min_points - a.min_points)[0] ||
+      defaultAchievementBadges[0];
+    transaction.set(
+      profileRef,
+      {
+        achievementPoints: points,
+        achievementBadge: {
+          slug: badge.slug,
+          name: badge.name,
+          description: badge.description,
+          imageUrl: badge.image_url || '',
+        },
+        achievementUpdatedAt: FieldValue.serverTimestamp(),
       },
-      achievementUpdatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
+      { merge: true },
+    );
     transaction.create(ledgerRef, {
-      uid, sourceKey, delta, pointsAfter: points,
+      uid,
+      sourceKey,
+      delta,
+      pointsAfter: points,
       createdAt: FieldValue.serverTimestamp(),
     });
     if (dailyLimitRef) {
-      transaction.set(dailyLimitRef, {
-        uid,
-        date: new Date().toISOString().slice(0, 10),
-        count: Number(dailyActivity?.data()?.count || 0) + 1,
-        updatedAt: FieldValue.serverTimestamp(),
-      }, { merge: true });
+      transaction.set(
+        dailyLimitRef,
+        {
+          uid,
+          date: new Date().toISOString().slice(0, 10),
+          count: Number(dailyActivity?.data()?.count || 0) + 1,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
     }
-    result = { changed: true, points, badge: badge.slug, badgeName: badge.name };
+    result = {
+      changed: true,
+      points,
+      badge: badge.slug,
+      badgeName: badge.name,
+      levelChanged: previousBadgeSlug !== badge.slug,
+    };
   });
   if (result.changed && delta > 0) {
-    await createNotificationBestEffort({
+    const title = String(notification?.title || 'Achievement pontot kaptál');
+    const body = String(
+      notification?.body ||
+        `+${delta} achievement pontot kaptál. Új összpontszám: ${result.points}.` +
+        (result.levelChanged ? ` Új rangod: „${result.badgeName || 'Achievement'}”.` : ''),
+    );
+    const notificationCreated = await createNotificationBestEffort({
       recipientUid: uid,
       type: 'achievement_points',
-      title: 'Achievement pontot kaptál',
-      body: `+${delta} pont – Megkaptad a „${result.badgeName || 'Achievement'}” achievementet. Új összpontszám: ${result.points}.`,
+      title,
+      body,
       targetType: 'achievement',
       targetId: uid,
       dedupeKey: `achievement-points:${ledgerId}`,
     });
+    if (notificationCreated) await sendAchievementPushBestEffort(uid, title, body);
   }
   return result;
 }
 
-exports.reconcileAchievementPoints = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
-  if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin futtathatja az újraszámolást.');
-  const caller = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
-  if (!isAdmin(context, caller)) throw new HttpsError('permission-denied', 'Csak admin futtathatja az újraszámolást.');
-  const dryRun = data?.dryRun !== false;
-  const [ledgerSnapshot, profileSnapshot] = await Promise.all([
-    db.collection('achievement_ledger').get(),
-    db.collection('community_profiles').get(),
-  ]);
-  const totals = new Map();
-  for (const document of ledgerSnapshot.docs) {
-    const entry = document.data() || {};
-    const uid = String(entry.uid || '').trim();
-    const delta = Number(entry.delta || 0);
-    if (!uid || !Number.isInteger(delta)) continue;
+exports.reconcileAchievementPoints = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin futtathatja az újraszámolást.');
+    const caller = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+    if (!isAdmin(context, caller))
+      throw new HttpsError('permission-denied', 'Csak admin futtathatja az újraszámolást.');
+    const dryRun = data?.dryRun !== false;
+    const [ledgerSnapshot, profileSnapshot] = await Promise.all([
+      db.collection('achievement_ledger').get(),
+      db.collection('community_profiles').get(),
+    ]);
+    const totals = new Map();
+    for (const document of ledgerSnapshot.docs) {
+      const entry = document.data() || {};
+      const uid = String(entry.uid || '').trim();
+      const delta = Number(entry.delta || 0);
+      if (!uid || !Number.isInteger(delta)) continue;
       totals.set(uid, (totals.get(uid) || 0) + delta);
-  }
-  const badges = await getAchievementBadges();
-  const changes = [];
-  for (const profileDocument of profileSnapshot.docs) {
-    const uid = profileDocument.id;
-    const profile = profileDocument.data() || {};
-      const points = Math.max(0, totals.get(uid) || 0);
-    const badge = badges.filter((item) => points >= item.min_points)
-      .sort((a, b) => b.min_points - a.min_points)[0] || defaultAchievementBadges[0];
-    const current = Math.max(0, Number(profile.achievementPoints || 0));
-    const currentBadge = profile.achievementBadge || {};
-    if (current !== points || currentBadge.slug !== badge.slug || currentBadge.imageUrl !== (badge.image_url || '')) {
-      changes.push({ uid, from: current, to: points, badge: badge.slug });
-      if (!dryRun) await profileDocument.ref.set({
-        achievementPoints: points,
-        achievementBadge: { slug: badge.slug, name: badge.name, description: badge.description, imageUrl: badge.image_url || '' },
-        achievementUpdatedAt: FieldValue.serverTimestamp(),
-      }, { merge: true });
     }
-  }
-  return { dryRun, ledgerEntries: ledgerSnapshot.size, profiles: profileSnapshot.size, changed: changes.length, changes: changes.slice(0, 100) };
-});
+    const badges = await getAchievementBadges();
+    const changes = [];
+    for (const profileDocument of profileSnapshot.docs) {
+      const uid = profileDocument.id;
+      const profile = profileDocument.data() || {};
+      const points = Math.max(0, totals.get(uid) || 0);
+      const badge =
+        badges.filter((item) => points >= item.min_points).sort((a, b) => b.min_points - a.min_points)[0] ||
+        defaultAchievementBadges[0];
+      const current = Math.max(0, Number(profile.achievementPoints || 0));
+      const currentBadge = profile.achievementBadge || {};
+      if (current !== points || currentBadge.slug !== badge.slug || currentBadge.imageUrl !== (badge.image_url || '')) {
+        changes.push({ uid, from: current, to: points, badge: badge.slug });
+        if (!dryRun)
+          await profileDocument.ref.set(
+            {
+              achievementPoints: points,
+              achievementBadge: {
+                slug: badge.slug,
+                name: badge.name,
+                description: badge.description,
+                imageUrl: badge.image_url || '',
+              },
+              achievementUpdatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+      }
+    }
+    return {
+      dryRun,
+      ledgerEntries: ledgerSnapshot.size,
+      profiles: profileSnapshot.size,
+      changed: changes.length,
+      changes: changes.slice(0, 100),
+    };
+  });
 
 function normalizeReferralCode(value) {
-  return String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
+  return String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 16);
 }
 
 function referralCodeForUid(uid) {
@@ -887,30 +1312,39 @@ exports.claimReferralCode = functions.runWith({ enforceAppCheck: false }).https.
     if (!invitee.exists) throw new HttpsError('failed-precondition', 'A profil még nem készült el.');
     const current = invitee.data() || {};
     if (current.referredBy) return;
-    transaction.set(inviteeRef, {
-      referredBy: inviter.id,
-      referralClaimedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
+    transaction.set(
+      inviteeRef,
+      {
+        referredBy: inviter.id,
+        referralClaimedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
   });
   return { claimed: true };
 });
 
-exports.awardAchievementFromReferral = onDocumentWritten({
-  document: 'community_profiles/{userId}', database: 'hungarian-hardstyle', region: 'europe-central2',
-}, async (event) => {
-  const before = event.data?.before?.data() || {};
-  const after = event.data?.after?.data() || {};
-  const invitedBy = String(after.referredBy || '').trim();
-  if (!invitedBy || before.referredBy || after.referralRewardGranted === true) return null;
-  const userId = String(event.params.userId || '').trim();
-  const result = await awardAchievementPoints(invitedBy, 50, `referral:${userId}`);
-  await event.data.after.ref.update({
-    referralRewardGranted: true,
-    referralRewardGrantedAt: FieldValue.serverTimestamp(),
-  });
-  console.log(JSON.stringify({ event: 'achievement_referral', result }));
-  return result;
-});
+exports.awardAchievementFromReferral = onDocumentWritten(
+  {
+    document: 'community_profiles/{userId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  async (event) => {
+    const before = event.data?.before?.data() || {};
+    const after = event.data?.after?.data() || {};
+    const invitedBy = String(after.referredBy || '').trim();
+    if (!invitedBy || before.referredBy || after.referralRewardGranted === true) return null;
+    const userId = String(event.params.userId || '').trim();
+    const result = await awardAchievementPoints(invitedBy, 50, `referral:${userId}`);
+    await event.data.after.ref.update({
+      referralRewardGranted: true,
+      referralRewardGrantedAt: FieldValue.serverTimestamp(),
+    });
+    console.log(JSON.stringify({ event: 'achievement_referral', result }));
+    return result;
+  },
+);
 
 exports.refreshAchievementBadge = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = String(context.auth?.uid || '').trim();
@@ -925,9 +1359,9 @@ exports.refreshAchievementBadge = functions.runWith({ enforceAppCheck: false }).
     const profile = profileSnapshot.data() || {};
     const points = Math.max(0, Number(profile.achievementPoints || 0));
     const badges = await getAchievementBadges();
-    const badge = badges
-      .filter((item) => points >= item.min_points)
-      .sort((a, b) => b.min_points - a.min_points)[0] || defaultAchievementBadges[0];
+    const badge =
+      badges.filter((item) => points >= item.min_points).sort((a, b) => b.min_points - a.min_points)[0] ||
+      defaultAchievementBadges[0];
     const achievementBadge = {
       slug: badge.slug,
       name: badge.name,
@@ -935,12 +1369,20 @@ exports.refreshAchievementBadge = functions.runWith({ enforceAppCheck: false }).
       imageUrl: badge.image_url || '',
     };
     const current = profile.achievementBadge || {};
-    if (current.slug !== achievementBadge.slug || current.imageUrl !== achievementBadge.imageUrl ||
-        current.name !== achievementBadge.name || current.description !== achievementBadge.description) {
-      transaction.set(profileRef, {
-        achievementBadge,
-        achievementUpdatedAt: FieldValue.serverTimestamp(),
-      }, { merge: true });
+    if (
+      current.slug !== achievementBadge.slug ||
+      current.imageUrl !== achievementBadge.imageUrl ||
+      current.name !== achievementBadge.name ||
+      current.description !== achievementBadge.description
+    ) {
+      transaction.set(
+        profileRef,
+        {
+          achievementBadge,
+          achievementUpdatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
     }
     return { achievementPoints: points, achievementBadge };
   });
@@ -975,7 +1417,8 @@ exports.getAchievementLeaderboard = functions.runWith({ enforceAppCheck: false }
   const cursorUserId = String(data?.cursorUserId || '').trim();
   const requestedOffset = Number(data?.offset || 0);
   const offset = Number.isSafeInteger(requestedOffset) && requestedOffset >= 0 ? requestedOffset : 0;
-  let query = db.collection('public_profiles')
+  let query = db
+    .collection('public_profiles')
     .orderBy('achievementPoints', 'desc')
     .orderBy(FieldPath.documentId(), 'asc');
   if (Number.isFinite(cursorPoints) && cursorUserId) {
@@ -985,8 +1428,8 @@ exports.getAchievementLeaderboard = functions.runWith({ enforceAppCheck: false }
   const pageDocs = snapshot.docs.slice(0, pageSize);
   const items = pageDocs.map((document, index) => {
     const profile = document.data() || {};
-    const badge = profile.achievementBadge && typeof profile.achievementBadge === 'object'
-      ? profile.achievementBadge : {};
+    const badge =
+      profile.achievementBadge && typeof profile.achievementBadge === 'object' ? profile.achievementBadge : {};
     return {
       userId: document.id,
       displayName: String(profile.displayName || '').trim(),
@@ -1000,25 +1443,28 @@ exports.getAchievementLeaderboard = functions.runWith({ enforceAppCheck: false }
   return {
     items,
     hasMore: snapshot.size > pageSize,
-    nextCursor: last ? {
-      points: Math.max(0, Number(last.data()?.achievementPoints || 0)),
-      userId: last.id,
-      offset: offset + pageDocs.length,
-    } : null,
+    nextCursor: last
+      ? {
+          points: Math.max(0, Number(last.data()?.achievementPoints || 0)),
+          userId: last.id,
+          offset: offset + pageDocs.length,
+        }
+      : null,
   };
 });
 
 function badgeForPoints(catalog, points) {
-  return catalog
-    .filter((item) => points >= item.min_points)
-    .sort((a, b) => b.min_points - a.min_points)[0] || defaultAchievementBadges[0];
+  return (
+    catalog.filter((item) => points >= item.min_points).sort((a, b) => b.min_points - a.min_points)[0] ||
+    defaultAchievementBadges[0]
+  );
 }
 
 function publicAchievementData(profile, catalog) {
   const points = Math.max(0, Number(profile?.achievementPoints || 0));
   const badge = badgeForPoints(catalog, points);
-  const stored = profile?.achievementBadge && typeof profile.achievementBadge === 'object'
-    ? profile.achievementBadge : {};
+  const stored =
+    profile?.achievementBadge && typeof profile.achievementBadge === 'object' ? profile.achievementBadge : {};
   const storedImage = String(stored.imageUrl || stored.image_url || '').trim();
   return {
     achievementPoints: points,
@@ -1036,55 +1482,62 @@ function publicAchievementData(profile, catalog) {
 
 async function persistPublicAchievementIfNeeded(profileRef, profile, achievement) {
   const next = achievement.achievementBadge || {};
-  const current = profile?.achievementBadge && typeof profile.achievementBadge === 'object'
-    ? profile.achievementBadge : {};
+  const current =
+    profile?.achievementBadge && typeof profile.achievementBadge === 'object' ? profile.achievementBadge : {};
   if (!String(next.imageUrl || '').trim()) return;
-  if (current.slug === next.slug && current.name === next.name &&
-      current.description === next.description &&
-      String(current.imageUrl || current.image_url || '').trim() === next.imageUrl) return;
-  await profileRef.set({
-    achievementBadge: next,
-    achievementUpdatedAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
+  if (
+    current.slug === next.slug &&
+    current.name === next.name &&
+    current.description === next.description &&
+    String(current.imageUrl || current.image_url || '').trim() === next.imageUrl
+  )
+    return;
+  await profileRef.set(
+    {
+      achievementBadge: next,
+      achievementUpdatedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
 }
 
 function publicProfileData(profile, userId, achievement = null) {
-  const socialLinks = profile.socialLinks && typeof profile.socialLinks === 'object'
-    ? Object.fromEntries(Object.entries(profile.socialLinks)
-      .filter(([key, value]) => typeof key === 'string' && typeof value === 'string')
-      .map(([key, value]) => [key, String(value).trim()]))
-    : {};
-  const numberOr = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+  const socialLinks =
+    profile.socialLinks && typeof profile.socialLinks === 'object'
+      ? Object.fromEntries(
+          Object.entries(profile.socialLinks)
+            .filter(([key, value]) => typeof key === 'string' && typeof value === 'string')
+            .map(([key, value]) => [key, String(value).trim()]),
+        )
+      : {};
+  const numberOr = (value, fallback) => (Number.isFinite(Number(value)) ? Number(value) : fallback);
   const publicAchievement = achievement || {
     achievementPoints: Math.max(0, numberOr(profile.achievementPoints, 0)),
-    achievementBadge: profile.achievementBadge && typeof profile.achievementBadge === 'object'
-      ? profile.achievementBadge : {},
+    achievementBadge:
+      profile.achievementBadge && typeof profile.achievementBadge === 'object' ? profile.achievementBadge : {},
   };
   const achievementBadge = publicAchievement.achievementBadge || {};
   // The badge artwork may change without changing the rest of the profile.
   // Always use the newest profile/achievement timestamp for the public image
   // cache key; using `updatedAt` first could otherwise keep an old badge URL
   // forever when `achievementUpdatedAt` was newer.
-  const versionCandidates = [
-    profile.updatedAt,
-    profile.achievementUpdatedAt,
-  ].map((value) => {
+  const versionCandidates = [profile.updatedAt, profile.achievementUpdatedAt].map((value) => {
     if (value?.toMillis instanceof Function) return value.toMillis();
     const numeric = Number(value);
     return Number.isFinite(numeric) ? numeric : 0;
   });
   const profileVersion = String(Math.max(...versionCandidates, 0));
-  const badgeImageUrl = String(
-    achievementBadge.imageUrl || achievementBadge.image_url || '',
-  ).trim();
-  const profileImageUrl = [
-    profile.profileSourceImageUrl,
-    profile.profileImageUrl,
-    // Keep older profile records visible while they are migrated.
-    profile.imageUrl,
-    profile.photoURL,
-    profile.photoUrl,
-  ].find((value) => typeof value === 'string' && value.trim().length > 0) || '';
+  const badgeImageUrl = String(achievementBadge.imageUrl || achievementBadge.image_url || '').trim();
+  const profileImageUrl =
+    [
+      profile.profileSourceImageUrl,
+      profile.profileImageUrl,
+      // Keep older profile records visible while they are migrated.
+      profile.imageUrl,
+      profile.photoURL,
+      profile.photoUrl,
+    ].find((value) => typeof value === 'string' && value.trim().length > 0) || '';
+  const memberSince = profile.createdAt?.toMillis?.() || null;
   return {
     userId,
     displayName: String(profile.displayName || '').trim() || `HUHS user ${Number(profile.huhsUserNumber) || ''}`.trim(),
@@ -1092,6 +1545,7 @@ function publicProfileData(profile, userId, achievement = null) {
     accessRole: ['admin', 'moderator'].includes(profile.accessRole) ? profile.accessRole : 'none',
     bio: String(profile.bio || '').trim(),
     profileImageUrl: String(profileImageUrl).trim(),
+    ...(Number.isFinite(memberSince) ? { memberSince } : {}),
     profileFocusX: numberOr(profile.profileFocusX, 50),
     profileFocusY: numberOr(profile.profileFocusY, 25),
     profileZoom: numberOr(profile.profileZoom, 1),
@@ -1116,7 +1570,10 @@ function publicProfileData(profile, userId, achievement = null) {
 }
 
 function isUnnumberedPlaceholderDisplayName(value) {
-  const normalized = String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
   return !normalized || /^(?:hun hs|hs hu|hu hs|huhs user)$/.test(normalized);
 }
 
@@ -1137,15 +1594,20 @@ async function ensureHuhsUserNumber(userId) {
       assignedNumber = existing;
       return;
     }
-    const next = Number.isInteger(existing) && existing >= 1000
-      ? existing
-      : Math.max(1000, Number(counterSnapshot.data()?.nextNumber || 1000));
+    const next =
+      Number.isInteger(existing) && existing >= 1000
+        ? existing
+        : Math.max(1000, Number(counterSnapshot.data()?.nextNumber || 1000));
     assignedNumber = next;
-    transaction.set(profileRef, {
-      huhsUserNumber: next,
-      displayName: `HUHS user ${next}`,
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
+    transaction.set(
+      profileRef,
+      {
+        huhsUserNumber: next,
+        displayName: `HUHS user ${next}`,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
     if (!(Number.isInteger(existing) && existing >= 1000)) {
       transaction.set(counterRef, { nextNumber: next + 1 }, { merge: true });
     }
@@ -1162,84 +1624,132 @@ function requireRegisteredViewer(context) {
 }
 
 function normalizeDisplayName(value) {
-  return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('hu-HU');
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('hu-HU');
 }
 
 function displayNameKey(value) {
   return crypto.createHash('sha256').update(normalizeDisplayName(value)).digest('hex');
 }
 
+function validatedDisplayName(value) {
+  const displayName = String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ');
+  if (displayName.length < 2 || displayName.length > 40) {
+    throw new functions.https.HttpsError('invalid-argument', 'A név 2–40 karakter hosszú legyen.');
+  }
+  if (
+    !/^[\p{L}\p{N}][\p{L}\p{N} ._'\-]*$/u.test(displayName) ||
+    /(?:kurva|fasz|geci|buzi|cigány|nigger)/iu.test(displayName)
+  ) {
+    throw new functions.https.HttpsError('invalid-argument', 'Ez a felhasználónév nem használható.');
+  }
+  return displayName;
+}
+
+// This is only an early UX check. claimDisplayName remains the authoritative
+// transaction because another account may reserve the name between calls.
+exports.checkDisplayNameAvailability = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data) => {
+  const displayName = validatedDisplayName(data?.displayName);
+  const snapshot = await db.collection('display_name_index').doc(displayNameKey(displayName)).get();
+  return { available: !snapshot.exists };
+});
+
 // Reserves a display name atomically so two users cannot claim the same name
 // during concurrent registration or profile saves.
 exports.claimDisplayName = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = requireRegisteredViewer(context);
-  if ((await db.collection('deleted_user_ids').doc(uid).get()).exists) {
+  const targetUid = String(data?.targetUid || uid).trim();
+  if (targetUid !== uid) {
+    const callerProfile = (await db.collection('community_profiles').doc(uid).get()).data() || {};
+    if (!isAdmin(context, callerProfile)) throw new functions.https.HttpsError('permission-denied', 'Csak admin módosíthat másik felhasználónevet.');
+  }
+  if ((await db.collection('deleted_user_ids').doc(targetUid).get()).exists) {
     throw new functions.https.HttpsError('permission-denied', 'A korábbi fiók törölve lett. Regisztrálj új fiókot.');
   }
-  const displayName = String(data?.displayName || '').trim().replace(/\s+/g, ' ');
-  if (displayName.length < 2 || displayName.length > 40) {
-    console.warn(JSON.stringify({ event: 'claim_display_name_rejected', step: 'validate', errorCode: 'invalid-argument', reason: 'length', length: displayName.length }));
-    throw new functions.https.HttpsError('invalid-argument', 'A név 2–40 karakter hosszú legyen.');
-  }
-  if (!/^[\p{L}\p{N}][\p{L}\p{N} ._'-]*$/u.test(displayName) ||
-      /(?:kurva|fasz|geci|buzi|cigány|nigger)/iu.test(displayName)) {
-    console.warn(JSON.stringify({ event: 'claim_display_name_rejected', step: 'validate', errorCode: 'invalid-argument', reason: 'format' }));
-    throw new functions.https.HttpsError('invalid-argument', 'Ez a felhasználónév nem használható.');
-  }
+  const displayName = validatedDisplayName(data?.displayName);
   const key = displayNameKey(displayName);
   const indexRef = db.collection('display_name_index').doc(key);
-  const profileRef = db.collection('community_profiles').doc(uid);
+  const profileRef = db.collection('community_profiles').doc(targetUid);
   try {
     await db.runTransaction(async (transaction) => {
-    const [indexSnapshot, profileSnapshot] = await Promise.all([
-      transaction.get(indexRef),
-      transaction.get(profileRef),
-    ]);
-    const ownerUid = String(indexSnapshot.data()?.uid || '').trim();
-    if (ownerUid && ownerUid !== uid) {
-      throw new functions.https.HttpsError('already-exists', 'display-name-already-in-use');
-    }
-    const oldName = String(profileSnapshot.data()?.displayName || '').trim();
-    const oldPlaceholder = isUnnumberedPlaceholderDisplayName(oldName) || /^HUHS user \d+$/i.test(oldName);
-    const isOwnerAdmin = String(context.auth?.token?.email || '').trim().toLowerCase() === ADMIN_EMAIL;
-    const currentYear = new Date().getUTCFullYear();
-    const storedChangeCount = Math.max(0, Number(profileSnapshot.data()?.usernameChangeCount || 0));
-    const changeYear = Number(profileSnapshot.data()?.usernameChangeYear || (storedChangeCount > 0 ? currentYear : 0));
-    const changeCount = changeYear === currentYear ? storedChangeCount : 0;
-    if (!isOwnerAdmin && oldName && !oldPlaceholder && normalizeDisplayName(oldName) !== normalizeDisplayName(displayName) && changeCount >= 1) {
-      throw new functions.https.HttpsError('failed-precondition', 'A felhasználónevet évente egyszer lehet módosítani.');
-    }
-    const oldKey = oldName ? displayNameKey(oldName) : '';
-    const oldIndexSnapshot = oldKey && oldKey !== key
-      ? await transaction.get(db.collection('display_name_index').doc(oldKey))
-      : null;
-    transaction.set(indexRef, {
-      uid,
-      displayName,
-      normalizedName: normalizeDisplayName(displayName),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    if (oldIndexSnapshot && String(oldIndexSnapshot.data()?.uid || '').trim() === uid) {
-      transaction.delete(db.collection('display_name_index').doc(oldKey));
-    }
-    transaction.set(profileRef, {
-      displayName,
-      usernameChangeCount: isOwnerAdmin ? 0 : (oldName && !oldPlaceholder && normalizeDisplayName(oldName) !== normalizeDisplayName(displayName)
-        ? changeCount + 1 : changeCount),
-      ...(isOwnerAdmin ? { usernameChangeYear: FieldValue.delete() } : (oldName && !oldPlaceholder && normalizeDisplayName(oldName) !== normalizeDisplayName(displayName)
-        ? { usernameChangeYear: currentYear } : {})),
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
+      const [indexSnapshot, profileSnapshot] = await Promise.all([
+        transaction.get(indexRef),
+        transaction.get(profileRef),
+      ]);
+      const ownerUid = String(indexSnapshot.data()?.uid || '').trim();
+      if (ownerUid && ownerUid !== targetUid) {
+        throw new functions.https.HttpsError('already-exists', 'display-name-already-in-use');
+      }
+      const oldName = String(profileSnapshot.data()?.displayName || '').trim();
+      const oldPlaceholder = isUnnumberedPlaceholderDisplayName(oldName) || /^HUHS user \d+$/i.test(oldName);
+      const isOwnerAdmin =
+        targetUid !== uid || String(context.auth?.token?.email || '')
+          .trim()
+          .toLowerCase() === ADMIN_EMAIL;
+      const currentYear = new Date().getUTCFullYear();
+      const storedChangeCount = Math.max(0, Number(profileSnapshot.data()?.usernameChangeCount || 0));
+      const changeYear = Number(
+        profileSnapshot.data()?.usernameChangeYear || (storedChangeCount > 0 ? currentYear : 0),
+      );
+      const changeCount = changeYear === currentYear ? storedChangeCount : 0;
+      if (
+        !isOwnerAdmin &&
+        oldName &&
+        !oldPlaceholder &&
+        normalizeDisplayName(oldName) !== normalizeDisplayName(displayName) &&
+        changeCount >= 1
+      ) {
+        throw new functions.https.HttpsError(
+          'failed-precondition',
+          'A felhasználónevet évente egyszer lehet módosítani.',
+        );
+      }
+      const oldKey = oldName ? displayNameKey(oldName) : '';
+      const oldIndexSnapshot =
+        oldKey && oldKey !== key ? await transaction.get(db.collection('display_name_index').doc(oldKey)) : null;
+      transaction.set(indexRef, {
+        uid: targetUid,
+        displayName,
+        normalizedName: normalizeDisplayName(displayName),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      if (oldIndexSnapshot && String(oldIndexSnapshot.data()?.uid || '').trim() === targetUid) {
+        transaction.delete(db.collection('display_name_index').doc(oldKey));
+      }
+      transaction.set(
+        profileRef,
+        {
+          displayName,
+          usernameChangeCount: isOwnerAdmin
+            ? 0
+            : oldName && !oldPlaceholder && normalizeDisplayName(oldName) !== normalizeDisplayName(displayName)
+              ? changeCount + 1
+              : changeCount,
+          ...(isOwnerAdmin
+            ? { usernameChangeYear: FieldValue.delete() }
+            : oldName && !oldPlaceholder && normalizeDisplayName(oldName) !== normalizeDisplayName(displayName)
+              ? { usernameChangeYear: currentYear }
+              : {}),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
     });
   } catch (error) {
-    console.error(JSON.stringify({
-      event: 'claim_display_name_failed',
-      step: 'transaction',
-      errorCode: error?.code || 'unknown',
-    }));
+    console.error(
+      JSON.stringify({
+        event: 'claim_display_name_failed',
+        step: 'transaction',
+        errorCode: error?.code || 'unknown',
+      }),
+    );
     throw error;
   }
-  return { displayName };
+  return { displayName, uid: targetUid };
 });
 
 exports.toggleChatReaction = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
@@ -1251,7 +1761,7 @@ exports.toggleChatReaction = functions.runWith({ enforceAppCheck: false }).https
   if (!/^[a-zA-Z0-9_-]{1,128}$/.test(postId) || !allowedReactions.has(emoji)) {
     throw new HttpsError('invalid-argument', 'Érvénytelen reakció.');
   }
-  if (!await allowCall(uid, 'chat_reaction', 60)) {
+  if (!(await allowCall(uid, 'chat_reaction', 60))) {
     throw new HttpsError('resource-exhausted', 'Túl sok reakció, próbáld később.');
   }
   const postRef = db.collection('live_feed_posts').doc(postId);
@@ -1260,9 +1770,7 @@ exports.toggleChatReaction = functions.runWith({ enforceAppCheck: false }).https
     const snapshot = await transaction.get(postRef);
     if (!snapshot.exists) throw new HttpsError('not-found', 'A bejegyzés nem található.');
     const current = snapshot.data() || {};
-    const source = current.reactionBy && typeof current.reactionBy === 'object'
-      ? current.reactionBy
-      : {};
+    const source = current.reactionBy && typeof current.reactionBy === 'object' ? current.reactionBy : {};
     const reactionBy = {};
     for (const [userId, value] of Object.entries(source)) {
       if (typeof userId === 'string' && userId.length <= 128 && allowedReactions.has(value)) {
@@ -1282,7 +1790,7 @@ exports.toggleChatReaction = functions.runWith({ enforceAppCheck: false }).https
 exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = String(context.auth?.uid || '').trim();
   if (!uid) throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
-  if (!await allowCall(uid, 'chat_post', 20)) {
+  if (!(await allowCall(uid, 'chat_post', 20))) {
     throw new HttpsError('resource-exhausted', 'Túl sok üzenet, próbáld később.');
   }
   if ((await db.collection('community_bans').doc(uid).get()).exists) {
@@ -1290,6 +1798,7 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
   }
   const text = typeof data?.text === 'string' ? data.text.trim() : '';
   const imageUrl = typeof data?.imageUrl === 'string' ? data.imageUrl.trim() : '';
+  const replyToText = typeof data?.replyToText === 'string' ? data.replyToText.trim().slice(0, 200) : '';
   const imagePublicId = typeof data?.imagePublicId === 'string' ? data.imagePublicId.trim() : '';
   const isAnonymous = context.auth.token.firebase?.sign_in_provider === 'anonymous';
   if ((!text && !imageUrl) || text.length > 2000) {
@@ -1313,7 +1822,8 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
   const accessRole = isAnonymous ? '' : normalizedAccessRole(profile.accessRole);
   const profileImage = String(profile.profileImageUrl || profile.profileSourceImageUrl || '').trim();
   const authorImageUrl = /^https:\/\/res\.cloudinary\.com\/fjxo93em\/image\/upload\/.+/.test(profileImage)
-    ? profileImage : '';
+    ? profileImage
+    : '';
   const ref = db.collection('live_feed_posts').doc();
   await ref.set({
     authorId: uid,
@@ -1323,6 +1833,7 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
     authorAccessRole: accessRole,
     isAnonymous,
     text,
+    ...(replyToText ? { replyToText } : {}),
     imageUrl,
     ...(imagePublicId ? { imagePublicId } : {}),
     reactions: {},
@@ -1343,7 +1854,7 @@ exports.manageConnection = functions.runWith({ enforceAppCheck: false }).https.o
   if (action !== 'prune' && (!otherUid || otherUid === uid || otherUid.length > 128)) {
     throw new HttpsError('invalid-argument', 'Érvénytelen felhasználó.');
   }
-  if (!await allowCall(uid, `connection_${action}`, action === 'prune' ? 5 : 30)) {
+  if (!(await allowCall(uid, `connection_${action}`, action === 'prune' ? 5 : 30))) {
     throw new HttpsError('resource-exhausted', 'Túl sok ismerős-művelet, próbáld később.');
   }
 
@@ -1385,11 +1896,14 @@ exports.manageConnection = functions.runWith({ enforceAppCheck: false }).https.o
       db.collection('community_profiles').doc(otherUid).collection('blocked_users').doc(uid).get(),
     ]);
     if (!target.exists) throw new HttpsError('not-found', 'A felhasználó nem található.');
-    if (blockedByMe.exists || blockedByOther.exists) throw new HttpsError('permission-denied', 'Az ismerős-jelölés nem elérhető.');
+    if (blockedByMe.exists || blockedByOther.exists)
+      throw new HttpsError('permission-denied', 'Az ismerős-jelölés nem elérhető.');
     if (own.exists || reverse.exists) return { status: 'accepted' };
     const existing = await outgoingRequest.get();
     if (existing.data()?.status === 'pending') {
-      await outgoingRequest.update({ notificationRequestedAt: FieldValue.serverTimestamp() });
+      await outgoingRequest.update({
+        notificationRequestedAt: FieldValue.serverTimestamp(),
+      });
       return { status: 'pending' };
     }
     const profile = (await db.collection('community_profiles').doc(uid).get()).data() || {};
@@ -1412,7 +1926,10 @@ exports.manageConnection = functions.runWith({ enforceAppCheck: false }).https.o
     throw new HttpsError('failed-precondition', 'Az ismerős-kérés már nem érhető el.');
   }
   const batch = db.batch();
-  batch.update(incomingRequest, { status: accept ? 'accepted' : 'rejected', updatedAt: FieldValue.serverTimestamp() });
+  batch.update(incomingRequest, {
+    status: accept ? 'accepted' : 'rejected',
+    updatedAt: FieldValue.serverTimestamp(),
+  });
   if (accept) {
     const targetProfile = (await db.collection('community_profiles').doc(uid).get()).data() || {};
     batch.set(ownConnection, {
@@ -1446,7 +1963,10 @@ exports.getPublicProfile = functions.runWith({ enforceAppCheck: false }).https.o
   }
   let profile = snapshot.data() || {};
   if (isUnnumberedPlaceholderDisplayName(profile.displayName)) {
-    profile = { ...profile, huhsUserNumber: await ensureHuhsUserNumber(targetUid) };
+    profile = {
+      ...profile,
+      huhsUserNumber: await ensureHuhsUserNumber(targetUid),
+    };
   }
   // This is the fallback when the realtime public projection has not arrived
   // yet. Keep it Firebase-only: waiting for the WordPress badge catalog here
@@ -1464,8 +1984,7 @@ async function persistPublicProfileProjection(userId, data) {
 async function commitReferenceUpdates(references, data) {
   for (let offset = 0; offset < references.length; offset += 400) {
     const batch = db.batch();
-    references.slice(offset, offset + 400).forEach((reference) =>
-      batch.set(reference, data, { merge: true }));
+    references.slice(offset, offset + 400).forEach((reference) => batch.set(reference, data, { merge: true }));
     await batch.commit();
   }
 }
@@ -1481,83 +2000,114 @@ async function syncDenormalizedProfileReferences(userId, publicData) {
     db.collectionGroup('comments').where('authorId', '==', userId).get(),
   ]);
   await Promise.all([
-    commitReferenceUpdates(posts.docs.map((doc) => doc.ref), { authorName: displayName, authorImageUrl: imageUrl }),
-    commitReferenceUpdates(meetups.docs
-      .filter((doc) => doc.ref.path.startsWith('event_meetups/'))
-      .map((doc) => doc.ref), { displayName, imageUrl }),
-    commitReferenceUpdates(ownConnections.docs.map((doc) =>
-      db.collection('community_profiles').doc(doc.id).collection('connections').doc(userId)), {
-      displayName,
-      imageUrl,
-    }),
-    commitReferenceUpdates(comments.docs
-      .filter((doc) => doc.ref.path.startsWith('article_comments/'))
-      .map((doc) => doc.ref), { authorName: displayName, imageUrl }),
+    commitReferenceUpdates(
+      posts.docs.map((doc) => doc.ref),
+      { authorName: displayName, authorImageUrl: imageUrl },
+    ),
+    commitReferenceUpdates(
+      meetups.docs.filter((doc) => doc.ref.path.startsWith('event_meetups/')).map((doc) => doc.ref),
+      { displayName, imageUrl },
+    ),
+    commitReferenceUpdates(
+      ownConnections.docs.map((doc) =>
+        db.collection('community_profiles').doc(doc.id).collection('connections').doc(userId),
+      ),
+      {
+        displayName,
+        imageUrl,
+      },
+    ),
+    commitReferenceUpdates(
+      comments.docs.filter((doc) => doc.ref.path.startsWith('article_comments/')).map((doc) => doc.ref),
+      { authorName: displayName, imageUrl },
+    ),
   ]);
   for (const conversation of conversations.docs) {
     const value = conversation.data() || {};
-    await conversation.ref.set({
-      participantNames: { ...(value.participantNames || {}), [userId]: displayName },
-      participantImages: { ...(value.participantImages || {}), [userId]: imageUrl },
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
+    await conversation.ref.set(
+      {
+        participantNames: {
+          ...(value.participantNames || {}),
+          [userId]: displayName,
+        },
+        participantImages: {
+          ...(value.participantImages || {}),
+          [userId]: imageUrl,
+        },
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
   }
 }
 
 // Keep a public-only, realtime-friendly projection in Firestore. Chat and
 // profile surfaces can read this document directly without touching the
 // WordPress API or the private community_profiles document.
-exports.syncPublicProfileProjection = onDocumentWritten({
-  document: 'community_profiles/{userId}', database: 'hungarian-hardstyle', region: 'europe-central2',
-}, async (event) => {
-  const after = event.data?.after;
-  const uid = String(event.params.userId || '').trim();
-  if (!uid) return null;
-  if ((await db.collection('deleted_user_ids').doc(uid).get()).exists) {
-    if (after?.exists) await db.recursiveDelete(after.ref);
-    await db.collection('public_profiles').doc(uid).delete();
-    return null;
-  }
-  if (!after?.exists) {
-    await db.collection('public_profiles').doc(uid).delete();
-    return null;
-  }
-  const profile = after.data() || {};
-  if (isUnnumberedPlaceholderDisplayName(profile.displayName)) {
-    await ensureHuhsUserNumber(uid);
-    return null;
-  }
-  const publicData = publicProfileData(profile, uid);
-  await persistPublicProfileProjection(uid, publicData);
-  const before = event.data?.before?.data() || {};
-  const beforePublic = publicProfileData(before, uid);
-  if (beforePublic.displayName !== publicData.displayName ||
-      beforePublic.profileImageUrl !== publicData.profileImageUrl) {
-    await syncDenormalizedProfileReferences(uid, publicData);
-  }
-  return null;
-});
-
-exports.repairCommunityProfileProjections = onSchedule({
-  schedule: 'every day 03:00',
-  timeZone: 'Europe/Budapest',
-  region: 'europe-central2',
-}, async () => {
-  const snapshot = await db.collection('community_profiles').get();
-  let repaired = 0;
-  for (const document of snapshot.docs) {
-    const profile = document.data() || {};
-    if (isUnnumberedPlaceholderDisplayName(profile.displayName)) {
-      await ensureHuhsUserNumber(document.id);
-      repaired++;
-      continue;
+exports.syncPublicProfileProjection = onDocumentWritten(
+  {
+    document: 'community_profiles/{userId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  async (event) => {
+    const after = event.data?.after;
+    const uid = String(event.params.userId || '').trim();
+    if (!uid) return null;
+    if ((await db.collection('deleted_user_ids').doc(uid).get()).exists) {
+      if (after?.exists) await db.recursiveDelete(after.ref);
+      await db.collection('public_profiles').doc(uid).delete();
+      return null;
     }
-    const publicData = publicProfileData(profile, document.id);
-    await persistPublicProfileProjection(document.id, publicData);
-    await syncDenormalizedProfileReferences(document.id, publicData);
-  }
-  console.info('community_profile_projection_repair', { profiles: snapshot.size, repaired });
-});
+    if (!after?.exists) {
+      await db.collection('public_profiles').doc(uid).delete();
+      return null;
+    }
+    const profile = after.data() || {};
+    if (isUnnumberedPlaceholderDisplayName(profile.displayName)) {
+      await ensureHuhsUserNumber(uid);
+      return null;
+    }
+    const publicData = publicProfileData(profile, uid);
+    await persistPublicProfileProjection(uid, publicData);
+    const before = event.data?.before?.data() || {};
+    const beforePublic = publicProfileData(before, uid);
+    if (
+      beforePublic.displayName !== publicData.displayName ||
+      beforePublic.profileImageUrl !== publicData.profileImageUrl
+    ) {
+      await syncDenormalizedProfileReferences(uid, publicData);
+    }
+    return null;
+  },
+);
+
+exports.repairCommunityProfileProjections = onSchedule(
+  {
+    schedule: 'every day 03:00',
+    timeZone: 'Europe/Budapest',
+    region: 'europe-central2',
+  },
+  async () => {
+    const snapshot = await db.collection('community_profiles').get();
+    let repaired = 0;
+    for (const document of snapshot.docs) {
+      const profile = document.data() || {};
+      if (isUnnumberedPlaceholderDisplayName(profile.displayName)) {
+        await ensureHuhsUserNumber(document.id);
+        repaired++;
+        continue;
+      }
+      const publicData = publicProfileData(profile, document.id);
+      await persistPublicProfileProjection(document.id, publicData);
+      await syncDenormalizedProfileReferences(document.id, publicData);
+    }
+    console.info('community_profile_projection_repair', {
+      profiles: snapshot.size,
+      repaired,
+    });
+  },
+);
 
 exports.getPublicProfiles = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   requireRegisteredViewer(context);
@@ -1565,7 +2115,10 @@ exports.getPublicProfiles = functions.runWith({ enforceAppCheck: false }).https.
   // already-denormalized public projection instead of downloading every
   // private profile (including email and moderation fields) and recalculating
   // badges one document at a time.
-  const snapshot = await db.collection('public_profiles').get();
+  const snapshot = await db
+    .collection('public_profiles')
+    .select('displayName', 'profileImageUrl', 'profileFocusX', 'profileFocusY', 'profileZoom', 'profilePanX', 'profilePanY', 'profileVersion', 'achievementPoints', 'achievementBadge')
+    .get();
   const profiles = snapshot.docs
     .map((doc) => ({ ...doc.data(), userId: doc.id }))
     .filter((profile) => !isUnnumberedPlaceholderDisplayName(profile.displayName));
@@ -1579,72 +2132,95 @@ function boolMap(value) {
   return Object.fromEntries(Object.entries(value).filter(([, active]) => active === true));
 }
 
-exports.awardAchievementFromAttendance = onDocumentWritten({
-  document: 'event_attendance/{eventId}/users/{userId}', database: 'hungarian-hardstyle', region: 'europe-central2',
-}, async (event) => {
-  const before = event.data?.before?.data() || {};
-  const after = event.data?.after?.data() || {};
-  const uid = String(event.params.userId || '').trim();
-  const eventId = String(event.params.eventId || '').trim();
-  if (!uid || !eventId) return null;
-  const validEventIds = await getValidEventIds();
-  if (validEventIds === null) return null;
-  if (!validEventIds.has(Number(eventId))) {
-    await restoreExpiredEventWrite(event, before, after);
-    return null;
-  }
-  const beforeAttending = before.state === 'attending';
-  const afterAttending = after.state === 'attending';
-  if (beforeAttending === afterAttending) return null;
-  const result = await awardAchievementPoints(uid, afterAttending ? 10 : -10, `attendance:${eventId}`);
-  console.log(JSON.stringify({ event: 'achievement_attendance', eventId, result }));
-  return result;
-});
-
-exports.awardAchievementFromMeetup = onDocumentWritten({
-  document: 'event_meetups/{eventId}/users/{userId}', database: 'hungarian-hardstyle', region: 'europe-central2',
-}, async (event) => {
-  const beforeExists = event.data?.before?.exists;
-  const beforeData = event.data?.before?.data() || {};
-  const after = event.data?.after?.data() || {};
-  const uid = String(event.params.userId || '').trim();
-  const eventId = String(event.params.eventId || '').trim();
-  if (!uid || !eventId) return null;
-  const validEventIds = await getValidEventIds();
-  if (validEventIds === null) return null;
-  if (!validEventIds.has(Number(eventId))) {
-    await restoreExpiredEventWrite(event, beforeData, after);
-    return null;
-  }
-  const results = [];
-  if (!beforeExists && event.data?.after?.exists) results.push(await awardAchievementPoints(uid, 5, `meetup:${eventId}`));
-  if (beforeExists && !event.data?.after?.exists) results.push(await awardAchievementPoints(uid, -5, `meetup:${eventId}`));
-  const beforeInterested = boolMap(event.data?.before?.data()?.interestedBy);
-  const afterInterested = boolMap(after.interestedBy);
-  for (const interestedUid of Object.keys(afterInterested)) {
-    if (!beforeInterested[interestedUid]) {
-      results.push(await awardAchievementPoints(interestedUid, 15, `meetup-interest:${eventId}:${uid}:${interestedUid}`));
+exports.awardAchievementFromAttendance = onDocumentWritten(
+  {
+    document: 'event_attendance/{eventId}/users/{userId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  async (event) => {
+    const before = event.data?.before?.data() || {};
+    const after = event.data?.after?.data() || {};
+    const uid = String(event.params.userId || '').trim();
+    const eventId = String(event.params.eventId || '').trim();
+    if (!uid || !eventId) return null;
+    const validEventIds = await getValidEventIds();
+    if (validEventIds === null) return null;
+    if (!validEventIds.has(Number(eventId))) {
+      await restoreExpiredEventWrite(event, before, after);
+      return null;
     }
-  }
-  for (const interestedUid of Object.keys(beforeInterested)) {
-    if (!afterInterested[interestedUid]) {
-      results.push(await awardAchievementPoints(interestedUid, -15, `meetup-interest:${eventId}:${uid}:${interestedUid}`));
-    }
-  }
-  return results;
-});
+    const beforeAttending = before.state === 'attending';
+    const afterAttending = after.state === 'attending';
+    if (beforeAttending === afterAttending) return null;
+    const result = await awardAchievementPoints(uid, afterAttending ? 10 : -10, `attendance:${eventId}`);
+    console.log(JSON.stringify({ event: 'achievement_attendance', eventId, result }));
+    return result;
+  },
+);
 
-exports.awardAchievementFromNewsReaction = onDocumentWritten({
-  document: 'news_reactions/{postId}', database: 'hungarian-hardstyle', region: 'europe-central2',
-}, async (event) => {
-  const before = boolMap(event.data?.before?.data()?.likedBy);
-  const after = boolMap(event.data?.after?.data()?.likedBy);
-  const postId = String(event.params.postId || '').trim();
-  const results = [];
-  for (const uid of Object.keys(after)) if (!before[uid]) results.push(await awardAchievementPoints(uid, 2, `news-like:${postId}`));
-  for (const uid of Object.keys(before)) if (!after[uid]) results.push(await awardAchievementPoints(uid, -2, `news-like:${postId}`));
-  return results;
-});
+exports.awardAchievementFromMeetup = onDocumentWritten(
+  {
+    document: 'event_meetups/{eventId}/users/{userId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  async (event) => {
+    const beforeExists = event.data?.before?.exists;
+    const beforeData = event.data?.before?.data() || {};
+    const after = event.data?.after?.data() || {};
+    const uid = String(event.params.userId || '').trim();
+    const eventId = String(event.params.eventId || '').trim();
+    if (!uid || !eventId) return null;
+    const validEventIds = await getValidEventIds();
+    if (validEventIds === null) return null;
+    if (!validEventIds.has(Number(eventId))) {
+      await restoreExpiredEventWrite(event, beforeData, after);
+      return null;
+    }
+    const results = [];
+    if (!beforeExists && event.data?.after?.exists)
+      results.push(await awardAchievementPoints(uid, 5, `meetup:${eventId}`));
+    if (beforeExists && !event.data?.after?.exists)
+      results.push(await awardAchievementPoints(uid, -5, `meetup:${eventId}`));
+    const beforeInterested = boolMap(event.data?.before?.data()?.interestedBy);
+    const afterInterested = boolMap(after.interestedBy);
+    for (const interestedUid of Object.keys(afterInterested)) {
+      if (!beforeInterested[interestedUid]) {
+        results.push(
+          await awardAchievementPoints(interestedUid, 15, `meetup-interest:${eventId}:${uid}:${interestedUid}`),
+        );
+      }
+    }
+    for (const interestedUid of Object.keys(beforeInterested)) {
+      if (!afterInterested[interestedUid]) {
+        results.push(
+          await awardAchievementPoints(interestedUid, -15, `meetup-interest:${eventId}:${uid}:${interestedUid}`),
+        );
+      }
+    }
+    return results;
+  },
+);
+
+exports.awardAchievementFromNewsReaction = onDocumentWritten(
+  {
+    document: 'news_reactions/{postId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  async (event) => {
+    const before = boolMap(event.data?.before?.data()?.likedBy);
+    const after = boolMap(event.data?.after?.data()?.likedBy);
+    const postId = String(event.params.postId || '').trim();
+    const results = [];
+    for (const uid of Object.keys(after))
+      if (!before[uid]) results.push(await awardAchievementPoints(uid, 2, `news-like:${postId}`));
+    for (const uid of Object.keys(before))
+      if (!after[uid]) results.push(await awardAchievementPoints(uid, -2, `news-like:${postId}`));
+    return results;
+  },
+);
 
 exports.rateEvent = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = context.auth?.uid;
@@ -1669,7 +2245,12 @@ exports.rateEvent = functions.runWith({ enforceAppCheck: false }).https.onCall(a
   if (existing.exists) {
     throw new HttpsError('already-exists', 'Ezt az eseményt már értékelted.');
   }
-  await ref.create({ eventId, userId: uid, score, createdAt: FieldValue.serverTimestamp() });
+  await ref.create({
+    eventId,
+    userId: uid,
+    score,
+    createdAt: FieldValue.serverTimestamp(),
+  });
   return { saved: true, score };
 });
 
@@ -1680,7 +2261,9 @@ exports.setEventAttendance = functions.runWith({ enforceAppCheck: false }).https
   }
   const eventId = Number(data?.eventId);
   const state = String(data?.state || '').trim();
-  const title = String(data?.title || '').trim().slice(0, 300);
+  const title = String(data?.title || '')
+    .trim()
+    .slice(0, 300);
   if (!Number.isInteger(eventId) || eventId < 1 || !['attending', 'not_attending'].includes(state)) {
     throw new HttpsError('invalid-argument', 'Érvényes esemény és részvételi állapot szükséges.');
   }
@@ -1690,13 +2273,24 @@ exports.setEventAttendance = functions.runWith({ enforceAppCheck: false }).https
   }
   const attendanceRef = db.collection('event_attendance').doc(String(eventId)).collection('users').doc(uid);
   const plannedRef = db.collection('community_profiles').doc(uid).collection('planned_events').doc(String(eventId));
-  const attendanceData = { eventId, state, updatedAt: FieldValue.serverTimestamp() };
+  const attendanceData = {
+    eventId,
+    state,
+    updatedAt: FieldValue.serverTimestamp(),
+  };
   await db.runTransaction(async (transaction) => {
     transaction.set(attendanceRef, attendanceData, { merge: true });
     if (state === 'attending') {
-      transaction.set(plannedRef, {
-        eventId, ...(title ? { title } : {}), state, updatedAt: FieldValue.serverTimestamp(),
-      }, { merge: true });
+      transaction.set(
+        plannedRef,
+        {
+          eventId,
+          ...(title ? { title } : {}),
+          state,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
     } else {
       transaction.delete(plannedRef);
     }
@@ -1704,93 +2298,122 @@ exports.setEventAttendance = functions.runWith({ enforceAppCheck: false }).https
   return { saved: true, state };
 });
 
-exports.awardAchievementFromEventRating = onDocumentWritten({
-  document: 'event_ratings/{eventId}/users/{userId}', database: 'hungarian-hardstyle', region: 'europe-central2',
-}, async (event) => {
-  if (event.data?.before?.exists || !event.data?.after?.exists) return null;
-  const eventId = String(event.params.eventId || '').trim();
-  const uid = String(event.params.userId || '').trim();
-  return awardAchievementPoints(uid, 10, `event-rating:${eventId}`);
-});
+exports.awardAchievementFromEventRating = onDocumentWritten(
+  {
+    document: 'event_ratings/{eventId}/users/{userId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  async (event) => {
+    if (event.data?.before?.exists || !event.data?.after?.exists) return null;
+    const eventId = String(event.params.eventId || '').trim();
+    const uid = String(event.params.userId || '').trim();
+    return awardAchievementPoints(uid, 10, `event-rating:${eventId}`);
+  },
+);
 
-exports.togglePrivateMessageReaction = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
-  const uid = context.auth?.uid;
-  if (!uid || context.auth.token.firebase.sign_in_provider === 'anonymous') {
-    throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
-  }
-  const conversationId = String(data?.conversationId || '').trim();
-  const messageId = String(data?.messageId || '').trim();
-  if (!conversationId || !messageId) throw new HttpsError('invalid-argument', 'Érvényes üzenet szükséges.');
-  const conversationRef = db.collection('private_conversations').doc(conversationId);
-  const messageRef = conversationRef.collection('messages').doc(messageId);
-  let liked = false;
-  await db.runTransaction(async (transaction) => {
-    const conversation = await transaction.get(conversationRef);
-    const message = await transaction.get(messageRef);
-    const participants = conversation.data()?.participantIds || [];
-    if (!conversation.exists || !message.exists || !participants.includes(uid)) {
-      throw new HttpsError('permission-denied', 'Az üzenet nem érhető el.');
+exports.togglePrivateMessageReaction = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    const uid = context.auth?.uid;
+    if (!uid || context.auth.token.firebase.sign_in_provider === 'anonymous') {
+      throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
     }
-    const reactionBy = { ...(message.data()?.reactionBy || {}) };
-    const reactions = { ...(message.data()?.reactions || {}) };
-    liked = reactionBy[uid] === '❤️';
-    if (liked) {
-      delete reactionBy[uid];
-      reactions['❤️'] = Math.max(0, Number(reactions['❤️'] || 1) - 1);
-    } else {
-      reactionBy[uid] = '❤️';
-      reactions['❤️'] = Number(reactions['❤️'] || 0) + 1;
-    }
-    transaction.update(messageRef, { reactions, reactionBy });
+    const conversationId = String(data?.conversationId || '').trim();
+    const messageId = String(data?.messageId || '').trim();
+    if (!conversationId || !messageId) throw new HttpsError('invalid-argument', 'Érvényes üzenet szükséges.');
+    const conversationRef = db.collection('private_conversations').doc(conversationId);
+    const messageRef = conversationRef.collection('messages').doc(messageId);
+    let liked = false;
+    await db.runTransaction(async (transaction) => {
+      const conversation = await transaction.get(conversationRef);
+      const message = await transaction.get(messageRef);
+      const participants = conversation.data()?.participantIds || [];
+      if (!conversation.exists || !message.exists || !participants.includes(uid)) {
+        throw new HttpsError('permission-denied', 'Az üzenet nem érhető el.');
+      }
+      const reactionBy = { ...(message.data()?.reactionBy || {}) };
+      const reactions = { ...(message.data()?.reactions || {}) };
+      liked = reactionBy[uid] === '❤️';
+      if (liked) {
+        delete reactionBy[uid];
+        reactions['❤️'] = Math.max(0, Number(reactions['❤️'] || 1) - 1);
+      } else {
+        reactionBy[uid] = '❤️';
+        reactions['❤️'] = Number(reactions['❤️'] || 0) + 1;
+      }
+      transaction.update(messageRef, { reactions, reactionBy });
+    });
+    return { liked: !liked };
   });
-  return { liked: !liked };
-});
 
-exports.awardAchievementFromProfile = onDocumentWritten({
-  document: 'community_profiles/{userId}', database: 'hungarian-hardstyle', region: 'europe-central2',
-}, async (event) => {
-  if (!event.data?.after?.exists) return null;
-  const profile = event.data.after.data() || {};
-  const uid = String(event.params.userId || '').trim();
-  if (!uid) return null;
-  const profileEmail = String(profile.email || '').trim().toLowerCase();
-  let authEmail = '';
-  try {
-    authEmail = String((await auth.getUser(uid)).email || '').trim().toLowerCase();
-  } catch (error) {
-    console.warn(JSON.stringify({ event: 'profile_achievement_auth_lookup_failed', message: error?.message || String(error) }));
-    return null;
-  }
-  const complete = String(profile.displayName || '').trim()
-    && String(profile.bio || '').trim()
-    && profileEmail
-    && authEmail
-    && profileEmail === authEmail;
-  if (!complete) return null;
-  return awardAchievementPoints(uid, 30, 'profile-complete');
-});
+exports.awardAchievementFromProfile = onDocumentWritten(
+  {
+    document: 'community_profiles/{userId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  async (event) => {
+    if (!event.data?.after?.exists) return null;
+    const profile = event.data.after.data() || {};
+    const uid = String(event.params.userId || '').trim();
+    if (!uid) return null;
+    const profileEmail = String(profile.email || '')
+      .trim()
+      .toLowerCase();
+    let authEmail = '';
+    try {
+      authEmail = String((await auth.getUser(uid)).email || '')
+        .trim()
+        .toLowerCase();
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'profile_achievement_auth_lookup_failed',
+          message: error?.message || String(error),
+        }),
+      );
+      return null;
+    }
+    const complete =
+      String(profile.displayName || '').trim() &&
+      String(profile.bio || '').trim() &&
+      profileEmail &&
+      authEmail &&
+      profileEmail === authEmail;
+    if (!complete) return null;
+    return awardAchievementPoints(uid, 30, 'profile-complete');
+  },
+);
 
 // Backfill the one-time profile-completion reward for profiles created before
 // the trigger existed. The ledger key makes repeated app starts harmless.
-exports.claimProfileCompletionAchievement = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
-  const uid = requireRegisteredViewer(context);
-  const profile = (await db.collection('community_profiles').doc(uid).get()).data() || {};
-  const profileEmail = String(profile.email || '').trim().toLowerCase();
-  let authEmail = '';
-  try {
-    authEmail = String((await auth.getUser(uid)).email || '').trim().toLowerCase();
-  } catch (_) {
-    throw new HttpsError('failed-precondition', 'A profil ellenőrzése nem sikerült.');
-  }
-  const complete = String(profile.displayName || '').trim()
-    && String(profile.bio || '').trim()
-    && profileEmail
-    && authEmail
-    && profileEmail === authEmail;
-  if (!complete) return { awarded: false };
-  const result = await awardAchievementPoints(uid, 30, 'profile-complete');
-  return { awarded: result.changed === true, points: 30 };
-});
+exports.claimProfileCompletionAchievement = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    const uid = requireRegisteredViewer(context);
+    const profile = (await db.collection('community_profiles').doc(uid).get()).data() || {};
+    const profileEmail = String(profile.email || '')
+      .trim()
+      .toLowerCase();
+    let authEmail = '';
+    try {
+      authEmail = String((await auth.getUser(uid)).email || '')
+        .trim()
+        .toLowerCase();
+    } catch (_) {
+      throw new HttpsError('failed-precondition', 'A profil ellenőrzése nem sikerült.');
+    }
+    const complete =
+      String(profile.displayName || '').trim() &&
+      String(profile.bio || '').trim() &&
+      profileEmail &&
+      authEmail &&
+      profileEmail === authEmail;
+    if (!complete) return { awarded: false };
+    const result = await awardAchievementPoints(uid, 30, 'profile-complete');
+    return { awarded: result.changed === true, points: 30 };
+  });
 
 function securityLog(event, context) {
   console.warn(JSON.stringify({ event, result: 'recorded' }));
@@ -1879,13 +2502,46 @@ async function getPushTokens(uid) {
   const privateData = (await db.collection('private_user_data').doc(uid).get()).data() || {};
   const legacyData = (await db.collection('community_profiles').doc(uid).get()).data() || {};
   const values = [privateData.fcmTokens, legacyData.fcmTokens, legacyData.fcmToken];
-  return [...new Set(values.flatMap((raw) => Array.isArray(raw)
-    ? raw
-    : raw && typeof raw === 'object'
-      ? Object.values(raw)
-      : typeof raw === 'string' ? [raw] : [])
-    .filter((token) => typeof token === 'string' && token.trim())
-    .map((token) => token.trim()))];
+  return [
+    ...new Set(
+      values
+        .flatMap((raw) =>
+          Array.isArray(raw)
+            ? raw
+            : raw && typeof raw === 'object'
+              ? Object.values(raw)
+              : typeof raw === 'string'
+                ? [raw]
+                : [],
+        )
+        .filter((token) => typeof token === 'string' && token.trim())
+        .map((token) => token.trim()),
+    ),
+  ];
+}
+
+async function sendAchievementPushBestEffort(uid, title, body) {
+  try {
+    const privateData = (await db.collection('private_user_data').doc(uid).get()).data() || {};
+    const preferences = privateData.notificationPreferences || {};
+    if (preferences.enabled === false || preferences.achievements === false) return;
+    const tokens = await getPushTokens(uid);
+    if (!tokens.length) return;
+    await sendMulticastToAllTokens(
+      {
+        notification: { title, body },
+        data: { type: 'achievement_points', targetId: uid },
+      },
+      tokens,
+    );
+  } catch (error) {
+    console.warn(
+      JSON.stringify({
+        event: 'achievement_push_failed',
+        message: error?.message || String(error),
+      }),
+    );
+  }
 }
 
 // Backend-only durable inbox entries. The hash makes retries idempotent.
@@ -1895,17 +2551,26 @@ async function createNotification({ recipientUid, type, title, body, targetType,
   if (!recipient || !key) return false;
   const notificationId = crypto.createHash('sha256').update(key).digest('hex');
   try {
-    await db.collection('notifications').doc(notificationId).create({
-      recipientUid: recipient,
-      type: String(type || 'general').trim(),
-      title: String(title || '').trim().slice(0, 120),
-      body: String(body || '').trim().slice(0, 500),
-      targetType: String(targetType || '').trim(),
-      targetId: String(targetId || '').trim(),
-      senderId: String(senderId || '').trim().slice(0, 128),
-      createdAt: FieldValue.serverTimestamp(),
-      readAt: null,
-    });
+    await db
+      .collection('notifications')
+      .doc(notificationId)
+      .create({
+        recipientUid: recipient,
+        type: String(type || 'general').trim(),
+        title: String(title || '')
+          .trim()
+          .slice(0, 120),
+        body: String(body || '')
+          .trim()
+          .slice(0, 500),
+        targetType: String(targetType || '').trim(),
+        targetId: String(targetId || '').trim(),
+        senderId: String(senderId || '')
+          .trim()
+          .slice(0, 128),
+        createdAt: FieldValue.serverTimestamp(),
+        readAt: null,
+      });
     return true;
   } catch (error) {
     if (error?.code === 6 || error?.code === 'already-exists') return false;
@@ -1917,12 +2582,14 @@ async function createNotificationBestEffort(payload) {
   try {
     return await createNotification(payload);
   } catch (error) {
-    console.warn(JSON.stringify({
-      event: 'notification_write_failed',
-      type: payload?.type || 'unknown',
-      recipientUid: String(payload?.recipientUid || '').slice(0, 8),
-      message: error?.message || String(error),
-    }));
+    console.warn(
+      JSON.stringify({
+        event: 'notification_write_failed',
+        type: payload?.type || 'unknown',
+        recipientUid: String(payload?.recipientUid || '').slice(0, 8),
+        message: error?.message || String(error),
+      }),
+    );
     return false;
   }
 }
@@ -1963,34 +2630,42 @@ async function notifyUsersToRateCompletedEvents() {
       created += 1;
       const tokens = await getPushTokens(uid);
       if (!tokens.length) continue;
-      const result = await sendMulticastToAllTokens({
-        notification: {
-          title: 'Értékeld az eseményt',
-          body: `${eventTitle} véget ért. Értékeld az eseményt az appban.`,
+      const result = await sendMulticastToAllTokens(
+        {
+          notification: {
+            title: 'Értékeld az eseményt',
+            body: `${eventTitle} véget ért. Értékeld az eseményt az appban.`,
+          },
+          data: { type: 'event_rating_request', eventId: String(eventId) },
         },
-        data: { type: 'event_rating_request', eventId: String(eventId) },
-      }, tokens);
+        tokens,
+      );
       pushed += result.successCount;
     }
   }
   return { created, pushed };
 }
 
-exports.notifyUsersToRateCompletedEvents = onSchedule({
-  schedule: 'every 5 minutes',
-  timeZone: 'Europe/Budapest',
-  region: 'europe-central2',
-}, async () => {
-  try {
-    const result = await notifyUsersToRateCompletedEvents();
-    console.info('event_rating_notifications', result);
-  } catch (error) {
-    console.warn(JSON.stringify({
-      event: 'event_rating_notifications_failed',
-      message: error?.message || String(error),
-    }));
-  }
-});
+exports.notifyUsersToRateCompletedEvents = onSchedule(
+  {
+    schedule: 'every 5 minutes',
+    timeZone: 'Europe/Budapest',
+    region: 'europe-central2',
+  },
+  async () => {
+    try {
+      const result = await notifyUsersToRateCompletedEvents();
+      console.info('event_rating_notifications', result);
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'event_rating_notifications_failed',
+          message: error?.message || String(error),
+        }),
+      );
+    }
+  },
+);
 
 // WordPress content is managed outside Firestore, so there is no Firestore
 // create trigger to generate inbox entries. Poll only the public lightweight
@@ -1998,11 +2673,41 @@ exports.notifyUsersToRateCompletedEvents = onSchedule({
 // and later runs notify only about newly published IDs.
 async function pollWordPressContentNotifications() {
   const endpoints = [
-    { key: 'news', path: '/posts', targetType: 'news', type: 'new_news', title: 'Új hír érkezett' },
-    { key: 'release', path: '/releases', targetType: 'release', type: 'new_release', title: 'Új release érkezett' },
-    { key: 'artist', path: '/artists?per_page=50', targetType: 'artist', type: 'new_artist', title: 'Új DJ került fel' },
-    { key: 'organizer', path: '/organizers?per_page=50', targetType: 'organizer', type: 'new_organizer', title: 'Új szervező került fel' },
-    { key: 'event', path: '/events', targetType: 'event', type: 'new_event', title: 'Új esemény érkezett' },
+    {
+      key: 'news',
+      path: '/posts',
+      targetType: 'news',
+      type: 'new_news',
+      title: 'Új hír érkezett',
+    },
+    {
+      key: 'release',
+      path: '/releases',
+      targetType: 'release',
+      type: 'new_release',
+      title: 'Új release érkezett',
+    },
+    {
+      key: 'artist',
+      path: '/artists?per_page=50',
+      targetType: 'artist',
+      type: 'new_artist',
+      title: 'Új DJ került fel',
+    },
+    {
+      key: 'organizer',
+      path: '/organizers?per_page=50',
+      targetType: 'organizer',
+      type: 'new_organizer',
+      title: 'Új szervező került fel',
+    },
+    {
+      key: 'event',
+      path: '/events',
+      targetType: 'event',
+      type: 'new_event',
+      title: 'Új esemény érkezett',
+    },
   ];
   const stateRef = db.collection('app_settings').doc('wordpress_content_notifications');
   const stateSnapshot = await stateRef.get();
@@ -2017,7 +2722,10 @@ async function pollWordPressContentNotifications() {
     if (!response.ok) throw new Error(`WordPress ${endpoint.key} lista: HTTP ${response.status}`);
     const body = await response.json();
     const items = Array.isArray(body) ? body : Array.isArray(body?.items) ? body.items : [];
-    const ids = items.map((item) => String(item?.id || '').trim()).filter(Boolean).slice(0, 100);
+    const ids = items
+      .map((item) => String(item?.id || '').trim())
+      .filter(Boolean)
+      .slice(0, 100);
     current[endpoint.key] = ids;
     if (stateSnapshot.exists) {
       const oldIds = new Set(Array.isArray(previous[endpoint.key]) ? previous[endpoint.key] : []);
@@ -2035,49 +2743,66 @@ async function pollWordPressContentNotifications() {
   let created = 0;
   for (const item of newlyPublished) {
     const name = String(item.item?.title?.rendered || item.item?.title || item.item?.name || '').trim();
-    await Promise.all(profiles.docs.map(async (profile) => {
-      const recipientUid = profile.id;
-      await createNotificationBestEffort({
-        recipientUid,
-        type: item.type,
-        title: item.title,
-        body: name || item.title,
-        targetType: item.targetType,
-        targetId: item.id,
-        dedupeKey: `wordpress_content:${item.key}:${item.id}:${recipientUid}`,
-      });
-      created += 1;
-    }));
+    await Promise.all(
+      profiles.docs.map(async (profile) => {
+        const recipientUid = profile.id;
+        await createNotificationBestEffort({
+          recipientUid,
+          type: item.type,
+          title: item.title,
+          body: name || item.title,
+          targetType: item.targetType,
+          targetId: item.id,
+          dedupeKey: `wordpress_content:${item.key}:${item.id}:${recipientUid}`,
+        });
+        created += 1;
+      }),
+    );
   }
   return { baseline: false, created };
 }
 
-exports.pollWordPressContentNotifications = onSchedule({
-  schedule: 'every 5 minutes',
-  timeZone: 'Europe/Budapest',
-  region: 'europe-central2',
-}, async () => {
-  try {
-    const result = await pollWordPressContentNotifications();
-    console.info('wordpress_content_notifications', result);
-  } catch (error) {
-    console.warn(JSON.stringify({
-      event: 'wordpress_content_notifications_failed',
-      message: error?.message || String(error),
-    }));
-  }
-});
+exports.pollWordPressContentNotifications = onSchedule(
+  {
+    schedule: 'every 5 minutes',
+    timeZone: 'Europe/Budapest',
+    region: 'europe-central2',
+  },
+  async () => {
+    try {
+      const result = await pollWordPressContentNotifications();
+      console.info('wordpress_content_notifications', result);
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'wordpress_content_notifications_failed',
+          message: error?.message || String(error),
+        }),
+      );
+    }
+  },
+);
 
 async function removePushTokens(uid, tokens) {
   if (!tokens.length) return;
-  await db.collection('private_user_data').doc(uid).set({
-    fcmTokens: FieldValue.arrayRemove(...tokens),
-    updatedAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
+  await db
+    .collection('private_user_data')
+    .doc(uid)
+    .set(
+      {
+        fcmTokens: FieldValue.arrayRemove(...tokens),
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
   // Keep legacy cleanup for tokens written by older app versions.
-  await db.collection('community_profiles').doc(uid).update({
-    fcmTokens: FieldValue.arrayRemove(...tokens),
-  }).catch(() => {});
+  await db
+    .collection('community_profiles')
+    .doc(uid)
+    .update({
+      fcmTokens: FieldValue.arrayRemove(...tokens),
+    })
+    .catch(() => {});
 }
 
 const submissionRoutes = {
@@ -2087,216 +2812,221 @@ const submissionRoutes = {
 };
 
 function isAdmin(context, profile) {
-  return String(context.auth?.token?.email || '').trim().toLowerCase() === ADMIN_EMAIL
-    || profile.accessRole === 'admin';
+  return (
+    String(context.auth?.token?.email || '')
+      .trim()
+      .toLowerCase() === ADMIN_EMAIL || profile.accessRole === 'admin'
+  );
 }
 
 async function notifySubmissionAdmins(kind, title, id) {
   const profiles = await db.collection('community_profiles').get();
   const adminProfiles = profiles.docs.filter((profileDoc) => {
     const profile = profileDoc.data() || {};
-    return String(profile.email || '').trim().toLowerCase() === ADMIN_EMAIL
-      || profile.accessRole === 'admin';
+    return (
+      String(profile.email || '')
+        .trim()
+        .toLowerCase() === ADMIN_EMAIL || profile.accessRole === 'admin'
+    );
   });
-  const tokenLists = await Promise.all(
-    adminProfiles.map((profileDoc) => getPushTokens(profileDoc.id)),
-  );
+  const tokenLists = await Promise.all(adminProfiles.map((profileDoc) => getPushTokens(profileDoc.id)));
   const tokens = tokenLists.flat();
   const uniqueTokens = [...new Set(tokens.map((token) => token.trim()).filter(Boolean))];
   if (!uniqueTokens.length) return { sent: 0 };
-  const result = await sendMulticastToAllTokens({
-    notification: { title: `Új ${kind}beküldés`, body: title },
-    data: { type: 'submission', kind, id: String(id) },
-  }, uniqueTokens);
+  const result = await sendMulticastToAllTokens(
+    {
+      notification: { title: `Új ${kind}beküldés`, body: title },
+      data: { type: 'submission', kind, id: String(id) },
+    },
+    uniqueTokens,
+  );
   return { sent: result.successCount, failed: result.failureCount };
 }
 
-exports.submitWordPressContent = wordPressCall(
-  async (data, context) => {
-    if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
-      throw new HttpsError('permission-denied', 'Regisztráció szükséges a beküldéshez.');
-    }
-    if (!await allowCall(context.auth.uid, 'submission')) {
-      securityLog('submission_rate_limited', context);
-      throw new HttpsError('resource-exhausted', 'Túl sok beküldés, próbáld később.');
-    }
+exports.submitWordPressContent = wordPressCall(async (data, context) => {
+  if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
+    throw new HttpsError('permission-denied', 'Regisztráció szükséges a beküldéshez.');
+  }
+  if (!(await allowCall(context.auth.uid, 'submission'))) {
+    securityLog('submission_rate_limited', context);
+    throw new HttpsError('resource-exhausted', 'Túl sok beküldés, próbáld később.');
+  }
 
-    const route = submissionRoutes[String(data?.kind || '')];
-    const payload = data?.payload;
-    if (!route || !payload || typeof payload !== 'object' || Array.isArray(payload)) {
-      throw new HttpsError('invalid-argument', 'Érvénytelen beküldési adat.');
-    }
-    if (JSON.stringify(payload).length > 512_000) {
-      throw new HttpsError('invalid-argument', 'A beküldés túl nagy.');
-    }
+  const route = submissionRoutes[String(data?.kind || '')];
+  const payload = data?.payload;
+  if (!route || !payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen beküldési adat.');
+  }
+  if (JSON.stringify(payload).length > 512_000) {
+    throw new HttpsError('invalid-argument', 'A beküldés túl nagy.');
+  }
 
-    const requestHash = crypto.createHash('sha256')
-      .update(`${context.auth.uid}:${data.kind}:${JSON.stringify(payload)}`)
-      .digest('hex');
-    const requestRef = db.collection('submission_requests').doc(requestHash);
-    let duplicateResponse;
-    let duplicateInProgress = false;
-    await db.runTransaction(async (transaction) => {
-      const existing = await transaction.get(requestRef);
-      if (existing.exists) {
-        duplicateResponse = existing.data()?.response;
-        duplicateInProgress = !duplicateResponse;
-        return;
-      }
-      transaction.create(requestRef, {
-        createdAt: FieldValue.serverTimestamp(),
-        kind: data.kind,
-      });
+  const requestHash = crypto
+    .createHash('sha256')
+    .update(`${context.auth.uid}:${data.kind}:${JSON.stringify(payload)}`)
+    .digest('hex');
+  const requestRef = db.collection('submission_requests').doc(requestHash);
+  let duplicateResponse;
+  let duplicateInProgress = false;
+  await db.runTransaction(async (transaction) => {
+    const existing = await transaction.get(requestRef);
+    if (existing.exists) {
+      duplicateResponse = existing.data()?.response;
+      duplicateInProgress = !duplicateResponse;
+      return;
+    }
+    transaction.create(requestRef, {
+      createdAt: FieldValue.serverTimestamp(),
+      kind: data.kind,
     });
-    if (duplicateResponse) return duplicateResponse;
-    if (duplicateInProgress) {
-      throw new HttpsError('already-exists', 'Ezt a beküldést már feldolgozzuk.');
-    }
+  });
+  if (duplicateResponse) return duplicateResponse;
+  if (duplicateInProgress) {
+    throw new HttpsError('already-exists', 'Ezt a beküldést már feldolgozzuk.');
+  }
 
-    const profileSnapshot = await db.collection('community_profiles').doc(context.auth.uid).get();
-    const profile = profileSnapshot.data() || {};
-    if (!isAdmin(context, profile) && route.role && profile.role !== route.role) {
-      await requestRef.delete().catch(() => {});
-      throw new HttpsError('permission-denied', 'Ehhez a beküldéshez nincs jogosultságod.');
-    }
+  const profileSnapshot = await db.collection('community_profiles').doc(context.auth.uid).get();
+  const profile = profileSnapshot.data() || {};
+  if (!isAdmin(context, profile) && route.role && profile.role !== route.role) {
+    await requestRef.delete().catch(() => {});
+    throw new HttpsError('permission-denied', 'Ehhez a beküldéshez nincs jogosultságod.');
+  }
 
-    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
-    const response = await fetch(`${WORDPRESS_BASE_URL}${route.path}`, {
-      method: 'POST',
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const response = await fetch(`${WORDPRESS_BASE_URL}${route.path}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'X-HUHS-Skip-Submission-Push': '1',
+    },
+    body: JSON.stringify(payload),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    await requestRef.delete().catch(() => {});
+    throw new HttpsError('failed-precondition', body.message || 'A WordPress beküldés sikertelen.');
+  }
+  await requestRef.set({ response: body, completedAt: FieldValue.serverTimestamp() }, { merge: true });
+  if (body?.id) {
+    const label = data.kind === 'artist' ? 'DJ' : data.kind === 'organizer' ? 'szervező' : 'esemény';
+    await notifySubmissionAdmins(label, body.title || payload.title || '', body.id).catch((error) =>
+      console.warn('submission admin push failed', error),
+    );
+  }
+  return body;
+});
+
+exports.listWordPressSubmissions = wordPressCall(async (data, context) => {
+  if (!context.auth) {
+    throw new HttpsError('permission-denied', 'Csak admin tekintheti meg a beküldéseket.');
+  }
+  const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+  if (!isAdmin(context, profile)) {
+    throw new HttpsError('permission-denied', 'Csak admin tekintheti meg a beküldéseket.');
+  }
+  if (!(await allowCall(context.auth.uid, 'wp_admin'))) {
+    securityLog('wp_admin_rate_limited', context);
+    throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
+  }
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const response = await fetch(
+    'https://hungarianhardstyle.hu/wp-json/wp/v2/huhs_submission?status=pending&per_page=100&_fields=id,date,title,link,content,excerpt,type,post_type',
+    {
       headers: {
         Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
-        'Content-Type': 'application/json',
         Accept: 'application/json',
-        'X-HUHS-Skip-Submission-Push': '1',
       },
-      body: JSON.stringify(payload),
-    });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      await requestRef.delete().catch(() => {});
-      throw new HttpsError('failed-precondition', body.message || 'A WordPress beküldés sikertelen.');
-    }
-    await requestRef.set({ response: body, completedAt: FieldValue.serverTimestamp() }, { merge: true });
-    if (body?.id) {
-      const label = data.kind === 'artist' ? 'DJ' : data.kind === 'organizer' ? 'szervező' : 'esemény';
-      await notifySubmissionAdmins(label, body.title || payload.title || '', body.id)
-        .catch((error) => console.warn('submission admin push failed', error));
-    }
-    return body;
-  },
-);
+    },
+  );
+  const body = await response.json().catch(() => []);
+  if (!response.ok) {
+    throw new HttpsError('failed-precondition', body?.message || 'A WordPress beküldések nem tölthetők be.');
+  }
+  return Array.isArray(body)
+    ? body.map((item) => ({
+        id: item.id,
+        date: item.date,
+        title: item.title?.rendered || '',
+        link: item.link || '',
+        content: item.content?.rendered || '',
+        excerpt: item.excerpt?.rendered || '',
+        type: item.type || item.post_type || '',
+      }))
+    : [];
+});
 
-exports.listWordPressSubmissions = wordPressCall(
-  async (data, context) => {
-    if (!context.auth) {
-      throw new HttpsError('permission-denied', 'Csak admin tekintheti meg a beküldéseket.');
-    }
-    const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
-    if (!isAdmin(context, profile)) {
-      throw new HttpsError('permission-denied', 'Csak admin tekintheti meg a beküldéseket.');
-    }
-    if (!await allowCall(context.auth.uid, 'wp_admin')) {
-      securityLog('wp_admin_rate_limited', context);
-      throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
-    }
-    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
-    const response = await fetch(
-      'https://hungarianhardstyle.hu/wp-json/wp/v2/huhs_submission?status=pending&per_page=100&_fields=id,date,title,link,content,excerpt,type,post_type',
-      { headers: { Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`, Accept: 'application/json' } },
-    );
-    const body = await response.json().catch(() => []);
-    if (!response.ok) {
-      throw new HttpsError('failed-precondition', body?.message || 'A WordPress beküldések nem tölthetők be.');
-    }
-    return Array.isArray(body) ? body.map((item) => ({
-      id: item.id,
-      date: item.date,
-      title: item.title?.rendered || '',
-      link: item.link || '',
-      content: item.content?.rendered || '',
-      excerpt: item.excerpt?.rendered || '',
-      type: item.type || item.post_type || '',
-    })) : [];
-  },
-);
-
-exports.manageWordPressSubmission = wordPressCall(
-  async (data, context) => {
-    if (!context.auth) {
-      throw new HttpsError('permission-denied', 'Csak admin kezelheti a beküldéseket.');
-    }
-    const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
-    if (!isAdmin(context, profile)) {
-      throw new HttpsError('permission-denied', 'Csak admin kezelheti a beküldéseket.');
-    }
-    if (!await allowCall(context.auth.uid, 'wp_admin')) {
-      securityLog('wp_admin_rate_limited', context);
-      throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
-    }
-    const id = Number(data?.id);
-    const action = String(data?.action || '');
-    if (!Number.isInteger(id) || id <= 0 || !['approve', 'trash'].includes(action)) {
-      throw new HttpsError('invalid-argument', 'Érvénytelen beküldés-művelet.');
-    }
-    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
-    const url = action === 'approve'
+exports.manageWordPressSubmission = wordPressCall(async (data, context) => {
+  if (!context.auth) {
+    throw new HttpsError('permission-denied', 'Csak admin kezelheti a beküldéseket.');
+  }
+  const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+  if (!isAdmin(context, profile)) {
+    throw new HttpsError('permission-denied', 'Csak admin kezelheti a beküldéseket.');
+  }
+  if (!(await allowCall(context.auth.uid, 'wp_admin'))) {
+    securityLog('wp_admin_rate_limited', context);
+    throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
+  }
+  const id = Number(data?.id);
+  const action = String(data?.action || '');
+  if (!Number.isInteger(id) || id <= 0 || !['approve', 'trash'].includes(action)) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen beküldés-művelet.');
+  }
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const url =
+    action === 'approve'
       ? `${WORDPRESS_BASE_URL}/submissions/${id}/approve`
       : `https://hungarianhardstyle.hu/wp-json/wp/v2/huhs_submission/${id}`;
-    const response = await fetch(
-      url,
-      {
-        method: action === 'approve' ? 'POST' : 'DELETE',
-        headers: {
-          Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
-          Accept: 'application/json',
-        },
-      },
-    );
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new HttpsError('failed-precondition', body?.message || 'A WordPress művelet sikertelen.');
-    }
-    return { ok: true, action, id, profileId: body?.profile_id || null };
-  },
-);
+  const response = await fetch(url, {
+    method: action === 'approve' ? 'POST' : 'DELETE',
+    headers: {
+      Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+      Accept: 'application/json',
+    },
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new HttpsError('failed-precondition', body?.message || 'A WordPress művelet sikertelen.');
+  }
+  return { ok: true, action, id, profileId: body?.profile_id || null };
+});
 
-exports.updateWordPressSubmission = wordPressCall(
-  async (data, context) => {
-    if (!context.auth) {
-      throw new HttpsError('permission-denied', 'Csak admin szerkeszthet beküldést.');
-    }
-    const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
-    if (!isAdmin(context, profile)) {
-      throw new HttpsError('permission-denied', 'Csak admin szerkeszthet beküldést.');
-    }
-    if (!await allowCall(context.auth.uid, 'wp_admin')) {
-      securityLog('wp_admin_rate_limited', context);
-      throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
-    }
-    const id = Number(data?.id);
-    const title = String(data?.title || '').trim();
-    const content = String(data?.content || '');
-    if (!Number.isInteger(id) || id <= 0 || !title || title.length > 300 || content.length > 512_000) {
-      throw new HttpsError('invalid-argument', 'Érvénytelen beküldési adat.');
-    }
-    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
-    const response = await fetch(`https://hungarianhardstyle.hu/wp-json/wp/v2/huhs_submission/${id}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ title, content }),
-    });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new HttpsError('failed-precondition', body?.message || 'A WordPress beküldés mentése sikertelen.');
-    }
-    return { ok: true, id, title: body?.title?.rendered || title };
-  },
-);
-
+exports.updateWordPressSubmission = wordPressCall(async (data, context) => {
+  if (!context.auth) {
+    throw new HttpsError('permission-denied', 'Csak admin szerkeszthet beküldést.');
+  }
+  const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+  if (!isAdmin(context, profile)) {
+    throw new HttpsError('permission-denied', 'Csak admin szerkeszthet beküldést.');
+  }
+  if (!(await allowCall(context.auth.uid, 'wp_admin'))) {
+    securityLog('wp_admin_rate_limited', context);
+    throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
+  }
+  const id = Number(data?.id);
+  const title = String(data?.title || '').trim();
+  const content = String(data?.content || '');
+  if (!Number.isInteger(id) || id <= 0 || !title || title.length > 300 || content.length > 512_000) {
+    throw new HttpsError('invalid-argument', 'Érvénytelen beküldési adat.');
+  }
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const response = await fetch(`https://hungarianhardstyle.hu/wp-json/wp/v2/huhs_submission/${id}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ title, content }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new HttpsError('failed-precondition', body?.message || 'A WordPress beküldés mentése sikertelen.');
+  }
+  return { ok: true, id, title: body?.title?.rendered || title };
+});
 
 const WORDPRESS_ADMIN_PATHS = new Set([
   '/wp/v2/huhs_event',
@@ -2307,51 +3037,56 @@ const WORDPRESS_ADMIN_PATHS = new Set([
   '/huhs/v1/admin',
 ]);
 
-exports.wordPressAdminRequest = wordPressCall(
-  async (data, context) => {
-    if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin használhatja a WordPress vezérlőközpontot.');
-    const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
-    if (!isAdmin(context, profile)) throw new HttpsError('permission-denied', 'Csak admin használhatja a WordPress vezérlőközpontot.');
-    if (!await allowCall(context.auth.uid, 'wp_admin_request')) {
-      securityLog('wp_admin_request_rate_limited', context);
-      throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
-    }
-    const rawPath = String(data?.path || '');
-    const path = rawPath.split('?')[0];
-    const method = String(data?.method || 'GET').toUpperCase();
-    const isAllowedPath = WORDPRESS_ADMIN_PATHS.has(path) || [...WORDPRESS_ADMIN_PATHS].some((base) => path.startsWith(base + '/') && /^\/\d+$/.test(path.slice(base.length)));
-    if (!isAllowedPath || !['GET', 'POST', 'PUT', 'DELETE'].includes(method)) {
-      throw new HttpsError('invalid-argument', 'Nem engedélyezett WordPress admin útvonal vagy művelet.');
-    }
-    const query = rawPath.includes('?') ? `?${rawPath.split('?').slice(1).join('?')}` : '';
-    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
-    const options = {
+exports.wordPressAdminRequest = wordPressCall(async (data, context) => {
+  if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin használhatja a WordPress vezérlőközpontot.');
+  const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
+  if (!isAdmin(context, profile))
+    throw new HttpsError('permission-denied', 'Csak admin használhatja a WordPress vezérlőközpontot.');
+  if (!(await allowCall(context.auth.uid, 'wp_admin_request'))) {
+    securityLog('wp_admin_request_rate_limited', context);
+    throw new HttpsError('resource-exhausted', 'Túl sok admin művelet, próbáld később.');
+  }
+  const rawPath = String(data?.path || '');
+  const path = rawPath.split('?')[0];
+  const method = String(data?.method || 'GET').toUpperCase();
+  const isAllowedPath =
+    WORDPRESS_ADMIN_PATHS.has(path) ||
+    [...WORDPRESS_ADMIN_PATHS].some((base) => path.startsWith(base + '/') && /^\/\d+$/.test(path.slice(base.length)));
+  if (!isAllowedPath || !['GET', 'POST', 'PUT', 'DELETE'].includes(method)) {
+    throw new HttpsError('invalid-argument', 'Nem engedélyezett WordPress admin útvonal vagy művelet.');
+  }
+  const query = rawPath.includes('?') ? `?${rawPath.split('?').slice(1).join('?')}` : '';
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const options = {
+    method,
+    headers: {
+      Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+      Accept: 'application/json',
+    },
+  };
+  if (method !== 'GET' && method !== 'DELETE') {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(data?.body && typeof data.body === 'object' ? data.body : {});
+  }
+  const response = await fetch(`https://hungarianhardstyle.hu/wp-json${path}${query}`, options);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    console.warn('wordpress_admin_request_failed', {
+      uid: context.auth.uid,
+      path,
       method,
-      headers: {
-        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
-        Accept: 'application/json',
-      },
-    };
-    if (method !== 'GET' && method !== 'DELETE') {
-      options.headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(data?.body && typeof data.body === 'object' ? data.body : {});
-    }
-    const response = await fetch(`https://hungarianhardstyle.hu/wp-json${path}${query}`, options);
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      console.warn('wordpress_admin_request_failed', {
-        uid: context.auth.uid,
-        path,
-        method,
-        status: response.status,
-        message: typeof body?.message === 'string' ? body.message : '',
-      });
-      throw new HttpsError('failed-precondition', body?.message || 'A WordPress admin művelet sikertelen.');
-    }
-    console.info('wordpress_admin_request_ok', { uid: context.auth.uid, path, method });
-    return body;
-  },
-);
+      status: response.status,
+      message: typeof body?.message === 'string' ? body.message : '',
+    });
+    throw new HttpsError('failed-precondition', body?.message || 'A WordPress admin művelet sikertelen.');
+  }
+  console.info('wordpress_admin_request_ok', {
+    uid: context.auth.uid,
+    path,
+    method,
+  });
+  return body;
+});
 async function deleteDocumentReferences(documents) {
   const uniqueDocuments = [...new Map(documents.map((document) => [document.ref.path, document])).values()];
   for (let offset = 0; offset < uniqueDocuments.length; offset += 400) {
@@ -2385,7 +3120,10 @@ async function removeUserReactions(uid) {
       : { ...(data.likedBy || {}) };
     if (!Object.prototype.hasOwnProperty.call(likedBy, uid)) continue;
     delete likedBy[uid];
-    writes.push({ ref: document.ref, data: { likedBy, count: Object.keys(likedBy).length } });
+    writes.push({
+      ref: document.ref,
+      data: { likedBy, count: Object.keys(likedBy).length },
+    });
   }
   for (let offset = 0; offset < writes.length; offset += 400) {
     const batch = db.batch();
@@ -2395,11 +3133,27 @@ async function removeUserReactions(uid) {
 }
 
 async function deleteUserReferences(uid, profileData = {}) {
-  const [relatedUserDocs, connectionRequestsFrom, connectionRequestsTo,
-    conversations, comments, notifications, gameAttempts, ledgerEntries,
-    votes, deviceClaims, reportsByUser, reportsAboutUser, artistClaims,
-    labelEntitlements, labelPurchaseClaims, labelAdUnlocks,
-    rewardedTransactions, referringProfiles, ownPosts] = await Promise.all([
+  const [
+    relatedUserDocs,
+    connectionRequestsFrom,
+    connectionRequestsTo,
+    conversations,
+    comments,
+    notifications,
+    gameAttempts,
+    ledgerEntries,
+    votes,
+    deviceClaims,
+    reportsByUser,
+    reportsAboutUser,
+    artistClaims,
+    labelEntitlements,
+    labelPurchaseClaims,
+    labelAdUnlocks,
+    rewardedTransactions,
+    referringProfiles,
+    ownPosts,
+  ] = await Promise.all([
     db.collectionGroup('users').get(),
     db.collection('connection_requests').where('from', '==', uid).get(),
     db.collection('connection_requests').where('to', '==', uid).get(),
@@ -2424,16 +3178,30 @@ async function deleteUserReferences(uid, profileData = {}) {
   for (const [publicIdKey, urlKey] of [
     ['profileImagePublicId', 'profileImageUrl'],
     ['profileSourceImagePublicId', 'profileSourceImageUrl'],
-  ]) cloudinaryAssets.push({ ownerUid: uid, publicId: profileData[publicIdKey], secureUrl: profileData[urlKey] });
+  ])
+    cloudinaryAssets.push({
+      ownerUid: uid,
+      publicId: profileData[publicIdKey],
+      secureUrl: profileData[urlKey],
+    });
   ownPosts.docs.forEach((post) => {
     const value = post.data() || {};
-    cloudinaryAssets.push({ ownerUid: uid, publicId: value.imagePublicId, secureUrl: value.imageUrl });
+    cloudinaryAssets.push({
+      ownerUid: uid,
+      publicId: value.imagePublicId,
+      secureUrl: value.imageUrl,
+    });
   });
   for (const conversation of conversations.docs) {
     const messages = await conversation.ref.collection('messages').get();
     messages.docs.forEach((message) => {
       const value = message.data() || {};
-      if (value.senderId === uid) cloudinaryAssets.push({ ownerUid: uid, publicId: value.imagePublicId, secureUrl: value.imageUrl });
+      if (value.senderId === uid)
+        cloudinaryAssets.push({
+          ownerUid: uid,
+          publicId: value.imagePublicId,
+          secureUrl: value.imageUrl,
+        });
     });
   }
   const selectedCloudinary = selectOwnedCloudinaryAssets(uid, cloudinaryAssets);
@@ -2448,15 +3216,18 @@ async function deleteUserReferences(uid, profileData = {}) {
     });
   } catch (error) {
     cloudinaryListPending = true;
-    console.warn(JSON.stringify({
-      event: 'account_deletion_cloudinary_list_failed',
-      step: 'list_owned_assets',
-      uidHash: crypto.createHash('sha256').update(uid).digest('hex').slice(0, 16),
-      errorCode: error?.code || error?.message || 'unknown',
-    }));
+    console.warn(
+      JSON.stringify({
+        event: 'account_deletion_cloudinary_list_failed',
+        step: 'list_owned_assets',
+        uidHash: crypto.createHash('sha256').update(uid).digest('hex').slice(0, 16),
+        errorCode: error?.code || error?.message || 'unknown',
+      }),
+    );
   }
-  const allCloudinaryAssets = [...selectedCloudinary.assets, ...listedCloudinary]
-    .filter((asset, index, assets) => assets.findIndex((other) => other.publicId === asset.publicId) === index);
+  const allCloudinaryAssets = [...selectedCloudinary.assets, ...listedCloudinary].filter(
+    (asset, index, assets) => assets.findIndex((other) => other.publicId === asset.publicId) === index,
+  );
   for (const asset of allCloudinaryAssets) {
     await destroyCloudinaryAsset({
       cloudName: CLOUDINARY_CLOUD_NAME,
@@ -2471,23 +3242,32 @@ async function deleteUserReferences(uid, profileData = {}) {
     if (path.length !== 4) continue;
     const rootCollection = path[0];
     const value = document.data() || {};
-    if ((rootCollection === 'event_meetups' && (document.id === uid || value.userId === uid))
-        || (rootCollection === 'event_attendance' && document.id === uid)
-        || (rootCollection === 'event_ratings' && document.id === uid)) {
+    if (
+      (rootCollection === 'event_meetups' && (document.id === uid || value.userId === uid)) ||
+      (rootCollection === 'event_attendance' && document.id === uid) ||
+      (rootCollection === 'event_ratings' && document.id === uid)
+    ) {
       cleanupOperations.push({ type: 'delete', ref: document.ref });
     } else if (rootCollection === 'event_meetups' && value.interestedBy?.[uid] === true) {
       const interestedBy = { ...value.interestedBy };
       delete interestedBy[uid];
-      cleanupOperations.push({ type: 'set', ref: document.ref, data: {
-        interestedBy, updatedAt: FieldValue.serverTimestamp(),
-      } });
+      cleanupOperations.push({
+        type: 'set',
+        ref: document.ref,
+        data: {
+          interestedBy,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+      });
     }
   }
   const ownConnections = await db.collection('community_profiles').doc(uid).collection('connections').get();
-  ownConnections.docs.forEach((connection) => cleanupOperations.push({
-    type: 'delete',
-    ref: db.collection('community_profiles').doc(connection.id).collection('connections').doc(uid),
-  }));
+  ownConnections.docs.forEach((connection) =>
+    cleanupOperations.push({
+      type: 'delete',
+      ref: db.collection('community_profiles').doc(connection.id).collection('connections').doc(uid),
+    }),
+  );
   for (let offset = 0; offset < cleanupOperations.length; offset += 400) {
     const batch = db.batch();
     cleanupOperations.slice(offset, offset + 400).forEach((operation) => {
@@ -2516,24 +3296,36 @@ async function deleteUserReferences(uid, profileData = {}) {
   ]);
   if (referringProfiles.size) {
     const batch = db.batch();
-    referringProfiles.docs.forEach((profile) => batch.set(profile.ref, {
-      referredBy: FieldValue.delete(),
-      referralRewardGranted: FieldValue.delete(),
-      referralRewardGrantedAt: FieldValue.delete(),
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true }));
+    referringProfiles.docs.forEach((profile) =>
+      batch.set(
+        profile.ref,
+        {
+          referredBy: FieldValue.delete(),
+          referralRewardGranted: FieldValue.delete(),
+          referralRewardGrantedAt: FieldValue.delete(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      ),
+    );
     await batch.commit();
   }
   for (const attempt of gameAttempts.docs) {
     const value = attempt.data() || {};
     const gameId = Number(value.gameId || 0);
     if (!Number.isSafeInteger(gameId) || gameId <= 0) continue;
-    await db.collection('game_stats').doc(String(gameId)).set({
-      submissions: FieldValue.increment(-1),
-      correctAnswers: FieldValue.increment(-Math.max(0, Number(value.correctAnswers || 0))),
-      totalAnswers: FieldValue.increment(-Math.max(0, Number(value.totalAnswers || 0))),
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
+    await db
+      .collection('game_stats')
+      .doc(String(gameId))
+      .set(
+        {
+          submissions: FieldValue.increment(-1),
+          correctAnswers: FieldValue.increment(-Math.max(0, Number(value.correctAnswers || 0))),
+          totalAnswers: FieldValue.increment(-Math.max(0, Number(value.totalAnswers || 0))),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
   }
   const oldName = String(profileData.displayName || '').trim();
   if (oldName) {
@@ -2556,99 +3348,147 @@ async function deleteUserReferences(uid, profileData = {}) {
 // Keep this compatible with the currently released Play client until its
 // Play Integrity attestation is verified end-to-end. Admin authorization,
 // rate limiting and the protected primary-admin account remain server-side.
-exports.deleteCommunityUser = functions.runWith({
-  secrets: [CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, ...SMTP_SECRETS],
-  enforceAppCheck: false,
-}).https.onCall(async (data, context) => {
-  const email = String(context.auth?.token?.email || '').trim().toLowerCase();
-  if (!context.auth) {
-    throw new HttpsError('permission-denied', 'Csak admin törölhet felhasználót.');
-  }
-    if (!await allowCall(context.auth.uid, 'user_delete', 10)) {
-    securityLog('user_delete_rate_limited', context);
-    throw new HttpsError('resource-exhausted', 'Túl sok törlési művelet, próbáld később.');
-  }
-
-  const uid = String(data?.uid || '').trim();
-  if (!uid) {
-    throw new HttpsError('invalid-argument', 'Érvényes felhasználó szükséges.');
-  }
-
-  if (uid !== context.auth.uid) {
-    const callerProfile = await db.collection('community_profiles').doc(context.auth.uid).get();
-    const callerData = callerProfile.data() || {};
-    if (
-      email !== ADMIN_EMAIL &&
-      callerData.accessRole !== 'admin' &&
-      callerData.role !== 'admin'
-    ) {
-      throw new HttpsError('permission-denied', 'Only admins can delete users.');
+exports.deleteCommunityUser = functions
+  .runWith({
+    secrets: [CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, ...SMTP_SECRETS],
+    enforceAppCheck: false,
+  })
+  .https.onCall(async (data, context) => {
+    const email = String(context.auth?.token?.email || '')
+      .trim()
+      .toLowerCase();
+    if (!context.auth) {
+      throw new HttpsError('permission-denied', 'Csak admin törölhet felhasználót.');
     }
-  }
+    if (!(await allowCall(context.auth.uid, 'user_delete', 10))) {
+      securityLog('user_delete_rate_limited', context);
+      throw new HttpsError('resource-exhausted', 'Túl sok törlési művelet, próbáld később.');
+    }
 
-  const selfDelete = uid === context.auth.uid;
-  const deletionRef = db.collection('account_deletions').doc(uid);
-  await deletionRef.set({
-    status: 'pending',
-    selfDelete,
-    deletionType: 'account-deletion',
-    source: 'deleteCommunityUser',
-    expiresAt: FieldValue.delete(),
-    updatedAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
+    const uid = String(data?.uid || '').trim();
+    if (!uid) {
+      throw new HttpsError('invalid-argument', 'Érvényes felhasználó szükséges.');
+    }
 
-  let targetUser;
-  try {
-    targetUser = await auth.getUser(uid);
-  } catch (error) {
-    if (error?.code === 'auth/user-not-found') targetUser = null; else throw error;
-  }
-  if (String(targetUser?.email || '').trim().toLowerCase() === ADMIN_EMAIL) {
-    throw new HttpsError('failed-precondition', 'A fő adminisztrátori fiók nem törölhető.');
-  }
+    if (uid !== context.auth.uid) {
+      const callerProfile = await db.collection('community_profiles').doc(context.auth.uid).get();
+      const callerData = callerProfile.data() || {};
+      if (email !== ADMIN_EMAIL && callerData.accessRole !== 'admin' && callerData.role !== 'admin') {
+        throw new HttpsError('permission-denied', 'Only admins can delete users.');
+      }
+    }
 
-  const profileSnapshot = await db.collection('community_profiles').doc(uid).get();
-  const profileData = profileSnapshot.data() || {};
-  try {
-    await auth.deleteUser(uid);
-  } catch (error) {
-    // Make retries safe when Auth was already deleted but Firestore cleanup did not finish.
-    if (error?.code !== 'auth/user-not-found') throw error;
-  }
-  await db.collection('deleted_user_ids').doc(uid).set({
-    deletedAt: FieldValue.serverTimestamp(),
-  });
-  let cleanup;
-  try {
-    cleanup = await deleteUserReferences(uid, profileData);
-  } catch (error) {
-    // Auth is already gone; preserve a retryable deletion record instead of
-    // turning partial cleanup into a misleading hard failure.
-    await deletionRef.set({
-      status: 'pending',
-      lastError: error?.code || 'cleanup-failed',
-      expiresAt: FieldValue.delete(),
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
-    securityLog('community_user_core_deleted_cleanup_pending', context);
-    return { deleted: true, uid, cleanupStatus: 'cleanup_pending' };
-  }
+    const selfDelete = uid === context.auth.uid;
+    const deletionRef = db.collection('account_deletions').doc(uid);
+    await deletionRef.set(
+      {
+        status: 'pending',
+        selfDelete,
+        deletionType: 'account-deletion',
+        source: 'deleteCommunityUser',
+        expiresAt: FieldValue.delete(),
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
 
-  const authStillExists = await auth.getUser(uid).then(() => true).catch((error) => {
-    if (error?.code === 'auth/user-not-found') return false;
-    throw error;
-  });
-  const profileStillExists = (await db.collection('community_profiles').doc(uid).get()).exists;
-  if (authStillExists || profileStillExists) {
-    await deletionRef.set({
-      status: 'pending',
-      lastError: 'required-account-data-remains',
-      expiresAt: FieldValue.delete(),
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
-    throw new HttpsError('aborted', 'A fiók törlése nem fejeződött be, próbáld újra.');
-  }
-  if (cleanup.cloudinaryListPending) {
+    let targetUser;
+    try {
+      targetUser = await auth.getUser(uid);
+    } catch (error) {
+      if (error?.code === 'auth/user-not-found') targetUser = null;
+      else throw error;
+    }
+    if (
+      String(targetUser?.email || '')
+        .trim()
+        .toLowerCase() === ADMIN_EMAIL
+    ) {
+      throw new HttpsError('failed-precondition', 'A fő adminisztrátori fiók nem törölhető.');
+    }
+
+    const profileSnapshot = await db.collection('community_profiles').doc(uid).get();
+    const profileData = profileSnapshot.data() || {};
+    try {
+      await auth.deleteUser(uid);
+    } catch (error) {
+      // Make retries safe when Auth was already deleted but Firestore cleanup did not finish.
+      if (error?.code !== 'auth/user-not-found') throw error;
+    }
+    await db.collection('deleted_user_ids').doc(uid).set({
+      deletedAt: FieldValue.serverTimestamp(),
+    });
+    let cleanup;
+    try {
+      cleanup = await deleteUserReferences(uid, profileData);
+    } catch (error) {
+      // Auth is already gone; preserve a retryable deletion record instead of
+      // turning partial cleanup into a misleading hard failure.
+      await deletionRef.set(
+        {
+          status: 'pending',
+          lastError: error?.code || 'cleanup-failed',
+          expiresAt: FieldValue.delete(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+      securityLog('community_user_core_deleted_cleanup_pending', context);
+      return { deleted: true, uid, cleanupStatus: 'cleanup_pending' };
+    }
+
+    const authStillExists = await auth
+      .getUser(uid)
+      .then(() => true)
+      .catch((error) => {
+        if (error?.code === 'auth/user-not-found') return false;
+        throw error;
+      });
+    const profileStillExists = (await db.collection('community_profiles').doc(uid).get()).exists;
+    if (authStillExists || profileStillExists) {
+      await deletionRef.set(
+        {
+          status: 'pending',
+          lastError: 'required-account-data-remains',
+          expiresAt: FieldValue.delete(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+      throw new HttpsError('aborted', 'A fiók törlése nem fejeződött be, próbáld újra.');
+    }
+    if (cleanup.cloudinaryListPending) {
+      if (!selfDelete && targetUser?.email) {
+        await sendIdentityEmailOnce({
+          key: `admin-deletion:${uid}`,
+          to: targetUser.email,
+          template: deletionEmailTemplate(),
+        });
+      }
+      await deletionRef.set(
+        {
+          status: 'pending',
+          lastError: 'cloudinary-list-temporary-failure',
+          expiresAt: FieldValue.delete(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+      securityLog('community_user_core_deleted_cleanup_pending', context);
+      return { deleted: true, uid, cleanupStatus: 'cleanup_pending' };
+    }
+    await deletionRef.set(
+      {
+        status: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
+        ...(cleanup.manualCleanupRequired
+          ? { lastError: 'legacy-cloudinary-public-id-missing' }
+          : { completedAt: FieldValue.serverTimestamp() }),
+        expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+
     if (!selfDelete && targetUser?.email) {
       await sendIdentityEmailOnce({
         key: `admin-deletion:${uid}`,
@@ -2656,181 +3496,183 @@ exports.deleteCommunityUser = functions.runWith({
         template: deletionEmailTemplate(),
       });
     }
-    await deletionRef.set({
-      status: 'pending',
-      lastError: 'cloudinary-list-temporary-failure',
-      expiresAt: FieldValue.delete(),
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
-    securityLog('community_user_core_deleted_cleanup_pending', context);
-    return { deleted: true, uid, cleanupStatus: 'cleanup_pending' };
-  }
-  await deletionRef.set({
-    status: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
-    ...(cleanup.manualCleanupRequired ? { lastError: 'legacy-cloudinary-public-id-missing' } : { completedAt: FieldValue.serverTimestamp() }),
-    expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
-    updatedAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
 
-  if (!selfDelete && targetUser?.email) {
-    await sendIdentityEmailOnce({
-      key: `admin-deletion:${uid}`,
-      to: targetUser.email,
-      template: deletionEmailTemplate(),
-    });
-  }
+    securityLog('community_user_deleted', context);
 
-  securityLog('community_user_deleted', context);
+    return {
+      deleted: true,
+      uid,
+      cleanupStatus: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
+    };
+  });
 
-  return { deleted: true, uid, cleanupStatus: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed' };
-});
+exports.cleanupIncompleteAccounts = onSchedule(
+  {
+    schedule: 'every 15 minutes',
+    timeZone: 'Europe/Budapest',
+    region: 'europe-central2',
+    secrets: [CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET],
+  },
+  async () => {
+    const expiredEmailJobs = await db
+      .collection('email_delivery_jobs')
+      .where('expiresAt', '<=', new Date())
+      .limit(100)
+      .get();
+    await deleteDocumentReferences(expiredEmailJobs.docs);
 
-exports.cleanupIncompleteAccounts = onSchedule({
-  schedule: 'every 15 minutes',
-  timeZone: 'Europe/Budapest',
-  region: 'europe-central2',
-  secrets: [CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET],
-}, async () => {
-  const expiredEmailJobs = await db.collection('email_delivery_jobs')
-    .where('expiresAt', '<=', new Date())
-    .limit(100)
-    .get();
-  await deleteDocumentReferences(expiredEmailJobs.docs);
-
-  let pageToken;
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  do {
-    const page = await auth.listUsers(1000, pageToken);
-    for (const authUser of page.users) {
-      if (normalizedEmail(authUser.email) === ADMIN_EMAIL) continue;
-      const created = authUser.metadata.creationTime ? new Date(authUser.metadata.creationTime).getTime() : 0;
-      if (!created || created > cutoff) continue;
-      const profileSnapshot = await db.collection('community_profiles').doc(authUser.uid).get();
-      const profile = profileSnapshot.data() || {};
-      const name = String(profile.displayName || '').trim();
-      const incompleteName = !name || isUnnumberedPlaceholderDisplayName(name) || /^HUHS user \d+$/i.test(name);
-      const pendingEmail = normalizedEmail(profile.pendingEmail);
-      const pendingExpiry = profile.pendingEmailExpiresAt?.toDate?.();
-      const pendingExpiryTime = pendingExpiry?.getTime?.();
-      const pendingEmailExpired = Boolean(
-        pendingEmail && Number.isFinite(pendingExpiryTime) && pendingExpiryTime <= Date.now(),
-      );
-      const hasGoogleProvider = authUser.providerData.some((provider) => provider.providerId === 'google.com');
-      if ((authUser.emailVerified || hasGoogleProvider) && !incompleteName) {
-        if (pendingEmailExpired) {
-          await profileSnapshot.ref.set({
-            pendingEmail: FieldValue.delete(),
-            pendingEmailExpiresAt: FieldValue.delete(),
-            updatedAt: FieldValue.serverTimestamp(),
-          }, { merge: true });
+    let pageToken;
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    do {
+      const page = await auth.listUsers(1000, pageToken);
+      for (const authUser of page.users) {
+        if (normalizedEmail(authUser.email) === ADMIN_EMAIL) continue;
+        const created = authUser.metadata.creationTime ? new Date(authUser.metadata.creationTime).getTime() : 0;
+        if (!created || created > cutoff) continue;
+        const profileSnapshot = await db.collection('community_profiles').doc(authUser.uid).get();
+        const profile = profileSnapshot.data() || {};
+        const name = String(profile.displayName || '').trim();
+        const incompleteName = !name || isUnnumberedPlaceholderDisplayName(name) || /^HUHS user \d+$/i.test(name);
+        const pendingEmail = normalizedEmail(profile.pendingEmail);
+        const pendingExpiry = profile.pendingEmailExpiresAt?.toDate?.();
+        const pendingExpiryTime = pendingExpiry?.getTime?.();
+        const pendingEmailExpired = Boolean(
+          pendingEmail && Number.isFinite(pendingExpiryTime) && pendingExpiryTime <= Date.now(),
+        );
+        const hasGoogleProvider = authUser.providerData.some((provider) => provider.providerId === 'google.com');
+        if ((authUser.emailVerified || hasGoogleProvider) && !incompleteName) {
+          if (pendingEmailExpired) {
+            await profileSnapshot.ref.set(
+              {
+                pendingEmail: FieldValue.delete(),
+                pendingEmailExpiresAt: FieldValue.delete(),
+                updatedAt: FieldValue.serverTimestamp(),
+              },
+              { merge: true },
+            );
+          }
+          continue;
         }
-        continue;
-      }
-      const email = normalizedEmail(authUser.email || profile.email);
-      if (email) {
-        const markerRef = db.collection('deleted_identity_hashes').doc(deletedIdentityKey(email));
-        const markerSnapshot = await markerRef.get();
-        if (!isExplicitIdentityBan(markerSnapshot.data() || {})) {
-          await markerRef.set({
-            blocked: false,
-            reason: 'incomplete-account-cleanup',
-            source: 'cleanupIncompleteAccounts',
-            deletionType: 'account-deletion',
-            createdAt: FieldValue.serverTimestamp(),
-            updatedAt: FieldValue.serverTimestamp(),
-          }, { merge: true });
+        const email = normalizedEmail(authUser.email || profile.email);
+        if (email) {
+          const markerRef = db.collection('deleted_identity_hashes').doc(deletedIdentityKey(email));
+          const markerSnapshot = await markerRef.get();
+          if (!isExplicitIdentityBan(markerSnapshot.data() || {})) {
+            await markerRef.set(
+              {
+                blocked: false,
+                reason: 'incomplete-account-cleanup',
+                source: 'cleanupIncompleteAccounts',
+                deletionType: 'account-deletion',
+                createdAt: FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
+              },
+              { merge: true },
+            );
+          }
         }
+        try {
+          await auth.deleteUser(authUser.uid);
+        } catch (error) {
+          if (error?.code !== 'auth/user-not-found') throw error;
+        }
+        await db.collection('deleted_user_ids').doc(authUser.uid).set({ deletedAt: FieldValue.serverTimestamp() });
+        await deleteUserReferences(authUser.uid, profile);
       }
-      try { await auth.deleteUser(authUser.uid); } catch (error) {
-        if (error?.code !== 'auth/user-not-found') throw error;
+      pageToken = page.pageToken;
+    } while (pageToken);
+
+    const pendingDeletions = await db.collection('account_deletions').where('status', '==', 'pending').limit(50).get();
+    for (const deletion of pendingDeletions.docs) {
+      const uid = deletion.id;
+      const authStillExists = await auth
+        .getUser(uid)
+        .then(() => true)
+        .catch((error) => {
+          if (error?.code === 'auth/user-not-found') return false;
+          throw error;
+        });
+      if (authStillExists) continue;
+      const profileSnapshot = await db.collection('community_profiles').doc(uid).get();
+      try {
+        const cleanup = await deleteUserReferences(uid, profileSnapshot.data() || {});
+        if (cleanup.cloudinaryListPending) continue;
+        await deletion.ref.set(
+          {
+            status: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
+            ...(cleanup.manualCleanupRequired
+              ? { lastError: 'legacy-cloudinary-public-id-missing' }
+              : { completedAt: FieldValue.serverTimestamp() }),
+            expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+      } catch (error) {
+        console.error(
+          JSON.stringify({
+            event: 'account_deletion_retry_failed',
+            step: 'retry_pending_cleanup',
+            uidHash: crypto.createHash('sha256').update(uid).digest('hex').slice(0, 16),
+            errorCode: error?.code || error?.message || 'unknown',
+          }),
+        );
       }
-      await db.collection('deleted_user_ids').doc(authUser.uid).set({ deletedAt: FieldValue.serverTimestamp() });
-      await deleteUserReferences(authUser.uid, profile);
     }
-    pageToken = page.pageToken;
-  } while (pageToken);
+  },
+);
 
-  const pendingDeletions = await db.collection('account_deletions')
-    .where('status', '==', 'pending')
-    .limit(50)
-    .get();
-  for (const deletion of pendingDeletions.docs) {
-    const uid = deletion.id;
-    const authStillExists = await auth.getUser(uid).then(() => true).catch((error) => {
-      if (error?.code === 'auth/user-not-found') return false;
-      throw error;
-    });
-    if (authStillExists) continue;
-    const profileSnapshot = await db.collection('community_profiles').doc(uid).get();
-    try {
-      const cleanup = await deleteUserReferences(uid, profileSnapshot.data() || {});
-      if (cleanup.cloudinaryListPending) continue;
-      await deletion.ref.set({
-        status: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
-        ...(cleanup.manualCleanupRequired
-          ? { lastError: 'legacy-cloudinary-public-id-missing' }
-          : { completedAt: FieldValue.serverTimestamp() }),
-        expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
-        updatedAt: FieldValue.serverTimestamp(),
-      }, { merge: true });
-    } catch (error) {
-      console.error(JSON.stringify({
-        event: 'account_deletion_retry_failed',
-        step: 'retry_pending_cleanup',
-        uidHash: crypto.createHash('sha256').update(uid).digest('hex').slice(0, 16),
-        errorCode: error?.code || error?.message || 'unknown',
-      }));
+exports.deletePrivateConversation = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    const uid = String(context.auth?.uid || '').trim();
+    if (!uid || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
+      throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a beszélgetés törléséhez.');
     }
-  }
-});
+    if (!(await allowCall(uid, 'private_conversation_delete', 10))) {
+      securityLog('private_conversation_delete_rate_limited', context);
+      throw new HttpsError('resource-exhausted', 'Túl sok törlési művelet, próbáld később.');
+    }
 
-exports.deletePrivateConversation = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
-  const uid = String(context.auth?.uid || '').trim();
-  if (!uid || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
-    throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a beszélgetés törléséhez.');
-  }
-  if (!await allowCall(uid, 'private_conversation_delete', 10)) {
-    securityLog('private_conversation_delete_rate_limited', context);
-    throw new HttpsError('resource-exhausted', 'Túl sok törlési művelet, próbáld később.');
-  }
+    const conversationId = String(data?.conversationId || '').trim();
+    if (!conversationId || !/^[^_]+_[^_]+$/.test(conversationId)) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen beszélgetésazonosító.');
+    }
 
-  const conversationId = String(data?.conversationId || '').trim();
-  if (!conversationId || !/^[^_]+_[^_]+$/.test(conversationId)) {
-    throw new HttpsError('invalid-argument', 'Érvénytelen beszélgetésazonosító.');
-  }
+    const conversationRef = db.collection('private_conversations').doc(conversationId);
+    const conversation = await conversationRef.get();
+    if (!conversation.exists) return { deleted: true };
+    const participants = Array.isArray(conversation.data()?.participantIds)
+      ? conversation.data().participantIds.map((id) => String(id))
+      : [];
+    if (!participants.includes(uid)) {
+      securityLog('private_conversation_delete_denied', context);
+      throw new HttpsError('permission-denied', 'Csak a beszélgetés résztvevője törölheti azt.');
+    }
 
-  const conversationRef = db.collection('private_conversations').doc(conversationId);
-  const conversation = await conversationRef.get();
-  if (!conversation.exists) return { deleted: true };
-  const participants = Array.isArray(conversation.data()?.participantIds)
-    ? conversation.data().participantIds.map((id) => String(id))
-    : [];
-  if (!participants.includes(uid)) {
-    securityLog('private_conversation_delete_denied', context);
-    throw new HttpsError('permission-denied', 'Csak a beszélgetés résztvevője törölheti azt.');
-  }
-
-  const messages = await conversationRef.collection('messages').get();
-  for (let offset = 0; offset < messages.docs.length; offset += 400) {
-    const batch = db.batch();
-    messages.docs.slice(offset, offset + 400).forEach((message) => batch.delete(message.ref));
-    await batch.commit();
-  }
-  await conversationRef.delete();
-  return { deleted: true };
-});
+    const messages = await conversationRef.collection('messages').get();
+    for (let offset = 0; offset < messages.docs.length; offset += 400) {
+      const batch = db.batch();
+      messages.docs.slice(offset, offset + 400).forEach((message) => batch.delete(message.ref));
+      await batch.commit();
+    }
+    await conversationRef.delete();
+    return { deleted: true };
+  });
 
 exports.claimArtistProfile = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   if (!context.auth || context.auth.token.email_verified !== true) {
     throw new HttpsError('permission-denied', 'Hitelesített e-mailes fiók szükséges.');
   }
   const artistId = Number(data?.artistId);
-  const email = String(context.auth.token.email || '').trim().toLowerCase();
+  const email = String(context.auth.token.email || '')
+    .trim()
+    .toLowerCase();
   const isAdminClaim = email === ADMIN_EMAIL;
   if (!Number.isInteger(artistId) || artistId <= 0 || !email || email === 'info@hungarianhardstyle.hu') {
     throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap és e-mail szükséges.');
   }
-    if (!await allowCall(context.auth.uid, 'artist_claim', 5)) {
+  if (!(await allowCall(context.auth.uid, 'artist_claim', 5))) {
     throw new HttpsError('resource-exhausted', 'Túl sok claim-kérés, próbáld később.');
   }
   const claimRef = db.collection('artist_claims').doc(String(artistId));
@@ -2840,7 +3682,13 @@ exports.claimArtistProfile = functions.runWith({ enforceAppCheck: false }).https
   }
   const response = await fetch(`${WORDPRESS_BASE_URL}/artists/${artistId}`);
   const artist = await response.json().catch(() => ({}));
-  if (!response.ok || (!isAdminClaim && String(artist?.booking_email || '').trim().toLowerCase() !== email)) {
+  if (
+    !response.ok ||
+    (!isAdminClaim &&
+      String(artist?.booking_email || '')
+        .trim()
+        .toLowerCase() !== email)
+  ) {
     throw new HttpsError('permission-denied', 'A bejelentkezési e-mail nem egyezik a booking e-maillel.');
   }
   await claimRef.set({
@@ -2866,31 +3714,37 @@ exports.getMyClaimedArtists = functions.runWith({ enforceAppCheck: false }).http
   if (!context.auth || context.auth.token.email_verified !== true) {
     throw new HttpsError('permission-denied', 'Bejelentkezés szükséges.');
   }
-  const snapshot = await db
-    .collection('artist_claims')
-    .where('uid', '==', context.auth.uid)
-    .get();
+  const snapshot = await db.collection('artist_claims').where('uid', '==', context.auth.uid).get();
   return {
-    artistIds: snapshot.docs
-      .map((doc) => Number(doc.data()?.artistId))
-      .filter((id) => Number.isInteger(id) && id > 0),
+    artistIds: snapshot.docs.map((doc) => Number(doc.data()?.artistId)).filter((id) => Number.isInteger(id) && id > 0),
   };
 });
 
 exports.verifyLabelPurchase = functions
-  .runWith({ secrets: [GOOGLE_PLAY_SERVICE_ACCOUNT_JSON], enforceAppCheck: false })
+  .runWith({
+    secrets: [GOOGLE_PLAY_SERVICE_ACCOUNT_JSON],
+    enforceAppCheck: false,
+  })
   .https.onCall(async (data, context) => {
     if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
       throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a vásárláshoz.');
     }
-    if (!await allowCall(context.auth.uid, 'label_purchase', 10)) {
+    if (!(await allowCall(context.auth.uid, 'label_purchase', 10))) {
       throw new HttpsError('resource-exhausted', 'Túl sok vásárlási ellenőrzés.');
     }
     const productId = String(data?.productId || '').trim();
     const purchaseToken = String(data?.purchaseToken || '').trim();
     const releaseId = Number(data?.releaseId || 0);
-    const productMatch = productId.match(/^huhs_release_([0-9]+)_(radio_wav|radio_mp3_320|extended_wav|extended_mp3_320|wav|mp3_320)$/);
-    if (!productMatch || !purchaseToken || !Number.isInteger(releaseId) || releaseId < 1 || Number(productMatch[1]) !== releaseId) {
+    const productMatch = productId.match(
+      /^huhs_release_([0-9]+)_(radio_wav|radio_mp3_320|extended_wav|extended_mp3_320|wav|mp3_320)$/,
+    );
+    if (
+      !productMatch ||
+      !purchaseToken ||
+      !Number.isInteger(releaseId) ||
+      releaseId < 1 ||
+      Number(productMatch[1]) !== releaseId
+    ) {
       throw new HttpsError('invalid-argument', 'Érvénytelen Label-vásárlási adat.');
     }
     let serviceAccount;
@@ -2919,7 +3773,8 @@ exports.verifyLabelPurchase = functions
       throw new HttpsError('permission-denied', 'A vásárlás nincs teljesítve.');
     }
     const purchaseTokenHash = crypto.createHash('sha256').update(purchaseToken).digest('hex');
-    const previousOwner = await db.collection('label_entitlements')
+    const previousOwner = await db
+      .collection('label_entitlements')
       .where('purchaseTokenHash', '==', purchaseTokenHash)
       .limit(1)
       .get();
@@ -2959,7 +3814,10 @@ exports.verifyLabelPurchase = functions
   });
 
 exports.getLabelDownloadUrl = functions
-  .runWith({ secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD], enforceAppCheck: false })
+  .runWith({
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+    enforceAppCheck: false,
+  })
   .https.onCall(async (data, context) => {
     const releaseId = Number(data?.releaseId || 0);
     const variant = String(data?.variant || '').trim();
@@ -2967,22 +3825,32 @@ exports.getLabelDownloadUrl = functions
     if (isAnonymous) {
       throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a letöltéshez.');
     }
-    const callerKey = context.auth?.uid
-      || context.rawRequest?.ip
-      || context.rawRequest?.socket?.remoteAddress
-      || 'anonymous';
-    if (!await allowCall(callerKey, 'label_download', 10)) {
+    const callerKey =
+      context.auth?.uid || context.rawRequest?.ip || context.rawRequest?.socket?.remoteAddress || 'anonymous';
+    if (!(await allowCall(callerKey, 'label_download', 10))) {
       throw new HttpsError('resource-exhausted', 'Túl sok letöltési kérés.');
     }
-    if (!Number.isInteger(releaseId) || releaseId < 1 || !['free_wav', 'wav', 'mp3_320', 'mp3_96', 'mp3_128', 'radio_wav', 'radio_mp3_320', 'extended_wav', 'extended_mp3_320'].includes(variant)) {
+    if (
+      !Number.isInteger(releaseId) ||
+      releaseId < 1 ||
+      ![
+        'free_wav',
+        'wav',
+        'mp3_320',
+        'mp3_96',
+        'mp3_128',
+        'radio_wav',
+        'radio_mp3_320',
+        'extended_wav',
+        'extended_mp3_320',
+      ].includes(variant)
+    ) {
       throw new HttpsError('invalid-argument', 'Érvénytelen Label-letöltési adat.');
     }
     const paid = !['free_wav', 'mp3_96', 'mp3_128'].includes(variant);
     const productId = `huhs_release_${releaseId}_${variant}`;
     const entitlement = paid
-      ? await db.collection('label_entitlements')
-        .doc(`${context.auth.uid}_${productId}`)
-        .get()
+      ? await db.collection('label_entitlements').doc(`${context.auth.uid}_${productId}`).get()
       : null;
     if (paid && (!entitlement || !entitlement.exists || entitlement.data()?.releaseId !== releaseId)) {
       throw new HttpsError('permission-denied', 'Ehhez a fájlhoz nincs vásárlási jogosultság.');
@@ -3014,7 +3882,10 @@ exports.getLabelDownloadUrl = functions
       throw new HttpsError('failed-precondition', body?.message || 'A Label-letöltés nem érhető el.');
     }
     console.info('label_download_wordpress_ok', { releaseId, variant });
-    return { downloadUrl: body.download_url, expiresIn: Number(body.expires_in || 300) };
+    return {
+      downloadUrl: body.download_url,
+      expiresIn: Number(body.expires_in || 300),
+    };
   });
 
 const labelProductDefinitions = [
@@ -3025,7 +3896,9 @@ const labelProductDefinitions = [
 ];
 
 function parseHufPrice(value) {
-  const match = String(value || '').replace(/\s/g, '').match(/\d+/);
+  const match = String(value || '')
+    .replace(/\s/g, '')
+    .match(/\d+/);
   const price = Number(match?.[0] || 0);
   return Number.isInteger(price) && price > 0 ? price : 0;
 }
@@ -3045,20 +3918,26 @@ function productIdFromResponse(product) {
 async function upsertPlayProduct(androidPublisher, release, definition, productId, price) {
   let current = null;
   try {
-    current = (await androidPublisher.monetization.onetimeproducts.get({
-      packageName: GOOGLE_PLAY_PACKAGE_NAME,
-      productId,
-    })).data;
+    current = (
+      await androidPublisher.monetization.onetimeproducts.get({
+        packageName: GOOGLE_PLAY_PACKAGE_NAME,
+        productId,
+      })
+    ).data;
   } catch (error) {
     if (error?.response?.status !== 404) throw error;
   }
 
   const purchaseOptionId = String(current?.purchaseOptions?.[0]?.purchaseOptionId || 'default');
   const title = `${String(release.title || 'HUHS Release')} – ${definition.label}`.slice(0, 55);
-  const description = `Hungarian Hardstyle ${definition.label} letöltés: ${String(release.title || 'Release')}`.slice(0, 200);
-  const currentOption = current?.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId)
-    || current?.purchaseOptions?.[0]
-    || null;
+  const description = `Hungarian Hardstyle ${definition.label} letöltés: ${String(release.title || 'Release')}`.slice(
+    0,
+    200,
+  );
+  const currentOption =
+    current?.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId) ||
+    current?.purchaseOptions?.[0] ||
+    null;
   const regionalPrices = new Map(
     (currentOption?.regionalPricingAndAvailabilityConfigs || [])
       .filter((item) => item?.regionCode)
@@ -3071,7 +3950,10 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
   });
   const purchaseOption = {
     purchaseOptionId,
-    buyOption: currentOption?.buyOption || { legacyCompatible: true, multiQuantityEnabled: false },
+    buyOption: currentOption?.buyOption || {
+      legacyCompatible: true,
+      multiQuantityEnabled: false,
+    },
     regionalPricingAndAvailabilityConfigs: [...regionalPrices.values()],
   };
   if (currentOption?.newRegionsConfig) purchaseOption.newRegionsConfig = currentOption.newRegionsConfig;
@@ -3103,22 +3985,28 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
       request('PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE'),
     );
   } catch (error) {
-    const isBackendError = error?.response?.status === 500
-      && (error?.response?.data?.error?.status === 'INTERNAL'
-        || error?.response?.data?.error?.errors?.some((item) => item.reason === 'backendError'));
+    const isBackendError =
+      error?.response?.status === 500 &&
+      (error?.response?.data?.error?.status === 'INTERNAL' ||
+        error?.response?.data?.error?.errors?.some((item) => item.reason === 'backendError'));
     if (!isBackendError) throw error;
     console.warn('label_product_sync_latency_tolerant_retry', {
-      releaseId: Number(release.id), type: definition.type, productId, price,
+      releaseId: Number(release.id),
+      type: definition.type,
+      productId,
+      price,
     });
     result = await androidPublisher.monetization.onetimeproducts.patch(
       request('PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT'),
     );
   }
   let saved = result.data || product;
-  let savedOption = saved.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId)
-    || saved.purchaseOptions?.[0];
+  let savedOption =
+    saved.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId) || saved.purchaseOptions?.[0];
   console.log('label_product_sync_play_patch_response', {
-    releaseId: Number(release.id), type: definition.type, productId,
+    releaseId: Number(release.id),
+    type: definition.type,
+    productId,
     purchaseOptionCount: Array.isArray(saved.purchaseOptions) ? saved.purchaseOptions.length : 0,
     purchaseOptionState: savedOption?.state || 'missing',
   });
@@ -3132,12 +4020,15 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
   if (!savedOption) {
     for (const delayMs of [500, 1500, 3000]) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
-      saved = (await androidPublisher.monetization.onetimeproducts.get({
-        packageName: GOOGLE_PLAY_PACKAGE_NAME,
-        productId,
-      })).data;
-      savedOption = saved.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId)
-        || saved.purchaseOptions?.[0];
+      saved = (
+        await androidPublisher.monetization.onetimeproducts.get({
+          packageName: GOOGLE_PLAY_PACKAGE_NAME,
+          productId,
+        })
+      ).data;
+      savedOption =
+        saved.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId) ||
+        saved.purchaseOptions?.[0];
       if (savedOption) break;
     }
   }
@@ -3146,18 +4037,21 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
     const batchResult = await androidPublisher.monetization.onetimeproducts.batchUpdate({
       packageName: GOOGLE_PLAY_PACKAGE_NAME,
       requestBody: {
-        requests: [{
-          oneTimeProduct: product,
-          updateMask: 'listings,purchaseOptions',
-          regionsVersion: { version: GOOGLE_PLAY_REGIONS_VERSION },
-          allowMissing: true,
-          latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
-        }],
+        requests: [
+          {
+            oneTimeProduct: product,
+            updateMask: 'listings,purchaseOptions',
+            regionsVersion: { version: GOOGLE_PLAY_REGIONS_VERSION },
+            allowMissing: true,
+            latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
+          },
+        ],
       },
     });
     saved = batchResult.data?.oneTimeProducts?.[0] || null;
-    savedOption = saved?.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId)
-      || saved?.purchaseOptions?.[0];
+    savedOption =
+      saved?.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId) ||
+      saved?.purchaseOptions?.[0];
   }
 
   if (!savedOption) {
@@ -3169,35 +4063,42 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
       packageName: GOOGLE_PLAY_PACKAGE_NAME,
       productId,
       requestBody: {
-        requests: [{
-          activatePurchaseOptionRequest: {
-            packageName: GOOGLE_PLAY_PACKAGE_NAME,
-            productId,
-            purchaseOptionId: savedOption.purchaseOptionId || purchaseOptionId,
-            latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
+        requests: [
+          {
+            activatePurchaseOptionRequest: {
+              packageName: GOOGLE_PLAY_PACKAGE_NAME,
+              productId,
+              purchaseOptionId: savedOption.purchaseOptionId || purchaseOptionId,
+              latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
+            },
           },
-        }],
+        ],
       },
     });
   }
 
-  const verified = (await androidPublisher.monetization.onetimeproducts.get({
-    packageName: GOOGLE_PLAY_PACKAGE_NAME,
-    productId,
-  })).data;
-  const verifiedOption = verified.purchaseOptions?.find(
-    (option) => option.purchaseOptionId === (savedOption.purchaseOptionId || purchaseOptionId),
-  ) || verified.purchaseOptions?.[0];
+  const verified = (
+    await androidPublisher.monetization.onetimeproducts.get({
+      packageName: GOOGLE_PLAY_PACKAGE_NAME,
+      productId,
+    })
+  ).data;
+  const verifiedOption =
+    verified.purchaseOptions?.find(
+      (option) => option.purchaseOptionId === (savedOption.purchaseOptionId || purchaseOptionId),
+    ) || verified.purchaseOptions?.[0];
   if (!verifiedOption || verifiedOption.state !== 'ACTIVE') {
     throw new Error(`Play purchase option is not active after sync: ${productId}`);
   }
   console.log('label_product_sync_play_verified', {
-    releaseId: Number(release.id), type: definition.type, productId,
+    releaseId: Number(release.id),
+    type: definition.type,
+    productId,
     purchaseOptionId: verifiedOption.purchaseOptionId,
     purchaseOptionState: verifiedOption.state,
-    huAvailability: verifiedOption.regionalPricingAndAvailabilityConfigs?.find(
-      (item) => item.regionCode === 'HU',
-    )?.availability || 'missing',
+    huAvailability:
+      verifiedOption.regionalPricingAndAvailabilityConfigs?.find((item) => item.regionCode === 'HU')?.availability ||
+      'missing',
   });
   return productIdFromResponse(saved) || productId;
 }
@@ -3220,20 +4121,28 @@ async function updateWordPressReleaseProducts(credentials, releaseId, products) 
 async function syncReleasePlayProducts(release, credentials, androidPublisher) {
   const products = {};
   if (String(release.audio_status || '') !== 'ready') {
-    return { releaseId: Number(release.id), products, skipped: 'audio-not-ready' };
+    return {
+      releaseId: Number(release.id),
+      products,
+      skipped: 'audio-not-ready',
+    };
   }
-  const existing = new Map((Array.isArray(release.products) ? release.products : []).map((item) => [String(item.type), item]));
+  const existing = new Map(
+    (Array.isArray(release.products) ? release.products : []).map((item) => [String(item.type), item]),
+  );
   const prices = release.product_prices || {};
-  const available = new Set((Array.isArray(release.versions) ? release.versions : []).filter((item) => item.available).map((item) => String(item.type)));
+  const available = new Set(
+    (Array.isArray(release.versions) ? release.versions : [])
+      .filter((item) => item.available)
+      .map((item) => String(item.type)),
+  );
   const errors = [];
   for (const definition of labelProductDefinitions) {
     const rawKnown = existing.get(definition.type);
     const knownId = String(rawKnown?.id || '');
     // Never attach a product belonging to another release. This prevents a
     // copied/stale WordPress ID from leaving the new release's buttons grey.
-    const known = rawKnown && knownId.startsWith(`huhs_release_${release.id}_`)
-      ? rawKnown
-      : null;
+    const known = rawKnown && knownId.startsWith(`huhs_release_${release.id}_`) ? rawKnown : null;
     const price = parseHufPrice(prices[definition.type] || known?.price);
     const sourceType = definition.type.startsWith('radio_') ? 'radio' : 'extended';
     if (!known?.id && (!available.has(sourceType) || !price)) continue;
@@ -3245,23 +4154,35 @@ async function syncReleasePlayProducts(release, credentials, androidPublisher) {
     try {
       products[definition.type] = await upsertPlayProduct(androidPublisher, release, definition, productId, price);
       console.info('label_product_sync_item', {
-        releaseId: Number(release.id), type: definition.type,
-        productId: products[definition.type], price, status: 'ok',
+        releaseId: Number(release.id),
+        type: definition.type,
+        productId: products[definition.type],
+        price,
+        status: 'ok',
       });
     } catch (error) {
       const apiError = error?.response?.data?.error || error?.response?.data || null;
       const detail = {
-        releaseId: Number(release.id), type: definition.type, productId, price,
-        status: error?.response?.status || null, message: error?.message || String(error),
-        apiError: apiError ? {
-          code: apiError.code || null,
-          status: apiError.status || null,
-          message: apiError.message || null,
-          reasons: Array.isArray(apiError.errors)
-            ? apiError.errors.map((item) => ({ reason: item.reason || null, message: item.message || null }))
-            : [],
-          raw: JSON.stringify(apiError),
-        } : null,
+        releaseId: Number(release.id),
+        type: definition.type,
+        productId,
+        price,
+        status: error?.response?.status || null,
+        message: error?.message || String(error),
+        apiError: apiError
+          ? {
+              code: apiError.code || null,
+              status: apiError.status || null,
+              message: apiError.message || null,
+              reasons: Array.isArray(apiError.errors)
+                ? apiError.errors.map((item) => ({
+                    reason: item.reason || null,
+                    message: item.message || null,
+                  }))
+                : [],
+              raw: JSON.stringify(apiError),
+            }
+          : null,
       };
       errors.push(detail);
       console.error('label_product_sync_item_failed', detail);
@@ -3287,7 +4208,9 @@ async function syncWordPressLabelProducts(releaseId = 0) {
       scopes: ['https://www.googleapis.com/auth/androidpublisher'],
     });
     const androidPublisher = google.androidpublisher({ version: 'v3', auth });
-    const response = await fetch(`${WORDPRESS_BASE_URL}/releases`, { headers: { Accept: 'application/json' } });
+    const response = await fetch(`${WORDPRESS_BASE_URL}/releases`, {
+      headers: { Accept: 'application/json' },
+    });
     const body = await response.json().catch(() => ({}));
     if (!response.ok || !Array.isArray(body.items)) throw new Error('A WordPress release-lista nem tölthető be.');
     const releases = body.items.filter((release) => !releaseId || Number(release.id) === releaseId);
@@ -3299,8 +4222,10 @@ async function syncWordPressLabelProducts(releaseId = 0) {
         console.info('label_product_sync_release', result);
       } catch (error) {
         console.error('label_product_sync_failed', {
-          releaseId: release.id, title: release.title,
-          message: error?.message || String(error), status: error?.response?.status || null,
+          releaseId: release.id,
+          title: release.title,
+          message: error?.message || String(error),
+          status: error?.response?.status || null,
         });
       }
     }
@@ -3315,38 +4240,46 @@ exports.syncLabelProducts = functions
   .https.onCall(async (data, context) => {
     if (!context.auth) throw new HttpsError('permission-denied', 'Csak admin indíthatja a Play-termékszinkront.');
     const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
-    if (!isAdmin(context, profile)) throw new HttpsError('permission-denied', 'Csak admin indíthatja a Play-termékszinkront.');
+    if (!isAdmin(context, profile))
+      throw new HttpsError('permission-denied', 'Csak admin indíthatja a Play-termékszinkront.');
     const releaseId = Number(data?.releaseId || 0);
-    if (releaseId && (!Number.isInteger(releaseId) || releaseId < 1)) throw new HttpsError('invalid-argument', 'Érvénytelen release-azonosító.');
+    if (releaseId && (!Number.isInteger(releaseId) || releaseId < 1))
+      throw new HttpsError('invalid-argument', 'Érvénytelen release-azonosító.');
     return syncWordPressLabelProducts(releaseId);
   });
 
-exports.syncWordPressLabelProducts = onSchedule({
-  schedule: 'every 5 minutes',
-  timeZone: 'Europe/Budapest',
-  secrets: labelProductSyncSecrets,
-}, async () => syncWordPressLabelProducts());
+exports.syncWordPressLabelProducts = onSchedule(
+  {
+    schedule: 'every 5 minutes',
+    timeZone: 'Europe/Budapest',
+    secrets: labelProductSyncSecrets,
+  },
+  async () => syncWordPressLabelProducts(),
+);
 
 // WordPress queues this request immediately after audio processing succeeds.
 // The scheduled sync remains as a safety-net for missed or failed requests.
-exports.syncQueuedWordPressLabelProducts = onDocumentCreated({
-  document: 'label_product_sync_requests/{requestId}',
-  database: 'hungarian-hardstyle',
-  region: 'us-central1',
-  secrets: labelProductSyncSecrets,
-}, async (event) => {
-  const request = event.data?.data() || {};
-  const releaseId = Number(request.releaseId || 0);
-  if (!Number.isInteger(releaseId) || releaseId < 1) return;
-  const result = await syncWordPressLabelProducts(releaseId);
-  console.info('label_product_sync_queued_request', { releaseId, result });
-});
+exports.syncQueuedWordPressLabelProducts = onDocumentCreated(
+  {
+    document: 'label_product_sync_requests/{requestId}',
+    database: 'hungarian-hardstyle',
+    region: 'us-central1',
+    secrets: labelProductSyncSecrets,
+  },
+  async (event) => {
+    const request = event.data?.data() || {};
+    const releaseId = Number(request.releaseId || 0);
+    if (!Number.isInteger(releaseId) || releaseId < 1) return;
+    const result = await syncWordPressLabelProducts(releaseId);
+    console.info('label_product_sync_queued_request', { releaseId, result });
+  },
+);
 
 exports.getLabelAdUnlockStatus = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
     throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
   }
-    if (!await allowCall(context.auth.uid, 'label_ad_unlock_status', 40)) {
+  if (!(await allowCall(context.auth.uid, 'label_ad_unlock_status', 40))) {
     throw new HttpsError('resource-exhausted', 'Túl sok feloldási ellenőrzés.');
   }
   const releaseId = Number(data?.releaseId || 0);
@@ -3357,9 +4290,7 @@ exports.getLabelAdUnlockStatus = functions.runWith({ enforceAppCheck: false }).h
   if (!Number.isInteger(releaseId) || releaseId < 1) {
     throw new HttpsError('invalid-argument', 'Érvénytelen release azonosító.');
   }
-  const snapshot = await db.collection('label_ad_unlocks')
-    .doc(`${context.auth.uid}_${releaseId}`)
-    .get();
+  const snapshot = await db.collection('label_ad_unlocks').doc(`${context.auth.uid}_${releaseId}`).get();
   const unlock = snapshot.data() || {};
   const unlocked = snapshot.exists && activeAdUnlock(unlock, releaseId, variant);
   return { unlocked };
@@ -3395,32 +4326,40 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
     // Google signs the query exactly as received, up to (but excluding) the
     // `&signature=` separator. Do not decode, reorder, or remove key_id.
     const signedQuery = rawQuery.slice(0, signatureMatch.index);
-    const signatureBytes = [
-      Buffer.from(signature, 'base64url'),
-      Buffer.from(signature, 'base64'),
-    ];
+    const signatureBytes = [Buffer.from(signature, 'base64url'), Buffer.from(signature, 'base64')];
     const normalizedSignature = signature.replace(/-/g, '+').replace(/_/g, '/');
     const publicKeys = [key.pem];
     if (key.base64) {
-      publicKeys.push(crypto.createPublicKey({
-        key: Buffer.from(key.base64, 'base64'),
-        format: 'der',
-        type: 'spki',
-      }));
+      publicKeys.push(
+        crypto.createPublicKey({
+          key: Buffer.from(key.base64, 'base64'),
+          format: 'der',
+          type: 'spki',
+        }),
+      );
     }
     const queryFromUrl = requestUrl.split('?')[1] || '';
     const urlSignatureMatch = /(?:^|&)signature=([^&]*)/.exec(queryFromUrl);
     const verificationInputs = [
       { label: 'original-excluding-separator', value: signedQuery },
       ...(urlSignatureMatch
-        ? [{ label: 'url-excluding-separator', value: queryFromUrl.slice(0, urlSignatureMatch.index) }]
+        ? [
+            {
+              label: 'url-excluding-separator',
+              value: queryFromUrl.slice(0, urlSignatureMatch.index),
+            },
+          ]
         : []),
     ];
-    const decodeQuery = (value) => value.split('&').map((part) => {
-      const separator = part.indexOf('=');
-      if (separator < 0) return decodeURIComponent(part);
-      return `${decodeURIComponent(part.slice(0, separator))}=${decodeURIComponent(part.slice(separator + 1))}`;
-    }).join('&');
+    const decodeQuery = (value) =>
+      value
+        .split('&')
+        .map((part) => {
+          const separator = part.indexOf('=');
+          if (separator < 0) return decodeURIComponent(part);
+          return `${decodeURIComponent(part.slice(0, separator))}=${decodeURIComponent(part.slice(separator + 1))}`;
+        })
+        .join('&');
     verificationInputs.push({
       label: 'decoded-query',
       value: decodeQuery(signedQuery),
@@ -3466,26 +4405,47 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
     const uid = String(decoded.uid || '').trim();
     const releaseId = Number(decoded.releaseId || 0);
     const variant = String(decoded.variant || 'mp3_128').trim();
-    if (!uid || !Number.isInteger(releaseId) || releaseId < 1
-      || !['free_wav', 'free_link', 'mp3_96', 'mp3_128'].includes(variant)) return reject('invalid reward data');
+    if (
+      !uid ||
+      !Number.isInteger(releaseId) ||
+      releaseId < 1 ||
+      !['free_wav', 'free_link', 'mp3_96', 'mp3_128'].includes(variant)
+    )
+      return reject('invalid reward data');
     const transaction = db.collection('admob_reward_transactions').doc(transactionId);
     await db.runTransaction(async (tx) => {
       if ((await tx.get(transaction)).exists) return;
       const unlockRef = db.collection('label_ad_unlocks').doc(`${uid}_${releaseId}`);
       const unlock = await tx.get(unlockRef);
-      const existingVariants = unlock.exists && unlock.data()?.variants && typeof unlock.data().variants === 'object'
-        ? unlock.data().variants
-        : {};
-      tx.set(transaction, { uid, releaseId, createdAt: FieldValue.serverTimestamp() });
-      tx.set(unlockRef, {
-        uid, releaseId, transactionId,
-        variants: { ...existingVariants, [variant]: true },
-        unlockedAt: FieldValue.serverTimestamp(),
-      }, { merge: true });
+      const existingVariants =
+        unlock.exists && unlock.data()?.variants && typeof unlock.data().variants === 'object'
+          ? unlock.data().variants
+          : {};
+      tx.set(transaction, {
+        uid,
+        releaseId,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      tx.set(
+        unlockRef,
+        {
+          uid,
+          releaseId,
+          transactionId,
+          variants: { ...existingVariants, [variant]: true },
+          unlockedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
     });
     return res.status(200).send('ok');
   } catch (error) {
-    console.warn(JSON.stringify({ event: 'admob_ssv_failed', message: String(error?.message || error) }));
+    console.warn(
+      JSON.stringify({
+        event: 'admob_ssv_failed',
+        message: String(error?.message || error),
+      }),
+    );
     return res.status(400).send('invalid callback');
   }
 });
@@ -3495,7 +4455,8 @@ exports.getVotingSummary = functions.runWith({ enforceAppCheck: false }).https.o
   const profile = (await db.collection('community_profiles').doc(context.auth.uid).get()).data() || {};
   if (!isAdmin(context, profile)) throw new HttpsError('permission-denied', 'Csak admin tekintheti meg az összesítőt.');
   const seasonId = Number(data?.seasonId);
-  if (!Number.isInteger(seasonId) || seasonId <= 0) throw new HttpsError('invalid-argument', 'Érvényes szezon szükséges.');
+  if (!Number.isInteger(seasonId) || seasonId <= 0)
+    throw new HttpsError('invalid-argument', 'Érvényes szezon szükséges.');
   const snapshot = await db.collection('voting_votes').where('seasonId', '==', seasonId).get();
   const counts = {};
   for (const doc of snapshot.docs) {
@@ -3559,9 +4520,15 @@ function normalizeVotingBallot(rawVotes) {
     if (!Array.isArray(rawIds)) throw new HttpsError('invalid-argument', 'A jelöltek listája érvénytelen.');
     const ids = rawIds.map(Number);
     const required = VOTING_REQUIRED_COUNTS[category];
-    if (ids.length !== required || ids.some((id) => !Number.isSafeInteger(id) || id <= 0)
-      || new Set(ids).size !== ids.length) {
-      throw new HttpsError('invalid-argument', `${category} kategóriában pontosan ${required} különböző jelölt szükséges.`);
+    if (
+      ids.length !== required ||
+      ids.some((id) => !Number.isSafeInteger(id) || id <= 0) ||
+      new Set(ids).size !== ids.length
+    ) {
+      throw new HttpsError(
+        'invalid-argument',
+        `${category} kategóriában pontosan ${required} különböző jelölt szükséges.`,
+      );
     }
     votes[category] = ids;
   }
@@ -3571,7 +4538,8 @@ function normalizeVotingBallot(rawVotes) {
 exports.getVotingStatus = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = requireVotingUser(context);
   const seasonId = Number(data?.seasonId);
-  if (!Number.isSafeInteger(seasonId) || seasonId <= 0) throw new HttpsError('invalid-argument', 'Érvényes szezon szükséges.');
+  if (!Number.isSafeInteger(seasonId) || seasonId <= 0)
+    throw new HttpsError('invalid-argument', 'Érvényes szezon szükséges.');
   const deviceId = votingDeviceIdForRequest(context, data?.deviceId);
   const categories = Object.keys(VOTING_REQUIRED_COUNTS);
   const refs = categories.map((category) => db.collection('voting_votes').doc(`${seasonId}_${category}_${uid}`));
@@ -3587,9 +4555,7 @@ exports.getVotingStatus = functions.runWith({ enforceAppCheck: false }).https.on
       votedCategories.add(category);
       const ids = snapshot.data()?.candidateIds;
       if (Array.isArray(ids)) {
-        selectedCandidateIds[category] = ids
-          .map(Number)
-          .filter((id) => Number.isSafeInteger(id) && id > 0);
+        selectedCandidateIds[category] = ids.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0);
       }
     }
   });
@@ -3600,19 +4566,22 @@ exports.getVotingStatus = functions.runWith({ enforceAppCheck: false }).https.on
       votedCategories.add(category);
       const ids = deviceData.selections?.[category];
       if (!selectedCandidateIds[category] && Array.isArray(ids)) {
-        selectedCandidateIds[category] = ids
-          .map(Number)
-          .filter((id) => Number.isSafeInteger(id) && id > 0);
+        selectedCandidateIds[category] = ids.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0);
       }
     }
   });
-  return { seasonId, votedCategories: [...votedCategories], selectedCandidateIds };
+  return {
+    seasonId,
+    votedCategories: [...votedCategories],
+    selectedCandidateIds,
+  };
 });
 
 exports.submitVotingBallot = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = requireVotingUser(context);
   const seasonId = Number(data?.seasonId);
-  if (!Number.isSafeInteger(seasonId) || seasonId <= 0) throw new HttpsError('invalid-argument', 'Érvényes szezon szükséges.');
+  if (!Number.isSafeInteger(seasonId) || seasonId <= 0)
+    throw new HttpsError('invalid-argument', 'Érvényes szezon szükséges.');
   const deviceId = votingDeviceIdForRequest(context, data?.deviceId);
   const votes = normalizeVotingBallot(data?.votes);
   const refs = Object.keys(VOTING_REQUIRED_COUNTS).map((category) => ({
@@ -3627,20 +4596,22 @@ exports.submitVotingBallot = functions.runWith({ enforceAppCheck: false }).https
     for (const item of refs) current.set(item.category, await transaction.get(item.ref));
     const deviceClaim = await transaction.get(deviceRef);
     const deviceData = deviceClaim.exists ? deviceClaim.data() || {} : {};
-    const selections = deviceData.selections && typeof deviceData.selections === 'object'
-      ? { ...deviceData.selections } : {};
+    const selections =
+      deviceData.selections && typeof deviceData.selections === 'object' ? { ...deviceData.selections } : {};
     const claimedCategories = new Set(
       Array.isArray(deviceData.categories)
-        ? deviceData.categories.filter((category) => Object.prototype.hasOwnProperty.call(VOTING_REQUIRED_COUNTS, category))
+        ? deviceData.categories.filter((category) =>
+            Object.prototype.hasOwnProperty.call(VOTING_REQUIRED_COUNTS, category),
+          )
         : [],
     );
     if (deviceClaim.exists && deviceData.userId && deviceData.userId !== uid) {
       throw new HttpsError('already-exists', 'Erről a készülékről erre az évadra már érkezett szavazat.');
     }
     const missing = refs
-      .filter((item) => !current.get(item.category).exists
-        && !claimedCategories.has(item.category)
-        && !votes[item.category])
+      .filter(
+        (item) => !current.get(item.category).exists && !claimedCategories.has(item.category) && !votes[item.category],
+      )
       .map((item) => item.category);
     if (missing.length) {
       throw new HttpsError('invalid-argument', `Hiányzó kötelező kategória: ${missing.join(', ')}.`);
@@ -3660,27 +4631,40 @@ exports.submitVotingBallot = functions.runWith({ enforceAppCheck: false }).https
       selections[item.category] = votes[item.category];
       createdCategories.push(item.category);
     }
-    const allCategories = [...new Set([...claimedCategories, ...refs
-      .filter((item) => current.get(item.category).exists)
-      .map((item) => item.category), ...createdCategories])];
+    const allCategories = [
+      ...new Set([
+        ...claimedCategories,
+        ...refs.filter((item) => current.get(item.category).exists).map((item) => item.category),
+        ...createdCategories,
+      ]),
+    ];
     ballotComplete = refs.every((item) => allCategories.includes(item.category));
-    transaction.set(deviceRef, {
-      seasonId,
-      userId: uid,
-      categories: allCategories,
-      createdAt: deviceClaim.exists
-        ? deviceData.createdAt || FieldValue.serverTimestamp()
-        : FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-      selections,
-    }, { merge: true });
+    transaction.set(
+      deviceRef,
+      {
+        seasonId,
+        userId: uid,
+        categories: allCategories,
+        createdAt: deviceClaim.exists
+          ? deviceData.createdAt || FieldValue.serverTimestamp()
+          : FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+        selections,
+      },
+      { merge: true },
+    );
   });
   const isRegistered = context.auth.token.firebase?.sign_in_provider !== 'anonymous';
   let achievement = { changed: false };
   if (ballotComplete && isRegistered) {
     achievement = await awardAchievementPoints(uid, 10, `voting:${seasonId}`);
   }
-  return { ok: true, seasonId, createdCategories, achievementPoints: achievement.changed ? 10 : 0 };
+  return {
+    ok: true,
+    seasonId,
+    createdCategories,
+    achievementPoints: achievement.changed ? 10 : 0,
+  };
 });
 
 exports.notifyConnectionRequest = onDocumentWritten(
@@ -3693,10 +4677,12 @@ exports.notifyConnectionRequest = onDocumentWritten(
     const requestId = event.params.requestId;
     const before = event.data?.before?.data() || {};
     const request = event.data?.after?.data() || {};
-    console.log(JSON.stringify({
-      event: 'connection_request_received',
-      status: request.status || null,
-    }));
+    console.log(
+      JSON.stringify({
+        event: 'connection_request_received',
+        status: request.status || null,
+      }),
+    );
     if (!request.from || !request.to) return null;
     const from = String(request.from);
     const to = String(request.to);
@@ -3723,10 +4709,13 @@ exports.notifyConnectionRequest = onDocumentWritten(
       if (!created) return null;
       const tokens = await getPushTokens(from);
       if (!tokens.length) return null;
-      const result = await sendMulticastToAllTokens({
-        notification: { title, body },
-        data: { type: 'connection_accepted', targetId: to },
-      }, tokens);
+      const result = await sendMulticastToAllTokens(
+        {
+          notification: { title, body },
+          data: { type: 'connection_accepted', targetId: to },
+        },
+        tokens,
+      );
       const invalidTokens = tokens.filter((_, index) => {
         const error = result.responses[index].error;
         return error?.code === 'messaging/registration-token-not-registered';
@@ -3741,32 +4730,50 @@ exports.notifyConnectionRequest = onDocumentWritten(
     if (!notification || beforeNotification === notification) return null;
     const sender = (await db.collection('community_profiles').doc(from).get()).data() || {};
     const name = String(sender.displayName || 'Egy felhasználó').trim();
-    await createNotificationBestEffort({ recipientUid: to, type: 'connection_request', title: 'Új ismerősnek jelölés', body: `${name} ismerősnek jelölt.`, targetType: 'profile', targetId: from, dedupeKey: `connection_request:${requestId}:${notification}` });
+    await createNotificationBestEffort({
+      recipientUid: to,
+      type: 'connection_request',
+      title: 'Új ismerősnek jelölés',
+      body: `${name} ismerősnek jelölt.`,
+      targetType: 'profile',
+      targetId: from,
+      dedupeKey: `connection_request:${requestId}:${notification}`,
+    });
     const uniqueTokens = await getPushTokens(to);
     if (!uniqueTokens.length) {
-      console.warn(JSON.stringify({
-        event: 'connection_request_no_target_token',
-        requestId,
-      }));
+      console.warn(
+        JSON.stringify({
+          event: 'connection_request_no_target_token',
+          requestId,
+        }),
+      );
       return null;
     }
-    const result = await sendMulticastToAllTokens({
-      notification: { title: 'Új ismerősnek jelölés', body: `${name} ismerősnek jelölt.` },
-      data: { type: 'connection_request', senderId: from },
-    }, uniqueTokens);
-    console.log(JSON.stringify({
-      event: 'connection_request_push_result',
-      requestId,
-      tokenCount: uniqueTokens.length,
-      successCount: result.successCount,
-      failureCount: result.failureCount,
-      failures: result.responses
-        .filter((response) => !response.success)
-        .map((response) => ({
-          code: response.error?.code || 'unknown',
-          message: response.error?.message || '',
-        })),
-    }));
+    const result = await sendMulticastToAllTokens(
+      {
+        notification: {
+          title: 'Új ismerősnek jelölés',
+          body: `${name} ismerősnek jelölt.`,
+        },
+        data: { type: 'connection_request', senderId: from },
+      },
+      uniqueTokens,
+    );
+    console.log(
+      JSON.stringify({
+        event: 'connection_request_push_result',
+        requestId,
+        tokenCount: uniqueTokens.length,
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+        failures: result.responses
+          .filter((response) => !response.success)
+          .map((response) => ({
+            code: response.error?.code || 'unknown',
+            message: response.error?.message || '',
+          })),
+      }),
+    );
     const invalidTokens = uniqueTokens.filter((_, index) => {
       const error = result.responses[index].error;
       return error?.code === 'messaging/registration-token-not-registered';
@@ -3789,43 +4796,53 @@ exports.notifyMeetupInterest = onDocumentWritten(
     const after = event.data?.after?.data() || {};
     const meetupUserId = String(event.params.meetupUserId || '').trim();
     const eventId = String(event.params.eventId || '').trim();
-    const beforeInterested = before.interestedBy && typeof before.interestedBy === 'object'
-      ? before.interestedBy
-      : {};
-    const afterInterested = after.interestedBy && typeof after.interestedBy === 'object'
-      ? after.interestedBy
-      : {};
-    const newInterests = Object.keys(afterInterested).filter((uid) => (
-      afterInterested[uid] === true && beforeInterested[uid] !== true
-    ));
+    const beforeInterested = before.interestedBy && typeof before.interestedBy === 'object' ? before.interestedBy : {};
+    const afterInterested = after.interestedBy && typeof after.interestedBy === 'object' ? after.interestedBy : {};
+    const newInterests = Object.keys(afterInterested).filter(
+      (uid) => afterInterested[uid] === true && beforeInterested[uid] !== true,
+    );
     if (!meetupUserId || !eventId || !newInterests.length) return null;
 
-    const targetBlocked = await db.collection('community_profiles')
-      .doc(meetupUserId).collection('blocked_users').get();
+    const targetBlocked = await db.collection('community_profiles').doc(meetupUserId).collection('blocked_users').get();
     const blockedIds = new Set(targetBlocked.docs.map((doc) => doc.id));
     const targetTokens = await getPushTokens(meetupUserId);
     const eventTitle = String(after.eventTitle || 'az esemény').trim();
     const results = [];
     for (const senderId of newInterests) {
       if (senderId === meetupUserId || blockedIds.has(senderId)) continue;
-      const reverseBlocked = await db.collection('community_profiles')
-        .doc(senderId).collection('blocked_users').doc(meetupUserId).get();
+      const reverseBlocked = await db
+        .collection('community_profiles')
+        .doc(senderId)
+        .collection('blocked_users')
+        .doc(meetupUserId)
+        .get();
       if (reverseBlocked.exists) continue;
       const sender = (await db.collection('community_profiles').doc(senderId).get()).data() || {};
       const senderName = String(sender.displayName || 'Egy felhasználó').trim();
-      await createNotificationBestEffort({ recipientUid: meetupUserId, type: 'meetup_interest', title: 'Új Meetup érdeklődés', body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`, targetType: 'event', targetId: eventId, dedupeKey: `meetup_interest:${eventId}:${meetupUserId}:${senderId}` });
+      await createNotificationBestEffort({
+        recipientUid: meetupUserId,
+        type: 'meetup_interest',
+        title: 'Új Meetup érdeklődés',
+        body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`,
+        targetType: 'event',
+        targetId: eventId,
+        dedupeKey: `meetup_interest:${eventId}:${meetupUserId}:${senderId}`,
+      });
       if (!targetTokens.length) continue;
-      const result = await sendMulticastToAllTokens({
-        notification: {
-          title: 'Új Meetup érdeklődés',
-          body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`,
+      const result = await sendMulticastToAllTokens(
+        {
+          notification: {
+            title: 'Új Meetup érdeklődés',
+            body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`,
+          },
+          data: {
+            type: 'meetup_interest',
+            senderId,
+            eventId,
+          },
         },
-        data: {
-          type: 'meetup_interest',
-          senderId,
-          eventId,
-        },
-      }, targetTokens);
+        targetTokens,
+      );
       results.push(result);
     }
     return {
@@ -3858,10 +4875,12 @@ exports.notifyPrivateMessage = onDocumentCreated(
       ? conversation.participantIds.map((id) => String(id))
       : [];
     if (!participantIds.includes(senderId) || !participantIds.includes(recipientId)) {
-      console.warn(JSON.stringify({
-        event: 'private_message_invalid_participants',
-        conversationId,
-      }));
+      console.warn(
+        JSON.stringify({
+          event: 'private_message_invalid_participants',
+          conversationId,
+        }),
+      );
       return null;
     }
 
@@ -3872,34 +4891,49 @@ exports.notifyPrivateMessage = onDocumentCreated(
       db.collection('community_profiles').doc(recipientId).collection('blocked_users').doc(senderId).get(),
     ]);
     if (blockedBySender.exists || blockedByRecipient.exists) return null;
-    await createNotificationBestEffort({ recipientUid: recipientId, type: 'private_message', title: `${senderName || 'Egy felhasználó'} üzenetet küldött`, body: notificationBody, targetType: 'private_conversation', targetId: conversationId, senderId, dedupeKey: `private_message:${conversationId}:${event.params.messageId}` });
+    await createNotificationBestEffort({
+      recipientUid: recipientId,
+      type: 'private_message',
+      title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
+      body: notificationBody,
+      targetType: 'private_conversation',
+      targetId: conversationId,
+      senderId,
+      dedupeKey: `private_message:${conversationId}:${event.params.messageId}`,
+    });
     const uniqueTokens = await getPushTokens(recipientId);
     if (!uniqueTokens.length) {
-      console.log(JSON.stringify({
-        event: 'private_message_no_target_token',
-        conversationId,
-
-      }));
+      console.log(
+        JSON.stringify({
+          event: 'private_message_no_target_token',
+          conversationId,
+        }),
+      );
       return null;
     }
-    const result = await sendMulticastToAllTokens({
-      notification: {
-        title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
-        body: notificationBody.slice(0, 160),
+    const result = await sendMulticastToAllTokens(
+      {
+        notification: {
+          title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
+          body: notificationBody.slice(0, 160),
+        },
+        data: {
+          type: 'private_message',
+          conversationId,
+          senderId,
+        },
       },
-      data: {
-        type: 'private_message',
+      uniqueTokens,
+    );
+    console.log(
+      JSON.stringify({
+        event: 'private_message_push_result',
         conversationId,
-        senderId,
-      },
-    }, uniqueTokens);
-    console.log(JSON.stringify({
-      event: 'private_message_push_result',
-      conversationId,
-      tokenCount: uniqueTokens.length,
-      successCount: result.successCount,
-      failureCount: result.failureCount,
-    }));
+        tokenCount: uniqueTokens.length,
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+      }),
+    );
 
     const invalidTokens = uniqueTokens.filter((_, index) => {
       const error = result.responses[index].error;
@@ -3927,48 +4961,72 @@ exports.notifyChatReport = onDocumentCreated(
     const recipientIds = profiles.docs
       .filter((profileDoc) => {
         const profile = profileDoc.data() || {};
-        const email = String(profile.email || '').trim().toLowerCase();
-        return email === ADMIN_EMAIL
-          || profile.accessRole === 'admin'
-          || profile.accessRole === 'moderator';
+        const email = String(profile.email || '')
+          .trim()
+          .toLowerCase();
+        return email === ADMIN_EMAIL || profile.accessRole === 'admin' || profile.accessRole === 'moderator';
       })
       .map((profileDoc) => profileDoc.id);
 
     const reporterName = String(report.reporterName || 'Egy felhasználó').trim();
     const reason = String(report.reason || '').trim();
-    await Promise.all(recipientIds.map((recipientUid) => createNotificationBestEffort({ recipientUid, type: 'chat_report', title: 'Új chatjelentés', body: reason ? `${reporterName}: ${reason}` : `${reporterName} új chatjelentést küldött.`, targetType: 'chat_report', targetId: reportId, dedupeKey: `chat_report:${reportId}:${recipientUid}` })));
+    await Promise.all(
+      recipientIds.map((recipientUid) =>
+        createNotificationBestEffort({
+          recipientUid,
+          type: 'chat_report',
+          title: 'Új chatjelentés',
+          body: reason ? `${reporterName}: ${reason}` : `${reporterName} új chatjelentést küldött.`,
+          targetType: 'chat_report',
+          targetId: reportId,
+          dedupeKey: `chat_report:${reportId}:${recipientUid}`,
+        }),
+      ),
+    );
     const tokenLists = await Promise.all(recipientIds.map((uid) => getPushTokens(uid)));
-    const uniqueTokens = [...new Set(tokenLists.flat().map((token) => token.trim()).filter(Boolean))];
+    const uniqueTokens = [
+      ...new Set(
+        tokenLists
+          .flat()
+          .map((token) => token.trim())
+          .filter(Boolean),
+      ),
+    ];
     if (!uniqueTokens.length) {
       console.log(JSON.stringify({ event: 'chat_report_no_recipient_token', reportId }));
       return null;
     }
-    const result = await sendMulticastToAllTokens({
-      notification: {
-        title: 'Új chatjelentés',
-        body: reason ? `${reporterName}: ${reason}`.slice(0, 160) : `${reporterName} új chatjelentést küldött.`,
+    const result = await sendMulticastToAllTokens(
+      {
+        notification: {
+          title: 'Új chatjelentés',
+          body: reason ? `${reporterName}: ${reason}`.slice(0, 160) : `${reporterName} új chatjelentést küldött.`,
+        },
+        data: {
+          type: 'chat_report',
+          reportId,
+        },
       },
-      data: {
-        type: 'chat_report',
-        reportId,
-      },
-    }, uniqueTokens);
+      uniqueTokens,
+    );
 
-    const invalidTokens = uniqueTokens.filter((_, index) => (
-      result.responses[index].error?.code === 'messaging/registration-token-not-registered'
-    ));
+    const invalidTokens = uniqueTokens.filter(
+      (_, index) => result.responses[index].error?.code === 'messaging/registration-token-not-registered',
+    );
     if (invalidTokens.length) {
       await Promise.all(recipientIds.map((uid) => removePushTokens(uid, invalidTokens)));
     }
 
-    console.log(JSON.stringify({
-      event: 'chat_report_push_result',
-      reportId,
-      recipientCount: recipientIds.length,
-      tokenCount: uniqueTokens.length,
-      successCount: result.successCount,
-      failureCount: result.failureCount,
-    }));
+    console.log(
+      JSON.stringify({
+        event: 'chat_report_push_result',
+        reportId,
+        recipientCount: recipientIds.length,
+        tokenCount: uniqueTokens.length,
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+      }),
+    );
     return result;
   },
 );

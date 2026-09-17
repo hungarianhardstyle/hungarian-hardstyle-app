@@ -9,6 +9,16 @@
 - Hibánál a használható korábbi cache maradjon látható; fiókváltáskor UID-kötötten ne keveredjenek az adatok.
 - A profil cache-first javítás már elkészült; a teljes többi adatbetöltési láncot a következő munkamenetben kell végigvezetni és tesztelni.
 
+### Következő fejlesztési feladat — külön WordPress nyereményjáték-rendszer
+
+- A Kvíztől külön menüpont és adatmodell legyen a WordPress HUHS API-ban.
+- Kezelje a kérdést, 3–5 választ, a helyes választ, a kezdési és befejezési időt, valamint a nyeremény típusát és leírását.
+- Csak regisztrált felhasználó játszhasson; a válasz, eredmény és részvétel szerveroldalon, egyszer játszhatóan tárolódjon.
+- A sorsolás a játék lezárásakor szerveroldali, véletlenszerű és idempotens legyen.
+- A nyertes appos notify-t és e-mailt kapjon a nyereményről és a kapcsolatfelvételről (`info@hungarianhardstyle.hu`).
+- A főoldalon a Kvíz felett jelenjen meg kép; lezárás után a beállított ideig csak a nyertes felhasználóneve, a nyeremény és a gratuláció látszódjon.
+- A résztvevői e-mail-címek csak a játék és a sorsolás/értesítés idejére maradjanak meg, majd automatikusan törlődjenek; username, részvétel és eredmény anonimizálás nélkül, de e-mail nélkül megőrizhető.
+
 ### Tartós munkamenet-jegyzet — 2026-09-04
 
 - Profil törlés után a kliens törli a jelenlegi felhasználóhoz kötött profil-, achievement-, admin- és WordPress-cache állapotot, a helyi kedvenceket és biztonsági/token adatokat, majd kijelentkezik és a Kezdőlapra vált.

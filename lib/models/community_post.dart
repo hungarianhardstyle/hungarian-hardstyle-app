@@ -9,6 +9,7 @@ class CommunityPost {
   final String authorRole;
   final String authorAccessRole;
   final String text;
+  final String replyToText;
   final String imageUrl;
   final bool pinned;
   final Map<String, int> reactions;
@@ -23,6 +24,7 @@ class CommunityPost {
     required this.authorRole,
     required this.authorAccessRole,
     required this.text,
+    required this.replyToText,
     required this.imageUrl,
     required this.pinned,
     required this.reactions,
@@ -45,6 +47,7 @@ class CommunityPost {
       authorRole: data['authorRole'] as String? ?? '',
       authorAccessRole: data['authorAccessRole'] as String? ?? '',
       text: data['text'] as String? ?? '',
+      replyToText: data['replyToText'] as String? ?? '',
       imageUrl: data['imageUrl'] as String? ?? '',
       pinned: data['pinned'] == true,
       reactions: data['reactions'] is Map

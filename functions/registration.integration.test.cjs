@@ -97,6 +97,39 @@ test('azonos UID névfoglalásának idempotens újrapróbálása', async () => {
   assert.equal(second.response.status, 200);
 });
 
+test('foglalt név Auth létrehozása előtt felismerhető, a foglalás pedig atomikus', async () => {
+  const name = `Reserved User ${Date.now()}`;
+  const before = await callable('checkDisplayNameAvailability', {displayName: name});
+  assert.equal(before.response.status, 200, JSON.stringify(before.body));
+  assert.equal(before.body.result.available, true);
+
+  const owner = await auth('accounts:signUp', {
+    email: `owner-${Date.now()}@example.test`,
+    password: 'Valid-test-password-123!',
+    returnSecureToken: true,
+  });
+  assert.equal(owner.response.status, 200, JSON.stringify(owner.body));
+  const claim = await callable('claimDisplayName', {displayName: name}, owner.body.idToken);
+  assert.equal(claim.response.status, 200, JSON.stringify(claim.body));
+
+  const after = await callable('checkDisplayNameAvailability', {displayName: name});
+  assert.equal(after.response.status, 200, JSON.stringify(after.body));
+  assert.equal(after.body.result.available, false);
+
+  const competing = await auth('accounts:signUp', {
+    email: `competing-${Date.now()}@example.test`,
+    password: 'Valid-test-password-123!',
+    returnSecureToken: true,
+  });
+  assert.equal(competing.response.status, 200, JSON.stringify(competing.body));
+  const collision = await callable(
+    'claimDisplayName',
+    {displayName: name},
+    competing.body.idToken,
+  );
+  assert.equal(collision.response.status, 409, JSON.stringify(collision.body));
+});
+
 test('App Check kikapcsolva, Auth továbbra is szükséges a névfoglaláshoz', async () => {
   const result = await callable('claimDisplayName', {displayName: 'No Token User'});
   assert.equal(result.response.status, 401);

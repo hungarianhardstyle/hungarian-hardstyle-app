@@ -10,9 +10,10 @@ import '../../core/errors/user_facing_error.dart';
 import '../../providers/news_provider.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
-  const GameScreen({super.key, required this.game});
+  const GameScreen({super.key, required this.game, this.resultsOnly = false});
 
   final HuhsGame game;
+  final bool resultsOnly;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -25,6 +26,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   bool _submitting = false;
   bool _checkingSubmission = true;
   bool _submitted = false;
+  bool _loadingResults = false;
+  String? _resultsError;
+  List<HuhsGameResult> _results = const [];
 
   bool get _isTimeline => widget.game.type == 'timeline';
   bool get _isRegisteredUser {
@@ -41,7 +45,32 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     super.initState();
     _timelineItems = [...widget.game.timelineItems]..shuffle(Random());
     _answers = List<int>.filled(widget.game.questions.length, -1);
-    _loadSubmissionStatus();
+    if (widget.resultsOnly) {
+      _loadResults();
+    } else {
+      _loadSubmissionStatus();
+    }
+  }
+
+  Future<void> _loadResults() async {
+    setState(() {
+      _loadingResults = true;
+      _resultsError = null;
+    });
+    try {
+      final results = await ref
+          .read(wordpressServiceProvider)
+          .getGameResults(widget.game.id);
+      if (mounted) setState(() => _results = results);
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _resultsError = 'Az eredménylista most nem tölthető be.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loadingResults = false);
+    }
   }
 
   Future<void> _loadSubmissionStatus() async {
@@ -146,12 +175,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final game = widget.game;
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: Text(game.title)),
+      appBar: AppBar(
+        title: Text(widget.resultsOnly ? 'Játék eredményei' : game.title),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
         children: [
           _GameHero(game: game),
-          if (!_isRegisteredUser) ...[
+          if (widget.resultsOnly) ...[
+            const SizedBox(height: 16),
+            _buildResultsLeaderboard(context),
+          ] else if (!_isRegisteredUser) ...[
             const SizedBox(height: 16),
             _buildRegistrationRequired(context),
           ] else ...[
@@ -212,6 +246,58 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ),
               ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultsLeaderboard(BuildContext context) {
+    if (_loadingResults) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    if (_resultsError != null) {
+      return _GamePanel(
+        child: Column(
+          children: [
+            Text(_resultsError!, textAlign: TextAlign.center),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: _loadResults,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Újrapróbálás'),
+            ),
+          ],
+        ),
+      );
+    }
+    if (_results.isEmpty) {
+      return const _GamePanel(
+        child: Text(
+          'Ehhez a játékhoz még nincs megjeleníthető eredmény.',
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+    return _GamePanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Eredménylista', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          for (final result in _results)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(child: Text('${result.rank}')),
+              title: Text(result.displayName),
+              trailing: Text(
+                '${result.percent}% (${result.correctAnswers}/${result.totalAnswers})',
+              ),
+            ),
         ],
       ),
     );
