@@ -8,7 +8,13 @@ const admin = require('firebase-admin');
 const { getApps } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const { getFirestore, FieldPath, FieldValue } = require('firebase-admin/firestore');
-const { google } = require('googleapis');
+// Lazy-loaded: only the Play purchase/product-sync paths need googleapis, so
+// eager loading would slow every function's cold start.
+let _googleApis = null;
+function googleApis() {
+  if (!_googleApis) _googleApis = require('googleapis').google;
+  return _googleApis;
+}
 const { selectOwnedCloudinaryAssets, destroyCloudinaryAsset, listOwnedCloudinaryAssets } = require('./cloudinary');
 const { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, sendMail } = require('./email_service');
 const { generateAuthActionLink } = require('./auth_action_link');
@@ -3762,11 +3768,11 @@ exports.verifyLabelPurchase = functions
     } catch (_) {
       throw new HttpsError('failed-precondition', 'A Google Play vásárlás-ellenőrzés nincs beállítva.');
     }
-    const auth = new google.auth.GoogleAuth({
+    const auth = new googleApis().auth.GoogleAuth({
       credentials: serviceAccount,
       scopes: ['https://www.googleapis.com/auth/androidpublisher'],
     });
-    const androidPublisher = google.androidpublisher({ version: 'v3', auth });
+    const androidPublisher = googleApis().androidpublisher({ version: 'v3', auth });
     let purchase;
     try {
       purchase = await androidPublisher.purchases.products.get({
@@ -4212,11 +4218,11 @@ async function syncWordPressLabelProducts(releaseId = 0) {
     } catch (_) {
       throw new Error('A Google Play service account secret érvénytelen.');
     }
-    const auth = new google.auth.GoogleAuth({
+    const auth = new googleApis().auth.GoogleAuth({
       credentials: serviceAccount,
       scopes: ['https://www.googleapis.com/auth/androidpublisher'],
     });
-    const androidPublisher = google.androidpublisher({ version: 'v3', auth });
+    const androidPublisher = googleApis().androidpublisher({ version: 'v3', auth });
     const response = await fetch(`${WORDPRESS_BASE_URL}/releases`, {
       headers: { Accept: 'application/json' },
     });
