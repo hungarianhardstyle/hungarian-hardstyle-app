@@ -18,6 +18,14 @@ function huhs_release_catalog_rest_cache_headers($response, $server, $request) {
     $route = (string) $request->get_route();
     if (strpos($route, '/huhs/v1/') !== 0) return $response;
 
+    // Authenticated admin endpoints (e.g. /huhs/v1/admin) return privileged
+    // summaries and must never be stored in a shared CDN/browser cache.
+    if (strpos($route, '/admin') !== false) {
+        $response->header('Cache-Control', 'no-store, private');
+        $response->header('Vary', 'Authorization, Cookie, Accept-Encoding');
+        return $response;
+    }
+
     $seconds = (strpos($route, '/posts') !== false || strpos($route, '/events') !== false)
         ? 45
         : 300;
