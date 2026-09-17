@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -2216,15 +2217,17 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       final displayName = _name.text.trim().replaceAll(RegExp(r'\s+'), ' ');
       final bio = _bio.text.trim();
       final socialLinks = _socialValues();
-      debugPrint(
-        'Profile save attempt=$attempt stage=validation nameLength=${displayName.length}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          'Profile save attempt=$attempt stage=validation nameLength=${displayName.length}',
+        );
+      }
       final savedProfile = await persistCommunityProfileDraft(
         displayName: displayName,
         claimDisplayName: (value) async {
-          debugPrint('Profile save attempt=$attempt stage=claim_started');
+          if (kDebugMode) debugPrint('Profile save attempt=$attempt stage=claim_started');
           await _service.claimDisplayName(value);
-          debugPrint('Profile save attempt=$attempt stage=claim_succeeded');
+          if (kDebugMode) debugPrint('Profile save attempt=$attempt stage=claim_succeeded');
         },
         writeProfile: () => _service.firestore
             .collection('community_profiles')
@@ -2251,7 +2254,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           return snapshot.data() ?? const <String, dynamic>{};
         },
       );
-      debugPrint('Profile save attempt=$attempt stage=server_confirmed');
+      if (kDebugMode) debugPrint('Profile save attempt=$attempt stage=server_confirmed');
       // Firestore has confirmed the server-owned name and role at this point.
       // Paint that result before optional Auth mirroring/reload work so a
       // successful save is visible immediately.
@@ -2285,9 +2288,11 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       CommunityService.clearProfileCache(user.uid);
       if (mounted) _message('Profil mentve.');
     } catch (error) {
-      debugPrint(
-        'Profile save attempt=$attempt stage=failed errorType=${error.runtimeType}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          'Profile save attempt=$attempt stage=failed errorType=${error.runtimeType}',
+        );
+      }
       if (mounted) {
         _message('A profil mentése sikertelen: ${_chatError(error)}');
       }
