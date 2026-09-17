@@ -31,7 +31,15 @@ const wordpressSource = fs.readFileSync(
 );
 
 test('callable-k alapból enforcement nélkül; csak az engedélyezett olvasók App Check-kel', () => {
-  const appCheckEnforced = ['getAchievementLeaderboard'];
+  const appCheckEnforced = [
+    'getAchievementLeaderboard',
+    'checkRegistrationEligibility',
+    'checkDisplayNameAvailability',
+    'getPublicAchievement',
+    'getPublicProfile',
+    'getPublicProfiles',
+    'getArtistClaimStatus',
+  ];
   const blocks = [...functionsSource.matchAll(
     /^exports\.(?<name>[A-Za-z0-9_]+)\s*=\s*(?<body>.*?)(?=^exports\.|(?![\s\S]))/gms,
   )].filter(({ groups }) => /https\.onCall|wordPressCall\(/.test(groups.body));

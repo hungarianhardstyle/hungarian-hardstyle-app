@@ -69,7 +69,7 @@ function isExplicitIdentityBan(marker) {
 // Registration is intentionally checked before Auth creation so a deleted
 // identity cannot silently return as a new account. This callable has no Auth
 // requirement; the one-way identity marker is the only identity it receives.
-exports.checkRegistrationEligibility = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+exports.checkRegistrationEligibility = functions.runWith({ enforceAppCheck: true }).https.onCall(async (data, context) => {
   if (!(await allowCallByIp(context, 'registration_eligibility', 30))) {
     throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
   }
@@ -1419,7 +1419,7 @@ exports.refreshAchievementBadge = functions.runWith({ enforceAppCheck: false }).
 // separate from refreshAchievementBadge so viewing somebody else's profile
 // never gets access to private profile fields and does not depend on the
 // client having a freshly populated community_profiles document.
-exports.getPublicAchievement = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+exports.getPublicAchievement = functions.runWith({ enforceAppCheck: true }).https.onCall(async (data, context) => {
   const targetUid = String(data?.userId || '').trim();
   if (!targetUid || targetUid.length > 128) {
     throw new functions.https.HttpsError('invalid-argument', 'Érvénytelen felhasználó.');
@@ -1681,7 +1681,7 @@ function validatedDisplayName(value) {
 
 // This is only an early UX check. claimDisplayName remains the authoritative
 // transaction because another account may reserve the name between calls.
-exports.checkDisplayNameAvailability = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+exports.checkDisplayNameAvailability = functions.runWith({ enforceAppCheck: true }).https.onCall(async (data, context) => {
   if (!(await allowCallByIp(context, 'display_name_availability', 30))) {
     throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
   }
@@ -1984,7 +1984,7 @@ exports.manageConnection = functions.runWith({ enforceAppCheck: false }).https.o
 // Public profile fields are deliberately projected server-side.  Do not
 // return the source community_profiles document: it contains private email
 // and push-token data needed by account and notification code.
-exports.getPublicProfile = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+exports.getPublicProfile = functions.runWith({ enforceAppCheck: true }).https.onCall(async (data, context) => {
   const targetUid = String(data?.userId || '').trim();
   if (!targetUid || targetUid.length > 128) {
     throw new functions.https.HttpsError('invalid-argument', 'Érvénytelen felhasználó.');
@@ -2141,7 +2141,7 @@ exports.repairCommunityProfileProjections = onSchedule(
   },
 );
 
-exports.getPublicProfiles = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+exports.getPublicProfiles = functions.runWith({ enforceAppCheck: true }).https.onCall(async (data, context) => {
   requireRegisteredViewer(context);
   // The callable is used by the private-message user picker. Read the
   // already-denormalized public projection instead of downloading every
@@ -3741,7 +3741,7 @@ exports.claimArtistProfile = functions.runWith({ enforceAppCheck: false }).https
   return { claimed: true, artistId };
 });
 
-exports.getArtistClaimStatus = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+exports.getArtistClaimStatus = functions.runWith({ enforceAppCheck: true }).https.onCall(async (data, context) => {
   if (!(await allowCallByIp(context, 'artist_claim_status', 60))) {
     throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
   }
