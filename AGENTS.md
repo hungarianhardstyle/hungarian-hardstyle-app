@@ -1,5 +1,45 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### AZ APP-PUSH NAPOKIG NEM MENT KI — `admin.messaging` már nem létezik a firebase-admin 14-ben (2026-09-18, javítva, **deploy még NEM történt**)
+
+- **Hogyan került elő:** a tulajdonos a hír-lájk napi korlátját jelentette; a `awardAchievementFromNewsReaction` naplójában megtaláltam a valódi hibát: `{"event":"achievement_push_failed","message":"admin.messaging is not a function"}`.
+- **A gyökér (bizonyítva, nem sejtés):** a `functions/package.json`-ban `firebase-admin ^14.3.0` van, és **ebben a verzióban a régi namespace-hívás megszűnt**: `typeof require('firebase-admin').messaging === 'undefined'`. A `sendMulticastToAllTokens()` a `admin.messaging().sendEachForMulticast(...)` alakot használta, ezért **minden** app-push meghalt, ami ezen a helperen megy:
+  - achievement pont értesítés,
+  - esemény-értékelési kérés,
+  - új beküldés az adminoknak,
+  - ismerős-jelölés (`notifyConnectionRequest`),
+  - meetup-érdeklődés,
+  - privát üzenet,
+  - chat jelentés.
+- **Miért maradt rejtve:** (1) a hívók `console.warn`-nal nyelték el, a művelet maga sikeres maradt (a pont/profil/értékelés beírása nem függ a pushtól); (2) **a hír-értesítést a WordPress plugin küldi**, nem ez a függvény — egy működő hírek-push elfedte a többi hat útvonalat. Élő bizonyíték a fejlécből: `push_last=release/ok … sent=122 failed=0` (az a plugin másik útja).
+- **A javítás:** `const { getMessaging } = require('firebase-admin/messaging')` a fájl tetején, és a helper `const messaging = getMessaging();`-t használ. **Új napló:** ha egy körben **nulla** sikeres küldés van, `console.error('push_multicast_all_failed', …)` — ez a hibaosztály nem tud többé némán elmúlni.
+- **Új teszt: `functions/push-messaging.test.cjs`** (5 teszt) — a moduláris út létezik, a `admin.messaging(` **kódként** nem térhet vissza (a komment-sorokat a lint kizárja), a telepített firebase-admin-ban tényleg `undefined`, és csak **egy** hely hívja a Firebase API-t (a 6+ útvonal ugyanazon a helperen megy).
+- **FONTOS:** ez a javítás **nincs élesítve**. A `firebase deploy` a tulajdonos jóváhagyására vár, mert az app-push viselkedését éles felhasználóknál változtatja meg. **Az app-push a javítás előtt HAT útvonalon nem működött.**
+
+### Hír-lájk: napi 3 pont-jogosultság (5 helyett) + emulátoros bizonyíték (2026-09-18, javítva)
+
+- **A tulajdonos jelzése:** *„hír lájkolással ne lehessen achievement pontokat farmolni, eddig volt benne valami tiltás, hogy max napi 3 hír lájkolásért jár achi egy usernek, most mintha nem így működne"*.
+- **A tények a git-történetből:** a napi plafon **2026-09-14-én** (`dbc1d887`) került a kódba, és az érték **5** volt (nem 3) — a `f87bb8fc` (08-31) verzióban még **egyáltalán nem volt napi plafon**, csak a ledger. Vagyis a tulajdonos emléke a 3-ról pontatlan volt, a „mintha nem működne" érzés pedig onnan jöhet, hogy **5 lájk elég soknak tűnik**.
+- **Két külön védelem, és miért kell mindkettő:**
+  1. **`achievement_ledger`** — a kulcs tartalmazza a `postId`-t (`news-like:<postId>`), ezért **ugyanazt a cikket** kétszer lájkolni nem ad kétszer pontot;
+  2. **napi számláló** (`achievement_news_like_limits/<uid>_<YYYY-MM-DD>`) — mert egy nap **több tucat különböző cikket** is meg lehet nyitni, és a ledger erre nem véd.
+- **A javítás:** `NEWS_LIKE_DAILY_POINT_LIMIT = 3` és `ARTICLE_COMMENT_DAILY_POINT_LIMIT = 3` (nevesített konstansok, egy helyen). A visszavonás (unlike) **szándékosan a plafon fölött is működik**, különben egy elrontott pont nem lenne levehető.
+- **Új teszt: `functions/achievement-daily-limit.test.cjs`** (**6/6**, valódi Firestore-emulatoron, a **valódi** `awardAchievementPoints` tranzakcióval — nem forrás-szöveg keresés). Bizonyítja: 3 különböző cikk után 6 pont, a 4–6. cikk **nem** ad pontot, a ledgerben csak 3 sor van, ugyanaz a cikk kétszer nem ad pontot, a visszavonás a plafonon is megy, a kommentnek külön számlálója van, és a nem korlátozott forrás (esemény-részvétel) nem fogyasztja a napi keretet. Futtatás:
+  `npx firebase emulators:exec --only firestore --project demo-huhs "node functions/achievement-daily-limit.test.cjs"`
+- **A teszthez szükséges egy apró javítás:** a `functions/index.js` mostantól `if (!getApps().length) admin.initializeApp();`, mert az emulátor injektálja a saját `FIREBASE_CONFIG`-ját, és a feltétel nélküli `initializeApp()` a „[DEFAULT] already exists with a different configuration" hibát adta. Az éles futásban ez változatlan (ott sosem létezik még app).
+- **Teszt-only exportok** (nem Cloud Functionok, nem deployolódnak): `exports.__awardAchievementPointsForTests`, `exports.__achievementDailyLimitsForTests`.
+
+### A „tájékoztató" levelek újrapróbálása — az audit H2 pontja lezárva (2026-09-18, javítva, **deploy még NEM történt**)
+
+- **A rés:** a `sendIdentityEmailOnce()` a **duplikáció** ellen véd, nem a **kudarc** ellen. A munkarekord a címzettet csak **hash**-ként tárolja, ezért SMTP-hiba után nincs miből újraküldeni. Két helyen ez **végleges elveszést** jelent, mert nincs, aki újrakérje:
+  - **e-mail-csere:** a `syncEmailChange()` a `previousEmail` mezőt a levél **előtt** törli, tehát a régi cím a művelettel eltűnik;
+  - **admin fióktörlés:** az Auth-fiók már törölve van, a cím csak a memóriában élt, és a hívás egyszer fut.
+  - **Amit ez NEM érint:** a felhasználó által **kért** leveleket (megerősítés, jelszó-visszaállítás). Azok védettek: a `sendAuthEmail` megvizsgálja az eredményt, **hibát dob**, és mivel a munkarekord `failed` (nem `sent`), a következő kérés átmegy a deduplikáción. Ez élesben igazolva (a tulajdonos megkapta a megerősítő és a törlési levelet is).
+- **A javítás — új modul `functions/email_delivery_retry.js`:** a címzett és a sablonnév egy **rövid életű** (24 óra), szerveroldali `email_delivery_pending` rekordba kerül, és egy **új ütemezett függvény** (`retryPendingIdentityEmails`, 10 percenként) korlátozottan (max 3 kísérlet, 5 és 30 perc késleltetéssel) újrapróbálja. **Sikeres küldés vagy a 3. kudarc után a rekord — és vele a cím — törlődik**, tehát nem marad személyes adat a szerveren.
+- **A Firestore-szabály kiegészítve** (`firestore.rules`): `email_delivery_pending` és `email_delivery_jobs` kliensből `allow read, write: if false` — még a saját UID-hoz tartozó sor sem olvasható. Ugyanez a napi pont-plafon számlálókra (`achievement_news_like_limits`, `achievement_article_comment_limits`): ha a kliens olvasná, kiszámíthatná, ha írná, nullázná a plafont.
+- **Új teszt: `functions/email-delivery-retry.test.cjs`** (12 teszt) — a címzett **teljes** címe megmarad (nem hash), a lejárat a rövid TTL-en belül van, üres címzettel nem keletkezik rekord, a siker törli, a kudarc növeli a kísérletszámot és késleltet, a 3. kudarc után **feladja és töröl**, a késleltetés nő; plusz forrás-invariánsok: **mindkét** admin-törlési hívóhely jelöl retry-t, a `sendAuthEmail` **szándékosan nem** (ott az újrakérés a védelem), és a sikeres küldés törli a rekordot.
+- **Amiért a `sendAuthEmail` marad jelölés nélkül:** ha egy felhasználó kérte a levelet, ő látja a hibát és újra tudja kérni — ott a szerveroldali újrapróbálás felesleges, a látható hiba a helyes viselkedés.
+
 ### E-mail-küldés ÉLESBEN IGAZOLVA — a nodemailer 10 csere nem tört el semmit (2026-09-18)
 
 - **A tulajdonos visszajelzése:** *„a google regisztráció fixen ment, de ahhoz nem kell mail megerősítés — regelés után a megerősítő mail megjött, működik is, admin user törlés után a törlésről szóló levél is megjött"*.

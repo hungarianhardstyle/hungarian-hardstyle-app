@@ -8,6 +8,17 @@ const admin = require('firebase-admin');
 const { getApps } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const { getFirestore, FieldPath, FieldValue } = require('firebase-admin/firestore');
+// firebase-admin 14 removed the legacy `admin.messaging()` namespace accessor
+// (`typeof admin.messaging === 'undefined'`), so every push sent from a Cloud
+// Function died on `admin.messaging is not a function`. The modular
+// `getMessaging()` below is the only supported entry point in v14.
+//
+// This was invisible for a while because the surrounding helpers catch and log
+// at info level, and because the *news* push is sent by the WordPress plugin,
+// not from here — so a working news push hid five broken app pushes
+// (achievement, event-rating, submission, connection request, meetup interest,
+// private message, chat report). `functions/push-messaging.test.cjs` pins it.
+const { getMessaging } = require('firebase-admin/messaging');
 // Lazy-loaded: only the Play purchase/product-sync paths need googleapis, so
 // eager loading would slow every function's cold start.
 let _googleApis = null;
@@ -44,8 +55,23 @@ const { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, send
 const { generateAuthActionLink } = require('./auth_action_link');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
+const {
+  MAX_ATTEMPTS: EMAIL_RETRY_MAX_ATTEMPTS,
+  nextRetryDelayMs,
+  queueIdentityNotificationRetry,
+  clearIdentityNotificationRetry,
+  bumpIdentityNotificationRetry,
+  resolveTemplate: resolveIdentityTemplate,
+} = require('./email_delivery_retry');
 
-admin.initializeApp();
+// In the Cloud Functions runtime this module is the first thing that loads, so
+// the app never exists yet. A test that boots this module against the Firestore
+// Emulator has to create the DEFAULT app itself first (the emulator injects its
+// own FIREBASE_CONFIG); asking Admin SDK to initialise a second, differently
+// configured DEFAULT app throws "A Firebase app named \"[DEFAULT]\" already
+// exists with a different configuration". Reusing the existing app is correct
+// in both worlds.
+if (!getApps().length) admin.initializeApp();
 
 const db = getFirestore(getApps()[0], 'hungarian-hardstyle');
 const auth = getAuth(getApps()[0]);
@@ -204,10 +230,13 @@ exports.syncEmailChange = functions
       { merge: true },
     );
     if (profile.previousEmail && profile.previousEmail !== email) {
+      // A `previousEmail` mezot a fenti set mar torolte, ezert ha ez a kuldes
+      // elhasal, a regi cim csak az ujraprobalasi rekordban marad meg.
       await sendIdentityEmailOnce({
         key: `email-change:${uid}:${email}`,
         to: profile.previousEmail,
         template: emailChangeEmailTemplate(),
+        retry: { uid, template: 'emailChange' },
       });
     }
     return { synced: true };
@@ -215,6 +244,12 @@ exports.syncEmailChange = functions
 
 function emailDeliveryJobRef(key) {
   return db.collection('email_delivery_jobs').doc(crypto.createHash('sha256').update(key).digest('hex'));
+}
+
+// Az ujraprobalasi rekord azonositoja ugyanaz a hash, mint a munkarekordé,
+// ezert a sikeres kuldes utan pontosan azt a dokumentumot lehet torolni.
+function retryPendingIdFor(key) {
+  return crypto.createHash('sha256').update(String(key || '')).digest('hex').slice(0, 40);
 }
 
 async function recentEmailDeliveryOutcome(key, deliveryType) {
@@ -240,6 +275,7 @@ async function sendIdentityEmailOnce({
   template,
   operationId = crypto.randomUUID(),
   deliveryType = 'identity',
+  retry = null,
 }) {
   const resendDeduplicationWindowMs = 60 * 1000;
   const jobRef = emailDeliveryJobRef(key);
@@ -290,6 +326,9 @@ async function sendIdentityEmailOnce({
   }
   try {
     const delivery = await sendMail({ to, ...template });
+    // Sikeres kuldes utan a cimzettet tartalmazo ujraprobalasi rekord azonnal
+    // torlodik, hogy szemelyes adat ne maradjon a szerveren.
+    await clearIdentityNotificationRetry(db, retryPendingIdFor(key));
     await db.runTransaction(async (transaction) => {
       const snapshot = await transaction.get(jobRef);
       if (snapshot.data()?.leaseId !== leaseId) return;
@@ -357,11 +396,110 @@ async function sendIdentityEmailOnce({
         command: String(error?.command || 'unknown'),
         responseCode: Number.isInteger(error?.responseCode) ? error.responseCode : null,
         stage: String(error?.stage || 'unknown'),
+        queuedForRetry: Boolean(retry?.uid && retry?.template),
       }),
     );
+    // A cimzett megorzese ujraprobalahoz. Enelkul a level veglegesen elveszne
+    // (a munkarekord csak hash-t tarol), pont azokban az esetekben, ahol nincs,
+    // aki ujrakerje: e-mail-csere ertesitese a REGI cimre, es admin torlesi
+    // ertesites egy mar torolt fiokhoz.
+    if (retry?.uid && retry?.template) {
+      await queueIdentityNotificationRetry(db, {
+        key,
+        uid: retry.uid,
+        to,
+        template: retry.template,
+        reason: String(error?.smtpCode || 'smtp_rejected'),
+      }).catch(() => {});
+    }
     return { sent: false, outcome: 'smtp_rejected', operationId };
   }
 }
+
+// ---------------------------------------------------------------------------
+// A tajekoztato levelek ujraprobalasa.
+//
+// A `sendIdentityEmailOnce()` nem tud ujraprobalni, mert a munkarekord csak a
+// cimzett HASH-et tarolja. Ket helyen ez vegleges elveszest jelent, mert nincs,
+// aki ujrakerje: az e-mail-csere ertesitese a REGI cimre (a `previousEmail`
+// mezot a muvelet mar torolte), es az admin torlesi ertesites egy mar torolt
+// fiokhoz. Ez a fuggveny az `email_delivery_pending` rekordbol dolgozik, amit
+// a `sendIdentityEmailOnce` irt ki hiba eseten, es korlatozott alkalommal
+// ujraprobalja. Sikeres kuldes utan a rekord (es vele a cim) torlodik.
+// ---------------------------------------------------------------------------
+exports.retryPendingIdentityEmails = onSchedule(
+  {
+    schedule: 'every 10 minutes',
+    timeZone: 'Europe/Budapest',
+    secrets: SMTP_SECRETS,
+    // A WordPress-nel bevalt minta: a kor ne fusson orokke egy elakadt rekordon.
+    timeoutSeconds: 120,
+  },
+  async () => {
+    const now = new Date();
+    const snapshot = await db
+      .collection('email_delivery_pending')
+      .where('expiresAt', '>', now)
+      .limit(25)
+      .get();
+    let retried = 0;
+    let delivered = 0;
+    for (const document of snapshot.docs) {
+      const record = document.data() || {};
+      const dueAt = record.nextAttemptAt?.toDate?.()?.getTime?.();
+      if (Number.isFinite(dueAt) && dueAt > Date.now()) continue;
+      const template = resolveIdentityTemplate(record.template, {
+        deletionEmailTemplate,
+        emailChangeEmailTemplate,
+      });
+      if (!template || !record.recipient || !record.uid) {
+        await document.ref.delete().catch(() => {});
+        continue;
+      }
+      retried += 1;
+      const attempts = Math.max(1, Number(record.attempts || 0) + 1);
+      try {
+        await sendMail({ to: record.recipient, ...template });
+        await document.ref.delete().catch(() => {});
+        delivered += 1;
+        console.info(
+          JSON.stringify({
+            event: 'identity_email_retry_delivered',
+            attempt: attempts,
+            template: String(record.template || ''),
+          }),
+        );
+      } catch (error) {
+        await bumpIdentityNotificationRetry(db, document.id, {
+          attempts,
+          reason: String(error?.smtpCode || 'smtp_rejected'),
+        }).catch(() => {});
+        console.warn(
+          JSON.stringify({
+            event: 'identity_email_retry_failed',
+            attempt: attempts,
+            maxAttempts: EMAIL_RETRY_MAX_ATTEMPTS,
+            smtpCode: String(error?.smtpCode || 'unknown'),
+            template: String(record.template || ''),
+          }),
+        );
+      }
+    }
+    const exhausted = await db
+      .collection('email_delivery_pending')
+      .where('expiresAt', '<=', now)
+      .limit(25)
+      .get()
+      .catch(() => null);
+    if (exhausted && !exhausted.empty) {
+      for (const document of exhausted.docs) await document.ref.delete().catch(() => {});
+      console.info(
+        JSON.stringify({ event: 'identity_email_retry_expired', removed: exhausted.size }),
+      );
+    }
+    return { retried, delivered };
+  },
+);
 
 exports.sendAuthEmail = functions
   .runWith({ secrets: SMTP_SECRETS, enforceAppCheck: false })
@@ -1185,6 +1323,12 @@ async function restoreExpiredEventWrite(event, before, after) {
   return true;
 }
 
+// Napi plafon a konnyen farmolhato pontforrasokra (egy fiok / egy nap).
+// A hir-lajkolas 3, a cikk-komment 3. A `functions/achievement-daily-limit.test.cjs`
+// valodi Firestore-emulatoron bizonyitja, hogy a plafon fog.
+const NEWS_LIKE_DAILY_POINT_LIMIT = 3;
+const ARTICLE_COMMENT_DAILY_POINT_LIMIT = 3;
+
 async function awardAchievementPoints(uid, delta, sourceKey, notification = null) {
   if (!uid || !Number.isInteger(delta) || delta === 0 || !sourceKey) return { changed: false };
   const ledgerId = crypto
@@ -1196,7 +1340,19 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
   const profileRef = db.collection('community_profiles').doc(uid);
   const isNewsLikeGrant = delta > 0 && sourceKey.startsWith('news-like:');
   const isArticleCommentGrant = delta > 0 && sourceKey.startsWith('article-comment:');
-  const dailyLimit = isNewsLikeGrant || isArticleCommentGrant ? 5 : null;
+  // A hir-lajkolas es a cikk-komment a leggyorsabban farmolhato pontforras,
+  // ezert NAPONTA VEGES: egy fiok legfeljebb ennyi alkalommal kap erte pontot.
+  // A tulajdonos szandeka: hirre 3, kommentre 3 (korabban 5 volt mindkettore).
+  //
+  // A fenti `ledger.exists` ellenorzes ezt onmagaban NEM valtja ki: az csak
+  // ugyanazt a cikket ismetelten lajkolotol ved (a ledger-kulcs tartalmazza a
+  // postId-t), egy nap viszont 40 kulonbozo cikket is lehet lajkolni. Ezert
+  // kell a kulon napi szamlalo.
+  const dailyLimit = isNewsLikeGrant
+    ? NEWS_LIKE_DAILY_POINT_LIMIT
+    : isArticleCommentGrant
+      ? ARTICLE_COMMENT_DAILY_POINT_LIMIT
+      : null;
   const dailyLimitRef =
     dailyLimit == null
       ? null
@@ -1287,6 +1443,16 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
   }
   return result;
 }
+
+// Test-only exports: `functions/achievement-daily-limit.test.cjs` futtatja a
+// valodi `awardAchievementPoints` tranzakciot a Firestore-emulatoron, hogy a
+// napi plafon tenyleges viselkedeset bizonyitsa (nem forras-szoveget keres).
+// Ezek nem Cloud Functionok, ezert nem deployolodnak.
+exports.__awardAchievementPointsForTests = awardAchievementPoints;
+exports.__achievementDailyLimitsForTests = {
+  newsLike: NEWS_LIKE_DAILY_POINT_LIMIT,
+  articleComment: ARTICLE_COMMENT_DAILY_POINT_LIMIT,
+};
 
 exports.reconcileAchievementPoints = functions
   .runWith({ enforceAppCheck: false })
@@ -2715,15 +2881,30 @@ async function sendMulticastToAllTokens(message, tokens) {
       },
     },
   };
+  const messaging = getMessaging();
   const responses = [];
   for (let offset = 0; offset < tokens.length; offset += 500) {
-    const result = await admin.messaging().sendEachForMulticast({
+    const result = await messaging.sendEachForMulticast({
       ...pushMessage,
       tokens: tokens.slice(offset, offset + 500),
     });
     successCount += result.successCount;
     failureCount += result.failureCount;
     responses.push(...result.responses);
+  }
+  // Ha egyetlen küldés sem sikerült, az MINDIG hagyjon nyomot. Az `admin.messaging`
+  // hibája napokig csak `console.warn`-ként élt és elfedte a hat érintett
+  // útvonalat (lásd `functions/push-messaging.test.cjs`).
+  if (tokens.length && successCount === 0) {
+    const firstFailure = responses.find((item) => item?.error);
+    console.error(
+      JSON.stringify({
+        event: 'push_multicast_all_failed',
+        tokens: tokens.length,
+        failureCount,
+        failureCode: String(firstFailure?.error?.code || 'unknown'),
+      }),
+    );
   }
   return { successCount, failureCount, responses };
 }
@@ -3732,6 +3913,7 @@ exports.deleteCommunityUser = functions
           key: `admin-deletion:${uid}`,
           to: targetUser.email,
           template: deletionEmailTemplate(),
+          retry: { uid, template: 'deletion' },
         });
       }
       await deletionRef.set(
@@ -3763,6 +3945,7 @@ exports.deleteCommunityUser = functions
         key: `admin-deletion:${uid}`,
         to: targetUser.email,
         template: deletionEmailTemplate(),
+        retry: { uid, template: 'deletion' },
       });
     }
 

@@ -250,6 +250,28 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Napi pont-plafon szamlalok (hir-lajkolas, cikk-komment). Kizarolag szerver
+    // irja; ha a kliens olvashatna, a plafon kiszamithato lenne, ha irhatna,
+    // egyszeruen nullazna.
+    match /achievement_news_like_limits/{entryId} {
+      allow read, write: if false;
+    }
+
+    match /achievement_article_comment_limits/{entryId} {
+      allow read, write: if false;
+    }
+
+    // Az ujraprobalasi sor a cimzett TELJES e-mail-cimet tartalmazza addig,
+    // amig a level kimegy (sikeres kuldes utan torlodik). Kliensbol soha nem
+    // erheto el — meg a sajat UID-jahoz tartozo sor sem.
+    match /email_delivery_pending/{entryId} {
+      allow read, write: if false;
+    }
+
+    match /email_delivery_jobs/{entryId} {
+      allow read, write: if false;
+    }
+
     // Game attempts and aggregate results are written only by Cloud
     // Functions. The client can submit through the callable, never directly
     // to these collections.
