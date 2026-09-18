@@ -257,5 +257,34 @@ if (repairEscapes(migrated) !== migrated) {
   ok('a migráció után a read-oldali javítás már nem változtat semmit');
 }
 
+/* ------------------------------------------------------------------ */
+/* 3. Az engedélylista nem lehet megduplázva                           */
+/* ------------------------------------------------------------------ */
+
+/*
+ * A 2.4.113-ban a /poll/active bekerült a huhs_public_cache_route()
+ * engedélylistájába, de a http-cache.php tetején maradt egy kezzel másolt,
+ * második regex, ami nem tartalmazta. Ezért a kérdőív friss válasza fejléc
+ * nélkül ment ki (se ETag, se 45 másodperc), és a hosting a maga 300
+ * másodperces Cache-Controlját tette alá. Egy engedélylista lehet.
+ */
+let allowlists = 0;
+for (const file of phpFiles) {
+  const code = fs.readFileSync(file, 'utf8');
+  const matches = code.match(/preg_match\(\s*'#\^\/huhs\/v1\/\(/g) || [];
+  const matchesDouble = code.match(/preg_match\(\s*"#\^\/huhs\/v1\/\(/g) || [];
+  allowlists += matches.length + matchesDouble.length;
+}
+if (allowlists !== 1) {
+  fail(`a nyilvános cache engedélylistája ${allowlists} helyen szerepel — pontosan 1 kell (huhs_public_cache_route)`);
+} else {
+  ok('a nyilvános cache engedélylistája egyetlen helyen szerepel');
+}
+if (fs.readFileSync(path.join(sourceDir, 'includes/http-cache.php'), 'utf8').includes('huhs_public_cache_route($route)')) {
+  ok('a friss válasz fejlécei a közös huhs_public_cache_route() engedélylistát használják');
+} else {
+  fail('a friss válasz fejlécei nem a közös engedélylistát használják');
+}
+
 console.log(failures === 0 ? '\nMINDEN ELLENŐRZÉS RENDBEN' : `\n${failures} HIBA`);
 process.exit(failures === 0 ? 0 : 1);

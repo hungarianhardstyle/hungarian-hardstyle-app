@@ -19,6 +19,19 @@
 - **A verziókód-tanulság:** a 317-es kódot a Play már felhasználta, ezért a build **csak a `pubspec.yaml` `version:` sorának emelésével** volt feltölthető. Minden új AAB előtt érdemes a legutóbb feltöltött kódot ellenőrizni, és a merge-elt manifestből visszaolvasni a tényleges `versionCode`-ot.
 - **Baseline profile:** szándékosan **nem** lett újragenerálva, mert ahhoz rootolt emulátor vagy támogatott fizikai eszköz kell (`docs/BASELINE_PROFILE.md`); a meglévő, build közben összeálló profil került a csomagba.
 
+### Javítva — a nyilvános cache engedélylistája három példányban élt (2026-09-18, plugin 2.4.115)
+
+- **Élő mérés közben talált második hiba:** a `/poll/active` **friss** (cache-miss) válasza `Cache-Control: public, max-age=300, stale-while-revalidate=60` fejléccel és **ETag nélkül** ment ki, miközben ugyanannak a végpontnak a cache-elt válasza helyesen `max-age=45` + ETag + `X-HUHS-Cache: early` volt.
+- **Ok:** a `http-cache.php`-ban a nyilvános útvonalak engedélylistája **három helyen** szerepelt kézzel másolva. Amikor a 2.4.113-ban a `/poll/active` bekerült a `huhs_public_cache_route()`-ba, a másik kettőből kimaradt:
+  1. `huhs_add_public_cache_headers()` (`rest_post_dispatch` 9999) — ez adja a **friss** válasz ETag/45 s fejlécét; ezért a friss válasz fejléctelen maradt, és **a hosting tette alá a maga 300 másodperces fejlécét**;
+  2. `huhs_preserve_public_not_modified()` — ez őrzi meg a 304-et a REST-szerializáláson át; ezért a kérdőívnél a 304 nem érvényesült.
+- **Következmény (a javítás előtt):** egy épp megnyíló vagy épp záruló kérdőív akár **5 percet** késhetett — nem a saját 120 s-os transientünk miatt, hanem a hosting 300 s-os fejléce miatt. Ez pontosan az a fajta hiba, amit mérés nélkül nem lehet megtalálni.
+- **Javítás:** mindkét hely a közös `huhs_public_cache_route()`-ot hívja, tehát **egy engedélylista-igazság** van. A `tools/check-wp-meta-json.mjs` ezt **ellenőrzi is**: a javítatlan 2.4.113-on „az engedélylista 3 helyen szerepel" hibát ad, a 2.4.115-ön átmegy.
+- **Új: a plugin verziója látszik a diagnosztikában** — `X-HUHS-Health: api=2.4.115 …`, kizárólag a titkos `huhs_diag=huhs-boot-probe-2026` markerrel. Ebből **élőben ellenőrizhető, hogy egy feltöltött csomag tényleg kicserélődött** (eddig erre nem volt mód: a `plugins=` lista csak könyvtárneveket ad, verziót nem).
+- **ÉLŐ ÁLLAPOT a 2.4.114 feltöltése után:** `/poll/active` → `{"poll":null}` — **nincs nyitott kérdőív**, ezért a kártya nem jelenik meg az appban. A `huhs_poll_active_id()` csak **`publish` állapotú** és **nyitott időablakú** kérdőívet ad vissza, ezért a kérdőívet **közzé kell tenni**, a kezdésnek a múltban, a zárásnak a jövőben kell lennie. Ez nem hiba, hanem a beállítás hiánya.
+- **Élő mérés ehhez:** a `poll/active` cache-elt válasza `early` + `max-age=45` + ETag (0,53 s), a `posts?per_page=1` pedig `fresh` + 45 + ETag — a cache-út tehát ép. A `max-age=300` fejlécet a **nem engedélylistázott** útvonalak kapják (`games/active`, `does-not-exist` 404), ez a hosting alapértéke.
+- Csomag: `build/huhs-mobile-api-2.4.115.zip` (SHA-256 `BC9BDA30569F80B10BDBD1A66FCBB194D25B991DBFA1777D02D071C6899EC7C5`), forrás `.tmp-api-24115/huhs-mobile-api/`, 42 fájl, bájt-azonos. **A 2.4.114 forrása nem maradt meg külön mappában** (a munkamappa a 2.4.115-re lett átnevezve), mert a 2.4.115 mindent tartalmaz belőle; a 2.4.114 egy köztes javítás volt.
+
 ### Javítva — a WordPress post meta lenyeli a `json_encode` escape-ét (2026-09-18, plugin 2.4.114)
 
 - **A tulajdonos észrevétele:** a WordPress adminban a kérdőív egyik válaszlehetősége `Utu00e1lom` alakban jelent meg `Utálom` helyett.
