@@ -39,6 +39,25 @@ service cloud.firestore {
           || url.matches('^https://res\\.cloudinary\\.com/fjxo93em/image/upload/.+'));
     }
 
+    // Plain-text mirror of the server-side name reservation.
+    //
+    // claimDisplayName reserves a name in display_name_index under a SHA-256
+    // hash, which a security rule cannot compute. Ownership is therefore also
+    // mirrored in display_name_claims under the normalized name itself, so a
+    // profile created directly from a client cannot take a name that already
+    // belongs to somebody else.
+    //
+    // The normalization must match normalizeDisplayName() in functions/index.js:
+    // trim, collapse inner whitespace, lowercase.
+    function normalizedDisplayName(name) {
+      return name.trim().lower().replace('\\s+', ' ');
+    }
+
+    function displayNameClaimAvailable(name) {
+      return !exists(/databases/$(database)/documents/display_name_claims/$(normalizedDisplayName(name)))
+        || get(/databases/$(database)/documents/display_name_claims/$(normalizedDisplayName(name))).data.uid == request.auth.uid;
+    }
+
     match /live_feed_posts/{postId} {
       allow read: if true;
       allow create: if request.auth != null
@@ -106,6 +125,16 @@ service cloud.firestore {
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() >= 2
         && request.resource.data.displayName.size() <= 40
+        // A name that another account already reserved must not be taken by
+        // writing the profile document directly instead of calling
+        // claimDisplayName. A free name is still accepted, so the released
+        // client keeps working exactly as before.
+        //
+        // The key test comes first on purpose: reading a missing map key is an
+        // evaluation error in the rules language, and an error here would hide
+        // the real reason a malformed create was rejected.
+        && ('displayName' in request.resource.data
+          && displayNameClaimAvailable(request.resource.data.displayName))
         && (!request.resource.data.keys().hasAny(['email'])
           || (request.resource.data.email is string
             && request.resource.data.email == request.auth.token.email))
@@ -177,6 +206,11 @@ service cloud.firestore {
               && request.auth.token.email == 'djdeeroy@gmail.com'
               ? request.resource.data.role == 'organizer' && request.resource.data.accessRole == 'admin'
               : request.resource.data.role in ['dj', 'organizer', 'partygoer'])
+            // An admin rename must respect somebody else's reservation too;
+            // otherwise the same bypass would just move to the admin path.
+            && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName'])
+              || ('displayName' in request.resource.data
+                && displayNameClaimAvailable(request.resource.data.displayName)))
             && (!request.resource.data.keys().hasAny(['accessRole'])
               || request.resource.data.accessRole in ['none', 'moderator', 'admin'])
             && (!request.resource.data.keys().hasAny(['fcmTokens'])
@@ -194,6 +228,13 @@ service cloud.firestore {
     // Blocks already-issued tokens for a deleted UID. Re-registering the same
     // email or Google identity creates a new UID and remains allowed.
     match /deleted_user_ids/{userId} {
+      allow read, write: if false;
+    }
+
+    // Plain-text owner of each reserved display name. Written only by the
+    // claimDisplayName callable and the daily repair job; the rules read it
+    // through get()/exists(), which do not depend on the access rules below.
+    match /display_name_claims/{name} {
       allow read, write: if false;
     }
 

@@ -1,5 +1,42 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Biztonság: a névfoglalás megkerülése lezárva (2026-09-18)
+
+- **A rés, igazolva:** a `community_profiles` create-szabály megengedte, hogy egy kliens közvetlenül írjon profil-dokumentumot tetszőleges `displayName`-nel, megkerülve a `claimDisplayName` szerveroldali névfoglalását. Így egy módosított kliens **már lefoglalt nevet is elvehetett** (név-utánzás).
+- **Két akadály, amit előbb fel kellett oldani:**
+  1. A `displayNameKey()` **SHA-256 hash**, amit a Firestore szabályok **nem tudnak kiszámolni**, ezért a meglévő `display_name_index`-et egy szabály nem tudja megnézni.
+  2. A **jelenleg telepített +225-ös app közvetlenül írja a `displayName`-t** (`community_service.dart` 276. és 459. sor a +225 commitban, `f87bb8fc`). Ezért **tilos** volt a mezőt kivenni a szabályból: az a telepített app regisztrációját törte volna el.
+- **A megoldás: plain-text tükör.** Új `display_name_claims/<normalizáltNév>` kollekció (kliensoldalról `allow read, write: if false`):
+  - `claimDisplayName` tranzakcióban írja (és átnevezéskor törli a régit, ha a hívóé volt);
+  - a fióktörlés felszabadítja, különben a név örökre blokkolódna;
+  - a napi `repairCommunityProfileProjections` **feltölti** a meglévő profilok neveit, és ütközést jelent (`community_profile_display_name_conflicts`), de nem nevez át senkit automatikusan.
+- **A szabály** (`firestore.rules`): `normalizedDisplayName()` = `trim().lower().replace('\\s+', ' ')`, és `displayNameClaimAvailable()` engedi a szabad nevet **vagy** a saját foglalást. Beépítve a create-ágba és az admin-átnevezés ágába is.
+  - **A mező jelenlétét `'displayName' in request.resource.data`-val kell ellenőrizni**, mert a hiányzó kulcs olvasása *evaluation error* a szabály-nyelvben, és az elfedné a valódi elutasítási okot. Ezt az emulátoros teszt fogta meg.
+- **Emulátoros szabályteszt: `functions/rules.test.cjs`** (8 teszt, mind zöld). Futtatás a repo gyökeréből:
+  `npx firebase emulators:exec --only firestore --project demo-huhs "node functions/rules.test.cjs"`
+  Ez az első valódi Firestore Rules Emulator-teszt a projektben (a `USER_MANAGEMENT_SOURCE_AUDIT` M3 pontja), és épp a kiadás-biztonságot bizonyítja: **szabad nevet a telepített kliens továbbra is beírhat**, idegen foglalást nem lehet elvenni, a tulajdonos a sajátját igen, a normalizálás (kis-nagybetű, dupla szóköz) egyezik a szerverrel, a foglalás-kollekció kliensből elérhetetlen, a szokásos profilfrissítés működik.
+- **Fontos ütemezés:** a meglévő nevek védelme a **következő 03:00-s napi javításkor** épül fel (akkor fut a backfill). Addig csak a deploy után foglalt nevek védettek. A védelem hiánya nem hiba, csak késleltetett.
+- **Az app nem törhet el:** a szabály csak olyan create-et utasít el, amit a kliens magától is elutasított volna (a nevet a `checkDisplayNameAvailability`/`claimDisplayName` már foglaltnak jelezte).
+
+### Biztonsági függőség-frissítés: nodemailer 7 → 10 (2026-09-18)
+
+- `npm audit` a `functions/`-ben **1 magas súlyosságú** sebezhetőséget jelzett a `nodemailer@7.0.13`-ban; a javítás a `nodemailer@10.0.10` (törő verzióváltás).
+- **Ellenőrizve, hogy biztonságos:** a `functions/email_service.js` csak a stabil API-t használja (`createTransport({host, port, secure, auth, tls, connectionTimeout, greetingTimeout, socketTimeout})` és `sendMail({from, to, subject, text, html})`), ezek a 10-es verzióban is léteznek; a futtatókörnyezet Node 22.
+- Frissítés után: **`npm audit`: 0 sebezhetőség**, `node --check functions/index.js` OK, és mind a **9 függvény-teszt zöld**.
+- **Tanulság a tesztek futtatásához:** a `functions/*.test.cjs` fájlokat a **repo gyökeréből** kell indítani (`node functions/<nev>.test.cjs`). A `functions/` könyvtárból futtatva a `security-permissions.test.cjs` elhasal egy relatív útvonalon, ami **nem regresszió**, csak rossz munkakönyvtár.
+
+### Cache-invalidációs audit — mind a hat hiba MÁR javítva volt (2026-09-18)
+
+- A `docs/AUDIT_CHAT_ACHIEVEMENT_REFRESH_2026-09-02.md` „bizonyított" hibái az audit óta **már javítva lettek**, ezért **nem szabad újraimplementálni** őket. Bizonyíték a jelenlegi kódban:
+  1. **A chat-sor nem frissült** → javítva: `community_screen.dart:746` figyeli a `CommunityService.publicProfileRefreshGeneration` értéket, és növeli a `_profileRefreshGeneration`-t.
+  2. **A `forceRefresh` megkerülte a deduplikációt** → javítva: `_publicProfileRefreshRequests` (`community_service.dart:1502`) és `_publicAchievementRefreshRequests` (`1842`) visszaadja a már futó frissítést.
+  3. **A régi Future visszaírt a cache-be** → javítva: epoch-ellenőrzés a visszaírás előtt, profilnál `1522`, achievementnél `1856` (`_cacheEpochFor(...) == requestEpoch`).
+  4. **Az összesített `_publicProfilesCache` nem invalidálódott** → javítva: `clearPublicProfileCache(uid)` nullázza (`1799`) és növeli a `_publicProfilesEpoch`-ot.
+  5. **Hibák elnyelve, nincs újrapróbálás** → részben javítva: 3 próbálkozás növekvő várakozással (`1511`, `1848`); felhasználói hibaüzenet szándékosan nincs, mert a profilból olvasott részleges rang a helyes fallback.
+  6. **`AchievementSummary.empty` felülírhatta a részleges rangot** → javítva: `community_screen.dart:1651-1656` a helyi (profilból olvasott) értéket tartja meg, ha a fallbacknek nincs jelvényképe.
+- **Ami valóban hiányzik: a tesztfedezet.** Az audit által kért service-/widgettesztek (deduplikáció, invalidálás utáni stale válasz elutasítása, jelvény megjelenése a chatben) **nem készültek el**. Ezekhez a `CommunityService`-t injektálhatóvá kellene tenni (interfész kiemelése), ami **valódi refaktor a működő appban** — ezért a „ne törjön el az app" elv miatt **szándékosan elhalasztva**, külön döntést igényel.
+- **Ne olvasd a régi auditot nyitott hibák listájaként.** Előbb ellenőrizd a kódot.
+
 ### Játékok: ÉLESBEN MŰKÖDNEK — a régi audit állításai elavultak (2026-09-18)
 
 - **Tulajdonosi visszajelzés:** *„fut egy éppen, egy meg lezárva"*. Ez megerősíti, hogy a játék-funkció éles és használatban van.

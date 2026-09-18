@@ -1743,6 +1743,16 @@ function displayNameKey(value) {
   return crypto.createHash('sha256').update(normalizeDisplayName(value)).digest('hex');
 }
 
+// Plain-text counterpart of displayNameKey.
+//
+// A Firestore security rule cannot compute a SHA-256 hash, so name ownership is
+// also mirrored under the normalized name itself. That is the only form the
+// rules can look up, and it is what stops a client from writing a profile
+// document directly with a name that already belongs to another account.
+function displayNameClaimRef(value) {
+  return db.collection('display_name_claims').doc(normalizeDisplayName(value));
+}
+
 function validatedDisplayName(value) {
   const displayName = String(value || '')
     .trim()
@@ -1823,14 +1833,28 @@ exports.claimDisplayName = functions.runWith({ enforceAppCheck: false }).https.o
       const oldKey = oldName ? displayNameKey(oldName) : '';
       const oldIndexSnapshot =
         oldKey && oldKey !== key ? await transaction.get(db.collection('display_name_index').doc(oldKey)) : null;
+      const oldNormalized = oldName ? normalizeDisplayName(oldName) : '';
+      const renamed = oldNormalized !== '' && oldNormalized !== normalizeDisplayName(displayName);
+      const oldClaimRef = renamed ? displayNameClaimRef(oldName) : null;
+      const oldClaimSnapshot = oldClaimRef ? await transaction.get(oldClaimRef) : null;
       transaction.set(indexRef, {
         uid: targetUid,
         displayName,
         normalizedName: normalizeDisplayName(displayName),
         updatedAt: FieldValue.serverTimestamp(),
       });
+      // Mirror the reservation in the plain-text collection the security rules
+      // read, so the reservation is enforced for direct client writes too.
+      transaction.set(displayNameClaimRef(displayName), {
+        uid: targetUid,
+        displayName,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
       if (oldIndexSnapshot && String(oldIndexSnapshot.data()?.uid || '').trim() === targetUid) {
         transaction.delete(db.collection('display_name_index').doc(oldKey));
+      }
+      if (oldClaimRef && String(oldClaimSnapshot?.data()?.uid || '').trim() === targetUid) {
+        transaction.delete(oldClaimRef);
       }
       transaction.set(
         profileRef,
@@ -2219,12 +2243,43 @@ exports.repairCommunityProfileProjections = onSchedule(
     const snapshot = await db.collection('community_profiles').get();
     let repaired = 0;
     let badgesRepaired = 0;
+    let claimsBackfilled = 0;
+    const claimConflicts = [];
     for (const document of snapshot.docs) {
       const profile = document.data() || {};
       if (isUnnumberedPlaceholderDisplayName(profile.displayName)) {
         await ensureHuhsUserNumber(document.id);
         repaired++;
         continue;
+      }
+      // Backfill the plain-text name reservation the security rules read. Names
+      // claimed before display_name_claims existed, and names chosen by clients
+      // that only mirror the reservation, are protected from the next run on.
+      const reservedName = String(profile.displayName || '').trim();
+      if (reservedName) {
+        const claimRef = displayNameClaimRef(reservedName);
+        const claim = await claimRef.get();
+        const claimOwner = String(claim.data()?.uid || '').trim();
+        if (!claimOwner) {
+          await claimRef.set(
+            {
+              uid: document.id,
+              displayName: reservedName,
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+          claimsBackfilled++;
+        } else if (claimOwner !== document.id) {
+          // Two profiles normalize to the same name. The existing owner keeps
+          // the reservation; the duplicate is reported for a manual review
+          // instead of being renamed automatically.
+          claimConflicts.push({
+            name: normalizeDisplayName(reservedName),
+            kept: claimOwner,
+            duplicate: document.id,
+          });
+        }
       }
       const achievement = catalogReliable ? publicAchievementData(profile, catalog) : null;
       if (achievement && !sameAchievementBadge(profile.achievementBadge, achievement.achievementBadge)) {
@@ -2245,7 +2300,12 @@ exports.repairCommunityProfileProjections = onSchedule(
       profiles: snapshot.size,
       repaired,
       badgesRepaired,
+      claimsBackfilled,
+      claimConflicts: claimConflicts.length,
     });
+    if (claimConflicts.length > 0) {
+      console.warn('community_profile_display_name_conflicts', claimConflicts);
+    }
   },
 );
 
@@ -3480,6 +3540,11 @@ async function deleteUserReferences(uid, profileData = {}) {
     const indexRef = db.collection('display_name_index').doc(displayNameKey(oldName));
     const index = await indexRef.get();
     if (String(index.data()?.uid || '').trim() === uid) await indexRef.delete();
+    // The plain-text claim must be released too, otherwise the name stays
+    // permanently blocked for everybody after an account is deleted.
+    const claimRef = displayNameClaimRef(oldName);
+    const claim = await claimRef.get();
+    if (String(claim.data()?.uid || '').trim() === uid) await claimRef.delete();
   }
   await db.recursiveDelete(db.collection('community_profiles').doc(uid));
   await Promise.all([
