@@ -1,5 +1,28 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### A WP admin „HUHS Mobile" menü rendberakva — a rendezési lista elavult volt (2026-09-18, plugin 2.5.2)
+
+- **A tulajdonos jelzése:** *„meg apiban tedd rendbe a menüpontokat, elég összevisszaság lett most, about legalul legyen a többi meg értelem szerűen egymáshoz viszonyítva jó helyen"*, majd pontosítva: *„most ugye a WP HUHS mobil menüről beszéltem"*.
+- **FONTOS FÉLREÉRTÉS, amit rögzítek:** először az **app** „Több" menüjét kezdtem rendezni. Az a módosítás **visszaállítva** (a `MoreScreen` érintetlen). **Az app menüje külön téma, arról külön kell kérdezni** — a tulajdonos itt a WordPress adminra gondolt.
+- **A gyökér:** a `admin.php` végén már **volt** egy rendező hook (`admin_menu`, priority 999), de a benne lévő lista **elavult**: a később hozzáadott modulok — `huhs-poll-results` (2.4.121), `edit.php?post_type=huhs_poll`, `huhs-prize` és `edit.php?post_type=huhs_prize` (2.5.0), `huhs-newsletter` — **benne sem voltak**. A rendezés után ezért a lista **végére** kerültek, a `huhs-trash` és a `huhs-about` társaságába. Pontosan ez volt a „összevisszaság".
+- **A javítás — tematikus csoportok (`$groups`) a lapos `$order` helyett:**
+  1. **Dashboard** — `huhs-mobile`
+  2. **Tartalom** — DJ-k, szervezők, események, kiadványok, GYIK
+  3. **Interakció** — kérdőív (+eredmények), nyereményjáték (+admin), éves szavazás szezonjai (+összesítő)
+  4. **Közösség** — játékeredmények, játékképek, játékok, új játék, achievementek
+  5. **Kommunikáció** — push értesítések, hírlevél
+  6. **Beállítások** — rádió, indítási kép, beállítások
+  7. **Rendszer** — shortcode-ok, beküldések, lomtár
+  8. **Névjegy (About)** — **MINDIG a legalsó sor** (a tulajdonos kérése)
+  Az itt fel nem sorolt (jövőbeli) sorok **a végére** kerülnek, hogy semmi ne tűnjön el a menüből.
+- **Amit SZÁNDÉKOSAN NEM tettem:** nem raktam **elválasztó sorokat** a csoportok közé. Kipróbáltam, majd elvetettem: az elválasztó sor a WordPress almenüben **kattintható** lenne és egy nem létező oldalra vinne („nincs jogosultságod"), ezért a tiszta, tematikus sorrend önmagában is átlátható. Ezt egy ellenőrzés is tiltja (lásd lent).
+- **Új, önmagát bizonyító ellenőrzés: `tools/check-wp-admin-menu.mjs`** (**8/8**). Minden `add_submenu_page()` **5. argumentumát** (a saját slugot) és minden `show_in_menu => 'huhs-mobile'` bejegyzéstípus `edit.php?post_type=…` sorát begyűjti a forrásból, majd megköveteli, hogy **mind szerepeljen** a tematikus sorrendben. Emellett rögzíti a blokkok sorrendjét, hogy az About legalul van, és hogy nincs elválasztó sor.
+  - **Két saját parsolási hibát is javítottam közben, érdemes megjegyezni:** (1) a zárójel-párosítást a **hívás** saját nyitó zárójeléből kell indítani, különben a `function ()` zárójelére illeszkedik; (2) az `add_submenu_page()` **első** paramétere a **szülő slug**, ezért a saját slug az **ötödik** (index 4), nem a negyedik. Az első váltolat ezért a `manage_options`/`edit_posts` jogosultság-sztringeket gyűjtötte slugként.
+  - **A detektor bizonyítottan működik:** a javítás előtti (lapos `$order`) sorrenden a szkript **szándékosan elhasal** és felsorolja a hiányzó sorokat.
+  - Futtatás: `node tools/check-wp-admin-menu.mjs .tmp-api-24115/huhs-mobile-api`
+- **Csomag:** `build/huhs-mobile-api-2.5.2.zip` — 43 bejegyzés, 131,7 KB, SHA-256 `C3072A84F00AE82254708AD0404D5BEDECF2D0EA9173FB6DA8028C10807E47D1`.
+- **Ellenőrzések:** 42/42 PHP parse, `check-wp-admin-menu.mjs` **8/8**, `check-wp-meta-json.mjs` zöld, `verify-prize-draw.mjs` **44/44**, `verify-poll-status.mjs` **25/25**.
+
 ### „100 év után jelent meg a nyertes" — a `forceRefresh` HEAD + ETag útja a RÉGI testet adta vissza (2026-09-18, AAB 324)
 
 - **A tulajdonos jelzése:** *„a játék lejárt 22:17-kor el is tűnt, de nincs ott in app a nyertes a nyereményjáték kártya helyén"*, majd amikor megkérdeztem az app verzióját: **„322 van fent"**, végül: *„ja közben meglett a kártya, 100 év után"*.
