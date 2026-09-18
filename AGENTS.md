@@ -13,7 +13,7 @@
 
 ### A Play-kiadási jegyzet másolhatóan + kapu rá (2026-09-18, AAB 328)
 
-- **A tulajdonos kérése:** *„add az utolsó aab-t + changelog másolhatónak, tételesen"* — vagyis legyen egy helyen, **kész és másolható** formában az, amit a Play Console-ra be kell illeszteni, tételesen.
+- **A tulajdonos kérése:** *„add az utolsó aab-t + changelog másolhatónak, tételesen"*, majd *„röviden kéne a Playbe"* — vagyis legyen egy helyen, **kész és másolható** formában az, amit a Play Console-ra be kell illeszteni.
 - **Az új dokumentum: `docs/PLAY-KIADASI-JEGYZET.md`** — tartalmazza
   1. a feltöltendő AAB **mért** adatait (fájl, versionName, versionCode, méret, SHA-256),
   2. a **Play Console blokkot** (```play-notes fenced blokk — ez másolható egyben),
@@ -21,11 +21,12 @@
   4. az **app Névjegyének tételes listáját build szerint** (328…323),
   5. a **plugin 2.5.5 kiadásjegyzékét**,
   6. a feltöltés előtti ellenőrzések sorrendjét.
-- **MIÉRT a teljes ugrás (322 → 328) a fő szöveg:** a Playen a legutóbb publikált build a **322** (ezt a tulajdonos jelezte), a 323–328 pedig **egy csomagban** megy ki. Ha csak a 328 két pontja lenne a jegyzetben, a felhasználó a **hat build** javításainak a nagy részét észre sem venné — pont azok maradnának láthatatlanok, amiket kifejezetten kért (chat/komment szerkesztés, értesítés-törlés, azonnali frissülés). Ezért a fő blokk **mind a hatot** lefedi.
+- **A Play-szöveg RÖVID (a tulajdonos kérése: „röviden kéne a Playbe"):** az elsődleges blokk **3 sor, 136/500 karakter** — a Play a frissítés kártyáján úgyis rövidítve mutatja. A tételes lista nem vész el: **az app Névjegyében** van (3. pont), és a dokumentum **1b.** szakaszában a hosszabb (458/500) változat is ott marad, ha mégis bővebben kellene.
+- **MIÉRT a teljes ugrás (322 → 328) a referencia:** a Playen a legutóbb publikált build a **322** (ezt a tulajdonos jelezte), a 323–328 pedig **egy csomagban** megy ki, ezért a tételes lista (és a hosszabb Play-változat) **mind a hatot** lefedi — így nem marad láthatatlan pont az, amit kifejezetten kért (chat/komment szerkesztés, értesítés-törlés, azonnali frissülés).
   - **Ha kiderül, hogy a 323–327 közül valamelyik mégis kiment**, akkor a dokumentum fejlécében a `lastPublishedBuild` értékét kell átírni — a kapu erre magától jelez (lásd lent), és a „csak a 328" tartalék blokk való.
 - **A Play- és a Névjegy-szöveg viszonya:** a Play-blokk **összevont, felhasználói összefoglaló**, az app Névjegyében (`lib/data/app_changelog.dart`) viszont **build szerinti, teljes** lista van. Ez szándékos: a Play nyelvenként **500 karakterre** korlátoz _(a Play Console súgója szerint; a korlátot a gyakorlat is visszaigazolja)_, a Névjegy viszont nem korlátozott.
 - **Új kapu: `tools/check-play-notes.mjs`** — ez a hatodik olyan ellenőrzés, ami **magát a kiadási szöveget** méri, nem a kódot:
-  1. minden ```play-notes blokk **≤ 500 karakter** (mért érték: **458/500** a fő blokké, **217/500** a tartaléké);
+  1. minden ```play-notes blokk **≤ 500 karakter** (mért érték: **136/500** a rövid fő blokké, **458/500** a hosszabbé, **217/500** a „csak 328" tartaléké);
   2. **biztonsági margó**: 480 karakter felett **jelez**, mert egy későbbi szövegmódosítás különben csendben átbillentené a feltöltést (a fő blokk **458/480**);
   3. a dokumentum fejlécében lévő build/verzió **egyezik a `pubspec.yaml`-lel** (1.0.0+328);
   4. **(lastPublishedBuild, currentBuild] minden buildjéhez van tételes bejegyzés** — így nem lehet egy javítás „lemaradni";

@@ -32,10 +32,26 @@ ezt kell tükröznie, különben a javítások fele láthatatlan maradna.
 > helyett a 328-hoz tartozó rövidebb blokk való (lásd lent), és a `lastPublishedBuild`
 > értékét itt kell átírni — a `tools/check-play-notes.mjs` erre figyelmeztet.
 
-## 1. Play Console — kiadási megjegyzések (EZT MÁSOLD BE)
+## 1. Play Console — RÖVID (ezt másold be)
 
-A Play **nyelvenként 500 karaktert** enged a kiadási megjegyzésekben. Az alábbi blokk
-**mérve a limit alatt van** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
+A tulajdonos kérése: *„röviden kéne a Playbe"*. A Play a kiadási megjegyzést a frissítés
+kártyáján **rövidítve** mutatja, ezért a **rövid** szöveg a jó: 3 sor, minden sor egy
+érthető újdonság. A részletes lista nem vész el — az **az app Névjegyében** van (3. pont),
+és a felhasználó ott bármikor megnézheti.
+
+A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com/googleplay/android-developer/answer/9859348?hl=en));
+az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
+
+```play-notes
+- Súgó (GYIK): témakörökre bontva, érthetően.
+- Egységes kártyák a főoldalon.
+- Chat- és hozzászólás-szerkesztés, jobb értesítéskezelés.
+```
+
+## 1b. Play Console — ha bővebben szeretnéd (tartalék)
+
+Ugyanaz, hosszabban — ez is a limiten belül van (**458/500**). Akkor használd, ha
+részletesebben akarod felsorolni, mit kap a felhasználó.
 
 ```play-notes
 - ÚJ: a GYIK (Segítség) témakörökre bontva, érthető szöveggel.
