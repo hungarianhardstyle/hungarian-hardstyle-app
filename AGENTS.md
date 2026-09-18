@@ -11,6 +11,31 @@
 - **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **245/245**.
 - **Csomag:** `build/HUHS-v1.0.0+328-release.aab` — tisztán kliensoldali, **a pluginhoz nem kell nyúlni**.
 
+### A Play-kiadási jegyzet másolhatóan + kapu rá (2026-09-18, AAB 328)
+
+- **A tulajdonos kérése:** *„add az utolsó aab-t + changelog másolhatónak, tételesen"* — vagyis legyen egy helyen, **kész és másolható** formában az, amit a Play Console-ra be kell illeszteni, tételesen.
+- **Az új dokumentum: `docs/PLAY-KIADASI-JEGYZET.md`** — tartalmazza
+  1. a feltöltendő AAB **mért** adatait (fájl, versionName, versionCode, méret, SHA-256),
+  2. a **Play Console blokkot** (```play-notes fenced blokk — ez másolható egyben),
+  3. egy **tartalék blokkot arra az esetre, ha csak a 328 megy ki**,
+  4. az **app Névjegyének tételes listáját build szerint** (328…323),
+  5. a **plugin 2.5.5 kiadásjegyzékét**,
+  6. a feltöltés előtti ellenőrzések sorrendjét.
+- **MIÉRT a teljes ugrás (322 → 328) a fő szöveg:** a Playen a legutóbb publikált build a **322** (ezt a tulajdonos jelezte), a 323–328 pedig **egy csomagban** megy ki. Ha csak a 328 két pontja lenne a jegyzetben, a felhasználó a **hat build** javításainak a nagy részét észre sem venné — pont azok maradnának láthatatlanok, amiket kifejezetten kért (chat/komment szerkesztés, értesítés-törlés, azonnali frissülés). Ezért a fő blokk **mind a hatot** lefedi.
+  - **Ha kiderül, hogy a 323–327 közül valamelyik mégis kiment**, akkor a dokumentum fejlécében a `lastPublishedBuild` értékét kell átírni — a kapu erre magától jelez (lásd lent), és a „csak a 328" tartalék blokk való.
+- **A Play- és a Névjegy-szöveg viszonya:** a Play-blokk **összevont, felhasználói összefoglaló**, az app Névjegyében (`lib/data/app_changelog.dart`) viszont **build szerinti, teljes** lista van. Ez szándékos: a Play nyelvenként **500 karakterre** korlátoz _(a Play Console súgója szerint; a korlátot a gyakorlat is visszaigazolja)_, a Névjegy viszont nem korlátozott.
+- **Új kapu: `tools/check-play-notes.mjs`** — ez a hatodik olyan ellenőrzés, ami **magát a kiadási szöveget** méri, nem a kódot:
+  1. minden ```play-notes blokk **≤ 500 karakter** (mért érték: **458/500** a fő blokké, **217/500** a tartaléké);
+  2. **biztonsági margó**: 480 karakter felett **jelez**, mert egy későbbi szövegmódosítás különben csendben átbillentené a feltöltést (a fő blokk **458/480**);
+  3. a dokumentum fejlécében lévő build/verzió **egyezik a `pubspec.yaml`-lel** (1.0.0+328);
+  4. **(lastPublishedBuild, currentBuild] minden buildjéhez van tételes bejegyzés** — így nem lehet egy javítás „lemaradni";
+  5. az **AAB létezik, és a dokumentumban szereplő SHA-256 tényleg az** (a fájlt valóban beolvassa és hashel: `C8D3BEDB…B660EB9`);
+  6. nincs `TODO`/`XXX`/`FIXME` a szövegben.
+  - **Mind a négy hibamód bizonyítottan elhasal:** túl hosszú blokk (637/500), kihagyott build (327), hamis SHA-256, és a pubspec-től eltérő build — mindegyik **HIBA**, a valódi dokumentumon **MINDEN ELLENŐRZÉS RENDBEN**.
+  - **Saját hibám, amit érdemes megjegyezni:** a hibamódokat először PowerShell-egysorosokkal próbáltam generálni, és a magyar idézőjelek/ékezetek a parancsstringben **megsérültek** — a „túl hosszú" eset ezért **hamis zöldet** adott. A mutációkat végül **Node-szkripttel** (UTF-8-biztosan) generáltam, és akkor mind a négy elhasalt. Tanulság: **magyar szöveges mutációt ne parancssori literálból** állíts elő.
+- **AAB (mérve):** `build/HUHS-v1.0.0+328-release.aab` — versionCode **328** (a merge-elt release manifestből visszaolvasva), versionName `1.0.0`, 79,22 MB, SHA-256 `C8D3BEDBFE7D24C8B6F0ECB004D23AA07E986C81332BF1A934D38B681B660EB9`.
+- **Ellenőrzések:** `check-play-notes.mjs` **MINDEN ELLENŐRZÉS RENDBEN**, `flutter test` **245/245** (ebből `test/data/app_changelog_test.dart` a pubspec-egyezést kényszeríti ki — a 328-hoz van bejegyzés), `flutter analyze` tiszta.
+
 ### A GYIK (Segítség) rendberakva — tárgyi hiba, duplikáció, zaj és hiányzó témák (2026-09-18, plugin **2.5.5**)
 
 - **A tulajdonos jelzése:** *„nézzük meg a GYIK menüt is mert most elég gagyi, érthető normális funkció ismertető kell, nem pedig mindenféle Firebase meg semmi értelme duma, és csak az elérhető funkciókról segítség"*. Ez a korábban **ELHALASZTVA** jelölt feladat.

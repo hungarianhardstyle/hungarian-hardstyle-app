@@ -1,6 +1,15 @@
 # Kiadási changelog ellenőrzőlista
 
-## Következő kiadás (1.0.0+322) — changelog szövegek
+> **A soron következő feltöltés kész, másolható szövegei: `docs/PLAY-KIADASI-JEGYZET.md`**
+> (Play-blokkok karakterlimittel, build szerinti tételes lista, plugin-kiadásjegyzék).
+> Azt a fájlt ellenőrzi a `node tools/check-play-notes.mjs` — a Play-blokk hosszát,
+> a build-lefedettséget és az AAB SHA-256-át is.
+>
+> **Állapot (2026-09-18):** a Playen a legutóbb publikált build a **322**; a legfrissebb
+> elkészült csomag a **`build/HUHS-v1.0.0+328-release.aab`** (versionCode 328), ez viszi fel
+> a 323–328 összes javítását. A lenti 322-es blokk ezért **archív**: a 322 már kint van.
+
+## Archív: a 322-es kiadás szövegei (már publikálva)
 
 **Google Play Console – kiadási megjegyzések (magyar):**
 
