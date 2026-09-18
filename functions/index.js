@@ -4104,6 +4104,68 @@ exports.getLabelDownloadUrl = functions
     };
   });
 
+// Public opinion poll ("Kérdőív").
+//
+// Only a registered account may vote, and only once. The WordPress site is the
+// store of record: it keeps a salted fingerprint of the voter and nothing else,
+// so no name, e-mail address or Firebase UID is stored anywhere. The caller
+// never sends its own identity: the UID comes from the verified auth token, so
+// one account cannot vote on behalf of another.
+//
+// Calling this without `optionIndex` only asks whether this account has already
+// voted, which is how the app decides between the ballot and the thank-you
+// state.
+exports.pollVote = functions
+  .runWith({
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+    enforceAppCheck: false,
+  })
+  .https.onCall(async (data, context) => {
+    requireRegisteredViewer(context);
+    const pollId = Number(data?.pollId || 0);
+    if (!Number.isInteger(pollId) || pollId < 1) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen kérdőív.');
+    }
+    const hasOption = data?.optionIndex !== undefined && data?.optionIndex !== null;
+    const optionIndex = Number(data?.optionIndex ?? -1);
+    if (hasOption && (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex > 9)) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen válaszlehetőség.');
+    }
+
+    const uid = String(context.auth.uid);
+    if (hasOption && !(await allowCall(uid, 'poll_vote', 20))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok kérés, próbáld később.');
+    }
+
+    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+    const response = await fetch(`${WORDPRESS_BASE_URL}${hasOption ? '/poll/vote' : '/poll/status'}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(hasOption ? { pollId, optionIndex, uid } : { pollId, uid }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.warn('poll_vote_wordpress_failed', {
+        pollId,
+        hasOption,
+        status: response.status,
+        message: typeof payload?.message === 'string' ? payload.message : '',
+      });
+      throw new HttpsError(
+        response.status === 403 ? 'failed-precondition' : 'internal',
+        typeof payload?.message === 'string' && payload.message !== ''
+          ? payload.message
+          : 'A szavazat rögzítése nem sikerült.',
+      );
+    }
+    if (!hasOption) return { voted: payload?.voted === true };
+    return { ok: true, alreadyVoted: payload?.alreadyVoted === true };
+  });
+
 const labelProductDefinitions = [
   { type: 'radio_wav', label: 'Radio WAV' },
   { type: 'radio_mp3_320', label: 'Radio MP3 320 kbps' },

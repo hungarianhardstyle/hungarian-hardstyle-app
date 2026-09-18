@@ -1,5 +1,20 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Új funkció: Közvéleménykutatás — Kérdőív (2026-09-18, plugin 2.4.113)
+
+- **Tulajdonosi kérés:** a WordPress adminban megadható **egy kérdés** és legfeljebb **10 válaszlehetőség**; **csak regisztrált** felhasználó szavazhasson; az eredmény **a WordPressben** tárolódjon **felhasználónév és e-mail nélkül**, csak az összesített számok; **állítható kezdő és záró dátum**; **publikus eredmény nem kell**; a főoldalon az **éves szavazás alatt** jelenjen meg; **kép nem kell**.
+- **Tulajdonosi döntések:** (1) a kérdőív **csak a két dátum között** látszik az appban; (2) **egy fiók egyszer szavazhat**, és a szavazat **nem módosítható**.
+- **Adatvédelem — ez a lényeg:** a WordPress **soha** nem tárol felhasználónevet, e-mail-címet vagy Firebase UID-t. Minden szavazat csak egy **sótolt ujjlenyomatot** hagy (`_huhs_poll_vote_<sha256>`), amiből a duplikáció kiszűrhető, de a szavazó nem azonosítható. A só (`huhs_poll_salt` opció) a szerveren marad, ezért a kliens **nem tud más nevében szavazni**.
+- **Ki dönt az időablakról:** a `huhs_poll_window_state()` a WordPressben (`before` / `open` / `closed`), a webhely időzónájában. A `/poll/active` végpont **csak nyitott** kérdőívet ad vissza, ezért az app nem számol dátumot, és egy elállított készülék-idő nem tudja kitolni az ablakot. Hiányzó dátum → nyitott határ, hogy egy elgépelt dátum ne tegye használhatatlanná a kérdőívet.
+- **Ki szavazhat:** a `pollVote` Firebase callable `requireRegisteredViewer(context)`-tel indul, tehát **névtelen (vendég) fiók nem szavazhat**. A callable a **hitelesített tokenből** veszi a UID-t, nem a kliens kéréséből, így egy fiók nem tud más nevében szavazni. (`optionIndex` nélkül hívva csak azt válaszolja meg, hogy ez a fiók szavazott-e már — ebből lesz a „Köszönjük" állapot.)
+- **Hol van a szavazat:** `POST /poll/vote` és `POST /poll/status` a pluginben, `current_user_can('manage_options')`-szel védve, mert **csak a Firebase** hívja a WordPress application passworddel (ugyanaz a minta, mint a `/releases/{id}/play-products`). Az egyediség `add_post_meta(..., true)`-val történik, a szavazatszám pedig a szavazat-sorokból **számolódik újra**, ezért nincs külön számláló, ami elcsúszhatna.
+- **Publikus eredmény nincs:** külön adminoldal (HUHS Mobile → *Kérdőív eredményei*) mutatja a számokat és az arányokat; publikus eredmény-végpont szándékosan nem készült.
+- **Cache:** a `/poll/active` bekerült a szerveroldali cache engedélylistájába (a lassú boot miatt), ezért egy épp kinyíló vagy épp záruló kérdőív **legfeljebb 120 s-ig** késhet. Ez tudatos tradeoff.
+- **Kliens:** `lib/models/poll.dart`, `lib/services/poll_service.dart`, `lib/providers/poll_provider.dart`, `lib/widgets/poll_card.dart`, bekötve a `home_screen.dart`-ban **közvetlenül az éves szavazás kártyája alá**. A kártya magától eltűnik, ha nincs nyitott kérdőív, és vendégnek regisztrációs figyelmeztetést mutat. A `RadioListTile` helyett szándékosan `ListTile` + rádió ikon van, mert ebben a Flutter-verzióban a Material radio API `RadioGroup`-ra migrál (`deprecated_member_use`).
+- Csomag: `build/huhs-mobile-api-2.4.113.zip` (SHA-256 `FB75635AC70C2F84EF22ACD8B312C9FCF24E15D61B8A2644BE7748955537BF5A`), forrás: `.tmp-api-24113/huhs-mobile-api/`. **A 2.4.112 forrása érintetlen maradt** (`.tmp-api-24112`), mert az van élesben.
+- **Ami hátra van:** a kliensoldali kártya **a következő AAB-buildben** élesedik. Addig a `/poll/active` végpont nem is létezik a telepített pluginban, ezért a kliens `null`-t kap és nem jelenít meg semmit — nincs hibaüzenet.
+- **Ellenőrzés:** 41/41 PHP-fájl parse-olható, `flutter analyze` tiszta, `flutter test` **158/158** (4 új modellteszttel), függvény-tesztek 9/9, `node --check` OK, `pollVote` élesítve.
+
 ### Kiadvány megjelenési dátum szerinti élesítés + PRESAVE (2026-09-18)
 
 - **Tulajdonosi kérés:** új kiadvány feltöltésekor a Play-szinkron fusson le (kimegy a Google Play felé), de az appban **csak a megjelenési dátumtól** legyen megvásárolható, és a **96 kbps ingyenes (reklámos) letöltés is csak akkor** működjön. Emellett legyen **PRESAVE link** mező.
