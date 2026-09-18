@@ -252,7 +252,9 @@ class _ReleaseCard extends StatelessWidget {
                             .map((artist) => artist.name)
                             .join(' · '),
                       if (release.releaseDate.isNotEmpty)
-                        'Megjelenés: ${release.releaseDate}',
+                        release.isUpcoming
+                            ? 'Hamarosan · Megjelenés: ${release.releaseDate}'
+                            : 'Megjelenés: ${release.releaseDate}',
                       if (release.genre.isNotEmpty) release.genre,
                     ].join('\n'),
                     maxLines: 2,

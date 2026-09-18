@@ -1,5 +1,20 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Kiadvány megjelenési dátum szerinti élesítés + PRESAVE (2026-09-18)
+
+- **Tulajdonosi kérés:** új kiadvány feltöltésekor a Play-szinkron fusson le (kimegy a Google Play felé), de az appban **csak a megjelenési dátumtól** legyen megvásárolható, és a **96 kbps ingyenes (reklámos) letöltés is csak akkor** működjön. Emellett legyen **PRESAVE link** mező.
+- **Tulajdonosi döntések (mind rögzítve):**
+  1. A dátum előtt a kiadvány **látszódik** „Hamarosan" jelöléssel + PRESAVE gombbal.
+  2. A PRESAVE **egy URL-mező**, ami a megjelenési dátum után **automatikusan eltűnik**.
+  3. A Play-termék **csak a megjelenési napon aktiválódik** (addig létezik, de nem vásárolható).
+  4. **A 60 másodperces preview a dátum előtt is működik** — ez külön, nyilvános fájl, a kapu nem érinti.
+- **Hol születik a döntés (egyetlen hely):** `huhs_release_is_upcoming()` a `helpers.php`-ban. A dátum a **webhely időzónájában** értendő, és a kiadvány a megjelenési napján **00:00-kor** válik elérhetővé. A nyilvános API ebből adja az `is_upcoming` mezőt, ezért a kliensnek **nem kell dátumot számolnia** — így nincs időzóna-eltérés az app és a szerver között. Érvénytelen/üres dátum → hamis (elérhető), hogy egy elgépelt dátum ne zárja ki a vásárlókat.
+- **A letöltés-kapu a WordPressben van** (`private-download.php`, `huhs_release_create_download_token`): a token **minden** privát változatra (fizetős WAV/320, reklámos 96 kbps, ingyenes WAV) elutasításra kerül a dátum előtt. Ez azért itt van, mert itt van a dátum és az időzóna, és mert így a **már telepített kliensek is védettek**. A Firebase-oldalon nem kellett külön kaput tenni: a `getLabelDownloadUrl` a WordPress hibaüzenetét adja tovább (`failed-precondition`), így a felhasználó értelmes magyar üzenetet kap.
+- **Play-termék ütemezése** (`functions/index.js`, `upsertPlayProduct`): a termék a dátum előtt is létrejön (hogy a Play ellenőrzése és a terjesztés lefusson a premierig), de a vásárlási opció **INACTIVE** marad; a napon az **ötpercenkénti ütemezett szinkron** aktiválja, emberi beavatkozás nélkül. A dátum előtti ellenőrzés szándékosan **nem egy konkrét Play-állapotot** követel meg, hanem csak azt, hogy „ne legyen ACTIVE" — a katalógusnak több nem-aktív állapota van, és egy ismeretlen érték elutasítása feleslegesen elbuktatná a szinkront.
+- **WordPress oldal (2.4.112):** új `presave_url` meta + admin mező a „Megjelenes elotti elorendeles" szekcióban; az `is_upcoming` és a `presave_url` bekerült a lista- és a részlet-válaszba is (a `presave_url` csak akkor, ha a kiadvány még előtte van). Csomag: `build/huhs-mobile-api-2.4.112.zip` (SHA-256 `A462311F9EFC8F60F3C4D5C2178D17CF656AEA012F0AE427B16772D65BC38F31`), forrás: `.tmp-api-24112/huhs-mobile-api/`.
+- **Kliens:** a `HuhsRelease` modell új `isUpcoming` és `presaveUrl` mezőt kapott (hiányzó `is_upcoming` esetén `false`, vagyis a régi viselkedés marad). A lista-kártyán „Hamarosan · Megjelenés: …" felirat; a részletoldalon egy „Hamarosan" kártya a PRESAVE gombbal, és a **vásárlási/letöltési blokkok elrejtve** a dátum előtt. A kliens-oldali elrejtés csak megjelenítés: a tényleges kapu a szerveren van.
+- **Ami még hátra van:** a kliensoldali változás **csak a következő AAB-buildben** élesedik. Addig a telepített app a dátum előtt is mutatja a vásárlás/letöltés gombot, de a szerver elutasítja, és a magyar hibaüzenet jelenik meg — ez szándékos és biztonságos.
+
 ### Biztonság: a névfoglalás megkerülése lezárva (2026-09-18)
 
 - **A rés, igazolva:** a `community_profiles` create-szabály megengedte, hogy egy kliens közvetlenül írjon profil-dokumentumot tetszőleges `displayName`-nel, megkerülve a `claimDisplayName` szerveroldali névfoglalását. Így egy módosított kliens **már lefoglalt nevet is elvehetett** (név-utánzás).

@@ -4274,20 +4274,38 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
     throw new Error(`Play purchase option missing after upsert: ${productId}`);
   }
 
-  if (savedOption && savedOption.state !== 'ACTIVE') {
+  // A release that is not out yet has to exist in Play — the review and the
+  // propagation have to finish before the launch day — but it must not be
+  // buyable. The purchase option is therefore kept inactive until the release
+  // date. The scheduled sync runs every five minutes, so the option activates
+  // itself on the day without anybody pressing anything.
+  const releaseIsUpcoming = release?.is_upcoming === true;
+  const currentState = String(savedOption.state || '').toUpperCase();
+
+  if (releaseIsUpcoming ? currentState === 'ACTIVE' : currentState !== 'ACTIVE') {
+    const optionId = savedOption.purchaseOptionId || purchaseOptionId;
     await androidPublisher.monetization.onetimeproducts.purchaseOptions.batchUpdateStates({
       packageName: GOOGLE_PLAY_PACKAGE_NAME,
       productId,
       requestBody: {
         requests: [
-          {
-            activatePurchaseOptionRequest: {
-              packageName: GOOGLE_PLAY_PACKAGE_NAME,
-              productId,
-              purchaseOptionId: savedOption.purchaseOptionId || purchaseOptionId,
-              latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
-            },
-          },
+          releaseIsUpcoming
+            ? {
+                deactivatePurchaseOptionRequest: {
+                  packageName: GOOGLE_PLAY_PACKAGE_NAME,
+                  productId,
+                  purchaseOptionId: optionId,
+                  latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
+                },
+              }
+            : {
+                activatePurchaseOptionRequest: {
+                  packageName: GOOGLE_PLAY_PACKAGE_NAME,
+                  productId,
+                  purchaseOptionId: optionId,
+                  latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
+                },
+              },
         ],
       },
     });
@@ -4303,8 +4321,17 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
     verified.purchaseOptions?.find(
       (option) => option.purchaseOptionId === (savedOption.purchaseOptionId || purchaseOptionId),
     ) || verified.purchaseOptions?.[0];
-  if (!verifiedOption || verifiedOption.state !== 'ACTIVE') {
-    throw new Error(`Play purchase option is not active after sync: ${productId}`);
+  const verifiedState = String(verifiedOption?.state || '').toUpperCase();
+  // The pre-release requirement is "not buyable", not one specific Play state
+  // string: the catalog has more than one non-active state, and rejecting an
+  // unknown one would fail the sync for a product that is in fact safe.
+  const stateIsCorrect = releaseIsUpcoming ? verifiedState !== 'ACTIVE' : verifiedState === 'ACTIVE';
+  if (!verifiedOption || !stateIsCorrect) {
+    throw new Error(
+      releaseIsUpcoming
+        ? `Play purchase option is still active before the release date: ${productId}`
+        : `Play purchase option is not active after sync: ${productId}`,
+    );
   }
   console.log('label_product_sync_play_verified', {
     releaseId: Number(release.id),
@@ -4312,6 +4339,7 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
     productId,
     purchaseOptionId: verifiedOption.purchaseOptionId,
     purchaseOptionState: verifiedOption.state,
+    releaseIsUpcoming,
     huAvailability:
       verifiedOption.regionalPricingAndAvailabilityConfigs?.find((item) => item.regionCode === 'HU')?.availability ||
       'missing',

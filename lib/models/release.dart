@@ -49,6 +49,21 @@ class HuhsRelease {
   final bool isFree;
   final String freeExternalLink;
 
+  /// True while the release date has not arrived yet.
+  ///
+  /// This comes from the WordPress API on purpose. The release date is a
+  /// site-local calendar date and the download gate is enforced server-side, so
+  /// the app must not re-derive the decision from the raw date string in the
+  /// device timezone, where it could disagree by hours.
+  final bool isUpcoming;
+
+  /// Pre-save link for a release that is not out yet.
+  ///
+  /// The API only sends this while the release is upcoming, so the button
+  /// disappears by itself on the release date without any client-side date
+  /// logic.
+  final String presaveUrl;
+
   const HuhsRelease({
     required this.id,
     required this.title,
@@ -63,6 +78,8 @@ class HuhsRelease {
     required this.releaseDate,
     required this.isFree,
     required this.freeExternalLink,
+    this.isUpcoming = false,
+    this.presaveUrl = '',
   });
 
   /// A free release only has a downloadable WAV when the API reports an
@@ -133,6 +150,8 @@ class HuhsRelease {
       freeExternalLink: _readString(
         json['free_external_link'] ?? json['freeExternalLink'],
       ),
+      isUpcoming: json['is_upcoming'] == true || json['isUpcoming'] == true,
+      presaveUrl: _readString(json['presave_url'] ?? json['presaveUrl']),
     );
   }
 }

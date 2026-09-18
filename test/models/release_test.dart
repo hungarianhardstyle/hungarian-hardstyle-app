@@ -38,6 +38,46 @@ void main() {
     expect(release.hasFreeWav, isFalse);
   });
 
+  test('a megjelenés előtti kiadvány a szerver jelzését használja', () {
+    // The server decides `is_upcoming`, because the release date is a site-local
+    // calendar date while the download gate lives on the server. The app must
+    // not re-derive it in the device timezone.
+    final upcoming = HuhsRelease.fromJson({
+      'id': 1,
+      'title': 'Coming soon',
+      'release_date': '2099-01-01',
+      'is_upcoming': true,
+      'presave_url': 'https://example.com/presave',
+    });
+    expect(upcoming.isUpcoming, isTrue);
+    expect(upcoming.presaveUrl, 'https://example.com/presave');
+
+    // After the release date the API stops sending the presave link and clears
+    // the flag, so the button disappears without any client-side date logic.
+    final live = HuhsRelease.fromJson({
+      'id': 1,
+      'title': 'Out now',
+      'release_date': '2020-01-01',
+      'is_upcoming': false,
+      'presave_url': '',
+    });
+    expect(live.isUpcoming, isFalse);
+    expect(live.presaveUrl, isEmpty);
+  });
+
+  test('hiányzó is_upcoming mezőnél a kiadvány a régi módon viselkedik', () {
+    // An older plugin version does not send the flag. The release must then stay
+    // buyable in the UI exactly as before; the server-side gate still protects
+    // the files, so nothing is exposed by defaulting to false here.
+    final release = HuhsRelease.fromJson({
+      'id': 5,
+      'title': 'Legacy payload',
+      'release_date': '2099-01-01',
+    });
+    expect(release.isUpcoming, isFalse);
+    expect(release.presaveUrl, isEmpty);
+  });
+
   test(
     'külső linkes ingyenes kiadványnál WAV nélkül nincs WAV-jogosultság',
     () {

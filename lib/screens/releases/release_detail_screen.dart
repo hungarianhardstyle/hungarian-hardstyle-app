@@ -501,7 +501,72 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
               padding: EdgeInsets.only(top: 8),
               child: Text('A hanganyag feldolgozása nem sikerült.'),
             ),
-          if (!release.isFree && release.products.isNotEmpty) ...[
+          // Before the release date the fan can listen to the 60-second preview
+          // and pre-save the release, but nothing can be bought or downloaded.
+          // The download is also refused server-side, so this is presentation,
+          // not the actual gate.
+          if (release.isUpcoming) ...[
+            const SizedBox(height: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1B1B1B),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.redAccent.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.schedule,
+                        size: 18,
+                        color: Colors.redAccent,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Hamarosan',
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    release.releaseDate.isEmpty
+                        ? 'A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.'
+                        : 'Megjelenés: ${release.releaseDate}. Ekkor válik megvásárolhatóvá és letölthetővé. Addig a 60 másodperces előzetes hallgatható.',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  if (release.presaveUrl.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () => openInAppBrowser(
+                          context,
+                          release.presaveUrl,
+                          title: 'Előrendelés',
+                        ),
+                        icon: const Icon(Icons.bookmark_add_outlined),
+                        label: const Text('PRESAVE'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          if (!release.isUpcoming &&
+              !release.isFree &&
+              release.products.isNotEmpty) ...[
             const SizedBox(height: 20),
             ...release.products
                 .where(
@@ -516,7 +581,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
             if (_message != null)
               Text(_message!, style: const TextStyle(color: Colors.white70)),
           ],
-          if (!release.isFree &&
+          if (!release.isUpcoming &&
+              !release.isFree &&
               release.audioStatus != 'queued' &&
               release.audioStatus != 'failed' &&
               _products.isEmpty)
@@ -531,7 +597,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
               ),
             ),
           const SizedBox(height: 18),
-          if (release.hasFreeWav)
+          if (!release.isUpcoming && release.hasFreeWav)
             Card(
               child: ListTile(
                 title: const Text('WAV feloldása reklámmal'),
@@ -548,7 +614,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 ),
               ),
             )
-          else if (!release.isFree)
+          else if (!release.isUpcoming && !release.isFree)
             Card(
               child: ListTile(
                 title: const Text('96 kbps MP3 feloldása reklámmal'),
@@ -565,7 +631,10 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 ),
               ),
             ),
-          if (!release.isFree && release.products.isEmpty && _message != null)
+          if (!release.isUpcoming &&
+              !release.isFree &&
+              release.products.isEmpty &&
+              _message != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
@@ -573,7 +642,9 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 style: const TextStyle(color: Colors.white70),
               ),
             ),
-          if (release.isFree && release.freeExternalLink.isNotEmpty)
+          if (!release.isUpcoming &&
+              release.isFree &&
+              release.freeExternalLink.isNotEmpty)
             Card(
               child: ListTile(
                 title: const Text('Ingyenes külső link'),
