@@ -203,23 +203,34 @@ for (const [topic, needle] of [
   check(`a GYIK kitér a kovetkezore: ${topic}`, corpus.includes(needle.toLowerCase()));
 }
 
-/* --- 5. NYUGDIJAZOTT bejegyzesek -------------------------------------- */
+/* --- 5. A REGI bejegyzesek nyugdijazasa ------------------------------- */
 
-const retiredBlock = codeOnly.slice(codeOnly.indexOf('function huhs_faq_v4_retired_slugs'));
-const retired = [...retiredBlock.matchAll(/^\s*'([a-z0-9\-]+)',/gm)].map((m) => m[1]);
-check('van nyugdijazott (vazlatba kerulo) bejegyzes', retired.length >= 3, `talalt: ${retired.length}`);
+const retireStart = codeOnly.indexOf('function huhs_faq_v4_retire_stale');
+check('megvan a nyugdijazo fuggveny', retireStart > 0);
+const retireBlock = retireStart > 0 ? codeOnly.slice(retireStart) : '';
+
 check(
-  'egy nyugdijazott bejegyzes sem szerepel az aktiv listaban',
-  retired.every((slug) => !items.some((item) => item.slug === slug)),
-  retired.filter((slug) => items.some((item) => item.slug === slug)).join(', '),
+  'a nyugdijazas MINDEN bent maradt sort kezel, nem egy kezi listat',
+  // A „bent marad" feltétel: ha a slug benne van az új listában, kihagyjuk —
+  // minden más publikal bejegyzés vázlatba kerül.
+  //
+  // FIGYELEM a mintára: a `in_array(...)` első argumentuma maga is zárójelet
+  // tartalmaz (`get_post_field(...)`), ezért a `[^)]*` NEM működik — a minta
+  // az első zárójelnél elakadna. Ezért `[\s\S]`-t használunk lazán.
+  /in_array\([\s\S]{0,160}?\$keep_slugs[\s\S]{0,160}?\)\s*\)\s*continue;/.test(retireBlock),
+  'a „nincs benne az uj listaban" feltetel kell',
 );
 check(
-  'a duplikalt fióktörlés bejegyzés nyugdíjazva van',
-  retired.includes('profil-es-fiok-torlese'),
+  'a nyugdijazas VAZLATBA tesz, nem torol',
+  retireBlock.includes("'post_status' => 'draft'") && !/wp_delete_post/.test(codeOnly),
 );
 check(
-  'a rendszerleíró indítási kép bejegyzés nyugdíjazva van',
-  retired.includes('push-eritesek-inditasi-kep') || retired.includes('push-eritesek-es-inditasi-kep'),
+  'a nyugdijazas csak a PUBLIKALT sorokhoz nyul',
+  /'post_status'\s*=>\s*'publish'/.test(retireBlock),
+);
+check(
+  'a nyugdijazas hangosan naploz (nem tunik el csendben a tartalom)',
+  retireBlock.includes('error_log'),
 );
 
 /* --- 6. A SZOVEG A VALOS KODHOZ ILLESZKEDIK --------------------------- */

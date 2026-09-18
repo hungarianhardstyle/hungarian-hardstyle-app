@@ -63,7 +63,7 @@ A javaslat elve: **csak arrÃ³l Ã­runk, ami tÃ©nyleg van**, egy kÃ©rdÃ©s = egy tÃ
 
 ## A javasolt GYIK
 
-HÃ©t tÃ©makÃ¶r, **26 kÃ©rdÃ©s**. A jelenlegi 33 helyett â€” rÃ¶videbb, de hasznÃ¡lhatÃ³bb.
+Hét témakör, **31 kérdés**. A jelenlegi 33 helyett — rövidebb, de használhatóbb.
 
 ---
 

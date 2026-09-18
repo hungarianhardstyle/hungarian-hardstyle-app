@@ -18,7 +18,35 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const sourceDir = process.argv[2] || '.tmp-api-24114/huhs-mobile-api';
+/*
+ * A forrásmappa kiválasztása: kézzel megadva azt használjuk, egyébként
+ * automatikusan a legfrissebb .tmp-api-… munkafa huhs-mobile-api mappája.
+ * FIX: korábban egy beégetett .tmp-api-24114 szerepelt itt, és amikor a
+ * munkafa átneveződött (.tmp-api-24115), a szkript ENOENT-tel elhasalt —
+ * vagyis a kapu csendben használhatatlanná vált. Ez a fajta hiba nem
+ * fordulhat elő újra.
+ */
+function resolveSourceDir() {
+  const explicit = process.argv[2];
+  if (explicit) return explicit;
+  const candidates = fs
+    .readdirSync('.')
+    .filter((name) => /^\.tmp-api-/.test(name))
+    .map((name) => path.join(name, 'huhs-mobile-api'))
+    .filter((candidate) => fs.existsSync(candidate))
+    .map((candidate) => ({ candidate, mtime: fs.statSync(candidate).mtimeMs }))
+    .sort((a, b) => b.mtime - a.mtime);
+  if (!candidates.length) {
+    console.error(
+      'HIBA  nem talalok .tmp-api-*/huhs-mobile-api munkafat — add meg kezzel: ' +
+        'node tools/check-wp-meta-json.mjs <plugin-forras-mappa>',
+    );
+    process.exit(2);
+  }
+  return candidates[0].candidate;
+}
+
+const sourceDir = resolveSourceDir();
 const META_WRITERS = ['update_post_meta', 'add_post_meta', 'update_metadata', 'add_metadata'];
 
 let failures = 0;
