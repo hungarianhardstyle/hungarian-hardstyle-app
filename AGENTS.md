@@ -1,5 +1,16 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 2.4.111 éles mérés — a saját pluginunk betöltése elhanyagolható (2026-09-18)
+
+- **Eredmény: `our_files_ms=2–3` (egy mintában 19).** A saját 40 include-fájlunk betöltése **2–3 ms** — vagyis az a felvetés, hogy az admin-only fájlokat lustán töltsük be, **nem éri meg**. A mérés nélkül felesleges és kockázatos refaktor készült volna. Ez a kérdés **lezárva**, ne nyúlj hozzá újra.
+- A mérés a `plugin_file_at` (az első saját fájl, a `diagnostics.php` betöltése) és az `our_files_at` (a fő pluginfájl vége) különbsége. A `diagnostics.php` szándékosan a 3. include, ezért a `plugin_file_at` jó közelítés a saját betöltésünk kezdetére.
+- **A `queries` változatlanul 111**, és a `plugins` lista ugyanaz a 38 — az ötperces scan szűkítése csak akkor látszik, amikor a cron ténylegesen lefuttatja (5 percenként egyszer), ezért egy átlagos kérésben nem mérhető.
+- **FONTOS, ne tulajdonítsuk magunknak:** ebben a mérési ablakban `wp_to_response` 849–947 ms volt a korábbi 1396–1416 ms helyett, DE a statikus fájl ugyanakkor **132 ms** volt a korábbi 20–40 ms helyett — vagyis a host épp **terheltebb**, mégis gyorsabb PHP-választ adott. A 38 bővítmény és a 111 lekérdezés **azonos**, ezért ez **host-terhelés szórása, nem a változtatásunk eredménye**. Különböző ablakok méréseit tilos összehasonlítani; mindig kell mellé statikus fájl-kalibráció.
+- Regresszió-ellenőrzés 2.4.111 után: `HEAD` elsőre `fresh` (a pluginfrissítés invalidálta a cache-t — helyes), ismételve `early`; GET 455 ms. A cache-út rendben.
+- **Az esemény-dátum formátuma ellenőrizve élesben:** `/events` szerint `event_start_date` mindig `Y-m-d` (pl. `2026-10-17`, `2026-09-26`), tehát a `meta_query` `BETWEEN` szűrés formátum-feltevése helyes. Élőben 3 esemény van; közülük a `2026-09-26` esik a 8 napos horizontba, a távolabbiak helyesen kimaradnak.
+- **Az ablak bizonyítottan elég tág:** a hét-emlékeztető ablaka `start - 7 nap`-nál nyílik, és ekkor a horizont `now + 8 nap = start + 1 nap ≥ start`, tehát az esemény benne van. Ugyanez igaz az egy napos és a hat órás ablakra. Az alsó korlát (`ma`) is biztonságos: emlékeztető csak `start ≥ now + 5 óra` esetén esedékes.
+- `push_tokens=895` továbbra is — a halott-token tisztítás **még nem igazolható**, mert a 2.4.111 feltöltése óta nem futott push-kör. Az első éles cikk közzététele után kell visszamérni: ha a szám csökken, a tisztítás működik.
+
 ### Tulajdonosi döntés: a bővítményekhez nem nyúlunk (2026-09-18)
 
 - A tulajdonos visszajelzése a 38 bővítményről: *„semmit ne kapcsolj ki, kellenek az oldal működéséhez sajna”*.
