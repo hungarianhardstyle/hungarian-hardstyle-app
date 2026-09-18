@@ -1,8 +1,10 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
-### AAB build: 1.0.0+317 — feltöltésre kész (2026-09-18)
+### AAB build: 1.0.0+318 — feltöltésre kész (2026-09-18)
 
-- Csomag: **`build/HUHS-v1.0.0+317-release.aab`**, **79,1 MB**, SHA-256 `CE7DF3E2225B44DD8D3802EDF81AF40197C68701B5DB7DECE5264B1425E13BB4`. **A tulajdonos tölti fel**, az agent soha.
+- Csomag: **`build/HUHS-v1.0.0+318-release.aab`**, **79,1 MB**, SHA-256 `0ADA179475CE0176F830A1B846A90C7EE8985003AF5513A8AA0370469F31E6E6`. **A tulajdonos tölti fel**, az agent soha.
+- **A 317-es verziókód már foglalt volt a Playen** (a tulajdonos visszajelzése), ezért a `pubspec.yaml` verziója `1.0.0+318`-ra emelkedett és újra kellett építeni. A `build/HUHS-v1.0.0+317-release.aab` helyben maradt, de **ne töltsd fel**.
+- **A verziókód ellenőrzése a kész buildből:** a merge-elt release manifest (`build/app/intermediates/merged_manifest/release/.../AndroidManifest.xml`) szerint **versionCode = 318**, versionName = `1.0.0`. Ez a mérés **kötelező minden buildnél**, mert a verziókód a pubspecből származik, és a Play a foglalt kódot elutasítja.
 - **A build parancs kötelező `-P` paraméterekkel** (különben a Gradle szándékosan elhasal):
   ```
   flutter build appbundle --release \
@@ -14,7 +16,7 @@
 - **Ellenőrizve a kész AAB-ban:** a production AdMob **App ID benne van** a manifestben, a **teszt App ID nincs benne**, `versionName 1.0.0`, és az aláírás jelen van (`META-INF/HUHS-UPL.RSA`). A banner/rewarded egységazonosítók szándékosan **nincsenek** a manifestben: azokat a `lib/providers/ads_provider.dart` adja a beégetett production defaultokból (a komment ki is mondja, hogy egy hiányzó dart-define nem kapcsolhatja ki némán a reklámokat).
 - **Mit tartalmaz (kliensoldal):** kiadvány „Hamarosan" + PRESAVE felület és dátumig rejtett vásárlás/letöltés; új **Kérdőív** kártya a főoldalon; cache-first első kirajzolás + frissítés ikon; Photon képméretzés; induláskori előtöltés; részlet-előtöltés görgetés közben; hiányzó rangjelvény önjavítása.
 - **Ellenőrzések a build előtt:** `flutter analyze` tiszta, `flutter test` **158/158**.
-- **Nyitott bizonytalanság:** a verziószám a `pubspec.yaml` szerint `1.0.0+317`, és **már létezett egy +317 AAB** (2026-09-17 23:19, a mai kliensváltozások előtt), amelyet a nyilvántartás szerint még nem töltöttek fel. **Ha a Play azt jelzi, hogy a 317-es verziókódot már felhasználták, a `pubspec.yaml` verzióját +318-ra kell emelni és újraépíteni.**
+- **A verziókód-tanulság:** a 317-es kódot a Play már felhasználta, ezért a build **csak a `pubspec.yaml` `version:` sorának emelésével** volt feltölthető. Minden új AAB előtt érdemes a legutóbb feltöltött kódot ellenőrizni, és a merge-elt manifestből visszaolvasni a tényleges `versionCode`-ot.
 - **Baseline profile:** szándékosan **nem** lett újragenerálva, mert ahhoz rootolt emulátor vagy támogatott fizikai eszköz kell (`docs/BASELINE_PROFILE.md`); a meglévő, build közben összeálló profil került a csomagba.
 
 ### Új funkció: Közvéleménykutatás — Kérdőív (2026-09-18, plugin 2.4.113)
