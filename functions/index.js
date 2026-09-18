@@ -15,6 +15,30 @@ function googleApis() {
   if (!_googleApis) _googleApis = require('googleapis').google;
   return _googleApis;
 }
+
+// The androidpublisher client needs a GoogleAuth *instance*.
+//
+// `google.auth` is an AuthPlus instance whose `GoogleAuth` property is the
+// class, so it must be constructed with `new`. Writing `googleApis().auth
+// .GoogleAuth({...})` without `new` throws "Class constructor GoogleAuth
+// cannot be invoked without 'new'" at runtime — inside an async function that
+// only surfaced as one generic scheduler error per run, which is exactly how
+// the five-minute Play-product sync failed silently for days. Both call sites
+// now go through this single helper, and `functions/google-auth.test.cjs`
+// pins the behaviour.
+function createAndroidPublisherClient(serviceAccount, google = googleApis()) {
+  const auth = new google.auth.GoogleAuth({
+    credentials: serviceAccount,
+    scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+  });
+  return google.androidpublisher({ version: 'v3', auth });
+}
+
+// Test-only export: `functions/google-auth.test.cjs` calls this helper to prove
+// the GoogleAuth instance is constructed correctly. It is not a Cloud Function
+// (only `exports.<name> = functions...` deploys), so this adds no runtime
+// surface.
+exports.__createAndroidPublisherClientForTests = createAndroidPublisherClient;
 const { selectOwnedCloudinaryAssets, destroyCloudinaryAsset, listOwnedCloudinaryAssets } = require('./cloudinary');
 const { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, sendMail } = require('./email_service');
 const { generateAuthActionLink } = require('./auth_action_link');
@@ -4001,11 +4025,7 @@ exports.verifyLabelPurchase = functions
     } catch (_) {
       throw new HttpsError('failed-precondition', 'A Google Play vásárlás-ellenőrzés nincs beállítva.');
     }
-    const auth = new googleApis().auth.GoogleAuth({
-      credentials: serviceAccount,
-      scopes: ['https://www.googleapis.com/auth/androidpublisher'],
-    });
-    const androidPublisher = googleApis().androidpublisher({ version: 'v3', auth });
+    const androidPublisher = createAndroidPublisherClient(serviceAccount);
     let purchase;
     try {
       purchase = await androidPublisher.purchases.products.get({
@@ -4208,70 +4228,6 @@ exports.pollVote = functions
     }
     if (!hasOption) return { voted: payload?.voted === true };
     return { ok: true, alreadyVoted: payload?.alreadyVoted === true };
-  });
-
-// ---------------------------------------------------------------------------
-// IDEIGLENES DIAGNOSZTIKA - a kerdőív-szavazat szerveroldali bizonyitasara.
-//
-// A tulajdonos jelezte, hogy ujra tudott szavazni (eloször frissites utan,
-// majd az app ujranyitasa utan). A kliens oldalon javitottuk a beragadt
-// „szavaztal mar?" allapotot, de azt is bizonyitani kell, hogy a WordPress
-// valoban rogziti a szavazatot es felismeri a masodikat.
-//
-// Ez a fuggveny pontosan azt a negy lepest jatsza le, amit az app:
-//   status -> vote -> vote (masodszor) -> status
-// Egy VELETLEN proba-UID-vel dolgozik, majd a sajat sorat torli, ezert a
-// valodi szavazatszamot nem valtoztatja meg. A valasz megmutatja, mit ad a
-// WordPress mind a negy lepesben.
-//
-// Futtatas (a bejelentkezett tulajdonos tokenjevel):
-//   npx firebase functions:log --only pollVoteDiagnostics
-// Es a hivas: POST https://us-central1-hungarian-hardstyle.cloudfunctions.net/pollVoteDiagnostics
-// A fuggveny a deploy utan EGYSZER fut, utana torolni kell.
-// ---------------------------------------------------------------------------
-exports.pollVoteDiagnostics = functions
-  .runWith({
-    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
-    enforceAppCheck: false,
-    timeoutSeconds: 120,
-  })
-  .https.onCall(async (data, context) => {
-    const uid = requireRegisteredViewer(context);
-    const pollId = Number(data?.pollId || 0);
-    if (!Number.isInteger(pollId) || pollId < 1) {
-      throw new HttpsError('invalid-argument', 'Érvénytelen kérdőív.');
-    }
-
-    const probe = `diag-${crypto.randomBytes(8).toString('hex')}`;
-    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
-    const request = async (path, body) => {
-      const response = await fetch(`${WORDPRESS_BASE_URL}${path}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-      const payload = await response.json().catch(() => ({}));
-      return { status: response.status, payload };
-    };
-
-    const report = { pollId, callerUidLength: uid.length, probeUid: probe };
-    report.statusBefore = await request('/poll/status', { pollId, uid: probe });
-    report.voteFirst = await request('/poll/vote', { pollId, optionIndex: 0, uid: probe });
-    report.voteSecond = await request('/poll/vote', { pollId, optionIndex: 0, uid: probe });
-    report.statusAfter = await request('/poll/status', { pollId, uid: probe });
-    report.cleanup = await request('/poll/vote', {
-      pollId,
-      optionIndex: 0,
-      uid: probe,
-      remove: true,
-    });
-    report.statusAfterCleanup = await request('/poll/status', { pollId, uid: probe });
-    console.info('poll_vote_diagnostics', JSON.stringify(report));
-    return report;
   });
 
 const labelProductDefinitions = [
@@ -4643,11 +4599,7 @@ async function syncWordPressLabelProducts(releaseId = 0) {
     } catch (_) {
       throw new Error('A Google Play service account secret érvénytelen.');
     }
-    const auth = new googleApis().auth.GoogleAuth({
-      credentials: serviceAccount,
-      scopes: ['https://www.googleapis.com/auth/androidpublisher'],
-    });
-    const androidPublisher = googleApis().androidpublisher({ version: 'v3', auth });
+    const androidPublisher = createAndroidPublisherClient(serviceAccount);
     const response = await fetch(`${WORDPRESS_BASE_URL}/releases`, {
       headers: { Accept: 'application/json' },
     });
@@ -4675,6 +4627,45 @@ async function syncWordPressLabelProducts(releaseId = 0) {
   }
 }
 
+// The scheduled sync is the only thing that puts a new release into the Play
+// Console. Until now a failure produced a single generic scheduler error line
+// with no release, no product and no reason — which is how a broken sync could
+// stay invisible. These two wrappers log a readable summary either way.
+async function runWordPressLabelSync(releaseId = 0) {
+  try {
+    const result = await syncWordPressLabelProducts(releaseId);
+    const results = Array.isArray(result?.results) ? result.results : [];
+    const failed = results.flatMap((item) =>
+      (Array.isArray(item?.errors) ? item.errors : []).map((error) => ({
+        releaseId: item.releaseId,
+        type: error.type,
+        productId: error.productId,
+        status: error.status,
+        message: error.message,
+      })),
+    );
+    const skipped = results
+      .filter((item) => item?.skipped)
+      .map((item) => ({ releaseId: item.releaseId, skipped: item.skipped }));
+    console.info('label_sync_summary', {
+      releaseId: releaseId || null,
+      processed: result?.processed ?? 0,
+      failed,
+      skipped,
+    });
+    if (failed.length) console.error('label_sync_failed_items', failed);
+    return result;
+  } catch (error) {
+    console.error('label_sync_failed', {
+      releaseId: releaseId || null,
+      message: error?.message || String(error),
+      status: error?.response?.status || null,
+      stack: String(error?.stack || '').split('\n').slice(0, 6).join(' | '),
+    });
+    throw error;
+  }
+}
+
 exports.syncLabelProducts = functions
   .runWith({ secrets: labelProductSyncSecrets, enforceAppCheck: false })
   .https.onCall(async (data, context) => {
@@ -4685,7 +4676,7 @@ exports.syncLabelProducts = functions
     const releaseId = Number(data?.releaseId || 0);
     if (releaseId && (!Number.isInteger(releaseId) || releaseId < 1))
       throw new HttpsError('invalid-argument', 'Érvénytelen release-azonosító.');
-    return syncWordPressLabelProducts(releaseId);
+    return runWordPressLabelSync(releaseId);
   });
 
 exports.syncWordPressLabelProducts = onSchedule(
@@ -4694,7 +4685,7 @@ exports.syncWordPressLabelProducts = onSchedule(
     timeZone: 'Europe/Budapest',
     secrets: labelProductSyncSecrets,
   },
-  async () => syncWordPressLabelProducts(),
+  async () => runWordPressLabelSync(),
 );
 
 // WordPress queues this request immediately after audio processing succeeds.
@@ -4710,8 +4701,16 @@ exports.syncQueuedWordPressLabelProducts = onDocumentCreated(
     const request = event.data?.data() || {};
     const releaseId = Number(request.releaseId || 0);
     if (!Number.isInteger(releaseId) || releaseId < 1) return;
-    const result = await syncWordPressLabelProducts(releaseId);
-    console.info('label_product_sync_queued_request', { releaseId, result });
+    try {
+      const result = await runWordPressLabelSync(releaseId);
+      console.info('label_product_sync_queued_request', { releaseId, result });
+    } catch (error) {
+      // The WordPress-side queue has no retry, so the failure has to be loud.
+      console.error('label_product_sync_queued_request_failed', {
+        releaseId,
+        message: error?.message || String(error),
+      });
+    }
   },
 );
 

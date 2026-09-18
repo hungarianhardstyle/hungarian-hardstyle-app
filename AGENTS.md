@@ -1,5 +1,29 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### A Play-termékszinkron NAPOKIG NÉMÁN HALT EL — `GoogleAuth` `new` nélkül (2026-09-18, javítva + élesítve)
+
+- **A tulajdonos jelzése:** *„feltettem a Goze - Change of Pace-t, feltöltöttem a wavokat is — nem került be a Play Console egyszeri termékekhez, ezt a megjelenés napján küldi el?"*
+- **A válasz: NEM, a termékeknek a megjelenés ELŐTT bent kell lenniük** (a Play-ellenőrzésnek és a terjesztésnek le kell futnia a premierig). Csak a **vásárlási opció** marad `INACTIVE` a megjelenési napig, és az aktiválódik magától.
+- **A gyökér (éles naplóból, nem sejtésből):** a `syncWordPressLabelProducts` ütemezett függvény **ötpercenként** lefutott, és minden futás ezzel bukott el:
+  `Error: Class constructor GoogleAuth cannot be invoked without 'new'`
+  A hiba a **`const auth = googleApis().auth.GoogleAuth({…})`** alakból jött: a `google.auth` egy **AuthPlus-példány**, aminek a `GoogleAuth` tulajdonsága a **class**, ezért `new` nélkül hívni `TypeError`. **Bizonyítva lokálisan:** `typeof google.auth = object`, `ctor = AuthPlus`, `typeof google.auth.GoogleAuth = function GoogleAuth`, `new` → OK, `new` nélkül → pontosan ez a hibaüzenet.
+- **Miért maradt rejtve napokig:** a scheduler a hibát **egyetlen generikus sorba** csomagolja (`at httpFunc …/scheduler.js:65`), release, termék és ok nélkül. A `syncWordPressLabelProducts`-ban pedig minden release-t külön `try`-catch vett, így a hiba **nem is jutott el** a `label_product_sync_failed` naplóig. A tünet ezért csak a Play Console-ban látszott: üres „egyszeri termékek" lista.
+- **A javítás:**
+  1. **Új `createAndroidPublisherClient(serviceAccount, google = googleApis())`** helper — a `GoogleAuth` **egyetlen** helyen épül, `new`-val. Mindkét hívási hely (Play-vásárlás-ellenőrzés és a szinkron) ezt használja.
+  2. **`runWordPressLabelSync()` wrapper** a `syncWordPressLabelProducts` körül: sikeres futásnál `label_sync_summary` (hány release, mely termékek mentek, mi maradt ki), hibánál `label_sync_failed` **a release azonosítójával, az üzenettel és a stack első soraival**, plusz `label_sync_failed_items` a termékenkénti hibákra.
+  3. A **queued** útra (`syncQueuedWordPressLabelProducts`) is került `label_product_sync_queued_request_failed` — a WordPress-oldali queue-nak nincs újrapróbája, ezért ott a hiba nem maradhat néma.
+- **ÉLES BIZONYÍTÉK a javítás után (14:14-kor, a deploy 14:09):** a WordPress `GET /releases/12699` mostantól **négy terméket** ad vissza:
+  `huhs_release_12699_radio_wav` (700), `huhs_release_12699_radio_mp3_320` (550), `huhs_release_12699_extended_wav` (700), `huhs_release_12699_extended_mp3_320` (550) — vagyis a termékek **létrejöttek a Playben** és a `label_product_sync_play_verified` napló szerint a vásárlási opció **nem ACTIVE** (helyes a megjelenés előtt). A szinkron élesítve: `firebase deploy --only functions:syncWordPressLabelProducts,syncLabelProducts,syncQueuedWordPressLabelProducts,verifyLabelPurchase`.
+- **Új teszt: `functions/google-auth.test.cjs`** (5 teszt) — a helper AuthPlus-példányból épít klienst (fake Google objektummal **és** a valódi `googleapis` csomaggal), a `new` nélküli hívás valóban dob, és a **forrásban pontosan egy `auth.GoogleAuth` előfordulás** lehet, az is `new`-val (ez a lint fogja el a visszakúszást). A helper teszt-exportja `exports.__createAndroidPublisherClientForTests` (nem Cloud Function).
+- **Ami a tulajdonosnak hátra van:** a Play Console-ban meg kell **jelentetni** (közzétenni) a négy új terméket — a megjelenítés a Console feladata —, és a **2026-09-25-i Goze – Change of Pace** premier előtt ennek meg kell történnie.
+
+### Kiadvány preview: létezik és megy (2026-09-18, mérés — nem hiba)
+
+- **A tulajdonos jelzése:** *„nem jött létre a preview"*. **Élő mérés szerint létrejött:** `GET /releases/12699` → `tracks[0].preview_url = https://hungarianhardstyle.hu/wp-content/uploads/2026/09/huhs-release-12699-preview-1789739500.mp3`.
+- A fájl **valóban kiszolgálható**: `HTTP/1.1 200`, `Content-Type: audio/mpeg`, `Content-Length: 960723`, és **range-kérésre `206` + 65536 bájt** (a lejátszó így tud streamelni).
+- A kliens oldal rendben: a `ReleaseTrack.fromJson` a `preview_url`-t olvassa, a `ReleaseDetailScreen` `ReleasePreviewPlayer`-t rajzol minden trackhez **megjelenési dátumtól függetlenül**, és a „Hamarosan" kártya szövege ki is mondja, hogy „Addig a 60 másodperces előzetes hallgatható".
+- **Tehát ahol mégis hiányzik, ott a WordPress admin „Elkészült preview" sora vagy a Play Console a helyszín — ezt a tulajdonostól kell megkérdezni, nem szabad kitalálni.**
+
 ### Kérdőív: gomb a hírek fölött + saját képernyő + beragadt szavazott-állapot (2026-09-18, AAB 1.0.0+320)
 
 - **Tulajdonosi jelzések, sorrendben:** (1) a kérdőív „rossz helyen és nem gombként" jelent meg — a `PollCard` a **„Legfrissebb hírek" felirat ALATT** lógott, ezért a hírfolyam részének tűnt (ráadásul az éves szavazás blokk épp üres volt, mert nem volt aktív szezon, így semmi nem választotta el a kártyát a hírektől); (2) **„a »Legfrissebb hírek« felirat FÖLÖTT legyen"**; (3) **„ha ráfrissítettem a kérdőívre, tudtam megint szavazni"**, majd **„ha újra megnyitottam az appot, engedett megint szavazni"**.
@@ -17,13 +41,13 @@
 - **AAB: `build/HUHS-v1.0.0+320-release.aab`** — a `pubspec.yaml` verziója `1.0.0+320` (a **319-et a tulajdonos még nem küldte be**, ezért ment 320). A verziókód a merge-elt release manifestből **visszaolvasva** ellenőrizendő (lásd a lentebb „AAB build" szakaszt); a build a szokásos három `-P` AdMob-paraméterrel készül.
 - **A `PollCard`-ra hivatkozó régi szakaszok** (a lentebbi „Kérdőív kártya az appban — javítva, AAB 1.0.0+319" és a 2.4.113-as fejezet) **történeti leírások**: a kártya helyét a gomb vette át.
 
-### Kérdőív: a szavazat szerveroldali bizonyítása + `remove` a diagnosztikához (2026-09-18, plugin 2.4.123)
+### Kérdőív: a szavazat szerveroldali bizonyítása — előkészítve, majd visszavonva (2026-09-18, plugin MARAD 2.4.122)
 
-- **Miért kellett:** a tulajdonos kétszer tudott szavazni. A kliens beragadt állapotát javítottuk (lásd fentebb), de **azt is bizonyítani kell, hogy a WordPress valóban rögzíti a szavazatot, és felismeri a másodikat** — ezt a kliens nem tudja megmondani.
-- **A `/poll/vote` új `remove` ága:** `{"pollId":…, "uid":…, "remove":true}` törli az adott ujjlenyomat sorát (`delete_post_meta`), és `{"ok":true,"removed":true}`-t ad. Ez **kizárólag a saját diagnosztikánkhoz** kell: így egy **véletlen proba-UID**-vel végigjátszható a `status → vote → vote → status` lánc, majd a sor törölhető, tehát **a valódi szavazatszám nem változik**. A végpont egyébként is csak a Firebase-nek jár (application password), ezért ez nem új támadási felület.
-- **A plugin verziója 2.4.123** (`HUHS_API_VERSION` is), forrás `.tmp-api-24115/huhs-mobile-api/`, csomag `build/huhs-mobile-api-2.4.123.zip` (SHA-256 `7E746F2959C182C8262EB52BC568CDFC3D18258E60129EA901E7798F706A4A8B`), 42 fájl, 41/41 PHP parse-oltható, `tools/check-wp-meta-json.mjs` zöld.
-- **A diagnosztika menete (a `remove` ág feltöltése UTÁN futtatható):** `functions/index.js`-ben egy **ideiglenes** `pollVoteDiagnostics` callable (`requireRegisteredViewer`-rel védve) végigjátssza a négy lépést egy `diag-<random>` UID-vel, naplózza a négy választ, majd a `remove` ággal törli a sorát. A napló: `npx firebase functions:log --only pollVoteDiagnostics`. **A funkció ideiglenes: a mérés után törölni kell a `functions/index.js`-ből, és újra kell deployolni.**
-- **Amit majd bizonyítania kell:** `statusBefore.voted=false`, `voteFirst.alreadyVoted=false`, `voteSecond.alreadyVoted=true`, `statusAfter.voted=true`, `statusAfterCleanup.voted=false`. Ha a `voteSecond` **nem** `alreadyVoted=true`, akkor a WordPress-oldali egyediség hibás, és ott kell javítani.
+- **Miért merült fel:** a tulajdonos kétszer tudott szavazni. A kliens beragadt állapotát javítottuk (lásd fentebb), de felmerült, hogy **azt is bizonyítani kell, hogy a WordPress valóban rögzíti a szavazatot, és felismeri a másodikat**.
+- **Amit ehhez átmenetileg megépítettem (majd visszavontam):** a `/poll/vote` `remove` ága (a proba-UID sorának törlése) + egy ideiglenes `pollVoteDiagnostics` callable, ami a `status → vote → vote → status` láncot játssza le. **A `remove` ág és a diagnosztika NEM maradt a kódban:** a plugin visszaállt a **2.4.122-re** (a `.tmp-api-24115` forrása bájt-azonos az élessel — a `build/huhs-mobile-api-2.4.122.zip` és az újrabuildelt csomag **42/42 bejegyzése azonos hashű**), a `pollVoteDiagnostics` pedig törölve a `functions/index.js`-ből.
+- **Ami MARADT és éles:** a `pollVote` callable mostantól **naplózza a WordPress válaszát** (`poll_vote_wordpress_result`: `status`, `voted`, `alreadyVoted`, `uidLength` — az UID-t **szándékosan nem**, csak a hosszát). Ebből a `npx firebase functions:log --only pollVote` paranccsal **utólag is megválaszolható**, hogy egy adott szavazásnál a WordPress mit adott vissza: rögzítette-e (`alreadyVoted:false`) vagy már ismerte (`alreadyVoted:true`). Élesítve `firebase deploy --only functions:pollVote`-tal.
+- **A mérés a tulajdonos következő szavazásakor elvégezhető ebből a naplóból** — nem kell hozzá semmilyen új plugin- vagy függvényváltozás.
+- **Ami bizonyítottan NEM hiba a szerveren:** a 2026-09-18-i összes `pollVote` hívás `200`-at kapott, és **egyetlen `poll_vote_wordpress_failed` sor sem keletkezett** — vagyis a szerver nem utasított el szavazatot; a duplán megjelenő szavazólap a kliens beragadt állapotából jött.
 
 ### Kérdőív kártya az appban — javítva, AAB 1.0.0+319 (2026-09-18)
 
