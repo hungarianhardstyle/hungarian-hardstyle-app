@@ -18,6 +18,7 @@ import '../../widgets/featured_news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
+import '../../widgets/home_action_card.dart';
 import '../../widgets/poll_entry_button.dart';
 import '../../services/notification_service.dart';
 import '../notifications/notification_center_screen.dart';
@@ -266,37 +267,33 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Kozvelemenykutatas: csak a gomb, KOZVETLENUL a
-                    // „Legfrissebb hírek" felirat FOLOTT. A szavazas sajat
-                    // képernyőn tortenik, ezert a hírfolyam nem tolódik el.
-                    const PollEntryButton(),
-                    Text(
-                      'Legfrissebb hírek',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    ref
-                        .watch(votingProvider)
-                        .when(
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, _) => const SizedBox.shrink(),
-                          data: (season) => season.active || season.isClosed
-                              ? Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: OutlinedButton.icon(
-                                      style: OutlinedButton.styleFrom(
-                                        backgroundColor: Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainer,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 14,
-                                          vertical: 10,
-                                        ),
-                                        minimumSize: Size.zero,
-                                      ),
-                                      onPressed: () {
+                    // A két főoldali „hero" sor (kérdőív + éves szavazás)
+                    // UGYANAZT a format adja a HomeActionCard-bol, ezert
+                    // pontosan egyforma szelesseguek. A „Legfrissebb hírek"
+                    // felirat csak ezutan jon, hogy a sorok ne a hírfolyam
+                    // reszenek tűnjenek.
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // A kerdőív sora magatol eltunik, ha nincs nyitott
+                        // kerdőív.
+                        const PollEntryButton(),
+                        ref
+                            .watch(votingProvider)
+                            .when(
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, _) => const SizedBox.shrink(),
+                              data: (season) => season.active || season.isClosed
+                                  ? HomeActionCard(
+                                      key: const Key('voting-entry'),
+                                      eyebrow: 'SZAVAZÁS',
+                                      label: season.hasPublishedResults
+                                          ? 'Eredmények megtekintése'
+                                          : season.isClosed
+                                          ? 'A szavazás véget ért'
+                                          : 'Szavazz a HUHS ${season.year} jelöltjeire',
+                                      icon: Icons.how_to_vote_outlined,
+                                      onTap: () {
                                         if (season.hasPublishedResults) {
                                           launchUrl(
                                             Uri.parse(season.resultsUrl),
@@ -312,25 +309,17 @@ class HomeScreen extends ConsumerWidget {
                                           );
                                         }
                                       },
-                                      icon: const Icon(
-                                        Icons.how_to_vote_outlined,
-                                        size: 20,
-                                      ),
-                                      label: Text(
-                                        season.hasPublishedResults
-                                            ? 'Eredmények megtekintése'
-                                            : season.isClosed
-                                            ? 'A szavazás véget ért'
-                                            : 'Szavazz a HUHS ${season.year} jelöltjeire',
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                    // Kozvelemenykutatas - a bejarati gomb mar fentebb, a
-                    // „Legfrissebb hírek" felirat fölött van.
-                    const SizedBox(height: 6),
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Legfrissebb hírek',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
                     news.when(
                       loading: () => const Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),

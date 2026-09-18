@@ -1,5 +1,23 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### KÖVETKEZŐ BUILD (322): a kérdőív és az éves szavazás sora hero-szélességű — a tulajdonos kérése (2026-09-18, **AAB még NEM készült**)
+
+- **A tulajdonos jelzése (képernyőképpel):** *„a kérdőív kártya a főoldalon lehetne szebb és szélesebb, hero szélességű"*, majd pontosítva: *„a kérdőív kártya legyen olyan széles mint felette a hero"*, végül: *„és ez vonatkozik az éves szavazásos kártya gombra is"*.
+- **A gyökér:** mindkét sor egy tartalomhoz igazodó `OutlinedButton.icon` volt (`minimumSize: Size.zero`, `Align(centerLeft)`), ezért a szöveg hosszáig ért csak — a felette lévő hero kártya viszont a **teljes** belső szélességet kitölti. Ezért lógott ki a kettő egymás alatt.
+- **A javítás — egyetlen közös komponens: `lib/widgets/home_action_card.dart` (`HomeActionCard`).** Mindkét sor ezt használja, ezért **nem tudnak elcsúszni egymástól**:
+  - a főoldali `ListView` teljes belső szélességét kitölti (nincs `Align`, nincs tartalomhoz igazodó méret);
+  - a megjelenése a hero kártyát követi: sötét színátmenet, **4 px piros bal oldali sav**, 1 px világos keret, 10 px sarok;
+  - bal oldalon ikon, alatta kis nagybetűs felirat (`KÉRDŐÍV` / `SZAVAZÁS`), a fő szöveg 2 sorig (utána `…`), jobb szélen nyíl;
+  - `Semantics(button: true)`, és a `Key('poll-entry')` / `Key('voting-entry')` a tesztekhez;
+  - `disabled: true` esetén a sav és az ikon szürke, nyíl nincs, koppintás nincs (előkészítve a lezárt szavazásra).
+- **Flutter-korlát, amit érdemes megjegyezni (kétszer is elhasalt rajta a kód):** a `Material`/`Ink` és a `BoxDecoration` kerete **csak egyforma színű kerettel** tud lekerekített sarkot rajzolni (`A borderRadius can only be given on borders with uniform colors`). Ezért a piros bal oldali sav **nem keret**, hanem egy külön `Positioned` csík a `Stack`-ben — így a sarok lekerekítése és a piros sav egyszerre működik.
+- **A főoldal sorrendje (fontos, mert egyszer már félrement):** a két sor egy `Column(crossAxisAlignment: stretch)`-ben van egymás alatt, **mindkettő a „Legfrissebb hírek" felirat FÖLÖTT**. A `SizedBox(height: 20)` van a felirat előtt, tehát a sorok nem a hírfolyam részeként jelennek meg. A szavazás sora **változatlanul eltűnik, ha nincs aktív/lezárt szezon** (a `PollEntryButton` pedig akkor tűnik el, ha nincs nyitott kérdőív).
+- **Új teszt: „a kerdőív sor olyan szeles, mint a hero kartya"** — egy 1080 px széles, 3x-es sűrűségű nézetben összehasonlítja a hero kártya és a kérdőív-sor `Rect`-jét (`left` és `width` epszilonon belül egyezik). A `Key('poll-entry')` a `HomeActionCard`-ra került, ezért a teszt a teljes sor méretét méri.
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **180/180**.
+- **A verziókód emelése (`1.0.0+322`) és az AAB build SZÁNDÉKOSAN elmaradt**, mert a tulajdonos kérése szerint *„de nem kell még aab"* — a 321-es van élesítés alatt. A `pubspec.yaml` még `1.0.0+321`.
+- **Changelog a 322-höz (ha kell), magyar, 231 karakter:**
+  `- A főoldalon a Kérdőív és a Szavazz/Eredmények sor ugyanolyan széles, mint a felette lévő kártya, és egységes megjelenést kapott.`
+
 ### MEGTALÁLVA: a `/poll/status` a meta ÉRTÉKÉT kérdezte, nem a sor LÉTEZÉSÉT — `(bool) '0'` a PHP-ban FALSE (2026-09-18, plugin 2.4.123 + AAB 321)
 
 - **A tulajdonos jelzése (a 320-as telepítése UTÁN):** *„most oké a kérdőív, de még mindig tudok többször szavazni, ha újranyitom az appot"*. Vagyis a kliensoldali javítás (friss `hasVoted` lekérés) **nem volt elég** — a hiba a SZERVEREN volt.
