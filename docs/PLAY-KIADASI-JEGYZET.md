@@ -24,13 +24,14 @@ sha256: C8D3BEDBFE7D24C8B6F0ECB004D23AA07E986C81332BF1A934D38B681B660EB9
 | SHA-256 | `C8D3BEDBFE7D24C8B6F0ECB004D23AA07E986C81332BF1A934D38B681B660EB9` |
 
 **Miért a 328-at kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
-(323–328). A Play-en a legutóbb publikált build a **322** (ezt a tulajdonos jelezte), ezért
-a felhasználók **egyszerre** kapják meg a 323–328 összes változását — a kiadási jegyzetnek is
-ezt kell tükröznie, különben a javítások fele láthatatlan maradna.
+(323–328). A Play-en a legutóbb publikált build a **322** — a tulajdonos **megerősítette**:
+*„csak a 328 megy fel, az előtte lévőket nem tettem fel, 322 volt előtte"*. Vagyis a
+felhasználók **egyszerre** kapják meg a 323–328 összes változását, ezért a kiadási jegyzetnek
+is ezt kell tükröznie — különben a javítások nagy része láthatatlan maradna.
 
-> **Ha a 323–327 közül valamelyik mégis kiment a Playre**, akkor a „teljes ugrás" blokk
-> helyett a 328-hoz tartozó rövidebb blokk való (lásd lent), és a `lastPublishedBuild`
-> értékét itt kell átírni — a `tools/check-play-notes.mjs` erre figyelmeztet.
+> **FONTOS, NE keverd össze:** a **2. pont** blokkja (`csak a 328 változásai`) **NEM** erre az
+> esetre való. Az akkor kell, ha a 323–327 **már kint lenne** a Playen. Most **nem** az van:
+> a 328 az első kiadás a 322 óta, ezért az **1. pont** blokkját kell bemásolni.
 
 ## 1. Play Console — RÖVID (ezt másold be)
 
@@ -63,9 +64,11 @@ részletesebben akarod felsorolni, mit kap a felhasználó.
 - A főoldalon a „További hírek” sor egységes kártyaformát kapott.
 ```
 
-## 2. Play Console — ha csak a 328 megy ki (tartalék)
+## 2. Play Console — CSAK akkor, ha a 323–327 már fent lenne
 
-Ezt akkor használd, ha a 323–327 már fent van a Playen.
+**Most NE ezt használd!** Ez a blokk csak a 328 két változását sorolja fel, ezért akkor való,
+ha a 323–327 **már kint van** a Playen (most nem ez a helyzet: 322 volt az utolsó, és a 328
+az első utána).
 
 ```play-notes
 - A főoldalon a „További hírek” sor ugyanolyan kártyaformát kapott, mint a kérdőív és a nyereményjáték.
