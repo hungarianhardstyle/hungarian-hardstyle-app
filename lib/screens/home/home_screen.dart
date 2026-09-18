@@ -10,6 +10,7 @@ import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/voting_provider.dart';
 import '../../providers/games_provider.dart';
+import '../../providers/poll_provider.dart';
 import '../../models/post.dart';
 import '../../models/game.dart';
 import '../../widgets/event_card.dart';
@@ -87,9 +88,13 @@ class HomeScreen extends ConsumerWidget {
   Future<void> _refreshHome(WidgetRef ref) async {
     ref.invalidate(newsProvider);
     ref.invalidate(eventsProvider);
+    // A kerdőív is frissul: nyitas/zaras utan a kartyanak követnie kell.
+    ref.invalidate(activePollProvider);
     await Future.wait<void>([
       ref.read(newsProvider.future),
       ref.read(eventsProvider.future),
+      // A kerdőív opcionalis, ezert egy hibaja ne törje meg a frissitést.
+      ref.read(activePollProvider.future).catchError((Object _) => null),
     ]);
   }
 

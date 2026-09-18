@@ -21,7 +21,8 @@ class PollCard extends ConsumerStatefulWidget {
   ConsumerState<PollCard> createState() => _PollCardState();
 }
 
-class _PollCardState extends ConsumerState<PollCard> {
+class _PollCardState extends ConsumerState<PollCard>
+    with WidgetsBindingObserver {
   int? _selected;
   bool _submitting = false;
   bool _voted = false;
@@ -29,6 +30,28 @@ class _PollCardState extends ConsumerState<PollCard> {
 
   int? _statusPollId;
   Future<bool>? _statusFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Amikor a felhasznalo visszater az appba, a kerdőív allapota valtozhatott
+  /// (kozben kinyilt vagy lezarult), ezert ujrakerdezunk. Enelkul a
+  /// munkamenet elejen lekért valasz a munkamenet vegéig érvényben maradna.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(activePollProvider);
+    }
+  }
 
   /// A "mar szavazott?" allapot kerdőívenkent egyszer kerdődik le.
   Future<bool> _statusFor(int pollId) {

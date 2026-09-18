@@ -15,8 +15,11 @@ class PollService {
   final WordpressService _wordpress;
 
   /// A nyitott kerdőív, vagy null. A szerver csak nyitott kerdőívet ad vissza.
-  Future<HuhsPoll?> activePoll() async {
-    final payload = await _wordpress.getActivePoll();
+  ///
+  /// `forceRefresh: true` eseten a mentett valasz nem dont: a kerdőív
+  /// megnyilasa/zarasa időponthoz kotott, ezert a cache nem rejtheti el.
+  Future<HuhsPoll?> activePoll({bool forceRefresh = false}) async {
+    final payload = await _wordpress.getActivePoll(forceRefresh: forceRefresh);
     return HuhsPoll.fromJson(payload);
   }
 

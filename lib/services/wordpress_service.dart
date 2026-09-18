@@ -1443,9 +1443,9 @@ class WordpressService {
   /// Az app szandekosan nem szamolja ki az időablakot: a WordPress donti el a
   /// webhely időzonajaban, es csak nyitott kerdőívet ad vissza, így egy elállított
   /// keszülék-ido nem tudja kitolni az ablakot.
-  Future<Map<String, dynamic>?> getActivePoll() async {
+  Future<Map<String, dynamic>?> getActivePoll({bool forceRefresh = false}) async {
     try {
-      final data = await _getHeadCached('/poll/active');
+      final data = await _getHeadCached('/poll/active', forceRefresh: forceRefresh);
       if (data is Map) {
         final poll = data['poll'];
         if (poll is Map) return Map<String, dynamic>.from(poll);

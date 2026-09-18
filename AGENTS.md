@@ -1,5 +1,20 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Kérdőív kártya az appban — javítva, AAB 1.0.0+319 (2026-09-18)
+
+- **A tulajdonos jelzése:** a kérdőív **nem jelent meg az appban**, pedig a szerver bizonyítottan helyes volt (élőben: `{"poll":{"id":12694,"question":"Tetszik az Applikáció?","options":[…,"Utálom"…],"start":"2026-09-18T15:20","end":"2026-09-22T19:00"}}`), és a `getActivePoll()` + `HuhsPoll.fromJson()` lánc is helyesen olvasta.
+- **A gyökér (kliens):** a `activePollProvider` egy sima `FutureProvider` volt, amely a `/poll/active` végpontot **munkamenetenként egyszer** kérdezte le, és a `getActivePoll()` a **cache-first** úton ment (`forceRefresh: false`). Ezért ha az app a kérdőív **kinyílása előtt** kérdezte le (`{"poll":null}`), a `null` **az egész munkamenetre** beragadt — se a főoldal frissítése, se az app újranyitása (a munkameneten belül) nem javította.
+- **A javítás négy ponton (mind a kliensben):**
+  1. `WordpressService.getActivePoll({bool forceRefresh = false})` — átadja a `forceRefresh`-t a `_getHeadCached`-nek.
+  2. `PollService.activePoll({bool forceRefresh = false})` — ugyanez.
+  3. `activePollProvider` mostantól **`forceRefresh: true`**-val kérdez: a kérdőív nyitása/zárása **időponthoz kötött**, ezért a mentett válasz nem dönthet. A végpont kicsi (~250 bajt), a szerver pedig maga 45 másodpercig cache-eli, tehát ez olcsó.
+  4. **Újrakérdezés két úton:** a főoldal `_refreshHome()`-ja (húzással frissítés **és** a fejléc frissítés ikon) `ref.invalidate(activePollProvider)`-t is hív és megvárja; a `PollCard` pedig **`WidgetsBindingObserver`**-ként figyeli az app állapotát, és **`AppLifecycleState.resumed`**-nél újrakérdez. Így egy közben kinyílt vagy lezárult kérdőív újraindítás nélkül követhető.
+- **Új teszt: `test/providers/poll_provider_test.dart`** (4 teszt) — a szolgáltatástól kéri le, **igazolja, hogy a lekérdezés megkerüli a cache-t** (`forceRefresh: true`), hogy frissítés után **újra lekérdez**, és hogy zárt kérdőívnél `null`. A `PollService` injektálható (`pollServiceProvider.overrideWithValue`), ezért ez valódi egységteszt, nem szimuláció.
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **162/162** (158 + 4 új).
+- **AAB: `build/HUHS-v1.0.0+319-release.aab`** — **79,1 MB**, SHA-256 `938E59AB7C525E3022A88F822E52B8D8E94C6A55CD7372E5103FD190A17D6A54`. A merge-elt manifestből visszaolvasva: **versionCode = 319**, versionName `1.0.0`; a production AdMob App ID benne van, a **teszt App ID nincs**, az aláírás jelen (`META-INF/HUHS-UPL.RSA`). A `+318` AAB a helyén maradt, de elavult (a **317-es kód foglalt volt**, ezért 319 lett).
+- A build parancs a szokásos három `-P` AdMob-paraméterrel készült (lásd a lenti „AAB build" szakaszt); ezek nélkül a Gradle szándékosan elhasal.
+- **A `+318`-as szakaszban leírt „nyitott kliensoldali hiba" ezzel LEZÁRVA.**
+
 ### Kérdőív eredményei: legördülő a régebbi kérdőívekhez (2026-09-18, plugin 2.4.122)
 
 - **Tulajdonosi kérés:** *„ha mondjuk ez lezáródik, nekem maradjon meg az eredmény és egy dropdown menüből tudjam visszanézni a régebbi kérdőíveket"*.
