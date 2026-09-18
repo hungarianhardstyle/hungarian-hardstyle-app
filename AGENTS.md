@@ -1,5 +1,13 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Kérdőív eredményei: legördülő a régebbi kérdőívekhez (2026-09-18, plugin 2.4.122)
+
+- **Tulajdonosi kérés:** *„ha mondjuk ez lezáródik, nekem maradjon meg az eredmény és egy dropdown menüből tudjam visszanézni a régebbi kérdőíveket"*.
+- **A megőrzés eddig is működött:** a szavazatok `_huhs_poll_vote_<sha256>` meta-sorként a kérdőív bejegyzésén maradnak, és a `huhs_poll_results()` **mindig a szavazat-sorokból számol újra** — a lezárás (`huhs_poll_window_state()` = `closed`) **csak az appban** rejti el a kártyát, az adatot nem érinti. Ezt a tulajdonos felé is kimondtuk, mert a kérés mögött ez a bizonytalanság volt.
+- **A változás:** a „Kérdőív eredményei" oldal eddig **az összes** kérdőívet egy hosszú listában mutatta. Mostantól egy **legördülő** van felül (a legfrissebb elöl, a címke tartalmazza az állapotot és a szavazatszámot: `Kérdés — nyitott/lezárult · N szavazat`), és alatta **csak a kiválasztott** kérdőív részletes eredménye látszik. Alapértelmezés: a **nyitott** kérdőív, ha nincs, akkor a legfrissebb.
+- A választás sima GET-űrlap (`admin.php?page=huhs-poll-results&poll=<id>`), ezért **könyvjelzőzhető**, és `noscript`-nél is működik (Megjelenítés gomb). A `posts_per_page` 50 → **200**, hogy sok kérdőívnél se maradjon ki egy sem.
+- Csomag: `build/huhs-mobile-api-2.4.122.zip` (SHA-256 `E80FEA3AAE6F5D2DA13388111FEAEF0789F395143754FA21BA26CDFE07458121`), forrás `.tmp-api-24115/huhs-mobile-api/`, 42 fájl, bájt-azonos, 41/41 PHP parse. **A 2.4.121-et is tartalmazza** (az admin-menü javításával).
+
 ### Az admin almenü a szülő-menü ELŐTT regisztrálódott — „Kérdőív eredményei" halott (2026-09-18, plugin 2.4.121)
 
 - **A tulajdonos jelzése:** a WordPress adminban a **HUHS Mobile → Kérdőív eredményei** nem nyílik meg („Hoppá! Az oldal nem található.", majd a közvetlen címre „Sajnáljuk, nincs megfelelő jogosultság ehhez az oldalhoz kapcsolódni.").
