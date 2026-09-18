@@ -1,6 +1,14 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
-### AZ APP-PUSH NAPOKIG NEM MENT KI — `admin.messaging` már nem létezik a firebase-admin 14-ben (2026-09-18, javítva, **deploy még NEM történt**)
+### Tulajdonosi döntés: a Goze-termékek MAGUKTÓL aktiválódnak (2026-09-18)
+
+- **A tulajdonos visszajelzése:** *„Goze termék jó ha magától aktiválódik majd, nem kell kézi beavatkozás"*.
+- **Ezért NE ajánld fel újra a kézi aktiválást.** A premier (2026-09-25) előtti korai aktiválás **el van vetve**.
+- **Ami automatikusan történik:** az `upsertPlayProduct` a megjelenési dátum előtt **INACTIVE** vásárlási opcióval hozza létre a terméket (ez már megvan: a négy Goze-termék bent van a Console-ban), és az **ötpercenkénti `syncWordPressLabelProducts`** aktiválja a napon, amikor a WordPress `is_upcoming` mezője hamisra vált (a webhely időzónájában 00:00-kor).
+- **Az app ezért konzisztens marad:** a vásárlás/letöltés gombot is a WordPress `is_upcoming` mezője vezérli, nem a Play állapota — vagyis nem fordulhat elő, hogy az app vásárlást kínál egy még nem aktivált termékre.
+- **Egyetlen dolog, ami ezt elronthatja (nem kell hozzá teendő, csak tudni):** ha a `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret lejár vagy visszavonják, a szinkron nem tud aktiválni. A szinkron mostantól **hangosan jelez** (`label_sync_failed`, `label_sync_failed_items`), tehát ez nem marad észrevétlen.
+
+### AZ APP-PUSH NAPOKIG NEM MENT KI — `admin.messaging` már nem létezik a firebase-admin 14-ben (2026-09-18, javítva, **ÉLESÍTVE**)
 
 - **Hogyan került elő:** a tulajdonos a hír-lájk napi korlátját jelentette; a `awardAchievementFromNewsReaction` naplójában megtaláltam a valódi hibát: `{"event":"achievement_push_failed","message":"admin.messaging is not a function"}`.
 - **A gyökér (bizonyítva, nem sejtés):** a `functions/package.json`-ban `firebase-admin ^14.3.0` van, és **ebben a verzióban a régi namespace-hívás megszűnt**: `typeof require('firebase-admin').messaging === 'undefined'`. A `sendMulticastToAllTokens()` a `admin.messaging().sendEachForMulticast(...)` alakot használta, ezért **minden** app-push meghalt, ami ezen a helperen megy:
@@ -14,7 +22,7 @@
 - **Miért maradt rejtve:** (1) a hívók `console.warn`-nal nyelték el, a művelet maga sikeres maradt (a pont/profil/értékelés beírása nem függ a pushtól); (2) **a hír-értesítést a WordPress plugin küldi**, nem ez a függvény — egy működő hírek-push elfedte a többi hat útvonalat. Élő bizonyíték a fejlécből: `push_last=release/ok … sent=122 failed=0` (az a plugin másik útja).
 - **A javítás:** `const { getMessaging } = require('firebase-admin/messaging')` a fájl tetején, és a helper `const messaging = getMessaging();`-t használ. **Új napló:** ha egy körben **nulla** sikeres küldés van, `console.error('push_multicast_all_failed', …)` — ez a hibaosztály nem tud többé némán elmúlni.
 - **Új teszt: `functions/push-messaging.test.cjs`** (5 teszt) — a moduláris út létezik, a `admin.messaging(` **kódként** nem térhet vissza (a komment-sorokat a lint kizárja), a telepített firebase-admin-ban tényleg `undefined`, és csak **egy** hely hívja a Firebase API-t (a 6+ útvonal ugyanazon a helperen megy).
-- **FONTOS:** ez a javítás **nincs élesítve**. A `firebase deploy` a tulajdonos jóváhagyására vár, mert az app-push viselkedését éles felhasználóknál változtatja meg. **Az app-push a javítás előtt HAT útvonalon nem működött.**
+- **A deploy megtörtént (2026-09-18, ~16:20):** az első célzott `--only` deploy **csak egy függvényt** frissített és az új ütemezett függvényt **nem hozta létre**, ezért **teljes `firebase deploy --only functions`** futott. Minden függvény **egyetlen közös kód-hash-en** van (`0c0a9080…`), és a `retryPendingIdentityEmails` **létrejött** (`state: ACTIVE`, ütemezett, mind az 5 SMTP secret beállítva). Az app-push javítása így **élesben van**.
 
 ### Hír-lájk: napi 3 pont-jogosultság (5 helyett) + emulátoros bizonyíték (2026-09-18, javítva)
 
@@ -29,7 +37,7 @@
 - **A teszthez szükséges egy apró javítás:** a `functions/index.js` mostantól `if (!getApps().length) admin.initializeApp();`, mert az emulátor injektálja a saját `FIREBASE_CONFIG`-ját, és a feltétel nélküli `initializeApp()` a „[DEFAULT] already exists with a different configuration" hibát adta. Az éles futásban ez változatlan (ott sosem létezik még app).
 - **Teszt-only exportok** (nem Cloud Functionok, nem deployolódnak): `exports.__awardAchievementPointsForTests`, `exports.__achievementDailyLimitsForTests`.
 
-### A „tájékoztató" levelek újrapróbálása — az audit H2 pontja lezárva (2026-09-18, javítva, **deploy még NEM történt**)
+### A „tájékoztató" levelek újrapróbálása — az audit H2 pontja lezárva (2026-09-18, javítva, **ÉLESÍTVE**)
 
 - **A rés:** a `sendIdentityEmailOnce()` a **duplikáció** ellen véd, nem a **kudarc** ellen. A munkarekord a címzettet csak **hash**-ként tárolja, ezért SMTP-hiba után nincs miből újraküldeni. Két helyen ez **végleges elveszést** jelent, mert nincs, aki újrakérje:
   - **e-mail-csere:** a `syncEmailChange()` a `previousEmail` mezőt a levél **előtt** törli, tehát a régi cím a művelettel eltűnik;
