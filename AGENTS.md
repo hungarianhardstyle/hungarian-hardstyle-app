@@ -1,5 +1,26 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Push-kézbesítés — 895 eszköz, ezért feldarabolva (2026-09-18, 2.4.110)
+
+- A 2.4.109 éles health-próba megmutatta: **`push_tokens=895`**. A régi kód **minden** eszközre külön, sorban küldött egy blokkoló kérést (~200 ms/db), ezért egy hír közzététele **~3 percig** tartott. Ha a host 60 s-nál elvágja a kérést (PHP-FPM `request_terminate_timeout`, nginx `fastcgi_read_timeout`), akkor a lista **nagy része értesítést sem kapott** — a hír-pushnak ugyanis nincs újrapróbája, a release-nek van.
+- Ezért a **2.4.110** feldarabolja a `huhs_push_send()`-et: egy kérés legfeljebb `HUHS_PUSH_TIME_BUDGET` = **15 s**-ot küld, a maradékot a `huhs_push_continue` cron-hook viszi tovább (offset + `huhs_push_job_<random>` opció, nem autoloadolt), legfeljebb `HUHS_PUSH_MAX_RUNS` = **40** körig. 895 eszköz ≈ 12 kör ≈ 3 perc összmunka, de **egyetlen kérés sem hosszabb 15 s-nál**, így a host nem tudja elvágni.
+- Új: **a halott tokenek törlése.** Ha az FCM 404 / `NOT_FOUND` / `UNREGISTERED` választ ad (app törölve, vagy a token lecserélődött), az a token eddig **örökre** a listában maradt, és minden további pushban lassított. Most a kör végén egyetlen opcióírással törlődnek.
+- **A viselkedés nem változik:** ugyanaz a cím, szöveg, `data`, és ugyanaz a preferenciaszűrés — a szűrő logika `huhs_push_recipients()`-be került, a feltételek változatlanok.
+- **WordPress-tények, amiket a `wp-cron.php` forrásában ellenőriztem:** `ignore_user_abort(true)` van, `set_time_limit(0)` **nincs**, és korán meghívja a `fastcgi_finish_request()`-et; a `spawn_cron()` pedig `DOING_CRON` alatt **azonnal visszatér, nem csinál semmit**. Ezért a folytató körök a következő WP-Cron-t kiváltó kérésre futnak le (`wp_cron()` az `init`-en minden kérésnél ott van, és az app maga folyamatosan kéréseket küld) — másodpercek, nem percek.
+- Logikai ellenőrzés PHP nélkül: `tools/verify-push-delivery.mjs` (futtatás: `node tools/verify-push-delivery.mjs`) — a kézbesítés algoritmusát szimulálja (szűrés, időkeret, offset, folytatás, tisztítás). Ellenőrizve: 895 eszköznél mindenki **pontosan egyszer** kap értesítést, a lánc lefut, a halottak törlődnek, az élők megmaradnak, 1 eszköz/kör esetén is végigmegy, tartós FCM-hibánál is lefut, kórosan lassú esetben a plafon megállítja. **Ha a push-kézbesítés logikája változik, ezt a szimulációt is frissíteni kell**, mert ez az egyetlen futó ellenőrzés erre a részre.
+- Csomag: `build/huhs-mobile-api-2.4.110.zip` (SHA-256 `92A4B8C37271C6989BF0F3FEDA6A11F8DE60F47F98ECF3602160547B7EABA36F`), forrás: `.tmp-api-24110/huhs-mobile-api/`.
+- Nyitott ötlet a további gyorsításra: a küldés párhuzamosítása `curl_multi`-val (a WordPress HTTP API nem tud ilyet). Ez a ~3 perc összmunkát töredékére vágná, de éles PHP-tesztek nélkül kockázatos, ezért külön döntést igényel.
+
+### Az oldal lassulása — a 2.4.109 health-próba eredménye (2026-09-18)
+
+- Éles `X-HUHS-Health`: `opcache=restricted object_cache=no plugins=38 autoload=1247opts/667KB cron=79 cron_disabled=no push_tokens=895 memory_limit=512M php=8.4.24`.
+- **38 aktív bővítmény** — ez a fő ok. `plugins_loaded` 788–1044 ms, teljes válasz 1423–1642 ms, 111–116 lekérdezés, 166–168 MB csúcs, mindezt egy 10 KB-os JSON-ért.
+- **`object_cache=no`** — nincs tartós object cache, ezért minden kérés az adatbázisból olvassa az opciókat és a transienteket.
+- **`opcache=restricted`** — az `opcache_get_status()` `false`-t adott. Ez **kétértelmű**: vagy ki van kapcsolva az OPcache, vagy az `opcache.restrict_api` tiltja a lekérdezést. A pontos válaszhoz egy következő próbában `ini_get('opcache.enable')` kell.
+- **`autoload=1247opts/667KB`** — minden kérésnél 667 KB opció töltődik be. A legnagyobb egyetlen tétel a `_transient_dirsize_cache` **206 KB** (a `get_dirsize()` méret-gyorsítótára), ami több ezer könyvtárbejegyzést jelent; utána `rewrite_rules` 36 KB, `fs_accounts` 35 KB.
+- **Teendő-jelöltek (tulajdonosi döntés kell, magamtól nem nyúlok hozzá):** a 38 plugin átvilágítása — több feleslegesnek tűnik (`broken-link-checker`, `google-site-kit`, `intelly-related-posts`, `real-category-library-lite`, `category-subcategory-list-widget`, `child-theme-wizard`, `final-tiles-grid-gallery-lite`, `video-player-block`, `all-in-one-video-gallery`, `wp-flyer-popup`, `blog-designer-pack`, `advanced-import`, `poll-maker`, `disqus-comment-system`), és tisztázni kell a három további HUHS-plugin sorsát is (`huhs-push-auto-permission-patch-0.1.5-all-categories`, `huhs-release-catalog-1.1.0`, `hungarian-hardstyle-google-source-1.0.4`). Emellett a hostnál kérhető az **OPcache bekapcsolása** és egy **tartós object cache (Redis)**.
+- Fontos: ha bármelyik bővítményt kikapcsoljuk, utána **ellenőrizni kell**, hogy az app végpontjai és a mentési folyamatok működnek-e (a `huhs-*` három plugin kivétele különösen kockázatos: lehet, hogy a push-engedélyezés vagy a release-katalógus múlik rajtuk).
+
 ### Javítva — lassú cikkmentés: a blokkoló FCM push (2026-09-18)
 
 - **Tünet:** a tulajdonos szerint a WordPress adminban **csak közzétételkor** volt lassú a cikk mentése (piszkozat mentése gyors), és maga az oldal is lassú.
