@@ -2918,7 +2918,13 @@ async function pollWordPressContentNotifications() {
   const stateRef = db.collection('app_settings').doc('wordpress_content_notifications');
   const stateSnapshot = await stateRef.get();
   const previous = stateSnapshot.data()?.ids || {};
+  const previousRevisions = stateSnapshot.data()?.revisions || {};
+  // A revision-terkep bevezetese elott keszult allapotnal meg nem tudjuk
+  // megallapitani, mi valtozott, ezert az elso futas csak feltolti (nincs
+  // ertesites-vihar a mar meglevo tartalmakra).
+  const hasRevisions = Object.keys(previousRevisions).length > 0;
   const current = {};
+  const currentRevisions = {};
   const newlyPublished = [];
 
   for (const endpoint of endpoints) {
@@ -2933,16 +2939,42 @@ async function pollWordPressContentNotifications() {
       .filter(Boolean)
       .slice(0, 100);
     current[endpoint.key] = ids;
-    if (stateSnapshot.exists) {
-      const oldIds = new Set(Array.isArray(previous[endpoint.key]) ? previous[endpoint.key] : []);
-      for (const item of items) {
-        const id = String(item?.id || '').trim();
-        if (id && !oldIds.has(id)) newlyPublished.push({ ...endpoint, id, item });
+
+    // A publikalasi datum a "revision": csak ujra kozzetetelkor valtozik,
+    // egyszeru szerkeszteskor nem. Ez azert fontos, mert a push is a
+    // kozzetetelhez kotodik (a WordPress plugin küldi), igy a ket rendszer
+    // ugyanakkor sul el — korabban a vazlatba tett, majd ujra kozzetett cikk
+    // push-t kapott, de az app ertesiteslistajaba nem kerult be.
+    const revisions = {};
+    for (const item of items) {
+      const id = String(item?.id || '').trim();
+      if (!id) continue;
+      const revision = String(item?.date || item?.date_gmt || '').trim();
+      if (revision) revisions[id] = revision;
+    }
+    currentRevisions[endpoint.key] = revisions;
+
+    if (!stateSnapshot.exists) continue;
+    const oldIds = new Set(Array.isArray(previous[endpoint.key]) ? previous[endpoint.key] : []);
+    const oldRevisions = previousRevisions[endpoint.key] || {};
+    for (const item of items) {
+      const id = String(item?.id || '').trim();
+      if (!id) continue;
+      const revision = revisions[id] || '';
+      if (!oldIds.has(id)) {
+        newlyPublished.push({ ...endpoint, id, item, revision });
+        continue;
+      }
+      if (hasRevisions && revision && oldRevisions[id] && revision !== oldRevisions[id]) {
+        newlyPublished.push({ ...endpoint, id, item, revision });
       }
     }
   }
 
-  await stateRef.set({ ids: current, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  await stateRef.set(
+    { ids: current, revisions: currentRevisions, updatedAt: FieldValue.serverTimestamp() },
+    { merge: true },
+  );
   if (!newlyPublished.length) return { baseline: !stateSnapshot.exists, created: 0 };
 
   // The fan-out only needs each profile's document id, so select just that
@@ -2961,7 +2993,7 @@ async function pollWordPressContentNotifications() {
           body: name || item.title,
           targetType: item.targetType,
           targetId: item.id,
-          dedupeKey: `wordpress_content:${item.key}:${item.id}:${recipientUid}`,
+          dedupeKey: `wordpress_content:${item.key}:${item.id}:${item.revision || ''}:${recipientUid}`,
         });
         created += 1;
       }),

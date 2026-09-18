@@ -1,5 +1,19 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Az app-értesítéslista csak az ELSŐ közzétételre szólt (2026-09-18, Firebase-függvény)
+
+- **A tulajdonos jelzése:** „elsőre ment, a visszavonás és újra publikálás után nem" — vagyis az **első** közzétételnél megjelent a bejegyzés az app **Értesítések** paneljén (Aktív/Archivált), vázlat→újra közzététel után viszont **nem**, pedig a push megérkezett.
+- **A gyökér: két külön rendszer dönti el, mi „új tartalom".**
+  1. **Push:** a WordPress plugin küldi, minden közzétételi eseményre (2.4.117 óta esemény-tokenhez kötve, ezért újra közzétételnél is megy).
+  2. **App-értesítéslista:** a Firebase `pollWordPressContentNotifications` ütemezett függvény (5 percenként) tölti fel, és **csak az azonosítót** figyelte (`app_settings/wordpress_content_notifications.ids`). Az újra közzétett cikk **azonosítója nem változott**, ezért a job azt hitte, nincs új tartalom → nem szólt.
+- **Élesben igazoltam a jelzőt:** a cikk `date` mezője az újra közzétételkor **megváltozott** (`2026-09-18T14:52:19+02:00` → `15:21:24+02:00`), miközben az `id` ugyanaz maradt. **A publikálási dátum csak közzétételkor változik, egyszerű szerkesztéskor nem** — ezért pontosan ugyanazt az eseményt jelöli, mint a push.
+- **A javítás (csak Firebase, pluginfeltöltés nem kell):** a poller mostantól **revision-térképet** is tárol (`revisions[key][id] = date`), és értesítést ad, ha az azonosító **vagy a revision változott**. A dedupe-kulcs is tartalmazza a revisiont (`wordpress_content:<key>:<id>:<revision>:<uid>`), így egy új közzététel **új** értesítés-dokumentumot hoz létre (a korábbi megmarad), a futás ismétlése viszont idempotens marad.
+  - **Bázis-védelem:** a régi állapot-dokumentumban nincs `revisions` térkép, ezért a telepítés utáni **első futás csak feltölti** azt, és **nem** küld visszamenőleges értesítés-vihart a meglévő tartalmakra.
+  - **Hiányzó dátum** nem lesz revision (nincs téves értesítés).
+- **Ellenőrzés: `tools/verify-wp-content-notifications.mjs`** (10/10) — bázis, változatlan lista, új cikk, **vázlat→újra közzététel**, a kulcs eltérése, ugyanarra a közzétételre nincs ismétlés, régi állapotforma (nincs vihar), hiányzó dátum. Futtatás: `node tools/verify-wp-content-notifications.mjs`.
+- **Amit tudni kell a működéséről:** az app-értesítéslista **5 percenként** frissül, ezért a pushhoz képest akár **5 percet késhet**; és csak azok kapják, akiknek **közösségi profiljuk** van (`community_profiles` fan-out). A push ezzel szemben minden regisztrált eszközre azonnal megy.
+- Élesítve: `firebase deploy --only functions:pollWordPressContentNotifications` (csak ez az egy függvény, hogy ne nyúljunk a többihez).
+
 ### AAB build: 1.0.0+318 — feltöltésre kész (2026-09-18)
 
 - Csomag: **`build/HUHS-v1.0.0+318-release.aab`**, **79,1 MB**, SHA-256 `0ADA179475CE0176F830A1B846A90C7EE8985003AF5513A8AA0370469F31E6E6`. **A tulajdonos tölti fel**, az agent soha.
@@ -20,6 +34,8 @@
 - **Baseline profile:** szándékosan **nem** lett újragenerálva, mert ahhoz rootolt emulátor vagy támogatott fizikai eszköz kell (`docs/BASELINE_PROFILE.md`); a meglévő, build közben összeálló profil került a csomagba.
 
 ### Push: a biztonsági háló átveszi az elárvult feladatot is (2026-09-18, plugin 2.4.119)
+
+- **A 2.4.118 ellenőrzésekor kiderült:** a biztonsági háló csak a **jövőbeli** küldéseket védi, mert a `huhs_push_active_job` mutatót csak a 2.4.118 írja. A korábban elakadt feladat (offset=338, 405 eszköz hátra) a DB-ben maradt, de **semmi nem mutatott rá** — ezért `push_active=none`, és a maradék 405 eszköz továbbra sem kapott értesítést.
 - **A 2.4.119 ezt is pótolja:** `huhs_push_adopt_orphan_job()` a `shutdown`-ban (a biztonsági háló előtt) átvesz egy elárvult `huhs_push_job_%` feladatot, ha nincs aktív mutató, és beállítja a `huhs_push_active_job`-ot. A scan **legfeljebb 5 percenként** fut, és csak akkor, ha nincs aktív feladat (hogy a lassú site-on ne legyen állandó lekérdezés); egy **napnál régebbi** feladatot inkább töröl (ne toljon a semmiből egy „új hír" értesítést).
 - Ezzel a háló **önmagától is gyógyul**: ha a jövőben bármikor elveszik a mutató (vagy a cron-esemény), a sor akkor is befejeződik, amint bármelyik kérés beérkezik.
 - Csomag: `build/huhs-mobile-api-2.4.119.zip` (SHA-256 `76B71B5A0C9BAAB99EB5F6F56A6CFD875682CD9C274305D478CC8E497D0670E9`), forrás `.tmp-api-24115/huhs-mobile-api/`. **A 2.4.118-at is tartalmazza.**
