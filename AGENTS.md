@@ -112,6 +112,8 @@
 - A korai válasz tartalma **szemantikailag azonos** a friss válasszal (11 elem, azonos címek/ID-k/kategóriák, mezők; normalizált JSON-összehasonlítás egyezik), és **az ETag ugyanaz** — csak a JSON-kódolás más (WP escape-el, a cache-elt `json` nem), ezért a byte-hossz eltér (11071 vs 9689). Az app ETag-alapú revalidálása emiatt zavartalanul működik a két út között.
 - Ismert, szándékos tradeoff: a `_huhs_revalidate` paraméter a cache-kulcsból ki van zárva, ezért a kézi frissítés is a cache-ből szolgálható ki (max. 120 s régi tartalom), **de tartalomváltozás azonnal invalidál**. Ha a tulajdonosnak a kézi frissítésnél is garantáltan friss kell, egy kis kiegészítéssel a GET + paraméter megkerülheti a cache-t (a HEAD revalidáció maradna gyors).
 - A padló a mi pluginfájlunk előtt betöltődő pluginok (~0,28–0,45 s). Opcionális továbblépés: mu-plugin drop-in, ami még ezek előtt kiszolgál (~0,15–0,25 s), de az egy új, minden kérésnél lefutó fájl — külön tulajdonosi döntést igényel.
+- **Tulajdonosi döntés (2026-09-18): a mu-plugin drop-in NEM készül el**, a 2.4.108 korai kiszolgálás így marad. A szerveroldali gyorsítás ezzel lezárva; a további nyereség a boot-idő gyökerének feltárásából jöhetne (az egész weboldalra), de az külön vizsgálat.
+- Újra-ellenőrzés (2026-09-18): `HEAD /posts` három egymást követő mérése egyaránt `HTTP/1.1 200 OK` + `X-HUHS-Cache: early`, a GET ~600 ms ugyanabban a hálózati ablakban — a korai kiszolgálás stabilan él. Ez a javítás szerveroldali, ezért **már a jelenleg kiadott appban is érvényes**, nem kell hozzá új AAB.
 
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
 
