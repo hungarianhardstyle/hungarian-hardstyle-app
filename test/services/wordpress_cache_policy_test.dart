@@ -110,4 +110,30 @@ void main() {
     expect(categories, contains('_persistentValueNeedsRefresh(key)'));
     expect(categories, contains('_schedulePersistentRefresh(key'));
   });
+
+  test('a kiadvany-adatlap a sajat vegpontjat keri le (preview + arak)', () {
+    // A reszletoldal a `getRelease()`-szel tolti fel a teljes rekordot. Ha ez a
+    // SUMMARY listat keri le (vagy elrontja az URL-t), akkor a `tracks` URES
+    // marad, ezert a 60 masodperces preview lejatszo el sem jelenik — pontosan
+    // az a tunet, amit a tulajdonos jelzett. A dedikalt vegpont egy kicsi
+    // keresest ad vissza a teljes katalogus letoltese helyett.
+    final source = File(
+      'lib/services/wordpress_service.dart',
+    ).readAsStringSync();
+
+    final start = source.indexOf('Future<HuhsRelease> getRelease(int releaseId)');
+    expect(start, greaterThanOrEqualTo(0));
+    final end = source.indexOf('Future<List<HuhsRelease>> _fetchReleases(', start);
+    final detail = source.substring(start, end);
+
+    expect(detail, contains(r"'/releases/$releaseId'"));
+    expect(
+      detail,
+      isNot(contains(r"'summary'")),
+      reason: 'a summary valasz ures tracks-ot ad, abból nem lesz lejatszo',
+    );
+    // A tartalek ut is megmarad: ha a reszlet-vegpont nem elerheto, a
+    // gyujtemeny-valaszbol (ami teljes rekordokat ad) is feltoltodik.
+    expect(detail, contains(r"_getHeadCached('/releases')"));
+  });
 }

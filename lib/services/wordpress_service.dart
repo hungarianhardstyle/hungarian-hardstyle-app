@@ -1368,10 +1368,27 @@ class WordpressService {
       cache: _releaseDetailCache,
       inFlight: _releaseDetailInFlight,
       loader: () async {
-        // The live HUHS API exposes the complete release records through the
-        // collection endpoint. There is no reliable /releases/{id} route;
-        // calling it makes the detail screen fall back to the summary item,
-        // which intentionally has no versions or free download metadata.
+        // A dedicated detail route exists and returns the complete record
+        // (tracks with `preview_url`, `product_prices`, `versions`,
+        // `audio_status`). Read that first: it is one small request instead of
+        // downloading the whole release catalogue for a single record.
+        try {
+          final detail = await _getHeadCached('/releases/$releaseId');
+          final record = detail is Map<String, dynamic>
+              ? detail
+              : detail is Map
+              ? Map<String, dynamic>.from(detail)
+              : null;
+          if (record != null && _readInt(record['id']) == releaseId) {
+            return HuhsRelease.fromJson(record);
+          }
+        } catch (_) {
+          // Fall through to the collection payload below.
+        }
+        // Fallback: the collection endpoint always carries the full records
+        // (only `summary=true` strips the tracks), so the detail screen can
+        // still be completed if the detail route is unavailable or cached
+        // under an older shape.
         final data = await _getHeadCached('/releases');
         final values = data is List
             ? data

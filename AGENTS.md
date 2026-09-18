@@ -19,10 +19,13 @@
 
 ### Kiadvány preview: létezik és megy (2026-09-18, mérés — nem hiba)
 
-- **A tulajdonos jelzése:** *„nem jött létre a preview"*. **Élő mérés szerint létrejött:** `GET /releases/12699` → `tracks[0].preview_url = https://hungarianhardstyle.hu/wp-content/uploads/2026/09/huhs-release-12699-preview-1789739500.mp3`.
+- **A tulajdonos jelzése:** *„nem jött létre a preview"*, majd a kérdésre: **„Az appban nincs lejátszó a Goze oldalán"**.
+- **Élő mérés szerint a preview LÉTREJÖTT:** `GET /releases/12699` → `tracks[0].preview_url = https://hungarianhardstyle.hu/wp-content/uploads/2026/09/huhs-release-12699-preview-1789739500.mp3`.
 - A fájl **valóban kiszolgálható**: `HTTP/1.1 200`, `Content-Type: audio/mpeg`, `Content-Length: 960723`, és **range-kérésre `206` + 65536 bájt** (a lejátszó így tud streamelni).
-- A kliens oldal rendben: a `ReleaseTrack.fromJson` a `preview_url`-t olvassa, a `ReleaseDetailScreen` `ReleasePreviewPlayer`-t rajzol minden trackhez **megjelenési dátumtól függetlenül**, és a „Hamarosan" kártya szövege ki is mondja, hogy „Addig a 60 másodperces előzetes hallgatható".
-- **Tehát ahol mégis hiányzik, ott a WordPress admin „Elkészült preview" sora vagy a Play Console a helyszín — ezt a tulajdonostól kell megkérdezni, nem szabad kitalálni.**
+- **A valódi kliensoldali hiba, amit ez a jelzés feltárt:** a `WordpressService.getRelease(id)` **`/releases?summary=true`-t kért le** (illetve cache-elt `summary` listát), és a `huhs_build_release_summary()` **szándékosan `tracks: []`-t ad** — vagyis a részletoldal „teljes" rekordja **üres tracks-szal** érkezett, ezért a `ReleasePreviewPlayer` a tartalék sorát mutatta („Preview még nem érhető el."), nem lejátszót. Emellett a régi kód kommentje szerint „nincs megbízható `/releases/{id}` útvonal", **pedig van** (`api-releases.php` 7. sor, `huhs_get_release_detail`, és élőben is helyes választ ad).
+- **A javítás:** a `getRelease()` **először a dedikált `/releases/{id}` végpontot** hívja (egy kicsi kérés a teljes katalógus helyett), és **csak hiba esetén** esik vissza a gyűjtemény-válaszra. Így a `tracks` (preview URL), a `product_prices`, a `versions` és az `audio_status` is megérkezik.
+- **Új teszt:** `test/widgets/release_preview_player_test.dart` (3 teszt) — az API-alak (`tracks[].preview_url`) átmegy a modellen, érvényes URL-nél **lejátszó ikonok** jelennek meg, **üres URL-nél** a tartalék sor. Plusz a `test/services/wordpress_cache_policy_test.dart` új esete rögzíti, hogy a részletoldal a **`/releases/{id}`** útvonalat kéri (és nem summary-t).
+- **A preview a megjelenési dátum ELŐTT is megy** — a játékos nincs dátumhoz kötve, a „Hamarosan" kártya szövege is ezt mondja. A tulajdonos a javítás után **az appban is látja** („most ott a prev").
 
 ### Kérdőív: gomb a hírek fölött + saját képernyő + beragadt szavazott-állapot (2026-09-18, AAB 1.0.0+320)
 
