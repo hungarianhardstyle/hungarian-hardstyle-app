@@ -19,6 +19,13 @@
 - **A verziókód-tanulság:** a 317-es kódot a Play már felhasználta, ezért a build **csak a `pubspec.yaml` `version:` sorának emelésével** volt feltölthető. Minden új AAB előtt érdemes a legutóbb feltöltött kódot ellenőrizni, és a merge-elt manifestből visszaolvasni a tényleges `versionCode`-ot.
 - **Baseline profile:** szándékosan **nem** lett újragenerálva, mert ahhoz rootolt emulátor vagy támogatott fizikai eszköz kell (`docs/BASELINE_PROFILE.md`); a meglévő, build közben összeálló profil került a csomagba.
 
+### Push: a biztonsági háló átveszi az elárvult feladatot is (2026-09-18, plugin 2.4.119)
+
+- **A 2.4.118 ellenőrzésekor kiderült:** a biztonsági háló csak a **jövőbeli** küldéseket védi, mert a `huhs_push_active_job` mutatót csak a 2.4.118 írja. A korábban elakadt feladat (offset=338, 405 eszköz még hátra) a DB-ben maradt, de **semmi nem mutatott rá** — ezért `push_active=none`, és a maradék 405 eszköz továbbra sem kapta meg az értesítést.
+- **A 2.4.119 ezt is pótolja:** `huhs_push_adopt_orphan_job()` a `shutdown`-ban (a biztonsági háló előtt) átvesz egy elárvult `huhs_push_job_%` feladatot, ha nincs aktív mutató, és beállítja a `huhs_push_active_job`-ot. A scan **legfeljebb 5 percenként** fut, és csak akkor, ha nincs aktív feladat (hogy a lassú site-on ne legyen állandó lekérdezés); egy **napnál régebbi** feladatot inkább töröl (ne toljon a semmiből egy „új hír" értesítést).
+- Ezzel a háló **önmagától is gyógyul**: ha a jövőben bármikor elveszik a mutató (vagy a cron-esemény), a sor akkor is befejeződik, amint bármelyik kérés beérkezik.
+- Csomag: `build/huhs-mobile-api-2.4.119.zip` (SHA-256 `76B71B5A0C9BAAB99EB5F6F56A6CFD875682CD9C274305D478CC8E497D0670E9`), forrás `.tmp-api-24115/huhs-mobile-api/`. **A 2.4.118-at is tartalmazza.**
+
 ### Push: a küldési lánc elakadt, mert a cron-esemény eltűnt — biztonsági háló (2026-09-18, plugin 2.4.118)
 
 - **A mérés (2.4.117 diagnosztikája, élőben):** `push_job=none`, `push_active` még nem létezett, `cron_overdue=1 → 0` két mérés között. **Ez a döntő tény:** a WP-Cron **működik** (a lejárt események száma csökkent), de a `huhs_push_continue` **nincs betervezve** — vagyis a folytatás nem várakozott, hanem **elveszett**. Ezért állt meg a küldés 338 eszköznél, és a maradék 405 **soha nem kapott értesítést**.
