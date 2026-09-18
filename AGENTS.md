@@ -19,6 +19,20 @@
 - **A verziókód-tanulság:** a 317-es kódot a Play már felhasználta, ezért a build **csak a `pubspec.yaml` `version:` sorának emelésével** volt feltölthető. Minden új AAB előtt érdemes a legutóbb feltöltött kódot ellenőrizni, és a merge-elt manifestből visszaolvasni a tényleges `versionCode`-ot.
 - **Baseline profile:** szándékosan **nem** lett újragenerálva, mert ahhoz rootolt emulátor vagy támogatott fizikai eszköz kell (`docs/BASELINE_PROFILE.md`); a meglévő, build közben összeálló profil került a csomagba.
 
+### Push: a küldési lánc elakadt, mert a cron-esemény eltűnt — biztonsági háló (2026-09-18, plugin 2.4.118)
+
+- **A mérés (2.4.117 diagnosztikája, élőben):** `push_job=none`, `push_active` még nem létezett, `cron_overdue=1 → 0` két mérés között. **Ez a döntő tény:** a WP-Cron **működik** (a lejárt események száma csökkent), de a `huhs_push_continue` **nincs betervezve** — vagyis a folytatás nem várakozott, hanem **elveszett**. Ezért állt meg a küldés 338 eszköznél, és a maradék 405 **soha nem kapott értesítést**.
+- **A hiba jellege:** a lánc egyetlen cron-eseményen múlott, és ha az eltűnik (a `cron` opciót a WordPress több kérése is írja, és a `wp_cron()`-nak **nincs zára**, ezért párhuzamos kérések ugyanazt az eseményt is futtathatják), akkor **néma leállás** következik be. A `huhs_push_continue` ráadásul három helyen **nyom nélkül** tért vissza (`$job` nem tömb, üres kulcs, hiányzó hitelesítés), és a `wp_schedule_single_event()` visszatérési értékét **nem ellenőrizte** — így a lánc megszakadása semmilyen nyomot nem hagyott.
+- **A javítás (2.4.118) — biztonsági háló:** új `huhs_push_resume_pending_job()` a **`shutdown` hookon** (priority 99). A válasz elküldése **után** megnézi, hogy van-e fuggőben lévő feladat (`huhs_push_active_job` opció), és ha az utolsó kör **10 másodpercnél** régebben futott, lefuttatja a következőt. Így a sor **minden olyan kérésnél halad, ami eljut a WordPressig**, függetlenül attól, hogy a cron-esemény megvan-e.
+  - A köre szándékosan **rövid** (`HUHS_PUSH_RESUME_BUDGET` = 5 s), mert ha éppen egy látogató kérése fizeti meg, ne várjon sokat; a `HUHS_PUSH_RESUME_GAP` = 10 s pedig a sűrűséget korlátozza.
+  - **Zár** védi a párhuzamos futástól: `add_option('huhs_push_resume_lock', …)` atomikus, és 120 s után lejár (elhalt folyamat nem blokkol örökre).
+  - **Nem hívunk `fastcgi_finish_request()`-et** — ez szándékos: a válasz levágásának kockázata nagyobb, mint az 5 másodperces várakozás nyeresége.
+- **A hívási lánc mostantól ellenőrzi a hibát:** a `wp_schedule_single_event()` visszatérési értékét mindkét helyen naplózzuk, és **nem töröljük a feladatot**, ha az ütemezés meghiúsul (a háló így is folytatni tudja). A három néma visszatérés mindegyike **logol**, és a feladat-bejegyzést is rendben hagyja.
+- **A diagnosztika is pontosabb:** `push_active=runs=/offset=/age=` — vagyis **látszik, ha a feladat megvan, de a cron-esemény nincs** (pontosan az a hiba, ami eddig rejtve maradt).
+- **Éles tempó (miért lassú a sok kör):** a mérés szerint egy 25 hívást küldő köteg **0,9–2,3 másodpercig** tart, tehát a párhuzamosítás nyeresége valós, de a teljes ~750 eszköz néhány kör. **A szűk keresztmetszet nem a sávszélesség, hanem az FCM válaszideje és a körök közötti szünetek** — utóbbit szünteti meg a biztonsági háló.
+- **Ellenőrzés:** 41/41 PHP parse, `tools/check-wp-meta-json.mjs` zöld, `tools/verify-push-delivery.mjs` 26/26.
+- Csomag: `build/huhs-mobile-api-2.4.118.zip` (SHA-256 `536AE0508682189DA219DFBF64A09E33CE2A29455CEC374117AAA61DE3038BE7`), forrás `.tmp-api-24115/huhs-mobile-api/`. **A 2.4.117-et is tartalmazza.**
+
 ### Push: az értesítés a KÖZZÉTÉTELHEZ kötődik, nem a cikkhez (2026-09-18, plugin 2.4.117)
 
 - **A tulajdonos kérdése:** „eltettem vázlatba és újra kitettem, elvileg ilyenkor is kéne push/notify". **Igaza volt, és a válasz két részre bomlik.**
