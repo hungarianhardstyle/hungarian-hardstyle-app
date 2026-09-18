@@ -1,5 +1,25 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Javítva — lassú cikkmentés: a blokkoló FCM push (2026-09-18)
+
+- **Tünet:** a tulajdonos szerint a WordPress adminban **csak közzétételkor** volt lassú a cikk mentése (piszkozat mentése gyors), és maga az oldal is lassú.
+- **Ok (bizonyított, nem sejtés):** a `push.php` `huhs_push_on_publish()` a `transition_post_status` hookon, a mentési kérésen **belül** hívta a `huhs_push_send()`-et `post` típusnál. A `huhs_push_send()` pedig **egyenként, sorban** küld egy blokkoló `wp_remote_post`-ot az FCM-nek **minden regisztrált készülékre** (`timeout: 15`). Vagyis a szerkesztő addig várt, amíg az összes telefon értesítése elment: 100 készülék × 200–400 ms = 20–40 másodperc. Piszkozatnál nincs `transition_post_status` publish felé, ezért az gyors maradt — ez a megfigyelés egyezik a diagnózissal.
+- **A hiba nem szándékos:** ugyanabban a fájlban az egyedi push már régóta sorba van állítva, szó szerinti indoklással (`huhs_push_queue_custom`: „Queue a custom push instead of keeping the authenticated REST request open while FCM is contacted once for every registered device”). Az esemény és a release is `wp_schedule_single_event`-tel megy. **Csak a hír** maradt a régi, blokkoló úton.
+- **Javítás:** új `huhs_schedule_news_push()` + `huhs_push_publish_news` cron-hook. A publikálás csak **ütemez** (`time() + 1`), majd `spawn_cron()`-nal (nem blokkoló loopback) azonnal el is indítja; a küldés a kérésen kívül fut. Ugyanaz a cím, ugyanaz a payload és ugyanaz a `news` preferenciaszűrés, tehát a funkció nem változik, csak nem blokkol. Ha az ütemezés mégis meghiúsul, a régi, azonnali küldés fut le tartalékként, hogy egy értesítés se vesszen el.
+- **Ugyanaz a hiba a release-nél is javítva:** a `releases.php` `save_post_huhs_release` ága a `huhs_queue_label_product_sync()`-et hívta közvetlenül a mentésben, pedig az egy OAuth tokent kér a Google-től **és** ír a Firestore-ba (két hálózati kör, 15 s timeouttal). Új `huhs_schedule_label_product_sync()` + `huhs_label_product_sync` cron-hook; az admin „Play-termékek létrehozása” gomb szándékosan maradt szinkron, mert ott a felhasználó kifejezetten az eredményre vár.
+- Csomag: `build/huhs-mobile-api-2.4.109.zip` (SHA-256 `2969969D012F123CEA960E61220D8904CF2D8CC0FD08B4A43A8F457938FF009F`), forrás: `.tmp-api-24109/huhs-mobile-api/`. A tulajdonos tölti fel.
+- **Újraindítható csomagoló:** `tools/build-plugin-zip.mjs` (Node, forward slash, helyes root mappa, `deflateRaw` + CRC32). Eddig minden verzióhoz kézzel készült a ZIP; mostantól: `node tools/build-plugin-zip.mjs <plugin-mappa> <out.zip> <rootMappa>`. Ellenőrizve: 41 bejegyzés, `/` elválasztó, `huhs-mobile-api/` gyökér, mind a 41 fájl bájt-azonos a forrással.
+
+### Oldal-lassulás — hol tart a vizsgálat (2026-09-18)
+
+- **Mérés (cache-busterrel, valódi kérés):** főoldal cache-ből (Jetpack Boost) 196 ms, **valódi főoldal 1817 ms**, `/posts` 1253 ms, statikus kép 20–40 ms. A hálózat tehát gyors, a WordPress bootja a költség.
+- A `X-HUHS-Boot` éles értéke: `plugins_loaded=761 ms`, `init=945 ms`, `rest_api_init=1101 ms`, válasz 1253 ms, **111 lekérdezés**, **166 MB csúcsmemória** egy 10 KB-os JSON-hoz. A kérés ~60%-a a pluginok betöltése.
+- **A gyökér még nem ismert**, csak a gyanúsítottak: OPcache kikapcsolva (ekkor minden kérés újrafordítja a PHP-t), nincs perzisztens object cache, felduzzadt autoload options tábla, túl sok plugin, illetve a Jetpack (és a Jetpack Boost) súlya.
+- Ezért a **2.4.109** egy új diagnosztikai fejlécet ad: **`X-HUHS-Health`** — `opcache`, `object_cache`, `plugins=<n>:<lista>`, `autoload=<n>opts/<KB>KB`, `top_autoload=<5 legnagyobb>`, `cron=<n>`, `cron_disabled`, `push_tokens`, `memory_limit`, `php`.
+- Használat: `GET /wp-json/huhs/v1/posts?per_page=1&huhs_diag=huhs-boot-probe-2026&probe=<véletlen>`. A `probe` értéknek **minden mérésnél másnak kell lennie** (része a cache-kulcsnak), különben a korai cache kiszolgál és nem lesz fejléc. Csak a titkos markerrel működik, csak fejlécet ad, a tartalmat nem érinti.
+- A `push_tokens` szám közvetlenül megmutatja, hány készüléknek küld a push — ebből számolható, mennyi volt a régi, blokkoló mentés valódi költsége.
+- A `cron_disabled` azért fontos, mert a fenti javítások WP-Cronra támaszkodnak; ha a host letiltotta (`DISABLE_WP_CRON`), akkor a következő oldalletöltés futtatja őket (a WordPress `init`-en minden kérésnél ütemez), tehát továbbra is másodperceken belül elmennek — de ezt tudni kell.
+
 ### Javítva — hiányzó achievement-jelvény (2026-09-18)
 
 - Kiváltó ok: a `getAchievementBadges()` WordPress-kimaradás esetén a kép nélküli vészkatalógust (`defaultAchievementBadges`) adja vissza, és ezt a pontozás, a jelvény-újraszámolás és az admin-egyeztetés eddig **el is mentette** a profilba. Így egy WordPress-lassulás a felhasználót a „Kezdő ütem” rangra visszaminősítette, és törölte a feltöltött jelvénygrafikát.
