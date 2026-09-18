@@ -21,6 +21,16 @@
 - Az Események/DJ-k/Szervezők/Kiadványok listák és a részletoldalak már eddig is a cache-ből rajzolódtak (a `WordpressHeadCache` a lemezen is tárol, és lejárat után előbb a mentett törzset adja vissza, majd háttérben revalidál).
 - Kliensoldali változás: a következő AAB-build viszi.
 
+### Cache TTL-politika — megjelenítés és frissítés szétválasztva (2026-09-18)
+
+- Két külön útvonal: a **megjelenítés** (`forceRefresh: false`) mindig a rendelkezésre álló cache-t adja ki, kortól függetlenül, és csak háttérben revalidál; a **frissítés** (`forceRefresh: true`) a hálózatra vár.
+- A `WordpressHeadCache` (ETag/HEAD) eddig is így működött: a 30 másodperces ablak után a mentett törzs azonnal kimegy, a revalidáció háttérben fut. Ezt a `test/services/wordpress_head_cache_test.dart` fedi.
+- A perzisztens JSON cache (`_persistentCacheTtl`, 5 perc) viszont **eldobta** a lejárt értéket. Ez gyakorlatban a hír-kategóriákat érintette (a lista/chip 5 perc után hálózatra várt). Mostantól a lejárt érték is kimegy, és a TTL csak azt jelzi, hogy háttérfrissítés kell (`_persistentValueNeedsRefresh`).
+- A `getStickyPosts` (Hírek „Kiemelt” sor) eddig minden megjelenítésnél erőltetett kérést indított; mostantól cache-first, `forceRefresh` paraméterrel a kézi frissítéshez.
+- Az éles WordPress minden `/huhs/v1` végponton küld `ETag`-et, és a szerver maga is `Cache-Control: max-age=45, stale-while-revalidate=60`-at ad, ezért a lemezes cache valóban revalidálható, nem kell rövid élettartamot kényszeríteni.
+- Teszt: `test/services/wordpress_cache_policy_test.dart` (lejárt érték kiszolgálása, frissítés-jelzés, sérült bejegyzés törlése, sticky- és kategória-megjelenítési út).
+- Szándékosan nem módosítva: a `CommunityService` publikus profil-/achievement cache-e 24 óra után dobja el a mentett értéket. Ugyanaz az elv alkalmazható rá, de ott még nincs tesztfedezet, ezért külön körben érdemes.
+
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
 
 - Minden hálózatról vagy Firebase-ből letöltött adatnál a korábbi állapot azonnal legyen látható.

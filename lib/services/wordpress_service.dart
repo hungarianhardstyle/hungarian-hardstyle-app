@@ -222,6 +222,11 @@ class WordpressService {
     );
   }
 
+  /// Freshness window of the parsed in-memory list caches.
+  ///
+  /// This is not a lifetime: once it passes, the call falls through to the
+  /// layered disk cache ([WordpressHeadCache]), which still answers instantly
+  /// and only revalidates in the background. Display never blocks on it.
   static const _listCacheDuration = Duration(seconds: 30);
   final Map<String, _PostsCacheEntry> _postsCache = {};
   final Map<String, Future<PostsPage>> _postsInFlight = {};
@@ -252,6 +257,13 @@ class WordpressService {
   final Map<int, _TimedCacheEntry<List<HuhsGameResult>>> _gameResultsCache = {};
   final Map<int, Future<List<HuhsGameResult>>> _gameResultsInFlight = {};
 
+  /// Freshness window of the persisted JSON entries.
+  ///
+  /// It marks when a stored value should be revalidated, not how long it may be
+  /// used: the display path always serves whatever is on disk, however old it
+  /// is, and only the background refresh is gated by this window. This keeps a
+  /// second app session from waiting for WordPress just because the previous
+  /// visit was more than a few minutes ago.
   static const _persistentCacheTtl = Duration(minutes: 5);
   Future<SharedPreferences>? _preferencesFuture;
   final Map<String, _TimedCacheEntry<Object?>> _persistentJsonCache = {};
@@ -326,29 +338,56 @@ class WordpressService {
     return _preferencesFuture ??= SharedPreferences.getInstance();
   }
 
+  /// Reads a persisted JSON value for the display path.
+  ///
+  /// An expired entry is still returned: the age only decides whether the
+  /// caller schedules a background refresh (see [_persistentValueNeedsRefresh]).
+  /// Only unreadable payloads are dropped, because those cannot be rendered.
   Future<Object?> _readPersistentJson(String key) async {
     final now = DateTime.now();
     final memory = _persistentJsonCache[key];
-    if (memory != null && memory.expiresAt.isAfter(now)) return memory.value;
+    if (memory != null) return memory.value;
 
     final preferences = await _preferences();
-    final savedAt = preferences.getInt('$key.savedAt');
     final payload = preferences.getString(key);
-    if (savedAt == null || payload == null) return null;
-    final expiresAt = DateTime.fromMillisecondsSinceEpoch(savedAt)
-        .add(_persistentCacheTtl);
-    if (!expiresAt.isAfter(now)) {
-      _persistentJsonCache.remove(key);
-      return null;
-    }
+    if (payload == null) return null;
     try {
       final value = jsonDecode(payload);
+      final savedAt = preferences.getInt('$key.savedAt');
+      final expiresAt = savedAt == null
+          ? now.add(_persistentCacheTtl)
+          : DateTime.fromMillisecondsSinceEpoch(savedAt).add(_persistentCacheTtl);
       _persistentJsonCache[key] = _TimedCacheEntry(value, expiresAt);
       return value;
     } catch (_) {
+      await _removePersistentJson(key);
       return null;
     }
   }
+
+  /// Whether the stored value passed its freshness window and should be
+  /// revalidated in the background. Display never waits for that refresh.
+  Future<bool> _persistentValueNeedsRefresh(String key) async {
+    final entry = _persistentJsonCache[key];
+    if (entry != null) return !entry.expiresAt.isAfter(DateTime.now());
+    final preferences = await _preferences();
+    final savedAt = preferences.getInt('$key.savedAt');
+    if (savedAt == null) return true;
+    return !DateTime.fromMillisecondsSinceEpoch(
+      savedAt,
+    ).add(_persistentCacheTtl).isAfter(DateTime.now());
+  }
+
+  /// Test hook for the persisted display policy: an expired entry must still be
+  /// returned, because only the background refresh is gated by the freshness
+  /// window.
+  @visibleForTesting
+  Future<Object?> readPersistentJsonForTesting(String key) =>
+      _readPersistentJson(key);
+
+  @visibleForTesting
+  Future<bool> persistentJsonNeedsRefreshForTesting(String key) =>
+      _persistentValueNeedsRefresh(key);
 
   Future<void> _writePersistentJson(String key, Object value) async {
     final now = DateTime.now();
@@ -723,9 +762,16 @@ class WordpressService {
     return page.items;
   }
 
+  /// Sticky posts for the "Kiemelt" row of the news screen.
+  ///
+  /// The display path reads the layered cache like every other list: the stored
+  /// row is painted immediately and the ETag revalidation replaces it in the
+  /// background, then bumps [publicContentRefreshGeneration] so the row updates
+  /// without a gesture. Pass [forceRefresh] only on an explicit user refresh.
   Future<List<Post>> getStickyPosts({
     String search = '',
     int categoryId = 0,
+    bool forceRefresh = false,
   }) async {
     final page = await getPosts(
       page: 1,
@@ -733,7 +779,7 @@ class WordpressService {
       search: search,
       categoryId: categoryId,
       sticky: true,
-      forceRefresh: true,
+      forceRefresh: forceRefresh,
     );
     return page.items;
   }
@@ -1566,7 +1612,10 @@ class WordpressService {
     try {
       const key = 'huhs.wp.categories';
       final cached = forceRefresh ? null : await _readPersistentJson(key);
-      if (cached is List) {
+      // The stored category list is served whatever its age, so the news filter
+      // chips never wait for WordPress. Only the revalidation is delayed until
+      // the freshness window passed; a forced refresh writes the new list.
+      if (cached is List && await _persistentValueNeedsRefresh(key)) {
         _schedulePersistentRefresh(key, () async {
           await getCategories(forceRefresh: true);
         });
