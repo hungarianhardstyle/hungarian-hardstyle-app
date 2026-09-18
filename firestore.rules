@@ -66,7 +66,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'authorId', 'authorName', 'authorImageUrl', 'authorRole',
           'authorAccessRole', 'isAnonymous', 'text', 'replyToText', 'imageUrl', 'imagePublicId',
-          'reactions', 'reactionBy', 'pinned', 'createdAt'
+          'reactions', 'reactionBy', 'pinned', 'createdAt', 'editedAt'
         ])
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.authorName is string
@@ -107,6 +107,24 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text'])
         && request.resource.data.text is string
         && request.resource.data.text.size() <= 2000;
+      // A SZERZO a sajat uzenetet szerkesztheti (a tulajdonos keresere:
+      // „a chaten a felhasználó tudja szerkeszteni a saját üzenetét").
+      //
+      // Szandekosan SZUK a jog: kizarolag a `text` es az `editedAt` valtozhat,
+      // es kizarolag a sajat soron. Ezert nem lehet ezen az uton
+      //  - mas neveben irni (`authorId` valtozatlan),
+      //  - uzenetet rogziteni (`pinned` valtozatlan),
+      //  - reakciot hamisitani (`reactions`/`reactionBy` valtozatlan).
+      // Az `editedAt` azert lehetseges, hogy a felulet jelezhesse, hogy az
+      // uzenet mar nem az eredeti szoveg.
+      allow update: if isRegistered()
+        && request.auth.uid == resource.data.authorId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'editedAt'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000;
+      // Torolni CSAK admin tud. A szerzo a sajat uzenetet szerkesztheti, de nem
+      // torolheti — ez tudatos: a torles moderacios jog.
       allow delete: if isAdmin();
     }
 

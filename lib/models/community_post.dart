@@ -16,6 +16,12 @@ class CommunityPost {
   final Map<String, int> reactions;
   final DateTime createdAt;
 
+  /// Mikor szerkesztette a szerzo (vagy egy admin) az uzenetet.
+  ///
+  /// `null`, ha az uzenet meg soha nem volt szerkesztve — a felulet ilyenkor
+  /// nem irja ki a „szerkesztve" jelzest.
+  final DateTime? editedAt;
+
   const CommunityPost({
     required this.id,
     required this.authorName,
@@ -31,6 +37,7 @@ class CommunityPost {
     required this.pinned,
     required this.reactions,
     required this.createdAt,
+    this.editedAt,
   });
 
   factory CommunityPost.fromDocument(
@@ -38,6 +45,7 @@ class CommunityPost {
   ) {
     final data = doc.data() ?? const <String, dynamic>{};
     final timestamp = data['createdAt'];
+    final edited = data['editedAt'];
     return CommunityPost(
       id: doc.id,
       authorId: data['authorId'] as String? ?? '',
@@ -60,6 +68,7 @@ class CommunityPost {
             )
           : const <String, int>{},
       createdAt: timestamp is Timestamp ? timestamp.toDate() : DateTime.now(),
+      editedAt: edited is Timestamp ? edited.toDate() : null,
     );
   }
 }

@@ -21,7 +21,7 @@ const {
   assertSucceeds,
   assertFails,
 } = require('@firebase/rules-unit-testing');
-const { doc, setDoc, updateDoc, Timestamp } = require('firebase/firestore');
+const { doc, setDoc, updateDoc, deleteDoc, Timestamp } = require('firebase/firestore');
 
 const PROJECT_ID = 'demo-huhs';
 const OWNER_UID = 'owner-uid';
@@ -146,4 +146,113 @@ test('a szokásos profilfrissítés (bio, role) változatlanul működik', async
 test('a foglalás kollekciója kliensoldalról nem olvasható és nem írható', async () => {
   const db = firestoreFor('user-g', 'g@example.com');
   await assertFails(setDoc(doc(db, 'display_name_claims', 'sajat nev'), { uid: 'user-g' }));
+});
+
+// ---------------------------------------------------------------------------
+// Chat-üzenet szerkesztése
+//
+// A tulajdonos kérése: „a chaten a felhasználó tudja szerkeszteni a saját
+// üzenetét … Admin természetesen mindenkiét + admin törölni is tudjon."
+//
+// A felület csak felkínálja a lehetőséget — a VALÓDI védelem ez a szabály, ezért
+// itt emulátoron, a szabállyal szemben mérjük.
+// ---------------------------------------------------------------------------
+
+const chatPost = (authorId, extra = {}) => ({
+  authorId,
+  authorName: 'Teszt Elek',
+  authorImageUrl: '',
+  authorRole: 'partygoer',
+  authorAccessRole: 'none',
+  isAnonymous: false,
+  text: 'Eredeti üzenet',
+  replyToText: '',
+  imageUrl: '',
+  reactions: {},
+  reactionBy: {},
+  pinned: false,
+  createdAt: Timestamp.now(),
+  ...extra,
+});
+
+async function seedChatPost(postId, authorId) {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'live_feed_posts', postId), chatPost(authorId));
+  });
+}
+
+test('a SZERZO szerkesztheti a saját Chat-üzenetét', async () => {
+  const authorUid = 'chat-author';
+  await seedChatPost('post-a', authorUid);
+  const db = firestoreFor(authorUid, 'author@example.com');
+
+  await assertSucceeds(
+    updateDoc(doc(db, 'live_feed_posts', 'post-a'), {
+      text: 'Javított üzenet',
+      editedAt: Timestamp.now(),
+    }),
+  );
+});
+
+test('a szerző NEM szerkesztheti MÁS üzenetét', async () => {
+  await seedChatPost('post-b', 'mas-szerzo');
+  const db = firestoreFor('betolakodo', 'betolakodo@example.com');
+
+  await assertFails(
+    updateDoc(doc(db, 'live_feed_posts', 'post-b'), { text: 'Átírva' }),
+  );
+});
+
+test('a szerző csak a text/editedAt mezot valtoztathatja', async () => {
+  // Ez a lényegi védelem: a szerkesztés nem lehet eszköz arra, hogy valaki
+  // más nevében írjon, üzenetet rögzítsen, vagy reakciót hamisítson.
+  const authorUid = 'chat-author-2';
+  await seedChatPost('post-c', authorUid);
+  const db = firestoreFor(authorUid, 'author2@example.com');
+
+  await assertFails(
+    updateDoc(doc(db, 'live_feed_posts', 'post-c'), { authorName: 'Valaki Más' }),
+  );
+  await assertFails(
+    updateDoc(doc(db, 'live_feed_posts', 'post-c'), { pinned: true }),
+  );
+  await assertFails(
+    updateDoc(doc(db, 'live_feed_posts', 'post-c'), { reactions: { '❤️': 99 } }),
+  );
+  await assertSucceeds(
+    updateDoc(doc(db, 'live_feed_posts', 'post-c'), { text: 'Csak a szoveg' }),
+  );
+});
+
+test('a szerző üres szöveget nem menthet (a szerkesztés nem ürítheti ki)', async () => {
+  const authorUid = 'chat-author-3';
+  await seedChatPost('post-d', authorUid);
+  const db = firestoreFor(authorUid, 'author3@example.com');
+
+  // Üres szöveg: a szabály a szerzőnek is megköveteli az 1–2000 karaktert,
+  // különben a szerkesztéssel ki lehetne üríteni az üzenetet.
+  await assertFails(
+    updateDoc(doc(db, 'live_feed_posts', 'post-d'), { text: '' }),
+  );
+  await assertFails(
+    updateDoc(doc(db, 'live_feed_posts', 'post-d'), { text: 'x'.repeat(2001) }),
+  );
+});
+
+test('a SZERZŐ nem törölheti a saját üzenetét (a törlés admin-jog)', async () => {
+  const authorUid = 'chat-author-4';
+  await seedChatPost('post-f', authorUid);
+  const db = firestoreFor(authorUid, 'author4@example.com');
+
+  await assertFails(deleteDoc(doc(db, 'live_feed_posts', 'post-f')));
+});
+
+test('az ADMIN bárki üzenetét szerkesztheti és törölheti', async () => {
+  await seedChatPost('post-e', 'mas-szerzo');
+  const db = firestoreFor('admin-uid', 'djdeeroy@gmail.com');
+
+  await assertSucceeds(
+    updateDoc(doc(db, 'live_feed_posts', 'post-e'), { text: 'Admin javította' }),
+  );
+  await assertSucceeds(deleteDoc(doc(db, 'live_feed_posts', 'post-e')));
 });

@@ -621,6 +621,9 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
           replyToName: value.replyToName || '',
           replyToText: value.replyToText || '',
           createdAt: value.createdAt?.toMillis() || 0,
+          // A felulet ebbol irja ki a „szerkesztve" jelzest; 0, ha meg soha nem
+          // volt szerkesztve.
+          editedAt: value.editedAt?.toMillis() || 0,
         };
       }),
     };
@@ -720,6 +723,22 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
         });
       }
     }
+  } else if (action === 'edit') {
+    // A tulajdonos keresere: a hozzaszolo a SAJAT hozzaszolasat szerkesztheti,
+    // moderatorkent/adminkent pedig BARMEKIT — ugyanaz a szabaly, mint a
+    // torlesnel (`delete`), es ugyanaz, mint a Chat-üzeneteknel.
+    const text = typeof data.text === 'string' ? data.text.trim() : '';
+    if (!text || text.length > 2000)
+      throw new HttpsError('invalid-argument', 'Írj 1–2000 karakteres hozzászólást.');
+    await db.runTransaction(async (tx) => {
+      const comment = await tx.get(ref);
+      if (!comment.exists) throw new HttpsError('not-found', 'A hozzászólás már nem található.');
+      if (comment.data().authorId !== uid && !moderator)
+        throw new HttpsError('permission-denied', 'Ezt a hozzászólást nem szerkesztheted.');
+      // Az `editedAt` jelzi a feluleten, hogy a szoveg mar nem az eredeti.
+      tx.update(ref, { text, editedAt: FieldValue.serverTimestamp() });
+    });
+    return { ok: true, text };
   } else if (action === 'delete') {
     await db.runTransaction(async (tx) => {
       const comment = await tx.get(ref);

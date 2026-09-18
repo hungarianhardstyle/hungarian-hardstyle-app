@@ -1182,6 +1182,11 @@ class CommunityService {
     );
   }
 
+  /// A Chat-üzenet törlése — **csak adminnak**.
+  ///
+  /// A tulajdonos kérése: *„Admin természetesen mindenkiét + admin törölni is
+  /// tudjon"*. A szerzo a SAJÁT üzenetét **szerkesztheti** (lásd
+  /// [updatePostText]), de nem törölheti: a törlés admin-jog.
   Future<void> deletePost(String postId) async {
     if (!isAdmin && _cachedAccessRole == accessNone) {
       await _cacheProfileRole();
@@ -1192,17 +1197,38 @@ class CommunityService {
     await firestore.collection('live_feed_posts').doc(postId).delete();
   }
 
+  /// A Chat-üzenet szerkesztése — a **szerző magáé**, adminként **bárkié**.
+  ///
+  /// A tulajdonos kérése: *„a chaten a felhasználó tudja szerkeszteni a saját
+  /// üzenetét … Admin természetesen mindenkiét"*.
+  ///
+  /// A jogosultságot a KLIENS oldal is ellenőrzi (hogy a felület ne kínáljon
+  /// lehetetlent), de a valódi védelem a Firestore-szabályban van: a szerző
+  /// kizárólag a saját során, kizárólag a `text` és az `editedAt` mezőt
+  /// módosíthatja. Így egy másik fiók üzenetét akkor sem lehet átírni, ha
+  /// valaki megkerüli a felületet.
+  ///
+  /// Az `authorId` azért jön paraméterként, mert a hívó már ismeri a bejegyzést:
+  /// így nem kell egy plusz Firestore-olvasás csak a jogosultság eldöntéséhez.
   Future<void> updatePostText({
     required String postId,
     required String text,
+    String authorId = '',
   }) async {
+    if (!isAdmin && _cachedAccessRole == accessNone) {
+      await _cacheProfileRole();
+    }
     if (!isAdmin) {
-      throw StateError('Csak admin szerkeszthet Chat-üzenetet.');
+      final uid = auth.currentUser?.uid ?? '';
+      if (uid.isEmpty || authorId.trim() != uid) {
+        throw StateError('Csak a saját üzenetedet szerkesztheted.');
+      }
     }
     final trimmed = maskProfanity(text.trim());
     if (trimmed.isEmpty) throw ArgumentError('Az üzenet nem lehet üres.');
     await firestore.collection('live_feed_posts').doc(postId).update({
       'text': trimmed,
+      'editedAt': FieldValue.serverTimestamp(),
     });
   }
 

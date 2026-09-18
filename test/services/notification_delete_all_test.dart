@@ -1,3 +1,9 @@
+// A Firestore osztalyok (`Query`, `DocumentSnapshot`, ...) `sealed`-ek, ezert az
+// `implements` jelzest a lint kifogasolja. Itt SZANDEKOS: nem uj csomagot
+// akarunk behuzni (`fake_cloud_firestore`), hanem a lehető legkisebb feluletet
+// utanozzuk, hogy a szolgaltatas VALODI kodja fusson.
+// ignore_for_file: subtype_of_sealed_class
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -134,6 +134,53 @@ class _ArticleCommentsState extends State<ArticleComments> {
     });
   }
 
+  /// A hozzászólás szerkesztése — a szerző a sajátját, moderátor bárkiét.
+  ///
+  /// A tulajdonos kérése: *„a chaten a felhasználó tudja szerkeszteni a saját
+  /// üzenetét, ugyanezt a cikkek alatti kommenteknél is. Admin természetesen
+  /// mindenkiét"*. A jogosultságot a `articleComments` callable ellenőrzi a
+  /// szerveren (ugyanaz a szabály, mint a törlésnél), a felület csak a saját
+  /// soron kínálja fel a lehetőséget.
+  Future<void> _edit(Map<String, dynamic> item) async {
+    var text = (item['text'] as String? ?? '').trim();
+    final updated = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hozzászólás szerkesztése'),
+        content: TextFormField(
+          initialValue: text,
+          autofocus: true,
+          maxLines: 5,
+          maxLength: 2000,
+          onChanged: (value) => text = value,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Mégse'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, text),
+            child: const Text('Mentés'),
+          ),
+        ],
+      ),
+    );
+    if (updated == null || !mounted) return;
+    final trimmed = CommunityService.maskProfanity(updated.trim());
+    if (trimmed.isEmpty) return;
+    try {
+      await _call({'action': 'edit', 'id': item['id'], 'text': trimmed});
+      if (!mounted) return;
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(e))));
+      }
+    }
+  }
+
   Future<void> _action(Map<String, dynamic> item, String action) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -251,14 +298,23 @@ class _ArticleCommentsState extends State<ArticleComments> {
                         ),
                         if (registered)
                           PopupMenuButton<String>(
-                            onSelected: (action) => action == 'reply'
-                                ? _replyTo(item)
-                                : _action(item, action),
+                            onSelected: (action) => switch (action) {
+                              'reply' => _replyTo(item),
+                              'edit' => _edit(item),
+                              _ => _action(item, action),
+                            },
                             itemBuilder: (_) => [
                               if (item['authorId'] != user.uid)
                                 const PopupMenuItem(
                                   value: 'reply',
                                   child: Text('Válasz'),
+                                ),
+                              // A szerző a sajátját, moderátor bárkiét — ez a
+                              // szerveren is ugyanígy van kikényszerítve.
+                              if (item['authorId'] == user.uid || _moderator)
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text('Szerkesztés'),
                                 ),
                               if (item['authorId'] == user.uid || _moderator)
                                 const PopupMenuItem(
@@ -307,6 +363,22 @@ class _ArticleCommentsState extends State<ArticleComments> {
                         ),
                       ),
                     Text(item['text'] as String? ?? ''),
+                    // A szerkesztes jelzese: a szerzo (es a moderator) utolag
+                    // atirhatja a szoveget, ezert latszania kell, hogy a
+                    // hozzaszolas mar nem az eredeti.
+                    if ((item['editedAt'] as num?)?.toInt() != null &&
+                        (item['editedAt'] as num).toInt() > 0)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text(
+                          'szerkesztve',
+                          style: TextStyle(
+                            color: Colors.white38,
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

@@ -1246,7 +1246,12 @@ class _PostCardState extends ConsumerState<_PostCard> {
     try {
       await ref
           .read(communityServiceProvider)
-          .updatePostText(postId: widget.post.id, text: updated);
+          .updatePostText(
+            postId: widget.post.id,
+            text: updated,
+            // A szerzo-ellenorzeshez: admin barkit, a szerzo csak a sajatjat.
+            authorId: widget.post.authorId,
+          );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -1325,7 +1330,20 @@ class _PostCardState extends ConsumerState<_PostCard> {
     final service = ref.read(communityServiceProvider);
     final currentUser = service.auth.currentUser;
     final isRegisteredUser = currentUser != null && !currentUser.isAnonymous;
-    final canManagePosts = isRegisteredUser && service.isAdmin;
+    // A tulajdonos keresere: „a chaten a felhasználó tudja szerkeszteni a saját
+    // üzenetét … Admin természetesen mindenkiét, + admin törölni is tudjon".
+    //
+    //  - SZERKESZTÉS: a szerző a sajátját, admin bárkiét;
+    //  - TÖRLÉS:     csak admin (a szerző nem törölheti a sajátját sem);
+    //  - RÖGZÍTÉS:   csak admin.
+    final isOwnPost =
+        isRegisteredUser &&
+        post.authorId.isNotEmpty &&
+        post.authorId == currentUser.uid;
+    final canEditPost = isRegisteredUser && (service.isAdmin || isOwnPost);
+    final canDeletePost = isRegisteredUser && service.isAdmin;
+    final canPinPost = isRegisteredUser && service.isAdmin;
+    final canModeratePosts = canEditPost || canDeletePost || canPinPost;
     final canReportOrBlock =
         isRegisteredUser &&
         post.authorId.isNotEmpty &&
@@ -1358,20 +1376,37 @@ class _PostCardState extends ConsumerState<_PostCard> {
                     _timeLabel(post.createdAt),
                     style: const TextStyle(color: Colors.white54, fontSize: 11),
                   ),
-                  if (canManagePosts || canReportOrBlock)
+                  // A szerkesztes jelzese: a tulajdonos keresere a felhasznalo
+                  // szerkesztheti a sajat uzenetet, ezert latszania kell, hogy
+                  // a szoveg mar nem az eredeti.
+                  if (post.editedAt != null)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 6),
+                      child: Text(
+                        'szerkesztve',
+                        style: TextStyle(
+                          color: Colors.white38,
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  if (canModeratePosts || canReportOrBlock)
                     PopupMenuButton<String>(
                       tooltip: 'Üzenetműveletek',
                       onSelected: _handleMenuAction,
                       itemBuilder: (context) => [
-                        if (canManagePosts) ...[
+                        if (canEditPost)
                           const PopupMenuItem(
                             value: 'edit',
                             child: Text('Szerkesztés'),
                           ),
+                        if (canDeletePost)
                           const PopupMenuItem(
                             value: 'delete',
                             child: Text('Törlés'),
                           ),
+                        if (canPinPost)
                           PopupMenuItem(
                             value: 'pin',
                             child: Text(
@@ -1380,7 +1415,6 @@ class _PostCardState extends ConsumerState<_PostCard> {
                                   : 'Üzenet rögzítése',
                             ),
                           ),
-                        ],
                         if (canReportOrBlock) ...[
                           const PopupMenuItem(
                             value: 'report',

@@ -1,5 +1,30 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Chat- és cikk-hozzászólás szerkesztése — a szerző a sajátját, admin bárkiét (2026-09-18, AAB 326 + Firebase)
+
+- **A tulajdonos kérése:** *„+1 javítás, kiegészítés a chaten a felhasználó tudja szerkeszteni a saját üzenetét, ugyanezt a cikkek alatti kommenteknél is. Admin természetesen mindenkiét + admin törölni is tudjon"*.
+- **A kiindulás (chat):** a `CommunityService.updatePostText()` **már létezett**, de **csak adminnak** engedte (`if (!isAdmin) throw …`), és a `CommunityScreen` menüjében is csak a `canManagePosts == isAdmin` esetén jelent meg a „Szerkesztés". Vagyis a funkció megvolt, csak épp a felhasználó nem érhette el.
+- **A kiindulás (cikk-kommentek):** a `articleComments` callable-nek **nem volt** `edit` művelete — csak `list`, `create`, `delete`, `report`.
+- **A jogosultsági modell, egységesen mindkét helyen:**
+  - **szerkesztés** — a szerző a sajátját, admin/moderátor **bárkiét**;
+  - **törlés** — **csak admin** (a szerző a sajátját sem törölheti: ez moderációs jog);
+  - **rögzítés (chat)** — csak admin.
+- **Chat — a valódi védelem a Firestore-szabályban van (`firestore.rules`):**
+  - **új** `allow update`: `isRegistered() && request.auth.uid == resource.data.authorId && diff().affectedKeys().hasOnly(['text','editedAt']) && text 1–2000 karakter`. Ez **szándékosan szűk**: a szerző nem tud más nevében írni (`authorId`), üzenetet rögzíteni (`pinned`) vagy reakciót hamisítani (`reactions`/`reactionBy`) — ezek külön admin-szabályok maradnak.
+  - `editedAt` bekerült a **create** `hasOnly([...])` listájába is, hogy konzisztens legyen (a szűkítés nem gyengül: a lista csak bővült).
+  - `allow delete: if isAdmin()` **változatlan** — a szerző nem törölhet.
+  - A reakciók amúgy is Cloud Functionből (`toggleChatReaction`) mennek, ami Admin SDK-val ír, ezért a szabály szűkítése ott nem okoz regressziót.
+- **Chat — kliens:** `updatePostText()` mostantól `authorId` paramétert kap (a hívó már ismeri a bejegyzést, így nincs plusz olvasás), és nem-admin esetén megköveteli, hogy az egyezzen a bejelentkezett UID-dal. A `CommunityScreen` a `canManagePosts` helyett **három külön jogosultságot** számol (`canEditPost`, `canDeletePost`, `canPinPost`), ezért a menü a helyes pontokat kínálja. A `CommunityPost` modell új `editedAt` mezőt kapott, és a kártya a `createdAt` mellett **„szerkesztve"** jelzést ír ki.
+- **Cikk-kommentek — szerver:** új `edit` ág a `articleComments` callable-ben: `db.runTransaction`, `authorId === uid || moderator` ellenőrzés, 1–2000 karakter, `tx.update(ref, {text, editedAt})`; a `list` válasz mostantól `editedAt`-et is ad (0 = még nem szerkesztették).
+- **Cikk-kommentek — kliens:** a `ArticleComments` menü új **„Szerkesztés"** pontot kapott (szerző vagy moderátor), `_edit()` dialógussal, és a szöveg alatt „szerkesztve" jelzés. A `onSelected` `switch`-re váltott, mert három külön művelet van.
+- **Tesztelés:**
+  - `functions/article-comments.test.cjs` **5 → 10**: a szerző szerkesztheti a sajátját (trimmelve tárolva) és `editedAt > 0` jön vissza; admin **és** moderátor is szerkesztheti másét; **más nem** szerkesztheti (a szöveg változatlan marad); a hossz-ellenőrzés ugyanaz, mint létrehozásnál; nem létező hozzászólás → `not-found`. A fixture `runTransaction`-jét bővíteni kellett `update`-tel.
+  - `functions/rules.test.cjs` **8 → 14**: emulátoron, a valódi szabállyal mérve — a szerző szerkesztheti a sajátját; **másét nem**; csak a `text`/`editedAt` módosítható (a `authorName`/`pinned`/`reactions` írása **elutasítva**); üres és 2000+ karakteres szöveg elutasítva; a szerző **nem törölheti** a sajátját; az admin bárkiét szerkesztheti **és törölheti**.
+  - **Saját hibám, javítva:** az első „nem törölheti" tesztem valójában csak az üres szöveget mérte (nem a törlést). Kettébontottam, és a törlést igazi `deleteDoc`-kal mérem.
+- **Élesítve:** `firebase deploy --only functions:articleComments,firestore:rules` — **a szabályok élesítése nélkül a szerkesztés a klienseknél elutasításra futna**, ezért ez a lépés kötelező volt.
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **228/228**, `functions/article-comments.test.cjs` **10/10**, `functions/rules.test.cjs` **14/14**.
+- **Csomag:** `build/HUHS-v1.0.0+326-release.aab`.
+
 ### „Összes törlése" az értesítéseknél: az Aktív fül az ARCHIVÁLTAT is törölte (2026-09-18, AAB 325)
 
 - **A tulajdonos jelzése:** *„Notifyt lehet archiválni és átrakja az archiváltba — de ha az aktív fülön nyomok egy összes törlését, töröl mindent még az archiváltat is, ezt külön kéne választani: aktívban az aktívat törölje, archivban az archiváltakat"*.

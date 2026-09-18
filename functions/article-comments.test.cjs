@@ -26,7 +26,7 @@ function fixture() {
   let allowed = true;
   const context = {
     exports: {}, functions: { https: { onCall: handler => handler }, runWith: () => ({ https: { onCall: handler => handler } }) }, HttpsError, crypto,
-    db: { collection, runTransaction: async fn => fn({ get: ref => ref.get(), create: (ref, value) => records.set(ref.path, value), delete: ref => records.delete(ref.path) }) },
+    db: { collection, runTransaction: async fn => fn({ get: ref => ref.get(), create: (ref, value) => records.set(ref.path, value), update: (ref, value) => records.set(ref.path, { ...(records.get(ref.path) || {}), ...value }), delete: ref => records.delete(ref.path) }) },
     FieldPath: { documentId: () => '__name__' },
     FieldValue: { serverTimestamp: () => ({ toMillis: () => 1 }) },
     isAdmin: (_, profile) => profile.accessRole === 'admin', allowCall: async () => allowed,
@@ -100,4 +100,67 @@ test('a válasz a megcélzott hozzászólást idézi, lánc nélkül', async () 
   // A válasz csak egyetlen idézetet hordoz, és nem hivatkozik tovább a szülőre.
   assert.equal(reply.replyToCommentId, undefined);
   assert.equal(items.find(item => item.id === 'parent').replyToName, '');
+});
+
+// A tulajdonos kérése: „a chaten a felhasználó tudja szerkeszteni a saját
+// üzenetét, ugyanezt a cikkek alatti kommenteknél is. Admin természetesen
+// mindenkiét + admin törölni is tudjon."
+
+test('a SZERZO szerkesztheti a saját hozzászólását, és kap „szerkesztve" jelzést', async () => {
+  const { call, records } = fixture();
+  await call({ postId: 123, action: 'create', id: 'x', text: 'Eredeti szöveg' }, registered('owner'));
+
+  const result = await call({ postId: 123, action: 'edit', id: 'x', text: '  Javított szöveg  ' }, registered('owner'));
+
+  assert.equal(result.ok, true);
+  assert.equal(result.text, 'Javított szöveg', 'a szoveget trimmelve taroljuk');
+  assert.equal(records.get('article_comments/123/comments/x').text, 'Javított szöveg');
+  // A jelzes a listaban is megjelenik, hogy a felulet ki tudja irni.
+  const item = (await call({ postId: 123 }, {})).items.find(entry => entry.id === 'x');
+  assert.equal(item.text, 'Javított szöveg');
+  assert.ok(item.editedAt > 0, 'a szerkesztes jelzese megjelenik a valaszban');
+});
+
+test('az ADMIN/MODERATOR mas hozzaszolasat is szerkesztheti', async () => {
+  const { call, records } = fixture();
+  records.set('community_profiles/admin', { displayName: 'Admin', accessRole: 'admin' });
+  records.set('community_profiles/mod', { displayName: 'Modi', accessRole: 'moderator' });
+  await call({ postId: 123, action: 'create', id: 'x', text: 'Eredeti' }, registered('owner'));
+
+  await call({ postId: 123, action: 'edit', id: 'x', text: 'Admin javította' }, registered('admin'));
+  assert.equal(records.get('article_comments/123/comments/x').text, 'Admin javította');
+
+  await call({ postId: 123, action: 'edit', id: 'x', text: 'Moderátor javította' }, registered('mod'));
+  assert.equal(records.get('article_comments/123/comments/x').text, 'Moderátor javította');
+});
+
+test('MAS felhasznalo nem szerkesztheti a hozzaszolast', async () => {
+  const { call, records } = fixture();
+  records.set('community_profiles/other', { displayName: 'Másik' });
+  await call({ postId: 123, action: 'create', id: 'x', text: 'Eredeti' }, registered('owner'));
+
+  await assert.rejects(
+    call({ postId: 123, action: 'edit', id: 'x', text: 'Hackelte' }, registered('other')),
+    { code: 'permission-denied' },
+  );
+  assert.equal(records.get('article_comments/123/comments/x').text, 'Eredeti');
+});
+
+test('a szerkesztes ugyanugy ellenorzi a hosszt, mint a letrehozas', async () => {
+  const { call, records } = fixture();
+  await call({ postId: 123, action: 'create', id: 'x', text: 'Eredeti' }, registered('owner'));
+
+  for (const text of ['', '   ', 'x'.repeat(2001)]) {
+    await assert.rejects(call({ postId: 123, action: 'edit', id: 'x', text }, registered('owner')), {
+      code: 'invalid-argument',
+    });
+  }
+  assert.equal(records.get('article_comments/123/comments/x').text, 'Eredeti');
+});
+
+test('nem letezo hozzaszolas szerkesztese not-found', async () => {
+  const { call } = fixture();
+  await assert.rejects(call({ postId: 123, action: 'edit', id: 'nincs', text: 'x' }, registered('owner')), {
+    code: 'not-found',
+  });
 });
