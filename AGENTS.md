@@ -1,5 +1,14 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Játékok: ÉLESBEN MŰKÖDNEK — a régi audit állításai elavultak (2026-09-18)
+
+- **Tulajdonosi visszajelzés:** *„fut egy éppen, egy meg lezárva"*. Ez megerősíti, hogy a játék-funkció éles és használatban van.
+- Élesben ellenőrizve: `GET /wp-json/huhs/v1/games/active` → HTTP 200, 1742 bájt, **id 12662, „Hardstyle kvíz"**, `type=hardstyle_quiz`, `start_at=2026-09-15T19:55`, `end_at=2026-09-25T19:00`, `results_until=2026-09-27T19:00`, `status=active`, **5 kérdés**, 6 jutalomsáv.
+- **Az artwork fel van töltve:** `artwork=https://hungarianhardstyle.hu/wp-content/uploads/2026/09/02_HARDSTYLE_KVÍZ.png`. Tehát a `docs/GAMES_IMPLEMENTATION_AUDIT_HU.md` „a félkész Flutter játék-UI nincs bekötve" és „végleges artworkök feltöltése hátra van" pontjai **elavultak** — a `GameScreen` be van kötve (`lib/screens/home/home_screen.dart:522`), a `lib/models/game.dart` és a `lib/providers/games_provider.dart` megvan, és a szerveroldali végpont él.
+- **NYITOTT RENDELLENESSÉG, amit élesben mértem:** `GET /wp-json/huhs/v1/games/results/latest` → **HTTP 200, de 0 bájt** (üres törzs). A `games.php` forrása szerint ez a végpont a legutóbbi `closed` állapotú játék adatait adná vissza, és `rest_ensure_response(null)`-t ad, ha nincs ilyen — az viszont `null` (4 bájt) lenne, nem üres. Két lehetséges ok: vagy nincs a `huhs_game_status()` szerint `closed` játék (pl. lejárt a `results_until` ablaka), vagy a payload-építés futásidejű hibát ad, és a már elküldött 200-as fejléc mellett üres marad a törzs. **A tulajdonos visszajelzése kell hozzá:** megjelenik-e az appban a lezárt játék eredménye. Ha nem, ezt ki kell vizsgálni (szerver error_log + a lezárt játék `_huhs_game_*` meta mezői).
+- **A nyereményjáték (nyereményjáték / prize draw) ETTŐL FÜGGETLEN**, külön WordPress-rendszer, és **még nincs megcsinálva**. Tulajdonosi döntés: *„az ráér"* — **ne kezdd el**, amíg nem szól. A spec a „Következő fejlesztési feladat — külön WordPress nyereményjáték-rendszer" szakaszban van.
+- Tanulság a jövőre: a `docs/` auditok **státusza elavulhat** (a játékoknál ez megtörtént). Mielőtt egy dokumentumban „nyitott" tételt felajánlanál, ellenőrizd a kódban vagy élesben.
+
 ### 2.4.111 éles mérés — a saját pluginunk betöltése elhanyagolható (2026-09-18)
 
 - **Eredmény: `our_files_ms=2–3` (egy mintában 19).** A saját 40 include-fájlunk betöltése **2–3 ms** — vagyis az a felvetés, hogy az admin-only fájlokat lustán töltsük be, **nem éri meg**. A mérés nélkül felesleges és kockázatos refaktor készült volna. Ez a kérdés **lezárva**, ne nyúlj hozzá újra.
