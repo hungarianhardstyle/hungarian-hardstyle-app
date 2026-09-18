@@ -93,6 +93,9 @@
 - Cloudflare-dokumentáció szerint a CDN **nem cache-el, ha `Set-Cookie` van a válaszon**, és a JSON-t alapból nem cache-eli (Cache Rule kell). Ezért a **2.4.106** szerveroldalon cache-elhetővé teszi a válaszokat: `header_remove('Set-Cookie')` a nyilvános JSON-útvonalakon (a Facebook pixel `_fbp` sütije minden kérésnél új értéket kapott, és blokkolta volna a CDN-t), `s-maxage=45` hozzáadva, valamint a duplikált `Vary: Accept-Encoding,Accept-Encoding,Origin` normalizálva `Accept-Encoding, Origin`-re.
 - Csomag: `build/huhs-mobile-api-2.4.106.zip` (SHA-256 `4AE112C02576E6D5590075DB4D0F9C0081AC17DB5FC3CD3A610F046B8D7FF6D1`), forrás: `.tmp-api-24106/huhs-mobile-api/`.
 - **Él-cache beállításnál a cache-kulcsból ki kell zárni a `_huhs_revalidate` és `_` query paramétereket**, különben az app revalidálása minden alkalommal cache-miss lenne.
+- A 2.4.106 éles ellenőrzése (2026-09-18): a `Set-Cookie` **eltűnt** mind az öt vizsgált JSON-végpontról, a `Cache-Control: public, max-age=45, s-maxage=45, stale-while-revalidate=60` mindenhol ott van, a tartalom és az ETag változatlan (nincs regresszió). A `Vary` normalizálás nem érvényesül teljesen (a WP CORS-logika és az openresty is hozzáfűzi a magáét), de ez a Cloudflare cache-kulcsát nem befolyásolja, ezért nem érdemes vele újabb kört csinálni.
+- **Tulajdonosi döntés: az „A” út** — host-oldali microcache (nincs DNS-mozgatás, nincs e-mail-kockázat). A szolgáltatónak küldhető, konfigurációs vázlatot és ellenőrzési lépéseket tartalmazó dokumentum: `build/huhs-microcache-host-request.md`.
+- Az él-cache bekapcsolása után ellenőrizendő: `X-Cache-Status`/`Age` a válaszokon, és a `/posts` válaszidő ~50–150 ms a mostani ~1,2 s helyett.
 - Nyitott: a boot-idő gyökere (Jetpack? lassú DB? nincs perzisztens object cache?) — ehhez diagnosztikai mu-plugin kellene; ez az egész weboldalt gyorsítaná, nem csak az appot.
 
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
