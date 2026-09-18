@@ -98,6 +98,17 @@
 - Az él-cache bekapcsolása után ellenőrizendő: `X-Cache-Status`/`Age` a válaszokon, és a `/posts` válaszidő ~50–150 ms a mostani ~1,2 s helyett.
 - Nyitott: a boot-idő gyökere (Jetpack? lassú DB? nincs perzisztens object cache?) — ehhez diagnosztikai mu-plugin kellene; ez az egész weboldalt gyorsítaná, nem csak az appot.
 
+### Boot-idő mérés és korai cache-kiszolgálás (2026-09-18)
+
+- A **2.4.107 diagnosztika** (csak a `huhs_diag=huhs-boot-probe-2026` paraméterre válaszol, `X-HUHS-Boot` fejlécben) éles mérése szerint egy `/posts` kérés (~870–1360 ms) így oszlik meg: **plugin-fájlok betöltése 513–811 ms**, `init` +130–180 ms, `rest_api_init` +155–185 ms, maga a végpont +66–180 ms; közben **97 adatbázis-lekérdezés** és **164 MB csúcsmemória** egy 10 KB-os JSON-hoz. A saját pluginunk fájlja a folyamat ~285–455 ms-ánál töltődik.
+- Ezért a **2.4.108** kiszolgálja a cache-elt választ **már a saját pluginfájl betöltésekor** (`huhs_try_serve_public_cache_early()` a `http-cache.php` végén), mielőtt a többi plugin betöltődne és mielőtt bármely `init`/REST callback lefutna. Csak GET/HEAD, csak a nyilvános allow-lista útvonalaira; minden más kérés egyetlen `strpos`-szal tér vissza. GET-re a cache-elt JSON-t küldi, HEAD-re csak a fejléceket (az app revalidálása HEAD-es), `If-None-Match` egyezésre 304-et.
+- A cache-elt válasz fejlécei is tárolódnak (`headers`), így a korai válasz azonos a REST-ével; a `Set-Cookie` és a hop-by-hop fejlécek kimaradnak.
+- Új diagnosztikai fejléc: **`X-HUHS-Cache: early|memory|fresh`** — ebből kiderül, melyik réteg szolgált ki (early = pluginbetöltéskor, memory = REST-réteg cache, fresh = most renderelte a végpont).
+- Várható eredmény: ~0,9–1,4 s helyett **~0,3–0,5 s** cache-elt kérésre (host, CDN és app-módosítás nélkül).
+- Ha a mérés azt mutatja, hogy a fejléc mindig `fresh`, akkor a transient cache nem perzisztál ezen a hoston → akkor fájl-alapú cache-re kell váltani (wp-content/uploads), ez a következő lépés.
+- További lehetőség (ha kell): mu-plugin drop-in, ami még a plugin-fájlok betöltése előtt kiszolgál (~0,15–0,25 s), de ez egy új, minden kérésnél lefutó fájl, ezért külön döntést igényel.
+- Csomag: `build/huhs-mobile-api-2.4.108.zip` (SHA-256 `09B8FF5E9CBA63ACE5BB124EB648C88782C4AEB189150941DDC11A8717BF7F33`), forrás: `.tmp-api-24108/huhs-mobile-api/`.
+
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
 
 - Minden hálózatról vagy Firebase-ből letöltött adatnál a korábbi állapot azonnal legyen látható.
