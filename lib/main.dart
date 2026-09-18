@@ -13,6 +13,7 @@ import 'providers/ads_provider.dart';
 import 'services/push_notification_service.dart';
 import 'services/referral_link_service.dart';
 import 'services/label_purchase_service.dart';
+import 'services/public_content_warmer.dart';
 import 'widgets/startup_gate.dart';
 import 'widgets/session_watcher.dart';
 import 'widgets/profile_access_gate.dart';
@@ -33,6 +34,11 @@ Future<void> main() async {
   await initializeFirebaseRuntime();
   await _initializeAppCheck();
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
+  // The home screen needs the news and event lists first. Starting that request
+  // here runs it behind the startup gate, so the content is already cached when
+  // the splash ends — also on a first install. The service shares in-flight
+  // requests with the home providers, so this downloads nothing twice.
+  unawaited(PublicContentWarmer.warm());
   LabelPurchaseService.shared.listen();
   unawaited(_initializePushNotifications());
   unawaited(ReferralLinkService.initialize());

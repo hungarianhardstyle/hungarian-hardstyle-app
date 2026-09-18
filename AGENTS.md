@@ -44,6 +44,17 @@
 - Teszt: `test/core/images/wordpress_image_url_test.dart`.
 - Kliensoldali változás: a következő AAB-build viszi.
 
+### Induláskori előtöltés — hírek és események a splash alatt (2026-09-18)
+
+- Az app indulásakor eddig **csak** a saját profil és az adminadatok töltődtek elő (`CommunityService.preloadOwnProfile` / `preloadWordPressAdmin`, csak bejelentkezve), valamint az indulási üzenet. A hírek és az események lekérése a főoldal felépüléséig nem indult el.
+- A főoldal mégis azonnali volt, mert a lemezes ETag-cache (cache-first) a mentett tartalmat azonnal kiadja. Friss telepítésnél viszont a 700 ms-os splash után megjelent a töltő, és meg kellett várni a hálózatot.
+- Új `lib/services/public_content_warmer.dart`: a `main()` a `runApp` után azonnal elindítja a hírek + események lekérését, így az a **startup gate mögött** fut le. Mire a főoldal felépül, az adat már a cache-ben van, tehát az első indítás is tartalmat mutat.
+- Nem generál plusz kérést: ugyanazokat a hívásokat indítja, amiket a főoldal providerei, és a szolgáltatás a folyamatban lévő kéréseket megosztja (`_postsInFlight`, `_eventsInFlight`).
+- Hiba esetén a melegítés elnyeli a kivételt (az indulás nem törhet meg), a képernyők pedig maguktól újrapróbálnak.
+- Teszt: `test/services/public_content_warmer_test.dart` (párhuzamos indítás, részleges és teljes hiba).
+- Ez a megoldás a korábban felvetett csontváz-(skeleton) helyett készült el: nem szépíti a várakozást, hanem a splash alá rejti.
+- Kliensoldali változás: a következő AAB-build viszi.
+
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
 
 - Minden hálózatról vagy Firebase-ből letöltött adatnál a korábbi állapot azonnal legyen látható.
