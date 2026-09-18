@@ -78,7 +78,8 @@ class _PollScreenState extends ConsumerState<PollScreen> {
 
   String _readableError(Exception error) {
     final text = error.toString();
-    if (text.contains('unauthenticated') || text.contains('permission-denied')) {
+    if (text.contains('unauthenticated') ||
+        text.contains('permission-denied')) {
       return 'A szavazáshoz regisztrált fiók szükséges.';
     }
     if (text.contains('failed-precondition') || text.contains('nem elérhető')) {
@@ -106,9 +107,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kérdőív'),
-        actions: [
-          ContentRefreshIcon(onRefresh: _refreshStatus),
-        ],
+        actions: [ContentRefreshIcon(onRefresh: _refreshStatus)],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -160,7 +159,16 @@ class _PollScreenState extends ConsumerState<PollScreen> {
               ),
             ),
           ),
-          if (registered && _voted) ...[
+          // Az eredmeny-osszesito a WordPress ADMIN vegpontjarol jon
+          // (`/huhs/v1/admin?action=voting_summary`), ezert sima felhasznalonak
+          // nincs hozza jogosultsaga — a gombot eddig megis feltetel nelkul
+          // kiadtuk szavazas utan, es a felhasznalo hibauzenetet kapott.
+          //
+          // Mostantol CSAK admin latja, es neki akkor is latszik, ha meg nem
+          // szavazott: aki a kerdőívet osszeallitja, annak a szavazas elott is
+          // meg kell tudnia nezni, hol tart.
+          if (registered &&
+              ref.watch(currentUserIsAdminProvider).valueOrNull == true) ...[
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerLeft,
@@ -196,9 +204,8 @@ class _PollScreenState extends ConsumerState<PollScreen> {
           ),
         ],
       ),
-      data: (voted) => voted
-          ? const _PollThanks()
-          : _buildBallot(context, widget.poll),
+      data: (voted) =>
+          voted ? const _PollThanks() : _buildBallot(context, widget.poll),
     );
   }
 

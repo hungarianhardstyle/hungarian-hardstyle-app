@@ -368,4 +368,29 @@ void main() {
       'AUTH/network-request-failed: hiba',
     );
   });
+
+  // A tulajdonos jelzese: „nekem adminként nincs ott [az eredmeny-gomb]".
+  // Az admin-felismeres a szerveren az e-mail-cimhez es az accessRole mezohoz
+  // kotott; a kliensnek ugyanezt kell tudnia, fuggetlenul attol, hogy a profil
+  // szerepkor-cache mar feltolt-e.
+  test(
+    'a tulajdonos e-mail-cime adminnak szamit (kis-nagybetutol fuggetlenul)',
+    () {
+      expect(CommunityService.isOwnerEmail('djdeeroy@gmail.com'), isTrue);
+      expect(CommunityService.isOwnerEmail('  DJDeeroy@Gmail.COM  '), isTrue);
+    },
+  );
+
+  test('mas e-mail-cim nem admin (es a hianyzo sem)', () {
+    expect(CommunityService.isOwnerEmail('valaki@example.com'), isFalse);
+    expect(CommunityService.isOwnerEmail(''), isFalse);
+    expect(CommunityService.isOwnerEmail(null), isFalse);
+  });
+
+  test('az admin konstansok valtozatlanok', () {
+    expect(CommunityService.accessAdmin, 'admin');
+    expect(CommunityService.accessModerator, 'moderator');
+    expect(CommunityService.accessNone, 'none');
+    expect(CommunityService.adminEmail, 'djdeeroy@gmail.com');
+  });
 }

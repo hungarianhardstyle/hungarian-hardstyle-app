@@ -1083,6 +1083,12 @@ class CommunityService {
 
   bool _isAdmin(String? email) => email?.trim().toLowerCase() == adminEmail;
 
+  /// A tulajdonos e-mail-címe. A szerver ugyanezt tekinti adminnak, ezért a
+  /// kliensnek is azonnal annak kell látnia — a profil `accessRole` mezőjének
+  /// betöltése nélkül is. (Lásd `currentUserIsAdminProvider`.)
+  static bool isOwnerEmail(String? email) =>
+      email?.trim().toLowerCase() == adminEmail;
+
   bool get isOwner => _isAdmin(auth.currentUser?.email);
 
   bool get isAdmin =>

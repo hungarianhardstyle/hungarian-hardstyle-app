@@ -71,12 +71,23 @@ class _RegisteredUser extends Fake implements User {
   String get uid => 'test-uid';
 }
 
-Widget _app(PollService fake, {bool registered = true}) {
+/// A tulajdonos fiokja: az e-mail-cim alapjan admin.
+class _AdminUser extends _RegisteredUser {
+  @override
+  String? get email => 'djdeeroy@gmail.com';
+}
+
+Widget _app(PollService fake, {bool registered = true, bool admin = false}) {
   return ProviderScope(
     overrides: [
       pollServiceProvider.overrideWithValue(fake),
+      // Az admin-jogosultsagot a kepernyo a sajat providerbol olvassa, ezert a
+      // teszt ezt allitja be (nem kell hozza Firestore).
+      currentUserIsAdminProvider.overrideWith((ref) async => admin),
       communityAuthProvider.overrideWith(
-        (ref) => Stream<User?>.value(registered ? _RegisteredUser() : null),
+        (ref) => Stream<User?>.value(
+          registered ? (admin ? _AdminUser() : _RegisteredUser()) : null,
+        ),
       ),
     ],
     child: MaterialApp(
@@ -275,4 +286,68 @@ void main() {
       expect(find.text('Szavazok'), findsNothing);
     },
   );
+
+  testWidgets('sima felhasznalonak NINCS eredmeny-gomb (nincs jogosultsaga)', (
+    tester,
+  ) async {
+    // A tulajdonos jelzese: szavazas utan a sima user latott egy
+    // „Eredmények megtekintése" gombot, ami a WordPress ADMIN vegpontra visz,
+    // ezert hibat kapott. A gombot sima felhasznalonak nem szabad kiadni.
+    final fake = _FakePollService(poll: _poll);
+    await tester.pumpWidget(_app(fake, admin: false));
+    await tester.pumpAndSettle();
+
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nem'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Szavazok'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Köszönjük'),
+      findsOneWidget,
+      reason: 'szavazott',
+    );
+    expect(
+      find.text('Eredmények megtekintése'),
+      findsNothing,
+      reason: 'a sima user nem kaphat eredmeny-gombot',
+    );
+  });
+
+  testWidgets('adminként ott van az eredmeny-gomb, szavazas elott is', (
+    tester,
+  ) async {
+    // A tulajdonos jelzese: „nekem adminként nincs ott". Aki a kerdőívet
+    // osszeallitja, annak a szavazas ELOTT is meg kell tudnia nezni az allast,
+    // ezert a gomb nem fugg attol, hogy szavazott-e mar.
+    final fake = _FakePollService(poll: _poll);
+    await tester.pumpWidget(_app(fake, admin: true));
+    await tester.pumpAndSettle();
+
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Eredmények megtekintése'), findsOneWidget);
+    expect(find.text('Szavazok'), findsOneWidget, reason: 'a szavazas is megy');
+  });
+
+  testWidgets('adminként szavazas utan is ott van az eredmeny-gomb', (
+    tester,
+  ) async {
+    final fake = _FakePollService(poll: _poll);
+    await tester.pumpWidget(_app(fake, admin: true));
+    await tester.pumpAndSettle();
+
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nem'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Szavazok'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Köszönjük'), findsOneWidget);
+    expect(find.text('Eredmények megtekintése'), findsOneWidget);
+  });
 }

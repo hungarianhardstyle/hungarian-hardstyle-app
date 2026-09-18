@@ -1,5 +1,18 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Az eredmény-gomb a kérdőíven: eddig MINDENKINEK megjelent, adminnak viszont nem — javítva (2026-09-18, a következő buildben élesedik)
+
+- **A tulajdonos jelzése:** *„kérdőív szavazás után ott egy eredmények megtekintése gomb a sima usernek, amihez nincs jogosultsága, viszont nekem adminként nincs ott.. ezt javítsd, hogy csak admin lássa és legyen is ott az adminnak"*.
+- **A gyökér:** a `PollScreen` az „Eredmények megtekintése" gombot **feltétel nélkül** kiadta, ha a fiók szavazott (`if (registered && _voted)`). A mögötte lévő `VotingSummaryScreen` viszont a **WordPress admin végpontot** hívja (`/huhs/v1/admin?action=voting_summary` a `wordPressAdminRequest`-en keresztül), ezért **sima felhasználónak nincs joga** — hibaüzenetet kapott. Fordítva pedig: a tulajdonosnál a gomb **nem jelent meg** (nem szavazott még a kérdőívben), így nem is látta az összesítőt.
+- **A javítás két részből áll:**
+  1. **Új `currentUserIsAdminProvider`** (`lib/providers/community_provider.dart`) — a `community_profiles/<uid>.accessRole` mezőt figyeli, és a tulajdonos e-mail-címére **rövidre zár**.
+  2. A `PollScreen` a gombot **csak adminnak** adja ki, és **szavazás nélkül is**: `if (registered && ref.watch(currentUserIsAdminProvider).valueOrNull == true)`. Indoklás: aki a kérdőívet összeállítja, annak a **szavazás előtt is** látnia kell, hol tart.
+- **Miért nem a `CommunityService.isAdmin`-t használtam:** az egy szolgáltatás-példány belső cache-éből dolgozik (`_cachedAccessRole`), ami **csak akkor tölt**, ha a profilképernyő vagy a `refreshCurrentSession` már lefutott. Egy frissen megnyitott képernyőn ez a cache üres, ezért az admin jogát **nem látta** — pontosan ez volt a „nekem adminként nincs ott" jelenség. Az új provider közvetlenül a profil-dokumentumot olvassa, ezért cache-feltöltéstől független. A tulajdonos e-mail-címe külön rövidzár, mert a szerver is adminnak tekinti akkor is, ha az `accessRole` mező még nem állt be.
+- **Új segédfüggvény:** `CommunityService.isOwnerEmail(String?)` (statikus, normalizál: trim + kisbetű). A meglévő `_isAdmin` ugyanezt teszi példányszinten; a statikus változat azért kell, mert a provider nem tud példányt létrehozni Firebase nélkül.
+- **Új tesztek:** `test/widgets/poll_entry_button_test.dart` **9 → 12**: sima felhasználónak **nincs** eredmény-gomb (szavazás után sem), adminként **ott van** (szavazás előtt is), és adminként szavazás után is. A `_app()` teszt-segéd átvesz egy `admin` kapcsolót, és a `currentUserIsAdminProvider`-t felülírja (nem kell hozzá Firestore). A `test/services/community_service_test.dart` **+3**: a tulajdonos címe admin (kis-nagybetűtől és szóköztől függetlenül), más cím nem az, a konstansok változatlanok.
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **186/186**.
+- **Állapot:** a javítás **kliensoldali**, ezért **a következő AAB-buildben** (322) élesedik — a 321 már fent van a Playen. A plugin/szerver oldalon nincs teendő.
+
 ### Tulajdonosi döntés: a Goze-termékek MAGUKTÓL aktiválódnak (2026-09-18)
 
 - **A tulajdonos visszajelzése:** *„Goze termék jó ha magától aktiválódik majd, nem kell kézi beavatkozás"*.
