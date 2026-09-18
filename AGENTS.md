@@ -1,5 +1,20 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### A Névjegy alatt kiadási jegyzet (changelog) — a korábban elhalasztott feladat kész (2026-09-18, AAB 327)
+
+- **A tulajdonos kérése:** *„csináld meg azt is hogy az appról részbe legyen changelog is"* — ez a korábban **ELHALASZTVA** jelölt feladat, ami most **elkészült**. A `docs/RELEASE_CHANGELOG_CHECKLIST.md` szerint ugyanazt a magyar changelogot kell vezetni a Play Console-on, az app Névjegyén és a plugin kiadásjegyzékén.
+- **Az adat: `lib/data/app_changelog.dart`** — `AppReleaseNotes { version, build, changes }`, a lista a **legfrissebbel elöl**. A `build` a **verziókód** (326, 325, …), mert az azonosítja pontosan a kiadást.
+- **Miért a buildszám és nem a verziószám:** a `version` (`1.0.0`) minden kiadásnál ugyanaz, csak a verziókód nő. Ha a verziónevet használnánk kulcsként, a changelog nem tudná megkülönböztetni a kiadásokat.
+- **A képernyő (`lib/screens/more/about_screen.dart`):** a verzió továbbra is a `package_info_plus`-ból jön (ezért nem tud elavulni), a **„Újdonságok"** szekcióban az aktuális build bejegyzése **kiemelt kártyán** van „Ez a verzió" jelvénnyel, alatta a **„Korábbi kiadások"** halványabban. Ismeretlen buildnél (friss build, amihez még nincs bejegyzés) kiírja, hogy ehhez még nincs jegyzet — nem hazudik és nem omlik össze.
+  - **A `PackageInfo` mostantól opcionális paraméter** (`AboutScreen({this.packageInfo})`): élesben a `PackageInfo.fromPlatform()` fut, a widget-teszt viszont beadhatja az adatot, így nem kell platformcsatorna. Ez a tesztelhetőség egyetlen oka.
+- **A fegyelem kikényszerítése — ez a lényeg:** a `test/data/app_changelog_test.dart` **kiolvassa a `pubspec.yaml` verzióját**, és megköveteli, hogy **legyen hozzá changelog bejegyzés**, valamint hogy az **első** bejegyzés az aktuális build legyen. Enélkül a következő kiadásnál a felhasználó üres „Újdonságok" részt látna — ez a hiba pedig pont a frissítés után tűnik fel.
+  - **A detektor bizonyítottan működik:** a `pubspec.yaml`-t ideiglenesen `1.0.0+327`-re emeltem úgy, hogy a changelog még 326-ig tartott, és a teszt **elhasalt** ezzel: *„a pubspec verziója 1.0.0+327, de ehhez nincs changelog bejegyzés"*. Utána visszaállítottam.
+- **A jelenlegi tartalom (visszamenőleg is):** **326** (chat/komment szerkesztés), **325** (értesítés-törlés fülre szűkítve), **324** (nyertes és kérdőív azonnali frissülése), **323** (kérdőív-összesítő javítás, kép mező törlése), **322** (nyereményjáték + hero-szélesség + admin-eredmények), **321** (szavazat-állapot nem ragad be), **320** (Hamarosan/PRESAVE, előzetes lejátszó, kérdőív kártya), **319** (kérdőív a főoldalon, saját képernyő). **327** = maga a changelog.
+- **Új tesztek:** `test/data/app_changelog_test.dart` (8) — pubspec-egyezés, csökkenő buildszám, nincs duplikáció, aktuális/ismeretlen build, nem üres pontok, nincs benne `- ` vagy `TODO`. `test/widgets/about_changelog_test.dart` (5) — a changelog látszik verziószámmal, az aktuális kiadás **feljebb** van, mint a „Korábbi kiadások" fejléc, **régi buildnél a saját kiadás** van kiemelve (nem a legfrissebb), ismeretlen buildnél jelzés, és a Verzió/Weboldal/Kapcsolat adatok megmaradtak.
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **241/241**.
+- **Csomag:** `build/HUHS-v1.0.0+327-release.aab`.
+- **FONTOS A JÖVŐRE:** **új kiadásnál a `lib/data/app_changelog.dart`-ba is fel kell venni a bejegyzést**, különben a `test/data/app_changelog_test.dart` elhasal — ez szándékos, ez a védelem.
+
 ### Chat- és cikk-hozzászólás szerkesztése — a szerző a sajátját, admin bárkiét (2026-09-18, AAB 326 + Firebase)
 
 - **A tulajdonos kérése:** *„+1 javítás, kiegészítés a chaten a felhasználó tudja szerkeszteni a saját üzenetét, ugyanezt a cikkek alatti kommenteknél is. Admin természetesen mindenkiét + admin törölni is tudjon"*.
