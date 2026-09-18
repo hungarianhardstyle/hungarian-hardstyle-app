@@ -1,5 +1,19 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### E-mail-küldés ÉLESBEN IGAZOLVA — a nodemailer 10 csere nem tört el semmit (2026-09-18)
+
+- **A tulajdonos visszajelzése:** *„a google regisztráció fixen ment, de ahhoz nem kell mail megerősítés — regelés után a megerősítő mail megjött, működik is, admin user törlés után a törlésről szóló levél is megjött"*.
+- **Ez éles, valódi postafiókos bizonyíték három külön útra**, ugyanazon a `sendIdentityEmailOnce()` + `email_service.js` láncon (nodemailer 10):
+  1. regisztrációs **megerősítő** levél (action link) — megérkezik;
+  2. **admin fióktörlés** utáni biztonsági értesítés — megérkezik (`functions/index.js:3762`, `key: admin-deletion:<uid>`, a cím az **Auth-felhasználóból**, nem profilmezőből);
+  3. Google-regisztráció — szándékosan **nem** kér e-mail-megerősítést (ez helyes, nem hiányosság).
+- **Következmény:** a 2026-09-18-i **nodemailer 7 → 10** főverzió-váltás **nem tört el semmit**. A korábbi „valódi postafiókos megerősítés hiányzik" aggodalom **LEZÁRVA** — többé ne sorold nyitott tételként.
+- **Ami az auditból megmarad (H2, szűk élszakasz — NEM regresszió, régóta így van):** ha az SMTP **épp abban a pillanatban** hibázik, amikor az értesítés kimegy, akkor
+  - az **e-mail-csere** régi címre küldött értesítése nem próbálható újra, mert a `previousEmail` mezőt a `syncEmailChange` már törölte (`functions/index.js:194-212`);
+  - az **admin törlés** értesítése sem próbálható újra, mert a fiók már törölve van és a hívás egyszer fut.
+  A művelet maga ilyenkor is sikeres (ez szándékos: egy levélhiba nem fordíthat vissza egy törlést). **A címzett megőrzése retryképes, rövid életű szerveroldali rekordban** zárná le teljesen — külön döntés, nem sürgős.
+- **Az auditból LEZÁRVA:** H1 (névfoglalás-bypass → `display_name_claims` + Rules Emulator-teszt), H3 (nodemailer 10 + `npm audit` 0), M3 (Rules Emulator-tesztek, `functions/rules.test.cjs`).
+
 ### KÖVETKEZŐ BUILD (322): a kérdőív és az éves szavazás sora hero-szélességű — a tulajdonos kérése (2026-09-18, **AAB még NEM készült**)
 
 - **A tulajdonos jelzése (képernyőképpel):** *„a kérdőív kártya a főoldalon lehetne szebb és szélesebb, hero szélességű"*, majd pontosítva: *„a kérdőív kártya legyen olyan széles mint felette a hero"*, végül: *„és ez vonatkozik az éves szavazásos kártya gombra is"*.
