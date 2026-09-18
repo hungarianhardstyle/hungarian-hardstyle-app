@@ -72,6 +72,18 @@
 - **Következmény: a 45 s → 300 s emelés önmagában semmit nem javít a szerver terhelésén**, mert nincs mit hosszabbítani. Ami valóban segítene: (a) valódi szerveroldali válasz-cache (transient/object cache) a GET-végpontokra, a cache-elt törzsből számolt ETag-gal és `_huhs_revalidate` esetén megkerüléssel; (b) hosting/CDN szintű lapcache; (c) a végpontok N+1 lekérdezéseinek optimalizálása (ez a valódi gyökérök).
 - A (a) pont elkészíthető pluginfrissítésként (a tulajdonos tölti fel); a döntés az övé, mert a TTL és a frissesség között tradeoff van.
 
+### WordPress szerveroldali válasz-cache — elkészült (2026-09-18)
+
+- A `HUHS Mobile API` plugin `includes/http-cache.php` fájlja mostantól **valódi szerveroldali cache-t** is tartalmaz a nyilvános, csak olvasható végpontokra (`/posts`, `/events`, `/releases`, `/artists`, `/organizers`, `/faq`, `/translations`, `/achievements/badges`).
+- Működés: a felépített választ egy transient tárolja (`huhs_pc_<md5>`, kulcs = route + normalizált query, a `_huhs_revalidate` és `_` paraméter nélkül). A `rest_pre_dispatch` a cache-elt törzsből szolgál ki, saját ETag-gal; `If-None-Match` egyezésnél **304-et ad újrarenderelés nélkül**. A `rest_post_dispatch` (9998) menti a friss választ, a meglévő fejléc-logika (9999) változatlanul fut.
+- Élettartam: `HUHS_PUBLIC_CACHE_TTL` = 120 s, és **minden tartalomváltozás azonnal invalidál** (`save_post`, `deleted_post`, `trashed_post`, `untrashed_post`, `edited_terms`, `created_term`, `delete_term`, valamint `huhs_` előtagú opciófrissítés — a számláló saját magára nem reagál, különben rekurzió lenne).
+- **Szándékos döntés:** poszt-meta írásra NEM invalidálunk, mert a `pvc_view_post()` minden cikkmegtekintésnél metát ír — az minden olvasásnál ürítené a cache-t.
+- Biztonság: csak GET, csak a nyilvános allow-lista (mindegyik `permission_callback => '__return_true'`, felhasználói kontextus nélkül), ezért cache-elt válasz nem szivároghat át látogatók között.
+- Várható nyereség: az ismételt kérések (és az app ETag/HEAD revalidálása) ~1,2 s helyett ~50 ms.
+- Csomag: `build/huhs-mobile-api-2.4.105.zip` (a tulajdonos tölti fel WordPress alatt); a forrás a `.tmp-api-24105/huhs-mobile-api/` munkamappában van (a `.tmp-*` gitignore-olt, ezért a következő verziót abból kell továbbépíteni).
+- Ellenőrzés PHP nélkül: `.tmp-phpcheck/check.mjs` Node-alapú PHP-parser (`php-parser` npm csomag) — 39/39 fájl parse-olható; a csomag 40/40 fájlja bájt-azonos a forrással, a ZIP-bejegyzések `/` elválasztót és `huhs-mobile-api/` gyökeret használnak. ZIP SHA-256: `0074DA0C720C3E84BD53ED255BF68969B360EBC331844638907F4AF256BA77AC`.
+- **Fontos tanulság:** a .NET `ZipFile.CreateFromDirectory` visszafelé perjelet ír a ZIP-bejegyzésekbe, ami WordPress alatt szétesik; a csomagot kézzel, `/` elválasztóval kell építeni.
+
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
 
 - Minden hálózatról vagy Firebase-ből letöltött adatnál a korábbi állapot azonnal legyen látható.
