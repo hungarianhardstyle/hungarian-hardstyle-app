@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/poll.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/poll_provider.dart';
+import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
 import '../voting/voting_summary_screen.dart';
 
@@ -177,13 +178,27 @@ class _PollScreenState extends ConsumerState<PollScreen> {
 
   Widget _buildStatus(BuildContext context) {
     if (_voted) return const _PollThanks();
-    return FutureBuilder<bool>(
-      future: ref.watch(hasVotedProvider(widget.poll.id).future),
-      initialData: false,
-      builder: (context, status) {
-        if (status.data == true) return const _PollThanks();
-        return _buildBallot(context, widget.poll);
-      },
+    final request = ref.watch(hasVotedProvider(widget.poll.id));
+    return request.when(
+      // A valaszlehetosegek listaja CSAK akkor jelenik meg, ha a szerver
+      // kifejezetten azt mondta, hogy ez a fiok meg nem szavazott. Amig a
+      // valasz uton van (vagy hibara futott), a lista NEM latszik: egy
+      // szavazott felhasznalonak nem szabad ujra valaszlehetosegeket latnia.
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 18),
+        child: Center(child: BrandLoadingIndicator()),
+      ),
+      error: (_, _) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'A szavazás állapotát most nem sikerült lekérdezni. Ellenőrizd a kapcsolatot, és próbáld újra a jobb felső frissítés ikonnal.',
+          ),
+        ],
+      ),
+      data: (voted) => voted
+          ? const _PollThanks()
+          : _buildBallot(context, widget.poll),
     );
   }
 

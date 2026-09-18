@@ -19,18 +19,25 @@ const _poll = HuhsPoll(
 );
 
 class _FakePollService extends PollService {
-  _FakePollService({this.poll, this.voted = false});
+  _FakePollService({this.poll, this.voted = false, this.statusDelay});
 
   final HuhsPoll? poll;
   bool voted;
   int voteCalls = 0;
   int? lastOptionIndex;
 
+  /// Ha be van allitva, a „szavaztal mar?" valasz ennyit var, hogy a betoltes
+  /// kozbeni allapot is tesztelheto legyen.
+  final Duration? statusDelay;
+
   @override
   Future<HuhsPoll?> activePoll({bool forceRefresh = false}) async => poll;
 
   @override
-  Future<bool> hasVoted(int pollId) async => voted;
+  Future<bool> hasVoted(int pollId) async {
+    if (statusDelay != null) await Future<void>.delayed(statusDelay!);
+    return voted;
+  }
 
   @override
   Future<bool> vote({required int pollId, required int optionIndex}) async {
@@ -42,6 +49,19 @@ class _FakePollService extends PollService {
   }
 }
 
+/// A „szavaztal mar?" lekerdezes halozati hibaja.
+class _FailingStatusPollService extends PollService {
+  _FailingStatusPollService({this.poll});
+
+  final HuhsPoll? poll;
+
+  @override
+  Future<HuhsPoll?> activePoll({bool forceRefresh = false}) async => poll;
+
+  @override
+  Future<bool> hasVoted(int pollId) async => throw Exception('network down');
+}
+
 /// Regisztralt (nem nevvtelen) fiok, Firebase inicializalas nelkul.
 class _RegisteredUser extends Fake implements User {
   @override
@@ -51,7 +71,7 @@ class _RegisteredUser extends Fake implements User {
   String get uid => 'test-uid';
 }
 
-Widget _app(_FakePollService fake, {bool registered = true}) {
+Widget _app(PollService fake, {bool registered = true}) {
   return ProviderScope(
     overrides: [
       pollServiceProvider.overrideWithValue(fake),
@@ -134,6 +154,53 @@ void main() {
     expect(find.textContaining('Köszönjük'), findsOneWidget);
     expect(find.text('Szavazok'), findsNothing);
     expect(find.byIcon(Icons.radio_button_unchecked), findsNothing);
+  });
+
+  testWidgets('a valaszlista meg sem jelenik, amig a szerver valasza uton van', (
+    tester,
+  ) async {
+    // A tulajdonos kérése: „ha valaki szavazott, csak kapja meg a már
+    // szavaztál dolgot és ne lássa a listát". Ez akkor is igaz, ha a
+    // válasz még úton van: a lista csak KIFEJEZETT „nem szavaztál" után jön.
+    final fake = _FakePollService(
+      poll: _poll,
+      voted: true,
+      statusDelay: const Duration(milliseconds: 400),
+    );
+    await tester.pumpWidget(_app(fake));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(OutlinedButton));
+    // Egy pillanat: a status valasz MEG NEM erkezett meg.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(
+      find.byIcon(Icons.radio_button_unchecked),
+      findsNothing,
+      reason: 'a lista nem villanhat fel, mielott a szerver valaszol',
+    );
+    expect(find.text('Szavazok'), findsNothing);
+
+    // A valasz megjott: szavazott -> a „Köszönjük" allapot.
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+    expect(find.textContaining('Köszönjük'), findsOneWidget);
+    expect(find.byIcon(Icons.radio_button_unchecked), findsNothing);
+  });
+
+  testWidgets('ha a status lekerdezes hibara fut, a lista NEM jelenik meg', (
+    tester,
+  ) async {
+    final fake = _FailingStatusPollService(poll: _poll);
+    await tester.pumpWidget(_app(fake));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(OutlinedButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.radio_button_unchecked), findsNothing);
+    expect(find.text('Szavazok'), findsNothing);
+    expect(find.textContaining('nem sikerült lekérdezni'), findsOneWidget);
   });
 
   testWidgets('vendegnek regisztracios figyelmeztetes van valaszlista helyett', (

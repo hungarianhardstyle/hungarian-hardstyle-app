@@ -1,5 +1,30 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### MEGTALÁLVA: a `/poll/status` a meta ÉRTÉKÉT kérdezte, nem a sor LÉTEZÉSÉT — `(bool) '0'` a PHP-ban FALSE (2026-09-18, plugin 2.4.123 + AAB 321)
+
+- **A tulajdonos jelzése (a 320-as telepítése UTÁN):** *„most oké a kérdőív, de még mindig tudok többször szavazni, ha újranyitom az appot"*. Vagyis a kliensoldali javítás (friss `hasVoted` lekérés) **nem volt elég** — a hiba a SZERVEREN volt.
+- **A gyökér (egy sor, és pontosan megmagyarázza a tünetet):** a `huhs_poll_api_status()` ezt adta vissza:
+  `'voted' => (bool) get_post_meta($poll_id, '_huhs_poll_vote_' . $hash, true)`
+  A szavazat értéke a **választott válasz indexe**, és az **első válaszlehetőség indexe `0`**. A PHP-ban viszont a **`(bool) '0'` értéke FALSE**. Ezért aki az **első** válaszra szavazott, arról a végpont azt mondta: **„nem szavaztál"**.
+- **A tünetsor pontosan illeszkedik:** az app újra kiadta a szavazólapot → a felhasználó azt hitte, **újra tud szavazni** → „Újra szavaztam" érzés. **Közben a szerver a második szavazatot MINDIG elutasította** (`add_post_meta(..., true)` egyedi sora már létezett, és a végpont `alreadyVoted: true`-t adott) — vagyis **dupla szavazat sosem született**, csak a felület hazudott. Ezt az is magyarázza, hogy a kérdőív eredményeinél a szavazatok száma sosem duplázódott.
+- **A javítás (plugin 2.4.123):** a végpont mostantól a **sor létezését** kérdezi:
+  `'voted' => metadata_exists('post', $poll_id, '_huhs_poll_vote_' . $hash)`
+  Ez pontosan az a kérdés, amire a kliens kíváncsi, és **minden indexre helyes** — az értéktől függetlenül. Az `add_post_meta(..., true)` egyedisége érintetlen, tehát a védelem a helyén marad.
+- **Új, önmagát bizonyító ellenőrzés: `tools/verify-poll-status.mjs`** (`node tools/verify-poll-status.mjs [plugin-mappa]`, **20/20** a 2.4.123-on). Szimulálja a PHP kasztot, a `metadata_exists`-et és az `add_post_meta(..., true)` egyediséget, végigjátssza a `szavazás(index 0) → újranyitás → status` láncot, és **a javítatlan 2.4.113 forráson szándékosan elhasal** (17/20, jelzi a `(bool) get_post_meta`-t). A forrás-lint **kizárja a komment-sorokat**, különben a hibát leíró komment maga buktatná el.
+- **Kliens-oldali szigorítás (AAB 321) — a tulajdonos kérése:** *„ha valaki szavazott, csak kapja meg a már szavaztál dolgot és ne lássa a listát"*. A `PollScreen` mostantól **nem `FutureBuilder`** (`initialData: false`-szal), hanem `ref.watch(hasVotedProvider(...)).when(...)`:
+  - **`loading`** → töltésjelző, **a válaszlista NEM látszik** (korábban a `initialData: false` miatt egy pillanatra **felvillant** a lista, mielőtt a szerver válaszolt);
+  - **`error`** → „A szavazás állapotát most nem sikerült lekérdezni…" és **lista nélkül**, mert egy szavazott fióknak nem szabad válaszlehetőségeket látnia;
+  - **`data: true`** → „Köszönjük, a szavazatod rögzítettük.";
+  - **`data: false`** → **csak akkor** jön a válaszlista.
+  Vagyis a lista megjelenésének feltétele egy **kifejezett szerveroldali „nem szavaztál"**.
+- **Új tesztek:** `test/widgets/poll_entry_button_test.dart` **6 → 8**: „a válaszlista meg sem jelenik, amíg a szerver válasza úton van" (késleltetett status) és „ha a status lekérdezés hibára fut, a lista NEM jelenik meg". A `_FakePollService` késleltethető (`statusDelay`), és van egy `_FailingStatusPollService`.
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **179/179**, 41/41 PHP parse, `tools/check-wp-meta-json.mjs` zöld, `verify-poll-status.mjs` 20/20, a függvénytesztek (google-auth, security-permissions, voting, achievements, article-comments, cloudinary-deletion) zöldek, `verify-push-delivery.mjs` és `verify-wp-content-notifications.mjs` „Minden ellenőrzés sikeres".
+- **Csomagok:**
+  - **`build/huhs-mobile-api-2.4.123.zip`** — SHA-256 `630B1039DA1B2608C9921B1C99658B424ECBA081BF5DBCDED276FD7748E90B3E`, 120,4 KB, 42 fájl, bővíti a 2.4.122-t. **Ezt kell feltölteni** (ez a szavazat-állapot javítása).
+  - **`build/HUHS-v1.0.0+321-release.aab`** — verziókód **321**, verzióneve 1.0.0, 79,07 MB, 720 bejegyzés, production AdMob App ID jelen, teszt App ID nincs, aláírás jelen (`META-INF/HUHS-UPL.SF`), SHA-256 `519E2D4332A78540329C40EE64E8211D4FB9AFD6A8C6037099175D9FC3C89D07`. A verziókód a merge-elt manifestből visszaolvasva **321**.
+  - Élesítve: `firebase deploy --only functions:pollVote` (a napló mostantól a WordPress által adott `voted`/`alreadyVoted` választ is rögzíti, UID nélkül — csak a hosszával).
+- **TANULSÁG A JÖVŐRE:** ha egy „igen/nem" állapot egy **index** vagy **szám** tárolt értékéből származik, **soha ne a `(bool)` kasztra alapozz** — a `0` és a `'0'` hamis, az üres sztring is hamis. A helyes kérdés a **sor létezése** (`metadata_exists`), nem az értéke. Ugyanez a csapda a `games.php` és a `voting.php` hasonló ellenőrzéseinél is figyelendő.
+
 ### A Play-termékszinkron NAPOKIG NÉMÁN HALT EL — `GoogleAuth` `new` nélkül (2026-09-18, javítva + élesítve)
 
 - **A tulajdonos jelzése:** *„feltettem a Goze - Change of Pace-t, feltöltöttem a wavokat is — nem került be a Play Console egyszeri termékekhez, ezt a megjelenés napján küldi el?"*
@@ -45,13 +70,12 @@
 - **AAB: `build/HUHS-v1.0.0+320-release.aab`** — a `pubspec.yaml` verziója `1.0.0+320` (a **319-et a tulajdonos még nem küldte be**, ezért ment 320). **Ez a csomag a kérdőív-gombot ÉS a preview-javítást is tartalmazza** (a `getRelease()` már a `/releases/{id}` végpontot kéri). Verziókód a merge-elt manifestből visszaolvasva: **320**, versionName `1.0.0`, production AdMob App ID jelen, teszt App ID nincs, aláírás jelen (`META-INF/HUHS-UPL.SF`), 720 bejegyzés, 79,1 MB, SHA-256 `9B4679CBA1248A53AF82B772F5CD168822B03C2F9815E0915967DB2F2F5CE3D7`.
 - **A `PollCard`-ra hivatkozó régi szakaszok** (a lentebbi „Kérdőív kártya az appban — javítva, AAB 1.0.0+319" és a 2.4.113-as fejezet) **történeti leírások**: a kártya helyét a gomb vette át.
 
-### Kérdőív: a szavazat szerveroldali bizonyítása — előkészítve, majd visszavonva (2026-09-18, plugin MARAD 2.4.122)
+### Kérdőív: a szavazat szerveroldali bizonyítása — LEZÁRVA a 2.4.123-mal (2026-09-18)
 
-- **Miért merült fel:** a tulajdonos kétszer tudott szavazni. A kliens beragadt állapotát javítottuk (lásd fentebb), de felmerült, hogy **azt is bizonyítani kell, hogy a WordPress valóban rögzíti a szavazatot, és felismeri a másodikat**.
-- **Amit ehhez átmenetileg megépítettem (majd visszavontam):** a `/poll/vote` `remove` ága (a proba-UID sorának törlése) + egy ideiglenes `pollVoteDiagnostics` callable, ami a `status → vote → vote → status` láncot játssza le. **A `remove` ág és a diagnosztika NEM maradt a kódban:** a plugin visszaállt a **2.4.122-re** (a `.tmp-api-24115` forrása bájt-azonos az élessel — a `build/huhs-mobile-api-2.4.122.zip` és az újrabuildelt csomag **42/42 bejegyzése azonos hashű**), a `pollVoteDiagnostics` pedig törölve a `functions/index.js`-ből.
-- **Ami MARADT és éles:** a `pollVote` callable mostantól **naplózza a WordPress válaszát** (`poll_vote_wordpress_result`: `status`, `voted`, `alreadyVoted`, `uidLength` — az UID-t **szándékosan nem**, csak a hosszát). Ebből a `npx firebase functions:log --only pollVote` paranccsal **utólag is megválaszolható**, hogy egy adott szavazásnál a WordPress mit adott vissza: rögzítette-e (`alreadyVoted:false`) vagy már ismerte (`alreadyVoted:true`). Élesítve `firebase deploy --only functions:pollVote`-tal.
-- **A mérés a tulajdonos következő szavazásakor elvégezhető ebből a naplóból** — nem kell hozzá semmilyen új plugin- vagy függvényváltozás.
-- **Ami bizonyítottan NEM hiba a szerveren:** a 2026-09-18-i összes `pollVote` hívás `200`-at kapott, és **egyetlen `poll_vote_wordpress_failed` sor sem keletkezett** — vagyis a szerver nem utasított el szavazatot; a duplán megjelenő szavazólap a kliens beragadt állapotából jött.
+- **A kérdés eredete:** a tulajdonos kétszer tudott szavazni. Először a kliens beragadt állapotát javítottuk, majd a szerveroldali okot is megtaláltuk — **lásd a legfelső „`(bool) '0'` a PHP-ban FALSE" szakaszt.**
+- **A diagnosztika, ami elvezetett oda:** a `pollVote` callable naplója (`poll_vote_wordpress_result`), amiből kiderült, hogy a WordPress **soha nem utasított el szavazatot** (minden hívás 200), tehát a hiba a `/poll/status` VÁLASZÁBAN volt, nem a rögzítésben. A napló **éles** marad, és továbbra is az UID **hosszát** rögzíti, nem az UID-t (adatvédelem).
+- **Amit átmenetileg megépítettem, majd visszavontam:** a `/poll/vote` `remove` ága (proba-UID sorának törlése) + egy ideiglenes `pollVoteDiagnostics` callable. **Egyik sem maradt a kódban** — nem is kellett hozzájuk nyúlni, mert a valódi ok egyetlen sor volt.
+- **A plugin ezért 2.4.123** (nem 2.4.122), és a javítás egy sor: `metadata_exists()` a `(bool) get_post_meta()` helyett.
 
 ### Kérdőív kártya az appban — javítva, AAB 1.0.0+319 (2026-09-18)
 

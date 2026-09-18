@@ -4202,15 +4202,20 @@ exports.pollVote = functions
     const payload = await response.json().catch(() => ({}));
     // A kerdőív-szavazas diagnosztikaja. Az UID-t SZANDEKOSAN nem naplozzuk
     // (adatvedelem): csak a hosszat, hogy azonosithato legyen, valtozott-e.
-    // Ez a sor valaszolja meg azt a kerdest, amit a kliens nem tud: a WordPress
-    // valoban rogzitette-e a szavazatot, es ismeri-e fel a masodikat.
+    //
+    // A `voted` mezo a WordPress altal ADOTT valaszt jelenti. A 2.4.122-ig ez a
+    // `(bool) get_post_meta(...)` volt, ami az elso valaszlehetoseg (index 0)
+    // eseten `'0'`-t olvasott, es a PHP-ban ez FALSE — ezert mondta a szerver
+    // „nem szavaztal"-t mindenkinek, aki az elso választ választotta. A 2.4.123
+    // `metadata_exists()`-tel a sor LETEZESET kerdezi, ezert ugyanerre a
+    // szavazatra TRUE-t ad. A naplobol ez a ketto megkulonboztetheto.
     console.info('poll_vote_wordpress_result', {
       pollId,
       optionIndex: hasOption ? optionIndex : null,
       uidLength: uid.length,
       status: response.status,
-      voted: payload?.voted === true,
-      alreadyVoted: payload?.alreadyVoted === true,
+      voted: hasOption ? null : payload?.voted === true,
+      alreadyVoted: hasOption ? payload?.alreadyVoted === true : null,
     });
     if (!response.ok) {
       console.warn('poll_vote_wordpress_failed', {
