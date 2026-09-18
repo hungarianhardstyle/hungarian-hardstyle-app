@@ -108,6 +108,10 @@
 - Ha a mérés azt mutatja, hogy a fejléc mindig `fresh`, akkor a transient cache nem perzisztál ezen a hoston → akkor fájl-alapú cache-re kell váltani (wp-content/uploads), ez a következő lépés.
 - További lehetőség (ha kell): mu-plugin drop-in, ami még a plugin-fájlok betöltése előtt kiszolgál (~0,15–0,25 s), de ez egy új, minden kérésnél lefutó fájl, ezért külön döntést igényel.
 - Csomag: `build/huhs-mobile-api-2.4.108.zip` (SHA-256 `09B8FF5E9CBA63ACE5BB124EB648C88782C4AEB189150941DDC11A8717BF7F33`), forrás: `.tmp-api-24108/huhs-mobile-api/`.
+- **Éles mérés a 2.4.108 után (2026-09-18): működik.** `/posts` hidegen 1478 ms (`fresh`), ismételve **431–438 ms (`early`)**; `HEAD` + `If-None-Match` → **304, 495 ms (`early`)**; a `_huhs_revalidate` paraméterrel is `early` (507 ms); `/faq` hidegen 1229 ms, ismételve **450 ms**; a statikus kép 20–40 ms ugyanabban a körben, tehát a nyereség valódi (~3×).
+- A korai válasz tartalma **szemantikailag azonos** a friss válasszal (11 elem, azonos címek/ID-k/kategóriák, mezők; normalizált JSON-összehasonlítás egyezik), és **az ETag ugyanaz** — csak a JSON-kódolás más (WP escape-el, a cache-elt `json` nem), ezért a byte-hossz eltér (11071 vs 9689). Az app ETag-alapú revalidálása emiatt zavartalanul működik a két út között.
+- Ismert, szándékos tradeoff: a `_huhs_revalidate` paraméter a cache-kulcsból ki van zárva, ezért a kézi frissítés is a cache-ből szolgálható ki (max. 120 s régi tartalom), **de tartalomváltozás azonnal invalidál**. Ha a tulajdonosnak a kézi frissítésnél is garantáltan friss kell, egy kis kiegészítéssel a GET + paraméter megkerülheti a cache-t (a HEAD revalidáció maradna gyors).
+- A padló a mi pluginfájlunk előtt betöltődő pluginok (~0,28–0,45 s). Opcionális továbblépés: mu-plugin drop-in, ami még ezek előtt kiszolgál (~0,15–0,25 s), de az egy új, minden kérésnél lefutó fájl — külön tulajdonosi döntést igényel.
 
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
 
