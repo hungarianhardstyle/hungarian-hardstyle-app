@@ -1,14 +1,29 @@
 # GYIK — javasolt, emberi szövegek
 
-> **ÁLLAPOT: MEGVALÓSÍTVA** (plugin **2.5.3**). A szövegek a
+> **ÁLLAPOT: MEGVALÓSÍTVA** (plugin **2.5.5**). A szövegek a
 > `.tmp-api-24115/huhs-mobile-api/includes/faq-human.php` fájlba kerültek, és
 > egy egyszeri migráció viszi be őket a WordPressbe, amint az adminfelületet
-> megnyitod a 2.5.3 feltöltése után. Ez a dokumentum a **szöveg forrása és
-> indoklása** — ha itt változtatsz, a PHP-t is át kell írni.
+> megnyitod a **2.5.5** feltöltése után. Ez a dokumentum a **szöveg forrása és
+> indoklása** — ha itt változtatsz, a PHP-t is át kell írni, és a
+> `HUHS_FAQ_CONTENT_VERSION`-t **emelni kell** (különben a migráció némán
+> elhal; ez egyszer már megtörtént, lásd lent).
 >
-> A szövegeket a `tools/verify-faq-content.mjs` ellenőrzi (**36/36**): egyezik-e
+> A szövegeket a `tools/verify-faq-content.mjs` ellenőrzi (**43/43**): egyezik-e
 > a napi plafon és a pontértékek a **valós kóddal**, van-e benne technikai
-> szakkifejezés, és minden téma megvan-e.
+> szakkifejezés, minden téma megvan-e, **elindul-e egyáltalán a migráció**, és
+> **megkíméli-e a tulajdonos kezzel írt szövegét**. A nyugdíjazás viselkedését
+> emellett valódi PHP futtatással a `tools/verify-faq-retire.php` (**16/16**)
+> bizonyítja.
+>
+> **KÉT HIBA, AMIT ÉLESBEN MÉRVE TALÁLTAM MEG (és ami miatt 2.5.5 lett):**
+> 1. A **2.5.3 ugyanazt a `HUHS_FAQ_CONTENT_VERSION = 4` jelzést** használta, és
+>    az éles WordPressben az opció már 4-en állt — ezért a szigorúbb nyugdíjazás
+>    a 4-es jelzéssel **soha nem futott volna le** (a migráció azonnal visszatér).
+>    A javítás: **5**-ös verzió.
+> 2. A `faq.php` docblockjában **négy ANSI/CP1250 bájt** volt (a „—” és a „„”
+>    helyén), ezért a fájl nem volt érvényes UTF-8. Ezért született a
+>    `tools/check-plugin-encoding.mjs` kapu (most **44/44**), ami ezt csomagolás
+>    előtt megfogja.
 
 Ez a fájl a **Segítség** (GYIK) menü új szövegeit tartalmazza. A jelenlegi GYIK a
 WordPressből jön (`huhs_faq` bejegyzéstípus), 33 bejegyzéssel — ezek között van
@@ -63,7 +78,7 @@ A javaslat elve: **csak arról írunk, ami tényleg van**, egy kérdés = egy t�
 
 ## A javasolt GYIK
 
-H�t t�mak�r, **31 k�rd�s**. A jelenlegi 33 helyett � r�videbb, de haszn�lhat�bb.
+Hét témakör, **31 kérdés**. A jelenlegi 33 helyett — rövidebb, de használhatóbb.
 
 ---
 

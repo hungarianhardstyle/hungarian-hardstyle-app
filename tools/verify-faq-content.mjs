@@ -232,6 +232,56 @@ check(
   'a nyugdijazas hangosan naploz (nem tunik el csendben a tartalom)',
   retireBlock.includes('error_log'),
 );
+check(
+  'a nyugdijazas MEGKIMELI a tulajdonos kezzel irt szoveget',
+  // Aki kezzel írt/átírt egy GYIK-et, annak a szövegét nem dobjuk vázlatba:
+  // a vizsgálat megköveteli a `continue;`-t is, különben a feltétel kiiktatása
+  // (a bejegyzés átcsúszna a vázlatba tevő ágra) nem tűnne fel.
+  // A VISELKEDÉST a `tools/verify-faq-retire.php` bizonyítja valódi PHP-val.
+  /_huhs_faq_human_edited[\s\S]{0,240}?continue;/.test(retireBlock) &&
+    /\$kept\[\]/.test(retireBlock),
+  'a kezzel irt bejegyzes nem kerulhet vazlatba',
+);
+check(
+  'a kezzel irt bejegyzesek megtartasa is naplozva van',
+  /if \(\$result\['kept'\]\)\s*\{[\s\S]{0,240}?error_log/.test(codeOnly),
+);
+
+/* --- 5/b. A MIGRACIO VERZIOJA ELINDUL-E EGYALTALAN --------------------- */
+
+// EZ A LENYEG: a migráció a `huhs_faq_human_version` opcióhoz hasonlít, és ha a
+// konstans nem nagyobb a már alkalmazott értéknél, NÉMÁN visszatér.
+// ÉLESBEN MÉRVE: a 2.5.3 is a 4-es jelzést használta, és az opció már 4-en állt
+// (a 31 új bejegyzés bent volt, a hibás „naponta legfeljebb öt" szöveg már nem).
+// Ezért a 4-es jelzéssel a szigorúbb nyugdíjazás SOHA nem futott volna le.
+const contentVersion = Number(
+  /define\(\s*'HUHS_FAQ_CONTENT_VERSION'\s*,\s*(\d+)\s*\)/.exec(codeOnly)?.[1] ?? '0',
+);
+check(
+  'a GYIK-migracio verzioja ismert',
+  contentVersion > 0,
+);
+check(
+  'a GYIK-migracio verzioja nagyobb, mint a 2.5.3-ban mar alkalmazott 4',
+  contentVersion >= 5,
+  `a 2.5.3 mar 4-et alkalmazott elesben, ezert a konstans most ${contentVersion} — ` +
+    '4-gyel a nyugdijazas neman elhalna',
+);
+check(
+  'a migracio a sajat irasat NEM belyegzi kezi szerkesztesnek',
+  // A `save_post_huhs_faq` marker a migráció közben nem jelölhet.
+  /huhs_faq_v4_seeding/.test(codeOnly) &&
+    /\$GLOBALS\['huhs_faq_v4_seeding'\]\s*=\s*true/.test(codeOnly) &&
+    /unset\(\$GLOBALS\['huhs_faq_v4_seeding'\]\)/.test(codeOnly),
+  'a migracio sajat irasa nem szamit emberi szerkesztesnek',
+);
+check(
+  'a kezzel LETREHOZOTT GYIK is vedelmet kap (save_post, nem post_updated)',
+  // A `post_updated` csak MÓDOSÍTÁSNÁL fut le, új bejegyzésnél nem — ezért a
+  // `save_post_huhs_faq` hook kell.
+  /add_action\('save_post_huhs_faq'/.test(codeOnly),
+  'uj bejegyzesre a post_updated nem indul el',
+);
 
 /* --- 6. A SZOVEG A VALOS KODHOZ ILLESZKEDIK --------------------------- */
 
