@@ -1,5 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
-
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -7,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../providers/community_provider.dart';
+import '../../widgets/resized_network_image.dart';
 import 'community_users_screen.dart';
 
 class AchievementLeaderboardScreen extends ConsumerStatefulWidget {
@@ -227,13 +226,12 @@ class _LeaderboardTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (imageUrl.isNotEmpty)
-              CachedNetworkImage(
-                imageUrl: imageUrl,
+              ResizedNetworkImage(
+                url: imageUrl,
+                physicalWidth: badgeCacheWidth,
                 width: 28,
                 height: 28,
                 fit: BoxFit.contain,
-                memCacheWidth: badgeCacheWidth,
-                maxWidthDiskCache: badgeCacheWidth,
                 errorWidget: (_, _, _) => const SizedBox.shrink(),
               ),
             Text('$points pont'),

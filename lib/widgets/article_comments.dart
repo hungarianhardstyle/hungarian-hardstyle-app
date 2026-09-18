@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +8,7 @@ import '../core/errors/user_facing_error.dart';
 import '../core/firebase/firebase_callable.dart';
 import '../core/input/sentence_capitalization_formatter.dart';
 import '../services/community_service.dart';
+import 'resized_network_image.dart';
 
 class ArticleComments extends StatefulWidget {
   final int postId;
@@ -228,8 +228,12 @@ class _ArticleCommentsState extends State<ArticleComments> {
                       children: [
                         CircleAvatar(
                           child: ClipOval(
-                            child: CachedNetworkImage(
-                              imageUrl: item['imageUrl'] as String? ?? '',
+                            child: ResizedNetworkImage(
+                              url: item['imageUrl'] as String? ?? '',
+                              physicalWidth:
+                                  (40 * MediaQuery.devicePixelRatioOf(context))
+                                      .round()
+                                      .clamp(96, 240),
                               width: 40,
                               height: 40,
                               fit: BoxFit.cover,

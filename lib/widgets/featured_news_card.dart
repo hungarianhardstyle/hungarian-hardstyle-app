@@ -1,10 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../core/content/date_formatters.dart';
 import '../models/post.dart';
 import '../screens/news/news_detail_screen.dart';
 import 'news_reaction_button.dart';
+import 'resized_network_image.dart';
 
 class FeaturedNewsCard extends StatelessWidget {
   final Post post;
@@ -45,11 +45,10 @@ class FeaturedNewsCard extends StatelessWidget {
               child: Hero(
                 tag: "post_${post.id}",
                 child: post.imageUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: post.imageUrl,
+                    ? ResizedNetworkImage(
+                        url: post.imageUrl,
+                        physicalWidth: imageCacheWidth,
                         fit: BoxFit.cover,
-                        memCacheWidth: imageCacheWidth,
-                        maxWidthDiskCache: imageCacheWidth,
                       )
                     : Container(
                         color: colors.surfaceContainerHighest,

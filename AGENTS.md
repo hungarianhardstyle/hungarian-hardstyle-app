@@ -31,6 +31,19 @@
 - Teszt: `test/services/wordpress_cache_policy_test.dart` (lejárt érték kiszolgálása, frissítés-jelzés, sérült bejegyzés törlése, sticky- és kategória-megjelenítési út).
 - Szándékosan nem módosítva: a `CommunityService` publikus profil-/achievement cache-e 24 óra után dobja el a mentett értéket. Ugyanaz az elv alkalmazható rá, de ott még nincs tesztfedezet, ezért külön körben érdemes.
 
+### Képméretezés — Photon CDN, élesség megtartásával (2026-09-18)
+
+- Kiindulás: a hírkártyák és a kis felületek (avatarok, jelvények) a WordPress **teljes** feltöltött képét kérték le. Éles mérés: egy 1024 px-es featured kép PNG-ben **1,5 MB**.
+- A WordPress `?resize=` paramétere nem működik (a teljes fájlt adja vissza), a `-WxH` utótagos változatok pedig nem számíthatók ki megbízhatóan (404).
+- A Jetpack **Photon CDN (`i0.wp.com`) viszont elérhető a site-hoz**, és formátumtartóan méretez: ugyanaz a kép 1024 px-en **365 KB**, 600 px-en 135 KB, 200 px-en 20 KB. A PNG tehát PNG marad (átlátszóság megmarad), nincs formátumváltás.
+- Új `lib/core/images/wordpress_image_url.dart`: a kért szélesség mindig a **fizikai** pixelszélesség (`logikai méret × devicePixelRatio`), és sosem nagyobb, mint a hivatkozott forrásváltozat szélessége → nincs felnagyítás, nincs lágyítás.
+- Új `lib/widgets/resized_network_image.dart`: a CDN URL-t kéri, és ha a CDN nem adja, egyszer visszaesik az eredeti WordPress URL-re, így az optimalizálás miatt egy kép sem tűnhet el. A memóriabeli dekódolási méret is a ténylegesen szolgáltatott szélesség.
+- Bekötve: hírkártya (teljes és kompakt), kiemelt hírkártya, eseménykártya, achievement-jelvénykártya, toplista-jelvény, cikk-komment avatar, valamint a `CommunityService.optimizedImageUrl` (chat-, privát üzenet- és publikus profil-avatarok WordPress-hátterű képei).
+- Éles ellenőrzés: `w=982` → pontosan 982×654 px (arány 1,502 a forrás 1,499-e helyett), `w=200` → 200×133 px, jelvénykép `w=112` → 112×112 px / 8 KB.
+- **Szándékos döntés:** a listaképeknél nem kértünk 600 px-t, mert a kártya modern telefonon ~980–1100 fizikai pixel széles; ott a 600 px láthatóan lágy lenne. A nyereség a mérethelyes kérésből és a Photon újrakódolásából jön (1,5 MB → 0,37 MB ugyanazon a felbontáson), a kis felületeknél pedig 20–75×-ös adatcsökkenés.
+- Teszt: `test/core/images/wordpress_image_url_test.dart`.
+- Kliensoldali változás: a következő AAB-build viszi.
+
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
 
 - Minden hálózatról vagy Firebase-ből letöltött adatnál a korábbi állapot azonnal legyen látható.

@@ -17,6 +17,7 @@ import 'package:otp/otp.dart';
 import '../models/community_post.dart';
 import '../models/achievement.dart';
 import '../core/firebase/firebase_callable.dart';
+import '../core/images/wordpress_image_url.dart';
 import 'wordpress_service.dart';
 
 class _AchievementCacheEntry {
@@ -2722,12 +2723,20 @@ class CommunityService {
     return fallback.trim();
   }
 
-  /// Adds a Cloudinary thumbnail transformation without changing non-
-  /// Cloudinary URLs. The server still owns the original image URL.
+  /// Adds a CDN thumbnail transformation without changing the stored URL: the
+  /// server keeps owning the original image.
+  ///
+  /// Cloudinary assets use Cloudinary's own transform. Community avatars that
+  /// still point at the WordPress media library are sized through Photon, so a
+  /// 40 px avatar no longer downloads the full 1.5 MB featured image. Every
+  /// other host (Gravatar, Google, …) is returned untouched.
   static String optimizedImageUrl(String url, {required int width}) {
     final value = url.trim();
     final uri = Uri.tryParse(value);
-    if (uri == null || !uri.host.contains('cloudinary.com')) return value;
+    if (uri == null) return value;
+    if (!uri.host.contains('cloudinary.com')) {
+      return WordpressImageUrl.resized(value, physicalWidth: width);
+    }
     final marker = '/image/upload/';
     final index = uri.path.indexOf(marker);
     if (index < 0) return value;

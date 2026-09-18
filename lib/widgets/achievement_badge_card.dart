@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import '../models/achievement.dart';
+import 'resized_network_image.dart';
 
 class AchievementBadgeCard extends StatelessWidget {
   final AchievementSummary achievement;
@@ -29,13 +29,13 @@ class AchievementBadgeCard extends StatelessWidget {
                       color: Colors.white,
                     ),
                   )
-                : CachedNetworkImage(
-                    // Keep the original image URL so profile surfaces never
-                    // display a lower-quality badge rendition.
-                    imageUrl: image,
+                : ResizedNetworkImage(
+                    // Ask for the badge at its painted size: the artwork stays
+                    // crisp because the request always covers the physical
+                    // pixels of this 72 px circle.
+                    url: image,
+                    physicalWidth: imageCacheWidth,
                     fit: BoxFit.cover,
-                    memCacheWidth: imageCacheWidth,
-                    maxWidthDiskCache: imageCacheWidth,
                     placeholder: (context, url) => const ColoredBox(
                       color: Color(0xFFE53935),
                       child: Center(

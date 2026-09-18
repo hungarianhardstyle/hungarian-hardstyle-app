@@ -1,10 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../core/content/date_formatters.dart';
 import '../models/post.dart';
 import '../screens/news/news_detail_screen.dart';
 import 'news_reaction_button.dart';
+import 'resized_network_image.dart';
 
 class NewsCard extends StatelessWidget {
   final Post post;
@@ -16,9 +16,11 @@ class NewsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final imageCacheWidth = (MediaQuery.sizeOf(context).width * dpr)
+    // The card lives inside 18 px list padding, so the request has to cover the
+    // card's own physical width instead of the whole screen.
+    final imageCacheWidth = ((MediaQuery.sizeOf(context).width - 36) * dpr)
         .round()
-        .clamp(720, 1600);
+        .clamp(360, 1600);
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
       decoration: BoxDecoration(
@@ -48,11 +50,10 @@ class NewsCard extends StatelessWidget {
                       child: AspectRatio(
                         aspectRatio: 16 / 9,
                         child: post.imageUrl.isNotEmpty
-                            ? CachedNetworkImage(
-                                imageUrl: post.imageUrl,
+                            ? ResizedNetworkImage(
+                                url: post.imageUrl,
+                                physicalWidth: imageCacheWidth,
                                 fit: BoxFit.cover,
-                                memCacheWidth: imageCacheWidth,
-                                maxWidthDiskCache: imageCacheWidth,
                               )
                             : Container(
                                 color: Colors.grey.shade900,
@@ -159,11 +160,10 @@ class _CompactNewsCardContent extends StatelessWidget {
               left: Radius.circular(12),
             ),
             child: post.imageUrl.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: post.imageUrl,
+                ? ResizedNetworkImage(
+                    url: post.imageUrl,
+                    physicalWidth: imageCacheWidth,
                     fit: BoxFit.cover,
-                    memCacheWidth: imageCacheWidth,
-                    maxWidthDiskCache: imageCacheWidth,
                   )
                 : Container(
                     color: Colors.grey.shade900,

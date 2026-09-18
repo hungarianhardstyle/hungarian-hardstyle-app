@@ -1,10 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../core/content/date_formatters.dart';
 import '../models/event.dart';
 import '../screens/events/event_detail_screen.dart';
 import 'genre_chip.dart';
+import 'resized_network_image.dart';
 
 class EventCard extends StatelessWidget {
   final HuhsEvent event;
@@ -60,12 +60,11 @@ class EventCard extends StatelessWidget {
                   child: AspectRatio(
                     aspectRatio: 16 / 10,
                     child: event.flyerUrl.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: event.flyerUrl,
+                        ? ResizedNetworkImage(
+                            url: event.flyerUrl,
+                            physicalWidth: imageCacheWidth,
                             fit: BoxFit.contain,
                             alignment: Alignment.center,
-                            memCacheWidth: imageCacheWidth,
-                            maxWidthDiskCache: imageCacheWidth,
                             color: colors.surfaceContainerHighest,
                             colorBlendMode: BlendMode.dstOver,
                           )
