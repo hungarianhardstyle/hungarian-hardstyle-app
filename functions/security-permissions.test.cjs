@@ -202,7 +202,10 @@ test('public profile fallback stays Firebase-only and private notifications carr
   const end = functionsSource.indexOf('async function persistPublicProfileProjection', start);
   const getPublicProfileSource = functionsSource.slice(start, end);
   assert.doesNotMatch(getPublicProfileSource, /getAchievementBadges\(/);
-  assert.match(getPublicProfileSource, /publicProfileData\(profile, targetUid\)/);
+  // Only an already loaded (warm) catalog may be used, so opening a profile
+  // never waits for WordPress.
+  assert.match(getPublicProfileSource, /achievementCatalogIsReliable\(\) \? achievementBadgesCache : null/);
+  assert.match(getPublicProfileSource, /publicProfileData\(profile, targetUid, achievement\)/);
   assert.match(functionsSource, /targetType, targetId, dedupeKey, senderId/);
   assert.match(functionsSource, /senderId[\s\S]{0,400}dedupeKey: `private_message:/);
 });

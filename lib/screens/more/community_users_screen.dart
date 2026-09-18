@@ -194,9 +194,20 @@ class _CommunityPublicProfileScreenState
       if (profile['memberSince'] is num) return profile;
       return service.getPublicProfile(widget.userId, forceRefresh: true);
     });
-    // getPublicProfile already contains the public achievement projection.
-    // Reusing it removes a second callable request from profile opening.
-    _achievementFuture = _profileFuture.then(AchievementSummary.fromProfile);
+    // getPublicProfile already contains the public achievement projection, so
+    // opening a profile normally costs a single callable request. Only a
+    // projection whose badge has no artwork at all triggers the recalculation
+    // callable: that state means the stored badge was written while the server
+    // had no WordPress badge catalog, and the callable returns the real rank.
+    _achievementFuture = _profileFuture.then((profile) {
+      final projected = AchievementSummary.fromProfile(profile);
+      if (projected.badgeImageUrl.isNotEmpty) return projected;
+      return service.getPublicAchievement(widget.userId).then(
+        (recalculated) => recalculated.badgeImageUrl.isEmpty
+            ? projected
+            : recalculated,
+      );
+    });
   }
 
   Future<void> _requestConnection() async {

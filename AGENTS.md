@@ -1,5 +1,16 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Javítva — hiányzó achievement-jelvény (2026-09-18)
+
+- Kiváltó ok: a `getAchievementBadges()` WordPress-kimaradás esetén a kép nélküli vészkatalógust (`defaultAchievementBadges`) adja vissza, és ezt a pontozás, a jelvény-újraszámolás és az admin-egyeztetés eddig **el is mentette** a profilba. Így egy WordPress-lassulás a felhasználót a „Kezdő ütem” rangra visszaminősítette, és törölte a feltöltött jelvénygrafikát.
+- A vészkatalógus mostantól csak megjelenítésre használható: `persistedAchievementBadge()` kizárólag akkor számol rangot a katalógusból, ha az valóban betöltődött; különben a profilban már tárolt jelvény marad érintetlen.
+- A napi `repairCommunityProfileProjections` a valódi WordPress-katalógusból számolja újra a jelvényt, és a hiányzó grafikát is pótolja.
+- A `getPublicProfile` és a toplista a már betöltött (meleg) katalógust használja plusz kérés nélkül, a nyilvános profiladatlap pedig kép nélküli jelvénynél a `getPublicAchievement` callable-lel számoltatja újra.
+- A pontozás csak tényleges rangváltásnál bumpolja az `achievementUpdatedAt`-et, így nem indul újra a jelvénykép letöltése minden egyes lájk után.
+- Élesítve (`firebase deploy --only functions`), majd a napi javítás azonnali futtatásával ellenőrizve: 22 profilból 5 hibás jelvénye állt helyre, jelenleg egyetlen profil sem mutat kép nélküli jelvényt.
+- Új teszt: `functions/achievements.test.cjs`; a `functions/article-comments.test.cjs` a regisztrációs kapu szerinti szerződésre frissítve (névtelen felhasználó nem hozhat létre hozzászólást). A `registration.integration.test.cjs` helyi Firestore-emulátort igényel, ezért emulátor nélkül nem fut.
+- Kliensoldali kiegészítés a `CommunityPublicProfileScreen`-ben elkészült, de **szándékosan még nincs új AAB-ban** (a tulajdonos kérésére most nem készül build); a következő build viszi.
+
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
 
 - Minden hálózatról vagy Firebase-ből letöltött adatnál a korábbi állapot azonnal legyen látható.

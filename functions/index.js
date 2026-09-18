@@ -1195,22 +1195,24 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
     // receive points or cause one to be created implicitly.
     if (!profile.exists) return;
     const current = Math.max(0, Number(profile.data()?.achievementPoints || 0));
-    const previousBadgeSlug = String(profile.data()?.achievementBadge?.slug || '').trim();
+    const storedBadge = profile.data()?.achievementBadge;
+    const previousBadgeSlug = String(storedBadge?.slug || '').trim();
     const points = Math.max(0, current + delta);
-    const badge =
-      badges.filter((item) => points >= item.min_points).sort((a, b) => b.min_points - a.min_points)[0] ||
-      defaultAchievementBadges[0];
+    const badge = persistedAchievementBadge(badges, points, storedBadge);
+    // Only touch the badge and its cache version when the rank really changed.
+    // Rewriting `achievementUpdatedAt` on every point would invalidate the
+    // versioned badge image URL for every client on every single like.
+    const badgeChanged = !sameAchievementBadge(storedBadge, badge);
     transaction.set(
       profileRef,
       {
         achievementPoints: points,
-        achievementBadge: {
-          slug: badge.slug,
-          name: badge.name,
-          description: badge.description,
-          imageUrl: badge.image_url || '',
-        },
-        achievementUpdatedAt: FieldValue.serverTimestamp(),
+        ...(badgeChanged
+          ? {
+              achievementBadge: badge,
+              achievementUpdatedAt: FieldValue.serverTimestamp(),
+            }
+          : {}),
       },
       { merge: true },
     );
@@ -1288,24 +1290,21 @@ exports.reconcileAchievementPoints = functions
       const uid = profileDocument.id;
       const profile = profileDocument.data() || {};
       const points = Math.max(0, totals.get(uid) || 0);
-      const badge =
-        badges.filter((item) => points >= item.min_points).sort((a, b) => b.min_points - a.min_points)[0] ||
-        defaultAchievementBadges[0];
+      const badge = persistedAchievementBadge(badges, points, profile.achievementBadge);
       const current = Math.max(0, Number(profile.achievementPoints || 0));
-      const currentBadge = profile.achievementBadge || {};
-      if (current !== points || currentBadge.slug !== badge.slug || currentBadge.imageUrl !== (badge.image_url || '')) {
+      const badgeChanged = !sameAchievementBadge(profile.achievementBadge, badge);
+      if (current !== points || badgeChanged) {
         changes.push({ uid, from: current, to: points, badge: badge.slug });
         if (!dryRun)
           await profileDocument.ref.set(
             {
               achievementPoints: points,
-              achievementBadge: {
-                slug: badge.slug,
-                name: badge.name,
-                description: badge.description,
-                imageUrl: badge.image_url || '',
-              },
-              achievementUpdatedAt: FieldValue.serverTimestamp(),
+              ...(badgeChanged
+                ? {
+                    achievementBadge: badge,
+                    achievementUpdatedAt: FieldValue.serverTimestamp(),
+                  }
+                : {}),
             },
             { merge: true },
           );
@@ -1418,22 +1417,10 @@ exports.refreshAchievementBadge = functions.runWith({ enforceAppCheck: false }).
     const profile = profileSnapshot.data() || {};
     const points = Math.max(0, Number(profile.achievementPoints || 0));
     const badges = await getAchievementBadges();
-    const badge =
-      badges.filter((item) => points >= item.min_points).sort((a, b) => b.min_points - a.min_points)[0] ||
-      defaultAchievementBadges[0];
-    const achievementBadge = {
-      slug: badge.slug,
-      name: badge.name,
-      description: badge.description,
-      imageUrl: badge.image_url || '',
-    };
-    const current = profile.achievementBadge || {};
-    if (
-      current.slug !== achievementBadge.slug ||
-      current.imageUrl !== achievementBadge.imageUrl ||
-      current.name !== achievementBadge.name ||
-      current.description !== achievementBadge.description
-    ) {
+    // Without a reachable WordPress catalog this keeps the stored badge
+    // instead of overwriting it with the image-less emergency starter rank.
+    const achievementBadge = persistedAchievementBadge(badges, points, profile.achievementBadge);
+    if (!sameAchievementBadge(profile.achievementBadge, achievementBadge)) {
       transaction.set(
         profileRef,
         {
@@ -1488,16 +1475,27 @@ exports.getAchievementLeaderboard = functions.runWith({ enforceAppCheck: true })
   }
   const snapshot = await query.limit(pageSize + 1).get();
   const pageDocs = snapshot.docs.slice(0, pageSize);
+  // A warm catalog (no extra request) repairs rows whose stored badge artwork
+  // is missing. A valid stored URL is kept as-is, because replacing it would
+  // force every client to download the same image again.
+  const catalog = achievementCatalogIsReliable() ? achievementBadgesCache : null;
   const items = pageDocs.map((document, index) => {
     const profile = document.data() || {};
     const badge =
       profile.achievementBadge && typeof profile.achievementBadge === 'object' ? profile.achievementBadge : {};
+    let badgeName = String(badge.name || '').trim();
+    let badgeImageUrl = String(badge.imageUrl || badge.image_url || '').trim();
+    if (!badgeImageUrl && catalog) {
+      const catalogBadge = publicAchievementData(profile, catalog).achievementBadge;
+      badgeImageUrl = String(catalogBadge.imageUrl || '').trim();
+      if (!badgeName) badgeName = String(catalogBadge.name || '').trim();
+    }
     return {
       userId: document.id,
       displayName: String(profile.displayName || '').trim(),
       points: Math.max(0, Number(profile.achievementPoints || 0)),
-      badgeName: String(badge.name || 'Kezdő ütem').trim(),
-      badgeImageUrl: String(badge.imageUrl || badge.image_url || '').trim(),
+      badgeName: badgeName || 'Kezdő ütem',
+      badgeImageUrl,
       rank: offset + index + 1,
     };
   });
@@ -1519,6 +1517,63 @@ function badgeForPoints(catalog, points) {
   return (
     catalog.filter((item) => points >= item.min_points).sort((a, b) => b.min_points - a.min_points)[0] ||
     defaultAchievementBadges[0]
+  );
+}
+
+// `defaultAchievementBadges` is a display-only emergency catalog: every entry
+// has an empty image URL and the only rank below 100 points is the starter
+// badge. It is fine for rendering one response during a WordPress outage, but
+// it must never be written back to a profile, because that demotes the stored
+// rank and wipes the artwork until something else recalculates it.
+function achievementCatalogIsReliable() {
+  return Array.isArray(achievementBadgesCache) && achievementBadgesCache.length > 0;
+}
+
+function normalizedStoredBadge(stored) {
+  if (!stored || typeof stored !== 'object') return null;
+  const slug = String(stored.slug || '').trim();
+  if (!slug) return null;
+  return {
+    slug,
+    name: String(stored.name || '').trim(),
+    description: String(stored.description || '').trim(),
+    imageUrl: String(stored.imageUrl || stored.image_url || '').trim(),
+  };
+}
+
+// Rank that may be persisted. With a reliable catalog it is derived from the
+// points; during a WordPress outage the already stored badge is kept so the
+// user never loses the rank and the artwork they already earned.
+function persistedAchievementBadge(catalog, points, storedBadge) {
+  const stored = normalizedStoredBadge(storedBadge);
+  if (!achievementCatalogIsReliable()) {
+    if (stored) return stored;
+    const fallback = defaultAchievementBadges[0];
+    return {
+      slug: fallback.slug,
+      name: fallback.name,
+      description: fallback.description,
+      imageUrl: fallback.image_url || '',
+    };
+  }
+  const badge = badgeForPoints(catalog, points);
+  return {
+    slug: badge.slug,
+    name: badge.name,
+    description: badge.description,
+    imageUrl: badge.image_url || '',
+  };
+}
+
+function sameAchievementBadge(first, second) {
+  const left = normalizedStoredBadge(first);
+  const right = normalizedStoredBadge(second);
+  if (!left || !right) return left === right;
+  return (
+    left.slug === right.slug &&
+    left.name === right.name &&
+    left.description === right.description &&
+    left.imageUrl === right.imageUrl
   );
 }
 
@@ -1544,16 +1599,8 @@ function publicAchievementData(profile, catalog) {
 
 async function persistPublicAchievementIfNeeded(profileRef, profile, achievement) {
   const next = achievement.achievementBadge || {};
-  const current =
-    profile?.achievementBadge && typeof profile.achievementBadge === 'object' ? profile.achievementBadge : {};
   if (!String(next.imageUrl || '').trim()) return;
-  if (
-    current.slug === next.slug &&
-    current.name === next.name &&
-    current.description === next.description &&
-    String(current.imageUrl || current.image_url || '').trim() === next.imageUrl
-  )
-    return;
+  if (sameAchievementBadge(profile?.achievementBadge, next)) return;
   await profileRef.set(
     {
       achievementBadge: next,
@@ -2038,7 +2085,15 @@ exports.getPublicProfile = functions.runWith({ enforceAppCheck: true }).https.on
   // This is the fallback when the realtime public projection has not arrived
   // yet. Keep it Firebase-only: waiting for the WordPress badge catalog here
   // made opening a profile or a private message needlessly slow.
-  const result = publicProfileData(profile, targetUid);
+  //
+  // The catalog is used only when this instance already loaded it (a warm
+  // 30-second cache, no extra request). That repairs a stored badge that was
+  // written while WordPress was unreachable, instead of keeping an image-less
+  // starter rank on the profile until the next recalculation.
+  const catalog = achievementCatalogIsReliable() ? achievementBadgesCache : null;
+  const achievement = catalog ? publicAchievementData(profile, catalog) : null;
+  const result = publicProfileData(profile, targetUid, achievement);
+  if (achievement) await persistPublicAchievementIfNeeded(snapshot.ref, profile, achievement);
   await persistPublicProfileProjection(targetUid, result);
   return result;
 });
@@ -2156,8 +2211,14 @@ exports.repairCommunityProfileProjections = onSchedule(
     region: 'europe-central2',
   },
   async () => {
+    // Recalculate the badge from the real WordPress catalog, so a rank that was
+    // stamped from the image-less emergency catalog during an outage is
+    // repaired for everybody, not only for the profiles that were opened.
+    const catalog = await getAchievementBadges();
+    const catalogReliable = achievementCatalogIsReliable();
     const snapshot = await db.collection('community_profiles').get();
     let repaired = 0;
+    let badgesRepaired = 0;
     for (const document of snapshot.docs) {
       const profile = document.data() || {};
       if (isUnnumberedPlaceholderDisplayName(profile.displayName)) {
@@ -2165,13 +2226,25 @@ exports.repairCommunityProfileProjections = onSchedule(
         repaired++;
         continue;
       }
-      const publicData = publicProfileData(profile, document.id);
+      const achievement = catalogReliable ? publicAchievementData(profile, catalog) : null;
+      if (achievement && !sameAchievementBadge(profile.achievementBadge, achievement.achievementBadge)) {
+        await document.ref.set(
+          {
+            achievementBadge: achievement.achievementBadge,
+            achievementUpdatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+        badgesRepaired++;
+      }
+      const publicData = publicProfileData(profile, document.id, achievement);
       await persistPublicProfileProjection(document.id, publicData);
       await syncDenormalizedProfileReferences(document.id, publicData);
     }
     console.info('community_profile_projection_repair', {
       profiles: snapshot.size,
       repaired,
+      badgesRepaired,
     });
   },
 );
