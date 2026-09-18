@@ -18,7 +18,7 @@ import '../../widgets/featured_news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
-import '../../widgets/poll_card.dart';
+import '../../widgets/poll_entry_button.dart';
 import '../../services/notification_service.dart';
 import '../notifications/notification_center_screen.dart';
 import '../community/community_screen.dart';
@@ -266,6 +266,10 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    // Kozvelemenykutatas: csak a gomb, KOZVETLENUL a
+                    // „Legfrissebb hírek" felirat FOLOTT. A szavazas sajat
+                    // képernyőn tortenik, ezert a hírfolyam nem tolódik el.
+                    const PollEntryButton(),
                     Text(
                       'Legfrissebb hírek',
                       style: Theme.of(context).textTheme.headlineSmall,
@@ -324,9 +328,8 @@ class HomeScreen extends ConsumerWidget {
                                 )
                               : const SizedBox.shrink(),
                         ),
-                    // Kozvelemenykutatas - a kozossegi szavazas kozvetlenul alatt.
-                    // A kartya magatol eltunik, ha nincs nyitott kerdőív.
-                    const PollCard(),
+                    // Kozvelemenykutatas - a bejarati gomb mar fentebb, a
+                    // „Legfrissebb hírek" felirat fölött van.
                     const SizedBox(height: 6),
                     news.when(
                       loading: () => const Padding(

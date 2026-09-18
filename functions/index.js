@@ -4180,6 +4180,18 @@ exports.pollVote = functions
       body: JSON.stringify(hasOption ? { pollId, optionIndex, uid } : { pollId, uid }),
     });
     const payload = await response.json().catch(() => ({}));
+    // A kerdőív-szavazas diagnosztikaja. Az UID-t SZANDEKOSAN nem naplozzuk
+    // (adatvedelem): csak a hosszat, hogy azonosithato legyen, valtozott-e.
+    // Ez a sor valaszolja meg azt a kerdest, amit a kliens nem tud: a WordPress
+    // valoban rogzitette-e a szavazatot, es ismeri-e fel a masodikat.
+    console.info('poll_vote_wordpress_result', {
+      pollId,
+      optionIndex: hasOption ? optionIndex : null,
+      uidLength: uid.length,
+      status: response.status,
+      voted: payload?.voted === true,
+      alreadyVoted: payload?.alreadyVoted === true,
+    });
     if (!response.ok) {
       console.warn('poll_vote_wordpress_failed', {
         pollId,
@@ -4196,6 +4208,70 @@ exports.pollVote = functions
     }
     if (!hasOption) return { voted: payload?.voted === true };
     return { ok: true, alreadyVoted: payload?.alreadyVoted === true };
+  });
+
+// ---------------------------------------------------------------------------
+// IDEIGLENES DIAGNOSZTIKA - a kerdőív-szavazat szerveroldali bizonyitasara.
+//
+// A tulajdonos jelezte, hogy ujra tudott szavazni (eloször frissites utan,
+// majd az app ujranyitasa utan). A kliens oldalon javitottuk a beragadt
+// „szavaztal mar?" allapotot, de azt is bizonyitani kell, hogy a WordPress
+// valoban rogziti a szavazatot es felismeri a masodikat.
+//
+// Ez a fuggveny pontosan azt a negy lepest jatsza le, amit az app:
+//   status -> vote -> vote (masodszor) -> status
+// Egy VELETLEN proba-UID-vel dolgozik, majd a sajat sorat torli, ezert a
+// valodi szavazatszamot nem valtoztatja meg. A valasz megmutatja, mit ad a
+// WordPress mind a negy lepesben.
+//
+// Futtatas (a bejelentkezett tulajdonos tokenjevel):
+//   npx firebase functions:log --only pollVoteDiagnostics
+// Es a hivas: POST https://us-central1-hungarian-hardstyle.cloudfunctions.net/pollVoteDiagnostics
+// A fuggveny a deploy utan EGYSZER fut, utana torolni kell.
+// ---------------------------------------------------------------------------
+exports.pollVoteDiagnostics = functions
+  .runWith({
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+    enforceAppCheck: false,
+    timeoutSeconds: 120,
+  })
+  .https.onCall(async (data, context) => {
+    const uid = requireRegisteredViewer(context);
+    const pollId = Number(data?.pollId || 0);
+    if (!Number.isInteger(pollId) || pollId < 1) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen kérdőív.');
+    }
+
+    const probe = `diag-${crypto.randomBytes(8).toString('hex')}`;
+    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+    const request = async (path, body) => {
+      const response = await fetch(`${WORDPRESS_BASE_URL}${path}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      const payload = await response.json().catch(() => ({}));
+      return { status: response.status, payload };
+    };
+
+    const report = { pollId, callerUidLength: uid.length, probeUid: probe };
+    report.statusBefore = await request('/poll/status', { pollId, uid: probe });
+    report.voteFirst = await request('/poll/vote', { pollId, optionIndex: 0, uid: probe });
+    report.voteSecond = await request('/poll/vote', { pollId, optionIndex: 0, uid: probe });
+    report.statusAfter = await request('/poll/status', { pollId, uid: probe });
+    report.cleanup = await request('/poll/vote', {
+      pollId,
+      optionIndex: 0,
+      uid: probe,
+      remove: true,
+    });
+    report.statusAfterCleanup = await request('/poll/status', { pollId, uid: probe });
+    console.info('poll_vote_diagnostics', JSON.stringify(report));
+    return report;
   });
 
 const labelProductDefinitions = [
