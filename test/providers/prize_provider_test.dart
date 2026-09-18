@@ -222,7 +222,6 @@ const _openPrize = HuhsPrize(
   ],
   prizeType: '',
   prizeDescription: '',
-  imageUrl: '',
   winner: null,
 );
 
@@ -233,6 +232,5 @@ const _drawnPrize = HuhsPrize(
   answers: [],
   prizeType: 'HUHS póló',
   prizeDescription: '',
-  imageUrl: '',
   winner: HuhsPrizeWinner(name: 'Kiss Péter', drawnAt: '2026-09-20 18:00:00'),
 );

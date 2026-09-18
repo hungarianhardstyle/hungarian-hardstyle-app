@@ -141,14 +141,62 @@ check(
   /add_post_meta\(\$poll_id, '_huhs_poll_vote_' \. \$hash, \$option_index, true\)/.test(source),
 );
 
+// --- 4b. A KERDOIV eredmenye kulon admin-muvelet (nem az eves szavazas) ---
+//
+// A tulajdonos jelzese: „A kérdőívnél rossz szavazási összesítő van az
+// adminnak, az éves szavazást mutatja". A gyoker az volt, hogy a mobil admin a
+// `voting_summary` muveletet kerte a kerdőívhez — az viszont az ÉVES SZAVAZAS
+// jelöltjeit összesíti. Ezert van kulon `poll_results` (es a valasztohoz
+// `polls`) muvelet.
+
+const adminFile = path.join(pluginDir, 'includes', 'api-admin.php');
+const adminSource = fs.readFileSync(adminFile, 'utf8');
+
+check(
+  'letezik a sajat poll_results admin-muvelet',
+  adminSource.includes("$action === 'poll_results'"),
+);
+check(
+  'letezik a kerdőívek listaja a valasztohoz (polls)',
+  adminSource.includes("$action === 'polls'"),
+);
+check(
+  'a poll_results a SAJAT kerdőív-adataibol szamol (huhs_poll_results)',
+  /if \(\$action === 'poll_results'\)[\s\S]*?huhs_poll_results\(/.test(adminSource),
+);
+check(
+  'a poll_results a kerdőív válaszlehetosegeit adja vissza (nem jelolteket)',
+  /if \(\$action === 'poll_results'\)[\s\S]*?'options' => \$items/.test(adminSource),
+);
+{
+  const section = adminSource.slice(
+    adminSource.indexOf("$action === 'poll_results'"),
+    adminSource.indexOf("$action === 'push'"),
+  );
+  const codeOnly = section
+    .split('\n')
+    .filter((line) => {
+      const trimmed = line.trim();
+      return !trimmed.startsWith('//') && !trimmed.startsWith('*') && !trimmed.startsWith('/*');
+    })
+    .join('\n');
+  check(
+    'a poll_results NEM az eves szavazas összesítőjét hasznalja',
+    !codeOnly.includes('huhs_vote_firestore_summary'),
+    'a jeloltekre vonatkozo összesítés a voting_summary-ban marad',
+  );
+}
+
 // --- 5. A plugin verzioja -------------------------------------------------
 
 const mainFile = fs.readFileSync(path.join(pluginDir, 'huhs-mobile-api.php'), 'utf8');
 const versionMatch = /Version:\s*([0-9.]+)/.exec(mainFile);
 const version = versionMatch ? versionMatch[1] : '';
+const versionParts = version.split('.').map((part) => Number(part) || 0);
+const atLeast = (a, b) => a[0] > b[0] || (a[0] === b[0] && (a[1] > b[1] || (a[1] === b[1] && a[2] >= b[2])));
 check(
-  `a plugin verzioja legalabb 2.4.123 (talalt: ${version || 'nincs'})`,
-  version === '2.4.123',
+  `a plugin verzioja legalabb 2.5.1 (talalt: ${version || 'nincs'})`,
+  versionParts.length === 3 && atLeast(versionParts, [2, 5, 1]),
 );
 
 console.log(results.join('\n'));

@@ -6,7 +6,7 @@ import '../../providers/community_provider.dart';
 import '../../providers/poll_provider.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
-import '../voting/voting_summary_screen.dart';
+import 'poll_results_screen.dart';
 
 /// Kozvelemenykutatas - a kerdőív sajat képernyője.
 ///
@@ -91,12 +91,16 @@ class _PollScreenState extends ConsumerState<PollScreen> {
     return 'A szavazatot most nem sikerült rögzíteni. Próbáld újra.';
   }
 
-  /// Az eredmenyek admin-only összesítője a WordPressben van (publikus
-  /// eredmeny-végpont szandekosan nincs), ezert az éves szavazasnal mar meglevo
-  /// összesítő képernyőt nyitjuk meg: az mutatja a szavazatszámokat.
+  /// A kérdőív eredmény-összesítője — CSAK adminnak, mert a WordPress
+  /// admin-végpont mögött van (publikus eredmény-végpont szándékosan nincs).
+  ///
+  /// **Ez korábban rossz volt:** a `VotingSummaryScreen`-t nyitotta meg, ami az
+  /// ÉVES SZAVAZÁS összesítőjét kéri le, ezért a kérdőívnél a jelöltekre leadott
+  /// szavazatok látszottak. A saját `PollResultsScreen` a `poll_results`
+  /// műveletet kéri, ami a kérdőív válaszaira adja a számokat.
   void _openResults() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const VotingSummaryScreen()),
+      MaterialPageRoute<void>(builder: (_) => const PollResultsScreen()),
     );
   }
 

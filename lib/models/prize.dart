@@ -52,7 +52,6 @@ class HuhsPrize {
     required this.answers,
     required this.prizeType,
     required this.prizeDescription,
-    required this.imageUrl,
     required this.winner,
   });
 
@@ -67,9 +66,6 @@ class HuhsPrize {
   /// csak annyit mond, hogy „Nyereményjáték".
   final String prizeType;
   final String prizeDescription;
-
-  /// Opcionalis kep a nyeremenyjatek kartyajahoz.
-  final String imageUrl;
 
   /// Csak [HuhsPrizeState.drawn] eseten van kitoltve.
   final HuhsPrizeWinner? winner;
@@ -111,7 +107,6 @@ class HuhsPrize {
       answers: answers,
       prizeType: (json['prize_type'] ?? '').toString().trim(),
       prizeDescription: (json['prize_description'] ?? '').toString().trim(),
-      imageUrl: (json['image'] ?? '').toString().trim(),
       winner: winner,
     );
   }

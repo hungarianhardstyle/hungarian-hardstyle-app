@@ -319,6 +319,20 @@ check(
   codeOnly.includes('_huhs_prize_display_days') && codeOnly.includes('function huhs_prize_winner_visible'),
 );
 
+// A tulajdonos jelzese: „játékhoz adhatok meg képet, de minek, nem mutatja,
+// ráadásul feltölteni se lehet képet, csak link van, igazából felesleges is a
+// kép oda, jó a kártya". Ezert a kep MEZO es a hozza tartozo meta teljesen
+// eltunt: nem csak el van rejtve a felulet, hanem a vegpontok sem adjak ki.
+check(
+  'nincs kep-mezo a nyeremenyjatek admin urlapon',
+  !codeOnly.includes('huhs_prize_image'),
+  'a kep mezot a tulajdonos keresere teljesen eltavolitottuk',
+);
+check(
+  'a nyilvanos /prize/active nem ad ki kepet',
+  !/['"]image['"]\s*=>/.test(codeSection('function huhs_prize_api_active()', 'function huhs_prize_api_status(')),
+);
+
 check(
   'a lezart, meg nem sorsolt jatekokat kulon vegpont adja (a sorsolonak)',
   codeOnly.includes("'/prize/pending'"),
