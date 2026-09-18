@@ -16,6 +16,7 @@ import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
+import '../../widgets/content_refresh_icon.dart';
 import '../../services/notification_service.dart';
 import '../notifications/notification_center_screen.dart';
 import '../community/community_screen.dart';
@@ -81,6 +82,16 @@ class HomeScreen extends ConsumerWidget {
 
   const HomeScreen({super.key, required this.onShowMoreNews});
 
+  /// Forced refresh shared by pull-to-refresh and the header refresh icon.
+  Future<void> _refreshHome(WidgetRef ref) async {
+    ref.invalidate(newsProvider);
+    ref.invalidate(eventsProvider);
+    await Future.wait<void>([
+      ref.read(newsProvider.future),
+      ref.read(eventsProvider.future),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final news = ref.watch(newsProvider);
@@ -94,14 +105,7 @@ class HomeScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(newsProvider);
-                  ref.invalidate(eventsProvider);
-                  await Future.wait<void>([
-                    ref.read(newsProvider.future),
-                    ref.read(eventsProvider.future),
-                  ]);
-                },
+                onRefresh: () => _refreshHome(ref),
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.symmetric(
@@ -122,6 +126,9 @@ class HomeScreen extends ConsumerWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            ContentRefreshIcon(
+                              onRefresh: () => _refreshHome(ref),
+                            ),
                             StreamBuilder(
                               stream: Firebase.apps.isEmpty
                                   ? Stream.value(const <dynamic>[])

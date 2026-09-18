@@ -8,6 +8,7 @@ import '../../models/artist.dart';
 import '../../providers/artists_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/news_provider.dart';
+import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/favorite_button.dart';
 import 'artist_detail_screen.dart';
 
@@ -40,6 +41,19 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
     });
   }
 
+  /// Forced refresh shared by pull-to-refresh and the header refresh icon.
+  Future<void> _refreshArtists() async {
+    await ref
+        .read(wordpressServiceProvider)
+        .getArtists(
+          search: _search,
+          category: _category,
+          forceRefresh: true,
+        );
+    ref.invalidate(artistsProvider(_query));
+    await ref.read(artistsProvider(_query).future);
+  }
+
   @override
   Widget build(BuildContext context) {
     final artists = ref.watch(artistsProvider(_query));
@@ -57,17 +71,7 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
         child: SafeArea(
           top: false,
           child: RefreshIndicator(
-            onRefresh: () async {
-              await ref
-                  .read(wordpressServiceProvider)
-                  .getArtists(
-                    search: _search,
-                    category: _category,
-                    forceRefresh: true,
-                  );
-              ref.invalidate(artistsProvider(_query));
-              await ref.read(artistsProvider(_query).future);
-            },
+            onRefresh: _refreshArtists,
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
@@ -77,12 +81,19 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Magyar DJ-k',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Magyar DJ-k',
+                                style: TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ContentRefreshIcon(onRefresh: _refreshArtists),
+                          ],
                         ),
                         const SizedBox(height: 16),
                         TextField(

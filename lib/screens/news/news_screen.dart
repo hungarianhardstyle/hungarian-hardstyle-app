@@ -7,6 +7,7 @@ import '../../providers/news_provider.dart';
 import '../../models/post.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../widgets/brand_loading_indicator.dart';
+import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/huhs_corner_logo.dart';
 import '../../widgets/news_card.dart';
 import '../../widgets/mobile_ad_banner.dart';
@@ -52,6 +53,15 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
     }
   }
 
+  /// Forced refresh shared by pull-to-refresh and the header refresh icon.
+  Future<void> _refreshNews() async {
+    ref.invalidate(stickyNewsProvider);
+    await Future.wait<void>([
+      ref.read(paginatedNewsProvider.notifier).refresh(),
+      ref.read(stickyNewsProvider.future),
+    ]);
+  }
+
   void _onSearchChanged(String value) {
     setState(() {});
     _searchDebounce?.cancel();
@@ -89,13 +99,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
             children: [
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(stickyNewsProvider);
-                    await Future.wait<void>([
-                      ref.read(paginatedNewsProvider.notifier).refresh(),
-                      ref.read(stickyNewsProvider.future),
-                    ]);
-                  },
+                  onRefresh: _refreshNews,
                   child: state.isLoading && state.posts.isEmpty
                       ? const Center(child: BrandLoadingIndicator(size: 220))
                       : ListView.builder(
@@ -110,9 +114,9 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Row(
+                                  Row(
                                     children: [
-                                      Expanded(
+                                      const Expanded(
                                         child: Text(
                                           'Hírek',
                                           style: TextStyle(
@@ -121,7 +125,10 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                           ),
                                         ),
                                       ),
-                                      HuhsCornerLogo(),
+                                      ContentRefreshIcon(
+                                        onRefresh: _refreshNews,
+                                      ),
+                                      const HuhsCornerLogo(),
                                     ],
                                   ),
                                   const SizedBox(height: 16),

@@ -11,6 +11,16 @@
 - Új teszt: `functions/achievements.test.cjs`; a `functions/article-comments.test.cjs` a regisztrációs kapu szerinti szerződésre frissítve (névtelen felhasználó nem hozhat létre hozzászólást). A `registration.integration.test.cjs` helyi Firestore-emulátort igényel, ezért emulátor nélkül nem fut.
 - Kliensoldali kiegészítés a `CommunityPublicProfileScreen`-ben elkészült, de **szándékosan még nincs új AAB-ban** (a tulajdonos kérésére most nem készül build); a következő build viszi.
 
+### Cache-first megjelenítés és frissítés ikon (2026-09-18)
+
+- A WordPress-tartalom rétegzett cache-e (memória + ETag/HEAD + SharedPreferences) már korábban elkészült; ez a kör a **megjelenítést** tette cache-firstté.
+- A Hírek lista eddig nyitáskor erőltetett hálózati kérést várt, ezért teljes képernyős töltő jelent meg. Most a mentett oldal azonnal kirajzolódik, és a friss válasz utána cseréli le; ha a háttérfrissítés hibázik, a mentett lista a képernyőn marad.
+- A `PaginatedNewsNotifier` betöltői injektálhatók (`loadPage`, `loadCategories`), ezért a cache-first viselkedés élő WordPress nélkül tesztelhető (`test/providers/news_provider_cache_first_test.dart`).
+- Új `ContentRefreshIcon` widget: látható frissítés ikon, pörgés a kérés alatt, és ismételt koppintás nem indít párhuzamos kérést. Bekötve a főoldal, a Hírek, az Események, a DJ-k, a Szervezők és a Kiadványok fejlécébe/AppBarjába.
+- A húzással történő frissítés és az ikon ugyanazt az erőltetett frissítést futtatja (`_refreshHome`, `_refreshNews`, `_refreshEvents`, `_refreshArtists`, `_refreshOrganizers`, `refreshNow`), így nem alakulhat ki eltérő viselkedés.
+- Az Események/DJ-k/Szervezők/Kiadványok listák és a részletoldalak már eddig is a cache-ből rajzolódtak (a `WordpressHeadCache` a lemezen is tárol, és lejárat után előbb a mentett törzset adja vissza, majd háttérben revalidál).
+- Kliensoldali változás: a következő AAB-build viszi.
+
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
 
 - Minden hálózatról vagy Firebase-ből letöltött adatnál a korábbi állapot azonnal legyen látható.

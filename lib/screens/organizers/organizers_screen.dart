@@ -8,6 +8,7 @@ import '../../models/organizer.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/organizers_provider.dart';
+import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/favorite_button.dart';
 import 'organizer_detail_screen.dart';
 
@@ -37,6 +38,15 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
     });
   }
 
+  /// Forced refresh shared by pull-to-refresh and the header refresh icon.
+  Future<void> _refreshOrganizers() async {
+    await ref
+        .read(wordpressServiceProvider)
+        .getOrganizers(search: _search, forceRefresh: true);
+    ref.invalidate(organizersProvider(_search));
+    await ref.read(organizersProvider(_search).future);
+  }
+
   @override
   Widget build(BuildContext context) {
     final organizers = ref.watch(organizersProvider(_search));
@@ -54,13 +64,7 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
         child: SafeArea(
           top: false,
           child: RefreshIndicator(
-            onRefresh: () async {
-              await ref
-                  .read(wordpressServiceProvider)
-                  .getOrganizers(search: _search, forceRefresh: true);
-              ref.invalidate(organizersProvider(_search));
-              await ref.read(organizersProvider(_search).future);
-            },
+            onRefresh: _refreshOrganizers,
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
@@ -70,12 +74,19 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Szervezők',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Szervezők',
+                                style: TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ContentRefreshIcon(onRefresh: _refreshOrganizers),
+                          ],
                         ),
                         const SizedBox(height: 16),
                         TextField(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/community_provider.dart';
 import '../../models/event.dart';
+import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/huhs_corner_logo.dart';
 import '../../services/wordpress_service.dart';
@@ -90,6 +91,27 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     }
   }
 
+  /// Forced refresh shared by pull-to-refresh and the header refresh icon.
+  Future<void> _refreshEvents() async {
+    _extraUpcoming.clear();
+    _extraPast.clear();
+    _upcomingPage = 1;
+    _pastPage = 1;
+    _hasMoreUpcoming = false;
+    _hasMorePast = false;
+    final service = WordpressService();
+    await Future.wait([
+      service.getEvents(forceRefresh: true),
+      service.getEvents(includePast: true, forceRefresh: true),
+    ]);
+    ref.invalidate(eventsProvider);
+    ref.invalidate(pastEventsProvider);
+    await Future.wait<void>([
+      ref.read(eventsProvider.future).then<void>((_) {}),
+      ref.read(pastEventsProvider.future).then<void>((_) {}),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final events = ref.watch(eventsProvider);
@@ -109,25 +131,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         ),
         child: SafeArea(
           child: RefreshIndicator(
-            onRefresh: () async {
-              _extraUpcoming.clear();
-              _extraPast.clear();
-              _upcomingPage = 1;
-              _pastPage = 1;
-              _hasMoreUpcoming = false;
-              _hasMorePast = false;
-              final service = WordpressService();
-              await Future.wait([
-                service.getEvents(forceRefresh: true),
-                service.getEvents(includePast: true, forceRefresh: true),
-              ]);
-              ref.invalidate(eventsProvider);
-              ref.invalidate(pastEventsProvider);
-              await Future.wait<void>([
-                ref.read(eventsProvider.future).then<void>((_) {}),
-                ref.read(pastEventsProvider.future).then<void>((_) {}),
-              ]);
-            },
+            onRefresh: _refreshEvents,
             child: events.when(
               loading: () => ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -139,6 +143,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   _EventsHeader(
                     onSubmit: () => _openSubmission(context),
                     showSubmit: canSubmit,
+                    onRefresh: _refreshEvents,
                   ),
                   const SizedBox(height: 100),
                   const Center(child: CircularProgressIndicator()),
@@ -154,6 +159,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   _EventsHeader(
                     onSubmit: () => _openSubmission(context),
                     showSubmit: canSubmit,
+                    onRefresh: _refreshEvents,
                   ),
                   const SizedBox(height: 80),
                   const Text(
@@ -199,6 +205,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                       _EventsHeader(
                         onSubmit: () => _openSubmission(context),
                         showSubmit: canSubmit,
+                        onRefresh: _refreshEvents,
                       ),
                       const SizedBox(height: 80),
                       const Center(
@@ -224,6 +231,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   _EventsHeader(
                     onSubmit: () => _openSubmission(context),
                     showSubmit: canSubmit,
+                    onRefresh: _refreshEvents,
                   ),
                   if (featured.isNotEmpty) ...[
                     const _EventsSectionTitle('Kiemelt események'),
@@ -286,22 +294,29 @@ class _EventsHeader extends StatelessWidget {
   final VoidCallback onSubmit;
   final bool showSubmit;
 
-  const _EventsHeader({required this.onSubmit, required this.showSubmit});
+  const _EventsHeader({
+    required this.onSubmit,
+    required this.showSubmit,
+    required this.onRefresh,
+  });
+
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Expanded(
+            const Expanded(
               child: Text(
                 'Események',
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
               ),
             ),
-            HuhsCornerLogo(),
+            ContentRefreshIcon(onRefresh: onRefresh),
+            const HuhsCornerLogo(),
           ],
         ),
         const SizedBox(height: 14),

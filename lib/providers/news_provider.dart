@@ -86,21 +86,66 @@ class PaginatedNewsState {
   }
 }
 
+/// One page of WordPress news, loaded either from the layered cache or from the
+/// network. Injectable so the cache-first first paint can be tested without a
+/// live WordPress instance.
+typedef NewsPageLoader =
+    Future<PostsPage> Function({
+      required int page,
+      required String search,
+      required int categoryId,
+      required bool forceRefresh,
+    });
+
+typedef NewsCategoriesLoader = Future<List<NewsCategory>> Function();
+
 class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
-  PaginatedNewsNotifier(this._service) : super(const PaginatedNewsState()) {
+  PaginatedNewsNotifier({
+    required this.loadPage,
+    required this.loadCategories,
+  }) : super(const PaginatedNewsState()) {
     _loadCategories();
-    refresh();
+    _loadFirstPage();
   }
 
-  static const int _perPage = 10;
+  static const int perPage = 10;
 
-  final WordpressService _service;
+  final NewsPageLoader loadPage;
+  final NewsCategoriesLoader loadCategories;
   int _requestId = 0;
 
   Future<void> _loadCategories() async {
-    final categories = await _service.getCategories();
+    final categories = await loadCategories();
 
     state = state.copyWith(categories: categories);
+  }
+
+  /// Cache-first first paint.
+  ///
+  /// The layered WordPress cache answers this call from memory or from disk and
+  /// only revalidates in the background, so the last known page can be painted
+  /// without waiting for the network. The forced [refresh] right after it
+  /// replaces the page with the current server state. On a cold cache there is
+  /// nothing to show, so the loading state stays until the first response.
+  Future<void> _loadFirstPage() async {
+    try {
+      final cached = await _getPostsPage(page: 1);
+      if (!mounted) return;
+      if (cached.items.isNotEmpty && state.posts.isEmpty) {
+        state = state.copyWith(
+          posts: cached.items,
+          isLoading: false,
+          hasMore: cached.hasMore,
+          page: cached.page,
+          clearError: true,
+        );
+      }
+    } catch (_) {
+      // The forced refresh below surfaces the error state; a usable cache entry
+      // keeps the list on screen instead of an empty error page.
+    }
+    if (!mounted) return;
+    await refresh();
   }
 
   Future<void> refresh() async {
@@ -178,12 +223,10 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
     required int page,
     bool forceRefresh = false,
   }) {
-    return _service.getPosts(
+    return loadPage(
+      page: page,
       search: state.search,
       categoryId: state.selectedCategoryId,
-      sticky: false,
-      page: page,
-      perPage: _perPage,
       forceRefresh: forceRefresh,
     );
   }
@@ -220,5 +263,21 @@ final paginatedNewsProvider =
       PaginatedNewsState
     >((ref) {
       final service = ref.watch(wordpressServiceProvider);
-      return PaginatedNewsNotifier(service);
+      return PaginatedNewsNotifier(
+        loadCategories: service.getCategories,
+        loadPage:
+            ({
+              required int page,
+              required String search,
+              required int categoryId,
+              required bool forceRefresh,
+            }) => service.getPosts(
+              search: search,
+              categoryId: categoryId,
+              sticky: false,
+              page: page,
+              perPage: PaginatedNewsNotifier.perPage,
+              forceRefresh: forceRefresh,
+            ),
+      );
     });

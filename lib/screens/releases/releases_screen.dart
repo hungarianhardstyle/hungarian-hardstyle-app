@@ -8,6 +8,7 @@ import '../../models/release.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/releases_provider.dart';
 import '../../providers/news_provider.dart';
+import '../../widgets/content_refresh_icon.dart';
 import 'release_detail_screen.dart';
 import 'free_releases_screen.dart';
 
@@ -95,19 +96,19 @@ class ReleasesScreenState extends ConsumerState<ReleasesScreen>
     return Scaffold(
       appBar: AppBar(
         title: title,
-        actions: widget.artistId == 0
-            ? [
-                TextButton.icon(
-                  icon: const Icon(Icons.local_offer_outlined),
-                  label: const Text('Ingyenes kiadványok'),
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const FreeReleasesScreen(),
-                    ),
-                  ),
+        actions: [
+          if (widget.artistId == 0)
+            TextButton.icon(
+              icon: const Icon(Icons.local_offer_outlined),
+              label: const Text('Ingyenes kiadványok'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const FreeReleasesScreen(),
                 ),
-              ]
-            : null,
+              ),
+            ),
+          ContentRefreshIcon(onRefresh: refreshNow),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: refreshNow,
