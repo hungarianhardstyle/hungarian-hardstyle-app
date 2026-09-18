@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/content/date_formatters.dart';
 import '../models/post.dart';
 import '../screens/news/news_detail_screen.dart';
+import '../services/wordpress_service.dart';
+import 'detail_prefetch.dart';
 import 'news_reaction_button.dart';
 import 'resized_network_image.dart';
 
@@ -21,6 +23,17 @@ class NewsCard extends StatelessWidget {
     final imageCacheWidth = ((MediaQuery.sizeOf(context).width - 36) * dpr)
         .round()
         .clamp(360, 1600);
+    return DetailPrefetch(
+      onPrefetch: () => WordpressService().getPost(post.id),
+      child: _buildCard(context, colors, imageCacheWidth),
+    );
+  }
+
+  Widget _buildCard(
+    BuildContext context,
+    ColorScheme colors,
+    int imageCacheWidth,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
       decoration: BoxDecoration(

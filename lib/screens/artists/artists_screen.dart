@@ -8,7 +8,9 @@ import '../../models/artist.dart';
 import '../../providers/artists_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/news_provider.dart';
+import '../../services/wordpress_service.dart';
 import '../../widgets/content_refresh_icon.dart';
+import '../../widgets/detail_prefetch.dart';
 import '../../widgets/favorite_button.dart';
 import 'artist_detail_screen.dart';
 
@@ -239,6 +241,13 @@ class _ArtistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return DetailPrefetch(
+      onPrefetch: () => WordpressService().getArtist(artist.id),
+      child: _buildCard(context),
+    );
+  }
+
+  Widget _buildCard(BuildContext context) {
     final subtitle = artist.genres.isNotEmpty
         ? artist.genres.take(3).join(' · ')
         : artist.location;

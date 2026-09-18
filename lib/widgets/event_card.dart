@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/content/date_formatters.dart';
 import '../models/event.dart';
 import '../screens/events/event_detail_screen.dart';
+import '../services/wordpress_service.dart';
+import 'detail_prefetch.dart';
 import 'genre_chip.dart';
 import 'resized_network_image.dart';
 
@@ -23,6 +25,13 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return DetailPrefetch(
+      onPrefetch: () => WordpressService().getEvent(event.id),
+      child: _buildCard(context),
+    );
+  }
+
+  Widget _buildCard(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final imageCacheWidth =
         ((width ?? MediaQuery.sizeOf(context).width) *

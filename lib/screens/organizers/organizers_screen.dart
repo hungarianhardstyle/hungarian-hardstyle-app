@@ -8,7 +8,9 @@ import '../../models/organizer.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/organizers_provider.dart';
+import '../../services/wordpress_service.dart';
 import '../../widgets/content_refresh_icon.dart';
+import '../../widgets/detail_prefetch.dart';
 import '../../widgets/favorite_button.dart';
 import 'organizer_detail_screen.dart';
 
@@ -170,6 +172,13 @@ class _OrganizerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return DetailPrefetch(
+      onPrefetch: () => WordpressService().getOrganizer(organizer.id),
+      child: _buildCard(context, ref),
+    );
+  }
+
+  Widget _buildCard(BuildContext context, WidgetRef ref) {
     final logoCacheWidth = (88 * MediaQuery.devicePixelRatioOf(context))
         .round()
         .clamp(176, 352);

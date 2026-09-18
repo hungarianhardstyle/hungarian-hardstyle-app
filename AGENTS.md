@@ -55,6 +55,23 @@
 - Ez a megoldás a korábban felvetett csontváz-(skeleton) helyett készült el: nem szépíti a várakozást, hanem a splash alá rejti.
 - Kliensoldali változás: a következő AAB-build viszi.
 
+### Részletoldal-előtöltés görgetés közben (2026-09-18)
+
+- Új `lib/widgets/detail_prefetch.dart`: a kártya 700 ms-ig a képernyőn marad, és csak akkor indítja el a részletadatok lekérését. Gyors elgörgetésnél a kártya eldobása törli az időzítőt, tehát **nem indul kérés** — csak arra a kártyára tölt elő, amin a felhasználó megáll.
+- Bekötve a kártyákba (`NewsCard`, `FeaturedNewsCard`, `EventCard`, `_ArtistCard`, `_OrganizerCard`, `_ReleaseCard`), így minden lista automatikusan lefedett: hírek, kiemelt hír, események, DJ-k, szervezők, kiadványok.
+- Nem generál plusz kérést: ugyanazokat a hívásokat indítja, amiket a részletoldal (`getPost`, `getEvent`, `getArtist`, `getOrganizer`, `getRelease`), a szolgáltatás pedig id szerint cache-el és deduplikál.
+- A legnagyobb nyereség a hírrészletnél van: a lista csak összefoglalót hoz (`summary=true`, üres `content`), a teljes cikk a részletoldalon érkezik — ez most előre betöltődik.
+- Hiba esetén néma (a részletoldal saját hibadoboza jelenik meg), és a widget nem nyúl a megjelenéshez.
+- Teszt: `test/widgets/detail_prefetch_test.dart` (késleltetés, elgörgetéskor törölt kérés, néma hiba).
+- Kliensoldali változás: a következő AAB-build viszi.
+
+### WordPress szerveroldali cache — vizsgálat (2026-09-18)
+
+- **Nincs szerveroldali cache.** A plugin `includes/http-cache.php` fájlja csak `rest_post_dispatch`-ben (tehát a válasz teljes összeállítása **után**) tesz `ETag`-et, `Cache-Control: public, max-age=45, stale-while-revalidate=60`-at és `Last-Modified`-et, majd az `If-None-Match` egyezésnél 304-et ad. A `max-age` kizárólag a kliensekre/proxykra vonatkozik, a WordPress munkáját nem csökkenti.
+- Éles mérések: statikus kép **164 ms**, a főoldal HTML-je **279 ms**, a `/huhs/v1/*` végpontok viszont **1,0–1,6 s** minden kérése — `HEAD`-re is (200 + ETag), és a `max-age=300`-at deklaráló `/games/active` is ~1,1 s. Feltételes GET (`If-None-Match`) élesben **200**-at adott 304 helyett, de az app ezt kezeli (ETag-egyezés alapján a mentett törzset használja), így ez nem funkcionális hiba.
+- **Következmény: a 45 s → 300 s emelés önmagában semmit nem javít a szerver terhelésén**, mert nincs mit hosszabbítani. Ami valóban segítene: (a) valódi szerveroldali válasz-cache (transient/object cache) a GET-végpontokra, a cache-elt törzsből számolt ETag-gal és `_huhs_revalidate` esetén megkerüléssel; (b) hosting/CDN szintű lapcache; (c) a végpontok N+1 lekérdezéseinek optimalizálása (ez a valódi gyökérök).
+- A (a) pont elkészíthető pluginfrissítésként (a tulajdonos tölti fel); a döntés az övé, mert a TTL és a frissesség között tradeoff van.
+
 ### Következő folytatandó feladat — teljes cache-first adatbetöltés
 
 - Minden hálózatról vagy Firebase-ből letöltött adatnál a korábbi állapot azonnal legyen látható.

@@ -8,7 +8,9 @@ import '../../models/release.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/releases_provider.dart';
 import '../../providers/news_provider.dart';
+import '../../services/wordpress_service.dart';
 import '../../widgets/content_refresh_icon.dart';
+import '../../widgets/detail_prefetch.dart';
 import 'release_detail_screen.dart';
 import 'free_releases_screen.dart';
 
@@ -194,6 +196,13 @@ class _ReleaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return DetailPrefetch(
+      onPrefetch: () => WordpressService().getRelease(release.id),
+      child: _buildCard(context),
+    );
+  }
+
+  Widget _buildCard(BuildContext context) {
     final coverCacheWidth = (150 * MediaQuery.devicePixelRatioOf(context))
         .round()
         .clamp(300, 600);

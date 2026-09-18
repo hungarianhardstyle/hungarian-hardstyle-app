@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/content/date_formatters.dart';
 import '../models/post.dart';
 import '../screens/news/news_detail_screen.dart';
+import '../services/wordpress_service.dart';
+import 'detail_prefetch.dart';
 import 'news_reaction_button.dart';
 import 'resized_network_image.dart';
 
@@ -13,6 +15,13 @@ class FeaturedNewsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return DetailPrefetch(
+      onPrefetch: () => WordpressService().getPost(post.id),
+      child: _buildCard(context),
+    );
+  }
+
+  Widget _buildCard(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final imageCacheWidth =
         (MediaQuery.sizeOf(context).width *
