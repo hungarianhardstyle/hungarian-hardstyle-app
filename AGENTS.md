@@ -1,5 +1,16 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### A „További hírek" sor egységes kártyaformát kapott (2026-09-18, AAB 328)
+
+- **A tulajdonos jelzése:** *„a TOVÁBBI hírek gomb a főoldalon lehetne olyan mint a kérdőív meg a nyereményjáték kártya, egységesen"*.
+- **A gyökér:** a „További hírek" egy `OutlinedButton.icon` volt (`SizedBox(width: double.infinity)`-tel), tehát **más volt a formája**, mint a főoldali hero-soroknak (kérdőív, nyereményjáték, éves szavazás) — azok a `HomeActionCard`-ot használják. Ráadásul a `Column`-ban nem volt `crossAxisAlignment: stretch`, ezért a sor **nem is töltötte ki** a teljes szélességet.
+- **A javítás:** a sor mostantól **`HomeActionCard`** (`key: Key('more-news')`, `eyebrow: 'HÍREK'`, `label: 'További hírek'`, `icon: Icons.arrow_forward_rounded`), és a `Column` megkapta a `crossAxisAlignment: CrossAxisAlignment.stretch`-et. Így **pontosan ugyanaz a formátum és szélesség**, mint a többi hero-soron — a közös komponens miatt nem tud elcsúszni tőlük.
+- **Miért `crossAxisAlignment: stretch` kellett:** a `HomeActionCard` egy `Padding`-be csomagolt `Semantics`/`Material`/`InkWell`, ami **a szülőtől kapott szélességet** tölti ki. `stretch` nélkül a `Column` a gyerekek saját (tartalomhoz igazodó) szélességét használja.
+- **Új teszt: `test/widgets/home_more_news_test.dart` (4 teszt)** — a **teljes főoldalt** rendereli (provider-felülírásokkal, hálózat nélkül), és méri, hogy a sor **bal széle és szélessége egyezik** a hírsáv `Rect`-jével; hogy megvan a `HÍREK` felirat és a nyíl (a közös formátum jele); hogy koppintásra meghívódik a `onShowMoreNews`; és hogy **hírek nélkül nincs sor**.
+  - **Tanulság a jövőre:** a teszt-nézet legyen **valósághű** (1200 px / 3x = 400 logikai px). Az első futásom 1080 px-szel **11 pixeles túlcsordulást** jelzett a **fejléc-sorban** (`home_screen.dart:130`), ami **nem** a módosításom hibája volt, hanem a túl szűk nézeté — a valódi telefonon nem jelentkezik.
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **245/245**.
+- **Csomag:** `build/HUHS-v1.0.0+328-release.aab` — tisztán kliensoldali, **a pluginhoz nem kell nyúlni**.
+
 ### A GYIK (Segítség) rendberakva — tárgyi hiba, duplikáció, zaj és hiányzó témák (2026-09-18, plugin 2.5.3)
 
 - **A tulajdonos jelzése:** *„nézzük meg a GYIK menüt is mert most elég gagyi, érthető normális funkció ismertető kell, nem pedig mindenféle Firebase meg semmi értelme duma, és csak az elérhető funkciókról segítség"*. Ez a korábban **ELHALASZTVA** jelölt feladat.

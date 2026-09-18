@@ -374,32 +374,23 @@ class HomeScreen extends ConsumerWidget {
                         }
 
                         return Column(
+                          // A „További hírek" sor ugyanazt a kártyaformat
+                          // használja, mint a főoldali hero-sorok (kérdőív,
+                          // nyereményjáték, szavazás), ezért a kereszttenegelyre
+                          // kell igazítani: így tölti ki a teljes szélességet.
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             _NewsSlider(posts: latestPosts),
                             const SizedBox(height: 16),
-                            SizedBox(
-                              width: double.infinity,
-                              child: OutlinedButton.icon(
-                                onPressed: onShowMoreNews,
-                                icon: const Icon(Icons.arrow_forward_rounded),
-                                label: const Text('További hírek'),
-                                style: OutlinedButton.styleFrom(
-                                  backgroundColor: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainer,
-                                  foregroundColor: Theme.of(context)
-                                      .colorScheme
-                                      .primary,
-                                  side: BorderSide(
-                                    color: Theme.of(context).colorScheme.primary
-                                        .withValues(alpha: .7),
-                                  ),
-                                  alignment: Alignment.centerLeft,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                ),
-                              ),
+                            // A tulajdonos kérése: „a TOVÁBBI hírek gomb a
+                            // főoldalon lehetne olyan mint a kérdőív meg a
+                            // nyereményjáték kártya, egységesen".
+                            HomeActionCard(
+                              key: const Key('more-news'),
+                              eyebrow: 'HÍREK',
+                              label: 'További hírek',
+                              icon: Icons.arrow_forward_rounded,
+                              onTap: onShowMoreNews,
                             ),
                             activeGame.when(
                               loading: () => const SizedBox.shrink(),

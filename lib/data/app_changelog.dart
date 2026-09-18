@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 328,
+    changes: [
+      'A főoldalon a „További hírek" sor ugyanolyan kártyaformát kapott, mint a kérdőív és a nyereményjáték — így egységes a megjelenés.',
+      'A GYIK (Segítség) témakörökre bontva, érthetőbben — és a pontok, valamint a napi limitek a valós értékeket mutatják.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 327,
     changes: [
       'ÚJ: a Névjegy alatt mostantól látszik a kiadási jegyzet (changelog) verziószámmal.',
