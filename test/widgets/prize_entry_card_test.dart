@@ -57,8 +57,19 @@ class _FakePrizeService extends PrizeService {
   int playCalls = 0;
   int? lastAnswerIndex;
 
+  /// A kartyanak `bypassCache: true`-val KELL kérdeznie: a `forceRefresh`
+  /// (HEAD + ETag) élesben a régi testet adta vissza, ezért a kihirdetett
+  /// nyertes tíz percig nem jelent meg.
+  bool? lastBypassCache;
+
   @override
-  Future<HuhsPrize?> activePrize({bool forceRefresh = false}) async => prize;
+  Future<HuhsPrize?> activePrize({
+    bool forceRefresh = false,
+    bool bypassCache = false,
+  }) async {
+    lastBypassCache = bypassCache;
+    return prize;
+  }
 
   @override
   Future<HuhsPrizePlay> playStatus(int prizeId) async {
@@ -93,7 +104,10 @@ class _FailingStatusPrizeService extends PrizeService {
   final HuhsPrize? prize;
 
   @override
-  Future<HuhsPrize?> activePrize({bool forceRefresh = false}) async => prize;
+  Future<HuhsPrize?> activePrize({
+    bool forceRefresh = false,
+    bool bypassCache = false,
+  }) async => prize;
 
   @override
   Future<HuhsPrizePlay> playStatus(int prizeId) async =>

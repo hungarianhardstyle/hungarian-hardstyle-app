@@ -31,7 +31,17 @@ class _FakePollService extends PollService {
   final Duration? statusDelay;
 
   @override
-  Future<HuhsPoll?> activePoll({bool forceRefresh = false}) async => poll;
+  Future<HuhsPoll?> activePoll({
+    bool forceRefresh = false,
+    bool bypassCache = false,
+  }) async {
+    lastBypassCache = bypassCache;
+    return poll;
+  }
+
+  /// A kartyanak `bypassCache: true`-val KELL kérdeznie (a `forceRefresh` a
+  /// WordPress cache-elt ETag-ja miatt a régi testet adta vissza).
+  bool? lastBypassCache;
 
   @override
   Future<bool> hasVoted(int pollId) async {
@@ -56,7 +66,10 @@ class _FailingStatusPollService extends PollService {
   final HuhsPoll? poll;
 
   @override
-  Future<HuhsPoll?> activePoll({bool forceRefresh = false}) async => poll;
+  Future<HuhsPoll?> activePoll({
+    bool forceRefresh = false,
+    bool bypassCache = false,
+  }) async => poll;
 
   @override
   Future<bool> hasVoted(int pollId) async => throw Exception('network down');

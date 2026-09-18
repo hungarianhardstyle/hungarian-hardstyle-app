@@ -300,6 +300,7 @@ class WordpressService {
     String path, {
     Map<String, dynamic>? queryParameters,
     bool forceRefresh = false,
+    bool bypassCache = false,
   }) {
     final query = queryParameters?.map(
       (key, value) => MapEntry(key, value.toString()),
@@ -310,6 +311,7 @@ class WordpressService {
       uri,
       cacheContext: PlatformDispatcher.instance.locale.toLanguageTag(),
       forceRefresh: forceRefresh,
+      bypassCache: bypassCache,
     );
   }
 
@@ -1460,9 +1462,22 @@ class WordpressService {
   /// Az app szandekosan nem szamolja ki az időablakot: a WordPress donti el a
   /// webhely időzonajaban, es csak nyitott kerdőívet ad vissza, így egy elállított
   /// keszülék-ido nem tudja kitolni az ablakot.
-  Future<Map<String, dynamic>?> getActivePoll({bool forceRefresh = false}) async {
+  ///
+  /// `bypassCache: true` eseten a mentett valasz **egyaltalan nem** donthet.
+  /// A kerdőív nyitasa es zarasa időponthoz kotott, es a `forceRefresh` erre nem
+  /// volt eleg: az HEAD + ETag egyeztetessel dolgozik, a WordPress cache-elt
+  /// valasza pedig ugyanazt az ETag-ot adja vissza, ezert a kliens a REGI testet
+  /// szolgalta ki. A `forceRefresh` marad a „felhasznalo frissitett" jelentesre.
+  Future<Map<String, dynamic>?> getActivePoll({
+    bool forceRefresh = false,
+    bool bypassCache = false,
+  }) async {
     try {
-      final data = await _getHeadCached('/poll/active', forceRefresh: forceRefresh);
+      final data = await _getHeadCached(
+        '/poll/active',
+        forceRefresh: forceRefresh,
+        bypassCache: bypassCache,
+      );
       if (data is Map) {
         final poll = data['poll'];
         if (poll is Map) return Map<String, dynamic>.from(poll);
@@ -1483,12 +1498,17 @@ class WordpressService {
   /// sorsolas elott.
   ///
   /// Az időablakot mint a kerdőívnél: a WordPress donti el a webhely
-  /// időzonajaban, ezert a mentett valasz nem dönthet (forceRefresh).
-  Future<Map<String, dynamic>?> getActivePrize({bool forceRefresh = false}) async {
+  /// időzonajaban, ezert `bypassCache: true` eseten a mentett valasz **nem**
+  /// dönthet — a sorsolas utan kihirdetett nyertesnek azonnal meg kell jelennie.
+  Future<Map<String, dynamic>?> getActivePrize({
+    bool forceRefresh = false,
+    bool bypassCache = false,
+  }) async {
     try {
       final data = await _getHeadCached(
         '/prize/active',
         forceRefresh: forceRefresh,
+        bypassCache: bypassCache,
       );
       if (data is Map) {
         final prize = data['prize'];
@@ -1502,7 +1522,8 @@ class WordpressService {
     }
   }
 
-  Future<ProfileSubmissionOptions> getProfileSubmissionOptions() async {    try {
+  Future<ProfileSubmissionOptions> getProfileSubmissionOptions() async {
+    try {
       final data = await _getHeadCached('/profile-submission-options');
 
       if (data is Map<String, dynamic>) {

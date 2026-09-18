@@ -12,10 +12,16 @@ final pollServiceProvider = Provider<PollService>((ref) => PollService());
 /// `null`) nem dönthet arról, latszik-e a kartya. A vegpont kicsi (~250 bajt),
 /// a szerver pedig maga is 45 masodpercig cache-eli, tehat ez olcso.
 ///
+/// **`bypassCache`, nem `forceRefresh`:** az utobbi HEAD + ETag egyeztetessel
+/// dönt, a WordPress cache-elt valasza viszont ugyanazt az ETag-ot adja vissza,
+/// ezert a kliens a REGI testet szolgalta ki — emiatt jelent meg egy frissen
+/// kihirdetett nyertes csak tiz perccel kesobb. A `bypassCache` egyenesen
+/// megkerüli a mentett rekordot.
+///
 /// Ezen felul a kartya ujrakerdez, amikor a főoldalt frissitik, illetve amikor
 /// a felhasznalo visszater az appba (lasd `PollEntryButton`).
 final activePollProvider = FutureProvider<HuhsPoll?>((ref) async {
-  return ref.watch(pollServiceProvider).activePoll(forceRefresh: true);
+  return ref.watch(pollServiceProvider).activePoll(bypassCache: true);
 });
 
 /// Igaz, ha ez a bejelentkezett fiok mar szavazott a megadott kerdőívben.

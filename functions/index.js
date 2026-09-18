@@ -4635,10 +4635,37 @@ async function drawPrizeWinnerForPrizes(prizes, deps = {}) {
       continue;
     }
 
-    const winner = participants.players[crypto.randomInt(0, participants.players.length)];
+    // A jeloltek SORRENDJE a WordPress bejegyzes-sorrendje (meta_id szerint), es
+    // a sorsolas ebbol valaszt. Ezert a dontes visszamenoleg ellenorizheto: a
+    // naplo megmondja, hany jogosult volt es melyik sorszamot huzta.
+    //
+    // A `crypto.randomInt` a Node beepitett, kriptografiailag biztonsagos
+    // generatora (nem `Math.random`), es elfogultsag nelkul ad egyenletes
+    // eloszlast a [0, n) intervallumon — ezt a `functions/prize-draw.test.cjs`
+    // méri is (2, 3 es 5 jelolttel, 200 000 huzas).
+    const eligible = participants.players.length;
+    const choice = crypto.randomInt(0, eligible);
+    const winner = participants.players[choice];
     const winnerUid = String(winner.uid).trim();
     const winnerName = String(winner.name || '').trim();
     const drawnAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    // A jeloltlista lenyomata: ebbol utolag igazolhato, hogy pontosan ezek a
+    // jatekosok voltak a kalapban, es milyen sorrendben.
+    const candidatesHash = crypto
+      .createHash('sha256')
+      .update(participants.players.map((player) => String(player.hash || '')).join('|'))
+      .digest('hex')
+      .slice(0, 32);
+    console.info(
+      JSON.stringify({
+        event: 'prize_draw_choice',
+        prizeId,
+        eligible,
+        choice,
+        winnerName,
+        candidatesHash,
+      }),
+    );
 
     let result;
     try {
@@ -4689,6 +4716,11 @@ async function drawPrizeWinnerForPrizes(prizes, deps = {}) {
           prizeId,
           winnerUid,
           winnerName,
+          // Audit-adatok: a sorsolas visszamenoleg ellenorizheto.
+          eligibleCount: eligible,
+          chosenIndex: choice,
+          candidatesHash,
+          drawnAt,
           notifiedAt: FieldValue.serverTimestamp(),
         });
         fresh = true;

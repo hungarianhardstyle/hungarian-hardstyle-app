@@ -48,12 +48,18 @@ class WordpressHeadCache {
     Uri uri, {
     String cacheContext = '',
     bool forceRefresh = false,
+    bool bypassCache = false,
   }) {
     final key = _key(uri, cacheContext);
     final existing = _inFlight[key];
     if (existing != null) return existing;
     late final Future<Object?> request;
-    request = _get(key, uri, forceRefresh: forceRefresh).whenComplete(() {
+    request = _get(
+      key,
+      uri,
+      forceRefresh: forceRefresh,
+      bypassCache: bypassCache,
+    ).whenComplete(() {
       if (identical(_inFlight[key], request)) _inFlight.remove(key);
     });
     _inFlight[key] = request;
@@ -64,22 +70,37 @@ class WordpressHeadCache {
     String key,
     Uri uri, {
     required bool forceRefresh,
+    bool bypassCache = false,
   }) async {
     final generation = _generation;
     final cached = await _load(key);
     final now = _now();
-    if (!forceRefresh &&
+
+    // BYPASS: a mentett valasz egyaltalan nem donthet.
+    //
+    // Az idohoz kotott vegpontoknal (kerdőív nyitasa/zarasa, nyeremenyjatek
+    // sorsolasa) ez kotelezo. A `forceRefresh` erre NEM eleg: az HEAD + ETag
+    // egyeztetessel dolgozik, es a WordPress cache-elt valasza UGYANAZT az
+    // ETag-ot adja vissza, ezert a kliens a regi (meg ures) testet szolgalta ki
+    // — igy a frissen kihirdetett nyertes csak tiz perccel kesobb jelent meg.
+    //
+    // A lekerdezes a `_bypass()` uri-t hasznalja, tehat a szerver sajat,
+    // rovid (45 s) cache-e sem adja vissza a regi testet. A valaszt viszont
+    // elmentjuk, hogy a megjelenitesi ut (forceRefresh = false) tovabbra is
+    // azonnal tudjon rajzolni.
+    if (!bypassCache &&
+        !forceRefresh &&
         cached != null &&
         now.difference(cached.checkedAt) < validationWindow) {
       return cached.data;
     }
 
-    if (!forceRefresh && cached != null) {
+    if (!bypassCache && !forceRefresh && cached != null) {
       _refreshInBackground(key, uri, cached);
       return cached.data;
     }
 
-    if (cached != null) {
+    if (!bypassCache && cached != null) {
       try {
         final head = await request('HEAD', _bypass(uri, now));
         final headEtag = head.etag;
@@ -95,7 +116,9 @@ class WordpressHeadCache {
 
     late final WordpressCacheResponse response;
     try {
-      response = await request('GET', cached == null ? uri : _bypass(uri, now));
+      // Mindig a bypass-uri-t kérjük: a szerver saját, 45 másodperces cache-e
+      // különben a régi testet adná vissza (a HEAD-ág ugyanezt teszi).
+      response = await request('GET', _bypass(uri, now));
     } catch (_) {
       if (cached != null) return cached.data;
       rethrow;

@@ -22,12 +22,20 @@ class _FakePrizeService extends PrizeService {
   int statusCalls = 0;
   int playCalls = 0;
   bool? lastForceRefresh;
+
+  /// A kartyanak `bypassCache: true`-val KELL kérdeznie: a `forceRefresh`
+  /// (HEAD + ETag) élesben a régi testet adta vissza.
+  bool? lastBypassCache;
   int? lastPrizeId;
 
   @override
-  Future<HuhsPrize?> activePrize({bool forceRefresh = false}) async {
+  Future<HuhsPrize?> activePrize({
+    bool forceRefresh = false,
+    bool bypassCache = false,
+  }) async {
     activeCalls += 1;
     lastForceRefresh = forceRefresh;
+    lastBypassCache = bypassCache;
     return prize;
   }
 
@@ -67,7 +75,7 @@ void main() {
       expect(prize?.id, 777);
       expect(service.activeCalls, 1);
       expect(
-        service.lastForceRefresh,
+        service.lastBypassCache,
         isTrue,
         reason: 'a jatek nyitasa/zarasa időponthoz kotott, a cache nem dönthet',
       );

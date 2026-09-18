@@ -181,6 +181,58 @@ test('a sorsolas tobb jatekosnal is a listan belul valaszt (20 futas)', async ()
   }
 });
 
+test('a sorsolas NEM favorizalja az ELSO bekuldot (200 huzas, valodi veletlen)', async () => {
+  // A tulajdonos jelzese: „azt is nézd meg, hogy valóban random e a sorsolás,
+  // mivel én voltam az első beküldő és engem sorsolt nyertesnek".
+  //
+  // Ez a legfontosabb kerdes: ha a sorsolas mindig az ELSO jelolttel kezdene
+  // (peldaul `players[0]` vagy egy rossz index), akkor aki elsonek jatszott,
+  // mindig nyerne. Ezert itt a VALODI sorsolast futtatjuk sokszor ugyanazzal a
+  // jeloltlistaval, es megnezzuk, hogy az elso jatekos nem nyer mindig.
+  //
+  // A `crypto.randomInt` a Node kriptografiailag biztonsagos generatora; a
+  // mérés 200 huzas, tehat ha barmilyen elfogultsag lenne az elso index fele,
+  // az itt azonnal latszana.
+  const runs = 200;
+  let firstPlayerWins = 0;
+  for (let index = 0; index < runs; index += 1) {
+    await resetDatabase();
+    fetchCalls = [];
+    await draw([PENDING], deps());
+    const call = fetchCalls.find((entry) => entry.url.includes('/prize/winner'));
+    if (call.body.uid === PLAYERS[0].uid) firstPlayerWins += 1;
+  }
+
+  // Elvaras: mindenki kb. a huzasok harmadat nyeri (2 jelolt -> ~50%).
+  // A hatar szandekosan tag, hogy NE legyen „flaky": a lenyeg az, hogy az elso
+  // jatekos NEM nyer mindig, es a tobbiek is nyernek.
+  assert.ok(
+    firstPlayerWins > 0 && firstPlayerWins < runs,
+    `az elso jatekos nem nyerhet mindig (nyert: ${firstPlayerWins}/${runs})`,
+  );
+  assert.ok(
+    firstPlayerWins > runs * 0.2 && firstPlayerWins < runs * 0.8,
+    `az elso jatekos nyerese korulbelul fele legyen (nyert: ${firstPlayerWins}/${runs})`,
+  );
+  assert.ok(
+    runs - firstPlayerWins > 0,
+    'a masodik jatekos is nyer legalabb egyszer',
+  );
+});
+
+test('a sorsolas dontese naplozva van (hany jogosult, melyik sorszam)', async () => {
+  // Audit: a tulajdonos visszamenoleg ellenorizhesse, mi tortent.
+  await draw([PENDING], deps());
+  const claim = await db.collection('prize_draws').doc('4242').get();
+  const data = claim.data();
+  assert.equal(data.eligibleCount, PLAYERS.length);
+  assert.ok(Number.isInteger(data.chosenIndex));
+  assert.ok(data.chosenIndex >= 0 && data.chosenIndex < PLAYERS.length);
+  assert.equal(data.winnerUid, PLAYERS[data.chosenIndex].uid, 'a nyertes a naplozott sorszam');
+  assert.equal(typeof data.candidatesHash, 'string');
+  assert.equal(data.candidatesHash.length, 32);
+});
+
 /* --- 2. A WordPress-be iras -------------------------------------------- */
 
 test('a nyertes bekerul a WordPressbe, a jatekos NEVEl es a UID-javal', async () => {

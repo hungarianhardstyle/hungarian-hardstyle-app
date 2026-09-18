@@ -20,11 +20,20 @@ class PrizeService {
 
   /// A nyitott jatek vagy a frissen kihirdetett nyertes, egyebkent null.
   ///
-  /// `forceRefresh: true` eseten a mentett valasz nem dont: a jatek nyitasa,
+  /// `bypassCache: true` eseten a mentett valasz nem dont: a jatek nyitasa,
   /// zarasa es a sorsolas időponthoz kotott, ezert a cache nem rejtheti el.
-  Future<HuhsPrize?> activePrize({bool forceRefresh = false}) async {
+  ///
+  /// **Ezt a jelzot a `forceRefresh` nem tudja helyettesiteni.** Az csak HEAD +
+  /// ETag egyeztetessel dolgozik, a WordPress cache-elt valasza viszont ugyanazt
+  /// az ETag-ot adja vissza — ezert egy kihirdetett nyertes tiz percig nem
+  /// jelent meg a kártyán, hiaba volt meg a szerveren.
+  Future<HuhsPrize?> activePrize({
+    bool forceRefresh = false,
+    bool bypassCache = false,
+  }) async {
     final payload = await _wordpress.getActivePrize(
       forceRefresh: forceRefresh,
+      bypassCache: bypassCache,
     );
     return HuhsPrize.fromJson(payload);
   }

@@ -13,15 +13,24 @@ class _FakePollService extends PollService {
   int calls = 0;
   bool? lastForceRefresh;
 
+  /// A kartyanak `bypassCache: true`-val KELL kérdeznie. A `forceRefresh`
+  /// (HEAD + ETag) élesben a régi testet adta vissza, ezért a frissen
+  /// kihirdetett nyertes csak tíz perccel később jelent meg.
+  bool? lastBypassCache;
+
   /// A szerver valasza a „szavaztal mar?" keredesre.
   bool voted;
   int statusCalls = 0;
   int voteCalls = 0;
 
   @override
-  Future<HuhsPoll?> activePoll({bool forceRefresh = false}) async {
+  Future<HuhsPoll?> activePoll({
+    bool forceRefresh = false,
+    bool bypassCache = false,
+  }) async {
     calls += 1;
     lastForceRefresh = forceRefresh;
+    lastBypassCache = bypassCache;
     return poll;
   }
 
@@ -72,12 +81,17 @@ void main() {
   test('a lekerdezes MEGKERULI a cache-t', () async {
     // Ez a lényeg: a kerdőív megnyilasa/zarasa időponthoz kotott, ezert egy
     // mentett valasz (peldaul egy korabbi `null`) nem dönthet a kartyarol.
+    //
+    // **`bypassCache`, nem `forceRefresh`.** Az utobbi HEAD + ETag
+    // egyeztetessel dönt, a WordPress cache-elt valasza viszont ugyanazt az
+    // ETag-ot adja vissza — ezért élesben a régi testet szolgálta ki, és a
+    // frissen kihirdetett nyertes csak tíz perccel később jelent meg.
     final fake = _FakePollService(_poll);
     final container = _containerWith(fake);
 
     await container.read(activePollProvider.future);
 
-    expect(fake.lastForceRefresh, isTrue);
+    expect(fake.lastBypassCache, isTrue);
   });
 
   test('frissites utan ujra lekerdez (nyitas/zaras követhető)', () async {

@@ -1,5 +1,29 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### „100 év után jelent meg a nyertes" — a `forceRefresh` HEAD + ETag útja a RÉGI testet adta vissza (2026-09-18, AAB 324)
+
+- **A tulajdonos jelzése:** *„a játék lejárt 22:17-kor el is tűnt, de nincs ott in app a nyertes a nyereményjáték kártya helyén"*, majd amikor megkérdeztem az app verzióját: **„322 van fent"**, végül: *„ja közben meglett a kártya, 100 év után"*.
+- **Amit először kizártam (méréssel, nem sejtéssel):**
+  - a szerver **helyes** volt: `GET /prize/active` élőben `state: "drawn"` + `winner.name: "Denoiser"` (a `drawn_at` 20:19:04 UTC = 22:19 budapesti idő, tehát a 22:17-es zárás után 2 perccel a sorsoló lefutott);
+  - a kliens **modell** is helyes: `test/models/prize_model_test.dart` az **éles válasz szó szerinti szövegével** (a megmaradt `image` mezővel együtt, mert a plugin akkor még 2.5.0 volt) felismeri a nyertest;
+  - az app **322** volt, tehát a kártya kódja benne volt.
+  Vagyis a hiba a **kettő között**, a cache-útvonalon volt.
+- **A gyökér — a `forceRefresh` nem cache-kerülés, hanem ETag-egyeztetés.** A `WordpressHeadCache._get()` a `forceRefresh` esetén ezt tette: `HEAD` kérés a `_bypass()` (egyedi `_huhs_revalidate`) URI-ra, majd ha a HEAD **ugyanazt az ETag-ot** adta vissza, mint a mentett rekord, akkor `_unchanged()` igaz lett, és a függvény a **mentett testet** szolgálta ki. A WordPress viszont a **cache-elt válaszához ugyanazt az ETag-ot** adja (`X-HUHS-Cache: early`), ezért a kliens tíz percen át a **régi, még üres** `{"prize":null}` testet kapta — hiába volt a szerveren már ott a nyertes. **Élő mérés, ami ezt alátámasztja:** a GET és a HEAD is `X-HUHS-Cache: early` + **azonos ETag** (`"8426d91d…"`), és a feltételes (`If-None-Match`) kérés is **200-at** ad, nem 304-et.
+- **Miért nem derült ki a kérdőívnél?** Ott ugyanez a hiba létezett, csak rövidebb ablakon: a kérdőív 45 másodpercenként változó tartalma miatt az ETag hamarabb eltért, ezért a „beragadás" nem tűnt fel. A nyereményjátéknál viszont **egyszeri, ritka esemény** a sorsolás, ezért ott ez tíz perces késést okozott.
+- **A javítás — új `bypassCache` jelző a cache-ben (`lib/services/wordpress_head_cache.dart`):**
+  - `bypassCache: true` esetén a mentett rekord **egyáltalán nem dönthet**: nincs ablak-ellenőrzés, nincs háttér-frissítés, **nincs HEAD-egyeztetés** — egyenesen `GET` a bypass URI-ra;
+  - a választ **elmentjük**, hogy a megjelenítési út (`forceRefresh: false`) továbbra is azonnal tudjon rajzolni;
+  - hálózati hiba esetén a mentett test marad (a viselkedés nem romlik);
+  - a `forceRefresh` **megmarad** a „felhasználó frissített" jelentésre — a kettő nem ugyanaz.
+- **Bekötés:** `getActivePoll()` és `getActivePrize()` (`bypassCache` paraméter), `PollService.activePoll()` és `PrizeService.activePrize()`, majd **`activePollProvider` és `activePrizeProvider` is `bypassCache: true`**-val kér. A `forceRefresh` innentől **egyetlen providerben sem** szerepel ezeknél.
+- **Új tesztek (a hiba konkrét leírásával):**
+  - `test/services/wordpress_head_cache_test.dart` **+4**: „bypassCache: a mentett test NEM nyerhet, ha az ETag egyezik" (a `methods` `['GET', 'GET']`, tehát nincs HEAD), „üres (null) mentett válasz nem ragadhat be", „hálózati hiba esetén a mentett test marad", „az ablakon belül is a szerverhez megy";
+  - `test/providers/poll_provider_test.dart` és `test/providers/prize_provider_test.dart`: a cache-kerülés ellenőrzése `lastForceRefresh` helyett **`lastBypassCache`**;
+  - `test/models/prize_model_test.dart` (**+2**): az éles `drawn` válasz feldolgozása, és hogy a megmaradt `image` mező nem töri el.
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **222/222**.
+- **Csomag:** `build/HUHS-v1.0.0+324-release.aab` — **a pluginhoz NEM kell nyúlni**, ez tisztán kliensoldali javítás.
+- **TANULSÁG A JÖVŐRE:** ha egy végpont tartalma **időponthoz kötött eseménytől** függ (nyitás, zárás, sorsolás), akkor a `forceRefresh` **nem elég** — az csak ETag-egyeztetés, és egy cache-elő szerver ugyanazt az ETag-ot adhatja vissza megváltozott tartalom mellett. Ilyenkor **explicit cache-kerülés** kell (`bypassCache`), különben a felhasználó a régi állapotot látja, és ez a hiba pont azért veszélyes, mert **ritka és egyszeri** eseményeknél jelentkezik.
+
 ### A kérdőív eredmény-gombja az ÉVES SZAVAZÁS összesítőjét nyitotta meg — javítva (2026-09-18, plugin 2.5.1 + AAB 323)
 
 - **A tulajdonos jelzése:** *„A kérdőívnél rossz szavazási összesítő van az adminnak, az éves szavazást mutatja"*.
