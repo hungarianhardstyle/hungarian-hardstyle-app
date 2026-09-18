@@ -84,14 +84,28 @@ class NotificationService {
     await firestore.collection('notifications').doc(notification.id).delete();
   }
 
-  Future<void> deleteAll() async {
+  /// Az AKTÍV vagy az ARCHIVÁLT értesítések törlése.
+  ///
+  /// A tulajdonos jelzése: *„ha az aktív fülön nyomok egy összes törlését, töröl
+  /// mindent még az archiváltat is, ezt külön kéne választani"*. Ezért a törlés
+  /// **a látható fülhöz** kötött: az Aktív fül csak az aktívakat, az Archivált
+  /// fül csak az archiváltakat törli. Korábban ez a függvény feltétel nélkül
+  /// **mindent** törölt, ezért az Aktív fülről indítva az archívum is eltűnt.
+  Future<void> deleteAll({required bool archived}) async {
     final uid = auth.currentUser?.uid;
     if (uid == null || auth.currentUser?.isAnonymous == true) return;
     final snapshot = await firestore
         .collection('notifications')
         .where('recipientUid', isEqualTo: uid)
         .get();
-    await _commitInChunks(snapshot.docs, (batch, doc) {
+    // A szűrést a kliensen végezzük, mert az `archivedAt == null` feltétel a
+    // Firestore-ban nem kérdezhető le közvetlenül (a hiányzó mezőre nincs
+    // egyenlőség-szűrő). Ugyanaz a minta, mint az `archiveReadOlderThan`-nél.
+    final matching = snapshot.docs.where((doc) {
+      final isArchived = doc.data()['archivedAt'] != null;
+      return isArchived == archived;
+    });
+    await _commitInChunks(matching, (batch, doc) {
       batch.delete(doc.reference);
     });
   }

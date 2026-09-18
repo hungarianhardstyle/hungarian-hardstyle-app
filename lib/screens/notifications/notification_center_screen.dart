@@ -79,12 +79,27 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     }
   }
 
+  /// Az ÉPP LÁTHATÓ fül értesítéseinek törlése.
+  ///
+  /// A tulajdonos jelzése: *„ha az aktív fülön nyomok egy összes törlését, töröl
+  /// mindent még az archiváltat is, ezt külön kéne választani: aktívban az
+  /// aktívat törölje, archivban az archiváltakat"*.
+  ///
+  /// Ezért a megerősítő szöveg is a fület nevezi meg, hogy senki ne töröljön
+  /// véletlenül a másik fülből, és a törlés is a látható fülre szűkül.
   Future<void> _deleteAll(BuildContext context) async {
+    final archived = _showArchived;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Értesítések törlése'),
-        content: const Text('Biztosan törlöd az összes értesítést?'),
+        title: Text(
+          archived ? 'Archivált értesítések törlése' : 'Aktív értesítések törlése',
+        ),
+        content: Text(
+          archived
+              ? 'Biztosan törlöd az összes ARCHIVÁLT értesítést? Az aktív fül értesítései megmaradnak.'
+              : 'Biztosan törlöd az összes AKTÍV értesítést? Az archivált értesítések megmaradnak.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -99,7 +114,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     );
     if (confirmed != true) return;
     try {
-      await NotificationService().deleteAll();
+      await NotificationService().deleteAll(archived: archived);
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -282,7 +297,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       const SizedBox(width: 6),
                       IconButton(
                         style: actionStyle,
-                        tooltip: 'Összes törlése',
+                        // A tooltip is megmondja, MELYIK fulett töröl — a gomb a
+                        // látható fülre vonatkozik, nem mindenre.
+                        tooltip: _showArchived
+                            ? 'Összes archivált törlése'
+                            : 'Összes aktív törlése',
                         onPressed: items.isEmpty
                             ? null
                             : () => unawaited(_deleteAll(context)),

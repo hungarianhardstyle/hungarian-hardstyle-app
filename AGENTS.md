@@ -1,5 +1,19 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### „Összes törlése" az értesítéseknél: az Aktív fül az ARCHIVÁLTAT is törölte (2026-09-18, AAB 325)
+
+- **A tulajdonos jelzése:** *„Notifyt lehet archiválni és átrakja az archiváltba — de ha az aktív fülön nyomok egy összes törlését, töröl mindent még az archiváltat is, ezt külön kéne választani: aktívban az aktívat törölje, archivban az archiváltakat"*.
+- **A gyökér (egy hiányzó szűrés):** a `NotificationService.deleteAll()` a `recipientUid`-re szűrt, majd **feltétel nélkül az ÖSSZES** rekordot törölte — az `archivedAt` mezőt egyáltalán nem nézte. A képernyő pedig mindig ezt hívta, tekintet nélkül a kiválasztott fülre, ezért az Aktív fülről indított törlés az archívumot is elvitte. A felirat is félrevezető volt: „Biztosan törlöd az összes értesítést?".
+- **A javítás:**
+  1. **`deleteAll({required bool archived})`** — a törlés a **látható fülre** szűkül. A szűrést a kliensen végezzük (`doc.data()['archivedAt'] != null`), mert a Firestore-ban a **hiányzó mezőre nincs egyenlőség-szűrő** (`archivedAt == null` nem kérdezhető le) — ugyanaz a minta, mint a meglévő `archiveReadOlderThan()`-nél és a `markAllRead()`-nél.
+  2. **A megerősítő szöveg megnevezi a fület:** „Biztosan törlöd az összes **AKTÍV** értesítést? Az archivált értesítések megmaradnak." (és fordítva), a cím is fül-specifikus.
+  3. **A gomb tooltipje** is megmondja: „Összes aktív törlése" / „Összes archivált törlése".
+- **Az „aktív" definíciója szándékosan `archivedAt == null`**, nem pedig `readAt == null`: az olvasottság nem sorol át egy értesítést a másik fülre, különben egy olvasott értesítés átcsúszna, és a törlés a rossz helyen hatna. Ezt a teszt külön rögzíti.
+- **Új teszt: `test/services/notification_delete_all_test.dart` (6 teszt)** — aktív törlésnél az archiváltak **megmaradnak** és fordítva; a **más felhasználó** értesítéséhez egyik fül sem nyúl; az olvasott, de nem archivált értesítés az **aktív** fülhöz tartozik; vendég fióknál nem töröl semmit; üres fülön nem hiba.
+  - **Nem adtam hozzá új csomagot** (`fake_cloud_firestore`): a teszt kézzel írt Firestore-hasznot használ `implements`-szel, ezért a szolgáltatás a **valódi `deleteAll()`** kódját futtatja, csak a tárhely hamis. Ez a projekt bevett mintája.
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **228/228**.
+- **Csomag:** `build/HUHS-v1.0.0+325-release.aab` — tisztán kliensoldali javítás, **a pluginhoz nem kell nyúlni**.
+
 ### A WP admin „HUHS Mobile" menü rendberakva — a rendezési lista elavult volt (2026-09-18, plugin 2.5.2)
 
 - **A tulajdonos jelzése:** *„meg apiban tedd rendbe a menüpontokat, elég összevisszaság lett most, about legalul legyen a többi meg értelem szerűen egymáshoz viszonyítva jó helyen"*, majd pontosítva: *„most ugye a WP HUHS mobil menüről beszéltem"*.
