@@ -286,5 +286,68 @@ if (fs.readFileSync(path.join(sourceDir, 'includes/http-cache.php'), 'utf8').inc
   fail('a friss válasz fejlécei nem a közös engedélylistát használják');
 }
 
+/* ------------------------------------------------------------------ */
+/* 4. Admin almenü csak a szülő-menü UTÁN regisztrálhat                */
+/* ------------------------------------------------------------------ */
+
+/*
+ * A WordPress az admin-oldal azonosítóját a szülő-menü ismeretében számolja.
+ * Ha egy almenü az előtt regisztrálódik, hogy a szülő-menü létrejönne, a
+ * WordPress eldobja, és a címre ez jön: „Sorry, you are not allowed to access
+ * this page." — pontosan ez történt a „Kérdőív eredményei" oldallal (a
+ * poll.php az admin.php ELŐTT töltődik be). A javítás: admin_menu priority 20.
+ */
+const submenuPriority = (code) => {
+  const match = code.match(/add_action\(\s*'admin_menu'\s*,[\s\S]{0,600}?\}\s*,\s*(\d+)\s*\)\s*;/);
+  return match ? Number(match[1]) : 10;
+};
+
+const adminMenuProblems = (files) => {
+  const problems = [];
+  for (const { name, code } of files) {
+    if (!/add_submenu_page\s*\(/.test(code)) continue;
+    if (name === 'admin.php') continue; // ez hozza létre a szülő-menüt
+    const priority = submenuPriority(code);
+    if (priority < 20) problems.push(`${name} (priority ${priority})`);
+  }
+  return problems;
+};
+
+{
+  const mainFile = fs.readFileSync(path.join(sourceDir, 'huhs-mobile-api.php'), 'utf8');
+  const includeOrder = [...mainFile.matchAll(/require_once HUHS_API_PATH \. 'includes\/([^']+)'/g)].map((m) => m[1]);
+  const adminIndex = includeOrder.indexOf('admin.php');
+
+  const beforeParent = includeOrder.slice(0, adminIndex).map((name) => ({
+    name,
+    code: fs.existsSync(path.join(sourceDir, 'includes', name)) ? fs.readFileSync(path.join(sourceDir, 'includes', name), 'utf8') : '',
+  }));
+  const afterParent = includeOrder.slice(adminIndex + 1).map((name) => ({
+    name,
+    code: fs.existsSync(path.join(sourceDir, 'includes', name)) ? fs.readFileSync(path.join(sourceDir, 'includes', name), 'utf8') : '',
+  }));
+
+  const broken = adminMenuProblems(beforeParent);
+  if (broken.length) {
+    fail(`admin almenü a szülő-menü ELŐTT, priority nélkül: ${broken.join(', ')} — a WordPress eldobja az oldalt`);
+  } else {
+    ok('a szülő-menü előtt betöltődő fájlok almenüje priority 20-szal regisztrál');
+  }
+
+  // A detektor működésének bizonyítéka: a javítás ELŐTTI minta (priority 10).
+  const beforeFix = [{
+    name: 'poll.php',
+    code: "add_action('admin_menu', function () {\n    add_submenu_page('huhs-mobile', 'Kérdőív eredményei', 'Kérdőív eredményei', 'manage_options', 'huhs-poll-results', 'huhs_poll_results_admin_page');\n});",
+  }];
+  if (adminMenuProblems(beforeFix).length !== 1) {
+    fail('a detektor nem ismeri fel a javítás előtti (priority 10) esetet');
+  } else {
+    ok('a detektor felismeri a javítás előtti esetet (priority 10)');
+  }
+
+  const afterParentProblems = adminMenuProblems(afterParent.filter((entry) => entry.code));
+  void afterParentProblems;
+}
+
 console.log(failures === 0 ? '\nMINDEN ELLENŐRZÉS RENDBEN' : `\n${failures} HIBA`);
 process.exit(failures === 0 ? 0 : 1);
