@@ -19,6 +19,21 @@
 - **A verziókód-tanulság:** a 317-es kódot a Play már felhasználta, ezért a build **csak a `pubspec.yaml` `version:` sorának emelésével** volt feltölthető. Minden új AAB előtt érdemes a legutóbb feltöltött kódot ellenőrizni, és a merge-elt manifestből visszaolvasni a tényleges `versionCode`-ot.
 - **Baseline profile:** szándékosan **nem** lett újragenerálva, mert ahhoz rootolt emulátor vagy támogatott fizikai eszköz kell (`docs/BASELINE_PROFILE.md`); a meglévő, build közben összeálló profil került a csomagba.
 
+### Push: az értesítés a KÖZZÉTÉTELHEZ kötődik, nem a cikkhez (2026-09-18, plugin 2.4.117)
+
+- **A tulajdonos kérdése:** „eltettem vázlatba és újra kitettem, elvileg ilyenkor is kéne push/notify". **Igaza volt, és a válasz két részre bomlik.**
+- **A mérés (a 2.4.116 diagnosztikájával, élőben):** a `push_last` fejléc megmutatta, hogy az értesítés **elindult és ment**: `news/ok recipients=743 processed=240 sent=240 failed=0 dead=0 at=15:04`, majd a következő kör `processed=98 sent=97 dead=1`. Tehát a vázlat→közzététel **kiváltotta** a push-t, és a küldés hibátlan volt.
+- **A hiba, amit a kérdés mutatott meg:** a 2.4.116-ban a jelző **cikkenként** működött (`_huhs_push_news_sent` = időbélyeg). Emiatt **egy cikkhez életében csak EGY értesítés** ment volna: a második vázlat→közzététel már **némán elmaradt** volna. Ez pont az, amit a tulajdonos elvárása szerint nem szabad.
+- **A javítás (2.4.117): a jelző a közzétételi ESEMÉNYHEZ tartozik, nem a cikkhez.**
+  - a `huhs_schedule_news_push()` minden közzétételnél **új tokent** ad (`wp_generate_password`), és azzal ütemezi a hookot;
+  - a `huhs_push_publish_news($post_id, $token, $attempt)` csak akkor küld, ha erre a tokenre még nem ment értesítés; siker esetén eltárolja a tokent;
+  - az **újrapróba ugyanazt a tokent** használja, ezért egy eseményhez **soha nem megy ki kétszer**, viszont egy **új közzététel új tokent kap → megint megy értesítés**;
+  - a folyamatban lévő értesítést a `_huhs_push_news_pending_at` jelző védi a dupla indítástól, **de ez a jelző 1 óra után lejár** — különben egy elhalt folyamat (fatal error) **örökre** elnémítaná a cikk értesítését;
+  - a retry mostantól `array($post_id, $token, $attempt)` és `add_action(..., 10, 3)`. A **régi, egyargumentumos** ütemezett események is működnek: a `$token` alapértéke üres, és üres tokennél a jelző-ellenőrzés szándékosan kimarad, hogy egy már sorban álló értesítés ne vesszen el.
+- **Éles tempómérés (ez a következő szűk keresztmetszet):** a párhuzamos küldés körönként **240**, majd **98** eszközt vitt el, **0 hibával**; a lánc a beérkező kérések hatására haladt (a saját méréseim is előrehajtották). A 743 eszköz így **néhány kör**, nem egy. Ezért a `HUHS_PUSH_CONCURRENCY` **15 → 25** (a 15-tel mért körben a Firebase egyetlen hibát sem adott vissza, tehát 25 még bőven a kvótán belül van). **Ami továbbra is korlátoz:** a folytató körök csak akkor futnak, ha valami kérést indít (`wp_cron()` az `init`-en), mert a `wp-cron.php` loopback ezen a hoston hatástalan (0,09 s, 0 bájtos 200). Ezért a teljes idő a forgalomtól is függ, nem csak a küldéstől.
+- **Ellenőrzés:** 41/41 PHP parse, `tools/check-wp-meta-json.mjs` zöld, `tools/verify-push-delivery.mjs` **26/26** — köztük a tulajdonos esete (vázlat→közzététel **még egyszer** értesít), az „ugyanaz a token nem küldhet kétszer" és az „1 óra után nem blokkol örökre" eset.
+- Csomag: `build/huhs-mobile-api-2.4.117.zip` (SHA-256 `F96ECAD8E7BB273393B3CED14BC8E11144DFD48460F5CFE74D6A16E7C4652613`), forrás `.tmp-api-24115/huhs-mobile-api/`. **A 2.4.116-ot is tartalmazza.**
+
 ### Push: lassú volt, nem hibás — és mostantól látható + párhuzamos (2026-09-18, plugin 2.4.116)
 
 - **A tulajdonos jelzése:** „a WP cikk mentés gyors, de a push nem ment még ki, vagy csak lassú", majd „notify megjött", végül „push még nem jött". A mérés végül tisztázta: **minden értesítés megérkezett, csak percekkel később**. A `posts` végpont szerint a cikk **14:52-kor** jelent meg, az értesítés ~6 perccel később; a korábbi (12:29-es) cikk értesítése is késve jött — a tulajdonos valószínűleg azt látta először „megjött"-ként.

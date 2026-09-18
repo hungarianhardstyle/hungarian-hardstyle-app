@@ -148,20 +148,45 @@ const runBroadcast = (tokens, data, clock, attempt, slice = deliverSlice) => {
 };
 
 /**
- * Mirror of huhs_push_publish_news: one notification per article, a marker on
- * success, a bounded retry when nothing was delivered, and no retry at all when
- * there was nobody to notify.
+ * Mirror of huhs_schedule_news_push + huhs_push_publish_news.
+ *
+ * The notification is tracked per publish EVENT (a token), not per article:
+ * a retry reuses the token so it can never send twice, while taking an article
+ * back to draft and publishing it again creates a NEW token and therefore
+ * notifies again — which is what the owner expects.
  */
-const newsNotification = (sentPerAttempt, recipientCount) => {
-  const scheduled = [];
-  for (let attempt = 1; attempt <= NEWS_MAX_ATTEMPTS; attempt += 1) {
-    const sent = sentPerAttempt[attempt - 1] ?? 0;
-    if (sent > 0) return { attemptsUsed: attempt, marked: true, scheduled, reason: 'ok' };
-    if (recipientCount <= 0) return { attemptsUsed: attempt, marked: false, scheduled, reason: 'no-recipients' };
-    if (attempt >= NEWS_MAX_ATTEMPTS) return { attemptsUsed: attempt, marked: false, scheduled, reason: 'gave-up' };
-    scheduled.push(attempt);
-  }
-  return { attemptsUsed: NEWS_MAX_ATTEMPTS, marked: false, scheduled, reason: 'gave-up' };
+const newsPush = () => {
+  const state = { pendingAt: null, sentToken: null, notifications: 0, attempts: 0 };
+  return {
+    state,
+    schedule(now) {
+      if (state.pendingAt !== null && state.pendingAt > now - 3600) return { blocked: true };
+      state.attempts += 1;
+      state.pendingAt = now;
+      return { token: `token${state.attempts}` };
+    },
+    run(now, token, attempt, sent, recipients) {
+      if (token !== '' && state.sentToken === token) {
+        state.pendingAt = null;
+        return 'already-sent';
+      }
+      if (sent > 0) {
+        state.sentToken = token;
+        state.pendingAt = null;
+        state.notifications += 1;
+        return 'sent';
+      }
+      if (recipients <= 0) {
+        state.pendingAt = null;
+        return 'no-recipients';
+      }
+      if (attempt >= NEWS_MAX_ATTEMPTS) {
+        state.pendingAt = null;
+        return 'gave-up';
+      }
+      return 'retry-scheduled';
+    },
+  };
 };
 
 const check = (name, condition, detail) => {
@@ -294,19 +319,58 @@ let failures = 0;
   );
 }
 
-// 9. A news notification is never silently lost and never sent twice.
+// 9. A news notification is never silently lost, never sent twice, and a
+//    deliberate re-publish notifies again.
 {
-  const delivered = newsNotification([7, 0, 0], 900);
-  failures += check('sikeres küldés után nincs újrapróba', delivered.attemptsUsed === 1 && delivered.marked === true && delivered.scheduled.length === 0, JSON.stringify(delivered));
+  // 9a. A successful first attempt notifies exactly once.
+  const one = newsPush();
+  const first = one.schedule(1000);
+  failures += check('közzététel: értesítés indul', first.token === 'token1', JSON.stringify(first));
+  const outcome = one.run(1001, first.token, 1, 7, 743);
+  failures += check('sikeres küldés után nincs újrapróba', outcome === 'sent' && one.state.notifications === 1 && one.state.pendingAt === null, `${outcome} notifications=${one.state.notifications}`);
 
-  const late = newsNotification([0, 0, 9], 900);
-  failures += check('két sikertelen kísérlet után a harmadik még kimegy', late.attemptsUsed === 3 && late.marked === true && late.scheduled.length === 2, JSON.stringify(late));
+  // 9b. A retry reuses the token, so it can never produce a second notification.
+  const two = newsPush();
+  const evt = two.schedule(1000);
+  const r1 = two.run(1001, evt.token, 1, 0, 743);
+  const r2 = two.run(1002, evt.token, 2, 0, 743);
+  const r3 = two.run(1003, evt.token, 3, 9, 743);
+  failures += check('két sikertelen kísérlet után a harmadik még kimegy', r1 === 'retry-scheduled' && r2 === 'retry-scheduled' && r3 === 'sent' && two.state.notifications === 1, `${r1}/${r2}/${r3} notifications=${two.state.notifications}`);
+  failures += check('az újrapróba ugyanazt a tokent használja (nincs dupla értesítés)', two.run(1004, evt.token, 3, 9, 743) === 'already-sent' && two.state.notifications === 1, `notifications=${two.state.notifications}`);
 
-  const lost = newsNotification([0, 0, 0], 900);
-  failures += check('három sikertelen kísérlet után jelzés nélkül feladja (nincs néma elveszés)', lost.attemptsUsed === 3 && lost.marked === false && lost.reason === 'gave-up', JSON.stringify(lost));
+  // 9c. Three failures are logged and given up, not silently swallowed.
+  const three = newsPush();
+  const evt3 = three.schedule(1000);
+  three.run(1001, evt3.token, 1, 0, 743);
+  three.run(1002, evt3.token, 2, 0, 743);
+  const last = three.run(1003, evt3.token, 3, 0, 743);
+  failures += check('három sikertelen kísérlet után jelzés nélkül feladja (nincs néma elveszés)', last === 'gave-up' && three.state.notifications === 0, `${last}`);
 
-  const nobody = newsNotification([0, 0, 0], 0);
-  failures += check('ha nincs kit értesíteni, nincs felesleges újrapróba', nobody.attemptsUsed === 1 && nobody.reason === 'no-recipients', JSON.stringify(nobody));
+  // 9d. Nobody to notify: no pointless retry.
+  const four = newsPush();
+  const evt4 = four.schedule(1000);
+  failures += check('ha nincs kit értesíteni, nincs felesleges újrapróba', four.run(1001, evt4.token, 1, 0, 0) === 'no-recipients', 'no-recipients');
+
+  // 9e. THE OWNER'S CASE: draft, then publish again -> it must notify again.
+  const five = newsPush();
+  const a = five.schedule(1000);
+  five.run(1001, a.token, 1, 743, 743);
+  const b = five.schedule(5000);
+  failures += check('vázlatba tétel után újra közzététel: új token jön', b.token === 'token2', JSON.stringify(b));
+  const again = five.run(5001, b.token, 1, 743, 743);
+  failures += check('ÚJRA KÖZZÉTÉTELNÉL MEGINT MEGY ÉRTESÍTÉS', again === 'sent' && five.state.notifications === 2, `${again} notifications=${five.state.notifications}`);
+
+  // 9f. While one notification is in flight, the same event cannot start a second.
+  const six = newsPush();
+  const c = six.schedule(1000);
+  const blocked = six.schedule(1001);
+  failures += check('folyamatban lévő értesítés nem indítható újra ugyanarra a közzétételre', blocked.blocked === true, JSON.stringify(blocked));
+
+  // 9g. ...but a stale pending marker must not block forever after a crash.
+  const seven = newsPush();
+  seven.schedule(1000);
+  const afterCrash = seven.schedule(1000 + 3601);
+  failures += check('elhalt folyamat után (1 óra) nem blokkol örökre', afterCrash.blocked === undefined && afterCrash.token === 'token2', JSON.stringify(afterCrash));
 }
 
 console.log(failures === 0 ? '\nMinden ellenőrzés sikeres.' : `\n${failures} ellenőrzés hibás.`);
