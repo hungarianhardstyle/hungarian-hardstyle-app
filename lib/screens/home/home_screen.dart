@@ -11,6 +11,7 @@ import '../../providers/news_provider.dart';
 import '../../providers/voting_provider.dart';
 import '../../providers/games_provider.dart';
 import '../../providers/poll_provider.dart';
+import '../../providers/prize_provider.dart';
 import '../../models/post.dart';
 import '../../models/game.dart';
 import '../../widgets/event_card.dart';
@@ -20,6 +21,7 @@ import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/home_action_card.dart';
 import '../../widgets/poll_entry_button.dart';
+import '../../widgets/prize_entry_card.dart';
 import '../../services/notification_service.dart';
 import '../notifications/notification_center_screen.dart';
 import '../community/community_screen.dart';
@@ -91,11 +93,16 @@ class HomeScreen extends ConsumerWidget {
     ref.invalidate(eventsProvider);
     // A kerdőív is frissul: nyitas/zaras utan a kartyanak követnie kell.
     ref.invalidate(activePollProvider);
+    // A nyeremenyjatek ugyanígy: a jatek nyitasa, zarasa es a sorsolas is
+    // időponthoz kotott, ezert a frissitesnek ezt is le kell kérdeznie.
+    ref.invalidate(activePrizeProvider);
     await Future.wait<void>([
       ref.read(newsProvider.future),
       ref.read(eventsProvider.future),
       // A kerdőív opcionalis, ezert egy hibaja ne törje meg a frissitést.
       ref.read(activePollProvider.future).catchError((Object _) => null),
+      // Ugyanez a nyeremenyjatekra.
+      ref.read(activePrizeProvider.future).catchError((Object _) => null),
     ]);
   }
 
@@ -267,14 +274,17 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // A két főoldali „hero" sor (kérdőív + éves szavazás)
-                    // UGYANAZT a format adja a HomeActionCard-bol, ezert
-                    // pontosan egyforma szelesseguek. A „Legfrissebb hírek"
-                    // felirat csak ezutan jon, hogy a sorok ne a hírfolyam
-                    // reszenek tűnjenek.
+                    // A főoldali „hero" sorok (nyereményjáték, kérdőív, éves
+                    // szavazás) UGYANAZT a format adjak a HomeActionCard-bol,
+                    // ezert pontosan egyforma szelesseguek. A „Legfrissebb
+                    // hírek" felirat csak ezutan jon, hogy a sorok ne a
+                    // hírfolyam reszenek tűnjenek.
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        // A nyeremenyjatek sora magatol eltunik, ha nincs
+                        // nyitott jatek es nincs frissen kihirdetett nyertes.
+                        const PrizeEntryCard(),
                         // A kerdőív sora magatol eltunik, ha nincs nyitott
                         // kerdőív.
                         const PollEntryButton(),

@@ -1475,8 +1475,34 @@ class WordpressService {
     }
   }
 
-  Future<ProfileSubmissionOptions> getProfileSubmissionOptions() async {
+  /// A jelenleg latszo nyeremenyjatek, vagy null, ha épp nincs ilyen.
+  ///
+  /// Ket allapot letezik: nyitott jatek (akkor a kerdes es a valaszlehetosegek
+  /// jonnek le), illetve kihirdetett nyertes (akkor a kerdes NEM, csak a nyertes
+  /// es a nyeremeny leirasa). A helyes valaszt a szerver soha nem kuldi el a
+  /// sorsolas elott.
+  ///
+  /// Az időablakot mint a kerdőívnél: a WordPress donti el a webhely
+  /// időzonajaban, ezert a mentett valasz nem dönthet (forceRefresh).
+  Future<Map<String, dynamic>?> getActivePrize({bool forceRefresh = false}) async {
     try {
+      final data = await _getHeadCached(
+        '/prize/active',
+        forceRefresh: forceRefresh,
+      );
+      if (data is Map) {
+        final prize = data['prize'];
+        if (prize is Map) return Map<String, dynamic>.from(prize);
+      }
+      return null;
+    } on DioException {
+      // A nyeremenyjatek opcionalis; egy atmenetileg elerhetetlen vegpont nem
+      // akadalyozhatja a főoldal többi reszet.
+      return null;
+    }
+  }
+
+  Future<ProfileSubmissionOptions> getProfileSubmissionOptions() async {    try {
       final data = await _getHeadCached('/profile-submission-options');
 
       if (data is Map<String, dynamic>) {

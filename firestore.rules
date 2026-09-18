@@ -272,6 +272,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // A nyeremenyjatek sorsolasanak egyszeri jelzoje (jatekonkent egy sor). Ha a
+    // kliens irhatna, ujra kivalthatna a sorsolast; ha olvashatna, a nyertest a
+    // hivatalos kihirdetes elott megtudhatna.
+    match /prize_draws/{prizeId} {
+      allow read, write: if false;
+    }
+
     // Game attempts and aggregate results are written only by Cloud
     // Functions. The client can submit through the callable, never directly
     // to these collections.

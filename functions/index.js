@@ -4418,6 +4418,401 @@ exports.pollVote = functions
     return { ok: true, alreadyVoted: payload?.alreadyVoted === true };
   });
 
+// ---------------------------------------------------------------------------
+// Nyeremenyjatek ("Nyereményjáték") — kviz EGYETLEN helyes valasszal.
+//
+// A jatekszabaly a tulajdonosi dontes szerint:
+//  * CSAK a helyes valasz szamit, az nyerhet;
+//  * egy jatekos EGYSZER jatszik — ha ront, "ennyi volt", nincs javitas, nincs
+//    ujraproba (a WordPress `add_post_meta(..., true)` egyedi sora zarja ezt le,
+//    es a szerver donti el a helyességet, nem a kliens);
+//  * E-MAIL-CIMET A RENDSZER NEM TAROL a WordPressben: a nyertes cime a
+//    sorsolaskor, a Firebase Auth-bol kerul elo (lasd drawPrizeWinner).
+//
+// A `prizeVote` tehat ugyanazt a "kérdezz-vagy-szavazz" alakot hasznalja, mint a
+// `pollVote`: `answerIndex` nelkul csak az allapotot kerdezi (jatszott-e mar).
+// ---------------------------------------------------------------------------
+
+/** A WordPress REST hibauzenete (WP_Error JSON), vagy egy altalanos tartalek. */
+function wordPressErrorMessage(payload, fallback) {
+  const message = payload?.message;
+  if (typeof message === 'string' && message.trim() !== '') return message.trim();
+  if (typeof payload?.data?.message === 'string' && payload.data.message.trim() !== '') {
+    return payload.data.message.trim();
+  }
+  return fallback;
+}
+
+/** A jatekos megjelenitett neve a profiljabol (a WordPress napló így emberi). */
+async function prizeDisplayName(uid) {
+  const profile = (await db.collection('community_profiles').doc(uid).get()).data() || {};
+  return String(profile.displayName || profile.name || '')
+    .trim()
+    .slice(0, 60);
+}
+
+exports.prizeVote = functions
+  .runWith({
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+    enforceAppCheck: false,
+  })
+  .https.onCall(async (data, context) => {
+    requireRegisteredViewer(context);
+    const prizeId = Number(data?.prizeId || 0);
+    if (!Number.isInteger(prizeId) || prizeId < 1) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen nyereményjáték.');
+    }
+    const hasAnswer = data?.answerIndex !== undefined && data?.answerIndex !== null;
+    const answerIndex = Number(data?.answerIndex ?? -1);
+    if (hasAnswer && (!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex > 9)) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen válaszlehetőség.');
+    }
+
+    const uid = String(context.auth.uid);
+    if (hasAnswer && !(await allowCall(uid, 'prize_vote', 20))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok kérés, próbáld később.');
+    }
+
+    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+    const body = hasAnswer
+      ? {
+          prizeId,
+          uid,
+          answerIndex,
+          displayName: await prizeDisplayName(uid),
+        }
+      : { prizeId, uid };
+    const response = await fetch(`${WORDPRESS_BASE_URL}${hasAnswer ? '/prize/enter' : '/prize/status'}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => ({}));
+    // Diagnosztika — az UID-t SZANDEKOSAN nem naplozzuk, csak a hosszat.
+    console.info('prize_vote_wordpress_result', {
+      prizeId,
+      answerIndex: hasAnswer ? answerIndex : null,
+      uidLength: uid.length,
+      status: response.status,
+      correct: hasAnswer ? payload?.correct === true : null,
+      alreadyPlayed: payload?.alreadyPlayed === true,
+    });
+    if (!response.ok) {
+      console.warn('prize_vote_wordpress_failed', {
+        prizeId,
+        hasAnswer,
+        status: response.status,
+        message: wordPressErrorMessage(payload, ''),
+      });
+      throw new HttpsError(
+        response.status === 403 ? 'failed-precondition' : 'internal',
+        wordPressErrorMessage(payload, 'A játék eredményét most nem sikerült rögzíteni.'),
+      );
+    }
+    if (!hasAnswer) {
+      return {
+        played: payload?.played === true,
+        correct: payload?.correct === true,
+        answerIndex: Number.isInteger(payload?.answerIndex) ? payload.answerIndex : null,
+      };
+    }
+    return {
+      ok: true,
+      alreadyPlayed: payload?.alreadyPlayed === true,
+      correct: payload?.correct === true,
+      answerIndex: Number.isInteger(payload?.answerIndex) ? payload.answerIndex : answerIndex,
+    };
+  });
+
+/** A nyertesnek szolo level. Nyeremeny NEVET es LEIRAST is tartalmaz. */
+function prizeWinnerEmailTemplate({ name, question, prizeType, prizeDescription }) {
+  const escapeHtml = (value) =>
+    String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  const who = String(name || '').trim() || 'Kedves játékos';
+  const game = String(question || '').trim();
+  const prize = String(prizeType || '').trim();
+  const details = String(prizeDescription || '').trim();
+  const lines = [
+    `Szia ${who}!`,
+    '',
+    game !== ''
+      ? `Gratulálunk — megnyerted a(z) „${game}” nyereményjátékot!`
+      : 'Gratulálunk — megnyerted a nyereményjátékot!',
+  ];
+  if (prize !== '') lines.push('', `Nyeremény: ${prize}`);
+  if (details !== '') lines.push(details);
+  lines.push(
+    '',
+    'A részletek egyeztetéséhez erre a levélre válaszolva tudsz jelentkezni.',
+    '',
+    'Hungarian Hardstyle',
+  );
+  const text = lines.join('\n');
+  const htmlLines = [
+    `<p>Szia ${escapeHtml(who)}!</p>`,
+    game !== ''
+      ? `<p>Gratulálunk — megnyerted a(z) <strong>${escapeHtml(game)}</strong> nyereményjátékot!</p>`
+      : '<p>Gratulálunk — megnyerted a nyereményjátékot!</p>',
+  ];
+  if (prize !== '') htmlLines.push(`<p>Nyeremény: <strong>${escapeHtml(prize)}</strong></p>`);
+  if (details !== '') htmlLines.push(`<p>${escapeHtml(details)}</p>`);
+  htmlLines.push('<p>A részletek egyeztetéséhez erre a levélre válaszolva tudsz jelentkezni.</p>');
+  htmlLines.push('<p>Hungarian Hardstyle</p>');
+  return {
+    subject: 'Hungarian Hardstyle – nyertél a nyereményjátékban!',
+    text,
+    html: htmlLines.join(''),
+  };
+}
+
+/**
+ * A sorsolas: kivalaszt EGY helyes valaszt adott jatekost, beirja a WordPressbe,
+ * es ertesiti (app-ertesites + push + e-mail).
+ *
+ * Idempotencia ket oldalrol:
+ *  * a WordPress `huhs_prize_set_winner()` nem irja felul a meglevo nyertest;
+ *  * ide, a `prize_draws` jelzobe egyszer kerul be a jatek, ezert a push es a
+ *    level sem megy ki ketszer, ha a negyedes fuves utemezes kozben ujraindul.
+ *
+ * A nyertes e-mail-cime a Firebase Auth-bol jon (`auth.getUser`), nem a
+ * WordPressbol — a WordPress szandekosan nem tarol e-mail-cimet.
+ */
+async function drawPrizeWinnerForPrizes(prizes, deps = {}) {
+  const firestore = deps.db || db;
+  const authApi = deps.auth || auth;
+  const sendEmail = deps.sendMail || sendMail;
+  const credentials =
+    deps.credentials ||
+    `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const authorization = `Basic ${Buffer.from(credentials).toString('base64')}`;
+
+  /** A `/prize/participants` valasz csak application password-del kerheto el. */
+  const getParticipants = async (prizeId) => {
+    const response = await fetch(`${WORDPRESS_BASE_URL}/prize/participants?prizeId=${prizeId}`, {
+      headers: { Authorization: authorization, Accept: 'application/json' },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(wordPressErrorMessage(payload, `HTTP ${response.status}`));
+    }
+    const players = Array.isArray(payload?.players)
+      ? payload.players.filter((player) => String(player?.uid || '').trim())
+      : [];
+    return { players, correctCount: Number(payload?.correctCount || players.length || 0) };
+  };
+
+  const drawn = [];
+  for (const prize of prizes) {
+    const prizeId = Number(prize?.id || 0);
+    if (!Number.isInteger(prizeId) || prizeId < 1) continue;
+    const question = String(prize?.question || '').trim();
+
+    let participants;
+    try {
+      participants = await getParticipants(prizeId);
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'prize_draw_participants_failed',
+          prizeId,
+          message: error?.message || String(error),
+        }),
+      );
+      continue;
+    }
+    if (!participants.players.length) {
+      // Lezart jatek helyes valasz NELKUL: nincs kit sorsolni. Ez nem hiba, de
+      // hangosan jelezzuk, mert a tulajdonos igy latja, hogy a jatek elment.
+      console.info(JSON.stringify({ event: 'prize_draw_no_eligible_players', prizeId, question }));
+      continue;
+    }
+
+    const winner = participants.players[crypto.randomInt(0, participants.players.length)];
+    const winnerUid = String(winner.uid).trim();
+    const winnerName = String(winner.name || '').trim();
+    const drawnAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    let result;
+    try {
+      const response = await fetch(`${WORDPRESS_BASE_URL}/prize/winner`, {
+        method: 'POST',
+        headers: {
+          Authorization: authorization,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ prizeId, uid: winnerUid, displayName: winnerName, drawnAt }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(wordPressErrorMessage(payload, `HTTP ${response.status}`));
+      }
+      result = payload;
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'prize_draw_store_failed',
+          prizeId,
+          message: error?.message || String(error),
+        }),
+      );
+      continue;
+    }
+
+    // Ha a WordPress szerint MÁR volt nyertes (idempotens védelem), akkor az itteni
+    // valasztás nem érvényes: nem küldünk értesítést egy másik játékosnak.
+    if (result?.alreadyDrawn === true) {
+      console.info(JSON.stringify({ event: 'prize_draw_already_drawn', prizeId }));
+      continue;
+    }
+
+    const prizeType = String(prize?.prize_type || '').trim();
+    const prizeDescription = String(prize?.prize_description || '').trim();
+    drawn.push({ prizeId, question, winnerName, winnerUid });
+
+    // Egyszeri jelzo: az ertesitesek (push + e-mail) pontosan egyszer mennek ki.
+    const claimRef = firestore.collection('prize_draws').doc(String(prizeId));
+    let fresh = false;
+    try {
+      await firestore.runTransaction(async (transaction) => {
+        const snapshot = await transaction.get(claimRef);
+        if (snapshot.exists) return;
+        transaction.set(claimRef, {
+          prizeId,
+          winnerUid,
+          winnerName,
+          notifiedAt: FieldValue.serverTimestamp(),
+        });
+        fresh = true;
+      });
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'prize_draw_claim_failed',
+          prizeId,
+          message: error?.message || String(error),
+        }),
+      );
+    }
+    if (!fresh) {
+      console.info(JSON.stringify({ event: 'prize_draw_notifications_already_sent', prizeId }));
+      continue;
+    }
+
+    const pushBody =
+      prizeType !== ''
+        ? `Megnyerted a nyereményjátékot: ${prizeType}`
+        : 'Megnyerted a nyereményjátékot!';
+    await createNotificationBestEffort({
+      recipientUid: winnerUid,
+      type: 'prize_winner',
+      title: '🏆 Nyertél a nyereményjátékban!',
+      body: pushBody,
+      targetType: 'prize',
+      targetId: String(prizeId),
+      dedupeKey: `prize-winner:${prizeId}:${winnerUid}`,
+    });
+    await sendAchievementPushBestEffort(winnerUid, '🏆 Nyertél a nyereményjátékban!', pushBody);
+
+    // A cim a Firebase Auth-bol jon. Ha a fiok idokozben megszunt, nincs hova
+    // kuldni — az app-ertesites es a push ilyenkor is megvan, ezert a sorsolas
+    // eredmenye nem veszik el.
+    let email = '';
+    try {
+      email = String((await authApi.getUser(winnerUid)).email || '').trim();
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'prize_draw_winner_lookup_failed',
+          prizeId,
+          message: error?.message || String(error),
+        }),
+      );
+    }
+    if (email === '') {
+      console.info(JSON.stringify({ event: 'prize_draw_winner_email_missing', prizeId }));
+      continue;
+    }
+    try {
+      await sendEmail({
+        to: email,
+        ...prizeWinnerEmailTemplate({
+          name: winnerName,
+          question,
+          prizeType,
+          prizeDescription,
+        }),
+      });
+      console.info(JSON.stringify({ event: 'prize_draw_winner_email_sent', prizeId }));
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'prize_draw_winner_email_failed',
+          prizeId,
+          smtpCode: String(error?.smtpCode || 'unknown'),
+          message: error?.message || String(error),
+        }),
+      );
+    }
+  }
+  return drawn;
+}
+
+// Test-only export (nem Cloud Function): a sorsolo magot emulatoros teszttel
+// lehet igy meghajtani, injektalt adatbazissal es levelkuldo helyettessel.
+exports.__drawPrizeWinnerForTests = drawPrizeWinnerForPrizes;
+
+exports.drawPrizeWinner = onSchedule(
+  {
+    schedule: 'every 5 minutes',
+    timeZone: 'Europe/Budapest',
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD, ...SMTP_SECRETS],
+    // A kor ne fusson orokke, ha a WordPress eppen nem valaszol.
+    timeoutSeconds: 120,
+  },
+  async () => {
+    const response = await fetch(`${WORDPRESS_BASE_URL}/prize/pending`, {
+      headers: {
+        Authorization: `Basic ${Buffer.from(
+          `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`,
+        ).toString('base64')}`,
+        Accept: 'application/json',
+      },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.warn(
+        JSON.stringify({
+          event: 'prize_draw_pending_failed',
+          status: response.status,
+          message: wordPressErrorMessage(payload, ''),
+        }),
+      );
+      throw new Error(`WordPress nyereményjáték-lista: HTTP ${response.status}`);
+    }
+    const pending = Array.isArray(payload?.pending) ? payload.pending : [];
+    if (!pending.length) return { pending: 0, drawn: 0 };
+    const drawn = await drawPrizeWinnerForPrizes(pending);
+    console.info(
+      JSON.stringify({
+        event: 'prize_draw_summary',
+        pending: pending.length,
+        drawn: drawn.length,
+        prizes: drawn.map((item) => item.prizeId),
+      }),
+    );
+    return { pending: pending.length, drawn: drawn.length };
+  },
+);
+
 const labelProductDefinitions = [
   { type: 'radio_wav', label: 'Radio WAV' },
   { type: 'radio_mp3_320', label: 'Radio MP3 320 kbps' },
