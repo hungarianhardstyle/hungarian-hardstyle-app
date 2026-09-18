@@ -1,5 +1,22 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### AAB build: 1.0.0+317 — feltöltésre kész (2026-09-18)
+
+- Csomag: **`build/HUHS-v1.0.0+317-release.aab`**, **79,1 MB**, SHA-256 `CE7DF3E2225B44DD8D3802EDF81AF40197C68701B5DB7DECE5264B1425E13BB4`. **A tulajdonos tölti fel**, az agent soha.
+- **A build parancs kötelező `-P` paraméterekkel** (különben a Gradle szándékosan elhasal):
+  ```
+  flutter build appbundle --release \
+    -P "HUHS_ADMOB_APP_ID=ca-app-pub-7714662594685378~1123886696" \
+    -P "HUHS_ADMOB_BANNER_ID=ca-app-pub-7714662594685378/5219184964" \
+    -P "HUHS_ADMOB_REWARDED_ID=ca-app-pub-7714662594685378/5286829694"
+  ```
+  Kell még az `android/key.properties` (release-aláírás); ez megvan. A Gradle **ellenőrzi is** az azonosítókat, és elutasítja a felcserélt banner/rewarded párt — ez véd a korábbi `format mismatch` hiba ellen.
+- **Ellenőrizve a kész AAB-ban:** a production AdMob **App ID benne van** a manifestben, a **teszt App ID nincs benne**, `versionName 1.0.0`, és az aláírás jelen van (`META-INF/HUHS-UPL.RSA`). A banner/rewarded egységazonosítók szándékosan **nincsenek** a manifestben: azokat a `lib/providers/ads_provider.dart` adja a beégetett production defaultokból (a komment ki is mondja, hogy egy hiányzó dart-define nem kapcsolhatja ki némán a reklámokat).
+- **Mit tartalmaz (kliensoldal):** kiadvány „Hamarosan" + PRESAVE felület és dátumig rejtett vásárlás/letöltés; új **Kérdőív** kártya a főoldalon; cache-first első kirajzolás + frissítés ikon; Photon képméretzés; induláskori előtöltés; részlet-előtöltés görgetés közben; hiányzó rangjelvény önjavítása.
+- **Ellenőrzések a build előtt:** `flutter analyze` tiszta, `flutter test` **158/158**.
+- **Nyitott bizonytalanság:** a verziószám a `pubspec.yaml` szerint `1.0.0+317`, és **már létezett egy +317 AAB** (2026-09-17 23:19, a mai kliensváltozások előtt), amelyet a nyilvántartás szerint még nem töltöttek fel. **Ha a Play azt jelzi, hogy a 317-es verziókódot már felhasználták, a `pubspec.yaml` verzióját +318-ra kell emelni és újraépíteni.**
+- **Baseline profile:** szándékosan **nem** lett újragenerálva, mert ahhoz rootolt emulátor vagy támogatott fizikai eszköz kell (`docs/BASELINE_PROFILE.md`); a meglévő, build közben összeálló profil került a csomagba.
+
 ### Új funkció: Közvéleménykutatás — Kérdőív (2026-09-18, plugin 2.4.113)
 
 - **Tulajdonosi kérés:** a WordPress adminban megadható **egy kérdés** és legfeljebb **10 válaszlehetőség**; **csak regisztrált** felhasználó szavazhasson; az eredmény **a WordPressben** tárolódjon **felhasználónév és e-mail nélkül**, csak az összesített számok; **állítható kezdő és záró dátum**; **publikus eredmény nem kell**; a főoldalon az **éves szavazás alatt** jelenjen meg; **kép nem kell**.
