@@ -1,5 +1,15 @@
 # GYIK — javasolt, emberi szövegek
 
+> **ÁLLAPOT: MEGVALÓSÍTVA** (plugin **2.5.3**). A szövegek a
+> `.tmp-api-24115/huhs-mobile-api/includes/faq-human.php` fájlba kerültek, és
+> egy egyszeri migráció viszi be őket a WordPressbe, amint az adminfelületet
+> megnyitod a 2.5.3 feltöltése után. Ez a dokumentum a **szöveg forrása és
+> indoklása** — ha itt változtatsz, a PHP-t is át kell írni.
+>
+> A szövegeket a `tools/verify-faq-content.mjs` ellenőrzi (**36/36**): egyezik-e
+> a napi plafon és a pontértékek a **valós kóddal**, van-e benne technikai
+> szakkifejezés, és minden téma megvan-e.
+
 Ez a fájl a **Segítség** (GYIK) menü új szövegeit tartalmazza. A jelenlegi GYIK a
 WordPressből jön (`huhs_faq` bejegyzéstípus), 33 bejegyzéssel — ezek között van
 **tárgyi hiba**, **elavult** és **felesleges** pont is.

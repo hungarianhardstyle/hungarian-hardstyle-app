@@ -1,5 +1,34 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### A GYIK (Segítség) rendberakva — tárgyi hiba, duplikáció, zaj és hiányzó témák (2026-09-18, plugin 2.5.3)
+
+- **A tulajdonos jelzése:** *„nézzük meg a GYIK menüt is mert most elég gagyi, érthető normális funkció ismertető kell, nem pedig mindenféle Firebase meg semmi értelme duma, és csak az elérhető funkciókról segítség"*. Ez a korábban **ELHALASZTVA** jelölt feladat.
+- **A GYIK a WordPressből jön** (`huhs_faq` bejegyzéstípus, `huhs_faq_category` taxonómia, `/wp-json/huhs/v1/faq` végpont), nem az app kódjából. **33 bejegyzés volt**, ezeket mértem át élőben.
+- **A gyökerek (mind mérve):**
+  1. **TÁRGYI HIBA:** a „Hogyan működnek az achievement pontok?" azt állította, hogy cikkkommentért *„naponta legfeljebb öt alkalom"* jár. A kódban a plafon **három** (`ARTICLE_COMMENT_DAILY_POINT_LIMIT = 3`). Aki elhiszi az ötöt, a negyedik komment után azt hiszi, elromlott az app.
+  2. **DUPLIKÁCIÓ:** a „Hogyan törölhetem a profilomat?" **két** bejegyzésként szerepelt.
+  3. **RENDSZERLEÍRÁS A SEGÍTSÉG HELYETT:** *„Ugyanaz az indítási kép egy telefonon két órán belül nem jelenik meg újra."*
+  4. **ZAJ:** „Mire keres rá a hírek keresője?" (a kereső definíciója) és a külső oldalak jogi bekezdése.
+  5. **HIÁNYZÓ TÉMÁK:** a **nyereményjátékról** és a **kérdőívről** egyetlen szó sem volt; az értesítések Aktív/Archivált füléről sem.
+  6. **SORREND:** a régi `huhs_seed_v3_faq_once()` **minden** bejegyzésnek `menu_order = 100`-at adott, a játékoknak 95-öt, 16-nak pedig 0-t — ezért a lista **elején 16 kategórianélküli bejegyzés** keveredett összevissza, és csak utána jöttek a témakörök.
+- **A megoldás: új `includes/faq-human.php`** (`huhs_seed_human_faq_once`, `HUHS_FAQ_CONTENT_VERSION = 4`):
+  - **7 témakör** (`menu_order` tízes egységekkel: Első lépések 100, Közösség 200, Hírek és értesítések 300, Zene és kiadványok 400, Játékok 500, Szavazás és nyereményjáték 600, Segítség és adatvédelem 700), **28 kérdés**;
+  - minden bejegyzés **slug szerint** kerül fel/frissül, ezért **újrafuttatva is ugyanazt adja**;
+  - **tartalom-védelem:** ha a tulajdonos a WordPress adminban **kézzel átír egy szöveget**, a `_huhs_faq_human_edited` meta megvédi — a migráció onnantól **nem írja felül**, csak a besorolást igazítja;
+  - a **nyugdíjazott** bejegyzések (duplikált fióktörlés, rendszerleíró indítási kép, kereső-definíció, jogi bekezdés, barátok-blokk) **vázlatba** kerülnek — **nem törlünk semmit**, az adminban visszatalálhatók;
+  - a régi `huhs_seed_v3_faq_once()` **kiürítve** (csak a jelzőt állítja), különben visszahozta volna a hibás szöveget egy friss telepítésen.
+- **AMIT A SZÖVEGBEN SZÁNDÉKOSAN NEM ÍRTAM:** technológia (Firebase, Firestore, cache), fájlformátum és bitráta. Helyette az számít, ami a felhasználót érinti („a kisebb minőségű MP3 egy rövid reklámmal ingyen nyílik meg").
+- **Új, önmagát bizonyító ellenőrzés: `tools/verify-faq-content.mjs`** (**36/36**):
+  - **A szöveget a VALÓS KÓDHOZ köti** — ez a lényeg: kiolvassa a `functions/index.js`-ből az `ARTICLE_COMMENT_DAILY_POINT_LIMIT` / `NEWS_LIKE_DAILY_POINT_LIMIT` értéket, és megköveteli, hogy a GYIK **ugyanazt** írja. Ugyanígy ellenőrzi a pontértékeket (profil 30 · szavazás 10 · esemény-értékelés 10 · meetup 5 · ajánlás 50 · hír kedvelés 2 · komment 1) — vagyis **a mostani hiba nem tud visszakúszni**;
+  - tiltott szakkifejezések listája (a `gyorsítótár` **szándékosan kivétel**: a fióktörlésnél a felhasználónak fontos, hogy a helyi adatok és a mentett ideiglenes fájlok is törlődnek);
+  - a terjengősséget a **folyó szövegen** méri (a `•`-s felsorolás kimarad), és a mérés előtt **feloldja a `\n` escape-et** — enélkül a nyers szöveg két karakternek számolja a sortörést, és 10-15 karakterrel többet mutat a valósnál (ezt a saját hibámat javítottam);
+  - a migráció biztonsága: tartalom-védelem, verzióhoz kötés, vázlatba tétel (nem törlés), admin-jog.
+  - **A detektor bizonyítottan működik:** a hibás „naponta legfeljebb **öt** alkalommal" szöveggel a szkript **elhasal** (35/36), a valódi forráson átmegy.
+- **Csomag:** `build/huhs-mobile-api-2.5.3.zip` — 44 bejegyzés, 136,8 KB, SHA-256 `9A2F9D124748055B5BDC141490EE3E28498909D22BEC7F84A708641446773E4A`.
+- **A migráció akkor fut le, amikor a feltöltés után megnyitod a WordPress adminfelületet** (admin_init + verziójelző). Utána a GYIK **7 témakörre bontva, 28 kérdéssel** jelenik meg az appban.
+- **Ellenőrzések:** 43/43 PHP parse, `verify-faq-content.mjs` **36/36**, `check-wp-admin-menu.mjs` **8/8**, `check-wp-meta-json.mjs` zöld, `verify-prize-draw.mjs` **44/44**, `verify-poll-status.mjs` **25/25**.
+- **A szöveg forrása és indoklása:** `docs/GYIK-JAVASLAT.md` — ha ott változtatsz, a `faq-human.php`-t is át kell írni, és a verziószámot emelni (`HUHS_FAQ_CONTENT_VERSION`).
+
 ### A Névjegy alatt kiadási jegyzet (changelog) — a korábban elhalasztott feladat kész (2026-09-18, AAB 327)
 
 - **A tulajdonos kérése:** *„csináld meg azt is hogy az appról részbe legyen changelog is"* — ez a korábban **ELHALASZTVA** jelölt feladat, ami most **elkészült**. A `docs/RELEASE_CHANGELOG_CHECKLIST.md` szerint ugyanazt a magyar changelogot kell vezetni a Play Console-on, az app Névjegyén és a plugin kiadásjegyzékén.
