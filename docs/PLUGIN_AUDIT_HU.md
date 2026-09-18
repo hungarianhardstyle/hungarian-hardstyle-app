@@ -1,5 +1,16 @@
 # Bővítmény-audit — Hungarian Hardstyle (2026-09-18)
 
+> ## TULAJDONOSI DÖNTÉS (2026-09-18): a bővítményekhez NEM nyúlunk
+>
+> A tulajdonos visszajelzése: *„semmit ne kapcsolj ki, kellenek az oldal
+> működéséhez sajna”*. Ezért **ebből a listából semmit nem szabad kikapcsolni** —
+> a dokumentum megmarad nyilvántartásnak és magyarázatnak (mi mit csinál, mi
+> hagy nyomot az élő oldalon), de **nem végrehajtási terv**. Ne ajánld fel újra.
+>
+> A lassulás így a bővítmények oldaláról nem javítható. Ami marad, az a **saját
+> pluginunk** belseje és a **hosting** (OPcache, tartós object cache) — utóbbihoz
+> a tulajdonos döntése kell, mert a szolgáltató korábban VPS-ajánlattal élt.
+
 **Miért készült:** az oldal lassú, és a mérés szerint a WordPress boot-idő ~60%-a a
 bővítmények betöltése. Élesben 38 aktív bővítmény fut: `plugins_loaded` 788–1044 ms,
 teljes válasz 1423–1642 ms, 111–116 adatbázis-lekérdezés és 166–168 MB csúcsmemória

@@ -1,5 +1,20 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Tulajdonosi döntés: a bővítményekhez nem nyúlunk (2026-09-18)
+
+- A tulajdonos visszajelzése a 38 bővítményről: *„semmit ne kapcsolj ki, kellenek az oldal működéséhez sajna”*.
+- **Ezért a `docs/PLUGIN_AUDIT_HU.md` listájából semmit nem szabad kikapcsolni.** A dokumentum megmarad nyilvántartásnak (mi mit csinál, mi hagy nyomot az élő oldalon), de **nem végrehajtási terv** — ne ajánld fel újra.
+- Következmény: az oldal lassulása a bővítmények oldaláról **nem javítható**. Marad (a) a **saját pluginunk** belseje, (b) a **hosting** (OPcache, tartós object cache) — utóbbi külön tulajdonosi döntés, mert a szolgáltató korábban VPS-ajánlattal élt, (c) annak biztosítása, hogy az app a lehető legkevesebb kérést indítsa (a cache-first működés ezt nagyrészt megoldja).
+- **Az app szempontjából a helyzet így is jó:** a 2.4.108 óta a cache-elt választ a szerver már a pluginbetöltés közben kiszolgálja (~0,43–0,6 s a ~1,4 s helyett), a kliens cache-first, és a frissítés is háttérben fut. A lassulás elsősorban **hideg** kéréseken és a weboldal látogatóin látszik.
+
+### 2.4.111 — saját plugin költsége és az ötperces esemény-scan (2026-09-18)
+
+- **Új mérés:** a fő pluginfájl végén egy `huhs_diag_mark('plugin_files_done')` jelölés, és a boot-próba fejlécében két új érték: **`our_files_at`** és **`our_files_ms`** — vagyis hogy a saját 40 include-fájlunk mennyibe kerül. Ez a szám kell ahhoz, hogy eldönthessük: megéri-e az admin-only fájlokat lustán betölteni. Éles mérés 2.4.111 feltöltése után.
+- **Javított ötperces scan:** a `huhs_push_scan_event_reminders()` eddig **minden** publikált eseményt betöltött (max. 500 bejegyzés + meta), ötpercenként, örökké — méghozzá WP-Cronon keresztül, tehát **egy véletlenszerű látogatói vagy app-kérés fizette meg**. Pedig emlékeztető csak a következő egy héten belül kezdődő eseményhez lehet esedékes. Most `meta_query` szűkíti a kört `event_start_date` BETWEEN [ma, ma+8 nap] értékre (szándékosan tágabb a három emlékeztető-ablaknál: hét / egy nap / hat óra). Így a lekérdezés jellemzően néhány sort ad 500 helyett.
+- **Időzóna-csapda, amit elkerültem:** az `event_start_date` **helyi naptári dátum**, ezért a határokat valós időből és a site időzónájából kell számolni (`wp_date('Y-m-d', time())`). A függvény `$now` változója `current_time('timestamp')`, ami egy **helyileg eltolt** időbélyeg — abból számolt dátum duplán tolódna.
+- **Nem változtattam** a többi emlékeztető-úton (`huhs_push_schedule_event_reminders`, `save_post_huhs_event`), és az emlékeztető-küldés logikája (`huhs_push_event_reminder`) érintetlen.
+- Csomag: `build/huhs-mobile-api-2.4.111.zip` (SHA-256 `4060FE2E5CCCA2AE267247495AC5EE910767E0D401DA3CC6035985D575AEDB8B`), forrás: `.tmp-api-24111/huhs-mobile-api/`. **Ez tartalmazza a 2.4.110 push-feldarabolást is**, ezért a tulajdonosnak csak a 2.4.111-et kell feltöltenie (a 2.4.110-et nem töltötte fel).
+
 ### Push-kézbesítés — 895 eszköz, ezért feldarabolva (2026-09-18, 2.4.110)
 
 - A 2.4.109 éles health-próba megmutatta: **`push_tokens=895`**. A régi kód **minden** eszközre külön, sorban küldött egy blokkoló kérést (~200 ms/db), ezért egy hír közzététele **~3 percig** tartott. Ha a host 60 s-nál elvágja a kérést (PHP-FPM `request_terminate_timeout`, nginx `fastcgi_read_timeout`), akkor a lista **nagy része értesítést sem kapott** — a hír-pushnak ugyanis nincs újrapróbája, a release-nek van.
