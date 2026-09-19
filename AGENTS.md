@@ -86,6 +86,7 @@ A 2026-09-19-i hibavadászat ideiglenes szkriptekkel történt, ezért azok **ne
 | `tools/verify-wp-admin-endpoints.mjs` | **ÉLES**: a plugin `apiVersion`-je, a `prize_games`/`prize_results`/`poll_results`/`polls` végpontok, UID/hash-szivárgás, `players = résztvevők` konzisztencia | `node tools/verify-wp-admin-endpoints.mjs` · önteszt: `--self-test` |
 | `tools/verify-native-admin-menu.mjs` | a natív admin menüpontjai ↔ a plugin admin-végpontjai (forrás-lint) | `node tools/verify-native-admin-menu.mjs` |
 | `tools/check-play-listing.mjs` | a **nyilvános** Play-oldal állapota (zárt tesztnél 404 = várt eredmény) | `node tools/check-play-listing.mjs [csomagnév]` |
+| `tools/check-play-track.mjs` | **ÉLES**: mi van tényleg a Play sávjain (melyik build, milyen állapotban, milyen kiadási szöveggel) — a Play Developer API-t **olvasásra** kérdezi | `node tools/check-play-track.mjs [csomagnév]` |
 | `tools/run-account-cleanup.mjs` | a 15 percenkénti fiók-takarítás **azonnali** futtatása (idempotens) | előnézet: `node tools/run-account-cleanup.mjs` · futtatás: `--confirm` |
 | `tools/check-play-notes.mjs` | a kiadási szöveg (karakterlimit, build-lefedettség, AAB-hash) | `node tools/check-play-notes.mjs` |
 | `tools/verify-achievement-points.mjs` | **ÉLES**: a profil-pontszám egyezik-e a ledgerrel, és van-e **visszaállítatlan** elveszett hír-lájk pont | `node tools/verify-achievement-points.mjs` · önteszt: `--self-test` |

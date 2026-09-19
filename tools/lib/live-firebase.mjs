@@ -186,6 +186,36 @@ export function secret(name) {
   throw new Error(`A(z) ${name} titok nem olvasható a Secret Managerből (${lastError?.message || 'ismeretlen hiba'}).`);
 }
 
+/**
+ * TÖBB SOROS titok (pl. egy szolgáltatói fiók JSON-je) — a `secret()` fölé.
+ *
+ * MIÉRT kell külön: a `secret()` a kimenet **utolsó sorát** adja vissza, mert a
+ * CLI néha naplósort ír a titok elé. Egy JSON viszont **több soros**, ezért ott
+ * az utolsó sor csak `}` lenne — élesben pontosan ez történt meg
+ * (`Unexpected token '}', "}" is not valid JSON`). Itt a legelső `{`-től
+ * olvassuk a végét.
+ */
+export function secretMultiline(name) {
+  let lastError;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const output = execFileSync('npx', ['firebase', 'functions:secrets:access', name], {
+        encoding: 'utf8',
+        shell: true,
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+      const start = output.indexOf('{');
+      const value = (start >= 0 ? output.slice(start) : output).trim();
+      if (!value) throw new Error('üres érték');
+      return value;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 1) execFileSync('node', ['-e', 'setTimeout(()=>{}, 1500)'], { stdio: 'ignore' });
+    }
+  }
+  throw new Error(`A(z) ${name} titok nem olvasható (${lastError?.message || 'ismeretlen hiba'}).`);
+}
+
 /** A 15 percenkénti takarítás azonnali futtatása (Cloud Scheduler „run”). */
 export async function runScheduledJob(jobName, { location = 'europe-central2', token } = {}) {
   const auth = token || (await accessToken());

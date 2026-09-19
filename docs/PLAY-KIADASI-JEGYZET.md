@@ -13,6 +13,22 @@ aab: build/HUHS-v1.0.0+332-release.aab
 sha256: BD7130B553372300F22E43B8EE708003DB2C796ED19449568E451920DB098AA4
 -->
 
+## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
+
+A Play Developer API-t **olvasásra** kérdezve (2026-09-19):
+
+| Sáv | Állapot | Build |
+|---|---|---|
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **332** — „332 (1.0.0)", kiadási szöveggel |
+| beta | üres | — |
+| production | üres | — |
+| internal | completed | 278 (+ egy üres draft) |
+
+- Vagyis **a 332 élesben van a zárt teszt sávján** — ez az, amit a tesztelők megkapnak.
+- A feltöltött AAB-ek a Playen: 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 328, 329, 330, 331, **332**.
+- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 332 automatikusan felváltotta a korábbit; külön „leszedni" nem kell semmit.
+- Az alkalmazott kiadási szöveg a **hosszabb (1b.) változat** volt (a mérés szerint az került fel) — a rövidebb (1.) is ugyanazt mondja, csak tömörebben.
+
 ## A feltöltendő AAB (mérve)
 
 | | |
