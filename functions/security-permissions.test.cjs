@@ -145,9 +145,17 @@ test('deletion keeps ownership checks and verifies required data is gone', () =>
   assert.match(deletionSource, /deleteUserReferences\(uid, profileData\)/);
   assert.match(deletionSource, /authStillExists/);
   assert.match(deletionSource, /profileStillExists/);
-  assert.match(deletionSource, /Auth is already gone/);
   assert.match(deletionSource, /cleanupStatus: 'cleanup_pending'/);
   assert.match(deletionSource, /status: 'pending'/);
+  // A megszakadt takaritas NEM jelenthet csendes sikert: a hibaag megnezi, hogy
+  // a profil a helyen maradt-e, es ha igen, hibaval ter vissza. (2026-09-19 elott
+  // itt feltetel nelkul „siker" volt — ez keltette a „nem torli az usert" erzetet.)
+  assert.match(
+    deletionSource,
+    /const profileRemains = \(await db\.collection\('community_profiles'\)\.doc\(uid\)\.get\(\)\)\.exists/,
+  );
+  assert.match(deletionSource, /community_user_profile_cleanup_failed/);
+  assert.match(deletionSource, /cloudinaryDestroyFailed/);
   for (const collection of [
     'artist_claims',
     'label_entitlements',
@@ -173,6 +181,10 @@ test('a pending deletion is retried after Auth deletion even when the profile re
   assert.match(source, /const profileSnapshot = await db\.collection\('community_profiles'\)\.doc\(uid\)\.get\(\);/);
   assert.match(source, /deleteUserReferences\(uid, profileSnapshot\.data\(\) \|\| \{\}\)/);
   assert.doesNotMatch(source, /if \(authStillExists \|\| .*community_profiles.*exists\(\)\) continue/);
+  // Ha a profil mar nincs meg, csak a kepek maradtak: ilyenkor NEM futtatjuk ujra
+  // a teljes (draga) gyujtemeny-takaritast, hanem csak a kepeket probaljuk torolni.
+  assert.match(source, /const onlyCloudinaryLeft =/);
+  assert.match(source, /await retryCloudinaryAssetCleanup\(uid, stored\)/);
 });
 
 test('the repository has no Firebase Realtime Database or Storage user store', () => {

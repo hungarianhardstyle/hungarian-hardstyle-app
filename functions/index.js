@@ -3692,13 +3692,36 @@ async function deleteUserReferences(uid, profileData = {}) {
   const allCloudinaryAssets = [...selectedCloudinary.assets, ...listedCloudinary].filter(
     (asset, index, assets) => assets.findIndex((other) => other.publicId === asset.publicId) === index,
   );
+  // A Cloudinary-hiba NEM allithatja meg a Firestore-takaritast.
+  //
+  // MIERT: a `destroyCloudinaryAsset` dob, ha a Cloudinary nem `ok`/`not found`
+  // valaszt ad (pl. elavult API-secret -> 401). Korabban ez a kivetel kifutott a
+  // fuggvenybol, es a hivo azonnal visszatert a „cleanup_pending" agon -- meg a
+  // `community_profiles/<uid>` torlese ELOTT. Az eredmeny: az Auth-fiok eltunt, a
+  // profil viszont a helyen maradt, ezert a torolt felhasznalo tovabbra is ott volt
+  // az admin listaban („nem torli az usert"). Eles meres 2026-09-19: a
+  // `deleted_user_ids/<uid>` bekerult, a `community_profiles/<uid>` megmaradt, a
+  // `account_deletions/<uid>.lastError` pedig `cloudinary-delete-temporary-failure:401`.
+  const failedCloudinaryAssets = [];
   for (const asset of allCloudinaryAssets) {
-    await destroyCloudinaryAsset({
-      cloudName: CLOUDINARY_CLOUD_NAME,
-      apiKey: CLOUDINARY_API_KEY.value(),
-      apiSecret: CLOUDINARY_API_SECRET.value(),
-      publicId: asset.publicId,
-    });
+    try {
+      await destroyCloudinaryAsset({
+        cloudName: CLOUDINARY_CLOUD_NAME,
+        apiKey: CLOUDINARY_API_KEY.value(),
+        apiSecret: CLOUDINARY_API_SECRET.value(),
+        publicId: asset.publicId,
+      });
+    } catch (error) {
+      failedCloudinaryAssets.push(asset.publicId);
+      console.warn(
+        JSON.stringify({
+          event: 'account_deletion_cloudinary_destroy_failed',
+          step: 'destroy_owned_assets',
+          uidHash: crypto.createHash('sha256').update(uid).digest('hex').slice(0, 16),
+          errorCode: error?.code || error?.message || 'unknown',
+        }),
+      );
+    }
   }
   const cleanupOperations = [];
   for (const document of relatedUserDocs.docs) {
@@ -3811,8 +3834,17 @@ async function deleteUserReferences(uid, profileData = {}) {
   return {
     manualCleanupRequired: selectedCloudinary.manualCleanupRequired,
     cloudinaryListPending,
+    // A kepek, amelyeket a Cloudinary visszautasitott. Nem hiba a fiok
+    // torlese szempontjabol -- de nem is vesz el: a `pendingCloudinaryAssets`
+    // mezoben marad, es a 15 percenkenti takaritas ujraprobalja.
+    cloudinaryDestroyFailed: failedCloudinaryAssets,
   };
 }
+
+// Test-only hook: a felhasznalo-takaritas VALODI fuggvenye, hogy emulatoron
+// (hamis `fetch`-csel, valodi Firestore-ral) merheto legyen, hogy egy Cloudinary
+// hiba NEM allitja meg a Firestore-takaritast.
+exports.__deleteUserReferencesForTests = deleteUserReferences;
 
 // Keep this compatible with the currently released Play client until its
 // Play Integrity attestation is verified end-to-end. Admin authorization,
@@ -3891,18 +3923,30 @@ exports.deleteCommunityUser = functions
     try {
       cleanup = await deleteUserReferences(uid, profileData);
     } catch (error) {
-      // Auth is already gone; preserve a retryable deletion record instead of
-      // turning partial cleanup into a misleading hard failure.
+      // Az Auth-fiok mar torolve van, de a Firestore-takaritas MEGSZAKADT.
+      // Ez nem siker: ha a profil a helyen maradt, a felhasznalo tovabbra is
+      // latszik az admin listaban. Korabban itt feltetel nelkul „sikert"
+      // jelentettunk (HTTP 200 + deleted: true), es pontosan ez keltette azt,
+      // hogy „nem torli az usert, ugyanugy ott van".
+      const profileRemains = (await db.collection('community_profiles').doc(uid).get()).exists;
       await deletionRef.set(
         {
           status: 'pending',
-          lastError: error?.code || 'cleanup-failed',
+          lastError: profileRemains
+            ? `core-cleanup-failed:${error?.code || 'unknown'}`
+            : error?.code || 'cleanup-failed',
           expiresAt: FieldValue.delete(),
           updatedAt: FieldValue.serverTimestamp(),
         },
         { merge: true },
       );
-      securityLog('community_user_core_deleted_cleanup_pending', context);
+      securityLog(
+        profileRemains ? 'community_user_profile_cleanup_failed' : 'community_user_core_deleted_cleanup_pending',
+        context,
+      );
+      if (profileRemains) {
+        throw new HttpsError('aborted', 'A fiók törlése nem fejeződött be, próbáld újra.');
+      }
       return { deleted: true, uid, cleanupStatus: 'cleanup_pending' };
     }
 
@@ -3926,7 +3970,8 @@ exports.deleteCommunityUser = functions
       );
       throw new HttpsError('aborted', 'A fiók törlése nem fejeződött be, próbáld újra.');
     }
-    if (cleanup.cloudinaryListPending) {
+    const destroyFailed = Array.isArray(cleanup.cloudinaryDestroyFailed) ? cleanup.cloudinaryDestroyFailed : [];
+    if (cleanup.cloudinaryListPending || destroyFailed.length) {
       if (!selfDelete && targetUser?.email) {
         await sendIdentityEmailOnce({
           key: `admin-deletion:${uid}`,
@@ -3938,7 +3983,14 @@ exports.deleteCommunityUser = functions
       await deletionRef.set(
         {
           status: 'pending',
-          lastError: 'cloudinary-list-temporary-failure',
+          lastError: cleanup.cloudinaryListPending
+            ? 'cloudinary-list-temporary-failure'
+            : 'cloudinary-delete-temporary-failure',
+          // A profil MAR torolve van, csak a kepek maradtak: ezt a jelzest a
+          // 15 percenkenti takaritas hasznalja, hogy ne futtassa ujra a teljes
+          // (draga) gyujtemeny-takaritast, csak a kepeket probalja torolni.
+          cloudinaryListPending: cleanup.cloudinaryListPending === true,
+          pendingCloudinaryAssets: destroyFailed,
           expiresAt: FieldValue.delete(),
           updatedAt: FieldValue.serverTimestamp(),
         },
@@ -3950,6 +4002,8 @@ exports.deleteCommunityUser = functions
     await deletionRef.set(
       {
         status: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
+        cloudinaryListPending: FieldValue.delete(),
+        pendingCloudinaryAssets: FieldValue.delete(),
         ...(cleanup.manualCleanupRequired
           ? { lastError: 'legacy-cloudinary-public-id-missing' }
           : { completedAt: FieldValue.serverTimestamp() }),
@@ -3976,6 +4030,77 @@ exports.deleteCommunityUser = functions
       cleanupStatus: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
     };
   });
+
+/**
+ * A fuggoben maradt Cloudinary-kepek ujraprobalkozasa.
+ *
+ * MIERT kulon fuggveny: ilyenkor a Firestore- es Auth-oldali takaritas MAR
+ * lefutott (a felhasznalo nem latszik az admin listaban), csak a kepek maradtak
+ * a Cloudinaryn. A teljes `deleteUserReferences` ujrafuttatasa 15 percenkent
+ * indokolatlanul draga lenne, ezert itt csak a kepekkel foglalkozunk.
+ *
+ * Visszaadas: `null`, ha minden sikerult; kulonben a megmaradt kepek es a
+ * lista-lekerdezes allapota.
+ */
+async function retryCloudinaryAssetCleanup(uid, stored = {}) {
+  const uidHash = crypto.createHash('sha256').update(uid).digest('hex').slice(0, 16);
+  const known = Array.isArray(stored.pendingCloudinaryAssets)
+    ? stored.pendingCloudinaryAssets.map((value) => String(value)).filter(Boolean)
+    : [];
+  const listed = [];
+  let listPending = false;
+  // Ha a korabbi lista-lekerdezes hasalt el, VAGY egyaltalan nem ismerunk
+  // public_id-t (regi, meg a diagnosztika elotti rekord), akkor egyszer
+  // megkerdezzuk a Cloudinaryt -- ez egyetlen olcso HTTP hivas.
+  if (stored.cloudinaryListPending === true || known.length === 0) {
+    try {
+      const assets = await listOwnedCloudinaryAssets({
+        cloudName: CLOUDINARY_CLOUD_NAME,
+        apiKey: CLOUDINARY_API_KEY.value(),
+        apiSecret: CLOUDINARY_API_SECRET.value(),
+        uid,
+      });
+      listed.push(...assets.map((asset) => asset.publicId));
+    } catch (error) {
+      listPending = true;
+      console.warn(
+        JSON.stringify({
+          event: 'account_deletion_cloudinary_list_failed',
+          step: 'retry_pending_cleanup',
+          uidHash,
+          errorCode: error?.code || error?.message || 'unknown',
+        }),
+      );
+    }
+  }
+  const targets = [...new Set([...known, ...listed])];
+  const failed = [];
+  for (const publicId of targets) {
+    try {
+      await destroyCloudinaryAsset({
+        cloudName: CLOUDINARY_CLOUD_NAME,
+        apiKey: CLOUDINARY_API_KEY.value(),
+        apiSecret: CLOUDINARY_API_SECRET.value(),
+        publicId,
+      });
+    } catch (error) {
+      failed.push(publicId);
+      console.warn(
+        JSON.stringify({
+          event: 'account_deletion_cloudinary_destroy_failed',
+          step: 'retry_pending_cleanup',
+          uidHash,
+          errorCode: error?.code || error?.message || 'unknown',
+        }),
+      );
+    }
+  }
+  if (!failed.length && !listPending) return null;
+  return { assets: failed, listPending };
+}
+
+// Test-only hook a fenti „csak kepek" ujraprobahoz.
+exports.__retryCloudinaryAssetCleanupForTests = retryCloudinaryAssetCleanup;
 
 exports.cleanupIncompleteAccounts = onSchedule(
   {
@@ -4056,6 +4181,50 @@ exports.cleanupIncompleteAccounts = onSchedule(
     const pendingDeletions = await db.collection('account_deletions').where('status', '==', 'pending').limit(50).get();
     for (const deletion of pendingDeletions.docs) {
       const uid = deletion.id;
+      const stored = deletion.data() || {};
+      const profileSnapshot = await db.collection('community_profiles').doc(uid).get();
+      const storedAssets = Array.isArray(stored.pendingCloudinaryAssets)
+        ? stored.pendingCloudinaryAssets.map((value) => String(value)).filter(Boolean)
+        : [];
+      // A „csak kepek maradtak" eset: a profil (es az Auth-fiok) mar nincs meg,
+      // tehat a teljes gyujtemeny-takaritas futtatasa ertelmetlen es draga
+      // (`collectionGroup` kerdesek felhasznalonkent, 15 percenkent). Ilyenkor
+      // csak a Cloudinary-kepeket probaljuk torolni.
+      const onlyCloudinaryLeft =
+        !profileSnapshot.exists &&
+        (stored.cloudinaryListPending === true ||
+          storedAssets.length > 0 ||
+          String(stored.lastError || '').startsWith('cloudinary'));
+      if (onlyCloudinaryLeft) {
+        const remaining = await retryCloudinaryAssetCleanup(uid, stored);
+        if (remaining) {
+          await deletion.ref.set(
+            {
+              status: 'pending',
+              lastError: remaining.listPending
+                ? 'cloudinary-list-temporary-failure'
+                : 'cloudinary-delete-temporary-failure',
+              cloudinaryListPending: remaining.listPending,
+              pendingCloudinaryAssets: remaining.assets,
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+          continue;
+        }
+        await deletion.ref.set(
+          {
+            status: 'completed',
+            completedAt: FieldValue.serverTimestamp(),
+            cloudinaryListPending: FieldValue.delete(),
+            pendingCloudinaryAssets: FieldValue.delete(),
+            expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+        continue;
+      }
       const authStillExists = await auth
         .getUser(uid)
         .then(() => true)
@@ -4064,13 +4233,29 @@ exports.cleanupIncompleteAccounts = onSchedule(
           throw error;
         });
       if (authStillExists) continue;
-      const profileSnapshot = await db.collection('community_profiles').doc(uid).get();
       try {
         const cleanup = await deleteUserReferences(uid, profileSnapshot.data() || {});
-        if (cleanup.cloudinaryListPending) continue;
+        const destroyFailed = Array.isArray(cleanup.cloudinaryDestroyFailed) ? cleanup.cloudinaryDestroyFailed : [];
+        if (cleanup.cloudinaryListPending || destroyFailed.length) {
+          await deletion.ref.set(
+            {
+              status: 'pending',
+              lastError: cleanup.cloudinaryListPending
+                ? 'cloudinary-list-temporary-failure'
+                : 'cloudinary-delete-temporary-failure',
+              cloudinaryListPending: cleanup.cloudinaryListPending === true,
+              pendingCloudinaryAssets: destroyFailed,
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+          continue;
+        }
         await deletion.ref.set(
           {
             status: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
+            cloudinaryListPending: FieldValue.delete(),
+            pendingCloudinaryAssets: FieldValue.delete(),
             ...(cleanup.manualCleanupRequired
               ? { lastError: 'legacy-cloudinary-public-id-missing' }
               : { completedAt: FieldValue.serverTimestamp() }),
