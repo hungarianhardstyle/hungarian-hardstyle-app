@@ -6,11 +6,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 334
+currentBuild: 335
 currentVersion: 1.0.0
 lastPublishedBuild: 328
-aab: build/HUHS-v1.0.0+334-release.aab
-sha256: 5834831C474722C89BF2B5FA938AA2BC0E6E36BDFE9EDE7A002BD468F490B228
+aab: build/HUHS-v1.0.0+335-release.aab
+sha256: 4D824B24B9C071BB1A429530ABF93D5BC6803D0CC68B4C94BE0B869772CAA10D
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -24,9 +24,8 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-19, a 334 build előtt)
 | production | üres | — |
 | internal | completed + egy üres piszkozat | 278 |
 
-- Vagyis **a zárt teszt sávján most a 332 él**, és mellette egy **befejezetlen (draft) kiadás** áll — a **333 nem ment ki** egyetlen sávra sem (ezt a mérés igazolta: se az alpha, se az internal nem hozta).
-- **A 333-at tehát semmi nem váltja a tesztelőknél**: a **334** viszi mindazt, amit a 333 tartalmazott volna.
-- A feltöltött AAB-ek a Playen: 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 328, 329, 330, 331, **332** (és a most feltöltendő **334**).
+- Vagyis **a zárt teszt sávján most a 334 él** (a 333 nem ment ki), és mellette egy **befejezetlen (draft) kiadás** áll az internal sávon.
+- A feltöltött AAB-ek a Playen: 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 329, 330, 331, 332, 333, **334** (és a most feltöltendő **335**).
 - **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 334 automatikusan felváltja a 332-t; a félbemaradt **piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
 - Az alkalmazott kiadási szöveg a **hosszabb (1b.) változat** volt — a rövidebb (1.) is ugyanazt mondja, csak tömörebben.
 
@@ -34,19 +33,17 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-19, a 334 build előtt)
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+334-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+335-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **334** (a merge-elt release manifestből visszaolvasva) |
+| Verziókód | **335** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 79,54 MB |
-| SHA-256 | 5834831C474722C89BF2B5FA938AA2BC0E6E36BDFE9EDE7A002BD468F490B228 |
+| SHA-256 | 4D824B24B9C071BB1A429530ABF93D5BC6803D0CC68B4C94BE0B869772CAA10D |
 
-**Miért a 334-et kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
-(323–334). A Play-en a legutóbb publikált build a **328**, a zárt teszt sávján pedig a **332** él —
-a **333 nem ment ki** (egy félbemaradt piszkozat maradt helyette), ezért a tesztelők a **334-gyel**
-kapják meg az Achievement-útmutató javítását, a három új pontforrást és a rang-frissítést.
+**Miért a 335-öt kell feltenni:** ez a legfrissebb (a 334-re épül, plusz a beküldési szerepkör-szabály).
+A zárt teszt sávján most a **334** él — a 335 ezt váltja.
 
-> **FONTOS:** a **korábbi AAB-eket (köztük a 333-at) ne töltsd fel** — a 334 mindegyiket tartalmazza,
-> és a 333-nál kisebb verziókódú csomagot a Play amúgy sem fogadna el.
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 335 mindegyiket tartalmazza, és kisebb
+> verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.5.7** (`build/huhs-mobile-api-2.5.7.zip`) — **ezt is fel kell tölteni**, mert a
 létrehozás a plugin új végpontjait használja (a 2.5.6-tal a mentés „nem engedélyezett"-et adna).
@@ -63,6 +60,7 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 ```play-notes
 - ÚJ: napi aktivitási pont — kommentért és chatért 1–5 pont jár, a szerver számolja.
 - ÚJ: kiadvány megvásárlásáért +20, jóváhagyott beküldésért +10 pont jár.
+- Eseményt mostantól csak szervezői szerepkörrel lehet beküldeni.
 - Az Achievement-útmutató pontos leírást kapott (napi keretek, szabályok).
 - A rangod és a jelvényed szintlépésnél magától frissül, nem kell újranyitni az appot.
 - A hírek, a DJ-k és az események listája görgetés közben már nem villog.
@@ -75,9 +73,10 @@ felsorolni, mit kap a felhasználó.
 
 ```play-notes
 - ÚJ: napi aktivitási pont — kommentért és chatért 1–5 pont jár, a szerver számolja.
-- ÚJ: kiadvány-vásárlásért +20 pont jár minden változatért.
-- ÚJ: a jóváhagyott beküldésekért (esemény, DJ, szervező) +10 pont jár.
-- Az Achievement-útmutató pontos leírásokat kapott: napi keretek.
+- ÚJ: kiadvány-vásárlásért +20 pont jár.
+- ÚJ: jóváhagyott beküldésért +10 pont jár.
+- Eseményt mostantól csak szervezői szerepkörrel lehet beküldeni.
+- Az Achievement-útmutató pontos leírásokat kapott.
 - A rang és a jelvény szintlépésnél magától frissül.
 - A hírek, a DJ-k és az események listája görgetés közben már nem villog.
 - A kedvelt hír pontját a lájk visszavonása nem veszi el.
@@ -98,6 +97,10 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 335 — beküldés szerepkör szerint
+- Eseményt mostantól csak szervezői szerepkörrel lehet beküldeni (a DJ-t DJ-, a szervezőt szervezői szerepkörrel, ahogy eddig) — a beküldő gomb csak annak látszik, akinek szabad.
+- Az Achievement-útmutató megmondja, ki mit küldhet be, és hogy a beküldésért járó pont a jóváhagyáskor jár a beküldőnek.
 
 ### 334 — pontos Achievement-útmutató, három új pontforrás, rang-frissítés
 - Az Achievement-útmutató (Több → Achievementek) pontos leírásokat kapott: a napi keretek (lájk 3, komment 3, beküldés 3), a lájkpont véglegessége, és az is, hogy az esemény/meetup pont **eseményenként egyszer** jár, de lemondásnál elvész.
@@ -172,7 +175,7 @@ SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`).
 
 1. `node tools/check-play-notes.mjs` — a Play-blokkok hossza és a build-lefedettség.
 2. `flutter test test/data/app_changelog_test.dart` — az app changelogja egyezik a `pubspec.yaml`-lel.
-3. Az AAB verziókódja a merge-elt manifestből: **334**.
+3. Az AAB verziókódja a merge-elt manifestből: **335**.
 4. `node tools/verify-native-admin-menu.mjs` — a natív admin menüpontjai és a plugin végpontjai egyeznek.
 5. `node tools/verify-achievement-points.mjs` — az achievement-pontok konzisztenciája (ÉLES, csak olvas).
 6. `node tools/verify-achievement-guide.mjs` — az Achievement-útmutató szövege egyezik a kóddal (napi keretek, pontértékek, létező források).

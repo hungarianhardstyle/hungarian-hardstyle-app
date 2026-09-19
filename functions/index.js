@@ -3808,11 +3808,38 @@ async function removePushTokens(uid, tokens) {
     .catch(() => {});
 }
 
+/**
+ * Ki mit küldhet be — EGY helyen, hogy a szerver és az app ne csússzon el.
+ *
+ * A tulajdonos szabálya (2026-09-19): *„djt csak dj szerepkörrel, esemény csak
+ * szervező szerepkörrel és szervezőt is szervező szerepkörrel lehet csak
+ * beküldeni"*. Korábban az **esemény szerepkör nélkül** volt (`role: null`),
+ * ezért bármelyik bejelentkezett felhasználó beküldhetett eseményt — és ez volt
+ * az egyetlen könnyen farmolható beküldés (napi 3 elfogadott = +30 pont).
+ *
+ * A `role` lehet **lista** is (pl. `['organizer','dj']`), így egy későbbi
+ * lazítás egyetlen szó.
+ */
 const submissionRoutes = {
-  event: { path: '/event-submissions', role: null },
+  event: { path: '/event-submissions', role: 'organizer' },
   artist: { path: '/artist-submissions', role: 'dj' },
   organizer: { path: '/organizer-submissions', role: 'organizer' },
 };
+
+/** Jogosultság-ellenőrzés a beküldéshez (tiszta logika → tesztelhető). */
+function submissionRoleAllows(routeRole, profileRole, isAdminCaller) {
+  if (isAdminCaller) return true;
+  if (!routeRole) return true;
+  const allowed = Array.isArray(routeRole) ? routeRole : [routeRole];
+  const role = String(profileRole || '').trim();
+  return role !== '' && allowed.includes(role);
+}
+
+// Test-only export (nem Cloud Function): a szerepkör-kapu és a valódi
+// útvonal-szabályok mérése. A `submissionRoutes` UTÁN kell lennie, különben a
+// `const` még nincs inicializálva (TDZ).
+exports.__submissionRulesForTests = { submissionRoutes, submissionRoleAllows };
+
 
 function isAdmin(context, profile) {
   return (
@@ -3890,9 +3917,14 @@ exports.submitWordPressContent = wordPressCall(async (data, context) => {
 
   const profileSnapshot = await db.collection('community_profiles').doc(context.auth.uid).get();
   const profile = profileSnapshot.data() || {};
-  if (!isAdmin(context, profile) && route.role && profile.role !== route.role) {
+  if (!submissionRoleAllows(route.role, profile.role, isAdmin(context, profile))) {
     await requestRef.delete().catch(() => {});
-    throw new HttpsError('permission-denied', 'Ehhez a beküldéshez nincs jogosultságod.');
+    throw new HttpsError(
+      'permission-denied',
+      route.role === 'organizer'
+        ? 'Az esemény- és szervezőbeküldés szervezői szerepkörhöz kötött.'
+        : 'Ehhez a beküldéshez nincs jogosultságod.',
+    );
   }
 
   const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;

@@ -73,7 +73,7 @@ class AchievementGuideScreen extends ConsumerWidget {
       title: 'Jóváhagyott beküldés',
       points: '+10 pont',
       detail:
-          'Beküldött esemény, DJ vagy szervező: a pont a jóváhagyáskor jár. Naponta legfeljebb 3 jóváhagyott beküldésért.',
+          'Eseményt szervező, DJ-t DJ, szervezőt szervező küldhet be; a pont a jóváhagyáskor jár a beküldőnek. Naponta legfeljebb 3 jóváhagyott beküldésért.',
     ),
     (
       title: 'Profil kitöltése',

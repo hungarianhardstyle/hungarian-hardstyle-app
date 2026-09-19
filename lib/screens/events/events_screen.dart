@@ -7,6 +7,7 @@ import '../../models/event.dart';
 import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/huhs_corner_logo.dart';
+import '../../services/submission_rules.dart';
 import '../../services/wordpress_service.dart';
 import 'event_submission_screen.dart';
 
@@ -117,7 +118,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     final events = ref.watch(eventsProvider);
     final pastEvents = ref.watch(pastEventsProvider);
     final user = ref.watch(communityAuthProvider).valueOrNull;
-    final canSubmit = user != null && !user.isAnonymous;
+    final service = ref.watch(communityServiceProvider);
+    // Eseményt a tulajdonos szabálya szerint csak SZERVEZŐ (vagy admin)
+    // küldhet be — ugyanaz a szabály, mint a szerveren (`SubmissionRules`).
+    final canSubmit = SubmissionRules.canSubmit(
+      kind: 'event',
+      registered: user != null && !user.isAnonymous,
+      role: service.cachedAccountRole,
+      isAdmin: service.isAdmin,
+    );
 
     return Scaffold(
       backgroundColor: Colors.transparent,

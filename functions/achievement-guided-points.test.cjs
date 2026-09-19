@@ -42,6 +42,7 @@ const {
   __dailyActivityPointsForTests: dailyPoints,
   __recordDailyActivityForTests: recordDailyActivity,
   __awardDailyActivityForDayForTests: awardDailyActivity,
+  __submissionRulesForTests: submissionRules,
 } = require('./index.js');
 
 function todayKey() {
@@ -102,6 +103,30 @@ test('a pontértékek és a napi keret a tulajdonos döntése szerint', () => {
   assert.equal(pointValues.approvedSubmission, 10);
   assert.equal(pointValues.releasePurchase, 20);
   assert.equal(limits.submission, 3);
+});
+
+test('a beküldés szerepkör-kapuja: esemény és szervező = szervező, DJ = DJ', () => {
+  // A tulajdonos szabálya: „djt csak dj szerepkörrel, esemény csak szervező
+  // szerepkörrel és szervezőt is szervező szerepkörrel lehet csak beküldeni”.
+  assert.deepEqual(submissionRules.submissionRoutes.event.role, 'organizer');
+  assert.deepEqual(submissionRules.submissionRoutes.artist.role, 'dj');
+  assert.deepEqual(submissionRules.submissionRoutes.organizer.role, 'organizer');
+
+  const allows = submissionRules.submissionRoleAllows;
+  // Esemény: csak szervező.
+  assert.equal(allows('organizer', 'organizer', false), true);
+  assert.equal(allows('organizer', 'dj', false), false, 'DJ nem küldhet be eseményt');
+  assert.equal(allows('organizer', 'partygoer', false), false);
+  assert.equal(allows('organizer', '', false), false, 'szerepkör nélkül sem megy');
+  // Admin mindent beküldhet.
+  assert.equal(allows('organizer', 'partygoer', true), true);
+  assert.equal(allows('dj', '', true), true);
+  // DJ-beküldés.
+  assert.equal(allows('dj', 'dj', false), true);
+  assert.equal(allows('dj', 'organizer', false), false);
+  // Lista is működik (későbbi lazításhoz), és a szerepkör nélküli út bárkinek jár.
+  assert.equal(allows(['organizer', 'dj'], 'dj', false), true);
+  assert.equal(allows(null, 'partygoer', false), true);
 });
 
 test('jóváhagyott beküldés: a BEKÜLDŐ kap +10 pontot, indoklással', async () => {

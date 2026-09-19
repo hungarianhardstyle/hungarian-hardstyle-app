@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/community_provider.dart';
+import '../../services/submission_rules.dart';
 import '../../widgets/huhs_corner_logo.dart';
 import '../artists/artists_screen.dart';
 import '../organizers/organizers_screen.dart';
@@ -54,8 +55,20 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     final user = ref.watch(communityAuthProvider).valueOrNull;
     final registered = user != null && !user.isAnonymous;
     final role = service.cachedAccountRole;
-    final canArtist = registered && (service.isAdmin || role == 'dj');
-    final canOrganizer = registered && (service.isAdmin || role == 'organizer');
+    // A szerepkör-szabály EGY helyen él (`SubmissionRules`), és ugyanaz, mint a
+    // szerveren — így a gomb és a szerver-kapu nem tud elcsúszni.
+    final canArtist = SubmissionRules.canSubmit(
+      kind: 'artist',
+      registered: registered,
+      role: role,
+      isAdmin: service.isAdmin,
+    );
+    final canOrganizer = SubmissionRules.canSubmit(
+      kind: 'organizer',
+      registered: registered,
+      role: role,
+      isAdmin: service.isAdmin,
+    );
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -121,7 +134,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               if (!canArtist && !canOrganizer)
                 _notice(
                   registered
-                      ? 'A DJ- és szervezőbeküldés a megfelelő szerepkörhöz kötött.'
+                      ? SubmissionRules.notice
                       : 'A beküldés csak regisztrált felhasználóknak érhető el.',
                 ),
             ]),

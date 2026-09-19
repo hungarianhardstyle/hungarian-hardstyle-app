@@ -72,6 +72,24 @@ export function readCodeFacts(functionsSource) {
   };
 }
 
+/** A beküldési szerepkör-szabály a kódból (a kliens ugyanezt használja). */
+export function readSubmissionFacts(functionsSource) {
+  const roles = {};
+  for (const kind of ['event', 'artist', 'organizer']) {
+    const match = new RegExp(
+      `${kind}:\\s*\\{[^}]*role:\\s*(\\[[^\\]]*\\]|'[^']*')`,
+    ).exec(functionsSource);
+    roles[kind] = match
+      ? [...match[1].matchAll(/'([^']+)'/g)].map((hit) => hit[1])
+      : null;
+  }
+  return {
+    roles,
+    // A kapu a SZERVEREN van (nem csak a felületen).
+    hasRoleGuard: /submissionRoleAllows\(route\.role/.test(functionsSource),
+  };
+}
+
 /** Az útmutató szövegének vizsgálata (tiszta → önteszttel bizonyítható). */
 export function analyzeGuide({ functionsSource, guideSource }) {
   const facts = readCodeFacts(functionsSource);
@@ -166,6 +184,20 @@ export function analyzeGuide({ functionsSource, guideSource }) {
       has('Jóváhagyott beküldés', `legfeljebb ${facts.submissionLimit}`) &&
       has('Jóváhagyott beküldés', 'jóváhagyáskor'),
   );
+  // A beküldés SZEREPKÖRHÖZ kötött (a tulajdonos szabálya), és ezt a szerver is
+  // kikényszeríti — a szöveg pedig megmondja, ki mit küldhet be.
+  const submissionFacts = readSubmissionFacts(functionsSource);
+  check(
+    'a beküldés szerepkör-kapu a SZERVEREN is megvan, és a valós szerepköröket írja',
+    submissionFacts.hasRoleGuard &&
+      JSON.stringify(submissionFacts.roles) ===
+        JSON.stringify({ event: ['organizer'], artist: ['dj'], organizer: ['organizer'] }),
+    JSON.stringify(submissionFacts.roles),
+  );
+  check(
+    'az útmutató megmondja, ki mit küldhet be (esemény/DJ/szervező)',
+    has('Jóváhagyott beküldés', 'szervező') && has('Jóváhagyott beküldés', 'DJ'),
+  );
   check(
     `napi aktivitási pont: 1–${facts.dailyActivityMax}, ÉS létezik a forrás + a számláló`,
     facts.dailyActivitySource &&
@@ -244,6 +276,26 @@ function selfTest() {
   check(
     'a forrás nélküli kiadvány-sor elhasal',
     analyzeGuide({ functionsSource: noSource, guideSource }).failures.length > 0,
+  );
+
+  // 6. Ha az esemény-beküldés szerepköre visszaáll a „bárki"-re, elhasal.
+  const looseEvent = functionsSource.replace(
+    "event: { path: '/event-submissions', role: 'organizer' }",
+    "event: { path: '/event-submissions', role: null }",
+  );
+  check(
+    'az esemény szerepkör nélkül (bárki beküldheti) elhasal',
+    analyzeGuide({ functionsSource: looseEvent, guideSource }).failures.length > 0,
+  );
+
+  // 7. Ha a szerveroldali kapu eltűnik (csak a felület tilt), elhasal.
+  const noGuard = functionsSource.replace(
+    'if (!submissionRoleAllows(route.role, profile.role, isAdmin(context, profile))) {',
+    'if (false) {',
+  );
+  check(
+    'a szerveroldali szerepkör-kapu eltávolítása elhasal',
+    analyzeGuide({ functionsSource: noGuard, guideSource }).failures.length > 0,
   );
 
   for (const result of results) console.log(`${result.ok ? 'OK   ' : 'HIBA '} ${result.label}`);
