@@ -38,8 +38,11 @@ const databaseId = 'hungarian-hardstyle';
 const app = initializeApp({ projectId });
 const db = getFirestore(app, databaseId);
 
-const { __awardAchievementPointsForTests: award, __achievementDailyLimitsForTests: limits } =
-  require('./index.js');
+const {
+  __awardAchievementPointsForTests: award,
+  __achievementDailyLimitsForTests: limits,
+  __awardNewsReactionPointsForTests: awardNewsReaction,
+} = require('./index.js');
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
@@ -155,22 +158,77 @@ test('ugyanaz a cikk ketszer: a ledger fogja meg (nem a napi szamlalo)', async (
   await cleanup(uid);
 });
 
-test('a visszavonas (unlike) a plafonon is mukodik', async () => {
+test('a visszavonas a plafonon is mukodik (a napi keret nem blokkolja a levonast)', async () => {
   const uid = 'limit-news-3';
   await seedProfile(uid);
 
   for (const postId of [9201, 9202, 9203]) await award(uid, 2, `news-like:${postId}`);
   assert.equal(await pointsOf(uid), 6);
 
-  // A 4. grant mar nem jar ponttal, de a visszavonasnak mukodnie kell.
+  // A napi keret elfogyott, de a visszavonasnak (állapotváltásnak) működnie kell.
   const revoke = await award(uid, -2, 'news-like:9202');
   assert.equal(revoke.changed, true, 'a visszavonas nem eshet a napi plafon ala');
   assert.equal(await pointsOf(uid), 4);
 
-  // Es a visszavonas utan sem ad ugyanaz a cikk ujra pontot.
-  const again = await award(uid, 2, 'news-like:9202');
-  assert.equal(again.changed, false);
-  assert.equal(await pointsOf(uid), 4);
+  await cleanup(uid);
+});
+
+test('a hír-lájk: a visszavonás NEM vesz el pontot, és az újralájk nem ad újat', async () => {
+  // A TULAJDONOS SZABÁLYA: „ha kiveszem a lájkot, ne adja vissza megint".
+  // Ezt a lájk-pontmag viselkedése adja ki (nem a ledger tiltása), ezért itt a
+  // valódi magot mérjük: lájk → visszavonás → újralájk.
+  const uid = 'limit-like-rule';
+  await seedProfile(uid);
+
+  const like = await awardNewsReaction({}, { [uid]: true }, 9401);
+  assert.equal(like[0]?.changed, true, 'az első lájk pontot ad');
+  assert.equal(await pointsOf(uid), 2);
+
+  // Visszavonás: a pont MARAD (nincs levonás), ledger-sor sem keletkezik.
+  const unlike = await awardNewsReaction({ [uid]: true }, {}, 9401);
+  assert.deepEqual(unlike, [], 'a visszavonás nem ad és nem vesz el pontot');
+  assert.equal(await pointsOf(uid), 2, 'a lájkpont megmarad');
+
+  // Újralájk: nem jár új pont (nincs állapotváltozás), és nem lehet farmolni.
+  const again = await awardNewsReaction({}, { [uid]: true }, 9401);
+  assert.equal(again[0]?.changed, false, 'az újralájk nem ad másodszor pontot');
+  assert.equal(await pointsOf(uid), 2);
+
+  const ledger = await db.collection('achievement_ledger').where('uid', '==', uid).get();
+  assert.equal(ledger.size, 1, 'egyetlen ledger-sor van a cikkhez');
+
+  await cleanup(uid);
+});
+
+test('az esemény-részvétel oda-vissza váltogatása nem veszíti el a pontot', async () => {
+  // A korábbi kulcs (`…:grant` / `…:revoke`) miatt a visszavonás UTÁNI újabb
+  // jóváírás örökre blokkolva maradt — a felhasználó mínuszba került. Most a
+  // ledger az ÁLLAPOTOT tárolja, ezért a harmadik váltás már újra jóváír.
+  const uid = 'limit-attendance-cycle';
+  await seedProfile(uid);
+
+  const first = await award(uid, 10, 'attendance:777');
+  assert.equal(first.changed, true);
+  const off = await award(uid, -10, 'attendance:777');
+  assert.equal(off.changed, true);
+  assert.equal(await pointsOf(uid), 0);
+
+  const back = await award(uid, 10, 'attendance:777');
+  assert.equal(back.changed, true, 'a visszajelentkezés újra pontot ad (nincs csapda)');
+  assert.equal(await pointsOf(uid), 10);
+
+  // Ismételt jóváírás ugyanarra: nincs új pont (farmolás elleni védelem).
+  const duplicate = await award(uid, 10, 'attendance:777');
+  assert.equal(duplicate.changed, false);
+  assert.equal(await pointsOf(uid), 10);
+
+  // Soha nem kapott érte pontot → nincs mit visszavonni (nincs mínusz a semmiből).
+  const neverGranted = await award(uid, -10, 'attendance:999');
+  assert.equal(neverGranted.changed, false, 'a sosem adott pont nem vonható le');
+  assert.equal(await pointsOf(uid), 10);
+
+  const ledger = await db.collection('achievement_ledger').where('uid', '==', uid).get();
+  assert.equal(ledger.size, 1, 'forrásonként egyetlen állapot-sor van');
 
   await cleanup(uid);
 });

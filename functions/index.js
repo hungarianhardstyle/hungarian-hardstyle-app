@@ -1350,12 +1350,22 @@ const ARTICLE_COMMENT_DAILY_POINT_LIMIT = 3;
 
 async function awardAchievementPoints(uid, delta, sourceKey, notification = null) {
   if (!uid || !Number.isInteger(delta) || delta === 0 || !sourceKey) return { changed: false };
+  // EGY ledger-sor forrásonként, amely a JELENLEGI állapotot tárolja
+  // (`state: 'granted' | 'revoked'`).
+  //
+  // MIÉRT nem külön `grant`/`revoke` sor (ez volt a hiba): a korábbi kulcs
+  // `${uid}:${sourceKey}:${grant|revoke}` volt, ezért egy visszavonás UTÁN az
+  // újabb jóváírás **örökre blokkolva maradt** (a `grant` sor már létezett). Élő
+  // mérés (2026-09-19): 19 olyan eset volt, ahol a felhasználó lájkolt,
+  // visszavonta, majd újra lájkolt — a pont véglegesen elveszett. Ugyanez a csapda
+  // állt az esemény-részvételnél és a meetupnál is (oda-vissza váltogatás).
   const ledgerId = crypto
     .createHash('sha256')
-    .update(`${uid}:${sourceKey}:${delta > 0 ? 'grant' : 'revoke'}`)
+    .update(`${uid}:${sourceKey}`)
     .digest('hex')
     .slice(0, 40);
   const ledgerRef = db.collection('achievement_ledger').doc(ledgerId);
+  const wantedState = delta > 0 ? 'granted' : 'revoked';
   const profileRef = db.collection('community_profiles').doc(uid);
   const isNewsLikeGrant = delta > 0 && sourceKey.startsWith('news-like:');
   const isArticleCommentGrant = delta > 0 && sourceKey.startsWith('article-comment:');
@@ -1385,7 +1395,16 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
   const badges = await getAchievementBadges();
   await db.runTransaction(async (transaction) => {
     const ledger = await transaction.get(ledgerRef);
-    if (ledger.exists) return;
+    const stored = ledger.data() || {};
+    // A régi, `grant`/`revoke` párt használó sorokból is levezetjük az állapotot,
+    // hogy az átállás ne veszítsen el információt.
+    const currentState = ledger.exists
+      ? String(stored.state || (Number(stored.delta) > 0 ? 'granted' : 'revoked'))
+      : '';
+    // Nincs állapotváltozás: nem jár új pont (ez a farmolás elleni védelem).
+    if (currentState === wantedState) return;
+    // Soha nem kapott érte pontot: nincs mit visszavonni.
+    if (!ledger.exists && delta < 0) return;
     const dailyActivity = dailyLimitRef ? await transaction.get(dailyLimitRef) : null;
     if (dailyActivity && Number(dailyActivity.data()?.count || 0) >= dailyLimit) return;
     const profile = await transaction.get(profileRef);
@@ -1415,13 +1434,22 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
       },
       { merge: true },
     );
-    transaction.create(ledgerRef, {
-      uid,
-      sourceKey,
-      delta,
-      pointsAfter: points,
-      createdAt: FieldValue.serverTimestamp(),
-    });
+    transaction.set(
+      ledgerRef,
+      {
+        uid,
+        sourceKey,
+        state: wantedState,
+        delta,
+        pointsAfter: points,
+        createdAt: stored.createdAt || FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+        // A hányadik állapotváltás ez (grant → revoke → grant …) — a napló
+        // olvashatóságáért, nem a logikáért.
+        transitions: FieldValue.increment(1),
+      },
+      { merge: true },
+    );
     if (dailyLimitRef) {
       transaction.set(
         dailyLimitRef,
@@ -2612,6 +2640,33 @@ exports.awardAchievementFromMeetup = onDocumentWritten(
   },
 );
 
+/**
+ * A hír-lájk pontmagja — szándékosan külön függvényben, hogy a szabály
+ * **viselkedésként** tesztelhető legyen (`functions/achievement-daily-limit.test.cjs`).
+ *
+ * A TULAJDONOS SZABÁLYA: *„ha kiveszem a lájkot, ne adja vissza megint"*.
+ * Ezt két együttműködő szabály adja ki:
+ *  1. a **visszavonás nem vesz el pontot** (a lájkpont egyszer jár, véglegesen);
+ *  2. az újralájk így **állapotváltozás nélkül** fut (a ledgersor `granted`
+ *     marad), ezért nem jár új pont — de nem is lehet vele pontot farmolni.
+ *
+ * MIÉRT jobb ez a korábbinál: a régi kód a visszavonásnál levonta a pontot, az
+ * újralájkot viszont a már létező `grant` sor blokkolta — a felhasználó tehát
+ * **véglegesen mínuszba** került ugyanazzal a cikkel. Élő mérés (2026-09-19):
+ * 19 ilyen eset, és pontosan ezt jelezte a felhasználó („lájkoltam, nem kaptam
+ * pontot, és nullán állok").
+ */
+async function awardNewsReactionPoints(beforeLikedBy, afterLikedBy, postId) {
+  const before = boolMap(beforeLikedBy);
+  const after = boolMap(afterLikedBy);
+  const results = [];
+  for (const uid of Object.keys(after)) {
+    if (before[uid]) continue;
+    results.push(await awardAchievementPoints(uid, 2, `news-like:${postId}`));
+  }
+  return results;
+}
+
 exports.awardAchievementFromNewsReaction = onDocumentWritten(
   {
     document: 'news_reactions/{postId}',
@@ -2619,17 +2674,17 @@ exports.awardAchievementFromNewsReaction = onDocumentWritten(
     region: 'europe-central2',
   },
   async (event) => {
-    const before = boolMap(event.data?.before?.data()?.likedBy);
-    const after = boolMap(event.data?.after?.data()?.likedBy);
     const postId = String(event.params.postId || '').trim();
-    const results = [];
-    for (const uid of Object.keys(after))
-      if (!before[uid]) results.push(await awardAchievementPoints(uid, 2, `news-like:${postId}`));
-    for (const uid of Object.keys(before))
-      if (!after[uid]) results.push(await awardAchievementPoints(uid, -2, `news-like:${postId}`));
-    return results;
+    return awardNewsReactionPoints(
+      event.data?.before?.data()?.likedBy,
+      event.data?.after?.data()?.likedBy,
+      postId,
+    );
   },
 );
+
+// Test-only hook (nem Cloud Function): a lájk-pontmag viselkedésének mérése.
+exports.__awardNewsReactionPointsForTests = awardNewsReactionPoints;
 
 exports.rateEvent = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = context.auth?.uid;

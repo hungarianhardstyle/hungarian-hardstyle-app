@@ -1,5 +1,25 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Achievement-pontok auditja — a „lájkoltam, mégsem kaptam pontot" ügy (2026-09-19, **szerveroldali javítás: AAB NEM kell hozzá**)
+
+- **A tulajdonos jelzése:** *„nézz rá az achievent pontok kiosztására mert egy user jelezte, hogy lájkolt hírt és nem kapta meg és valóban nullán áll (Szabó Attila) + ha kiveszem a lájkot, ne adja vissza megint + a többi achi pont kiosztását is auditáld"*.
+- **Amit ÉLŐBEN mértem (21 profil, 465 ledger-sor):**
+  1. **Az invariáns tart**: minden profil `achievementPoints` értéke **pontosan** a `achievement_ledger` sorainak összege (**0 eltérés**) → a jóváírás/levonás mindig együtt íródik, nincs néma részleges írás.
+  2. **Forrásonkénti mérleg:** `news-like` 379 grant / **20 revoke** (nettó +718), `attendance` 11/4, `meetup` 7/4, `meetup-interest` 11/4; a `article-comment`, `event-rating`, `game`, `profile-complete`, `voting` forrásoknál **nulla** revoke.
+  3. **A valódi hiba (mért): 19 olyan eset**, ahol ugyanarra a (felhasználó, cikk) párra **grant ÉS revoke is** van → a pont **véglegesen elveszett**. Plusz **1** revoke, amihez nem tartozott grant (levonás a semmiből).
+  4. **Szabó Attila konkrét esete:** 6 grant (+12 pont, 09-18 és 09-19), majd **6 revoke (−12)** → **0 pont**. Vagyis a pont **megérkezett**, de a lájkok visszavonása **elvette**, és a napi keret (3/nap) is elfogyott, ezért az új lájkjai már nem adtak pontot.
+- **A gyökér (két, egymást erősítő hiba):**
+  1. **A ledger-kulcs `grant`/`revoke` párt használt** (`sha256(uid:source:grant|revoke)`), ezért **a visszavonás UTÁN az újabb jóváírás örökre blokkolva maradt** (a `grant` sor már létezett). Emiatt a felhasználó mínuszba került ugyanazzal a cikkel. **Ugyanez a csapda állt** az esemény-részvételnél, a meetupnál és a meetup-érdeklődésnél is (oda-vissza váltogatás).
+  2. **A lájk visszavonása levonta a pontot** — a tulajdonos szabálya viszont az, hogy *„ha kiveszem a lájkot, ne adja vissza megint"*, azaz a pont **egyszer jár** (és nem arról szól, hogy elvegyék).
+- **A javítás (`functions/index.js`):**
+  - **Egy ledger-sor forrásonként, `state: 'granted' | 'revoked'` mezővel** (a régi `grant`/`revoke` páros helyett). Jóváírás csak **állapotváltásnál** történik; a `revoke` után a `grant` **újra működik** (nincs csapda); a sosem adott pont **nem vonható le**; az ismételt jóváírás továbbra sem ad pontot (farmolás elleni védelem megmaradt). A régi sorokból az állapot **levezethető**, ezért az átállás nem veszít el adatot.
+  - **A hír-lájk pontmagja külön, tesztelhető függvény** (`awardNewsReactionPoints`): a **visszavonás nem vesz el pontot**, ezért az újralájk **állapotváltozás nélkül** fut → nem ad új pontot, de nem is lehet vele pontot farmolni. Ezzel a tulajdonos szabálya **viselkedésként** teljesül.
+  - A napi plafon (hír 3, komment 3) **változatlan** — az szándékos.
+- **Bizonyítás (`functions/achievement-daily-limit.test.cjs`, 6 → 8 teszt):** a valódi tranzakciót futtatja Firestore-emulátoron; az új tesztek: *„a hír-lájk: a visszavonás NEM vesz el pontot, és az újralájk nem ad újat"* (lajk → visszavonás → újralájk, egyetlen ledger-sorral) és *„az esemény-részvétel oda-vissza váltogatása nem veszíti el a pontot"* (+10 → −10 → **+10 újra jóváír**, ismétlésre nem, és a sosem adott pont nem vonható le).
+- **Élesítve:** `firebase deploy --only functions` (az `awardAchievementPoints`-t használó összes függvény és a `awardAchievementFromNewsReaction` trigger).
+- **NYITOTT DÖNTÉS (a tulajdonosé):** a **20 hír-lájk revoke** miatt **~7 felhasználónál összesen 40 pont** elveszett (ebből Szabó Attila 12-t veszített). A mechanizmus javítva van, de a **már elveszett pontok visszaállítása adatmódosítás** (a felhasználóknak látszó szám változik), ezért **jóváhagyásra vár**. A javasolt út: forrásonként egy külön `news-like-restore:<postId>` jóváírás (+2) a profilra és a ledgerbe — így az invariáns (profil = ledger-összeg) megmarad, és a napló megmutatja, hogy ez visszaállítás.
+- **ISMERT, NEM JAVÍTOTT (szándékos, de félrevezető):** a **napi 3 lájkpont-plafon csendben** elfogy — a felhasználó lájkol, és nem történik semmi. A GYIK írja a limitet, de az app nem jelzi. Ha a tulajdonos kéri, egy kis kliensoldali jelzés („a napi pontkeret elfogyott") megoldja — ez AAB-ot igényel, ezért most nem nyúltam hozzá.
+
 ### Létrehozás a natív adminból: kérdőív, nyereményjáték, kvíz (2026-09-19, AAB **331** + plugin **2.5.7**)
 
 - **A tulajdonos kérdése:** *„ja de most már tudok hozzáadni kvizt, nyereményjátékot és kérdőívet natív adminból?”* — a válasz **nem** volt, és ezt kódban is igazoltam: a `_creatableSections` csak `huhs_event`/`huhs_artist`/`huhs_organizer`, a `save_resource` **kizárólag meglévő** bejegyzést mentett (`get_post()` + `edit_post` jog), a `huhs_admin_resource_fields()` pedig a `huhs_poll`/`huhs_prize`/`huhs_game` típusokra **üres listát** adott. A tulajdonos ezután **mindhármat** kérte.
