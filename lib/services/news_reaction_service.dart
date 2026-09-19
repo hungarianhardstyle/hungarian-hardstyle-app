@@ -106,4 +106,61 @@ class NewsReactionService {
       liked: data['liked'] == true,
     );
   }
+
+  /// A napi lájkpont-keret állapota a **saját** profilból, vagy `null`.
+  ///
+  /// MIÉRT: a tulajdonos jelzése szerint a felhasználó lájkolt, és nem történt
+  /// semmi — mert a napi 3 pontos keret már elfogyott, erről viszont az app nem
+  /// szólt. A szerver a napi számlálót a profilba is beírja
+  /// (`achievementDailyLimit`), ezért innen ki tudjuk írni: „Ma 2/3 lájkpont" /
+  /// „A mai lájkpontod elfogyott".
+  Stream<DailyLikePoints?> watchDailyLikePoints() {
+    final firestore = _firestore;
+    if (firestore == null) return Stream.value(null);
+    return FirebaseAuth.instance.authStateChanges().asyncExpand((user) {
+      if (user == null || user.isAnonymous) return Stream.value(null);
+      return firestore
+          .collection('community_profiles')
+          .doc(user.uid)
+          .snapshots()
+          .map((snapshot) => dailyLikePointsOf(snapshot.data()));
+    });
+  }
+}
+
+/// A napi lájkpont-keret a profil mezőjéből (tiszta logika → tesztelhető).
+class DailyLikePoints {
+  const DailyLikePoints({
+    required this.count,
+    required this.limit,
+    required this.date,
+  });
+
+  final int count;
+  final int limit;
+  final String date;
+
+  bool get exhausted => count >= limit;
+
+  String get label => exhausted
+      ? 'A mai lájkpontod elfogyott.'
+      : 'Ma $count/$limit lájkpont jár.';
+}
+
+/// `achievementDailyLimit` mezőből, ha az a mai napra és a hír-lájkra vonatkozik.
+DailyLikePoints? dailyLikePointsOf(Object? profileData, {DateTime? now}) {
+  if (profileData is! Map) return null;
+  final raw = profileData['achievementDailyLimit'];
+  if (raw is! Map) return null;
+  if ('${raw['kind'] ?? ''}' != 'newsLike') return null;
+  final nowDate = now ?? DateTime.now();
+  final today =
+      '${nowDate.year.toString().padLeft(4, '0')}-'
+      '${nowDate.month.toString().padLeft(2, '0')}-'
+      '${nowDate.day.toString().padLeft(2, '0')}';
+  if ('${raw['date'] ?? ''}' != today) return null;
+  final limit = (raw['limit'] as num?)?.toInt() ?? 0;
+  final count = (raw['count'] as num?)?.toInt() ?? 0;
+  if (limit <= 0) return null;
+  return DailyLikePoints(count: count, limit: limit, date: today);
 }

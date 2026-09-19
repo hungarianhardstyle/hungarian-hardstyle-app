@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 332,
+    changes: [
+      'A hírek, a DJ-k és az események listája görgetés közben már nem villog — a képek áttűnés nélkül, azonnal megjelennek.',
+      'Ha a napi lájkpontod (3) elfogyott, az app mostantól szól, mielőtt lájkolnál — eddig csendben maradt, pedig ilyenkor nem járt pont.',
+      'A hír kedveléséért járó pontot a lájk visszavonása már nem veszi el, és a régebben tévesen elvett lájkpontok visszaálltak.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 331,
     changes: [
       'A HUHS adminban (natív) mostantól új kérdőív, nyereményjáték és kvíz is létrehozható — nem kell hozzá a WordPress admin.',

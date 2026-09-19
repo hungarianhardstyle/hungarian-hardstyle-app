@@ -7,24 +7,37 @@ import '../services/news_reaction_service.dart';
 class NewsReactionButton extends StatefulWidget {
   final int postId;
 
-  const NewsReactionButton({super.key, required this.postId});
+  /// Csak a tesztelhetőségért: a widget tesztben így Firebase nélkül mérhető
+  /// (a `NewsReactionService` a hálózatot és az auth-ot is használja).
+  final NewsReactionService? service;
+
+  const NewsReactionButton({super.key, required this.postId, this.service});
 
   @override
   State<NewsReactionButton> createState() => _NewsReactionButtonState();
 }
 
 class _NewsReactionButtonState extends State<NewsReactionButton> {
-  final _service = NewsReactionService();
+  late final NewsReactionService _service =
+      widget.service ?? NewsReactionService();
   bool _busy = false;
   NewsReactionState _state = const NewsReactionState();
   NewsReactionState? _pendingState;
   Timer? _pendingStateTimer;
   StreamSubscription<NewsReactionState>? _stateSubscription;
+  StreamSubscription<DailyLikePoints?>? _dailyPointsSubscription;
+  DailyLikePoints? _dailyPoints;
 
   @override
   void initState() {
     super.initState();
     _subscribeToState();
+    // A napi lájkpont-keret: ha elfogyott, a lájk NEM ad pontot — erről eddig
+    // semmi nem szólt, ezért a felhasználó azt hitte, elromlott. (Tulajdonosi
+    // jelzés: „lájkoltam, mégsem kaptam pontot".)
+    _dailyPointsSubscription = _service.watchDailyLikePoints().listen((value) {
+      if (mounted) setState(() => _dailyPoints = value);
+    });
   }
 
   @override
@@ -56,6 +69,19 @@ class _NewsReactionButtonState extends State<NewsReactionButton> {
 
   Future<void> _toggle() async {
     if (_busy) return;
+    // Lájk előtt: ha a napi keret már elfogyott, ezt MONDJUK MEG (különben a
+    // felhasználó néma csendet lát, és azt hiszi, hibás az app).
+    final wasLiked = _state.liked;
+    if (!wasLiked && _dailyPoints?.exhausted == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${_dailyPoints!.label} Hírek kedveléséért naponta '
+            '${_dailyPoints!.limit} alkalommal jár pont.',
+          ),
+        ),
+      );
+    }
     final previous = _state;
     final optimistic = NewsReactionState(
       count: (previous.count + (previous.liked ? -1 : 1))
@@ -94,6 +120,7 @@ class _NewsReactionButtonState extends State<NewsReactionButton> {
   @override
   void dispose() {
     _stateSubscription?.cancel();
+    _dailyPointsSubscription?.cancel();
     _pendingStateTimer?.cancel();
     super.dispose();
   }

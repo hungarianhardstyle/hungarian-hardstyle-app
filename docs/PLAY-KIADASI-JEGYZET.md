@@ -6,29 +6,29 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 331
+currentBuild: 332
 currentVersion: 1.0.0
 lastPublishedBuild: 328
-aab: build/HUHS-v1.0.0+331-release.aab
-sha256: 6D5798840E5C47EA6AB7DF54B2BB1C2A3767016E89BCD3B4326158973EC85336
+aab: build/HUHS-v1.0.0+332-release.aab
+sha256: BD7130B553372300F22E43B8EE708003DB2C796ED19449568E451920DB098AA4
 -->
 
 ## A feltöltendő AAB (mérve)
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+331-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+332-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **331** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 79,49 MB |
-| SHA-256 | D5798840E5C47EA6AB7DF54B2BB1C2A3767016E89BCD3B4326158973EC85336 |
+| Verziókód | **332** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 79,50 MB |
+| SHA-256 | BD7130B553372300F22E43B8EE708003DB2C796ED19449568E451920DB098AA4 |
 
-**Miért a 331-et kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
-(323–331). A Play-en a legutóbb publikált build a **328**; a **329 és a 330 soha nem ment ki**,
-ezért a felhasználók most a **329–331 újdonságait** kapják egyben.
+**Miért a 332-t kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
+(323–332). A Play-en a legutóbb publikált build a **328**; a **329, 330 és 331 soha nem ment ki**,
+ezért a felhasználók most a **329–332 újdonságait** kapják egyben.
 
-> **FONTOS:** a **329-es és a 330-as AAB-et ne töltsd fel** — a 331 mindkettőt tartalmazza, plusz
-> a natív létrehozást (kérdőív / nyereményjáték / kvíz).
+> **FONTOS:** a **329-es, 330-as és 331-es AAB-et ne töltsd fel** — a 332 mindegyiket tartalmazza,
+> plusz a görgetési villogás javítását és a lájkpont-jelzést.
 
 **A plugin ehhez 2.5.7** (`build/huhs-mobile-api-2.5.7.zip`) — **ezt is fel kell tölteni**, mert a
 létrehozás a plugin új végpontjait használja (a 2.5.6-tal a mentés „nem engedélyezett"-et adna).
@@ -43,8 +43,10 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Adminoknak: a HUHS adminban új menüpontok — kvíz, kérdőív és nyereményjáték.
-- Adminoknak: új kérdőív, nyereményjáték és kvíz létrehozása az appból.
+- A hírek, a DJ-k és az események listája görgetés közben már nem villog.
+- Ha a napi lájkpontod elfogyott, az app mostantól szól, mielőtt lájkolnál.
+- A kedvelt hír pontját a lájk visszavonása már nem veszi el.
+- Adminoknak: új kérdőív, nyereményjáték és kvíz hozható létre az appból.
 - Chat: a régebbi üzenetek lefelé görgetve betöltődnek.
 ```
 
@@ -54,10 +56,10 @@ Ugyanaz, hosszabban — ez is a limiten belül van. Akkor használd, ha részlet
 felsorolni, mit kap a felhasználó.
 
 ```play-notes
-- Adminoknak: a natív HUHS adminban új menüpontok — Kvíz és játékok, Kérdőív, Nyereményjáték.
-- Adminoknak: mostantól ÚJ kérdőív, nyereményjáték és kvíz is létrehozható az appból.
-- A kvíz-szerkesztőben kérdések 2–6 válasszal, a helyes válasz bepipálásával.
-- Adminoknak: a kérdőív eredményei és a nyereményjáték résztvevői az adminból is elérhetők.
+- A hírek, a DJ-k és az események listája görgetés közben már nem villog.
+- Ha a napi lájkpontod (3) elfogyott, az app mostantól szól, mielőtt lájkolnál.
+- A kedvelt hír pontját a lájk visszavonása nem veszi el, és a régebben elvett pontok visszaálltak.
+- Adminoknak: a natív adminban új menüpontok, és új kérdőív, nyereményjáték, kvíz hozható létre.
 - Chat: a régebbi üzenetek lefelé görgetve betöltődnek.
 ```
 
@@ -76,6 +78,11 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 332 — villogás javítása + lájkpont-jelzés
+- A hírek, a DJ-k és az események listája görgetés közben már nem villog — a képek áttűnés nélkül, azonnal megjelennek.
+- Ha a napi lájkpontod (3) elfogyott, az app mostantól szól, mielőtt lájkolnál — eddig csendben maradt, pedig ilyenkor nem járt pont.
+- A hír kedveléséért járó pontot a lájk visszavonása már nem veszi el, és a régebben tévesen elvett lájkpontok visszaálltak.
 
 ### 331 — létrehozás a natív adminból (kérdőív, nyereményjáték, kvíz)
 - A HUHS adminban (natív) mostantól új kérdőív, nyereményjáték és kvíz is létrehozható — nem kell hozzá a WordPress admin.
@@ -134,5 +141,6 @@ SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`).
 
 1. `node tools/check-play-notes.mjs` — a Play-blokkok hossza és a build-lefedettség.
 2. `flutter test test/data/app_changelog_test.dart` — az app changelogja egyezik a `pubspec.yaml`-lel.
-3. Az AAB verziókódja a merge-elt manifestből: **330**.
+3. Az AAB verziókódja a merge-elt manifestből: **332**.
 4. `node tools/verify-native-admin-menu.mjs` — a natív admin menüpontjai és a plugin végpontjai egyeznek.
+5. `node tools/verify-achievement-points.mjs` — az achievement-pontok konzisztenciája (ÉLES, csak olvas).

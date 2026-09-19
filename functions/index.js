@@ -1372,8 +1372,13 @@ function achievementReasonText(sourceKey) {
   return 'egy jóváírt tevékenységért';
 }
 
-async function awardAchievementPoints(uid, delta, sourceKey, notification = null) {
+async function awardAchievementPoints(uid, delta, sourceKey, notification = null, options = {}) {
   if (!uid || !Number.isInteger(delta) || delta === 0 || !sourceKey) return { changed: false };
+  // A dedikált karbantartási út (`correction:` forrás) kifejezetten levonhat
+  // olyan forrásra is, amelyhez nem tartozik korábbi jóváírás — különben egy
+  // tévesen kifizetett pontot nem lehetne visszavonni. Minden más úton marad a
+  // védelem: amit sosem adtunk, azt nem lehet levonni.
+  const allowNegativeWithoutGrant = options?.allowNegativeWithoutGrant === true;
   // EGY ledger-sor forrásonként, amely a JELENLEGI állapotot tárolja
   // (`state: 'granted' | 'revoked'`).
   //
@@ -1455,7 +1460,7 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
     // Nincs állapotváltozás: nem jár új pont (ez a farmolás elleni védelem).
     if (currentState === wantedState) return;
     // Soha nem kapott érte pontot: nincs mit visszavonni.
-    if (!ledger.exists && delta < 0) return;
+    if (!ledger.exists && delta < 0 && !allowNegativeWithoutGrant) return;
     const dailyActivity = dailyLimitRef ? await transaction.get(dailyLimitRef) : null;
     if (dailyActivity && Number(dailyActivity.data()?.count || 0) >= dailyLimit) return;
     const profile = await transaction.get(profileRef);
@@ -2752,6 +2757,175 @@ exports.awardAchievementFromNewsReaction = onDocumentWritten(
 
 // Test-only hook (nem Cloud Function): a lájk-pontmag viselkedésének mérése.
 exports.__awardNewsReactionPointsForTests = awardNewsReactionPoints;
+
+/**
+ * A 2026-09-19 ELŐTTI működés miatt elveszett pontok TERVE — a tiszta logika
+ * külön, függőség nélküli fájlban él (`functions/achievement-restore-plan.js`),
+ * mert ugyanezt a tervet a karbantartó eszköz is kiszámolja ELŐNÉZETHEZ. Így a
+ * kettő nem tud elcsúszni egymástól.
+ */
+const { buildAchievementRestorePlan } = require('./achievement-restore-plan');
+
+/** UID helyett visszafejthetetlen rövidítés a naplóba és az eredménybe. */
+const maintenanceUidHash = (uid) =>
+  crypto.createHash('sha256').update(`huhs-maintenance:${uid}`).digest('hex').slice(0, 16);
+
+/**
+ * A terv végrehajtása a VALÓDI `awardAchievementPoints`-szal: ugyanaz a
+ * tranzakció, ugyanaz a jelvény-logika, ugyanaz az értesítés — nincs
+ * újraimplementált szabály, ezért nem tud elcsúszni a normál működéstől.
+ *
+ * IDEMPOTENS: a visszaállítás (`news-like-restore:<postId>`) és a korrekció
+ * (`correction:…`) forrása is fix ledger-kulcs, ezért a második futás nem ad
+ * új pontot. Ez azért fontos, mert a Firestore-trigger többször is tüzelhet.
+ */
+async function applyAchievementRestorePlan({
+  plan,
+  applyCorrections = false,
+  logger = console,
+} = {}) {
+  const restores = Array.isArray(plan?.restores) ? plan.restores : [];
+  const corrections =
+    applyCorrections && Array.isArray(plan?.corrections) ? plan.corrections : [];
+  const applied = [];
+  const failures = [];
+  let restoredPoints = 0;
+  let correctedPoints = 0;
+  for (const award of restores) {
+    try {
+      const result = await awardAchievementPoints(award.uid, award.delta, award.sourceKey);
+      if (result.changed) restoredPoints += award.delta;
+      applied.push({
+        kind: 'restore',
+        uid: award.uid,
+        sourceKey: award.sourceKey,
+        delta: award.delta,
+        changed: result.changed === true,
+      });
+    } catch (error) {
+      failures.push({
+        kind: 'restore',
+        uidHash: maintenanceUidHash(award.uid),
+        sourceKey: award.sourceKey,
+        message: error?.message || String(error),
+      });
+    }
+  }
+  for (const correction of corrections) {
+    try {
+      const result = await awardAchievementPoints(
+        correction.uid,
+        correction.delta,
+        correction.sourceKey,
+        null,
+        { allowNegativeWithoutGrant: true },
+      );
+      if (result.changed) correctedPoints += correction.delta;
+      applied.push({
+        kind: 'correction',
+        uid: correction.uid,
+        sourceKey: correction.sourceKey,
+        delta: correction.delta,
+        changed: result.changed === true,
+      });
+    } catch (error) {
+      failures.push({
+        kind: 'correction',
+        uidHash: maintenanceUidHash(correction.uid),
+        sourceKey: correction.sourceKey,
+        message: error?.message || String(error),
+      });
+    }
+  }
+  const summary = {
+    planned: restores.length + corrections.length,
+    changed: applied.filter((entry) => entry.changed).length,
+    restoredPoints,
+    correctedPoints,
+    failures,
+  };
+  logger.log(
+    JSON.stringify({
+      event: 'achievement_restore_applied',
+      planned: summary.planned,
+      changed: summary.changed,
+      restoredPoints,
+      correctedPoints,
+      failureCount: failures.length,
+    }),
+  );
+  return { summary, applied };
+}
+
+/**
+ * Karbantartó munka élesítése (a tulajdonos jóváhagyásával).
+ *
+ * MIÉRT Firestore-trigger, és nem kliensről hívható függvény: a visszaállítás
+ * **ír az éles adatbázisba**, ezért nem lehet az appból elindítható út. A
+ * `maintenance_jobs/<jobId>` dokumentumot csak a karbantartó eszköz
+ * (`tools/restore-lost-achievement-points.mjs`) hozza létre; az app kliensei
+ * számára ez az útvonal tiltott (nincs rá Firestore-szabály).
+ *
+ * KÉT KAPU van, hogy semmi ne történjen véletlenül:
+ *  * `kind: 'restore-lost-points'` + `status: 'approved'` kell a futáshoz;
+ *  * a saját visszaírásunk (`status: 'completed'`) újra tüzeli a triggert —
+ *    ezt a `status` kapu állítja meg, így nincs végtelen hurok.
+ */
+exports.runAchievementRestoreJob = onDocumentWritten(
+  {
+    document: 'maintenance_jobs/{jobId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async (event) => {
+    const job = event.data?.after?.data() || null;
+    if (!job) return null;
+    if (String(job.kind || '') !== 'restore-lost-points') return null;
+    if (String(job.status || '') !== 'approved') return null;
+    const jobId = String(event.params.jobId || '').trim();
+    const ledgerSnapshot = await db.collection('achievement_ledger').get();
+    const plan = buildAchievementRestorePlan(
+      ledgerSnapshot.docs.map((document) => document.data()),
+    );
+    const { summary, applied } = await applyAchievementRestorePlan({
+      plan,
+      applyCorrections: job.applyCorrections === true,
+    });
+    const byUser = new Map();
+    for (const entry of applied) {
+      if (!entry.changed) continue;
+      const uidHash = maintenanceUidHash(entry.uid);
+      const bucket = byUser.get(uidHash) || { uidHash, restored: 0, corrected: 0, sources: 0 };
+      if (entry.kind === 'restore') bucket.restored += entry.delta;
+      else bucket.corrected += entry.delta;
+      bucket.sources += 1;
+      byUser.set(uidHash, bucket);
+    }
+    const record = {
+      jobId,
+      kind: 'restore-lost-points',
+      planned: summary.planned,
+      changed: summary.changed,
+      restoredPoints: summary.restoredPoints,
+      correctedPoints: summary.correctedPoints,
+      failureCount: summary.failures.length,
+      failures: summary.failures,
+      users: [...byUser.values()],
+      finishedAt: new Date().toISOString(),
+    };
+    await db.collection('maintenance_job_results').doc(jobId).set(record);
+    await event.data.after.ref.set(
+      { status: 'completed', completedAt: FieldValue.serverTimestamp(), result: record },
+      { merge: true },
+    );
+    return record;
+  },
+);
+
+exports.__buildAchievementRestorePlanForTests = buildAchievementRestorePlan;
+exports.__applyAchievementRestorePlanForTests = applyAchievementRestorePlan;
 
 exports.rateEvent = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = context.auth?.uid;

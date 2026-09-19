@@ -53,9 +53,9 @@ Map<String, dynamic> _field(
   'label': label,
   'type': type,
   'value': '',
-  if (min != null) 'min': min,
-  if (max != null) 'max': max,
-  if (options != null) 'options': options,
+  'min': ?min,
+  'max': ?max,
+  'options': ?options,
 };
 
 Future<void> _pumpEditor(

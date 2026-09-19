@@ -25,19 +25,38 @@ import { accessToken, createChecker, firestoreList, shortHash } from './lib/live
 export function analyzeAchievementState({ profiles, ledger }) {
   const expectedByUid = new Map();
   const revokedByUid = new Map();
+  // A visszaállítás (`news-like-restore:<postId>`) ugyanahhoz a cikkhez tartozik,
+  // ezért a kettőt (uid, postId) páronként kell összevetni: a naplóban marad
+  // negatív sor, de ha van mellette visszaállítás, a pont NEM elveszett.
+  const removedByPair = new Map();
+  const restoredPairs = new Set();
   for (const row of ledger) {
     const uid = String(row.uid || '');
+    const sourceKey = String(row.sourceKey || '');
     const delta = Number(row.delta || 0);
     // KÉT korszak van a ledgerben:
     //  * RÉGI sorok (nincs `state` mező): minden váltás KÜLÖN sor — a kettő
-    //    együtt adja a profilra gyakorolt hatást;
+    //    együtt adja a profilra gyakorolt hatást, ezért a `delta` számít;
     //  * ÚJ sorok (`state: 'granted' | 'revoked'`): forrásonként EGY sor, amely a
-    //    mindenkori állapotot mutatja — a jelenlegi hozzájárulás tehát
-    //    `state === 'granted' ? delta : 0`.
-    const contribution = 'state' in row ? (String(row.state) === 'granted' ? delta : 0) : delta;
+    //    forrás **nettó** hatását mutatja: `granted` állapotban `+delta`,
+    //    `revoked` állapotban 0 (a jóváírás és a levonás kioltja egymást).
+    //  * KIVÉTEL az EGYIRÁNYÚ `correction:` forrás: ott maga a levonás az
+    //    érvényes állapot (nincs mögötte jóváírás), ezért a `delta` számít.
+    const isCorrection = sourceKey.startsWith('correction:');
+    const contribution = 'state' in row
+      ? (isCorrection ? delta : (String(row.state) === 'granted' ? delta : 0))
+      : delta;
     expectedByUid.set(uid, (expectedByUid.get(uid) || 0) + contribution);
-    if (delta < 0 && String(row.sourceKey || '').startsWith('news-like:')) {
-      revokedByUid.set(uid, (revokedByUid.get(uid) || 0) + 2);
+    if (sourceKey.startsWith('news-like:')) {
+      if (delta < 0) {
+        revokedByUid.set(uid, (revokedByUid.get(uid) || 0) + 2);
+        const pair = `${uid}|${sourceKey}`;
+        removedByPair.set(pair, (removedByPair.get(pair) || 0) + Math.abs(delta));
+      }
+    }
+    if (sourceKey.startsWith('news-like-restore:')) {
+      const granted = 'state' in row ? String(row.state) === 'granted' : delta > 0;
+      if (granted) restoredPairs.add(`${uid}|news-like:${sourceKey.slice('news-like-restore:'.length)}`);
     }
   }
   const mismatches = [];
@@ -48,19 +67,37 @@ export function analyzeAchievementState({ profiles, ledger }) {
       mismatches.push({ uidHash: shortHash(profile.id), name: profile.displayName, actual, expected });
     }
   }
-  const lostPoints = [...revokedByUid.values()].reduce((sum, value) => sum + value, 0);
+  let lostPoints = 0;
+  let lostLikeSources = 0;
+  let restoredLikeSources = 0;
+  for (const [pair, removed] of removedByPair) {
+    if (restoredPairs.has(pair)) restoredLikeSources += 1;
+    else {
+      lostLikeSources += 1;
+      lostPoints += removed;
+    }
+  }
   return {
     profileCount: profiles.length,
     ledgerRows: ledger.length,
     mismatches,
     revokedLikeSources: revokedByUid.size,
+    lostLikeSources,
+    restoredLikeSources,
     lostPoints,
   };
 }
 
 function selfTest() {
   const checker = createChecker();
-  const row = (uid, sourceKey, delta, state, updatedAt) => ({ uid, sourceKey, delta, state, updatedAt });
+  // FONTOS: a régi sorokban a `state` mező **nem létezik** (nem üres string!),
+  // ezért a segéd csak akkor teszi be, ha van értéke — különben a teszt a valós
+  // adattól eltérő alakot mérne.
+  const row = (uid, sourceKey, delta, state, updatedAt) => {
+    const entry = { uid, sourceKey, delta, updatedAt };
+    if (state) entry.state = state;
+    return entry;
+  };
   const clean = analyzeAchievementState({
     profiles: [{ id: 'a', achievementPoints: 4 }],
     ledger: [row('a', 'news-like:1', 2, 'granted', '2026-01-01'), row('a', 'news-like:2', 2, 'granted', '2026-01-02')],
@@ -73,6 +110,46 @@ function selfTest() {
     ledger: [row('a', 'news-like:1', 2, '', '2026-01-01'), row('a', 'news-like:1', -2, '', '2026-01-02')],
   });
   checker.check('a régi grant/revoke párt a legutolsó sor szerint számolja', legacy.mismatches.length === 0 && legacy.lostPoints === 2);
+
+  // ÉS a visszaállítás után ugyanez az adat NEM számít elveszettnek — a
+  // naplóban marad a negatív sor, de mellette ott a visszaállítás.
+  const restored = analyzeAchievementState({
+    profiles: [{ id: 'a', achievementPoints: 2 }],
+    ledger: [
+      row('a', 'news-like:1', 2, '', '2026-01-01'),
+      row('a', 'news-like:1', -2, '', '2026-01-02'),
+      row('a', 'news-like-restore:1', 2, 'granted', '2026-01-03'),
+    ],
+  });
+  checker.check(
+    'a visszaállított pontot nem jelenti elveszettnek',
+    restored.mismatches.length === 0 && restored.lostPoints === 0 && restored.restoredLikeSources === 1,
+  );
+
+  // Az EGYIRÁNYÚ korrekció (levonás) is helyesen számol: a `revoked` állapot itt
+  // magát a levonást jelenti, nem egy visszavont jóváírást.
+  const corrected = analyzeAchievementState({
+    profiles: [{ id: 'a', achievementPoints: 30 }],
+    ledger: [
+      row('a', 'profile-complete', 30, '', '2026-08-29'),
+      row('a', 'profile-complete', 30, 'granted', '2026-09-19'),
+      row('a', 'correction:profile-complete-duplicate', -30, 'revoked', '2026-09-19'),
+    ],
+  });
+  checker.check(
+    'a dupla jóváírás korrekcióját levonásként számolja',
+    corrected.mismatches.length === 0,
+    JSON.stringify(corrected.mismatches),
+  );
+  const wronglyApplied = analyzeAchievementState({
+    profiles: [{ id: 'a', achievementPoints: 60 }],
+    ledger: [
+      row('a', 'profile-complete', 30, '', '2026-08-29'),
+      row('a', 'profile-complete', 30, 'granted', '2026-09-19'),
+      row('a', 'correction:profile-complete-duplicate', -30, 'revoked', '2026-09-19'),
+    ],
+  });
+  checker.check('a korrekciót figyelmen kívül hagyó számítás elbukna', wronglyApplied.mismatches.length === 1);
 
   const broken = analyzeAchievementState({
     profiles: [{ id: 'a', achievementPoints: 9 }],
@@ -97,14 +174,21 @@ async function liveCheck() {
   });
   const state = analyzeAchievementState({ profiles, ledger });
   console.log(
-    `profilok=${state.profileCount} ledger-sorok=${state.ledgerRows} források=${state.sourceCount} ` +
-      `visszavont hír-lájk forrás=${state.revokedLikeSources} (érintett pont=${state.lostPoints})`,
+    `profilok=${state.profileCount} ledger-sorok=${state.ledgerRows} ` +
+      `visszavont hír-lájk forrás=${state.revokedLikeSources} ` +
+      `(visszaállítva=${state.restoredLikeSources}, visszaállítatlan=${state.lostLikeSources}, ` +
+      `érintett pont=${state.lostPoints})`,
   );
   checker.check('a profil-pontszám mindenhol egyezik a ledgerrel', state.mismatches.length === 0, JSON.stringify(state.mismatches));
-  if (state.revokedLikeSources > 0) {
+  checker.check(
+    'nincs visszaállítatlan, elveszett hír-lájk pont',
+    state.lostLikeSources === 0,
+    `${state.lostLikeSources} forrás (${state.lostPoints} pont) — futtasd: node tools/restore-lost-achievement-points.mjs`,
+  );
+  if (state.restoredLikeSources > 0) {
     console.log(
-      `  FIGYELEM: ${state.revokedLikeSources} forrás áll „visszavonva” állapotban (összesen ${state.lostPoints} pont) — ` +
-        'ezek a javítás ELŐTTI működésből maradtak; a visszaállításukról a tulajdonos dönt (lásd AGENTS.md).',
+      `  A ${state.restoredLikeSources} visszavont hír-lájk forrás vissza van állítva ` +
+        '(`news-like-restore:*` sorok) — a régi negatív sorok a naplóban maradnak, ezért látszanak itt is.',
     );
   }
   for (const mismatch of state.mismatches) {

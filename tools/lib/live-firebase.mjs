@@ -12,6 +12,9 @@
  *    a WordPress/Cloudinary titkokat pedig futásidőben kérdezzük le a Secret
  *    Managerből (`firebase functions:secrets:access`).
  *  * **Olvasás.** Az ellenőrző eszközök nem írnak az éles adatbázisba.
+ *  * **Kivétel:** a karbantartó eszközök (pl. a visszaállítás) írnak — de csak
+ *    akkor, ha a felhasználó `--confirm`-ot adott, és akkor is egyetlen
+ *    „munkakérés" dokumentumot hoznak létre, amit a Cloud Function hajt végre.
  *  * **Nem kell hozzá kulcsfájl**: elég, ha ezen a gépen `firebase login` volt.
  */
 import fs from 'node:fs';
@@ -117,6 +120,47 @@ export async function firestoreGet(documentPath, { token } = {}) {
   const json = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(`${documentPath} olvasása sikertelen (status=${response.status}).`);
   return decodeDocument({ name: `${BASE}/${documentPath}`, fields: json.fields });
+}
+
+function encodeFirestoreValue(value) {
+  if (value === null || value === undefined) return { nullValue: null };
+  if (typeof value === 'string') return { stringValue: value };
+  if (typeof value === 'boolean') return { booleanValue: value };
+  if (typeof value === 'number') {
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
+  }
+  if (value instanceof Date) return { timestampValue: value.toISOString() };
+  if (Array.isArray(value)) return { arrayValue: { values: value.map(encodeFirestoreValue) } };
+  if (typeof value === 'object') return { mapValue: { fields: encodeFirestoreFields(value) } };
+  throw new Error(`Nem alakítható Firestore-értékké: ${String(value)}`);
+}
+
+function encodeFirestoreFields(object) {
+  return Object.fromEntries(Object.entries(object).map(([key, value]) => [key, encodeFirestoreValue(value)]));
+}
+
+/**
+ * Írás az éles adatbázisba — **csak a kifejezetten `--confirm`-ot kérő**
+ * karbantartó eszközök használják (`tools/restore-lost-achievement-points.mjs`).
+ *
+ * MIÉRT itt van, és nem a hívóban: a Firestore REST `PATCH` + `updateMask` a
+ * részleges frissítés egyetlen helyes módja, és így egy helyen van, ahol
+ * ellenőrizni lehet, hogy semmi nem ír véletlenül.
+ */
+export async function firestoreSet(documentPath, fields, { merge = true, token } = {}) {
+  const auth = token || (await accessToken());
+  const url = new URL(`${BASE}/${documentPath}`);
+  if (merge) for (const key of Object.keys(fields)) url.searchParams.append('updateMask.fieldPaths', key);
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${auth}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: encodeFirestoreFields(fields) }),
+  });
+  if (!response.ok) {
+    const body = (await response.text().catch(() => '')).slice(0, 300);
+    throw new Error(`${documentPath} írása sikertelen (status=${response.status}, ${body}).`);
+  }
+  return true;
 }
 
 /** Egy titok értéke a Secret Managerből (futásidőben; a repóban soha). */

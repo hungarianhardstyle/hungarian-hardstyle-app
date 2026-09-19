@@ -70,6 +70,14 @@ class ResizedNetworkImage extends StatelessWidget {
       colorBlendMode: colorBlendMode,
       memCacheWidth: decodeWidth,
       maxWidthDiskCache: decodeWidth,
+      // NINCS áttűnés: a `CachedNetworkImage` alapértéke 500 ms be- és 1000 ms
+      // kiúsztatás, ami **minden újraépítésnél lefut**. Görgetés közben a lista
+      // elemei újraépülnek, ezért a (gyorsítótárból azonnal megjövő) kép
+      // újra „beúszott" — a felhasználó ezt **villogásként** látta (a DJ-knél,
+      // híreknél, eseményeknél ugyanígy). A gyorsítótárból érkező képnél nincs
+      // mit áttűnni, ezért a nulla a helyes érték.
+      fadeInDuration: Duration.zero,
+      fadeOutDuration: Duration.zero,
       placeholder: placeholder,
       errorWidget: (context, failedUrl, error) {
         if (fallbackUrl != null) {
