@@ -3062,6 +3062,173 @@ exports.runAchievementRestoreJob = onDocumentWritten(
 
 exports.__buildAchievementRestorePlanForTests = buildAchievementRestorePlan;
 exports.__applyAchievementRestorePlanForTests = applyAchievementRestorePlan;
+/**
+ * Beküldések ELFOGADÁSÁNAK lekérdezése a WordPressből (2.5.8-as plugin-végpont).
+ *
+ * MIÉRT: az achievement-pont csak az **elfogadott** beküldésért jár, és a
+ * beküldést **két helyen** lehet elfogadni — az appban (natív admin, ez szól a
+ * Firebase-nek és azonnal fizet) és a **WordPress adminban** (ez viszont nem
+ * szól, ezért ott eddig elveszett a pont). Ez a hívás teszi lehetővé a pótlást:
+ * a plugin `created_profile_id` metája jelöli az elfogadást.
+ *
+ * BEST-EFFORT: hálózati hiba vagy régi plugin (404) esetén `null`-t ad, és a
+ * hívó egyszerűen kihagyja ezt a kört — nem jelöl meg semmit „elkészült"-ként.
+ */
+async function fetchSubmissionStatuses(ids) {
+  const cleanIds = [...new Set((ids || []).map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0))];
+  if (!cleanIds.length) return null;
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const url = new URL(`${WORDPRESS_BASE_URL}/submission-statuses`);
+  url.searchParams.set('ids', cleanIds.slice(0, 100).join(','));
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        Accept: 'application/json',
+      },
+    });
+    if (!response.ok) {
+      console.warn(
+        JSON.stringify({ event: 'submission_status_fetch_failed', status: response.status }),
+      );
+      return null;
+    }
+    const body = await response.json().catch(() => ({}));
+    const items = Array.isArray(body?.items) ? body.items : [];
+    return new Map(
+      items
+        .map((item) => [Number(item?.id), item])
+        .filter(([id]) => Number.isInteger(id) && id > 0),
+    );
+  } catch (error) {
+    console.warn(
+      JSON.stringify({ event: 'submission_status_fetch_error', message: error?.message || String(error) }),
+    );
+    return null;
+  }
+}
+
+/** A `submission:<kind>:<id>` naplósor megmutatja, hogy a pont már megvan-e. */
+async function submissionPointsAlreadyGranted(uid, kind, wpId) {
+  const ledgerId = crypto
+    .createHash('sha256')
+    .update(`${uid}:submission:${kind}:${wpId}`)
+    .digest('hex')
+    .slice(0, 40);
+  const snapshot = await db.collection('achievement_ledger').doc(ledgerId).get();
+  const data = snapshot.data() || {};
+  return snapshot.exists && String(data.state || '') === 'granted';
+}
+
+/**
+ * Az ELFOGADOTT beküldések pontjainak PÓTLÁSA (naponta többször fut).
+ *
+ * Végigmegy a szerveroldali szerző-megfeleltetéseken (`submission_authors`),
+ * megkérdezi a WordPresstől, hogy melyiket fogadták el, és a még ki nem fizetett
+ * elfogadottakra jóváírja a pontot a VALÓDI `awardAchievementPoints`-szal.
+ *
+ * NÉGY SZÁNDÉKOS SZABÁLY:
+ *  1. **Csak elfogadottra** fizet (`accepted === true`).
+ *  2. **Nem fizet kétszer:** ha a napló már `granted`, csak megjelöli késznek.
+ *  3. **A napi keret nem veszíti el a pontot:** ha a keret fogta meg
+ *     (`changed: false` ÉS nincs naplósor), akkor **nem** jelöljük késznek, így
+ *     a következő körben — immár szabad kerettel — kifizeti.
+ *  4. **WordPress-hiba esetén semmit nem jelöl meg**, hogy a következő kör
+ *     újrapróbálhassa (nincs néma elveszett pont).
+ */
+async function reconcileAcceptedSubmissionPoints({ fetchStatuses = fetchSubmissionStatuses } = {}) {
+  const snapshot = await db.collection('submission_authors').limit(300).get();
+  const pending = snapshot.docs
+    .map((document) => ({ ref: document.ref, data: document.data() || {} }))
+    .filter(({ data }) => !data.awardedAt && !data.abandonedAt)
+    .map((entry) => ({ ...entry, wpId: Number(entry.data.wpId ?? entry.ref.id) }))
+    .filter((entry) => Number.isInteger(entry.wpId) && entry.wpId > 0);
+
+  const summary = {
+    checked: pending.length,
+    accepted: 0,
+    awarded: 0,
+    alreadyGranted: 0,
+    deferred: 0,
+    failures: 0,
+  };
+  if (!pending.length) return summary;
+
+  const statuses = await fetchStatuses(pending.map((entry) => entry.wpId));
+  // Nincs válasz (régi plugin vagy hiba): ebben a körben nem döntünk.
+  if (!statuses) return { ...summary, deferred: pending.length };
+
+  for (const entry of pending) {
+    const status = statuses.get(entry.wpId);
+    if (!status || status.accepted !== true) {
+      if (status) summary.deferred += 1;
+      continue;
+    }
+    summary.accepted += 1;
+    const kind = String(status.type || entry.data.kind || 'event').trim() || 'event';
+    try {
+      const result = await awardAchievementPoints(
+        entry.data.uid,
+        APPROVED_SUBMISSION_POINTS,
+        `submission:${kind}:${entry.wpId}`,
+      );
+      if (result.changed) {
+        summary.awarded += 1;
+      } else if (await submissionPointsAlreadyGranted(entry.data.uid, kind, entry.wpId)) {
+        summary.alreadyGranted += 1;
+      } else {
+        // A napi keret fogta meg: NEM jelöljük késznek, jövő körben újrapróbáljuk.
+        summary.deferred += 1;
+        continue;
+      }
+      await entry.ref.set(
+        {
+          awardedAt: FieldValue.serverTimestamp(),
+          awardedPoints: APPROVED_SUBMISSION_POINTS,
+          acceptedProfileId: Number(status.profileId || 0),
+        },
+        { merge: true },
+      );
+    } catch (error) {
+      summary.failures += 1;
+      console.warn(
+        JSON.stringify({
+          event: 'submission_payout_failed',
+          wpId: entry.wpId,
+          message: error?.message || String(error),
+        }),
+      );
+    }
+  }
+  return summary;
+}
+
+/**
+ * A pótlás futtatása (30 percenként).
+ *
+ * MIÉRT ütemezett: az appból indított elfogadás **azonnal** fizet, a
+ * WordPress-adminban indított viszont csak itt derül ki — így a beküldő
+ * akkor is megkapja a pontot, ha a tulajdonos a WordPressben kattintott.
+ */
+exports.reconcileSubmissionPoints = onSchedule(
+  {
+    schedule: 'every 30 minutes',
+    timeZone: 'Europe/Budapest',
+    region: 'europe-central2',
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+    timeoutSeconds: 300,
+    memory: '256MiB',
+  },
+  async () => {
+    const summary = await reconcileAcceptedSubmissionPoints();
+    console.log(JSON.stringify({ event: 'submission_payout_reconciled', ...summary }));
+    return summary;
+  },
+);
+
+exports.__reconcileAcceptedSubmissionPointsForTests = reconcileAcceptedSubmissionPoints;
+exports.__fetchSubmissionStatusesForTests = fetchSubmissionStatuses;
+
 exports.__awardApprovedSubmissionPointsForTests = awardApprovedSubmissionPoints;
 exports.__awardReleasePurchasePointsForTests = awardReleasePurchasePoints;
 

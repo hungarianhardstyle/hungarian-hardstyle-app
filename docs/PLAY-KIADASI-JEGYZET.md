@@ -45,8 +45,9 @@ A zárt teszt sávján most a **334** él — a 335 ezt váltja.
 > **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 335 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
-**A plugin ehhez 2.5.7** (`build/huhs-mobile-api-2.5.7.zip`) — **ezt is fel kell tölteni**, mert a
-létrehozás a plugin új végpontjait használja (a 2.5.6-tal a mentés „nem engedélyezett"-et adna).
+**A plugin ehhez 2.5.8** (`build/huhs-mobile-api-2.5.8.zip`) — **ezt is fel kell tölteni**: ebben van
+a beküldések elfogadását lekérdező végpont, ami nélkül a WordPress-adminban elfogadott beküldésekért
+**nem jár meg utólag a pont**. (Az app-oldali funkciók a 2.5.7-tel is működnek.)
 
 ## 1. Play Console — RÖVID (ezt másold be)
 
@@ -157,7 +158,19 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A kérdőív eredményeinél már a kérdőív saját válaszai látszanak az éves szavazás adatai helyett.
 - A nyereményjátéknál eltűnt a felesleges kép mező.
 
-## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.5.7)
+## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.5.8)
+
+A plugin csomag: `build/huhs-mobile-api-2.5.8.zip` (45 fájl, 143,8 KB,
+SHA-256 `6F758F4DD0179B584017B34EB8365DB4C0C5FD8325FBC6BBB7C2A7D292FED206`).
+
+**Mit hoz a 2.5.8 (az előző, 2.5.7 óta):**
+```text
+- ÚJ végpont: GET /huhs/v1/submission-statuses?ids=1,2,3 — megmondja, hogy egy beküldést elfogadtak-e (created_profile_id), típus szerint.
+- Egyszerre legfeljebb 100 azonosítót fogad (batch), és hitelesített WordPress-felhasználót kér (nem nyilvános).
+- Ezt használja az új ütemezett Cloud Function (reconcileSubmissionPoints): ha egy beküldést a WordPress adminban fogadtak el, a pont utólag is megérkezik a beküldőnek.
+```
+
+### 2.5.7 — létrehozás a natív adminból
 
 A plugin csomag: `build/huhs-mobile-api-2.5.7.zip` (45 fájl, 142,9 KB,
 SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`).

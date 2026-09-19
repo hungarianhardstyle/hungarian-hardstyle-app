@@ -43,7 +43,13 @@ const {
   __recordDailyActivityForTests: recordDailyActivity,
   __awardDailyActivityForDayForTests: awardDailyActivity,
   __submissionRulesForTests: submissionRules,
+  __reconcileAcceptedSubmissionPointsForTests: reconcileAccepted,
 } = require('./index.js');
+const crypto = require('node:crypto');
+
+function ledgerIdFor(uid, sourceKey) {
+  return crypto.createHash('sha256').update(`${uid}:${sourceKey}`).digest('hex').slice(0, 40);
+}
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
@@ -82,6 +88,7 @@ async function cleanup(uid) {
     'achievement_submission_limits',
     'daily_activity',
     'notifications',
+    'submission_authors',
   ]) {
     const snapshot = await db
       .collection(name)
@@ -360,4 +367,159 @@ test('aktivitás nélkül nincs napi pont (nincs jóváírás a semmire)', async
   assert.equal((await awardDailyActivity({ uid: '', date: '2026-09-18', comments: 5 })).changed, false);
 
   await cleanup(uid);
+});
+
+/**
+ * Az ELFOGADOTT beküldések pontjának PÓTLÁSA.
+ *
+ * A tulajdonos kérése: *„csak ELFOGADOTT beküldésért járjon achi"*, és a
+ * beküldést a WordPress adminban is el lehet fogadni — az viszont nem szól a
+ * Firebase-nek. Ezért a plugin 2.5.8-as végpontja megmondja, melyik beküldést
+ * fogadták el, és ez a pótlás fizet érte (a valódi `awardAchievementPoints`-szal).
+ */
+async function seedSubmissionAuthor(wpId, uid, kind = 'event') {
+  await db.collection('submission_authors').doc(String(wpId)).set({
+    uid,
+    kind,
+    wpId: Number(wpId),
+    title: `pótlás teszt ${wpId}`,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+}
+
+function statusFor(wpId, { accepted = true, type = 'event', profileId = 9000 } = {}) {
+  return new Map([
+    [Number(wpId), { id: Number(wpId), type, accepted, profileId, status: 'pending', profileStatus: 'draft' }],
+  ]);
+}
+
+test('a WordPress-adminban elfogadott beküldés pontja utólag megérkezik', async () => {
+  const uid = 'guided-payout-1';
+  await seedProfile(uid);
+  await seedSubmissionAuthor(6101, uid, 'event');
+
+  const summary = await reconcileAccepted({
+    fetchStatuses: async () => statusFor(6101, { accepted: true }),
+  });
+  assert.equal(summary.accepted, 1);
+  assert.equal(summary.awarded, 1);
+  assert.equal(await pointsOf(uid), pointValues.approvedSubmission);
+
+  // A megfeleltetés megjelöli, hogy kész — így a következő kör nem is kérdezi.
+  const mapping = await db.collection('submission_authors').doc('6101').get();
+  assert.ok(mapping.data()?.awardedAt, 'a pótlás megjelöli a kifizetést');
+  assert.equal(mapping.data()?.acceptedProfileId, 9000);
+
+  const second = await reconcileAccepted({
+    fetchStatuses: async () => statusFor(6101, { accepted: true }),
+  });
+  assert.equal(second.awarded, 0, 'a már kifizetettet nem fizeti ki újra');
+  assert.equal(await pointsOf(uid), pointValues.approvedSubmission);
+
+  await cleanup(uid);
+  await db.collection('submission_authors').doc('6101').delete().catch(() => {});
+});
+
+test('az appból már kifizetett beküldést nem fizeti ki kétszer', async () => {
+  const uid = 'guided-payout-2';
+  await seedProfile(uid);
+  await seedSubmissionAuthor(6102, uid, 'artist');
+  // Az app-út már kifizette (a naplóban ott a `granted` sor), de a megfeleltetés
+  // még nem tud erről (az app-út nem jelöli meg).
+  const paid = await awardSubmission(6102);
+  assert.equal(paid.changed, true);
+  assert.equal(await pointsOf(uid), pointValues.approvedSubmission);
+
+  const summary = await reconcileAccepted({
+    fetchStatuses: async () => statusFor(6102, { accepted: true, type: 'artist' }),
+  });
+  assert.equal(summary.awarded, 0);
+  assert.equal(summary.alreadyGranted, 1);
+  assert.equal(await pointsOf(uid), pointValues.approvedSubmission, 'nincs dupla jóváírás');
+  const mapping = await db.collection('submission_authors').doc('6102').get();
+  assert.ok(mapping.data()?.awardedAt, 'a dupla kifizetés veszélye nélkül megjelölhető');
+
+  await cleanup(uid);
+  await db.collection('submission_authors').doc('6102').delete().catch(() => {});
+});
+
+test('a MÉG NEM elfogadott beküldésért nem fizet, és nem is jelöli késznek', async () => {
+  const uid = 'guided-payout-3';
+  await seedProfile(uid);
+  await seedSubmissionAuthor(6103, uid, 'organizer');
+
+  const summary = await reconcileAccepted({
+    fetchStatuses: async () => statusFor(6103, { accepted: false, type: 'organizer' }),
+  });
+  assert.equal(summary.accepted, 0);
+  assert.equal(summary.deferred, 1);
+  assert.equal(await pointsOf(uid), 0);
+  const mapping = await db.collection('submission_authors').doc('6103').get();
+  assert.equal(mapping.data()?.awardedAt, undefined, 'elfogadás nélkül nincs pont és nincs kész-jelölés');
+
+  await cleanup(uid);
+  await db.collection('submission_authors').doc('6103').delete().catch(() => {});
+});
+
+test('a napi keret nem veszíti el a pontot: a pótlás később újrapróbálja', async () => {
+  const uid = 'guided-payout-4';
+  await seedProfile(uid);
+  // A napi keret már elfogyott (3 beküldés ma).
+  for (const wpId of [6201, 6202, 6203]) {
+    await seedSubmissionAuthor(wpId, uid, 'event');
+    await awardSubmission(wpId);
+  }
+  assert.equal(await pointsOf(uid), 3 * pointValues.approvedSubmission);
+
+  // Egy negyedik, a WordPress adminban elfogadott beküldés: a keret fogja meg.
+  await seedSubmissionAuthor(6204, uid, 'event');
+  const blocked = await reconcileAccepted({
+    fetchStatuses: async () => statusFor(6204, { accepted: true }),
+  });
+  assert.equal(blocked.awarded, 0);
+  assert.equal(blocked.deferred, 1, 'a keret miatt később újrapróbáljuk');
+  const mapping = await db.collection('submission_authors').doc('6204').get();
+  assert.equal(
+    mapping.data()?.awardedAt,
+    undefined,
+    'a keret miatt NEM jelöljük késznek — különben elveszne a pont',
+  );
+
+  await cleanup(uid);
+  for (const wpId of [6201, 6202, 6203, 6204]) {
+    await db.collection('submission_authors').doc(String(wpId)).delete().catch(() => {});
+  }
+});
+
+test('WordPress-hiba esetén nem jelöl meg semmit (nincs néma elveszett pont)', async () => {
+  const uid = 'guided-payout-5';
+  await seedProfile(uid);
+  await seedSubmissionAuthor(6301, uid, 'event');
+
+  const summary = await reconcileAccepted({ fetchStatuses: async () => null });
+  assert.equal(summary.awarded, 0);
+  assert.ok(summary.deferred >= 1, 'a függő beküldés a következő körre marad');
+  assert.equal(await pointsOf(uid), 0);
+  const mapping = await db.collection('submission_authors').doc('6301').get();
+  assert.equal(mapping.data()?.awardedAt, undefined, 'hálózati hiba után újrapróbáljuk');
+
+  await cleanup(uid);
+  await db.collection('submission_authors').doc('6301').delete().catch(() => {});
+});
+
+test('a napló-kulcs ellenőrzése a valódi sémát használja', async () => {
+  const uid = 'guided-payout-6';
+  await seedProfile(uid);
+  await seedSubmissionAuthor(6401, uid, 'artist');
+  await awardSubmission(6401);
+
+  const row = await db
+    .collection('achievement_ledger')
+    .doc(ledgerIdFor(uid, 'submission:artist:6401'))
+    .get();
+  assert.equal(row.exists, true, 'a pótlás ugyanazt a naplókulcsot keresi, amit a jóváírás ír');
+  assert.equal(row.data().state, 'granted');
+
+  await cleanup(uid);
+  await db.collection('submission_authors').doc('6401').delete().catch(() => {});
 });
