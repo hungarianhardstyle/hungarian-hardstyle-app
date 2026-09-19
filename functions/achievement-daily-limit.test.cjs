@@ -233,6 +233,38 @@ test('az esemény-részvétel oda-vissza váltogatása nem veszíti el a pontot'
   await cleanup(uid);
 });
 
+test('a régi (grant/revoke) ledger-sor blokkolja az ismételt jóváírást — nincs dupla pont', async () => {
+  // ÉLES HIBA (2026-09-19): a ledger-kulcs átállása után a régi `…:grant` sort
+  // már nem találta meg a kód, ezért ugyanazért a teljesítményért **másodszor**
+  // is kifizette a pontot (Denoiser `profile-complete` +30 kétszer). Ez a teszt
+  // azt rögzíti, hogy a régi sorokat is figyelembe vesszük.
+  const crypto = require('node:crypto');
+  const uid = 'limit-legacy-duplicate';
+  await seedProfile(uid);
+  const legacyId = crypto
+    .createHash('sha256')
+    .update(`${uid}:profile-complete:grant`)
+    .digest('hex')
+    .slice(0, 40);
+  await db.collection('achievement_ledger').doc(legacyId).set({
+    uid,
+    sourceKey: 'profile-complete',
+    delta: 30,
+    pointsAfter: 30,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  await db
+    .collection('community_profiles')
+    .doc(uid)
+    .set({ achievementPoints: 30 }, { merge: true });
+
+  const result = await award(uid, 30, 'profile-complete');
+  assert.equal(result.changed, false, 'a régi jóváírást nem lehet még egyszer kifizetni');
+  assert.equal(await pointsOf(uid), 30, 'a pontszám nem nő duplán');
+
+  await cleanup(uid);
+});
+
 test('a cikk-komment kulon szamlalot hasznal, sajat plafonnal', async () => {
   const uid = 'limit-comment-1';
   await seedProfile(uid);

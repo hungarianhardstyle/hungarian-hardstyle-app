@@ -1348,6 +1348,30 @@ async function restoreExpiredEventWrite(event, before, after) {
 const NEWS_LIKE_DAILY_POINT_LIMIT = 3;
 const ARTICLE_COMMENT_DAILY_POINT_LIMIT = 3;
 
+/**
+ * MIÉRT kaptál pontot — magyar szöveg a `sourceKey`-ből.
+ *
+ * A tulajdonos jelzése: *„kaptam valamire 30 achievement pontot az előbb, de nem
+ * tudom mire — a notifyban MINDIG jelezze miért kapsz épp achievement pontot"*.
+ * Korábban az értesítés csak annyi volt: „+30 achievement pontot kaptál", ok
+ * nélkül. Mostantól minden jóváírás megmondja, **miért** járt.
+ */
+function achievementReasonText(sourceKey) {
+  const key = String(sourceKey || '');
+  if (key.startsWith('news-like:')) return 'egy hír kedveléséért';
+  if (key.startsWith('article-comment:')) return 'egy cikkhez írt hozzászólásodért';
+  if (key.startsWith('attendance:')) return 'egy eseményre való jelentkezésedért';
+  if (key.startsWith('meetup:')) return 'egy meetupon való részvételedért';
+  if (key.startsWith('meetup-interest:')) return 'egy meetup iránti érdeklődésedért';
+  if (key.startsWith('event-rating:')) return 'egy esemény értékeléséért';
+  if (key.startsWith('voting:')) return 'az éves szavazáson leadott szavazatodért';
+  if (key.startsWith('game:')) return 'egy játék teljesítéséért';
+  if (key === 'profile-complete') return 'a profilod kitöltéséért';
+  if (key.startsWith('referral:')) return 'egy meghívott barátod regisztrációjáért';
+  if (key.startsWith('news-like-restore:')) return 'egy korábban elveszett lájkpont visszaállításáért';
+  return 'egy jóváírt tevékenységért';
+}
+
 async function awardAchievementPoints(uid, delta, sourceKey, notification = null) {
   if (!uid || !Number.isInteger(delta) || delta === 0 || !sourceKey) return { changed: false };
   // EGY ledger-sor forrásonként, amely a JELENLEGI állapotot tárolja
@@ -1365,6 +1389,16 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
     .digest('hex')
     .slice(0, 40);
   const ledgerRef = db.collection('achievement_ledger').doc(ledgerId);
+  // A RÉGI (korszak előtti) sorok id-je `…:grant` / `…:revoke` volt. Ezeket is
+  // megnézzük, különben a régi jóváírást nem látnánk, és **másodszor is**
+  // jóváírnánk ugyanazért — élesben pontosan ez történt meg (Denoiser
+  // `profile-complete` +30 kétszer: 2026-08-29 és 2026-09-19).
+  const legacyLedgerRef = (suffix) =>
+    db
+      .collection('achievement_ledger')
+      .doc(crypto.createHash('sha256').update(`${uid}:${sourceKey}:${suffix}`).digest('hex').slice(0, 40));
+  const legacyGrantRef = legacyLedgerRef('grant');
+  const legacyRevokeRef = legacyLedgerRef('revoke');
   const wantedState = delta > 0 ? 'granted' : 'revoked';
   const profileRef = db.collection('community_profiles').doc(uid);
   const isNewsLikeGrant = delta > 0 && sourceKey.startsWith('news-like:');
@@ -1394,13 +1428,30 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
   // Load the badge catalog first (it is cached for 30s and falls back safely).
   const badges = await getAchievementBadges();
   await db.runTransaction(async (transaction) => {
-    const ledger = await transaction.get(ledgerRef);
+    const [ledger, legacyGrant, legacyRevoke] = await transaction.getAll(
+      ledgerRef,
+      legacyGrantRef,
+      legacyRevokeRef,
+    );
     const stored = ledger.data() || {};
-    // A régi, `grant`/`revoke` párt használó sorokból is levezetjük az állapotot,
-    // hogy az átállás ne veszítsen el információt.
-    const currentState = ledger.exists
-      ? String(stored.state || (Number(stored.delta) > 0 ? 'granted' : 'revoked'))
-      : '';
+    let currentState = '';
+    if (ledger.exists) {
+      currentState = String(stored.state || (Number(stored.delta) > 0 ? 'granted' : 'revoked'));
+    } else if (legacyGrant.exists || legacyRevoke.exists) {
+      // Régi adat: a `:grant` és `:revoke` KÜLÖN sor volt.
+      const isNewsLike = sourceKey.startsWith('news-like:');
+      if (isNewsLike) {
+        // A lájkpont egyszer jár: a régi visszavonást nem tekintjük állapotnak,
+        // különben újra lehetne jóváírni ugyanazért a cikkért.
+        currentState = 'granted';
+      } else if (legacyGrant.exists && legacyRevoke.exists) {
+        const grantAt = String(legacyGrant.data()?.createdAt?.toDate?.()?.toISOString?.() || '');
+        const revokeAt = String(legacyRevoke.data()?.createdAt?.toDate?.()?.toISOString?.() || '');
+        currentState = revokeAt > grantAt ? 'revoked' : 'granted';
+      } else {
+        currentState = legacyGrant.exists ? 'granted' : 'revoked';
+      }
+    }
     // Nincs állapotváltozás: nem jár új pont (ez a farmolás elleni védelem).
     if (currentState === wantedState) return;
     // Soha nem kapott érte pontot: nincs mit visszavonni.
@@ -1421,10 +1472,24 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
     // Rewriting `achievementUpdatedAt` on every point would invalidate the
     // versioned badge image URL for every client on every single like.
     const badgeChanged = !sameAchievementBadge(storedBadge, badge);
+    const nextDailyCount = dailyLimitRef ? Number(dailyActivity?.data()?.count || 0) + 1 : 0;
     transaction.set(
       profileRef,
       {
         achievementPoints: points,
+        // A napi keret állapota a SAJÁT profilba is bekerül, hogy az app
+        // megmutathassa: „Ma 2/3 lájkpont" / „A mai lájkpontod elfogyott".
+        // Enélkül a felhasználó csak azt látta, hogy lájkolt és nem történt semmi.
+        ...(dailyLimitRef
+          ? {
+              achievementDailyLimit: {
+                kind: isNewsLikeGrant ? 'newsLike' : 'articleComment',
+                date: new Date().toISOString().slice(0, 10),
+                count: nextDailyCount,
+                limit: dailyLimit,
+              },
+            }
+          : {}),
         ...(badgeChanged
           ? {
               achievementBadge: badge,
@@ -1456,7 +1521,7 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
         {
           uid,
           date: new Date().toISOString().slice(0, 10),
-          count: Number(dailyActivity?.data()?.count || 0) + 1,
+          count: nextDailyCount,
           updatedAt: FieldValue.serverTimestamp(),
         },
         { merge: true },
@@ -1471,10 +1536,12 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
     };
   });
   if (result.changed && delta > 0) {
-    const title = String(notification?.title || 'Achievement pontot kaptál');
+    // Az értesítés MINDIG megmondja, miért járt a pont (a tulajdonos kérése).
+    const reason = achievementReasonText(sourceKey);
+    const title = String(notification?.title || `+${delta} achievement pont`);
     const body = String(
       notification?.body ||
-        `+${delta} achievement pontot kaptál. Új összpontszám: ${result.points}.` +
+        `+${delta} pont ${reason}. Új összpontszámod: ${result.points}.` +
         (result.levelChanged ? ` Új rangod: „${result.badgeName || 'Achievement'}”.` : ''),
     );
     const notificationCreated = await createNotificationBestEffort({
