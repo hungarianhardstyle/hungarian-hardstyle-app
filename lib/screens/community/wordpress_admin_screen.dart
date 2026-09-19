@@ -10,7 +10,9 @@ import '../../models/submission_image.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/community_provider.dart';
 import '../../widgets/submission_image_picker.dart';
+import '../poll/poll_results_screen.dart';
 import '../voting/voting_summary_screen.dart';
+import 'prize_admin_screen.dart';
 
 class WordPressAdminScreen extends ConsumerStatefulWidget {
   const WordPressAdminScreen({super.key});
@@ -29,7 +31,12 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
 
   static const _sections = <String, String>{
     'dashboard': 'Áttekintés',
-    'games': 'Játékok',
+    // A „Játékok" valójában a kvíz- és idővonal-játékokat jelenti (huhs_game:
+    // hardstyle/fesztivál/magyar hardstyle kvíz), ezért a cím is ezt mondja ki —
+    // a tulajdonos jelezte, hogy a „kvíz" menüpontot nem találta.
+    'games': 'Kvíz és játékok',
+    'poll_results': 'Kérdőív',
+    'prize_results': 'Nyereményjáték',
     'voting_summary': 'Szavazási állás',
     'huhs_release': 'Release-ek',
     'submissions': 'Beküldések',
@@ -38,9 +45,26 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     'huhs_organizer': 'Szervezők',
     'trash': 'Lomtár',
     'push': 'Push',
+    'newsletter': 'Hírlevél',
+    'shortcodes': 'Shortcode-ok',
+    'settings': 'Beállítások',
     'about': 'Névjegy',
     'startup': 'Indítási kép',
   };
+
+  /// A „csak megnyitó" menüpontok: ezek saját képernyőt nyitnak, nem a
+  /// Vezérlőközpont listáját töltik. Egy helyen tartjuk őket, hogy a menüpont és
+  /// a célképernyő ne tudjon elcsúszni egymástól (ezt forrás-lint is ellenőrzi:
+  /// `tools/verify-native-admin-menu.mjs`).
+  static const _openingSections = <String, WidgetBuilder>{
+    'voting_summary': _openVotingSummary,
+    'poll_results': _openPollResults,
+    'prize_results': _openPrizeAdmin,
+  };
+
+  static Widget _openVotingSummary(BuildContext context) => const VotingSummaryScreen();
+  static Widget _openPollResults(BuildContext context) => const PollResultsScreen();
+  static Widget _openPrizeAdmin(BuildContext context) => const PrizeAdminScreen();
   static const _customSections = <String>{
     'huhs_event',
     'huhs_artist',
@@ -104,10 +128,12 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
 
   void _select(String section) {
     if (!mounted || _section == section) return;
-    if (section == 'voting_summary') {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const VotingSummaryScreen()),
-      );
+    // A „csak megnyitó" pontok saját képernyőre visznek (kérdőív-eredmények,
+    // nyereményjáték-résztvevők, szavazási összesítő) — a választó sorban
+    // marad, ezért nem állítjuk át a kiválasztott szakaszt.
+    final builder = _openingSections[section];
+    if (builder != null) {
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: builder));
       return;
     }
     setState(() {

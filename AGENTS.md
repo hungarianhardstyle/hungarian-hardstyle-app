@@ -1,5 +1,21 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Natív admin: a kvíz, a kérdőív és a nyereményjáték menüpontjai (2026-09-19, AAB **330**)
+
+- **A tulajdonos jelzése:** *„ami nem működik: a natív huhs adminban nincsenek ott a nyereményjáték, kviz, és a kérdőiv meg a hozzá tartozó menüpontok"*.
+- **A mért gyökér (két külön dolog):**
+  1. **Elérhetetlen menüpontok.** A plugin admin-végpontjai (`polls`, `poll_results`, `prize_games`, `prize_results`, `settings`, `newsletter`, `shortcodes`) **éltek**, sőt a `wordpress_admin_screen.dart` `_load()`-ja egy részüket **be is töltötte** — de a **menüben** (`_sections`) nem szerepeltek. Pontosan a néma hibaosztály, amit kergetünk: a szerver tudja, az app nem kínálja fel. (Ugyanez volt korábban a `users` szakasszal is, az is holt kód.)
+  2. **A „kvíz" valójában ott volt, csak más néven.** A „Játékok" chip a `huhs_game` bejegyzéstípus listája: `hardstyle_quiz`, `festival_quiz`, `hungarian_hardstyle_quiz` + Hardstyle idővonal. A tulajdonos ezt „kvíz" néven kereste, és nem ismerte fel — ezért a cím mostantól **„Kvíz és játékok"**.
+- **A javítás (`wordpress_admin_screen.dart`):**
+  - `_sections` bővítve: **`Kvíz és játékok`** (átnevezve), **`Kérdőív`** (`poll_results`), **`Nyereményjáték`** (`prize_results`), **`Hírlevél`**, **`Shortcode-ok`**, **`Beállítások`** — az utolsó három eddig is működött a háttérben, csak nem lehetett megnyitni.
+  - **Új `_openingSections` térkép** (`String → WidgetBuilder`): a „csak megnyitó" pontok (Szavazási állás, Kérdőív, Nyereményjáték) egy helyen vannak, és a `_select` ezt használja — nincs többé szétszórt `if`. Így a menüpont és a célképernyő **nem tud elcsúszni** egymástól (ezt a kapu is méri).
+  - A „Kérdőív" a `PollResultsScreen`-t, a „Nyereményjáték" a `PrizeAdminScreen`-t nyitja — mindkettő a **saját** szervervégpontjait használja (`polls`/`poll_results`, illetve `prize_games`/`prize_results`), és **nem** ad ki UID-t/hash-t.
+- **Új, önmagát bizonyító kapu: `tools/verify-native-admin-menu.mjs`** (**31/31**) — a plugin **összes** `$action === '…'` ágát kiolvassa az `api-admin.php`-ból, az app menüjét/szaka­sz-kezelőit a `wordpress_admin_screen.dart`-ból, és megköveteli, hogy **minden olvasó végpont elérhető legyen** valahonnan (közvetlen menüpont, kezelő ág, vagy egy megnyitó menüpont mögötti képernyő — ezt a célscreen forrásából igazolja). A dokumentált kivételek: `voting_seasons` (a szezonok adminja szándékosan a WordPressben marad) és `resource` (belső szerkesztő/törlő művelet) + a write-ágak.
+  - **A mutációs bizonyíték:** a javítás előtti `wordpress_admin_screen.dart`-on a kapu **elhasal** (20/28, 8 HIBA: nincs `_openingSections`, nincs „Kvíz és játékok"/„Kérdőív"/„Nyereményjáték" menüpont), a javított kódon **31/31**.
+- **Csomag:** `build/HUHS-v1.0.0+330-release.aab` — a **329 helyett** ezt kell feltölteni (a 330 mindent tartalmaz, amit a 329, plusz ezt). A `pubspec.yaml` `1.0.0+330`, a changelogbejegyzés a `lib/data/app_changelog.dart`-ban, a Play-szöveg a `docs/PLAY-KIADASI-JEGYZET.md`-ben.
+  - **Miért 330 és nem 329:** a 329 **soha nem ment ki** (a tulajdonos épp feltöltötte volna, amikor ez a jelzés jött), ezért a `lastPublishedBuild` továbbra is **328**, és a Play-szöveg a 329+330 újdonságait fedi le egyben.
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` zöld, `node tools/verify-native-admin-menu.mjs` **31/31**, `node tools/check-play-notes.mjs` zöld.
+
 ### „Nem törli az usert — a »Teszt acc« ugyanúgy ott van" — a Cloudinary-hiba MEGSZAKÍTOTTA a törlést (2026-09-19, **szerveroldali javítás: AAB NEM kell hozzá**)
 
 - **A tulajdonos jelzése:** *„még a 328-as van fent de ez az admin user törlés nem akar menni a 'teszt acc' user ugyanúgy ott van"*. (Ez a 329-es menet 4. pontjának a folytatása — akkor a napló alapján még azt hittem, a törlés sikerült.)

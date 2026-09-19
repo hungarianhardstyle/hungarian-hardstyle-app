@@ -4,14 +4,16 @@
 > „Legutóbbi tartós állapot” (2026-09-04) és a további build-naplók **történeti** bejegyzések:
 > a bennük szereplő buildszámok (pl. `+225`, `+182`) **nem** az aktuális kiadást jelentik.
 
-## Aktuális állapot — 2026-09-19 (AAB **329** + plugin **2.5.6**)
+## Aktuális állapot — 2026-09-19 (AAB **330** + plugin **2.5.6**)
 
-- **Kiadásra kész:** `build/HUHS-v1.0.0+329-release.aab` (versionCode **329**, SHA-256 `A6248354E468AD63B6FD9AB839FDA0ED61F4584DC9C19602C8AA3D632B6A2DAD`) és `build/huhs-mobile-api-2.5.6.zip` (SHA-256 `492CC69DF5115AE5EBCB4D33AE6F8C77B1268468508A4FB2CBD2782F8B28FF9E`). A Play-be másolható kiadási szöveg: `docs/PLAY-KIADASI-JEGYZET.md`.
-- **A plugin 2.5.6 élesben van** (ellenőrizve: `apiVersion=2.5.6`, az új `prize_games`/`prize_results` admin-végpontok valódi adatot adnak, UID/hash kiadása nélkül).
+- **Kiadásra kész:** `build/HUHS-v1.0.0+330-release.aab` (versionCode **330**, SHA-256 `094C860547BA154417BEC1981AF88B25535B83BC8496EACEB6377937926DF496`) és `build/huhs-mobile-api-2.5.6.zip` (SHA-256 `492CC69DF5115AE5EBCB4D33AE6F8C77B1268468508A4FB2CBD2782F8B28FF9E`). A Play-be másolható kiadási szöveg: `docs/PLAY-KIADASI-JEGYZET.md`. **A 330-at kell feltölteni (nem a 329-et)** — a 329 soha nem ment ki, a 330 mindent tartalmaz.
+- **A 330 újdonsága:** a natív HUHS Vezérlőközpontban új menüpontok — **„Kvíz és játékok"**, **„Kérdőív"**, **„Nyereményjáték"**, valamint elérhető lett a **„Hírlevél"**, a **„Shortcode-ok"** és a **„Beállítások"** is (ezek eddig a háttérben működtek, de nem lehetett megnyitni).
+- **A plugin 2.5.6 élesben van** (ellenőrizve: `apiVersion=2.5.6`, az új `prize_games`/`prize_results` admin-végpontok valódi adatot adnak, UID/hash kiadása nélkül). A GYIK 7 témakörre bontva, 31 kérdéssel.
 - **A szerveroldal éles:** `firestore:rules` és `functions` deployolva. A **felhasználó-törlés** hibája javítva: a Cloudinary-hiba többé **nem** szakítja meg a törlést, a hibaág nem hazudik sikert, a maradék képek nyilvántartva maradnak. A 49 félbemaradt törlés lezárva, a „Teszt acc” profil (és nyilvános profilja) törölve, az árva kép eltakarítva.
 - **A Cloudinary-oldal rendben:** az API-secret elgépelése (`l`/`I`) javítva (2-es verzió), a `huhs-user-cleanup` kulcs szerepe **Master Admin** — a képek törlése 403-mal bukott, ezért kellett.
-- **A törlés javításához nem kell új app:** szerveroldali, a 328-as kliensen is működik. A törölt felhasználót a kliens a megszűnt profilról (és a 329-ben a szerveroldali jelzőről) azonnal kijelentkezteti, és a Kezdőlapra vált.
-- Részletek, élő mérési bizonyítékok, buktatók és tanulságok: **`AGENTS.md`** (legfelső szakasz). Felhasználói changelog: `lib/data/app_changelog.dart`.
+- **A törlés javításához nem kell új app:** szerveroldali, a 328-as kliensen is működik. A törölt felhasználót a kliens a megszűnt profilról (és a 329/330-ban a szerveroldali jelzőről) azonnal kijelentkezteti, és a Kezdőlapra vált.
+- **Új kapuk:** `tools/verify-native-admin-menu.mjs` (a natív admin menüpontjai ↔ a plugin végpontjai) és `tools/check-play-notes.mjs` (a kiadási szöveg).
+- Részletek, élő mérési bizonyítékok, buktatók és tanulságok: **`AGENTS.md`** (legfelső szakaszok). Felhasználói changelog: `lib/data/app_changelog.dart`.
 
 ## Legutóbbi tartós állapot — 2026-09-04
 
