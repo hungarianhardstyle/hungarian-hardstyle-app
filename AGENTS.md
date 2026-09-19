@@ -1,5 +1,22 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Élő ellenőrző eszközök — a hibavadászat „szemei" (2026-09-19, commitolva a `tools/` alá)
+
+A 2026-09-19-i hibavadászat ideiglenes szkriptekkel történt, ezért azok **nem látszottak** a következő agensnek. Mostantól a `tools/` alatt vannak, **egy paranccsal** újrafuttathatók, és **titkot nem tartalmaznak** (a Firebase CLI bejelentkezését és a Secret Managert használják futásidőben).
+
+| Eszköz | Mit mér | Használat |
+|---|---|---|
+| `tools/verify-live-account-deletion.mjs` | **ÉLES**: nincs-e elakadt törlés (`pending` rekord létező profillal) és nincs-e „szellem-profil" (törölt jelölés + létező profil) | `node tools/verify-live-account-deletion.mjs` · önteszt: `--self-test` |
+| `tools/verify-wp-admin-endpoints.mjs` | **ÉLES**: a plugin `apiVersion`-je, a `prize_games`/`prize_results`/`poll_results`/`polls` végpontok, UID/hash-szivárgás, `players = résztvevők` konzisztencia | `node tools/verify-wp-admin-endpoints.mjs` · önteszt: `--self-test` |
+| `tools/verify-native-admin-menu.mjs` | a natív admin menüpontjai ↔ a plugin admin-végpontjai (forrás-lint) | `node tools/verify-native-admin-menu.mjs` |
+| `tools/check-play-listing.mjs` | a **nyilvános** Play-oldal állapota (zárt tesztnél 404 = várt eredmény) | `node tools/check-play-listing.mjs [csomagnév]` |
+| `tools/run-account-cleanup.mjs` | a 15 percenkénti fiók-takarítás **azonnali** futtatása (idempotens) | előnézet: `node tools/run-account-cleanup.mjs` · futtatás: `--confirm` |
+| `tools/check-play-notes.mjs` | a kiadási szöveg (karakterlimit, build-lefedettség, AAB-hash) | `node tools/check-play-notes.mjs` |
+
+- **Közös modul:** `tools/lib/live-firebase.mjs` — Firebase CLI token (memóriában), Firestore-olvasás, titok-lekérés, ütemező-indítás, egységes ellenőrzés-kiíró, UID/hash-szivárgás-kereső. **Titkot a repóban soha**; a token-tároló fájlhoz nem nyúlunk.
+- **Az öntesztek bizonyítják a detektorokat:** a törlés-kapu a „pending + létező profil" és a „szellem-profil" esetet is elkapja (és egy „mindig rendben" mutált változat elbukna), a WordPress-kapu pedig megtalálja az UID/hash-szivárgást.
+- **Node-csapda Windowson (érdemes megjegyezni):** a `process.exit()` a nyitott hálózati kapcsolatok mellett **elhasal** (`libuv assertion … async.c`), ezért ezek az eszközök `process.exitCode`-ot állítanak, és a folyamat magától lezárul.
+
 ### Natív admin: a kvíz, a kérdőív és a nyereményjáték menüpontjai (2026-09-19, AAB **330**)
 
 - **A tulajdonos jelzése:** *„ami nem működik: a natív huhs adminban nincsenek ott a nyereményjáték, kviz, és a kérdőiv meg a hozzá tartozó menüpontok"*.

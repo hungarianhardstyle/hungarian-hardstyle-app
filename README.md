@@ -13,6 +13,7 @@
 - **A Cloudinary-oldal rendben:** az API-secret elgépelése (`l`/`I`) javítva (2-es verzió), a `huhs-user-cleanup` kulcs szerepe **Master Admin** — a képek törlése 403-mal bukott, ezért kellett.
 - **A törlés javításához nem kell új app:** szerveroldali, a 328-as kliensen is működik. A törölt felhasználót a kliens a megszűnt profilról (és a 329/330-ban a szerveroldali jelzőről) azonnal kijelentkezteti, és a Kezdőlapra vált.
 - **Új kapuk:** `tools/verify-native-admin-menu.mjs` (a natív admin menüpontjai ↔ a plugin végpontjai) és `tools/check-play-notes.mjs` (a kiadási szöveg).
+- **Élő ellenőrző eszközök** (egy paranccsal, titok nélkül a repóban): `tools/verify-live-account-deletion.mjs` (nincs-e elakadt törlés / szellem-profil), `tools/verify-wp-admin-endpoints.mjs` (a plugin végpontjai és UID/hash-szivárgás), `tools/check-play-listing.mjs` (a nyilvános Play-oldal állapota — zárt tesztnél a 404 a várt), `tools/run-account-cleanup.mjs` (a takarítás azonnali futtatása, `--confirm`-mal). Közös modul: `tools/lib/live-firebase.mjs`.
 - Részletek, élő mérési bizonyítékok, buktatók és tanulságok: **`AGENTS.md`** (legfelső szakaszok). Felhasználói changelog: `lib/data/app_changelog.dart`.
 
 ## Legutóbbi tartós állapot — 2026-09-04
