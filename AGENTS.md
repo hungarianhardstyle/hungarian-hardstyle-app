@@ -130,6 +130,7 @@ A 2026-09-19-i hibavadászat ideiglenes szkriptekkel történt, ezért azok **ne
 | `tools/verify-achievement-points.mjs` | **ÉLES**: a profil-pontszám egyezik-e a ledgerrel, és van-e **visszaállítatlan** elveszett hír-lájk pont | `node tools/verify-achievement-points.mjs` · önteszt: `--self-test` |
 | `tools/restore-lost-achievement-points.mjs` | az elveszett pontok **visszaállítása** (előnézet írás nélkül; `--confirm` → munkakérés a Cloud Functionnek) | `node tools/restore-lost-achievement-points.mjs` · `--confirm` · önteszt: `--self-test` |
 | `tools/verify-achievement-guide.mjs` | az Achievement-útmutató **szövege** egyezik-e a kóddal (pontértékek, napi keretek, létező források, nincs zsargon) | `node tools/verify-achievement-guide.mjs` · önteszt: `--self-test` |
+| `tools/check-function-errors.mjs` | **ÉLES**: volt-e `ERROR`/`WARNING` a Cloud Function-ökben az elmúlt időszakban (Cloud Logging, függvényenkénti összegzéssel) | `node tools/check-function-errors.mjs [--hours 72] [--warnings]` |
 
 - **Közös modul:** `tools/lib/live-firebase.mjs` — Firebase CLI token (memóriában), Firestore-olvasás, titok-lekérés, ütemező-indítás, egységes ellenőrzés-kiíró, UID/hash-szivárgás-kereső. **Titkot a repóban soha**; a token-tároló fájlhoz nem nyúlunk.
 - **Az öntesztek bizonyítják a detektorokat:** a törlés-kapu a „pending + létező profil" és a „szellem-profil" esetet is elkapja (és egy „mindig rendben" mutált változat elbukna), a WordPress-kapu pedig megtalálja az UID/hash-szivárgást.
