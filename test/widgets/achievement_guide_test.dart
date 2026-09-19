@@ -49,13 +49,21 @@ void main() {
     expect(like.detail, contains('végleges'));
     expect(like.detail, isNot(contains('visszavonódik')));
 
-    // A lemondásnál elvesző pontok kimondva (esemény, meetup, kapcsolat).
+    // A lemondásnál elvesző pontok kimondva (esemény, meetup, kapcsolat), és
+    // az is, hogy ez ESEMÉNYENKÉNT egyszer jár (nem egyszer az életben).
+    expect(byTitle['Eseményen ott leszek']!.detail, contains('Eseményenként'));
     expect(byTitle['Eseményen ott leszek']!.detail, contains('elvész'));
+    expect(byTitle['Meetup jelzés']!.detail, contains('Meetuponként'));
     expect(byTitle['Meetup jelzés']!.detail, contains('elvész'));
+    expect(
+      byTitle['Kölcsönös kapcsolat meetupolóval']!.detail,
+      contains('kapcsolatonként'),
+    );
     expect(
       byTitle['Kölcsönös kapcsolat meetupolóval']!.detail,
       contains('megszűnik'),
     );
+    expect(byTitle['Esemény utáni értékelés']!.detail, contains('Eseményenként'));
 
     // A két korábban „üres" sor mostantól valódi szabályt ír le.
     expect(byTitle['Kiadvány megvásárlása']!.points, '+20 pont');

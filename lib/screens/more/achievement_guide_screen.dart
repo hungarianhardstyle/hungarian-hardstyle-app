@@ -21,24 +21,24 @@ class AchievementGuideScreen extends ConsumerWidget {
       title: 'Eseményen ott leszek',
       points: '+10 pont',
       detail:
-          'Amíg jelentkezve vagy rá, addig jár. Ha lemondod, a pont elvész — visszajelentkezésnél újra jár.',
+          'Eseményenként egyszer jár. Amíg jelentkezve vagy rá, addig érvényes: ha lemondod, a pont elvész, visszajelentkezésnél újra jár.',
     ),
     (
       title: 'Meetup jelzés',
       points: '+5 pont',
       detail:
-          'Amíg jelezve van, addig jár. Lemondásnál ez a pont is elvész, visszajelzésnél újra jár.',
+          'Meetuponként egyszer jár. Ha lemondod a jelzést, ez a pont is elvész, visszajelzésnél újra jár.',
     ),
     (
       title: 'Kölcsönös kapcsolat meetupolóval',
       points: '+15 pont',
       detail:
-          'Csak valódi, kölcsönös kapcsolat után jár. Ha a kapcsolat megszűnik, a pont is elvész.',
+          'Eseményenként és kapcsolatonként jár, ha valódi, kölcsönös kapcsolat születik. Ha a kapcsolat megszűnik, a pont is elvész.',
     ),
     (
       title: 'Esemény utáni értékelés',
       points: '+10 pont',
-      detail: 'Egy eseményhez egyszer adható.',
+      detail: 'Eseményenként egyszer adható.',
     ),
     (
       title: 'Hír kedvelése',
@@ -99,7 +99,7 @@ class AchievementGuideScreen extends ConsumerWidget {
     'A hír kedveléséért és a cikkkommentért naponta legfeljebb 3-3 alkalommal jár pont, a jóváhagyott beküldésekért szintén 3.',
     'A napi aktivitási pont (1–5) a lezárt nap után, naponta egyszer jár: a szerver a cikkhez írt hozzászólásaidból és a chat-üzeneteidből számolja.',
     'A lájkpont végleges: ha kiveszed a lájkot, a pont megmarad, de az újralájk sem ad újat.',
-    'Az esemény- és meetup-pont a jelentkezésedhez igazodik: lemondásnál elvész, visszajelentkezésnél újra jár.',
+    'Az esemény- és meetup-pont eseményenként (meetuponként) egyszer jár, és a jelentkezésedhez igazodik: lemondásnál elvész, visszajelentkezésnél újra jár.',
     'A rangod mindig a legmagasabb elért szinted jelvénye.',
   ];
 

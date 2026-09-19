@@ -10,7 +10,7 @@ currentBuild: 333
 currentVersion: 1.0.0
 lastPublishedBuild: 328
 aab: build/HUHS-v1.0.0+333-release.aab
-sha256: A2EC7D908B784B7BAC13B6AAF4F29EFBD23E9C9D095708484CF1FBCB571E932A
+sha256: 6DFAF7F7631427679DA61FD86A30062243E7AED0AF634F3324BEC9FDE63E9EE7
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -37,7 +37,7 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-19):
 | Verzió | `1.0.0` (versionName) |
 | Verziókód | **333** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 79,49 MB |
-| SHA-256 | A2EC7D908B784B7BAC13B6AAF4F29EFBD23E9C9D095708484CF1FBCB571E932A |
+| SHA-256 | 6DFAF7F7631427679DA61FD86A30062243E7AED0AF634F3324BEC9FDE63E9EE7 |
 
 **Miért a 333-at kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
 (323–333). A Play-en a legutóbb publikált build a **328**, de a zárt teszt sávján most a **332** él —
@@ -96,7 +96,7 @@ Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön felt�
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
 
 ### 333 — pontos Achievement-útmutató + három új pontforrás
-- Az Achievement-útmutató (Több → Achievementek) pontos leírásokat kapott: a napi keretek (lájk 3, komment 3, beküldés 3), a lájkpont véglegessége és a lemondásnál elvesző esemény-pont is látszik.
+- Az Achievement-útmutató (Több → Achievementek) pontos leírásokat kapott: a napi keretek (lájk 3, komment 3, beküldés 3), a lájkpont véglegessége, és az is, hogy az esemény/meetup pont **eseményenként egyszer** jár, de lemondásnál elvész.
 - A szintek és jelvények listája mostantól a szerverről jön, ezért azonnal követi, ha az adminban átírnak egy küszöböt vagy nevet.
 - Kiadvány megvásárlásáért +20 pont jár minden megvásárolt változatért (a vásárlást a Google Play ellenőrzi).
 - A jóváhagyott beküldésekért (esemény, DJ, szervező) +10 pont jár a beküldőnek, naponta legfeljebb 3 beküldésért.

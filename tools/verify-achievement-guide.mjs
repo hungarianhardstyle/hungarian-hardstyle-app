@@ -124,6 +124,19 @@ export function analyzeGuide({ functionsSource, guideSource }) {
       has('Meetup jelzés', 'elvész') &&
       has('Kölcsönös kapcsolat meetupolóval', 'megszűnik'),
   );
+  // Az „egyszer" az ESEMÉNYRE vonatkozik, nem az egész életre — ezt a
+  // naplókulcsok is így tartják nyilván (`attendance:<eventId>` stb.).
+  check(
+    'az esemény/meetup pontoknál kimondva, hogy ESEMÉNYENKÉNT egyszer járnak',
+    has('Eseményen ott leszek', 'Eseményenként') &&
+      has('Meetup jelzés', 'Meetuponként') &&
+      has('Kölcsönös kapcsolat meetupolóval', 'kapcsolatonként') &&
+      has('Esemény utáni értékelés', 'Eseményenként') &&
+      /attendance:\$\{eventId\}/.test(functionsSource) &&
+      /meetup:\$\{eventId\}/.test(functionsSource) &&
+      /meetup-interest:\$\{eventId\}:\$\{uid\}:\$\{interestedUid\}/.test(functionsSource) &&
+      /event-rating:\$\{eventId\}/.test(functionsSource),
+  );
 
   // 2. A pontértékek egyeznek a kóddal.
   check(`esemény: +${facts.attendance} pont`, has('Eseményen ott leszek', `+${facts.attendance} pont`));
