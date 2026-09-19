@@ -121,14 +121,25 @@ export async function firestoreGet(documentPath, { token } = {}) {
 
 /** Egy titok értéke a Secret Managerből (futásidőben; a repóban soha). */
 export function secret(name) {
-  const output = execFileSync('npx', ['firebase', 'functions:secrets:access', name], {
-    encoding: 'utf8',
-    shell: true,
-    stdio: ['ignore', 'pipe', 'ignore'],
-  });
-  const value = output.trim().split(/\r?\n/).pop().trim();
-  if (!value) throw new Error(`A(z) ${name} titok üres vagy nem olvasható.`);
-  return value;
+  // A `firebase` CLI néha átmenetileg hibázik (párhuzamos hívásoknál), ezért
+  // egyszer újrapróbáljuk — a titok értéke nem változik közben.
+  let lastError;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const output = execFileSync('npx', ['firebase', 'functions:secrets:access', name], {
+        encoding: 'utf8',
+        shell: true,
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+      const value = output.trim().split(/\r?\n/).pop().trim();
+      if (!value) throw new Error('üres érték');
+      return value;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 1) execFileSync('node', ['-e', 'setTimeout(()=>{}, 1500)'], { stdio: 'ignore' });
+    }
+  }
+  throw new Error(`A(z) ${name} titok nem olvasható a Secret Managerből (${lastError?.message || 'ismeretlen hiba'}).`);
 }
 
 /** A 15 percenkénti takarítás azonnali futtatása (Cloud Scheduler „run”). */
