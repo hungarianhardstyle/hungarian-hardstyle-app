@@ -185,6 +185,10 @@ test('a pending deletion is retried after Auth deletion even when the profile re
   // a teljes (draga) gyujtemeny-takaritast, hanem csak a kepeket probaljuk torolni.
   assert.match(source, /const onlyCloudinaryLeft =/);
   assert.match(source, /await retryCloudinaryAssetCleanup\(uid, stored\)/);
+  // ...es a hibas Cloudinaryt nem terheli 15 percenkent: a sikertelen probalkozas
+  // varakozast allit be, amit a kovetkezo futas elobb tiszteletben tart.
+  assert.match(source, /if \(!cloudinaryRetryDueAt\(stored\)\) continue;/);
+  assert.match(source, /cloudinaryRetryAfter: new Date\(Date\.now\(\) \+ CLOUDINARY_RETRY_DELAY_MS\)/);
 });
 
 test('the repository has no Firebase Realtime Database or Storage user store', () => {

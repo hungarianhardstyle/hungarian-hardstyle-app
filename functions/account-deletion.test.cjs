@@ -48,6 +48,7 @@ const db = getFirestore(app, databaseId);
 const {
   __deleteUserReferencesForTests: deleteUserReferences,
   __retryCloudinaryAssetCleanupForTests: retryCloudinaryAssetCleanup,
+  __cloudinaryRetryDueAtForTests: cloudinaryRetryDueAt,
 } = require('./index.js');
 
 const COLLECTIONS = [
@@ -244,4 +245,24 @@ test('ismert public_id eseten nem keri le ujra a kepek listajat', async () => {
     'ismert public_id eseten nincs szukseg a (draga) lista-lekerdezesre',
   );
   assert.equal(destroyCalls().length, 1);
+});
+
+test('a Cloudinary-ujraproba idokapuja (nem terheli 15 percenkent a hibas szolgaltatast)', () => {
+  const now = Date.parse('2026-09-19T12:00:00Z');
+
+  // Meg nem probalkoztunk: szabad.
+  assert.equal(cloudinaryRetryDueAt({}, now), true);
+  // Varakozas van ervenyes: nem szabad.
+  assert.equal(cloudinaryRetryDueAt({ cloudinaryRetryAfter: new Date(now + 3_600_000) }, now), false);
+  // Lejart a varakozas: ujra szabad.
+  assert.equal(cloudinaryRetryDueAt({ cloudinaryRetryAfter: new Date(now - 1_000) }, now), true);
+  // Firestore Timestamp-szeru ertek is mukodik (a valos tarolt alak ez).
+  assert.equal(
+    cloudinaryRetryDueAt({ cloudinaryRetryAfter: { toDate: () => new Date(now + 1_000) } }, now),
+    false,
+  );
+  assert.equal(
+    cloudinaryRetryDueAt({ cloudinaryRetryAfter: { toDate: () => new Date(now - 1_000) } }, now),
+    true,
+  );
 });

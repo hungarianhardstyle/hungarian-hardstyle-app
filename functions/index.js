@@ -3991,6 +3991,7 @@ exports.deleteCommunityUser = functions
           // (draga) gyujtemeny-takaritast, csak a kepeket probalja torolni.
           cloudinaryListPending: cleanup.cloudinaryListPending === true,
           pendingCloudinaryAssets: destroyFailed,
+          cloudinaryRetryAfter: new Date(Date.now() + CLOUDINARY_RETRY_DELAY_MS),
           expiresAt: FieldValue.delete(),
           updatedAt: FieldValue.serverTimestamp(),
         },
@@ -4004,6 +4005,7 @@ exports.deleteCommunityUser = functions
         status: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
         cloudinaryListPending: FieldValue.delete(),
         pendingCloudinaryAssets: FieldValue.delete(),
+        cloudinaryRetryAfter: FieldValue.delete(),
         ...(cleanup.manualCleanupRequired
           ? { lastError: 'legacy-cloudinary-public-id-missing' }
           : { completedAt: FieldValue.serverTimestamp() }),
@@ -4102,6 +4104,27 @@ async function retryCloudinaryAssetCleanup(uid, stored = {}) {
 // Test-only hook a fenti „csak kepek" ujraprobahoz.
 exports.__retryCloudinaryAssetCleanupForTests = retryCloudinaryAssetCleanup;
 
+/**
+ * Mikor probalkozhat ujra egy mar csak Cloudinary-kepek miatt fuggoben levo torles?
+ *
+ * MIERT kell ez a kapu: ha a Cloudinary hivasai tartosan hasalnak (pl. elavult
+ * API-secret -> 401), akkor a takaritas 15 percenkent MINDEN ilyen rekordnal
+ * ujra megkerdezné a Cloudinaryt. 2026-09-19-en 49 ilyen rekord volt, ami egy
+ * futasban ~50 (mindig 401-gyel elutasitott) HTTP hivast jelent -- felesleges
+ * terheles, es a fuggveny futasidejet is a timeout fele tolja.
+ */
+const CLOUDINARY_RETRY_DELAY_MS = 60 * 60 * 1000;
+
+function cloudinaryRetryDueAt(stored = {}, nowMs = Date.now()) {
+  const value = stored?.cloudinaryRetryAfter;
+  const ms = typeof value?.toDate === 'function' ? value.toDate().getTime() : Number(value || 0);
+  if (!Number.isFinite(ms) || ms <= 0) return true;
+  return ms <= nowMs;
+}
+
+// Test-only hook a fenti idokapuhoz (tiszta logika, halozat nelkul merheto).
+exports.__cloudinaryRetryDueAtForTests = cloudinaryRetryDueAt;
+
 exports.cleanupIncompleteAccounts = onSchedule(
   {
     schedule: 'every 15 minutes',
@@ -4196,6 +4219,8 @@ exports.cleanupIncompleteAccounts = onSchedule(
           storedAssets.length > 0 ||
           String(stored.lastError || '').startsWith('cloudinary'));
       if (onlyCloudinaryLeft) {
+        // Ha az elozo probalkozas nemrég hasalt el, most nem terheljuk ujra.
+        if (!cloudinaryRetryDueAt(stored)) continue;
         const remaining = await retryCloudinaryAssetCleanup(uid, stored);
         if (remaining) {
           await deletion.ref.set(
@@ -4206,6 +4231,7 @@ exports.cleanupIncompleteAccounts = onSchedule(
                 : 'cloudinary-delete-temporary-failure',
               cloudinaryListPending: remaining.listPending,
               pendingCloudinaryAssets: remaining.assets,
+              cloudinaryRetryAfter: new Date(Date.now() + CLOUDINARY_RETRY_DELAY_MS),
               updatedAt: FieldValue.serverTimestamp(),
             },
             { merge: true },
@@ -4218,6 +4244,7 @@ exports.cleanupIncompleteAccounts = onSchedule(
             completedAt: FieldValue.serverTimestamp(),
             cloudinaryListPending: FieldValue.delete(),
             pendingCloudinaryAssets: FieldValue.delete(),
+            cloudinaryRetryAfter: FieldValue.delete(),
             expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
             updatedAt: FieldValue.serverTimestamp(),
           },
@@ -4245,6 +4272,7 @@ exports.cleanupIncompleteAccounts = onSchedule(
                 : 'cloudinary-delete-temporary-failure',
               cloudinaryListPending: cleanup.cloudinaryListPending === true,
               pendingCloudinaryAssets: destroyFailed,
+              cloudinaryRetryAfter: new Date(Date.now() + CLOUDINARY_RETRY_DELAY_MS),
               updatedAt: FieldValue.serverTimestamp(),
             },
             { merge: true },
@@ -4256,6 +4284,7 @@ exports.cleanupIncompleteAccounts = onSchedule(
             status: cleanup.manualCleanupRequired ? 'manual_cleanup_required' : 'completed',
             cloudinaryListPending: FieldValue.delete(),
             pendingCloudinaryAssets: FieldValue.delete(),
+            cloudinaryRetryAfter: FieldValue.delete(),
             ...(cleanup.manualCleanupRequired
               ? { lastError: 'legacy-cloudinary-public-id-missing' }
               : { completedAt: FieldValue.serverTimestamp() }),
