@@ -1,5 +1,27 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Létrehozás a natív adminból: kérdőív, nyereményjáték, kvíz (2026-09-19, AAB **331** + plugin **2.5.7**)
+
+- **A tulajdonos kérdése:** *„ja de most már tudok hozzáadni kvizt, nyereményjátékot és kérdőívet natív adminból?”* — a válasz **nem** volt, és ezt kódban is igazoltam: a `_creatableSections` csak `huhs_event`/`huhs_artist`/`huhs_organizer`, a `save_resource` **kizárólag meglévő** bejegyzést mentett (`get_post()` + `edit_post` jog), a `huhs_admin_resource_fields()` pedig a `huhs_poll`/`huhs_prize`/`huhs_game` típusokra **üres listát** adott. A tulajdonos ezután **mindhármat** kérte.
+- **Szerver (plugin 2.5.7) — új `includes/admin-create.php`:**
+  - `HUHS_ADMIN_CREATABLE_TYPES` (a meglévő négy + a három új), `HUHS_ADMIN_QUIZ_TYPES` (csak a 3 kvíz-típus), `huhs_admin_is_creatable_type()`.
+  - `huhs_admin_interaction_fields($type)` — a három típus mezői. **A mezők kulcsa MINDIG a valódi meta-kulcs** (`_huhs_poll_options`, `_huhs_prize_correct`, `_huhs_game_questions`), ezért a mentés nem tud elcsúszni a WordPress-oldali űrlaptól.
+  - **Tiszta, WP nélkül tesztelhető logika:** `huhs_admin_text_list_values()`, `huhs_admin_question_values()` (minden sort **megtart**, hogy a hiba meg tudja nevezni a hibás sort), `huhs_admin_validate_resource_values()`, `huhs_admin_encode_meta_value()`, `huhs_admin_normalize_resource_meta()`, `huhs_admin_created_status()`, `huhs_admin_resource_title()`.
+  - `api-admin.php`: a `resource` művelet `id=0`-ra a **mező-definíciókat** adja vissza (üres értékkel) — így az app **ugyanazt az űrlapot** használja létrehozáshoz és szerkesztéshez; a `save_resource` `id=0`-ra **létrehoz** (`wp_insert_post`), validál, majd menti a metákat.
+  - **Négy tudatos döntés:** (1) a `_huhs_prize_correct` a felületen **1-alapú** (ahogy az ember számol), a szerver fordítja **0-alapú indexre** — egy helyen; (2) az új elem alapból **`publish`**, mert a „piszkozat” csendes lenne (a szerver `draft` helyőrzőjét az app szándékosan **figyelmen kívül hagyja** — ezt a teszt fogta meg); (3) a kvíznél **csak a 3 kvíz-típus** választható, a többi játéktípus (idővonal, „találd ki a zenét”, hang-borítók, jutalomsávok) **szándékosan a WordPress adminban marad**; (4) a hibaüzenet **megnevezi a hibás kérdés sorszámát**.
+- **App (AAB 331) — új `lib/screens/community/admin_resource_editor_screen.dart`:**
+  - `adminResourceRequestProvider` (szűk szelet) → a képernyő **Firebase nélkül tesztelhető**.
+  - Mezőtípusok: `text`, `textarea`, `int`, `bool`, `select`, `url`, `email`, **`text_list`** (2–6 válasz, a sorok számát a mező `min` értéke adja), **`questions`** (kérdés + 2–6 válasz + a helyes válasz bepipálása).
+  - Belépési pontok: „＋” a **Kvíz és játékok** szakaszon (`Key('game-create')`), a **Kérdőív-eredmények** (`Key('poll-create')`) és a **Nyereményjáték-admin** (`Key('prize-create')`) képernyőn; mentés után a lista frissül.
+  - Helyi ellenőrzés a mentés előtt (ugyanaz, amit a szerver is kér), és a szerver hibája **megjelenik** — nincs néma hiba.
+- **Bizonyítás:**
+  - `test/widgets/admin_resource_editor_test.dart` (**6 teszt**) — nem a külalakot, hanem a **kimenő tartalmat** méri: a mentés a valódi meta-kulcsokat és a megjelölt helyes választ küldi; 1 megadott válasszal **nem** indul mentés; a hibás kérdés sorszáma megjelenik; a szerver hibáját kiírja.
+  - `tools/verify-admin-create.php` (**41 ellenőrzés**) — a tiszta logika stubolt WordPress-környezetben; a mutációs bizonyíték: a „legfeljebb 6 válasz” feltétel kiiktatásával **elhasal**.
+  - `tools/verify-native-admin-menu.mjs` **31 → 51** — az új szakasz a három létrehozási útvonalat ÉS a **mezőtípus-egyeztetést** méri (amit a szerver küldhet, azt az appnak ismernie kell).
+  - `flutter analyze` tiszta, `flutter test` **279/279**, 44/44 PHP parse, `check-plugin-encoding.mjs` **45/45**, `check-wp-admin-menu.mjs` **8/8**, `verify-prize-draw.mjs` **47/47**, `verify-poll-status.mjs` **25/25**, `check-play-notes.mjs` zöld.
+- **Csomagok:** `build/HUHS-v1.0.0+331-release.aab` (versionCode **331**, 79,49 MB, SHA-256 `6D5798840E5C47EA6AB7DF54B2BB1C2A3767016E89BCD3B4326158973EC85336`) és `build/huhs-mobile-api-2.5.7.zip` (45 fájl, 142,9 KB, SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`). **Mindkettőt fel kell tölteni** (app + plugin), és a 329/330 AAB helyett a 331 megy.
+- **⚠️ FIGYELEM, DURVÁN FONTOS A JÖVŐRE:** a **plugin forrása gitignore-olt munkafában él** (`.gitignore: /.tmp-*`), ezért a repóban **csak a ZIP és a dokumentáció** látszik — egy másik agens (Codex) a plugin kódját **nem látja**. A `build/` szintén ignorált. Ha a munkafa törlődik, a plugin forrás-előzménye elvész. Ezt jeleztem a tulajdonosnak; a megoldás külön döntés (a plugin forrásának verziókezelése).
+
 ### Élő ellenőrző eszközök — a hibavadászat „szemei" (2026-09-19, commitolva a `tools/` alá)
 
 A 2026-09-19-i hibavadászat ideiglenes szkriptekkel történt, ezért azok **nem látszottak** a következő agensnek. Mostantól a `tools/` alatt vannak, **egy paranccsal** újrafuttathatók, és **titkot nem tartalmaznak** (a Firebase CLI bejelentkezését és a Secret Managert használják futásidőben).

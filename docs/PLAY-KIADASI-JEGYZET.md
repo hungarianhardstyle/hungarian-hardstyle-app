@@ -6,30 +6,32 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 330
+currentBuild: 331
 currentVersion: 1.0.0
 lastPublishedBuild: 328
-aab: build/HUHS-v1.0.0+330-release.aab
-sha256: 094C860547BA154417BEC1981AF88B25535B83BC8496EACEB6377937926DF496
+aab: build/HUHS-v1.0.0+331-release.aab
+sha256: 6D5798840E5C47EA6AB7DF54B2BB1C2A3767016E89BCD3B4326158973EC85336
 -->
 
 ## A feltöltendő AAB (mérve)
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+330-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+331-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **330** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 79,38 MB |
-| SHA-256 | `094C860547BA154417BEC1981AF88B25535B83BC8496EACEB6377937926DF496` |
+| Verziókód | **331** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 79,49 MB |
+| SHA-256 | D5798840E5C47EA6AB7DF54B2BB1C2A3767016E89BCD3B4326158973EC85336 |
 
-**Miért a 330-at kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
-(323–330). A Play-en a legutóbb publikált build a **328**; a **329 soha nem ment ki**, ezért a
-felhasználók most a **329 és a 330 újdonságait** kapják egyben.
+**Miért a 331-et kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
+(323–331). A Play-en a legutóbb publikált build a **328**; a **329 és a 330 soha nem ment ki**,
+ezért a felhasználók most a **329–331 újdonságait** kapják egyben.
 
-> **FONTOS:** a **329-es AAB-et ne töltsd fel** — a 330 ugyanazt tartalmazza, plusz a natív admin
-> menüpontjait. Ha a 329-et is feltöltenéd, a Play verziókód szerint a 330-at fogja kiszolgálni,
-> de felesleges kör.
+> **FONTOS:** a **329-es és a 330-as AAB-et ne töltsd fel** — a 331 mindkettőt tartalmazza, plusz
+> a natív létrehozást (kérdőív / nyereményjáték / kvíz).
+
+**A plugin ehhez 2.5.7** (`build/huhs-mobile-api-2.5.7.zip`) — **ezt is fel kell tölteni**, mert a
+létrehozás a plugin új végpontjait használja (a 2.5.6-tal a mentés „nem engedélyezett"-et adna).
 
 ## 1. Play Console — RÖVID (ezt másold be)
 
@@ -41,9 +43,9 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Adminoknak: a HUHS adminban új menüpontok — kvíz, kérdőív és nyereményjáték eredményei.
+- Adminoknak: a HUHS adminban új menüpontok — kvíz, kérdőív és nyereményjáték.
+- Adminoknak: új kérdőív, nyereményjáték és kvíz létrehozása az appból.
 - Chat: a régebbi üzenetek lefelé görgetve betöltődnek.
-- A „már szavaztam / már játszottam” állapot azonnal látszik.
 ```
 
 ## 1b. Play Console — ha bővebben szeretnéd (tartalék)
@@ -53,11 +55,10 @@ felsorolni, mit kap a felhasználó.
 
 ```play-notes
 - Adminoknak: a natív HUHS adminban új menüpontok — Kvíz és játékok, Kérdőív, Nyereményjáték.
+- Adminoknak: mostantól ÚJ kérdőív, nyereményjáték és kvíz is létrehozható az appból.
+- A kvíz-szerkesztőben kérdések 2–6 válasszal, a helyes válasz bepipálásával.
 - Adminoknak: a kérdőív eredményei és a nyereményjáték résztvevői az adminból is elérhetők.
 - Chat: a régebbi üzenetek lefelé görgetve betöltődnek.
-- A „már szavaztam / már játszottam” állapot azonnal látszik.
-- A főoldalon a „További hírek” sor egységes kártyaformát kapott.
-- Az értesítéseknél az „összes törlése” már csak a látható fület üríti.
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -75,6 +76,11 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 331 — létrehozás a natív adminból (kérdőív, nyereményjáték, kvíz)
+- A HUHS adminban (natív) mostantól új kérdőív, nyereményjáték és kvíz is létrehozható — nem kell hozzá a WordPress admin.
+- A kvíz-szerkesztőben kérdéseket vehetsz fel 2–6 válasszal, és bepipálhatod a helyes választ; mentés előtt minden hibát megnevez a képernyő.
+- A nyereményjátéknál a helyes válasz sorszámát adod meg, a látszási napokat pedig számban — a lista pedig azonnal frissül.
 
 ### 330 — natív admin menüpontok (kvíz, kérdőív, nyereményjáték)
 - A HUHS Vezérlőközpontban (natív admin) új menüpontok: „Kvíz és játékok", „Kérdőív" és „Nyereményjáték" — a kérdőív eredményei és a nyereményjáték résztvevői mostantól innen is elérhetők.
@@ -110,17 +116,18 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A kérdőív eredményeinél már a kérdőív saját válaszai látszanak az éves szavazás adatai helyett.
 - A nyereményjátéknál eltűnt a felesleges kép mező.
 
-## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.5.6)
+## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.5.7)
 
-A plugin csomag: `build/huhs-mobile-api-2.5.6.zip` (44 fájl, 139,0 KB,
-SHA-256 `492CC69DF5115AE5EBCB4D33AE6F8C77B1268468508A4FB2CBD2782F8B28FF9E`).
+A plugin csomag: `build/huhs-mobile-api-2.5.7.zip` (45 fájl, 142,9 KB,
+SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`).
 
 ```text
-- ÚJ: a nyereményjáték admin-nézete az appban (prize_games, prize_results): játéklista, válaszmegoszlás a helyes válasz jelölésével, résztvevők és nyertes.
-- Az app-admin játék-nézet nem ad ki UID-t és hash-t a kliensnek.
-- GYIK: 7 témakör, 31 érthető kérdés-felelet; a régi, kategóriátlan bejegyzések vázlatba kerülnek (nem törlődnek).
-- A migráció megkíméli a tulajdonos kézzel írt/átírt GYIK-szövegét.
-- Az app oldalán nincs API-törő változás: a meglévő végpontok változatlanok.
+- ÚJ: a natív adminból létrehozható új KÉRDŐÍV, NYEREMÉNYJÁTÉK és KVÍZ (admin-create.php).
+- A mezők kulcsa a valódi meta-kulcs, ezért a mentés nem tud elcsúszni a WordPress-űrlaptól.
+- Validáció a szerveren is: kérdőív 2–6 válasz, nyereményjáték 3–5 válasz + helyes válasz, kvíz 1+ kérdés 2–6 válasszal és megjelölt helyes válasszal.
+- A `_huhs_prize_correct` 1-alapú (emberi) sorszámát a szerver fordítja 0-alapú indexre.
+- A haladó beállítások (jutalomsávok, idővonal, hang-borítók, „találd ki a zenét” típusok) szándékosan a WordPress adminban maradnak.
+- A nyilvános végpontok változatlanok; UID/hash továbbra sem megy ki a kliensnek.
 ```
 
 ## 5. Ellenőrzés feltöltés előtt

@@ -12,6 +12,7 @@ import '../../providers/community_provider.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../poll/poll_results_screen.dart';
 import '../voting/voting_summary_screen.dart';
+import 'admin_resource_editor_screen.dart';
 import 'prize_admin_screen.dart';
 
 class WordPressAdminScreen extends ConsumerStatefulWidget {
@@ -752,8 +753,25 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         .toList();
   }
 
-  Future<void> _createResource() async {
-    if (!_creatableSections.contains(_section)) return;
+  /// Új elem létrehozása a KÖZÖS, mező-vezérelt szerkesztővel.
+  ///
+  /// MIÉRT külön út: a mezőket a szerver írja le (`action=resource&id=0`), ezért
+  /// ugyanaz az űrlap szolgálja a létrehozást és a szerkesztést — így a kettő nem
+  /// tud szétszakadni (ezt a `tools/verify-native-admin-menu.mjs` is méri).
+  Future<void> _openResourceEditor({
+    required String type,
+    required String typeLabel,
+  }) async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) =>
+            AdminResourceEditorScreen(type: type, typeLabel: typeLabel),
+      ),
+    );
+    if (created == true && mounted) _reload();
+  }
+
+  Future<void> _createResource() async {    if (!_creatableSections.contains(_section)) return;
     final result = await _editDialog('', '');
     if (result == null || result.$1.trim().isEmpty) return;
     try {
@@ -1481,6 +1499,16 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       appBar: AppBar(
         title: const Text('HUHS Vezérlőközpont'),
         actions: [
+          // ÚJ (a tulajdonos kérése): a kvíz is létrehozható a natív adminból.
+          // A szerkesztő a KÖZÖS űrlapot használja, a mezőket a szerver írja le.
+          if (_section == 'games')
+            IconButton(
+              key: const Key('game-create'),
+              tooltip: 'Új kvíz',
+              onPressed: () =>
+                  _openResourceEditor(type: 'huhs_game', typeLabel: 'Kvíz'),
+              icon: const Icon(Icons.add),
+            ),
           if (_creatableSections.contains(_section))
             IconButton(
               tooltip: 'Új elem',

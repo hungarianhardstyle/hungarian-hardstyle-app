@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/community_provider.dart';
+import '../community/admin_resource_editor_screen.dart';
 
 /// A WordPress admin-művelet, amit a kérdőív-eredmények képernyő használ.
 ///
@@ -170,12 +171,33 @@ class _PollResultsScreenState extends ConsumerState<PollResultsScreen> {
     });
   }
 
+  Future<void> _openEditor(BuildContext context) async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const AdminResourceEditorScreen(
+          type: 'huhs_poll',
+          typeLabel: 'Kérdőív',
+        ),
+      ),
+    );
+    if (created == true && mounted) _refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kérdőív eredményei'),
         actions: [
+          // ÚJ: a tulajdonos kérése — a natív adminból **létre is** lehessen hozni
+          // kérdőívet, ne csak megnézni. Ugyanazt az űrlapot nyitja, mint a
+          // szerkesztés (a mezőket a szerver írja le).
+          IconButton(
+            key: const Key('poll-create'),
+            tooltip: 'Új kérdőív',
+            onPressed: () => _openEditor(context),
+            icon: const Icon(Icons.add),
+          ),
           IconButton(
             tooltip: 'Frissítés',
             onPressed: _refresh,

@@ -148,6 +148,53 @@ for (const section of [...openingEntries.keys()]) {
   check(`az „${section}" nyitó pont szerepel a menüben is`, sectionEntries.has(section));
 }
 
+// 5) LÉTREHOZÁS a natív adminból (kérdőív / nyereményjáték / kvíz).
+//
+// A tulajdonos kérése: „most már tudok hozzáadni kvizt, nyereményjátékot és
+// kérdőívet natív adminból?” — ez a szakasz azt méri, hogy a három útvonal
+// (szerver-mezők + app-belépési pont + a mezőtípusok ismerete) **együtt** megvan.
+const createFile = path.join(pluginDir, 'includes', 'admin-create.php');
+const editorFile = 'lib/screens/community/admin_resource_editor_screen.dart';
+check('megvan a szerveroldali létrehozó fájl (admin-create.php)', fs.existsSync(createFile), createFile);
+check('megvan az app szerkesztő képernyője', fs.existsSync(editorFile), editorFile);
+
+if (fs.existsSync(createFile) && fs.existsSync(editorFile)) {
+  const createSource = fs.readFileSync(createFile, 'utf8');
+  const editorSource = fs.readFileSync(editorFile, 'utf8');
+  const createSurfaces = {
+    huhs_poll: { source: pollScreenSource, key: 'poll-create' },
+    huhs_prize: { source: prizeScreenSource, key: 'prize-create' },
+    huhs_game: { source: screenSource, key: 'game-create' },
+  };
+  for (const [type, surface] of Object.entries(createSurfaces)) {
+    check(`a(z) „${type}" szerepel a létrehozható típusok között`, createSource.includes(`'${type}'`));
+    check(
+      `a(z) „${type}" létrehozásához van gomb az appban (${surface.key})`,
+      surface.source.includes(`Key('${surface.key}')`) && surface.source.includes(`type: '${type}'`),
+    );
+  }
+  const adminApiSource = fs.readFileSync(adminApiFile, 'utf8');
+  check(
+    'a szerver engedi az `id = 0`-t (létrehozás)',
+    adminApiSource.includes('wp_insert_post') && adminApiSource.includes('if (!$post_id) {'),
+  );
+  check('a kvízhez CSAK a kvíz-típusok választhatók', createSource.includes('HUHS_ADMIN_QUIZ_TYPES'));
+
+  // A mezőtípusok egyezése: amit a szerver küldhet, azt az appnak ismernie kell.
+  const serverTypes = new Set(
+    [...`${createSource}\n${fs.readFileSync(adminApiFile, 'utf8')}`.matchAll(/'type'\s*=>\s*'([a-z_]+)'/g)].map((match) => match[1]),
+  );
+  const appTypes = new Set([...editorSource.matchAll(/case '([a-z_]+)':/g)].map((match) => match[1]));
+  const knownElsewhere = new Set(['bool', 'text', 'url', 'email', 'int', 'ids']); // a meglévő űrlap kezeli
+  for (const type of [...serverTypes].sort()) {
+    check(
+      `a(z) „${type}" mezőtípust ismeri az app szerkesztője`,
+      appTypes.has(type) || knownElsewhere.has(type),
+      `app által ismert: ${[...appTypes].sort().join(', ')}`,
+    );
+  }
+}
+
 console.log(results.join('\n'));
 console.log('');
 console.log(`${checked - failed}/${checked} ellenőrzés rendben${failed ? ` — ${failed} HIBA` : ''}`);

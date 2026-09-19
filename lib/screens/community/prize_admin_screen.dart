@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/community_provider.dart';
+import 'admin_resource_editor_screen.dart';
 
 /// A nyereményjáték-admin WordPress admin-műveletei.
 ///
@@ -241,12 +242,32 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
     });
   }
 
+  Future<void> _openEditor(BuildContext context) async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const AdminResourceEditorScreen(
+          type: 'huhs_prize',
+          typeLabel: 'Nyereményjáték',
+        ),
+      ),
+    );
+    if (created == true && mounted) _refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nyereményjáték (admin)'),
         actions: [
+          // ÚJ: létrehozás a natív adminból (a tulajdonos kérése) — ugyanaz az
+          // űrlap, mint a szerkesztésnél, a mezőket a szerver írja le.
+          IconButton(
+            key: const Key('prize-create'),
+            tooltip: 'Új nyereményjáték',
+            onPressed: () => _openEditor(context),
+            icon: const Icon(Icons.add),
+          ),
           IconButton(
             tooltip: 'Frissítés',
             onPressed: _refresh,
