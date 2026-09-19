@@ -15,19 +15,20 @@ sha256: 4D824B24B9C071BB1A429530ABF93D5BC6803D0CC68B4C94BE0B869772CAA10D
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
-A Play Developer API-t **olvasásra** kérdezve (2026-09-19, a 334 build előtt):
+A Play Developer API-t **olvasásra** kérdezve (2026-09-19, a legfrissebb mérés):
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) + egy **üres piszkozat** | **332** — „332 (1.0.0)", kiadási szöveggel |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **335** — „335 (1.0.0)", kiadási szöveggel |
 | beta | üres | — |
 | production | üres | — |
-| internal | completed + egy üres piszkozat | 278 |
+| internal | completed + egy **üres piszkozat** | 278 |
 
-- Vagyis **a zárt teszt sávján most a 334 él** (a 333 nem ment ki), és mellette egy **befejezetlen (draft) kiadás** áll az internal sávon.
-- A feltöltött AAB-ek a Playen: 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 329, 330, 331, 332, 333, **334** (és a most feltöltendő **335**).
-- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 334 automatikusan felváltja a 332-t; a félbemaradt **piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
-- Az alkalmazott kiadási szöveg a **hosszabb (1b.) változat** volt — a rövidebb (1.) is ugyanazt mondja, csak tömörebben.
+- **A 335 a zárt teszt sávján MÁR FENT VAN** (completed), a saját — „eseményt mostantól csak szervezői szerepkörrel" — kiadási szövegével.
+- **A 335 viszont még NEM „éles":** a **production sáv üres**. A termékkör megnyitása a Play zárt teszt követelményéhez kötött (személyes fejlesztői fióknál legalább **12 tesztelő / 14 nap** folyamatos zárt teszt), ezért az „élesítés" **nem** egy újabb AAB feltöltése, hanem a production access megnyitása + kiadás a meglévő bundle-ből.
+- A feltöltött AAB-ek a Playen: 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 330, 331, 332, 333, **334**, **335**. (A **329** a legfrissebb mérés szerint **már nincs** a listán; a 333 és a 334 is fent van.)
+- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 335 automatikusan felváltotta a 334-et; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**328**) azt jelöli, hogy **a felhasználókhoz legutóbb kikerült** build a 328 volt — ezért az **1. pont** blokkja a **329–335 összes** újdonságát fedi le, nem csak a legfrissebb buildét.
 
 ## A feltöltendő AAB (mérve)
 
@@ -40,7 +41,7 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-19, a 334 build előtt)
 | SHA-256 | 4D824B24B9C071BB1A429530ABF93D5BC6803D0CC68B4C94BE0B869772CAA10D |
 
 **Miért a 335-öt kell feltenni:** ez a legfrissebb (a 334-re épül, plusz a beküldési szerepkör-szabály).
-A zárt teszt sávján most a **334** él — a 335 ezt váltja.
+**Ez a csomag már fent van a zárt teszt sávján** (mérve: alpha = completed 335), ezért **újra feltölteni nem kell** — a production kiadás ebből a bundle-ből indítható, amint a termékkör megnyílik. Új AAB csak akkor kell, ha a kód ezután változik.
 
 > **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 335 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
@@ -170,6 +171,12 @@ SHA-256 `6F758F4DD0179B584017B34EB8365DB4C0C5FD8325FBC6BBB7C2A7D292FED206`).
 - Ezt használja az új ütemezett Cloud Function (reconcileSubmissionPoints): ha egy beküldést a WordPress adminban fogadtak el, a pont utólag is megérkezik a beküldőnek.
 ```
 
+### A 2.5.8 ÉLŐBEN igazolva (2026-09-19, a tulajdonos „api feltöltve" jelzése után)
+
+- `node tools/verify-submission-payout.mjs --live` → **4/4 OK**: `apiVersion = 2.5.8`, üres `ids`-re **400**, ismeretlen azonosítóra **üres lista**, hitelesítés nélkül **401/403**. Vagyis a végpont **fent van, védett, és a helyes hibákat adja**.
+- `node tools/verify-wp-admin-endpoints.mjs` → **15/15 OK**: a meglévő admin-végpontok (nyereményjáték, kérdőív, szavazás) a pluginfrissítés után is válaszolnak, és továbbra sem adnak ki UID-t/hash-t.
+- **Őszinte korlát:** a `submission_authors` megfeleltetés élőben még **üres** (**0 rekord** — a bevezetés óta nem érkezett beküldés), ezért a WordPress-adminban elfogadott beküldés **utólagos kifizetése** valódi beküldéssel **még nincs bizonyítva**; az emulátoros teszt (18/18) és a kapu (`10/10` + önteszt `5/5`) fedi. Az első beküldés után a 30 perces kör magától fizet.
+
 ### 2.5.7 — létrehozás a natív adminból
 
 A plugin csomag: `build/huhs-mobile-api-2.5.7.zip` (45 fájl, 142,9 KB,
@@ -193,3 +200,5 @@ SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`).
 5. `node tools/verify-achievement-points.mjs` — az achievement-pontok konzisztenciája (ÉLES, csak olvas).
 6. `node tools/verify-achievement-guide.mjs` — az Achievement-útmutató szövege egyezik a kóddal (napi keretek, pontértékek, létező források).
 7. `node tools/check-play-track.mjs` — mi van tényleg a Play sávjain.
+8. `node tools/verify-submission-payout.mjs --live` — a feltöltött plugin végpontja él és védett (4/4).
+9. `node tools/verify-wp-admin-endpoints.mjs` — a plugin admin-végpontjai a frissítés után is működnek (15/15).

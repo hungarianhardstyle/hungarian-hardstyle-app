@@ -175,7 +175,18 @@ export function secret(name) {
         shell: true,
         stdio: ['ignore', 'pipe', 'ignore'],
       });
-      const value = output.trim().split(/\r?\n/).pop().trim();
+      // Az UTOLSÓ NEM ÜRES sor: a CLI a titok után üres sort is írhat, és a
+      // korábbi „utolsó sor" logika ilyenkor üres értéket adott — ezért a
+      // WordPress-jelszó olvasása **hamisan** hiúsult meg
+      // (`WORDPRESS_APPLICATION_PASSWORD titok nem olvasható`), pedig a titok a
+      // kimenet első sorában ott volt. (Több soros JSON titokra a
+      // `secretMultiline()` való.)
+      const value =
+        output
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .pop() || '';
       if (!value) throw new Error('üres érték');
       return value;
     } catch (error) {
