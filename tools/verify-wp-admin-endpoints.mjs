@@ -23,7 +23,8 @@
 import { createChecker, findForbiddenKeys, secret } from './lib/live-firebase.mjs';
 
 const SITE = 'https://hungarianhardstyle.hu/wp-json';
-const MIN_API_VERSION = '2.5.6';
+// A 2.5.7 kell a natív létrehozáshoz (admin-create.php), ezért ez a küszöb.
+const MIN_API_VERSION = '2.5.7';
 
 /** „2.5.6” >= „2.5.6” — szám szerint, nem szövegként. */
 export function apiVersionAtLeast(actual, expected) {
