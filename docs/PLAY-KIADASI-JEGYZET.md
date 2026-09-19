@@ -10,7 +10,7 @@ currentBuild: 333
 currentVersion: 1.0.0
 lastPublishedBuild: 328
 aab: build/HUHS-v1.0.0+333-release.aab
-sha256: 6DFAF7F7631427679DA61FD86A30062243E7AED0AF634F3324BEC9FDE63E9EE7
+sha256: B9469F516F1D0801DB49EB74FB0835AA62AA17304E6C007E2780C1F14CF79DA3
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -36,8 +36,8 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-19):
 | Fájl | `build/HUHS-v1.0.0+333-release.aab` |
 | Verzió | `1.0.0` (versionName) |
 | Verziókód | **333** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 79,49 MB |
-| SHA-256 | 6DFAF7F7631427679DA61FD86A30062243E7AED0AF634F3324BEC9FDE63E9EE7 |
+| Méret | 79,54 MB |
+| SHA-256 | B9469F516F1D0801DB49EB74FB0835AA62AA17304E6C007E2780C1F14CF79DA3 |
 
 **Miért a 333-at kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
 (323–333). A Play-en a legutóbb publikált build a **328**, de a zárt teszt sávján most a **332** él —
@@ -101,6 +101,7 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - Kiadvány megvásárlásáért +20 pont jár minden megvásárolt változatért (a vásárlást a Google Play ellenőrzi).
 - A jóváhagyott beküldésekért (esemény, DJ, szervező) +10 pont jár a beküldőnek, naponta legfeljebb 3 beküldésért.
 - ÚJ napi aktivitási pont: a cikkhez írt hozzászólásaidért és a chat-üzeneteidért a következő napon 1–5 pontot kapsz, amennyit a szerver az aktivitásodból számol.
+- A rang és a jelvény továbbra is gyorsítótárból jelenik meg azonnal, de szintlépésnél magától frissül.
 
 ### 332 — villogás javítása + lájkpont-jelzés
 - A hírek, a DJ-k és az események listája görgetés közben már nem villog — a képek áttűnés nélkül, azonnal megjelennek.

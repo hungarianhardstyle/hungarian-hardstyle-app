@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../providers/achievement_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/voting_provider.dart';
@@ -108,6 +109,10 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // A saját rang/jelvény figyelése: a cache marad, de szintlépésnél
+    // frissítünk (lásd `achievementRankSyncProvider`). A Kezdőlap az első fül,
+    // ezért ez a feliratkozás a teljes munkamenet alatt él.
+    ref.watch(achievementRankSyncProvider);
     final news = ref.watch(newsProvider);
     final events = ref.watch(eventsProvider);
     final activeGame = ref.watch(activeGameProvider);
