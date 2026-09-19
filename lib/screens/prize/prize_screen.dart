@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/prize.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/prize_provider.dart';
+import '../../services/vote_memory.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
 
@@ -53,6 +54,14 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
       final result = await ref
           .read(prizeServiceProvider)
           .play(prizeId: prize.id, answerIndex: selected);
+      // A most rogzitett jatek eredmenye (a helyesseggel egyutt) a legfrissebb
+      // ismert allapot: elmentjuk, hogy a kovetkezo megnyitasnal azonnal,
+      // teves ítélet nelkul latszodjon.
+      await VoteMemory.markPrizePlayed(
+        ref.read(currentUidProvider),
+        prize.id,
+        result,
+      );
       if (!mounted) return;
       setState(() {
         _submitting = false;

@@ -21,7 +21,7 @@ const {
   assertSucceeds,
   assertFails,
 } = require('@firebase/rules-unit-testing');
-const { doc, setDoc, updateDoc, deleteDoc, Timestamp } = require('firebase/firestore');
+const { doc, setDoc, updateDoc, deleteDoc, getDoc, Timestamp } = require('firebase/firestore');
 
 const PROJECT_ID = 'demo-huhs';
 const OWNER_UID = 'owner-uid';
@@ -255,4 +255,60 @@ test('az ADMIN bárki üzenetét szerkesztheti és törölheti', async () => {
     updateDoc(doc(db, 'live_feed_posts', 'post-e'), { text: 'Admin javította' }),
   );
   await assertSucceeds(deleteDoc(doc(db, 'live_feed_posts', 'post-e')));
+});
+
+/* ------------------------------------------------------------------ */
+/* A TÖRÖLT FIÓK jelzője                                               */
+/* ------------------------------------------------------------------ */
+
+/*
+ * A tulajdonos jelzése: *„adminként nem törli az usert, googleval regelt"*.
+ *
+ * Élő mérés szerint a törlés LEFUTOTT (a függvény 200-at adott, az Auth-fiók és
+ * a profil is eltűnt), a Google-fiók viszont egy új bejelentkezéssel UGYANAZZAL a
+ * UID-dal újra létrejön. Ezért a törlést a `deleted_user_ids` jelzővel kell
+ * felismerni — ehhez viszont a törölt felhasználónak a SAJÁT sorát olvasnia kell
+ * tudnia, különben az app nem tudja megmondani, mi történt.
+ *
+ * Ez a négy teszt pontosan ezt a négy állítást méri.
+ */
+
+const USER_A = 'user-deleted-a';
+const USER_B = 'user-deleted-b';
+
+beforeEach(async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'deleted_user_ids', USER_A), {
+      deletedAt: Timestamp.now(),
+    });
+  });
+});
+
+test('a törölt felhasználó a SAJÁT törlés-jelzőjét el tudja olvasni', async () => {
+  const db = firestoreFor(USER_A, 'a@example.com');
+  const snapshot = await assertSucceeds(
+    getDoc(doc(db, 'deleted_user_ids', USER_A)),
+  );
+  assert.equal(snapshot.exists(), true, 'a jelzőnek látszania kell');
+});
+
+test('más felhasználó törlés-jelzője NEM olvasható', async () => {
+  const db = firestoreFor(USER_B, 'b@example.com');
+  await assertFails(getDoc(doc(db, 'deleted_user_ids', USER_A)));
+});
+
+test('a törlés-jelzőt kliensből írni sem lehet (sem törölni)', async () => {
+  const db = firestoreFor(USER_B, 'b@example.com');
+  await assertFails(setDoc(doc(db, 'deleted_user_ids', USER_B), { deletedAt: Timestamp.now() }));
+  await assertFails(deleteDoc(doc(db, 'deleted_user_ids', USER_B)));
+});
+
+test('a törölt felhasználó profilja közben tiltott marad (isRegistered)', async () => {
+  // Ez a lényeg: a törölt fiók MINDEN `isRegistered()` szabálytól elesik, ezért a
+  // kliensnek a jelzőből kell megértenie, hogy ki kell jelentkeztetni — enélkül a
+  // felhasználó értelmezhetetlen hibákat kap.
+  const db = firestoreFor(USER_A, 'a@example.com');
+  await assertFails(
+    setDoc(doc(db, 'community_profiles', USER_A), profilePayload('Teszt Törölt')),
+  );
 });

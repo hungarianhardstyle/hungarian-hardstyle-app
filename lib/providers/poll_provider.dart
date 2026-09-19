@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/poll.dart';
 import '../services/poll_service.dart';
+import '../services/vote_memory.dart';
+import 'community_provider.dart';
 
 final pollServiceProvider = Provider<PollService>((ref) => PollService());
 
@@ -34,11 +38,51 @@ final activePollProvider = FutureProvider<HuhsPoll?>((ref) async {
 /// maga a kerdőív (lefele huzas, frissites ikon, app visszateres, a képernyő
 /// megnyitasa), ezert nem tud beragadni.
 ///
+/// **A tulajdonos jelzése:** *„Kérdőívnél elsőre picit sokára tölti be, hogy már
+/// kitöltöttem"*. A válasz csak egy három lépcsős út végén derül ki
+/// (app → Cloud Function → WordPress), ezért a **legutóbbi ismert állapotot a
+/// telefon megjegyzi** (`VoteMemory`): ha eszerint már szavaztál, az **azonnal**
+/// látszik, és a szerver válaszát a háttérben ellenőrizzük. Ha a szerver azt
+/// mondja, mégsem szavaztál, a jelzést töröljük és a felület visszavált a
+/// szavazólapra — így soha nem marad el egy szavazat.
+///
 /// A szavazat vegso egyedisege tovabbra is a szerveren van (a WordPress
 /// `add_post_meta(..., true)` egyedi sora), ezert egy elavult „nem szavaztal"
 /// valasz sem ad masodik érvényes szavazatot: a szerver `alreadyVoted`-del
 /// valaszol.
 final hasVotedProvider = FutureProvider.family<bool, int>((ref, pollId) async {
   if (pollId < 1) return false;
-  return ref.watch(pollServiceProvider).hasVoted(pollId);
+  final uid = ref.watch(currentUidProvider);
+  // A háttérellenőrzés a képernyő bezárása UTÁN is befejeződhet; ilyenkor nem
+  // szabad újraszámolni (a provider „loading" állapotban szűnne meg, ami hibát
+  // dob a lezárásnál).
+  var disposed = false;
+  ref.onDispose(() => disposed = true);
+  if (await VoteMemory.isPollVoted(uid, pollId)) {
+    // Azonnal a „már szavaztál" állapot, és közben ellenőrizzük a szervert.
+    unawaited(_revalidateVoted(ref, pollId, uid, () => disposed));
+    return true;
+  }
+  final voted = await ref.watch(pollServiceProvider).hasVoted(pollId);
+  if (voted) await VoteMemory.markPollVoted(uid, pollId);
+  return voted;
 });
+
+/// A háttérellenőrzés: ha a szerver szerint mégsem szavaztál, a mentett jelzést
+/// töröljük és a providert újraszámoljuk (ekkor jön a szavazólap).
+Future<void> _revalidateVoted(
+  Ref ref,
+  int pollId,
+  String? uid,
+  bool Function() isDisposed,
+) async {
+  try {
+    final voted = await ref.read(pollServiceProvider).hasVoted(pollId);
+    if (voted) return;
+    await VoteMemory.clearPollVoted(uid, pollId);
+    if (isDisposed()) return;
+    ref.invalidateSelf();
+  } catch (_) {
+    // Hálózati hiba: a mentett állapot marad, a következő megnyitás újrapróbálja.
+  }
+}

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:hungarian_hardstyle_app/models/poll.dart';
 import 'package:hungarian_hardstyle_app/providers/community_provider.dart';
@@ -111,6 +112,14 @@ Widget _app(PollService fake, {bool registered = true, bool admin = false}) {
 
 void main() {
   final entry = find.byKey(const Key('poll-entry'));
+
+  setUp(() {
+    // A „már szavaztál" állapot helyi emlékezete (VoteMemory) SharedPreferences-t
+    // használ. Mock nélkül a plugin-hívás nem fejeződik be a teszt-környezetben,
+    // ezért a képernyő „töltés" állapotban maradna (pumpAndSettle timeout).
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+  });
 
   testWidgets('nyitott kerdőívnel megjelenik a kerdőív sor, a kerdessel', (
     tester,

@@ -297,6 +297,22 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // A torolt fiokok jelzoje. A Google-fiokkal regisztralt felhasznalo Auth-fiokja
+    // egy uj bejelentkezessel UJRA letrejon (ugyanazzal a UID-dal), ezert az Auth
+    // hiba nem jelzi a torlest — ezt a szerveroldali jelzot kell nezni.
+    //
+    // A felhasznalo KIZAROLAG a SAJAT sorat olvashatja (hogy az app meg tudja
+    // mondani: „ez a fiok torolve lett"), es kliensbol SENKI nem irhatja.
+    // Szandekosan `get`, nem `list`: a teljes lista nem kerdezheto le.
+    //
+    // FIGYELEM: itt SZANDEKOSAN nem `isRegistered()` all, mert az maga is nézi a
+    // `deleted_user_ids`-et — vagyis pont a torolt felhasznalotol tagadna meg a
+    // valaszt, es az app nem tudna megmondani, mi tortent.
+    match /deleted_user_ids/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list, write: if false;
+    }
+
     // Game attempts and aggregate results are written only by Cloud
     // Functions. The client can submit through the callable, never directly
     // to these collections.

@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:hungarian_hardstyle_app/models/poll.dart';
+import 'package:hungarian_hardstyle_app/providers/community_provider.dart';
 import 'package:hungarian_hardstyle_app/providers/poll_provider.dart';
 import 'package:hungarian_hardstyle_app/services/poll_service.dart';
 
@@ -23,6 +27,10 @@ class _FakePollService extends PollService {
   int statusCalls = 0;
   int voteCalls = 0;
 
+  /// Ha be van állítva, a státusz-kérés **nem fejeződik be**, amíg ezt meg nem
+  /// oldjuk. Ezzel mérhető, hogy a felület nem VÁR a szerverre.
+  Completer<bool>? statusGate;
+
   @override
   Future<HuhsPoll?> activePoll({
     bool forceRefresh = false,
@@ -37,6 +45,8 @@ class _FakePollService extends PollService {
   @override
   Future<bool> hasVoted(int pollId) async {
     statusCalls += 1;
+    final gate = statusGate;
+    if (gate != null) return gate.future;
     return voted;
   }
 
@@ -58,15 +68,25 @@ const _poll = HuhsPoll(
   ],
 );
 
-ProviderContainer _containerWith(_FakePollService fake) {
+ProviderContainer _containerWith(_FakePollService fake, {String? uid = 'teszt-uid'}) {
   final container = ProviderContainer(
-    overrides: [pollServiceProvider.overrideWithValue(fake)],
+    overrides: [
+      pollServiceProvider.overrideWithValue(fake),
+      // A „már szavaztál" helyi emlékezet kulcsához kell a UID. Szűk provider,
+      // ezért Firebase nélkül felülírható.
+      currentUidProvider.overrideWithValue(uid),
+    ],
   );
   addTearDown(container.dispose);
   return container;
 }
 
 void main() {
+  setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+  });
+
   test('a nyitott kerdőívet a szolgaltatastol keri le', () async {
     final fake = _FakePollService(_poll);
     final container = _containerWith(fake);
@@ -173,5 +193,88 @@ void main() {
 
     expect(await container.read(hasVotedProvider(0).future), isFalse);
     expect(fake.statusCalls, 0);
+  });
+
+  /* ---------------------------------------------------------------- */
+  /* Azonnali „már szavaztál" állapot (a tulajdonos jelzése)          */
+  /* ---------------------------------------------------------------- */
+
+  /// A mentett jelzést ugyanúgy írjuk, ahogy az app is teszi.
+  Future<void> seedVoted(String uid, int pollId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('huhs.voted.poll.$uid.$pollId', true);
+  }
+
+  test(
+    'mentett szavazatnál a válasz AZONNAL jön, a szerver megkérdezése nélkül',
+    () async {
+      // A tulajdonos jelzése: *„Kérdőívnél elsőre picit sokára tölti be, hogy már
+      // kitöltöttem"*. A válasz három lépcsős úton derül ki (app → Cloud Function
+      // → WordPress), ezért a legutóbbi ismert állapot a telefonról jön.
+      //
+      // A bizonyítás: a szerver kérése **soha nem fejeződik be** (statusGate),
+      // a provider mégis azonnal válaszol. Ha a mentett jelzés nem működne, ez a
+      // teszt örökre elakadna (a timeout buktatja).
+      await seedVoted('teszt-uid', 12694);
+      final fake = _FakePollService(_poll, voted: true)
+        ..statusGate = Completer<bool>();
+      final container = _containerWith(fake);
+
+      final value = await container
+          .read(hasVotedProvider(12694).future)
+          .timeout(const Duration(seconds: 2));
+
+      expect(value, isTrue);
+      expect(
+        fake.statusCalls,
+        lessThanOrEqualTo(1),
+        reason: 'a háttérellenőrzés legfeljebb egyszer indul',
+      );
+    },
+  );
+
+  test('a mentett jelzés csak a SAJÁT fiókra érvényes', () async {
+    await seedVoted('mas-felhasznalo', 12694);
+    final fake = _FakePollService(_poll);
+    final container = _containerWith(fake, uid: 'teszt-uid');
+
+    expect(await container.read(hasVotedProvider(12694).future), isFalse);
+    expect(fake.statusCalls, 1, reason: 'más fiók jelzése nem használható fel');
+  });
+
+  test('a háttérellenőrzés törli a mentett jelzést, ha a szerver nem szavazott', () async {
+    // Ha a szerver szerint mégsem szavazott, a jelzés nem maradhat meg: egy
+    // elavult „már szavaztál" elrejtené a szavazólapot.
+    await seedVoted('teszt-uid', 12694);
+    final fake = _FakePollService(_poll, voted: false);
+    final container = _containerWith(fake);
+
+    expect(await container.read(hasVotedProvider(12694).future), isTrue);
+
+    // A háttérellenőrzés lefut és megkérdezi a szervert.
+    for (var i = 0; i < 10 && fake.statusCalls == 0; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(fake.statusCalls, 1, reason: 'a háttérellenőrzés megkérdezi a szervert');
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(
+      prefs.getBool('huhs.voted.poll.teszt-uid.12694'),
+      isNull,
+      reason: 'a téves mentett jelzést törölni kell',
+    );
+
+    // Újraszámolás után a szavazólap jön (nem „már szavaztál").
+    container.invalidate(hasVotedProvider(12694));
+    expect(await container.read(hasVotedProvider(12694).future), isFalse);
+  });
+
+  test('vendég (UID nélkül) nem használ mentett jelzést', () async {
+    await seedVoted('teszt-uid', 12694);
+    final fake = _FakePollService(_poll, voted: false);
+    final container = _containerWith(fake, uid: null);
+
+    expect(await container.read(hasVotedProvider(12694).future), isFalse);
+    expect(fake.statusCalls, 1);
   });
 }

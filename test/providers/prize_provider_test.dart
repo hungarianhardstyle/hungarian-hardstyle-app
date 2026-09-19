@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:hungarian_hardstyle_app/models/prize.dart';
+import 'package:hungarian_hardstyle_app/providers/community_provider.dart';
 import 'package:hungarian_hardstyle_app/providers/prize_provider.dart';
 import 'package:hungarian_hardstyle_app/services/prize_service.dart';
 /// A nyeremenyjatek PROVIDEREI: a jatek es a sajat jatszott-allapot a
@@ -28,6 +32,10 @@ class _FakePrizeService extends PrizeService {
   bool? lastBypassCache;
   int? lastPrizeId;
 
+  /// Ha be van állítva, a státusz-kérés **nem fejeződik be**, amíg ezt meg nem
+  /// oldjuk. Ezzel mérhető, hogy a felület nem VÁR a szerverre.
+  Completer<HuhsPrizePlay>? statusGate;
+
   @override
   Future<HuhsPrize?> activePrize({
     bool forceRefresh = false,
@@ -43,6 +51,8 @@ class _FakePrizeService extends PrizeService {
   Future<HuhsPrizePlay> playStatus(int prizeId) async {
     statusCalls += 1;
     lastPrizeId = prizeId;
+    final gate = statusGate;
+    if (gate != null) return gate.future;
     return status;
   }
 
@@ -56,15 +66,39 @@ class _FakePrizeService extends PrizeService {
   }
 }
 
-ProviderContainer _container(PrizeService service) {
+ProviderContainer _container(PrizeService service, {String? uid = 'teszt-uid'}) {
   final container = ProviderContainer(
-    overrides: [prizeServiceProvider.overrideWithValue(service)],
+    overrides: [
+      prizeServiceProvider.overrideWithValue(service),
+      // A „már játszottam" helyi emlékezet kulcsához kell a UID. Szűk provider,
+      // ezért Firebase nélkül felülírható.
+      currentUidProvider.overrideWithValue(uid),
+    ],
   );
   addTearDown(container.dispose);
   return container;
 }
 
 void main() {
+  setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  /// A mentett játékeredményt ugyanúgy írjuk, ahogy az app is teszi.
+  Future<void> seedPlayed(
+    String uid,
+    int prizeId, {
+    bool correct = false,
+    int? answerIndex,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'huhs.played.prize.$uid.$prizeId',
+      '{"played":true,"correct":$correct,"answerIndex":$answerIndex}',
+    );
+  }
+
   group('activePrizeProvider', () {
     test('a nyitott jatekot a szerverrol keri le, cache-kikerulessel', () async {
       final service = _FakePrizeService(prize: _openPrize);
@@ -142,6 +176,67 @@ void main() {
 
       expect(play.played, isFalse);
       expect(service.statusCalls, 0);
+    });
+
+    /* -------------------------------------------------------------- */
+    /* Azonnali „már játszottam" állapot (a tulajdonos jelzése)       */
+    /* -------------------------------------------------------------- */
+
+    test(
+      'mentett eredménynél a válasz AZONNAL jön, a szerver megkérdezése nélkül',
+      () async {
+        // A tulajdonos jelzése: *„Kvíznél elsőre kicsit sokára tölti be, hogy már
+        // játszottam"*. A bizonyítás: a szerver kérése **soha nem fejeződik be**
+        // (statusGate), a provider mégis azonnal válaszol.
+        await seedPlayed('teszt-uid', 777, correct: true, answerIndex: 1);
+        final service = _FakePrizeService(prize: _openPrize)
+          ..statusGate = Completer<HuhsPrizePlay>();
+        final container = _container(service);
+
+        final play = await container
+            .read(prizePlayProvider(777).future)
+            .timeout(const Duration(seconds: 2));
+
+        expect(play.played, isTrue);
+        expect(
+          play.correct,
+          isTrue,
+          reason: 'a mentett ítélet is megmarad, nem csak a „játszott" tény',
+        );
+        expect(play.answerIndex, 1);
+      },
+    );
+
+    test('a mentett eredmény csak a SAJÁT fiókra érvényes', () async {
+      await seedPlayed('mas-felhasznalo', 777, correct: true);
+      final service = _FakePrizeService(prize: _openPrize);
+
+      final play = await _container(
+        service,
+        uid: 'teszt-uid',
+      ).read(prizePlayProvider(777).future);
+
+      expect(play.played, isFalse);
+      expect(service.statusCalls, 1);
+    });
+
+    test('a háttérellenőrzés törli a mentett eredményt, ha a szerver nem játszott', () async {
+      await seedPlayed('teszt-uid', 777, correct: true, answerIndex: 1);
+      final service = _FakePrizeService(prize: _openPrize);
+      final container = _container(service);
+
+      expect((await container.read(prizePlayProvider(777).future)).played, isTrue);
+
+      for (var i = 0; i < 10 && service.statusCalls == 0; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      expect(service.statusCalls, 1);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('huhs.played.prize.teszt-uid.777'), isNull);
+
+      container.invalidate(prizePlayProvider(777));
+      expect((await container.read(prizePlayProvider(777).future)).played, isFalse);
     });
   });
 

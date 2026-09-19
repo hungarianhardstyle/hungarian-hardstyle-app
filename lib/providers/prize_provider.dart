@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/prize.dart';
 import '../services/prize_service.dart';
+import '../services/vote_memory.dart';
+import 'community_provider.dart';
 
 final prizeServiceProvider = Provider<PrizeService>((ref) => PrizeService());
 
@@ -25,6 +29,14 @@ final activePrizeProvider = FutureProvider<HuhsPrize?>((ref) async {
 /// Providerban van (nem a widget allapotaban), ezert minden képernyő-megnyitas,
 /// frissites es jatek utan ujra a szerverhez megy — így nem tud beragadni a
 /// „nem jatszottal" valasz. A jatekszabaly szerint egy fiok egyszer jatszik.
+///
+/// **A tulajdonos jelzése:** *„Kvíznél elsőre kicsit sokára tölti be, hogy már
+/// játszottam"*. A válasz három lépcsős út végén derül ki (app → Cloud Function
+/// → WordPress), ezért a **legutóbbi ismert eredményt a telefon megjegyzi**
+/// (`VoteMemory`) — a `correct` és a választott index is, különben a visszatérő
+/// játékos egy pillanatra rossz ítéletet látna. A szerver válaszát a háttérben
+/// ellenőrizzük; ha eszerint mégsem játszottál, a jelzést töröljük és a
+/// felület visszavált a válaszlehetőségekre.
 final prizePlayProvider = FutureProvider.family<HuhsPrizePlay, int>((
   ref,
   prizeId,
@@ -32,5 +44,41 @@ final prizePlayProvider = FutureProvider.family<HuhsPrizePlay, int>((
   if (prizeId < 1) {
     return const HuhsPrizePlay(played: false, correct: false);
   }
-  return ref.watch(prizeServiceProvider).playStatus(prizeId);
+  final uid = ref.watch(currentUidProvider);
+  // A háttérellenőrzés a képernyő bezárása UTÁN is befejeződhet; ilyenkor nem
+  // szabad újraszámolni (a provider „loading" állapotban szűnne meg, ami hibát
+  // dob a lezárásnál).
+  var disposed = false;
+  ref.onDispose(() => disposed = true);
+  final remembered = await VoteMemory.prizePlay(uid, prizeId);
+  if (remembered != null && remembered.played) {
+    unawaited(_revalidatePlayed(ref, prizeId, uid, () => disposed));
+    return remembered;
+  }
+  final play = await ref.watch(prizeServiceProvider).playStatus(prizeId);
+  if (play.played) await VoteMemory.markPrizePlayed(uid, prizeId, play);
+  return play;
 });
+
+/// A háttérellenőrzés: ha a szerver szerint mégsem játszottál, a mentett
+/// eredményt töröljük és a providert újraszámoljuk.
+Future<void> _revalidatePlayed(
+  Ref ref,
+  int prizeId,
+  String? uid,
+  bool Function() isDisposed,
+) async {
+  try {
+    final play = await ref.read(prizeServiceProvider).playStatus(prizeId);
+    if (play.played) {
+      // Időközben játszott (másik eszközön), a mentett eredmény frissül.
+      await VoteMemory.markPrizePlayed(uid, prizeId, play);
+      return;
+    }
+    await VoteMemory.clearPrizePlayed(uid, prizeId);
+    if (isDisposed()) return;
+    ref.invalidateSelf();
+  } catch (_) {
+    // Hálózati hiba: a mentett állapot marad, a következő megnyitás újrapróbálja.
+  }
+}

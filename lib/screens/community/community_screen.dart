@@ -612,16 +612,36 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                                       final cleanupStatus = await service
                                           .deleteUser(doc.id);
                                       if (!context.mounted) return;
+                                      // A tulajdonos jelzése: *„adminként nem törli az
+                                      // usert"*. A törlés a szerveren valóban lefutott,
+                                      // ezért mostantól VISSZA IS ELLENŐRIZZÜK (szerverről,
+                                      // nem cache-ből) — így a válasz egyértelmű.
+                                      bool? stillThere;
+                                      try {
+                                        final snapshot = await service.firestore
+                                            .collection('community_profiles')
+                                            .doc(doc.id)
+                                            .get(
+                                              const GetOptions(
+                                                source: Source.server,
+                                              ),
+                                            );
+                                        stillThere = snapshot.exists;
+                                      } catch (_) {
+                                        // Hálózati hiba: nem állítjuk, hogy sikerült, de
+                                        // nem is kiabálunk feleslegesen hibát.
+                                        stillThere = null;
+                                      }
+                                      if (!context.mounted) return;
+                                      final message = stillThere == true
+                                          ? 'A fiók törlése nem fejeződött be a szerveren. Próbáld újra.'
+                                          : cleanupStatus == 'cleanup_pending'
+                                          ? 'A felhasználó törölve; a képek háttértakarítása folyamatban van.'
+                                          : 'A felhasználó törlése sikerült.';
                                       ScaffoldMessenger.of(context)
                                         ..hideCurrentSnackBar()
                                         ..showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              cleanupStatus == 'cleanup_pending'
-                                                  ? 'A felhasználó törölve; a képek háttértakarítása folyamatban van.'
-                                                  : 'A felhasználó törlése sikerült.',
-                                            ),
-                                          ),
+                                          SnackBar(content: Text(message)),
                                         );
                                     } catch (error) {
                                       if (!context.mounted) return;

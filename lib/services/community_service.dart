@@ -2977,6 +2977,19 @@ class CommunityService {
         'emailVerifiedChanged': false,
       };
     }
+    // A Google-fiokkal (vagy barmilyen kulso szolgaltatoval) regisztralt
+    // felhasznalo Auth-fiokja egy UJ bejelentkezessel ujra letrejon, UGYANAZZAL a
+    // UID-dal. Ezert a torlest nem az Auth hibaja jelzi, hanem a szerveroldali
+    // `deleted_user_ids` jelzo. Enelkul a torolt felhasznalo visszajott, es a
+    // felulet erthetetlen hibakat dobalt (minden `isRegistered()` szabaly tiltja).
+    if (await isAccountMarkedDeleted(user.uid)) {
+      await _clearDeletedAccountState(user.uid);
+      return {
+        'active': false,
+        'deleted': true,
+        'emailVerifiedChanged': false,
+      };
+    }
     final refreshed = auth.currentUser;
     final emailVerifiedChanged =
         !wasVerified && refreshed?.emailVerified == true;
@@ -2991,6 +3004,25 @@ class CommunityService {
       'active': refreshed != null,
       'emailVerifiedChanged': emailVerifiedChanged,
     };
+  }
+
+  /// Igaz, ha a szerver a felhasznalot toroltkent tartja nyilvan.
+  ///
+  /// A `deleted_user_ids` sor kizarolag a sajat UID-ra olvashato (lasd
+  /// `firestore.rules`). Hálózati vagy jogosultsagi hiba eseten **false**-t adunk:
+  /// egy atmeneti hiba soha nem zárhat ki egy legitim felhasznalot.
+  Future<bool> isAccountMarkedDeleted(String uid) async {
+    final trimmed = uid.trim();
+    if (trimmed.isEmpty) return false;
+    try {
+      final snapshot = await firestore
+          .collection('deleted_user_ids')
+          .doc(trimmed)
+          .get();
+      return snapshot.exists;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> _cacheProfileRole() async {

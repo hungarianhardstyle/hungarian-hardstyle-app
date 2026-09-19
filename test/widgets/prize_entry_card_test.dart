@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:hungarian_hardstyle_app/models/prize.dart';
 import 'package:hungarian_hardstyle_app/providers/community_provider.dart';
@@ -139,6 +140,14 @@ Widget _app(PrizeService fake, {bool registered = true}) {
 
 void main() {
   final entry = find.byKey(const Key('prize-entry'));
+
+  setUp(() {
+    // A „már játszottam" állapot helyi emlékezete (VoteMemory) SharedPreferences-t
+    // használ. Mock nélkül a plugin-hívás nem fejeződik be a teszt-környezetben,
+    // ezért a képernyő „töltés" állapotban maradna (pumpAndSettle timeout).
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+  });
 
   testWidgets('nyitott jateknal megjelenik a sor, a kerdessel', (tester) async {
     await tester.pumpWidget(_app(_FakePrizeService(prize: _openPrize)));

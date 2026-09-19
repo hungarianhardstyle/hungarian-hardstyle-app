@@ -839,11 +839,19 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
 
   Future<void> _deleteUser(Map<String, dynamic> item) async {
     final id = (item['id'] as num?)?.toInt() ?? 0;
-    if (id == 0 ||
-        !await _confirm(
-          'Felhasználó törlése',
-          'Biztosan törlöd ezt a WordPress-felhasználót? A művelet nem vonható vissza.',
-        )) {
+    if (id == 0) {
+      // Korabban ez NEMAN visszatert: a tulajdonos azt hitte, „nem torli a usert",
+      // holott a sorhoz nem is tartozott torolheto WordPress-azonosito.
+      _message(
+        'Ez a sor nem törölhető innen (nincs WordPress-felhasználó-azonosítója). '
+        'Az app-fiókokat a Közösségi adminisztrációban lehet törölni.',
+      );
+      return;
+    }
+    if (!await _confirm(
+      'Felhasználó törlése',
+      'Biztosan törlöd ezt a WordPress-felhasználót? A művelet nem vonható vissza.',
+    )) {
       return;
     }
     try {

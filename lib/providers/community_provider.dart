@@ -12,6 +12,18 @@ final communityAuthProvider = StreamProvider<User?>((ref) {
   return ref.watch(communityServiceProvider).auth.userChanges();
 });
 
+/// Az éppen bejelentkezett (nem névtelen) fiók UID-ja, vagy null.
+///
+/// **Szűk provider, és ez szándékos:** a helyi emlékezet kulcsa (`VoteMemory`)
+/// ezt használja, és így tesztben Firebase nélkül felülírható. A „már
+/// szavaztál / már játszottál" állapot azonnali kijelzéséhez kell, mert a
+/// mentett jelzés csak a **saját** fiókra érvényes.
+final currentUidProvider = Provider<String?>((ref) {
+  final user = ref.watch(communityAuthProvider).valueOrNull;
+  if (user == null || user.isAnonymous) return null;
+  return user.uid;
+});
+
 final communityPostsProvider = StreamProvider<List<CommunityPost>>((ref) {
   return ref.watch(communityServiceProvider).watchPosts();
 });

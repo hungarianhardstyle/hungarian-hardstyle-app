@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/poll.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/poll_provider.dart';
+import '../../services/vote_memory.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
 import 'poll_results_screen.dart';
@@ -57,6 +58,12 @@ class _PollScreenState extends ConsumerState<PollScreen> {
       final alreadyVoted = await ref
           .read(pollServiceProvider)
           .vote(pollId: poll.id, optionIndex: selected);
+      // A most leadott szavazat a legfrissebb ismert allapot: elmentjuk, hogy a
+      // kovetkezo megnyitasnal azonnal latszodjon (ne kelljen a szerverre varni).
+      await VoteMemory.markPollVoted(
+        ref.read(currentUidProvider),
+        poll.id,
+      );
       if (!mounted) return;
       setState(() {
         _voted = true;
