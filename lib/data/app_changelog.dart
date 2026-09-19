@@ -38,12 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
-    build: 333,
+    build: 334,
     changes: [
-      'Az Achievement-útmutató (Több → Achievementek) pontos leírásokat kapott: a napi keretek (lájk 3, komment 3, beküldés 3), a lájkpont véglegessége és a lemondásnál elvesző esemény-pont is látszik.',
-      'A pontrendszer két új lehetőséggel bővült: kiadvány megvásárlásáért +20 pont jár minden megvásárolt változatért, a jóváhagyott beküldésekért (esemény, DJ, szervező) pedig +10 pont a beküldőnek.',
-      'ÚJ: napi aktivitási pont — ha hozzászólsz egy cikkhez vagy írsz a chatbe, a következő napon 1–5 pontot kapsz, amennyit a szerver az aktivitásodból számol.',
-      'A rangod és a jelvényed továbbra is azonnal, gyorsítótárból jelenik meg — de ha szintet lépsz, a frissítés magától megtörténik, nem kell újranyitni az appot.',
+      'Az Achievement-útmutató (Több → Achievementek) pontos leírásokat kapott: a napi keretek (lájk 3, komment 3, beküldés 3), a lájkpont véglegessége, és az is, hogy az esemény/meetup pont eseményenként egyszer jár, de lemondásnál elvész.',
+      'A szintek és jelvények listája mostantól a szerverről jön, ezért azonnal követi, ha az adminban átírnak egy küszöböt vagy nevet.',
+      'Kiadvány megvásárlásáért +20 pont jár minden megvásárolt változatért (a vásárlást a Google Play ellenőrzi).',
+      'A jóváhagyott beküldésekért (esemény, DJ, szervező) +10 pont jár a beküldőnek, naponta legfeljebb 3 beküldésért.',
+      'ÚJ napi aktivitási pont: a cikkhez írt hozzászólásaidért és a chat-üzeneteidért a következő napon 1–5 pontot kapsz, amennyit a szerver az aktivitásodból számol.',
+      'A rangod és a jelvényed szintlépésnél magától frissül, nem kell újranyitni az appot.',
     ],
   ),
   AppReleaseNotes(

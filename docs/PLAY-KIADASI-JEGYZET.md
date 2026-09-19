@@ -6,45 +6,47 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 333
+currentBuild: 334
 currentVersion: 1.0.0
 lastPublishedBuild: 328
-aab: build/HUHS-v1.0.0+333-release.aab
-sha256: B9469F516F1D0801DB49EB74FB0835AA62AA17304E6C007E2780C1F14CF79DA3
+aab: build/HUHS-v1.0.0+334-release.aab
+sha256: 5834831C474722C89BF2B5FA938AA2BC0E6E36BDFE9EDE7A002BD468F490B228
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
-A Play Developer API-t **olvasásra** kérdezve (2026-09-19):
+A Play Developer API-t **olvasásra** kérdezve (2026-09-19, a 334 build előtt):
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **332** — „332 (1.0.0)", kiadási szöveggel |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) + egy **üres piszkozat** | **332** — „332 (1.0.0)", kiadási szöveggel |
 | beta | üres | — |
 | production | üres | — |
-| internal | completed | 278 (+ egy üres draft) |
+| internal | completed + egy üres piszkozat | 278 |
 
-- Vagyis **a 332 élesben van a zárt teszt sávján** — ez az, amit a tesztelők megkapnak.
-- A feltöltött AAB-ek a Playen: 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 328, 329, 330, 331, **332**.
-- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 332 automatikusan felváltotta a korábbit; külön „leszedni" nem kell semmit.
-- Az alkalmazott kiadási szöveg a **hosszabb (1b.) változat** volt (a mérés szerint az került fel) — a rövidebb (1.) is ugyanazt mondja, csak tömörebben.
+- Vagyis **a zárt teszt sávján most a 332 él**, és mellette egy **befejezetlen (draft) kiadás** áll — a **333 nem ment ki** egyetlen sávra sem (ezt a mérés igazolta: se az alpha, se az internal nem hozta).
+- **A 333-at tehát semmi nem váltja a tesztelőknél**: a **334** viszi mindazt, amit a 333 tartalmazott volna.
+- A feltöltött AAB-ek a Playen: 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 328, 329, 330, 331, **332** (és a most feltöltendő **334**).
+- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 334 automatikusan felváltja a 332-t; a félbemaradt **piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
+- Az alkalmazott kiadási szöveg a **hosszabb (1b.) változat** volt — a rövidebb (1.) is ugyanazt mondja, csak tömörebben.
 
 ## A feltöltendő AAB (mérve)
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+333-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+334-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **333** (a merge-elt release manifestből visszaolvasva) |
+| Verziókód | **334** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 79,54 MB |
-| SHA-256 | B9469F516F1D0801DB49EB74FB0835AA62AA17304E6C007E2780C1F14CF79DA3 |
+| SHA-256 | 5834831C474722C89BF2B5FA938AA2BC0E6E36BDFE9EDE7A002BD468F490B228 |
 
-**Miért a 333-at kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
-(323–333). A Play-en a legutóbb publikált build a **328**, de a zárt teszt sávján most a **332** él —
-a 333 ezt váltja.
+**Miért a 334-et kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
+(323–334). A Play-en a legutóbb publikált build a **328**, a zárt teszt sávján pedig a **332** él —
+a **333 nem ment ki** (egy félbemaradt piszkozat maradt helyette), ezért a tesztelők a **334-gyel**
+kapják meg az Achievement-útmutató javítását, a három új pontforrást és a rang-frissítést.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 333 mindegyiket tartalmazza, plusz az
-> útmutató javítását és a három új pontforrást.
+> **FONTOS:** a **korábbi AAB-eket (köztük a 333-at) ne töltsd fel** — a 334 mindegyiket tartalmazza,
+> és a 333-nál kisebb verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.5.7** (`build/huhs-mobile-api-2.5.7.zip`) — **ezt is fel kell tölteni**, mert a
 létrehozás a plugin új végpontjait használja (a 2.5.6-tal a mentés „nem engedélyezett"-et adna).
@@ -97,13 +99,16 @@ bemásolni (mert a 329 nem ment ki).
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
 
-### 333 — pontos Achievement-útmutató + három új pontforrás
+### 334 — pontos Achievement-útmutató, három új pontforrás, rang-frissítés
 - Az Achievement-útmutató (Több → Achievementek) pontos leírásokat kapott: a napi keretek (lájk 3, komment 3, beküldés 3), a lájkpont véglegessége, és az is, hogy az esemény/meetup pont **eseményenként egyszer** jár, de lemondásnál elvész.
 - A szintek és jelvények listája mostantól a szerverről jön, ezért azonnal követi, ha az adminban átírnak egy küszöböt vagy nevet.
 - Kiadvány megvásárlásáért +20 pont jár minden megvásárolt változatért (a vásárlást a Google Play ellenőrzi).
 - A jóváhagyott beküldésekért (esemény, DJ, szervező) +10 pont jár a beküldőnek, naponta legfeljebb 3 beküldésért.
 - ÚJ napi aktivitási pont: a cikkhez írt hozzászólásaidért és a chat-üzeneteidért a következő napon 1–5 pontot kapsz, amennyit a szerver az aktivitásodból számol.
 - A rang és a jelvény továbbra is gyorsítótárból jelenik meg azonnal, de szintlépésnél magától frissül.
+
+### 333 — NEM ment ki (a tartalma a 334-ben van)
+- A 333 elkészült, de **egyetlen Play-sávra sem került fel** (a mérés szerint az alpha és az internal sávon is csak egy üres piszkozat maradt). A tartalma **változatlanul a 334-ben** van, ezért a tesztelők onnan kapják meg.
 
 ### 332 — villogás javítása + lájkpont-jelzés
 - A hírek, a DJ-k és az események listája görgetés közben már nem villog — a képek áttűnés nélkül, azonnal megjelennek.
@@ -167,7 +172,7 @@ SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`).
 
 1. `node tools/check-play-notes.mjs` — a Play-blokkok hossza és a build-lefedettség.
 2. `flutter test test/data/app_changelog_test.dart` — az app changelogja egyezik a `pubspec.yaml`-lel.
-3. Az AAB verziókódja a merge-elt manifestből: **333**.
+3. Az AAB verziókódja a merge-elt manifestből: **334**.
 4. `node tools/verify-native-admin-menu.mjs` — a natív admin menüpontjai és a plugin végpontjai egyeznek.
 5. `node tools/verify-achievement-points.mjs` — az achievement-pontok konzisztenciája (ÉLES, csak olvas).
 6. `node tools/verify-achievement-guide.mjs` — az Achievement-útmutató szövege egyezik a kóddal (napi keretek, pontértékek, létező források).
