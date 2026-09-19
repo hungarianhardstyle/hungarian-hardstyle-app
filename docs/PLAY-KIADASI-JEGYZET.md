@@ -6,32 +6,31 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 328
+currentBuild: 329
 currentVersion: 1.0.0
-lastPublishedBuild: 322
-aab: build/HUHS-v1.0.0+328-release.aab
-sha256: C8D3BEDBFE7D24C8B6F0ECB004D23AA07E986C81332BF1A934D38B681B660EB9
+lastPublishedBuild: 328
+aab: build/HUHS-v1.0.0+329-release.aab
+sha256: A6248354E468AD63B6FD9AB839FDA0ED61F4584DC9C19602C8AA3D632B6A2DAD
 -->
 
 ## A feltöltendő AAB (mérve)
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+328-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+329-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **328** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 79,22 MB |
-| SHA-256 | `C8D3BEDBFE7D24C8B6F0ECB004D23AA07E986C81332BF1A934D38B681B660EB9` |
+| Verziókód | **329** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 79,37 MB |
+| SHA-256 | `A6248354E468AD63B6FD9AB839FDA0ED61F4584DC9C19602C8AA3D632B6A2DAD` |
 
-**Miért a 328-at kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
-(323–328). A Play-en a legutóbb publikált build a **322** — a tulajdonos **megerősítette**:
-*„csak a 328 megy fel, az előtte lévőket nem tettem fel, 322 volt előtte"*. Vagyis a
-felhasználók **egyszerre** kapják meg a 323–328 összes változását, ezért a kiadási jegyzetnek
-is ezt kell tükröznie — különben a javítások nagy része láthatatlan maradna.
+**Miért a 329-et kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
+(323–329). A Play-en a legutóbb publikált build a **328** (a tulajdonos feltöltötte), ezért a
+felhasználók most a **329 újdonságait** kapják — a korábbi kiadások listája lentebb, history
+jelleggel ott marad.
 
-> **FONTOS, NE keverd össze:** a **2. pont** blokkja (`csak a 328 változásai`) **NEM** erre az
-> esetre való. Az akkor kell, ha a 323–327 **már kint lenne** a Playen. Most **nem** az van:
-> a 328 az első kiadás a 322 óta, ezért az **1. pont** blokkját kell bemásolni.
+> **FONTOS, NE keverd össze:** a **2. pont** blokkja („csak a 329 változásai") **NEM** erre az
+> esetre való. Az akkor kell, ha a **329 közben kiment volna**, és csak a rákövetkező kiadás
+> megy fel. Most az **1. pont** blokkját kell bemásolni.
 
 ## 1. Play Console — RÖVID (ezt másold be)
 
@@ -44,9 +43,9 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Súgó (GYIK): témakörökre bontva, érthetően.
-- Egységes kártyák a főoldalon.
-- Chat- és hozzászólás-szerkesztés, jobb értesítéskezelés.
+- Chat: a régebbi üzenetek lefelé görgetve betöltődnek.
+- A „már szavaztam / már játszottam” állapot azonnal látszik.
+- Adminoknak: résztvevők és nyertes a nyereményjátékhoz.
 ```
 
 ## 1b. Play Console — ha bővebben szeretnéd (tartalék)
@@ -64,21 +63,27 @@ részletesebben akarod felsorolni, mit kap a felhasználó.
 - A főoldalon a „További hírek” sor egységes kártyaformát kapott.
 ```
 
-## 2. Play Console — CSAK akkor, ha a 323–327 már fent lenne
+## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
 
-**Most NE ezt használd!** Ez a blokk csak a 328 két változását sorolja fel, ezért akkor való,
-ha a 323–327 **már kint van** a Playen (most nem ez a helyzet: 322 volt az utolsó, és a 328
-az első utána).
+**Most NE ezt használd!** Ez a blokk csak a 329 változásait sorolja fel, ezért akkor való, ha
+a 329 **már kint van**, és csak a rákövetkező kiadás megy fel. Most az **1. pont** blokkját
+kell bemásolni.
 
 ```play-notes
-- A főoldalon a „További hírek” sor ugyanolyan kártyaformát kapott, mint a kérdőív és a nyereményjáték.
-- A GYIK (Segítség) témakörökre bontva, érthető szöveggel; a pontok és a napi limitek a valós értékeket mutatják.
+- Chat: a régebbi üzenetek lefelé görgetve betöltődnek.
+- A „már szavaztam / már játszottam” állapot azonnal látszik.
+- Adminoknak: résztvevők és nyertes a nyereményjátékhoz.
 ```
 
 ## 3. App (Több → Névjegy) — tételes, build szerint
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 329 — chat-lapozás, azonnali állapot, natív nyereményjáték-admin
+- A Chatben lefelé görgetve betölti a régebbi üzeneteket — akár hetekkel ezelőttit is visszaolvashatsz, és egy gombbal visszaugorhatsz a legfrissebbhez.
+- A nyereményjáték és a kérdőív „már játszottam / már szavaztam" állapota azonnal megjelenik nyitáskor, nem kell a betöltésre várni.
+- Adminoknak: új „Résztvevők" nézet a nyereményjátékhoz az appban — ki játszott, mit válaszolt, helyes volt-e, és ki nyert.
 
 ### 328 — „További hírek" kártya + GYIK
 - A főoldalon a „További hírek" sor ugyanolyan kártyaformát kapott, mint a kérdőív és a nyereményjáték — így egységes a megjelenés.
@@ -105,16 +110,16 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A kérdőív eredményeinél már a kérdőív saját válaszai látszanak az éves szavazás adatai helyett.
 - A nyereményjátéknál eltűnt a felesleges kép mező.
 
-## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.5.5)
+## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.5.6)
 
-A plugin csomag: `build/huhs-mobile-api-2.5.5.zip` (44 fájl, 138,0 KB,
-SHA-256 `06512149E638EFC41F168C839A021659B37D7A090990CBFA09242B3996CCE3D0`).
+A plugin csomag: `build/huhs-mobile-api-2.5.6.zip` (44 fájl, 139,0 KB,
+SHA-256 `492CC69DF5115AE5EBCB4D33AE6F8C77B1268468508A4FB2CBD2782F8B28FF9E`).
 
 ```text
+- ÚJ: a nyereményjáték admin-nézete az appban (prize_games, prize_results): játéklista, válaszmegoszlás a helyes válasz jelölésével, résztvevők és nyertes.
+- Az app-admin játék-nézet nem ad ki UID-t és hash-t a kliensnek.
 - GYIK: 7 témakör, 31 érthető kérdés-felelet; a régi, kategóriátlan bejegyzések vázlatba kerülnek (nem törlődnek).
 - A migráció megkíméli a tulajdonos kézzel írt/átírt GYIK-szövegét.
-- A migráció verziójelzője 5 — a 2.5.3 migrációja már lefutott, ezért a 4-es jelzővel a szigorúbb nyugdíjazás nem indult volna el.
-- A faq.php érvénytelen UTF-8 bájtjai javítva (a WordPress szerkesztő hibás karakterei megszűntek).
 - Az app oldalán nincs API-törő változás: a meglévő végpontok változatlanok.
 ```
 
@@ -122,4 +127,4 @@ SHA-256 `06512149E638EFC41F168C839A021659B37D7A090990CBFA09242B3996CCE3D0`).
 
 1. `node tools/check-play-notes.mjs` — a Play-blokkok hossza és a build-lefedettség.
 2. `flutter test test/data/app_changelog_test.dart` — az app changelogja egyezik a `pubspec.yaml`-lel.
-3. Az AAB verziókódja a merge-elt manifestből: **328**.
+3. Az AAB verziókódja a merge-elt manifestből: **329**.

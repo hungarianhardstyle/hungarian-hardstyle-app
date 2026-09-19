@@ -344,6 +344,39 @@ check(
     /'hashes' => array_values\(array_filter\(array_column\(\$players, 'hash'\)\)\)/.test(codeOnly),
 );
 
+/* ------------------------------------------------------------------ */
+/* A NATIV app-admin nezet (a tulajdonos keresere)                      */
+/* ------------------------------------------------------------------ */
+
+// A tulajdonos keresere: „Natív HUHS adminba bekerulhetnenek az uj dolgok,
+// mukodoen (ertds: az appba)". A nyeremenyjatek eddig CSAK a WordPress
+// adminjaban volt atlathato; az app mostantol a sajat admin-muveleteibol
+// (prize_games, prize_results) rajzolja ki ugyanazt.
+const adminFile = path.join(pluginDir, 'includes', 'api-admin.php');
+const adminSource = fs.existsSync(adminFile) ? fs.readFileSync(adminFile, 'utf8') : '';
+const adminCode = adminSource
+  .split('\n')
+  .filter((line) => !/^\s*(\/\/|\*|\/\*)/.test(line))
+  .join('\n');
+
+check(
+  'az app-admin API ad jateklistat (prize_games)',
+  adminCode.includes("$action === 'prize_games'") && adminCode.includes("'prizes' =>"),
+);
+check(
+  'az app-admin API ad reszletes jatek-adatot (prize_results)',
+  adminCode.includes("$action === 'prize_results'") &&
+    adminCode.includes("'participants' =>") &&
+    adminCode.includes("'correctIndex' =>"),
+);
+check(
+  'az app-admin jatek-nezet NEM ad ki UID-t vagy hash-t a kliensnek',
+  // Az appnak nem kell a jatekos azonositoja; a nyilvanos vegpont elve itt is
+  // all: minel kevesebb adat megy ki.
+  !/'uid'\s*=>/.test(adminCode) && !/'hash'\s*=>/.test(adminCode),
+  'a participants sorokban ne legyen uid/hash',
+);
+
 console.log(results.join('\n'));
 console.log(`\n${checked - failed}/${checked} ellenorzes rendben`);
 process.exit(failed === 0 ? 0 : 1);

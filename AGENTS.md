@@ -1,5 +1,56 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Öt tulajdonosi jelzés egy menetben — chat-lapozás, azonnali állapot, admin user-törlés, natív admin (2026-09-19, AAB 329 + plugin 2.5.6)
+
+A tulajdonos öt pontot adott egyszerre, majd: *„csináld meg ezeket"*. Mindegyikhez **mért gyökér** és **bizonyított javítás** tartozik.
+
+#### 1–2. „Kvíznél/Kérdőívnél elsőre kicsit sokára tölti be, hogy már játszottam/kitöltöttem"
+- **A gyökér:** az állapot csak egy **három lépcsős út** végén derül ki (app → Cloud Function → WordPress), első hívásnál a függvény hidegen is indul; a felület pedig **szándékosan** nem mutat válaszlehetőségeket, amíg a szerver nem mondja ki, hogy nem szavaztál/játszottál. Ezért a várakozás **látszott**.
+- **A javítás — helyi emlékezet + háttérellenőrzés:** új `lib/services/vote_memory.dart` (`VoteMemory`) megjegyzi a legutóbbi ismert állapotot. A `hasVotedProvider` / `prizePlayProvider` **azonnal** a mentett értéket adja, majd a háttérben megkérdezi a szervert; ha az azt mondja, mégsem szavaztál/játszottál, a jelzést törli és **`ref.invalidateSelf()`**-fel visszavált a szavazólapra.
+  - **Két szándékos szabály:** (1) **csak `true`-t** („már megtörtént") mentünk — hamis állapotot soha, mert az elrejtené a szavazólapot; (2) a kulcs **tartalmazza a UID-t** (`huhs.voted.poll.<uid>.<pollId>`), ezért más fiók bejelentkezése nem örökli az emléket.
+  - A játéknál a **`correct` és a választott index is** mentődik, különben a visszatérő játékos egy pillanatra **rossz ítéletet** látna („helyes volt / nem talált").
+  - **Új szűk provider: `currentUidProvider`** (`community_provider.dart`) — ez adja a UID-t a kulcshoz, és **tesztben Firebase nélkül felülírható**.
+  - **Riverpod-csapda (2.6.1):** a `Ref.mounted` **nem létezik** ebben a verzióban, ezért a háttérfeladat a provider építésekor regisztrált `ref.onDispose` flaggel ellenőrzi, hogy szabad-e még újraszámolni. Enélkül a lezárásnál *„The provider … was disposed during loading state"* hibát kapunk.
+- **Bizonyítás:** `test/providers/poll_provider_test.dart` **+4** és `prize_provider_test.dart` **+3**. A lényeg mérése: a szerver kérése egy **soha be nem fejeződő `Completer`** (`statusGate`), a provider mégis **2 másodperc alatt** válaszol — vagyis tényleg nem vár rá.
+
+#### 3. Chat: „legyen valami limit … lefele scrollozáskor töltsön be"
+- **A mért kiindulás:** a chat **már nem** tölti le az összeset — élőben csak a **legfrissebb 60** üzenetet figyeli (`watchPosts()`). Az 5000 üzenet tehát **nem** lassítja. A valódi hiányosság: a 60-nál régebbit **nem lehetett elérni**.
+- **A javítás:** új `lib/services/chat_paging.dart` (**tiszta logika**) + `CommunityService.loadOlderPosts({before, limit = 30})` + a `LiveFeedScreen` görgetésre tölt.
+  - **A chat a legfrissebbel kezdődik**, ezért **lefelé** görgetve haladunk vissza az időben — a tulajdonos megfogalmazása pontosan erre illik.
+  - **A kitűzött (pinned) üzenet kora nem lehet a lapozás határa** (`oldestBoundary`): ha egy hete kitűzött üzenetet beszámítanánk, a következő lap **átugraná** a közte lévő beszélgetést.
+  - **Duplikáció-szűrés** (`newOlderPosts`): se az élő ablakkal, se a már betöltött lapokkal nem ismétlődik.
+  - A lap alján **„Régebbi üzenetek betöltése"** gomb (görgetés nélkül is működik), a végén **„Ez a beszélgetés eleje."**, és mély görgetésnél egy **„a legfrissebbre"** gomb. A lehúzásos frissítés (`_refreshChat`) **eldobja** a betöltött régebbi lapokat.
+- **Bizonyítás:** `test/services/chat_paging_test.dart` **10** + `test/widgets/chat_paging_test.dart` **2** — a második **valódi görgetéssel** méri, hogy a régebbi üzenet **megjelenik**, és hogy elfogyás után **nem kér újra**.
+
+#### 4. „Adminként nem törli az usert, googleval regelt" — a törlés LEFUTOTT, a felhasználó viszont visszajött
+- **Élő mérés (függvénynapló, 06:39):** a `deleteCommunityUser` **kétszer is lefutott**, mindkétszer **HTTP 200**-at adott (`cleanup_pending`), és a kód a visszatérés előtt **ellenőrzi**, hogy az Auth-fiók és a `community_profiles` sor is eltűnt. Tehát a törlés **sikeres volt**; csak a Cloudinary-képek takarítása maradt függőben (`cloudinary-list-temporary-failure`), amit a **15 percenkénti** `cleanupIncompleteAccounts` újrapróbál.
+- **A valódi hiba (kettős):**
+  1. **A Google-fiókkal regisztrált felhasználó Auth-fiókja újra létrejön** ugyanazzal a UID-dal, amikor újra bejelentkezik. Az app viszont **sehol nem nézte** a szerveroldali `deleted_user_ids` jelzőt, ezért a visszatérő törölt fiók **érthetetlen hibákba** futott (minden `isRegistered()` szabály tiltja) ahelyett, hogy megmondtuk volna neki: *ez a fiók törölve lett*.
+  2. **Néma no-op:** az appon belüli WP-admin „Felhasználók" fülén a törlés `id == 0` esetén **üzenet nélkül visszatért** — pontosan ez kelti a „nem törli" érzést.
+- **A javítás:**
+  - **`firestore.rules`:** a felhasználó a **saját** `deleted_user_ids/<uid>` sorát olvashatja (`allow get`), írni senki. **FIGYELEM, csapda:** itt **szándékosan nem** `isRegistered()` áll, mert az maga is nézi a `deleted_user_ids`-et — így pont a törölt felhasználótól tagadná meg a választ.
+  - **`CommunityService.isAccountMarkedDeleted(uid)`** + bekötve a **`refreshCurrentSession()`**-be: ha a jelző ott van, `{'active': false, 'deleted': true}`-t ad, amire a `main.dart` **már meglévő** útja kijelentkeztet és kiírja: *„A fiókodat törölték. Kijelentkeztettünk."* Hálózati hiba esetén **false** (átmeneti hiba nem zárhat ki senkit).
+  - **`functions/cloudinary.js`:** a hiba mostantól viszi a **HTTP-státuszt és a Cloudinary üzenetét** is (`cloudinary-list-temporary-failure:429`), különben a naplóból nem derül ki, hogy 401/429/alak volt-e a baj.
+  - **`wordpress_admin_screen._deleteUser`:** `id == 0` esetén **érthető üzenet** (nincs WordPress-azonosító; az app-fiókok a Közösségi adminisztrációban törölhetők).
+  - **`community_screen`:** a törlés után **szerveroldali ellenőrzés** (nem cache-ből), és a válasz egyértelmű: „törölve" / „nem fejeződött be, próbáld újra".
+- **Bizonyítás:** `functions/rules.test.cjs` **14 → 18** + `test/services/deleted_account_guard_test.dart` (**5**, kézzel írt Firestore-hasznossal, új csomag nélkül).
+
+#### 5. „Natív HUHS adminba bekerülhetnének az új dolgok, működően (értds: az appba)"
+- **Amit találtam:** az appon belüli admin API (`/huhs/v1/admin?action=…`) **nem** tudott a nyereményjátékról — az csak a WordPress adminjában volt átlátható, holott az app a játékot már mutatta a felhasználóknak.
+- **A javítás:**
+  - **Plugin (`includes/api-admin.php`, 2.5.6):** új `prize_games` (játéklista) és `prize_results` (állapot, nyeremény, **helyes válasz indexe**, válaszonként `count`/`percent`, résztvevők). `prizeId` nélkül a **nyitott → friss nyertes → legfrissebb** sorrendben választ.
+    - **A helyes válasz itt kiadható** (a nyilvános `/prize/active`-nál nem): ez a végpont `manage_options` mögött van, és az admin a saját játékát ellenőrzi.
+    - **UID és hash viszont itt sem megy ki** — ezt a `verify-prize-draw.mjs` forrás-linttel kéri számon.
+  - **Kliens:** új `lib/screens/community/prize_admin_screen.dart` (legördülő a játékokból, állapot + nyeremény + megjelenítési napok, válaszmegoszlás a **helyes válasz jelölésével**, résztvevő-lista ✔/✖/🏆 jelekkel), és a nyereményjáték képernyőn egy **admin-only** „Résztvevők (admin)" gomb (`Key('prize-admin-open')`).
+    - A hálózat itt is **szűk providereken** megy (`prizeAdminRequestProvider`, `prizeAdminCacheClearProvider`) — ezért a képenyő **Firebase nélkül tesztelhető**.
+- **Bizonyítás:** `tools/verify-prize-draw.mjs` **44 → 47** (a hibás változaton — UID kiadása a résztvevő-sorokban — **elhasal**) + `test/widgets/prize_admin_screen_test.dart` (**4**).
+
+#### Csomagok és ellenőrzések
+- **AAB:** `build/HUHS-v1.0.0+329-release.aab` (versionCode **329**) — `pubspec.yaml` `1.0.0+329`, és a `lib/data/app_changelog.dart`-ba bekerült a 329 bejegyzés (a `test/data/app_changelog_test.dart` **megköveteli**).
+- **Plugin:** `build/huhs-mobile-api-2.5.6.zip` — 44 fájl, 139,0 KB, SHA-256 `492CC69DF5115AE5EBCB4D33AE6F8C77B1268468508A4FB2CBD2782F8B28FF9E`.
+- **Élesítve:** `firestore:rules` (a törölt-fiók olvasásához **kötelező**) és `functions` (a `cloudinary.js` diagnosztika miatt).
+- **Ellenőrzések:** `flutter analyze` tiszta, `flutter test` **273/273** (a menet elején 245 volt — **+28 új teszt**), `functions/rules.test.cjs` **18/18**, 43/43 PHP parse, `check-plugin-encoding.mjs` **44/44**, `verify-faq-content.mjs` **43/43**, `verify-faq-retire.php` **16/16**, `check-wp-admin-menu.mjs` **8/8**, `check-wp-meta-json.mjs` zöld, `verify-prize-draw.mjs` **47/47**, `verify-poll-status.mjs` **25/25**, `check-play-notes.mjs` zöld.
+
 ### A „További hírek" sor egységes kártyaformát kapott (2026-09-18, AAB 328)
 
 - **A tulajdonos jelzése:** *„a TOVÁBBI hírek gomb a főoldalon lehetne olyan mint a kérdőív meg a nyereményjáték kártya, egységesen"*.

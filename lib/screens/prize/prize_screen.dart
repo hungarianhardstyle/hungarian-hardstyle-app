@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/prize.dart';
 import '../../providers/community_provider.dart';
+import '../community/prize_admin_screen.dart';
 import '../../providers/prize_provider.dart';
 import '../../services/vote_memory.dart';
 import '../../widgets/brand_loading_indicator.dart';
@@ -127,6 +128,20 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
     );
   }
 
+  /// A nyereményjáték **admin-nézete** (résztvevők, válaszmegoszlás, nyertes).
+  ///
+  /// **A tulajdonos kérése:** *„Natív HUHS adminba bekerülhetnének az új dolgok,
+  /// működően (értds: az appba)"*. A nyereményjáték eddig csak a WordPress
+  /// adminjában volt átlátható; ez a gomb ugyanazt nyitja meg az appban.
+  ///
+  /// Szándékosan **csak adminnak** látszik: a végpont a WordPress admin-jog
+  /// mögött van, ezért egy sima felhasználó csak hibaüzenetet kapna.
+  void _openAdmin() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const PrizeAdminScreen()),
+    );
+  }
+
   Widget _buildHeader(String eyebrow, IconData icon) {
     return Row(
       children: [
@@ -162,6 +177,20 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
             )
           else
             _buildStatus(context, prize),
+          // Az admin-nézet gombja: a résztvevők, a válaszmegoszlás és a nyertes
+          // (ugyanaz, amit a WordPress „Nyereményjáték" oldal mutat).
+          if (ref.watch(currentUserIsAdminProvider).valueOrNull == true) ...[
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                key: const Key('prize-admin-open'),
+                onPressed: _openAdmin,
+                icon: const Icon(Icons.groups_outlined, size: 20),
+                label: const Text('Résztvevők (admin)'),
+              ),
+            ),
+          ],
         ],
       ),
     );
