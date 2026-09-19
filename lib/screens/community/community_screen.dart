@@ -21,8 +21,10 @@ import '../../core/input/sentence_capitalization_formatter.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/favorites_provider.dart';
+import '../../services/chat_paging.dart';
 import '../../services/community_service.dart';
 import '../../services/chat_display_preferences.dart';
+import '../../widgets/brand_loading_indicator.dart';
 import '../../services/referral_link_service.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../../widgets/achievement_badge_card.dart';
@@ -757,6 +759,25 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   Timer? _profileRefreshTimer;
   int _profileRefreshGeneration = 0;
 
+  /// A chat görgetése (a lapozáshoz).
+  final _chatScrollController = ScrollController();
+
+  /// Látszik-e a „a legfrissebbhez" gomb (ha a felhasználó mélyen visszagörgetett).
+  final _showJumpToNewest = ValueNotifier<bool>(false);
+
+  /// A már betöltött RÉGEBBI üzenetek (a legfrissebb 60 élő ablakon kívül).
+  final List<CommunityPost> _olderPosts = [];
+  bool _loadingOlder = false;
+  bool _reachedChatStart = false;
+
+  /// A régebbi lap mérete. 30 üzenet laponként: ennyi olvasás, és a felhasználó
+  /// hamarabb lát eredményt, mintha 100-at kérnénk egyszerre.
+  static const int _olderPageSize = 30;
+
+  /// Ennyi pixelen belül kezdjük tölteni a régebbi üzeneteket (nem kell a
+  /// legvégéig görgetni).
+  static const double _loadOlderThreshold = 600;
+
   CommunityService get _service => ref.read(communityServiceProvider);
 
   @override
@@ -783,7 +804,82 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       _profileRefreshInterval,
       (_) => _refreshPublicProfiles(),
     );
+    _chatScrollController.addListener(_maybeLoadOlderPosts);
     _prepareAnonymousUser();
+  }
+
+  @override
+  void dispose() {
+    _chatScrollController.removeListener(_maybeLoadOlderPosts);
+    _chatScrollController.dispose();
+    _showJumpToNewest.dispose();
+    _authSubscription?.cancel();
+    CommunityService.publicProfileRefreshGeneration.removeListener(
+      _achievementRefreshListener,
+    );
+    _profileRefreshTimer?.cancel();
+    _textController.dispose();
+    _composerFocusNode.dispose();
+    super.dispose();
+  }
+
+  /// A chat a LEGFRISSESEBB üzenettel kezdődik, ezért **lefelé** görgetve haladunk
+  /// visszafelé az időben — a tulajdonos kérése pontosan ez: *„lefele
+  /// scrollozáskor töltsön be"*.
+  void _maybeLoadOlderPosts() {
+    if (!mounted) return;
+    if (!_chatScrollController.hasClients) return;
+    final position = _chatScrollController.position;
+    _showJumpToNewest.value = position.pixels > 900;
+    if (_loadingOlder || _reachedChatStart) return;
+    if (position.extentAfter > _loadOlderThreshold) return;
+    unawaited(_loadOlderPosts());
+  }
+
+  /// A régebbi üzenetek betöltése. Egyszeri lekérdezés, ezért 5000 üzenetnél sem
+  /// lassul le a chat: mindig csak a következő 30-at kérjük.
+  Future<void> _loadOlderPosts() async {
+    final newest = ref.read(communityPostsProvider).valueOrNull;
+    if (newest == null) return;
+    final boundary = ChatPaging.oldestBoundary(<CommunityPost>[
+      ...newest,
+      ..._olderPosts,
+    ]);
+    if (boundary == null) return;
+    setState(() => _loadingOlder = true);
+    try {
+      final incoming = await _service.loadOlderPosts(
+        before: boundary,
+        limit: _olderPageSize,
+      );
+      if (!mounted) return;
+      final fresh = ChatPaging.newOlderPosts(
+        incoming: incoming,
+        newest: newest,
+        alreadyOlder: _olderPosts,
+      );
+      setState(() {
+        _olderPosts.addAll(fresh);
+        _loadingOlder = false;
+        _reachedChatStart = ChatPaging.reachedStart(
+          received: incoming.length,
+          pageSize: _olderPageSize,
+        );
+      });
+    } catch (_) {
+      // Hálózati hiba: nem jelöljük „nincs több"-nek, hogy a következő
+      // görgetésnél újra lehessen próbálni.
+      if (mounted) setState(() => _loadingOlder = false);
+    }
+  }
+
+  void _jumpToNewest() {
+    if (!_chatScrollController.hasClients) return;
+    _chatScrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   void _refreshPublicProfiles() {
@@ -797,6 +893,14 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
 
   Future<void> _refreshChat() async {
     _refreshPublicProfiles();
+    // A frissítés a legfrissebb állapotot mutatja: a betöltött régebbi lapokat
+    // eldobjuk, különben a képernyőn maradna egy régi szelet.
+    if (_olderPosts.isNotEmpty || _reachedChatStart) {
+      setState(() {
+        _olderPosts.clear();
+        _reachedChatStart = false;
+      });
+    }
     ref.invalidate(communityPostsProvider);
   }
 
@@ -836,18 +940,6 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
             : name.trim()[0].toUpperCase();
       });
     } catch (_) {}
-  }
-
-  @override
-  void dispose() {
-    _authSubscription?.cancel();
-    CommunityService.publicProfileRefreshGeneration.removeListener(
-      _achievementRefreshListener,
-    );
-    _profileRefreshTimer?.cancel();
-    _textController.dispose();
-    _composerFocusNode.dispose();
-    super.dispose();
   }
 
   Future<void> _pickImage({required ImageSource source}) async {
@@ -925,6 +1017,41 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     await _refreshAvatar();
   }
 
+  /// A chat alján látszó sor: „töltés…", „ez a beszélgetés eleje", vagy egy
+  /// gomb, amivel a felhasználó kérheti a régebbi üzeneteket.
+  ///
+  /// A lapozás görgetésre magától is elindul (`_maybeLoadOlderPosts`), ez a sor
+  /// akkor is működik, ha valaki nem görget (például egérrel).
+  Widget _chatPagingFooter() {
+    if (_loadingOlder) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: BrandLoadingIndicator()),
+      );
+    }
+    if (_reachedChatStart) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: Text(
+            'Ez a beszélgetés eleje.',
+            style: TextStyle(fontSize: 12, color: Colors.white54),
+          ),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: TextButton(
+          key: const Key('chat-load-older'),
+          onPressed: () => unawaited(_loadOlderPosts()),
+          child: const Text('Régebbi üzenetek betöltése'),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final posts = ref.watch(communityPostsProvider);
@@ -940,8 +1067,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Chat'),
-          actions: [
+          title: const Text('Chat'),          actions: [
             IconButton(
               tooltip: 'Privát üzenetek',
               style: IconButton.styleFrom(
@@ -1020,14 +1146,34 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                     : RefreshIndicator(
                         onRefresh: _refreshChat,
                         child: ListView.builder(
+                          controller: _chatScrollController,
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                          itemCount: items.length,
-                          itemBuilder: (_, index) => _PostCard(
-                            post: items[index],
-                            compact: !landscape,
-                            profileRefreshGeneration: _profileRefreshGeneration,
-                            onReply: () => _replyTo(items[index]),
-                          ),
+                          // A végére kerül a „töltés"/„ez a beszélgetés eleje"
+                          // sor, ezért +1.
+                          itemCount: items.length + _olderPosts.length + 1,
+                          itemBuilder: (_, index) {
+                            if (index < items.length) {
+                              return _PostCard(
+                                post: items[index],
+                                compact: !landscape,
+                                profileRefreshGeneration:
+                                    _profileRefreshGeneration,
+                                onReply: () => _replyTo(items[index]),
+                              );
+                            }
+                            final olderIndex = index - items.length;
+                            if (olderIndex < _olderPosts.length) {
+                              final post = _olderPosts[olderIndex];
+                              return _PostCard(
+                                post: post,
+                                compact: !landscape,
+                                profileRefreshGeneration:
+                                    _profileRefreshGeneration,
+                                onReply: () => _replyTo(post),
+                              );
+                            }
+                            return _chatPagingFooter();
+                          },
                         ),
                       ),
               ),
@@ -1051,6 +1197,19 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
               ],
             );
           },
+        ),
+        // Ha valaki mélyen visszagörgetett a régebbi üzenetek között, egy
+        // koppintással visszakerül a legfrissebbhez (nem kell visszatekerni).
+        floatingActionButton: ValueListenableBuilder<bool>(
+          valueListenable: _showJumpToNewest,
+          builder: (context, show, _) => show
+              ? FloatingActionButton.small(
+                  key: const Key('chat-jump-newest'),
+                  tooltip: 'Ugrás a legfrissebb üzenethez',
+                  onPressed: _jumpToNewest,
+                  child: const Icon(Icons.arrow_upward_rounded),
+                )
+              : const SizedBox.shrink(),
         ),
       ),
     );

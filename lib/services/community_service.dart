@@ -243,6 +243,33 @@ class CommunityService {
         });
   }
 
+  /// A chat **régebbi** üzenetei (lapozás).
+  ///
+  /// **A tulajdonos jelzése:** *„chaten kéne valami limit, … ha valaki vissza
+  /// akar olvasni legyen valami lehetőség arra hogy lefele scrollozáskor
+  /// töltsön be"*. Az élő ablak (`watchPosts`) csak a legfrissebb 60 üzenetet
+  /// figyeli — ez a függvény teszi elérhetővé a régebbieket, egyszeri
+  /// lekérdezéssel, hogy 5000 üzenetnél se legyen lassú.
+  ///
+  /// [before] előtti (szigorúan régebbi) üzeneteket ad vissza, a legfrissebbel
+  /// kezdve. A tiltott felhasználók üzenetei itt is kimaradnak.
+  Future<List<CommunityPost>> loadOlderPosts({
+    required DateTime before,
+    int limit = 30,
+  }) async {
+    final snapshot = await firestore
+        .collection('live_feed_posts')
+        .where('createdAt', isLessThan: Timestamp.fromDate(before))
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .get();
+    final blocked = await _loadBlockedUserIds();
+    final posts = snapshot.docs.map(CommunityPost.fromDocument).toList();
+    posts.removeWhere((post) => blocked.contains(post.authorId));
+    posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return posts;
+  }
+
   Future<Set<String>> _loadBlockedUserIds() {
     final user = auth.currentUser;
     if (user == null || user.isAnonymous) return Future.value(<String>{});
