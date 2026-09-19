@@ -1,92 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AchievementGuideScreen extends StatelessWidget {
+import '../../providers/achievement_provider.dart';
+import '../../services/achievement_service.dart';
+
+/// `Több → Achievementek`: hogyan működik a pontrendszer.
+///
+/// **A szövegek a valós működést írják le** — ezt a
+/// `tools/verify-achievement-guide.mjs` kapu köti a szerver kódjához
+/// (`functions/index.js`), hogy ne avulhasson el újra csendben. A korábbi
+/// változat még azt írta, hogy a lájk visszavonásakor elvész a pont (ez már nem
+/// igaz), hogy a kommentért naponta **5** jár (valójában **3**), és szerepelt
+/// benne két olyan sor, ami mögött nem volt szabály.
+class AchievementGuideScreen extends ConsumerWidget {
   const AchievementGuideScreen({super.key});
 
-  static const _levels = <({int points, String name, String description})>[
-    (
-      points: 0,
-      name: 'Kezdő ütem',
-      description: 'Alapjelvény minden regisztrált felhasználónak.',
-    ),
-    (
-      points: 100,
-      name: 'Első lépés',
-      description: 'Az első közösségi mérföldkő.',
-    ),
-    (
-      points: 300,
-      name: 'Rendszeres látogató',
-      description: 'Rendszeresen jelen van a közösségben.',
-    ),
-    (
-      points: 700,
-      name: 'Hardstyle arc',
-      description: 'Láthatóan aktív HUHS-közösségi tag.',
-    ),
-    (
-      points: 1500,
-      name: 'Közösségi ember',
-      description: 'Sokat tesz a közösségi jelenlétért.',
-    ),
-    (
-      points: 3000,
-      name: 'Scene veteran',
-      description: 'Hosszú távon aktív színtértag.',
-    ),
-    (
-      points: 6000,
-      name: 'HUHS legenda',
-      description: 'Kiemelkedő, tartós közösségi aktivitás.',
-    ),
-  ];
-
-  static const _activities = <({String title, String points, String detail})>[
+  /// A pontforrások. A `points` a jobb oldali kiemelt érték.
+  static const activities = <({String title, String points, String detail})>[
     (
       title: 'Eseményen ott leszek',
       points: '+10 pont',
-      detail: 'Egy eseményre egyszer jár pont.',
+      detail:
+          'Amíg jelentkezve vagy rá, addig jár. Ha lemondod, a pont elvész — visszajelentkezésnél újra jár.',
     ),
     (
       title: 'Meetup jelzés',
       points: '+5 pont',
-      detail: 'A meetupot csak egyszer számítjuk.',
+      detail:
+          'Amíg jelezve van, addig jár. Lemondásnál ez a pont is elvész, visszajelzésnél újra jár.',
     ),
     (
       title: 'Kölcsönös kapcsolat meetupolóval',
       points: '+15 pont',
-      detail: 'Csak valódi, kölcsönös kapcsolat után jár.',
+      detail:
+          'Csak valódi, kölcsönös kapcsolat után jár. Ha a kapcsolat megszűnik, a pont is elvész.',
     ),
     (
       title: 'Esemény utáni értékelés',
       points: '+10 pont',
-      detail: 'Egy eseményhez egyszer adható jóváírás.',
+      detail: 'Egy eseményhez egyszer adható.',
     ),
     (
       title: 'Hír kedvelése',
       points: '+2 pont',
-      detail: 'A saját reakciód visszavonásakor a pont is visszavonódik.',
+      detail:
+          'Naponta legfeljebb 3 hír kedveléséért jár pont. A pont végleges: ha kiveszed a lájkot, megmarad, de újralájk sem ad újat.',
+    ),
+    (
+      title: 'Napi aktivitási pont',
+      points: '+1–5 pont',
+      detail:
+          'Ha aznap hozzászólsz egy cikkhez vagy írsz a chatbe, a következő napon a szerver kiszámolja, mennyit voltál aktív, és 1–5 pontot ad érte. Naponta egyszer.',
     ),
     (
       title: 'Cikk kommentelése',
       points: '+1 pont',
-      detail:
-          'Naponta legfeljebb 5 sikeresen elküldött cikkkommentért jár pont.',
+      detail: 'Naponta legfeljebb 3 elküldött cikkkommentért jár pont.',
     ),
     (
       title: 'Éves HUHS szavazás',
       points: '+10 pont',
-      detail: 'A teljes, kötelező kategóriákat tartalmazó szavazólap után jár.',
+      detail:
+          'A teljes, minden kötelező kategóriát tartalmazó szavazólap után jár (bejelentkezve).',
     ),
     (
-      title: 'Közösségi aktivitás',
-      points: '+5–20 pont',
-      detail: 'Az ellenőrzött, hasznos aktivitás típusától függ.',
+      title: 'Kiadvány megvásárlása',
+      points: '+20 pont',
+      detail:
+          'Minden megvásárolt változatért (MP3/WAV) jár. A vásárlást a Google Play ellenőrzi, ezért nem lehet hamisítani.',
+    ),
+    (
+      title: 'Jóváhagyott beküldés',
+      points: '+10 pont',
+      detail:
+          'Beküldött esemény, DJ vagy szervező: a pont a jóváhagyáskor jár. Naponta legfeljebb 3 jóváhagyott beküldésért.',
     ),
     (
       title: 'Profil kitöltése',
       points: '+30 pont',
-      detail: 'Egyszeri jóváírás a teljes profilért.',
+      detail: 'Egyszeri jóváírás a teljes profilért (név, bemutatkozás, egyező e-mail).',
     ),
     (
       title: 'Meghívott regisztrációja',
@@ -94,19 +86,29 @@ class AchievementGuideScreen extends StatelessWidget {
       detail: 'Új regisztráció után, szerveroldali ellenőrzéssel.',
     ),
     (
-      title: 'Kiadvány megvásárlása',
-      points: '+20 pont',
-      detail: 'A vásárlást a szerver ellenőrzi.',
-    ),
-    (
       title: 'HUHS játékok',
-      points: 'Pont járhat érte',
-      detail: 'A játékok teljesítésével és a helyes válaszokkal is szerezhetsz achievement pontot.',
+      points: 'a játék jutalma',
+      detail:
+          'A játékhoz beállított jutalom: kvíznél a helyes válaszok aránya szerint sávokban, más játéktípusnál csak teljes pontszámért.',
     ),
   ];
 
+  /// A szabályok, érthetően (technikai zsargon nélkül).
+  static const rules = <String>[
+    'Ugyanazért a tevékenységért egyszer jár pont — a rendszer mindig a szerveren ellenőrzi.',
+    'A hír kedveléséért és a cikkkommentért naponta legfeljebb 3-3 alkalommal jár pont, a jóváhagyott beküldésekért szintén 3.',
+    'A napi aktivitási pont (1–5) a lezárt nap után, naponta egyszer jár: a szerver a cikkhez írt hozzászólásaidból és a chat-üzeneteidből számolja.',
+    'A lájkpont végleges: ha kiveszed a lájkot, a pont megmarad, de az újralájk sem ad újat.',
+    'Az esemény- és meetup-pont a jelentkezésedhez igazodik: lemondásnál elvész, visszajelentkezésnél újra jár.',
+    'A rangod mindig a legmagasabb elért szinted jelvénye.',
+  ];
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // A szintek a szerverről (WordPress-katalógus) jönnek; hálózat nélkül a
+    // beépített tartalék lista jelenik meg, ezért ez a képernyő nem tud üres
+    // lenni.
+    final levels = ref.watch(achievementLevelsProvider).valueOrNull;
     return Scaffold(
       appBar: AppBar(title: const Text('Achievement rendszer')),
       body: ListView(
@@ -116,22 +118,29 @@ class AchievementGuideScreen extends StatelessWidget {
           const SizedBox(height: 16),
           const _SectionTitle('Szintek és jelvények'),
           const SizedBox(height: 8),
-          ..._levels.map((level) => _LevelTile(level: level)),
+          ...?levels?.map((level) => _LevelTile(level: level)),
           const SizedBox(height: 18),
           const _SectionTitle('Miért jár pont?'),
           const SizedBox(height: 8),
-          ..._activities.map((activity) => _ActivityTile(activity: activity)),
+          ...activities.map((activity) => _ActivityTile(activity: activity)),
           const SizedBox(height: 18),
           const _SectionTitle('Fontos szabályok'),
           const SizedBox(height: 8),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(
-                'A pontokat a rendszer szerveroldalon ellenőrzi és idempotensen könyveli. '
-                'Ugyanazt a tevékenységet nem lehet ismételten farmolni, a visszavont aktivitás pontja is visszavonható. '
-                'A rangodhoz mindig a legmagasabb elért szint jelvénye tartozik.',
-                style: Theme.of(context).textTheme.bodyLarge,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final rule in rules)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '•  $rule',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -151,7 +160,7 @@ class AchievementGuideScreen extends StatelessWidget {
               leading: const Icon(Icons.image_outlined),
               title: const Text('Jelvénygrafikák'),
               subtitle: const Text(
-                'A jelvények grafikáit a HUHS adminisztrátora tölti fel és kezeli. Az alkalmazás nem generál véletlenszerű vagy AI-jelvényeket.',
+                'A jelvények grafikáit és a szintek pontszámait a HUHS adminisztrátora kezeli, ezért itt mindig a jelenlegi állapot látszik.',
               ),
             ),
           ),
@@ -189,7 +198,7 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _LevelTile extends StatelessWidget {
-  final ({int points, String name, String description}) level;
+  final AchievementLevel level;
   const _LevelTile({required this.level});
 
   @override
@@ -198,7 +207,7 @@ class _LevelTile extends StatelessWidget {
       leading: CircleAvatar(
         backgroundColor: const Color(0xFFE53935),
         child: Text(
-          '${level.points}',
+          '${level.minPoints}',
           style: const TextStyle(color: Colors.white, fontSize: 11),
         ),
       ),
@@ -206,7 +215,11 @@ class _LevelTile extends StatelessWidget {
         level.name,
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      subtitle: Text('${level.points} pont • ${level.description}'),
+      subtitle: Text(
+        level.description.isEmpty
+            ? '${level.minPoints} ponttól'
+            : '${level.minPoints} pont • ${level.description}',
+      ),
     ),
   );
 }

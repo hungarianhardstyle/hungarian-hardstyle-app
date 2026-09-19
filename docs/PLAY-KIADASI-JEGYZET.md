@@ -6,11 +6,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 332
+currentBuild: 333
 currentVersion: 1.0.0
 lastPublishedBuild: 328
-aab: build/HUHS-v1.0.0+332-release.aab
-sha256: BD7130B553372300F22E43B8EE708003DB2C796ED19449568E451920DB098AA4
+aab: build/HUHS-v1.0.0+333-release.aab
+sha256: A2EC7D908B784B7BAC13B6AAF4F29EFBD23E9C9D095708484CF1FBCB571E932A
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -33,18 +33,18 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-19):
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+332-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+333-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **332** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 79,50 MB |
-| SHA-256 | BD7130B553372300F22E43B8EE708003DB2C796ED19449568E451920DB098AA4 |
+| Verziókód | **333** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 79,49 MB |
+| SHA-256 | A2EC7D908B784B7BAC13B6AAF4F29EFBD23E9C9D095708484CF1FBCB571E932A |
 
-**Miért a 332-t kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
-(323–332). A Play-en a legutóbb publikált build a **328**; a **329, 330 és 331 soha nem ment ki**,
-ezért a felhasználók most a **329–332 újdonságait** kapják egyben.
+**Miért a 333-at kell feltenni:** ez a legfrissebb, és **minden korábbi javítást tartalmaz**
+(323–333). A Play-en a legutóbb publikált build a **328**, de a zárt teszt sávján most a **332** él —
+a 333 ezt váltja.
 
-> **FONTOS:** a **329-es, 330-as és 331-es AAB-et ne töltsd fel** — a 332 mindegyiket tartalmazza,
-> plusz a görgetési villogás javítását és a lájkpont-jelzést.
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 333 mindegyiket tartalmazza, plusz az
+> útmutató javítását és a három új pontforrást.
 
 **A plugin ehhez 2.5.7** (`build/huhs-mobile-api-2.5.7.zip`) — **ezt is fel kell tölteni**, mert a
 létrehozás a plugin új végpontjait használja (a 2.5.6-tal a mentés „nem engedélyezett"-et adna).
@@ -59,11 +59,10 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
+- ÚJ: napi aktivitási pont — kommentért és chatért 1–5 pont jár, a szerver számolja.
+- ÚJ: kiadvány megvásárlásáért +20, jóváhagyott beküldésért +10 pont jár.
+- Az Achievement-útmutató pontos leírást kapott (napi keretek, szabályok).
 - A hírek, a DJ-k és az események listája görgetés közben már nem villog.
-- Ha a napi lájkpontod elfogyott, az app mostantól szól, mielőtt lájkolnál.
-- A kedvelt hír pontját a lájk visszavonása már nem veszi el.
-- Adminoknak: új kérdőív, nyereményjáték és kvíz hozható létre az appból.
-- Chat: a régebbi üzenetek lefelé görgetve betöltődnek.
 ```
 
 ## 1b. Play Console — ha bővebben szeretnéd (tartalék)
@@ -72,11 +71,12 @@ Ugyanaz, hosszabban — ez is a limiten belül van. Akkor használd, ha részlet
 felsorolni, mit kap a felhasználó.
 
 ```play-notes
+- ÚJ: napi aktivitási pont — kommentért és chatért 1–5 pont jár, a szerver számolja.
+- ÚJ: kiadvány megvásárlásáért +20 pont jár minden megvásárolt változatért.
+- ÚJ: a jóváhagyott beküldésekért (esemény, DJ, szervező) +10 pont jár.
+- Az Achievement-útmutató pontos leírásokat kapott: napi keretek, szabályok.
 - A hírek, a DJ-k és az események listája görgetés közben már nem villog.
-- Ha a napi lájkpontod (3) elfogyott, az app mostantól szól, mielőtt lájkolnál.
-- A kedvelt hír pontját a lájk visszavonása nem veszi el, és a régebben elvett pontok visszaálltak.
-- Adminoknak: a natív adminban új menüpontok, és új kérdőív, nyereményjáték, kvíz hozható létre.
-- Chat: a régebbi üzenetek lefelé görgetve betöltődnek.
+- A kedvelt hír pontját a lájk visszavonása nem veszi el.
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -94,6 +94,13 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 333 — pontos Achievement-útmutató + három új pontforrás
+- Az Achievement-útmutató (Több → Achievementek) pontos leírásokat kapott: a napi keretek (lájk 3, komment 3, beküldés 3), a lájkpont véglegessége és a lemondásnál elvesző esemény-pont is látszik.
+- A szintek és jelvények listája mostantól a szerverről jön, ezért azonnal követi, ha az adminban átírnak egy küszöböt vagy nevet.
+- Kiadvány megvásárlásáért +20 pont jár minden megvásárolt változatért (a vásárlást a Google Play ellenőrzi).
+- A jóváhagyott beküldésekért (esemény, DJ, szervező) +10 pont jár a beküldőnek, naponta legfeljebb 3 beküldésért.
+- ÚJ napi aktivitási pont: a cikkhez írt hozzászólásaidért és a chat-üzeneteidért a következő napon 1–5 pontot kapsz, amennyit a szerver az aktivitásodból számol.
 
 ### 332 — villogás javítása + lájkpont-jelzés
 - A hírek, a DJ-k és az események listája görgetés közben már nem villog — a képek áttűnés nélkül, azonnal megjelennek.
@@ -157,6 +164,8 @@ SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`).
 
 1. `node tools/check-play-notes.mjs` — a Play-blokkok hossza és a build-lefedettség.
 2. `flutter test test/data/app_changelog_test.dart` — az app changelogja egyezik a `pubspec.yaml`-lel.
-3. Az AAB verziókódja a merge-elt manifestből: **332**.
+3. Az AAB verziókódja a merge-elt manifestből: **333**.
 4. `node tools/verify-native-admin-menu.mjs` — a natív admin menüpontjai és a plugin végpontjai egyeznek.
 5. `node tools/verify-achievement-points.mjs` — az achievement-pontok konzisztenciája (ÉLES, csak olvas).
+6. `node tools/verify-achievement-guide.mjs` — az Achievement-útmutató szövege egyezik a kóddal (napi keretek, pontértékek, létező források).
+7. `node tools/check-play-track.mjs` — mi van tényleg a Play sávjain.

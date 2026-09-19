@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 333,
+    changes: [
+      'Az Achievement-útmutató (Több → Achievementek) pontos leírásokat kapott: a napi keretek (lájk 3, komment 3, beküldés 3), a lájkpont véglegessége és a lemondásnál elvesző esemény-pont is látszik.',
+      'A pontrendszer két új lehetőséggel bővült: kiadvány megvásárlásáért +20 pont jár minden megvásárolt változatért, a jóváhagyott beküldésekért (esemény, DJ, szervező) pedig +10 pont a beküldőnek.',
+      'ÚJ: napi aktivitási pont — ha hozzászólsz egy cikkhez vagy írsz a chatbe, a következő napon 1–5 pontot kapsz, amennyit a szerver az aktivitásodból számol.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 332,
     changes: [
       'A hírek, a DJ-k és az események listája görgetés közben már nem villog — a képek áttűnés nélkül, azonnal megjelennek.',

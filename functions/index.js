@@ -710,6 +710,9 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
       // One point per article comment, with the daily limit enforced inside
       // the idempotent server-side achievement ledger.
       await awardAchievementPoints(uid, 1, `article-comment:${postId}:${id}`);
+      // ÉS a napi aktivitási pont is számol vele (a tulajdonos kérése szerint a
+      // szerver a teljes napi aktivitásból oszt 1–5 pontot).
+      await recordDailyActivity(uid, 'comments');
       if (replyToAuthorId && replyToAuthorId !== uid) {
         await createNotificationBestEffort({
           recipientUid: replyToAuthorId,
@@ -1347,6 +1350,36 @@ async function restoreExpiredEventWrite(event, before, after) {
 // valodi Firestore-emulatoron bizonyitja, hogy a plafon fog.
 const NEWS_LIKE_DAILY_POINT_LIMIT = 3;
 const ARTICLE_COMMENT_DAILY_POINT_LIMIT = 3;
+// A JÓVÁHAGYOTT közösségi beküldés (esemény / DJ / szervező) is pontot ér. Ez
+// is farmolható lenne (egy felhasználó több eseményt is beküldhet), ezért itt
+// is NAPI KERET van — a jóváhagyás ugyan admin-művelet, de a beküldések száma
+// a felhasználó kezében van.
+const APPROVED_SUBMISSION_POINTS = 10;
+const APPROVED_SUBMISSION_DAILY_POINT_LIMIT = 3;
+// Egy megvásárolt kiadvány-változat (a Play-vásárlás ELLENŐRZÖTT, ezért itt nem
+// kell napi keret — fizetős tétel, nem lehet farmolni).
+const RELEASE_PURCHASE_POINTS = 20;
+// NAPI AKTIVITÁSI PONT (1–5): a tulajdonos kérése — „arra is kéne 1-5
+// achievement pont naponta, ha valaki kommentel egy cikkhez, ír a chatre; ezt
+// döntse el a szerver, mennyit aktívkodott és úgy ossza ki".
+//
+// Ezért a pont NEM cselekvésenként jár, hanem a LEZÁRT NAP értékelése után,
+// egyszer: a szerver megszámolja a napi aktivitást (cikkhez írt hozzászólás és
+// chat-üzenet), és sávosan oszt ki 1–5 pontot. A hozzászólás 2 egységet ér,
+// mert több munkát igényel, mint egy chat-üzenet.
+//
+// A pontok a `daily_activity/<uid>_<YYYY-MM-DD>` szerveroldali számlálóból
+// jönnek (a kliens nem olvashatja), a kiosztás pedig idempotens: a naplókulcs
+// a nap (`daily-activity:<YYYY-MM-DD>`), ezért egy napra egyszer jár.
+const DAILY_ACTIVITY_MAX_POINTS = 5;
+const DAILY_ACTIVITY_COMMENT_WEIGHT = 2;
+const DAILY_ACTIVITY_TIERS = [
+  { units: 1, points: 1 },
+  { units: 4, points: 2 },
+  { units: 8, points: 3 },
+  { units: 15, points: 4 },
+  { units: 25, points: 5 },
+];
 
 /**
  * MIÉRT kaptál pontot — magyar szöveg a `sourceKey`-ből.
@@ -1369,6 +1402,9 @@ function achievementReasonText(sourceKey) {
   if (key === 'profile-complete') return 'a profilod kitöltéséért';
   if (key.startsWith('referral:')) return 'egy meghívott barátod regisztrációjáért';
   if (key.startsWith('news-like-restore:')) return 'egy korábban elveszett lájkpont visszaállításáért';
+  if (key.startsWith('submission:')) return 'egy jóváhagyott beküldésedért';
+  if (key.startsWith('release-purchase:')) return 'egy kiadvány megvásárlásáért';
+  if (key.startsWith('daily-activity:')) return 'a tegnapi közösségi aktivitásodért (hozzászólás és chat)';
   return 'egy jóváírt tevékenységért';
 }
 
@@ -1408,25 +1444,45 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
   const profileRef = db.collection('community_profiles').doc(uid);
   const isNewsLikeGrant = delta > 0 && sourceKey.startsWith('news-like:');
   const isArticleCommentGrant = delta > 0 && sourceKey.startsWith('article-comment:');
-  // A hir-lajkolas es a cikk-komment a leggyorsabban farmolhato pontforras,
-  // ezert NAPONTA VEGES: egy fiok legfeljebb ennyi alkalommal kap erte pontot.
-  // A tulajdonos szandeka: hirre 3, kommentre 3 (korabban 5 volt mindkettore).
+  const isSubmissionGrant = delta > 0 && sourceKey.startsWith('submission:');
+  // A hir-lajkolas, a cikk-komment es a jovahagyott bekuldes a
+  // leggyorsabban farmolhato pontforras, ezert NAPONTA VEGES: egy fiok
+  // legfeljebb ennyi alkalommal kap erte pontot. A tulajdonos szandeka:
+  // hirre 3, kommentre 3 (korabban 5 volt mindkettore), bekuldesre 3.
   //
   // A fenti `ledger.exists` ellenorzes ezt onmagaban NEM valtja ki: az csak
   // ugyanazt a cikket ismetelten lajkolotol ved (a ledger-kulcs tartalmazza a
   // postId-t), egy nap viszont 40 kulonbozo cikket is lehet lajkolni. Ezert
   // kell a kulon napi szamlalo.
-  const dailyLimit = isNewsLikeGrant
-    ? NEWS_LIKE_DAILY_POINT_LIMIT
+  //
+  // A keret FAJTAJA (`kind`) a profilba is bekerul (`achievementDailyLimit`),
+  // es a kliens ebbol irja ki a „Ma 2/3" jelzest — ezert egy helyen kell
+  // kepezni, hogy a szamlalo-gyujtemeny es a kliens jelzese ne csuszszon el.
+  const dailyLimitKind = isNewsLikeGrant
+    ? 'newsLike'
     : isArticleCommentGrant
-      ? ARTICLE_COMMENT_DAILY_POINT_LIMIT
-      : null;
+      ? 'articleComment'
+      : isSubmissionGrant
+        ? 'submission'
+        : null;
+  const dailyLimit =
+    dailyLimitKind === 'newsLike'
+      ? NEWS_LIKE_DAILY_POINT_LIMIT
+      : dailyLimitKind === 'articleComment'
+        ? ARTICLE_COMMENT_DAILY_POINT_LIMIT
+        : dailyLimitKind === 'submission'
+          ? APPROVED_SUBMISSION_DAILY_POINT_LIMIT
+          : null;
+  const dailyLimitCollection =
+    dailyLimitKind === 'newsLike'
+      ? 'achievement_news_like_limits'
+      : dailyLimitKind === 'articleComment'
+        ? 'achievement_article_comment_limits'
+        : 'achievement_submission_limits';
   const dailyLimitRef =
     dailyLimit == null
       ? null
-      : db
-          .collection(isNewsLikeGrant ? 'achievement_news_like_limits' : 'achievement_article_comment_limits')
-          .doc(`${uid}_${new Date().toISOString().slice(0, 10)}`);
+      : db.collection(dailyLimitCollection).doc(`${uid}_${new Date().toISOString().slice(0, 10)}`);
   let result = { changed: false };
   // A WordPress fetch must never run inside a Firestore transaction: it can
   // hold the document lock for the full 2.5s HTTP timeout and cause contention.
@@ -1488,7 +1544,7 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
         ...(dailyLimitRef
           ? {
               achievementDailyLimit: {
-                kind: isNewsLikeGrant ? 'newsLike' : 'articleComment',
+                kind: dailyLimitKind,
                 date: new Date().toISOString().slice(0, 10),
                 count: nextDailyCount,
                 limit: dailyLimit,
@@ -1571,6 +1627,11 @@ exports.__awardAchievementPointsForTests = awardAchievementPoints;
 exports.__achievementDailyLimitsForTests = {
   newsLike: NEWS_LIKE_DAILY_POINT_LIMIT,
   articleComment: ARTICLE_COMMENT_DAILY_POINT_LIMIT,
+  submission: APPROVED_SUBMISSION_DAILY_POINT_LIMIT,
+};
+exports.__achievementPointsForTests = {
+  approvedSubmission: APPROVED_SUBMISSION_POINTS,
+  releasePurchase: RELEASE_PURCHASE_POINTS,
 };
 
 exports.reconcileAchievementPoints = functions
@@ -2858,6 +2919,81 @@ async function applyAchievementRestorePlan({
 }
 
 /**
+ * Hány pont jár a napi aktivitásért (0–5). TISZTA logika, ezért tesztelhető.
+ *
+ * Sávok (`units` = hozzászólás × 2 + chat-üzenet):
+ *   1 egység → 1 pont · 4 → 2 · 8 → 3 · 15 → 4 · 25 → 5
+ * Egyetlen tevékenység (egy komment vagy egy chat-üzenet) tehát már 1 pontot ér,
+ * a plafon pedig napi 5 — így nem lehet a chattel pontot farmolni.
+ */
+function dailyActivityPointsFor({ comments = 0, chatMessages = 0 } = {}) {
+  const clean = (value) => Math.max(0, Math.floor(Number(value) || 0));
+  const units = clean(comments) * DAILY_ACTIVITY_COMMENT_WEIGHT + clean(chatMessages);
+  let points = 0;
+  for (const tier of DAILY_ACTIVITY_TIERS) {
+    if (units >= tier.units) points = tier.points;
+  }
+  return Math.min(DAILY_ACTIVITY_MAX_POINTS, points);
+}
+
+/**
+ * Napi aktivitás számlálása (szerveroldali, a kliens számára nem olvasható).
+ *
+ * BEST-EFFORT: az aktivitás (hozzászólás, chat-üzenet) soha nem bukhat el azon,
+ * hogy a számláló nem íródott meg — viszont naplózzuk, hogy egy hiányzó pont
+ * visszakövethető legyen.
+ */
+async function recordDailyActivity(uid, field, amount = 1) {
+  const cleanUid = String(uid || '').trim();
+  if (!cleanUid || !['comments', 'chatMessages'].includes(field)) return false;
+  const date = new Date().toISOString().slice(0, 10);
+  try {
+    await db
+      .collection('daily_activity')
+      .doc(`${cleanUid}_${date}`)
+      .set(
+        {
+          uid: cleanUid,
+          date,
+          [field]: FieldValue.increment(Math.max(1, Math.floor(Number(amount) || 1))),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+    return true;
+  } catch (error) {
+    console.warn(
+      JSON.stringify({
+        event: 'daily_activity_record_failed',
+        field,
+        message: error?.message || String(error),
+      }),
+    );
+    return false;
+  }
+}
+
+/**
+ * A LEZÁRT nap értékelése és kiosztása egy felhasználónak.
+ *
+ * A naplókulcs a nap, ezért ugyanarra a napra kétszer nem fizet (akkor sem, ha a
+ * függvény újrafut, vagy a felhasználó még aznap aktivitást folytat).
+ */
+async function awardDailyActivityForDay({ uid, date, comments, chatMessages }) {
+  const cleanUid = String(uid || '').trim();
+  const cleanDate = String(date || '').trim();
+  const points = dailyActivityPointsFor({ comments, chatMessages });
+  if (!cleanUid || !cleanDate || points <= 0) return { changed: false, points: 0 };
+  const result = await awardAchievementPoints(cleanUid, points, `daily-activity:${cleanDate}`);
+  return { changed: result.changed === true, points };
+}
+
+exports.__achievementReasonTextForTests = achievementReasonText;
+exports.__dailyActivityPointsForTests = dailyActivityPointsFor;
+exports.__recordDailyActivityForTests = recordDailyActivity;
+exports.__awardDailyActivityForDayForTests = awardDailyActivityForDay;
+
+/**
  * Karbantartó munka élesítése (a tulajdonos jóváhagyásával).
  *
  * MIÉRT Firestore-trigger, és nem kliensről hívható függvény: a visszaállítás
@@ -2926,6 +3062,84 @@ exports.runAchievementRestoreJob = onDocumentWritten(
 
 exports.__buildAchievementRestorePlanForTests = buildAchievementRestorePlan;
 exports.__applyAchievementRestorePlanForTests = applyAchievementRestorePlan;
+exports.__awardApprovedSubmissionPointsForTests = awardApprovedSubmissionPoints;
+exports.__awardReleasePurchasePointsForTests = awardReleasePurchasePoints;
+
+/**
+ * A chat-aktivitás számlálása.
+ *
+ * MIÉRT trigger kell: a chat-üzenetet a KLIENS írja közvetlenül a
+ * `live_feed_posts` gyűjteménybe (a szabályok engedik), ezért a szerver csak
+ * így látja. A vendég (anonim) fiókot nem számoljuk — nincs profilja, és
+ * pontot sem kaphat, ezt az `awardAchievementPoints` is kikényszeríti.
+ */
+exports.recordChatActivity = onDocumentCreated(
+  {
+    document: 'live_feed_posts/{postId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  async (event) => {
+    const data = event.data?.data() || {};
+    const uid = String(data.authorId || '').trim();
+    if (!uid) return null;
+    if (data.isAnonymous === true) return null;
+    await recordDailyActivity(uid, 'chatMessages');
+    return null;
+  },
+);
+
+/**
+ * A NAPI AKTIVITÁSI PONT kiosztása (1–5) — naponta egyszer, a LEZÁRT napra.
+ *
+ * MIÉRT 03:20 (budapesti idő): a napi számlálók a **UTC-nap** szerint készülnek
+ * (mint a többi napi keret), a UTC-nap viszont Budapesten 01:00/02:00-kor zárul.
+ * Ha a feladat 00:20-kor futna, a még nyitott UTC-napot értékelné, és a
+ * hajnali aktivitás elveszne. 03:20-kor a `now - 24h` UTC-dátuma már egy
+ * **lezárt** nap, ezért a pont mindig a teljes napra jár.
+ */
+exports.awardDailyActivityPoints = onSchedule(
+  {
+    schedule: '20 3 * * *',
+    timeZone: 'Europe/Budapest',
+    region: 'europe-central2',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    const date = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const snapshot = await db.collection('daily_activity').where('date', '==', date).get();
+    let awarded = 0;
+    let points = 0;
+    let failures = 0;
+    for (const document of snapshot.docs) {
+      const data = document.data() || {};
+      try {
+        const result = await awardDailyActivityForDay({
+          uid: data.uid,
+          date,
+          comments: data.comments,
+          chatMessages: data.chatMessages,
+        });
+        if (result.changed) {
+          awarded += 1;
+          points += result.points;
+        }
+      } catch (error) {
+        failures += 1;
+        console.warn(
+          JSON.stringify({
+            event: 'daily_activity_award_failed',
+            message: error?.message || String(error),
+          }),
+        );
+      }
+    }
+    const summary = { event: 'daily_activity_awarded', date, candidates: snapshot.size, awarded, points, failures };
+    console.log(JSON.stringify(summary));
+    return summary;
+  },
+);
 
 exports.rateEvent = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   const uid = context.auth?.uid;
@@ -3118,6 +3332,35 @@ exports.claimProfileCompletionAchievement = functions
     if (!complete) return { awarded: false };
     const result = await awardAchievementPoints(uid, 30, 'profile-complete');
     return { awarded: result.changed === true, points: 30 };
+  });
+
+/**
+ * A jelvény-katalógus a KLIENSNEK (a „Több → Achievementek" útmutatóhoz).
+ *
+ * MIÉRT: a szintek listája korábban az appba volt beégetve, ezért **némán
+ * elavult**, ha a tulajdonos a WordPress adminban átírt egy küszöböt vagy
+ * nevet. A hiteles forrás a WordPress (`/achievements/badges`), ezt a
+ * szerveroldali gyorsítótárat (`getAchievementBadges()`, 30 s) adjuk tovább —
+ * így egy helyen dől el, mi az érvényes szintezés.
+ *
+ * Nyilvános (bejelentkezés nélkül is), ezért IP-re szűrt kérés-limittel.
+ */
+exports.getAchievementBadgeCatalog = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    if (!(await allowCallByIp(context, 'achievement_catalog', 60))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok kérés, próbáld később.');
+    }
+    const badges = await getAchievementBadges();
+    return {
+      badges: (Array.isArray(badges) ? badges : []).map((badge) => ({
+        slug: String(badge?.slug || ''),
+        name: String(badge?.name || ''),
+        minPoints: Math.max(0, Number(badge?.min_points || 0)),
+        description: String(badge?.description || ''),
+        imageUrl: String(badge?.image_url || ''),
+      })),
+    };
   });
 
 function securityLog(event, context) {
@@ -3670,6 +3913,32 @@ exports.submitWordPressContent = wordPressCall(async (data, context) => {
   }
   await requestRef.set({ response: body, completedAt: FieldValue.serverTimestamp() }, { merge: true });
   if (body?.id) {
+    // A JÓVÁHAGYÁSKOR pontot adunk a beküldőnek, ezért tudnunk kell, KI küldte
+    // be: a WordPress-beküldés azonosítóját a beküldőhöz kötjük. Ez a
+    // megfeleltetés szerveroldali (a kliensek számára nincs rá szabály), és
+    // a pontot is a JÓVÁHAGYÁS adja — a beküldő magát nem tudja jóváírni.
+    try {
+      await db.collection('submission_authors').doc(String(body.id)).set(
+        {
+          uid: context.auth.uid,
+          kind: String(data.kind || ''),
+          title: String(body.title || payload.title || '').slice(0, 200),
+          createdAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+    } catch (error) {
+      // A beküldés a WordPressben már létrejött, ezért itt NEM dobunk (a
+      // felhasználó ne kapjon hibát egy sikeres beküldésre) — de naplózzuk,
+      // hogy a hiányzó pont visszakövethető legyen.
+      console.warn(
+        JSON.stringify({
+          event: 'submission_author_map_failed',
+          wpId: String(body.id),
+          message: error?.message || String(error),
+        }),
+      );
+    }
     const label = data.kind === 'artist' ? 'DJ' : data.kind === 'organizer' ? 'szervező' : 'esemény';
     await notifySubmissionAdmins(label, body.title || payload.title || '', body.id).catch((error) =>
       console.warn('submission admin push failed', error),
@@ -3717,6 +3986,40 @@ exports.listWordPressSubmissions = wordPressCall(async (data, context) => {
     : [];
 });
 
+/**
+ * Jóváhagyott közösségi beküldés = pont a BEKÜLDŐNEK.
+ *
+ * MIÉRT itt (és nem a beküldésnél): a pont csak **ellenőrzött** munkáért jár, a
+ * jóváhagyás pedig admin-művelet. Így a felhasználó nem tudja magát jóváírni,
+ * és a `submission:<kind>:<wpId>` naplókulcs miatt ugyanaz a beküldés csak
+ * egyszer ér pontot (akkor is, ha az admin többször nyom jóváhagyást).
+ * A napi keret (`APPROVED_SUBMISSION_DAILY_POINT_LIMIT`) a `submission:` forrásra
+ * automatikusan érvényes az `awardAchievementPoints`-ban.
+ */
+async function awardApprovedSubmissionPoints(wpId) {
+  const id = Number(wpId);
+  if (!Number.isInteger(id) || id <= 0) return { changed: false };
+  const mapping = await db.collection('submission_authors').doc(String(id)).get();
+  const uid = String(mapping.data()?.uid || '').trim();
+  if (!uid) return { changed: false };
+  const kind = String(mapping.data()?.kind || 'event').trim() || 'event';
+  return awardAchievementPoints(uid, APPROVED_SUBMISSION_POINTS, `submission:${kind}:${id}`);
+}
+
+/**
+ * Megvásárolt kiadvány-változat = pont.
+ *
+ * A vásárlást a `verifyLabelPurchase` a **Google Play APIn** keresztül
+ * ellenőrzi (a játékos nem tud hamis vásárlást beállítani), ezért itt nem kell
+ * napi keret. A naplókulcs a **termék-azonosító**, ezért minden megvásárolt
+ * változat (pl. radio + extended) egyszer jár — a tulajdonos döntése szerint.
+ */
+async function awardReleasePurchasePoints(uid, productId) {
+  const clean = String(productId || '').trim();
+  if (!uid || !clean) return { changed: false };
+  return awardAchievementPoints(uid, RELEASE_PURCHASE_POINTS, `release-purchase:${clean}`);
+}
+
 exports.manageWordPressSubmission = wordPressCall(async (data, context) => {
   if (!context.auth) {
     throw new HttpsError('permission-denied', 'Csak admin kezelheti a beküldéseket.');
@@ -3750,7 +4053,18 @@ exports.manageWordPressSubmission = wordPressCall(async (data, context) => {
   if (!response.ok) {
     throw new HttpsError('failed-precondition', body?.message || 'A WordPress művelet sikertelen.');
   }
-  return { ok: true, action, id, profileId: body?.profile_id || null };
+  // A JÓVÁHAGYÁS adja a pontot a beküldőnek (a beküldő maga nem tudja).
+  let achievement = { changed: false };
+  if (action === 'approve') {
+    achievement = await awardApprovedSubmissionPoints(id);
+  }
+  return {
+    ok: true,
+    action,
+    id,
+    profileId: body?.profile_id || null,
+    achievementPoints: achievement.changed ? APPROVED_SUBMISSION_POINTS : 0,
+  };
 });
 
 exports.updateWordPressSubmission = wordPressCall(async (data, context) => {
@@ -3913,6 +4227,8 @@ async function deleteUserReferences(uid, profileData = {}) {
     rewardedTransactions,
     referringProfiles,
     ownPosts,
+    dailyActivity,
+    submissionAuthors,
   ] = await Promise.all([
     db.collectionGroup('users').get(),
     db.collection('connection_requests').where('from', '==', uid).get(),
@@ -3933,6 +4249,11 @@ async function deleteUserReferences(uid, profileData = {}) {
     db.collection('admob_reward_transactions').where('uid', '==', uid).get(),
     db.collection('community_profiles').where('referredBy', '==', uid).get(),
     db.collection('live_feed_posts').where('authorId', '==', uid).get(),
+    // A napi aktivitás számlálója és a beküldés-szerző megfeleltetés is a
+    // törölt felhasználóra mutat, ezért ezek is mennek (a törlés ígérete: a
+    // fiókra vonatkozó adat nem marad).
+    db.collection('daily_activity').where('uid', '==', uid).get(),
+    db.collection('submission_authors').where('uid', '==', uid).get(),
   ]);
   const cloudinaryAssets = [];
   for (const [publicIdKey, urlKey] of [
@@ -4074,6 +4395,8 @@ async function deleteUserReferences(uid, profileData = {}) {
     deleteDocumentReferences(labelPurchaseClaims.docs),
     deleteDocumentReferences(labelAdUnlocks.docs),
     deleteDocumentReferences(rewardedTransactions.docs),
+    deleteDocumentReferences(dailyActivity.docs),
+    deleteDocumentReferences(submissionAuthors.docs),
     ...conversations.docs.map((conversation) => db.recursiveDelete(conversation.ref)),
     ...ownPosts.docs.map((post) => post.ref.delete()),
   ]);
@@ -4790,7 +5113,16 @@ exports.verifyLabelPurchase = functions
       }
       tx.set(entitlementRef, entitlement, { merge: true });
     });
-    return { verified: true, releaseId, productId };
+    // A megvásárolt kiadvány pontot ér. A naplókulcs a TERMÉK-azonosító, ezért
+    // minden megvásárolt változat egyszer jár, és egy ismételt ellenőrzés
+    // (ugyanaz a token) nem ad új pontot.
+    const achievement = await awardReleasePurchasePoints(context.auth.uid, productId);
+    return {
+      verified: true,
+      releaseId,
+      productId,
+      achievementPoints: achievement.changed ? RELEASE_PURCHASE_POINTS : 0,
+    };
   });
 
 exports.getLabelDownloadUrl = functions
