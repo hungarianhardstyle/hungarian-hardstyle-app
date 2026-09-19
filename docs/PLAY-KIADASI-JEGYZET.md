@@ -62,6 +62,7 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 - ÚJ: napi aktivitási pont — kommentért és chatért 1–5 pont jár, a szerver számolja.
 - ÚJ: kiadvány megvásárlásáért +20, jóváhagyott beküldésért +10 pont jár.
 - Az Achievement-útmutató pontos leírást kapott (napi keretek, szabályok).
+- A rangod és a jelvényed szintlépésnél magától frissül, nem kell újranyitni az appot.
 - A hírek, a DJ-k és az események listája görgetés közben már nem villog.
 ```
 
@@ -72,9 +73,10 @@ felsorolni, mit kap a felhasználó.
 
 ```play-notes
 - ÚJ: napi aktivitási pont — kommentért és chatért 1–5 pont jár, a szerver számolja.
-- ÚJ: kiadvány megvásárlásáért +20 pont jár minden megvásárolt változatért.
+- ÚJ: kiadvány-vásárlásért +20 pont jár minden változatért.
 - ÚJ: a jóváhagyott beküldésekért (esemény, DJ, szervező) +10 pont jár.
-- Az Achievement-útmutató pontos leírásokat kapott: napi keretek, szabályok.
+- Az Achievement-útmutató pontos leírásokat kapott: napi keretek.
+- A rang és a jelvény szintlépésnél magától frissül.
 - A hírek, a DJ-k és az események listája görgetés közben már nem villog.
 - A kedvelt hír pontját a lájk visszavonása nem veszi el.
 ```
