@@ -54,9 +54,10 @@ class RadioPlaybackService : Service() {
     private var focusRequest: AudioFocusRequest? = null
 
     /**
-     * Elhallgattunk-e azért, mert egy MÁSIK app (Spotify/YouTube) elvette a
-     * fókusz? Ilyenkor a lejátszási **szándék megmarad**, és amint a másik app
-     * abbahagyja, folytatjuk (lásd [registerPlaybackWatcher]).
+     * Elhallgattunk-e azért, mert egy MÁSIK app (Spotify/YouTube) **véglegesen**
+     * elvette a fókusz? Ilyenkor a lejátszási **szándék megmarad**, és amint a
+     * másik app abbahagyja, magunktól folytatjuk (lásd
+     * [registerPlaybackWatcher] és [resumeAfterFocusLoss]).
      */
     private var pausedByFocus = false
 
@@ -119,6 +120,12 @@ class RadioPlaybackService : Service() {
         if (!pausedByFocus || !isPlaybackRequested()) return
         val url = streamUrl
         if (url.isNullOrBlank()) return
+        // ⚠️ HÍVÁS VÉDELME: hívás közben a rendszer „mode"-ja IN_CALL /
+        // IN_COMMUNICATION, ilyenkor a zene-stream NEM aktív, ezért a
+        // `isMusicActive` önmagában nem védené meg a hívást — a rádió
+        // beleszólna. Ez a kapu publikus API, nem kell hozzá engedély.
+        val mode = audioManager.mode
+        if (mode == AudioManager.MODE_IN_CALL || mode == AudioManager.MODE_IN_COMMUNICATION) return
         val musicPlaying = runCatching { audioManager.isMusicActive }.getOrDefault(true)
         if (musicPlaying) return
         if (!requestAudioFocus()) return
@@ -149,8 +156,8 @@ class RadioPlaybackService : Service() {
     /** MÁS APP hangja: elhallgatunk, majd folytatjuk (lásd [registerPlaybackWatcher]). */
     private val focusListener = AudioManager.OnAudioFocusChangeListener { change ->
         when (change) {
-            AudioManager.AUDIOFOCUS_LOSS -> pauseForFocusLoss()
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> pauseForFocusLoss()
+            AudioManager.AUDIOFOCUS_LOSS -> pauseForFocusLoss(permanent = true)
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> pauseForFocusLoss(permanent = false)
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> player?.setVolume(0.2f, 0.2f)
             AudioManager.AUDIOFOCUS_GAIN -> {
                 pausedByFocus = false
@@ -280,22 +287,30 @@ class RadioPlaybackService : Service() {
      *
      * A lejátszási SZÁNDÉK megmarad (`playing` igaz, az URL mentve), a fókusz
      * kérése pedig a helyén marad — ezért tudunk magunktól folytatni:
-     *  - **ideiglenes** elvesztésnél a rendszer küldi a `AUDIOFOCUS_GAIN`-t;
      *  - **végleges** elvesztésnél (Spotify/YouTube „elvette") a rendszer
-     *    **nem** küld semmit, ezért a [registerPlaybackWatcher] figyeli, mikor hagyja
-     *    abba a másik app, és akkor kér fókuszt újra.
+     *    **nem** küld semmit, ezért a [registerPlaybackWatcher] és a
+     *    [focusWatchdog] figyeli, mikor hagyja abba a másik app, és akkor kér
+     *    fókuszt újra;
+     *  - **ideiglenes** elvesztésnél (hívás, navigáció) a rendszer **küldi** a
+     *    `AUDIOFOCUS_GAIN`-t, ezért itt **nem** indítunk őrkutyát: az csak
+     *    ártana, mert hívás közben a zene-stream nem aktív, és a 2
+     *    másodpercenkénti próbálkozás visszavenné a fókuszt a hívástól.
      *
      * A szolgáltatás **fut tovább** (az értesítés is megmarad), csak a hang
      * hallgat el — így nem kell újraindítani a lejátszást a felhasználónak.
      */
-    private fun pauseForFocusLoss() {
+    private fun pauseForFocusLoss(permanent: Boolean) {
         reconnectHandler.removeCallbacks(reconnect)
         releasePlayer()
         releaseLocks()
-        pausedByFocus = true
-        // Amíg a másik app szól, figyeljük, mikor hagyja abba (lásd
-        // [resumeAfterFocusLoss]) — és a visszahívás mellett a 2 másodperces
-        // őrkutya is indul, mert a visszahívás nem garantált.
+        // ⚠️ SZÁNDÉKOS: a jelző csak a VÉGLEGES elvesztést jelöli, mert csak
+        // akkor kell magunknak visszaszereznünk a fókuszt. Ideiglenes
+        // elvesztésnél (hívás) a rendszer küldi a `AUDIOFOCUS_GAIN`-t, és ha a
+        // jelző bekapcsolva maradna, az őrkutya hívás közben visszavenné a
+        // fókuszt a hívástól.
+        pausedByFocus = permanent
+        if (!permanent) return
+        // Csak a végleges elvesztésnél figyelünk — lásd a fenti indoklást.
         reconnectHandler.removeCallbacks(focusWatchdog)
         reconnectHandler.postDelayed(focusWatchdog, FOCUS_RETRY_DELAY_MS)
     }

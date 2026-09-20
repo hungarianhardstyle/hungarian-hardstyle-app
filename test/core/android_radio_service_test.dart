@@ -117,7 +117,7 @@ void main() {
       final body = _functionBody(service, 'pauseForFocusLoss');
       expect(body, contains('releasePlayer'));
       expect(body, contains('releaseLocks'));
-      expect(body, contains('pausedByFocus = true'));
+      expect(body, contains('pausedByFocus = permanent'));
       expect(
         body,
         isNot(contains('stopSelf')),
@@ -132,6 +132,16 @@ void main() {
         body,
         isNot(contains('stopForeground')),
         reason: 'az értesítés maradjon ott, hogy vissza tudjunk térni',
+      );
+      expect(
+        _bodyAfter(service, 'val focusListener'),
+        contains('pauseForFocusLoss(permanent = true)'),
+        reason: 'a végleges elvesztés külön ág',
+      );
+      expect(
+        _bodyAfter(service, 'val focusListener'),
+        contains('pauseForFocusLoss(permanent = false)'),
+        reason: 'a hívás/navigáció ideiglenes ág',
       );
     });
   });
@@ -185,9 +195,24 @@ void main() {
       expect(body, contains('if (musicPlaying) return'));
       expect(body, contains('if (!pausedByFocus'));
       expect(
+        body,
+        contains('MODE_IN_CALL'),
+        reason: 'hívás közben a zene-stream nem aktív — a rádió beleszólna',
+      );
+      expect(body, contains('MODE_IN_COMMUNICATION'));
+      expect(
         service,
         isNot(contains('clientUid')),
         reason: 'a getClientUid()/isActive() rendszer-API: nem is fordul le',
+      );
+    });
+
+    test('ideiglenes elvesztésnél (hívás) nem indul őrkutya', () {
+      final body = _functionBody(service, 'pauseForFocusLoss');
+      expect(
+        body.indexOf('if (!permanent) return'),
+        lessThan(body.indexOf('postDelayed(focusWatchdog')),
+        reason: 'a hívás alatt nem szabad fókuszt visszakérni',
       );
     });
 
