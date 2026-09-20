@@ -1,5 +1,22 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Nyereményjáték-sorsolás: „biztos random?" — MÉRVE, nem feltételezve (2026-09-20, **szerver/eszköz: AAB NEM kell hozzá**)
+
+- **A tulajdonos jelzése:** *„nyereményjáték sorolás teszt: az elsőnél a legelső beküldő nyert, a másodiknál a legutolsó — biztos random?"*
+- **A VÁLASZ: IGEN, random — és a két megfigyelése is igaz, mindkettő 1/n esélyű volt.** A sorsolás a `drawPrizeWinnerForPrizes`-ben (`functions/index.js`) **`crypto.randomInt(0, eligible)`**-tal húz (a Node **kriptográfiailag biztonságos** generátora, nem `Math.random`), a jelöltlista pedig a **helyes választ adók** listája (`/prize/participants`), a beküldés sorrendjében. Nincs súlyozás, nincs „első/utolsó" előny.
+- **A MÉRT HÚZÁSOK (élő, `node tools/check-prize-draws.mjs --days 30 --participants`):**
+  - `#12709` (2026-09-18, nyertes **Denoiser**): **3 jogosult**, a nyertes az **1.** helyen → esélye **33,3%**;
+  - `#12797` (2026-09-20, nyertes **Kobakologia**): **8 jogosult**, a nyertes a **8.** helyen → esélye **12,5%**.
+  - Együtt **1/24 ≈ 4,2%** — ez **nem** említésre méltó ritkaság, két húzásból **nem lehet** elfogultságra következtetni (2 húzásnál a minta semmi).
+- **⚠️ A MÉRÉS KÉT FORRÁSA (és miért kellett a második):** az audit-adat a `prize_draws/<prizeId>` dokumentumban van (`eligibleCount`, `chosenIndex`, `candidatesHash`, `drawnAt`) — ezt a **341-es körben** tette be a függvény, ezért a `#12709` dokumentumában **nincs** (`chosenIndex` hiányzik). A Cloud Logging `prize_draw_choice` bejegyzése **már nem elérhető** (a napló lejár) — ezért a régi húzásnál a **jelöltlista mai állapotából** rekonstruáltam a helyet (`--participants`, jelszóval védett végpont, Secret Managerből olvasott jelszóval; **csak olvasás**). Ez **utólagos rekonstrukció**, nem a húzás pillanatában naplózott adat — ezt az eszköz ki is mondja.
+- **⚠️ TANULSÁG:** a *„nézzünk a naplóba"* itt **nem működött** (0 találat, mert a napló lejárt) — a **dokumentumba írt audit-adat** az, ami évekig bizonyít. Ezért a `chosenIndex`/`eligibleCount` beírása nem „extra", hanem a **bizonyíthatóság** feltétele.
+- **AZ ESZKÖZ (`tools/check-prize-draws.mjs`) BŐVÍTÉSE:** éles módban (1) a Firestore `prize_draws` az **elsődleges** forrás, (2) a napló a **kiegészítés** (ha a dokumentumban nincs audit-adat, de a naplóban még megvan), (3) `--participants` esetén a **jelöltlistából való rekonstrukció**, és a végén egy **megfigyelés** arról, hány húzás esett a lista szélére (első/utolsó) — **kimondva, hogy ez önmagában nem bizonyíték**.
+- **BIZONYÍTÁS (mind a generátorra, mind a mérésre):**
+  - `node tools/check-prize-draws.mjs --self-test` → **9/9**: 2/3/5 jelöltnél 200 000 húzás, a legnagyobb eltérés **<0,18 százalékpont**; egy **szándékosan elrontott** („mindig az első") szabályt a mérés **elkap** (66,7 százalékpont); a húzás a `0..n-1` tartományban marad; **új**: a rekonstrukció a nyertest az **első** és az **utolsó** helyen is megtalálja, ismeretlen nyertesnél **nem tippel** (`-1`), üres listánál nem hibázik.
+  - `npx firebase emulators:exec --only firestore --project demo-huhs "node functions/prize-draw.test.cjs"` → **24/24**, köztük *„a sorsolás NEM favorizálja az ELSŐ beküldőt (200 húzás, valódi véletlen)"*.
+  - **Mutációs bizonyíték:** a rekonstrukciót elrontva (mindig `0` index) a self-test **3 hibát** jelez (6/9), majd a fájl **byte-pontosan** visszaállt (SHA-256 egyezik).
+- **A SORSOLÁS EGYSZER FUT (mérve a kódban):** az ütemezett függvény a WordPress `/prize/pending` listáját dolgozza fel (lezárult, nyertes nélküli játékok), a WordPress `huhs_prize_set_winner()` pedig **nem írja felül** a meglévő nyertest — ezért egy játékot nem sorsol újra, és a véletlen döntés nem módosul utólag.
+
 ### A 341 SAJÁT REGRESSZIÓJA: a könyvtár kártyái „betöltés" állapotban ragadtak (2026-09-20, AAB **342**)
 
 - **A tulajdonos jelzése egy képernyőfelvétellel:** *„itt valami eltört"* — a felvételen (ffmpeg-gel kockákra bontva, `read_image`-del megnézve) a **„Megvásárolt zenéim"** lista **minden** kártyája ezt mutatta: `Kiadvány #12466` / `Adatok betöltése…` **végig**, 9 másodpercig — **miközben a lejátszósáv már a valódi címet** („Goze - TikaTika — MP3 96") és a fejléc valódi számokat („17 kiadvány · 22 tétel · 166,7 MB").
