@@ -95,7 +95,7 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 - A rádió képernyő-ki mellett is szól, és elhallgat, ha közben Spotify vagy YouTube indul — majd magától folytatódik.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–337 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–338 összesítő)
 
 **Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
