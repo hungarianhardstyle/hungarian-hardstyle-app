@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hungarian_hardstyle_app/models/label_library.dart';
 import 'package:hungarian_hardstyle_app/models/release.dart';
@@ -129,18 +131,48 @@ void main() {
       expect(previousLabelQueueIndex(0, 0), -1);
     });
 
-    test('az első letöltetlen tétel adja a sor kezdetét', () {
+    test('az első LETÖLTÖTT tétel adja a lejátszás kezdetét', () {
       final queue = buildLabelQueue(
         items: [item(100, ['radio_wav', 'wav'])],
         catalog: {100: release(100, 'Kiadvány')},
       );
-      expect(firstUndownloadedIndex(queue, {}), 0);
-      expect(firstUndownloadedIndex(queue, {'100:radio_wav'}), 1);
       expect(
-        firstUndownloadedIndex(queue, {'100:radio_wav', '100:wav'}),
+        firstDownloadedIndex(queue, {}),
         -1,
-        reason: 'ha minden megvan, nincs mit letölteni',
+        reason: 'amíg semmi nincs letöltve, nincs mit lejátszani',
       );
+      expect(firstDownloadedIndex(queue, {'100:wav'}), 1);
+      expect(firstDownloadedIndex(queue, {'100:radio_wav'}), 0);
+    });
+
+    test('a lapozás ÁTUGORJA a nem letöltött tételeket (nem indít letöltést)', () {
+      final queue = buildLabelQueue(
+        items: [item(100, ['radio_wav', 'wav', 'mp3_320'])],
+        catalog: {100: release(100, 'Kiadvány')},
+      );
+      // Csak az első és a harmadik van meg: a „következő" a harmadik legyen.
+      final downloaded = {'100:radio_wav', '100:mp3_320'};
+      expect(nextDownloadedIndex(queue, downloaded, 0), 2);
+      expect(previousDownloadedIndex(queue, downloaded, 2), 0);
+    });
+
+    test('a sor végén megáll (nincs több letöltött tétel)', () {
+      final queue = buildLabelQueue(
+        items: [item(100, ['radio_wav', 'wav'])],
+        catalog: {100: release(100, 'Kiadvány')},
+      );
+      expect(nextDownloadedIndex(queue, {'100:radio_wav'}, 0), -1);
+      expect(previousDownloadedIndex(queue, {'100:wav'}, 1), -1);
+    });
+
+    test('kiindulás: az első, illetve a legutolsó letöltött tétel', () {
+      final queue = buildLabelQueue(
+        items: [item(100, ['radio_wav', 'wav'])],
+        catalog: {100: release(100, 'Kiadvány')},
+      );
+      final downloaded = {'100:wav'};
+      expect(nextDownloadedIndex(queue, downloaded, -1), 1);
+      expect(previousDownloadedIndex(queue, downloaded, -1), 1);
     });
   });
 
@@ -209,4 +241,75 @@ void main() {
       expect(parsed.owns('wav'), isFalse);
     });
   });
+
+  group('forrás-lint: a felület csak a LETÖLTÖTT zenéket játssza', () {
+    late String source;
+
+    setUpAll(() {
+      source = File('lib/screens/more/my_music_screen.dart').readAsStringSync();
+    });
+
+    test('a lapozás a letöltött tételek között lépked', () {
+      expect(
+        source,
+        contains('nextDownloadedIndex(_queue, _downloaded, _currentIndex)'),
+      );
+      expect(
+        source,
+        contains('previousDownloadedIndex(_queue, _downloaded, _currentIndex)'),
+      );
+      expect(source, contains('firstDownloadedIndex(_queue, _downloaded)'));
+      expect(
+        source,
+        isNot(contains('nextLabelQueueIndex(')),
+        reason: 'a „nyers" következő már nem használható a lapozáshoz',
+      );
+    });
+
+    test('a lejátszás NEM indít letöltést (csak jelzi, hogy nincs meg)', () {
+      final body = _functionBody(source, '_playIndex');
+      expect(body, isNot(contains('_ensureDownloaded')));
+      expect(body, contains('if (!_downloaded.contains(entry.key))'));
+      expect(body, contains('még nincs letöltve'));
+    });
+
+    test('a szám végi továbblépés is letöltött tételre lép', () {
+      final body = _functionBody(source, '_advance');
+      expect(body, contains('nextDownloadedIndex(_queue, _downloaded,'));
+      expect(body, isNot(contains('_ensureDownloaded')));
+    });
+
+    test('a nyilvános listából eltűnt kiadványt megnevezzük, nem tippelünk', () {
+      expect(source, contains("'Ez a kiadvány már nem elérhető'"));
+      expect(source, contains('_unavailableReleases'));
+      expect(source, contains('.getRelease(releaseId)'));
+      expect(
+        source,
+        contains('catalogById.containsKey(item.releaseId)'),
+        reason: 'a sorba csak az kerülhet, amiről tudjuk, mi az',
+      );
+    });
+  });
+}
+
+/// Kiveszi egy Dart-metódus törzsét a nyitó kapcsos zárójel bezárásáig.
+///
+/// A `> <név>(` horgony szándékos: a puszta `_advance(` a **hívási helyet** is
+/// eltalálná (pl. `unawaited(_advance())`), a `void _advance(` pedig nem illik a
+/// `Future<void> _advance(` aláírásra.
+String _functionBody(String source, String name) {
+  final start = source.indexOf('> $name(');
+  expect(start, isNonNegative, reason: 'nincs ilyen tag: $name');
+  final open = source.indexOf('{', start);
+  expect(open, isNonNegative, reason: '$name törzse nem található');
+  var depth = 0;
+  for (var i = open; i < source.length; i++) {
+    final char = source[i];
+    if (char == '{') depth++;
+    if (char == '}') {
+      depth--;
+      if (depth == 0) return source.substring(open + 1, i);
+    }
+  }
+  fail('$name törzse nem záródik le');
 }

@@ -9,6 +9,7 @@ import '../../models/label_library.dart';
 import '../../models/release.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/label_library_provider.dart';
+import '../../providers/news_provider.dart';
 import '../../providers/releases_provider.dart';
 import '../../services/label_download_manager.dart';
 import '../../services/label_library_plan.dart';
@@ -55,6 +56,16 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   List<LabelQueueEntry> _queue = const [];
   String _queueSignature = '';
 
+  /// Kiadvány-adatok a könyvtárhoz. A lista a **nyilvános katalógusból** jön, de
+  /// egy régi (időközben törölt/elrejtett) kiadvány abban **már nincs benne** —
+  /// ilyenkor egyenként kérdezzük le (`/releases/<id>`), és ha az sem adja,
+  /// **nem elérhetőnek** jelöljük. (A tulajdonos jelezte: *„van ott egy kiadvány
+  /// #12327 ami nem tudom mi"* — az pontosan egy ilyen, a listából eltűnt
+  /// kiadvány volt, amit egy reklámmal oldott fel korábban.)
+  final Map<int, HuhsRelease> _releaseMeta = {};
+  final Set<int> _unavailableReleases = {};
+  final Set<int> _resolvingReleases = {};
+
   @override
   void initState() {
     super.initState();
@@ -74,6 +85,38 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   }
 
   LabelDownloadManager get _downloads => ref.read(labelDownloadManagerProvider);
+
+  /// A katalógusból hiányzó kiadványok egyenkénti lekérdezése.
+  ///
+  /// Csak **egyszer** próbáljuk (a `_resolvingReleases`/`_unavailableReleases`
+  /// miatt), és a hiba nem hibaüzenet: az azt jelenti, hogy a kiadvány már nincs
+  /// meg a nyilvános listában, ezért „nem elérhető"-ként jelöljük.
+  Future<void> _resolveMissingReleases(List<int> releaseIds) async {
+    for (final releaseId in releaseIds) {
+      if (_resolvingReleases.contains(releaseId) ||
+          _releaseMeta.containsKey(releaseId) ||
+          _unavailableReleases.contains(releaseId)) {
+        continue;
+      }
+      _resolvingReleases.add(releaseId);
+      try {
+        final release = await ref
+            .read(wordpressServiceProvider)
+            .getRelease(releaseId);
+        if (!mounted) return;
+        setState(() {
+          _releaseMeta[releaseId] = release;
+          _resolvingReleases.remove(releaseId);
+        });
+      } catch (_) {
+        if (!mounted) return;
+        setState(() {
+          _unavailableReleases.add(releaseId);
+          _resolvingReleases.remove(releaseId);
+        });
+      }
+    }
+  }
 
   Future<String> _urlFor(LabelQueueEntry entry) => ref
       .read(labelLibraryServiceProvider)
@@ -126,8 +169,20 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   Future<void> _playIndex(int index) async {
     if (index < 0 || index >= _queue.length) return;
     final entry = _queue[index];
+    // ⚠️ CSAK LETÖLTÖTT zene játszható: a lapozás és az automatikus továbblépés
+    // nem indít letöltést (a tulajdonos jelzése: „le akarja tölteni ami nincs
+    // letöltve… csak a letöltött zenéket játsza le").
+    if (!_downloaded.contains(entry.key)) {
+      if (mounted) {
+        setState(
+          () => _message =
+              'A(z) „${entry.nowPlayingLabel}" még nincs letöltve — előbb '
+              'töltsd le, és utána játszható.',
+        );
+      }
+      return;
+    }
     setState(() => _currentIndex = index);
-    if (!await _ensureDownloaded(entry)) return;
     try {
       // A rádió és a lejátszó ne szóljon egyszerre — ugyanaz a minta, mint a
       // kiadvány-előhallgatónál.
@@ -139,15 +194,15 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       final file = await _downloads.fileFor(entry);
       await _player.setFilePath(file.path);
       unawaited(_player.play());
-      if (mounted) setState(() {});
+      if (mounted) setState(() => _message = null);
     } catch (error) {
       if (mounted) setState(() => _message = userFacingError(error));
     }
   }
 
-  /// A szám végén a következőre lép (a sor végén megáll, és visszaadja a rádiót).
+  /// A szám végén a következő **letöltött** tételre lép; ha nincs több, megáll.
   Future<void> _advance() async {
-    final next = nextLabelQueueIndex(_currentIndex, _queue.length);
+    final next = nextDownloadedIndex(_queue, _downloaded, _currentIndex);
     if (next < 0) {
       await _releaseAudio();
       if (mounted) setState(() => _currentIndex = -1);
@@ -172,8 +227,15 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     } else if (_currentIndex >= 0 && _player.audioSource != null) {
       unawaited(_player.play());
     } else {
-      final start = firstUndownloadedIndex(_queue, _downloaded);
-      await _playIndex(start < 0 ? 0 : start);
+      final start = firstDownloadedIndex(_queue, _downloaded);
+      if (start < 0) {
+        setState(
+          () => _message =
+              'Még nincs letöltött zenéd — tölts le egyet a Letöltés gombbal.',
+        );
+      } else {
+        await _playIndex(start);
+      }
     }
     if (mounted) setState(() {});
   }
@@ -295,8 +357,31 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
           data: (catalog) {
             final catalogById = <int, HuhsRelease>{
               for (final release in catalog) release.id: release,
+              ..._releaseMeta,
             };
-            final queue = buildLabelQueue(items: items, catalog: catalogById);
+            // A katalógusból hiányzó kiadványokat egyenként kérdezzük le — a
+            // válasz után derül el, hogy megvan-e még egyáltalán.
+            final missing = <int>[
+              for (final item in items)
+                if (!catalogById.containsKey(item.releaseId) &&
+                    !_unavailableReleases.contains(item.releaseId) &&
+                    !_resolvingReleases.contains(item.releaseId))
+                  item.releaseId,
+            ];
+            if (missing.isNotEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                unawaited(_resolveMissingReleases(missing));
+              });
+            }
+            // A lejátszási sorba csak az kerül, amiről **tudjuk**, mi az; a már
+            // nem elérhető kiadványt nem is kínáljuk lejátszásra.
+            final playable = items
+                .where((item) => catalogById.containsKey(item.releaseId))
+                .toList(growable: false);
+            final queue = buildLabelQueue(
+              items: playable,
+              catalog: catalogById,
+            );
             final signature = queue.map((entry) => entry.key).join(',');
             if (signature != _queueSignature) {
               _queueSignature = signature;
@@ -383,10 +468,15 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
           children: [
             IconButton(
               tooltip: 'Előző',
-              onPressed: previousLabelQueueIndex(_currentIndex, _queue.length) < 0
+              onPressed:
+                  previousDownloadedIndex(_queue, _downloaded, _currentIndex) < 0
                   ? null
                   : () => _playIndex(
-                      previousLabelQueueIndex(_currentIndex, _queue.length),
+                      previousDownloadedIndex(
+                        _queue,
+                        _downloaded,
+                        _currentIndex,
+                      ),
                     ),
               icon: const Icon(Icons.skip_previous),
             ),
@@ -400,10 +490,11 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
             ),
             IconButton(
               tooltip: 'Következő',
-              onPressed: nextLabelQueueIndex(_currentIndex, _queue.length) < 0
+              onPressed:
+                  nextDownloadedIndex(_queue, _downloaded, _currentIndex) < 0
                   ? null
                   : () => _playIndex(
-                      nextLabelQueueIndex(_currentIndex, _queue.length),
+                      nextDownloadedIndex(_queue, _downloaded, _currentIndex),
                     ),
               icon: const Icon(Icons.skip_next),
             ),
@@ -420,8 +511,11 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                   ),
                   Text(
                     hasCurrent
-                        ? '${_currentIndex + 1}/${_queue.length}'
-                        : 'A megvásárolt zenéid sorban',
+                        ? '${_currentIndex + 1}/${_queue.length} · '
+                              '${_downloaded.length} letöltve'
+                        : _downloaded.isEmpty
+                        ? 'Előbb tölts le egy zenét'
+                        : '${_downloaded.length} letöltött zene',
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -434,10 +528,30 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   }
 
   Widget _buildReleaseCard(LabelLibraryItem item) {
+    final release = _releaseMeta[item.releaseId];
+    // A nyilvános listából eltűnt kiadvány: a feloldás/vásárlás megvan, de a zene
+    // már nem érhető el. **Megmondjuk**, mi ez, ahelyett hogy egy értelmezhetetlen
+    // „Kiadvány #szám" sort mutatnánk.
+    if (_unavailableReleases.contains(item.releaseId)) {
+      return _buildUnavailableCard(item);
+    }
+    if (release == null) {
+      return Card(
+        margin: const EdgeInsets.only(bottom: 10),
+        child: ListTile(
+          leading: const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          title: Text('Kiadvány #${item.releaseId}'),
+          subtitle: const Text('Adatok betöltése…'),
+        ),
+      );
+    }
     final entries = _queue
         .where((entry) => entry.releaseId == item.releaseId)
         .toList(growable: false);
-    final first = entries.isEmpty ? null : entries.first;
     final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -453,9 +567,9 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                   height: 52,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: first != null && first.coverUrl.isNotEmpty
+                    child: release.coverUrl.isNotEmpty
                         ? ResizedNetworkImage(
-                            url: first.coverUrl,
+                            url: release.coverUrl,
                             physicalWidth: 160,
                           )
                         : const Icon(Icons.album, size: 32),
@@ -467,14 +581,16 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        first?.title ?? 'Kiadvány #${item.releaseId}',
+                        release.title,
                         style: theme.textTheme.titleMedium,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (first != null && first.artist.isNotEmpty)
+                      if (release.artists.isNotEmpty)
                         Text(
-                          first.artist,
+                          release.artists
+                              .map((artist) => artist.name)
+                              .join(' & '),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -496,6 +612,42 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
             ),
             const SizedBox(height: 6),
             for (final entry in entries) _buildEntryRow(item, entry),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Egy kiadvány, ami **már nincs** a nyilvános listában (törölt/elrejtett).
+  Widget _buildUnavailableCard(LabelLibraryItem item) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_off, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ez a kiadvány már nem elérhető',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    item.isAdOnly
+                        ? 'Korábban reklámmal feloldottad (kiadvány #${item.releaseId}), '
+                              'de a kiadvány már nincs a nyilvános listában.'
+                        : 'Megvásároltad (kiadvány #${item.releaseId}), de a '
+                              'kiadvány már nincs a nyilvános listában.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -599,7 +751,7 @@ class _Scaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Saját zenéim')),
+    appBar: AppBar(title: const Text('Megvásárolt zenéim')),
     body: SafeArea(child: child),
   );
 }

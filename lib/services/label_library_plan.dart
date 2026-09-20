@@ -69,13 +69,48 @@ int previousLabelQueueIndex(int current, int length) {
   return previous < 0 ? -1 : previous;
 }
 
-/// Az **első** olyan tétel indexe, amit le kell tölteni a lejátszáshoz — a
-/// sornak attól az indextől kell indulnia, hogy ne legyen csend.
-///
-/// [downloaded] a már meglevő tételek kulcsai (`releaseId:változat`).
-int firstUndownloadedIndex(List<LabelQueueEntry> queue, Set<String> downloaded) {
+// --- CSAK A LETÖLTÖTT ZENÉK JÁTSZHATÓK ---------------------------------------
+//
+// A tulajdonos jelzése: *„ha lapozok a zenék között, le akarja tölteni ami nincs
+// letöltve, és így akarja lejátszani, csak a letöltött zenéket játsza le"*.
+//
+// Ezért a lapozás (előre/hátra és a szám végi automatikus továbblépés) **átugorja**
+// a nem letöltött tételeket, és nem indít letöltést. A letöltés kizárólag a
+// „Letöltés" gombra történik — így nem lesz váratlan, nagy forgalmú letöltés,
+// amikor csak tovább szeretnél lépni.
+
+/// Az első **letöltött** tétel indexe, vagy `-1`, ha egy sincs letöltve.
+int firstDownloadedIndex(List<LabelQueueEntry> queue, Set<String> downloaded) {
   for (var index = 0; index < queue.length; index++) {
-    if (!downloaded.contains(queue[index].key)) return index;
+    if (downloaded.contains(queue[index].key)) return index;
+  }
+  return -1;
+}
+
+/// A [current] utáni első **letöltött** tétel indexe, vagy `-1`, ha nincs több.
+///
+/// Ha [current] még nincs kiválasztva (`-1`), az első letöltött tétellel kezd.
+int nextDownloadedIndex(
+  List<LabelQueueEntry> queue,
+  Set<String> downloaded,
+  int current,
+) {
+  final start = current < 0 ? 0 : current + 1;
+  for (var index = start; index < queue.length; index++) {
+    if (downloaded.contains(queue[index].key)) return index;
+  }
+  return -1;
+}
+
+/// A [current] előtti első **letöltött** tétel indexe, vagy `-1`, ha nincs.
+int previousDownloadedIndex(
+  List<LabelQueueEntry> queue,
+  Set<String> downloaded,
+  int current,
+) {
+  final start = current < 0 ? queue.length - 1 : current - 1;
+  for (var index = start; index >= 0; index--) {
+    if (downloaded.contains(queue[index].key)) return index;
   }
   return -1;
 }

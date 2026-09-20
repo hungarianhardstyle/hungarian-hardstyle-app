@@ -33,6 +33,7 @@ class MoreScreen extends ConsumerStatefulWidget {
 class _MoreScreenState extends ConsumerState<MoreScreen> {
   final _search = TextEditingController();
   final _expanded = <String>{
+    'Megvásárolt zenéim',
     'Felfedezés',
     'Beküldés',
     'Kapcsolat és támogatás',
@@ -97,15 +98,17 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ),
             ),
             const SizedBox(height: 14),
-            _section('Saját zenéim', [
+            _section('Megvásárolt zenéim', [
               // A tulajdonos kérése: a megvásárolt (vagy reklámmal feloldott)
               // zenékhez **saját, fiókhoz kötött** menüpont, ahol lejátszhatók
               // (a szám végén a következőre lépve) és újra letölthetők.
+              // A szakasz nyitva indul, mint a többi — különben csukott kártyaként
+              // kilógna a „Több" menü megszokott kinézetéből.
               if (registered)
                 _item(
                   Icons.library_music_outlined,
-                  'Megvásárolt zenéim',
-                  'Lejátszás és letöltés — a fiókodhoz kötve',
+                  'Lejátszás és letöltés',
+                  'A megvásárolt zenéid — a fiókodhoz kötve',
                   const MyMusicScreen(),
                 )
               else

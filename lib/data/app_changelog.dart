@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 341,
+    changes: [
+      'A „Megvásárolt zenéim" a Több menüben mostantól a menü többi szakaszához illeszkedik, és a neve is ezt tükrözi.',
+      'A lejátszó csak a letöltött zenéket játssza: lapozásnál átugorja a még le nem töltötteket, és nem indít helyettük letöltést. Ha egy zene nincs meg, azt kiírja.',
+      'Ha egy kiadvány időközben lekerült a nyilvános listáról (pl. régi reklámmal feloldott zene), azt mostantól megnevezzük — nem egy értelmezhetetlen „Kiadvány #szám" sort látsz.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 340,
     changes: [
       'A kvíz mostantól azonnal jelzi, hogy már kitöltötted — eddig néhány másodpercig úgy látszott, mintha újra játszhatnál.',

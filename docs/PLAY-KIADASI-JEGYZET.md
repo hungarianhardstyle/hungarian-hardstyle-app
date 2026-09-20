@@ -6,11 +6,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 340
+currentBuild: 341
 currentVersion: 1.0.0
-lastPublishedBuild: 339
-aab: build/HUHS-v1.0.0+340-release.aab
-sha256: 0B8E13326617593CF540C12249C4B6940E0431965DA1D63E74695FF4A7269EA7
+lastPublishedBuild: 340
+aab: build/HUHS-v1.0.0+341-release.aab
+sha256: 88EAA49C072D8FF91B628B551885FBB689EE4B61ADE04FF3FBEDD3A8FF29EC8A
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -63,16 +63,17 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+340-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+341-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **340** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 79.83 MB |
-| SHA-256 | 0B8E13326617593CF540C12249C4B6940E0431965DA1D63E74695FF4A7269EA7 |
+| Verziókód | **341** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 79.85 MB |
+| SHA-256 | 88EAA49C072D8FF91B628B551885FBB689EE4B61ADE04FF3FBEDD3A8FF29EC8A |
 
-**Miért a 340-at kell feltenni:** ez a legfrissebb (a 339-re épül, plusz a **kvíz azonnali
-„már kitöltötted"** jelzése). A zárt teszt sávján most a **339** él — a 340 ezt váltja.
+**Miért a 341-et kell feltenni:** ez a legfrissebb (a 340-re épül, plusz a **lejátszó** javítása:
+csak a letöltött zenéket játssza, és a „Megvásárolt zenéim" a Több menü designjához illeszkedik).
+A zárt teszt sávján most a **340** él — a 341 ezt váltja.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 339 mindegyiket tartalmazza, és kisebb
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 341 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.5.9** (`build/huhs-mobile-api-2.5.9.zip`) — **ez már fent van** (élőben igazolva:
@@ -90,37 +91,37 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- A kvíz azonnal jelzi, ha már kitöltötted (eddig pár másodpercig még játszhatónak látszott).
-- „Saját zenéim" a Több menüben: a megvásárolt zenéid lejátszhatók, letölthetők és törölhetők.
-- A régebbi vásárlásaid és reklámmal feloldott zenéid is megjelennek a listában.
+- A lejátszó csak a letöltött zenéket játssza, és lapozásnál átugorja a le nem töltötteket.
+- A „Megvásárolt zenéim" a Több menüben a menü többi szakaszához illeszkedik.
+- A nyilvános listáról lekerült kiadványt megnevezzük (nem „Kiadvány #szám").
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–340 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–341 összesítő)
 
 **Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
 
 ```play-notes
-- Értesítés: chat-lájk, chat-válasz és a komment-válasz.
+- Értesítés: chat-lájk, chat-válasz és komment-válasz.
 - Az app ikonja mutatja az olvasatlanokat.
 - A rádió folyamatosan szól; más zene alatt elhallgat, majd folytatja.
 - A YouTube-videó az appban szól.
-- Aktivitási pont, vásárlás +20, jóváhagyott beküldés +10.
+- Aktivitási pont, vásárlás +20, beküldés +10.
 - Eseményt csak szervezőként lehet beküldeni; az Achievement-útmutató pontos.
 - A rangod szintlépésnél frissül; a listák nem villognak.
-- ÚJ: „Saját zenéim" és a kvíz azonnali „már kitöltötted" jelzése.
+- ÚJ: „Megvásárolt zenéim" (lejátszás/letöltés) és a kvíz azonnali „már kitöltötted" jelzése.
 ```
 
-## 1c. Play Console — CSAK a 340-hez, bővebben (tartalék)
+## 1c. Play Console — CSAK a 341-hez, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 340-et írja le** (a 329–339 már kiment a zárt teszt sávjára).
+megjeleníteni. **Ez is csak a 341-et írja le** (a 329–340 már kiment a zárt teszt sávjára).
 
 ```play-notes
-- A kvíz azonnal jelzi, ha már kitöltötted — eddig néhány másodpercig úgy látszott, mintha újra játszhatnál.
-- Ezt a telefon jegyzi meg, a szerver pedig ellenőrzi: ha az admin újranyitja a kvízt, újra játszható.
-- „Saját zenéim" a Több menüben: a megvásárolt zenéid lejátszhatók, letölthetők, törölhetők.
-- A régebbi vásárlásaid és reklámmal feloldott zenéid is megjelennek.
+- A „Megvásárolt zenéim" a Több menüben a menü többi szakaszához illeszkedik (nyitva indul, kereshető).
+- A lejátszó csak a letöltött zenéket játssza; lapozásnál átugorja a le nem töltötteket, és nem indít letöltést.
+- Ha egy zene nincs letöltve, a lejátszó ezt kiírja a helyett, hogy letöltené.
+- A nyilvános listáról lekerült kiadványt megnevezzük, nem „Kiadvány #szám" sort mutatunk.
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -138,6 +139,11 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 341 — a lejátszó csak a letöltött zenéket játssza
+- A „Saját zenéim" neve **„Megvásárolt zenéim"** lett, és a Több menüben a szakasz **nyitva indul**, mint a többi (eddig csukott kártyaként lógott ki).
+- A lejátszó **csak a letöltött** zenéket játssza: az előre/hátra lapozás és a szám végi továbblépés **átugorja** a le nem töltött tételeket, és nem indít helyettük letöltést. Ha egy zenét le akarsz játszani, de nincs meg, a lejátszó **kiírja**, hogy előbb le kell tölteni.
+- A nyilvános listáról időközben lekerült kiadvány (pl. régi reklámmal feloldott zene) mostantól **meg van nevezve** („Ez a kiadvány már nem elérhető"), nem pedig „Kiadvány #szám" — és nem kerül a lejátszási sorba.
 
 ### 340 — a kvíz azonnal jelzi, ha már kitöltötted
 - A kvíz megnyitásakor eddig néhány másodpercig úgy látszott, mintha még játszhatnál; mostantól **azonnal** „már játszottál" látszik.
