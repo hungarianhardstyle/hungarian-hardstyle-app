@@ -55,6 +55,7 @@ const { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, send
 const { generateAuthActionLink } = require('./auth_action_link');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
+const { playProductMatches } = require('./play-product-plan');
 const {
   MAX_ATTEMPTS: EMAIL_RETRY_MAX_ATTEMPTS,
   nextRetryDelayMs,
@@ -5985,6 +5986,28 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
     listings: [{ languageCode: 'hu-HU', title, description }],
     purchaseOptions: [purchaseOption],
   };
+
+  // VÁLTOZATLAN TERMÉK = NINCS ÍRÁS.
+  //
+  // ÉLES MÉRÉS (2026-09-20): a szinkron minden körben az összes terméket
+  // felküldte, akkor is, ha semmi nem változott — 5 percenként időtúllépéssel
+  // elhalt (~475 hibabejegyzés/24 óra) és feleslegesen fogyasztotta a Play
+  // keretét. A `get` válasza **itt már a kezünkben van**, ezért pontosan össze
+  // tudjuk hasonlítani azzal, amit küldenénk; ha egyezik, a PATCH elmarad, és a
+  // termék a hívó számára ugyanúgy „kész".
+  //
+  // SZÁNDÉKOSAN nem gyorsítótár: minden körben megnézzük a Play valódi
+  // állapotát, ezért egy kézzel, a Play Console-ban átírt terméket továbbra is
+  // AZONNAL észreveszünk és javítunk — csak a fölösleges írást spóroljuk meg.
+  if (playProductMatches(current, { title, description, price, purchaseOptionId })) {
+    console.log('label_product_sync_play_unchanged', {
+      releaseId: Number(release.id),
+      type: definition.type,
+      productId,
+      price,
+    });
+    return productId;
+  }
   // Use the documented single-product upsert endpoint. The previous code
   // routed every individual product through batchUpdate, although this sync
   // never sends a batch. PATCH supports the same allowMissing create path and
