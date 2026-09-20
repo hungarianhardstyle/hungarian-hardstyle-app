@@ -109,6 +109,17 @@ felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapj�
 - A listák görgetés közben már nem villognak.
 ```
 
+## 1c. Play Console — CSAK a 337-hez, bővebben (tartalék)
+
+Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
+megjeleníteni. **Ez is csak a 337-et írja le** (a 329–336 már kiment a zárt teszt sávjára).
+
+```play-notes
+- A cikkekben lévő YouTube-videó mostantól az appban játszódik le.
+- A videó a cikk „Média" szakaszában jelenik meg, a YouTube saját lejátszójával (play/pause, felirat, teljes képernyő).
+- Nem nyitja meg a YouTube-alkalmazást. Ha egy videó beágyazása tiltott, ott a „Megnyitás a YouTube-on" gomb.
+```
+
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
 
 **Most NE ezt használd!** Ez a blokk csak a **330** változásait sorolja fel, ezért akkor való, ha
