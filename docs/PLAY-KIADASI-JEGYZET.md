@@ -6,11 +6,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 337
+currentBuild: 338
 currentVersion: 1.0.0
-lastPublishedBuild: 336
-aab: build/HUHS-v1.0.0+337-release.aab
-sha256: 35FEB3EEFF1FFA30C04AB86C707E36574916691A89A9D4706F9B0939D21219A3
+lastPublishedBuild: 337
+aab: build/HUHS-v1.0.0+338-release.aab
+sha256: 083BAA98CA28AC4AF620C528E38BE7850FAFCC4468D641A363FB0FD334AD64F5
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -24,11 +24,11 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-20, a legfrissebb mér�
 | production | üres | — |
 | internal | completed + egy **üres piszkozat** | 278 |
 
-- **A 337 a zárt teszt sávján MÁR FENT VAN** (completed), és a **bővebb (1c.) kiadási szöveggel** ment ki.
+- **A 337 a zárt teszt sávján MÁR FENT VAN** (completed), a **bővebb (1c.) kiadási szöveggel** ment ki.
 - **A production sáv viszont üres:** a termékkör megnyitása a Play zárt teszt követelményéhez kötött (személyes fejlesztői fióknál legalább **12 tesztelő / 14 nap** folyamatos zárt teszt), ezért az „élesítés" **nem** egy újabb AAB feltöltése, hanem a production access megnyitása + kiadás a meglévő bundle-ből.
-- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 337 automatikusan felváltotta a 336-ot; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
-- A feltöltött AAB-ek a Playen (a legfrissebb mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 332, 333, 334, 335, **336**, **337**.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**336**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 336 volt — ezért az **1. pont** blokkja már csak a **337** újdonságát írja le. A **production** kiadáshoz a **hosszabb, 329–337 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
+- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 338 automatikusan felváltja a 337-et; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
+- A feltöltött AAB-ek a Playen (a legfrissebb mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 332, 333, 334, 335, 336, **337**.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**337**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 337 volt — ezért az **1. pont** blokkja már csak a **338** újdonságát írja le. A **production** kiadáshoz a **hosszabb, 329–338 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
 
@@ -63,16 +63,14 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+337-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+338-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **337** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 79,59 MB |
-| SHA-256 | 35FEB3EEFF1FFA30C04AB86C707E36574916691A89A9D4706F9B0939D21219A3 |
+| Verziókód | **338** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 79,61 MB |
+| SHA-256 | 083BAA98CA28AC4AF620C528E38BE7850FAFCC4468D641A363FB0FD334AD64F5 |
 
-**Miért a 337-et kell feltenni:** ez a legfrissebb (a 336-ra épül, plusz a YouTube-videó appon belüli
-lejátszása). **A 337 a zárt teszt sávján már fent van** (mérve: `alpha = completed 337`), ezért
-**újra feltölteni nem kell** — a következő (production) kiadás ebből a bundle-ből indítható. Új AAB
-csak akkor kell, ha a kód ezután változik.
+**Miért a 338-at kell feltenni:** ez a legfrissebb (a 337-re épül, plusz a chat-értesítések, az
+ikonjelvény és a rádió javítása). A zárt teszt sávján most a **337** él — a 338 ezt váltja.
 
 > **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 337 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
@@ -92,7 +90,9 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- A cikkekben lévő YouTube-videó mostantól az appban játszódik le (nem nyitja meg a YouTube-alkalmazást).
+- Értesítést kapsz, ha kedvelik a Chat-üzenetedet vagy válaszolnak rá (és a cikkhez írt hozzászólásodra is).
+- Az app ikonja mutatja az olvasatlan értesítéseid számát.
+- A rádió folyamatosan szól, akkor is, ha a képernyő ki van kapcsolva.
 ```
 
 ## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–337 összesítő)
@@ -101,26 +101,25 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
 
 ```play-notes
-- A cikkekben a YouTube-videó az appban játszódik le.
-- A Chatben pipa jelzi, hogy már reagáltál egy üzenetre.
-- ÚJ: napi aktivitási pont — kommentért és chatért 1–5 pont jár, a szerver számolja.
-- ÚJ: kiadvány-vásárlásért +20 pont jár.
-- ÚJ: jóváhagyott beküldésért +10 pont jár.
-- Eseményt csak szervezői szerepkörrel lehet beküldeni.
-- Az Achievement-útmutató pontos lett.
-- A rangod szintlépésnél magától frissül.
-- A listák görgetés közben már nem villognak.
+- Értesítés: chat-lájk, chat-válasz és a hozzászólásodra jött válasz is szól.
+- Az app ikonja mutatja az olvasatlan értesítéseid számát.
+- A rádió folyamatosan szól.
+- A cikkek YouTube-videója az appban játszódik le.
+- ÚJ: napi aktivitási pont (komment + chat), kiadvány-vásárlás +20, jóváhagyott beküldés +10.
+- Eseményt csak szervezői szerepkörrel lehet beküldeni; az Achievement-útmutató pontos lett.
+- A rangod szintlépésnél magától frissül; a listák nem villognak.
 ```
 
-## 1c. Play Console — CSAK a 337-hez, bővebben (tartalék)
+## 1c. Play Console — CSAK a 338-hoz, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 337-et írja le** (a 329–336 már kiment a zárt teszt sávjára).
+megjeleníteni. **Ez is csak a 338-at írja le** (a 329–337 már kiment a zárt teszt sávjára).
 
 ```play-notes
-- A cikkekben lévő YouTube-videó mostantól az appban játszódik le.
-- A videó a cikk „Média" szakaszában jelenik meg, a YouTube saját lejátszójával (play/pause, felirat, teljes képernyő).
-- Nem nyitja meg a YouTube-alkalmazást. Ha egy videó beágyazása tiltott, ott a „Megnyitás a YouTube-on" gomb.
+- Értesítést kapsz, ha valaki kedveli a Chat-üzenetedet, vagy válaszol rá.
+- Értesítést kapsz a cikkhez írt hozzászólásodra adott válaszról is.
+- Az app ikonja mutatja az olvasatlan értesítéseid számát.
+- A rádió folyamatosan szól, akkor is, ha a képernyő ki van kapcsolva.
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -138,6 +137,12 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 338 — chat-értesítések, ikonjelvény és a folyamatos rádió
+- Értesítést kapsz, ha valaki kedveli a Chat-üzenetedet, vagy válaszol rá (push nélkül, csak az app értesítéslistájában).
+- A cikkhez írt hozzászólásodra adott válaszról is szólunk (ez eddig is működött).
+- Az app ikonja mutatja az olvasatlan értesítéseid számát.
+- A rádió folyamatosan szól akkor is, ha a képernyő ki van kapcsolva — javítottuk a lejátszást, ami néhány perc után megállt.
 
 ### 337 — a YouTube-videó az appban játszódik le
 - A cikkekben lévő YouTube-videó mostantól az appban játszódik le: a videó a cikk „Média" szakaszában jelenik meg saját lejátszóval, nem nyitja meg a YouTube-alkalmazást. Ha egy videó beágyazása tiltott, marad egy „Megnyitás a YouTube-on" gomb.
@@ -270,7 +275,7 @@ SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`).
 
 1. `node tools/check-play-notes.mjs` — a Play-blokkok hossza és a build-lefedettség.
 2. `flutter test test/data/app_changelog_test.dart` — az app changelogja egyezik a `pubspec.yaml`-lel.
-3. Az AAB verziókódja a merge-elt manifestből: **337**.
+3. Az AAB verziókódja a merge-elt manifestből: **338**.
 4. `node tools/verify-native-admin-menu.mjs` — a natív admin menüpontjai és a plugin végpontjai egyeznek.
 5. `node tools/verify-achievement-points.mjs` — az achievement-pontok konzisztenciája (ÉLES, csak olvas).
 6. `node tools/verify-achievement-guide.mjs` — az Achievement-útmutató szövege egyezik a kóddal (napi keretek, pontértékek, létező források).

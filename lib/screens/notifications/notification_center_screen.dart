@@ -8,6 +8,7 @@ import '../../services/notification_service.dart';
 import '../../services/community_service.dart';
 import '../../services/wordpress_service.dart';
 import '../more/community_users_screen.dart';
+import '../community/community_screen.dart';
 import '../community/private_messages_screen.dart';
 import '../events/event_detail_screen.dart';
 import '../news/news_detail_screen.dart';
@@ -199,6 +200,14 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
               otherUserName: senderName.isEmpty ? 'HUHS user' : senderName,
             ),
           ),
+        );
+        return;
+      }
+      if (notification.targetType == 'chat') {
+        // A Chat-értesítés (lájk vagy válasz) a **Chat** képernyőt nyitja — a
+        // tulajdonos kérése ugyanis az volt, hogy ezekről az app értesítsen.
+        await navigator.push(
+          MaterialPageRoute<void>(builder: (_) => const LiveFeedScreen()),
         );
         return;
       }

@@ -10,6 +10,7 @@ import 'more/more_screen.dart';
 import 'news/news_screen.dart';
 import 'releases/releases_screen.dart';
 import '../widgets/radio_player_bar.dart';
+import '../services/app_badge_sync.dart';
 import '../services/app_update_service.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -41,11 +42,17 @@ class _MainNavigationState extends State<MainNavigation>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+    // Az app-ikon jelvénye (olvasatlan értesítések száma) a teljes munkamenet
+    // alatt figyelve van, mert ez a képernyő sosem tűnik el.
+    _badgeSync = AppBadgeSync();
   }
+
+  AppBadgeSync? _badgeSync;
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _badgeSync?.dispose();
     super.dispose();
   }
 

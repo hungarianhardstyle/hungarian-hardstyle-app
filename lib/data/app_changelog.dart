@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 338,
+    changes: [
+      'Értesítést kapsz, ha valaki kedveli a Chat-üzenetedet, vagy válaszol rá — és akkor is, ha a cikkhez írt hozzászólásodra válaszolnak. (Push helyett csak az app értesítéslistája szól.)',
+      'Az app ikonja mutatja az olvasatlan értesítéseid számát.',
+      'A rádió folyamatosan szól akkor is, ha a képernyő ki van kapcsolva — javítottuk a lejátszást, ami néhány perc után megállt.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 337,
     changes: [
       'A cikkekben lévő YouTube-videó mostantól az appban játszódik le: a videó a cikk „Média" szakaszában jelenik meg saját lejátszóval, nem nyitja meg a YouTube-alkalmazást.',

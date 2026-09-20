@@ -1147,6 +1147,7 @@ class CommunityService {
     bool pinned = false,
     String? replyToText,
     String? replyToName,
+    String? replyToAuthorId,
   }) async {
     final user = await ensureAnonymousUser();
     final isAnonymous = user.isAnonymous;
@@ -1189,6 +1190,17 @@ class CommunityService {
           'replyToName': replyToName!.trim().substring(
             0,
             replyToName.trim().length > 80 ? 80 : replyToName.trim().length,
+          ),
+        // KIT válaszoltunk meg: ebből lesz a szerveren az értesítés a válaszolt
+        // felhasználónak (a tulajdonos kérése). A `replyToText`/`replyToName`
+        // csak a megjelenítéshez kell, a szerző UID-ja az értesítéshez.
+        if (replyToText?.trim().isNotEmpty == true &&
+            replyToAuthorId?.trim().isNotEmpty == true)
+          'replyToAuthorId': replyToAuthorId!.trim().substring(
+            0,
+            replyToAuthorId.trim().length > 128
+                ? 128
+                : replyToAuthorId.trim().length,
           ),
         'imageUrl': imageUrl,
         if (uploadedImage?.publicId.isNotEmpty == true)

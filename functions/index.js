@@ -57,6 +57,10 @@ const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 const { playProductMatches } = require('./play-product-plan');
 const {
+  chatReactionNotification,
+  chatReplyNotification,
+} = require('./chat-notification-plan');
+const {
   MAX_ATTEMPTS: EMAIL_RETRY_MAX_ATTEMPTS,
   nextRetryDelayMs,
   queueIdentityNotificationRetry,
@@ -2273,10 +2277,12 @@ exports.toggleChatReaction = functions.runWith({ enforceAppCheck: false }).https
   }
   const postRef = db.collection('live_feed_posts').doc(postId);
   let selected = '';
+  let authorId = '';
   await db.runTransaction(async (transaction) => {
     const snapshot = await transaction.get(postRef);
     if (!snapshot.exists) throw new HttpsError('not-found', 'A bejegyzés nem található.');
     const current = snapshot.data() || {};
+    authorId = String(current.authorId || '').trim();
     const source = current.reactionBy && typeof current.reactionBy === 'object' ? current.reactionBy : {};
     const reactionBy = {};
     for (const [userId, value] of Object.entries(source)) {
@@ -2291,6 +2297,25 @@ exports.toggleChatReaction = functions.runWith({ enforceAppCheck: false }).https
     for (const value of Object.values(reactionBy)) reactions[value] = Number(reactions[value] || 0) + 1;
     transaction.update(postRef, { reactions, reactionBy });
   });
+
+  // ÉRTESÍTÉS A SZERZŐNEK — **PUSH NÉLKÜL** (a tulajdonos kérése: *„chat
+  // like-ról legyen az adott usernek notify"*, illetve *„csak notify, push nem
+  // kell"*). A döntés (kit értesítünk, mikor NEM, mi a naplókulcs) a tiszta
+  // `chat-notification-plan.js`-ben van, hogy mérhető legyen; itt csak a kiírás
+  // történik. Push-t szándékosan NEM küldünk.
+  const reactorName = String(
+    ((await db.collection('community_profiles').doc(uid).get()).data() || {}).displayName || '',
+  ).trim();
+  const reactionNotification = chatReactionNotification({
+    authorId,
+    reactorUid: uid,
+    reactorName,
+    postId,
+    selected,
+  });
+  if (reactionNotification) {
+    await createNotificationBestEffort(reactionNotification);
+  }
   return { selected };
 });
 
@@ -2307,6 +2332,9 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
   const imageUrl = typeof data?.imageUrl === 'string' ? data.imageUrl.trim() : '';
   const replyToText = typeof data?.replyToText === 'string' ? data.replyToText.trim().slice(0, 200) : '';
   const replyToName = typeof data?.replyToName === 'string' ? data.replyToName.trim().slice(0, 80) : '';
+  // KIT válaszoltunk meg — ebből lesz az értesítés. A kliens küldi (a válaszolt
+  // üzenet szerzőjének UID-ja); a `replyToText`/`replyToName` csak a megjelenítés.
+  const replyToAuthorId = typeof data?.replyToAuthorId === 'string' ? data.replyToAuthorId.trim().slice(0, 128) : '';
   const imagePublicId = typeof data?.imagePublicId === 'string' ? data.imagePublicId.trim() : '';
   const isAnonymous = context.auth.token.firebase?.sign_in_provider === 'anonymous';
   if ((!text && !imageUrl) || text.length > 2000) {
@@ -2350,6 +2378,20 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
     pinned: admin && data?.pinned === true,
     createdAt: FieldValue.serverTimestamp(),
   });
+
+  // ÉRTESÍTÉS A VÁLASZOLT FELHASZNÁLÓNAK — **PUSH NÉLKÜL** (tulajdonosi kérés:
+  // *„Ha valaki válaszol neked a chaten legyen róla notify"* + *„csak notify,
+  // push nem kell"*). A döntés a tiszta `chat-notification-plan.js`-ben van.
+  const replyNotification = chatReplyNotification({
+    recipientUid: replyToAuthorId,
+    senderUid: uid,
+    senderName: displayName,
+    replyToText,
+    messageId: ref.id,
+  });
+  if (replyNotification) {
+    await createNotificationBestEffort(replyNotification);
+  }
   return { id: ref.id };
 });
 

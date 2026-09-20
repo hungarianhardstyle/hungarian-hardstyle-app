@@ -746,6 +746,13 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   bool _sending = false;
   String? _replyToText;
   String? _replyToName;
+
+  /// KINEK válaszolunk (a válaszolt üzenet szerzőjének UID-ja).
+  ///
+  /// A szerző neve és a szöveg csak a megjelenítéshez kell; az **értesítéshez**
+  /// (a tulajdonos kérése: *„Ha valaki válaszol neked a chaten legyen róla
+  /// notify"*) a szerver a szerző UID-ját kapja ebben a mezőben.
+  String? _replyToAuthorId;
   bool _anonymous = true;
   String _avatarUrl = '';
   String _avatarLetter = 'H';
@@ -976,6 +983,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
         imageBytes: _image,
         replyToText: _replyToText,
         replyToName: _replyToName,
+        replyToAuthorId: _replyToAuthorId,
       );
       _textController.clear();
       if (mounted) {
@@ -983,6 +991,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
           _image = null;
           _replyToText = null;
           _replyToName = null;
+          _replyToAuthorId = null;
         });
       }
     } catch (error) {
@@ -1003,6 +1012,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     setState(() {
       _replyToText = post.text.trim();
       _replyToName = post.authorName.trim();
+      _replyToAuthorId = post.authorId.trim();
     });
     _composerFocusNode.requestFocus();
   }
@@ -1130,6 +1140,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
               onClearReply: () => setState(() {
                 _replyToText = null;
                 _replyToName = null;
+                _replyToAuthorId = null;
               }),
             );
             final postList = Expanded(
