@@ -1,5 +1,26 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### YouTube-videó lejátszása az appban (2026-09-20, AAB **337**) — **emulátorban igazolva**
+
+- **A tulajdonos jelzése:** *„a cikkekben lévő youtube linket az appban le tudja játszani a play gombra, most youtube appot nyitja meg, erre van valami megoldásod?"* — hozzátéve, hogy *„a codex nem tudta megoldani"*.
+- **A MÉRT GYÖKÉR (egyetlen sor):** a `lib/widgets/post_embed_card.dart` `initState`-je **szándékosan kihagyta** a YouTube-ot (`if (widget.embed.type == 'youtube') return;`), és helyette a `_YouTubeLinkCard`-ot rajzolta: thumbnail + „Videó megnyitása a YouTube-on" felirat, koppintásra pedig `_openExternal(...)` → `LaunchMode.externalApplication` = **a YouTube-alkalmazás**. A többi beágyazás (Spotify, SoundCloud, Instagram, TikTok) **már WebView-ban** ment. (A `_embedUri` egyébként kiszámolta a `youtube.com/embed/<id>` címet — de a YouTube-ág soha nem jutott el odáig.)
+- **Két további mérés, ami szűkítette a hibát:**
+  1. **ÉLŐ:** az első 20 cikkből **4 YouTube-embed**, mindegyikből kinyerhető az azonosító (a JSON-escape-elt `\u0026` alak is kezelve van);
+  2. a cikk **szövegében** lévő linkek **már eddig is** az appon belüli böngészőt nyitották (`openInAppBrowser`) — tehát kizárólag a **kártya** volt a hibás.
+- **A javítás (kliens, AAB 337 — `webview_flutter` már függőség volt, nem kellett új csomag):**
+  1. **Új, tiszta modul:** `lib/core/media/youtube_embed.dart` — `youTubeVideoId` (a YouTube **összes** linkformája), `youTubeEmbedUri`, `youTubeEmbedHtml`, `youTubeEmbedBaseUrl`, `youTubeEmbedUserAgent`.
+  2. **Origin/hivatkozó — EZ A LÉNYEG:** a lejátszót **saját HTML**-be ágyazzuk, és `loadHtmlString(..., baseUrl: youTubeEmbedBaseUrl)` tölti be. Ha a WebView közvetlenül a `youtube.com/embed/...` címet nyitja meg, a kérésnek **nincs hivatkozója**, és a YouTube „Video unavailable" / 153-as hibát ad — ezért nem működött eddig senkinek a WebView-os megoldása. A HTML emellett `referrerpolicy="origin"`-t és `name="referrer" content="origin"`-t is küld.
+  3. **Chrome user-agent:** `setUserAgent(youTubeEmbedUserAgent)`, mert a WebView saját `…; wv` fejlécét a YouTube **nem támogatott böngészőnek** látja.
+  4. **JavaScript** engedélyezve (a lejátszó enélkül el sem indul), `playsinline=1` (a lejátszás az appban marad), 16:9 `AspectRatio`, fekete háttér, töltésjelző.
+  5. **Tartalék:** „Megnyitás a YouTube-on" gomb a lejátszó alatt (ha egy videó beágyazása tiltott), és az **azonosító nélküli** YouTube-link továbbra is a régi thumbnail-kártyát kapja — semmi nem törik el.
+- **EMULÁTOROS BIZONYÍTÁS (Pixel_8, Android 15, `flutter build apk --debug`):** a telepítés után a **„Wasted Penguinz szünetet tart…"** cikk (id 12785) megnyitva → a videó a cikk **„Média" szakaszában játsszódik**, a YouTube saját vezérlőivel (play/pause, CC, beállítások, teljes képernyő), alatta a tartalék gomb. **Nem nyílt meg a YouTube-alkalmazás.**
+  - **⚠️ TANULSÁG (emulátor, mérve):** az első indítás **nem app-hiba** miatt halt meg: `lowmemorykiller: Kill 'hu.hungarianhardstyle.app.debug' … to free 406536kB rss` — a debug build ~400 MB, és az alapértelmezett AVD memóriája kevés. Az emulátort **`-memory 4096`**-tal kell indítani (`emulator -avd Pixel_8 -memory 4096 -cores 4`).
+  - **⚠️ TANULSÁG (eszközkép):** a képernyőképet `adb shell screencap -p /sdcard/x.png` + `adb pull` adja helyesen; a PowerShell `>` átirányítás **elrontja a PNG-t**.
+- **BIZONYÍTÁS — új `test/core/youtube_embed_test.dart` (16):** az azonosító kinyerése **minden** valós alakból (a cikkekből mért `watch?feature=shared&v=…`, `&amp;`, `\u0026`, séma nélküli, `youtu.be`, `shorts`, `embed`, `live`); érvénytelen bemenet → `null` (nem YouTube link, üres, csatorna-URL); a **konfiguráció** (a `baseUrl` HTTPS-origin és nem `about:blank`, a UA Chrome-fejléc `wv` nélkül, `playsinline=1`); a **HTML** (iframe, `allowfullscreen`, origin-hivatkozó, `encrypted-media`); és **forrás-lint**, hogy a YouTube nem esik ki a WebView-ból, `loadHtmlString`+`baseUrl` van, a tartalék gomb megmaradt, és az azonosító nélküli link a régi kártyát kapja.
+  - `flutter analyze` tiszta, `flutter test` **330/330** (a menet előtt 314 volt).
+- **Csomag:** `build/HUHS-v1.0.0+337-release.aab` (versionCode **337**, 79,59 MB, SHA-256 `35FEB3EEFF1FFA30C04AB86C707E36574916691A89A9D4706F9B0939D21219A3`) — `pubspec.yaml` `1.0.0+337`, changelog-bejegyzés, Play-jegyzet frissítve. **A 336 MÁR FENT VAN a zárt teszt sávján** (mérve: `alpha = completed 336`), ezért a `lastPublishedBuild` mostantól **336**, az 1. Play-blokk már csak a 337-et írja le, az 1b. pedig a **329–337 összesítő** a production kiadáshoz.
+- **ŐSZINTE KORLÁT:** az emulátor ugyanazt a WebView-motort futtatja, de a hangot/képminőséget és a teljes képernyős gombot **a tulajdonosnak kell igazolnia a telefonján**.
+
 ### Chat-reakció: látszik, hogy TE már lájkoltad (2026-09-20, AAB **336**)
 
 - **A tulajdonos jelzése:** *„ha valaki lájkol egy chat üzenetet, valahogy jelezhetné hogy az adott user lájkolta mert nem egyértelmű, nevet ne írjon oda, csak lássa hogy már lájkolta"*.

@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 337,
+    changes: [
+      'A cikkekben lévő YouTube-videó mostantól az appban játszódik le: a videó a cikk „Média" szakaszában jelenik meg saját lejátszóval, nem nyitja meg a YouTube-alkalmazást.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 336,
     changes: [
       'A Chat-üzeneteknél mostantól egyértelműen látszik, hogy TE már reagáltál: a reakciógomb bejelölve (pipa) és kiemelve jelenik meg. Nevek nem szerepelnek, csak a saját reakciód.',

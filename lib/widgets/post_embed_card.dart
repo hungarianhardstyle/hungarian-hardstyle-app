@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../core/media/youtube_embed.dart';
 import '../core/navigation/in_app_browser.dart';
 import '../models/post.dart';
 
@@ -18,10 +19,44 @@ class _PostEmbedCardState extends State<PostEmbedCard> {
   WebViewController? _controller;
   bool _loading = true;
 
+  /// A YouTube-videó azonosítója — `null`, ha nem kinyerhető (akkor marad a
+  /// régi, külső megnyitó kártya).
+  String? get _videoId => widget.embed.type == 'youtube'
+      ? youTubeVideoId(widget.embed.url)
+      : null;
+
   @override
   void initState() {
     super.initState();
-    if (widget.embed.type == 'youtube') return;
+    if (widget.embed.type == 'youtube') {
+      final videoId = _videoId;
+      if (videoId == null) return;
+      // A YouTube-lejátszót **saját HTML-be** ágyazzuk, és a `baseUrl` adja a
+      // valódi origin-t. Enélkül a WebView-nak nincs hivatkozója, és a YouTube
+      // „Video unavailable" hibát ad — ezért nyitotta eddig külső appot a
+      // tulajdonos által jelzett kártya.
+      _controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        // A WebView saját user-agentje (`…; wv`) alapján a YouTube „nem
+        // támogatott böngészőt" lát, ezért explicit Chrome-fejléc kell.
+        ..setUserAgent(youTubeEmbedUserAgent)
+        ..setBackgroundColor(const Color(0xFF000000))
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onPageFinished: (_) {
+              if (mounted) setState(() => _loading = false);
+            },
+            // A lejátszón BELÜLI navigációt engedjük (ez a videó kiválasztása),
+            // de új lapot nem nyitunk: minden az appon belül marad.
+            onNavigationRequest: (request) => NavigationDecision.navigate,
+          ),
+        )
+        ..loadHtmlString(
+          youTubeEmbedHtml(videoId),
+          baseUrl: youTubeEmbedBaseUrl,
+        );
+      return;
+    }
 
     final uri = _embedUri(widget.embed);
     if (uri != null) {
@@ -41,33 +76,73 @@ class _PostEmbedCardState extends State<PostEmbedCard> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.embed.type == 'youtube') {
+    if (widget.embed.type == 'youtube' && _videoId == null) {
       return _YouTubeLinkCard(embed: widget.embed);
     }
 
     final controller = _controller;
     if (controller == null) return _ExternalLink(embed: widget.embed);
 
-    return Container(
-      height: _height(widget.embed.type),
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(child: WebViewWidget(controller: controller)),
-          if (_loading)
-            const Positioned.fill(
-              child: ColoredBox(
-                color: Color(0xFF111111),
-                child: Center(child: CircularProgressIndicator()),
+    final isYouTube = widget.embed.type == 'youtube';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          // A YouTube 16:9 — így nincs fekete csík a lejátszó körül.
+          height: isYouTube ? null : _height(widget.embed.type),
+          margin: EdgeInsets.fromLTRB(20, 0, 20, isYouTube ? 8 : 20),
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: isYouTube ? const Color(0xFF000000) : const Color(0xFF111111),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: isYouTube
+              ? AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: WebViewWidget(controller: controller),
+                      ),
+                      if (_loading) const _EmbedLoading(),
+                    ],
+                  ),
+                )
+              : Stack(
+                  children: [
+                    Positioned.fill(child: WebViewWidget(controller: controller)),
+                    if (_loading) const _EmbedLoading(),
+                  ],
+                ),
+        ),
+        // TARTALÉK: ha a videó beágyazása tiltott, a felhasználó ne akadjon el.
+        if (isYouTube)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => _openExternal(widget.embed.url),
+                icon: const Icon(Icons.open_in_new, size: 18),
+                label: const Text('Megnyitás a YouTube-on'),
               ),
             ),
-        ],
+          ),
+      ],
+    );
+  }
+}
+
+class _EmbedLoading extends StatelessWidget {
+  const _EmbedLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Positioned.fill(
+      child: ColoredBox(
+        color: Color(0xFF111111),
+        child: Center(child: CircularProgressIndicator()),
       ),
     );
   }
