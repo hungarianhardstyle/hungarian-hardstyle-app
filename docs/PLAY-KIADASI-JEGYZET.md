@@ -30,7 +30,36 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-19, a legfrissebb mér�
 - **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 335 automatikusan felváltotta a 334-et; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
 - A `play-notes-meta` `lastPublishedBuild` értéke (**328**) azt jelöli, hogy **a felhasználókhoz legutóbb kikerült** build a 328 volt — ezért az **1. pont** blokkja a **329–335 összes** újdonságát fedi le, nem csak a legfrissebb buildét.
 
-## A feltöltendő AAB (mérve)
+## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
+
+A Play Console 2026-07-15-i értesítése szerint **2026. szeptember 30-tól** a **nem regisztrált**
+Play-alkalmazásokat **globálisan letiltják** a Google Playről, és a **Playen kívül** terjesztett,
+Android-aláírási kulcsot használó buildek **sem telepíthetők** a tanúsítvánnyal rendelkező
+Android-eszközökre bizonyos országokban. Ezért **minden** csomagnévhez **minden** aláíró kulcsot
+regisztrálni kell, amellyel terjesztesz.
+
+**A MI ÁLLAPOTUNK (mérve, 2026-09-20):**
+
+| Mit | Érték |
+|---|---|
+| Csomagnév | `hu.hungarianhardstyle.app` (ez az **egyetlen** alkalmazásunk; `applicationId` a `android/app/build.gradle.kts`-ből) |
+| Regisztráció a Play Console-ban | **Regisztrált** (3 kulcs), utoljára frissítve 2026. aug. 12. |
+| A helyi buildek aláíró tanúsítványa | SHA-256 `B4:FB:6D:AF:37:A7:0C:56:17:6F:8D:34:A5:BE:79:A1:7C:2E:5B:B5:59:1C:C4:F6:64:BF:29:47:F0:AB:0A:50` |
+| Tanúsítvány tulajdonos | `CN=Hungarian Hardstyle, OU=Mobile, O=Hungarian Hardstyle, L=Budapest, C=HU` (érvényes 2053-12-23-ig) |
+| Aláírási identitások száma | **1** — mind a **35 AAB** (301…335) és a 2 release APK ugyanezzel a kulccsal készült |
+| Terjesztés a Playen kívül | **nincs**: sem a plugin, sem a weboldal nem kínál app-APK-t (csak zenét/kiadványt) |
+
+**Ellenőrzés egy paranccsal:** `node tools/check-signing-identity.mjs` — kilistázza a kész buildek
+aláírását, és megmondja, hány **különböző** identitás van (több = figyelmeztetés, mert a nem
+regisztrált kulcsú build 2026-09-30 után nem telepíthető a tanúsított eszközökre).
+
+**Amit tenni kell:** a Play Console „Aláírási kulcsok" nézetében **ellenőrizni**, hogy a fenti
+lenyomat (a feltöltési kulcsunk) és a Google-féle **app signing key** is szerepel a regisztrált
+kulcsok között. Új AAB vagy plugin feltöltés **nem** kell hozzá. Ha valaha APK-t adnál ki a Playen
+kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell — ezért érdemes továbbra is
+**egy** kulccsal írni alá mindent.
+
+
 
 | | |
 |---|---|

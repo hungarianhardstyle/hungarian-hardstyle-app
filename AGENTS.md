@@ -1,5 +1,19 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Play-követelmény: alkalmazás- és aláírásregisztráció (2026-09-20, határidő **2026-09-30**, **nincs teendő a kódban**)
+
+- **A tulajdonos jelzése:** a Play Console egy zöld figyelmeztetést mutatott: *„Regisztrálj az összes olyan alkalmazás csomagnevét és aláírási kulcsát, amelyet Androidon terjesztesz"* — 2026. szeptember 30-tól a nem regisztrált Play-alkalmazásokat **globálisan letiltják**, és a **Playen kívül** terjesztett, Android-aláírási kulcsot használó buildek **sem telepíthetők** a tanúsítvánnyal rendelkező eszközökre bizonyos országokban. A kérdése: *„nekünk ezzel van dolgunk?"*
+- **A MÉRT VÁLASZ: gyakorlatilag nincs teendő, de egy dolgot ellenőrizni kell.** A Play Console a mi sorunknál **„Regisztrált"** állapotot és **3 kulcsot** mutat (utolsó frissítés 2026-08-12), a feltöltési kulcsunk pedig egyetlen:
+  - `applicationId = hu.hungarianhardstyle.app` — **egyetlen** alkalmazás (`android/app/build.gradle.kts`), nincs második csomagnév;
+  - a **helyi buildek aláíró tanúsítványa**: SHA-256 `B4:FB:6D:AF:37:A7:0C:56:17:6F:8D:34:A5:BE:79:A1:7C:2E:5B:B5:59:1C:C4:F6:64:BF:29:47:F0:AB:0A:50`, `CN=Hungarian Hardstyle, OU=Mobile, O=Hungarian Hardstyle, L=Budapest, C=HU` (2053-12-23-ig);
+  - **mind a 37 kész csomag (35 AAB 301…335 + 2 release APK) UGYANEZZEL a kulccsal** készült → **1 aláírási identitás** (a repóban lévő két `.jks` **bájtra azonos**, `D9FEC0D2…`);
+  - a `android/app/build.gradle.kts`-ben **egy** release signing config van (`signingConfigs.create("release")`), és release buildhez **kötelező** a `key.properties` (különben a build el sem indul);
+  - **Playen kívüli terjesztés nincs**: sem a plugin, sem a weboldal nem kínál app-APK-t (a „letöltés" a kiadványok zenéjére vonatkozik) — a zárt teszt is a Playről megy.
+- **Amit a tulajdonosnak ellenőrizni kell (nem kód):** a Play Console „Aláírási kulcsok" nézetében szerepeljen a fenti lenyomat (a **feltöltési kulcsunk**) **és** a Google-féle **app signing key**. Ha valaha APK-t ad ki a Playen kívül, **azt a kulcsot is** regisztrálni kell — ezért a szabály: **egy kulccsal** írjunk alá mindent.
+- **ÚJ ESZKÖZ: `tools/check-signing-identity.mjs`** — kiolvassa a kész AAB-ok/APK-k aláírását (`keytool -printcert -jarfile`, illetve `apksigner`; **a kulcstárat nem nyitja meg, titkot nem kér**), és megmondja, hány **különböző** aláírási identitás van. Egynél több → **figyelmeztetés** (mert a nem regisztrált kulcsú build 2026-09-30 után nem telepíthető). Önteszt **8/8** (lenyomat-egységesítés, `keytool`/`apksigner` kimenet-parsolás, csoportosítás, csonka lenyomat elutasítása).
+  - **Mérve:** `1 különböző aláírási identitás`, 37 csomag.
+- **⚠️ TANULSÁG:** a `.bat`-ot (Windows-on az `apksigner`) Node-ból **csak `shell: true`-val** lehet futtatni — enélkül a hívás üres kimenetet ad, és a „nem olvasható aláírás" **hamis riasztás** lenne (az első futás pontosan ezt mutatta a release APK-ra).
+
 ### Dupla push — „nézzünk rá, hogy LEHETSÉGES, némelyik push kétszer megy ki" (2026-09-20, **plugin 2.5.9 + szerveroldali javítás: AAB NEM kell hozzá**)
 
 - **A tulajdonos kérdése:** *„nézzünk rá arra, hogy LEHETSÉGES, némelyik Push kétszer megy ki"*. A válasz **igen, lehetett** — és **két külön mechanizmus** okozta, mindkettő mérve.
