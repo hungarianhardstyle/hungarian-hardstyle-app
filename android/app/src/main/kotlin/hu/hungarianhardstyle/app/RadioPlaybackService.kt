@@ -33,17 +33,20 @@ import androidx.annotation.RequiresApi
  * (Bejelentkezve az app egyéb hátterei időnként felébresztették a folyamatot,
  * ezért tűnt úgy, hogy „bejelentkezve jobb".)
  *
- * A JAVÍTÁS NÉGY RÉSZE:
+ * A JAVÍTÁS ÖT RÉSZE:
  *  1. `setWakeMode(PARTIAL_WAKE_LOCK)` a lejátszón, ÉS egy szolgáltatás-szintű
  *     wake lock, ami az **újracsatlakozás alatt is** tart (a MediaPlayer saját
- *     lockja ilyenkor elengedődik);
+ *     lockja ilyenkor elengedődik) — ezért szól a rádió **kikapcsolt képernyő**
+ *     mellett is, amíg az app fut;
  *  2. nagy teljesítményű Wi-Fi lock, hogy a Wi-Fi energiatakarékos módja ne
  *     ejtse el a streamet;
  *  3. az URL is mentődik, és a rendszer által újraindított szolgáltatás
  *     (`START_STICKY`, `intent == null`) **folytatja** a lejátszást;
  *  4. a hiba/lezárás utáni újracsatlakozás változatlanul 3 másodperc;
  *  5. **hangfókusz**: más app (Spotify/YouTube) indulásakor elhallgatunk, és
- *     amint az befejezi, **magunktól folytatjuk** (`registerPlaybackWatcher`).
+ *     amint az befejezi, **magunktól folytatjuk** (`registerPlaybackWatcher`) —
+ *     ezt a figyelést egy **korlátozott ideig** ébren tartó lock védi, hogy
+ *     képernyő-ki mellett is működjön (lásd [acquireFocusWatchLock]).
  */
 class RadioPlaybackService : Service() {
     private var player: MediaPlayer? = null
@@ -302,7 +305,10 @@ class RadioPlaybackService : Service() {
     private fun pauseForFocusLoss(permanent: Boolean) {
         reconnectHandler.removeCallbacks(reconnect)
         releasePlayer()
-        releaseLocks()
+        // A hang elhallgat, de a CPU **ébren marad**: különben kikapcsolt
+        // képernyő mellett az őrkutya nem futna le, és a rádió némán maradna
+        // akkor is, amikor a másik app már abbahagyta.
+        acquireFocusWatchLock()
         // ⚠️ SZÁNDÉKOS: a jelző csak a VÉGLEGES elvesztést jelöli, mert csak
         // akkor kell magunknak visszaszereznünk a fókuszt. Ideiglenes
         // elvesztésnél (hívás) a rendszer küldi a `AUDIOFOCUS_GAIN`-t, és ha a
@@ -358,19 +364,56 @@ class RadioPlaybackService : Service() {
 
     private fun isPlaybackRequested() = preferences().getBoolean(KEY_PLAYING, false)
 
+    /**
+     * Streameléshez: a CPU **korlátlanul** ébren marad, és a Wi-Fi is nagy
+     * teljesítményen megy. Ez az, ami miatt a rádió **kikapcsolt képernyő**
+     * mellett is szól — enélkül a CPU elaludna, és a stream a puffer kifogyása
+     * után megállna (ez volt a bejelentett hiba).
+     */
     private fun acquireLocks() {
         if (wakeLock == null) {
             wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager)
                 .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
                 .apply { setReferenceCounted(false) }
         }
-        wakeLock?.takeIf { !it.isHeld }?.acquire()
+        // Ha épp egy KORLÁTOZOTT lockot tartunk (fókusz-figyelés), lecseréljük
+        // korlátlanra: streamelés közben nem járhat le a lock.
+        wakeLock?.let { lock ->
+            if (lock.isHeld) lock.release()
+            lock.acquire()
+        }
         if (wifiLock == null) {
             wifiLock = (applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager)
                 .createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, WIFI_LOCK_TAG)
                 .apply { setReferenceCounted(false) }
         }
         wifiLock?.takeIf { !it.isHeld }?.acquire()
+    }
+
+    /**
+     * Fókusz miatti elhallgatás: **a CPU ébren marad**, hogy a 2 másodperces
+     * őrkutya kikapcsolt képernyő mellett is lefusson, és a rádió magától
+     * folytatódjon, amint a másik app abbahagyja.
+     *
+     * KÉT SZÁNDÉKOS KORLÁT:
+     *  1. a Wi-Fi lockot **elengedjük** (nem streamelünk) — a folytatásnál a
+     *     [acquireLocks] úgyis visszaszerzi;
+     *  2. a CPU-lock **korlátozott ideig** tart ([FOCUS_WATCH_WAKE_LOCK_MS]),
+     *     hogy egy elfeledett szünet (pl. a felhasználó egy órán át Spotify-t
+     *     hallgat) ne fogyassza a telepet. Ha lejár, az őrkutya a következő
+     *     ébredésnél (képernyő be) folytatja — a rádió tehát nem veszik el.
+     */
+    private fun acquireFocusWatchLock() {
+        if (wakeLock == null) {
+            wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager)
+                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
+                .apply { setReferenceCounted(false) }
+        }
+        wakeLock?.let { lock ->
+            if (lock.isHeld) lock.release()
+            lock.acquire(FOCUS_WATCH_WAKE_LOCK_MS)
+        }
+        wifiLock?.let { if (it.isHeld) it.release() }
     }
 
     private fun releaseLocks() {
@@ -447,5 +490,6 @@ class RadioPlaybackService : Service() {
         private const val NOTIFICATION_ID = 421
         private const val RECONNECT_DELAY_MS = 3_000L
         private const val FOCUS_RETRY_DELAY_MS = 2_000L
+        private const val FOCUS_WATCH_WAKE_LOCK_MS = 20 * 60 * 1_000L
     }
 }

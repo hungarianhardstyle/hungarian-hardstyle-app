@@ -10,7 +10,7 @@ currentBuild: 338
 currentVersion: 1.0.0
 lastPublishedBuild: 337
 aab: build/HUHS-v1.0.0+338-release.aab
-sha256: E82E23B2C04C54CE68AF4832311C195B9A1D18BB227E079320EB1FDFC35761C8
+sha256: 0854CB8C785CA70D0B8AFF44B5BBCB05E66D78D61386B1B078FCD0BEDE6C764F
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -67,7 +67,7 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 | Verzió | `1.0.0` (versionName) |
 | Verziókód | **338** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 79,61 MB |
-| SHA-256 | E82E23B2C04C54CE68AF4832311C195B9A1D18BB227E079320EB1FDFC35761C8 |
+| SHA-256 | 0854CB8C785CA70D0B8AFF44B5BBCB05E66D78D61386B1B078FCD0BEDE6C764F |
 
 **Miért a 338-at kell feltenni:** ez a legfrissebb (a 337-re épül, plusz a chat-értesítések, az
 ikonjelvény és a rádió javítása). A zárt teszt sávján most a **337** él — a 338 ezt váltja.

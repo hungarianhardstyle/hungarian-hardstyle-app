@@ -67,6 +67,42 @@ void main() {
       expect(service, contains('.acquire()'));
     });
 
+    test('streameléshez a CPU-lock KORLÁTLAN (nem járhat le képernyő-ki alatt)', () {
+      final body = _functionBody(service, 'acquireLocks');
+      expect(body, contains('lock.acquire()'));
+      expect(
+        RegExp(r'\.acquire\(\s*\d').hasMatch(body),
+        isFalse,
+        reason: 'a streamelés lockja nem kaphat lejáratot',
+      );
+      expect(body, contains('WIFI_MODE_FULL_HIGH_PERF'));
+      expect(
+        _functionBody(service, 'startPlayer'),
+        contains('acquireLocks()'),
+        reason: 'minden lejátszás-indításnál biztosítjuk a lockot',
+      );
+    });
+
+    test('fókusz miatti elhallgatáskor is ébren marad a CPU (de korlátozottan)', () {
+      expect(
+        _functionBody(service, 'pauseForFocusLoss'),
+        contains('acquireFocusWatchLock()'),
+        reason: 'különben képernyő-ki mellett az őrkutya nem futna le',
+      );
+      final body = _functionBody(service, 'acquireFocusWatchLock');
+      expect(body, contains('lock.acquire(FOCUS_WATCH_WAKE_LOCK_MS)'));
+      expect(
+        body,
+        contains('wifiLock?.let'),
+        reason: 'a Wi-Fi lockot elengedjük, amíg nem streamelünk',
+      );
+      expect(
+        service,
+        contains('FOCUS_WATCH_WAKE_LOCK_MS = 20 * 60 * 1_000L'),
+        reason: 'a védelem korlátozott ideig tart, hogy ne merítse a telepet',
+      );
+    });
+
     test('nagy teljesítményű Wi-Fi lock is van', () {
       expect(service, contains('createWifiLock('));
       expect(service, contains('WIFI_MODE_FULL_HIGH_PERF'));
@@ -116,7 +152,16 @@ void main() {
     test('a hang elvesztése elhallgattat, de nem állítja le a szolgáltatást', () {
       final body = _functionBody(service, 'pauseForFocusLoss');
       expect(body, contains('releasePlayer'));
-      expect(body, contains('releaseLocks'));
+      expect(
+        body,
+        contains('acquireFocusWatchLock'),
+        reason: 'a CPU marad ébren, hogy az őrkutya képernyő-ki mellett is fusson',
+      );
+      expect(
+        body,
+        isNot(contains('releaseLocks()')),
+        reason: 'a lock teljes elengedése képernyő-ki mellett megállítaná a figyelést',
+      );
       expect(body, contains('pausedByFocus = permanent'));
       expect(
         body,
