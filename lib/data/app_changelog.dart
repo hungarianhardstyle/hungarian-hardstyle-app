@@ -43,6 +43,7 @@ const appChangelog = <AppReleaseNotes>[
       'Értesítést kapsz, ha valaki kedveli a Chat-üzenetedet, vagy válaszol rá — és akkor is, ha a cikkhez írt hozzászólásodra válaszolnak. (Push helyett csak az app értesítéslistája szól.)',
       'Az app ikonja mutatja az olvasatlan értesítéseid számát.',
       'A rádió folyamatosan szól akkor is, ha a képernyő ki van kapcsolva — javítottuk a lejátszást, ami néhány perc után megállt.',
+      'A rádió elhallgat, ha közben elindítasz egy másik zenét (Spotify, YouTube), és amint az befejeződik, magától folytatódik.',
     ],
   ),
   AppReleaseNotes(

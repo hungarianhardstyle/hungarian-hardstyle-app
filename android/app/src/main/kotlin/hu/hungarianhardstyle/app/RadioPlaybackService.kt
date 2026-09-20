@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.media.AudioPlaybackConfiguration
 import android.media.MediaPlayer
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -17,6 +18,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
+import androidx.annotation.RequiresApi
 
 /**
  * A Real Hardstyle FM rádió lejátszása előtér-szolgáltatásként.
@@ -39,7 +41,9 @@ import android.os.PowerManager
  *     ejtse el a streamet;
  *  3. az URL is mentődik, és a rendszer által újraindított szolgáltatás
  *     (`START_STICKY`, `intent == null`) **folytatja** a lejátszást;
- *  4. a hiba/lezárás utáni újracsatlakozás változatlanul 3 másodperc.
+ *  4. a hiba/lezárás utáni újracsatlakozás változatlanul 3 másodperc;
+ *  5. **hangfókusz**: más app (Spotify/YouTube) indulásakor elhallgatunk, és
+ *     amint az befejezi, **magunktól folytatjuk** (`registerPlaybackWatcher`).
  */
 class RadioPlaybackService : Service() {
     private var player: MediaPlayer? = null
@@ -49,17 +53,108 @@ class RadioPlaybackService : Service() {
     private var wifiLock: WifiManager.WifiLock? = null
     private var focusRequest: AudioFocusRequest? = null
 
+    /**
+     * Elhallgattunk-e azért, mert egy MÁSIK app (Spotify/YouTube) elvette a
+     * fókusz? Ilyenkor a lejátszási **szándék megmarad**, és amint a másik app
+     * abbahagyja, folytatjuk (lásd [registerPlaybackWatcher]).
+     */
+    private var pausedByFocus = false
+
+    /**
+     * A rendszer lejátszás-figyelője. **Szándékosan `null`** az alapértéke, és a
+     * példány is csak API 26-tól jön létre: a `AudioPlaybackCallback` osztály a
+     * régebbi Androidokon nem létezik, ezért nem lehet mezőinicializálóban
+     * példányosítani (az a szolgáltatás létrehozásakor **azonnal** lefutna, és a
+     * régi készülékeken `NoClassDefFoundError`-ral elhasalna az app).
+     */
+    private var playbackWatcher: AudioManager.AudioPlaybackCallback? = null
+
     private val audioManager by lazy {
         getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 
-    /** MÁS APP hangja: elhallgatunk (lásd [requestAudioFocus] doksiját). */
+    /**
+     * „SZÓLJON TOVÁBB, HA A SPOTIFY BEFEJEZTE" — a tulajdonos kérése:
+     * *„ha megy a háttérben a rádió és valaki elindít pl egy spotifyt, akkor
+     * kussoljon be a rádió, ha kikapcsolja a spotifyt, vagy youtubeot, stb,
+     * menjen tovább a rádió"*.
+     *
+     * MIÉRT KELL EZ: a fókusz **végleges** elvesztése után az Android **nem**
+     * küld vissza `AUDIOFOCUS_GAIN`-t (a másik app „elvette", nem ideiglenesen
+     * vette el), ezért magunktól kell visszaszereznünk. Új fókuszt kérni viszont
+     * csak akkor szabad, ha a másik app **már nem játszik** — különben elvennénk
+     * tőle a fókuszt, ami pont az ellenkezője annak, amit a tulajdonos kért.
+     *
+     * EZT KÉT ÚTON FIGYELJÜK, és mindkettő ugyanazt a döntést hívja:
+     *  1. `registerAudioPlaybackCallback` (API 26+) — **azonnal** szól, amikor a
+     *     rendszer lejátszás-listája változik (a másik app abbahagyta);
+     *  2. `focusWatchdog` — 2 másodpercenként **megkérdezi** a publikus
+     *     `AudioManager.isMusicActive()`-et. Ez azért kell, mert a visszahívás
+     *     nem garantált minden készüléken, és mert az „aktív-e egy másik
+     *     lejátszás" kérdésre a rendszer-API-k (`isActive`, `getClientUid`)
+     *     **nem fordulnak le** — a szándék- és UID-alapú szűrés nem járható út.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun registerPlaybackWatcher() {
+        if (playbackWatcher != null) return
+        val watcher = object : AudioManager.AudioPlaybackCallback() {
+            override fun onPlaybackConfigChanged(configs: MutableList<AudioPlaybackConfiguration>?) {
+                // A lista csak RIAKASZTÁS: a döntést a közös út hozza.
+                resumeAfterFocusLoss()
+            }
+        }
+        playbackWatcher = watcher
+        audioManager.registerAudioPlaybackCallback(watcher, Handler(Looper.getMainLooper()))
+    }
+
+    /**
+     * Ha a rádió csak **elhallgatott** (más app elvette a fókuszt), és a másik
+     * app már nem játszik, akkor fókuszt kérünk és **folytatjuk**.
+     *
+     * Szándékos védelem: amíg a másik app szól (`isMusicActive`), **nem**
+     * kérünk fókuszt — különben elhallgattatnánk azt, amit a felhasználó
+     * éppen hallgat.
+     */
+    private fun resumeAfterFocusLoss() {
+        if (!pausedByFocus || !isPlaybackRequested()) return
+        val url = streamUrl
+        if (url.isNullOrBlank()) return
+        val musicPlaying = runCatching { audioManager.isMusicActive }.getOrDefault(true)
+        if (musicPlaying) return
+        if (!requestAudioFocus()) return
+        reconnectHandler.removeCallbacks(focusWatchdog)
+        pausedByFocus = false
+        // Az értesítés frissítése nem kötelező (a szolgáltatás végig előtérben
+        // maradt), de gondoskodunk róla, hogy ott legyen.
+        runCatching { startForeground(NOTIFICATION_ID, notification()) }
+        startPlayer(url)
+    }
+
+    /** 2 másodpercenként megkérdezi, folytathatjuk-e (lásd [resumeAfterFocusLoss]). */
+    private val focusWatchdog = object : Runnable {
+        override fun run() {
+            // Ha közben leállt a rádió, nincs mit figyelni — így nem pörög tovább.
+            if (!isPlaybackRequested()) return
+            resumeAfterFocusLoss()
+            if (pausedByFocus) reconnectHandler.postDelayed(this, FOCUS_RETRY_DELAY_MS)
+        }
+    }
+
+    private fun unregisterPlaybackWatcher() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        playbackWatcher?.let { audioManager.unregisterAudioPlaybackCallback(it) }
+        playbackWatcher = null
+    }
+
+    /** MÁS APP hangja: elhallgatunk, majd folytatjuk (lásd [registerPlaybackWatcher]). */
     private val focusListener = AudioManager.OnAudioFocusChangeListener { change ->
         when (change) {
-            AudioManager.AUDIOFOCUS_LOSS -> pauseForFocusLoss(permanent = true)
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> pauseForFocusLoss(permanent = false)
+            AudioManager.AUDIOFOCUS_LOSS -> pauseForFocusLoss()
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> pauseForFocusLoss()
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> player?.setVolume(0.2f, 0.2f)
             AudioManager.AUDIOFOCUS_GAIN -> {
+                pausedByFocus = false
+                reconnectHandler.removeCallbacks(focusWatchdog)
                 player?.setVolume(volume, volume)
                 val url = streamUrl
                 if (isPlaybackRequested() && !url.isNullOrBlank()) {
@@ -82,6 +177,11 @@ class RadioPlaybackService : Service() {
             )
         }
         streamUrl = preferences().getString(KEY_URL, null)
+        // A fókusz visszaszerzéséhez figyelni kell, mikor hagyja abba a MÁSIK
+        // app a lejátszást (lásd [registerPlaybackWatcher]). API 26-tól elérhető.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerPlaybackWatcher()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -101,7 +201,10 @@ class RadioPlaybackService : Service() {
                 // lejátszás be volt kapcsolva, folytatjuk — a rádió folyamatos.
                 if (isPlaybackRequested() && !streamUrl.isNullOrBlank()) {
                     startForeground(NOTIFICATION_ID, notification())
-                    if (requestAudioFocus()) startPlayer(streamUrl!!)
+                    if (requestAudioFocus()) {
+                        pausedByFocus = false
+                        startPlayer(streamUrl!!)
+                    }
                 } else {
                     stopSelf()
                 }
@@ -122,6 +225,7 @@ class RadioPlaybackService : Service() {
             // megpróbáljuk, de a fókusz megszerzése nélkül nem indulunk el.
             return
         }
+        pausedByFocus = false
         startPlayer(url)
     }
 
@@ -133,7 +237,8 @@ class RadioPlaybackService : Service() {
      * Enélkül a rádió **soha nem kap jelzést** arról, hogy más app hangot indít.
      * Ezért kérünk fókuszt, és a változásra:
      *  - **végleges elvesztés** (Spotify/YouTube elindul): a rádió **elhallgat**,
-     *    és nem is kapja vissza magától — a felület is „leállt"-ot mutat;
+     *    de **nem adja fel** — amint a másik app abbahagyja, a [registerPlaybackWatcher]
+     *    visszaszerzi a fókuszt és **folytatja** (a tulajdonos kérése);
      *  - **ideiglenes elvesztés** (hívás, navigáció): szünet, majd a fókusz
      *    visszakapásakor **folytatja** (ez a rádióknál megszokott viselkedés);
      *  - **halkítás** (duck): lehalkítjuk, majd visszaállítjuk a hangerőt.
@@ -170,19 +275,29 @@ class RadioPlaybackService : Service() {
         }
     }
 
-    private fun pauseForFocusLoss(permanent: Boolean) {
+    /**
+     * MÁS APP elvette a hangot: **elhallgatunk, de nem adjuk fel**.
+     *
+     * A lejátszási SZÁNDÉK megmarad (`playing` igaz, az URL mentve), a fókusz
+     * kérése pedig a helyén marad — ezért tudunk magunktól folytatni:
+     *  - **ideiglenes** elvesztésnél a rendszer küldi a `AUDIOFOCUS_GAIN`-t;
+     *  - **végleges** elvesztésnél (Spotify/YouTube „elvette") a rendszer
+     *    **nem** küld semmit, ezért a [registerPlaybackWatcher] figyeli, mikor hagyja
+     *    abba a másik app, és akkor kér fókuszt újra.
+     *
+     * A szolgáltatás **fut tovább** (az értesítés is megmarad), csak a hang
+     * hallgat el — így nem kell újraindítani a lejátszást a felhasználónak.
+     */
+    private fun pauseForFocusLoss() {
         reconnectHandler.removeCallbacks(reconnect)
         releasePlayer()
         releaseLocks()
-        if (permanent) {
-            // A rádió elhallgat, és a felület is ezt mutatja (a felhasználó
-            // indíthatja újra a gombbal).
-            preferences().edit().putBoolean(KEY_PLAYING, false).apply()
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
-        }
-        // Ideiglenes elvesztésnél a `playing` igaz marad: a fókusz
-        // visszakapásakor magától folytatjuk.
+        pausedByFocus = true
+        // Amíg a másik app szól, figyeljük, mikor hagyja abba (lásd
+        // [resumeAfterFocusLoss]) — és a visszahívás mellett a 2 másodperces
+        // őrkutya is indul, mert a visszahívás nem garantált.
+        reconnectHandler.removeCallbacks(focusWatchdog)
+        reconnectHandler.postDelayed(focusWatchdog, FOCUS_RETRY_DELAY_MS)
     }
 
     private fun startPlayer(url: String) {
@@ -262,7 +377,9 @@ class RadioPlaybackService : Service() {
     private fun stopPlayer() {
         preferences().edit().putBoolean(KEY_PLAYING, false).remove(KEY_URL).apply()
         reconnectHandler.removeCallbacks(reconnect)
+        reconnectHandler.removeCallbacks(focusWatchdog)
         streamUrl = null
+        pausedByFocus = false
         releasePlayer()
         releaseLocks()
         abandonAudioFocus()
@@ -287,6 +404,7 @@ class RadioPlaybackService : Service() {
 
     override fun onDestroy() {
         stopPlayer()
+        unregisterPlaybackWatcher()
         super.onDestroy()
     }
 
@@ -313,5 +431,6 @@ class RadioPlaybackService : Service() {
         private const val CHANNEL_ID = "huhs_radio"
         private const val NOTIFICATION_ID = 421
         private const val RECONNECT_DELAY_MS = 3_000L
+        private const val FOCUS_RETRY_DELAY_MS = 2_000L
     }
 }

@@ -10,7 +10,7 @@ currentBuild: 338
 currentVersion: 1.0.0
 lastPublishedBuild: 337
 aab: build/HUHS-v1.0.0+338-release.aab
-sha256: 083BAA98CA28AC4AF620C528E38BE7850FAFCC4468D641A363FB0FD334AD64F5
+sha256: 233E1F02F8F3BFCD4A463A345448FEDC460CC0D1946B42AD38087F8BACE63A48
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -67,7 +67,7 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 | Verzió | `1.0.0` (versionName) |
 | Verziókód | **338** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 79,61 MB |
-| SHA-256 | 083BAA98CA28AC4AF620C528E38BE7850FAFCC4468D641A363FB0FD334AD64F5 |
+| SHA-256 | 233E1F02F8F3BFCD4A463A345448FEDC460CC0D1946B42AD38087F8BACE63A48 |
 
 **Miért a 338-at kell feltenni:** ez a legfrissebb (a 337-re épül, plusz a chat-értesítések, az
 ikonjelvény és a rádió javítása). A zárt teszt sávján most a **337** él — a 338 ezt váltja.
@@ -92,7 +92,7 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 ```play-notes
 - Értesítést kapsz, ha kedvelik a Chat-üzenetedet vagy válaszolnak rá (és a cikkhez írt hozzászólásodra is).
 - Az app ikonja mutatja az olvasatlan értesítéseid számát.
-- A rádió folyamatosan szól, akkor is, ha a képernyő ki van kapcsolva.
+- A rádió képernyő-ki mellett is szól, és elhallgat, ha közben Spotify vagy YouTube indul — majd magától folytatódik.
 ```
 
 ## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–337 összesítő)
@@ -101,13 +101,13 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
 
 ```play-notes
-- Értesítés: chat-lájk, chat-válasz és a hozzászólásodra jött válasz is szól.
-- Az app ikonja mutatja az olvasatlan értesítéseid számát.
-- A rádió folyamatosan szól.
-- A cikkek YouTube-videója az appban játszódik le.
-- ÚJ: napi aktivitási pont (komment + chat), kiadvány-vásárlás +20, jóváhagyott beküldés +10.
-- Eseményt csak szervezői szerepkörrel lehet beküldeni; az Achievement-útmutató pontos lett.
-- A rangod szintlépésnél magától frissül; a listák nem villognak.
+- Értesítés: chat-lájk, chat-válasz és a hozzászólásodra jött válasz.
+- Az app ikonja mutatja az olvasatlan értesítéseid.
+- A rádió folyamatosan szól; Spotify/YouTube alatt elhallgat, majd folytatja.
+- A cikkek YouTube-videója az appban játszódik.
+- Napi aktivitási pont (komment+chat), kiadvány-vásárlás +20, jóváhagyott beküldés +10.
+- Eseményt csak szervezőként lehet beküldeni; az Achievement-útmutató pontos lett.
+- A rangod szintlépésnél frissül; a listák nem villognak.
 ```
 
 ## 1c. Play Console — CSAK a 338-hoz, bővebben (tartalék)
@@ -120,6 +120,7 @@ megjeleníteni. **Ez is csak a 338-at írja le** (a 329–337 már kiment a zár
 - Értesítést kapsz a cikkhez írt hozzászólásodra adott válaszról is.
 - Az app ikonja mutatja az olvasatlan értesítéseid számát.
 - A rádió folyamatosan szól, akkor is, ha a képernyő ki van kapcsolva.
+- A rádió elhallgat, ha közben Spotify vagy YouTube indul, majd magától folytatódik.
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -143,6 +144,7 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A cikkhez írt hozzászólásodra adott válaszról is szólunk (ez eddig is működött).
 - Az app ikonja mutatja az olvasatlan értesítéseid számát.
 - A rádió folyamatosan szól akkor is, ha a képernyő ki van kapcsolva — javítottuk a lejátszást, ami néhány perc után megállt.
+- A rádió elhallgat, ha közben elindítasz egy másik zenét (Spotify, YouTube), és amint az befejeződik, magától folytatódik.
 
 ### 337 — a YouTube-videó az appban játszódik le
 - A cikkekben lévő YouTube-videó mostantól az appban játszódik le: a videó a cikk „Média" szakaszában jelenik meg saját lejátszóval, nem nyitja meg a YouTube-alkalmazást. Ha egy videó beágyazása tiltott, marad egy „Megnyitás a YouTube-on" gomb.
