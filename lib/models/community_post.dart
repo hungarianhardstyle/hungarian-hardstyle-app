@@ -14,6 +14,16 @@ class CommunityPost {
   final String imageUrl;
   final bool pinned;
   final Map<String, int> reactions;
+
+  /// Ki mivel reagált (`{uid: emoji}`) — a szerver írja (`toggleChatReaction`).
+  ///
+  /// MIÉRT kell a felületnek: a `reactions` csak **darabszám**, abból nem derül
+  /// ki, hogy a saját reakciónk ott van-e. A tulajdonos jelzése: *„ha valaki
+  /// lájkol egy chat üzenetet, valahogy jelezhetné hogy az adott user lájkolta
+  /// mert nem egyértelmű, nevet ne írjon oda, csak lássa hogy már lájkolta"*.
+  /// Ebből a térképből **kizárólag a saját** UID-ot olvassuk ki, és **nevet nem
+  /// írunk ki** — a felület csak azt jelzi, hogy TE reagáltál.
+  final Map<String, String> reactionBy;
   final DateTime createdAt;
 
   /// Mikor szerkesztette a szerzo (vagy egy admin) az uzenetet.
@@ -36,6 +46,7 @@ class CommunityPost {
     required this.imageUrl,
     required this.pinned,
     required this.reactions,
+    this.reactionBy = const <String, String>{},
     required this.createdAt,
     this.editedAt,
   });
@@ -67,8 +78,26 @@ class CommunityPost {
                   MapEntry(key.toString(), (value as num?)?.toInt() ?? 0),
             )
           : const <String, int>{},
+      reactionBy: data['reactionBy'] is Map
+          ? (data['reactionBy'] as Map).entries
+                .where((entry) => entry.value is String)
+                .fold(<String, String>{}, (map, entry) {
+                  map[entry.key.toString()] = entry.value as String;
+                  return map;
+                })
+          : const <String, String>{},
       createdAt: timestamp is Timestamp ? timestamp.toDate() : DateTime.now(),
       editedAt: edited is Timestamp ? edited.toDate() : null,
     );
+  }
+
+  /// A **saját** reakcióm ezen az üzeneten (`''`, ha nincs ilyen).
+  ///
+  /// Szándékosan csak a saját UID-ot nézi: a felület nem listáz neveket, csak
+  /// azt jelzi, hogy a bejelentkezett felhasználó már reagált.
+  String myReaction(String? uid) {
+    final key = (uid ?? '').trim();
+    if (key.isEmpty) return '';
+    return reactionBy[key] ?? '';
   }
 }

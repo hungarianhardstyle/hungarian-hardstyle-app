@@ -1,5 +1,23 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### Chat-reakció: látszik, hogy TE már lájkoltad (2026-09-20, AAB **336**)
+
+- **A tulajdonos jelzése:** *„ha valaki lájkol egy chat üzenetet, valahogy jelezhetné hogy az adott user lájkolta mert nem egyértelmű, nevet ne írjon oda, csak lássa hogy már lájkolta"*.
+- **A MÉRT GYÖKÉR (két dolog együtt):**
+  1. **A szerver már mindent tud:** a `toggleChatReaction` (`functions/index.js`) a `reactions` (emoji → darabszám) mellett **`reactionBy: {uid: emoji}`** térképet is ír — vagyis a „ki mivel reagált" adat **évek óta megvan**.
+  2. **Az app eldobta:** a `CommunityPost.fromDocument` **csak** a `reactions` darabszámot olvasta be, a `reactionBy`-t nem — a felület pedig egy **múló** `_selectedReaction` mezővel jelölt (csak az utolsó koppintást, ami újratöltésnél elveszett). Ezért volt „nem egyértelmű".
+- **A javítás (kliens, AAB 336):**
+  - **`CommunityPost`**: új, **opcionális** `reactionBy` mező (`Map<String, String>`) + `myReaction(uid)` — **kizárólag a saját** UID-ot olvassa, neveket nem. A nem-string értékeket kiszűri.
+  - **`CommunityService.toggleReaction`** mostantól **visszaadja** a szerver `selected` mezőjét (`''` = visszavontuk) — ez az egyetlen biztos forrás az azonnali visszajelzéshez (a szerveroldali írás 100–300 ms).
+  - **`_PostCard`**: a saját reakció chipje **bejelölve** jelenik meg (`Icons.check_circle` + `primaryContainer` háttér + keret + félkövér címke + „Te reagáltál erre" tipp). Az optimista érték **pontosan a szerver válasza** (nem tipp), és a következő Firestore-kép beérkezésekor átadja a helyét a szerver állapotának (`didUpdateWidget`). Hiba esetén **nem hazudik**: marad a szerver-kép.
+  - **⚠️ SZÁNDÉKOS DÖNTÉS — miért nem `currentUidProvider`:** az a provider **null-t ad vendégnek** (`isAnonymous`), a Chat-reakció viszont **vendégnek is engedélyezett** (`ensureAnonymousUser()` a szolgáltatásban, a szerver csak UID-ot kér). Ezért a `communityAuthProvider` **nyers** UID-ját használjuk, különben a vendég nem látná a saját reakcióját.
+  - **Adatvédelem (tudni kell):** a `reactionBy` (UID → emoji) a Firestore-szabály szerint `allow read: if true`, tehát a kliens **megkapja** a teljes térképet — ez **nem új** (a privát üzenetek képernyője eddig is ebből olvasta a sajátját: `reactionBy[user.uid]`), és a felület **soha nem ír ki nevet**. Ha ezt szigorítani akarsz, a tiszta út egy `live_feed_posts/{postId}/reactions/{uid}` alkollekció (csak a tulajdonos olvashatja) — külön döntés, mert szerver + szabály + átállás.
+- **BIZONYÍTÁS — új `test/widgets/chat_reaction_mine_test.dart` (7):** a saját reakció **jelölve** van és a tipp is megjelenik; **más** reakciója **nem** jelenik meg az enyémként (és nincs névkiírás); a koppintás **azonnal** jelöl (a szerver válaszából, a képre nem várva); **visszavonáskor eltűnik**; a `myReaction` csak a saját UID-ot olvassa (null/üres/idegen → üres); a `reactionBy` **beolvasása a Firestore-dokumentumból** (a nem-string érték kiszűrve); hiányzó `reactionBy` → üres, nem dob.
+  - **⚠️ CSAPDA, amit mérve javítottam:** az első teszt-harness `Fake implements User`-rel **elhasalt** (`UnimplementedError: email`), mert a `_PostCard` az admin-jogot az **e-mailből** is nézi (`CommunityService.isAdmin`). A hamis felhasználónak ezért az `email`/`displayName`/`photoURL` is kell.
+  - `flutter analyze` tiszta, `flutter test` **314/314** (a menet előtt 307 volt).
+- **Csomag:** `build/HUHS-v1.0.0+336-release.aab` (versionCode **336**, 79,54 MB, SHA-256 `6C56CA5B103D82777DDF61C69630CBEC332225741A88CC07253348A070947C7F`) — a `pubspec.yaml` `1.0.0+336`, a changelog-bejegyzés a `lib/data/app_changelog.dart`-ban, a Play-szöveg a `docs/PLAY-KIADASI-JEGYZET.md`-ben (a blokkok **rövidítve**, hogy a 480 karakteres margó megmaradjon). **A plugin változatlan (2.5.9).**
+- **⚠️ TANULSÁG:** a Play-blokk hosszát **minden új sorral újra kell mérni** (`node tools/check-play-notes.mjs`) — egyetlen hozzáadott sor átlépte az 500 karakteres limitet (540/552), ezért a régi sorokat is rövidíteni kellett.
+
 ### Play-követelmény: alkalmazás- és aláírásregisztráció (2026-09-20, határidő **2026-09-30**, **nincs teendő a kódban**)
 
 - **A tulajdonos jelzése:** a Play Console egy zöld figyelmeztetést mutatott: *„Regisztrálj az összes olyan alkalmazás csomagnevét és aláírási kulcsát, amelyet Androidon terjesztesz"* — 2026. szeptember 30-tól a nem regisztrált Play-alkalmazásokat **globálisan letiltják**, és a **Playen kívül** terjesztett, Android-aláírási kulcsot használó buildek **sem telepíthetők** a tanúsítvánnyal rendelkező eszközökre bizonyos országokban. A kérdése: *„nekünk ezzel van dolgunk?"*

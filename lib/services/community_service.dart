@@ -1198,15 +1198,23 @@ class CommunityService {
     );
   }
 
-  Future<void> toggleReaction({
+  /// A Chat-üzenet reakciójának váltása; visszaadja a **saját** új állapotot.
+  ///
+  /// MIÉRT adja vissza: a szerver `selected` mezője (`''` = visszavontuk) az
+  /// egyetlen biztos forrás arra, hogy a felület **azonnal** mutassa, hogy a
+  /// felhasználó reakciója ott van-e. Enélkül a koppintás 100–300 ms-ig
+  /// „nem csinált semmit" benyomást kelt, és a felhasználó nem látja
+  /// egyértelműen, hogy lájkolt-e (a tulajdonos jelzése).
+  Future<String> toggleReaction({
     required String postId,
     required String emoji,
   }) async {
     await ensureAnonymousUser();
-    await callFirebaseCallable<void>(
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
       'toggleChatReaction',
       parameters: {'postId': postId, 'emoji': emoji},
     );
+    return result.data['selected'] as String? ?? '';
   }
 
   /// A Chat-üzenet törlése — **csak adminnak**.

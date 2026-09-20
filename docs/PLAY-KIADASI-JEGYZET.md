@@ -6,11 +6,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 335
+currentBuild: 336
 currentVersion: 1.0.0
 lastPublishedBuild: 328
-aab: build/HUHS-v1.0.0+335-release.aab
-sha256: 4D824B24B9C071BB1A429530ABF93D5BC6803D0CC68B4C94BE0B869772CAA10D
+aab: build/HUHS-v1.0.0+336-release.aab
+sha256: 6C56CA5B103D82777DDF61C69630CBEC332225741A88CC07253348A070947C7F
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -59,26 +59,26 @@ kulcsok között. Új AAB vagy plugin feltöltés **nem** kell hozzá. Ha valaha
 kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell — ezért érdemes továbbra is
 **egy** kulccsal írni alá mindent.
 
-
+## A feltöltendő AAB (mérve)
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+335-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+336-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **335** (a merge-elt release manifestből visszaolvasva) |
+| Verziókód | **336** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 79,54 MB |
-| SHA-256 | 4D824B24B9C071BB1A429530ABF93D5BC6803D0CC68B4C94BE0B869772CAA10D |
+| SHA-256 | 6C56CA5B103D82777DDF61C69630CBEC332225741A88CC07253348A070947C7F |
 
-**Miért a 335-öt kell feltenni:** ez a legfrissebb (a 334-re épül, plusz a beküldési szerepkör-szabály).
-**Ez a csomag már fent van a zárt teszt sávján** (mérve: alpha = completed 335), ezért **újra feltölteni nem kell** — a production kiadás ebből a bundle-ből indítható, amint a termékkör megnyílik. Új AAB csak akkor kell, ha a kód ezután változik.
+**Miért a 336-ot kell feltenni:** ez a legfrissebb (a 335-re épül, plusz a Chat-reakció saját jelzése).
+A zárt teszt sávján most a **335** él — a 336 ezt váltja.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 335 mindegyiket tartalmazza, és kisebb
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 336 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
-**A plugin ehhez 2.5.9** (`build/huhs-mobile-api-2.5.9.zip`) — **ezt is fel kell tölteni**: ebben van
-a beküldések elfogadását lekérdező végpont (2.5.8) **és a dupla push elleni védelem (2.5.9)**.
-A 2.5.8-at felváltja, tehát csak a 2.5.9-et kell feltölteni. (Az app-oldali funkciók a 2.5.7-tel is
-működnek, de a dupla push javítása nélkül a nagy körüzenetek egy része kétszer megy ki.)
+**A plugin ehhez 2.5.9** (`build/huhs-mobile-api-2.5.9.zip`) — **ez már fent van** (élőben igazolva:
+`apiVersion = 2.5.9`), ezért **nem kell újra feltölteni**. Ha viszont valaha újratelepíted a plugint,
+ez a csomag a jó: ebben van a beküldések elfogadását lekérdező végpont (2.5.8) **és a dupla push
+elleni védelem (2.5.9)**.
 
 ## 1. Play Console — RÖVID (ezt másold be)
 
@@ -93,9 +93,10 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 - ÚJ: napi aktivitási pont — kommentért és chatért 1–5 pont jár, a szerver számolja.
 - ÚJ: kiadvány megvásárlásáért +20, jóváhagyott beküldésért +10 pont jár.
 - Eseményt mostantól csak szervezői szerepkörrel lehet beküldeni.
-- Az Achievement-útmutató pontos leírást kapott (napi keretek, szabályok).
-- A rangod és a jelvényed szintlépésnél magától frissül, nem kell újranyitni az appot.
+- Az Achievement-útmutató pontos leírásokat kapott.
+- A rangod szintlépésnél magától frissül.
 - A hírek, a DJ-k és az események listája görgetés közben már nem villog.
+- A Chatben pipa jelzi, hogy már reagáltál egy üzenetre.
 ```
 
 ## 1b. Play Console — ha bővebben szeretnéd (tartalék)
@@ -107,11 +108,11 @@ felsorolni, mit kap a felhasználó.
 - ÚJ: napi aktivitási pont — kommentért és chatért 1–5 pont jár, a szerver számolja.
 - ÚJ: kiadvány-vásárlásért +20 pont jár.
 - ÚJ: jóváhagyott beküldésért +10 pont jár.
-- Eseményt mostantól csak szervezői szerepkörrel lehet beküldeni.
-- Az Achievement-útmutató pontos leírásokat kapott.
-- A rang és a jelvény szintlépésnél magától frissül.
-- A hírek, a DJ-k és az események listája görgetés közben már nem villog.
-- A kedvelt hír pontját a lájk visszavonása nem veszi el.
+- Eseményt csak szervezői szerepkörrel lehet beküldeni.
+- Az Achievement-útmutató pontos lett.
+- A rangod szintlépésnél magától frissül.
+- A listák görgetés közben már nem villognak.
+- A Chatben pipa jelzi, hogy már reagáltál egy üzenetre.
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -129,6 +130,9 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 336 — a saját reakciód jelzése a Chatben
+- A Chat-üzeneteknél mostantól egyértelműen látszik, hogy **TE** már reagáltál: a reakciógomb bejelölve (pipa) és kiemelve jelenik meg. Nevek nem szerepelnek, csak a saját reakciód.
 
 ### 335 — beküldés szerepkör szerint
 - Eseményt mostantól csak szervezői szerepkörrel lehet beküldeni (a DJ-t DJ-, a szervezőt szervezői szerepkörrel, ahogy eddig) — a beküldő gomb csak annak látszik, akinek szabad.

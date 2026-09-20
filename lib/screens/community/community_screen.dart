@@ -1356,16 +1356,41 @@ class _PostCard extends ConsumerStatefulWidget {
 }
 
 class _PostCardState extends ConsumerState<_PostCard> {
-  String? _selectedReaction;
+  /// A `toggleChatReaction` válasza, amíg a Firestore-kép meg nem erősíti.
+  ///
+  /// MIÉRT kell: a szerveroldali írás visszaérkezése 100–300 ms, addig a
+  /// felhasználó nem látná, hogy megtörtént a reakció. Az optimista érték
+  /// pontosan a szerver válasza (nem tipp), ezért nem tud „félrevezetni".
+  bool _optimisticActive = false;
+  String _optimisticReaction = '';
+
+  /// A saját reakcióm a szerver-kép szerint (üres, ha nincs / nem vagyok be).
+  String get _snapshotReaction {
+    final uid = ref.watch(communityAuthProvider).valueOrNull?.uid;
+    return widget.post.myReaction(uid);
+  }
+
+  @override
+  void didUpdateWidget(covariant _PostCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Beért a kép: az optimista érték már felesleges (a szerver az úr).
+    if (_optimisticActive && _snapshotReaction == _optimisticReaction) {
+      _optimisticActive = false;
+    }
+  }
 
   Future<void> _react(String emoji) async {
-    setState(() => _selectedReaction = emoji);
     try {
-      await ref
+      final selected = await ref
           .read(communityServiceProvider)
           .toggleReaction(postId: widget.post.id, emoji: emoji);
+      if (!mounted) return;
+      setState(() {
+        _optimisticActive = true;
+        _optimisticReaction = selected;
+      });
     } catch (_) {
-      if (mounted) setState(() => _selectedReaction = null);
+      // Hiba: marad a szerver-kép (nem mutatunk olyat, ami nem történt meg).
     }
   }
 
@@ -1703,15 +1728,36 @@ class _PostCardState extends ConsumerState<_PostCard> {
                 ),
                 ...['❤️', '🔥', '🙌'].map((emoji) {
                   final count = post.reactions[emoji] ?? 0;
+                  // A SAJÁT reakció egyértelmű jelzése — **név nélkül**.
+                  final isMine =
+                      (_optimisticActive
+                          ? _optimisticReaction
+                          : _snapshotReaction) ==
+                      emoji;
+                  final scheme = Theme.of(context).colorScheme;
                   return ActionChip(
                     visualDensity: widget.compact
                         ? VisualDensity.compact
                         : null,
-                    label: Text('$emoji${count > 0 ? ' $count' : ''}'),
-                    backgroundColor: _selectedReaction == emoji
-                        ? Theme.of(context).colorScheme.primary
-                              .withValues(alpha: .25)
+                    avatar: isMine
+                        ? Icon(
+                            Icons.check_circle,
+                            size: 16,
+                            color: scheme.primary,
+                          )
                         : null,
+                    label: Text(
+                      '$emoji${count > 0 ? ' $count' : ''}',
+                      style: isMine
+                          ? TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: scheme.primary,
+                            )
+                          : null,
+                    ),
+                    backgroundColor: isMine ? scheme.primaryContainer : null,
+                    side: isMine ? BorderSide(color: scheme.primary) : null,
+                    tooltip: isMine ? 'Te reagáltál erre' : null,
                     onPressed: () => _react(emoji),
                   );
                 }),
