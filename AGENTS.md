@@ -19,7 +19,7 @@
 - **BIZONYÍTÁS — új `test/core/youtube_embed_test.dart` (16):** az azonosító kinyerése **minden** valós alakból (a cikkekből mért `watch?feature=shared&v=…`, `&amp;`, `\u0026`, séma nélküli, `youtu.be`, `shorts`, `embed`, `live`); érvénytelen bemenet → `null` (nem YouTube link, üres, csatorna-URL); a **konfiguráció** (a `baseUrl` HTTPS-origin és nem `about:blank`, a UA Chrome-fejléc `wv` nélkül, `playsinline=1`); a **HTML** (iframe, `allowfullscreen`, origin-hivatkozó, `encrypted-media`); és **forrás-lint**, hogy a YouTube nem esik ki a WebView-ból, `loadHtmlString`+`baseUrl` van, a tartalék gomb megmaradt, és az azonosító nélküli link a régi kártyát kapja.
   - `flutter analyze` tiszta, `flutter test` **330/330** (a menet előtt 314 volt).
 - **Csomag:** `build/HUHS-v1.0.0+337-release.aab` (versionCode **337**, 79,59 MB, SHA-256 `35FEB3EEFF1FFA30C04AB86C707E36574916691A89A9D4706F9B0939D21219A3`) — `pubspec.yaml` `1.0.0+337`, changelog-bejegyzés, Play-jegyzet frissítve. **A 336 MÁR FENT VAN a zárt teszt sávján** (mérve: `alpha = completed 336`), ezért a `lastPublishedBuild` mostantól **336**, az 1. Play-blokk már csak a 337-et írja le, az 1b. pedig a **329–337 összesítő** a production kiadáshoz.
-- **ŐSZINTE KORLÁT:** az emulátor ugyanazt a WebView-motort futtatja, de a hangot/képminőséget és a teljes képernyős gombot **a tulajdonosnak kell igazolnia a telefonján**.
+- **A TULAJDONOS ÉLES ESZKÖZÖN IS IGAZOLTA (2026-09-20):** *„megy fel a 337, működött a youtube"* — vagyis a javítás a **valódi telefonján** is lejátszotta a videót az appban, nem csak az emulátorban. Ez a legerősebb bizonyíték (a hangot/képminőséget innen nem lehetett mérni).
 
 ### Chat-reakció: látszik, hogy TE már lájkoltad (2026-09-20, AAB **336**)
 

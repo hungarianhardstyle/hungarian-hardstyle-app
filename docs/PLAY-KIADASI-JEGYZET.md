@@ -19,14 +19,15 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-20, a legfrissebb mér�
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **336** — „336 (1.0.0)", kiadási szöveggel |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **337** — „337 (1.0.0)", kiadási szöveggel |
 | beta | üres | — |
 | production | üres | — |
 | internal | completed + egy **üres piszkozat** | 278 |
 
-- **A 336 a zárt teszt sávján MÁR FENT VAN** (completed), az 1. pont blokkjának szövegével.
+- **A 337 a zárt teszt sávján MÁR FENT VAN** (completed), és a **bővebb (1c.) kiadási szöveggel** ment ki.
 - **A production sáv viszont üres:** a termékkör megnyitása a Play zárt teszt követelményéhez kötött (személyes fejlesztői fióknál legalább **12 tesztelő / 14 nap** folyamatos zárt teszt), ezért az „élesítés" **nem** egy újabb AAB feltöltése, hanem a production access megnyitása + kiadás a meglévő bundle-ből.
-- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 337 automatikusan felváltja a 336-ot; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
+- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 337 automatikusan felváltotta a 336-ot; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
+- A feltöltött AAB-ek a Playen (a legfrissebb mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 332, 333, 334, 335, **336**, **337**.
 - A `play-notes-meta` `lastPublishedBuild` értéke (**336**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 336 volt — ezért az **1. pont** blokkja már csak a **337** újdonságát írja le. A **production** kiadáshoz a **hosszabb, 329–337 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -69,7 +70,9 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 | SHA-256 | 35FEB3EEFF1FFA30C04AB86C707E36574916691A89A9D4706F9B0939D21219A3 |
 
 **Miért a 337-et kell feltenni:** ez a legfrissebb (a 336-ra épül, plusz a YouTube-videó appon belüli
-lejátszása). A zárt teszt sávján most a **336** él — a 337 ezt váltja.
+lejátszása). **A 337 a zárt teszt sávján már fent van** (mérve: `alpha = completed 337`), ezért
+**újra feltölteni nem kell** — a következő (production) kiadás ebből a bundle-ből indítható. Új AAB
+csak akkor kell, ha a kód ezután változik.
 
 > **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 337 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
