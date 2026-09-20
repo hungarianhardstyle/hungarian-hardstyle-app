@@ -203,15 +203,24 @@ SHA-256 `61DCBD46FC114F2CDF8D83DC37CC2421833177620CEA1F33BFB20C71E3B01590`).
 - Az újrapróbálkozás sem indul el, ha a lánc viszi ki a küldést (nem küldi el kétszer ugyanazoknak).
 ```
 
-### A 2.5.9 ÉLŐBEN igazolva (2026-09-20)
+### A 2.5.9 ÉLŐBEN igazolva (2026-09-20, a tulajdonos „2.5.9 fent van" jelzése után)
 
-- `node tools/check-push-duplicates.mjs --hours 720` → a naplóban **ugyanarra a beszélgetésre 5–7
-  ezredmásodpercen belül kétszer** futott le a küldés (a Firestore-trigger legalább egyszer
-  kézbesít; a javítás a szerveroldalon ezt is lezárja, AAB nélkül).
-- `node tools/verify-push-dedupe.php` → **12/12**, és a régi viselkedést szimulálva a kapu
-  **bizonyítottan elkapja** a duplát (ugyanaz az eszköz kétszer kapja a push-t).
-- Élő állapot (`?huhs_diag=huhs-boot-probe-2026`): **807 regisztrált eszköz**, az utolsó kör
-  **125 eszközt** vitt el → egy kör hosszabb, mint a 10 s-os „elakadt" küszöb (ezért volt valós a verseny).
+- **A plugin verziója élőben: `apiVersion = 2.5.9`.** `node tools/verify-submission-payout.mjs --live`
+  → **4/4 OK** (a végpont válaszol, üres kérésre 400, ismeretlen azonosítóra üres lista, hitelesítés
+  nélkül 401/403), `node tools/verify-wp-admin-endpoints.mjs` → **15/15 OK** (a frissítés nem tört el
+  mást: nyereményjáték, kérdőív, szavazás továbbra is válaszol, UID/hash nem szivárog).
+- **A push-lánc élő állapota** (`node tools/check-wp-push-state.mjs`): **807 regisztrált eszköz**,
+  az utolsó kör egy **`news` körüzenet** volt — **130 eszköz, 0 hiba, 0 halott token**, és a lánc
+  **lezárult** (`függő feladat: none`, `aktív: none`), tehát nem maradt elakadt küldés.
+- **A szerveroldali (Firebase) dupla javítása mérve:** `node tools/check-push-duplicates.mjs --hours 8`
+  → a naplóban a privát üzenetek **már viszik a `messageId`-t** (a javítás él), és **minden
+  üzenethez pontosan EGY küldés** tartozik → **nincs dupla küldés**.
+- **A plugin oldali védelem bizonyítéka:** `node tools/verify-push-dedupe.php` → **12/12**, és a régi
+  viselkedést szimulálva a kapu **bizonyítottan elkapja** a duplát (ugyanaz az eszköz kétszer kapja a
+  push-t). A WP-oldali javítás a **következő nagy körüzenetnél** lesz közvetlenül is megfigyelhető
+  (a diagnosztika megmutatja a kör előrehaladását; a dupla a korábbi verzióban az azonos offset
+  újrafuttatásából jött).
+
 
 ### 2.5.8 — a WordPress-adminban elfogadott beküldések pontja
 
