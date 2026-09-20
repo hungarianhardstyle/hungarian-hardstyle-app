@@ -4,12 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/prize.dart';
 
-/// Helyi emlékezet: „erre a fiókra ebben a kérdőívben már szavaztunk", illetve
-/// „ebben a játékban már játszottunk".
+/// Helyi emlékezet: „erre a fiókra ebben a kérdőívben már szavaztunk", „ebben a
+/// játékban már játszottunk", illetve „ebben a nyereményjátékban már játszottunk".
 ///
 /// **A tulajdonos jelzése:** *„Kvíznél elsőre kicsit sokára tölti be, hogy már
-/// játszottam"*, illetve *„Kérdőívnél elsőre picit sokára tölti be, hogy már
-/// kitöltöttem"*.
+/// játszottam"*, *„Kérdőívnél elsőre picit sokára tölti be, hogy már
+/// kitöltöttem"*, illetve (2026-09-20) *„kviznél lassan frissül, hogy már
+/// kitöltötte, pár másodpercig úgy jelzi mintha tudna még játszani"*.
 ///
 /// **A gyökér:** ez az állapot csak egy három lépcsős út végén derül ki
 /// (app → Cloud Function → WordPress), első hívásnál a függvény hidegen is indul.
@@ -22,6 +23,11 @@ import '../models/prize.dart';
 /// (lásd a providereket). Ha a szerver azt mondja, mégsem szavaztál, akkor a
 /// jelzést töröljük és a felület visszavált.
 ///
+/// **⚠️ A KVIZ SOKÁIG KIMARADT:** a kérdőív és a nyereményjáték megkapta ezt az
+/// emlékezetet, a **kvíz viszont nem** — ezért ott továbbra is látszott a
+/// „játszható" állapot néhány másodpercig (a `GameScreen` csak a szervert
+/// kérdezte). Mostantól a kvíz is ugyanezt használja (`isGamePlayed`).
+///
 /// **Két szándékos szabály:**
 /// 1. **Csak `true`-t („már megtörtént") mentünk.** Hamis állapotot soha, mert
 ///    az a szavazólapot rejthetné el egy olyan fióknál, aki még nem szavazott.
@@ -32,6 +38,7 @@ class VoteMemory {
 
   static const String _pollPrefix = 'huhs.voted.poll';
   static const String _prizePrefix = 'huhs.played.prize';
+  static const String _gamePrefix = 'huhs.played.game';
 
   static String _key(String prefix, String uid, int id) => '$prefix.$uid.$id';
 
@@ -68,6 +75,46 @@ class VoteMemory {
   /// A jelzés törlése — akkor kell, ha a szerver azt mondja, mégsem szavaztál.
   static Future<void> clearPollVoted(String? uid, int pollId) async {
     final key = _uidKey(uid, pollId, _pollPrefix);
+    if (key == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(key);
+    } catch (_) {}
+  }
+
+  /// Igaz, ha erre a fiókra ebben a **kvízben** már játszottunk.
+  ///
+  /// Ebből lesz azonnal „Már játszottál" a képernyőn, amíg a szerver
+  /// (app → Cloud Function → WordPress) meg nem erősíti — enélkül néhány
+  /// másodpercig úgy látszott, mintha újra lehetne játszani.
+  static Future<bool> isGamePlayed(String? uid, int gameId) async {
+    final key = _uidKey(uid, gameId, _gamePrefix);
+    if (key == null) return false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(key) == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// A kvízjáték tényének megjegyzése (a szerver igazolása, vagy az épp most
+  /// sikeresen beküldött válaszok után).
+  static Future<void> markGamePlayed(String? uid, int gameId) async {
+    final key = _uidKey(uid, gameId, _gamePrefix);
+    if (key == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(key, true);
+    } catch (_) {
+      // A helyi emlékezet kiesése nem hiba: legfeljebb lassabb lesz a kijelzés.
+    }
+  }
+
+  /// A jelzés törlése — ha a szerver azt mondja, mégsem játszottál (pl. az
+  /// admin újranyitotta a kvízt).
+  static Future<void> clearGamePlayed(String? uid, int gameId) async {
+    final key = _uidKey(uid, gameId, _gamePrefix);
     if (key == null) return;
     try {
       final prefs = await SharedPreferences.getInstance();

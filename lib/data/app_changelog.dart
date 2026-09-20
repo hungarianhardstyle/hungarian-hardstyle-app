@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 340,
+    changes: [
+      'A kvíz mostantól azonnal jelzi, hogy már kitöltötted — eddig néhány másodpercig úgy látszott, mintha újra játszhatnál.',
+      'Ez a telefon jegyzi meg, a szerver pedig a háttérben ellenőrzi: ha az admin újranyitja a kvízt, akkor újra játszható lesz.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 339,
     changes: [
       'ÚJ: „Saját zenéim" a Több menüben — a megvásárolt (és reklámmal feloldott) zenéid egy helyen, a fiókodhoz kötve.',

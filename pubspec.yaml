@@ -1,9 +1,9 @@
-name: hungarian_hardstyle_app
+﻿name: hungarian_hardstyle_app
 description: "Hungarian Hardstyle mobile application"
 
 publish_to: 'none'
 
-version: 1.0.0+339
+version: 1.0.0+340
 
 environment:
   sdk: ^3.13.2

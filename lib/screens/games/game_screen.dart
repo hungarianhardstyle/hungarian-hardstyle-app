@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -9,6 +10,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../models/game.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/news_provider.dart';
+import '../../services/vote_memory.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key, required this.game, this.resultsOnly = false});
@@ -27,6 +29,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   bool _submitting = false;
   bool _checkingSubmission = true;
   bool _submitted = false;
+
+  /// A **helyi emlékezet** szerinti állapot: eszerint már játszottál.
+  ///
+  /// A tulajdonos jelzése: *„kviznél lassan frissül, hogy már kitöltötte, pár
+  /// másodpercig úgy jelzi mintha tudna még játszani"*. Az állapot ugyanis csak
+  /// egy három lépcsős út végén derül ki (app → Cloud Function → WordPress),
+  /// addig pedig **játszhatónak** látszott a kvíz. Ezért amit egyszer már
+  /// beküldtél, azt a telefon megjegyzi, és a képernyő **azonnal** „már
+  /// játszottál"-t mutat; a szerver válasza a háttérben érkezik, és **ő dönt**
+  /// (ha azt mondja, mégsem játszottál, visszaváltunk).
+  bool _playedHint = false;
+
   bool _loadingResults = false;
   String? _resultsError;
   List<HuhsGameResult> _results = const [];
@@ -80,13 +94,29 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       if (mounted) setState(() => _checkingSubmission = false);
       return;
     }
+    // 1. A HELYI EMLÉKEZET előbb: ha eszerint már játszottál, a képernyő
+    //    azonnal ezt mutatja (nem látszik játszhatónak a kvíz a szerver
+    //    válaszáig). A szerver ezután megerősíti vagy törli.
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final remembered = await VoteMemory.isGamePlayed(uid, widget.game.id);
+    if (!mounted) return;
+    if (remembered) setState(() => _playedHint = true);
     try {
       final status = await ref
           .read(wordpressServiceProvider)
           .getGameAttemptStatus(widget.game.id);
       if (!mounted) return;
+      final submitted = status['submitted'] == true;
+      // A SZERVER a hiteles forrás: ha szerinte nem játszottál (pl. az admin
+      // újranyitotta a kvízt), a helyi jelzést töröljük és visszaváltunk.
+      if (submitted) {
+        unawaited(VoteMemory.markGamePlayed(uid, widget.game.id));
+      } else if (remembered) {
+        unawaited(VoteMemory.clearGamePlayed(uid, widget.game.id));
+      }
       setState(() {
-        _submitted = status['submitted'] == true;
+        _submitted = submitted;
+        _playedHint = submitted;
         _restoreSavedAttempt(status);
         _checkingSubmission = false;
       });
@@ -132,8 +162,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 : null,
           );
       if (!mounted) return;
+      // A beküldés tényét a telefon is megjegyzi: a következő megnyitáskor
+      // **azonnal** „már játszottál" látszik, nem kell a szerverre várni.
+      unawaited(VoteMemory.markGamePlayed(
+        FirebaseAuth.instance.currentUser?.uid,
+        widget.game.id,
+      ));
       setState(() {
         _submitted = true;
+        _playedHint = true;
       });
     } catch (error) {
       if (mounted) {
@@ -205,16 +242,24 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             if (game.audioReady) ...[
               const SizedBox(height: 14),
               OutlinedButton.icon(
-                onPressed: _submitted ? null : _playAudio,
+                onPressed: _submitted || _playedHint ? null : _playAudio,
                 icon: const Icon(Icons.play_arrow_rounded),
                 label: const Text('Zenerészlet lejátszása'),
               ),
             ],
             const SizedBox(height: 16),
-            if (_isTimeline)
-              _buildTimeline(context)
-            else
-              _buildQuestions(context),
+            // ⚠️ Ha a helyi emlékezet szerint MÁR JÁTSZOTTÁL, akkor addig sem
+            // látszik játszhatónak a kvíz, amíg a szerver meg nem erősíti —
+            // ezt a néhány másodperces „még játszhatok" látszatot jelezte a
+            // tulajdonos. A kérdések ilyenkor nem szerkeszthetők.
+            if (_playedHint && !_submitted)
+              _buildWaitingForResult(context)
+            else ...[
+              if (_isTimeline)
+                _buildTimeline(context)
+              else
+                _buildQuestions(context),
+            ],
             const SizedBox(height: 20),
             if (_submitted) _buildResult(context),
             const SizedBox(height: 12),
@@ -223,6 +268,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   _complete &&
                       !_submitting &&
                       !_submitted &&
+                      !_playedHint &&
                       !_checkingSubmission
                   ? _submit
                   : null,
@@ -233,9 +279,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.send_rounded),
-              label: Text(_submitted ? 'Már játszottál' : 'Válaszok beküldése'),
+              label: Text(
+                _submitted || _playedHint
+                    ? 'Már játszottál'
+                    : 'Válaszok beküldése',
+              ),
             ),
-            if (!_complete && !_submitted)
+            if (!_complete && !_submitted && !_playedHint)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: Text(
@@ -247,6 +297,44 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ),
               ),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// Amíg a szerver megerősíti, hogy már játszottál (a helyi emlékezet szerint
+  /// igen), addig ez a semleges állapot látszik — nem a játszható kvíz.
+  Widget _buildWaitingForResult(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Ebben a kvízben már játszottál',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  'Egy pillanat — betöltjük az eredményedet.',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
