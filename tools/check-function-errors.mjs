@@ -28,6 +28,25 @@ const severity = withWarnings ? 'WARNING' : 'ERROR';
 const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 const limit = Number(argValue('--limit', '100')) || 100;
 
+/**
+ * A bejegyzés forrásának neve.
+ *
+ * 1. generációs függvény: `resource.labels.function_name`.
+ * 2. generációs függvény: `resource.labels.service_name` (Cloud Run), mert a
+ * napló `cloud_run_revision` alatt jelenik meg.
+ * Ütemező: `resource.labels.job_id`.
+ */
+function functionNameOf(entry) {
+  const labels = entry.resource?.labels || {};
+  return (
+    labels.function_name ||
+    labels.service_name ||
+    labels.job_id ||
+    entry.resource?.type ||
+    '(ismeretlen forrás)'
+  );
+}
+
 function payloadText(entry) {
   if (entry.textPayload) return entry.textPayload;
   const json = entry.jsonPayload || {};
@@ -39,8 +58,14 @@ function payloadText(entry) {
 
 async function main() {
   const token = await accessToken();
+  // FONTOS, mérve (2026-09-20): a 2. generációs függvények (`onDocumentCreated`,
+  // `onSchedule`, `onDocumentWritten`) naplója `cloud_run_revision` alatt
+  // jelenik meg, NEM `cloud_function` alatt. Az eredeti szűrő ezért a
+  // legfontosabb függvényeink hibáit **egyáltalán nem látta** — pont azokat,
+  // amelyek a push-t és az ütemezett feladatokat futtatják.
   const filter =
-    `severity>=${severity} AND resource.type="cloud_function" AND timestamp>="${since}"`;
+    `severity>=${severity} AND resource.type=("cloud_function" OR "cloud_run_revision" OR "cloud_scheduler_job") ` +
+    `AND timestamp>="${since}"`;
   const response = await fetch('https://logging.googleapis.com/v2/entries:list', {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -65,14 +90,19 @@ async function main() {
   const byFunction = new Map();
   console.log(`${entries.length} ${severity}+ bejegyzés az elmúlt ${hours} órában:\n`);
   for (const entry of entries.slice(0, 40)) {
-    const name = entry.resource?.labels?.function_name || '(ismeretlen függvény)';
+    const name = functionNameOf(entry);
     byFunction.set(name, (byFunction.get(name) || 0) + 1);
     console.log(
       `${entry.timestamp} ${String(entry.severity).padEnd(8)} ${name}\n    ${String(payloadText(entry)).slice(0, 300)}`,
     );
   }
   if (entries.length > 40) console.log(`… és további ${entries.length - 40} bejegyzés.`);
-  console.log('\nÖsszegzés függvényenként:');
+  // A maradékot is beszámoljuk az összegzésbe (a lista csak az első 40-et írja ki).
+  for (const entry of entries.slice(40)) {
+    const name = functionNameOf(entry);
+    byFunction.set(name, (byFunction.get(name) || 0) + 1);
+  }
+  console.log('\nÖsszegzés forrásonként:');
   for (const [name, count] of [...byFunction].sort((a, b) => b[1] - a[1])) {
     console.log(`  ${name}: ${count}`);
   }

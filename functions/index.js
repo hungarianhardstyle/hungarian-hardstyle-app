@@ -4949,6 +4949,11 @@ exports.cleanupIncompleteAccounts = onSchedule(
     timeZone: 'Europe/Budapest',
     region: 'europe-central2',
     secrets: [CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET],
+    // MÉRVE (2026-09-20): a takarítás egy köre az alapértelmezett 60 másodpercet
+    // is túllépheti (sok függő fiók, Cloudinary-körök), ilyenkor a futtató
+    // MEGSZAKÍTJA a munkát — a naplóban ez „maximum request timeout" volt, és a
+    // takarítás félbemaradt. Nagyobb keret: a szándékolt munka befejeződhet.
+    timeoutSeconds: 300,
   },
   async () => {
     const expiredEmailJobs = await db
@@ -6359,6 +6364,13 @@ exports.syncWordPressLabelProducts = onSchedule(
     schedule: 'every 5 minutes',
     timeZone: 'Europe/Budapest',
     secrets: labelProductSyncSecrets,
+    // MÉRVE (2026-09-20): ez a szinkron **5 percenként időtúllépéssel elhalt**
+    // (Cloud Scheduler: DEADLINE_EXCEEDED 504, 24 órában ~475 hibabejegyzés),
+    // mert egy kör az összes kiadványt végigjárja, termékenként egy Play GET +
+    // PATCH-csel — ez nem fér bele a 60 másodperces alapkeretbe. A napló szerint
+    // a küldés így soha nem fejeződött be. A keret 300 másodperc; a párhuzamos
+    // futást a `sync_locks/label_product_sync` foglalás zárja ki.
+    timeoutSeconds: 300,
   },
   async () => runWordPressLabelSync(),
 );
@@ -6899,72 +6911,194 @@ exports.notifyConnectionRequest = onDocumentWritten(
   },
 );
 
+/**
+ * Meetup-érdeklődés értesítés.
+ *
+ * A Firestore-trigger **legalább egyszer** kézbesít (at-least-once), ezért
+ * ugyanaz az esemény kétszer is lefuthat. Az értesítés-felismerés (`dedupeKey`)
+ * ezt eddig is kezelte, a PUSH viszont nem: újrakézbesítésnél a bejegyzés már
+ * megvolt, de a push ismét kiment (a tulajdonos jelzése: „némelyik push kétszer
+ * megy ki"). Ezért a push csak akkor indul, ha az értesítés MOST jött létre —
+ * ugyanaz a szabály, mint az ismerős-jelölésnél.
+ */
+async function handleMeetupInterestNotification(event, deps = {}) {
+  const { sendPush = sendMulticastToAllTokens, pushTokens = getPushTokens } = deps;
+  const before = event.data?.before?.data() || {};
+  const after = event.data?.after?.data() || {};
+  const meetupUserId = String(event.params.meetupUserId || '').trim();
+  const eventId = String(event.params.eventId || '').trim();
+  const beforeInterested = before.interestedBy && typeof before.interestedBy === 'object' ? before.interestedBy : {};
+  const afterInterested = after.interestedBy && typeof after.interestedBy === 'object' ? after.interestedBy : {};
+  const newInterests = Object.keys(afterInterested).filter(
+    (uid) => afterInterested[uid] === true && beforeInterested[uid] !== true,
+  );
+  if (!meetupUserId || !eventId || !newInterests.length) return null;
+
+  const targetBlocked = await db.collection('community_profiles').doc(meetupUserId).collection('blocked_users').get();
+  const blockedIds = new Set(targetBlocked.docs.map((doc) => doc.id));
+  const targetTokens = await pushTokens(meetupUserId);
+  const eventTitle = String(after.eventTitle || 'az esemény').trim();
+  const results = [];
+  for (const senderId of newInterests) {
+    if (senderId === meetupUserId || blockedIds.has(senderId)) continue;
+    const reverseBlocked = await db
+      .collection('community_profiles')
+      .doc(senderId)
+      .collection('blocked_users')
+      .doc(meetupUserId)
+      .get();
+    if (reverseBlocked.exists) continue;
+    const sender = (await db.collection('community_profiles').doc(senderId).get()).data() || {};
+    const senderName = String(sender.displayName || 'Egy felhasználó').trim();
+    const created = await createNotificationBestEffort({
+      recipientUid: meetupUserId,
+      type: 'meetup_interest',
+      title: 'Új Meetup érdeklődés',
+      body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`,
+      targetType: 'event',
+      targetId: eventId,
+      dedupeKey: `meetup_interest:${eventId}:${meetupUserId}:${senderId}`,
+    });
+    // Újrakézbesítés: az értesítés már megvolt, ezért NEM küldünk második push-t.
+    if (!created) continue;
+    if (!targetTokens.length) continue;
+    const result = await sendPush(
+      {
+        notification: {
+          title: 'Új Meetup érdeklődés',
+          body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`,
+        },
+        data: {
+          type: 'meetup_interest',
+          senderId,
+          eventId,
+        },
+      },
+      targetTokens,
+    );
+    results.push(result);
+  }
+  return {
+    successCount: results.reduce((sum, result) => sum + result.successCount, 0),
+    failureCount: results.reduce((sum, result) => sum + result.failureCount, 0),
+  };
+}
+
 exports.notifyMeetupInterest = onDocumentWritten(
   {
     document: 'event_meetups/{eventId}/users/{meetupUserId}',
     database: 'hungarian-hardstyle',
     region: 'europe-central2',
   },
-  async (event) => {
-    const before = event.data?.before?.data() || {};
-    const after = event.data?.after?.data() || {};
-    const meetupUserId = String(event.params.meetupUserId || '').trim();
-    const eventId = String(event.params.eventId || '').trim();
-    const beforeInterested = before.interestedBy && typeof before.interestedBy === 'object' ? before.interestedBy : {};
-    const afterInterested = after.interestedBy && typeof after.interestedBy === 'object' ? after.interestedBy : {};
-    const newInterests = Object.keys(afterInterested).filter(
-      (uid) => afterInterested[uid] === true && beforeInterested[uid] !== true,
-    );
-    if (!meetupUserId || !eventId || !newInterests.length) return null;
-
-    const targetBlocked = await db.collection('community_profiles').doc(meetupUserId).collection('blocked_users').get();
-    const blockedIds = new Set(targetBlocked.docs.map((doc) => doc.id));
-    const targetTokens = await getPushTokens(meetupUserId);
-    const eventTitle = String(after.eventTitle || 'az esemény').trim();
-    const results = [];
-    for (const senderId of newInterests) {
-      if (senderId === meetupUserId || blockedIds.has(senderId)) continue;
-      const reverseBlocked = await db
-        .collection('community_profiles')
-        .doc(senderId)
-        .collection('blocked_users')
-        .doc(meetupUserId)
-        .get();
-      if (reverseBlocked.exists) continue;
-      const sender = (await db.collection('community_profiles').doc(senderId).get()).data() || {};
-      const senderName = String(sender.displayName || 'Egy felhasználó').trim();
-      await createNotificationBestEffort({
-        recipientUid: meetupUserId,
-        type: 'meetup_interest',
-        title: 'Új Meetup érdeklődés',
-        body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`,
-        targetType: 'event',
-        targetId: eventId,
-        dedupeKey: `meetup_interest:${eventId}:${meetupUserId}:${senderId}`,
-      });
-      if (!targetTokens.length) continue;
-      const result = await sendMulticastToAllTokens(
-        {
-          notification: {
-            title: 'Új Meetup érdeklődés',
-            body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`,
-          },
-          data: {
-            type: 'meetup_interest',
-            senderId,
-            eventId,
-          },
-        },
-        targetTokens,
-      );
-      results.push(result);
-    }
-    return {
-      successCount: results.reduce((sum, result) => sum + result.successCount, 0),
-      failureCount: results.reduce((sum, result) => sum + result.failureCount, 0),
-    };
-  },
+  (event) => handleMeetupInterestNotification(event),
 );
+
+/**
+ * Privát üzenet értesítés.
+ *
+ * A `onDocumentCreated` trigger legalább egyszer kézbesít, ezért ugyanaz az
+ * üzenet kétszer is feldolgozásra kerülhet. Az értesítés (`dedupeKey`) eddig is
+ * idempotens volt, a PUSH viszont nem: újrakézbesítésnél ismét kiment, miközben
+ * a bejegyzés már megvolt — ez a mért dupla push (a naplóban 5–7 ms-on belül
+ * kétszer ugyanarra a beszélgetésre). Mostantól a push is a létrehozás tényéhez
+ * kötött, és a napló az ÜZENET azonosítóját is viszi, hogy a dupla bizonyítható
+ * legyen (`node tools/check-push-duplicates.mjs`).
+ */
+async function handlePrivateMessageNotification(event, deps = {}) {
+  const {
+    sendPush = sendMulticastToAllTokens,
+    pushTokens = getPushTokens,
+    removeTokens = removePushTokens,
+  } = deps;
+  const message = event.data?.data() || {};
+  const senderId = String(message.senderId || '').trim();
+  const recipientId = String(message.recipientId || '').trim();
+  const conversationId = String(event.params.conversationId || '').trim();
+  const messageId = String(event.params.messageId || '').trim();
+  const text = String(message.text || '').trim();
+  const imageUrl = String(message.imageUrl || '').trim();
+  if (!senderId || !recipientId || !conversationId || (!text && !imageUrl) || senderId === recipientId) {
+    return null;
+  }
+  const notificationBody = text || 'Képet küldött.';
+
+  const conversation = (await db.collection('private_conversations').doc(conversationId).get()).data() || {};
+  const participantIds = Array.isArray(conversation.participantIds)
+    ? conversation.participantIds.map((id) => String(id))
+    : [];
+  if (!participantIds.includes(senderId) || !participantIds.includes(recipientId)) {
+    console.warn(
+      JSON.stringify({
+        event: 'private_message_invalid_participants',
+        conversationId,
+      }),
+    );
+    return null;
+  }
+
+  const participantNames = conversation.participantNames || {};
+  const senderName = String(participantNames[senderId] || 'Egy felhasználó').trim();
+  const [blockedBySender, blockedByRecipient] = await Promise.all([
+    db.collection('community_profiles').doc(senderId).collection('blocked_users').doc(recipientId).get(),
+    db.collection('community_profiles').doc(recipientId).collection('blocked_users').doc(senderId).get(),
+  ]);
+  if (blockedBySender.exists || blockedByRecipient.exists) return null;
+  const created = await createNotificationBestEffort({
+    recipientUid: recipientId,
+    type: 'private_message',
+    title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
+    body: notificationBody,
+    targetType: 'private_conversation',
+    targetId: conversationId,
+    senderId,
+    dedupeKey: `private_message:${conversationId}:${messageId}`,
+  });
+  // Újrakézbesítés: erről az üzenetről már szóltunk — nincs második push.
+  if (!created) return null;
+  const uniqueTokens = await pushTokens(recipientId);
+  if (!uniqueTokens.length) {
+    console.log(
+      JSON.stringify({
+        event: 'private_message_no_target_token',
+        conversationId,
+      }),
+    );
+    return null;
+  }
+  const result = await sendPush(
+    {
+      notification: {
+        title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
+        body: notificationBody.slice(0, 160),
+      },
+      data: {
+        type: 'private_message',
+        conversationId,
+        senderId,
+      },
+    },
+    uniqueTokens,
+  );
+  console.log(
+    JSON.stringify({
+      event: 'private_message_push_result',
+      conversationId,
+      messageId,
+      tokenCount: uniqueTokens.length,
+      successCount: result.successCount,
+      failureCount: result.failureCount,
+    }),
+  );
+
+  const invalidTokens = uniqueTokens.filter((_, index) => {
+    const error = result.responses[index].error;
+    return error?.code === 'messaging/registration-token-not-registered';
+  });
+  if (invalidTokens.length) {
+    await removeTokens(recipientId, invalidTokens);
+  }
+  return result;
+}
 
 exports.notifyPrivateMessage = onDocumentCreated(
   {
@@ -6972,93 +7106,100 @@ exports.notifyPrivateMessage = onDocumentCreated(
     database: 'hungarian-hardstyle',
     region: 'europe-central2',
   },
-  async (event) => {
-    const message = event.data?.data() || {};
-    const senderId = String(message.senderId || '').trim();
-    const recipientId = String(message.recipientId || '').trim();
-    const conversationId = String(event.params.conversationId || '').trim();
-    const text = String(message.text || '').trim();
-    const imageUrl = String(message.imageUrl || '').trim();
-    if (!senderId || !recipientId || !conversationId || (!text && !imageUrl) || senderId === recipientId) {
-      return null;
-    }
-    const notificationBody = text || 'Képet küldött.';
-
-    const conversation = (await db.collection('private_conversations').doc(conversationId).get()).data() || {};
-    const participantIds = Array.isArray(conversation.participantIds)
-      ? conversation.participantIds.map((id) => String(id))
-      : [];
-    if (!participantIds.includes(senderId) || !participantIds.includes(recipientId)) {
-      console.warn(
-        JSON.stringify({
-          event: 'private_message_invalid_participants',
-          conversationId,
-        }),
-      );
-      return null;
-    }
-
-    const participantNames = conversation.participantNames || {};
-    const senderName = String(participantNames[senderId] || 'Egy felhasználó').trim();
-    const [blockedBySender, blockedByRecipient] = await Promise.all([
-      db.collection('community_profiles').doc(senderId).collection('blocked_users').doc(recipientId).get(),
-      db.collection('community_profiles').doc(recipientId).collection('blocked_users').doc(senderId).get(),
-    ]);
-    if (blockedBySender.exists || blockedByRecipient.exists) return null;
-    await createNotificationBestEffort({
-      recipientUid: recipientId,
-      type: 'private_message',
-      title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
-      body: notificationBody,
-      targetType: 'private_conversation',
-      targetId: conversationId,
-      senderId,
-      dedupeKey: `private_message:${conversationId}:${event.params.messageId}`,
-    });
-    const uniqueTokens = await getPushTokens(recipientId);
-    if (!uniqueTokens.length) {
-      console.log(
-        JSON.stringify({
-          event: 'private_message_no_target_token',
-          conversationId,
-        }),
-      );
-      return null;
-    }
-    const result = await sendMulticastToAllTokens(
-      {
-        notification: {
-          title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
-          body: notificationBody.slice(0, 160),
-        },
-        data: {
-          type: 'private_message',
-          conversationId,
-          senderId,
-        },
-      },
-      uniqueTokens,
-    );
-    console.log(
-      JSON.stringify({
-        event: 'private_message_push_result',
-        conversationId,
-        tokenCount: uniqueTokens.length,
-        successCount: result.successCount,
-        failureCount: result.failureCount,
-      }),
-    );
-
-    const invalidTokens = uniqueTokens.filter((_, index) => {
-      const error = result.responses[index].error;
-      return error?.code === 'messaging/registration-token-not-registered';
-    });
-    if (invalidTokens.length) {
-      await removePushTokens(recipientId, invalidTokens);
-    }
-    return result;
-  },
+  (event) => handlePrivateMessageNotification(event),
 );
+
+/**
+ * Chatjelentés értesítés az adminoknak.
+ *
+ * Ugyanaz a szabály, mint a többi útvonalon: a push csak akkor megy ki, ha az
+ * értesítés MOST jött létre. Újrakézbesítésnél (at-least-once trigger) a
+ * bejegyzés már megvan, tehát a második push elmarad.
+ */
+async function handleChatReportNotification(event, deps = {}) {
+  const {
+    sendPush = sendMulticastToAllTokens,
+    pushTokens = getPushTokens,
+    removeTokens = removePushTokens,
+  } = deps;
+  const reportId = String(event.params.reportId || '').trim();
+  const report = event.data?.data() || {};
+  if (!reportId) return null;
+
+  const profiles = await db.collection('community_profiles').get();
+  const recipientIds = profiles.docs
+    .filter((profileDoc) => {
+      const profile = profileDoc.data() || {};
+      const email = String(profile.email || '')
+        .trim()
+        .toLowerCase();
+      return email === ADMIN_EMAIL || profile.accessRole === 'admin' || profile.accessRole === 'moderator';
+    })
+    .map((profileDoc) => profileDoc.id);
+
+  const reporterName = String(report.reporterName || 'Egy felhasználó').trim();
+  const reason = String(report.reason || '').trim();
+  const created = await Promise.all(
+    recipientIds.map((recipientUid) =>
+      createNotificationBestEffort({
+        recipientUid,
+        type: 'chat_report',
+        title: 'Új chatjelentés',
+        body: reason ? `${reporterName}: ${reason}` : `${reporterName} új chatjelentést küldött.`,
+        targetType: 'chat_report',
+        targetId: reportId,
+        dedupeKey: `chat_report:${reportId}:${recipientUid}`,
+      }),
+    ),
+  );
+  // Ha egyetlen értesítés sem jött létre, ez újrakézbesítés: nincs második push.
+  if (!created.some(Boolean)) return null;
+  const tokenLists = await Promise.all(recipientIds.map((uid) => pushTokens(uid)));
+  const uniqueTokens = [
+    ...new Set(
+      tokenLists
+        .flat()
+        .map((token) => token.trim())
+        .filter(Boolean),
+    ),
+  ];
+  if (!uniqueTokens.length) {
+    console.log(JSON.stringify({ event: 'chat_report_no_recipient_token', reportId }));
+    return null;
+  }
+  const result = await sendPush(
+    {
+      notification: {
+        title: 'Új chatjelentés',
+        body: reason ? `${reporterName}: ${reason}`.slice(0, 160) : `${reporterName} új chatjelentést küldött.`,
+      },
+      data: {
+        type: 'chat_report',
+        reportId,
+      },
+    },
+    uniqueTokens,
+  );
+
+  const invalidTokens = uniqueTokens.filter(
+    (_, index) => result.responses[index].error?.code === 'messaging/registration-token-not-registered',
+  );
+  if (invalidTokens.length) {
+    await Promise.all(recipientIds.map((uid) => removeTokens(uid, invalidTokens)));
+  }
+
+  console.log(
+    JSON.stringify({
+      event: 'chat_report_push_result',
+      reportId,
+      recipientCount: recipientIds.length,
+      tokenCount: uniqueTokens.length,
+      successCount: result.successCount,
+      failureCount: result.failureCount,
+    }),
+  );
+  return result;
+}
 
 exports.notifyChatReport = onDocumentCreated(
   {
@@ -7066,81 +7207,13 @@ exports.notifyChatReport = onDocumentCreated(
     database: 'hungarian-hardstyle',
     region: 'europe-central2',
   },
-  async (event) => {
-    const reportId = String(event.params.reportId || '').trim();
-    const report = event.data?.data() || {};
-    if (!reportId) return null;
-
-    const profiles = await db.collection('community_profiles').get();
-    const recipientIds = profiles.docs
-      .filter((profileDoc) => {
-        const profile = profileDoc.data() || {};
-        const email = String(profile.email || '')
-          .trim()
-          .toLowerCase();
-        return email === ADMIN_EMAIL || profile.accessRole === 'admin' || profile.accessRole === 'moderator';
-      })
-      .map((profileDoc) => profileDoc.id);
-
-    const reporterName = String(report.reporterName || 'Egy felhasználó').trim();
-    const reason = String(report.reason || '').trim();
-    await Promise.all(
-      recipientIds.map((recipientUid) =>
-        createNotificationBestEffort({
-          recipientUid,
-          type: 'chat_report',
-          title: 'Új chatjelentés',
-          body: reason ? `${reporterName}: ${reason}` : `${reporterName} új chatjelentést küldött.`,
-          targetType: 'chat_report',
-          targetId: reportId,
-          dedupeKey: `chat_report:${reportId}:${recipientUid}`,
-        }),
-      ),
-    );
-    const tokenLists = await Promise.all(recipientIds.map((uid) => getPushTokens(uid)));
-    const uniqueTokens = [
-      ...new Set(
-        tokenLists
-          .flat()
-          .map((token) => token.trim())
-          .filter(Boolean),
-      ),
-    ];
-    if (!uniqueTokens.length) {
-      console.log(JSON.stringify({ event: 'chat_report_no_recipient_token', reportId }));
-      return null;
-    }
-    const result = await sendMulticastToAllTokens(
-      {
-        notification: {
-          title: 'Új chatjelentés',
-          body: reason ? `${reporterName}: ${reason}`.slice(0, 160) : `${reporterName} új chatjelentést küldött.`,
-        },
-        data: {
-          type: 'chat_report',
-          reportId,
-        },
-      },
-      uniqueTokens,
-    );
-
-    const invalidTokens = uniqueTokens.filter(
-      (_, index) => result.responses[index].error?.code === 'messaging/registration-token-not-registered',
-    );
-    if (invalidTokens.length) {
-      await Promise.all(recipientIds.map((uid) => removePushTokens(uid, invalidTokens)));
-    }
-
-    console.log(
-      JSON.stringify({
-        event: 'chat_report_push_result',
-        reportId,
-        recipientCount: recipientIds.length,
-        tokenCount: uniqueTokens.length,
-        successCount: result.successCount,
-        failureCount: result.failureCount,
-      }),
-    );
-    return result;
-  },
+  (event) => handleChatReportNotification(event),
 );
+
+// A push-útvonalak tesztelhető változatai (injektált küldéssel), hogy a dupla
+// küldés ne tudjon visszakúszni: `functions/push-dedupe.test.cjs`.
+exports.__pushNotifyForTests = {
+  handleMeetupInterestNotification,
+  handlePrivateMessageNotification,
+  handleChatReportNotification,
+};

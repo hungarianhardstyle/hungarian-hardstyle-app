@@ -257,9 +257,12 @@ test('SMTP munkarekord párhuzamos claimje lease-szel védett', () => {
 });
 
 test('blokkolt privát üzenethez nem készül értesítés', () => {
-  const start = functionsSource.indexOf('exports.notifyPrivateMessage');
-  const end = functionsSource.indexOf('exports.notifyChatReport', start);
+  // A küldés logikája a `handlePrivateMessageNotification` törzsében él (a
+  // trigger csak meghívja), ezért a FORRÁST kell nézni, nem az exportot.
+  const start = functionsSource.indexOf('async function handlePrivateMessageNotification');
+  const end = functionsSource.indexOf('exports.notifyPrivateMessage', start);
   const source = functionsSource.slice(start, end);
+  assert.ok(start > 0 && end > start, 'a privát üzenet küldő út megtalálható');
   assert.match(source, /blockedBySender/);
   assert.match(source, /blockedByRecipient/);
   assert.match(source, /if \(blockedBySender\.exists \|\| blockedByRecipient\.exists\) return null/);

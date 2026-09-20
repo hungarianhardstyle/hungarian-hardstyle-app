@@ -46,9 +46,10 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-19, a legfrissebb mér�
 > **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 335 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
-**A plugin ehhez 2.5.8** (`build/huhs-mobile-api-2.5.8.zip`) — **ezt is fel kell tölteni**: ebben van
-a beküldések elfogadását lekérdező végpont, ami nélkül a WordPress-adminban elfogadott beküldésekért
-**nem jár meg utólag a pont**. (Az app-oldali funkciók a 2.5.7-tel is működnek.)
+**A plugin ehhez 2.5.9** (`build/huhs-mobile-api-2.5.9.zip`) — **ezt is fel kell tölteni**: ebben van
+a beküldések elfogadását lekérdező végpont (2.5.8) **és a dupla push elleni védelem (2.5.9)**.
+A 2.5.8-at felváltja, tehát csak a 2.5.9-et kell feltölteni. (Az app-oldali funkciók a 2.5.7-tel is
+működnek, de a dupla push javítása nélkül a nagy körüzenetek egy része kétszer megy ki.)
 
 ## 1. Play Console — RÖVID (ezt másold be)
 
@@ -159,10 +160,31 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A kérdőív eredményeinél már a kérdőív saját válaszai látszanak az éves szavazás adatai helyett.
 - A nyereményjátéknál eltűnt a felesleges kép mező.
 
-## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.5.8)
+## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.5.9)
 
-A plugin csomag: `build/huhs-mobile-api-2.5.8.zip` (45 fájl, 143,8 KB,
-SHA-256 `6F758F4DD0179B584017B34EB8365DB4C0C5FD8325FBC6BBB7C2A7D292FED206`).
+A plugin csomag: `build/huhs-mobile-api-2.5.9.zip` (45 fájl, 145,1 KB,
+SHA-256 `61DCBD46FC114F2CDF8D83DC37CC2421833177620CEA1F33BFB20C71E3B01590`).
+
+**Mit hoz a 2.5.9 (az előző, 2.5.8 óta):**
+```text
+- JAVÍTVA: a nagy körüzenet (hír, esemény, release, emlékeztető) egy része KÉTSZER ment ki.
+- Az ok: a küldési láncot a cron ÉS a biztonsági háló is futtathatta; a háló a kör VÉGE előtt
+  „elakadtnak" látta a még futó kört, és ugyanarról az offsetről indított egy második kört.
+- Mostantól a kör a kezdetén szívverést ír, és egy atomikus foglalás védi: egyszerre egy kör dolgozhat.
+- Az újrapróbálkozás sem indul el, ha a lánc viszi ki a küldést (nem küldi el kétszer ugyanazoknak).
+```
+
+### A 2.5.9 ÉLŐBEN igazolva (2026-09-20)
+
+- `node tools/check-push-duplicates.mjs --hours 720` → a naplóban **ugyanarra a beszélgetésre 5–7
+  ezredmásodpercen belül kétszer** futott le a küldés (a Firestore-trigger legalább egyszer
+  kézbesít; a javítás a szerveroldalon ezt is lezárja, AAB nélkül).
+- `node tools/verify-push-dedupe.php` → **12/12**, és a régi viselkedést szimulálva a kapu
+  **bizonyítottan elkapja** a duplát (ugyanaz az eszköz kétszer kapja a push-t).
+- Élő állapot (`?huhs_diag=huhs-boot-probe-2026`): **807 regisztrált eszköz**, az utolsó kör
+  **125 eszközt** vitt el → egy kör hosszabb, mint a 10 s-os „elakadt" küszöb (ezért volt valós a verseny).
+
+### 2.5.8 — a WordPress-adminban elfogadott beküldések pontja
 
 **Mit hoz a 2.5.8 (az előző, 2.5.7 óta):**
 ```text
