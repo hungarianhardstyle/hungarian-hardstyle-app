@@ -72,9 +72,14 @@ test('connections and chat reactions are server-managed', () => {
   assert.match(functionsSource, /exports\.manageConnection\s*=/);
   assert.match(functionsSource, /exports\.toggleChatReaction\s*=/);
   assert.match(functionsSource, /exports\.publishChatPost\s*=/);
-  assert.match(clientSource, /callFirebaseCallable<[^>]+>\(\s*'manageConnection'/);
-  assert.match(clientSource, /callFirebaseCallable<[^>]+>\(\s*'toggleChatReaction'/);
-  assert.match(clientSource, /callFirebaseCallable<[^>]+>\(\s*'publishChatPost'/);
+  // A `[^()]` szándékos: a `Map<String, dynamic>` típusargumentum beágyazott
+  // `>`-t tartalmaz, amit a korábbi `[^>]+` minta nem engedett — ezért ez a
+  // kapu a 336-os menet után (amikor a `toggleReaction` visszatérési értéket
+  // kapott) **hamisan piros** lett. A lényeg változatlan: a hívás a szerveroldali
+  // callable-re menjen, ne közvetlen Firestore-írásra.
+  assert.match(clientSource, /callFirebaseCallable<[^()]{1,80}>\(\s*'manageConnection'/);
+  assert.match(clientSource, /callFirebaseCallable<[^()]{1,80}>\(\s*'toggleChatReaction'/);
+  assert.match(clientSource, /callFirebaseCallable<[^()]{1,80}>\(\s*'publishChatPost'/);
   assert.match(
     rulesSource,
     /match \/community_profiles\/\{userId\}\/connections\/\{otherUserId\}[\s\S]*?allow write: if false;/,

@@ -38,6 +38,16 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 339,
+    changes: [
+      'ÚJ: „Saját zenéim" a Több menüben — a megvásárolt (és reklámmal feloldott) zenéid egy helyen, a fiókodhoz kötve.',
+      'Innen játszhatod le őket: a szám végén magától a következőre lép, és a sor a következő kiadvánnyal folytatódik.',
+      'A zenék letölthetők a készülékre (offline is szólnak), és bármikor törölhetők — a vásárlás megmarad, ezért újra letölthetők.',
+      'A régebbi vásárlásaid és reklámmal feloldott zenéid is megjelennek a listában.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 338,
     changes: [
       'Értesítést kapsz, ha valaki kedveli a Chat-üzenetedet, vagy válaszol rá — és akkor is, ha a cikkhez írt hozzászólásodra válaszolnak. (Push helyett csak az app értesítéslistája szól.)',

@@ -15,6 +15,7 @@ import 'achievement_guide_screen.dart';
 import 'achievement_leaderboard_screen.dart';
 import 'donate_screen.dart';
 import 'faq_screen.dart';
+import 'my_music_screen.dart';
 import 'privacy_screen.dart';
 import 'referral_screen.dart';
 import 'radio_provider_screen.dart';
@@ -96,6 +97,23 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ),
             ),
             const SizedBox(height: 14),
+            _section('Saját zenéim', [
+              // A tulajdonos kérése: a megvásárolt (vagy reklámmal feloldott)
+              // zenékhez **saját, fiókhoz kötött** menüpont, ahol lejátszhatók
+              // (a szám végén a következőre lépve) és újra letölthetők.
+              if (registered)
+                _item(
+                  Icons.library_music_outlined,
+                  'Megvásárolt zenéim',
+                  'Lejátszás és letöltés — a fiókodhoz kötve',
+                  const MyMusicScreen(),
+                )
+              else
+                _notice(
+                  'A megvásárolt zenéidhez jelentkezz be — a vásárlás a '
+                  'fiókodhoz tartozik.',
+                ),
+            ]),
             _section('Felfedezés', [
               _item(
                 Icons.graphic_eq,

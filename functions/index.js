@@ -56,6 +56,7 @@ const { generateAuthActionLink } = require('./auth_action_link');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 const { playProductMatches } = require('./play-product-plan');
+const { adUnlockedVariants, labelLibraryPayload } = require('./label-library-plan');
 const {
   chatReactionNotification,
   chatReplyNotification,
@@ -3623,12 +3624,9 @@ exports.toggleNewsReaction = functions.runWith({ enforceAppCheck: false }).https
 });
 
 function activeAdUnlock(data, releaseId, variant = 'mp3_128') {
-  if (!data || data.releaseId !== releaseId) return false;
-  // Older unlock documents predate variant-specific rewards and are valid for
-  // the original 128 kbps reward only. New rewards must name their variant.
-  if (variant === 'mp3_128' && !data.variants && !data.variant) return true;
-  if (data.variant === variant) return true;
-  return data.variants?.[variant] === true;
+  // A szabály EGY helyen él (`label-library-plan.js`), hogy a „Saját zenéim"
+  // könyvtár és a letöltés-kapu ne mondhasson ellent egymásnak.
+  return adUnlockedVariants(data, releaseId).includes(variant);
 }
 
 async function sendMulticastToAllTokens(message, tokens) {
@@ -5445,6 +5443,43 @@ exports.getLabelDownloadUrl = functions
       downloadUrl: body.download_url,
       expiresIn: Number(body.expires_in || 300),
     };
+  });
+
+/**
+ * A „Saját zenéim" könyvtár: mit vásárolt meg a felhasználó, és mit oldott fel
+ * reklámmal.
+ *
+ * MIÉRT KELL ÚJ VÉGPONT: a jogosultság (`label_entitlements`) és a reklámos
+ * feloldás (`label_ad_unlocks`) eddig is megvolt, de **egyik listát sem lehet
+ * lekérdezni**: a Firestore-szabályokban ezekre a gyűjteményekre nincs olvasási
+ * szabály (szándékosan — a vásárlási token hash-e és az üzleti adat nem való a
+ * kliensre), a kliens pedig csak egyetlen dokumentumot nézett meg név szerint.
+ *
+ * A VÁLASZ SZÁNDÉKOSAN SOVÁNY: release-azonosító és változatlista. Cím, borító és
+ * előadó a **kliens** kiadvány-katalógusából jön (ott már megvan, gyorsítótárból),
+ * ezért nem másoljuk ide — így egy elavult másolat nem tud ellentmondani a
+ * valódi kiadványnak.
+ */
+exports.getMyLabelLibrary = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
+      throw new HttpsError('unauthenticated', 'A zenéidhez be kell jelentkezni.');
+    }
+    if (!(await allowCall(context.auth.uid, 'label_library', 20))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok kérés. Próbáld újra később.');
+    }
+    const uid = context.auth.uid;
+    const [entitlements, unlocks] = await Promise.all([
+      db.collection('label_entitlements').where('uid', '==', uid).get(),
+      db.collection('label_ad_unlocks').where('uid', '==', uid).get(),
+    ]);
+    const payload = labelLibraryPayload(
+      entitlements.docs.map((doc) => doc.data()),
+      unlocks.docs.map((doc) => doc.data()),
+    );
+    console.info('label_library_ok', { count: payload.count });
+    return payload;
   });
 
 // Public opinion poll ("Kérdőív").

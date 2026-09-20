@@ -6,11 +6,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 338
+currentBuild: 339
 currentVersion: 1.0.0
-lastPublishedBuild: 337
-aab: build/HUHS-v1.0.0+338-release.aab
-sha256: 0854CB8C785CA70D0B8AFF44B5BBCB05E66D78D61386B1B078FCD0BEDE6C764F
+lastPublishedBuild: 338
+aab: build/HUHS-v1.0.0+339-release.aab
+sha256: 9FC837E394400022E2E00B4ACC73CAE415A8438591C23F9514ED42E8D9D7D27E
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -63,16 +63,17 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+338-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+339-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **338** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 79,61 MB |
-| SHA-256 | 0854CB8C785CA70D0B8AFF44B5BBCB05E66D78D61386B1B078FCD0BEDE6C764F |
+| Verziókód | **339** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 79,82 MB |
+| SHA-256 | 9FC837E394400022E2E00B4ACC73CAE415A8438591C23F9514ED42E8D9D7D27E |
 
-**Miért a 338-at kell feltenni:** ez a legfrissebb (a 337-re épül, plusz a chat-értesítések, az
-ikonjelvény és a rádió javítása). A zárt teszt sávján most a **337** él — a 338 ezt váltja.
+**Miért a 339-at kell feltenni:** ez a legfrissebb (a 338-ra épül, plusz a **„Saját zenéim"**
+könyvtár: lejátszás sorban, letöltés a készülékre, törlés és újraletöltés, fiókhoz kötve).
+A zárt teszt sávján most a **338** él — a 339 ezt váltja.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 337 mindegyiket tartalmazza, és kisebb
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 339 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.5.9** (`build/huhs-mobile-api-2.5.9.zip`) — **ez már fent van** (élőben igazolva:
@@ -90,37 +91,38 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Értesítést kapsz, ha kedvelik a Chat-üzenetedet vagy válaszolnak rá (és a cikkhez írt hozzászólásodra is).
-- Az app ikonja mutatja az olvasatlan értesítéseid számát.
-- A rádió képernyő-ki mellett is szól, és elhallgat, ha közben Spotify vagy YouTube indul — majd magától folytatódik.
+- ÚJ: „Saját zenéim" a Több menüben — a megvásárolt (és reklámmal feloldott) zenéid egy helyen, a fiókodhoz kötve.
+- Innen lejátszhatók (a szám végén a következőre lép), letölthetők a készülékre, és törölhetők — a vásárlás megmarad.
+- A régebbi vásárlásaid és reklámmal feloldott zenéid is megjelennek a listában.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–338 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–339 összesítő)
 
 **Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
 
 ```play-notes
-- Értesítés: chat-lájk, chat-válasz és a hozzászólásodra jött válasz.
-- Az app ikonja mutatja az olvasatlan értesítéseid.
-- A rádió folyamatosan szól; Spotify/YouTube alatt elhallgat, majd folytatja.
-- A cikkek YouTube-videója az appban játszódik.
-- Napi aktivitási pont (komment+chat), kiadvány-vásárlás +20, jóváhagyott beküldés +10.
-- Eseményt csak szervezőként lehet beküldeni; az Achievement-útmutató pontos lett.
+- Értesítés: chat-lájk, chat-válasz és a komment-válasz.
+- Az app ikonja mutatja az olvasatlanokat.
+- A rádió folyamatosan szól; más zene alatt elhallgat, majd folytatja.
+- A YouTube-videó az appban szól.
+- Aktivitási pont, vásárlás +20, jóváhagyott beküldés +10.
+- Eseményt csak szervezőként lehet beküldeni; az Achievement-útmutató pontos.
 - A rangod szintlépésnél frissül; a listák nem villognak.
+- ÚJ: „Saját zenéim" — a megvásárolt zenék lejátszhatók, letölthetők.
 ```
 
-## 1c. Play Console — CSAK a 338-hoz, bővebben (tartalék)
+## 1c. Play Console — CSAK a 339-hez, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 338-at írja le** (a 329–337 már kiment a zárt teszt sávjára).
+megjeleníteni. **Ez is csak a 339-et írja le** (a 329–338 már kiment a zárt teszt sávjára).
 
 ```play-notes
-- Értesítést kapsz, ha valaki kedveli a Chat-üzenetedet, vagy válaszol rá.
-- Értesítést kapsz a cikkhez írt hozzászólásodra adott válaszról is.
-- Az app ikonja mutatja az olvasatlan értesítéseid számát.
-- A rádió folyamatosan szól, akkor is, ha a képernyő ki van kapcsolva.
-- A rádió elhallgat, ha közben Spotify vagy YouTube indul, majd magától folytatódik.
+- ÚJ: „Saját zenéim" a Több menüben — a megvásárolt zenéid egy helyen, a fiókodhoz kötve.
+- Innen játszhatod le őket: a szám végén magától a következőre lép.
+- Letölthetők a készülékre (offline is szólnak), és törölhetők — a vásárlás megmarad.
+- A régebbi vásárlásaid és reklámmal feloldott zenéid is megjelennek a listában.
+- Más fiókkal belépve a zenéid nem látszanak és nem tölthetők le.
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -138,6 +140,13 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 339 — „Saját zenéim": a megvásárolt zenék könyvtára
+- ÚJ menüpont a Több menüben: a megvásárolt (és reklámmal feloldott) zenéid egy helyen, a fiókodhoz kötve.
+- A zenék lejátszhatók az appban; a szám végén magától a következőre lép, és a sor a következő kiadvánnyal folytatódik.
+- A fájlok letölthetők a készülékre, így offline is szólnak; bármikor törölhetők, és utána újra letölthetők — a vásárlás megmarad.
+- A **régebbi** vásárlásaid és reklámmal feloldott zenéid is megjelennek (a szerver a meglévő jogosultságaidat listázza).
+- Más fiókkal belépve sem a zeneid, sem a letöltött fájljaid nem látszanak és nem tölthetők le (a lista és a helyi tároló is fiókonként külön).
 
 ### 338 — chat-értesítések, ikonjelvény és a folyamatos rádió
 - Értesítést kapsz, ha valaki kedveli a Chat-üzenetedet, vagy válaszol rá (push nélkül, csak az app értesítéslistájában).
