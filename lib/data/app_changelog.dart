@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 342,
+    changes: [
+      'Javítva: a „Megvásárolt zenéim" listában a kiadványok címe újra megjelenik (a 341-ben a kártyák végig „betöltés" állapotban maradtak).',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 341,
     changes: [
       'A „Megvásárolt zenéim" a Több menüben mostantól a menü többi szakaszához illeszkedik, és a neve is ezt tükrözi.',

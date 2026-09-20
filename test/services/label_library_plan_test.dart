@@ -289,18 +289,40 @@ void main() {
         reason: 'a sorba csak az kerülhet, amiről tudjuk, mi az',
       );
     });
+
+    test('a KÁRTYA is a katalógusból veszi a címet (ez tört el a 341-ben)', () {
+      // ⚠️ A tulajdonos képernyőfelvétele: a lista végig „Kiadvány #12466 /
+      // Adatok betöltése…" volt, miközben a lejátszósáv MÁR a valódi címet
+      // mutatta. Az ok: a kártya csak a lusta térképet (`_releaseMeta`) nézte,
+      // a katalógust (`_catalogById`) nem — a sor viszont a katalógust használta,
+      // ezért mondott ellent a kettő.
+      final body = _functionBody(source, '_buildReleaseCard');
+      expect(
+        body,
+        contains('_catalogById[item.releaseId]'),
+        reason: 'a kártya címe a katalógusból jön',
+      );
+      expect(body, contains('?? _releaseMeta[item.releaseId]'));
+      expect(
+        source,
+        contains('_catalogById = catalogById;'),
+        reason: 'a képernyő a katalógust is eltárolja a rajzoláshoz',
+      );
+    });
   });
 }
 
 /// Kiveszi egy Dart-metódus törzsét a nyitó kapcsos zárójel bezárásáig.
 ///
-/// A `> <név>(` horgony szándékos: a puszta `_advance(` a **hívási helyet** is
-/// eltalálná (pl. `unawaited(_advance())`), a `void _advance(` pedig nem illik a
-/// `Future<void> _advance(` aláírásra.
+/// A minta a **definícióra** illeszkedik (sortörés + visszatérési típus + név +
+/// `(`), nem a puszta névre: a `_advance(` alak a **hívási helyet** is eltalálná
+/// (`unawaited(_advance())`), és akkor rossz kapcsos zárójelet párosítana.
 String _functionBody(String source, String name) {
-  final start = source.indexOf('> $name(');
-  expect(start, isNonNegative, reason: 'nincs ilyen tag: $name');
-  final open = source.indexOf('{', start);
+  final match = RegExp(
+    '\\n\\s*[A-Za-z_][\\w<>, ?]*\\s${RegExp.escape(name)}\\(',
+  ).firstMatch(source);
+  expect(match, isNotNull, reason: 'nincs ilyen tag: $name');
+  final open = source.indexOf('{', match!.start);
   expect(open, isNonNegative, reason: '$name törzse nem található');
   var depth = 0;
   for (var i = open; i < source.length; i++) {

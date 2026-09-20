@@ -66,6 +66,15 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   final Set<int> _unavailableReleases = {};
   final Set<int> _resolvingReleases = {};
 
+  /// A **katalógus + a lusta lekérdezések** együtt — ebből rajzolódnak a kártyák
+  /// ÉS épül a lejátszási sor.
+  ///
+  /// ⚠️ EZT A KÉT HELYET EGYÜTT KELL HASZNÁLNI. A 341-es változat a kártyáknál
+  /// **csak** a lusta térképet nézte, ezért a katalógusból ismert kiadványok
+  /// címe **soha nem jelent meg**: a lista végig „Adatok betöltése…" volt, miközben
+  /// a lejátszósáv már a valódi címet mutatta (a sor a helyes térképet használta).
+  Map<int, HuhsRelease> _catalogById = const {};
+
   @override
   void initState() {
     super.initState();
@@ -382,6 +391,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
               items: playable,
               catalog: catalogById,
             );
+            _catalogById = catalogById;
             final signature = queue.map((entry) => entry.key).join(',');
             if (signature != _queueSignature) {
               _queueSignature = signature;
@@ -528,7 +538,9 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   }
 
   Widget _buildReleaseCard(LabelLibraryItem item) {
-    final release = _releaseMeta[item.releaseId];
+    // ⚠️ A KATALÓGUSBÓL is: a lusta lekérdezés csak a kiegészítés.
+    final release =
+        _catalogById[item.releaseId] ?? _releaseMeta[item.releaseId];
     // A nyilvános listából eltűnt kiadvány: a feloldás/vásárlás megvan, de a zene
     // már nem érhető el. **Megmondjuk**, mi ez, ahelyett hogy egy értelmezhetetlen
     // „Kiadvány #szám" sort mutatnánk.
@@ -544,8 +556,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
             height: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          title: Text('Kiadvány #${item.releaseId}'),
-          subtitle: const Text('Adatok betöltése…'),
+          title: const Text('Kiadvány betöltése…'),
+          subtitle: Text('Azonosító: ${item.releaseId}'),
         ),
       );
     }

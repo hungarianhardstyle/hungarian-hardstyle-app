@@ -6,11 +6,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 341
+currentBuild: 342
 currentVersion: 1.0.0
-lastPublishedBuild: 340
-aab: build/HUHS-v1.0.0+341-release.aab
-sha256: 88EAA49C072D8FF91B628B551885FBB689EE4B61ADE04FF3FBEDD3A8FF29EC8A
+lastPublishedBuild: 341
+aab: build/HUHS-v1.0.0+342-release.aab
+sha256: 43A8E6BC47EE2F014E055B44B4402220382380FE78DF775B76ED4BE658246C69
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -63,17 +63,17 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+341-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+342-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **341** (a merge-elt release manifestből visszaolvasva) |
+| Verziókód | **342** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 79.85 MB |
-| SHA-256 | 88EAA49C072D8FF91B628B551885FBB689EE4B61ADE04FF3FBEDD3A8FF29EC8A |
+| SHA-256 | 43A8E6BC47EE2F014E055B44B4402220382380FE78DF775B76ED4BE658246C69 |
 
-**Miért a 341-et kell feltenni:** ez a legfrissebb (a 340-re épül, plusz a **lejátszó** javítása:
-csak a letöltött zenéket játssza, és a „Megvásárolt zenéim" a Több menü designjához illeszkedik).
-A zárt teszt sávján most a **340** él — a 341 ezt váltja.
+**Miért a 342-t kell feltenni:** ez a legfrissebb (a 341-re épül, plusz a **könyvtár címeinek** javítása:
+a 341-ben a kártyák „betöltés" állapotban maradtak, most újra látszanak a címek).
+A zárt teszt sávján most a **341** él — a 342 ezt váltja.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 341 mindegyiket tartalmazza, és kisebb
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 342 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.5.9** (`build/huhs-mobile-api-2.5.9.zip`) — **ez már fent van** (élőben igazolva:
@@ -91,12 +91,12 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
+- Javítva: a „Megvásárolt zenéim" listában a kiadványok címe újra megjelenik (a 341-ben a kártyák „betöltés" állapotban maradtak).
 - A lejátszó csak a letöltött zenéket játssza, és lapozásnál átugorja a le nem töltötteket.
-- A „Megvásárolt zenéim" a Több menüben a menü többi szakaszához illeszkedik.
 - A nyilvános listáról lekerült kiadványt megnevezzük (nem „Kiadvány #szám").
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–341 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–342 összesítő)
 
 **Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
@@ -112,15 +112,15 @@ felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapj�
 - ÚJ: „Megvásárolt zenéim" (lejátszás/letöltés) és a kvíz azonnali „már kitöltötted" jelzése.
 ```
 
-## 1c. Play Console — CSAK a 341-hez, bővebben (tartalék)
+## 1c. Play Console — CSAK a 342-höz, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 341-et írja le** (a 329–340 már kiment a zárt teszt sávjára).
+megjeleníteni. **Ez is csak a 342-t írja le** (a 329–341 már kiment a zárt teszt sávjára).
 
 ```play-notes
-- A „Megvásárolt zenéim" a Több menüben a menü többi szakaszához illeszkedik (nyitva indul, kereshető).
+- Javítva: a „Megvásárolt zenéim" listában újra látszanak a kiadványok címei (a 341-ben végig „betöltés" állt).
 - A lejátszó csak a letöltött zenéket játssza; lapozásnál átugorja a le nem töltötteket, és nem indít letöltést.
-- Ha egy zene nincs letöltve, a lejátszó ezt kiírja a helyett, hogy letöltené.
+- A „Megvásárolt zenéim" a Több menüben a menü többi szakaszához illeszkedik (nyitva indul, kereshető).
 - A nyilvános listáról lekerült kiadványt megnevezzük, nem „Kiadvány #szám" sort mutatunk.
 ```
 
@@ -139,6 +139,10 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 342 — a könyvtár címei újra megjelennek
+- **Javítás:** a 341-ben a „Megvásárolt zenéim" lista kártyái **végig „Adatok betöltése…"** állapotban maradtak (a képernyőfelvételen látszott), miközben a lejátszósáv már a valódi címet mutatta. Az ok: a kártya csak a lusta lekérdezés térképét nézte, a nyilvános **katalógust** nem.
+- Most a kártya és a lejátszási sor **ugyanabból** a térképből dolgozik, és a regressziót **forrás-lint** őrzi (a hibát visszatelepítve a teszt elhasal).
 
 ### 341 — a lejátszó csak a letöltött zenéket játssza
 - A „Saját zenéim" neve **„Megvásárolt zenéim"** lett, és a Több menüben a szakasz **nyitva indul**, mint a többi (eddig csukott kártyaként lógott ki).
