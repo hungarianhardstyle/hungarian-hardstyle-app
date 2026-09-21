@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 344,
+    changes: [
+      'A frissen megvásárolt (vagy reklámmal feloldott) zene már másodperceken belül megjelenik a „Megvásárolt zenéim" listában — eddig előfordulhatott, hogy csak az app újraindítása után látszott.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 343,
     changes: [
       'Gyorsabb betöltés: a hírek, a kiadványok és a saját zenéid a készüléken tárolt példányból azonnal megjelennek, a frissítés a háttérben fut.',

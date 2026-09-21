@@ -6,11 +6,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 343
+currentBuild: 344
 currentVersion: 1.0.0
 lastPublishedBuild: 341
-aab: build/HUHS-v1.0.0+343-release.aab
-sha256: C0BA50E56081825857A577954931CEC3CEC21DD4073BA53E4EF2CC6267033F2A
+aab: build/HUHS-v1.0.0+344-release.aab
+sha256: 7FF7453AD64EEAD2AFE2E4CCB2D496F750C0F7BABBEC9E87441DB736A6108964
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -63,20 +63,22 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+343-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+344-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **343** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 80.02 MB |
-| SHA-256 | C0BA50E56081825857A577954931CEC3CEC21DD4073BA53E4EF2CC6267033F2A |
+| Verziókód | **344** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 80.03 MB |
+| SHA-256 | 7FF7453AD64EEAD2AFE2E4CCB2D496F750C0F7BABBEC9E87441DB736A6108964 |
 
-**Miért a 343-at kell feltenni:** ez a legfrissebb, és **három tulajdonosi panaszt** javít:
+**Miért a 344-et kell feltenni:** ez a legfrissebb, és **három tulajdonosi panaszt** javít:
 (1) a WordPress-adatok (hírek, kiadványok, saját zenék) a készüléken tárolt példányból
 **azonnal** megjelennek, a frissítés a háttérben fut; (2) a **lájk** és az **ismerősnek jelölés**
 azonnal látszik (a szerverhívás a háttérben megy, hiba esetén visszaáll); (3) a
 „Megvásárolt zenéim" lejátszójában **tekerhető a folyamatjelző**, van **stop** gomb és
-**lejátszási lista** (ismétlés/keverés és „folytatás ott, ahol abbahagytad"). A zárt teszt sávján most a **342** él — a 343 ezt váltja.
+**lejátszási lista** (ismétlés/keverés és „folytatás ott, ahol abbahagytad"). Emellett a
+**frissen vásárolt zene már másodperceken belül megjelenik** a listában (eddig csak
+újraindítás után látszott). **A 343-at ez váltja** — ha a 343-at már feltöltötted, a 344-et tedd fel helyette.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 343 mindegyiket tartalmazza, és kisebb
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 344 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.5.9** (`build/huhs-mobile-api-2.5.9.zip`) — **ez már fent van** (élőben igazolva:
@@ -97,6 +99,7 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 - Gyorsabb betöltés: a WordPress-adatok a készüléken tárolt példányból azonnal megjelennek, a frissítés a háttérben fut.
 - A lájk és az ismerősnek jelölés azonnal látszik; a szerver a háttérben dolgozik, hiba esetén visszaáll.
 - A „Megvásárolt zenéim" lejátszójában tekerhető a folyamatjelző, van stop gomb és lejátszási lista (ismétlés/keverés is).
+- A frissen megvásárolt zene másodperceken belül megjelenik a „Megvásárolt zenéim" listában.
 ```
 
 ## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–343 összesítő)
@@ -116,10 +119,10 @@ felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapj�
 - ÚJ: gyorsabb betöltés, azonnali lájk és ismerős-jelölés, tekerhető lejátszó listával.
 ```
 
-## 1c. Play Console — CSAK a 343-hoz, bővebben (tartalék)
+## 1c. Play Console — CSAK a 344-hez, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 343-at írja le.**
+megjeleníteni. **Ez is csak a 344-et írja le.**
 
 ```play-notes
 - Gyorsabb betöltés: a WordPress-adatok a tárolt példányból azonnal megjelennek, a frissítés a háttérben fut.
@@ -144,6 +147,9 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 344 — a frissen vásárolt zene azonnal megjelenik
+- A frissen megvásárolt (vagy reklámmal feloldott) zene már **másodperceken belül** megjelenik a „Megvásárolt zenéim" listában. Eddig előfordulhatott, hogy a lista a munkamenet végéig a **mentett** állapotot mutatta (a megnyitás nem kérdezte le újra a szervert), ezért az új vásárlás csak az app újraindítása után látszott.
 
 ### 343 — gyorsabb betöltés, azonnali lájk/ismerős, tekerhető lejátszó
 - **Gyorsabb betöltés:** a hírek, a kiadványok, a főoldali kérdőív/nyereményjáték sor és a saját zenéid listája a **készüléken tárolt példányból azonnal** megjelenik, a frissítés a háttérben fut. A lassulás oka a tárhely válaszideje (mérve 0,4–2,0 másodperc kéréseként, a válasz méretétől függetlenül), ezért a megoldás a helyi gyorsítótár és a háttérbeli egyeztetés — nem a tárhely cseréje.

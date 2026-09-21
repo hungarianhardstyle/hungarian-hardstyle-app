@@ -28,6 +28,14 @@ final labelLibraryServiceProvider = Provider<LabelLibraryService>(
 /// pedig csak a háttérben egyeztet; amikor az megjött, a provider
 /// újraszámol, és a (már friss) mentett listát rajzolja — hálózati várakozás
 /// nélkül. A fiókváltás továbbra is újratöltést indít (a UID a kulcsban van).
+///
+/// **Az életben tartott állapot nem öregedhet meg észrevétlenül:** a `keepAlive`
+/// miatt a képernyő újranyitása nem futtatja újra a providert, ezért egy időzítő
+/// **30 másodpercenként** újraszámolást kér. A `load()` ilyenkor a mentett listát
+/// adja azonnal (nincs töltő állapot: a riverpod a frissítésnél a korábbi értéket
+/// rajzolja), és csak a lejárt mentést egyezteti a háttérben. Enélkül egy frissen
+/// megvett kiadvány **a munkamenet végéig** hiányozhatna a listából. (Ugyanaz a
+/// minta, mint az `eventsProvider` percenkénti újraszámolásánál.)
 final labelLibraryProvider =
     FutureProvider.autoDispose<List<LabelLibraryItem>>((ref) async {
       ref.keepAlive();
@@ -38,6 +46,10 @@ final labelLibraryProvider =
       // nem szabad újraszámolni (a provider „loading" állapotban szűnne meg).
       var disposed = false;
       ref.onDispose(() => disposed = true);
+      final refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+        ref.invalidateSelf();
+      });
+      ref.onDispose(refreshTimer.cancel);
       final items = await service.load(uid: uid);
       final pending = service.pendingRefresh(uid);
       if (pending != null) {

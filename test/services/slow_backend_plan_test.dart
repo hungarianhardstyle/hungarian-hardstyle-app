@@ -152,10 +152,18 @@ void main() {
       expect(labelLibraryNeedsRefresh(now, now: now), isFalse);
       expect(
         labelLibraryNeedsRefresh(
-          now.subtract(const Duration(minutes: 4)),
+          now.subtract(const Duration(seconds: 30)),
           now: now,
         ),
         isFalse,
+      );
+      expect(
+        labelLibraryNeedsRefresh(
+          now.subtract(const Duration(minutes: 4)),
+          now: now,
+        ),
+        isTrue,
+        reason: 'a vásárlás nem maradhat percekig láthatatlan',
       );
       // A határ pontosan a frissességi ablak.
       expect(
@@ -409,6 +417,10 @@ void main() {
       );
       expect(libraryProvider, contains('load(uid: uid)'));
       expect(libraryProvider, contains('pendingRefresh'));
+      // Az életben tartott állapot nem öregedhet meg: időzítő kér
+      // újraszámolást, hogy egy friss vásárlás megjelenjen.
+      expect(libraryProvider, contains('Timer.periodic('));
+      expect(libraryProvider, contains('ref.onDispose(refreshTimer.cancel)'));
     });
 
     test('a zenetár szolgáltatása ELŐBB a mentést olvassa, mint a hálózatot', () {
