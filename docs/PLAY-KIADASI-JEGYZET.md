@@ -284,7 +284,27 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A kérdőív eredményeinél már a kérdőív saját válaszai látszanak az éves szavazás adatai helyett.
 - A nyereményjátéknál eltűnt a felesleges kép mező.
 
-## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.5.9)
+## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.6.0)
+
+A plugin csomag: `build/huhs-mobile-api-2.6.0.zip` (45 fájl, 147,0 KB,
+SHA-256 `289E8CC099DD6B43D131A736E54740A8F8232769C9D7DDE633272AAC4901BCFE`).
+A változás verziókövetve: `docs/plugin-2.6.0-dj-claim.patch`.
+
+**Mit hoz a 2.6.0 (az előző, 2.5.9 óta):**
+```text
+- ÚJ (privát, csak a HUHS szerverének): GET /huhs/v1/artists/<id>/claim-emails — megadja a DJ-adatlap
+  nyilvános booking és a beküldött PRIVÁT (kapcsolattartó) e-mail címét. Azért kell, mert a
+  privát cím a nyilvános adatlapról szándékosan kimarad, a claim viszont ezzel is működik.
+- JAVÍTVA: a beküldés jóváhagyásakor a privát e-mail eddig ELVESZETT (nem került át az adatlapra),
+  ezért a beküldött DJ a saját címével nem tudta volna claimelni az adatlapját. Most átkerül.
+- ÚJ (privát, idempotens): POST /huhs/v1/artists/claim-emails/backfill — a KORÁBBAN jóváhagyott
+  adatlapokra pótolja a privát címet a beküldésből (csak ha még nincs ott; kézzel javított címet
+  nem ír felül).
+- Az érintett fájlok: includes/api-artists.php (két új végpont), includes/submissions.php
+  (a cím átvitele), huhs-mobile-api.php (verzió).
+```
+
+### A 2.5.9 — a nagy körüzenet dupla küldésének javítása
 
 A plugin csomag: `build/huhs-mobile-api-2.5.9.zip` (45 fájl, 145,1 KB,
 SHA-256 `61DCBD46FC114F2CDF8D83DC37CC2421833177620CEA1F33BFB20C71E3B01590`).
