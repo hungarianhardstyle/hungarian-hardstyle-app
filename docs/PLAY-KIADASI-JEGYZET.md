@@ -6,11 +6,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 345
+currentBuild: 346
 currentVersion: 1.0.0
-lastPublishedBuild: 341
-aab: build/HUHS-v1.0.0+345-release.aab
-sha256: 9C958663E78E2C4CA7B1DF4EC54F77965FEAF0F86E0C0C9F170630AF614BB398
+lastPublishedBuild: 345
+aab: build/HUHS-v1.0.0+346-release.aab
+sha256: 662CAB098AA88923180304F52064DCB3ED102E1547165C4C3F25782FA762B859
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -19,7 +19,7 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-20, a legfrissebb mér�
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **337** — „337 (1.0.0)", kiadási szöveggel |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **345** — „345 (1.0.0)", kiadási szöveggel (a tulajdonos 2026-09-21-én jelezte) |
 | beta | üres | — |
 | production | üres | — |
 | internal | completed + egy **üres piszkozat** | 278 |
@@ -63,23 +63,20 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+345-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+346-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **345** (a merge-elt release manifestből visszaolvasva) |
+| Verziókód | **346** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 80.43 MB |
-| SHA-256 | 9C958663E78E2C4CA7B1DF4EC54F77965FEAF0F86E0C0C9F170630AF614BB398 |
+| SHA-256 | 662CAB098AA88923180304F52064DCB3ED102E1547165C4C3F25782FA762B859 |
 
-**Miért a 345-öt kell feltenni:** ez a **kész** csomag, minden eddigi javítással:
-(1) a WordPress-adatok a készüléken tárolt példányból **azonnal** megjelennek, a frissítés a
-háttérben fut; (2) a **lájk** és az **ismerősnek jelölés** azonnal látszik (a szerverhívás a
-háttérben megy, hiba esetén visszaáll); (3) a „Megvásárolt zenéim" lejátszójában **tekerhető a
-folyamatjelző**, van **stop** gomb és **lejátszási lista** (ismétlés/keverés, „folytatás ott, ahol
-abbahagytad", és a listáról **ki is vehetsz / vissza is tehetsz** egy letöltött zenét — a fájl
-megmarad); (4) a megvásárolt zene **kikapcsolt képernyőn is szól**, és a **zárképernyőről**
-(meg az értesítésből, a fejhallgató gombjaival) vezérelhető; (5) a frissen vásárolt zene
-másodperceken belül megjelenik a listában. **Javítva továbbá:** a lejátszó **elindul** (a 345
-első változatában néma maradt és angol hibaüzenetet írt ki), és **minden hibaüzenet magyar**.
-**A 343-at és a 344-et ez váltja.**
+**Miért a 346-ot kell feltenni:** a **345 már fel van töltve** a zárt teszt sávjára (a tulajdonos
+jelezte), abban viszont a **lejátszó néma maradt**, és angol hibaüzenetet írt ki — ezt a
+hibát a **346 javítja** (a `.pipe`/`addStream` csapda + 8 további hiba, lásd a 3. pontot).
+**Ugyanaz a verziókód nem tölthető fel újra**, ezért a javítás új verziókódot kapott.
+A 346-ban **minden** eddigi funkció is benne van: gyorsabb WordPress-betöltés, azonnali lájk és
+ismerős-jelölés, tekerhető folyamatjelző + stop + lejátszási lista (ismétlés/keverés, sorrendezés,
+ki/be a listáról), zárképernyős vezérlés és kikapcsolt képernyőn is szóló zene, valamint a
+frissen vásárolt zene azonnali megjelenése. **A 345-öt ez váltja.**
 
 > **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 345 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
@@ -99,16 +96,13 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Gyorsabb betöltés: a WordPress-adatok azonnal megjelennek.
-- A lájk és az ismerősnek jelölés azonnal látszik; hiba esetén visszaáll.
-- Megvásárolt zenéim: tekerés, stop, lista (ismétlés, keverés, sorrend).
-- A listáról zene ki-/bevehető, a sorrend fel/le mozgatható.
-- A zene kikapcsolt képernyőn is szól, zárképernyőről vezérelve.
-- Frissen vásárolt zene másodperceken belül megjelenik a listában.
-- Javítva: a lejátszó elindul, és minden hibaüzenet magyar.
+- Javítva: a „Megvásárolt zenéim" lejátszója elindul (a 345-ben néma maradt).
+- Javítva: minden hibaüzenet magyar, és hiba esetén a hang visszakerül a rádióhoz.
+- Javítva: a lista és a lapozás mindig az összes letöltött zenét mutatja.
+- Javítva: a zárképernyőn a tekerősáv hossza és az aktuális tétel jelölése helyes.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–345 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–346 összesítő)
 
 **Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
@@ -126,18 +120,17 @@ felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapj�
 - ÚJ: a listáról zene ki-/bevehető és sorrendezhető.
 ```
 
-## 1c. Play Console — CSAK a 345-höz, bővebben (tartalék)
+## 1c. Play Console — CSAK a 346-hoz, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 345-öt írja le.**
+megjeleníteni. **Ez is csak a 346-ot írja le** (a 345 már fent van a zárt teszt sávján).
 
 ```play-notes
-- Gyorsabb betöltés: a WordPress-adatok a tárolt példányból azonnal megjelennek, frissítés a háttérben.
-- A lájk és az ismerős-jelölés azonnal látszik; hiba esetén visszaáll.
-- Tekerhető folyamatjelző, stop gomb, lejátszási lista, ismétlés/keverés.
-- A listáról zene ki-/bevehető, a sorrend fel/le mozgatható (fájl megmarad).
-- A megvásárolt zene kikapcsolt képernyőn is szól, a zárképernyőről vezérelhető.
-- Frissen vásárolt zene másodperceken belül megjelenik a listában.
+- Javítva: a „Megvásárolt zenéim" lejátszója elindul — a 345-ben a zene el sem indult, és angol hibaüzenet jelent meg.
+- Javítva: minden hibaüzenet magyar; ha egy zene indítása nem sikerül, a hang visszakerül a rádióhoz.
+- Javítva: a lejátszási lista és a lapozás mindig az összes letöltött zenét mutatja.
+- Javítva: a zárképernyőn a tekerősáv hossza és az aktuális tétel jelölése is helyes.
+- Javítva: a lejátszás indítása nem indul el kétszer véletlenül.
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -156,7 +149,14 @@ bemásolni (mert a 329 nem ment ki).
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
 
-### 345 — a zene kikapcsolt képernyőn is szól (zárképernyő + értesítés)
+### 346 — a lejátszó elindul (hibajavítás)
+- **Javítva:** a „Megvásárolt zenéim" lejátszója **elindul** — a 345-ben a zene el sem indult, és egy **angol** hibaüzenet jelent meg a képernyőn.
+- **Javítva:** minden hibaüzenet **magyar**; ha egy zene indítása nem sikerül, a **hang visszakerül a rádióhoz** (az app nem némul el), és a sor nem marad „ez szól" állapotban.
+- **Javítva:** a lejátszási lista és a lapozás **mindig az összes letöltött zenét** mutatja (előfordult, hogy csak egy tételt látott: „1/1 · 15 letöltve").
+- **Javítva:** a zárképernyőn a **tekerősáv hossza** és az **aktuális tétel jelölése** is helyes.
+- **Javítva:** a lejátszás indítása nem indul el kétszer véletlenül, és a koppintás nem vész el.
+
+### 345 — kikapcsolt képernyőn is szól a zene, és szerkeszthető a lejátszási lista
 - A megvásárolt zene mostantól **kikapcsolt képernyőn is szól**, és a **zárképernyőn** (meg az értesítésből, illetve a fejhallgató gombjaival) vezérelhető: előző, szünet/lejátszás, következő, stop és tekerés.
 - **Hangfókusz:** ha más app indít zenét, vagy hívást kapsz, a lejátszó szünetel; **hívás után magától folytatja** (más zene-apptól nem veszi vissza a hangot). A **fejhallgató kihúzásakor** is megáll.
 - A lejátszó **nem áll meg**, ha elhagyod a képernyőt — visszatérve onnan folytatja a kijelzést, ahol a zene tart.
