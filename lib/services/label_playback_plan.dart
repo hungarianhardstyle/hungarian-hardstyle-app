@@ -116,6 +116,68 @@ List<int> playOrderFor({
   return result;
 }
 
+/// A **lejátszási lista** indexei a kívánt sorrendben.
+///
+/// A tulajdonos kérése: *„lehet szerkeszteni a playlistet?"* — ezért a lista
+/// **kézzel rendezhető**. A szabály szándékosan egyszerű és kiszámítható:
+///
+///  1. **Alap:** a letöltött és **nem kivett** tételek a könyvtár sorrendjében.
+///  2. **A kézi sorrend elöl megy:** a [customOrder]-ben szereplő tételek abban a
+///     sorrendben kerülnek előre — de **csak azok**, amik tényleg a listán vannak
+///     (letöltve és nincsenek kivéve). Így egy törölt/kivett tétel nem hagy
+///     „lyukat", és nem is tűnik el senki más.
+///  3. **Az új tételek a végére kerülnek:** amit a felhasználó még nem rendezett
+///     (frissen letöltött), az a **megszokott helyén**, a lista végén jelenik meg
+///     — nem kell külön „felvenni".
+///  4. **A hibás/duplikált bejegyzést eldobjuk** (a kézi sorrend tárolója
+///     elavulhat: elég, ha egy tételt töröltek).
+List<int> orderedPlaylistIndices({
+  required List<String> keys,
+  required Set<String> downloaded,
+  Set<String> excluded = const {},
+  List<String> customOrder = const [],
+}) {
+  final indexByKey = <String, int>{};
+  for (var index = 0; index < keys.length; index++) {
+    // ⚠️ Az ELSŐ előfordulás számít: ismétlődő kulcsnál (elméletben nem fordul
+    // elő, de a bemenet jöhet máshonnan) a stabil, kiszámítható választás ez.
+    indexByKey.putIfAbsent(keys[index], () => index);
+  }
+  final playlist = <String>{};
+  final libraryOrder = <String>[];
+  for (final key in keys) {
+    if (!downloaded.contains(key)) continue;
+    if (excluded.contains(key)) continue;
+    if (playlist.add(key)) libraryOrder.add(key);
+  }
+
+  final ordered = <String>[];
+  final seen = <String>{};
+  for (final key in customOrder) {
+    if (!playlist.contains(key)) continue;
+    if (!seen.add(key)) continue;
+    ordered.add(key);
+  }
+  for (final key in libraryOrder) {
+    if (seen.add(key)) ordered.add(key);
+  }
+  return [for (final key in ordered) indexByKey[key]!];
+}
+
+/// Egy tétel mozgatása a listában ([delta] = `-1` fel, `+1` le).
+///
+/// Tiszta függvény: a széleken **nem csinál semmit** (nincs körbefordulás, mert
+/// az egy listánál meglepő lenne), és a bemenetet nem módosítja.
+List<String> moveInOrder(List<String> order, int index, int delta) {
+  final result = List<String>.of(order);
+  final target = index + delta;
+  if (index < 0 || index >= result.length) return result;
+  if (target < 0 || target >= result.length) return result;
+  final moved = result.removeAt(index);
+  result.insert(target, moved);
+  return result;
+}
+
 /// A **következő** lépés a lejátszási sorrendben (kurzor → kurzor).
 ///
 /// * `cursor < 0` (még nincs kiválasztva) → `0`, ha van egyáltalán tétel;

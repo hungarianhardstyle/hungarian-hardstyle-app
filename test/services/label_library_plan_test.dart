@@ -251,12 +251,23 @@ void main() {
 
     test('a lapozás a LETÖLTÖTT tételek sorrendjében lépked', () {
       // A 343-as körben a lapozás a **lejátszási sorrend** (`_order`) felé
-      // került, hogy a keverés és az ismétlés működhessen. A szabály viszont
+      // került, hogy a keverés és az ismétlés működhessen; a 345-ben ehhez a
+      // **kézi sorrend** és a **kivétel** is hozzátartozik. A szabály viszont
       // változatlan: a sorrend **csak letöltött** tételekből állhat.
       expect(
         source,
-        contains('downloadedIndices('),
-        reason: 'a sorrend a letöltött tételekből épül',
+        contains('orderedPlaylistIndices('),
+        reason: 'a sorrend a letöltött, ki nem vett tételekből épül',
+      );
+      expect(
+        source,
+        contains('excluded: _excludedFromPlaylist'),
+        reason: 'a listáról kivett tétel nem szól bele a sorba',
+      );
+      expect(
+        source,
+        contains('customOrder: _playlistOrder'),
+        reason: 'a kézi sorrend is érvényesül',
       );
       expect(
         source,

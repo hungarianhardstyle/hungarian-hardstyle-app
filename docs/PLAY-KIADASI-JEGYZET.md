@@ -10,7 +10,7 @@ currentBuild: 345
 currentVersion: 1.0.0
 lastPublishedBuild: 341
 aab: build/HUHS-v1.0.0+345-release.aab
-sha256: 5F00E30CEDAD68F3E7B4C9BAE2546540CC82FB80C178017CA56121042C982085
+sha256: 8280E863C28F66A7159E114A14EF5E5675A536CCA725EB184E76D0E526C1A3BD
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -66,8 +66,8 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 | Fájl | `build/HUHS-v1.0.0+345-release.aab` |
 | Verzió | `1.0.0` (versionName) |
 | Verziókód | **345** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 80.41 MB |
-| SHA-256 | 5F00E30CEDAD68F3E7B4C9BAE2546540CC82FB80C178017CA56121042C982085 |
+| Méret | 80.43 MB |
+| SHA-256 | 8280E863C28F66A7159E114A14EF5E5675A536CCA725EB184E76D0E526C1A3BD |
 
 **Miért a 345-öt kell feltenni:** ez a **kész** csomag, minden eddigi javítással:
 (1) a WordPress-adatok a készüléken tárolt példányból **azonnal** megjelennek, a frissítés a
@@ -100,7 +100,7 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 - Gyorsabb betöltés: a WordPress-adatok azonnal megjelennek, frissítés a háttérben.
 - A lájk és az ismerősnek jelölés azonnal látszik; hiba esetén visszaáll.
 - Tekerhető folyamatjelző, stop gomb és lejátszási lista (ismétlés/keverés).
-- A listáról ki tudsz venni egy letöltött zenét (a fájl megmarad), és vissza is teheted.
+- A listáról zene ki-/bevehető, és a sorrend fel/le mozgatható (a fájl megmarad).
 - A megvásárolt zene kikapcsolt képernyőn is szól, a zárképernyőről vezérelhető.
 - A frissen vásárolt zene másodperceken belül megjelenik a listában.
 ```
@@ -120,7 +120,7 @@ felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapj�
 - ÚJ: „Megvásárolt zenéim", kvíz azonnali jelzése.
 - ÚJ: gyorsabb betöltés, azonnali lájk/ismerős, lejátszó.
 - ÚJ: zene kikapcsolt képernyőn is, zárképernyőről vezérelve.
-- ÚJ: a listáról zene ki-/bevehető (fájl megmarad).
+- ÚJ: a listáról zene ki-/bevehető és sorrendezhető.
 ```
 
 ## 1c. Play Console — CSAK a 345-höz, bővebben (tartalék)
@@ -132,7 +132,7 @@ megjeleníteni. **Ez is csak a 345-öt írja le.**
 - Gyorsabb betöltés: a WordPress-adatok a tárolt példányból azonnal megjelennek, frissítés a háttérben.
 - A lájk és az ismerős-jelölés azonnal látszik; hiba esetén visszaáll.
 - Tekerhető folyamatjelző, stop gomb, lejátszási lista, ismétlés/keverés.
-- A listáról ki-/bevehetsz egy letöltött zenét (a fájl megmarad).
+- A listáról zene ki-/bevehető, a sorrend fel/le mozgatható (fájl megmarad).
 - A megvásárolt zene kikapcsolt képernyőn is szól, a zárképernyőről vezérelhető.
 - Frissen vásárolt zene másodperceken belül megjelenik a listában.
 ```

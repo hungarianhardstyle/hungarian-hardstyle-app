@@ -94,8 +94,70 @@ void main() {
     });
   });
 
-  group('a kulcsok tisztítása (tiszta függvény)', () {
-    test('csak a kiadvány:változat alak marad meg', () {
+  group('a lista kézi sorrendje', () {
+    test('a mentett sorrend visszaolvasható, a sorrend megmarad', () async {
+      await store().saveOrder('uid-A', ['305:radio_wav', '200:mp3_128']);
+      expect(await store().loadOrder('uid-A'), [
+        '305:radio_wav',
+        '200:mp3_128',
+      ]);
+    });
+
+    test('a másik fiók nem örökli a sorrendet', () async {
+      await store().saveOrder('uid-A', ['305:radio_wav']);
+      expect(await store().loadOrder('uid-B'), isEmpty);
+    });
+
+    test('üres sorrendnél a kulcs eltűnik', () async {
+      final target = store();
+      await target.saveOrder('uid-A', ['305:radio_wav']);
+      await target.saveOrder('uid-A', const []);
+      final preferences = await SharedPreferences.getInstance();
+      expect(preferences.getString('huhs.music.order.uid-A'), isNull);
+      expect(await target.loadOrder('uid-A'), isEmpty);
+    });
+
+    test('vendégnél nem írunk és nem olvasunk', () async {
+      final target = store();
+      await target.saveOrder('', ['305:radio_wav']);
+      expect(await target.loadOrder(''), isEmpty);
+      final preferences = await SharedPreferences.getInstance();
+      expect(preferences.getKeys(), isEmpty);
+    });
+
+    test('hibás JSON esetén üres sorrend, és a kulcs törlődik', () async {
+      SharedPreferences.setMockInitialValues({
+        'huhs.music.order.uid-A': 'ez nem json',
+      });
+      expect(await store().loadOrder('uid-A'), isEmpty);
+      final preferences = await SharedPreferences.getInstance();
+      expect(preferences.getString('huhs.music.order.uid-A'), isNull);
+    });
+
+    test('a sorrend tisztítása megőrzi a sorrendet, a szemetet eldobja', () {
+      expect(
+        sanitizeOrderKeys([
+          '305:radio_wav',
+          'nem-jo',
+          '200:mp3_128',
+          '305:radio_wav',
+          0,
+        ]),
+        ['305:radio_wav', '200:mp3_128'],
+      );
+    });
+
+    test('a ki/be kapcsolás és a sorrend NEM ugyanaz a kulcs', () async {
+      // Ha ugyanaz lenne, a kivétel felülírná a sorrendet (és fordítva).
+      final target = store();
+      await target.save('uid-A', {'305:radio_wav'});
+      await target.saveOrder('uid-A', ['200:mp3_128']);
+      expect(await target.load('uid-A'), {'305:radio_wav'});
+      expect(await target.loadOrder('uid-A'), ['200:mp3_128']);
+    });
+  });
+
+  group('a kulcsok tisztítása (tiszta függvény)', () {    test('csak a kiadvány:változat alak marad meg', () {
       expect(
         sanitizeExcludedKeys([
           '305:radio_wav',

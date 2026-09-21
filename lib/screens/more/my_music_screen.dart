@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -117,6 +118,10 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   /// szól bele a sorba, és a listában sem szerepel.
   final LabelPlaylistMembership _playlist = LabelPlaylistMembership();
   Set<String> _excludedFromPlaylist = <String>{};
+
+  /// A lista **kézi sorrendje** (fiókonként mentve) — a fel/le mozgatás
+  /// eredménye. Ami nincs benne, az a könyvtár sorrendjében a végére kerül.
+  List<String> _playlistOrder = const [];
 
   /// A bejelentkezett UID **gyorsítótárazva**.
   ///
@@ -255,10 +260,11 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   /// Keverésnél az **aktuális tétel marad az első**, ezért a keverés
   /// bekapcsolása nem szakítja meg azt, amit épp hallgatsz.
   void _rebuildOrder({int? previousCurrent}) {
-    final indices = downloadedIndices(
-      [for (final entry in _queue) entry.key],
-      _downloaded,
+    final indices = orderedPlaylistIndices(
+      keys: [for (final entry in _queue) entry.key],
+      downloaded: _downloaded,
       excluded: _excludedFromPlaylist,
+      customOrder: _playlistOrder,
     );
     _order = playOrderFor(
       indices: indices,
@@ -343,9 +349,11 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     if (uid.isEmpty) return;
     try {
       final excluded = await _playlist.load(uid);
-      if (!mounted || excluded.isEmpty) return;
+      final order = await _playlist.loadOrder(uid);
+      if (!mounted || (excluded.isEmpty && order.isEmpty)) return;
       setState(() {
         _excludedFromPlaylist = excluded;
+        _playlistOrder = order;
         _orderDirty = true;
       });
       // A sorrendet a következő pásztázás építi újra (`_orderDirty` miatt).
@@ -353,6 +361,33 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     } catch (_) {
       // A tároló hibája nem akadályozhatja a lejátszást: ilyenkor minden a
       // listán marad (ez a biztonságos irány).
+    }
+  }
+
+  /// Egy tétel **mozgatása** a listában (`delta` = `-1` fel, `+1` le).
+  ///
+  /// A látható sorrendet mentjük el kézi sorrendként — így a mozgatás után az
+  /// lesz az érvényes sorrend, és az újonnan letöltött tételek a végére kerülnek.
+  Future<void> _movePlaylistEntry(LabelQueueEntry entry, int delta) async {
+    final uid = _uid;
+    if (uid.isEmpty) return;
+    final currentKeys = [
+      for (final index in _order)
+        if (index >= 0 && index < _queue.length) _queue[index].key,
+    ];
+    final position = currentKeys.indexOf(entry.key);
+    if (position < 0) return;
+    final next = moveInOrder(currentKeys, position, delta);
+    if (listEquals(next, currentKeys)) return;
+    setState(() {
+      _playlistOrder = next;
+      _message = null;
+    });
+    _rebuildOrder();
+    try {
+      await _playlist.saveOrder(uid, next);
+    } catch (_) {
+      // A mentés hibája nem akadályozhatja a lejátszást.
     }
   }
 
@@ -1083,13 +1118,49 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                             item.entry.variantLabel,
                             style: theme.textTheme.bodySmall,
                           ),
-                          trailing: IconButton(
-                            tooltip: 'Kivétel a lejátszási listából',
-                            onPressed: () async {
-                              await _togglePlaylistMembership(item.entry);
-                              if (sheetContext.mounted) sheetSetState(() {});
-                            },
-                            icon: const Icon(Icons.playlist_remove),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Keverés közben a sorrend nem értelmezhető, ezért
+                              // ilyenkor a nyilak le vannak tiltva (és a lábléc
+                              // meg is mondja, mit kell tenni).
+                              IconButton(
+                                tooltip: 'Feljebb',
+                                visualDensity: VisualDensity.compact,
+                                onPressed: (position == 0 || _shuffle)
+                                    ? null
+                                    : () async {
+                                        await _movePlaylistEntry(item.entry, -1);
+                                        if (sheetContext.mounted) {
+                                          sheetSetState(() {});
+                                        }
+                                      },
+                                icon: const Icon(Icons.keyboard_arrow_up),
+                              ),
+                              IconButton(
+                                tooltip: 'Lejjebb',
+                                visualDensity: VisualDensity.compact,
+                                onPressed:
+                                    (position == entries.length - 1 || _shuffle)
+                                    ? null
+                                    : () async {
+                                        await _movePlaylistEntry(item.entry, 1);
+                                        if (sheetContext.mounted) {
+                                          sheetSetState(() {});
+                                        }
+                                      },
+                                icon: const Icon(Icons.keyboard_arrow_down),
+                              ),
+                              IconButton(
+                                tooltip: 'Kivétel a lejátszási listából',
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () async {
+                                  await _togglePlaylistMembership(item.entry);
+                                  if (sheetContext.mounted) sheetSetState(() {});
+                                },
+                                icon: const Icon(Icons.playlist_remove),
+                              ),
+                            ],
                           ),
                           onTap: () {
                             Navigator.of(sheetContext).pop();
@@ -1114,6 +1185,18 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                           Text(
                             '$excludedCount tétel kivéve a listából — a kártyákon '
                             'a lista ikonnal teheted vissza (a fájl megvan).',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        if (_shuffle && entries.length > 1)
+                          Text(
+                            'Keverés közben a sorrend nem szerkeszthető — '
+                            'kapcsold ki a keverést a lejátszósávban.',
+                            style: theme.textTheme.bodySmall,
+                          )
+                        else if (entries.length > 1)
+                          Text(
+                            'A nyilakkal rendezheted a sorrendet — fiókonként '
+                            'megjegyzi.',
                             style: theme.textTheme.bodySmall,
                           ),
                       ],

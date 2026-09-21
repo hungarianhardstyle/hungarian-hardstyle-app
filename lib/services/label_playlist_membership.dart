@@ -26,6 +26,7 @@ class LabelPlaylistMembership {
   final Future<SharedPreferences> Function()? _preferencesOverride;
 
   static const _prefix = 'huhs.music.excluded';
+  static const _orderPrefix = 'huhs.music.order';
 
   Future<SharedPreferences> _preferences() {
     final override = _preferencesOverride;
@@ -38,6 +39,16 @@ class LabelPlaylistMembership {
     final trimmed = uid.trim();
     if (trimmed.isEmpty) return null;
     return '$_prefix.$trimmed';
+  }
+
+  /// A **sorrend** kulcsa — szándékosan külön a kivétel kulcsától.
+  ///
+  /// ⚠️ NEM a [keyFor] eredményéből épül (az már tartalmazza a `excluded`
+  /// előtagot, így dupla prefix lett volna belőle — ezt a teszt fogta meg).
+  String? orderKeyFor(String uid) {
+    final trimmed = uid.trim();
+    if (trimmed.isEmpty) return null;
+    return '$_orderPrefix.$trimmed';
   }
 
   /// A listáról **kivett** tételek (`kiadvány:változat`).
@@ -71,6 +82,54 @@ class LabelPlaylistMembership {
     }
     await preferences.setString(key, jsonEncode(clean.toList()..sort()));
   }
+
+  /// A lista **kézi sorrendje** (`kiadvány:változat` kulcsok sorrendben).
+  ///
+  /// A tulajdonos kérése: *„lehet szerkeszteni a playlistet?"* — a fel/le
+  /// mozgatás eredménye itt marad meg, fiókonként.
+  Future<List<String>> loadOrder(String uid) async {
+    final key = orderKeyFor(uid);
+    if (key == null) return const [];
+    final preferences = await _preferences();
+    final payload = preferences.getString(key);
+    if (payload == null) return const [];
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is! List) {
+        await preferences.remove(key);
+        return const [];
+      }
+      return sanitizeOrderKeys(decoded);
+    } catch (_) {
+      await preferences.remove(key);
+      return const [];
+    }
+  }
+
+  Future<void> saveOrder(String uid, List<String> order) async {
+    final key = orderKeyFor(uid);
+    if (key == null) return;
+    final preferences = await _preferences();
+    final clean = sanitizeOrderKeys(order);
+    if (clean.isEmpty) {
+      await preferences.remove(key);
+      return;
+    }
+    await preferences.setString(key, jsonEncode(clean));
+  }
+}
+
+/// A mentett **sorrend** tisztítása: csak az értelmes `kiadvány:változat` kulcsok
+/// maradnak, **sorrendben**, duplikáció nélkül (az első előfordulás számít).
+///
+/// Tiszta függvény, hogy a szűrés önmagában mérhető legyen.
+List<String> sanitizeOrderKeys(Iterable<dynamic> raw) {
+  final order = <String>[];
+  final seen = <String>{};
+  for (final value in sanitizeExcludedKeys(raw)) {
+    if (seen.add(value)) order.add(value);
+  }
+  return order;
 }
 
 /// A tárolt/bemenő értékek tisztítása: csak a **`kiadvány:változat`** alakú,

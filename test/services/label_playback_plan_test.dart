@@ -60,6 +60,101 @@ void main() {
     });
   });
 
+  group('a lejátszási lista kézi sorrendje', () {
+    // A tulajdonos kérése: *„A lista kézi sorrendje (fel/le mozgatás)"*.
+    const keys = ['a', 'b', 'c', 'd'];
+
+    test('kézi sorrend nélkül a könyvtár sorrendje marad', () {
+      expect(
+        orderedPlaylistIndices(
+          keys: keys,
+          downloaded: {'a', 'b', 'c', 'd'},
+        ),
+        [0, 1, 2, 3],
+      );
+    });
+
+    test('a kézi sorrend elöl megy, a többi utána (könyvtár sorrendben)', () {
+      expect(
+        orderedPlaylistIndices(
+          keys: keys,
+          downloaded: {'a', 'b', 'c', 'd'},
+          customOrder: ['c', 'a'],
+        ),
+        [2, 0, 1, 3],
+        reason: 'a „c" és „a" elöl, a maradék (b, d) utána',
+      );
+    });
+
+    test('a frissen letöltött tétel a VÉGÉRE kerül (nem kell felvenni)', () {
+      expect(
+        orderedPlaylistIndices(
+          keys: keys,
+          downloaded: {'a', 'b', 'c', 'd'},
+          customOrder: ['d', 'c'],
+        ),
+        [3, 2, 0, 1],
+      );
+    });
+
+    test('a kivett és a nem letöltött tétel nem hagy lyukat a sorrendben', () {
+      expect(
+        orderedPlaylistIndices(
+          keys: keys,
+          downloaded: {'a', 'b', 'c'},
+          excluded: {'b'},
+          customOrder: ['b', 'c', 'a'],
+        ),
+        [2, 0],
+        reason: 'a kivett „b" kimarad, a „c" és „a" marad a kért sorrendben',
+      );
+    });
+
+    test('az elavult/duplikált kézi sorrend nem tesz kárt', () {
+      expect(
+        orderedPlaylistIndices(
+          keys: keys,
+          downloaded: {'a', 'b'},
+          customOrder: ['nincs-ilyen', 'b', 'b', 'a'],
+        ),
+        [1, 0],
+      );
+    });
+
+    test('ismétlődő kulcs a bemenetben sem duplázódik', () {
+      expect(
+        orderedPlaylistIndices(
+          keys: ['a', 'a', 'b'],
+          downloaded: {'a', 'b'},
+        ),
+        [0, 2],
+      );
+    });
+  });
+
+  group('mozgatás a listában', () {
+    test('felfelé és lefelé is mozgat', () {
+      expect(moveInOrder(['a', 'b', 'c'], 1, -1), ['b', 'a', 'c']);
+      expect(moveInOrder(['a', 'b', 'c'], 1, 1), ['a', 'c', 'b']);
+    });
+
+    test('a széleken nem mozdul (nincs körbefordulás)', () {
+      expect(moveInOrder(['a', 'b', 'c'], 0, -1), ['a', 'b', 'c']);
+      expect(moveInOrder(['a', 'b', 'c'], 2, 1), ['a', 'b', 'c']);
+    });
+
+    test('a bemenetet nem módosítja', () {
+      final order = ['a', 'b', 'c'];
+      moveInOrder(order, 0, 1);
+      expect(order, ['a', 'b', 'c']);
+    });
+
+    test('érvénytelen indexre nem dob', () {
+      expect(moveInOrder(['a'], 5, -1), ['a']);
+      expect(moveInOrder(const [], 0, 1), isEmpty);
+    });
+  });
+
   group('keverés', () {
     test('a keverés PERMUTÁCIÓ: minden tétel pontosan egyszer szerepel', () {
       final indices = List<int>.generate(17, (index) => index);
@@ -535,6 +630,43 @@ void main() {
         contains('await _releaseAudio()'),
         reason: 'ne szóljon tovább olyan tétel, ami már nincs a listán',
       );
+    });
+
+    test('a listát KÉZZEL lehet rendezni (fel/le), és megmarad', () {
+      // A tulajdonos kérése: *„A lista kézi sorrendje (fel/le mozgatás)"*.
+      final sheet = _functionBody(source, '_showPlaylist');
+      expect(sheet, contains("tooltip: 'Feljebb'"));
+      expect(sheet, contains("tooltip: 'Lejjebb'"));
+      expect(sheet, contains('Icons.keyboard_arrow_up'));
+      expect(sheet, contains('Icons.keyboard_arrow_down'));
+      expect(sheet, contains('_movePlaylistEntry'));
+      final body = _functionBody(source, '_movePlaylistEntry');
+      expect(body, contains('moveInOrder('));
+      expect(
+        body,
+        contains('_playlist.saveOrder('),
+        reason: 'a sorrend fiókonként megmarad',
+      );
+      expect(
+        _functionBody(source, '_rebuildOrder'),
+        contains('customOrder: _playlistOrder'),
+        reason: 'a lapozás a kézi sorrendet követi',
+      );
+      expect(
+        source,
+        contains('await _playlist.loadOrder('),
+        reason: 'megnyitáskor betöltjük a mentett sorrendet',
+      );
+    });
+
+    test('keverés közben a sorrend nem szerkeszthető (és ezt meg is mondjuk)', () {
+      final sheet = _functionBody(source, '_showPlaylist');
+      expect(
+        sheet,
+        contains('position == 0 || _shuffle'),
+        reason: 'keverésnél a nyilak le vannak tiltva',
+      );
+      expect(sheet, contains('Keverés közben a sorrend nem szerkeszthető'));
     });
   });
 }
