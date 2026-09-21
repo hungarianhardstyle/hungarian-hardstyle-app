@@ -161,18 +161,59 @@ void main() {
       expect(body, contains('onResumeRadio'));
     });
 
-    test('a döntéseket NEM itt hozzuk: minden visszahíváson megy', () {
-      expect(_functionBody(handler, 'skipToNext'), contains('onNext'));
-      expect(_functionBody(handler, 'skipToPrevious'), contains('onPrevious'));
-      expect(_functionBody(handler, 'setRepeatMode'), contains('onRepeatChanged'));
+    test('a döntéseket a SZOLGÁLTATÁS hozza (nem a képernyő visszahívásai)', () {
+      // ⚠️ Ez a 346 utáni javítás lényege: a zárképernyő gombja **néma** volt, és
+      // a dal végén **megállt a zene**, mert a döntés a képernyő visszahívásaihoz
+      // volt kötve (a `dispose` pedig null-ra állította őket).
+      expect(_functionBody(handler, 'skipToNext'), contains('session.next()'));
+      expect(
+        _functionBody(handler, 'skipToPrevious'),
+        contains('session.previous()'),
+      );
+      expect(
+        _functionBody(handler, 'setRepeatMode'),
+        contains('session.setRepeat('),
+      );
       expect(
         _functionBody(handler, 'setShuffleMode'),
-        contains('onShuffleChanged'),
+        contains('session.setShuffle('),
+      );
+      expect(
+        handler,
+        isNot(contains('onNext')),
+        reason: 'nincs többé képernyőhöz kötött döntés-visszahívás',
       );
       expect(
         handler,
         isNot(contains('nextDownloadedIndex')),
         reason: 'a szolgáltatás nem tudhatja, mi van letöltve',
+      );
+    });
+
+    test('a sor és a dal vége a soré (music_queue_player.dart)', () {
+      final player = File(
+        'lib/services/music_queue_player.dart',
+      ).readAsStringSync();
+      final state = _functionBody(player, '_onPlayerState');
+      expect(
+        state,
+        contains('next(isAutoAdvance: true)'),
+        reason: 'a dal végén a szolgáltatás lép tovább (nem a képernyő)',
+      );
+      expect(
+        _functionBody(player, 'next'),
+        contains('_finishQueue()'),
+        reason: 'a sor végén leáll — és a stop visszaadja a hangot a rádiónak',
+      );
+      expect(
+        player,
+        contains('_plan.setBaseOrder(base, currentKey: currentKey.value)'),
+        reason: 'a sorrendet a képernyő adja (csak ő tudja, mi van letöltve)',
+      );
+      expect(
+        _functionBody(player, 'setBaseOrder'),
+        contains('_baseSignature'),
+        reason: 'keverésnél változatlan alapnál nem kever újra (nem ugrál)',
       );
     });
 
@@ -225,30 +266,59 @@ void main() {
       );
     });
 
-    test('a zárképernyő gombjai ugyanazt teszik, mint az app gombjai', () {
+    test('a döntések nincsenek a képernyő életciklusához kötve', () {
+      // ⚠️ A képernyő `dispose()`-a korábban **null-ra** állította a döntés-
+      // visszahívásokat, ezért a zárképernyő gombja néma maradt (a gomb látszott).
       final body = _functionBody(screen, 'initState');
-      expect(body, contains('handler.onNext = _playNext'));
-      expect(body, contains('handler.onPrevious = _playPrevious'));
-      expect(body, contains('handler.onRepeatChanged'));
-      expect(body, contains('handler.onShuffleChanged'));
+      expect(body, isNot(contains('handler.onNext')));
+      expect(body, isNot(contains('handler.onPrevious')));
+      expect(
+        body,
+        contains('session.currentKey.addListener(_onSessionCurrent)'),
+        reason: 'a képernyő a szolgáltatás állapotát követi',
+      );
+      expect(
+        _functionBody(screen, 'dispose'),
+        isNot(contains('onNext = null')),
+        reason: 'a döntések nem a képernyőn élnek',
+      );
+      expect(_functionBody(screen, '_playNext'), contains('_session.next()'));
+      expect(
+        _functionBody(screen, '_playPrevious'),
+        contains('_session.previous()'),
+      );
     });
 
     test('a lejátszás metaadatot ad a médiamunkamenetnek (cím, előadó, borító)', () {
-      final body = _functionBody(screen, '_playIndex');
+      final player = File(
+        'lib/services/music_queue_player.dart',
+      ).readAsStringSync();
+      final start = _functionBody(player, 'playAt');
       expect(
-        body,
+        start,
         contains('AudioSource.file('),
         reason: 'a tag nélkül nincs értesítés (a helyi fájl a médiatétel)',
       );
-      expect(body, contains('tag: item'));
-      // ⚠️ A metaadatok közzététele **külön, hibát nyelve** történik, és csak a
-      // hangforrás beállítása UTÁN — élesben a metaadat-hiba némította el a
-      // lejátszást (lásd a `music_audio_handler_pipe_test.dart`-ot).
-      expect(body, contains('_publishMetadata('));
-      final publish = _functionBody(screen, '_publishMetadata');
-      expect(publish, contains('publishQueue('));
-      expect(publish, contains('catch'));
-      expect(publish, contains('handler.resumeRadioWhenStopped'));
+      expect(start, contains('tag: track.item'));
+      expect(
+        _functionBody(player, '_applyDuration'),
+        contains('copyWith(duration: duration)'),
+        reason: 'a zárképernyő tekerősávja a MediaItem hosszából dolgozik',
+      );
+      // A sor közzététele a **szolgáltatásé**: a képernyő elhagyása után is helyes
+      // marad a cím, a sor és az aktuális tétel jelölése.
+      final handler = File(
+        'lib/services/music_audio_handler.dart',
+      ).readAsStringSync();
+      expect(
+        _functionBody(handler, '_publishSession'),
+        contains('publishQueue('),
+      );
+      expect(
+        screen,
+        isNot(contains('_publishMetadata')),
+        reason: 'a metaadatot már nem a képernyő teszi közzé',
+      );
       // ⚠️ A `_mediaItemFor` **`=>` alakú**, ezért itt a teljes sorra illesztünk
       // (a törzs-kivágó segéd a `{`-t keresné, és a következő metódus törzsét
       // találná meg).
@@ -258,7 +328,6 @@ void main() {
         screen,
         contains("artUri: entry.coverUrl.isEmpty ? null : Uri.tryParse(entry.coverUrl)"),
       );
-      expect(publish, contains('duration'));
     });
 
     test('a képernyő elhagyása NEM állítja le a zenét (ez a lényeg)', () {
@@ -277,11 +346,17 @@ void main() {
       );
     });
 
-    test('a visszatéréskor a lejátszó az igazság (nem a régi kijelzés)', () {
+    test('a visszatéréskor a szolgáltatás sora az igazság (nem a régi kijelzés)', () {
       expect(screen, contains('_syncWithBackgroundPlayback'));
       final body = _functionBody(screen, '_syncWithBackgroundPlayback');
-      expect(body, contains('_handler?.currentItem'));
-      expect(body, contains('_currentIndex = index'));
+      expect(body, contains('_onSessionCurrent()'));
+      final current = _functionBody(screen, '_onSessionCurrent');
+      expect(
+        current,
+        contains('_session.currentKey.value'),
+        reason: 'a közben (akár a zárképernyőről) léptetett tétel látszik',
+      );
+      expect(current, contains('_currentIndex = index'));
     });
   });
 }

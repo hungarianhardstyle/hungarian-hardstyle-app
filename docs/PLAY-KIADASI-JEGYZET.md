@@ -1,16 +1,20 @@
 # Play Console — kiadási jegyzet (másolható)
 
+> A következő feltöltés versionCode-ja: **347** (`1.0.0`) — a csomag:
+> `build/HUHS-v1.0.0+347-release.aab`. A zárt teszt sávján **345** van fent, a **346**
+> nem került fel, ezért a rövid (1.) blokk a 346 javítását is tartalmazza.
+
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
 ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 346
+currentBuild: 347
 currentVersion: 1.0.0
 lastPublishedBuild: 345
-aab: build/HUHS-v1.0.0+346-release.aab
-sha256: 662CAB098AA88923180304F52064DCB3ED102E1547165C4C3F25782FA762B859
+aab: build/HUHS-v1.0.0+347-release.aab
+sha256: BF0F6FA02EEE64BFB604C1EE2C590634103DBDC01D4A14F337B835D00C128064
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -97,40 +101,38 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 
 ```play-notes
 - Javítva: a „Megvásárolt zenéim" lejátszója elindul (a 345-ben néma maradt).
+- Javítva: a zárképernyő következő/előző gombja a képernyő elhagyása után is működik, és a dal végén jön a következő.
+- Javítva: a lista és a lapozás mindig az összes letöltött zenét mutatja, a keverés nem ugrál.
 - Javítva: minden hibaüzenet magyar, és hiba esetén a hang visszakerül a rádióhoz.
-- Javítva: a lista és a lapozás mindig az összes letöltött zenét mutatja.
-- Javítva: a zárképernyőn a tekerősáv hossza és az aktuális tétel jelölése helyes.
+- Javítva: tableten fekvő nézetben a kiemelt hírek és a játék kártya nem óriási.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–346 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–347 összesítő)
 
 **Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
 
 ```play-notes
 - Értesítés: chat-lájk, -válasz, komment-válasz.
-- Az ikon mutatja az olvasatlanokat; a rangod szintlépésnél frissül.
-- A rádió folyamatosan szól.
-- A YouTube-videó az appban szól.
-- Aktivitási pont, vásárlás +20.
-- Eseményt csak szervező küldhet.
+- Az ikon mutatja az olvasatlanokat; a rang frissül.
+- A rádió folyamatosan szól, a videó az appban.
+- Aktivitási pont, vásárlás +20; eseményt csak szervező küldhet.
 - ÚJ: „Megvásárolt zenéim", kvíz azonnali jelzése.
-- ÚJ: gyorsabb betöltés, azonnali lájk/ismerős, lejátszó.
+- ÚJ: gyorsabb betöltés, azonnali lájk, lejátszó.
 - ÚJ: zene kikapcsolt képernyőn is, zárképernyőről vezérelve.
-- ÚJ: a listáról zene ki-/bevehető és sorrendezhető.
+- ÚJ: a listáról zene ki-/bevehető, sorrendezhető; a lejátszó elnavigálva is vezérelhető.
 ```
 
-## 1c. Play Console — CSAK a 346-hoz, bővebben (tartalék)
+## 1c. Play Console — CSAK a 347-hez, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 346-ot írja le** (a 345 már fent van a zárt teszt sávján).
+megjeleníteni. **Ez is csak a 347-et írja le** (a 345 már fent van a zárt teszt sávján, a 346
+pedig nem került fel, ezért a rövid blokk a 346 javítását is tartalmazza).
 
 ```play-notes
-- Javítva: a „Megvásárolt zenéim" lejátszója elindul — a 345-ben a zene el sem indult, és angol hibaüzenet jelent meg.
-- Javítva: minden hibaüzenet magyar; ha egy zene indítása nem sikerül, a hang visszakerül a rádióhoz.
-- Javítva: a lejátszási lista és a lapozás mindig az összes letöltött zenét mutatja.
-- Javítva: a zárképernyőn a tekerősáv hossza és az aktuális tétel jelölése is helyes.
-- Javítva: a lejátszás indítása nem indul el kétszer véletlenül.
+- Javítva: a megvásárolt zene lejátszója a képernyő elhagyása után is vezérelhető — a zárképernyő következő/előző gombja mostantól működik, és a dal végén magától jön a következő tétel (eddig megállt a zene).
+- Javítva: a kevert lejátszási sorrend stabil — a „következő" tétel nem ugrál, amikor a lista frissül (pl. új vásárlás).
+- Javítva: tableten fekvő nézetben a kiemelt hírkártyák és a játék kártya akkora, mint a többi kártya (eddig a teljes szélességben óriásira nőttek).
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -148,6 +150,11 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 347 — a lejátszó a képernyő elhagyása után is vezérelhető + tabletes kártyák
+- **Javítva:** a megvásárolt zene lejátszója a **képernyő elhagyása után is vezérelhető** — a zárképernyő **következő/előző** gombja mostantól működik, és a **dal végén magától jön a következő** tétel. Eddig ilyenkor a gomb ott maradt, de nem csinált semmit, a dal végén pedig **megállt a zene** (a döntés a képernyőhöz volt kötve).
+- **Javítva:** a **kevert lejátszási sorrend stabil** — a „következő" tétel nem ugrál, amikor a lista frissül (új vásárlás, új letöltés, újbóli ellenőrzés).
+- **Javítva:** tableten **fekvő nézetben** a **kiemelt hírkártyák** és a **játék (kvíz) kártya** akkora, mint a többi kártya — eddig a teljes szélességben óriásira nőttek. Álló nézetben szándékosan nem változott semmi.
 
 ### 346 — a lejátszó elindul (hibajavítás)
 - **Javítva:** a „Megvásárolt zenéim" lejátszója **elindul** — a 345-ben a zene el sem indult, és egy **angol** hibaüzenet jelent meg a képernyőn.

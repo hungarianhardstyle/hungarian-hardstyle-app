@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 347,
+    changes: [
+      'A megvásárolt zene lejátszója a képernyő elhagyása után is vezérelhető: a zárképernyő következő/előző gombja mostantól működik, és a dal végén magától jön a következő (eddig ott megállt a zene).',
+      'A lejátszási lista keverése stabil: a „következő" tétel nem ugrál akkor sem, ha közben frissül a lista (új vásárlás, új letöltés).',
+      'Tableten fekvő nézetben a kiemelt hírkártyák és a játék kártya akkora, mint a többi kártya — eddig a teljes szélességben óriásira nőttek.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 346,
     changes: [
       'Javítva: a „Megvásárolt zenéim" lejátszója elindul — a 345-ben néma maradt, és egy angol hibaüzenetet írt ki.',

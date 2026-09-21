@@ -545,12 +545,26 @@ class _ActiveGameCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (game.artwork.isNotEmpty)
+              // ⚠️ A kép magassága **fekvő nézetben felülről korlátozott**: a
+              // teljes szélességű `fitWidth` kép az eredeti képarányával óriásira
+              // nőtt, és magával vitte az egész kártyát (a tulajdonos jelzése:
+              // *„tableten a kvíz kártya is kurvanagy"* — kifejezetten **fekvő**
+              // nézetben). Álló nézetben szándékosan **nem** változtatunk: ott a
+              // kártya jó, csak a széles (fekvő) nézet a hibás. Fix magasság
+              // helyett felső korlát + `cover`, ezért a kép nem csúszik el.
               Container(
                 color: Colors.black,
+                constraints: BoxConstraints(
+                  maxHeight:
+                      MediaQuery.orientationOf(context) ==
+                          Orientation.landscape
+                      ? 260
+                      : double.infinity,
+                ),
                 child: CachedNetworkImage(
                   imageUrl: game.artwork,
                   width: double.infinity,
-                  fit: BoxFit.fitWidth,
+                  fit: BoxFit.cover,
                   errorWidget: (_, _, _) => const SizedBox.shrink(),
                 ),
               ),

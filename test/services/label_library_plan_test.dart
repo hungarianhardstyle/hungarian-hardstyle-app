@@ -244,9 +244,15 @@ void main() {
 
   group('forrás-lint: a felület csak a LETÖLTÖTT zenéket játssza', () {
     late String source;
+    late String player;
 
     setUpAll(() {
       source = File('lib/screens/more/my_music_screen.dart').readAsStringSync();
+      // A **léptetés és a végrehajtás** a szolgáltatásban van (hogy a képernyő
+      // elhagyása után is működjön), ezért azt a fájlt is mérjük.
+      player = File(
+        'lib/services/music_queue_player.dart',
+      ).readAsStringSync();
     });
 
     test('a lapozás a LETÖLTÖTT tételek sorrendjében lépked', () {
@@ -271,8 +277,18 @@ void main() {
       );
       expect(
         source,
+        contains('MusicQueueTrack('),
+        reason: 'a sor a lejátszható tételeket (fájlútvonallal) kapja meg',
+      );
+      expect(
+        source,
+        contains('downloaded: paths.keys.toSet()'),
+        reason: 'csak a letöltött fájlok kerülhetnek a sorba',
+      );
+      expect(
+        player,
         contains('playOrderFor('),
-        reason: 'a sorrend a keverést is figyelembe veszi',
+        reason: 'a sorrend a keverést is figyelembe veszi (a szolgáltatásban)',
       );
       expect(
         source,
@@ -280,9 +296,9 @@ void main() {
         reason: 'a „nyers" következő már nem használható a lapozáshoz',
       );
       expect(
-        source,
-        contains('firstDownloadedIndex(_queue, _downloaded)'),
-        reason: 'a lejátszás indítása továbbra is az első letöltött tétel',
+        _functionBody(player, 'toggle'),
+        contains('await playAt(0'),
+        reason: 'ha nincs kiválasztott tétel, az első lejátszható indul',
       );
     });
 
@@ -294,10 +310,17 @@ void main() {
     });
 
     test('a szám végi továbblépés is a letöltött sorrendben lép', () {
-      final body = _functionBody(source, '_advance');
-      expect(body, contains('stepPlayback('));
-      expect(body, contains('_order['));
+      // ⚠️ A dal **vége** a szolgáltatásban dől el: ezért lép tovább a zene akkor
+      // is, ha a képernyőt közben elhagyták (korábban ott megállt).
+      final body = _functionBody(player, '_onPlayerState');
+      expect(body, contains('ProcessingState.completed'));
+      expect(body, contains('next(isAutoAdvance: true)'));
       expect(body, isNot(contains('_ensureDownloaded')));
+      expect(
+        source,
+        isNot(contains('_advance()')),
+        reason: 'a képernyőn nem marad második léptető (két döntés = hiba)',
+      );
     });
 
     test('a nyilvános listából eltűnt kiadványt megnevezzük, nem tippelünk', () {

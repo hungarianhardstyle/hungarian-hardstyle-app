@@ -116,33 +116,51 @@ void main() {
       );
     });
 
-    test('a hangforrás beállítása MEGELŐZI a metaadatok közzétételét', () {
-      final body = _functionBody(screen, '_playIndex');
+    test('a hangforrás beállítása MEGELŐZI a lejátszást (és a közzététel hibát nyelve fut)', () {
+      // A sorrend szabálya megmaradt, csak a helye változott: a hangforrást a
+      // **sor** állítja be (`MusicQueuePlayer.playAt`), a közzététel pedig a
+      // szolgáltatásban történik — mindkettő saját hibakezeléssel, hogy a
+      // megjelenítés hibája **soha** ne némítsa el a lejátszást.
+      final player = _withoutComments(
+        File('lib/services/music_queue_player.dart').readAsStringSync(),
+      );
+      final body = _functionBody(player, 'playAt');
       final sourceIndex = body.indexOf('setAudioSource(');
-      final publishIndex = body.indexOf('_publishMetadata(');
+      final playIndex = body.indexOf('player.play()');
       expect(sourceIndex, isNonNegative);
-      expect(publishIndex, isNonNegative);
+      expect(playIndex, isNonNegative);
       expect(
-        sourceIndex < publishIndex,
+        sourceIndex < playIndex,
         isTrue,
-        reason:
-            'a metaadat (értesítés/zárképernyő) hibája nem akadályozhatja a '
-            'lejátszást',
+        reason: 'előbb a hangforrás, csak azután indul a lejátszás',
       );
     });
 
     test('a metaadat-közzététel saját hibakezelésben van', () {
-      final body = _functionBody(screen, '_publishMetadata');
-      expect(body, contains('catch'));
-      expect(body, contains('debugPrint'));
+      // A **sor** oldalán…
+      final player = _withoutComments(
+        File('lib/services/music_queue_player.dart').readAsStringSync(),
+      );
+      final publish = _functionBody(player, '_publishPlan');
+      expect(publish, contains('catch'));
+      expect(publish, contains('debugPrint'));
+      // …és a **szolgáltatás** oldalán is (az értesítés/zárképernyő).
+      final servicePublish = _functionBody(handler, '_publishSession');
+      expect(servicePublish, contains('catch'));
+      expect(servicePublish, contains('debugPrint'));
     });
 
     test('sikertelen indításnál a kijelölés visszaáll és magyar üzenet jön', () {
-      final body = _functionBody(screen, '_playIndex');
-      expect(body, contains('previousIndex'));
+      // ⚠️ A hibaág a **sorban** van (a képernyő elhagyása után is le kell
+      // állnia, és vissza kell adnia a hangot a rádiónak).
+      final player = _withoutComments(
+        File('lib/services/music_queue_player.dart').readAsStringSync(),
+      );
+      final body = _functionBody(player, 'playAt');
+      expect(body, contains('previousKey'));
       expect(
         body,
-        contains('_currentIndex = previousIndex'),
+        contains('_plan.moveToKey(previousKey)'),
         reason: 'ne maradjon „ez szól" állapotban egy néma lejátszó',
       );
       expect(body, contains('playbackErrorMessage(error)'));
@@ -154,13 +172,23 @@ void main() {
     });
 
     test('a sorrend keverés nélkül MINDIG a valósághoz igazodik', () {
+      // A pásztázás **mindig** átadja az alap-sorrendet (nincs feltételes ág,
+      // amiben egy félkész sorrend beragadhat — élesben „1/1 · 15 letöltve"
+      // látszott). A keverés stabilitását a sor oldja meg: változatlan alapnál
+      // nem kever újra.
       final body = _functionBody(screen, '_scanDownloads');
       expect(
         body,
-        contains('if (changed || !_shuffle)'),
-        reason:
-            'enélkül egy félkész állapotban számolt sorrend beragadhat '
-            '(élesben „1/1 · 15 letöltve" látszott)',
+        contains('_pushBaseOrder(paths)'),
+        reason: 'minden pásztázás átadja a szolgáltatásnak a valós sorrendet',
+      );
+      final player = _withoutComments(
+        File('lib/services/music_queue_player.dart').readAsStringSync(),
+      );
+      expect(
+        _functionBody(player, 'setBaseOrder'),
+        contains('_shuffle && unchanged'),
+        reason: 'keverésnél csak változáskor kever újra (nem ugrál a következő)',
       );
     });
   });

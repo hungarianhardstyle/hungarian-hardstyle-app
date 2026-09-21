@@ -225,7 +225,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                     ),
                                     const SizedBox(height: 10),
                                     for (final post in stickyPosts)
-                                      NewsCard(post: post),
+                                      AdaptiveNewsCard(post: post),
                                   ],
                                   const SizedBox(height: 18),
                                   const Text(
@@ -326,21 +326,11 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                 index -
                                 postStartIndex -
                                 (hasSecondAd && index > secondAdIndex ? 1 : 0);
-                            final landscape =
-                                MediaQuery.orientationOf(context) ==
-                                Orientation.landscape;
-                            return Align(
-                              alignment: Alignment.topCenter,
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxWidth: landscape ? 760 : double.infinity,
-                                ),
-                                child: NewsCard(
-                                  post: posts[postIndex],
-                                  compact: landscape,
-                                ),
-                              ),
-                            );
+                            // Ugyanaz a kártya-elhelyezés, mint a „Kiemelt hírek"
+                            // sornál: a szabály egy helyen van, ezért a kettő
+                            // nem tud széthúzni (fekvő tabletben sávos, legfeljebb
+                            // 760 px széles kártya).
+                            return AdaptiveNewsCard(post: posts[postIndex]);
                           },
                         ),
                 ),

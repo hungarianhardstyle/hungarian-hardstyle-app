@@ -248,3 +248,37 @@ class _CompactNewsCardContent extends StatelessWidget {
     );
   }
 }
+
+/// A hírkártya **egységes elhelyezése** — ezt használja a „Friss hírek" lista
+/// **és** a „Kiemelt hírek" sor is.
+///
+/// MIÉRT: fekvő (tablet) nézetben a teljes szélességű kártya 16:9-es képe
+/// óriásira nő. A „Friss hírek" lista ezt már kezelte (legfeljebb 760 px széles,
+/// **sávos** kártya), a „Kiemelt hírek" sor viszont **nem** — ezért nézett ki
+/// másképp, és lett „nagyon nagy" (a tulajdonos jelzése: *„tableten a kiemelt
+/// hírek a hírek tabon nagyon nagyok, olyannak kéne lennie mint a többi hír
+/// kártyának"*). A szabály **egy helyen** van, ezért a kettő nem tud széthúzni.
+class AdaptiveNewsCard extends StatelessWidget {
+  const AdaptiveNewsCard({super.key, required this.post});
+
+  final Post post;
+
+  /// Fekvő nézetben ekkora a legnagyobb kártyaszélesség: ennél szélesebb
+  /// tabletben a teljes szélességű kártya képe már túl nagy lenne.
+  static const double maxLandscapeWidth = 760;
+
+  @override
+  Widget build(BuildContext context) {
+    final landscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: landscape ? maxLandscapeWidth : double.infinity,
+        ),
+        child: NewsCard(post: post, compact: landscape),
+      ),
+    );
+  }
+}

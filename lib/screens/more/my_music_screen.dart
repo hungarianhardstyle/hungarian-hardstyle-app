@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
@@ -7,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../../core/errors/playback_error.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../models/label_library.dart';
 import '../../models/release.dart';
@@ -22,6 +20,7 @@ import '../../services/label_playback_plan.dart';
 import '../../services/label_playlist_membership.dart';
 import '../../services/label_release_availability.dart';
 import '../../services/music_audio_handler.dart';
+import '../../services/music_queue_player.dart';
 import '../../widgets/radio_player_bar.dart';
 import '../../widgets/resized_network_image.dart';
 import '../releases/releases_screen.dart';
@@ -40,8 +39,14 @@ import '../releases/releases_screen.dart';
 ///     listát, sem lejátszható fájlt nem lát.
 ///  2. **A törlés csak a készülékről töröl**: a vásárlás a szerveren marad,
 ///     ezért a „Letöltés" gomb **azonnal visszakerül** a törölt tételhez.
-///  3. **A szám végén magától a következőre lép**, és ha az még nincs meg,
-///     előbb letölti — a sor nem akad meg.
+///  3. **Csak letöltött zene játszható**, és a lapozás közben **nincs letöltés**:
+///     a sor eleve a letöltött (és a listán hagyott) tételekből áll.
+///  4. **A léptetés nem itt dől el** ([MusicQueuePlayer]): a képernyő csak az
+///     **alap-sorrendet** adja át (mi van letöltve, mi van kivéve, mi a kézi
+///     sorrend), a „következő"/„előző" és a dal végi továbblépés a
+///     háttér-szolgáltatásban történik — ezért a képernyő elhagyása után sem
+///     hal meg a zárképernyő gombja.
+
 class MyMusicScreen extends ConsumerStatefulWidget {
   const MyMusicScreen({super.key});
 
@@ -59,6 +64,24 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   MusicAudioHandler? _handler;
   AudioPlayer? _ownedPlayer;
 
+  /// A **tartalék** sor (csak akkor, ha nincs háttér-szolgáltatás).
+  ///
+  /// A lejátszás és a léptetés ugyanazt az osztályt használja, mint a
+  /// szolgáltatás (`MusicQueuePlayer`) — ezért nincs kétféle viselkedés.
+  MusicQueuePlayer? _ownSession;
+
+  /// A **lejátszási sor**: a háttér-szolgáltatásé, vagy a saját tartalékunk.
+  ///
+  /// A léptetés, az ismétlés és a dal végi továbblépés **nem itt** dől el, ezért
+  /// a képernyő elhagyása után is működik (ez volt a korábbi korlát: a
+  /// zárképernyő gombja néma maradt, a dal végén pedig megállt a zene).
+  MusicQueuePlayer get _session =>
+      _handler?.session ??
+      (_ownSession ??= MusicQueuePlayer(
+        player: _ownedPlayer ??= AudioPlayer(),
+        onStopRequested: (_) => _releaseAudio(),
+      ));
+
   /// A lejátszó, akár a háttér-szolgáltatásé, akár a sajátunk.
   AudioPlayer get _player => _handler?.player ?? (_ownedPlayer ??= AudioPlayer());
 
@@ -73,25 +96,22 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   String? _message;
   int _storageBytes = 0;
 
-  /// A **lejátszási sorrend** (a sor indexei) és az abban álló kurzor.
+  /// A **lejátszási sorrend** (a sor indexei) — a szolgáltatás sorának a tükre.
   ///
   /// MIÉRT külön a `_queue`-tól: a keverés a sorrendet változtatja, nem a
-  /// tartalmat — a kurzor viszont mindig a **sorrendben** lépked, ezért a
-  /// „következő" gomb a kevert sorrendet követi (és a sor végén megáll).
+  /// tartalmat — a kurzor viszont mindig a **sorrendben** lépked. Az igazság a
+  /// `_session.tracks` (a szolgáltatásé); ez a lista csak a kirajzoláshoz kell,
+  /// és a szolgáltatás jelzésére épül újra (`_onSessionTracks`).
   List<int> _order = const [];
 
-  /// Ismétlés módja (nincs / mind / egy) és a keverés állapota.
+  /// Ismétlés módja (nincs / mind / egy) és a keverés állapota — a szolgáltatás
+  /// állapotának a tükre (a döntés ott van).
   PlaybackRepeat _repeat = PlaybackRepeat.none;
   bool _shuffle = false;
 
-  /// A **letöltött** tételek lenyomata: ebből tudjuk, kell-e újraépíteni a
-  /// sorrendet. Enélkül minden fájlpásztázás átrendezné a kevert sorrendet.
+  /// A **letöltött** tételek lenyomata: ebből tudjuk, változott-e a készlet
+  /// (ilyenkor érdemes a mentett „folytatás" pontot is újra megnézni).
   String _downloadedSignature = '';
-
-  /// Ha a **sor** változott (új vásárlás, eltűnt kiadvány), a benne lévő
-  /// indexek elavulnak, ezért a sorrendet újra kell építeni. Ezt külön jelöljük,
-  /// mert a letöltött készlet lenyomata önmagában nem változik ilyenkor.
-  bool _orderDirty = true;
 
   /// A lejátszás kijelzése: a pozíció és a hossz. A `_position` **nem**
   /// `setState`-tel frissül (200 ms-onként újrarajzolná a listát), hanem a
@@ -108,16 +128,6 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
 
   /// A legutóbb **mentett** pozíció — 5 másodpercenként mentünk, nem 200 ms-onként.
   int _lastSavedMs = 0;
-
-  /// Épp indul-e egy lejátszás (kétszeres indítás elleni kapu).
-  bool _starting = false;
-
-  /// A kapu miatt **elhalasztott** kérés: a felhasználó koppintása nem vész el,
-  /// hanem a folyamatban lévő indítás **befejezése után** indul el.
-  int? _pendingIndex;
-
-  /// Futott-e már a „háttérben szóló zene" visszakapcsolása (egyszer kell).
-  bool _syncedFromBackground = false;
 
   /// A lejátszási pont emlékezete (fiókonként; vendégnél nem ír).
   final LabelPlaybackMemory _memory = LabelPlaybackMemory();
@@ -173,30 +183,22 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   @override
   void initState() {
     super.initState();
-    // A háttér-lejátszó (ha van): a **döntéseket** a képernyő adja neki
-    // visszahíváson keresztül (a zárképernyő gombjai ugyanazt csinálják, mint
-    // az app gombjai), a lejátszást viszont ő végzi — így szól háttérben is.
-    final handler = ref.read(musicAudioHandlerProvider);
-    if (handler != null) {
-      _handler = handler;
-      handler.onNext = _playNext;
-      handler.onPrevious = _playPrevious;
-      handler.onRepeatChanged = (mode) async {
-        if (mounted) setState(() => _repeat = mode);
-      };
-      handler.onShuffleChanged = (enabled) async {
-        if (!mounted) return;
-        setState(() {
-          _shuffle = enabled;
-          _rebuildOrder();
-        });
-      };
-    }
+    // A háttér-lejátszó **sora az övé** (ezért a zárképernyő gombja a képernyő
+    // elhagyása után is működik), a képernyő pedig csak az **alap-sorrendet**
+    // adja át, és kirajzolja az állapotot.
+    _handler = ref.read(musicAudioHandlerProvider);
+    final session = _session;
+    session.tracks.addListener(_onSessionTracks);
+    session.currentKey.addListener(_onSessionCurrent);
+    session.repeat.addListener(_onSessionModes);
+    session.shuffle.addListener(_onSessionModes);
+    session.errorMessage.addListener(_onSessionError);
+    _repeat = session.repeat.value;
+    _shuffle = session.shuffle.value;
     _stateSubscription = _player.playerStateStream.listen((state) {
-      if (state.processingState == ProcessingState.completed) {
-        unawaited(_advance());
-        return;
-      }
+      // ⚠️ A dal **végén** NEM itt lépünk tovább: azt a szolgáltatás végzi
+      // (`MusicQueuePlayer`). Ha itt is lenne egy léptető, két helyen lenne
+      // ugyanaz a döntés — és a képernyő elhagyása után nem is lenne, aki lépjen.
       // Szünet/újraindítás: a pozíciót ilyenkor érdemes elmenteni (a hirtelen
       // kilépésnél ez a pont marad meg).
       if (!state.playing) unawaited(_saveProgress(force: true));
@@ -215,22 +217,69 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     unawaited(_loadReleaseAvailability());
     unawaited(_loadPlaylistMembership());
     // Ha a zene a háttérben tovább szólt (a képernyőt elhagytuk), a visszatéréskor
-    // a **lejátszó a hiteles forrás**: ahhoz igazítjuk a kijelzést.
-    unawaited(_syncWithBackgroundPlayback());
+    // a **szolgáltatás sora a hiteles forrás**: ahhoz igazítjuk a kijelzést.
+    _syncWithBackgroundPlayback();
   }
 
-  /// A háttérben szóló zene visszakapcsolása a felületre (a képernyő újranyitásakor).
-  Future<void> _syncWithBackgroundPlayback() async {
-    final item = _handler?.currentItem;
-    if (item == null || _queue.isEmpty) return;
-    final index = _queue.indexWhere((entry) => entry.key == item.id);
-    if (index < 0 || !mounted) return;
+  /// A **sorrend** követése: a kirajzolt `_order` a szolgáltatás sorából épül.
+  void _onSessionTracks() {
+    final indexByKey = <String, int>{
+      for (var i = 0; i < _queue.length; i++) _queue[i].key: i,
+    };
+    final order = <int>[];
+    for (final track in _session.tracks.value) {
+      final index = indexByKey[track.key];
+      if (index != null) order.add(index);
+    }
+    _order = order;
+    if (mounted) setState(() {});
+  }
+
+  /// Az **aktuális tétel** követése: a szolgáltatás dönt, a felület csak mutatja.
+  void _onSessionCurrent() {
+    final key = _session.currentKey.value;
+    final index = key == null
+        ? -1
+        : _queue.indexWhere((entry) => entry.key == key);
+    _currentIndex = index;
+    if (index >= 0) _resumePoint = null;
+    if (!mounted) return;
     setState(() {
-      _currentIndex = index;
-      _resumePoint = null;
       _position = _player.position;
       _seekValue = _position.inMilliseconds.toDouble();
     });
+  }
+
+  /// Az **ismétlés/keverés** követése (a zárképernyőről is változhat).
+  void _onSessionModes() {
+    final session = _session;
+    _repeat = session.repeat.value;
+    _shuffle = session.shuffle.value;
+    if (mounted) setState(() {});
+  }
+
+  /// A lejátszó **magyar** hibaüzenetének kijelzése (egyszeri üzenet).
+  void _onSessionError() {
+    final session = _session;
+    final message = session.errorMessage.value;
+    if (message == null) return;
+    session.errorMessage.value = null;
+    if (!mounted) return;
+    setState(() => _message = message);
+  }
+
+  /// A háttérben szóló zene visszakapcsolása a felületre (a képernyő megnyitásakor).
+  ///
+  /// A **sor a szolgáltatásé**, ezért nincs mit „visszaadni": elég a mostani
+  /// állapotot átvenni (sorrend, kurzor, ismétlés, keverés) — így a kijelzés
+  /// akkor is helyes, ha közben a zárképernyőről léptettek.
+  void _syncWithBackgroundPlayback() {
+    _onSessionTracks();
+    _onSessionCurrent();
+    _onSessionModes();
+    _position = _player.position;
+    _seekValue = _position.inMilliseconds.toDouble();
+    if (mounted) setState(() {});
   }
 
   @override
@@ -239,26 +288,34 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     _stateSubscription?.cancel();
     _positionSubscription?.cancel();
     _durationSubscription?.cancel();
+    final session = _handler?.session ?? _ownSession;
+    session?.tracks.removeListener(_onSessionTracks);
+    session?.currentKey.removeListener(_onSessionCurrent);
+    session?.repeat.removeListener(_onSessionModes);
+    session?.shuffle.removeListener(_onSessionModes);
+    session?.errorMessage.removeListener(_onSessionError);
+    // ⚠️ A **sort nem bontjuk le**, és a zenét **nem állítjuk le**: pont ez a
+    // háttér-lejátszás lényege (a zárképernyő következő/előző gombja is ezért
+    // működik tovább). A hang visszaadását a rádiónak a szolgáltatás intézi,
+    // amikor a zárképernyőn/értesítésben megállítják (`resumeRadioWhenStopped`).
     final handler = _handler;
-    // A visszahívásokat leválasztjuk (a képernyő megszűnik), DE a zenét **nem
-    // állítjuk le**: pont ez a háttér-lejátszás lényege. A hang visszaadását a
-    // rádiónak a szolgáltatás intézi, amikor a zárképernyőn/értesítésben
-    // megállítják (`resumeRadioWhenStopped`).
     if (handler != null) {
-      handler.onNext = null;
-      handler.onPrevious = null;
-      handler.onRepeatChanged = null;
-      handler.onShuffleChanged = null;
       handler.resumeRadioWhenStopped = _resumeRadioAfterStop;
       if (!handler.player.playing) {
-        // Ha épp nem szól, nincs mit háttérben tartani: a szokásos lezárás.
+        // Ha épp nem szól, nincs mit háttérben tartani: a szokásos lejárás.
         unawaited(_releaseAudio());
       }
     } else {
       // ⚠️ A saját lejátszót csak a leállás **befejezése után** dobjuk el,
       // különben a `stop()`/rádió-visszaadás egy már lezárt lejátszón futna.
       final owned = _ownedPlayer;
-      unawaited(_releaseAudio().whenComplete(() => owned?.dispose()));
+      final ownSession = _ownSession;
+      unawaited(
+        _releaseAudio().whenComplete(() async {
+          await ownSession?.dispose();
+          await owned?.dispose();
+        }),
+      );
     }
     super.dispose();
   }
@@ -268,23 +325,31 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   /// A kurzor a **lejátszási sorrendben** (nem a nyers sorban).
   int get _cursor => _order.indexOf(_currentIndex);
 
-  /// A sorrend újraépítése a letöltött tételekből.
+  /// Az **alap-sorrend** átadása a szolgáltatásnak — ez az egyetlen bemenet.
   ///
-  /// Keverésnél az **aktuális tétel marad az első**, ezért a keverés
-  /// bekapcsolása nem szakítja meg azt, amit épp hallgatsz.
-  void _rebuildOrder({int? previousCurrent}) {
+  /// A sor a **lejátszható** tételek listája: letöltött, nincs kivéve, a kézi
+  /// sorrend szerint, **fájlútvonallal**. A keverést és a léptetést a szolgáltatás
+  /// végzi ([MusicQueuePlayer]), ezért a képernyő elhagyása után is működik a
+  /// zárképernyő gombja és a dal végi továbblépés.
+  ///
+  /// A most hallgatott tételt a szolgáltatás **kulcs alapján** keresi vissza, így
+  /// egy új pásztázás (új vásárlás, törölt fájl, átrendezés) nem szakítja meg azt,
+  /// ami épp szól.
+  void _pushBaseOrder(Map<String, String> paths) {
     final indices = orderedPlaylistIndices(
       keys: [for (final entry in _queue) entry.key],
-      downloaded: _downloaded,
+      downloaded: paths.keys.toSet(),
       excluded: _excludedFromPlaylist,
       customOrder: _playlistOrder,
     );
-    _order = playOrderFor(
-      indices: indices,
-      shuffle: _shuffle,
-      random: Random(),
-      currentIndex: previousCurrent ?? _currentIndex,
-    );
+    _session.setBaseOrder([
+      for (final index in indices)
+        MusicQueueTrack(
+          key: _queue[index].key,
+          filePath: paths[_queue[index].key]!,
+          item: _mediaItemFor(_queue[index]),
+        ),
+    ]);
   }
 
   /// A letöltött tételek lenyomata — a sorrend csak **változáskor** épül újra.
@@ -367,9 +432,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       setState(() {
         _excludedFromPlaylist = excluded;
         _playlistOrder = order;
-        _orderDirty = true;
       });
-      // A sorrendet a következő pásztázás építi újra (`_orderDirty` miatt).
+      // A sorrendet a következő pásztázás adja át a szolgáltatásnak.
       unawaited(_scanDownloads());
     } catch (_) {
       // A tároló hibája nem akadályozhatja a lejátszást: ilyenkor minden a
@@ -396,7 +460,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       _playlistOrder = next;
       _message = null;
     });
-    _rebuildOrder();
+    // A kézi sorrend a szolgáltatás **alap-sorrendje**, ezért újra átadjuk neki.
+    unawaited(_scanDownloads());
     try {
       await _playlist.saveOrder(uid, next);
     } catch (_) {
@@ -432,7 +497,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
           ? 'Visszatéve a lejátszási listára.'
           : 'Kivéve a lejátszási listából — a fájl a készüléken marad.';
     });
-    _rebuildOrder();
+    // A kivétel/betevés az alap-sorrendet változtatja: a szolgáltatás kapja meg.
+    unawaited(_scanDownloads());
     if (stopCurrent) await _releaseAudio();
     try {
       await _playlist.save(uid, next);
@@ -491,14 +557,24 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     // a sorrend egy szűk, régi pillanatképből maradt meg).
     final queue = _queue;
     final queueSignature = _queueSignature;
-    Set<String> downloaded;
+    final downloaded = <String>{};
+    // A **fájlútvonalakat is** begyűjtjük: a szolgáltatás ezekből játszik, ezért
+    // egy menetben derül ki, hogy mi van meg, és az is, hogy honnan szól.
+    final paths = <String, String>{};
     var storage = 0;
     try {
-      downloaded = await _downloads.downloadedKeys(queue);
+      for (final entry in queue) {
+        final file = await _downloads.fileFor(entry);
+        if (await file.exists()) {
+          downloaded.add(entry.key);
+          paths[entry.key] = file.path;
+        }
+      }
       storage = await _downloads.totalBytes();
     } catch (_) {
       // Vendég fióknál (nincs mappa) nincs mit pásztázni — nem hiba.
-      downloaded = <String>{};
+      downloaded.clear();
+      paths.clear();
       storage = 0;
     }
     if (!mounted) return;
@@ -507,35 +583,24 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       return;
     }
     final signature = _signatureOf(downloaded);
-    final changed = signature != _downloadedSignature || _orderDirty;
+    final changed = signature != _downloadedSignature;
+    // ⚠️ A sorrendet **mindig** a szolgáltatásnak adjuk át, és nem tartunk róla
+    // párhuzamos másolatot: két lista ugyanarra a kérdésre garantáltan széthúzna
+    // (a 342-es hiba pontosan ez volt). A kevert sorrend így is megmarad — a
+    // szolgáltatás a most hallgatott tételt kulcs alapján visszakeresi, és
+    // változatlan alapnál nem kever újra.
+    _pushBaseOrder(paths);
+    _downloadedSignature = signature;
     setState(() {
       _downloaded
         ..clear()
         ..addAll(downloaded);
       _storageBytes = storage;
       if (_currentIndex >= queue.length) _currentIndex = -1;
-      // ⚠️ A sorrend KÉT esetben épül újra:
-      //  * ha a letöltött készlet (vagy a sor) változott, VAGY
-      //  * ha épp nincs keverés — ilyenkor a sorrend **számított** érték, és
-      //    mindig a valóságnak kell megfelelnie.
-      // Keverésnél csak változáskor épül újra, különben minden pásztázás újra
-      // keverne, és a „következő" gomb ugrálna.
-      if (changed || !_shuffle) {
-        _downloadedSignature = signature;
-        _orderDirty = false;
-        _rebuildOrder();
-      }
     });
     // A „folytatás" felajánlása csak akkor érdekes, ha a letöltött készlet
     // változott (ekkor derülhet ki, hogy a mentett tétel fájlja megvan-e).
     if (changed) unawaited(_loadResumePoint());
-    // ⚠️ A háttérben szóló zene visszakapcsolása **itt** is kell (nem csak az
-    // `initState`-ben): a sor ugyanis az első `build`-ben épül fel, az
-    // `initState`-beli hívás ilyenkor még üres sorral térne vissza.
-    if (!_syncedFromBackground && _queue.isNotEmpty) {
-      _syncedFromBackground = true;
-      unawaited(_syncWithBackgroundPlayback());
-    }
   }
 
   Future<bool> _ensureDownloaded(LabelQueueEntry entry) async {
@@ -559,18 +624,16 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     }
   }
 
+  /// Egy tétel indítása a **sorban** (a képernyő indexei szerint).
+  ///
+  /// A döntés (mi következik, mi az aktuális tétel) a **szolgáltatásé**: itt csak
+  /// a **bemeneti kapuk** vannak (csak letöltött zene játszható, a rádió átadja a
+  /// hangot), a többi a [MusicQueuePlayer]-ben történik — ezért a zárképernyőről
+  /// indított léptetés és a dal végi továbblépés ugyanígy működik, akkor is, ha a
+  /// képernyő már nincs nyitva.
   Future<void> _playIndex(int index, {int? startAtMs}) async {
     if (!mounted) return;
     if (index < 0 || index >= _queue.length) return;
-    // ⚠️ Kétszeres indítás elleni kapu: a szám végi automatikus továbblépés és a
-    // zárképernyő „következő" gombja egyszerre is jöhet — két párhuzamos
-    // `setAudioSource` összekeverné a lejátszást. A koppintás viszont **nem
-    // vész el**: a legfrissebb kérést eltesszük, és a mostani indítás végén
-    // elindítjuk (különben a felhasználó „nem reagál"-ként élné meg).
-    if (_starting) {
-      _pendingIndex = index;
-      return;
-    }
     final entry = _queue[index];
     // ⚠️ CSAK LETÖLTÖTT zene játszható: a lapozás és az automatikus továbblépés
     // nem indít letöltést (a tulajdonos jelzése: „le akarja tölteni ami nincs
@@ -585,103 +648,47 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       }
       return;
     }
-    // ⚠️ A kiválasztást **visszaállítjuk**, ha a lejátszás nem indul el: a sor
-    // ne maradjon „ez szól" állapotban, miközben semmi nem szól (élesben pont
-    // ez látszott: piros sor, 0:00 / 0:00, néma lejátszó).
-    final previousIndex = _currentIndex;
-    _starting = true;
-    setState(() {
-      _currentIndex = index;
-      _resumePoint = null;
-    });
-    try {
-      // A rádió és a lejátszó ne szóljon egyszerre — ugyanaz a minta, mint a
-      // kiadvány-előhallgatónál.
-      if (!releasePreviewPlayingState.value) {
-        _resumeRadioAfterStop = await isRadioPlaybackActive();
-        if (_resumeRadioAfterStop) await stopRadioPlayback();
-        if (mounted) releasePreviewPlayingState.value = true;
-      }
-      final file = await _downloads.fileFor(entry);
-      // A **háttér-lejátszáshoz** a médiamunkamenetnek tudnia kell, mi szól:
-      // ebből lesz az értesítés és a zárképernyő címe, előadója, borítója.
-      final item = _mediaItemFor(entry);
-      // ⚠️ SORREND: előbb a hangforrás és a lejátszás, **csak azután** a
-      // metaadatok. A metaadat közzététele korábban egy motor-hibától dobott,
-      // és emiatt a zene **el sem indult** (lásd `_publishMetadata`).
-      await _player.setAudioSource(AudioSource.file(file.path, tag: item));
-      _loadedSourceKey = entry.key;
-      // A „folytatás" pontját a betöltés **után** keressük meg (addig nincs
-      // hossz, és a seek nem is értelmezhető).
-      if (startAtMs != null && startAtMs > 0) {
-        await _player.seek(Duration(milliseconds: startAtMs));
-      }
-      _lastSavedMs = startAtMs ?? 0;
-      unawaited(_player.play());
-      _publishMetadata(index, duration: _player.duration);
-      if (mounted) setState(() => _message = null);
-    } catch (error) {
-      // A technikai okot a naplóba írjuk, a felületre magyar mondat megy.
-      debugPrint('Lejátszás-indítási hiba: $error');
-      // ⚠️ KRITIKUS: ha a rádiót már leállítottuk, a hangot vissza **kell**
-      // adni. Enélkül a `releasePreviewPlayingState` igaz marad, a rádió gombja
-      // pedig emiatt „nem csinál semmit" (a sáv `if (releasePreviewPlayingState
-      // .value) return;`-nel tér vissza) — az app némán marad.
-      await _releaseAudio();
-      if (mounted) {
-        setState(() {
-          _currentIndex = previousIndex;
-          _message = playbackErrorMessage(error);
-        });
-      }
-    } finally {
-      _starting = false;
-      final pending = _pendingIndex;
-      _pendingIndex = null;
-      if (pending != null && mounted) {
-        // A közben érkezett koppintás/következő gomb most indul el.
-        unawaited(_playIndex(pending));
-      }
+    // A rádió és a lejátszó ne szóljon egyszerre — ugyanaz a minta, mint a
+    // kiadvány-előhallgatónál.
+    if (!releasePreviewPlayingState.value) {
+      _resumeRadioAfterStop = await isRadioPlaybackActive();
+      if (_resumeRadioAfterStop) await stopRadioPlayback();
+      if (mounted) releasePreviewPlayingState.value = true;
     }
-  }
-
-  /// A lejátszási sor és az aktuális tétel közzététele a médiamunkamenetnek.
-  ///
-  /// **Szándékosan külön, és hibát nyelve:** ez csak *megjelenítés* (értesítés,
-  /// zárképernyő). Ha ez elhasal, a zenének akkor is szólnia kell — élesben pont
-  /// az ellenkezője történt, és a lejátszó néma maradt.
-  ///
-  /// A [duration] azért kell, mert az értesítés/zárképernyő **tekerősávja** a
-  /// `MediaItem` hosszából dolgozik: enélkül nulla hosszúságú lenne.
-  void _publishMetadata(int index, {Duration? duration}) {
-    final handler = _handler;
-    if (handler == null) return;
-    try {
-      handler.resumeRadioWhenStopped = _resumeRadioAfterStop;
-      final items = <MediaItem>[
-        for (final orderIndex in _order)
-          if (orderIndex >= 0 && orderIndex < _queue.length)
-            _mediaItemFor(_queue[orderIndex]),
-      ];
-      // A sor-indexet **0-ra szorítjuk**: a kivett tétel `-1`-et adna, amiből
-      // a médiamunkamenet elavult (üres) tételt kapna.
-      final position = _order.indexOf(index);
-      final safePosition = position < 0 ? 0 : position;
-      final currentDuration = duration ?? _player.duration;
-      if (currentDuration != null &&
-          safePosition < items.length &&
-          items[safePosition].duration == null) {
-        items[safePosition] = items[safePosition].copyWith(
-          duration: currentDuration,
+    _handler?.resumeRadioWhenStopped = _resumeRadioAfterStop;
+    _resumePoint = null;
+    _lastSavedMs = startAtMs ?? 0;
+    final session = _session;
+    // A tételt a **szolgáltatás sorában** keressük meg a kulcsa alapján: így a
+    // koppintás akkor is a jó zenét indítja, ha a lista közben elmozdult.
+    var position = session.tracks.value.indexWhere(
+      (track) => track.key == entry.key,
+    );
+    if (position < 0) {
+      // A sor még nem ismeri (frissen megnyitott képernyő, friss letöltés):
+      // egyszer átadjuk neki a fájlútvonalakkal együtt, és újra keressük.
+      await _scanDownloads();
+      position = session.tracks.value.indexWhere(
+        (track) => track.key == entry.key,
+      );
+    }
+    if (position < 0) {
+      if (mounted) {
+        setState(
+          () => _message = 'Ez a tétel most nincs a lejátszási listán.',
         );
       }
-      handler.publishQueue(items, index: safePosition);
-    } catch (error) {
-      debugPrint('Lejátszó-metaadat hiba: $error');
+      return;
     }
+    await session.playAt(position, startAtMs: startAtMs);
+    if (mounted) setState(() => _message = null);
   }
 
   /// A tételhez tartozó médiamunkamenet-adat (cím, előadó, borító).
+  ///
+  /// A **sor közzététele** (értesítés, zárképernyő) már nem itt történik: azt a
+  /// szolgáltatás végzi a saját sorából (`MusicAudioHandler._publishSession`),
+  /// ezért a képernyő elhagyása után is helyes marad a cím és a hossz.
   MediaItem _mediaItemFor(LabelQueueEntry entry) => MediaItem(
     id: entry.key,
     title: entry.title.isEmpty ? entry.nowPlayingLabel : entry.title,
@@ -690,55 +697,19 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     artUri: entry.coverUrl.isEmpty ? null : Uri.tryParse(entry.coverUrl),
   );
 
-  /// A szám végén a **sorrend** szerinti következő tételre lép.
-  ///
-  /// Az ismétlés (egy / mind) itt dönt: a [PlaybackRepeat.one] ugyanezt a tételt
-  /// indítja újra, a [PlaybackRepeat.all] körbefordul, egyébként megáll — és
-  /// ilyenkor a rádió visszakapja a hangot.
-  Future<void> _advance() async {
-    // ⚠️ Lokális másolat: a `stepPlayback` és a `_playIndex` között a sorrend
-    // újraépülhet (pásztázás/setState), és a `_order[next]` ilyenkor **kivételt
-    // dobna** (tartományon kívül).
-    final order = _order;
-    final next = stepPlayback(
-      cursor: order.indexOf(_currentIndex),
-      length: order.length,
-      repeat: _repeat,
-      isAutoAdvance: true,
-    );
-    if (next < 0) {
-      await _releaseAudio();
-      if (mounted) setState(() => _currentIndex = -1);
-      return;
-    }
-    await _playIndex(order[next]);
-  }
-
   /// A „következő" gomb: a sorrendben lép (ismétlés-egy mellett is tovább).
+  ///
+  /// ⚠️ A döntés a **szolgáltatásé** ([MusicQueuePlayer]), ezért a zárképernyő
+  /// gombja pontosan ezt teszi — és akkor is működik, ha a képernyő nincs nyitva.
+  /// A **dal végi** automatikus továbblépés szintén ott van, nem itt: ha itt is
+  /// lenne léptető, két helyen lenne ugyanaz a döntés.
   Future<void> _playNext() async {
-    if (!mounted) return;
-    final order = _order;
-    final next = stepPlayback(
-      cursor: order.indexOf(_currentIndex),
-      length: order.length,
-      repeat: _repeat,
-      isAutoAdvance: false,
-    );
-    if (next < 0) return;
-    await _playIndex(order[next]);
+    await _session.next();
   }
 
-  /// Az „előző" gomb: a sorrendben lép vissza.
+  /// Az „előző" gomb: a sorrendben lép vissza (a sor elején az ismétlés dönt).
   Future<void> _playPrevious() async {
-    if (!mounted) return;
-    final order = _order;
-    final previous = previousPlaybackStep(
-      cursor: order.indexOf(_currentIndex),
-      length: order.length,
-      repeat: _repeat,
-    );
-    if (previous < 0) return;
-    await _playIndex(order[previous]);
+    await _session.previous();
   }
 
   /// **Stop**: megáll, a szám elejére áll, és a rádió visszakapja a hangot.
@@ -761,13 +732,6 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     });
   }
 
-  /// A **betöltött** hangforrás azonosítója, vagy `null`, ha nincs betöltve.
-  ///
-  /// ⚠️ Saját nyilvántartás: a `just_audio` `AudioSource` **alaposztályán** nincs
-  /// `tag` getter (csak a leszármazottakon), ezért a `MediaItem`-et nem tudjuk
-  /// visszaolvasni a lejátszóból — a betöltés pillanatában jegyezzük meg.
-  String? _loadedSourceKey;
-
   /// Leállás: a rádió visszakapja a hangot, ha előtte az szólt.
   ///
   /// **Háttér-szolgáltatás esetén** a leállítást a szolgáltatás végzi
@@ -787,8 +751,10 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       releasePreviewPlayingState.value = false;
       return;
     }
-    await _player.stop();
-    _loadedSourceKey = null;
+    // ⚠️ Csak akkor van mit leállítani, ha ebben a képernyőben már indult zene:
+    // a `_session` getter **létrehozná** a lejátszót, ha még nem létezik (az
+    // fölösleges erőforrás lenne egy üres képernyőn).
+    await _ownSession?.stop();
     releasePreviewPlayingState.value = false;
     if (_resumeRadioAfterStop) {
       _resumeRadioAfterStop = false;
@@ -796,47 +762,41 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     }
   }
 
+  /// A „lejátszás/szünet" gomb: a döntés a szolgáltatásé (`MusicQueuePlayer`).
+  ///
+  /// Így ugyanezt teszi a zárképernyő play gombja is — és akkor is működik, ha a
+  /// képernyő nincs nyitva.
   Future<void> _togglePlay() async {
     if (!mounted) return;
-    final wanted = _currentIndex >= 0 && _currentIndex < _queue.length
-        ? _queue[_currentIndex].key
-        : null;
-    if (wanted != null && _player.playing) {
-      await _player.pause();
-    } else if (wanted != null &&
-        !needsSourceReload(loadedKey: _loadedSourceKey, wantedKey: wanted) &&
-        _player.processingState != ProcessingState.idle) {
-      // ⚠️ `idle` = stop utáni állapot (a dekóderek el vannak engedve), illetve
-      // ha **más** tétel van betöltve, akkor is újra kell tölteni — különben a
-      // gomb rossz zenét indítana.
-      unawaited(_player.play());
-    } else if (wanted != null) {
-      await _playIndex(_currentIndex, startAtMs: _position.inMilliseconds);
-    } else {
-      final start = firstDownloadedIndex(_queue, _downloaded);
-      if (start < 0) {
-        setState(
-          () => _message =
-              'Még nincs letöltött zenéd — tölts le egyet a Letöltés gombbal.',
-        );
-      } else {
-        await _playIndex(start);
-      }
+    final session = _session;
+    // A rádió és a lejátszó ne szóljon egyszerre (ugyanaz a minta, mint a
+    // kiadvány-előhallgatónál): a sor első tételének indítása előtt átvesszük a
+    // hangot.
+    if (!releasePreviewPlayingState.value && !session.isPlaying) {
+      _resumeRadioAfterStop = await isRadioPlaybackActive();
+      if (_resumeRadioAfterStop) await stopRadioPlayback();
+      if (mounted) releasePreviewPlayingState.value = true;
+      _handler?.resumeRadioWhenStopped = _resumeRadioAfterStop;
     }
+    await session.toggle(startAtMs: _position.inMilliseconds);
     if (mounted) setState(() {});
   }
 
   /// Az ismétlés mód léptetése (nincs → mind → egy → nincs).
+  ///
+  /// A döntés a szolgáltatásé: ugyanezt teszi a zárképernyő is, és az állapot
+  /// onnan is visszajön (`_onSessionModes`).
   void _cycleRepeat() {
-    setState(() => _repeat = nextPlaybackRepeat(_repeat));
+    _session.setRepeat(nextPlaybackRepeat(_session.repeat.value));
   }
 
   /// A keverés be/ki. Bekapcsoláskor az aktuális tétel az első helyre kerül.
+  ///
+  /// A kevert sorrendet a szolgáltatás állítja elő (`MusicQueuePlan`), és változatlan
+  /// alap-sorrendnél **nem kever újra** — így a fájlpásztázás nem ugráltatja a
+  /// „következő" tételt.
   void _toggleShuffle() {
-    setState(() {
-      _shuffle = !_shuffle;
-      _rebuildOrder();
-    });
+    _session.setShuffle(!_session.shuffle.value);
   }
 
   Future<void> _downloadOnly(LabelQueueEntry entry) async {
@@ -987,7 +947,9 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
             if (signature != _queueSignature) {
               // A sor **indexei** változtak, ezért a most hallgatott tételt a
               // kulcsa alapján keressük vissza (különben a „következő" gomb egy
-              // másik zenére lépne), a sorrendet pedig újra kell építeni.
+              // másik zenére lépne). A sorrendet nem itt építjük: azt a pásztázás
+              // adja át a szolgáltatásnak (`_pushBaseOrder`), amely a most szóló
+              // tételt szintén kulcs alapján tartja meg.
               final playingKey =
                   _currentIndex >= 0 && _currentIndex < _queue.length
                   ? _queue[_currentIndex].key
@@ -997,7 +959,6 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
               _currentIndex = playingKey == null
                   ? -1
                   : queue.indexWhere((entry) => entry.key == playingKey);
-              _orderDirty = true;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 unawaited(_scanDownloads());
               });

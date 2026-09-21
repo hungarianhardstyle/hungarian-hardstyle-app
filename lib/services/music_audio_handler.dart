@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import 'label_playback_plan.dart';
+import 'music_queue_player.dart';
 
 /// Az app **egyetlen** háttér-lejátszója (a `main`-ben jön létre).
 ///
@@ -34,20 +36,21 @@ final musicAudioHandlerProvider = Provider<MusicAudioHandler?>(
 /// érintetlen marad: azt ne is bántsuk, mert nehezen működik jól).
 ///
 /// NÉGY SZÁNDÉKOS SZABÁLY:
-///  1. **A döntés a képernyőé marad.** Ez a szolgáltatás **nem** tudja, mi a
-///     letöltött tétel, mi a kevert sorrend, és hol van a sor vége — ezért a
-///     „következő" / „előző" / ismétlés / keverés **visszahívásokon** keresztül
-///     kérdez vissza a képernyőtől (`onNext`, `onPrevious`, `onRepeatChanged`,
-///     `onShuffleChanged`). Egy szabály egy helyen: nem lehet, hogy a
-///     zárképernyő mást csinál, mint az appban a gomb.
+///  1. **A sor a szolgáltatásé** ([MusicQueuePlayer]): a „következő" / „előző" /
+///     ismétlés / keverés és a **dal végi** továbblépés itt dől el. Ez azért
+///     fontos, mert korábban ezek a **képernyő visszahívásai** voltak: a képernyő
+///     elhagyása után a zárképernyő gombja **néma** maradt, a dal végén pedig
+///     **megállt a zene**. A döntés továbbra is egy helyen van, a tiszta
+///     `label_playback_plan.dart`-ban — csak már nem függ a felülettől.
 ///  2. **Amit a szolgáltatás maga intéz:** lejátszás, szünet, stop, tekerés — ezek
-///     a lejátszón műveletek, nem döntések.
+///     a lejátszón műveletek, nem döntések. A sorrendet a képernyő adja át
+///     (`session.setBaseOrder`), mert csak ő tudja, mi van **letöltve**.
 ///  3. **Az értesítés csak akkor marad**, ha szól valami: `androidStopForegroundOnPause`
 ///     (szünetnél elengedi az előtér-státuszt), és a stop **leveszi** az
 ///     értesítést (`super.stop()`), hogy ne maradjon ott egy halott lejátszó.
-///  4. **A rádió hangja nem vész el:** a stop/lezárás visszahíváson keresztül
-///     szól a képernyőnek (`onStopped`), amely visszaadja a hangot a rádiónak —
-///     ugyanaz a viselkedés, mint eddig.
+///  4. **A rádió hangja nem vész el:** a stop — akár a zárképernyőről jött —
+///     visszaadja a hangot a rádiónak (`resumeRadioWhenStopped` + `onResumeRadio`),
+///     és ugyanez történik a sor természetes végén meg egy indítási hibánál is.
 class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
   MusicAudioHandler() {
     // ⚠️ NEM `.pipe(playbackState)`!
@@ -63,14 +66,31 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
     // Élesben pontosan ez volt a hiba a „Megvásárolt zenéim" képernyőn: a
     // metaadatok közzététele dobott, így a zene **el sem indult**. A javítás a
     // kézi `listen` + `add` (lásd `test/services/music_audio_handler_pipe_test.dart`).
+    // ⚠️ A **sor előbb** jön létre, mint a lejátszó-eseményekre való feliratkozás:
+    // a `_toPlaybackState` ugyanis a sor állapotát (ismétlés, keverés) is
+    // közzéteszi, és egy `late final` mezőhöz idő előtt hozzányúlni
+    // `LateInitializationError`-t dobna.
+    session = MusicQueuePlayer(
+      player: _player,
+      onStopRequested: _onQueueStopRequested,
+    );
     _stateSubscription = _player.playbackEventStream
         .map(_toPlaybackState)
         .listen(playbackState.add, onError: playbackState.addError);
+    // A sor és az aktuális tétel közzététele a rendszer felé (ebből lesz az
+    // értesítés és a zárképernyő).
+    session.tracks.addListener(_publishSession);
+    session.currentKey.addListener(_publishSession);
+    session.repeat.addListener(_publishModes);
+    session.shuffle.addListener(_publishModes);
   }
 
   StreamSubscription<PlaybackState>? _stateSubscription;
 
   final AudioPlayer _player = AudioPlayer();
+
+  /// A **lejátszási sor** — a szolgáltatásé, nem a képernyőé (lásd az 1. szabályt).
+  late final MusicQueuePlayer session;
 
   /// A lejátszó a felületnek (a folyamatjelző és a hossz ugyanaz a stream).
   AudioPlayer get player => _player;
@@ -78,14 +98,8 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
   /// A látható tétel (az értesítés címe, előadója, borítója).
   MediaItem? get currentItem => mediaItem.value;
 
-  /// A képernyő visszahívásai (a szolgáltatás sosem dönt helyettük).
-  Future<void> Function()? onNext;
-  Future<void> Function()? onPrevious;
-  Future<void> Function(PlaybackRepeat mode)? onRepeatChanged;
-  Future<void> Function(bool shuffle)? onShuffleChanged;
-
-  /// A **rádió** visszakapja a hangot, ha előtte az szólt (a `main`-ben kötjük be,
-  /// hogy a szolgáltatás ne függjön a felület fájljaitól).
+  /// A **rádió** visszakapja a hangot, ha előtte az szólt (a `main`-ben kötjük
+  /// be, hogy a szolgáltatás ne függjön a felület fájljaitól).
   Future<void> Function()? onResumeRadio;
 
   /// Jelezte-e a képernyő, hogy a zene átvette a hangot a rádiótól.
@@ -96,11 +110,17 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> play() async {
+    // Ha még **semmi** nincs betöltve (pl. a zárképernyőről indítanak), akkor a
+    // sor első tételét indítjuk: a szolgáltatás ismeri a sort, nem kell hozzá a
+    // képernyő.
+    if (_player.audioSource == null) {
+      await session.toggle();
+      return;
+    }
     // ⚠️ Stop után a dekóderek el vannak engedve (`processingState == idle`):
     // ilyenkor előbb **újra be kell tölteni** a forrást, különben a `play()`
     // némán nem csinál semmit (a zárképernyő play gombja így nem működne).
-    if (_player.processingState == ProcessingState.idle &&
-        _player.audioSource != null) {
+    if (_player.processingState == ProcessingState.idle) {
       await _player.load();
     }
     await _player.play();
@@ -116,7 +136,7 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
   /// visszaadja a hangot a rádiónak, ha a zene vette át tőle.
   @override
   Future<void> stop() async {
-    await _player.stop();
+    await session.stop();
     await super.stop();
     if (resumeRadioWhenStopped) {
       resumeRadioWhenStopped = false;
@@ -125,39 +145,39 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
     }
   }
 
+  /// A sor **vége vagy egy hiba**: leállítunk, és a hang visszamegy a rádiónak.
+  Future<void> _onQueueStopRequested(MusicQueueStopReason reason) => stop();
+
   @override
   Future<void> skipToNext() async {
-    final callback = onNext;
-    if (callback != null) await callback();
+    // ⚠️ NEM visszahívás a képernyőre: a sor a szolgáltatásé, ezért a zárképernyő
+    // gombja a képernyő elhagyása után is ugyanazt teszi, mint az appban.
+    await session.next();
   }
 
   @override
   Future<void> skipToPrevious() async {
-    final callback = onPrevious;
-    if (callback != null) await callback();
+    await session.previous();
   }
 
   @override
   Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
     // A lejátszó saját ismétlés-mezőjét nem használjuk (a sor végén a MI
-    // szabályunk dönt), ezért csak továbbadjuk a képernyőnek.
-    final mode = switch (repeatMode) {
+    // szabályunk dönt), ezért csak a sor kapja meg.
+    session.setRepeat(switch (repeatMode) {
       AudioServiceRepeatMode.one => PlaybackRepeat.one,
       AudioServiceRepeatMode.all ||
       AudioServiceRepeatMode.group => PlaybackRepeat.all,
       AudioServiceRepeatMode.none => PlaybackRepeat.none,
-    };
+    });
     playbackState.add(playbackState.value.copyWith(repeatMode: repeatMode));
-    final callback = onRepeatChanged;
-    if (callback != null) await callback(mode);
   }
 
   @override
   Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) async {
     final enabled = shuffleMode != AudioServiceShuffleMode.none;
+    session.setShuffle(enabled);
     playbackState.add(playbackState.value.copyWith(shuffleMode: shuffleMode));
-    final callback = onShuffleChanged;
-    if (callback != null) await callback(enabled);
   }
 
   /// A sor közzététele a rendszer felé (az értesítés „sor" nézete és a
@@ -177,11 +197,57 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
 
   /// Az aktuális tétel beállítása (a sáv és az értesítés címe).
   void publishCurrent(MediaItem? item, {int? index}) {
+    if (item == null) return;
     mediaItem.add(item);
     if (index != null) {
       playbackState.add(
         playbackState.value.copyWith(queueIndex: index < 0 ? null : index),
       );
+    }
+  }
+
+  /// A **sor** közzététele a szolgáltatás állapotából (a képernyő nélkül is).
+  ///
+  /// ⚠️ Saját hibakezelés: a közzététel csak *megjelenítés* (értesítés,
+  /// zárképernyő) — ha ez elhasal, a zenének akkor is szólnia kell.
+  void _publishSession() {
+    try {
+      final items = [for (final track in session.tracks.value) track.item];
+      if (items.isEmpty) return;
+      final index = session.index;
+      publishQueue(
+        items,
+        index: index < 0 || index >= items.length ? 0 : index,
+      );
+    } catch (error) {
+      debugPrint('Lejátszó-metaadat hiba: $error');
+    }
+  }
+
+  /// Az ismétlés/keverés állapotának közzététele (a zárképernyő is mutatja).
+  void _publishModes() {
+    try {
+      playbackState.add(
+        playbackState.value.copyWith(
+          repeatMode: _audioServiceRepeat(session.repeat.value),
+          shuffleMode: session.shuffle.value
+              ? AudioServiceShuffleMode.all
+              : AudioServiceShuffleMode.none,
+        ),
+      );
+    } catch (error) {
+      debugPrint('Lejátszó-metaadat hiba: $error');
+    }
+  }
+
+  AudioServiceRepeatMode _audioServiceRepeat(PlaybackRepeat repeat) {
+    switch (repeat) {
+      case PlaybackRepeat.one:
+        return AudioServiceRepeatMode.one;
+      case PlaybackRepeat.all:
+        return AudioServiceRepeatMode.all;
+      case PlaybackRepeat.none:
+        return AudioServiceRepeatMode.none;
     }
   }
 
@@ -207,6 +273,12 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
       updatePosition: _player.position,
       bufferedPosition: _player.bufferedPosition,
       speed: _player.speed,
+      // Az ismétlés/keverés a **soré** (nem a just_audio-é): enélkül minden
+      // esemény visszaállítaná a zárképernyőn a „nincs ismétlés" jelzést.
+      repeatMode: _audioServiceRepeat(session.repeat.value),
+      shuffleMode: session.shuffle.value
+          ? AudioServiceShuffleMode.all
+          : AudioServiceShuffleMode.none,
       // ⚠️ `queueIndex`-et SZÁNDÉKOSAN nem tesszük be: mi egyetlen
       // `AudioSource.file`-t játszunk, ezért a just_audio `event.currentIndex`-e
       // mindig `0` (vagy null) — az pedig **felülírná** a saját sor-indexünket,
@@ -215,8 +287,9 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
-  /// A lejátszó erőforrásainak elengedése (a képernyő lezárásakor).
+  /// A lejátszó erőforrásainak elengedése (a szolgáltatás lezárásakor).
   Future<void> disposePlayer() async {
+    await session.dispose();
     await _stateSubscription?.cancel();
     return _player.dispose();
   }

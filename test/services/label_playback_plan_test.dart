@@ -478,30 +478,58 @@ void main() {
   // --- FORRÁS-LINT: a lejátszó állapotgépe (a 345 utáni hibák) --------------
   group('forrás-lint: a lejátszó állapotgépe', () {
     late String source;
+    late String player;
 
     setUpAll(() {
       // ⚠️ A **kommenteket kivesszük**: a javítások indoklása szándékosan
       // tartalmazza a régi (hibás) mintát, és a nyers szövegkeresés ettől
       // hamisan piros lenne.
-      source = File('lib/screens/more/my_music_screen.dart')
+      String stripComments(String path) => File(path)
           .readAsStringSync()
           .split('\n')
           .where((line) => !line.trimLeft().startsWith('//'))
           .join('\n');
+      source = stripComments('lib/screens/more/my_music_screen.dart');
+      // A **döntés és a végrehajtás** a szolgáltatásban van (a képernyő elhagyása
+      // után is működnie kell), ezért azt a fájlt is mérjük.
+      player = stripComments('lib/services/music_queue_player.dart');
     });
 
     test('sikertelen indításnál a hang visszakerül a rádióhoz', () {
       // ⚠️ ÉLES HIBA: ha a rádiót már leállítottuk, és a lejátszás elhalt, a
       // `releasePreviewPlayingState` igaz maradt → a rádió gombja némán
       // működésképtelen lett, az app „nem szólt".
-      final catchBody = _functionBody(source, '_playIndex');
+      // A hibaág azóta a **soré** (a szolgáltatásban), mert a képernyő elhagyása
+      // után is le kell állnia a lejátszásnak és vissza kell adni a hangot.
+      final catchBody = _functionBody(player, 'playAt');
       expect(
         catchBody,
-        contains('await _releaseAudio()'),
-        reason: 'a hibás indítás után a hangot vissza kell adni',
+        contains('onStopRequested'),
+        reason: 'a sor jelzi a házigazdának, hogy álljon le',
+      );
+      expect(catchBody, contains('MusicQueueStopReason.failed'));
+      expect(
+        catchBody,
+        contains('playbackErrorMessage('),
+        reason: 'a felületre magyar mondat megy, a technikai ok a naplóba',
+      );
+      expect(
+        catchBody,
+        contains('_plan.moveToKey(previousKey)'),
+        reason: 'a kijelölés nem marad „ez szól" állapotban',
       );
       final release = _functionBody(source, '_releaseAudio');
       expect(release, contains('releasePreviewPlayingState.value = false'));
+      final handler = File(
+        'lib/services/music_audio_handler.dart',
+      ).readAsStringSync();
+      // ⚠️ A `_onQueueStopRequested` **`=>` alakú**, ezért a teljes sorra
+      // illesztünk (a törzs-kivágó a következő metódus `{`-jét találná meg).
+      expect(
+        handler,
+        contains('_onQueueStopRequested(MusicQueueStopReason reason) => stop();'),
+        reason: 'a szolgáltatás a stopnál visszaadja a hangot a rádiónak',
+      );
     });
 
     test('a pásztázás nem használ elavult pillanatképet', () {
@@ -518,42 +546,71 @@ void main() {
       );
     });
 
-    test('a háttérben szóló zene visszakapcsolása a sorépítés UTÁN is fut', () {
+    test('a kijelzés a szolgáltatás sorát követi (nincs külön szinkron)', () {
+      // A sor a szolgáltatásé: a pásztázás **átadja** neki az alap-sorrendet, a
+      // kirajzolt `_order` pedig az ő sorából épül — így nincs két igazság,
+      // amiért „vissza kellene kapcsolni" a kijelzést.
       final body = _functionBody(source, '_scanDownloads');
-      expect(body, contains('_syncWithBackgroundPlayback()'));
-      expect(body, contains('_syncedFromBackground'));
+      expect(
+        body,
+        contains('_pushBaseOrder('),
+        reason: 'a pásztázás adja át a szolgáltatásnak az alap-sorrendet',
+      );
+      final tracks = _functionBody(source, '_onSessionTracks');
+      expect(tracks, contains('_session.tracks.value'));
+      expect(
+        tracks,
+        contains('_order = order;'),
+        reason: 'a kirajzolt sorrend a szolgáltatás sorából épül',
+      );
+      final current = _functionBody(source, '_onSessionCurrent');
+      expect(
+        current,
+        contains('_session.currentKey.value'),
+        reason: 'az aktuális tétel is onnan jön (a zárképernyőn is léptethető)',
+      );
     });
 
-    test('a lapozás lokális sorrend-másolatból indexel', () {
-      for (final name in ['_advance', '_playNext', '_playPrevious']) {
-        final body = _functionBody(source, name);
-        expect(
-          body,
-          contains('final order = _order;'),
-          reason: '$name: a két olvasás között a sorrend újraépülhet',
-        );
-        expect(body, isNot(contains('_order[next]')));
-        expect(body, isNot(contains('_order[previous]')));
-      }
+    test('a léptetés a szolgáltatásban van (a képernyő csak továbbadja)', () {
+      expect(_functionBody(player, 'next'), contains('stepPlayback('));
+      expect(
+        _functionBody(player, 'previous'),
+        contains('previousPlaybackStep('),
+      );
+      expect(_functionBody(source, '_playNext'), contains('_session.next()'));
+      expect(
+        _functionBody(source, '_playPrevious'),
+        contains('_session.previous()'),
+      );
+      expect(
+        source,
+        isNot(contains('_advance()')),
+        reason: 'a dal végi továbblépés is a szolgáltatásé, nem a képernyőé',
+      );
     });
 
     test('a lejátszás gomb a BETÖLTÖTT tétel azonosítóját is nézi', () {
-      final body = _functionBody(source, '_togglePlay');
+      final body = _functionBody(player, 'toggle');
       expect(body, contains('needsSourceReload('));
-      expect(body, contains('_loadedSourceKey'));
+      expect(body, contains('_loadedKey'));
       expect(
         body,
         contains('ProcessingState.idle'),
         reason: 'stop után a play önmagában nem szólal meg',
       );
+      expect(
+        _functionBody(source, '_togglePlay'),
+        contains('session.toggle('),
+        reason: 'a gomb döntése is a szolgáltatásé',
+      );
     });
 
     test('a kétszeres indítás kapuja nem dobja el a koppintást', () {
-      final body = _functionBody(source, '_playIndex');
+      final body = _functionBody(player, 'playAt');
       expect(body, contains('_pendingIndex = index;'));
       expect(
         body,
-        contains('unawaited(_playIndex(pending))'),
+        contains('unawaited(playAt(pending))'),
         reason: 'a közben jött kérés a mostani indítás után elindul',
       );
     });
@@ -662,20 +719,28 @@ void main() {
     });
 
     test('a lapozás a lejátszási sorrendet követi (nem a nyers sort)', () {
-      expect(_functionBody(source, '_playNext'), contains('stepPlayback('));
+      // A lépés a **szolgáltatásban** dől el (a tiszta `stepPlayback` szabállyal),
+      // a képernyő gombjai pedig ezt adják tovább — ezért a zárképernyő gombja
+      // akkor is ugyanezt teszi, ha a képernyő nincs nyitva.
+      final player = File(
+        'lib/services/music_queue_player.dart',
+      ).readAsStringSync();
+      expect(_functionBody(player, 'next'), contains('stepPlayback('));
       expect(
-        _functionBody(source, '_playNext'),
-        contains('order[next]'),
-        reason: 'a kevert sorrendben kell lépni (lokális másolatból)',
-      );
-      expect(
-        _functionBody(source, '_playPrevious'),
+        _functionBody(player, 'previous'),
         contains('previousPlaybackStep('),
       );
+      final state = _functionBody(player, '_onPlayerState');
+      expect(state, contains('ProcessingState.completed'));
       expect(
-        _functionBody(source, '_advance'),
+        state,
         contains('isAutoAdvance: true'),
         reason: 'a szám végi továbblépés az ismétlést is figyeli',
+      );
+      expect(_functionBody(source, '_playNext'), contains('_session.next()'));
+      expect(
+        _functionBody(source, '_playPrevious'),
+        contains('_session.previous()'),
       );
     });
 
@@ -736,7 +801,7 @@ void main() {
 
     test('a kivett tétel kimarad a sorrendből, és a lista is frissül', () {
       expect(
-        _functionBody(source, '_rebuildOrder'),
+        _functionBody(source, '_pushBaseOrder'),
         contains('excluded: _excludedFromPlaylist'),
         reason: 'a lapozás is átugorja a kivett tételt',
       );
@@ -780,7 +845,7 @@ void main() {
         reason: 'a sorrend fiókonként megmarad',
       );
       expect(
-        _functionBody(source, '_rebuildOrder'),
+        _functionBody(source, '_pushBaseOrder'),
         contains('customOrder: _playlistOrder'),
         reason: 'a lapozás a kézi sorrendet követi',
       );
