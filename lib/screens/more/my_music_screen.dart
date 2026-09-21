@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,8 @@ import '../../providers/news_provider.dart';
 import '../../providers/releases_provider.dart';
 import '../../services/label_download_manager.dart';
 import '../../services/label_library_plan.dart';
+import '../../services/label_playback_memory.dart';
+import '../../services/label_playback_plan.dart';
 import '../../widgets/radio_player_bar.dart';
 import '../../widgets/resized_network_image.dart';
 import '../releases/releases_screen.dart';
@@ -43,6 +46,8 @@ class MyMusicScreen extends ConsumerStatefulWidget {
 class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   final AudioPlayer _player = AudioPlayer();
   StreamSubscription<PlayerState>? _stateSubscription;
+  StreamSubscription<Duration>? _positionSubscription;
+  StreamSubscription<Duration?>? _durationSubscription;
 
   final Set<String> _downloaded = <String>{};
   int _currentIndex = -1;
@@ -50,6 +55,52 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   bool _resumeRadioAfterStop = false;
   String? _message;
   int _storageBytes = 0;
+
+  /// A **lejátszási sorrend** (a sor indexei) és az abban álló kurzor.
+  ///
+  /// MIÉRT külön a `_queue`-tól: a keverés a sorrendet változtatja, nem a
+  /// tartalmat — a kurzor viszont mindig a **sorrendben** lépked, ezért a
+  /// „következő" gomb a kevert sorrendet követi (és a sor végén megáll).
+  List<int> _order = const [];
+
+  /// Ismétlés módja (nincs / mind / egy) és a keverés állapota.
+  PlaybackRepeat _repeat = PlaybackRepeat.none;
+  bool _shuffle = false;
+
+  /// A **letöltött** tételek lenyomata: ebből tudjuk, kell-e újraépíteni a
+  /// sorrendet. Enélkül minden fájlpásztázás átrendezné a kevert sorrendet.
+  String _downloadedSignature = '';
+
+  /// Ha a **sor** változott (új vásárlás, eltűnt kiadvány), a benne lévő
+  /// indexek elavulnak, ezért a sorrendet újra kell építeni. Ezt külön jelöljük,
+  /// mert a letöltött készlet lenyomata önmagában nem változik ilyenkor.
+  bool _orderDirty = true;
+
+  /// A lejátszás kijelzése: a pozíció és a hossz. A `_position` **nem**
+  /// `setState`-tel frissül (200 ms-onként újrarajzolná a listát), hanem a
+  /// folyamatjelző saját `StreamBuilder`-je olvassa a lejátszó streameit.
+  Duration _position = Duration.zero;
+  Duration _duration = Duration.zero;
+
+  /// Tekerés közben a **kéz** számít: a stream ilyenkor nem írja felül a sávot.
+  bool _seeking = false;
+  double _seekValue = 0;
+
+  /// A felajánlott „folytatás" pont (a képernyő megnyitásakor olvassuk be).
+  LabelPlaybackPoint? _resumePoint;
+
+  /// A legutóbb **mentett** pozíció — 5 másodpercenként mentünk, nem 200 ms-onként.
+  int _lastSavedMs = 0;
+
+  /// A lejátszási pont emlékezete (fiókonként; vendégnél nem ír).
+  final LabelPlaybackMemory _memory = LabelPlaybackMemory();
+
+  /// A bejelentkezett UID **gyorsítótárazva**.
+  ///
+  /// MIÉRT: a `dispose()`-ban is mentünk (hogy egy hirtelen kilépés ne vigye el a
+  /// folytatási pontot), ott viszont a `ref` már nem biztonságos — ezért a
+  /// `build`-ben eltároljuk az értéket, és a lejátszóéletciklus abból dolgozik.
+  String _uidValue = '';
 
   /// A legutóbb kiszámolt sor — a `build`-ben **tisztán** áll elő, ezért nem
   /// kell `setState` a számításhoz (az csak a fájlok pásztázásához kell).
@@ -81,16 +132,108 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     _stateSubscription = _player.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
         unawaited(_advance());
+        return;
       }
+      // Szünet/újraindítás: a pozíciót ilyenkor érdemes elmenteni (a hirtelen
+      // kilépésnél ez a pont marad meg).
+      if (!state.playing) unawaited(_saveProgress(force: true));
+    });
+    // A pozíciót NEM `setState`-tel követjük (az a teljes listát újrarajzolná
+    // 200 ms-onként), hanem eltároljuk a mentéshez és a folyamatjelzőhöz.
+    _positionSubscription = _player.positionStream.listen((position) {
+      _position = position;
+      if (!_seeking) _seekValue = position.inMilliseconds.toDouble();
+      unawaited(_saveProgress());
+    });
+    _durationSubscription = _player.durationStream.listen((duration) {
+      _duration = duration ?? Duration.zero;
+      if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
+    unawaited(_saveProgress(force: true));
     _stateSubscription?.cancel();
+    _positionSubscription?.cancel();
+    _durationSubscription?.cancel();
     unawaited(_releaseAudio());
     _player.dispose();
     super.dispose();
+  }
+
+  String get _uid => _uidValue;
+
+  /// A kurzor a **lejátszási sorrendben** (nem a nyers sorban).
+  int get _cursor => _order.indexOf(_currentIndex);
+
+  /// A sorrend újraépítése a letöltött tételekből.
+  ///
+  /// Keverésnél az **aktuális tétel marad az első**, ezért a keverés
+  /// bekapcsolása nem szakítja meg azt, amit épp hallgatsz.
+  void _rebuildOrder({int? previousCurrent}) {
+    final indices = downloadedIndices(
+      [for (final entry in _queue) entry.key],
+      _downloaded,
+    );
+    _order = playOrderFor(
+      indices: indices,
+      shuffle: _shuffle,
+      random: Random(),
+      currentIndex: previousCurrent ?? _currentIndex,
+    );
+  }
+
+  /// A letöltött tételek lenyomata — a sorrend csak **változáskor** épül újra.
+  String _signatureOf(Set<String> downloaded) {
+    final keys = downloaded.toList()..sort();
+    return keys.join('|');
+  }
+
+  /// A lejátszási pont mentése (5 másodpercenként, illetve `force` esetén).
+  ///
+  /// Csak **érdemi** pozíciót mentünk (`worthResuming`), ezért nem marad mentés
+  /// a szám legelejéről — azt a „folytatás" felajánlás úgysem kínálná fel.
+  Future<void> _saveProgress({bool force = false}) async {
+    if (_currentIndex < 0 || _currentIndex >= _queue.length) return;
+    final uid = _uid;
+    if (uid.isEmpty) return;
+    final positionMs = _position.inMilliseconds;
+    if (!force && (positionMs - _lastSavedMs).abs() < 5000) return;
+    _lastSavedMs = positionMs;
+    final entry = _queue[_currentIndex];
+    if (!worthResuming(positionMs, _duration.inMilliseconds)) {
+      // Elöl (5 s előtt) vagy a legvégén: inkább töröljük a pontot, hogy ne
+      // ajánljunk fel értelmetlen folytatást.
+      await _memory.clear(uid);
+      return;
+    }
+    await _memory.save(
+      uid,
+      LabelPlaybackPoint(
+        releaseId: entry.releaseId,
+        variant: entry.variant,
+        positionMs: positionMs,
+      ),
+    );
+  }
+
+  /// A mentett pont beolvasása és felajánlása (ha a fájl meg is van).
+  Future<void> _loadResumePoint() async {
+    final uid = _uid;
+    if (uid.isEmpty) {
+      if (mounted) setState(() => _resumePoint = null);
+      return;
+    }
+    final point = await _memory.load(uid);
+    if (!mounted) return;
+    // Csak akkor ajánljuk fel, ha a tétel a sorban **és a készüléken** is megvan:
+    // különben egy törölt fájlra kínálnánk folytatást.
+    final known =
+        point != null &&
+        _queue.any((entry) => entry.key == point.entryKey) &&
+        _downloaded.contains(point.entryKey);
+    setState(() => _resumePoint = known ? point : null);
   }
 
   LabelDownloadManager get _downloads => ref.read(labelDownloadManagerProvider);
@@ -145,13 +288,25 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       storage = 0;
     }
     if (!mounted) return;
+    final signature = _signatureOf(downloaded);
+    final changed = signature != _downloadedSignature || _orderDirty;
     setState(() {
       _downloaded
         ..clear()
         ..addAll(downloaded);
       _storageBytes = storage;
       if (_currentIndex >= queue.length) _currentIndex = -1;
+      // A sorrend csak **változáskor** épül újra: különben minden pásztázás
+      // átrendezné a kevert sorrendet, és a „következő" gomb ugrálna.
+      if (changed) {
+        _downloadedSignature = signature;
+        _orderDirty = false;
+        _rebuildOrder();
+      }
     });
+    // A „folytatás" felajánlása csak akkor érdekes, ha a letöltött készlet
+    // változott (ekkor derülhet ki, hogy a mentett tétel fájlja megvan-e).
+    if (changed) unawaited(_loadResumePoint());
   }
 
   Future<bool> _ensureDownloaded(LabelQueueEntry entry) async {
@@ -175,7 +330,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     }
   }
 
-  Future<void> _playIndex(int index) async {
+  Future<void> _playIndex(int index, {int? startAtMs}) async {
     if (index < 0 || index >= _queue.length) return;
     final entry = _queue[index];
     // ⚠️ CSAK LETÖLTÖTT zene játszható: a lapozás és az automatikus továbblépés
@@ -191,7 +346,10 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       }
       return;
     }
-    setState(() => _currentIndex = index);
+    setState(() {
+      _currentIndex = index;
+      _resumePoint = null;
+    });
     try {
       // A rádió és a lejátszó ne szóljon egyszerre — ugyanaz a minta, mint a
       // kiadvány-előhallgatónál.
@@ -202,6 +360,12 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       }
       final file = await _downloads.fileFor(entry);
       await _player.setFilePath(file.path);
+      // A „folytatás" pontját a betöltés **után** keressük meg (addig nincs
+      // hossz, és a seek nem is értelmezhető).
+      if (startAtMs != null && startAtMs > 0) {
+        await _player.seek(Duration(milliseconds: startAtMs));
+      }
+      _lastSavedMs = startAtMs ?? 0;
       unawaited(_player.play());
       if (mounted) setState(() => _message = null);
     } catch (error) {
@@ -209,15 +373,66 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     }
   }
 
-  /// A szám végén a következő **letöltött** tételre lép; ha nincs több, megáll.
+  /// A szám végén a **sorrend** szerinti következő tételre lép.
+  ///
+  /// Az ismétlés (egy / mind) itt dönt: a [PlaybackRepeat.one] ugyanezt a tételt
+  /// indítja újra, a [PlaybackRepeat.all] körbefordul, egyébként megáll — és
+  /// ilyenkor a rádió visszakapja a hangot.
   Future<void> _advance() async {
-    final next = nextDownloadedIndex(_queue, _downloaded, _currentIndex);
+    final next = stepPlayback(
+      cursor: _cursor,
+      length: _order.length,
+      repeat: _repeat,
+      isAutoAdvance: true,
+    );
     if (next < 0) {
       await _releaseAudio();
       if (mounted) setState(() => _currentIndex = -1);
       return;
     }
-    await _playIndex(next);
+    await _playIndex(_order[next]);
+  }
+
+  /// A „következő" gomb: a sorrendben lép (ismétlés-egy mellett is tovább).
+  Future<void> _playNext() async {
+    final next = stepPlayback(
+      cursor: _cursor,
+      length: _order.length,
+      repeat: _repeat,
+      isAutoAdvance: false,
+    );
+    if (next < 0) return;
+    await _playIndex(_order[next]);
+  }
+
+  /// Az „előző" gomb: a sorrendben lép vissza.
+  Future<void> _playPrevious() async {
+    final previous = previousPlaybackStep(
+      cursor: _cursor,
+      length: _order.length,
+      repeat: _repeat,
+    );
+    if (previous < 0) return;
+    await _playIndex(_order[previous]);
+  }
+
+  /// **Stop**: megáll, a szám elejére áll, és a rádió visszakapja a hangot.
+  ///
+  /// Szándékosan **nem** ugyanaz, mint a szünet: a szünetnél a lejátszás helye
+  /// megmarad (és a rádió hallgat), a stopnál viszont elölről kezdhető, ezért a
+  /// mentett folytatási pontot is töröljük.
+  Future<void> _stopPlayback() async {
+    await _player.stop();
+    await _releaseAudio();
+    await _memory.clear(_uid);
+    _lastSavedMs = 0;
+    if (!mounted) return;
+    setState(() {
+      _position = Duration.zero;
+      _seekValue = 0;
+      _duration = Duration.zero;
+      _message = null;
+    });
   }
 
   /// Leállás: a rádió visszakapja a hangot, ha előtte az szólt.
@@ -247,6 +462,19 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       }
     }
     if (mounted) setState(() {});
+  }
+
+  /// Az ismétlés mód léptetése (nincs → mind → egy → nincs).
+  void _cycleRepeat() {
+    setState(() => _repeat = nextPlaybackRepeat(_repeat));
+  }
+
+  /// A keverés be/ki. Bekapcsoláskor az aktuális tétel az első helyre kerül.
+  void _toggleShuffle() {
+    setState(() {
+      _shuffle = !_shuffle;
+      _rebuildOrder();
+    });
   }
 
   Future<void> _downloadOnly(LabelQueueEntry entry) async {
@@ -333,6 +561,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   @override
   Widget build(BuildContext context) {
     final uid = ref.watch(currentUidProvider);
+    _uidValue = uid ?? '';
     if (uid == null) {
       return const _Scaffold(
         child: _Notice(
@@ -394,8 +623,19 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
             _catalogById = catalogById;
             final signature = queue.map((entry) => entry.key).join(',');
             if (signature != _queueSignature) {
+              // A sor **indexei** változtak, ezért a most hallgatott tételt a
+              // kulcsa alapján keressük vissza (különben a „következő" gomb egy
+              // másik zenére lépne), a sorrendet pedig újra kell építeni.
+              final playingKey =
+                  _currentIndex >= 0 && _currentIndex < _queue.length
+                  ? _queue[_currentIndex].key
+                  : null;
               _queueSignature = signature;
               _queue = queue;
+              _currentIndex = playingKey == null
+                  ? -1
+                  : queue.indexWhere((entry) => entry.key == playingKey);
+              _orderDirty = true;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 unawaited(_scanDownloads());
               });
@@ -459,9 +699,197 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
           ],
         ),
         const SizedBox(height: 6),
+        if (_resumePoint != null) _buildResumeBanner(),
         if (_queue.isNotEmpty) _buildPlayerBar(),
         for (final item in items) _buildReleaseCard(item),
       ],
+    );
+  }
+
+  /// A „folytatás ott, ahol abbahagytad" felajánlás.
+  ///
+  /// Csak akkor jelenik meg, ha a mentett tétel **le is van töltve** (a
+  /// `_loadResumePoint` ellenőrzi), és a [worthResuming] szerint érdemi
+  /// pozícióról van szó. A „Mégsem" törli a pontot, hogy ne kérdezze újra.
+  Widget _buildResumeBanner() {
+    final point = _resumePoint!;
+    final entry = _queue.firstWhere((item) => item.key == point.entryKey);
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      color: theme.colorScheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+        child: Row(
+          children: [
+            const Icon(Icons.history, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Folytatás: ${entry.nowPlayingLabel} — '
+                '${playbackClock(point.positionMs)}-tól',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _memory.clear(_uid);
+                if (!mounted) return;
+                setState(() => _resumePoint = null);
+              },
+              child: const Text('Elölről'),
+            ),
+            FilledButton(
+              onPressed: () => _playIndex(
+                _queue.indexWhere((item) => item.key == point.entryKey),
+                startAtMs: point.positionMs,
+              ),
+              child: const Text('Folytatás'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// A **tekerhető** folyamatjelző: húzás közben a kéz számít, ezért a
+  /// lejátszó pozíció-streame ilyenkor **nem** írja felül a sávot.
+  Widget _buildSeekRow(ThemeData theme) {
+    return StreamBuilder<Duration>(
+      stream: _player.positionStream,
+      builder: (context, snapshot) {
+        final live = snapshot.data ?? _position;
+        final duration = _duration;
+        final maxMs = duration.inMilliseconds > 0
+            ? duration.inMilliseconds.toDouble()
+            : 0.0;
+        final value = _seeking
+            ? _seekValue
+            : live.inMilliseconds.toDouble().clamp(0.0, maxMs == 0 ? 1.0 : maxMs);
+        final shown = _seeking ? _seekValue : live.inMilliseconds.toDouble();
+        final enabled = maxMs > 0;
+        return Row(
+          children: [
+            Text(playbackClock(shown.round()), style: theme.textTheme.bodySmall),
+            Expanded(
+              child: Slider(
+                value: enabled ? value.clamp(0.0, maxMs) : 0,
+                max: enabled ? maxMs : 1,
+                onChanged: enabled
+                    ? (next) => setState(() {
+                        _seeking = true;
+                        _seekValue = next;
+                      })
+                    : null,
+                onChangeEnd: enabled
+                    ? (next) async {
+                        await _player.seek(
+                          Duration(milliseconds: next.round()),
+                        );
+                        if (!mounted) return;
+                        setState(() => _seeking = false);
+                      }
+                    : null,
+              ),
+            ),
+            Text(
+              playbackClock(duration.inMilliseconds),
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// A **lejátszási lista** (playlist): csak a letöltött tételek, a lejátszási
+  /// sorrendben, az aktuális kiemelve. Koppintásra azonnal indul, és a panel
+  /// bezárul (így nem marad elavult állapot a képernyőn).
+  void _showPlaylist() {
+    final theme = Theme.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final entries = [
+          for (final index in _order)
+            if (index >= 0 && index < _queue.length) (index: index, entry: _queue[index]),
+        ];
+        final pending = _queue.length - entries.length;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Lejátszási lista',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ),
+                    Text(
+                      '${entries.length} tétel'
+                      '${_shuffle ? ' · keverve' : ''}'
+                      '${pending > 0 ? ' · $pending nincs letöltve' : ''}',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: entries.length,
+                  itemBuilder: (context, position) {
+                    final item = entries[position];
+                    final isCurrent = item.index == _currentIndex;
+                    return ListTile(
+                      dense: true,
+                      selected: isCurrent,
+                      leading: isCurrent
+                          ? Icon(
+                              _player.playing
+                                  ? Icons.graphic_eq
+                                  : Icons.pause_circle_outline,
+                              color: theme.colorScheme.primary,
+                            )
+                          : Text('${position + 1}.'),
+                      title: Text(
+                        item.entry.nowPlayingLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: Text(
+                        item.entry.variantLabel,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        unawaited(_playIndex(item.index));
+                      },
+                    );
+                  },
+                ),
+              ),
+              if (pending > 0)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Text(
+                    'A nem letöltött tételek nincsenek a listában — azokat a '
+                    'kiadvány kártyáján tudod letölteni.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -469,67 +897,106 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     final hasCurrent = _currentIndex >= 0 && _currentIndex < _queue.length;
     final entry = hasCurrent ? _queue[_currentIndex] : null;
     final theme = Theme.of(context);
+    final hasPrevious =
+        previousPlaybackStep(
+          cursor: _cursor,
+          length: _order.length,
+          repeat: _repeat,
+        ) >=
+        0;
+    final hasNext =
+        stepPlayback(
+          cursor: _cursor,
+          length: _order.length,
+          repeat: _repeat,
+          isAutoAdvance: false,
+        ) >=
+        0;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       color: theme.colorScheme.primaryContainer,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+        child: Column(
           children: [
-            IconButton(
-              tooltip: 'Előző',
-              onPressed:
-                  previousDownloadedIndex(_queue, _downloaded, _currentIndex) < 0
-                  ? null
-                  : () => _playIndex(
-                      previousDownloadedIndex(
-                        _queue,
-                        _downloaded,
-                        _currentIndex,
+            Row(
+              children: [
+                IconButton(
+                  tooltip: 'Előző',
+                  onPressed: hasPrevious ? _playPrevious : null,
+                  icon: const Icon(Icons.skip_previous),
+                ),
+                IconButton(
+                  tooltip: _player.playing ? 'Szünet' : 'Lejátszás',
+                  onPressed: _togglePlay,
+                  icon: Icon(
+                    _player.playing ? Icons.pause_circle : Icons.play_circle,
+                    size: 34,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Következő',
+                  onPressed: hasNext ? _playNext : null,
+                  icon: const Icon(Icons.skip_next),
+                ),
+                IconButton(
+                  tooltip: 'Stop (a szám elejére áll)',
+                  onPressed: hasCurrent ? _stopPlayback : null,
+                  icon: const Icon(Icons.stop_circle_outlined),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entry?.nowPlayingLabel ?? 'Válassz egy zenét',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                    ),
-              icon: const Icon(Icons.skip_previous),
-            ),
-            IconButton(
-              tooltip: _player.playing ? 'Szünet' : 'Lejátszás',
-              onPressed: _togglePlay,
-              icon: Icon(
-                _player.playing ? Icons.pause_circle : Icons.play_circle,
-                size: 34,
-              ),
-            ),
-            IconButton(
-              tooltip: 'Következő',
-              onPressed:
-                  nextDownloadedIndex(_queue, _downloaded, _currentIndex) < 0
-                  ? null
-                  : () => _playIndex(
-                      nextDownloadedIndex(_queue, _downloaded, _currentIndex),
-                    ),
-              icon: const Icon(Icons.skip_next),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry?.nowPlayingLabel ?? 'Válassz egy zenét',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                      Text(
+                        hasCurrent
+                            ? '${playbackPositionLabel(_cursor, _order.length)} · '
+                                  '${_downloaded.length} letöltve'
+                            : _downloaded.isEmpty
+                            ? 'Előbb tölts le egy zenét'
+                            : '${_downloaded.length} letöltött zene',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
                   ),
-                  Text(
-                    hasCurrent
-                        ? '${_currentIndex + 1}/${_queue.length} · '
-                              '${_downloaded.length} letöltve'
-                        : _downloaded.isEmpty
-                        ? 'Előbb tölts le egy zenét'
-                        : '${_downloaded.length} letöltött zene',
-                    style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
+            _buildSeekRow(theme),
+            Row(
+              children: [
+                IconButton(
+                  tooltip: playbackRepeatLabel(_repeat),
+                  isSelected: _repeat != PlaybackRepeat.none,
+                  onPressed: _cycleRepeat,
+                  icon: Icon(
+                    _repeat == PlaybackRepeat.one
+                        ? Icons.repeat_one
+                        : Icons.repeat,
                   ),
-                ],
-              ),
+                ),
+                IconButton(
+                  tooltip: _shuffle ? 'Keverés kikapcsolása' : 'Keverés',
+                  isSelected: _shuffle,
+                  onPressed: _toggleShuffle,
+                  icon: const Icon(Icons.shuffle),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  // Üres listát ne nyissunk: ha nincs letöltött tétel, nincs mit
+                  // mutatni (a kártyákon ott a „Letöltés" gomb).
+                  onPressed: _order.isEmpty ? null : _showPlaylist,
+                  icon: const Icon(Icons.queue_music, size: 20),
+                  label: const Text('Lista'),
+                ),
+              ],
             ),
           ],
         ),

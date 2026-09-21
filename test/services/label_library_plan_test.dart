@@ -249,20 +249,29 @@ void main() {
       source = File('lib/screens/more/my_music_screen.dart').readAsStringSync();
     });
 
-    test('a lapozás a letöltött tételek között lépked', () {
+    test('a lapozás a LETÖLTÖTT tételek sorrendjében lépked', () {
+      // A 343-as körben a lapozás a **lejátszási sorrend** (`_order`) felé
+      // került, hogy a keverés és az ismétlés működhessen. A szabály viszont
+      // változatlan: a sorrend **csak letöltött** tételekből állhat.
       expect(
         source,
-        contains('nextDownloadedIndex(_queue, _downloaded, _currentIndex)'),
+        contains('downloadedIndices('),
+        reason: 'a sorrend a letöltött tételekből épül',
       );
       expect(
         source,
-        contains('previousDownloadedIndex(_queue, _downloaded, _currentIndex)'),
+        contains('playOrderFor('),
+        reason: 'a sorrend a keverést is figyelembe veszi',
       );
-      expect(source, contains('firstDownloadedIndex(_queue, _downloaded)'));
       expect(
         source,
         isNot(contains('nextLabelQueueIndex(')),
         reason: 'a „nyers" következő már nem használható a lapozáshoz',
+      );
+      expect(
+        source,
+        contains('firstDownloadedIndex(_queue, _downloaded)'),
+        reason: 'a lejátszás indítása továbbra is az első letöltött tétel',
       );
     });
 
@@ -273,9 +282,10 @@ void main() {
       expect(body, contains('még nincs letöltve'));
     });
 
-    test('a szám végi továbblépés is letöltött tételre lép', () {
+    test('a szám végi továbblépés is a letöltött sorrendben lép', () {
       final body = _functionBody(source, '_advance');
-      expect(body, contains('nextDownloadedIndex(_queue, _downloaded,'));
+      expect(body, contains('stepPlayback('));
+      expect(body, contains('_order['));
       expect(body, isNot(contains('_ensureDownloaded')));
     });
 
@@ -317,12 +327,41 @@ void main() {
 /// A minta a **definícióra** illeszkedik (sortörés + visszatérési típus + név +
 /// `(`), nem a puszta névre: a `_advance(` alak a **hívási helyet** is eltalálná
 /// (`unawaited(_advance())`), és akkor rossz kapcsos zárójelet párosítana.
+///
+/// ⚠️ A **paraméterlistát át kell ugrani**: a névvel kezdődő NÉVES paraméter
+/// (`{int? startAtMs}`) kapcsos zárójele különben a metódus törzse helyett
+/// találódna meg — ez a hiba 2026-09-20-án több forrás-lintet is „elhasaltatott"
+/// látszólag ok nélkül.
 String _functionBody(String source, String name) {
   final match = RegExp(
     '\\n\\s*[A-Za-z_][\\w<>, ?]*\\s${RegExp.escape(name)}\\(',
   ).firstMatch(source);
   expect(match, isNotNull, reason: 'nincs ilyen tag: $name');
-  final open = source.indexOf('{', match!.start);
+  final openParen = source.indexOf('(', match!.start);
+  expect(
+    openParen,
+    isNonNegative,
+    reason: '$name paraméterlistája nem található',
+  );
+  var parens = 0;
+  var afterParams = -1;
+  for (var i = openParen; i < source.length; i++) {
+    final char = source[i];
+    if (char == '(') parens++;
+    if (char == ')') {
+      parens--;
+      if (parens == 0) {
+        afterParams = i;
+        break;
+      }
+    }
+  }
+  expect(
+    afterParams,
+    isNonNegative,
+    reason: '$name paraméterlistája nem záródik le',
+  );
+  final open = source.indexOf('{', afterParams);
   expect(open, isNonNegative, reason: '$name törzse nem található');
   var depth = 0;
   for (var i = open; i < source.length; i++) {
