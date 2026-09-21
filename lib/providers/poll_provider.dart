@@ -6,26 +6,45 @@ import '../models/poll.dart';
 import '../services/poll_service.dart';
 import '../services/vote_memory.dart';
 import 'community_provider.dart';
+import 'news_provider.dart';
 
 final pollServiceProvider = Provider<PollService>((ref) => PollService());
 
 /// A nyitott kerdőív. Null, ha épp nincs (a szerver csak nyitott kerdőívet ad).
 ///
-/// Szandekosan **cache-kikerüléssel** kerdődik le: a kerdőív megnyilasa és
-/// zarasa időponthoz kotott, ezert egy mentett valasz (peldaul egy korabbi
-/// `null`) nem dönthet arról, latszik-e a kartya. A vegpont kicsi (~250 bajt),
-/// a szerver pedig maga is 45 masodpercig cache-eli, tehat ez olcso.
+/// **A MEGJELENÍTÉSI ÚT.** A mentett választ azonnal kiszolgálja, és csak a
+/// háttérben egyeztet a WordPress-szel (`WordpressHeadCache`), ezért a főoldali
+/// sor nem vár 0,4–2,0 másodpercet (mérve), és nem marad üresen a betöltés
+/// alatt. A `publicContentRefreshProvider` figyelése azért kell, hogy a
+/// háttérben beérkező **friss** válasz (nyitás/zárás, kihirdetett nyertes)
+/// magától megjelenjen a kártyán — hálózati várakozás nélkül, mert ekkor már a
+/// friss test van a gyorsítótárban.
 ///
-/// **`bypassCache`, nem `forceRefresh`:** az utobbi HEAD + ETag egyeztetessel
-/// dönt, a WordPress cache-elt valasza viszont ugyanazt az ETag-ot adja vissza,
-/// ezert a kliens a REGI testet szolgalta ki — emiatt jelent meg egy frissen
-/// kihirdetett nyertes csak tiz perccel kesobb. A `bypassCache` egyenesen
-/// megkerüli a mentett rekordot.
-///
-/// Ezen felul a kartya ujrakerdez, amikor a főoldalt frissitik, illetve amikor
-/// a felhasznalo visszater az appba (lasd `PollEntryButton`).
+/// A **kifejezett** frissítés (lehúzás, frissítés ikon, app-visszatérés) útja
+/// [activePollRefreshProvider]: az továbbra is megkerüli a mentett választ,
+/// mert a kérdoív nyitása/zárása időponthoz kötött.
 final activePollProvider = FutureProvider<HuhsPoll?>((ref) async {
-  return ref.watch(pollServiceProvider).activePoll(bypassCache: true);
+  ref.watch(publicContentRefreshProvider);
+  return ref.watch(pollServiceProvider).activePoll();
+});
+
+/// A kérdoív **kifejezett** frissítésének útja: a mentett válasz nem dönthet.
+///
+/// A két út szándékosan külön kérdés: a megjelenítésnek az a dolga, hogy
+/// **azonnal** legyen mit rajzolni, a frissítésnek pedig az, hogy a lehető
+/// legpontosabb állapotot adja. A `forceRefresh` (HEAD + ETag) erre nem elég: a
+/// WordPress cache-elt válasza ugyanazt az ETag-ot adja vissza, ezért a kliens a
+/// REGI testet szolgálta ki — a frissen kihirdetett nyertes csak tíz perccel
+/// később jelent meg. Ezért itt `bypassCache` kell.
+///
+/// A friss válasz a közös gyorsítótárba kerül, ezért a megjelenítési út utána
+/// (a provider újraszámolásával) **hálózat nélkül** a helyes állapotot rajzolja.
+final activePollRefreshProvider = FutureProvider<HuhsPoll?>((ref) async {
+  final poll = await ref
+      .watch(pollServiceProvider)
+      .activePoll(bypassCache: true);
+  ref.invalidate(activePollProvider);
+  return poll;
 });
 
 /// Igaz, ha ez a bejelentkezett fiok mar szavazott a megadott kerdőívben.

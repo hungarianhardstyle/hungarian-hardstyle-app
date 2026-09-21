@@ -54,10 +54,15 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
   }
 
   /// Forced refresh shared by pull-to-refresh and the header refresh icon.
+  ///
+  /// **Ez a kifejezett frissítés útja:** a mentett oldal ilyenkor nem dönthet,
+  /// a válaszra kifejezetten várunk. A képernyő megnyitása, a keresés és a
+  /// kategóriaváltás ezzel szemben a megjelenítési úton megy (mentett oldal
+  /// azonnal, egyeztetés a háttérben) — a WordPressnél egy kör 0,4–2,0 s.
   Future<void> _refreshNews() async {
     ref.invalidate(stickyNewsProvider);
     await Future.wait<void>([
-      ref.read(paginatedNewsProvider.notifier).refresh(),
+      ref.read(paginatedNewsProvider.notifier).refresh(forceRefresh: true),
       ref.read(stickyNewsProvider.future),
     ]);
   }

@@ -6,22 +6,42 @@ import '../models/prize.dart';
 import '../services/prize_service.dart';
 import '../services/vote_memory.dart';
 import 'community_provider.dart';
+import 'news_provider.dart';
 
 final prizeServiceProvider = Provider<PrizeService>((ref) => PrizeService());
 
 /// A nyitott nyeremenyjatek vagy a frissen kihirdetett nyertes. Null, ha nincs.
 ///
-/// Szandekosan **cache-kikerüléssel** kerdődik le, pontosan úgy, mint a
-/// kerdőív: a jatek megnyilasa, zarasa es a sorsolas időponthoz kotott, ezert
-/// egy mentett valasz (peldaul egy korabbi `null`) nem dönthet arrol, latszik-e
-/// a kartya. A vegpont kicsi, a szerver pedig maga is cache-eli.
+/// **A MEGJELENÍTÉSI ÚT**, pontosan úgy, mint a kérdoívnél: a mentett választ
+/// azonnal kiszolgálja, és csak a háttérben egyeztet a WordPress-szel — a
+/// főoldali sor így nem vár 0,4–2,0 másodpercet (mérve). A
+/// `publicContentRefreshProvider` figyelése azért kell, hogy a sorsolás után
+/// kihirdetett nyertes **magától** megjelenjen a kártyán, hálózati várakozás
+/// nélkül.
 ///
-/// **`bypassCache`, nem `forceRefresh`:** az utobbi HEAD + ETag egyeztetessel
-/// dönt, a WordPress cache-elt valasza viszont ugyanazt az ETag-ot adja vissza,
-/// ezert a kliens a REGI testet szolgalta ki — pontosan ezert jelent meg a
-/// kihirdetett nyertes csak tiz perccel kesobb a kártyán.
+/// A **kifejezett** frissítés útja [activePrizeRefreshProvider]: az továbbra is
+/// megkerüli a mentett választ, mert a játék nyitása, zárása és a sorsolás
+/// időponthoz kötött.
 final activePrizeProvider = FutureProvider<HuhsPrize?>((ref) async {
-  return ref.watch(prizeServiceProvider).activePrize(bypassCache: true);
+  ref.watch(publicContentRefreshProvider);
+  return ref.watch(prizeServiceProvider).activePrize();
+});
+
+/// A nyeremenyjatek **kifejezett** frissítésének útja: a mentett válasz nem
+/// dönthet.
+///
+/// **`bypassCache`, nem `forceRefresh`:** az utóbbi HEAD + ETag egyeztetéssel
+/// dönt, a WordPress cache-elt válasza viszont ugyanazt az ETag-ot adja vissza,
+/// ezért a kliens a REGI testet szolgálta ki — pontosan ezért jelent meg a
+/// kihirdetett nyertes csak tíz perccel később a kártyán. A friss válasz a közös
+/// gyorsítótárba kerül, ezért a megjelenítési út utána hálózat nélkül a helyes
+/// állapotot rajzolja.
+final activePrizeRefreshProvider = FutureProvider<HuhsPrize?>((ref) async {
+  final prize = await ref
+      .watch(prizeServiceProvider)
+      .activePrize(bypassCache: true);
+  ref.invalidate(activePrizeProvider);
+  return prize;
 });
 
 /// Ez a bejelentkezett fiok jatszott-e mar ebben a jatekban.

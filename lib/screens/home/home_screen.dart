@@ -92,18 +92,21 @@ class HomeScreen extends ConsumerWidget {
   Future<void> _refreshHome(WidgetRef ref) async {
     ref.invalidate(newsProvider);
     ref.invalidate(eventsProvider);
-    // A kerdőív is frissul: nyitas/zaras utan a kartyanak követnie kell.
-    ref.invalidate(activePollProvider);
+    // A kerdőív is frissul: nyitas/zaras utan a kartyanak követnie kell. Ez itt
+    // a **kifejezett** út, ezért a mentett válasz nem dönthet (`bypassCache`) —
+    // a megjelenítési út (`activePollProvider`) viszont cache-ből rajzol, hogy a
+    // sor azonnal látszódjon.
+    ref.invalidate(activePollRefreshProvider);
     // A nyeremenyjatek ugyanígy: a jatek nyitasa, zarasa es a sorsolas is
     // időponthoz kotott, ezert a frissitesnek ezt is le kell kérdeznie.
-    ref.invalidate(activePrizeProvider);
+    ref.invalidate(activePrizeRefreshProvider);
     await Future.wait<void>([
       ref.read(newsProvider.future),
       ref.read(eventsProvider.future),
       // A kerdőív opcionalis, ezert egy hibaja ne törje meg a frissitést.
-      ref.read(activePollProvider.future).catchError((Object _) => null),
+      ref.read(activePollRefreshProvider.future).catchError((Object _) => null),
       // Ugyanez a nyeremenyjatekra.
-      ref.read(activePrizeProvider.future).catchError((Object _) => null),
+      ref.read(activePrizeRefreshProvider.future).catchError((Object _) => null),
     ]);
   }
 

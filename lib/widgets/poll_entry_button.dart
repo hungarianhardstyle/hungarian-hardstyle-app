@@ -5,6 +5,7 @@ import '../models/poll.dart';
 import '../providers/poll_provider.dart';
 import '../screens/poll/poll_screen.dart';
 import 'home_action_card.dart';
+import 'home_row_state.dart';
 
 /// Kozvelemenykutatas - a kerdőív BEJARATA a főoldalon.
 ///
@@ -18,17 +19,31 @@ import 'home_action_card.dart';
 ///
 /// A sor magatol eltunik, ha a szerver szerint nincs nyitott kerdőív, tehat az
 /// időablak dontese tovabbra is a WordPressben szuletik.
+///
+/// Amig viszont a valasz **uton van**, a sor nem tunik el: a helyen egy
+/// skeleton ([HomeActionCardPlaceholder]) all, ezert a főoldal nem ugrik egyet,
+/// amikor a kártya megérkezik (a WordPress valaszideje mérve 0,4–2,0 s).
 class PollEntryButton extends ConsumerWidget {
   const PollEntryButton({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final poll = ref.watch(activePollProvider);
-    return poll.maybeWhen(
-      data: (value) =>
-          value == null ? const SizedBox.shrink() : _build(context, value),
-      orElse: () => const SizedBox.shrink(),
+    final value = poll.valueOrNull;
+    // A döntés szándékosan tiszta függvényben van (`homeRowView`): így
+    // hálózat nélkül mérhető, és a két főoldali sor nem tud eltérni egymástól.
+    final view = homeRowView(
+      hasValue: poll.hasValue,
+      hasContent: value != null,
+      isLoading: poll.isLoading,
     );
+    return switch (view) {
+      HomeRowView.content => _build(context, value!),
+      HomeRowView.loading => const HomeActionCardPlaceholder(
+        icon: Icons.poll_outlined,
+      ),
+      HomeRowView.empty => const SizedBox.shrink(),
+    };
   }
 
   Widget _build(BuildContext context, HuhsPoll poll) {

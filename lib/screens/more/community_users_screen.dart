@@ -181,6 +181,10 @@ class _CommunityPublicProfileScreenState
   late Future<AchievementSummary> _achievementFuture;
   bool _blocking = false;
 
+  /// Busy-kapu az ismerős-műveletekre (jelölés / elfogadás / elutasítás):
+  /// amíg egy callable fut, nem indulhat másik, és a gombok le vannak tiltva.
+  bool _connectionBusy = false;
+
   @override
   void initState() {
     super.initState();
@@ -211,20 +215,82 @@ class _CommunityPublicProfileScreenState
   }
 
   Future<void> _requestConnection() async {
+    // Busy-kapu: egy koppintás egy callable (a dupla jelölés a szerveren
+    // versenyhelyzetet okozna). A gomb eközben le is van tiltva.
+    if (_connectionBusy) return;
+    final previousStatus = _connectionStatus;
+    // Optimista váltás még a szolgáltatás-hívás előtt: a „pending" állapot
+    // azonnal látszik, nem a Cloud Function visszaérkezése (hideg indulásnál
+    // 1–3 s) után.
+    setState(() {
+      _connectionBusy = true;
+      _connectionStatus = Future.value('pending');
+    });
     try {
       await service.requestConnection(widget.userId);
       if (!mounted) return;
-      setState(() {
-        _connectionStatus = Future.value('pending');
-      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Ismerősnek jelölés elküldve.')),
       );
     } catch (error) {
       if (!mounted) return;
+      // Hiba: visszaáll a koppintás előtti állapot, és szólunk is.
+      setState(() {
+        _connectionStatus = previousStatus;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Az ismerősnek jelölés nem sikerült.')),
+        SnackBar(
+          content: Text(
+            'Az ismerősnek jelölés nem sikerült.\n${userFacingError(error)}',
+          ),
+        ),
       );
+    } finally {
+      if (mounted) setState(() => _connectionBusy = false);
+    }
+  }
+
+  /// Az érkező felkérés megválaszolása (elfogadás / elutasítás).
+  ///
+  /// MIÉRT külön metódus: korábban a két gomb `onPressed`-ében volt a hívás,
+  /// **try/catch nélkül** — egy hiba kezeletlen async hibaként tűnt el, nulla
+  /// visszajelzéssel. Most optimista a váltás, van busy-kapu, visszaállás és
+  /// SnackBar.
+  Future<void> _respondConnection(bool accept) async {
+    if (_connectionBusy) return;
+    final previousStatus = _connectionStatus;
+    setState(() {
+      _connectionBusy = true;
+      _connectionStatus = Future.value(accept ? 'accepted' : null);
+    });
+    try {
+      await service.respondConnection(widget.userId, accept);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            accept
+                ? 'Ismerős-jelölés elfogadva.'
+                : 'Ismerős-jelölés elutasítva.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _connectionStatus = previousStatus;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            accept
+                ? 'Az elfogadás nem sikerült.\n${userFacingError(error)}'
+                : 'Az elutasítás nem sikerült.\n${userFacingError(error)}',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _connectionBusy = false);
     }
   }
 
@@ -457,38 +523,22 @@ class _CommunityPublicProfileScreenState
                         spacing: 8,
                         children: [
                           FilledButton(
-                            onPressed: () async {
-                              await service.respondConnection(
-                                widget.userId,
-                                true,
-                              );
-                              if (mounted) {
-                                setState(() {
-                                  _connectionStatus = Future.value('accepted');
-                                });
-                              }
-                            },
+                            onPressed: _connectionBusy
+                                ? null
+                                : () => _respondConnection(true),
                             child: const Text('Elfogadás'),
                           ),
                           OutlinedButton(
-                            onPressed: () async {
-                              await service.respondConnection(
-                                widget.userId,
-                                false,
-                              );
-                              if (mounted) {
-                                setState(() {
-                                  _connectionStatus = Future.value(null);
-                                });
-                              }
-                            },
+                            onPressed: _connectionBusy
+                                ? null
+                                : () => _respondConnection(false),
                             child: const Text('Elutasítás'),
                           ),
                         ],
                       );
                     }
                     return FilledButton.icon(
-                      onPressed: _requestConnection,
+                      onPressed: _connectionBusy ? null : _requestConnection,
                       icon: const Icon(Icons.person_add_outlined),
                       label: const Text('Ismerősnek jelölés'),
                     );
@@ -1186,7 +1236,11 @@ class CommunityConnectionsScreen extends StatelessWidget {
             children: [
               if (requests.isEmpty) const Text('Nincs függőben lévő felkérés.'),
               for (final request in requests)
-                _ConnectionRequestTile(request: request, service: service),
+                _ConnectionRequestTile(
+                  key: ValueKey(request.id),
+                  request: request,
+                  service: service,
+                ),
               const Divider(),
               StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: service.watchConnections(user.uid),
@@ -1269,18 +1323,69 @@ class _FriendTile extends StatelessWidget {
   }
 }
 
-class _ConnectionRequestTile extends StatelessWidget {
+class _ConnectionRequestTile extends StatefulWidget {
   final QueryDocumentSnapshot<Map<String, dynamic>> request;
   final CommunityService service;
 
-  const _ConnectionRequestTile({required this.request, required this.service});
+  // Kulcs a dokumentum-azonosító: a lista a stream-ből él, és egy elfogadott
+  // felkérés kikerül belőle — kulcs nélkül a Flutter a megmaradt `State`-et
+  // (és vele az optimista `_handled` jelzőt) a KÖVETKEZŐ felkéréshez
+  // párosíthatná, ami hamis „Elfogadva" jelzést okozna.
+  const _ConnectionRequestTile({
+    super.key,
+    required this.request,
+    required this.service,
+  });
+
+  @override
+  State<_ConnectionRequestTile> createState() => _ConnectionRequestTileState();
+}
+
+class _ConnectionRequestTileState extends State<_ConnectionRequestTile> {
+  /// Busy-kapu: ne induljon két `respondConnection` ugyanarra a felkérésre.
+  bool _busy = false;
+
+  /// Optimista döntés: `true` = elfogadva, `false` = elutasítva, `null` = még
+  /// nincs döntés. A csempe a koppintásra **azonnal** vált (a hívás előtt),
+  /// mert a callable hideg indulásnál 1–3 s is lehet.
+  bool? _handled;
+
+  Future<void> _respond(bool accept) async {
+    if (_busy) return;
+    final from = widget.request.data()['from'] as String? ?? '';
+    final previousHandled = _handled;
+    setState(() {
+      _busy = true;
+      _handled = accept;
+    });
+    try {
+      // AWAIT: korábban itt nem vártuk meg a hívást, ezért a hiba
+      // kezeletlen async hibaként tűnt el, visszajelzés nélkül.
+      await widget.service.respondConnection(from, accept);
+    } catch (error) {
+      if (!mounted) return;
+      // Hiba: visszaáll a gombos állapot (újra próbálható), és szólunk is.
+      setState(() => _handled = previousHandled);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            accept
+                ? 'Az elfogadás nem sikerült.\n${userFacingError(error)}'
+                : 'Az elutasítás nem sikerült.\n${userFacingError(error)}',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final data = request.data();
+    final data = widget.request.data();
     final from = data['from'] as String? ?? '';
     return FutureBuilder<Map<String, dynamic>>(
-      future: service.getPublicProfile(from),
+      future: widget.service.getPublicProfile(from),
       builder: (context, snapshot) {
         final profile = snapshot.data ?? const <String, dynamic>{};
         final name =
@@ -1288,12 +1393,12 @@ class _ConnectionRequestTile extends StatelessWidget {
                     data['fromName'] as String? ??
                     'Felhasználó')
                 .trim();
-        final image = service.resolveProfileImage(
+        final image = widget.service.resolveProfileImage(
           profile,
           data['fromImageUrl'] as String? ?? '',
         );
         return ListTile(
-          onTap: from.isEmpty
+          onTap: _handled != null || from.isEmpty
               ? null
               : () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -1309,19 +1414,34 @@ class _ConnectionRequestTile extends StatelessWidget {
                 : null,
           ),
           title: Text(name.isEmpty ? 'Felhasználó' : name),
-          trailing: Wrap(
-            spacing: 4,
-            children: [
-              IconButton(
-                onPressed: () => service.respondConnection(from, true),
-                icon: const Icon(Icons.check),
-              ),
-              IconButton(
-                onPressed: () => service.respondConnection(from, false),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
+          // Optimista: a koppintásra azonnal ez a jelzés jelenik meg, nem a
+          // hívás visszaérkezése után.
+          trailing: _handled == null
+              ? Wrap(
+                  spacing: 4,
+                  children: [
+                    IconButton(
+                      onPressed: _busy ? null : () => _respond(true),
+                      icon: const Icon(Icons.check),
+                    ),
+                    IconButton(
+                      onPressed: _busy ? null : () => _respond(false),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _handled == true ? Icons.check : Icons.close,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(_handled == true ? 'Elfogadva' : 'Elutasítva'),
+                  ],
+                ),
         );
       },
     );

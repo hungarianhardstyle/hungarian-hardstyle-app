@@ -1367,13 +1367,22 @@ class _PostCard extends ConsumerStatefulWidget {
 }
 
 class _PostCardState extends ConsumerState<_PostCard> {
-  /// A `toggleChatReaction` válasza, amíg a Firestore-kép meg nem erősíti.
+  /// A helyi (optimista) reakció, amíg a Firestore-kép meg nem erősíti.
   ///
-  /// MIÉRT kell: a szerveroldali írás visszaérkezése 100–300 ms, addig a
-  /// felhasználó nem látná, hogy megtörtént a reakció. Az optimista érték
-  /// pontosan a szerver válasza (nem tipp), ezért nem tud „félrevezetni".
+  /// MIÉRT kell: a `toggleChatReaction` egy Firebase callable, hideg
+  /// indulásnál **1–3 s** (Cloud Function + WordPress kör). A koppintásnak
+  /// viszont **azonnal** látszania kell — ezért a helyi állapot előbb íródik,
+  /// és a szerver csak utána igazol. A minta a privát üzenet szíve
+  /// (`private_messages_screen.dart` `_toggleHeart`: helyi felülírás +
+  /// `setState` a `await` ELŐTT, hiba esetén visszaállás + SnackBar).
   bool _optimisticActive = false;
   String _optimisticReaction = '';
+
+  /// Busy-kapu: ugyanarra az üzenetre nem indulhat két párhuzamos
+  /// `toggleReaction`. Enélkül a gyors koppintások két callable-t indítanának,
+  /// és a lassabb válasz felülírná a gyorsabbat (a szerveroldali toggle
+  /// kiszámíthatatlan sorrendben írna).
+  bool _reactionBusy = false;
 
   /// A saját reakcióm a szerver-kép szerint (üres, ha nincs / nem vagyok be).
   String get _snapshotReaction {
@@ -1381,27 +1390,74 @@ class _PostCardState extends ConsumerState<_PostCard> {
     return widget.post.myReaction(uid);
   }
 
+  /// A darabszám helyi korrekciója (delta) a szerver-képhez képest.
+  ///
+  /// MIÉRT: a `post.reactions[emoji]` a Firestore-képből jön, az pedig csak a
+  /// szerveroldali írás (1–3 s) után érkezik meg — a szám enélkül másodpercekig
+  /// a régit mutatná. Ez pontosan ugyanaz a delta-minta, mint a privát üzenet
+  /// szívénél (`heartCount + (liked == currentLiked ? 0 : liked ? 1 : -1)`).
+  ///
+  /// A delta **magától eltűnik**, amint a kép beéri az optimista értéket
+  /// (`didUpdateWidget`), ezért nem tud tartósan hazudni; emoji-váltásnál pedig
+  /// a régi emojinál −1, az újnál +1 lesz.
+  int _reactionDelta(String emoji) {
+    final before = _snapshotReaction;
+    final after = _optimisticActive ? _optimisticReaction : _snapshotReaction;
+    if (before == after) return 0;
+    var delta = 0;
+    if (before == emoji) delta -= 1;
+    if (after == emoji) delta += 1;
+    return delta;
+  }
+
   @override
   void didUpdateWidget(covariant _PostCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Beért a kép: az optimista érték már felesleges (a szerver az úr).
+    // Beért a kép: az optimista érték már felesleges (a szerver az úr), így a
+    // delta is 0-ra esik vissza.
     if (_optimisticActive && _snapshotReaction == _optimisticReaction) {
       _optimisticActive = false;
     }
   }
 
   Future<void> _react(String emoji) async {
+    if (_reactionBusy) return;
+    final previousActive = _optimisticActive;
+    final previousReaction = _optimisticReaction;
+    // A koppintás pillanatában látható állapot: ha van helyi érték, az az úr,
+    // különben a szerver-kép. Ugyanarra az emojira koppintva visszavonjuk.
+    final current = previousActive ? previousReaction : _snapshotReaction;
+    final optimistic = current == emoji ? '' : emoji;
+    // Optimista írás még a szolgáltatás-hívás előtt: a chip és a darabszám
+    // azonnal mozdul, nem a callable visszaérkezésére vár.
+    setState(() {
+      _reactionBusy = true;
+      _optimisticActive = true;
+      _optimisticReaction = optimistic;
+    });
     try {
       final selected = await ref
           .read(communityServiceProvider)
           .toggleReaction(postId: widget.post.id, emoji: emoji);
       if (!mounted) return;
+      // A szerver válasza az igazság (nem tipp) — pontosan ezt fogja hozni a
+      // következő Firestore-kép is.
       setState(() {
         _optimisticActive = true;
         _optimisticReaction = selected;
       });
-    } catch (_) {
-      // Hiba: marad a szerver-kép (nem mutatunk olyat, ami nem történt meg).
+    } catch (error) {
+      if (!mounted) return;
+      // Hiba: visszaállunk a koppintás előtti állapotra ÉS szólunk — a korábbi
+      // néma hibaelnyelés elrejtette a hibát a felhasználó elől.
+      setState(() {
+        _optimisticActive = previousActive;
+        _optimisticReaction = previousReaction;
+      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_chatError(error))));
+    } finally {
+      if (mounted) setState(() => _reactionBusy = false);
     }
   }
 
@@ -1738,7 +1794,11 @@ class _PostCardState extends ConsumerState<_PostCard> {
                   onPressed: widget.onReply,
                 ),
                 ...['❤️', '🔥', '🙌'].map((emoji) {
-                  final count = post.reactions[emoji] ?? 0;
+                  // A szerver-kép + a helyi delta: a szám a koppintásra azonnal
+                  // mozdul, a képre nem vár (lásd `_reactionDelta`).
+                  final count =
+                      (post.reactions[emoji] ?? 0) + _reactionDelta(emoji);
+                  final safeCount = count < 0 ? 0 : count;
                   // A SAJÁT reakció egyértelmű jelzése — **név nélkül**.
                   final isMine =
                       (_optimisticActive
@@ -1758,7 +1818,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
                           )
                         : null,
                     label: Text(
-                      '$emoji${count > 0 ? ' $count' : ''}',
+                      '$emoji${safeCount > 0 ? ' $safeCount' : ''}',
                       style: isMine
                           ? TextStyle(
                               fontWeight: FontWeight.bold,

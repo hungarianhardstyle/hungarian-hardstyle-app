@@ -18,6 +18,7 @@ import '../models/submission_image.dart';
 import '../core/firebase/firebase_callable.dart';
 import '../models/voting.dart';
 import 'wordpress_head_cache.dart';
+import 'wordpress_tag_cache.dart';
 
 int _readInt(Object? value, {int fallback = 0}) {
   if (value is int) return value;
@@ -856,6 +857,25 @@ class WordpressService {
     }
   }
 
+  /// A címke-nevek pótlása a hír-végpont azonosítóihoz.
+  ///
+  /// **ELŐBB a gyorsítótár, és csak utána a hálózat.** A címkenév ritkán változó
+  /// adat, ezért egy találatnál a kirajzolás **nem** vár hálózatra — ez a
+  /// lényeg: egy kör a WordPressnél mérve 0,4–2,0 s, és ez a függvény eddig
+  /// MINDEN hírlista-, keresés- és cikk-lekérdezéshez hozzátett egy másodikat.
+  ///
+  /// A találat útja viszont nem „örök": a mentett érték a
+  /// [_persistentCacheTtl] letelte után **a háttérben** egyeztet (átnevezett
+  /// címke, átszámozott cikk), ugyanúgy, ahogy a kategóriáknál — a friss válasz
+  /// felülírja a mentettet, a kirajzolás pedig addig a mentett neveket használja.
+  ///
+  /// A kulcs a kért azonosítók **sorba rendezett** halmaza (lásd
+  /// [postTagCacheKey]), a mentés pedig a meglévő állandó gyorsítótáron megy
+  /// (`_readPersistentJson` / `_writePersistentJson`), ezért memóriából és
+  /// lemezről is azonnal válaszol.
+  ///
+  /// Hiba esetén a viselkedés változatlan: a bemeneti lista megy vissza, csak a
+  /// címkenevek nélkül.
   Future<List<Map<String, dynamic>>> _hydratePostTags(
     List<Map<String, dynamic>> posts,
   ) async {
@@ -867,6 +887,39 @@ class WordpressService {
       return posts;
     }
 
+    final cacheKey = postTagCacheKey(ids);
+    final stored = decodePostTagNames(await _readPersistentJson(cacheKey));
+    if (stored.isNotEmpty) {
+      if (await _persistentValueNeedsRefresh(cacheKey)) {
+        _schedulePersistentRefresh(
+          cacheKey,
+          () => _refreshPostTagNames(cacheKey, ids),
+        );
+      }
+      return applyPostTagNames(posts, stored);
+    }
+
+    final byId = await _fetchPostTagNames(ids);
+    if (byId.isNotEmpty) {
+      // A mentés a háttérben történik: a kirajzolás nem várhat a lemezre.
+      unawaited(_writePersistentJson(cacheKey, encodePostTagNames(byId)));
+    }
+    return applyPostTagNames(posts, byId);
+  }
+
+  /// A háttér-egyeztetés: a lejárt mentett címkenevek frissítése.
+  Future<void> _refreshPostTagNames(String cacheKey, List<int> ids) async {
+    final byId = await _fetchPostTagNames(ids);
+    if (byId.isEmpty) return;
+    await _writePersistentJson(cacheKey, encodePostTagNames(byId));
+  }
+
+  /// A címkenevek lekérdezése a WordPress alapszolgáltatásából.
+  ///
+  /// A `_hydratePostTags` és a háttér-egyeztetés is **ezt** használja, ezért a
+  /// két út nem tud eltérni egymástól. Hiba esetén üres térkép jön (nem dob): a
+  /// szerver válaszától függetlenül a hívó a bemeneti listát adja vissza.
+  Future<Map<int, List<String>>> _fetchPostTagNames(List<int> ids) async {
     try {
       final response = await _dio.get(
         'https://hungarianhardstyle.hu/wp-json/wp/v2/posts',
@@ -888,16 +941,11 @@ class WordpressService {
         final names = Post.fromWordpressJson(item).tags;
         if (id > 0 && names.isNotEmpty) byId[id] = names;
       }
-      return posts
-          .map((post) {
-            final names = byId[_readInt(post['id'])];
-            return names == null ? post : {...post, 'tag_names': names};
-          })
-          .toList(growable: false);
+      return byId;
     } catch (_) {
       // The custom endpoint remains usable if the optional core REST lookup
       // is blocked or unavailable.
-      return posts;
+      return const {};
     }
   }
 

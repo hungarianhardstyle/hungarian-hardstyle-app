@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/label_library.dart';
@@ -16,11 +18,36 @@ final labelLibraryServiceProvider = Provider<LabelLibraryService>(
 /// más fiók zenéihez hozzáférni. Azért `watch`-olja a [currentUidProvider]-t,
 /// hogy **fiókváltásnál automatikusan újratöltődjön**: eszébe se jusson a
 /// korábbi fiók listáját mutatni.
+///
+/// **`keepAlive` (a tulajdonos panasza):** *„ez az új megvárásolt zenéim is
+/// lassan tölt be"*. A provider korábban `autoDispose` volt, ezért a képernyő
+/// minden megnyitása elölről kérdezte le a szervert (0,4–2,0 s) — a megtartott
+/// állapot viszont azonnal rajzol.
+///
+/// **A mentett lista azonnal kimegy** (`LabelLibraryService.load`), a hálózat
+/// pedig csak a háttérben egyeztet; amikor az megjött, a provider
+/// újraszámol, és a (már friss) mentett listát rajzolja — hálózati várakozás
+/// nélkül. A fiókváltás továbbra is újratöltést indít (a UID a kulcsban van).
 final labelLibraryProvider =
     FutureProvider.autoDispose<List<LabelLibraryItem>>((ref) async {
+      ref.keepAlive();
       final uid = ref.watch(currentUidProvider);
       if (uid == null) return const [];
-      return ref.watch(labelLibraryServiceProvider).load();
+      final service = ref.watch(labelLibraryServiceProvider);
+      // A háttérellenőrzés a képernyő lezárása UTÁN is befejeződhet; ilyenkor
+      // nem szabad újraszámolni (a provider „loading" állapotban szűnne meg).
+      var disposed = false;
+      ref.onDispose(() => disposed = true);
+      final items = await service.load(uid: uid);
+      final pending = service.pendingRefresh(uid);
+      if (pending != null) {
+        unawaited(
+          pending.then((_) {
+            if (!disposed) ref.invalidateSelf();
+          }),
+        );
+      }
+      return items;
     });
 
 /// A **fiókhoz kötött** helyi tároló. Nincs bejelentkezés → üres UID, és akkor

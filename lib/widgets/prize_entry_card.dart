@@ -5,6 +5,7 @@ import '../models/prize.dart';
 import '../providers/prize_provider.dart';
 import '../screens/prize/prize_screen.dart';
 import 'home_action_card.dart';
+import 'home_row_state.dart';
 
 /// Nyeremenyjatek — a BEJARAT a főoldalon.
 ///
@@ -19,17 +20,31 @@ import 'home_action_card.dart';
 /// A jatek elott a nyeremeny NEVE es LEIRASA szandekosan nem kerul a kartya
 /// szovegere (a szerver sem adja ki): a kartya addig csak annyit mond, hogy
 /// nyeremenyjatek van.
+///
+/// Amig a valasz **uton van**, a sor nem tunik el: a helyen egy skeleton
+/// ([HomeActionCardPlaceholder]) all, ezert a főoldal nem ugrik egyet, amikor a
+/// kártya megérkezik (a WordPress válaszideje mérve 0,4–2,0 s).
 class PrizeEntryCard extends ConsumerWidget {
   const PrizeEntryCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final prize = ref.watch(activePrizeProvider);
-    return prize.maybeWhen(
-      data: (value) =>
-          value == null ? const SizedBox.shrink() : _build(context, value),
-      orElse: () => const SizedBox.shrink(),
+    final value = prize.valueOrNull;
+    // Ugyanaz a tiszta döntés, mint a kérdoív soránál (`homeRowView`): a két
+    // főoldali sor viselkedése így nem tud elcsúszni egymástól.
+    final view = homeRowView(
+      hasValue: prize.hasValue,
+      hasContent: value != null,
+      isLoading: prize.isLoading,
     );
+    return switch (view) {
+      HomeRowView.content => _build(context, value!),
+      HomeRowView.loading => const HomeActionCardPlaceholder(
+        icon: Icons.card_giftcard_outlined,
+      ),
+      HomeRowView.empty => const SizedBox.shrink(),
+    };
   }
 
   Widget _build(BuildContext context, HuhsPrize prize) {

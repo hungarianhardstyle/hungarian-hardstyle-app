@@ -13,13 +13,17 @@ import 'package:hungarian_hardstyle_app/services/poll_service.dart';
 class _FakePollService extends PollService {
   _FakePollService(this.poll, {this.voted = false});
 
-  final HuhsPoll? poll;
+  /// A nyitott kérdoív. Módosítható, mert a „közben lezárult" esetet is mérjük.
+  HuhsPoll? poll;
   int calls = 0;
   bool? lastForceRefresh;
 
-  /// A kartyanak `bypassCache: true`-val KELL kérdeznie. A `forceRefresh`
-  /// (HEAD + ETag) élesben a régi testet adta vissza, ezért a frissen
-  /// kihirdetett nyertes csak tíz perccel később jelent meg.
+  /// A **kifejezett frissítés** útjának `bypassCache: true`-val KELL kérdeznie.
+  ///
+  /// A `forceRefresh` (HEAD + ETag) élesben a régi testet adta vissza (a
+  /// WordPress cache-elt válasza ugyanazt az ETag-ot adja), ezért a frissen
+  /// kihirdetett nyertes csak tíz perccel később jelent meg. A megjelenítési út
+  /// viszont szándékosan a mentett válaszból rajzol azonnal.
   bool? lastBypassCache;
 
   /// A szerver valasza a „szavaztal mar?" keredesre.
@@ -98,20 +102,41 @@ void main() {
     expect(fake.calls, 1);
   });
 
-  test('a lekerdezes MEGKERULI a cache-t', () async {
-    // Ez a lényeg: a kerdőív megnyilasa/zarasa időponthoz kotott, ezert egy
-    // mentett valasz (peldaul egy korabbi `null`) nem dönthet a kartyarol.
-    //
-    // **`bypassCache`, nem `forceRefresh`.** Az utobbi HEAD + ETag
-    // egyeztetessel dönt, a WordPress cache-elt valasza viszont ugyanazt az
-    // ETag-ot adja vissza — ezért élesben a régi testet szolgálta ki, és a
-    // frissen kihirdetett nyertes csak tíz perccel később jelent meg.
+  test('a MEGJELENITESI ut a mentett valaszt adja (nem var a halozatra)', () async {
+    // A tulajdonos panasza szerint a WordPress-végpontok lassan töltenek be
+    // (mérve 0,4–2,0 s), ezért a kártya a mentett válaszból rajzol azonnal, és
+    // csak a háttérben egyeztet. A `bypassCache` ilyenkor **hiba** lenne: az
+    // egyenesen megkerüli a mentett rekordot, és megint várni kellene.
     final fake = _FakePollService(_poll);
     final container = _containerWith(fake);
 
     await container.read(activePollProvider.future);
 
+    expect(fake.lastBypassCache, isFalse);
+    expect(fake.lastForceRefresh, isFalse);
+  });
+
+  test('a KIFEJEZETT frissites MEGKERULI a cache-t (nyitas/zaras azonnal latszik)', () async {
+    // A frissítés viszont nem hazudhat: a kérdoív megnyílása/zárása időponthoz
+    // kötött, ezért itt a mentett válasz **nem** dönthet.
+    //
+    // **`bypassCache`, nem `forceRefresh`:** az utóbbi HEAD + ETag
+    // egyeztetéssel dönt, a WordPress cache-elt válasza viszont ugyanazt az
+    // ETag-ot adja vissza — ezért élesben a régi testet szolgálta ki, és a
+    // frissen kihirdetett nyertes csak tíz perccel később jelent meg.
+    final fake = _FakePollService(_poll);
+    final container = _containerWith(fake);
+    await container.read(activePollProvider.future);
+
+    // Közben a szerveren lezárult a kérdoív.
+    fake.poll = null;
+    await container.read(activePollRefreshProvider.future);
+
     expect(fake.lastBypassCache, isTrue);
+    expect(fake.calls, 2);
+    // A friss válasz a közös gyorsítótárba került, ezért a megjelenítési út
+    // utána már a helyes (üres) állapotot rajzolja.
+    expect(await container.read(activePollProvider.future), isNull);
   });
 
   test('frissites utan ujra lekerdez (nyitas/zaras követhető)', () async {

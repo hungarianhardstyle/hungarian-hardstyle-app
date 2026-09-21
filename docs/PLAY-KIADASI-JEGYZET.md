@@ -6,11 +6,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 342
+currentBuild: 343
 currentVersion: 1.0.0
 lastPublishedBuild: 341
-aab: build/HUHS-v1.0.0+342-release.aab
-sha256: 43A8E6BC47EE2F014E055B44B4402220382380FE78DF775B76ED4BE658246C69
+aab: build/HUHS-v1.0.0+343-release.aab
+sha256: C0BA50E56081825857A577954931CEC3CEC21DD4073BA53E4EF2CC6267033F2A
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -63,17 +63,20 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+342-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+343-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **342** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 79.85 MB |
-| SHA-256 | 43A8E6BC47EE2F014E055B44B4402220382380FE78DF775B76ED4BE658246C69 |
+| Verziókód | **343** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 80.02 MB |
+| SHA-256 | C0BA50E56081825857A577954931CEC3CEC21DD4073BA53E4EF2CC6267033F2A |
 
-**Miért a 342-t kell feltenni:** ez a legfrissebb (a 341-re épül, plusz a **könyvtár címeinek** javítása:
-a 341-ben a kártyák „betöltés" állapotban maradtak, most újra látszanak a címek).
-A zárt teszt sávján most a **341** él — a 342 ezt váltja.
+**Miért a 343-at kell feltenni:** ez a legfrissebb, és **három tulajdonosi panaszt** javít:
+(1) a WordPress-adatok (hírek, kiadványok, saját zenék) a készüléken tárolt példányból
+**azonnal** megjelennek, a frissítés a háttérben fut; (2) a **lájk** és az **ismerősnek jelölés**
+azonnal látszik (a szerverhívás a háttérben megy, hiba esetén visszaáll); (3) a
+„Megvásárolt zenéim" lejátszójában **tekerhető a folyamatjelző**, van **stop** gomb és
+**lejátszási lista** (ismétlés/keverés és „folytatás ott, ahol abbahagytad"). A zárt teszt sávján most a **342** él — a 343 ezt váltja.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 342 mindegyiket tartalmazza, és kisebb
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 343 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.5.9** (`build/huhs-mobile-api-2.5.9.zip`) — **ez már fent van** (élőben igazolva:
@@ -91,12 +94,12 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Javítva: a „Megvásárolt zenéim" listában a kiadványok címe újra megjelenik (a 341-ben a kártyák „betöltés" állapotban maradtak).
-- A lejátszó csak a letöltött zenéket játssza, és lapozásnál átugorja a le nem töltötteket.
-- A nyilvános listáról lekerült kiadványt megnevezzük (nem „Kiadvány #szám").
+- Gyorsabb betöltés: a WordPress-adatok a készüléken tárolt példányból azonnal megjelennek, a frissítés a háttérben fut.
+- A lájk és az ismerősnek jelölés azonnal látszik; a szerver a háttérben dolgozik, hiba esetén visszaáll.
+- A „Megvásárolt zenéim" lejátszójában tekerhető a folyamatjelző, van stop gomb és lejátszási lista (ismétlés/keverés is).
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–342 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–343 összesítő)
 
 **Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
@@ -104,24 +107,26 @@ felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapj�
 ```play-notes
 - Értesítés: chat-lájk, chat-válasz és komment-válasz.
 - Az app ikonja mutatja az olvasatlanokat.
-- A rádió folyamatosan szól; más zene alatt elhallgat, majd folytatja.
+- A rádió folyamatosan szól, más zene alatt elhallgat.
 - A YouTube-videó az appban szól.
 - Aktivitási pont, vásárlás +20, beküldés +10.
-- Eseményt csak szervezőként lehet beküldeni; az Achievement-útmutató pontos.
-- A rangod szintlépésnél frissül; a listák nem villognak.
-- ÚJ: „Megvásárolt zenéim" (lejátszás/letöltés) és a kvíz azonnali „már kitöltötted" jelzése.
+- Eseményt csak szervezőként lehet beküldeni.
+- A rangod szintlépésnél frissül.
+- ÚJ: „Megvásárolt zenéim" + kvíz azonnali „már kitöltötted" jelzése.
+- ÚJ: gyorsabb betöltés, azonnali lájk és ismerős-jelölés, tekerhető lejátszó listával.
 ```
 
-## 1c. Play Console — CSAK a 342-höz, bővebben (tartalék)
+## 1c. Play Console — CSAK a 343-hoz, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 342-t írja le** (a 329–341 már kiment a zárt teszt sávjára).
+megjeleníteni. **Ez is csak a 343-at írja le.**
 
 ```play-notes
-- Javítva: a „Megvásárolt zenéim" listában újra látszanak a kiadványok címei (a 341-ben végig „betöltés" állt).
-- A lejátszó csak a letöltött zenéket játssza; lapozásnál átugorja a le nem töltötteket, és nem indít letöltést.
-- A „Megvásárolt zenéim" a Több menüben a menü többi szakaszához illeszkedik (nyitva indul, kereshető).
-- A nyilvános listáról lekerült kiadványt megnevezzük, nem „Kiadvány #szám" sort mutatunk.
+- Gyorsabb betöltés: a WordPress-adatok a tárolt példányból azonnal megjelennek, a frissítés a háttérben fut.
+- A chat-lájk és az ismerősnek jelölés azonnal látszik; hiba esetén a jelzés visszaáll és üzenetet kapsz.
+- A „Megvásárolt zenéim" lejátszójában tekerhető a folyamatjelző és van stop gomb.
+- Új lejátszási lista („Lista") a letöltött zenékből, ismétléssel és keveréssel.
+- A lejátszó felajánlja a folytatást ott, ahol abbahagytad (fiókonként megjegyzi).
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -139,6 +144,18 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 343 — gyorsabb betöltés, azonnali lájk/ismerős, tekerhető lejátszó
+- **Gyorsabb betöltés:** a hírek, a kiadványok, a főoldali kérdőív/nyereményjáték sor és a saját zenéid listája a **készüléken tárolt példányból azonnal** megjelenik, a frissítés a háttérben fut. A lassulás oka a tárhely válaszideje (mérve 0,4–2,0 másodperc kéréseként, a válasz méretétől függetlenül), ezért a megoldás a helyi gyorsítótár és a háttérbeli egyeztetés — nem a tárhely cseréje.
+- A hírek megnyitása, a keresés és a kategóriaváltás már **nem vár** a szerverre; a lehúzásos frissítés viszont továbbra is valódi, friss választ kér.
+- A főoldali sorok betöltés közben **helykitöltő kártyát** mutatnak (eddig üresen maradtak, és a kártya másodpercekkel később „pattant be").
+- **A lájk azonnal látszik:** a chat-üzenet reakciója a koppintás pillanatában megjelenik (a szám is azonnal mozdul), a szerverhívás a háttérben fut; ha nem sikerül, a jelzés **visszaáll** és üzenetet kapsz (eddig néma hiba volt).
+- **Az ismerősnek jelölés is azonnal látszik**, és a bejövő felkérés elfogadása/elutasítása is — ez eddig hiba esetén **semmilyen** visszajelzést nem adott.
+- **Tekerhető folyamatjelző** a „Megvásárolt zenéim" lejátszójában (`0:42 / 4:10`), húzás közben a sáv nem ugrik vissza.
+- **Stop gomb:** megállítja a zenét és a szám elejére áll (a cím a sávban marad, egy koppintással újraindul).
+- **Lejátszási lista** („Lista") a letöltött zenékből, a lejátszási sorrendben, az aktuális kiemelve.
+- **Ismétlés** (nincs / mind / egy) és **keverés** — keverésnél az épp hallgatott zene marad az első.
+- **Folytatás ott, ahol abbahagytad:** a lejátszó fiókonként megjegyzi a helyet, és felajánlja („Elölről" / „Folytatás").
 
 ### 342 — a könyvtár címei újra megjelennek
 - **Javítás:** a 341-ben a „Megvásárolt zenéim" lista kártyái **végig „Adatok betöltése…"** állapotban maradtak (a képernyőfelvételen látszott), miközben a lejátszósáv már a valódi címet mutatta. Az ok: a kártya csak a lusta lekérdezés térképét nézte, a nyilvános **katalógust** nem.

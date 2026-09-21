@@ -9,11 +9,13 @@ import 'package:hungarian_hardstyle_app/providers/community_provider.dart';
 import 'package:hungarian_hardstyle_app/providers/prize_provider.dart';
 import 'package:hungarian_hardstyle_app/services/prize_service.dart';
 /// A nyeremenyjatek PROVIDEREI: a jatek es a sajat jatszott-allapot a
-/// szerverrol jon, es minden lekerdezes megkeruli a cache-t.
+/// szerverrol jon.
 ///
-/// A jatek nyitasa, zarasa es a sorsolas időponthoz kotott, ezert egy mentett
-/// valasz (peldaul egy korabbi `null`) nem dönthet arrol, latszik-e a kartya —
-/// pontosan ezt a hibat kellett a kerdőívnél egyszer javítani.
+/// **Ket kulon ut:** a **megjelenitesi** ut (`activePrizeProvider`) a mentett
+/// valaszt adja azonnal (a WordPress mérve 0,4–2,0 s), a **kifejezett
+/// frissites** utja (`activePrizeRefreshProvider`) viszont megkeruli a cache-t,
+/// mert a jatek nyitasa, zarasa es a sorsolas időponthoz kotott — pontosan ezt
+/// a hibat kellett a kerdőívnél egyszer javítani.
 class _FakePrizeService extends PrizeService {
   _FakePrizeService({
     this.prize,
@@ -27,8 +29,8 @@ class _FakePrizeService extends PrizeService {
   int playCalls = 0;
   bool? lastForceRefresh;
 
-  /// A kartyanak `bypassCache: true`-val KELL kérdeznie: a `forceRefresh`
-  /// (HEAD + ETag) élesben a régi testet adta vissza.
+  /// A **kifejezett frissítés** útjának `bypassCache: true`-val KELL kérdeznie:
+  /// a `forceRefresh` (HEAD + ETag) élesben a régi testet adta vissza.
   bool? lastBypassCache;
   int? lastPrizeId;
 
@@ -100,7 +102,10 @@ void main() {
   }
 
   group('activePrizeProvider', () {
-    test('a nyitott jatekot a szerverrol keri le, cache-kikerulessel', () async {
+    test('a MEGJELENITESI ut a mentett valaszt adja (nem var a halozatra)', () async {
+      // A WordPress-végpontok mérve 0,4–2,0 s alatt válaszolnak, ezért a
+      // főoldali sor a mentett válaszból rajzol azonnal, és csak a háttérben
+      // egyeztet. A `bypassCache` itt hiba lenne: megkerülné a mentett rekordot.
       final service = _FakePrizeService(prize: _openPrize);
       final container = _container(service);
 
@@ -108,10 +113,31 @@ void main() {
 
       expect(prize?.id, 777);
       expect(service.activeCalls, 1);
+      expect(service.lastBypassCache, isFalse);
+      expect(service.lastForceRefresh, isFalse);
+    });
+
+    test('a KIFEJEZETT frissites MEGKERULI a cache-t (a sorsolas azonnal latszik)', () async {
+      // A játék nyitása, zárása és a sorsolás időponthoz kötött, ezért a
+      // frissítés útján a mentett válasz **nem** dönthet. A `forceRefresh` erre
+      // nem elég: HEAD + ETag egyeztetéssel dolgozik, a WordPress cache-elt
+      // válasza pedig ugyanazt az ETag-ot adja vissza — élesben ezért jelent meg
+      // a kihirdetett nyertes csak tíz perccel később.
+      final service = _FakePrizeService(prize: _openPrize);
+      final container = _container(service);
+      await container.read(activePrizeProvider.future);
+
+      // Közben lezárul a játék, és kihirdetik a nyertest.
+      service.prize = _drawnPrize;
+      final refreshed = await container.read(activePrizeRefreshProvider.future);
+
+      expect(service.lastBypassCache, isTrue);
+      expect(refreshed?.winner?.name, 'Kiss Péter');
+      // A friss válasz a közös gyorsítótárba került: a megjelenítési út utána
+      // már a nyertest rajzolja, hálózati várakozás nélkül.
       expect(
-        service.lastBypassCache,
-        isTrue,
-        reason: 'a jatek nyitasa/zarasa időponthoz kotott, a cache nem dönthet',
+        (await container.read(activePrizeProvider.future))?.winner?.name,
+        'Kiss Péter',
       );
     });
 

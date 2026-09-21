@@ -38,6 +38,17 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 343,
+    changes: [
+      'Gyorsabb betöltés: a hírek, a kiadványok és a saját zenéid a készüléken tárolt példányból azonnal megjelennek, a frissítés a háttérben fut.',
+      'A lájk és az ismerősnek jelölés azonnal látszik — a szerver a háttérben dolgozik, hiba esetén a jelzés visszaáll és üzenetet kapsz.',
+      'A „Megvásárolt zenéim" lejátszójában tekerhető a folyamatjelző, és külön stop gomb állítja le a zenét.',
+      'Új lejátszási lista („Lista") a letöltött zenékből, ismétléssel (nincs / mind / egy) és keveréssel.',
+      'A lejátszó felajánlja, hogy ott folytasd, ahol abbahagytad — fiókonként megjegyzi a helyet.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 342,
     changes: [
       'Javítva: a „Megvásárolt zenéim" listában a kiadványok címe újra megjelenik (a 341-ben a kártyák végig „betöltés" állapotban maradtak).',

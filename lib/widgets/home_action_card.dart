@@ -144,3 +144,120 @@ class HomeActionCard extends StatelessWidget {
     );
   }
 }
+
+/// A főoldali sor **helye**, amíg a szerver válasza úton van.
+///
+/// **MÉRT OK:** a WordPress válaszideje 0,4–2,0 s (a válasz méretétől
+/// függetlenül), és a sor eddig `SizedBox.shrink()` volt — vagyis a kártya
+/// másodpercekkel később „pattant be", és a főoldal egyet ugrott. Ez a widget
+/// ugyanazt a formátumot (és ugyanazokat a margókat) rajzolja, mint a valódi
+/// [HomeActionCard], csak **tartalom nélkül**: két semleges sáv áll a szöveg
+/// helyén, ezért nem állítunk a felhasználónak olyat, ami még nem biztos.
+///
+/// A sávok magassága a valódi szövegstílusokból jön (`labelSmall` +
+/// `titleMedium`), ezért a betűméret-növelést is követi. A magasság a
+/// **egysoros** kártyáéval egyezik meg — a kétsoros cím ettől magasabb, de
+/// ilyen rövid időre nem érdemes tippelni a szöveg hosszára.
+class HomeActionCardPlaceholder extends StatelessWidget {
+  const HomeActionCardPlaceholder({super.key, required this.icon});
+
+  /// Ugyanaz az ikon, mint amit a valódi sor majd mutatni fog.
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Semantics(
+        label: 'Betöltés',
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [scheme.surfaceContainer, scheme.surfaceContainerHigh],
+            ),
+            border: Border.all(color: scheme.outlineVariant),
+            borderRadius: const BorderRadius.all(HomeActionCard._radius),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 4,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: scheme.outlineVariant,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: HomeActionCard._radius,
+                      bottomLeft: HomeActionCard._radius,
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
+                child: Row(
+                  children: [
+                    Icon(icon, size: 22, color: scheme.onSurfaceVariant),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _SkeletonLine(
+                            style: theme.textTheme.labelSmall,
+                            widthFactor: 0.3,
+                          ),
+                          const SizedBox(height: 3),
+                          _SkeletonLine(
+                            style: theme.textTheme.titleMedium,
+                            widthFactor: 0.72,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Egy sor magasságú semleges sáv (a szöveg helyén).
+class _SkeletonLine extends StatelessWidget {
+  const _SkeletonLine({required this.style, required this.widthFactor});
+
+  final TextStyle? style;
+  final double widthFactor;
+
+  @override
+  Widget build(BuildContext context) {
+    final fontSize = style?.fontSize ?? 14;
+    final lineHeight = fontSize * (style?.height ?? 1.2);
+    return SizedBox(
+      height: lineHeight,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: FractionallySizedBox(
+          widthFactor: widthFactor,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
