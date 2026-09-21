@@ -16,6 +16,7 @@ import '../../services/label_download_manager.dart';
 import '../../services/label_library_plan.dart';
 import '../../services/label_playback_memory.dart';
 import '../../services/label_playback_plan.dart';
+import '../../services/label_release_availability.dart';
 import '../../widgets/radio_player_bar.dart';
 import '../../widgets/resized_network_image.dart';
 import '../releases/releases_screen.dart';
@@ -117,6 +118,11 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   final Set<int> _unavailableReleases = {};
   final Set<int> _resolvingReleases = {};
 
+  /// A „nincs meg a nyilvános listában" jelölés **megmarad** a következő
+  /// megnyitásra is (24 óráig), különben minden alkalommal újra lekérdeznénk a
+  /// WordPressből (`getRelease`) — az pedig mért érték szerint **0,4–2 másodperc**.
+  final LabelReleaseAvailability _availability = LabelReleaseAvailability();
+
   /// A **katalógus + a lusta lekérdezések** együtt — ebből rajzolódnak a kártyák
   /// ÉS épül a lejátszási sor.
   ///
@@ -149,6 +155,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       _duration = duration ?? Duration.zero;
       if (mounted) setState(() {});
     });
+    unawaited(_loadReleaseAvailability());
   }
 
   @override
@@ -238,6 +245,21 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
 
   LabelDownloadManager get _downloads => ref.read(labelDownloadManagerProvider);
 
+  /// A korábban „nem elérhetőnek" jelölt kiadványok betöltése a tárolóból.
+  ///
+  /// Ez teszi **azonnalivá** a kártyát: a címe helyett nem „betöltés" látszik,
+  /// hanem rögtön az, hogy ez a kiadvány már nincs a nyilvános listában.
+  Future<void> _loadReleaseAvailability() async {
+    try {
+      final missing = await _availability.loadMissing();
+      if (!mounted || missing.isEmpty) return;
+      setState(() => _unavailableReleases.addAll(missing));
+    } catch (_) {
+      // A tároló hibája nem akadályozhatja a könyvtárat — ilyenkor egyszerűen
+      // újra lekérdezzük a hiányzó kiadványokat.
+    }
+  }
+
   /// A katalógusból hiányzó kiadványok egyenkénti lekérdezése.
   ///
   /// Csak **egyszer** próbáljuk (a `_resolvingReleases`/`_unavailableReleases`
@@ -260,12 +282,17 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
           _releaseMeta[releaseId] = release;
           _resolvingReleases.remove(releaseId);
         });
+        // Ha mégis megvan (újra közzétették), a jelölést is töröljük.
+        unawaited(_availability.clear(releaseId));
       } catch (_) {
         if (!mounted) return;
         setState(() {
           _unavailableReleases.add(releaseId);
           _resolvingReleases.remove(releaseId);
         });
+        // A jelölés megmarad a következő megnyitásra is (24 óra), hogy ne
+        // kérdezzük le újra ugyanazt a WordPressből minden alkalommal.
+        unawaited(_availability.markMissing(releaseId));
       }
     }
   }
@@ -450,6 +477,10 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       await _player.pause();
     } else if (_currentIndex >= 0 && _player.audioSource != null) {
       unawaited(_player.play());
+    } else if (_currentIndex >= 0 && _currentIndex < _queue.length) {
+      // Stop után a forrás újratöltése: a `stop()` a dekódereket elengedi, ezért
+      // a folytatás nem a `play()`-re, hanem egy friss betöltésre épül.
+      await _playIndex(_currentIndex, startAtMs: _position.inMilliseconds);
     } else {
       final start = firstDownloadedIndex(_queue, _downloaded);
       if (start < 0) {
@@ -713,7 +744,12 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   /// pozícióról van szó. A „Mégsem" törli a pontot, hogy ne kérdezze újra.
   Widget _buildResumeBanner() {
     final point = _resumePoint!;
-    final entry = _queue.firstWhere((item) => item.key == point.entryKey);
+    // ⚠️ VÉDELEM: a sor a háttérben változhat (új vásárlás, eltűnt kiadvány), és
+    // ilyenkor a mentett tétel kikerülhet belőle. `firstWhere` nélkül ez a
+    // `build`-ben dobna — ezért itt csendben eltűnik a felajánlás.
+    final index = _queue.indexWhere((item) => item.key == point.entryKey);
+    if (index < 0) return const SizedBox.shrink();
+    final entry = _queue[index];
     final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -742,10 +778,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
               child: const Text('Elölről'),
             ),
             FilledButton(
-              onPressed: () => _playIndex(
-                _queue.indexWhere((item) => item.key == point.entryKey),
-                startAtMs: point.positionMs,
-              ),
+              onPressed: () => _playIndex(index, startAtMs: point.positionMs),
               child: const Text('Folytatás'),
             ),
           ],
