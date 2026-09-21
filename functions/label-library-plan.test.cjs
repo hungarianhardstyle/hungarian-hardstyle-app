@@ -9,6 +9,8 @@ const {
   adUnlockedVariants,
   adUnlockGrantsVariant,
   labelLibraryPayload,
+  PURCHASE_VERIFY_BUDGETS,
+  purchaseVerificationBudget,
 } = require('./label-library-plan');
 
 /**
@@ -201,4 +203,90 @@ test('FORRÁS-LINT: a könyvtár-végpont a SAJÁT uid-re szűr, és a közös s
     ),
     'a free_link-et elnyelő régi szabály nem térhet vissza',
   );
+});
+
+// ---------------------------------------------------------------------------
+// A VÁSÁRLÁSOK HELYREÁLLÍTÁSÁNAK szerveroldali kerete.
+//
+// A tulajdonos döntése (2026-09-22): „A + B" kivitel (kézi gomb a
+// Beállításokban ÉS automatikus háttéregyeztetés), és **először csak a
+// szerveroldali rész** — mert a helyreállítás egyszerre TÖBB birtokolt terméket
+// ellenőriz, és a régi 10/perc keret a 11. kiadványnál elhasalt volna.
+// ---------------------------------------------------------------------------
+
+test('a normál vásárlás-ellenőrzés kerete VÁLTOZATLAN (10/perc, ugyanaz a kulcs)', () => {
+  const budget = purchaseVerificationBudget({});
+  assert.equal(budget.primaryKey, 'label_purchase');
+  assert.equal(budget.primaryLimit, 10);
+  assert.equal(budget.restore, false);
+  // A hiányzó vagy hamis jelző ugyanazt jelenti, mint eddig.
+  assert.deepEqual(purchaseVerificationBudget(), budget);
+  assert.deepEqual(purchaseVerificationBudget({ restore: false }), budget);
+  assert.deepEqual(purchaseVerificationBudget({ restore: 'true' }), budget);
+  assert.deepEqual(purchaseVerificationBudget({ restore: 1 }), budget);
+});
+
+test('a helyreállítás KÜLÖN vödröt kap, de nem korlátlan (20/perc)', () => {
+  const budget = purchaseVerificationBudget({ restore: true });
+  assert.equal(budget.primaryKey, 'label_restore');
+  assert.equal(budget.primaryLimit, 20);
+  assert.equal(budget.restore, true);
+  // Legalább a 15 kiadványos eset elférjen egy körben (a 10-es keret nem elég).
+  assert.ok(budget.primaryLimit > 10, 'a helyreállítás kerete legyen nagyobb a réginél');
+});
+
+test('a KÖZÖS összkeret mindkét utat ugyanabba a vödörbe tereli (nincs megkerülés)', () => {
+  const normal = purchaseVerificationBudget({});
+  const restore = purchaseVerificationBudget({ restore: true });
+  assert.equal(normal.totalKey, restore.totalKey, 'ugyanaz az összkeret');
+  assert.equal(normal.totalKey, 'label_verify');
+  assert.equal(normal.totalLimit, 20);
+  assert.equal(restore.totalLimit, 20);
+  // A két útvonal együtt SEM mehet 20/perc fölé — ezért a `restore` jelző nem
+  // válhat a korlát megkerülésének eszközévé.
+  assert.ok(
+    normal.totalLimit <= restore.primaryLimit,
+    'az összkeret fogja be a lazább helyreállítási vödröt',
+  );
+  // A vödrök nevei KÜLÖNBÖZŐEK, különben a helyreállítás a régi keretet enné.
+  assert.notEqual(normal.primaryKey, restore.primaryKey);
+  assert.notEqual(normal.primaryKey, normal.totalKey);
+  assert.notEqual(restore.primaryKey, restore.totalKey);
+});
+
+test('a keretek egy helyen élnek (a modul a forrása, nem a végpont)', () => {
+  assert.equal(PURCHASE_VERIFY_BUDGETS.purchase.limit, 10);
+  assert.equal(PURCHASE_VERIFY_BUDGETS.restore.limit, 20);
+  assert.equal(PURCHASE_VERIFY_BUDGETS.total.limit, 20);
+  assert.equal(Object.isFrozen(PURCHASE_VERIFY_BUDGETS), true);
+});
+
+test('FORRÁS-LINT: a verifyLabelPurchase a tesztelt keretet használja, a régit nem hardcode-olja', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8');
+  const start = source.indexOf('exports.verifyLabelPurchase');
+  assert.ok(start > 0, 'nincs verifyLabelPurchase végpont');
+  const body = source.slice(start, start + 5200);
+
+  // 1. A döntés a közös, tesztelt modulban van.
+  assert.match(body, /purchaseVerificationBudget\(\{/);
+  // 2. A `restore` csak SZIGORÚ `true` esetén számít.
+  assert.match(body, /restore:\s*data\?\.restore === true/);
+  // 3. Mindkét vödörből fogy (elsődleges + közös összkeret).
+  assert.match(
+    body,
+    /allowCall\(\s*context\.auth\.uid,\s*verifyBudget\.primaryKey,\s*verifyBudget\.primaryLimit,?\s*\)/,
+  );
+  assert.match(
+    body,
+    /allowCall\(\s*context\.auth\.uid,\s*verifyBudget\.totalKey,\s*verifyBudget\.totalLimit,?\s*\)/,
+  );
+  // 4. A régi, beégetett keret NEM maradhat benne (különben a modul és az éles
+  //    viselkedés csendben széthúzna).
+  assert.ok(
+    !/'label_purchase',\s*10/.test(source),
+    'a beégetett label_purchase keret ne maradjon a forrásban',
+  );
+  // 5. A jogosultság-írás és a token-egyediség érintetlen (nem lazult a védelem).
+  assert.match(body, /label_purchase_claims/);
+  assert.match(body, /Ez a vásárlás már másik felhasználóhoz tartozik\./);
 });

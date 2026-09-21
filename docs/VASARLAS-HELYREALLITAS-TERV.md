@@ -64,14 +64,44 @@ szerverünkön. Ha a 4. lépés bármiért kimarad, a Play szerint megvan a zene
 
 ## 5. ⚠️ A korlát, amit mindenképp kezelni kell: 10 kérés / 60 másodperc
 
+> **✅ A SZERVEROLDALI RÉSZ MEGVAN (2026-09-22, a tulajdonos döntése: „előbb csak a
+> szerveroldali rész").** A `verifyLabelPurchase` mostantól **két vödörből** fogy:
+> `label_purchase` **10/perc** (a normál út, **változatlan**) vagy `label_restore`
+> **20/perc** (ha a hívás `restore: true`-t küld), **és minden ellenőrzés ezen felül
+> a közös `label_verify` 20/perc összkeretből is** — így a `restore` jelző **nem**
+> válik a korlát megkerülésének eszközévé (a két út együtt sem mehet 20/perc fölé).
+> A döntés a tesztelt `functions/label-library-plan.js`-ben van
+> (`purchaseVerificationBudget`), a beégetett régi keret pedig **eltűnt** a
+> végpontból. **Az app viselkedése nem változott** (a `restore` jelző hiányában
+> pontosan a régi út fut), ezért **ehhez nem kellett új AAB**.
+> Bizonyíték: `functions/label-library-plan.test.cjs` **16/16** (5 új teszt: a régi
+> keret változatlansága, a külön vödör, a közös összkeret, a keretek egy helyen,
+> és forrás-lint a bekötésre), valamint **két mutációs próba** — a `restore` vödör
+> elvétele **2 tesztet**, a közös összkeret törlése **1 forrás-lintet** buktatott,
+> majd mindkét fájl **byte-pontosan** visszaállt (SHA-256 egyezik).
+
+> **A kliens-oldali rész (A + B) erre épül:** a darabolás a kliensben lesz
+> (8 termékenként), és mivel a `getMyLabelLibrary` már megmondja, mi van meg, a
+> kliens a **már meglévő** termékeket ki tudja hagyni — így a keret nem fogy
+> feleslegesen.
+
 - `verifyLabelPurchase`: `allowCall(uid, 'label_purchase', 10)` — **10 hívás / 60 másodperc /
-  fiók** (functions/index.js:5430, a `allowCall` fix 60 másodperces vödröt használ: `:1148-1169`).
+  fiók** (functions/index.js, a `allowCall` fix 60 másodperces vödröt használ: `:1148-1169`).
 - **A következmény:** akinek **10-nél több** megvásárolt kiadványa van, a naiv
   „mindent visszaállítok" kör a 11.-nél `resource-exhausted`-be fut.
-- **A megoldás (a terv része):** a helyreállítás **saját szerver-kulcsot** kapjon
-  (`allowCall(uid, 'label_restore', N)`), **és** a kliens **daraboljon** (pl. 8 termékenként,
-  a megmaradtakat a következő körre hagyva, „folytatás" lehetőséggel). A kettő együtt kell:
-  a darabolás önmagában lassú, az emelt keret önmagában visszaélhető.
+- **A megoldás (a terv része — a szerver fele ✅ kész, lásd a fenti keretet):** a helyreállítás
+  **saját szerver-kulcsot** kap (`label_restore`, 20/perc), **és** a kliens **daraboljon**
+  (8 termékenként, a megmaradtakat a következő körre hagyva, „folytatás" lehetőséggel). A kettő
+  együtt kell: a darabolás önmagában lassú, az emelt keret önmagában visszaélhető — ezért van
+  a **közös `label_verify` összkeret** is.
+
+## 5b. A tulajdonos döntései (2026-09-22)
+
+| Kérdés | Döntés |
+|---|---|
+| Melyik kivitel? | **A + B**: kézi gomb a Beállításokban **és** automatikus háttéregyeztetés |
+| Más fiókhoz kötött vásárlás? | **Magyar magyarázat, és NE tűnjön hibának** |
+| Mikor? | **Először csak a szerveroldali rész** (AAB nélkül) — a kliens (A + B) a következő körben, új AAB-ként |
 
 ## 6. Három kivitel — és a javaslat
 
@@ -117,10 +147,11 @@ de a legkevesebb haszon.
    kártyacímeknél).
 
 **Szerver:**
-5. Új `allowCall` kulcs a helyreállításnak (pl. `label_restore`, 20/perc), **a meglévő
-   `label_purchase` 10-es kerete érintetlen**.
-6. **Nincs új szükséges végpont**: a `verifyLabelPurchase` már most elvégzi a helyes dolgot,
-   ha a **helyes** `releaseId`-t kapja. (Ezért elég a kliens-oldali javítás + a keret.)
+5. ✅ **KÉSZ (2026-09-22):** új `allowCall` kulcs a helyreállításnak (`label_restore`, 20/perc) **és**
+   közös `label_verify` összkeret (20/perc), **a meglévő `label_purchase` 10-es kerete érintetlen**.
+6. ✅ **Nincs új szükséges végpont**: a `verifyLabelPurchase` már most elvégzi a helyes dolgot,
+   ha a **helyes** `releaseId`-t kapja (és mostantól a `restore: true` jelzővel a saját keretét
+   használja). A kliens a `getMyLabelLibrary`-ből tudja, mi van már meg — felesleges hívást nem indít.
 
 **Teszt-terv:**
 7. Tiszta tesztek a `label_restore_plan.dart`-ra: a termék-azonosító feldolgozása (helyes,
@@ -132,17 +163,26 @@ de a legkevesebb haszon.
 10. Mutációs bizonyíték: a darabolás kivételével és a `releaseId` hibás forrásból olvasásával
     **el kell hasalnia** a tesztnek (majd byte-pontos visszaállás).
 
-## 8. Döntési pontok a tulajdonosnak
+## 8. Döntési pontok — **MEGVÁLASZOLVA (2026-09-22, lásd 5b.)**
 
-1. **Kell-e egyáltalán?** A javaslatom: **igen**, de nem azért, mert a jogosultságok elvesznének
-   (azok nem vesznek el), hanem mert a **félbemaradt vásárlás** ma csak szerencsével hozható helyre.
-2. **Hova kerüljön?** A) gomb a Beállításokban, B) automatikus a háttérben, C) csak jelzés —
-   a javaslat **A + B**.
-3. **Mit mondjunk, ha a vásárlás MÁS app-fiókhoz tartozik?** A szerver ilyenkor elutasítja
-   (*„Ez a vásárlás már másik felhasználóhoz tartozik."*). A javaslat: a felület **mondja meg
-   magyarul**, hogy ez a vásárlás egy másik fiókhoz van kötve, és **ne** tűnjön hibának.
-4. **Kérjünk-e e-mailt/nyugtát?** Nem javaslom: a Play-nyugta és a token elég, és a token-
-   egyediség miatt a visszaélés kizárt.
+1. **Kell-e egyáltalán?** → **IGEN.** Nem azért, mert a jogosultságok elvesznének (azok nem
+   vesznek el), hanem mert a **félbemaradt vásárlás** ma csak szerencsével hozható helyre.
+2. **Hova kerüljön?** → **A + B** (gomb a Beállításokban **és** automatikus háttéregyeztetés).
+3. **Mit mondjunk, ha a vásárlás MÁS app-fiókhoz tartozik?** → **magyar magyarázat, és NE
+   tűnjön hibának.** A szerver ilyenkor elutasítja (*„Ez a vásárlás már másik felhasználóhoz
+   tartozik."*); a felület ezt **magyarázatként** írja ki („Ez a vásárlás egy másik fiókhoz van
+   kötve. Jelentkezz be azzal a fiókkal, amellyel vásároltál."), nem hibaüzenetként.
+4. **Kérjünk-e e-mailt/nyugtát?** → **Nem**: a Play-nyugta és a token elég, és a token-egyediség
+   miatt a visszaélés kizárt.
+
+## 8b. A következő kör (kliens, A + B) — a szerver már várja
+
+1. `lib/services/label_restore_plan.dart` (tiszta) + tesztek.
+2. Fiókszintű reconciler a `LabelPurchaseService`-ben (`purchaseUpdates` + `getMyLabelLibrary`).
+3. „Vásárlások helyreállítása" kártya a Beállításokban (a „Gyorsítótár" mintájára).
+4. Automatikus háttéregyeztetés a „Megvásárolt zenéim" megnyitásakor (csak akkor szól, ha talált).
+5. A hívás **`restore: true`** jelzővel megy → a szerver a `label_restore` vödröt használja.
+6. Új AAB (350), changelog + Play-jegyzet.
 
 ## 9. Amit SZÁNDÉKOSAN nem javaslok
 

@@ -184,6 +184,51 @@ function labelLibraryPayload(entitlements, unlocks) {
   return { items, count: items.length };
 }
 
+/**
+ * A vásárlás-ellenőrzés kérés-keretei.
+ *
+ * MIÉRT: a `verifyLabelPurchase` a Google Play API-t hívja, ezért a hívó
+ * fiókonként **korlátozott** (`allowCall`). A vásárlások **helyreállítása**
+ * viszont egyszerre **több** birtokolt terméket ellenőriz — ha ugyanabba a
+ * vödörbe futna, akkor a 10 megvásárolt kiadványnál a 11. már
+ * `resource-exhausted` lenne. Ezért a helyreállítás **saját** vödröt kap.
+ *
+ * HÁROM SZABÁLY, ami miatt ez biztonságos:
+ *  1. **A régi keret VÁLTOZATLAN:** a normál (nem helyreállító) ellenőrzés
+ *     továbbra is a `label_purchase` kulcsot használja, **10/perc**-cel.
+ *  2. **A helyreállítás felső korlátja 20/perc** — nem korlátlan.
+ *  3. **KÖZÖS ÖSSZKERET (`label_verify`, 20/perc):** minden ellenőrzés ebből is
+ *     fogy, ezért a **két útvonal együtt sem** tud 20/perc fölé menni. Így a
+ *     `restore` jelző **nem** válik a keret megkerülésének eszközévé.
+ *
+ * A `restore` szándékosan **csak szigorú `true`** esetén számít (a hiányzó vagy
+ * más érték a normál utat jelenti) — így egy elrontott kliens nem kerülhet
+ * véletlenül a lazább vödörbe.
+ */
+const PURCHASE_VERIFY_BUDGETS = Object.freeze({
+  purchase: Object.freeze({ key: 'label_purchase', limit: 10 }),
+  restore: Object.freeze({ key: 'label_restore', limit: 20 }),
+  total: Object.freeze({ key: 'label_verify', limit: 20 }),
+});
+
+/**
+ * Melyik vödrökből fogyjon ez az ellenőrzés?
+ * Kimenet: `{ primaryKey, primaryLimit, totalKey, totalLimit }`.
+ */
+function purchaseVerificationBudget({ restore } = {}) {
+  const primary =
+    restore === true
+      ? PURCHASE_VERIFY_BUDGETS.restore
+      : PURCHASE_VERIFY_BUDGETS.purchase;
+  return {
+    primaryKey: primary.key,
+    primaryLimit: primary.limit,
+    totalKey: PURCHASE_VERIFY_BUDGETS.total.key,
+    totalLimit: PURCHASE_VERIFY_BUDGETS.total.limit,
+    restore: restore === true,
+  };
+}
+
 module.exports = {
   LABEL_VARIANTS,
   parseLabelProductId,
@@ -191,4 +236,6 @@ module.exports = {
   adUnlockGrantsVariant,
   sortVariants,
   labelLibraryPayload,
+  PURCHASE_VERIFY_BUDGETS,
+  purchaseVerificationBudget,
 };

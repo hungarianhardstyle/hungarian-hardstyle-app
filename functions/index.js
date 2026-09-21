@@ -57,9 +57,9 @@ const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 const { playProductMatches } = require('./play-product-plan');
 const {
-  adUnlockedVariants,
   adUnlockGrantsVariant,
   labelLibraryPayload,
+  purchaseVerificationBudget,
 } = require('./label-library-plan');
 const {
   artistClaimState,
@@ -5427,7 +5427,30 @@ exports.verifyLabelPurchase = functions
     if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
       throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges a vásárláshoz.');
     }
-    if (!(await allowCall(context.auth.uid, 'label_purchase', 10))) {
+    // A vásárlások HELYREÁLLÍTÁSA (`restore: true`) egyszerre több birtokolt
+    // terméket ellenőriz, ezért saját vödröt kap — de a régi 10/perc keret
+    // változatlan, és minden ellenőrzés fogy a KÖZÖS `label_verify` keretből is,
+    // így a jelző nem válik a korlát megkerülésének eszközévé. A döntés a
+    // tesztelt `label-library-plan.js`-ben van (`purchaseVerificationBudget`).
+    const verifyBudget = purchaseVerificationBudget({
+      restore: data?.restore === true,
+    });
+    if (
+      !(await allowCall(
+        context.auth.uid,
+        verifyBudget.primaryKey,
+        verifyBudget.primaryLimit,
+      ))
+    ) {
+      throw new HttpsError('resource-exhausted', 'Túl sok vásárlási ellenőrzés.');
+    }
+    if (
+      !(await allowCall(
+        context.auth.uid,
+        verifyBudget.totalKey,
+        verifyBudget.totalLimit,
+      ))
+    ) {
       throw new HttpsError('resource-exhausted', 'Túl sok vásárlási ellenőrzés.');
     }
     const productId = String(data?.productId || '').trim();
