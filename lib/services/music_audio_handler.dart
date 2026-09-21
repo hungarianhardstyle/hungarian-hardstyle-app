@@ -50,10 +50,25 @@ final musicAudioHandlerProvider = Provider<MusicAudioHandler?>(
 ///     ugyanaz a viselkedés, mint eddig.
 class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
   MusicAudioHandler() {
-    // A lejátszó minden eseménye átfordul a rendszer felé látható állapottá
-    // (ebből él az értesítés és a zárképernyő).
-    _player.playbackEventStream.map(_toPlaybackState).pipe(playbackState);
+    // ⚠️ NEM `.pipe(playbackState)`!
+    //
+    // A `Stream.pipe(consumer)` a `consumer.addStream(...)`-et hívja, a
+    // `playbackState` viszont egy **rxdart `BehaviorSubject`** — az `addStream`
+    // pedig **egyszer s mindenkorra** letiltja az `add()`-ot, és csak akkor
+    // engedi el, ha a forrás lezárul. A lejátszó eseménystreamje **soha nem
+    // zárul le**, ezért minden további `playbackState.add(...)` dobott:
+    //
+    //     You cannot add items while items are being added from addStream
+    //
+    // Élesben pontosan ez volt a hiba a „Megvásárolt zenéim" képernyőn: a
+    // metaadatok közzététele dobott, így a zene **el sem indult**. A javítás a
+    // kézi `listen` + `add` (lásd `test/services/music_audio_handler_pipe_test.dart`).
+    _stateSubscription = _player.playbackEventStream
+        .map(_toPlaybackState)
+        .listen(playbackState.add, onError: playbackState.addError);
   }
+
+  StreamSubscription<PlaybackState>? _stateSubscription;
 
   final AudioPlayer _player = AudioPlayer();
 
@@ -80,7 +95,16 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
   bool resumeRadioWhenStopped = false;
 
   @override
-  Future<void> play() => _player.play();
+  Future<void> play() async {
+    // ⚠️ Stop után a dekóderek el vannak engedve (`processingState == idle`):
+    // ilyenkor előbb **újra be kell tölteni** a forrást, különben a `play()`
+    // némán nem csinál semmit (a zárképernyő play gombja így nem működne).
+    if (_player.processingState == ProcessingState.idle &&
+        _player.audioSource != null) {
+      await _player.load();
+    }
+    await _player.play();
+  }
 
   @override
   Future<void> pause() => _player.pause();
@@ -140,10 +164,11 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
   /// következő/előző gombok ehhez igazodnak).
   void publishQueue(List<MediaItem> items, {int index = 0}) {
     queue.add(items);
+    // A `mediaItem.add(null)` az audio_service-ben **némán nem csinál semmit**
+    // (a platform a korábbi tételt tartaná meg, azaz elavult címet mutatna) —
+    // ezért üres sornál nem írunk semmit.
     if (index >= 0 && index < items.length) {
       mediaItem.add(items[index]);
-    } else {
-      mediaItem.add(null);
     }
     playbackState.add(
       playbackState.value.copyWith(queueIndex: index < 0 ? null : index),
@@ -182,10 +207,17 @@ class MusicAudioHandler extends BaseAudioHandler with SeekHandler {
       updatePosition: _player.position,
       bufferedPosition: _player.bufferedPosition,
       speed: _player.speed,
-      queueIndex: event.currentIndex,
+      // ⚠️ `queueIndex`-et SZÁNDÉKOSAN nem tesszük be: mi egyetlen
+      // `AudioSource.file`-t játszunk, ezért a just_audio `event.currentIndex`-e
+      // mindig `0` (vagy null) — az pedig **felülírná** a saját sor-indexünket,
+      // és az értesítés mindig az első tételt jelölné. A sor a MIÉNK
+      // (`publishQueue`), ezért azt itt nem bántjuk.
     );
   }
 
   /// A lejátszó erőforrásainak elengedése (a képernyő lezárásakor).
-  Future<void> disposePlayer() => _player.dispose();
+  Future<void> disposePlayer() async {
+    await _stateSubscription?.cancel();
+    return _player.dispose();
+  }
 }

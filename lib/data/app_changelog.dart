@@ -40,6 +40,8 @@ const appChangelog = <AppReleaseNotes>[
     version: '1.0.0',
     build: 345,
     changes: [
+      'Javítva: a „Megvásárolt zenéim" lejátszója néma maradt, és egy angol hibaüzenetet írt ki — mostantól elindul a zene, és minden hibaüzenet magyar.',
+      'A sikertelen indítás sem némítja el az appot: a hang visszakerül a rádióhoz, és a lejátszó sora nem marad „ez szól" állapotban.',
       'A megvásárolt zenéd mostantól kikapcsolt képernyőn is szól, és a zárképernyőn (meg az értesítésben) vezérelhető: előző, szünet, következő, stop és tekerés.',
       'Ha közben más app indít zenét, vagy hívást kapsz, a lejátszó szünetel — hívás után magától folytatja. A fejhallgató kihúzásakor is megáll.',
       'A lejátszási listáról ki tudsz venni egy letöltött zenét (a fájl a készüléken marad), és bármikor vissza is teheted — a döntést fiókonként megjegyzi.',

@@ -130,6 +130,21 @@ void main() {
         [0, 2],
       );
     });
+
+    test('22 tételből 15 letöltött → 15 elemű sorrend (a „1/1" nem fordulhat elő)', () {
+      // ⚠️ ÉLES HIBA: a sáv „1/1 · 15 letöltve" volt, miközben 22 tétel és 15
+      // letöltés létezett. A sorrendnek **minden** letöltött, ki nem vett tételt
+      // tartalmaznia kell — ez az invariáns.
+      final keys = [for (var i = 0; i < 22; i++) '10$i:mp3_96'];
+      final downloaded = {for (var i = 0; i < 15; i++) '10$i:mp3_96'};
+      final order = orderedPlaylistIndices(keys: keys, downloaded: downloaded);
+      expect(order.length, 15);
+      expect(
+        order.length,
+        greaterThan(1),
+        reason: 'egy elemű sorrend 15 letöltött tételnél hiba, nem állapot',
+      );
+    });
   });
 
   group('mozgatás a listában', () {
@@ -440,6 +455,123 @@ void main() {
     });
   });
 
+  group('a „lejátszás" gomb eldöntése', () {
+    test('nincs betöltött forrás → újra kell tölteni', () {
+      expect(needsSourceReload(loadedKey: null, wantedKey: '305:mp3_96'), isTrue);
+    });
+
+    test('MÁS tétel van betöltve → újra kell tölteni (nem a rosszat indítjuk)', () {
+      expect(
+        needsSourceReload(loadedKey: '200:mp3_128', wantedKey: '305:mp3_96'),
+        isTrue,
+      );
+    });
+
+    test('ugyanaz a tétel van betöltve → elég a play', () {
+      expect(
+        needsSourceReload(loadedKey: '305:mp3_96', wantedKey: '305:mp3_96'),
+        isFalse,
+      );
+    });
+  });
+
+  // --- FORRÁS-LINT: a lejátszó állapotgépe (a 345 utáni hibák) --------------
+  group('forrás-lint: a lejátszó állapotgépe', () {
+    late String source;
+
+    setUpAll(() {
+      // ⚠️ A **kommenteket kivesszük**: a javítások indoklása szándékosan
+      // tartalmazza a régi (hibás) mintát, és a nyers szövegkeresés ettől
+      // hamisan piros lenne.
+      source = File('lib/screens/more/my_music_screen.dart')
+          .readAsStringSync()
+          .split('\n')
+          .where((line) => !line.trimLeft().startsWith('//'))
+          .join('\n');
+    });
+
+    test('sikertelen indításnál a hang visszakerül a rádióhoz', () {
+      // ⚠️ ÉLES HIBA: ha a rádiót már leállítottuk, és a lejátszás elhalt, a
+      // `releasePreviewPlayingState` igaz maradt → a rádió gombja némán
+      // működésképtelen lett, az app „nem szólt".
+      final catchBody = _functionBody(source, '_playIndex');
+      expect(
+        catchBody,
+        contains('await _releaseAudio()'),
+        reason: 'a hibás indítás után a hangot vissza kell adni',
+      );
+      final release = _functionBody(source, '_releaseAudio');
+      expect(release, contains('releasePreviewPlayingState.value = false'));
+    });
+
+    test('a pásztázás nem használ elavult pillanatképet', () {
+      final body = _functionBody(source, '_scanDownloads');
+      expect(
+        body,
+        contains('final queueSignature = _queueSignature;'),
+        reason: 'a pásztázás elején mentjük a sor lenyomatát',
+      );
+      expect(
+        body,
+        contains('queueSignature != _queueSignature'),
+        reason: 'ha közben a sor kicserélődött, az eredményt eldobjuk',
+      );
+    });
+
+    test('a háttérben szóló zene visszakapcsolása a sorépítés UTÁN is fut', () {
+      final body = _functionBody(source, '_scanDownloads');
+      expect(body, contains('_syncWithBackgroundPlayback()'));
+      expect(body, contains('_syncedFromBackground'));
+    });
+
+    test('a lapozás lokális sorrend-másolatból indexel', () {
+      for (final name in ['_advance', '_playNext', '_playPrevious']) {
+        final body = _functionBody(source, name);
+        expect(
+          body,
+          contains('final order = _order;'),
+          reason: '$name: a két olvasás között a sorrend újraépülhet',
+        );
+        expect(body, isNot(contains('_order[next]')));
+        expect(body, isNot(contains('_order[previous]')));
+      }
+    });
+
+    test('a lejátszás gomb a BETÖLTÖTT tétel azonosítóját is nézi', () {
+      final body = _functionBody(source, '_togglePlay');
+      expect(body, contains('needsSourceReload('));
+      expect(body, contains('_loadedSourceKey'));
+      expect(
+        body,
+        contains('ProcessingState.idle'),
+        reason: 'stop után a play önmagában nem szólal meg',
+      );
+    });
+
+    test('a kétszeres indítás kapuja nem dobja el a koppintást', () {
+      final body = _functionBody(source, '_playIndex');
+      expect(body, contains('_pendingIndex = index;'));
+      expect(
+        body,
+        contains('unawaited(_playIndex(pending))'),
+        reason: 'a közben jött kérés a mostani indítás után elindul',
+      );
+    });
+
+    test('a stop-jelzők a leállítás UTÁN állnak be', () {
+      final body = _functionBody(source, '_releaseAudio');
+      final stopIndex = body.indexOf('await handler.stop()');
+      final flagIndex = body.indexOf('_resumeRadioAfterStop = false');
+      expect(stopIndex, isNonNegative);
+      expect(flagIndex, isNonNegative);
+      expect(
+        stopIndex < flagIndex,
+        isTrue,
+        reason: 'ha a stop hibázik, a „zene szól" jelzés ne vesszen el',
+      );
+    });
+  });
+
   // --- FORRÁS-LINT: a felület tényleg ezt a logikát használja -----------------
   //
   // A tiszta modul önmagában nem elég: ha a képernyő a saját (régi) logikáját
@@ -533,8 +665,8 @@ void main() {
       expect(_functionBody(source, '_playNext'), contains('stepPlayback('));
       expect(
         _functionBody(source, '_playNext'),
-        contains('_order['),
-        reason: 'a kevert sorrendben kell lépni',
+        contains('order[next]'),
+        reason: 'a kevert sorrendben kell lépni (lokális másolatból)',
       );
       expect(
         _functionBody(source, '_playPrevious'),

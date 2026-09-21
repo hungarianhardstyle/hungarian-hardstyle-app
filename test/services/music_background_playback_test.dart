@@ -177,10 +177,13 @@ void main() {
     });
 
     test('a lejátszás/szünet/tekerés viszont a sajátja', () {
-      // ⚠️ Ezek a metódusok `=>` alakúak, ezért itt a teljes sorra illesztünk
-      // (a törzs-kivágó segéd a `{`-t keresné, és a következő metódus törzsét
-      // találná meg — ez a csapda a `=>`-s definícióknál).
-      expect(handler, contains('Future<void> play() => _player.play();'));
+      // ⚠️ A `play()` **stop után újratölt** (`ProcessingState.idle`), különben a
+      // zárképernyő play gombja némán nem csinálna semmit — ezért nem elég a
+      // puszta `_player.play()`.
+      final body = _functionBody(handler, 'play');
+      expect(body, contains('ProcessingState.idle'));
+      expect(body, contains('_player.load()'));
+      expect(body, contains('_player.play()'));
       expect(handler, contains('Future<void> pause() => _player.pause();'));
       expect(handler, contains('Future<void> seek(Duration position) => _player.seek(position);'));
     });
@@ -232,15 +235,30 @@ void main() {
 
     test('a lejátszás metaadatot ad a médiamunkamenetnek (cím, előadó, borító)', () {
       final body = _functionBody(screen, '_playIndex');
-      expect(body, contains('MediaItem('));
-      expect(body, contains('publishQueue('));
       expect(
         body,
         contains('AudioSource.file('),
         reason: 'a tag nélkül nincs értesítés (a helyi fájl a médiatétel)',
       );
       expect(body, contains('tag: item'));
-      expect(body, contains('handler.resumeRadioWhenStopped'));
+      // ⚠️ A metaadatok közzététele **külön, hibát nyelve** történik, és csak a
+      // hangforrás beállítása UTÁN — élesben a metaadat-hiba némította el a
+      // lejátszást (lásd a `music_audio_handler_pipe_test.dart`-ot).
+      expect(body, contains('_publishMetadata('));
+      final publish = _functionBody(screen, '_publishMetadata');
+      expect(publish, contains('publishQueue('));
+      expect(publish, contains('catch'));
+      expect(publish, contains('handler.resumeRadioWhenStopped'));
+      // ⚠️ A `_mediaItemFor` **`=>` alakú**, ezért itt a teljes sorra illesztünk
+      // (a törzs-kivágó segéd a `{`-t keresné, és a következő metódus törzsét
+      // találná meg).
+      expect(screen, contains('MediaItem _mediaItemFor(LabelQueueEntry entry)'));
+      expect(screen, contains('album: entry.variantLabel'));
+      expect(
+        screen,
+        contains("artUri: entry.coverUrl.isEmpty ? null : Uri.tryParse(entry.coverUrl)"),
+      );
+      expect(publish, contains('duration'));
     });
 
     test('a képernyő elhagyása NEM állítja le a zenét (ez a lényeg)', () {

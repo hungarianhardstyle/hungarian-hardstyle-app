@@ -178,6 +178,17 @@ List<String> moveInOrder(List<String> order, int index, int delta) {
   return result;
 }
 
+/// Újra be kell-e tölteni a hangforrást a „lejátszás" gombnál?
+///
+/// MIÉRT KELL AZ **AZONOSÍTÓ**, és nem elég az `audioSource != null`: a betöltött
+/// tétel lehet egy **másik** zene (háttérből visszatérve, vagy egy elavult
+/// kijelzésnél), és ilyenkor a „lejátszás" gomb rossz zenét indítana — a sáv
+/// viszont a most kijelöltet mutatja. Ilyenkor újra be kell tölteni.
+bool needsSourceReload({
+  required String? loadedKey,
+  required String wantedKey,
+}) => loadedKey == null || loadedKey != wantedKey;
+
 /// A **következő** lépés a lejátszási sorrendben (kurzor → kurzor).
 ///
 /// * `cursor < 0` (még nincs kiválasztva) → `0`, ha van egyáltalán tétel;

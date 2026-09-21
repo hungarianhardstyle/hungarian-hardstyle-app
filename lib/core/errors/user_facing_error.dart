@@ -1,10 +1,60 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+/// Angolul megfogalmazott **motor-/keretrendszer-üzenet**?
+///
+/// A tulajdonos kérése: *„a hibaüzeneteket amúgy is magyarul kéne"*. Ezért a
+/// `StateError` üzenetét **nem** írjuk ki vakon: az alkalmazás saját, magyar
+/// üzeneteit átengedjük, a keretrendszer/csomagok angol szövegét viszont a
+/// magyar általános üzenetre cseréljük.
+///
+/// MIÉRT pont ezek a szavak: ezek a tipikus angol fejlesztői fordulatok
+/// (a valódi éles eset a `You cannot add items while items are being added from
+/// addStream` volt az rxdart-ból). A magyar mondatainkban ezek a szavak nem
+/// fordulnak elő, ezért a szűrés nem nyeli el a saját üzeneteinket.
+bool looksLikeForeignEngineMessage(String message) {
+  final raw = message.toLowerCase();
+  const markers = [
+    'you cannot',
+    'cannot add',
+    'cannot open',
+    'being added',
+    'addstream',
+    'unhandled',
+    'exception',
+    'null check operator',
+    'lateinitializationerror',
+    'is not a subtype',
+    'bad state',
+    'unimplemented',
+    'stateerror',
+    'was used after being disposed',
+    'must be',
+    'must not',
+    'should be',
+    'invalid argument',
+    'assertion',
+    '.dart:',
+    'stack trace',
+    'stream',
+    'future',
+  ];
+  for (final marker in markers) {
+    if (raw.contains(marker)) return true;
+  }
+  return false;
+}
+
 String userFacingError(Object? error) {
   if (error is StateError) {
     final message = error.message.toString().trim();
-    if (message.isNotEmpty && message != 'null') return message;
+    // ⚠️ Csak a SAJÁT (magyar) üzeneteinket engedjük át — a keretrendszer angol
+    // szövege ne kerülhessen a felületre.
+    if (message.isNotEmpty &&
+        message != 'null' &&
+        !looksLikeForeignEngineMessage(message)) {
+      return message;
+    }
   }
   final raw = '${error ?? ''}'.toLowerCase();
   final isCloudinaryRequest =
