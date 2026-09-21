@@ -43,10 +43,57 @@ void main() {
     variants: [...purchased, ...unlocked],
   );
 
+  group('a megjelenített kiadványok (a listából eltűnt kiadvány)', () {
+    test('a már nem elérhető kiadvány NEM jelenik meg', () {
+      // A tulajdonos kérése: *„a megvásárolt zenék között ne látszódjon a már
+      // eltávolított kiadvány, felesleges"*.
+      final items = [
+        item(100, ['radio_wav']),
+        item(200, ['mp3_96']),
+      ];
+      final visible = visibleLibraryItems(items, unavailable: {200});
+      expect(visible.map((entry) => entry.releaseId), [100]);
+    });
+
+    test('ha minden kiadvány eltűnt, üres a lista (nem hiba)', () {
+      final visible = visibleLibraryItems(
+        [
+          item(100, ['radio_wav']),
+        ],
+        unavailable: {100},
+      );
+      expect(visible, isEmpty);
+    });
+
+    test('üres kihagyás-halmaznál minden megmarad, és a lista másolat', () {
+      final items = [
+        item(100, ['radio_wav']),
+      ];
+      final visible = visibleLibraryItems(items);
+      expect(visible.map((entry) => entry.releaseId), [100]);
+      expect(
+        identical(visible, items),
+        isFalse,
+        reason: 'a bemenetet nem adjuk vissza (a hívó módosíthatja)',
+      );
+    });
+
+    test('a vásárlás/feloldás adata megmarad a szűrés után is', () {
+      final visible = visibleLibraryItems([
+        item(100, [], unlocked: ['mp3_96']),
+      ]);
+      expect(visible.single.unlocked, ['mp3_96']);
+      expect(visible.single.isAdOnly, isTrue);
+    });
+  });
+
   group('a lejátszási sor összeállítása', () {
     test('a könyvtár sorrendjét követi (a legfrissebb kiadvánnyal elöl)', () {
       final queue = buildLabelQueue(
-        items: [item(305, ['radio_wav']), item(200, ['radio_wav'])],
+        items: [
+          item(305, ['radio_wav']),
+          item(200, ['radio_wav']),
+        ],
         catalog: {305: release(305, 'Új'), 200: release(200, 'Régi')},
       );
       expect(queue.map((entry) => entry.releaseId), [305, 200]);
@@ -88,7 +135,9 @@ void main() {
 
     test('a katalógusból hiányzó kiadvány is a sorban marad', () {
       final queue = buildLabelQueue(
-        items: [item(999, ['wav'])],
+        items: [
+          item(999, ['wav']),
+        ],
         catalog: const {},
       );
       expect(queue.length, 1);
@@ -99,7 +148,9 @@ void main() {
 
     test('a kiadvány címe és előadója a katalógusból jön', () {
       final queue = buildLabelQueue(
-        items: [item(100, ['wav'])],
+        items: [
+          item(100, ['wav']),
+        ],
         catalog: {100: release(100, 'Goze - Change of Pace', artist: 'Goze')},
       );
       expect(queue.first.title, 'Goze - Change of Pace');
@@ -133,7 +184,9 @@ void main() {
 
     test('az első LETÖLTÖTT tétel adja a lejátszás kezdetét', () {
       final queue = buildLabelQueue(
-        items: [item(100, ['radio_wav', 'wav'])],
+        items: [
+          item(100, ['radio_wav', 'wav']),
+        ],
         catalog: {100: release(100, 'Kiadvány')},
       );
       expect(
@@ -145,20 +198,27 @@ void main() {
       expect(firstDownloadedIndex(queue, {'100:radio_wav'}), 0);
     });
 
-    test('a lapozás ÁTUGORJA a nem letöltött tételeket (nem indít letöltést)', () {
-      final queue = buildLabelQueue(
-        items: [item(100, ['radio_wav', 'wav', 'mp3_320'])],
-        catalog: {100: release(100, 'Kiadvány')},
-      );
-      // Csak az első és a harmadik van meg: a „következő" a harmadik legyen.
-      final downloaded = {'100:radio_wav', '100:mp3_320'};
-      expect(nextDownloadedIndex(queue, downloaded, 0), 2);
-      expect(previousDownloadedIndex(queue, downloaded, 2), 0);
-    });
+    test(
+      'a lapozás ÁTUGORJA a nem letöltött tételeket (nem indít letöltést)',
+      () {
+        final queue = buildLabelQueue(
+          items: [
+            item(100, ['radio_wav', 'wav', 'mp3_320']),
+          ],
+          catalog: {100: release(100, 'Kiadvány')},
+        );
+        // Csak az első és a harmadik van meg: a „következő" a harmadik legyen.
+        final downloaded = {'100:radio_wav', '100:mp3_320'};
+        expect(nextDownloadedIndex(queue, downloaded, 0), 2);
+        expect(previousDownloadedIndex(queue, downloaded, 2), 0);
+      },
+    );
 
     test('a sor végén megáll (nincs több letöltött tétel)', () {
       final queue = buildLabelQueue(
-        items: [item(100, ['radio_wav', 'wav'])],
+        items: [
+          item(100, ['radio_wav', 'wav']),
+        ],
         catalog: {100: release(100, 'Kiadvány')},
       );
       expect(nextDownloadedIndex(queue, {'100:radio_wav'}, 0), -1);
@@ -167,7 +227,9 @@ void main() {
 
     test('kiindulás: az első, illetve a legutolsó letöltött tétel', () {
       final queue = buildLabelQueue(
-        items: [item(100, ['radio_wav', 'wav'])],
+        items: [
+          item(100, ['radio_wav', 'wav']),
+        ],
         catalog: {100: release(100, 'Kiadvány')},
       );
       final downloaded = {'100:wav'};
@@ -250,9 +312,7 @@ void main() {
       source = File('lib/screens/more/my_music_screen.dart').readAsStringSync();
       // A **léptetés és a végrehajtás** a szolgáltatásban van (hogy a képernyő
       // elhagyása után is működjön), ezért azt a fájlt is mérjük.
-      player = File(
-        'lib/services/music_queue_player.dart',
-      ).readAsStringSync();
+      player = File('lib/services/music_queue_player.dart').readAsStringSync();
     });
 
     test('a lapozás a LETÖLTÖTT tételek sorrendjében lépked', () {
@@ -323,9 +383,25 @@ void main() {
       );
     });
 
-    test('a nyilvános listából eltűnt kiadványt megnevezzük, nem tippelünk', () {
-      expect(source, contains("'Ez a kiadvány már nem elérhető'"));
-      expect(source, contains('_unavailableReleases'));
+    test('a nyilvános listából eltűnt kiadvány NEM kap kártyát', () {
+      // A tulajdonos kérése (2026-09-21): *„a megvásárolt zenék között ne
+      // látszódjon a már eltávolított kiadvány, felesleges"*. Ezért a listát a
+      // tiszta `visibleLibraryItems` szűri, és a régi „Ez a kiadvány már nem
+      // elérhető" kártya **eltűnt** (nem csak átfogalmazva lett).
+      expect(source, contains('visibleLibraryItems('));
+      expect(source, contains('unavailable: _unavailableReleases'));
+      expect(
+        source,
+        isNot(contains("'Ez a kiadvány már nem elérhető'")),
+        reason: 'a hely kitöltése helyett a kiadvány ki sem kerül a listára',
+      );
+      expect(source, isNot(contains('_buildUnavailableCard')));
+      expect(source, contains('for (final item in visible) _buildReleaseCard'));
+      expect(
+        source,
+        contains(r'${visible.length} kiadvány'),
+        reason: 'a fejléc is a látható kiadványokat számolja',
+      );
       expect(source, contains('.getRelease(releaseId)'));
       expect(
         source,

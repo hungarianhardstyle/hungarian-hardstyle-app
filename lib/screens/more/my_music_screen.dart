@@ -83,7 +83,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       ));
 
   /// A lejátszó, akár a háttér-szolgáltatásé, akár a sajátunk.
-  AudioPlayer get _player => _handler?.player ?? (_ownedPlayer ??= AudioPlayer());
+  AudioPlayer get _player =>
+      _handler?.player ?? (_ownedPlayer ??= AudioPlayer());
 
   StreamSubscription<PlayerState>? _stateSubscription;
   StreamSubscription<Duration>? _positionSubscription;
@@ -674,9 +675,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     }
     if (position < 0) {
       if (mounted) {
-        setState(
-          () => _message = 'Ez a tétel most nincs a lejátszási listán.',
-        );
+        setState(() => _message = 'Ez a tétel most nincs a lejátszási listán.');
       }
       return;
     }
@@ -971,7 +970,15 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   }
 
   Widget _buildContent(List<LabelLibraryItem> items) {
-    if (items.isEmpty) {
+    // A tulajdonos kérése (2026-09-21): *„a megvásárolt zenék között ne
+    // látszódjon a már eltávolított kiadvány, felesleges"* — ezért a nyilvános
+    // katalógusból eltűnt kiadvány **egyáltalán nem kap kártyát** (a feloldása
+    // persze megmarad, és ha visszakerül a katalógusba, újra megjelenik).
+    final visible = visibleLibraryItems(
+      items,
+      unavailable: _unavailableReleases,
+    );
+    if (visible.isEmpty) {
       return ListView(
         padding: const EdgeInsets.all(18),
         children: [
@@ -1005,9 +1012,9 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
             Expanded(
               child: Text(
                 _storageBytes > 0
-                    ? '${items.length} kiadvány · ${_queue.length} tétel · '
+                    ? '${visible.length} kiadvány · ${_queue.length} tétel · '
                           '${_formatBytes(_storageBytes)} a készüléken'
-                    : '${items.length} kiadvány · ${_queue.length} tétel',
+                    : '${visible.length} kiadvány · ${_queue.length} tétel',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -1024,7 +1031,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
         const SizedBox(height: 6),
         if (_resumePoint != null) _buildResumeBanner(),
         if (_queue.isNotEmpty) _buildPlayerBar(),
-        for (final item in items) _buildReleaseCard(item),
+        for (final item in visible) _buildReleaseCard(item),
       ],
     );
   }
@@ -1092,12 +1099,18 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
             : 0.0;
         final value = _seeking
             ? _seekValue
-            : live.inMilliseconds.toDouble().clamp(0.0, maxMs == 0 ? 1.0 : maxMs);
+            : live.inMilliseconds.toDouble().clamp(
+                0.0,
+                maxMs == 0 ? 1.0 : maxMs,
+              );
         final shown = _seeking ? _seekValue : live.inMilliseconds.toDouble();
         final enabled = maxMs > 0;
         return Row(
           children: [
-            Text(playbackClock(shown.round()), style: theme.textTheme.bodySmall),
+            Text(
+              playbackClock(shown.round()),
+              style: theme.textTheme.bodySmall,
+            ),
             Expanded(
               child: Slider(
                 value: enabled ? value.clamp(0.0, maxMs) : 0,
@@ -1212,7 +1225,10 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                                 onPressed: (position == 0 || _shuffle)
                                     ? null
                                     : () async {
-                                        await _movePlaylistEntry(item.entry, -1);
+                                        await _movePlaylistEntry(
+                                          item.entry,
+                                          -1,
+                                        );
                                         if (sheetContext.mounted) {
                                           sheetSetState(() {});
                                         }
@@ -1238,7 +1254,9 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                                 visualDensity: VisualDensity.compact,
                                 onPressed: () async {
                                   await _togglePlaylistMembership(item.entry);
-                                  if (sheetContext.mounted) sheetSetState(() {});
+                                  if (sheetContext.mounted) {
+                                    sheetSetState(() {});
+                                  }
                                 },
                                 icon: const Icon(Icons.playlist_remove),
                               ),
@@ -1408,12 +1426,10 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     // ⚠️ A KATALÓGUSBÓL is: a lusta lekérdezés csak a kiegészítés.
     final release =
         _catalogById[item.releaseId] ?? _releaseMeta[item.releaseId];
-    // A nyilvános listából eltűnt kiadvány: a feloldás/vásárlás megvan, de a zene
-    // már nem érhető el. **Megmondjuk**, mi ez, ahelyett hogy egy értelmezhetetlen
-    // „Kiadvány #szám" sort mutatnánk.
-    if (_unavailableReleases.contains(item.releaseId)) {
-      return _buildUnavailableCard(item);
-    }
+    // ⚠️ A nyilvános listából **eltűnt** kiadvány ide már nem jut el: azt a
+    // `visibleLibraryItems` kiszűri a listából (a tulajdonos kérése: *„a
+    // megvásárolt zenék között ne látszódjon a már eltávolított kiadvány,
+    // felesleges"*). Ezért itt nincs külön „nem elérhető" kártya.
     if (release == null) {
       return Card(
         margin: const EdgeInsets.only(bottom: 10),
@@ -1491,42 +1507,6 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
             ),
             const SizedBox(height: 6),
             for (final entry in entries) _buildEntryRow(item, entry),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Egy kiadvány, ami **már nincs** a nyilvános listában (törölt/elrejtett).
-  Widget _buildUnavailableCard(LabelLibraryItem item) {
-    final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-        child: Row(
-          children: [
-            Icon(Icons.cloud_off, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Ez a kiadvány már nem elérhető',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    item.isAdOnly
-                        ? 'Korábban reklámmal feloldottad (kiadvány #${item.releaseId}), '
-                              'de a kiadvány már nincs a nyilvános listában.'
-                        : 'Megvásároltad (kiadvány #${item.releaseId}), de a '
-                              'kiadvány már nincs a nyilvános listában.',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),

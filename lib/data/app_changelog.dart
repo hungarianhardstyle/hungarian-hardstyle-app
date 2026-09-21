@@ -38,6 +38,16 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 349,
+    changes: [
+      'Javítva: a jutalmazott reklámmal feloldható ingyenes külső link mostantól tényleg megnyílik — eddig hiába futott le a reklám, a feloldás elveszett.',
+      'Javítva: tableten fekvő nézetben a kiadvány adatlapja nem lesz óriási — a borító és a teljes tartalom is normál méretű.',
+      'Javítva: a DJ-k és a szervezők listája nem villog többé: a háttérben frissülő tartalom nem üríti ki a listát.',
+      'Javítva: a „Megvásárolt zenéim" listában nem látszik többé az a kiadvány, amely már nincs a nyilvános listában.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 348,
     changes: [
       'DJ-adatlapot mostantól csak az claimelhet (jelölhet a magáénak), akinek a bejelentkezési e-mail címe egyezik az adatlapon szereplő booking vagy privát e-mail címmel. Eddig előfordulhatott, hogy idegen adatlap került egy fiókra.',

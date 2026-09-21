@@ -32,6 +32,8 @@ class OrganizerDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Szervezői adatlap')),
       body: organizer.when(
+        // ⚠️ Háttér-frissítésnél a korábbi adatlap marad (nem villan spinner).
+        skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
           child: Padding(

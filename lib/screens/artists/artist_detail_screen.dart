@@ -46,6 +46,8 @@ class ArtistDetailScreen extends ConsumerWidget {
         ),
       ),
       body: artist.when(
+        // ⚠️ Háttér-frissítésnél a korábbi adatlap marad (nem villan spinner).
+        skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
           child: Padding(
@@ -127,9 +129,8 @@ class _ArtistContent extends ConsumerWidget {
       );
     } catch (error) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(userFacingError(error))));
     }
   }
 
@@ -142,14 +143,12 @@ class _ArtistContent extends ConsumerWidget {
       await ref.read(communityServiceProvider).releaseArtistClaim(artist.id);
       ref.invalidate(artistClaimStatusProvider(artist.id));
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A claim visszavonva.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('A claim visszavonva.')));
     } catch (error) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(userFacingError(error))));
     }
   }
 
@@ -329,7 +328,12 @@ class _ArtistContent extends ConsumerWidget {
                               padding: const EdgeInsets.only(top: 16),
                               child: Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  12,
+                                  8,
+                                  12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF141414),
                                   borderRadius: BorderRadius.circular(14),

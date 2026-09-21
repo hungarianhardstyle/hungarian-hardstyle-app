@@ -6,6 +6,7 @@ const crypto = require('node:crypto');
 
 function fixture() {
   const records = new Map();
+  const dailyActivity = [];
   const ref = path => ({
     path, collection: name => collection(`${path}/${name}`),
     get: async () => ({ exists: records.has(path), data: () => records.get(path) }),
@@ -32,12 +33,23 @@ function fixture() {
     isAdmin: (_, profile) => profile.accessRole === 'admin', allowCall: async () => allowed,
     isAnonymousAuth,
     awardAchievementPoints: async () => {},
+    // A napi aktivitási pont (2026-09-20) óta a hozzászólás létrehozása ezt is
+    // hívja. Az index.js ide vágott szeletében (`exports.articleComments =` …
+    // `const WORDPRESS_BASE_URL`) a valódi függvény NINCS benne (az sokkal
+    // lejjebb, a ~2996. sorban él), ezért itt STUB-olnunk kell — különben a
+    // szelet `ReferenceError: recordDailyActivity is not defined`-dal elhal.
+    // ⚠️ A stub önmagában elrejthetné, ha a valódi hívás eltűnik: ezt az
+    // utolsó teszt a VALÓDI forrásból ellenőrzi.
+    recordDailyActivity: async (uid, field) => {
+      dailyActivity.push([uid, field]);
+      return true;
+    },
     createNotificationBestEffort: async () => true,
     fetch: async () => ({ ok: true, json: async () => ({ id: 123 }) }), AbortSignal,
   };
   const source = fs.readFileSync(`${__dirname}/index.js`, 'utf8');
   vm.runInNewContext(source.slice(source.indexOf('exports.articleComments ='), source.indexOf('const WORDPRESS_BASE_URL')), context);
-  return { call: context.exports.articleComments, records, denyRate: () => { allowed = false; } };
+  return { call: context.exports.articleComments, records, dailyActivity, denyRate: () => { allowed = false; } };
 }
 // A cikkhozzászólás regisztrációhoz kötött: csak nem névtelen Auth-token
 // hozhat létre, módosíthat vagy jelenthet hozzászólást.
@@ -163,4 +175,27 @@ test('nem letezo hozzaszolas szerkesztese not-found', async () => {
   await assert.rejects(call({ postId: 123, action: 'edit', id: 'nincs', text: 'x' }, registered('owner')), {
     code: 'not-found',
   });
+});
+
+// A napi aktivitási pont (2026-09-20) óta a létrehozás ezt is hívja. A fenti
+// stub csak azt mutatja, hogy a szelet ELJUT a hívásig; azt, hogy a valódi
+// `articleComments` tényleg számol vele, a VALÓDI forrásból kell igazolni —
+// különben a stub csendben elfedné, ha a hívás eltűnne.
+test('a valodi forras a hozzaszolast a napi aktivitasba is beszamolja', async () => {
+  const { call, records, dailyActivity } = fixture();
+  records.set('community_profiles/owner', { displayName: 'Teszt Elek' });
+  await call({ action: 'create', postId: 123, id: 'test', text: 'Hello' }, registered('owner'));
+  assert.deepEqual(dailyActivity, [['owner', 'comments']]);
+
+  const source = fs.readFileSync(`${__dirname}/index.js`, 'utf8');
+  const start = source.indexOf('exports.articleComments =');
+  const body = source.slice(start, source.indexOf('const WORDPRESS_BASE_URL', start));
+  assert.ok(
+    body.includes("await recordDailyActivity(uid, 'comments');"),
+    'a articleComments hozzaszolás-létrehozása számoljon a napi aktivitással',
+  );
+  assert.ok(
+    source.includes('async function recordDailyActivity(uid, field, amount = 1)'),
+    'a recordDailyActivity létezzen a valódi forrásban (a teszt-szelet nem tartalmazza)',
+  );
 });

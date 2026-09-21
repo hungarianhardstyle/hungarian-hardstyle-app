@@ -1,8 +1,8 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 348 megy fel** (versionCode **348**, `1.0.0`). A zárt teszt sávján
-> **mérve a 347 van élesben** (`node tools/check-play-track.mjs`, 2026-09-21: alpha = completed,
-> „347 (1.0.0)"), ezért a rövid (1.) blokk **már csak a 348 újdonságait** írja le.
+> **Most a 349 megy fel** (versionCode **349**, `1.0.0`). A zárt teszt sávján
+> **mérve a 348 van élesben** (`node tools/check-play-track.mjs`, 2026-09-21: alpha = completed,
+> „348 (1.0.0)"), ezért a rövid (1.) blokk **már csak a 349 újdonságait** írja le.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -10,11 +10,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 348
+currentBuild: 349
 currentVersion: 1.0.0
-lastPublishedBuild: 347
-aab: build/HUHS-v1.0.0+348-release.aab
-sha256: B2770AD59E810934B1502A9AA286AF81F8D16F3391765D55FC7EE80CE5484036
+lastPublishedBuild: 348
+aab: build/HUHS-v1.0.0+349-release.aab
+sha256: C32D602A7159782321EF02A135D2974E9E6163FA01514654278967B9E0AA6B56
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -23,17 +23,17 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-21, a legfrissebb mér�
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **347** — „347 (1.0.0)", a rövid kiadási szöveggel |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **348** — „348 (1.0.0)", a rövid kiadási szöveggel |
 | beta | üres | — |
 | production | üres | — |
 | internal | completed + egy **üres piszkozat** | 278 |
 
-- **A 347 élesben van** a zárt teszt sávján (completed) — ezt a mérés igazolja (2026-09-21).
-  A **348** csomag a következő feltöltés.
+- **A 348 élesben van** a zárt teszt sávján (completed) — ezt a mérés igazolja (2026-09-21).
+  A **349** csomag a következő feltöltés.
 - **A production sáv viszont üres:** a termékkör megnyitása a Play zárt teszt követelményéhez kötött (személyes fejlesztői fióknál legalább **12 tesztelő / 14 nap** folyamatos zárt teszt), ezért az „élesítés" **nem** egy újabb AAB feltöltése, hanem a production access megnyitása + kiadás a meglévő bundle-ből.
-- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 348 automatikusan felváltja a 347-et; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
-- A feltöltött AAB-ek a Playen (a 2026-09-21-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 341, 342, 345, 346, **347**.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**347**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 347 volt — ezért az **1. pont** blokkja már csak a **348** újdonságait írja le. A **production** kiadáshoz a **hosszabb, 329–348 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
+- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 349 automatikusan felváltja a 348-at; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
+- A feltöltött AAB-ek a Playen (a 2026-09-21-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 342, 345, 346, **347**, **348**.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**348**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 348 volt — ezért az **1. pont** blokkja már csak a **349** újdonságait írja le. A **production** kiadáshoz a **hosszabb, 329–349 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
 
@@ -68,28 +68,30 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+346-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+349-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **346** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 80.43 MB |
-| SHA-256 | 662CAB098AA88923180304F52064DCB3ED102E1547165C4C3F25782FA762B859 |
+| Verziókód | **349** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 80.50 MB |
+| SHA-256 | C32D602A7159782321EF02A135D2974E9E6163FA01514654278967B9E0AA6B56 |
 
-**Miért a 346-ot kell feltenni:** a **345 már fel van töltve** a zárt teszt sávjára (a tulajdonos
-jelezte), abban viszont a **lejátszó néma maradt**, és angol hibaüzenetet írt ki — ezt a
-hibát a **346 javítja** (a `.pipe`/`addStream` csapda + 8 további hiba, lásd a 3. pontot).
-**Ugyanaz a verziókód nem tölthető fel újra**, ezért a javítás új verziókódot kapott.
-A 346-ban **minden** eddigi funkció is benne van: gyorsabb WordPress-betöltés, azonnali lájk és
-ismerős-jelölés, tekerhető folyamatjelző + stop + lejátszási lista (ismétlés/keverés, sorrendezés,
-ki/be a listáról), zárképernyős vezérlés és kikapcsolt képernyőn is szóló zene, valamint a
-frissen vásárolt zene azonnali megjelenése. **A 345-öt ez váltja.**
+**Miért a 349-et kell feltenni:** a **348 már élesben van** a zárt teszt sávján (mérve, completed),
+és a 349 négy hibát javít: a **jutalmazott reklámmal feloldható ingyenes külső link** végre megnyílik
+(a gyökér a szerveren volt: a `free_link` nem szerepelt a „lejátszható változatok" listájában, ezért a
+kapu soha nem látta feloldottnak), a **tabletes fekvő nézetben** a kiadvány adatlapja nem óriási, a
+**DJ- és szervezőlista nem villog**, és a **„Megvásárolt zenéim"** listából eltűnt a már nem elérhető
+kiadvány. **Ugyanaz a verziókód nem tölthető fel újra**, ezért minden javítás új verziókódot kap.
+A 349-ben **minden** eddigi funkció is benne van (rádió, chat, játékok, vásárlás, lejátszó
+zárképernyőn is, DJ-claim, gyorsabb WordPress-betöltés). **A 348-at ez váltja.**
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 345 mindegyiket tartalmazza, és kisebb
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 349 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
-**A plugin ehhez 2.5.9** (`build/huhs-mobile-api-2.5.9.zip`) — **ez már fent van** (élőben igazolva:
-`apiVersion = 2.5.9`), ezért **nem kell újra feltölteni**. Ha viszont valaha újratelepíted a plugint,
-ez a csomag a jó: ebben van a beküldések elfogadását lekérdező végpont (2.5.8) **és a dupla push
-elleni védelem (2.5.9)**.
+**A plugin ehhez 2.6.0** (`build/huhs-mobile-api-2.6.0.zip`) — **ez már fent van** (a tulajdonos
+jelezte: „2.6.0 feltöltve", és a privát claim-végpont élőben válaszol), ezért **nem kell újra
+feltölteni**. Ebben van a DJ-adatlap claim privát e-mail végpontja és a hiányzó privát címek pótlása.
+**A szerveroldali `free_link` javítás külön telepítve van** (`firebase deploy --only functions`),
+ezért az **AAB-tól függetlenül is él** — a 349-cel együtt viszont a felület is a javított állapotot
+mutatja.
 
 ## 1. Play Console — RÖVID (ezt másold be)
 
@@ -101,13 +103,13 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Javítva: DJ-adatlapot csak az claimelhet, akinek az e-mail címe egyezik az adatlapon szereplő címmel.
-- A claim gomb csak akkor jelenik meg, ha valóban a tiéd lehet; a saját claim visszavonható.
-- A profilodon a claimelt DJ-adatlapod kattintható kártyaként látszik.
-- Javítva: az „Új DJ került fel" értesítés megnyitja az adott DJ adatlapját.
+- Javítva: a jutalmazott reklámmal feloldható ingyenes külső link mostantól megnyílik (eddig a feloldás elveszett).
+- Javítva: tableten fekvő nézetben a kiadvány adatlapja nem óriási.
+- Javítva: a DJ- és a szervezőlista nem villog.
+- Javítva: a „Megvásárolt zenéim" listából eltűnt a már nem elérhető kiadvány.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–348 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–349 összesítő)
 
 **Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
@@ -118,21 +120,21 @@ felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapj�
 - A rádió folyamatosan szól, a videó az appban.
 - Aktivitási pont, vásárlás +20; eseményt csak szervező küld.
 - ÚJ: „Megvásárolt zenéim", kvíz azonnali jelzése.
-- ÚJ: gyorsabb betöltés, azonnali lájk, lejátszó.
-- ÚJ: zene kikapcsolt képernyőn is; a listáról ki-/bevehető; a lejátszó elnavigálva is vezérelhető.
+- ÚJ: zene kikapcsolt képernyőn is; a lejátszó elnavigálva is vezérelhető.
 - ÚJ: a DJ-adatlapod a profilodon, és csak egyező e-mail címmel claimelhető.
+- Javítva: reklámos ingyenes letöltés, tabletes kiadvány-adatlap, villogó listák.
 ```
 
-## 1c. Play Console — CSAK a 348-hoz, bővebben (tartalék)
+## 1c. Play Console — CSAK a 349-hez, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 348-at írja le** (a 347 már élesben van a zárt teszt sávján).
+megjeleníteni. **Ez is csak a 349-et írja le** (a 348 már élesben van a zárt teszt sávján).
 
 ```play-notes
-- Javítva: DJ-adatlapot csak az claimelhet, akinek a bejelentkezési e-mail címe egyezik az adatlapon szereplő booking vagy privát címmel — eddig idegen adatlap is kerülhetett egy fiókra.
-- A „DJ-adatlap claimelése" gomb csak akkor jelenik meg, ha claimelheted; a saját claimet bármikor visszavonhatod.
-- A nyilvános profilodon a claimelt DJ-adatlapod kattintható kártyaként jelenik meg.
-- Javítva: az „Új DJ került fel" (és az „Új szervező") értesítés megnyitja az adatlapot.
+- Javítva: a jutalmazott reklámmal feloldható ingyenes külső link mostantól tényleg megnyílik — eddig hiába futott le a reklám, a feloldás elveszett.
+- Javítva: tableten fekvő nézetben a kiadvány adatlapja nem lesz óriási (a borító és a tartalom is normál méretű).
+- Javítva: a DJ-k és a szervezők listája nem villog többé, amikor a háttérben frissül a tartalom.
+- Javítva: a „Megvásárolt zenéim" listában nem látszik az a kiadvány, amely már nincs a nyilvános listában.
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -150,6 +152,12 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 349 — jutalmazott ingyenes letöltés, tabletes kiadvány-adatlap, villogó listák
+- **Javítva:** a **jutalmazott reklámmal feloldható ingyenes külső link** (`free_link`) mostantól **tényleg megnyílik**. A gyökér a szerveren volt: a „lejátszható változatok" listája nem tartalmazza a `free_link`-et (nem fájl, hanem külső link), ezért a kapu **soha** nem látta feloldottnak — hiába futott le a reklám, a felület 20 másodpercig várta a jóváírást, majd hibát írt. Éles adat: **1 ilyen feloldás** volt a rendszerben, és azt a régi kapu **elutasította**.
+- **Javítva:** tableten **fekvő nézetben** a **kiadvány adatlapja** nem lesz óriási — a tartalom legfeljebb 1100 px széles sávban jelenik meg, a négyzetes **borító** pedig 360 px.
+- **Javítva:** a **DJ-k és a szervezők listája nem villog** többé: a globális WordPress-frissítés-jelző eddig **reload**-ot okozott, ilyenkor a kész lista helyett **spinner** villant; mostantól a korábbi lista a helyén marad, amíg az új adat meg nem érkezik.
+- **Javítva:** a **„Megvásárolt zenéim"** listában **nem látszik** az a kiadvány, amely **már nincs a nyilvános listában** (a feloldás persze megmarad, és ha visszakerül, újra megjelenik).
 
 ### 348 — a DJ-adatlap claim javítása + működő értesítés-koppintás
 - **Javítva:** a **DJ-adatlapot csak az claimelheti** (jelölheti a magáénak), akinek a bejelentkezési e-mail címe egyezik az adatlapon szereplő **booking vagy privát** e-mail címmel. Az **admin-kivétel megszűnt** — élesben pont az tette lehetővé, hogy a tulajdonos fiókjára egy **idegen** DJ adatlapja kerüljön („Sunshite State"), amit most le is vettünk.
@@ -385,7 +393,7 @@ SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`).
 
 1. `node tools/check-play-notes.mjs` — a Play-blokkok hossza és a build-lefedettség.
 2. `flutter test test/data/app_changelog_test.dart` — az app changelogja egyezik a `pubspec.yaml`-lel.
-3. Az AAB verziókódja a merge-elt manifestből: **338**.
+3. Az AAB verziókódja a merge-elt manifestből: **349** (versionName `1.0.0`, a production AdMob App ID bent, a teszt App ID nincs).
 4. `node tools/verify-native-admin-menu.mjs` — a natív admin menüpontjai és a plugin végpontjai egyeznek.
 5. `node tools/verify-achievement-points.mjs` — az achievement-pontok konzisztenciája (ÉLES, csak olvas).
 6. `node tools/verify-achievement-guide.mjs` — az Achievement-útmutató szövege egyezik a kóddal (napi keretek, pontértékek, létező források).

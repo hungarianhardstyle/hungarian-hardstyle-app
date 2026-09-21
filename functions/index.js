@@ -56,7 +56,11 @@ const { generateAuthActionLink } = require('./auth_action_link');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 const { playProductMatches } = require('./play-product-plan');
-const { adUnlockedVariants, labelLibraryPayload } = require('./label-library-plan');
+const {
+  adUnlockedVariants,
+  adUnlockGrantsVariant,
+  labelLibraryPayload,
+} = require('./label-library-plan');
 const {
   artistClaimState,
   claimErrorMessage,
@@ -3632,7 +3636,13 @@ exports.toggleNewsReaction = functions.runWith({ enforceAppCheck: false }).https
 function activeAdUnlock(data, releaseId, variant = 'mp3_128') {
   // A szabály EGY helyen él (`label-library-plan.js`), hogy a „Saját zenéim"
   // könyvtár és a letöltés-kapu ne mondhasson ellent egymásnak.
-  return adUnlockedVariants(data, releaseId).includes(variant);
+  //
+  // ⚠️ FONTOS: itt a **pontos változat** számít, nem a „lejátszható változatok"
+  // listája — a `free_link` (külső linkes ingyenes kiadvány) ugyanis **nincs**
+  // a `LABEL_VARIANTS`-ban (nem fájl), ezért a korábbi
+  // `adUnlockedVariants(...).includes('free_link')` **soha** nem lehetett igaz:
+  // élesben ezért nem működött a jutalmazott külső linkes feloldás.
+  return adUnlockGrantsVariant(data, releaseId, variant);
 }
 
 async function sendMulticastToAllTokens(message, tokens) {

@@ -7,6 +7,7 @@ const {
   LABEL_VARIANTS,
   parseLabelProductId,
   adUnlockedVariants,
+  adUnlockGrantsVariant,
   labelLibraryPayload,
 } = require('./label-library-plan');
 
@@ -115,6 +116,46 @@ test('a régi (változat nélküli) reklám-feloldás az eredeti 128 kbps jutalm
   assert.deepEqual(adUnlockedVariants(null, 100), []);
 });
 
+test('⚠️ a `free_link` (külső linkes ingyenes kiadvány) feloldása MŰKÖDIK', () => {
+  // ÉLES HIBA VOLT (a tulajdonos jelzése): *„a jutalmazott külső linkes ingyenes
+  // kiadvány feloldása nem működik"*. Az ok: a `free_link` **nincs** a
+  // `LABEL_VARIANTS`-ban (nem fájl, hanem külső link), ezért az
+  // `adUnlockedVariants(...)` **soha** nem adta vissza, a kapu pedig
+  // (`adUnlockedVariants(...).includes('free_link')`) **mindig** elutasított —
+  // a felület hiába várta a jóváírást.
+  const unlock = { uid: 'uid-1', releaseId: 100, variants: { free_link: true } };
+  assert.equal(adUnlockGrantsVariant(unlock, 100, 'free_link'), true);
+  assert.equal(adUnlockGrantsVariant(unlock, 100, 'mp3_96'), false);
+  assert.equal(adUnlockGrantsVariant(unlock, 100, 'free_wav'), false);
+  assert.equal(adUnlockGrantsVariant(unlock, 999, 'free_link'), false, 'más kiadvány');
+  assert.equal(adUnlockGrantsVariant(null, 100, 'free_link'), false);
+  assert.deepEqual(
+    adUnlockedVariants(unlock, 100),
+    [],
+    'a könyvtárba továbbra sem kerül be a free_link (nem lejátszható fájl)',
+  );
+  // A `free_link` a régi `variant` mezőben is működik.
+  assert.equal(
+    adUnlockGrantsVariant({ releaseId: 100, variant: 'free_link' }, 100, 'free_link'),
+    true,
+  );
+});
+
+test('a pontos változat-szabály a fájl-változatoknál ugyanazt adja, mint eddig', () => {
+  const unlock = { releaseId: 100, variants: { mp3_96: true, mp3_128: true } };
+  for (const variant of ['mp3_96', 'mp3_128']) {
+    assert.equal(adUnlockGrantsVariant(unlock, 100, variant), true, variant);
+  }
+  for (const variant of ['free_wav', 'wav', 'mp3_320', 'radio_wav']) {
+    assert.equal(adUnlockGrantsVariant(unlock, 100, variant), false, variant);
+  }
+  // Régi, változat nélküli dokumentum: az eredeti 128 kbps jutalom.
+  assert.equal(adUnlockGrantsVariant({ releaseId: 100 }, 100, 'mp3_128'), true);
+  assert.equal(adUnlockGrantsVariant({ releaseId: 100 }, 100, 'mp3_96'), false);
+  assert.equal(adUnlockGrantsVariant({ releaseId: 100 }, 100, 'free_link'), false);
+  assert.equal(adUnlockGrantsVariant({ releaseId: 100 }, 100, ''), false);
+});
+
 test('amit megvett, az nem szerepel „reklámmal feloldva" is', () => {
   const payload = labelLibraryPayload(
     [entitlement(100, 'mp3_128')],
@@ -151,9 +192,13 @@ test('FORRÁS-LINT: a könyvtár-végpont a SAJÁT uid-re szűr, és a közös s
   );
   // 3. A döntés a közös, tesztelt modulban van.
   assert.match(body, /labelLibraryPayload\(/);
-  // 4. A letöltés-kapu UGYANAZT a szabályt használja (nem csúszhat el).
-  assert.match(
-    source,
-    /function activeAdUnlock\(data, releaseId, variant = 'mp3_128'\) \{\s*\/\/[^\n]*\n[^\n]*\n\s*return adUnlockedVariants\(data, releaseId\)\.includes\(variant\);/,
+  // 4. A letöltés-kapu UGYANAZT a szabályt használja (nem csúszhat el) — és
+  //    **pontos változatra** kérdez, mert a `free_link` nincs a fájl-listában.
+  assert.match(source, /return adUnlockGrantsVariant\(data, releaseId, variant\);/);
+  assert.ok(
+    !/activeAdUnlock[\s\S]{0,200}adUnlockedVariants\(data, releaseId\)\.includes\(variant\)/.test(
+      source,
+    ),
+    'a free_link-et elnyelő régi szabály nem térhet vissza',
   );
 });

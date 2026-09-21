@@ -77,6 +77,34 @@ function adUnlockedVariants(unlock, releaseId) {
   return out;
 }
 
+/**
+ * Feloldotta-e a reklám **pontosan ezt** a változatot?
+ *
+ * MIÉRT KELL A `adUnlockedVariants` MELLETT (éles hiba, 2026-09-21): az
+ * `adUnlockedVariants` szándékosan csak a **lejátszható fájl-változatokat**
+ * (`LABEL_VARIANTS`) adja vissza, mert a „Saját zenéim" könyvtár azokból épül.
+ * A **`free_link`** viszont **nincs** benne ebben a listában — hiszen nem fájl,
+ * hanem egy **külső link** —, ezért a letöltés-kapu
+ * (`activeAdUnlock(..., 'free_link')`) **soha** nem látta feloldottnak:
+ * a tulajdonos jelzése szerint *„a jutalmazott külső linkes ingyenes kiadvány
+ * feloldása nem működik"*, és a felület 20 másodpercig hiába várta a jóváírást.
+ *
+ * A szabály itt is **egy helyen** van: a rekord vagy a régi `variant` mezőben,
+ * vagy a `variants` térképben (`true`) jelöli a feloldást. A **változat nélküli
+ * régi** dokumentum az eredeti 128 kbps jutalmat jelenti (ugyanaz, mint az
+ * `adUnlockedVariants`-nál).
+ */
+function adUnlockGrantsVariant(unlock, releaseId, variant) {
+  const wanted = String(variant || '').trim();
+  if (!unlock || Number(unlock.releaseId) !== Number(releaseId) || !wanted) {
+    return false;
+  }
+  if (!unlock.variants && !unlock.variant) return wanted === 'mp3_128';
+  if (String(unlock.variant || '').trim() === wanted) return true;
+  const map = unlock.variants;
+  return Boolean(map && typeof map === 'object' && map[wanted] === true);
+}
+
 /** A változatok rendezése a felületi sorrend szerint (nem ABC-sorrendben). */
 function sortVariants(variants) {
   const unique = [...new Set(variants)].filter((v) => LABEL_VARIANTS.includes(v));
@@ -160,6 +188,7 @@ module.exports = {
   LABEL_VARIANTS,
   parseLabelProductId,
   adUnlockedVariants,
+  adUnlockGrantsVariant,
   sortVariants,
   labelLibraryPayload,
 };

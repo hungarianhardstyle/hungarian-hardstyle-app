@@ -1,6 +1,28 @@
 import '../models/label_library.dart';
 import '../models/release.dart';
 
+/// A „Megvásárolt zenéim" listában **megjelenő** kiadványok.
+///
+/// A tulajdonos kérése (2026-09-21): *„a megvásárolt zenék között ne látszódjon
+/// a már eltávolított kiadvány, felesleges"* — vagyis ha egy kiadvány eltűnt a
+/// nyilvános katalógusból (törölték vagy elrejtették), akkor **ne kapjon
+/// kártyát** a listában. A feloldás/vásárlás ettől **megmarad** (a Firestore-ban
+/// van, nem a listában), ezért ha a kiadvány visszakerül a katalógusba, a sor
+/// automatikusan újra megjelenik.
+///
+/// A **lejátszási sorba** ilyen tétel nem is kerülhetett be: a `buildLabelQueue`
+/// csak ismert kiadványból dolgozik (lásd ott a 3. szabályt).
+List<LabelLibraryItem> visibleLibraryItems(
+  List<LabelLibraryItem> items, {
+  Set<int> unavailable = const {},
+}) {
+  if (unavailable.isEmpty) return List<LabelLibraryItem>.of(items);
+  return [
+    for (final item in items)
+      if (!unavailable.contains(item.releaseId)) item,
+  ];
+}
+
 /// A „Saját zenéim" lejátszási sor összeállítása — **tiszta logika**.
 ///
 /// A tulajdonos kérése: *„le tudja játszani, ha vége a zenének, ugrik a

@@ -417,6 +417,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final release = _release;
+    final landscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
     final coverCacheWidth =
         (MediaQuery.sizeOf(context).width *
                 MediaQuery.devicePixelRatioOf(context))
@@ -424,286 +426,336 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
             .clamp(1080, 1600);
     return Scaffold(
       appBar: AppBar(title: Text(release.title)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
-        children: [
-          if (release.coverUrl.isNotEmpty)
-            AspectRatio(
-              aspectRatio: 1,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: CachedNetworkImage(
-                  imageUrl: release.coverUrl,
-                  fit: BoxFit.contain,
-                  memCacheWidth: coverCacheWidth,
-                  maxWidthDiskCache: coverCacheWidth,
-                  color: const Color(0xFF171717),
-                  colorBlendMode: BlendMode.dstOver,
+      // ⚠️ FEKVŐ NÉZET (tablet): a többi adatlaphoz hasonlóan **legfeljebb
+      // 1100 px** széles sávban jelenünk meg. Enélkül a teljes szélességű
+      // tartalom (és a négyzetes borító) a képernyőnél is nagyobb lett — a
+      // tulajdonos jelzése: *„tableten fekvő nézetben ha megnyitok egy
+      // kiadványt, rohadt nagy a cover és frán nagy minden"*.
+      body: LayoutBuilder(
+        builder: (context, constraints) => Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: landscape ? 1100 : double.infinity,
+            ),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
+              children: [
+                if (release.coverUrl.isNotEmpty)
+                  // ⚠️ A borító **négyzetes**, ezért fekvő nézetben egy
+                  // teljes szélességű négyzet 1100 px magas lenne (magasabb,
+                  // mint a tablet képernyője). Ilyenkor fix, kényelmes méretre
+                  // vesszük, és balra igazítjuk.
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: landscape ? 360 : double.infinity,
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: CachedNetworkImage(
+                            imageUrl: release.coverUrl,
+                            fit: BoxFit.contain,
+                            memCacheWidth: coverCacheWidth,
+                            maxWidthDiskCache: coverCacheWidth,
+                            color: const Color(0xFF171717),
+                            colorBlendMode: BlendMode.dstOver,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 18),
+                Text(
+                  release.title,
+                  style: const TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ),
-          const SizedBox(height: 18),
-          Text(
-            release.title,
-            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-          ),
-          if (release.genre.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                release.genre,
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ),
-          if (release.releaseDate.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                'Megjelenés: ${release.releaseDate}',
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: release.artists
-                .map(
-                  (artist) => ActionChip(
-                    label: Text(artist.name),
-                    avatar: const Icon(Icons.person_outline, size: 18),
-                    onPressed: artist.id == 0
-                        ? null
-                        : () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => ReleasesScreen(
-                                artistId: artist.id,
-                                artistName: artist.name,
+                if (release.genre.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      release.genre,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                if (release.releaseDate.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      'Megjelenés: ${release.releaseDate}',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: release.artists
+                      .map(
+                        (artist) => ActionChip(
+                          label: Text(artist.name),
+                          avatar: const Icon(Icons.person_outline, size: 18),
+                          onPressed: artist.id == 0
+                              ? null
+                              : () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => ReleasesScreen(
+                                      artistId: artist.id,
+                                      artistName: artist.name,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 20),
+                ...release.tracks.asMap().entries.map(
+                  (entry) => ReleasePreviewPlayer(
+                    track: entry.value,
+                    index: entry.key,
+                  ),
+                ),
+                if (release.audioStatus == 'queued')
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text('A hanganyag feldolgozása folyamatban van.'),
+                  ),
+                if (release.audioStatus == 'failed')
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text('A hanganyag feldolgozása nem sikerült.'),
+                  ),
+                // Before the release date the fan can listen to the 60-second preview
+                // and pre-save the release, but nothing can be bought or downloaded.
+                // The download is also refused server-side, so this is presentation,
+                // not the actual gate.
+                if (release.isUpcoming) ...[
+                  const SizedBox(height: 18),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B1B1B),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.redAccent.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 18,
+                              color: Colors.redAccent,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Hamarosan',
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          release.releaseDate.isEmpty
+                              ? 'A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.'
+                              : 'Megjelenés: ${release.releaseDate}. Ekkor válik megvásárolhatóvá és letölthetővé. Addig a 60 másodperces előzetes hallgatható.',
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        if (release.presaveUrl.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: () => openInAppBrowser(
+                                context,
+                                release.presaveUrl,
+                                title: 'Előrendelés',
+                              ),
+                              icon: const Icon(Icons.bookmark_add_outlined),
+                              label: const Text('PRESAVE'),
+                            ),
                           ),
+                        ],
+                      ],
+                    ),
                   ),
-                )
-                .toList(),
-          ),
-          const SizedBox(height: 20),
-          ...release.tracks.asMap().entries.map(
-            (entry) =>
-                ReleasePreviewPlayer(track: entry.value, index: entry.key),
-          ),
-          if (release.audioStatus == 'queued')
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Text('A hanganyag feldolgozása folyamatban van.'),
-            ),
-          if (release.audioStatus == 'failed')
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Text('A hanganyag feldolgozása nem sikerült.'),
-            ),
-          // Before the release date the fan can listen to the 60-second preview
-          // and pre-save the release, but nothing can be bought or downloaded.
-          // The download is also refused server-side, so this is presentation,
-          // not the actual gate.
-          if (release.isUpcoming) ...[
-            const SizedBox(height: 18),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1B1B1B),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.redAccent.withValues(alpha: 0.4),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.schedule,
-                        size: 18,
-                        color: Colors.redAccent,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Hamarosan',
-                        style: TextStyle(
-                          color: Colors.redAccent,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
+                ],
+                if (!release.isUpcoming &&
+                    !release.isFree &&
+                    release.products.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  ...release.products
+                      .where(
+                        (configured) =>
+                            _verifiedProducts.contains(configured.id) ||
+                            _products.any(
+                              (product) => product.id == configured.id,
+                            ),
+                      )
+                      .map(
+                        (configured) => _productCard(
+                          configured,
+                          _findProduct(configured.id),
                         ),
                       ),
-                    ],
+                  if (_message != null)
+                    Text(
+                      _message!,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                ],
+                if (!release.isUpcoming &&
+                    !release.isFree &&
+                    release.audioStatus != 'queued' &&
+                    release.audioStatus != 'failed' &&
+                    _products.isEmpty)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: _loadingProducts
+                          ? null
+                          : _retryProductsManually,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(
+                        _loadingProducts
+                            ? 'Termékek betöltése…'
+                            : 'Újrapróbálás',
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 18),
+                if (!release.isUpcoming && release.hasFreeWav)
+                  Card(
+                    child: ListTile(
+                      title: const Text('WAV feloldása reklámmal'),
+                      subtitle: const Text(
+                        'A jutalmazott reklám megtekintése után a WAV letölthető.',
+                      ),
+                      trailing: FilledButton(
+                        onPressed: _unlocking || _checkingAdUnlock
+                            ? null
+                            : _adUnlocked
+                            ? () => _download('free_wav')
+                            : _unlockRewarded,
+                        child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
+                      ),
+                    ),
+                  )
+                else if (!release.isUpcoming && !release.isFree)
+                  Card(
+                    child: ListTile(
+                      title: const Text('96 kbps MP3 feloldása reklámmal'),
+                      subtitle: const Text(
+                        'A jutalmazott reklám megtekintése után a fájl letölthető.',
+                      ),
+                      trailing: FilledButton(
+                        onPressed: _unlocking || _checkingAdUnlock
+                            ? null
+                            : _adUnlocked
+                            ? () => _download('mp3_96')
+                            : _unlockRewarded,
+                        child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
+                      ),
+                    ),
+                  ),
+                if (!release.isUpcoming &&
+                    !release.isFree &&
+                    release.products.isEmpty &&
+                    _message != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      _message!,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                if (!release.isUpcoming &&
+                    release.isFree &&
+                    release.freeExternalLink.isNotEmpty)
+                  Card(
+                    child: ListTile(
+                      title: const Text('Ingyenes külső link'),
+                      subtitle: const Text(
+                        'A jutalmazott reklám megtekintése után megnyitható.',
+                      ),
+                      trailing: FilledButton(
+                        onPressed: _unlocking || _checkingAdUnlock
+                            ? null
+                            : _externalLinkUnlocked
+                            ? _openFreeExternalLink
+                            : _unlockExternalLink,
+                        child: Text(
+                          _externalLinkUnlocked ? 'Megnyitás' : 'Feloldás',
+                        ),
+                      ),
+                    ),
+                  ),
+                if (release.versions
+                    .where(
+                      (version) => !(release.isFree && version.type == 'radio'),
+                    )
+                    .isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Elérhető változatok',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    release.releaseDate.isEmpty
-                        ? 'A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.'
-                        : 'Megjelenés: ${release.releaseDate}. Ekkor válik megvásárolhatóvá és letölthetővé. Addig a 60 másodperces előzetes hallgatható.',
-                    style: const TextStyle(color: Colors.white70),
+                  Wrap(
+                    spacing: 8,
+                    children: release.versions
+                        .where(
+                          (version) =>
+                              !(release.isFree && version.type == 'radio'),
+                        )
+                        .map(
+                          (version) =>
+                              Chip(label: Text(_versionLabel(version.type))),
+                        )
+                        .toList(growable: false),
                   ),
-                  if (release.presaveUrl.isNotEmpty) ...[
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: () => openInAppBrowser(
-                          context,
-                          release.presaveUrl,
-                          title: 'Előrendelés',
-                        ),
-                        icon: const Icon(Icons.bookmark_add_outlined),
-                        label: const Text('PRESAVE'),
-                      ),
-                    ),
-                  ],
                 ],
-              ),
+                if (release.links.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Hol érhető el?',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: release.links.entries
+                        .map(
+                          (entry) => OutlinedButton.icon(
+                            onPressed: () =>
+                                openInAppBrowser(context, entry.value),
+                            icon: const Icon(Icons.open_in_new),
+                            label: Text(_label(entry.key)),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ],
             ),
-          ],
-          if (!release.isUpcoming &&
-              !release.isFree &&
-              release.products.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            ...release.products
-                .where(
-                  (configured) =>
-                      _verifiedProducts.contains(configured.id) ||
-                      _products.any((product) => product.id == configured.id),
-                )
-                .map(
-                  (configured) =>
-                      _productCard(configured, _findProduct(configured.id)),
-                ),
-            if (_message != null)
-              Text(_message!, style: const TextStyle(color: Colors.white70)),
-          ],
-          if (!release.isUpcoming &&
-              !release.isFree &&
-              release.audioStatus != 'queued' &&
-              release.audioStatus != 'failed' &&
-              _products.isEmpty)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                onPressed: _loadingProducts ? null : _retryProductsManually,
-                icon: const Icon(Icons.refresh),
-                label: Text(
-                  _loadingProducts ? 'Termékek betöltése…' : 'Újrapróbálás',
-                ),
-              ),
-            ),
-          const SizedBox(height: 18),
-          if (!release.isUpcoming && release.hasFreeWav)
-            Card(
-              child: ListTile(
-                title: const Text('WAV feloldása reklámmal'),
-                subtitle: const Text(
-                  'A jutalmazott reklám megtekintése után a WAV letölthető.',
-                ),
-                trailing: FilledButton(
-                  onPressed: _unlocking || _checkingAdUnlock
-                      ? null
-                      : _adUnlocked
-                      ? () => _download('free_wav')
-                      : _unlockRewarded,
-                  child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
-                ),
-              ),
-            )
-          else if (!release.isUpcoming && !release.isFree)
-            Card(
-              child: ListTile(
-                title: const Text('96 kbps MP3 feloldása reklámmal'),
-                subtitle: const Text(
-                  'A jutalmazott reklám megtekintése után a fájl letölthető.',
-                ),
-                trailing: FilledButton(
-                  onPressed: _unlocking || _checkingAdUnlock
-                      ? null
-                      : _adUnlocked
-                      ? () => _download('mp3_96')
-                      : _unlockRewarded,
-                  child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
-                ),
-              ),
-            ),
-          if (!release.isUpcoming &&
-              !release.isFree &&
-              release.products.isEmpty &&
-              _message != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                _message!,
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ),
-          if (!release.isUpcoming &&
-              release.isFree &&
-              release.freeExternalLink.isNotEmpty)
-            Card(
-              child: ListTile(
-                title: const Text('Ingyenes külső link'),
-                subtitle: const Text(
-                  'A jutalmazott reklám megtekintése után megnyitható.',
-                ),
-                trailing: FilledButton(
-                  onPressed: _unlocking || _checkingAdUnlock
-                      ? null
-                      : _externalLinkUnlocked
-                      ? _openFreeExternalLink
-                      : _unlockExternalLink,
-                  child: Text(_externalLinkUnlocked ? 'Megnyitás' : 'Feloldás'),
-                ),
-              ),
-            ),
-          if (release.versions
-              .where((version) => !(release.isFree && version.type == 'radio'))
-              .isNotEmpty) ...[
-            const SizedBox(height: 16),
-            const Text(
-              'Elérhető változatok',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: release.versions
-                  .where(
-                    (version) => !(release.isFree && version.type == 'radio'),
-                  )
-                  .map(
-                    (version) => Chip(label: Text(_versionLabel(version.type))),
-                  )
-                  .toList(growable: false),
-            ),
-          ],
-          if (release.links.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            const Text(
-              'Hol érhető el?',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: release.links.entries
-                  .map(
-                    (entry) => OutlinedButton.icon(
-                      onPressed: () => openInAppBrowser(context, entry.value),
-                      icon: const Icon(Icons.open_in_new),
-                      label: Text(_label(entry.key)),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }

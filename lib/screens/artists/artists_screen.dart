@@ -47,11 +47,7 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
   Future<void> _refreshArtists() async {
     await ref
         .read(wordpressServiceProvider)
-        .getArtists(
-          search: _search,
-          category: _category,
-          forceRefresh: true,
-        );
+        .getArtists(search: _search, category: _category, forceRefresh: true);
     ref.invalidate(artistsProvider(_query));
     await ref.read(artistsProvider(_query).future);
   }
@@ -142,6 +138,10 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
                   ),
                 ),
                 ...artists.when(
+                  // ⚠️ A háttérben megérkező WordPress-frissítés **ne** ürítse ki
+                  // a listát: ilyenkor a korábbi találatok maradnak a helyükön
+                  // (a tulajdonos jelzése: „a djk listája még mindig villog").
+                  skipLoadingOnReload: true,
                   loading: () => const [
                     SliverFillRemaining(
                       hasScrollBody: false,

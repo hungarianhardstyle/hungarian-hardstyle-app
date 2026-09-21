@@ -109,6 +109,9 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
                   ),
                 ),
                 ...organizers.when(
+                  // ⚠️ Ugyanaz, mint a DJ-listánál: háttér-frissítésnél a
+                  // korábbi lista marad (nem villan be a spinner).
+                  skipLoadingOnReload: true,
                   loading: () => const [
                     SliverFillRemaining(
                       hasScrollBody: false,
