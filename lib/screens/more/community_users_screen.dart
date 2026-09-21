@@ -8,6 +8,7 @@ import '../../core/errors/user_facing_error.dart';
 import '../../models/event.dart';
 import '../../models/achievement.dart';
 import '../../providers/community_provider.dart';
+import '../../providers/artists_provider.dart';
 import '../../services/community_service.dart';
 import '../../services/wordpress_service.dart';
 import '../events/event_detail_screen.dart';
@@ -582,6 +583,11 @@ class _CommunityPublicProfileScreenState
                   'Az ismerőslista regisztrált felhasználóknak érhető el.',
                 ),
               if (isRegistered) ...[
+                const SizedBox(height: 18),
+                _ClaimedArtistsSection(
+                  userId: widget.userId,
+                  service: service,
+                ),
                 const SizedBox(height: 18),
                 const Text(
                   'Események, ahol ott leszek',
@@ -1444,6 +1450,134 @@ class _ConnectionRequestTileState extends State<_ConnectionRequestTile> {
                 ),
         );
       },
+    );
+  }
+}
+
+/// A felhasználó **claimelt DJ-adatlapjai** a nyilvános profilon.
+///
+/// A tulajdonos kérése: *„ha valaki megnyitja egy user adatlapját és claimelt egy
+/// DJ profilt, látszódjon az is ott, egy kattintható kártyaként"*.
+///
+/// A lista a **szerverről** jön (`getClaimedArtistsForUser`), mert az
+/// `artist_claims` gyűjteményt a biztonsági szabályok más felhasználóról **nem**
+/// engedik olvasni (`firestore.rules`). Ha nincs claim — vagy a hívás hibázik —,
+/// a szakasz **el sem jelenik**: a profil nem mutat üres fejlécet.
+class _ClaimedArtistsSection extends StatefulWidget {
+  const _ClaimedArtistsSection({required this.userId, required this.service});
+
+  final String userId;
+  final CommunityService service;
+
+  @override
+  State<_ClaimedArtistsSection> createState() => _ClaimedArtistsSectionState();
+}
+
+class _ClaimedArtistsSectionState extends State<_ClaimedArtistsSection> {
+  late Future<List<int>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = widget.service.claimedArtistsOfUser(widget.userId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<int>>(
+      future: _future,
+      builder: (context, snapshot) {
+        final ids = snapshot.data ?? const <int>[];
+        if (ids.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'DJ-adatlap',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            for (final id in ids) _ClaimedArtistCard(artistId: id),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Egy claimelt DJ-adatlap **kattintható kártyája** (borító + név).
+class _ClaimedArtistCard extends ConsumerWidget {
+  const _ClaimedArtistCard({required this.artistId});
+
+  final int artistId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final artist = ref.watch(artistDetailProvider(artistId));
+    final value = artist.valueOrNull;
+    final name = value?.title.trim() ?? '';
+    final imageUrl = value == null
+        ? ''
+        : (value.profileImageUrl.isNotEmpty
+              ? value.profileImageUrl
+              : value.logoUrl);
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) =>
+                ArtistDetailScreen(artistId: artistId, fallbackName: name),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: imageUrl.isEmpty
+                      ? Container(
+                          color: Colors.white10,
+                          child: const Icon(Icons.person_outline),
+                        )
+                      : CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name.isEmpty ? 'DJ-adatlap' : name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Claimelt DJ-adatlap',
+                      style: TextStyle(color: Colors.white70, fontSize: 12.5),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

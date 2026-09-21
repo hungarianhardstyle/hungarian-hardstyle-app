@@ -10,6 +10,8 @@ import '../../services/wordpress_service.dart';
 import '../more/community_users_screen.dart';
 import '../community/community_screen.dart';
 import '../community/private_messages_screen.dart';
+import '../artists/artist_detail_screen.dart';
+import '../organizers/organizer_detail_screen.dart';
 import '../events/event_detail_screen.dart';
 import '../news/news_detail_screen.dart';
 import '../releases/release_detail_screen.dart';
@@ -211,6 +213,17 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         );
         return;
       }
+      if (notification.targetType == 'chat_report') {
+        // ⚠️ A chatjelentés azonosítója **nem szám** (a `targetId` a jelentés
+        // dokumentum-azonosítója), ezért ezt az ágat a szám-feldolgozás ELŐTT
+        // kell kezelni — különben a koppintás némán elveszne.
+        await navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) => const CommunityReportsScreen(),
+          ),
+        );
+        return;
+      }
       if (notification.targetType == 'achievement' && target.isNotEmpty) {
         await navigator.push(
           MaterialPageRoute<void>(
@@ -253,6 +266,29 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           await navigator.push(
             MaterialPageRoute<void>(
               builder: (_) => ReleaseDetailScreen(release: release),
+            ),
+          );
+        }
+      } else if (notification.targetType == 'artist') {
+        // ⚠️ ÉLES HIBA VOLT: a „Új DJ került fel" értesítés (`type: new_artist`,
+        // `targetType: artist`, `targetId: <DJ azonosító>`) **egyik ágba sem**
+        // esett bele, ezért a koppintás **semmit** nem csinált — az adatlap nem
+        // nyílt meg. Az azonosító itt már megvan (`id`), ezért elég megnyitni a
+        // DJ-adatlapot.
+        if (navigator.mounted) {
+          await navigator.push(
+            MaterialPageRoute<void>(
+              builder: (_) => ArtistDetailScreen(artistId: id),
+            ),
+          );
+        }
+      } else if (notification.targetType == 'organizer') {
+        // Ugyanaz a hiba-osztály: az „Új szervező került fel" értesítés sem
+        // nyitott semmit.
+        if (navigator.mounted) {
+          await navigator.push(
+            MaterialPageRoute<void>(
+              builder: (_) => OrganizerDetailScreen(organizerId: id),
             ),
           );
         }

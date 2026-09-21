@@ -163,8 +163,29 @@ export async function firestoreSet(documentPath, fields, { merge = true, token }
   return true;
 }
 
-/** Egy titok értéke a Secret Managerből (futásidőben; a repóban soha). */
-export function secret(name) {
+/**
+ * Dokumentum **törlése** az éles adatbázisból — kizárólag karbantartó eszköz
+ * használja, és csak akkor, ha a felhasználó `--confirm`-ot adott.
+ *
+ * MIÉRT itt van: a hibás DJ-adatlap claimet (`artist_claims/<artistId>`) eddig
+ * **semmilyen** úton nem lehetett levenni (a tulajdonos jelzése: *„lekéne szedni
+ * rólam"*), és a Firestore REST-ben a törlés külön hívás.
+ */
+export async function firestoreDelete(documentPath, { token } = {}) {
+  const auth = token || (await accessToken());
+  const response = await fetch(`${BASE}/${documentPath}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${auth}` },
+  });
+  if (response.status === 404) return false;
+  if (!response.ok) {
+    const body = (await response.text().catch(() => '')).slice(0, 300);
+    throw new Error(`${documentPath} törlése sikertelen (status=${response.status}, ${body}).`);
+  }
+  return true;
+}
+
+/** Egy titok értéke a Secret Managerből (futásidőben; a repóban soha). */export function secret(name) {
   // A `firebase` CLI néha átmenetileg hibázik (párhuzamos hívásoknál), ezért
   // egyszer újrapróbáljuk — a titok értéke nem változik közben.
   let lastError;

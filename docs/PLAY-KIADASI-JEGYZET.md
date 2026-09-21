@@ -1,9 +1,8 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 347 megy fel** (versionCode **347**, `1.0.0`) — a csomag:
-> `build/HUHS-v1.0.0+347-release.aab`. A zárt teszt sávján **mérve a 346 van élesben**
-> (`node tools/check-play-track.mjs`, 2026-09-21: alpha = completed, „346 (1.0.0)"), ezért a
-> rövid (1.) blokk **már csak a 347 újdonságait** írja le.
+> **Most a 348 megy fel** (versionCode **348**, `1.0.0`). A zárt teszt sávján
+> **mérve a 347 van élesben** (`node tools/check-play-track.mjs`, 2026-09-21: alpha = completed,
+> „347 (1.0.0)"), ezért a rövid (1.) blokk **már csak a 348 újdonságait** írja le.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -11,11 +10,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 347
+currentBuild: 348
 currentVersion: 1.0.0
-lastPublishedBuild: 346
-aab: build/HUHS-v1.0.0+347-release.aab
-sha256: BF0F6FA02EEE64BFB604C1EE2C590634103DBDC01D4A14F337B835D00C128064
+lastPublishedBuild: 347
+aab: build/HUHS-v1.0.0+348-release.aab
+sha256: B2770AD59E810934B1502A9AA286AF81F8D16F3391765D55FC7EE80CE5484036
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -24,19 +23,17 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-21, a legfrissebb mér�
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **346** — „346 (1.0.0)", a rövid kiadási szöveggel |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **347** — „347 (1.0.0)", a rövid kiadási szöveggel |
 | beta | üres | — |
 | production | üres | — |
 | internal | completed + egy **üres piszkozat** | 278 |
 
-- **A 346 a zárt teszt sávján élesben van** (completed) — ezt a mérés és a tulajdonos jelzése is
-  igazolja (*„346 az éles, most megy fel a 347"*, 2026-09-21). A **347 AAB már fel van töltve** a
-  Playre (a mérés szerint a feltöltött csomagok között ott van), ezért a mostani kör a **kiadás
-  kigördítése** a zárt teszt sávra.
+- **A 347 élesben van** a zárt teszt sávján (completed) — ezt a mérés igazolja (2026-09-21).
+  A **348** csomag a következő feltöltés.
 - **A production sáv viszont üres:** a termékkör megnyitása a Play zárt teszt követelményéhez kötött (személyes fejlesztői fióknál legalább **12 tesztelő / 14 nap** folyamatos zárt teszt), ezért az „élesítés" **nem** egy újabb AAB feltöltése, hanem a production access megnyitása + kiadás a meglévő bundle-ből.
-- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 347 automatikusan felváltja a 346-ot; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
-- A feltöltött AAB-ek a Playen (a 2026-09-21-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 340, 341, 342, 345, 346, **347**.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**346**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 346 volt — ezért az **1. pont** blokkja már csak a **347** újdonságait írja le. A **production** kiadáshoz a **hosszabb, 329–347 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
+- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 348 automatikusan felváltja a 347-et; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
+- A feltöltött AAB-ek a Playen (a 2026-09-21-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 341, 342, 345, 346, **347**.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**347**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 347 volt — ezért az **1. pont** blokkja már csak a **348** újdonságait írja le. A **production** kiadáshoz a **hosszabb, 329–348 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
 
@@ -104,37 +101,38 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Javítva: a zárképernyő következő/előző gombja a képernyő elhagyása után is működik, és a dal végén jön a következő.
-- Javítva: a kevert lejátszási sorrend stabil — nem ugrál a „következő" tétel.
-- Javítva: tableten fekvő nézetben a kiemelt hírek és a játék kártya nem óriásira nő.
+- Javítva: DJ-adatlapot csak az claimelhet, akinek az e-mail címe egyezik az adatlapon szereplő címmel.
+- A claim gomb csak akkor jelenik meg, ha valóban a tiéd lehet; a saját claim visszavonható.
+- A profilodon a claimelt DJ-adatlapod kattintható kártyaként látszik.
+- Javítva: az „Új DJ került fel" értesítés megnyitja az adott DJ adatlapját.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–347 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–348 összesítő)
 
 **Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
 
 ```play-notes
 - Értesítés: chat-lájk, -válasz, komment-válasz.
-- Az ikon mutatja az olvasatlanokat; a rang frissül.
+- Az ikon mutatja az olvasatlanokat.
 - A rádió folyamatosan szól, a videó az appban.
-- Aktivitási pont, vásárlás +20; eseményt csak szervező küldhet.
+- Aktivitási pont, vásárlás +20; eseményt csak szervező küld.
 - ÚJ: „Megvásárolt zenéim", kvíz azonnali jelzése.
 - ÚJ: gyorsabb betöltés, azonnali lájk, lejátszó.
-- ÚJ: zene kikapcsolt képernyőn is, zárképernyőről vezérelve.
-- ÚJ: a listáról zene ki-/bevehető, sorrendezhető; a lejátszó elnavigálva is vezérelhető.
+- ÚJ: zene kikapcsolt képernyőn is; a listáról ki-/bevehető; a lejátszó elnavigálva is vezérelhető.
+- ÚJ: a DJ-adatlapod a profilodon, és csak egyező e-mail címmel claimelhető.
 ```
 
-## 1c. Play Console — CSAK a 347-hez, bővebben (tartalék)
+## 1c. Play Console — CSAK a 348-hoz, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 347-et írja le** (a 346 már élesben van a zárt teszt sávján,
-ezért a 346 javítása nem kell bele).
+megjeleníteni. **Ez is csak a 348-at írja le** (a 347 már élesben van a zárt teszt sávján).
 
 ```play-notes
-- Javítva: a megvásárolt zene lejátszója a képernyő elhagyása után is vezérelhető — a zárképernyő következő/előző gombja mostantól működik, és a dal végén magától jön a következő tétel (eddig megállt a zene).
-- Javítva: a kevert lejátszási sorrend stabil — a „következő" tétel nem ugrál, amikor a lista frissül (pl. új vásárlás).
-- Javítva: tableten fekvő nézetben a kiemelt hírkártyák és a játék kártya akkora, mint a többi kártya (eddig a teljes szélességben óriásira nőttek).
+- Javítva: DJ-adatlapot csak az claimelhet, akinek a bejelentkezési e-mail címe egyezik az adatlapon szereplő booking vagy privát címmel — eddig idegen adatlap is kerülhetett egy fiókra.
+- A „DJ-adatlap claimelése" gomb csak akkor jelenik meg, ha claimelheted; a saját claimet bármikor visszavonhatod.
+- A nyilvános profilodon a claimelt DJ-adatlapod kattintható kártyaként jelenik meg.
+- Javítva: az „Új DJ került fel" (és az „Új szervező") értesítés megnyitja az adatlapot.
 ```
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -152,6 +150,13 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 348 — a DJ-adatlap claim javítása + működő értesítés-koppintás
+- **Javítva:** a **DJ-adatlapot csak az claimelheti** (jelölheti a magáénak), akinek a bejelentkezési e-mail címe egyezik az adatlapon szereplő **booking vagy privát** e-mail címmel. Az **admin-kivétel megszűnt** — élesben pont az tette lehetővé, hogy a tulajdonos fiókjára egy **idegen** DJ adatlapja kerüljön („Sunshite State"), amit most le is vettünk.
+- **Javítva:** a „DJ-adatlap claimelése" gomb **csak akkor jelenik meg**, ha valóban claimelhető (a döntést a szerver hozza, e-mail cím nélkül) — eddig minden hitelesített fióknál látszott.
+- **ÚJ:** a **saját claim visszavonható** a DJ-adatlapról („Claim visszavonása").
+- **ÚJ:** a **nyilvános profilodon** megjelenik a claimelt DJ-adatlapod **kattintható kártyaként**.
+- **Javítva:** az **„Új DJ került fel"** értesítésre koppintva megnyílik az adott DJ adatlapja — eddig **semmi** nem történt. Ugyanígy javult az **„Új szervező"** és a **chatjelentés** értesítés.
 
 ### 347 — a lejátszó a képernyő elhagyása után is vezérelhető + tabletes kártyák
 - **Javítva:** a megvásárolt zene lejátszója a **képernyő elhagyása után is vezérelhető** — a zárképernyő **következő/előző** gombja mostantól működik, és a **dal végén magától jön a következő** tétel. Eddig ilyenkor a gomb ott maradt, de nem csinált semmit, a dal végén pedig **megállt a zene** (a döntés a képernyőhöz volt kötve).

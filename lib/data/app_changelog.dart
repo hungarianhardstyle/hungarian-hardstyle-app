@@ -38,6 +38,16 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 348,
+    changes: [
+      'DJ-adatlapot mostantól csak az claimelhet (jelölhet a magáénak), akinek a bejelentkezési e-mail címe egyezik az adatlapon szereplő booking vagy privát e-mail címmel. Eddig előfordulhatott, hogy idegen adatlap került egy fiókra.',
+      'A „DJ-adatlap claimelése" gomb csak akkor jelenik meg, ha valóban a tiéd lehet az adatlap — és a saját claimet bármikor visszavonhatod.',
+      'A profilodon megjelenik a claimelt DJ-adatlapod egy kattintható kártyaként.',
+      'Javítva: az „Új DJ került fel" értesítésre koppintva megnyílik az adott DJ adatlapja (eddig semmi nem történt). Ugyanígy nyílik az „Új szervező" és a chatjelentés értesítés is.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 347,
     changes: [
       'A megvásárolt zene lejátszója a képernyő elhagyása után is vezérelhető: a zárképernyő következő/előző gombja mostantól működik, és a dal végén magától jön a következő (eddig ott megállt a zene).',

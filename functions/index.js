@@ -58,6 +58,12 @@ const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 const { playProductMatches } = require('./play-product-plan');
 const { adUnlockedVariants, labelLibraryPayload } = require('./label-library-plan');
 const {
+  artistClaimState,
+  claimErrorMessage,
+  artistClaimRecord,
+  claimedArtistIds,
+} = require('./artist-claim-plan');
+const {
   chatReactionNotification,
   chatReplyNotification,
 } = require('./chat-notification-plan');
@@ -5209,57 +5215,166 @@ exports.deletePrivateConversation = functions
     return { deleted: true };
   });
 
-exports.claimArtistProfile = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+/**
+ * A DJ-adatlap claim-hez használt e-mail címek (nyilvános booking + **privát**
+ * kapcsolattartó) a WordPressből.
+ *
+ * MIÉRT privát végpont: a `contact_email` a beküldő **személyes** címe, ezért a
+ * nyilvános `/artists/<id>` válaszban szándékosan **nincs benne** — csak a
+ * szerver kérdezheti le, a WordPress admin-alkalmazásjelszavával.
+ *
+ * MIÉRT van gyorsítótár: a WordPress válaszideje mérve 0,4–2,0 másodperc, és a
+ * profil megnyitásakor ezt minden alkalommal megkérdezni fölösleges késleltetés
+ * lenne (a címpárok ritkán változnak).
+ */
+const ARTIST_CLAIM_EMAIL_TTL_MS = 5 * 60 * 1000;
+const artistClaimEmailCache = new Map();
+
+async function fetchArtistClaimEmails(artistId) {
+  const key = String(artistId);
+  const cached = artistClaimEmailCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  let response;
+  try {
+    response = await fetch(`${WORDPRESS_BASE_URL}/artists/${artistId}/claim-emails`, {
+      headers: { Authorization: `Basic ${Buffer.from(credentials).toString('base64')}` },
+    });
+  } catch (error) {
+    console.warn(JSON.stringify({ event: 'artist_claim_emails_failed', message: String(error?.message || error) }));
+    return null;
+  }
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    console.warn(JSON.stringify({ event: 'artist_claim_emails_http', status: response.status, artistId }));
+    // ⚠️ Nem tippelünk: ha nem tudjuk lekérdezni a címeket, a claim **nem**
+    // engedélyezett (a hibaüzenet ezt meg is mondja).
+    return null;
+  }
+  const value = {
+    booking_email: String(payload?.booking_email || ''),
+    contact_email: String(payload?.contact_email || ''),
+  };
+  artistClaimEmailCache.set(key, { value, expiresAt: Date.now() + ARTIST_CLAIM_EMAIL_TTL_MS });
+  return value;
+}
+
+exports.claimArtistProfile = functions
+  .runWith({
+    enforceAppCheck: false,
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth || context.auth.token.email_verified !== true) {
+      throw new HttpsError('permission-denied', claimErrorMessage('unverified'));
+    }
+    const artistId = Number(data?.artistId);
+    // ⚠️ A cím NEM normalizálva megy tovább: a döntést a tiszta modul hozza
+    // (`artist-claim-plan.js`), egy helyen.
+    const email = String(context.auth.token.email || '');
+    if (!Number.isInteger(artistId) || artistId <= 0) {
+      throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap szükséges.');
+    }
+    if (!(await allowCall(context.auth.uid, 'artist_claim', 5))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok claim-kérés, próbáld később.');
+    }
+    const claimRef = db.collection('artist_claims').doc(String(artistId));
+    const existing = await claimRef.get();
+    const claim = existing.exists ? existing.data() : null;
+    const artist = await fetchArtistClaimEmails(artistId);
+    const state = artistClaimState({
+      email,
+      emailVerified: true,
+      artist,
+      claim,
+      uid: context.auth.uid,
+    });
+    if (!state.canClaim) {
+      securityLog('artist_claim_denied', context);
+      console.warn(JSON.stringify({ event: 'artist_claim_denied_reason', reason: state.reason, artistId }));
+      throw new HttpsError(
+        state.reason === 'taken' ? 'already-exists' : 'permission-denied',
+        claimErrorMessage(state.reason),
+      );
+    }
+    await claimRef.set({
+      ...artistClaimRecord({ artistId, uid: context.auth.uid, email }),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return { claimed: true, artistId };
+  });
+
+/**
+ * A claim **állapota** a felületnek: `claimed`, `mine`, `canClaim`.
+ *
+ * ⚠️ E-mail címet **nem** adunk vissza — a felület csak annyit tud, hogy
+ * claimelhető-e. Ezért a claim gomb **csak akkor jelenik meg**, ha valamelyik
+ * címpár (booking vagy privát) egyezik (a tulajdonos kérése).
+ */
+exports.getArtistClaimStatus = functions
+  .runWith({
+    enforceAppCheck: true,
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+  })
+  .https.onCall(async (data, context) => {
+    if (!(await allowCallByIp(context, 'artist_claim_status', 60))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
+    }
+    const artistId = Number(data?.artistId);
+    if (!Number.isInteger(artistId) || artistId <= 0) {
+      throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap szükséges.');
+    }
+    const claimSnapshot = await db.collection('artist_claims').doc(String(artistId)).get();
+    const claim = claimSnapshot.exists ? claimSnapshot.data() : null;
+    const email = String(context.auth?.token?.email || '');
+    const emailVerified = context.auth?.token?.email_verified === true;
+    if (!emailVerified) {
+      // Bejelentkezés nélkül (vagy nem hitelesített címmel) elég a „foglalt?"
+      // jelzés — a WordPress kört ilyenkor megspóroljuk.
+      return {
+        claimed: Boolean(claim && String(claim.uid || '').trim()),
+        mine: false,
+        canClaim: false,
+        reason: 'unverified',
+      };
+    }
+    const artist = await fetchArtistClaimEmails(artistId);
+    return artistClaimState({
+      email,
+      emailVerified,
+      artist,
+      claim,
+      uid: context.auth.uid,
+    });
+  });
+
+/**
+ * A **claim visszavonása**: a saját claimjét bárki, a hibásat az admin.
+ *
+ * MIÉRT kell: élesben egy idegen DJ-adatlap került a tulajdonos fiókjára (az
+ * admin-kivétel miatt), és *„lekéne szedni rólam"* — ezt eddig semmilyen úton
+ * nem lehetett megtenni.
+ */
+exports.releaseArtistClaim = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   if (!context.auth || context.auth.token.email_verified !== true) {
     throw new HttpsError('permission-denied', 'Hitelesített e-mailes fiók szükséges.');
-  }
-  const artistId = Number(data?.artistId);
-  const email = String(context.auth.token.email || '')
-    .trim()
-    .toLowerCase();
-  const isAdminClaim = email === ADMIN_EMAIL;
-  if (!Number.isInteger(artistId) || artistId <= 0 || !email || email === 'info@hungarianhardstyle.hu') {
-    throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap és e-mail szükséges.');
-  }
-  if (!(await allowCall(context.auth.uid, 'artist_claim', 5))) {
-    throw new HttpsError('resource-exhausted', 'Túl sok claim-kérés, próbáld később.');
-  }
-  const claimRef = db.collection('artist_claims').doc(String(artistId));
-  const existing = await claimRef.get();
-  if (existing.exists && existing.data()?.uid !== context.auth.uid) {
-    throw new HttpsError('already-exists', 'Ezt a DJ-adatlapot már claimelte egy másik fiók.');
-  }
-  const response = await fetch(`${WORDPRESS_BASE_URL}/artists/${artistId}`);
-  const artist = await response.json().catch(() => ({}));
-  if (
-    !response.ok ||
-    (!isAdminClaim &&
-      String(artist?.booking_email || '')
-        .trim()
-        .toLowerCase() !== email)
-  ) {
-    throw new HttpsError('permission-denied', 'A bejelentkezési e-mail nem egyezik a booking e-maillel.');
-  }
-  await claimRef.set({
-    artistId,
-    uid: context.auth.uid,
-    email,
-    status: 'claimed',
-    updatedAt: FieldValue.serverTimestamp(),
-  });
-  return { claimed: true, artistId };
-});
-
-exports.getArtistClaimStatus = functions.runWith({ enforceAppCheck: true }).https.onCall(async (data, context) => {
-  if (!(await allowCallByIp(context, 'artist_claim_status', 60))) {
-    throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
   }
   const artistId = Number(data?.artistId);
   if (!Number.isInteger(artistId) || artistId <= 0) {
     throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap szükséges.');
   }
-  const claim = await db.collection('artist_claims').doc(String(artistId)).get();
-  return { claimed: claim.exists };
+  const claimRef = db.collection('artist_claims').doc(String(artistId));
+  const existing = await claimRef.get();
+  if (!existing.exists) return { released: false, reason: 'missing' };
+  const claimUid = String(existing.data()?.uid || '').trim();
+  const email = String(context.auth.token.email || '').trim().toLowerCase();
+  const isAdmin = email === String(ADMIN_EMAIL).trim().toLowerCase();
+  if (claimUid !== context.auth.uid && !isAdmin) {
+    securityLog('artist_claim_release_denied', context);
+    throw new HttpsError('permission-denied', 'Ezt a claimet nem te vetted fel.');
+  }
+  await claimRef.delete();
+  return { released: true, artistId };
 });
 
 exports.getMyClaimedArtists = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
@@ -5267,9 +5382,30 @@ exports.getMyClaimedArtists = functions.runWith({ enforceAppCheck: false }).http
     throw new HttpsError('permission-denied', 'Bejelentkezés szükséges.');
   }
   const snapshot = await db.collection('artist_claims').where('uid', '==', context.auth.uid).get();
-  return {
-    artistIds: snapshot.docs.map((doc) => Number(doc.data()?.artistId)).filter((id) => Number.isInteger(id) && id > 0),
-  };
+  return { artistIds: claimedArtistIds(snapshot.docs.map((doc) => doc.data())) };
+});
+
+/**
+ * Egy **másik felhasználó** claimelt DJ-adatlapjai (a nyilvános profilhoz).
+ *
+ * A tulajdonos kérése: *„ha valaki megnyitja egy user adatlapját és claimelt egy
+ * DJ profilt, látszódjon az is ott, egy kattintható kártyaként"*. Csak az
+ * azonosítók mennek ki (a kártya adatait a kliens a nyilvános katalógusból
+ * rajzolja), és csak akkor, ha a hívó be van jelentkezve.
+ */
+exports.getClaimedArtistsForUser = functions.runWith({ enforceAppCheck: true }).https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+  }
+  if (!(await allowCallByIp(context, 'artist_claims_for_user', 60))) {
+    throw new HttpsError('resource-exhausted', 'Túl sok kérés.');
+  }
+  const uid = String(data?.uid || '').trim();
+  if (!uid || uid.length > 128) {
+    throw new HttpsError('invalid-argument', 'Érvényes felhasználó szükséges.');
+  }
+  const snapshot = await db.collection('artist_claims').where('uid', '==', uid).get();
+  return { artistIds: claimedArtistIds(snapshot.docs.map((doc) => doc.data())) };
 });
 
 exports.verifyLabelPurchase = functions

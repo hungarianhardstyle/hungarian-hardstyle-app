@@ -16,6 +16,7 @@ import 'package:otp/otp.dart';
 
 import '../models/community_post.dart';
 import '../models/achievement.dart';
+import '../models/artist_claim_status.dart';
 import '../core/firebase/firebase_callable.dart';
 import '../core/images/wordpress_image_url.dart';
 import 'wordpress_service.dart';
@@ -1387,12 +1388,47 @@ class CommunityService {
     );
   }
 
-  Future<bool> isArtistClaimed(int artistId) async {
+  /// A DJ-adatlap claim-jogosultsága (a **szerver** dönt, e-mail cím nélkül).
+  ///
+  /// A tulajdonos jelzése szerint a claim gomb csak akkor jelenhet meg, ha a
+  /// bejelentkezési e-mail egyezik az adatlapon szereplő **booking vagy privát**
+  /// címmel — ezért kérdezzük le a döntést, ahelyett hogy a felület találgatna.
+  Future<ArtistClaimStatus> artistClaimStatus(int artistId) async {
     final result = await callFirebaseCallable<Map<String, dynamic>>(
       'getArtistClaimStatus',
       parameters: {'artistId': artistId},
     );
-    return (result.data as Map?)?['claimed'] == true;
+    return ArtistClaimStatus.fromJson(result.data);
+  }
+
+  /// A claim **visszavonása** (a saját claimet bárki, a hibásat az admin).
+  ///
+  /// MIÉRT kell: élesben egy idegen DJ-adatlap került a tulajdonos fiókjára az
+  /// admin-kivétel miatt, és *„lekéne szedni rólam"* — ezt eddig semmilyen úton
+  /// nem lehetett megtenni.
+  Future<void> releaseArtistClaim(int artistId) async {
+    if (auth.currentUser?.emailVerified != true) {
+      throw StateError('Hitelesített e-mailes fiók szükséges.');
+    }
+    await callFirebaseCallable<void>(
+      'releaseArtistClaim',
+      parameters: {'artistId': artistId},
+    );
+  }
+
+  /// Egy **másik felhasználó** claimelt DJ-adatlapjai (a nyilvános profilhoz).
+  ///
+  /// A tulajdonos kérése: *„ha valaki megnyitja egy user adatlapját és claimelt
+  /// egy DJ profilt, látszódjon az is ott, egy kattintható kártyaként"*.
+  Future<List<int>> claimedArtistsOfUser(String userId) async {
+    if (userId.trim().isEmpty) return const [];
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'getClaimedArtistsForUser',
+      parameters: {'uid': userId},
+    );
+    final ids = (result.data as Map?)?['artistIds'];
+    if (ids is! List) return const [];
+    return ids.whereType<num>().map((id) => id.toInt()).toList();
   }
 
   Future<List<int>> myClaimedArtists() async {

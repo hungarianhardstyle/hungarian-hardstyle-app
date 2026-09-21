@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/community_post.dart';
+import '../models/artist_claim_status.dart';
 import '../services/community_service.dart';
 
 final communityServiceProvider = Provider<CommunityService>((ref) {
@@ -28,11 +29,16 @@ final communityPostsProvider = StreamProvider<List<CommunityPost>>((ref) {
   return ref.watch(communityServiceProvider).watchPosts();
 });
 
-final artistClaimStatusProvider = FutureProvider.family<bool, int>((
+/// A DJ-adatlap claim-állapota: foglalt-e, az enyém-e, és claimelhetem-e.
+///
+/// A tulajdonos kérése: *„a claim akkor jelenjen CSAK meg ha valamelyik email
+/// cím egyezik (booking vagy privát)"* — ezt a **szerver** dönti el
+/// (`functions/artist-claim-plan.js`), mert a privát cím nem kerülhet a kliensre.
+final artistClaimStatusProvider = FutureProvider.family<ArtistClaimStatus, int>((
   ref,
   artistId,
 ) {
-  return ref.watch(communityServiceProvider).isArtistClaimed(artistId);
+  return ref.watch(communityServiceProvider).artistClaimStatus(artistId);
 });
 
 /// Igaz, ha a bejelentkezett fiok admin (a WordPress-admin vegpontokhoz).

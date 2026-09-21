@@ -1,0 +1,162 @@
+diff --git a/.tmp-api-24115/huhs-mobile-api/huhs-mobile-api.php b/.tmp-api-260/huhs-mobile-api/huhs-mobile-api.php
+index 1075ea55..01206ed3 100644
+--- a/.tmp-api-24115/huhs-mobile-api/huhs-mobile-api.php
++++ b/.tmp-api-260/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.5.9
++ * Version: 2.6.0
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.5.9');
++define('HUHS_API_VERSION', '2.6.0');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/.tmp-api-24115/huhs-mobile-api/includes/api-artists.php b/.tmp-api-260/huhs-mobile-api/includes/api-artists.php
+index 7fb3ebc4..b5c1d2c5 100644
+--- a/.tmp-api-24115/huhs-mobile-api/includes/api-artists.php
++++ b/.tmp-api-260/huhs-mobile-api/includes/api-artists.php
+@@ -47,6 +47,118 @@ function huhs_register_artists_api()
+             ),
+         ),
+     ));
++
++    // ⚠️ PRIVÁT végpont: a DJ-adatlap claim-hez használt címek (nyilvános booking
++    // + **privát** kapcsolattartó). A `contact_email` a beküldő **személyes**
++    // címe, ezért a nyilvános `/artists/<id>` válaszból szándékosan kimarad —
++    // csak a HUHS szervere kérdezheti le, a WordPress
++    // admin-alkalmazásjelszavával (`current_user_can('manage_options')`).
++    register_rest_route('huhs/v1', '/artists/(?P<id>\d+)/claim-emails', array(
++        'methods'             => 'GET',
++        'callback'            => 'huhs_get_artist_claim_emails',
++        'permission_callback' => function () {
++            return current_user_can('manage_options');
++        },
++        'args'                => array(
++            'id' => array(
++                'sanitize_callback' => 'absint',
++                'validate_callback' => function ($value) {
++                    return absint($value) > 0;
++                },
++            ),
++        ),
++    ));
++
++    // Egyszeri, **idempotens** pótlás: a korábban jóváhagyott DJ-adatlapokra
++    // átmásolja a beküldés privát címét (`contact_email`), különben a DJ nem
++    // tudná claimelni a saját adatlapját (a jóváhagyás ezt korábban nem tette át).
++    register_rest_route('huhs/v1', '/artists/claim-emails/backfill', array(
++        'methods'             => WP_REST_Server::CREATABLE,
++        'callback'            => 'huhs_backfill_artist_claim_emails',
++        'permission_callback' => function () {
++            return current_user_can('manage_options');
++        },
++    ));
++}
++
++/**
++ * A claim-hez használt címek: nyilvános booking + privát kapcsolattartó.
++ *
++ * Kisbetűsítve adjuk vissza (a szerveroldali összehasonlítás így egyszerű), és
++ * **nem** helyettesítjük a `booking_email`-t a ház címével: itt a valódi mező
++ * számít, mert a claim azon is alapulhat, hogy a DJ a saját privát címével
++ * jelentkezett be.
++ */
++function huhs_get_artist_claim_emails(WP_REST_Request $request)
++{
++    $artist_id = absint($request->get_param('id'));
++    $post = get_post($artist_id);
++
++    if (!$post || $post->post_type !== 'huhs_artist') {
++        return new WP_Error('huhs_artist_not_found', 'Nincs ilyen DJ-adatlap.', array('status' => 404));
++    }
++
++    return new WP_REST_Response(array(
++        'artistId'      => $artist_id,
++        'booking_email' => strtolower((string) sanitize_email(get_post_meta($artist_id, 'booking_email', true))),
++        'contact_email' => strtolower((string) sanitize_email(get_post_meta($artist_id, 'contact_email', true))),
++    ), 200);
++}
++
++/**
++ * A privát címek pótlása a meglévő adatlapokra (a beküldés → adatlap útból).
++ *
++ * SZÁNDÉKOSAN csak akkor ír, ha az adatlapnak **még nincs** ilyen mezője: egy
++ * kézzel beírt (vagy javított) címet nem ír felül, ezért az ismételt futtatás
++ * sem tesz kárt.
++ */
++function huhs_backfill_artist_claim_emails()
++{
++    $submission_ids = get_posts(array(
++        'post_type'      => 'huhs_submission',
++        'post_status'    => 'any',
++        'posts_per_page' => -1,
++        'fields'         => 'ids',
++        'meta_query'     => array(
++            array(
++                'key'     => 'created_profile_id',
++                'compare' => 'EXISTS',
++            ),
++        ),
++    ));
++
++    $updated = 0;
++    $skipped = 0;
++
++    foreach ($submission_ids as $submission_id) {
++        $profile_id = (int) get_post_meta($submission_id, 'created_profile_id', true);
++        $contact = (string) sanitize_email(get_post_meta($submission_id, 'contact_email', true));
++
++        if (!$profile_id || $contact === '') {
++            $skipped++;
++            continue;
++        }
++
++        $post = get_post($profile_id);
++        if (!$post || $post->post_type !== 'huhs_artist') {
++            $skipped++;
++            continue;
++        }
++
++        $existing = (string) sanitize_email(get_post_meta($profile_id, 'contact_email', true));
++        if ($existing !== '') {
++            $skipped++;
++            continue;
++        }
++
++        update_post_meta($profile_id, 'contact_email', $contact);
++        $updated++;
++    }
++
++    return new WP_REST_Response(array(
++        'updated' => $updated,
++        'skipped' => $skipped,
++    ), 200);
+ }
+ 
+ function huhs_get_artists(WP_REST_Request $request)
+diff --git a/.tmp-api-24115/huhs-mobile-api/includes/submissions.php b/.tmp-api-260/huhs-mobile-api/includes/submissions.php
+index ef865eea..5043b718 100644
+--- a/.tmp-api-24115/huhs-mobile-api/includes/submissions.php
++++ b/.tmp-api-260/huhs-mobile-api/includes/submissions.php
+@@ -1050,7 +1050,11 @@ function huhs_approve_profile_submission($submission_id_override = 0, $redirect
+     } else {
+         $common_fields = array('city', 'country', 'facebook', 'instagram', 'tiktok');
+         $type_fields = $is_artist
+-            ? array('real_name', 'website', 'spotify', 'soundcloud', 'youtube', 'booking_email', 'booking_via_huhs')
++            // ⚠️ A `contact_email` (a beküldő **privát** címe) is átkerül az
++            // adatlapra: enélkül a DJ nem tudná claimelni a saját adatlapját,
++            // mert a publikus `booking_email` lehet üres vagy a ház címe
++            // (`booking_via_huhs`). A claim-szabály: booking **vagy** privát cím.
++            ? array('real_name', 'website', 'spotify', 'soundcloud', 'youtube', 'booking_email', 'booking_via_huhs', 'contact_email')
+             : array('website', 'genre');
+ 
+         foreach (array_merge($common_fields, $type_fields) as $key) {

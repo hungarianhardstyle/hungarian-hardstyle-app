@@ -39,6 +39,10 @@ test('callable-k alapból enforcement nélkül; csak az engedélyezett olvasók 
     'getPublicProfile',
     'getPublicProfiles',
     'getArtistClaimStatus',
+    // A claimelt DJ-adatlapok listája egy **másik** felhasználóról: olvasás, ezért
+    // App Check-kel védett (a `artist_claims` gyűjteményt a szabályok amúgy sem
+    // engedik kliensről olvasni).
+    'getClaimedArtistsForUser',
   ];
   const blocks = [...functionsSource.matchAll(
     /^exports\.(?<name>[A-Za-z0-9_]+)\s*=\s*(?<body>.*?)(?=^exports\.|^const wordPressCall|(?![\s\S]))/gms,

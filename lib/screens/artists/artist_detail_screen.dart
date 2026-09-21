@@ -8,6 +8,7 @@ import '../../core/content/html_linkifier.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../models/artist.dart';
+import '../../models/artist_claim_status.dart';
 import '../../widgets/genre_chip.dart';
 import '../../providers/artists_provider.dart';
 import '../../widgets/event_card.dart';
@@ -109,10 +110,57 @@ class _ArtistContent extends ConsumerWidget {
         .replaceAll('\n', '<br>');
   }
 
+  /// A claim elküldése.
+  ///
+  /// ⚠️ A gomb **csak** akkor látszik, ha a szerver szerint egyezik valamelyik
+  /// e-mail cím (booking vagy privát) — a döntés a szerveré, ezért itt nincs
+  /// „találgatás", és a hibaüzenetet is a szerver adja (magyarul). A korábbi
+  /// verzió a `permission-denied`-re egy **beégetett** szöveget írt ki, ami a
+  /// valódi okot (nincs megadva cím / nem egyezik) elrejtette.
+  Future<void> _claimArtist(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(communityServiceProvider).claimArtist(artist.id);
+      ref.invalidate(artistClaimStatusProvider(artist.id));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A DJ-adatlap claimelése sikeres.')),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+    }
+  }
+
+  /// A claim **visszavonása** (a saját claimet bárki, a hibásat az admin).
+  ///
+  /// Azért van rá szükség, mert élesben egy idegen DJ-adatlap került a
+  /// tulajdonos fiókjára, és eddig **semmilyen** úton nem lehetett levenni.
+  Future<void> _releaseArtistClaim(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(communityServiceProvider).releaseArtistClaim(artist.id);
+      ref.invalidate(artistClaimStatusProvider(artist.id));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A claim visszavonva.')),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(userFacingError(error))));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final biography = _biographyHtml();
-    final claimed = ref.watch(artistClaimStatusProvider(artist.id));
+    final claimStatus = ref.watch(artistClaimStatusProvider(artist.id));
+    // Ismeretlen/hibás állapotban **nem** kínálunk claim gombot: nem tudjuk,
+    // hogy szabad-e, és a tulajdonos kérése szerint a gomb csak egyező e-mail
+    // címnél jelenhet meg (azt a szerver dönti el).
+    final claim = claimStatus.valueOrNull ?? ArtistClaimStatus.unknown;
     final bookingEmail = artist.effectiveBookingEmail;
     final imageUrl = artist.profileImageUrl.isNotEmpty
         ? artist.profileImageUrl
@@ -264,7 +312,7 @@ class _ArtistContent extends ConsumerWidget {
                                     ),
                                   ),
                                   if (artist.webUrl.isNotEmpty &&
-                                      claimed.value != true)
+                                      !claim.claimed)
                                     OutlinedButton.icon(
                                       onPressed: () => openInAppBrowser(
                                         context,
@@ -276,46 +324,58 @@ class _ArtistContent extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                          if (claimed.value != true &&
-                              ref
-                                      .read(communityServiceProvider)
-                                      .auth
-                                      .currentUser
-                                      ?.emailVerified ==
-                                  true)
+                          if (claim.mine)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF141414),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: Colors.greenAccent.withValues(
+                                      alpha: 0.45,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.verified_user,
+                                      size: 20,
+                                      color: Colors.greenAccent,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    const Expanded(
+                                      child: Text(
+                                        'Ez a te DJ-adatlapod (claimelve).',
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          _releaseArtistClaim(context, ref),
+                                      child: const Text('Claim visszavonása'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else if (claim.canClaim)
                             Padding(
                               padding: const EdgeInsets.only(top: 16),
                               child: OutlinedButton.icon(
-                                onPressed: () async {
-                                  try {
-                                    await ref
-                                        .read(communityServiceProvider)
-                                        .claimArtist(artist.id);
-                                    ref.invalidate(
-                                      artistClaimStatusProvider(artist.id),
-                                    );
-                                    if (!context.mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'A DJ-adatlap claimelése sikeres.',
-                                        ),
-                                      ),
-                                    );
-                                  } catch (error) {
-                                    if (!context.mounted) return;
-                                    final raw = error.toString().toLowerCase();
-                                    final message =
-                                        raw.contains('permission-denied')
-                                        ? 'A bejelentkezési e-mail nem egyezik a booking e-maillel.'
-                                        : userFacingError(error);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(message)),
-                                    );
-                                  }
-                                },
+                                onPressed: () => _claimArtist(context, ref),
                                 icon: const Icon(Icons.verified_user_outlined),
                                 label: const Text('DJ-adatlap claimelése'),
+                              ),
+                            )
+                          else if (claim.claimed)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 16),
+                              child: Text(
+                                'Ezt a DJ-adatlapot már claimelte egy fiók.',
+                                style: TextStyle(color: Colors.white70),
                               ),
                             ),
                           if (bookingEmail.isNotEmpty)
