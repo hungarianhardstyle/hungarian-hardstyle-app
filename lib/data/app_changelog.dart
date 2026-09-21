@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 345,
+    changes: [
+      'A megvásárolt zenéd mostantól kikapcsolt képernyőn is szól, és a zárképernyőn (meg az értesítésben) vezérelhető: előző, szünet, következő, stop és tekerés.',
+      'Ha közben más app indít zenét, vagy hívást kapsz, a lejátszó szünetel — hívás után magától folytatja. A fejhallgató kihúzásakor is megáll.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 344,
     changes: [
       'A frissen megvásárolt (vagy reklámmal feloldott) zene már másodperceken belül megjelenik a „Megvásárolt zenéim" listában — eddig előfordulhatott, hogy csak az app újraindítása után látszott.',

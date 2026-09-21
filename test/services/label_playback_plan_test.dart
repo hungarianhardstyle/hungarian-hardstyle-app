@@ -356,7 +356,6 @@ void main() {
 
     test('van stop gomb, és az a szám elejére állít', () {
       final body = _functionBody(source, '_stopPlayback');
-      expect(body, contains('_player.stop()'));
       expect(body, contains('_releaseAudio()'));
       expect(body, contains('_memory.clear('));
       expect(
@@ -364,6 +363,16 @@ void main() {
         contains('Duration.zero'),
         reason: 'a stop a szám elejére állít',
       );
+      // ⚠️ A leállítás a `_releaseAudio`-ban van (ott a háttér-értesítés
+      // levétele is), ezért azt is mérjük — a stop-gombra önmagában nem elég a
+      // hívás megléte.
+      final release = _functionBody(source, '_releaseAudio');
+      expect(
+        release,
+        contains('stop()'),
+        reason: 'a hangnak tényleg meg kell állnia',
+      );
+      expect(release, contains('releasePreviewPlayingState.value = false'));
       expect(
         source,
         contains("tooltip: 'Stop (a szám elejére áll)'"),
@@ -463,7 +472,8 @@ void main() {
 /// látszólag ok nélkül.
 String _functionBody(String source, String name) {
   final match = RegExp(
-    '\\n\\s*[A-Za-z_][\\w<>, ?]*\\s${RegExp.escape(name)}\\(',
+    '\\n\\s*(?!await\\b|unawaited\\b|return\\b|if\\b|while\\b|for\\b|switch\\b|assert\\b)'
+    '[A-Za-z_][\\w<>, ?]*\\s${RegExp.escape(name)}\\(',
   ).firstMatch(source);
   expect(match, isNotNull, reason: 'nincs ilyen tag: $name');
   final openParen = source.indexOf('(', match!.start);

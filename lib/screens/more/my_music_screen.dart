@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -17,6 +18,7 @@ import '../../services/label_library_plan.dart';
 import '../../services/label_playback_memory.dart';
 import '../../services/label_playback_plan.dart';
 import '../../services/label_release_availability.dart';
+import '../../services/music_audio_handler.dart';
 import '../../widgets/radio_player_bar.dart';
 import '../../widgets/resized_network_image.dart';
 import '../releases/releases_screen.dart';
@@ -45,7 +47,18 @@ class MyMusicScreen extends ConsumerStatefulWidget {
 }
 
 class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
-  final AudioPlayer _player = AudioPlayer();
+  /// A háttér-lejátszó (zárképernyő + értesítés), ha elindult.
+  ///
+  /// MIÉRT lehet `null`: ha az `AudioService` nem indul el (régi készülék,
+  /// szolgáltatás-hiba), a lejátszó **a képernyőn belül** ugyanúgy működik —
+  /// ilyenkor a saját példányunkat használjuk. Ez a szándékos tartalék, nem
+  /// hibaág.
+  MusicAudioHandler? _handler;
+  AudioPlayer? _ownedPlayer;
+
+  /// A lejátszó, akár a háttér-szolgáltatásé, akár a sajátunk.
+  AudioPlayer get _player => _handler?.player ?? (_ownedPlayer ??= AudioPlayer());
+
   StreamSubscription<PlayerState>? _stateSubscription;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
@@ -135,6 +148,25 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   @override
   void initState() {
     super.initState();
+    // A háttér-lejátszó (ha van): a **döntéseket** a képernyő adja neki
+    // visszahíváson keresztül (a zárképernyő gombjai ugyanazt csinálják, mint
+    // az app gombjai), a lejátszást viszont ő végzi — így szól háttérben is.
+    final handler = ref.read(musicAudioHandlerProvider);
+    if (handler != null) {
+      _handler = handler;
+      handler.onNext = _playNext;
+      handler.onPrevious = _playPrevious;
+      handler.onRepeatChanged = (mode) async {
+        if (mounted) setState(() => _repeat = mode);
+      };
+      handler.onShuffleChanged = (enabled) async {
+        if (!mounted) return;
+        setState(() {
+          _shuffle = enabled;
+          _rebuildOrder();
+        });
+      };
+    }
     _stateSubscription = _player.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
         unawaited(_advance());
@@ -156,6 +188,23 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       if (mounted) setState(() {});
     });
     unawaited(_loadReleaseAvailability());
+    // Ha a zene a háttérben tovább szólt (a képernyőt elhagytuk), a visszatéréskor
+    // a **lejátszó a hiteles forrás**: ahhoz igazítjuk a kijelzést.
+    unawaited(_syncWithBackgroundPlayback());
+  }
+
+  /// A háttérben szóló zene visszakapcsolása a felületre (a képernyő újranyitásakor).
+  Future<void> _syncWithBackgroundPlayback() async {
+    final item = _handler?.currentItem;
+    if (item == null || _queue.isEmpty) return;
+    final index = _queue.indexWhere((entry) => entry.key == item.id);
+    if (index < 0 || !mounted) return;
+    setState(() {
+      _currentIndex = index;
+      _resumePoint = null;
+      _position = _player.position;
+      _seekValue = _position.inMilliseconds.toDouble();
+    });
   }
 
   @override
@@ -164,8 +213,25 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     _stateSubscription?.cancel();
     _positionSubscription?.cancel();
     _durationSubscription?.cancel();
-    unawaited(_releaseAudio());
-    _player.dispose();
+    final handler = _handler;
+    // A visszahívásokat leválasztjuk (a képernyő megszűnik), DE a zenét **nem
+    // állítjuk le**: pont ez a háttér-lejátszás lényege. A hang visszaadását a
+    // rádiónak a szolgáltatás intézi, amikor a zárképernyőn/értesítésben
+    // megállítják (`resumeRadioWhenStopped`).
+    if (handler != null) {
+      handler.onNext = null;
+      handler.onPrevious = null;
+      handler.onRepeatChanged = null;
+      handler.onShuffleChanged = null;
+      handler.resumeRadioWhenStopped = _resumeRadioAfterStop;
+      if (!handler.player.playing) {
+        // Ha épp nem szól, nincs mit háttérben tartani: a szokásos lezárás.
+        unawaited(_releaseAudio());
+      }
+    } else {
+      unawaited(_releaseAudio());
+      _ownedPlayer?.dispose();
+    }
     super.dispose();
   }
 
@@ -386,7 +452,25 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
         if (mounted) releasePreviewPlayingState.value = true;
       }
       final file = await _downloads.fileFor(entry);
-      await _player.setFilePath(file.path);
+      // A **háttér-lejátszáshoz** a médiamunkamenetnek tudnia kell, mi szól:
+      // ebből lesz az értesítés és a zárképernyő címe, előadója, borítója.
+      final item = MediaItem(
+        id: entry.key,
+        title: entry.title.isEmpty ? entry.nowPlayingLabel : entry.title,
+        artist: entry.artist.isEmpty ? 'Hungarian Hardstyle' : entry.artist,
+        album: entry.variantLabel,
+        artUri: entry.coverUrl.isEmpty ? null : Uri.tryParse(entry.coverUrl),
+      );
+      final handler = _handler;
+      if (handler != null) {
+        handler.resumeRadioWhenStopped = _resumeRadioAfterStop;
+        handler.publishQueue([
+          for (final index in _order)
+            if (index >= 0 && index < _queue.length)
+              _mediaItemFor(_queue[index]),
+        ], index: _order.indexOf(index));
+      }
+      await _player.setAudioSource(AudioSource.file(file.path, tag: item));
       // A „folytatás" pontját a betöltés **után** keressük meg (addig nincs
       // hossz, és a seek nem is értelmezhető).
       if (startAtMs != null && startAtMs > 0) {
@@ -399,6 +483,15 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       if (mounted) setState(() => _message = userFacingError(error));
     }
   }
+
+  /// A tételhez tartozó médiamunkamenet-adat (cím, előadó, borító).
+  MediaItem _mediaItemFor(LabelQueueEntry entry) => MediaItem(
+    id: entry.key,
+    title: entry.title.isEmpty ? entry.nowPlayingLabel : entry.title,
+    artist: entry.artist.isEmpty ? 'Hungarian Hardstyle' : entry.artist,
+    album: entry.variantLabel,
+    artUri: entry.coverUrl.isEmpty ? null : Uri.tryParse(entry.coverUrl),
+  );
 
   /// A szám végén a **sorrend** szerinti következő tételre lép.
   ///
@@ -449,7 +542,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   /// megmarad (és a rádió hallgat), a stopnál viszont elölről kezdhető, ezért a
   /// mentett folytatási pontot is töröljük.
   Future<void> _stopPlayback() async {
-    await _player.stop();
+    // A leállítást a `_releaseAudio` végzi (az veszi le a háttér-értesítést is),
+    // ezért itt nem hívunk külön lejátszó-műveletet.
     await _releaseAudio();
     await _memory.clear(_uid);
     _lastSavedMs = 0;
@@ -463,7 +557,21 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   }
 
   /// Leállás: a rádió visszakapja a hangot, ha előtte az szólt.
+  ///
+  /// **Háttér-szolgáltatás esetén** a leállítást a szolgáltatás végzi
+  /// (`handler.stop()`), mert az értesítést is **le kell venni** — különben ott
+  /// maradna egy halott lejátszó a zárképernyőn. A hang visszaadása ugyanígy a
+  /// szolgáltatásban történik (`resumeRadioWhenStopped`), ezért az a
+  /// zárképernyőről indított stopnál is működik.
   Future<void> _releaseAudio() async {
+    final handler = _handler;
+    if (handler != null) {
+      handler.resumeRadioWhenStopped = _resumeRadioAfterStop;
+      _resumeRadioAfterStop = false;
+      releasePreviewPlayingState.value = false;
+      await handler.stop();
+      return;
+    }
     await _player.stop();
     releasePreviewPlayingState.value = false;
     if (_resumeRadioAfterStop) {

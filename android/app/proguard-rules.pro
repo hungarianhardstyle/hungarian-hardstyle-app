@@ -19,3 +19,12 @@
 #   NoSuchMethodException: ...FirebaseAppCheckPlayIntegrityRegistrar.<init> []
 -keep class * implements com.google.firebase.components.ComponentRegistrar { *; }
 -keep class com.google.firebase.appcheck.** { *; }
+
+# Az audio_service (a megvásárolt zenék háttér-lejátszása) a médiamunkamenetet az
+# Activity TÍPUSÁRA építi: a plugin `context instanceof AudioServiceFragmentActivity`
+# ellenőrzést végez, a szolgáltatást és a fejhallgató-vevőt pedig a manifest nevezi
+# meg. R8 teljes módban ezt az osztályt BEPAKOLTA egy másikba (a release mapping
+# szerint `AudioServiceFragmentActivity -> R8$$REMOVED$$CLASS$$…`), ami éles
+# buildben némán megváltoztathatja a viselkedést — vagyis a zárképernyős
+# vezérlés „csak a release-ben" nem működne. Ezért ezeket megtartjuk.
+-keep class com.ryanheise.audioservice.** { *; }

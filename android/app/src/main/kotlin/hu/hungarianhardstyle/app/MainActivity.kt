@@ -13,13 +13,18 @@ import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import java.io.File
-import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
+import com.ryanheise.audioservice.AudioServiceFragmentActivity
 
-class MainActivity : FlutterFragmentActivity() {
+// FIGYELEM: a bázis-osztály `AudioServiceFragmentActivity` (nem közvetlenül a
+// `FlutterFragmentActivity`), mert a megvásárolt zenék háttér-lejátszása
+// (audio_service) ezen keresztül kapcsolódik a médiamunkamenethez. Ez az osztály
+// a `FlutterFragmentActivity`-ből származik, ezért az ujjlenyomat/PIN-es
+// belépés (BiometricPrompt) és a többi Metódus-csatorna változatlanul működik.
+class MainActivity : AudioServiceFragmentActivity() {
     private var systemBackCallback: OnBackInvokedCallback? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

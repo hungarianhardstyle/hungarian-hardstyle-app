@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +16,9 @@ import 'services/push_notification_service.dart';
 import 'services/referral_link_service.dart';
 import 'services/label_purchase_service.dart';
 import 'services/public_content_warmer.dart';
+import 'services/music_audio_handler.dart';
 import 'widgets/startup_gate.dart';
+import 'widgets/radio_player_bar.dart';
 import 'widgets/session_watcher.dart';
 import 'widgets/profile_access_gate.dart';
 import 'screens/community/community_screen.dart';
@@ -33,6 +37,9 @@ Future<void> main() async {
   await initializeDateFormatting('hu_HU');
   await initializeFirebaseRuntime();
   await _initializeAppCheck();
+  // A háttér-lejátszó **a `runApp` előtt** indul, mert a lejátszó példány csak
+  // utána jön létre (enélkül a megvásárolt zene nem szólna háttérben).
+  await _initializeBackgroundAudio();
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
   // The home screen needs the news and event lists first. Starting that request
   // here runs it behind the startup gate, so the content is already cached when
@@ -60,6 +67,71 @@ Future<void> _initializePushNotifications() async {
   try {
     await PushNotificationService.initialize();
   } catch (_) {}
+}
+
+/// A megvásárolt zenék háttér-lejátszása: rendszer-médiamunkamenet (zárképernyő,
+/// értesítés, fejhallgató-gombok) + hangfókusz.
+///
+/// MIÉRT KÜLÖN FÜGGVÉNYBEN ÉS `try`-ban: hiba esetén **nem állhat meg az app** —
+/// a lejátszó ilyenkor a képernyőn belül marad (tartalék), csak a zárképernyős
+/// vezérlés nem lesz elérhető.
+Future<void> _initializeBackgroundAudio() async {
+  try {
+    final handler = await AudioService.init<MusicAudioHandler>(
+      builder: MusicAudioHandler.new,
+      config: const AudioServiceConfig(
+        androidNotificationChannelId: 'hu.hungarianhardstyle.app.music',
+        androidNotificationChannelName: 'Zenelejátszás',
+        androidNotificationOngoing: true,
+        // Szünetnél elengedi az előtér-státuszt: ne maradjon ott egy álló
+        // szolgáltatás (a zárképernyőn a szünet gomb továbbra is látszik).
+        androidStopForegroundOnPause: true,
+      ),
+    );
+    setSharedMusicAudioHandler(handler);
+    // A zárképernyőről indított stop is adja vissza a hangot a rádiónak — ezért
+    // itt kötjük be, nem a képernyőn (az közben meg is szűnhet).
+    handler.onResumeRadio = () async {
+      releasePreviewPlayingState.value = false;
+      await resumeRadioPlayback();
+    };
+
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.music());
+    // Fejhallgató kihúzása: a rendszer jelzi — ilyenkor illik szüneteltetni.
+    session.becomingNoisyEventStream.listen((_) {
+      if (handler.player.playing) unawaited(handler.pause());
+    });
+    // Hívás vagy más zene-app: a fókusz elvesztésekor szünet. **Csak hívás
+    // után** folytatjuk magunktól (`pause` típus), mert egy másik zene-apptól
+    // nem vehetjük vissza a fókuszt — ugyanaz a szabály, mint a rádiónál.
+    var pausedByInterruption = false;
+    session.interruptionEventStream.listen((event) {
+      if (event.begin) {
+        if (event.type == AudioInterruptionType.duck) {
+          unawaited(handler.player.setVolume(0.4));
+          return;
+        }
+        pausedByInterruption = handler.player.playing;
+        if (pausedByInterruption) unawaited(handler.pause());
+        return;
+      }
+      if (event.type == AudioInterruptionType.duck) {
+        unawaited(handler.player.setVolume(1.0));
+        return;
+      }
+      if (pausedByInterruption && event.type == AudioInterruptionType.pause) {
+        pausedByInterruption = false;
+        unawaited(handler.play());
+      } else {
+        pausedByInterruption = false;
+      }
+    });
+  } catch (error) {
+    if (kDebugMode) {
+      debugPrint('Háttér-lejátszó indítási hiba: ${error.runtimeType}');
+    }
+  }
 }
 
 Future<void> _initializeAppCheck() async {
