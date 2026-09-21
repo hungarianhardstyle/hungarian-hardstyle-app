@@ -5,6 +5,8 @@ const path = require('node:path');
 
 const {
   HOUSE_EMAIL,
+  HOUSE_DOMAIN,
+  isHouseEmail,
   claimEmailsFor,
   artistClaimState,
   claimErrorMessage,
@@ -140,6 +142,50 @@ test('a ház saját címe (booking_via_huhs) nem számít egyezésnek', () => {
     claimEmailsFor(artist({ booking_email: HOUSE_EMAIL, contact_email: '' })).length,
     0,
   );
+});
+
+test('⚠️ a DJ privát címe lehet `info@` MÁS domainen (a tulajdonos észrevétele)', () => {
+  // *„info@ mail lehet privát, ha nem hungarianhardstyle.hu a domain sztem"* —
+  // ezért a szabály a **domainre** szűr, nem a pontos címre.
+  const dj = artist({ booking_email: '', contact_email: 'info@sajatdomain.hu' });
+  assert.deepEqual(claimEmailsFor(dj), ['info@sajatdomain.hu']);
+  const state = artistClaimState({
+    email: 'info@sajatdomain.hu',
+    emailVerified: true,
+    artist: dj,
+    claim: null,
+    uid: 'uid-1',
+  });
+  assert.equal(state.canClaim, true);
+  assert.equal(state.reason, 'ok');
+});
+
+test('a ház DOMAINJÉRE eső bármely cím kimarad (nem csak az info@)', () => {
+  // A korábbi pontos egyezés mellett a `booking@hungarianhardstyle.hu` átcsúszott
+  // volna — a domain-szabály ezt is kizárja.
+  const house = artist({
+    booking_email: 'booking@hungarianhardstyle.hu',
+    contact_email: 'sajat@hungarianhardstyle.hu',
+  });
+  assert.deepEqual(claimEmailsFor(house), []);
+  assert.equal(isHouseEmail('booking@hungarianhardstyle.hu'), true);
+  assert.equal(isHouseEmail('INFO@HungarianHardstyle.HU'), true);
+  assert.equal(isHouseEmail('info@sajatdomain.hu'), false);
+  assert.equal(isHouseEmail('nem-is-cim'), false);
+  assert.equal(isHouseEmail(''), false);
+  assert.equal(HOUSE_DOMAIN, 'hungarianhardstyle.hu');
+});
+
+test('a ház domainjével bejelentkező fiók sem claimelhet', () => {
+  const state = artistClaimState({
+    email: 'sajat@hungarianhardstyle.hu',
+    emailVerified: true,
+    artist: artist(),
+    claim: null,
+    uid: 'uid-1',
+  });
+  assert.equal(state.canClaim, false);
+  assert.equal(state.reason, 'house-email');
 });
 
 test('már claimelt (másnál) → nem claimelhető, de látszik, hogy foglalt', () => {

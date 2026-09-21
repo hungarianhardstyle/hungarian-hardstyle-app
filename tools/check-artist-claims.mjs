@@ -20,7 +20,7 @@
  * Kilépési kód: 0 = rendben, 1 = hiba (pl. jogosulatlan claim maradt, vagy
  * önteszt-hiba).
  */
-import { claimEmailsFor, HOUSE_EMAIL } from '../functions/artist-claim-plan.js';
+import { claimEmailsFor, isHouseEmail } from '../functions/artist-claim-plan.js';
 import {
   accessToken,
   firestoreDelete,
@@ -58,7 +58,9 @@ export function claimVerdict({ claimEmail, artist }) {
   const normalized = String(claimEmail ?? '').trim().toLowerCase();
   const emails = claimEmailsFor(artist);
   if (!normalized) return 'unknown';
-  if (normalized === HOUSE_EMAIL) return 'unjustified';
+  // ⚠️ A **ház domainje** (`hungarianhardstyle.hu`) nem claimelhető, de egy MÁS
+  // domainen lévő `info@` a DJ privát címe lehet — ezért domainre szűrünk.
+  if (isHouseEmail(normalized)) return 'unjustified';
   if (!emails.length) return 'unknown';
   return emails.includes(normalized) ? 'justified' : 'unjustified';
 }
@@ -339,6 +341,21 @@ function selfTest() {
     claimVerdict({ claimEmail: 'SUNSHITE@gmail.com', artist }),
     'justified',
   );
+  check(
+    'jogosult: `info@` MÁS domainen (a DJ privát címe lehet)',
+    claimVerdict({
+      claimEmail: 'info@sajatdomain.hu',
+      artist: { booking_email: '', contact_email: 'info@sajatdomain.hu' },
+    }),
+    'justified',
+  );
+  check(
+    '⚠️ jogosulatlan: a ház DOMAINJÉRE eső cím (booking@…)',
+    claimVerdict({ claimEmail: 'booking@hungarianhardstyle.hu', artist }),
+    'unjustified',
+  );
+  check('a ház domainje felismerése', isHouseEmail('info@hungarianhardstyle.hu'), true);
+  check('más domain nem ház', isHouseEmail('info@sajatdomain.hu'), false);
   check(
     '⚠️ jogosulatlan: az admin címe idegen adatlapon',
     claimVerdict({ claimEmail: 'djdeeroy@gmail.com', artist }),
