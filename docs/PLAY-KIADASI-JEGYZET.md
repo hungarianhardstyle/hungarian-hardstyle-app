@@ -304,6 +304,21 @@ A változás verziókövetve: `docs/plugin-2.6.0-dj-claim.patch`.
   (a cím átvitele), huhs-mobile-api.php (verzió).
 ```
 
+### A 2.6.0 ÉLŐBEN igazolva (2026-09-21, a tulajdonos „2.6.0 feltöltve" jelzése után)
+
+- **A privát végpont él:** `node tools/check-artist-claims.mjs --ping 12812` → válaszol, és megadja az
+  adatlap címkéit (a kimenet **maszkolt**: `booking=(nincs) privát=j***@gmail.com`). A címek
+  kisbetűsítve jönnek, és a végpont hitelesítés nélkül nem ad ki semmit.
+- **A cím-pótlás lefutott:** `--backfill --confirm` → **1 adatlap pótolva**, 0 kihagyva. Ez a
+  **12812 „Sunshine State"** adatlap: a beküldés privát címe eddig **elveszett** a jóváhagyásnál,
+  mostantól ott van — vagyis **a beküldött DJ a saját e-mail címével claimelheti** az adatlapját.
+  (⚠️ A WordPress object cache miatt az érték az első lekérdezésben még **elavultan üres** volt;
+  közvetlenül a pótlás után érdemes néhány másodpercet várni.)
+- **Teljes felmérés (élő, `--scan-emails`): 16 publikált DJ-adatlapból 11-en van claimhez használható
+  cím, 5-en NINCS.** A cím nélküliek: **11678 „Denoiser"**, 11726 „Adam Bass", 11731 „Impulz",
+  11734 „Noizemaker", 12373 „Goze" — ezeket **a DJ sem tudja claimelni**, amíg nincs rajtuk
+  booking vagy privát e-mail (a WordPress adminban a „Nyilvános booking e-mail" mező kitöltése elég).
+
 ### A 2.5.9 — a nagy körüzenet dupla küldésének javítása
 
 A plugin csomag: `build/huhs-mobile-api-2.5.9.zip` (45 fájl, 145,1 KB,

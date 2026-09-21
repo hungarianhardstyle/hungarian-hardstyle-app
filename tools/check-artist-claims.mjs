@@ -63,21 +63,34 @@ export function claimVerdict({ claimEmail, artist }) {
   return emails.includes(normalized) ? 'justified' : 'unjustified';
 }
 
-/** A privát végpont válasza (plugin 2.6.0+) vagy `null`, ha még nincs fent. */
-async function fetchClaimEmails(artistId, authorization) {
+/**
+ * A privát végpont válasza **státusszal együtt** (a `--ping` ehhez kérdez rá,
+ * hogy kiderüljön: a végpont létezik-e egyáltalán).
+ */
+async function fetchClaimEmailsWithStatus(artistId, authorization) {
   try {
     const response = await fetch(`${WORDPRESS_BASE_URL}/artists/${artistId}/claim-emails`, {
       headers: authorization ? { Authorization: authorization } : {},
     });
-    if (!response.ok) return null;
+    if (!response.ok) return { ok: false, status: response.status, value: null };
     const payload = await response.json().catch(() => ({}));
     return {
-      booking_email: String(payload?.booking_email || ''),
-      contact_email: String(payload?.contact_email || ''),
+      ok: true,
+      status: response.status,
+      value: {
+        booking_email: String(payload?.booking_email || ''),
+        contact_email: String(payload?.contact_email || ''),
+      },
     };
-  } catch {
-    return null;
+  } catch (error) {
+    return { ok: false, status: 0, value: null, message: String(error?.message || error) };
   }
+}
+
+/** A privát végpont válasza (plugin 2.6.0+) vagy `null`, ha még nincs fent. */
+async function fetchClaimEmails(artistId, authorization) {
+  const result = await fetchClaimEmailsWithStatus(artistId, authorization);
+  return result.ok ? result.value : null;
 }
 
 /** Az adatlap címe a nyilvános végpontról (csak megjelenítéshez). */
@@ -96,6 +109,37 @@ function basicAuthorization(username, password) {
   return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
 }
 
+/** Az összes **publikált** DJ-adatlap azonosítója (a nyilvános listából, lapozva). */
+async function fetchPublishedArtistIds() {
+  const ids = [];
+  for (let page = 1; page <= 20; page += 1) {
+    const response = await fetch(`${WORDPRESS_BASE_URL}/artists?per_page=50&page=${page}`);
+    if (!response.ok) break;
+    const payload = await response.json().catch(() => ({}));
+    const items = Array.isArray(payload?.items) ? payload.items : [];
+    if (!items.length) break;
+    for (const item of items) {
+      const id = Number(item?.id);
+      if (Number.isInteger(id) && id > 0) ids.push(id);
+    }
+    if (items.length < 50) break;
+  }
+  return ids;
+}
+
+/** Egyszerű párhuzamosság-korlátozó (a WordPress lassú, de ne terheljük túl). */
+async function forEachLimited(items, limit, worker) {
+  let cursor = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      await worker(items[index]);
+    }
+  });
+  await Promise.all(runners);
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const releaseIndex = args.indexOf('--release');
@@ -106,10 +150,6 @@ async function main() {
     return selfTest();
   }
 
-  const claims = await firestoreList('artist_claims', {
-    fields: ['artistId', 'uid', 'email', 'status'],
-  });
-
   let authorization = '';
   try {
     authorization = basicAuthorization(
@@ -119,6 +159,99 @@ async function main() {
   } catch {
     authorization = '';
   }
+
+  // A **privát** végpont él-e? (A plugin 2.6.0 hozza; a claim ehhez kell.)
+  const pingIndex = args.indexOf('--ping');
+  if (pingIndex >= 0) {
+    const artistId = Number(args[pingIndex + 1]);
+    if (!Number.isInteger(artistId) || artistId <= 0) {
+      console.error('HIBA  a --ping után egy DJ-adatlap azonosító kell (pl. --ping 12812)');
+      return 1;
+    }
+    if (!authorization) {
+      console.error('HIBA  a WordPress titkok nem olvashatók a Secret Managerből.');
+      return 1;
+    }
+    const emails = await fetchClaimEmailsWithStatus(artistId, authorization);
+    if (!emails.ok) {
+      console.log(`A privát végpont NEM érhető el (status=${emails.status}) — a plugin 2.6.0 még nincs fent?`);
+      return 1;
+    }
+    console.log(
+      `artist=${artistId}  booking=${maskEmail(emails.value?.booking_email)}  privát=${maskEmail(emails.value?.contact_email)}`,
+    );
+    return 0;
+  }
+
+  // Melyik adatlapon van egyáltalán claimhez használható cím? (csak olvas)
+  if (args.includes('--scan-emails')) {
+    if (!authorization) {
+      console.error('HIBA  a WordPress titkok nem olvashatók a Secret Managerből.');
+      return 1;
+    }
+    const ids = await fetchPublishedArtistIds();
+    const withEmail = [];
+    const withoutEmail = [];
+    await forEachLimited(ids, 6, async (id) => {
+      const emails = await fetchClaimEmails(id, authorization);
+      if (emails && (emails.booking_email || emails.contact_email)) {
+        withEmail.push({ id, ...emails });
+      } else {
+        withoutEmail.push(id);
+      }
+    });
+    console.log(`${ids.length} publikált DJ-adatlap vizsgálva.`);
+    console.log('');
+    for (const row of withEmail.sort((a, b) => a.id - b.id)) {
+      const title = await fetchArtistTitle(row.id);
+      console.log(
+        `CÍM VAN  artist=${row.id}${title ? ` „${title}"` : ''}  booking=${maskEmail(row.booking_email)}  privát=${maskEmail(row.contact_email)}`,
+      );
+    }
+    if (withoutEmail.length) {
+      console.log('');
+      for (const id of withoutEmail.sort((a, b) => a - b)) {
+        const title = await fetchArtistTitle(id);
+        console.log(
+          `⚠️ NINCS CÍM  artist=${id}${title ? ` „${title}"` : ''} — ezt az adatlapot a DJ **nem tudja** claimelni (a booking vagy privát e-mail hiányzik a WordPressben)`,
+        );
+      }
+    }
+    console.log('');
+    console.log(
+      `Összegzés: ${withEmail.length} adatlapon van cím, ${withoutEmail.length} adatlapon NINCS (azok nem claimelhetők).`,
+    );
+    return withoutEmail.length ? 1 : 0;
+  }
+
+  // A **privát címek pótlása** a korábban jóváhagyott adatlapokra (idempotens).
+  if (args.includes('--backfill')) {
+    if (!authorization) {
+      console.error('HIBA  a WordPress titkok nem olvashatók a Secret Managerből.');
+      return 1;
+    }
+    if (!confirm) {
+      console.log('Csak jelzés: a pótláshoz add meg a --confirm kapcsolót is.');
+      return 1;
+    }
+    const response = await fetch(`${WORDPRESS_BASE_URL}/artists/claim-emails/backfill`, {
+      method: 'POST',
+      headers: { Authorization: authorization },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.error(`HIBA  a pótlás nem sikerült (status=${response.status}).`);
+      return 1;
+    }
+    console.log(
+      `KÉSZ: pótolva ${Number(payload?.updated ?? 0)} adatlap, kihagyva ${Number(payload?.skipped ?? 0)} (ahol már volt cím, vagy nem DJ-adatlap).`,
+    );
+    return 0;
+  }
+
+  const claims = await firestoreList('artist_claims', {
+    fields: ['artistId', 'uid', 'email', 'status'],
+  });
 
   if (shouldRelease) {
     const artistId = Number(args[releaseIndex + 1]);
