@@ -10,7 +10,7 @@ currentBuild: 345
 currentVersion: 1.0.0
 lastPublishedBuild: 341
 aab: build/HUHS-v1.0.0+345-release.aab
-sha256: F70AD0B292E9FD611B3117726D792F51CDD3566EB22C5E5B6FDDE1E18AF53411
+sha256: 5F00E30CEDAD68F3E7B4C9BAE2546540CC82FB80C178017CA56121042C982085
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -66,15 +66,16 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 | Fájl | `build/HUHS-v1.0.0+345-release.aab` |
 | Verzió | `1.0.0` (versionName) |
 | Verziókód | **345** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 80.39 MB |
-| SHA-256 | F70AD0B292E9FD611B3117726D792F51CDD3566EB22C5E5B6FDDE1E18AF53411 |
+| Méret | 80.41 MB |
+| SHA-256 | 5F00E30CEDAD68F3E7B4C9BAE2546540CC82FB80C178017CA56121042C982085 |
 
 **Miért a 345-öt kell feltenni:** ez a **kész** csomag, minden eddigi javítással:
 (1) a WordPress-adatok a készüléken tárolt példányból **azonnal** megjelennek, a frissítés a
 háttérben fut; (2) a **lájk** és az **ismerősnek jelölés** azonnal látszik (a szerverhívás a
 háttérben megy, hiba esetén visszaáll); (3) a „Megvásárolt zenéim" lejátszójában **tekerhető a
 folyamatjelző**, van **stop** gomb és **lejátszási lista** (ismétlés/keverés, „folytatás ott, ahol
-abbahagytad"); (4) a megvásárolt zene **kikapcsolt képernyőn is szól**, és a **zárképernyőről**
+abbahagytad", és a listáról **ki is vehetsz / vissza is tehetsz** egy letöltött zenét — a fájl
+megmarad); (4) a megvásárolt zene **kikapcsolt képernyőn is szól**, és a **zárképernyőről**
 (meg az értesítésből, a fejhallgató gombjaival) vezérelhető; (5) a frissen vásárolt zene
 másodperceken belül megjelenik a listában. **A 343-at és a 344-et ez váltja.**
 
@@ -96,9 +97,10 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Gyorsabb betöltés: a WordPress-adatok azonnal megjelennek, a frissítés a háttérben fut.
+- Gyorsabb betöltés: a WordPress-adatok azonnal megjelennek, frissítés a háttérben.
 - A lájk és az ismerősnek jelölés azonnal látszik; hiba esetén visszaáll.
-- A lejátszóban tekerhető folyamatjelző, stop gomb és lejátszási lista (ismétlés/keverés).
+- Tekerhető folyamatjelző, stop gomb és lejátszási lista (ismétlés/keverés).
+- A listáról ki tudsz venni egy letöltött zenét (a fájl megmarad), és vissza is teheted.
 - A megvásárolt zene kikapcsolt képernyőn is szól, a zárképernyőről vezérelhető.
 - A frissen vásárolt zene másodperceken belül megjelenik a listában.
 ```
@@ -114,10 +116,11 @@ felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapj�
 - A rádió folyamatosan szól.
 - A YouTube-videó az appban szól.
 - Aktivitási pont, vásárlás +20.
-- Eseményt csak szervezőként lehet beküldeni.
-- ÚJ: „Megvásárolt zenéim" + kvíz azonnali „már kitöltötted" jelzése.
-- ÚJ: gyorsabb betöltés, azonnali lájk/ismerős, tekerhető lejátszó.
-- ÚJ: a zene kikapcsolt képernyőn is szól, zárképernyőről vezérelhető.
+- Eseményt csak szervező küldhet.
+- ÚJ: „Megvásárolt zenéim", kvíz azonnali jelzése.
+- ÚJ: gyorsabb betöltés, azonnali lájk/ismerős, lejátszó.
+- ÚJ: zene kikapcsolt képernyőn is, zárképernyőről vezérelve.
+- ÚJ: a listáról zene ki-/bevehető (fájl megmarad).
 ```
 
 ## 1c. Play Console — CSAK a 345-höz, bővebben (tartalék)
@@ -126,9 +129,10 @@ Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján t
 megjeleníteni. **Ez is csak a 345-öt írja le.**
 
 ```play-notes
-- Gyorsabb betöltés: a WordPress-adatok a tárolt példányból azonnal megjelennek, a frissítés a háttérben fut.
-- A chat-lájk és az ismerősnek jelölés azonnal látszik; hiba esetén visszaáll.
-- A lejátszóban tekerhető folyamatjelző, stop gomb, lejátszási lista, ismétlés és keverés.
+- Gyorsabb betöltés: a WordPress-adatok a tárolt példányból azonnal megjelennek, frissítés a háttérben.
+- A lájk és az ismerős-jelölés azonnal látszik; hiba esetén visszaáll.
+- Tekerhető folyamatjelző, stop gomb, lejátszási lista, ismétlés/keverés.
+- A listáról ki-/bevehetsz egy letöltött zenét (a fájl megmarad).
 - A megvásárolt zene kikapcsolt képernyőn is szól, a zárképernyőről vezérelhető.
 - Frissen vásárolt zene másodperceken belül megjelenik a listában.
 ```

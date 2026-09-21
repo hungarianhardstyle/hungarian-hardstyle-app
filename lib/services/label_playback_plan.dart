@@ -57,17 +57,25 @@ String playbackRepeatLabel(PlaybackRepeat repeat) {
   }
 }
 
-/// A **letöltött** tételek indexei a sor eredeti (könyvtár-) sorrendjében.
+/// A **lejátszható** tételek indexei a sor eredeti (könyvtár-) sorrendjében.
 ///
 /// Ez a keverés bemenete: a nem letöltött tételek **bekerülni sem tudnak** a
 /// lejátszási sorrendbe, mert nem játszhatók.
+///
+/// Az [excluded] a **lejátszási listáról kivett** tételek (`kiadvány:változat`):
+/// ezek **megvannak a készüléken** (nem töröltük őket), de a felhasználó
+/// kivette őket a sorból — ezért a lapozás és a lista is átugorja őket.
 List<int> downloadedIndices(
   List<String> keys,
-  Set<String> downloaded,
-) {
+  Set<String> downloaded, {
+  Set<String> excluded = const {},
+}) {
   final indices = <int>[];
   for (var index = 0; index < keys.length; index++) {
-    if (downloaded.contains(keys[index])) indices.add(index);
+    final key = keys[index];
+    if (!downloaded.contains(key)) continue;
+    if (excluded.contains(key)) continue;
+    indices.add(index);
   }
   return indices;
 }

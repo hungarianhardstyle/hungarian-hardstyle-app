@@ -33,6 +33,31 @@ void main() {
       );
       expect(indices, [0, 1, 2]);
     });
+
+    test('a lejátszási listáról KIVETT tétel kimarad (a fájl megvan)', () {
+      // A tulajdonos kérése: *„zenét hogy tud a playlistre rakni/levenni"* —
+      // a kivett tétel a készüléken marad, csak nem szól bele a sorba.
+      final indices = downloadedIndices(
+        ['a', 'b', 'c', 'd'],
+        {'a', 'b', 'c', 'd'},
+        excluded: {'b', 'd'},
+      );
+      expect(indices, [0, 2]);
+    });
+
+    test('a kivétel csak a letöltöttet érinti (a nem letöltött eleve kimarad)', () {
+      expect(
+        downloadedIndices(['a', 'b'], {'a'}, excluded: {'b'}),
+        [0],
+      );
+    });
+
+    test('üres kivétellel minden letöltött tétel a listán van', () {
+      expect(
+        downloadedIndices(['a', 'b'], {'a', 'b'}),
+        [0, 1],
+      );
+    });
   });
 
   group('keverés', () {
@@ -456,6 +481,60 @@ void main() {
         reason: 'legfeljebb 5 másodpercenként írunk a tárolóba',
       );
       expect(body, contains('if (!force &&'));
+    });
+
+    test('a lejátszási listáról ki lehet venni és vissza lehet tenni', () {
+      // A tétel sorában ott a lista-gomb, és a döntés a fiókonkénti tárolóba megy.
+      expect(source, contains('_togglePlaylistMembership'));
+      expect(source, contains('Icons.playlist_remove'));
+      expect(source, contains('Icons.playlist_add'));
+      expect(
+        source,
+        contains("'Kivétel a lejátszási listából (a fájl megmarad)'"),
+        reason: 'a gomb megmondja, hogy a fájl nem törlődik',
+      );
+      final body = _functionBody(source, '_togglePlaylistMembership');
+      expect(body, contains('_excludedFromPlaylist'));
+      expect(
+        body,
+        contains('_playlist.save('),
+        reason: 'a döntés fiókonként megmarad',
+      );
+      expect(
+        body,
+        isNot(contains('_downloads.delete(')),
+        reason: 'a kivétel nem törli a fájlt — az a külön kuka gomb',
+      );
+    });
+
+    test('a kivett tétel kimarad a sorrendből, és a lista is frissül', () {
+      expect(
+        _functionBody(source, '_rebuildOrder'),
+        contains('excluded: _excludedFromPlaylist'),
+        reason: 'a lapozás is átugorja a kivett tételt',
+      );
+      expect(
+        source,
+        contains('unawaited(_loadPlaylistMembership())'),
+        reason: 'megnyitáskor betöltjük a fiók kivételeit',
+      );
+      final sheet = _functionBody(source, '_showPlaylist');
+      expect(
+        sheet,
+        contains('StatefulBuilder'),
+        reason: 'a kivétel után a panel magától frissül',
+      );
+      expect(sheet, contains('kivéve a listából'));
+    });
+
+    test('az épp szóló tétel kivétele megállítja a lejátszást', () {
+      final body = _functionBody(source, '_togglePlaylistMembership');
+      expect(body, contains('stopCurrent'));
+      expect(
+        body,
+        contains('await _releaseAudio()'),
+        reason: 'ne szóljon tovább olyan tétel, ami már nincs a listán',
+      );
     });
   });
 }

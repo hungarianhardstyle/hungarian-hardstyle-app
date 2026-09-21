@@ -17,6 +17,7 @@ import '../../services/label_download_manager.dart';
 import '../../services/label_library_plan.dart';
 import '../../services/label_playback_memory.dart';
 import '../../services/label_playback_plan.dart';
+import '../../services/label_playlist_membership.dart';
 import '../../services/label_release_availability.dart';
 import '../../services/music_audio_handler.dart';
 import '../../widgets/radio_player_bar.dart';
@@ -109,6 +110,14 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
   /// A lejátszási pont emlékezete (fiókonként; vendégnél nem ír).
   final LabelPlaybackMemory _memory = LabelPlaybackMemory();
 
+  /// A **lejátszási listáról kivett** tételek (fiókonként, helyben tárolva).
+  ///
+  /// A tulajdonos kérése: *„zenét hogy tud a playlistre rakni/levenni"* — a
+  /// kivett tétel **a készüléken marad** (nem kell újra letölteni), csak nem
+  /// szól bele a sorba, és a listában sem szerepel.
+  final LabelPlaylistMembership _playlist = LabelPlaylistMembership();
+  Set<String> _excludedFromPlaylist = <String>{};
+
   /// A bejelentkezett UID **gyorsítótárazva**.
   ///
   /// MIÉRT: a `dispose()`-ban is mentünk (hogy egy hirtelen kilépés ne vigye el a
@@ -188,6 +197,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       if (mounted) setState(() {});
     });
     unawaited(_loadReleaseAvailability());
+    unawaited(_loadPlaylistMembership());
     // Ha a zene a háttérben tovább szólt (a képernyőt elhagytuk), a visszatéréskor
     // a **lejátszó a hiteles forrás**: ahhoz igazítjuk a kijelzést.
     unawaited(_syncWithBackgroundPlayback());
@@ -248,6 +258,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     final indices = downloadedIndices(
       [for (final entry in _queue) entry.key],
       _downloaded,
+      excluded: _excludedFromPlaylist,
     );
     _order = playOrderFor(
       indices: indices,
@@ -323,6 +334,62 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     } catch (_) {
       // A tároló hibája nem akadályozhatja a könyvtárat — ilyenkor egyszerűen
       // újra lekérdezzük a hiányzó kiadványokat.
+    }
+  }
+
+  /// A lejátszási listáról **kivett** tételek betöltése (fiókonként).
+  Future<void> _loadPlaylistMembership() async {
+    final uid = _uid;
+    if (uid.isEmpty) return;
+    try {
+      final excluded = await _playlist.load(uid);
+      if (!mounted || excluded.isEmpty) return;
+      setState(() {
+        _excludedFromPlaylist = excluded;
+        _orderDirty = true;
+      });
+      // A sorrendet a következő pásztázás építi újra (`_orderDirty` miatt).
+      unawaited(_scanDownloads());
+    } catch (_) {
+      // A tároló hibája nem akadályozhatja a lejátszást: ilyenkor minden a
+      // listán marad (ez a biztonságos irány).
+    }
+  }
+
+  /// Egy tétel ki-/bevétele a lejátszási listából.
+  ///
+  /// A tulajdonos kérése: *„zenét hogy tud a playlistre rakni/levenni"*. A
+  /// fájlt **nem** törli (az a külön kuka gomb): csak arról dönt, hogy a tétel
+  /// **beleszól-e a sorba**. Ha épp ez szólt, a kivétel **megállítja** — így a
+  /// sáv nem mutat olyat, ami már nincs a listán.
+  Future<void> _togglePlaylistMembership(LabelQueueEntry entry) async {
+    final uid = _uid;
+    if (uid.isEmpty) return;
+    final wasExcluded = _excludedFromPlaylist.contains(entry.key);
+    final next = <String>{..._excludedFromPlaylist};
+    if (wasExcluded) {
+      next.remove(entry.key);
+    } else {
+      next.add(entry.key);
+    }
+    final isCurrent =
+        _currentIndex >= 0 &&
+        _currentIndex < _queue.length &&
+        _queue[_currentIndex].key == entry.key;
+    final stopCurrent = !wasExcluded && isCurrent;
+    setState(() {
+      _excludedFromPlaylist = next;
+      if (stopCurrent) _currentIndex = -1;
+      _message = wasExcluded
+          ? 'Visszatéve a lejátszási listára.'
+          : 'Kivéve a lejátszási listából — a fájl a készüléken marad.';
+    });
+    _rebuildOrder();
+    if (stopCurrent) await _releaseAudio();
+    try {
+      await _playlist.save(uid, next);
+    } catch (_) {
+      // A mentés hibája nem akadályozhatja a lejátszást.
     }
   }
 
@@ -955,80 +1022,107 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       isScrollControlled: true,
       showDragHandle: true,
       builder: (sheetContext) {
-        final entries = [
-          for (final index in _order)
-            if (index >= 0 && index < _queue.length) (index: index, entry: _queue[index]),
-        ];
-        final pending = _queue.length - entries.length;
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Lejátszási lista',
-                        style: theme.textTheme.titleMedium,
-                      ),
+        // A panel **magától frissül**, amikor egy tételt kiveszünk a listából
+        // (különben a kivett sor ott maradna a képernyőn).
+        return StatefulBuilder(
+          builder: (sheetContext, sheetSetState) {
+            final entries = [
+              for (final index in _order)
+                if (index >= 0 && index < _queue.length)
+                  (index: index, entry: _queue[index]),
+            ];
+            final pending = _queue.length - entries.length;
+            final excludedCount = _excludedFromPlaylist.length;
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Lejátszási lista',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                        ),
+                        Text(
+                          '${entries.length} tétel'
+                          '${_shuffle ? ' · keverve' : ''}'
+                          '${pending > 0 ? ' · $pending nincs letöltve' : ''}',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
                     ),
-                    Text(
-                      '${entries.length} tétel'
-                      '${_shuffle ? ' · keverve' : ''}'
-                      '${pending > 0 ? ' · $pending nincs letöltve' : ''}',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: entries.length,
-                  itemBuilder: (context, position) {
-                    final item = entries[position];
-                    final isCurrent = item.index == _currentIndex;
-                    return ListTile(
-                      dense: true,
-                      selected: isCurrent,
-                      leading: isCurrent
-                          ? Icon(
-                              _player.playing
-                                  ? Icons.graphic_eq
-                                  : Icons.pause_circle_outline,
-                              color: theme.colorScheme.primary,
-                            )
-                          : Text('${position + 1}.'),
-                      title: Text(
-                        item.entry.nowPlayingLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: Text(
-                        item.entry.variantLabel,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      onTap: () {
-                        Navigator.of(sheetContext).pop();
-                        unawaited(_playIndex(item.index));
-                      },
-                    );
-                  },
-                ),
-              ),
-              if (pending > 0)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: Text(
-                    'A nem letöltött tételek nincsenek a listában — azokat a '
-                    'kiadvány kártyáján tudod letölteni.',
-                    style: theme.textTheme.bodySmall,
                   ),
-                ),
-            ],
-          ),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: entries.length,
+                      itemBuilder: (context, position) {
+                        final item = entries[position];
+                        final isCurrent = item.index == _currentIndex;
+                        return ListTile(
+                          dense: true,
+                          selected: isCurrent,
+                          leading: isCurrent
+                              ? Icon(
+                                  _player.playing
+                                      ? Icons.graphic_eq
+                                      : Icons.pause_circle_outline,
+                                  color: theme.colorScheme.primary,
+                                )
+                              : Text('${position + 1}.'),
+                          title: Text(
+                            item.entry.nowPlayingLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            item.entry.variantLabel,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          trailing: IconButton(
+                            tooltip: 'Kivétel a lejátszási listából',
+                            onPressed: () async {
+                              await _togglePlaylistMembership(item.entry);
+                              if (sheetContext.mounted) sheetSetState(() {});
+                            },
+                            icon: const Icon(Icons.playlist_remove),
+                          ),
+                          onTap: () {
+                            Navigator.of(sheetContext).pop();
+                            unawaited(_playIndex(item.index));
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (pending > 0)
+                          Text(
+                            'A nem letöltött tételek nincsenek a listában — '
+                            'azokat a kiadvány kártyáján tudod letölteni.',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        if (excludedCount > 0)
+                          Text(
+                            '$excludedCount tétel kivéve a listából — a kártyákon '
+                            'a lista ikonnal teheted vissza (a fájl megvan).',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -1346,6 +1440,18 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
               ],
             ),
           ),
+          if (downloaded && progress == null)
+            IconButton(
+              tooltip: _excludedFromPlaylist.contains(entry.key)
+                  ? 'Visszatétel a lejátszási listára'
+                  : 'Kivétel a lejátszási listából (a fájl megmarad)',
+              onPressed: () => _togglePlaylistMembership(entry),
+              icon: Icon(
+                _excludedFromPlaylist.contains(entry.key)
+                    ? Icons.playlist_add
+                    : Icons.playlist_remove,
+              ),
+            ),
           if (downloaded && progress == null)
             IconButton(
               tooltip: 'Törlés a készülékről (a vásárlás megmarad)',

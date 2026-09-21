@@ -42,6 +42,7 @@ const appChangelog = <AppReleaseNotes>[
     changes: [
       'A megvásárolt zenéd mostantól kikapcsolt képernyőn is szól, és a zárképernyőn (meg az értesítésben) vezérelhető: előző, szünet, következő, stop és tekerés.',
       'Ha közben más app indít zenét, vagy hívást kapsz, a lejátszó szünetel — hívás után magától folytatja. A fejhallgató kihúzásakor is megáll.',
+      'A lejátszási listáról ki tudsz venni egy letöltött zenét (a fájl a készüléken marad), és bármikor vissza is teheted — a döntést fiókonként megjegyzi.',
     ],
   ),
   AppReleaseNotes(
