@@ -1,8 +1,9 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> A következő feltöltés versionCode-ja: **347** (`1.0.0`) — a csomag:
-> `build/HUHS-v1.0.0+347-release.aab`. A zárt teszt sávján **345** van fent, a **346**
-> nem került fel, ezért a rövid (1.) blokk a 346 javítását is tartalmazza.
+> **Most a 347 megy fel** (versionCode **347**, `1.0.0`) — a csomag:
+> `build/HUHS-v1.0.0+347-release.aab`. A zárt teszt sávján **mérve a 346 van élesben**
+> (`node tools/check-play-track.mjs`, 2026-09-21: alpha = completed, „346 (1.0.0)"), ezért a
+> rövid (1.) blokk **már csak a 347 újdonságait** írja le.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -12,27 +13,30 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 <!-- play-notes-meta
 currentBuild: 347
 currentVersion: 1.0.0
-lastPublishedBuild: 345
+lastPublishedBuild: 346
 aab: build/HUHS-v1.0.0+347-release.aab
 sha256: BF0F6FA02EEE64BFB604C1EE2C590634103DBDC01D4A14F337B835D00C128064
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
-A Play Developer API-t **olvasásra** kérdezve (2026-09-20, a legfrissebb mérés):
+A Play Developer API-t **olvasásra** kérdezve (2026-09-21, a legfrissebb mérés):
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **345** — „345 (1.0.0)", kiadási szöveggel (a tulajdonos 2026-09-21-én jelezte) |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **346** — „346 (1.0.0)", a rövid kiadási szöveggel |
 | beta | üres | — |
 | production | üres | — |
 | internal | completed + egy **üres piszkozat** | 278 |
 
-- **A 337 a zárt teszt sávján MÁR FENT VAN** (completed), a **bővebb (1c.) kiadási szöveggel** ment ki.
+- **A 346 a zárt teszt sávján élesben van** (completed) — ezt a mérés és a tulajdonos jelzése is
+  igazolja (*„346 az éles, most megy fel a 347"*, 2026-09-21). A **347 AAB már fel van töltve** a
+  Playre (a mérés szerint a feltöltött csomagok között ott van), ezért a mostani kör a **kiadás
+  kigördítése** a zárt teszt sávra.
 - **A production sáv viszont üres:** a termékkör megnyitása a Play zárt teszt követelményéhez kötött (személyes fejlesztői fióknál legalább **12 tesztelő / 14 nap** folyamatos zárt teszt), ezért az „élesítés" **nem** egy újabb AAB feltöltése, hanem a production access megnyitása + kiadás a meglévő bundle-ből.
-- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 338 automatikusan felváltja a 337-et; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
-- A feltöltött AAB-ek a Playen (a legfrissebb mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 332, 333, 334, 335, 336, **337**.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**337**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 337 volt — ezért az **1. pont** blokkja már csak a **338** újdonságát írja le. A **production** kiadáshoz a **hosszabb, 329–338 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
+- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 347 automatikusan felváltja a 346-ot; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
+- A feltöltött AAB-ek a Playen (a 2026-09-21-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 340, 341, 342, 345, 346, **347**.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**346**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 346 volt — ezért az **1. pont** blokkja már csak a **347** újdonságait írja le. A **production** kiadáshoz a **hosszabb, 329–347 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
 
@@ -100,11 +104,9 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Javítva: a „Megvásárolt zenéim" lejátszója elindul (a 345-ben néma maradt).
 - Javítva: a zárképernyő következő/előző gombja a képernyő elhagyása után is működik, és a dal végén jön a következő.
-- Javítva: a lista és a lapozás mindig az összes letöltött zenét mutatja, a keverés nem ugrál.
-- Javítva: minden hibaüzenet magyar, és hiba esetén a hang visszakerül a rádióhoz.
-- Javítva: tableten fekvő nézetben a kiemelt hírek és a játék kártya nem óriási.
+- Javítva: a kevert lejátszási sorrend stabil — nem ugrál a „következő" tétel.
+- Javítva: tableten fekvő nézetben a kiemelt hírek és a játék kártya nem óriásira nő.
 ```
 
 ## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–347 összesítő)
@@ -126,8 +128,8 @@ felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapj�
 ## 1c. Play Console — CSAK a 347-hez, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 347-et írja le** (a 345 már fent van a zárt teszt sávján, a 346
-pedig nem került fel, ezért a rövid blokk a 346 javítását is tartalmazza).
+megjeleníteni. **Ez is csak a 347-et írja le** (a 346 már élesben van a zárt teszt sávján,
+ezért a 346 javítása nem kell bele).
 
 ```play-notes
 - Javítva: a megvásárolt zene lejátszója a képernyő elhagyása után is vezérelhető — a zárképernyő következő/előző gombja mostantól működik, és a dal végén magától jön a következő tétel (eddig megállt a zene).
