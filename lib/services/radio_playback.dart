@@ -63,19 +63,32 @@ class StreamRadioPlayback implements RadioPlayback {
   String? _url;
   bool _sessionEventsBound = false;
   bool _resumeAfterInterruption = false;
+  /// A **szándék** („szóljon a rádió"), nem a pillanatnyi állapot.
+  ///
+  /// ⚠️ MÉRT TANULSÁG (2026-09-22, YouTube-teszt): a megszakítás kezdetekor a
+  /// `just_audio` a maga oldalán is kezeli az eseményt, és **hamarabb lefut**,
+  /// mint a mi figyelőnk — ezért mire mi olvassuk, a `_player.playing` már
+  /// **hamis** volt, és nem is próbáltunk visszatérni. A szándékot kell követni.
+  bool _wantPlaying = false;
+  double _volume = 1.0;
 
   /// A **hangfókusz-események** bekötése — Android-paritás.
   ///
   /// A tulajdonos kérése az Androidnál: *„ha megy a háttérben a rádió és valaki
   /// elindít pl. egy spotifyt, akkor kussoljon be a rádió, ha kikapcsolja a
   /// spotifyt… menjen tovább a rádió"*. Androidon ezt a natív szolgáltatás
-  /// intézi; iOS-en eddig **semmi** nem figyelte a megszakításokat, ezért egy
-  /// hívás vagy másik zene-app után a rádió **némán elhallgatott** (a session
-  /// elveszett, és a `just_audio` nem jelzi — lásd `_activateSession`).
+  /// intézi; iOS-en eddig **semmi** nem figyelte a megszakításokat.
   ///
-  /// ⚠️ Csak **`pause` típusú** megszakítás után folytatjuk magunktól: egy másik
-  /// zene-apptól nem vesszük vissza a fókuszt. Ugyanaz a szabály, mint a
-  /// zenénél (`main.dart`).
+  /// ⚠️ KÉT DOLOG, AMITŐL MŰKÖDIK (mérve, 2026-09-22):
+  ///  1. a **szándékot** követjük (`_wantPlaying`), nem a pillanatnyi
+  ///     `_player.playing`-et — a `just_audio` ugyanis a saját kezelőjével
+  ///     hamarabb lefut, és mire mi olvassuk, már szünetel;
+  ///  2. a visszatérés **több próbával** megy: az iOS a megszakítás végét
+  ///     **előbb jelezheti**, mint hogy a másik app elengedi a sessiont, ilyenkor
+  ///     a `setActive(true)` még `false`-t ad.
+  ///
+  /// ⚠️ Fejhallgató-kihúzás után **nem** folytatjuk (a szándékot töröljük).
+  /// A `duck` (pl. navigációs hang) csak lehalkít, majd visszaáll.
   Future<void> _bindSessionEvents() async {
     if (_sessionEventsBound) return;
     _sessionEventsBound = true;
@@ -83,29 +96,53 @@ class StreamRadioPlayback implements RadioPlayback {
       final session = await AudioSession.instance;
       session.interruptionEventStream.listen((event) {
         if (event.begin) {
-          _resumeAfterInterruption = _player.playing;
+          if (event.type == AudioInterruptionType.duck) {
+            unawaited(_player.setVolume(_volume * 0.4));
+            return;
+          }
+          _resumeAfterInterruption = _wantPlaying;
           if (_player.playing) unawaited(_player.pause());
           return;
         }
-        final wasPlaying = _resumeAfterInterruption;
-        _resumeAfterInterruption = false;
-        if (!wasPlaying) return;
-        if (event.type != AudioInterruptionType.pause &&
-            event.type != AudioInterruptionType.unknown) {
+        if (event.type == AudioInterruptionType.duck) {
+          unawaited(_player.setVolume(_volume));
           return;
         }
-        final url = _url;
-        if (url == null || url.isEmpty) return;
-        unawaited(play(url));
+        final wasWanted = _resumeAfterInterruption;
+        _resumeAfterInterruption = false;
+        // ⚠️ Szándékosan NEM szűrünk a `type`-ra: az `audio_session` a végét
+        // `pause`-ként adja, ha az iOS `shouldResume`-ot jelez, egyébként
+        // `unknown`-ként — és a `setActive(true)` úgyis csak akkor sikerül, ha a
+        // session valóban szabaddá vált.
+        if (wasWanted) unawaited(_resumeWithRetries());
       });
       // Fejhallgató kihúzása: a rendszer jelzi — ilyenkor nem folytatjuk.
       session.becomingNoisyEventStream.listen((_) {
         _resumeAfterInterruption = false;
+        _wantPlaying = false;
         if (_player.playing) unawaited(_player.pause());
       });
     } catch (error) {
       debugPrint('rádió: a hangfókusz-figyelés nem köthető be: $error');
     }
+  }
+
+  /// Visszatérés a megszakítás után — **több próbával**.
+  ///
+  /// Az iOS a megszakítás végét előbb jelezheti, mint hogy a másik app elengedi
+  /// a sessiont; ilyenkor a `setActive(true)` még `false`, és a lejátszás némán
+  /// nem indul. Ezért néhányszor újrapróbáljuk, amíg a szándék él.
+  Future<void> _resumeWithRetries() async {
+    final url = _url;
+    if (url == null || url.isEmpty) return;
+    for (var attempt = 0; attempt < 5; attempt++) {
+      if (!_wantPlaying) return;
+      if (_player.playing) return;
+      await play(url);
+      if (_player.playing) return;
+      await Future<void>.delayed(Duration(milliseconds: 400 + attempt * 400));
+    }
+    debugPrint('rádió: a megszakítás után nem sikerült visszatérni');
   }
 
   /// A hang-session visszaszerzése — **iOS-en ez a lényeg.**
@@ -134,6 +171,9 @@ class StreamRadioPlayback implements RadioPlayback {
 
   @override
   Future<void> play(String url) async {
+    // A SZÁNDÉKOT előre rögzítjük: a megszakítás-figyelő ebből tudja, hogy
+    // vissza kell-e térni (a pillanatnyi `playing` nem megbízható).
+    _wantPlaying = true;
     await _bindSessionEvents();
     // A sessiont **a lejátszás előtt** szerezzük vissza; ha elsőre nem megy,
     // rövid várakozás után még egyszer (a másik lejátszó épp tehette tönkre).
@@ -156,13 +196,24 @@ class StreamRadioPlayback implements RadioPlayback {
   }
 
   @override
-  Future<void> stop() => _player.stop();
+  Future<void> stop() async {
+    // A szándék törlése: megszakítás után NE térjen vissza magától.
+    _wantPlaying = false;
+    _resumeAfterInterruption = false;
+    await _player.stop();
+  }
 
   @override
   Future<bool?> isPlaying() async => _player.playing;
 
   @override
-  Future<void> setVolume(double volume) => _player.setVolume(volume);
+  Future<void> setVolume(double volume) async {
+    // ⚠️ A kért hangerőt megjegyezzük: a `duck` (pl. navigációs hang) után
+    // EZT állítjuk vissza, nem vakon 1.0-t — különben egy némított rádió
+    // magától megszólalna.
+    _volume = volume;
+    await _player.setVolume(volume);
+  }
 }
 
 /// A platform-döntés **tiszta** függvénye — instance és plugin nélkül mérhető.

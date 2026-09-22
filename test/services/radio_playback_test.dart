@@ -92,13 +92,57 @@ void main() {
       // elhallgat, majd magától visszatér. iOS-en ezt eddig SEMMI nem figyelte.
       expect(service, contains('interruptionEventStream'));
       expect(service, contains('becomingNoisyEventStream'));
-      expect(service, contains('AudioInterruptionType.pause'),
-          reason: 'csak pause típusú megszakítás után folytatjuk magunktól — '
-              'egy másik zene-apptól nem vesszük vissza a fókusz');
-      // Fejhallgató-kihúzás után NEM folytatjuk.
-      expect(service.contains('_resumeAfterInterruption = false;\n        if (_player.playing)'),
-          isTrue,
-          reason: 'a becomingNoisy ág törölje a folytatás szándékát');
+
+      // ⚠️ MÉRT TANULSÁG (2026-09-22, YouTube-teszt): a `just_audio` a saját
+      // kezelőjével HAMARABB lefut a megszakítás kezdetekor, ezért mire a mi
+      // figyelőnk olvassa a `_player.playing`-et, az már hamis — így nem is
+      // próbáltunk visszatérni. A **szándékot** kell követni.
+      expect(service, contains('_resumeAfterInterruption = _wantPlaying;'),
+          reason: 'a pillanatnyi playing nem megbízható a megszakítás kezdetén');
+      expect(service.contains('_resumeAfterInterruption = _player.playing;'),
+          isFalse,
+          reason: 'pont ez volt a hiba — a playing már hamis ilyenkor');
+
+      // ⚠️ Az iOS a megszakítás végét ELŐBB jelezheti, mint hogy a másik app
+      // elengedi a sessiont: ilyenkor a setActive még false → több próba kell.
+      expect(service, contains('_resumeWithRetries()'));
+      expect(service, contains('attempt < 5'),
+          reason: 'a visszatérésnek többször kell próbálkoznia');
+      final resumeBlock = service.substring(
+        service.indexOf('Future<void> _resumeWithRetries'),
+        service.indexOf('/// A hang-session visszaszerzése'),
+      );
+      expect(resumeBlock, isNot(contains('AudioInterruptionType')),
+          reason: 'a visszatérést ne blokkolja a típus szerinti szűrés');
+
+      // Fejhallgató-kihúzás után NEM folytatjuk: a szándék törlődik.
+      final noisyBlock = service.substring(
+        service.indexOf('becomingNoisyEventStream'),
+        service.indexOf('/// Visszatérés a megszakítás után'),
+      );
+      expect(noisyBlock, contains('_wantPlaying = false;'),
+          reason: 'fejhallgató-kihúzás után nem folytatjuk magunktól');
+
+      // A `duck` (pl. navigációs hang) csak lehalkít, majd a KÉRT hangerőt
+      // állítja vissza — nem vakon 1.0-t, különben egy némított rádió
+      // magától megszólalna.
+      expect(service, contains('_player.setVolume(_volume * 0.4)'));
+      expect(service, contains('_player.setVolume(_volume)'));
+      expect(service, contains('_volume = volume;'));
+    });
+
+    test('a leallitas torli a szandekot (nem ter vissza magatol)', () {
+      // ⚠️ A keresést a STREAM-osztályra szűkítjük: a `stop()`/`isPlaying()`
+      // az Android-megvalósításban is szerepel, és előbb következik a fájlban.
+      final streamStart = service.indexOf('class StreamRadioPlayback');
+      final stopIndex = service.indexOf('Future<void> stop() async', streamStart);
+      expect(stopIndex, greaterThan(streamStart));
+      final stopBlock = service.substring(
+        stopIndex,
+        service.indexOf('Future<bool?> isPlaying()', stopIndex),
+      );
+      expect(stopBlock, contains('_wantPlaying = false;'),
+          reason: 'ha a felhasználó leállítja, ne induljon újra magától');
     });
 
     test('a widget a platform-rétegen megy át, nem nyúl a csatornához', () {
