@@ -18,7 +18,7 @@ venni ahhoz, hogy **TestFlight-buildet** kapj: a CI végzi el, és a kész build
 |---|---|---|
 | `ios/Runner.xcodeproj/project.pbxproj` | bundle ID: `com.example.hungarianHardstyleApp` → **`hu.hungarianhardstyle.app`** (3+3 hely) | `com.example.*`-tal nem lehet App Store-ba feltölteni; ez az Android `applicationId`-jával **egyezik** |
 | ugyanaz | `IPHONEOS_DEPLOYMENT_TARGET` 13.0 → **15.0** (3 hely) | a Flutter 3.47 sablonja és a saját migrációja is 15.0; 13.0-nál a build figyelmeztet/elhasal |
-| `ios/Podfile` | **ÚJ** (a Flutter-sablonból), `platform :ios, '15.0'` | eddig nem is volt Podfile a repóban — a CI-ben generálódott volna, kiszámíthatatlan platform-verzióval |
+| ~~`ios/Podfile`~~ | **NEM kell** — egy ideig bent volt, és **elhasalt tőle a build** | a projekt **Swift Package Manager**-t használ (minden iOS-plugin Swift Package). A Podfile CocoaPods integrációt kényszerít rá → `The sandbox is not in sync with the Podfile.lock` |
 | `ios/Runner/Info.plist` | **`UIBackgroundModes` = `audio`** | enélkül a rádió és a megvásárolt zene **nem szól** háttérben/zárképernyőn iOS-en |
 | ugyanaz | **`NSUserTrackingUsageDescription`** | iOS 14.5+ óta a reklámcélú követéshez ATT-engedély kell, különben az AdMob nem kérheti |
 | ugyanaz | **`ITSAppUsesNonExemptEncryption` = false** | csak HTTPS-t használunk → nem kell minden feltöltésnél az export-compliance kérdőív |
@@ -65,7 +65,7 @@ Ami **nem** közös, az a platform-kötött réteg. Ez a mérés a kódból:
 | Megvásárolt zene, zárképernyő | `audio_service` | ugyanaz | ✅ közös |
 | App-frissítés jelzés | Play In-App Updates (`in_app_update`) | **nincs ilyen API** — az App Store frissít | ℹ️ iOS-en néma, de **szándékosan**: a hívás kivételbe fut, és el van kapva |
 | Biometrikus belépés | BiometricPrompt | Face ID / Touch ID (`local_auth`) | ✅ javítva: `NSFaceIDUsageDescription` |
-| Google Sign-In | `google-services.json` | `GoogleService-Info.plist` + a benne lévő `REVERSED_CLIENT_ID` **URL-séma** az Info.plistben | ❌ hiányzik (2. pont E lépése) |
+| Google Sign-In | `google-services.json` | `GoogleService-Info.plist` + a benne lévő `REVERSED_CLIENT_ID` **URL-séma** az Info.plistben | ✅ kész (E lépés) |
 | Reklám | Android AdMob egységek | külön iOS AdMob app + egységek, ATT | ⚠️ ATT kész, az egységek nem |
 | Push (FCM) | FCM | APNs + `aps-environment` entitlement | ❌ nincs |
 | Zenevásárlás | Google Play Billing | StoreKit | ❌ üzleti döntés |
@@ -113,25 +113,30 @@ deklarációt **külön meg kell nézni**. Ez a szabály kód-szinten is le van 
 - **Issuer ID** (a táblázat felett) és **Key ID** — jegyezd fel
 - **Download API Key** (`.p8`) — ⚠️ **csak egyszer tölthető le**
 
-### E) Firebase: iOS app + `GoogleService-Info.plist` ⬅️ EZT MEG TUDOM CSINÁLNI
+### E) Firebase: iOS app + `GoogleService-Info.plist` — ✅ **KÉSZ (2026-09-22)**
 
-> **ÁLLAPOT — a tulajdonos döntése (2026-09-22):** *„ne most — előbb a 350-es
-> Android-kiadás menjen ki"*. Ezért ez a lépés **szándékosan nyitva van**: a
-> Firebase-projekt **érintetlen** (6 Android app, iOS egy sem), és a
-> `ios-testflight` workflow addig **nem tud lefutni**. A sorrend szándékos: a
-> Firebase-írás ne essen egybe a folyamatban lévő Android-kiadással.
+Az iOS app létrejött a `hungarian-hardstyle` projektben:
 
-Mérve: a `hungarian-hardstyle` Firebase-projektben **6 Android app van, iOS app
-egy sincs** → `GoogleService-Info.plist` ma nem is létezhet, és enélkül a
-`firebase_core` **iOS-en indulás közben elszáll** (a `lib/core/firebase/firebase_callable.dart`
-sima `Firebase.initializeApp()`-ot hív, ami a bundle-be ágyazott plistet olvassa).
+- **App ID:** `1:1030187737487:ios:0ceb5a9685b34b5f78ebfa`
+- **Bundle ID:** `hu.hungarianhardstyle.app` (egyezik az Android `applicationId`-jával)
+- **A plist** a repóban van: `ios/Runner/GoogleService-Info.plist` — ugyanúgy
+  verziózva, mint az Android `google-services.json`.
 
-Kézzel (Firebase Console → Project settings → Add app → iOS):
-- Bundle ID: `hu.hungarianhardstyle.app`
-- Ezután `GoogleService-Info.plist` letöltés → `ios/Runner/GoogleService-Info.plist`
-- ⚠️ **A fájlt az Xcode-projekt erőforrásai közé is fel kell venni** (Copy Bundle
-  Resources), különben nem kerül az appba. Ez a lépés **nincs meg** — szólj, és
-  elvégzem (CLI-ből az app létrehozása + a projekt-bejegyzés is).
+A plist **mind a négy helyen be van kötve** az Xcode-projektbe (PBXBuildFile,
+PBXFileReference, Runner csoport, Copy Bundle Resources), és a Google Sign-In
+`REVERSED_CLIENT_ID` URL-sémája bent van az `Info.plist`-ben. Ezt a
+**`tools/attach-ios-firebase.mjs`** végzi, amely:
+
+- a szerkesztés **előtt** ellenőrzi, hogy a plist bundle ID-ja egyezik-e a
+  projektével (a rossz ID-jű plist **csendben** megölné a Firebase-t),
+- **idempotens** — kétszer futtatva semmit nem dupláz,
+- `--check` módban nem ír semmit, `--self-test`-tel önmagát méri (19 ellenőrzés).
+
+Ha a plistet valaha újra le kell tölteni: `node tools/attach-ios-firebase.mjs`.
+
+> **Miért volt ez kritikus:** a `firebase_core` iOS-en a csomagba ágyazott
+> plistből indul (`lib/core/firebase/firebase_callable.dart` sima
+> `Firebase.initializeApp()`-ot hív) — enélkül az app **indulás közben elszáll**.
 
 ### F) Codemagic
 
@@ -143,8 +148,9 @@ Kézzel (Firebase Console → Project settings → Add app → iOS):
    tanúsítvány + App Store profil (a "Fetch from Developer Portal" gombbal
    letölthetők az imént feltöltött kulccsal).
 4. **Environment variables** — két csoport:
-   - `ios_firebase` → `GOOGLE_SERVICE_INFO_PLIST_BASE64` (a plist base64-ként,
-     **Secret** bejelölve). Ha a plist a repóban van, erre nincs szükség.
+   - `ios_firebase` → `GOOGLE_SERVICE_INFO_PLIST_BASE64` — **nem kell**, mert a
+     plist a repóban van (`ios/Runner/GoogleService-Info.plist`). Csak akkor,
+     ha kiveszed a repóból.
    - `appstore_credentials` → `APP_STORE_CONNECT_PRIVATE_KEY` (a `.p8` tartalma),
      `APP_STORE_CONNECT_KEY_IDENTIFIER`, `APP_STORE_CONNECT_ISSUER_ID` (**Secret**)
 5. Indítás: **Start new build → ios-testflight**
@@ -281,6 +287,11 @@ a **nyilvános** megjelenést:
   konkrét verzióra szorítani, hogy a build reprodukálható legyen.
 - Az **ikon-javítás** méréssel és szemrevételezéssel igazolt (alfa nincs, a kép
   változatlan), de **Apple-oldali validáción** még nem esett át.
-- A **függőségek SPM/CocoaPods kérdése** nyitott: a Flutter 3.47 a Swift Package
-  Manager-t is tudja. A Podfile szándékosan a CocoaPods utat rögzíti (minden
-  plugin támogatja), így a CI kiszámítható.
+- **A függőségek útja MÉRVE eldőlt (a CI első futása, 2026-09-22):** a projekt
+  **Swift Package Manager**-t használ — a napló szerint *„All plugins found for
+  ios are Swift Packages"*, és húsznál több csomag jön SPM-mel (Firebase,
+  GoogleSignIn, GoogleMobileAds, gRPC, abseil…). A Podfile-t ezért **távolítsd
+  el** (megtörtént): CocoaPods integrációt kényszerített rá, és a build elhasalt
+  (`The sandbox is not in sync with the Podfile.lock`). **Ez a hiba nem
+  feltételezésből, hanem az első CI-futás naplójából derült ki** — pontosan ezért
+  épült a pipeline.

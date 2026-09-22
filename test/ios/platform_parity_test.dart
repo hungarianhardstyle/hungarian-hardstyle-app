@@ -110,11 +110,68 @@ void main() {
     });
   });
 
+  group('a Firebase iOS-konfiguráció be van kötve', () {
+    // ⚠️ Enélkül a `firebase_core` iOS-en **indulás közben elszáll**: a
+    // `lib/core/firebase/firebase_callable.dart` sima `Firebase.initializeApp()`-ot
+    // hív, ami a csomagba ágyazott plist-ből indul. A plist bundle ID-jának
+    // egyeznie KELL a projektével — a rossz ID-jű plist csendben megölné a
+    // Firebase-t (nem hibaüzenet, csak nem működő bejelentkezés).
+    String? plistValue(String xml, String key) => RegExp(
+          '<key>$key</key>\\s*<string>([^<]*)</string>',
+        ).firstMatch(xml)?.group(1);
+
+    test('a plist megvan, és a bundle ID egyezik a projekttel', () {
+      final file = File('ios/Runner/GoogleService-Info.plist');
+      expect(file.existsSync(), isTrue,
+          reason: 'a Firebase iOS-konfiguráció hiányzik');
+
+      final plistBundleId = plistValue(file.readAsStringSync(), 'BUNDLE_ID');
+      final xcodeBundleId = RegExp(r'PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);')
+          .allMatches(_read('ios/Runner.xcodeproj/project.pbxproj'))
+          .map((match) => match.group(1)!.trim())
+          .firstWhere((id) => !id.endsWith('.RunnerTests'));
+
+      expect(plistBundleId, xcodeBundleId,
+          reason: 'a plist bundle ID-ja nem egyezhet a projektével');
+    });
+
+    test('az .gitignore NEM rejti el a plistet (a CI-nak látnia kell)', () {
+      expect(_read('ios/.gitignore'), isNot(contains('GoogleService-Info')),
+          reason: 'a plist a repóban van (mint az Android google-services.json), '
+              'különben a CI nem tudná beépíteni');
+    });
+
+    test('mind a négy helyen be van kötve az Xcode-projektbe', () {
+      final pbxproj = _read('ios/Runner.xcodeproj/project.pbxproj');
+      const name = 'GoogleService-Info.plist';
+      for (final needle in [
+        '/* $name in Resources */ = {isa = PBXBuildFile',
+        '/* $name */ = {isa = PBXFileReference',
+        '/* $name */,',
+        '/* $name in Resources */,',
+      ]) {
+        expect(pbxproj, contains(needle),
+            reason: 'hiányzó Xcode-bejegyzés: $needle');
+      }
+    });
+
+    test('a Google Sign-In URL-sémája a plist REVERSED_CLIENT_ID-ja', () {
+      final reversed =
+          plistValue(_read('ios/Runner/GoogleService-Info.plist'), 'REVERSED_CLIENT_ID');
+      expect(reversed, isNotNull, reason: 'a plistben nincs REVERSED_CLIENT_ID');
+
+      final info = _read('ios/Runner/Info.plist');
+      expect(info, contains('<key>CFBundleURLTypes</key>'));
+      expect(info, contains('<string>$reversed</string>'),
+          reason: 'enélkül a Google-bejelentkezés nem tér vissza a böngészőből '
+              'az appba — a hiba csak futásidőben, a bejelentkezéskor látszana');
+    });
+  });
+
   group('az ismert iOS-hiányok dokumentáltak (nem felejtődnek el)', () {
     /// Ami iOS-en **még nincs meg**, és tudni kell róla. Ha bármelyik elkészül,
     /// ez a teszt elhasal → frissítsd a dokumentumot ÉS ezt a listát.
     const documentedGaps = <String, String>{
-      'GoogleService-Info.plist': 'a Firebase iOS-konfiguráció',
       'StoreKit': 'a zenevásárlás (az Apple IAP-szabálya miatt)',
       'aps-environment': 'a push értesítés (APNs entitlement)',
       'Associated Domains': 'a meghívó-link (app_links)',

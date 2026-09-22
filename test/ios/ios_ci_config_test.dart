@@ -9,7 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 ///
 ///  * a **bundle ID** három helyen van (Xcode-projekt, Android `applicationId`,
 ///    `codemagic.yaml`) — ha bármelyik eltér, az aláírás vagy a feltöltés hal el;
-///  * a **deployment target** két helyen (Xcode-projekt, `Podfile`);
+///  * a **deployment target** egy helyen él (Xcode-projekt) — a projekt
+///    **Swift Package Manager**-t használ, ezért **Podfile nem lehet** benne;
 ///  * a **Flutter-verzió** két helyen (Codemagic, GitHub Actions) — ha a kettő
 ///    eltér, a CI más engine-nel fordít, mint amivel a kód készült.
 ///
@@ -55,7 +56,7 @@ void main() {
           reason: 'a CI-nek pont azt a bundle ID-t kell aláírnia, ami a projektben van');
     });
 
-    test('a deployment target egyezik a Xcode-projekt és a Podfile között', () {
+    test('a deployment target a Xcode-projektben él (SPM, nem CocoaPods)', () {
       final xcodeTargets = RegExp(r'IPHONEOS_DEPLOYMENT_TARGET = ([\d.]+);')
           .allMatches(pbxproj)
           .map((m) => m.group(1)!)
@@ -63,11 +64,17 @@ void main() {
       expect(xcodeTargets, {'15.0'},
           reason: 'a Flutter 3.47 sablonja és migrációja is 15.0');
 
-      final podTarget = RegExp(r"platform :ios, '([\d.]+)'")
-          .firstMatch(_read('ios/Podfile'))!
-          .group(1);
-      expect(podTarget, xcodeTargets.single,
-          reason: 'a `pod install` ne találgasson más platform-verziót');
+      // ⚠️ MÉRT ÉLES HIBA (GitHub Actions run #1, 2026-09-22): amikor egy
+      // Podfile került a repóba, a Flutter ráfogta a CocoaPods utat egy
+      // SPM-alapú projektre, és a build elhasalt:
+      //   "All plugins found for ios are Swift Packages, but your project still
+      //    has CocoaPods integration. Your project uses a non-standard Podfile"
+      //   "Error (Xcode): The sandbox is not in sync with the Podfile.lock."
+      // Ezért a Podfile HIÁNYA itt nem hiányosság, hanem a működés feltétele:
+      // az összes iOS-plugin Swift Package-ként jön.
+      expect(File('ios/Podfile').existsSync(), isFalse,
+          reason: 'a projekt Swift Package Manager-t használ — egy Podfile '
+              'CocoaPods integrációt kényszerít rá, és elhasal tőle a build');
 
       expect(
         _read('ios/Flutter/AppFrameworkInfo.plist'),
