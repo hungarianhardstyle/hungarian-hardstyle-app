@@ -459,6 +459,57 @@ A **TestFlight**-build ezt a zászlót szándékosan **nem** kapja meg. Ez **nem
 sideload hibája: ugyanez történne egy aláírt buildben is, amíg az AdMob nem hagyja
 jóvá az appot.
 
+#### ⚠️ ÚJ JUTALMAZOTT EGYSÉG = AZ SSV-VISSZAHÍVÁSI URL KÖTELEZŐ (mérve, 2026-09-22)
+
+**A tünet:** a jutalmazott teszt-reklám **lefutott**, de a termék **nem nyílt meg**.
+
+**A mért gyökér — nem a kliens és nem a reklám:** a feloldás kizárólag a
+**szerveroldali visszaigazoláson** múlik. A kliens `waitForAdUnlock`-kal várja, hogy
+a `label_ad_unlocks` rekord aktív legyen, azt viszont **csak az AdMob aláírt
+SSV-visszahívása** hozza létre (`functions/index.js` → `admobRewardedSsv` → aláírás
+ellenőrzése a `gstatic.com/admob/reward/verifier-keys.json` kulcsaival). A kliens
+`onUserEarnedReward` visszahívása **csak egy flaget állít** — a szervert nem
+értesíti.
+
+**A bizonyíték (`npx firebase functions:log --only admobRewardedSsv`):** a végpontot
+**összesen négyszer** hívták valaha, utoljára **2026-09-21 22:46**-kor — a 2026-09-22-i
+iOS-teszt idején **egyetlen hívás sem érkezett**. A végpont maga él és helyes
+(közvetlen próba: `HTTP 200 "validated"` a validátori ágon, `HTTP 400` aláírás nélküli
+tranzakcióra).
+
+**A gyökér oka:** az SSV-visszahívási URL az AdMobban **hirdetési egységenként**
+állítandó be. Az új iOS „HUHS jutalmazott" egységen ez **nincs beállítva** (a régi
+hívások a korábban beállított egységhez tartoznak). Ezért az AdMob sosem hívja a
+szervert, a rekord nem jön létre, és a felület *„A reklám lefutott, de a feloldás nem
+érkezett meg."* üzenetet adja.
+
+**A beállítandó URL (egyszer, minden jutalmazott egységen):**
+
+```
+https://us-central1-hungarian-hardstyle.cloudfunctions.net/admobRewardedSsv
+```
+
+AdMob → **Hirdetési egységek** → a jutalmazott egység szerkesztése →
+**Szerveroldali ellenőrzés (SSV)** → a fenti URL. (A mező melletti *Ellenőrzés* gomb
+pontosan azt a `200 "validated"` választ kapja, amit fent mértünk.)
+
+**⚠️ Nyitott kérdés, amit a következő teszt dönt el:** a Google **teszt**-reklámjai
+küldenek-e egyáltalán SSV-visszahívást. Ha nem, akkor a jutalmazott feloldás
+**teszt-reklámmal nem próbálható** — csak éles reklámmal (azaz az AdMob-jóváhagyás
+után). A mérés módja egyszerű: az URL beállítása után ismételd meg a tesztet, és
+nézd meg, megjelent-e új hívás a `functions:log`-ban.
+
+**⚠️ ÉS A MÉLYEBB TANULSÁG (a Google saját ajánlása):** az
+[iOS SSV-dokumentáció](https://developers.google.com/admob/ios/ssv) szerint
+*„For a good user experience, it is recommended to **reward the user immediately
+using the client-side callback** while performing validation on all rewards upon
+receiving server-side callbacks."* A mostani felépítés ennek az **ellenkezője**: a
+jóváírás **kizárólag** a szerverre vár, ezért ha az SSV késik, elmarad vagy nincs
+beállítva, a felhasználó **megnézte a reklámot és mégsem kap semmit**. Ez éles
+felhasználóknál is előfordulhat (hálózat, AdMob-kimaradás). A javítás iránya
+**tulajdonosi döntés**, mert a szigorú kapu egyben visszaélést is fog: ha a kliens
+azonnal jóváírhat, egy módosított kliens reklám nélkül is feloldhat.
+
 **⚠️ Ismert korlát (mérve, 2026-09-22):** az AdMob konzol **Alkalmazások**
 mikro-frontendje a CDP-vezérelt Chrome-profilban **nem indul el** (a Kezdőlap
 renderel, az Alkalmazások útvonal nem; nincs JS-hiba és nincs bukott kérés) — ezért
