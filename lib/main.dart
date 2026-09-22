@@ -134,6 +134,38 @@ Future<void> _initializeBackgroundAudio() async {
   }
 }
 
+/// Az iOS App Check-szolgáltató **külön zászlóval** választható.
+///
+/// MIÉRT KELL (mérve, 2026-09-22, a telefon naplójából): az `activate()` iOS-en
+/// alapból `AppleProvider.deviceCheck`-et használ (ez az enum alapértéke), és a
+/// szerver elutasítja, mert ehhez az apphoz **nincs regisztrálva szolgáltató**:
+///
+///     AppCheck failed: '...The server responded with an error:
+///      - URL: .../apps/1:1030187737487:ios:...:exchangeDeviceCheckToken
+///
+/// A regisztrációhoz viszont **Apple Developer fiók kell**: az App Check API
+/// szerint a DeviceCheck konfighoz `keyId` ÉS `privateKey` (`.p8`) kötelező,
+/// azaz fizetős tagság. Az **egyetlen út, ami Apple-fiók nélkül is működik, a
+/// `debug` szolgáltató** — pontosan úgy, ahogy Androidon debugban már megy.
+///
+/// ⚠️ A zászlót **csak a sideloadolt teszt-build** kapja meg (a GitHub Actions
+/// adja át `--dart-define`-nal). Az éles iOS build (Codemagic → TestFlight)
+/// **nem** kapja meg, ott App Attest (illetve DeviceCheck) a helyes út — azzal
+/// együtt, hogy a szolgáltatót regisztrálni kell a Firebase Console-ban.
+///
+/// ⚠️ **Az Android útja érintetlen:** a `androidProvider` kifejezése bitre
+/// ugyanaz maradt (`kDebugMode ? debug : playIntegrity`).
+const _appCheckDebugIos = bool.fromEnvironment(
+  'HUHS_APP_CHECK_DEBUG_IOS',
+  defaultValue: false,
+);
+
+/// Az iOS-en használt App Check-szolgáltató.
+AppleProvider get _appleAppCheckProvider =>
+    (kDebugMode || _appCheckDebugIos)
+    ? AppleProvider.debug
+    : AppleProvider.appAttestWithDeviceCheckFallback;
+
 Future<void> _initializeAppCheck() async {
   try {
     // Debug builds use the debug provider (no console registration needed).
@@ -145,6 +177,8 @@ Future<void> _initializeAppCheck() async {
       androidProvider: kDebugMode
           ? AndroidProvider.debug
           : AndroidProvider.playIntegrity,
+      // iOS: lásd a fenti `_appleAppCheckProvider` magyarázatát.
+      appleProvider: _appleAppCheckProvider,
     );
   } catch (_) {
     // App Check must never block startup or content loading.

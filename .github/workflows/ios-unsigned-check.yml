@@ -81,7 +81,13 @@ jobs:
         run: flutter analyze
 
       - name: iOS fordítás (aláírás nélkül)
-        run: flutter build ios --release --no-codesign
+        # ⚠️ A `HUHS_APP_CHECK_DEBUG_IOS` azért kell, mert az iOS App Check
+        # szolgáltató regisztrálása **Apple Developer fiókot** kér (a DeviceCheck
+        # konfighoz `keyId` + `.p8` kötelező), a `debug` szolgáltató viszont
+        # fiók nélkül is működik — és pont ez a sideloadolt TESZT-build célja.
+        # Az éles iOS build (Codemagic → TestFlight) szándékosan NEM kapja meg
+        # ezt a zászlót; ott App Attest a helyes út, regisztrált szolgáltatóval.
+        run: flutter build ios --release --no-codesign --dart-define=HUHS_APP_CHECK_DEBUG_IOS=true
 
       # --- Aláírás nélküli IPA a kézi teszteléshez -------------------------
       # Az `.ipa` a valóságban egy zip, benne `Payload/Runner.app` — nincs
