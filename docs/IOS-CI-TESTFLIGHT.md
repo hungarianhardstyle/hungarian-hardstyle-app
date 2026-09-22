@@ -702,15 +702,47 @@ az `Info.plist`-be került. **A viszonyítási alap** ugyanez az eszköz a javí
   a **közösségi profilok** és a **ranglista** betöltenek (az App Check javítása után),
   a **banner** megjelenik (Google teszt-egység), a **megvásárolt zene zárképernyőn is
   szól**, a **DJ-adatlap** hozzá van rendelve, a **Touch ID** megy, a **jutalmazott
-  feloldás** végig lefut (reklám → azonnali jóváírás → letöltés), és a **rádió**
-  teljesen működik (lásd lentebb).
-- **AMI MÉG NINCS MEGMÉRVE:** a **Google-bejelentkezés**, a **billentyűzet-elrejtő
-  gomb** a beviteli sávban (a fejlécben igazolt), továbbá a **valódi iOS
+  feloldás** végig lefut (reklám → azonnali jóváírás → letöltés), a **rádió**
+  teljesen működik, az **emoji-gomb** megjelenik a közösségi chatben (Androidon nem),
+  és a **billentyűzet-elrejtő gomb** látszik a beviteli sávban (lásd lentebb).
+- **AMI MÉG NINCS MEGMÉRVE:** a **Google-bejelentkezés**, továbbá a **valódi iOS
   reklámbevétel** (az AdMob-jóváhagyásig a teszt-egységek mennek) és a **StoreKit**.
   **Face ID nem releváns:** a tesztkészülék iPhone SE (2. generáció), azon **Touch ID**
   van — a biometrikus kapu ezen a készüléken a Touch ID-n keresztül megy.
   A `pymobiledevice3` indítani, naplózni és képernyőképet készíteni tud, **koppintani
   nem** — ezért kell a tulajdonos keze a viselkedés igazolásához.
+
+### A billentyűzet-elrejtő gomb — két gyökér, és KÉT hamis pozitív teszt (2026-09-22)
+
+A tulajdonos **háromszor** jelezte, hogy a gomb nincs ott; kétszer tévedtem vele
+szemben. Ez a szakasz azért van, mert a tanulság **általános**, és drágán tanultuk meg.
+
+| # | Gyökér | Miért volt néma | Javítás |
+|---|---|---|---|
+| 1 | a **beágyazott Scaffold** lenullázza a `MediaQuery.viewInsets`-t | az app képernyői a `main_navigation.dart` külső Scaffoldjában élnek; a külső Scaffold a `body`-jából törli a `viewInsets`-t (`resizeToAvoidBottomInset`), ezért a belső képernyőn a `viewInsetsOf(context).bottom` **mindig 0** | a **nyers platform-érték** olvasása: `View.of(context).viewInsets.bottom` |
+| 2 | a `View.of(context)` **nem értesít a változásról** | a Flutter saját dokumentációja (`view.dart:150-151`): *„[MediaQuery.sizeOf], which will ensure that the `context` is informed when the view properties change"* — a widget **egyszer** épült fel (zárt billentyűzettel), és ott ragadt | `StatefulWidget` + `WidgetsBindingObserver`, és `didChangeMetrics()`-ben újraépítés |
+
+**⚠️ A két hamis pozitív — ez a lényeg:**
+
+1. Az első widget-teszt **egyetlen** Scaffolddal mért, ezért **zöld** volt, miközben
+   élesben a gomb soha nem jelent meg. **A teszt nem azt a szerkezetet mérte, amiben a
+   hiba él.**
+2. A második teszt a `View.of`-et **csak az első felépítéskor** mérte (a billentyűzetet
+   a `pumpWidget` **előtt** állítottam be) — megint zöld, pedig a gomb a zárt
+   állapotban ragadt. **A teszt a statikus állapotot mérte, a hiba viszont a
+   változásban volt.**
+
+Ezért a `test/widgets/keyboard_dismiss_visibility_test.dart` most **beágyazott**
+Scaffolddal és **dinamikus** esetekkel mér (kinyitás a felépítés **után**, majd
+bezárás), és **mindkét** hibára van mutációs bizonyíték: a metrika-figyelő
+eltávolításával és a `MediaQuery`-re visszaállítással a megfelelő teszt **elhasal**
+(`Found 0 widgets with icon` — pontosan az éles tünet), majd a fájlok byte-pontosan
+visszaállnak.
+
+**A tanulság egy mondatban:** egy zöld teszt csak annyit bizonyít, hogy **az a
+forgatókönyv** jó, amit leír — ha az éles szerkezet vagy az időbeli lefolyás eltér,
+a teszt **hamis biztonságot** ad. Ezért a láthatóságot érdemes a **valódi
+beágyazással** és a **változás pillanatában** mérni.
 
 ### A rádió iOS-en — három hiba, három gyökér (2026-09-22, mind mérve)
 
