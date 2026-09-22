@@ -452,6 +452,34 @@ mikro-frontendje a CDP-vezérelt Chrome-profilban **nem indul el** (a Kezdőlap
 renderel, az Alkalmazások útvonal nem; nincs JS-hiba és nincs bukott kérés) — ezért
 az app + egységek létrehozása **kézi lépés** a tulajdonos böngészőjében.
 
+#### A kész csomag ellenőrzése — `tools/verify-ios-ipa.mjs` (mérve, 2026-09-22)
+
+A rossz reklám-azonosító **némán** jelentkezik: az app elindul, minden képernyő
+betölt, csak épp nem szolgál ki hirdetést. Ezt egy sikeres build és egy tiszta
+`flutter analyze` **sem** jelzi. Ezért van egy eszköz, ami a **kész csomag byte-jait**
+méri — Xcode nélkül, Windows-on is:
+
+```
+Copy-Item build/ios-ipa/Runner-unsigned.ipa build/ipa.zip
+Expand-Archive build/ipa.zip -DestinationPath build/ipa -Force
+node tools/verify-ios-ipa.mjs build/ipa/Payload/Runner.app
+```
+
+**A mért eredmény a valódi csomagon (GitHub Actions run `35744632628`):**
+
+```
+OK    AdMob app ID        ca-app-pub-7714662594685378~6550697484  <- Info.plist
+OK    banner egyseg       ca-app-pub-7714662594685378/5511193968  <- Frameworks\App.framework\App
+OK    jutalmazott egyseg  ca-app-pub-7714662594685378/7238016636  <- Frameworks\App.framework\App
+OK    Google TESZT app ID  (nincs benne)
+```
+
+Vagyis a `--dart-define` **tényleg átért** a befordított Dart-kódba, az app ID pedig
+az `Info.plist`-be került. **A viszonyítási alap** ugyanez az eszköz a javítás
+**előtti** csomagon: mind a négy ellenőrzés elhasalt, és a Google teszt app ID-t az
+`Info.plist`-ben találta meg — vagyis az eszköz nem „mindig zöld". Az `--self-test`
+**3/3 OK**, és a CI is lefuttatja (`A csomag reklám-identitásának ellenőrzése`).
+
 ---
 
 ## 6. Hibakeresés

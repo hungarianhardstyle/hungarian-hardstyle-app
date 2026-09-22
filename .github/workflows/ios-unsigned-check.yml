@@ -127,5 +127,19 @@ jobs:
           retention-days: 14
           path: build/ios/iphoneos/Runner-unsigned.ipa
 
+      # ⚠️ A rossz reklám-azonosító NÉMÁN jelentkezik: az app elindul, minden
+      # képernyő betölt, csak épp nem szolgál ki hirdetést. Ezt egy sikeres build
+      # és egy tiszta `flutter analyze` SEM jelzi — ezért a KÉSZ csomag byte-jaiban
+      # mérjük le (app ID + a befordított egység-konstansok).
+      # Szándékosan a feltöltés UTÁN: így egy hibás azonosító nem viszi el a
+      # letölthető csomagot, csak pirosra váltja a futást.
+      # Ha a GitHub-változók nincsenek beállítva (teszt-egységekre visszaváltva),
+      # az egység-ellenőrzés kimarad — az app ID viszont mindig ellenőrzött.
+      - name: A csomag reklám-identitásának ellenőrzése
+        run: |
+          node tools/verify-ios-ipa.mjs build/ios/iphoneos/Payload/Runner.app \
+            --banner="${{ vars.HUHS_ADMOB_BANNER_ID_IOS }}" \
+            --rewarded="${{ vars.HUHS_ADMOB_REWARDED_ID_IOS }}"
+
       - name: Tesztek
         run: flutter test
