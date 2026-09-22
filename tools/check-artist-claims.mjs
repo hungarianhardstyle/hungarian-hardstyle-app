@@ -162,7 +162,108 @@ async function main() {
     authorization = '';
   }
 
-  // A **privát** végpont él-e? (A plugin 2.6.0 hozza; a claim ehhez kell.)
+  // ⚠️ A PRIVÁT VÉGPONTOK VÉDELMÉNEK ÉLŐ ellenőrzése (plugin 2.7.0).
+  //
+  // MIÉRT: a 2.6.0-ban a nyilvános válasz-gyorsítótár engedélylistája **előtagra**
+  // illeszkedett, ezért a `/artists/<id>/claim-emails` — amely a DJ **privát**
+  // e-mail címét adja vissza — cache-elhető volt, a gyorsítótár pedig a
+  // hitelesítés ELŐTT is kiszolgál. Ez a mód ezt méri élőben, írás nélkül:
+  //
+  //   1. hitelesítés NÉLKÜL a privát végpont **nem** adhat adatot (401/403),
+  //   2. az új `dj-profile` írás-végpont létezik és védett (401/403, nem 404),
+  //   3. hitelesítéssel a privát végpont adata **jön** (a végpont működik),
+  //   4. hitelesítéssel egy ÜRES kéréssel a `dj-profile` **elutasít** (400) —
+  //      üres kérés nem ír semmit, ezért ez az adatokat nem érinti.
+  if (args.includes('--probe')) {
+    const artistId = Number(args[args.indexOf('--probe') + 1]) || 12812;
+    const checks = [];
+
+    const unauth = await fetch(
+      `${WORDPRESS_BASE_URL}/artists/${artistId}/claim-emails`,
+    ).catch(() => null);
+    checks.push({
+      name: 'privát claim-emails hitelesítés nélkül',
+      ok: unauth !== null && (unauth.status === 401 || unauth.status === 403),
+      detail: unauth === null ? 'hálózati hiba' : `status=${unauth.status}`,
+      hint: 'ha 200: a privát cím kiszolgálható — a gyorsítótár-javítás nem él',
+    });
+
+    const edit = await fetch(`${WORDPRESS_BASE_URL}/dj-profile/${artistId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    }).catch(() => null);
+    checks.push({
+      name: 'új dj-profile végpont hitelesítés nélkül',
+      ok: edit !== null && (edit.status === 401 || edit.status === 403),
+      detail: edit === null ? 'hálózati hiba' : `status=${edit.status}`,
+      hint: '404 = a végpont nincs fent (plugin 2.7.0 hiányzik)',
+    });
+
+    if (authorization) {
+      const authed = await fetchClaimEmailsWithStatus(artistId, authorization);
+      checks.push({
+        name: 'privát claim-emails hitelesítéssel',
+        ok: authed.ok,
+        detail: `status=${authed.status}`,
+        hint: 'a végpontnak a szerver (admin-alkalmazásjelszó) hívására adnia kell adatot',
+      });
+      const emptyEdit = await fetch(
+        `${WORDPRESS_BASE_URL}/dj-profile/${artistId}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: authorization,
+            'Content-Type': 'application/json',
+          },
+          body: '{}',
+        },
+      ).catch(() => null);
+      checks.push({
+        name: 'dj-profile üres kéréssel (nem ír semmit)',
+        ok: emptyEdit !== null && emptyEdit.status === 400,
+        detail: emptyEdit === null ? 'hálózati hiba' : `status=${emptyEdit.status}`,
+        hint: '400 = „Nem érkezett menthető mező" — üres kérés nem módosít adatot',
+      });
+    } else {
+      console.log('FIGYELEM  a WordPress titkok nem olvashatók — a hitelesített ellenőrzések kimaradnak.');
+    }
+
+    // A nyilvános út viszont TOVÁBBRA IS cache-elhető: a kizárás csak a privát
+    // al-útvonalakra vonatkozik, ezért a gyorsítótár jelzőjének meg kell lennie.
+    const publicRoute = await fetch(`${WORDPRESS_BASE_URL}/artists/${artistId}`).catch(
+      () => null,
+    );
+    const cacheMarker = publicRoute?.headers?.get('x-huhs-cache') || '';
+    checks.push({
+      name: 'nyilvános /artists/<id> továbbra is gyorsítótárazott',
+      ok: publicRoute !== null && publicRoute.status === 200 && cacheMarker !== '',
+      detail:
+        publicRoute === null
+          ? 'hálózati hiba'
+          : `status=${publicRoute.status}  X-HUHS-Cache=${cacheMarker || '(nincs)'}`,
+      hint: 'ha nincs jelző: a kizárás túl széles lett, a nyilvános cache elesett',
+    });
+
+    console.log(`Privát végpontok vizsgálata (artist=${artistId}):`);
+    console.log('');
+    let failed = 0;
+    for (const check of checks) {
+      if (!check.ok) failed += 1;
+      console.log(
+        `${check.ok ? 'OK   ' : 'HIBA '} ${check.name} — ${check.detail}${check.ok ? '' : `  (${check.hint})`}`,
+      );
+    }
+    console.log('');
+    console.log(
+      failed === 0
+        ? 'MINDEN ELLENŐRZÉS RENDBEN'
+        : `${failed} ellenőrzés bukott — nézd meg a fentieket.`,
+    );
+    return failed === 0 ? 0 : 1;
+  }
+
+  // A privát végpont él-e? (A plugin 2.6.0 hozza; a claim ehhez kell.)
   const pingIndex = args.indexOf('--ping');
   if (pingIndex >= 0) {
     const artistId = Number(args[pingIndex + 1]);

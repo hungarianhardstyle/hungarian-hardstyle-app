@@ -374,6 +374,21 @@ mert a 350-es app egyik funkciója ezt használja.
 **Feltöltés után érdemes ellenőrizni:** `node tools/check-artist-claims.mjs --ping <djId>` (a privát
 végpont továbbra is él), és egy átvett adatlap mentése az appból (a 350-es buildben).
 
+### ✅ A 2.7.0 FELKERÜLT ÉS ÉLŐBEN IGAZOLVA (2026-09-22, a tulajdonos „2.7.0 fent" jelzése után)
+
+- **A verzió élőben: `apiVersion = 2.7.0`** (`node tools/verify-submission-payout.mjs --live` → **4/4 OK**).
+- **ÚJ eszköz-mód: `node tools/check-artist-claims.mjs --probe <djId>` → 5/5 OK** (adat írása nélkül):
+  1. `claim-emails` **hitelesítés nélkül → 401** (a privát cím **nem** szolgálható ki — a gyorsítótár-javítás él),
+  2. az új `dj-profile` **hitelesítés nélkül → 401** (nem 404: a végpont fent van és védett),
+  3. `claim-emails` **hitelesítéssel → 200** (a végpont működik),
+  4. `dj-profile` **üres kéréssel → 400** („Nem érkezett menthető mező" — üres kérés nem ír adatot),
+  5. a **nyilvános** `/artists/<djId>` → 200, `X-HUHS-Cache=fresh` (a kizárás **nem** vitte el a nyilvános gyorsítótárat).
+- `node tools/verify-wp-admin-endpoints.mjs` → **15/15 OK** (a frissítés semmi mást nem tört el).
+- **⚠️ Közben a saját eszközünk egy hibáját is javítottuk:** a `verify-submission-payout.mjs` a verziót
+  csak az **utolsó** száma alapján hasonlította (`2.7.0` → `0 >= 8` = hamis), ezért a 2.5.8 utáni
+  **minden** kiadást hibásnak jelzett — a 2.7.0-nál élesben elő is jött. Mostantól valódi
+  verzió-összehasonlítás van (`versionAtLeast`), 10 új önteszt-esettel (a kapu **15/15**).
+
 ### A 2.5.9 ÉLŐBEN igazolva (2026-09-20, a tulajdonos „2.5.9 fent van" jelzése után)
 
 - **A plugin verziója élőben: `apiVersion = 2.5.9`.** `node tools/verify-submission-payout.mjs --live`

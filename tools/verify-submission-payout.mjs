@@ -93,6 +93,27 @@ function selfTest() {
   const sources = readSources();
   const results = [];
   const check = (label, ok, detail = '') => results.push({ label, ok: Boolean(ok), detail });
+
+  // ⚠️ A verzió-összehasonlítás (a régi kapu hibája: a 2.6.0/2.7.0-et
+  // hibásnak jelezte, mert csak az utolsó számot nézte).
+  for (const [version, expected] of [
+    ['2.5.8', true],
+    ['2.5.9', true],
+    ['2.6.0', true],
+    ['2.7.0', true],
+    ['3.0.0', true],
+    ['2.5.7', false],
+    ['2.4.99', false],
+    ['1.9.9', false],
+    ['', false],
+    ['nem-verzió', false],
+  ]) {
+    check(
+      `verzió-összehasonlítás: „${version}" ${expected ? '≥' : '<'} 2.5.8`,
+      versionAtLeast(version, '2.5.8') === expected,
+    );
+  }
+
   const good = analyzePayout(sources);
   check('a valódi forrásokon minden ellenőrzés rendben', good.failures.length === 0, JSON.stringify(good.failures));
 
@@ -144,6 +165,36 @@ function selfTest() {
 }
 
 /**
+ * Verzió-összehasonlítás: `2.7.0` ≥ `2.5.8`?
+ *
+ * ⚠️ MIÉRT KELL (a korábbi kapu hibája): a régi ellenőrzés a verzió **utolsó**
+ * számát nézte (`Number('2.7.0'.split('.').pop()) >= 8` → `0 >= 8` = HAMIS),
+ * ezért a 2.6.0/2.7.0-et **hibásnak** jelezte — vagyis minden 2.5.8 utáni
+ * kiadásnál pirosat adott. Ez a hiba a 2.7.0 feltöltésekor élesben elő is jött.
+ */
+export function versionAtLeast(version, minimum) {
+  const parse = (value) =>
+    String(value || '')
+      .trim()
+      .split('.')
+      .map((part) => Number.parseInt(part, 10));
+  const actual = parse(version);
+  const required = parse(minimum);
+  if (actual.some((part) => !Number.isFinite(part)) || required.length === 0) {
+    return false;
+  }
+  if (actual.length === 0 || !Number.isFinite(required[0])) return false;
+  for (let index = 0; index < Math.max(actual.length, required.length); index += 1) {
+    const left = actual[index] ?? 0;
+    const right = required[index] ?? 0;
+    if (!Number.isFinite(left) || !Number.isFinite(right)) return false;
+    if (left > right) return true;
+    if (left < right) return false;
+  }
+  return true;
+}
+
+/**
  * ÉLES: a plugin végpontja válaszol-e, és a hitelesítés rendben van-e.
  * A WordPress-jelszavakat futásidőben, a Secret Managerből kéri.
  */
@@ -160,7 +211,7 @@ async function liveCheck() {
     .then((response) => response.json().catch(() => ({})))
     .catch(() => ({}));
   const version = String(pluginVersion?.apiVersion || '');
-  checker.check('a plugin 2.5.8 (vagy újabb) van fent', Number(version.split('.').pop()) >= 8, `apiVersion=${version}`);
+  checker.check('a plugin 2.5.8 (vagy újabb) van fent', versionAtLeast(version, '2.5.8'), `apiVersion=${version}`);
 
   // Üres azonosítólista: 400-at kell adnia (a végpont él, és értelmesen válaszol).
   const empty = await fetch(`${WORDPRESS_BASE_URL}/submission-statuses?ids=`, {
