@@ -277,10 +277,65 @@ be → kód → újraindítás → megerősítés. (A `reveal` **megjeleníti**,
 | Korlát | Mit jelent a gyakorlatban |
 |---|---|
 | Az aláírás **7 napig** érvényes | utána újra át kell húzni a Sideloadly-val |
-| Egyszerre **max. 3 app** | a Sideloadly gyakran **véletlen utótagot** tesz a bundle ID-ra, ezért a frissítés **új appnak** látszik, és az app-adatok nem maradnak meg |
+| Egyszerre **max. 3 app** | a Sideloadly az ingyenes fióknál **utótagot** tesz a bundle ID-ra (`hu.hungarianhardstyle.app.JQPJ793V65`). Az utótag viszont **állandó** (az Apple ID-hoz kötött), ezért a frissítés **valódi frissítés** — mérve: ugyanaz a `final_bundle_id`, **1 telepítés**, `last_error` üres, és az **app-adatok megmaradnak** (a debug token is) |
 | Egyes **entitlementek** nem elérhetők | a **push értesítés** (`aps-environment`) biztosan nem megy így — nekünk amúgy sincs még |
-| **App Check** | ⚠️ a `firebase_app_check` iOS-en App Attest/DeviceCheck alapú; az App Attest **entitlementet** kér, amit ingyenes fiók nem ad. Ezért **előfordulhat**, hogy egy App Check-kel védett callable elutasítja a kérést. Androidon ez Play Integrity-vel már megy; iOS-en a Firebase Console-ban kell regisztrálni a szolgáltatót (App Check → Apps → iOS app). Ha ez gondot okoz, a végleges út a TestFlight |
+| **App Check** | ✅ **MEGOLDVA, mérve** — a build a **debug szolgáltatót** használja, a token a Firebase Console-ban regisztrálva van; az éles App Attest/DeviceCheck **nem kell** hozzá. Részletek lentebb |
 | **Helyi fájlok** | a „Megvásárolt zenéim" letöltései az újratelepítésnél elvesznek (új bundle ID) |
+
+#### App Check a sideloadolt builden — ✅ **MEGOLDVA, mérve (2026-09-22)**
+
+A gond az volt, hogy a `firebase_app_check` iOS-en alapból **App Attest / DeviceCheck**
+alapú, és mindkettő **fizetős** Apple-fiókot kér (DeviceCheck: `keyId` + `.p8` kulcs;
+App Attest: `teamId` + entitlement). Ingyenes fiókkal egyik sem elérhető — vagyis az
+App Check-kel védett callable-ok (`enforceAppCheck: true`) elutasították volna a kérést.
+
+**A megoldás a beépített debug szolgáltató**, ami ingyenes:
+
+1. a build `--dart-define=HUHS_APP_CHECK_DEBUG_IOS=true`-vel készül (a CI is így építi),
+   a `lib/main.dart` pedig ilyenkor `AppleAppCheckProvider.debug()`-ot ad meg az
+   `appAttestWithDeviceCheckFallback` helyett — az **Android ága változatlan**;
+2. az app **első indításakor maga generál** egy debug tokent; ugyanez a token a
+   készüléken a `Library/Preferences/<bundle>.plist` `GACAppCheckDebugToken` kulcsában
+   is ott van — **innen olvastuk ki** (`pymobiledevice3` + AFC, mert a napló
+   `<private>`-ként maszkolja);
+3. a tokent a Firebase Console-ban regisztráltuk:
+   **App Check → Apps → az iOS sor `⋮` → Manage debug tokens → Add debug token.**
+
+**A mért bizonyíték (nem feltételezés):**
+
+| Mit mértem | Hogyan | Eredmény |
+|---|---|---|
+| a debug provider **aktív** a telepített buildben | `pymobiledevice3 syslog live -pn Runner` indítás közben | `Firebase App Check Debug Token: <private>` |
+| a token a **mi app ID-nkhoz** tartozik | ugyanaz a napló | `GACAppCheckDebugToken…projects_hungarian-hardstyle_apps_1:1030187737487:ios:0ceb5a9685b34b5f78ebfa` |
+| a csere **élesben működik** | `POST …/apps/<app-id>:exchangeDebugToken?key=<API_KEY>`, az `API_KEY` a `GoogleService-Info.plist`-ből | **HTTP 200**, valódi App Check token, `ttl 3600s` |
+| a **régi hiba eltűnt** | ugyanaz a napló | nincs többé `AppCheck failed … exchangeDeviceCheckToken` |
+
+**EZ VOLT A VALÓDI OKA A „NEM TÖLTENEK A PROFILOK / ÜRES A RANGLISTA" JELZÉSNEK
+(mérve).** A `community_service.dart` a profilokat, az átvett DJ-adatlapokat és a
+ranglistát **App Check-kel védett** callable-okból kéri (`getPublicProfile`,
+`getPublicProfiles`, `getClaimedArtistsForUser`, `getAchievementLeaderboard`,
+`getPublicAchievement` — mind `enforceAppCheck: true`). Amíg az App Check elbukott,
+ezek **HTTP 401**-gyel tértek vissza, ezért a képernyők üresek maradtak. Kétoldalú
+éles mérés a regisztrált debug tokennel:
+
+| hívás | App Check token nélkül | tokennel |
+|---|---|---|
+| `getAchievementLeaderboard` | **401** | **200** + valódi ranglista (`Benyo1982`, 768 pont) |
+| `getPublicProfile` | **401** | **404** — a kapun **átjutott**, már csak a nem létező uid-ot jelzi |
+
+A hiba tehát **nem a kliensben és nem a szerverben** volt, hanem az **attestation
+hiányában** — és pont ezért nem lehetett Androidon reprodukálni (ott a Play Integrity
+már regisztrálva van).
+
+**⚠️ A „Not registered" állapot NEM blokkol.** Az App Check → Apps listában az iOS sor
+`Attestation providers` oszlopa **`–`**, a státusz **„Not registered"** — ez az **éles**
+attestation-re vonatkozik, a debug tokenes útra **nem**. Ezért a sideloadolt
+teszteléshez **nem kell** sem fizetős fiók, sem DeviceCheck-kulcs. Az éles App Attest
+majd a TestFlight-körben kerül be (a tulajdonos `teamId`-jével + entitlementtel).
+
+**⚠️ A debug token a telepítéshez kötődik.** Ha a container **törlődik** (eltávolítás +
+újratelepítés, nem frissítés), az app **új** tokent generál — azt újra regisztrálni kell.
+Frissítésnél (mint nálunk is) az app-adatok és így a token **megmaradnak**.
 
 **Ez tehát tesztelésre való, nem terjesztésre.** A végleges út a **TestFlight**
 (fizetős tagsággal): nincs 7 napos lejárat, nincs kábel, a tesztelőket meghívóval
@@ -317,10 +372,21 @@ a **nyilvános** megjelenést:
    Google Play Billing. iOS-en külön App Store termékek kellenek. 2025 óta
    vannak kivételek (US: Epic-ítélet; EU: DMA külső vásárlásra mutatás), de ezt
    **jogilag tisztázni kell, mielőtt bármit építünk**.
-2. **Reklám az iOS-en:** az `Info.plist`-ben a **Google teszt** App ID van
-   (`ca-app-pub-3940256099942544~1458002511`), a Dart-konstansok pedig az
-   **Android** AdMob egységek (`ca-app-pub-7714662594685378/...`). iOS-re külön
-   AdMob app + egységek kellenek, különben nincs reklámbevétel.
+2. **Reklám az iOS-en — és a mért AdMob-korlát (2026-09-22).** Az `Info.plist`-ben a
+   **Google teszt** App ID van (`ca-app-pub-3940256099942544~1458002511`), és az
+   `ad_unit_plan.dart` iOS-en üres azonosító esetén a **Google hivatalos
+   teszt-egységeire** esik vissza — ezért **a reklám megjelenik** (teszt-reklámként)
+   AdMob-regisztráció nélkül is. Az **AdMob konzol Kezdőlapja** (mérve) viszont
+   megmondja a valódi korlátot: *„**Az alkalmazásboltra mutató link** — A hirdetések
+   megjelenítése előtt az alkalmazásokat **jóvá kell hagyni**. Kapcsolja össze egy
+   alkalmazásbolttal, hogy felülvizsgálatot kérjen."* A fiók-ellenőrző lista **3/4**-en
+   áll (Fizetések ✅, Hirdetési egységek ✅; az alkalmazás–applikáció-áruház kapcsolat
+   hiányzik). Vagyis az iOS **valódi** reklámbevétele **kettős kapu** mögött van:
+   (1) az app legyen fent az App Store-ban (→ $99 tagság), (2) az AdMob hagyja jóvá a
+   store-linket. **Ezért most a teszt-egységek a helyesek:** a valódi iOS egységek
+   bevezetése csak az App Store-os megjelenés után van értelme — addig a valódi
+   egységek **egyáltalán nem** szolgálnának ki hirdetést, ami **rosszabb** a
+   teszt-reklámnál.
 3. **Push (FCM):** APNs kulcs a Firebase-ben + `aps-environment` entitlement.
    Az entitlement csak akkor kerülhet a projektbe, ha az App ID-nál a Push
    capability **be van kapcsolva** — különben az aláírás elhasal.
@@ -349,11 +415,24 @@ a **nyilvános** megjelenést:
 | `group ... not found` | hiányzik a `ios_firebase` / `appstore_credentials` env-csoport |
 | `Could not find a version of Xcode` | a `codemagic.yaml`-ban állítsd `xcode: latest`-re (vagy érvényes verzióra) |
 | a zene nem szól háttérben | `UIBackgroundModes: audio` az Info.plist-ben (kész) **és** helyes `AVAudioSession` kategória |
+| `[FirebaseCore][I-COR000008] The project's Bundle ID is inconsistent` | a Sideloadly ingyenes fióknál **utótagot** tesz a bundle ID-ra (`hu.hungarianhardstyle.app.JQPJ793V65`), a plist viszont `hu.hungarianhardstyle.app`-t ír. **Ártalmatlan**: a Firebase az app **ID-t** a plistből veszi (ezért megy az App Check is), és a naplóban mért módon minden szolgáltatás elindul. TestFlightnél (azonos bundle ID) meg sem jelenik |
+| `AppCheck failed … exchangeDeviceCheckToken` | a build **éles** attestationt próbál a debug helyett → hiányzik a `--dart-define=HUHS_APP_CHECK_DEBUG_IOS=true` (a CI-ben benne van), vagy a debug token nincs regisztrálva a Console-ban |
+| a Google-bejelentkezés elhasal iOS-en | elég a becsatolt `GoogleService-Info.plist` (`CLIENT_ID`) **és** a `REVERSED_CLIENT_ID` URL-séma: a `google_sign_in_ios` 5.9.0 a **plistből** olvassa a kliens-azonosítót, ezért külön `GIDClientID` **nem kell**. Ellenőrzés: `node tools/attach-ios-firebase.mjs --check` |
+| az AdMob konzol **Alkalmazások / Hirdetési egységek** oldala üresen renderel | a héj (Angular) **és a Kezdőlap** renderel, az `Alkalmazások` útvonal viszont nem — mérve: **nincs JS-hiba, nincs bukott kérés, nincs szolgáltató-munkás, nincs cache**. Az oldalsáv `Alkalmazások` pontja ráadásul **almennüt nyit** (`>` chevron), nem navigál. Az egység-azonosítókat ezért a **tulajdonos böngészőjében** kell lekérni (ott rendben megjelenik) |
 
 ---
 
 ## 7. ŐSZINTE KORLÁTOK
 
+- **A TELEPÍTETT BUILD MŰKÖDIK A KÉSZÜLÉKEN (2026-09-22, mérve):** a legfrissebb
+  CI-artefakt (`772ae708` futása) **frissítésként** felment egy iPhone SE (2. gen),
+  iOS 26.7 készülékre, és a `pymobiledevice3 developer dvt launch` + `screenshot`
+  szerint az app elindul és **tartalmat tölt**: főoldal, „Legfrissebb hírek" kártya,
+  profilkép, a rádiósáv (`REAL HARDSTYLE FM / Élő adás`) és az alsó öt lap. A Firebase
+  inicializálódik (FCM 11.15.0), és **App Check hiba nincs**. Ez az első **mért**
+  bizonyíték arra, hogy az iOS-build a készüléken nem csak lefordul, hanem
+  **használható**. (Amit ez nem bizonyít: a képernyőnkénti viselkedést — lásd a
+  korlátokat.)
 - **A CI MÁR FUTOTT, ÉS ZÖLD (2026-09-22, mérve):** a GitHub Actions **2. futása**
   (`af47542a`) **12m4s alatt sikeres** lett — `flutter analyze`, az
   **iOS-fordítás** és a teljes tesztkészlet is:
@@ -378,3 +457,12 @@ a **nyilvános** megjelenést:
   (`The sandbox is not in sync with the Podfile.lock`). **Ez a hiba nem
   feltételezésből, hanem az első CI-futás naplójából derült ki** — pontosan ezért
   épült a pipeline.
+- **AMI A KÉSZÜLÉKEN MÉG NINCS MEGMÉRVE (őszintén):** a képernyőnkénti viselkedés —
+  a **billentyűzet-elrejtő gomb** a chatokban, a privát üzenetek, a **DJ-adatlap
+  átvétele/szerkesztése**, a **közösségi profilok** és a **ranglista** betöltése —,
+  továbbá a **háttér-hanglejátszás zárképernyőn** (az `audio_service` iOS-en az
+  `AVAudioSession`-t használja, ami más, mint az Android zenei fókusz-kezelése), a
+  **Face ID**, a **Google-bejelentkezés** és a **reklámok** (iOS-en egyelőre a Google
+  **teszt** egységei mennek, mert az AdMob iOS app még nincs regisztrálva). Ezek
+  **koppintást** igényelnek a készüléken — a `pymobiledevice3` indítani, naplózni és
+  képernyőképet készíteni tud, **koppintani nem**.
