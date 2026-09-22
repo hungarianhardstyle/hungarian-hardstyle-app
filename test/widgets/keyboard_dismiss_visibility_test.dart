@@ -5,35 +5,42 @@ import 'package:hungarian_hardstyle_app/widgets/keyboard_dismiss_button.dart';
 
 /// **A billentyűzet-elrejtő gomb LÁTHATÓSÁGA — valódi widget-teszt.**
 ///
-/// MIÉRT KELL (a tulajdonos jelzése, 2026-09-22, iPhone): *„billentyűzet-elrejtő
-/// gomb a chatben és a privát üzeneteknél — **nincs**"*, majd a második körben:
-/// *„billentyűzet-elrejtő, na az nincs most se, nyitva, nézd meg"*.
+/// A tulajdonos két jelzése (2026-09-22, iPhone):
+///  * *„billentyűzet-elrejtő gomb a chatben és a privát üzeneteknél — **nincs**"*;
+///  * *„most sem látszik, de ha elkezdem görgetni a chatet eltűnik"*.
 ///
-/// ⚠️ **A LEGFONTOSABB TANULSÁG EBBEN A FÁJLBAN:** az első változat **egyetlen**
-/// Scaffolddal mérte a láthatóságot, ezért **zöld** volt — miközben az éles appban
-/// a gomb **soha** nem jelent meg. Az app képernyői ugyanis **egymásba ágyazott**
-/// Scaffoldokban élnek (`main_navigation.dart` külső Scaffold → a Chat belső
-/// Scaffoldja), és a külső Scaffold a saját `body`-jából **lenullázza** a
-/// `MediaQuery.viewInsets`-t (`resizeToAvoidBottomInset` viselkedése). A belső
-/// képernyőn ezért a `MediaQuery.viewInsetsOf(context).bottom` **mindig 0**.
+/// ## ⚠️ KÉT HAMIS POZITÍV TANULSÁGA EBBEN A FÁJLBAN
 ///
-/// Ezért ez a teszt **beágyazott** Scaffolddal méri azt az esetet, ami élesben
-/// elhasalt — és a nyers `tester.view.viewInsets`-szel állítja be a billentyűzetet
-/// (a `View.of(context)` ugyanazt olvassa, amit a platform ad).
+/// **1.** Az első változat **egyetlen** Scaffolddal mért, ezért **zöld** volt —
+/// miközben az éles appban a gomb soha nem jelent meg. Az app képernyői ugyanis
+/// **egymásba ágyazott** Scaffoldokban élnek, és a külső Scaffold a `body`-jából
+/// lenullázza a `MediaQuery.viewInsets`-t. Ezért itt **beágyazott** Scaffolddal
+/// mérünk.
+///
+/// **2.** A második változat a `View.of(context)`-et olvasta, de **csak az első
+/// felépítéskor** mérte (a billentyűzetet a `pumpWidget` ELŐTT állítottuk be) —
+/// így megint zöld lett, pedig a `View.of` **nem értesíti** a contextet, ezért a
+/// gomb a **bezrt állapotban ragadt**. Ezért van itt **dinamikus** eset is: a
+/// billentyűzetet a widget felépítése **UTÁN** nyitjuk ki.
 void main() {
   const keyboardHeight = 320.0;
 
   /// ⚠️ A valódi platform-inset állítása (nem `MediaQuery` injektálás): pontosan
   /// ezt olvassa a widget is.
-  void setKeyboard(WidgetTester tester, double bottomInset) {
+  void initKeyboard(WidgetTester tester, double bottomInset) {
     tester.view.viewInsets = FakeViewPadding(bottom: bottomInset);
     addTearDown(tester.view.reset);
   }
 
-  Widget host({
-    required Widget child,
-    required bool nestedScaffold,
-  }) {
+  void openKeyboard(WidgetTester tester) {
+    tester.view.viewInsets = const FakeViewPadding(bottom: keyboardHeight);
+  }
+
+  void closeKeyboard(WidgetTester tester) {
+    tester.view.viewInsets = FakeViewPadding.zero;
+  }
+
+  Widget host({required bool nestedScaffold}) {
     final inner = Scaffold(
       appBar: AppBar(
         title: const Text('Chat'),
@@ -54,33 +61,61 @@ void main() {
   }
 
   testWidgets('zárt billentyűzetnél NEM foglal helyet', (tester) async {
-    setKeyboard(tester, 0);
-    await tester.pumpWidget(host(nestedScaffold: true, child: const SizedBox()));
+    initKeyboard(tester, 0);
+    await tester.pumpWidget(host(nestedScaffold: true));
     expect(find.byIcon(Icons.keyboard_hide_rounded), findsNothing);
   });
 
   testWidgets('nyitott billentyűzetnél látszik (egyszerű Scaffold)', (tester) async {
-    setKeyboard(tester, keyboardHeight);
-    await tester.pumpWidget(host(nestedScaffold: false, child: const SizedBox()));
+    initKeyboard(tester, keyboardHeight);
+    await tester.pumpWidget(host(nestedScaffold: false));
     expect(find.byIcon(Icons.keyboard_hide_rounded), findsOneWidget);
   });
 
-  testWidgets('BEÁGYAZOTT Scaffold mellett is látszik — ez volt az éles hiba',
+  testWidgets('BEÁGYAZOTT Scaffold mellett is látszik — az 1. hiba őre',
       (tester) async {
-    setKeyboard(tester, keyboardHeight);
-    await tester.pumpWidget(host(nestedScaffold: true, child: const SizedBox()));
+    initKeyboard(tester, keyboardHeight);
+    await tester.pumpWidget(host(nestedScaffold: true));
     expect(
       find.byIcon(Icons.keyboard_hide_rounded),
       findsOneWidget,
       reason: 'a külső Scaffold lenullázza a belső MediaQuery viewInsets-ét, '
-          'ezért a NYERS platform-értéket kell olvasni — enélkül a gomb soha '
-          'nem jelenik meg az éles appban',
+          'ezért a NYERS platform-értéket kell olvasni',
     );
+  });
+
+  testWidgets('a billentyűzet KINYÍLÁSAKOR jelenik meg — a 2. hiba őre',
+      (tester) async {
+    // Így indul: nincs billentyűzet.
+    initKeyboard(tester, 0);
+    await tester.pumpWidget(host(nestedScaffold: true));
+    expect(find.byIcon(Icons.keyboard_hide_rounded), findsNothing);
+
+    // A felhasználó a szövegmezőbe koppint: a billentyűzet kinyílik.
+    openKeyboard(tester);
+    await tester.pump();
+
+    expect(
+      find.byIcon(Icons.keyboard_hide_rounded),
+      findsOneWidget,
+      reason: 'a View.of(context) NEM értesíti a widgetet a változásról — ezért '
+          'kell a metrika-figyelő, különben a gomb a zárt állapotban ragad',
+    );
+  });
+
+  testWidgets('a billentyűzet BEZÁRÁSAKOR eltűnik', (tester) async {
+    initKeyboard(tester, keyboardHeight);
+    await tester.pumpWidget(host(nestedScaffold: true));
+    expect(find.byIcon(Icons.keyboard_hide_rounded), findsOneWidget);
+
+    closeKeyboard(tester);
+    await tester.pump();
+    expect(find.byIcon(Icons.keyboard_hide_rounded), findsNothing);
   });
 
   testWidgets('a gomb elengedi a fókuszt (ez zárja be a billentyűzetet)',
       (tester) async {
-    setKeyboard(tester, keyboardHeight);
+    initKeyboard(tester, keyboardHeight);
     final focusNode = FocusNode();
     addTearDown(focusNode.dispose);
     await tester.pumpWidget(
@@ -106,7 +141,6 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          appBar: null,
           body: Row(children: [KeyboardDismissButton(keyboardVisible: true)]),
         ),
       ),

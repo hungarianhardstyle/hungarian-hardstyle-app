@@ -38,6 +38,14 @@ void main() {
         contains('unfocus()'),
         reason: 'a gombnak el kell engednie a fókuszt',
       );
+      // ⚠️ A MÁSODIK hiba őre: a `View.of(context)` nem értesíti a widgetet a
+      // változásról (a Flutter saját dokumentációja szerint ehhez `MediaQuery`
+      // kell), ezért a metrika-változást KÜLÖN figyeljük — különben a gomb a zárt
+      // állapotban ragad, és akkor sem jelenik meg, amikor a billentyűzet kinyílik.
+      expect(widget, contains('with WidgetsBindingObserver'));
+      expect(widget, contains('WidgetsBinding.instance.addObserver(this)'));
+      expect(widget, contains('WidgetsBinding.instance.removeObserver(this)'));
+      expect(widget, contains('void didChangeMetrics()'));
     });
 
     test('csak nyitott billentyűzetnél foglal helyet', () {
