@@ -38,6 +38,16 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 351,
+    changes: [
+      'Javítva: az értesítéseknél mostantól TÖBB sor is kijelölhető egyszerre — eddig minden koppintás lecserélte az előző kijelölést, ezért csak egyet vagy az összeset lehetett.',
+      'ÚJ: az átvett DJ-adatlapodat te szerkesztheted (név, bemutatkozás, közösségi linkek, képcsere).',
+      'ÚJ: az értesítéseket ki lehet jelölni törléshez — csak azt törlöd, amit akarsz.',
+      'A „Claim" helyett magyar szó: „Adatlap átvétele"; és az adatlapok aljára rendesen le lehet görgetni.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 350,
     changes: [
       'ÚJ: az átvett DJ-adatlapodat mostantól te szerkesztheted az appban — név, valódi név, város, ország, bemutatkozás, közösségi linkek és a kép cseréje. A foglalási e-mail cím és a mûfajok továbbra is a Hungarian Hardstyle kezében maradnak.',

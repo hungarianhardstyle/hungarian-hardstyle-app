@@ -133,16 +133,106 @@ void main() {
     });
   });
 
+  group('⚠️ a kijelölés ÁLLAPOTA — több sor is kijelölhető (éles hiba volt)', () {
+    // A tulajdonos jelzése (2026-09-22): *„a notify kijelölésnél egyszerre csak
+    // egyet lehet kijelölni"*, illetve *„csak egyet vagy az összeset"*. A gyökér
+    // a képernyő kaszkádja volt (`_selected..clear()..addAll(...)`): a `clear()`
+    // előbb futott, ezért a „most kijelölöm?" kérdés már üres halmazon dőlt el,
+    // és az eredmény mindig pontosan egy azonosító lett.
+    // Ezek a tesztek közvetlenül az ÁLLAPOTOT mérik, ezért ezt elkapják.
+    test('két különböző sor kijelölése MEGMARAD egymás mellett', () {
+      final selection = NotificationSelection();
+      selection.toggle('a');
+      expect(selection.ids, {'a'});
+      selection.toggle('b');
+      expect(
+        selection.ids,
+        {'a', 'b'},
+        reason: 'a második kijelölés nem törölheti az elsőt',
+      );
+      expect(selection.count, 2);
+      selection.toggle('c');
+      expect(selection.count, 3);
+    });
+
+    test('ugyanannak a sornak a második koppintása leengedi', () {
+      final selection = NotificationSelection()
+        ..toggle('a')
+        ..toggle('b');
+      selection.toggle('a');
+      expect(selection.ids, {'b'});
+      selection.toggle('b');
+      expect(selection.isEmpty, isTrue);
+    });
+
+    test('az üres azonosító nem jelölhető be (és nem rontja el a többit)', () {
+      final selection = NotificationSelection()..toggle('a');
+      selection.toggle('   ');
+      expect(selection.ids, {'a'});
+    });
+
+    test('összes kijelölése, törlése, és a listából eltűnt sor eldobása', () {
+      final selection = NotificationSelection()..toggle('x');
+      selection.selectAll(['a', 'b', ' ']);
+      expect(selection.ids, {'a', 'b'});
+      selection.retainOnly([notification('b')]);
+      expect(selection.ids, {'b'});
+      selection.clear();
+      expect(selection.isEmpty, isTrue);
+      expect(selection.count, 0);
+    });
+
+    test('a fejléc száma csak a LÁTHATÓ sorokat számolja', () {
+      final selection = NotificationSelection()
+        ..toggle('a')
+        ..toggle('rejtett');
+      final visible = [notification('a'), notification('b')];
+      expect(selection.count, 2, reason: 'az állapot mindkettőt tudja');
+      expect(
+        selection.countWithin(visible),
+        1,
+        reason: 'a fejléc csak azt mutatja, ami a listán is látszik',
+      );
+    });
+
+    test('a kijelölt azonosítók halmaza kívülről nem módosítható', () {
+      final selection = NotificationSelection()..toggle('a');
+      expect(() => selection.ids.add('b'), throwsUnsupportedError);
+    });
+  });
+
   group('FORRÁS-LINT: a képernyő és a szolgáltatás bekötése', () {
     String read(String path) =>
         File(path).readAsStringSync().replaceAll('\r\n', '\n');
 
-    test('a képernyőn van kijelölés mód, és a koppintás JELÖL', () {
+    /// Csak a KÓD: a csupa-komment sorok kimaradnak. A fejléc szándékosan
+    /// **idézi** a hibás mintát (`_selected..clear()..addAll(...)`), ezért a lint
+    /// nem találhatja meg a magyarázatban — ugyanaz a fogás, mint a lejátszó
+    /// `pipe`-tesztjénél.
+    String codeOnly(String source) => source
+        .split('\n')
+        .where((line) => !line.trimLeft().startsWith('//'))
+        .join('\n');
+
+    test('a képernyő a TESZTELT állapotot használja, és nem a kaszkád-csapdát', () {
       final source = read(
         'lib/screens/notifications/notification_center_screen.dart',
       );
       expect(source.contains('bool _selecting = false;'), isTrue);
-      expect(source.contains('final Set<String> _selected'), isTrue);
+      expect(source.contains('final NotificationSelection _selection'), isTrue);
+      expect(source.contains('_selection.toggle('), isTrue);
+      expect(source.contains('_selection.contains('), isTrue);
+      expect(source.contains('_selection.countWithin('), isTrue);
+      expect(source.contains('_selection.selectAll('), isTrue);
+      // ⚠️ A kaszkád-csapda a képernyőn: `..clear()..addAll(...)`. Ez volt az
+      // éles hiba (a `clear()` előbb fut, mint az argumentum kiértékelése),
+      // ezért a képernyőn nem maradhat ilyen minta.
+      expect(
+        codeOnly(source).contains('..clear()'),
+        isFalse,
+        reason: 'a kijelölést az állapot-osztály kezeli, nem a képernyő',
+      );
+      expect(codeOnly(source).contains('_selected'), isFalse);
       expect(
         source.contains('onTap: _selecting'),
         isTrue,
@@ -153,8 +243,6 @@ void main() {
       expect(source.contains('Icons.check_circle_outline'), isTrue);
       expect(source.contains('Icons.delete_outline'), isTrue);
       expect(source.contains('Icons.select_all_rounded'), isTrue);
-      // Fület váltva a kijelölés törlődik (másik lista).
-      expect(source.contains('_selected.clear();\n                        _selecting = false;'), isTrue);
       // A törlés a TISZTA szabályon megy át, nem nyers azonosítókon.
       expect(source.contains('deletableNotificationIds('), isTrue);
       expect(source.contains('deleteIds(ids)'), isTrue);

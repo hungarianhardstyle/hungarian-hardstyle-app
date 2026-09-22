@@ -71,3 +71,69 @@ Set<String> pruneNotificationSelection(
   final live = items.map((item) => item.id.trim()).toSet();
   return selected.where(live.contains).toSet();
 }
+
+/// A kijelölés **állapota** — szándékosan külön osztály, hogy mérhető legyen.
+///
+/// ⚠️ MIÉRT KELL (éles hiba, 2026-09-22, a tulajdonos jelzése: *„a notify
+/// kijelölésnél egyszerre csak egyet lehet kijelölni"*): a képernyő korábban
+/// így írta magát:
+///
+/// ```dart
+/// _selected..clear()..addAll(toggleNotificationSelection(_selected, id, …));
+/// ```
+///
+/// A kaszkád (`..`) **előbb** futtatja a `clear()`-t, és csak utána értékeli ki a
+/// `toggleNotificationSelection` argumentumait — a „most kijelölöm?" kérdés tehát
+/// **már üres halmazon** dőlt el, mindig `true` lett, és az eredmény **pontosan
+/// egy** azonosító volt. Ezért cserélte le minden koppintás az egész kijelölést.
+///
+/// A tiszta szabály (`toggleNotificationSelection`) végig helyes volt — a hiba a
+/// **bekötésben** élt, amit a szabály tesztje nem lát. Ezért az állapot most itt
+/// van, és a „több sor is kijelölhető" tulajdonság **közvetlenül mérhető**.
+class NotificationSelection {
+  final Set<String> _ids = <String>{};
+
+  /// A kijelölt azonosítók (másolat — kívülről nem módosítható).
+  Set<String> get ids => Set<String>.unmodifiable(_ids);
+
+  int get count => _ids.length;
+
+  bool get isEmpty => _ids.isEmpty;
+
+  bool get isNotEmpty => _ids.isNotEmpty;
+
+  bool contains(String id) => _ids.contains(id.trim());
+
+  /// Egy sor kijelölése/leengedése. A **többit nem érinti** — ez a lényeg.
+  void toggle(String id) {
+    // ⚠️ A következő halmazt ELŐBB kell kiszámolni, és csak utána cserélni:
+    // így a `selectedNow` a jelenlegi állapotból dől el.
+    final next = toggleNotificationSelection(
+      _ids,
+      id,
+      selectedNow: !contains(id),
+    );
+    _ids
+      ..clear()
+      ..addAll(next);
+  }
+
+  /// Az összes megadott azonosító kijelölése (a látható fül sorai).
+  void selectAll(Iterable<String> ids) {
+    _ids
+      ..clear()
+      ..addAll(ids.map((id) => id.trim()).where((id) => id.isNotEmpty));
+  }
+
+  void clear() => _ids.clear();
+
+  /// A listából eltűnt sorok eldobása (a stream bármikor szűkíthet).
+  void retainOnly(Iterable<AppNotification> items) {
+    final live = items.map((item) => item.id.trim()).toSet();
+    _ids.removeWhere((id) => !live.contains(id));
+  }
+
+  /// A megadott sorok közül hány van kijelölve (a fejléc számához).
+  int countWithin(Iterable<AppNotification> items) =>
+      items.where((item) => _ids.contains(item.id.trim())).length;
+}

@@ -1,5 +1,19 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 351: az értesítés-kijelölés javítása — „egyszerre csak egyet lehetett kijelölni" (2026-09-22, AAB **351**)
+
+- **A TULAJDONOS JELZÉSE (a 350 élesítése után):** *„baszki, a notify kijelölésnél egyszerre csak egyet lehet kijelölni, jó balfasz döntés volt tesa"*, illetve *„csak egyet vagy az összeset, ez jó hülyeség"*.
+- **A MÉRT GYÖKÉR (a SAJÁT 350-es hibám, kód-szinten):** a képernyő így írta magát:
+  ```dart
+  _selected..clear()..addAll(toggleNotificationSelection(_selected, id, selectedNow: !_selected.contains(id.trim())));
+  ```
+  A **kaszkád** (`..`) előbb futtatja a `clear()`-t, és **csak utána** értékeli ki a `toggleNotificationSelection` argumentumait. Ezért a „most kijelölöm?" kérdés **már üres halmazon** dőlt el → mindig `true` → az eredmény **pontosan egy** azonosító → minden koppintás **lecserélte** az előző kijelölést. Az „összes kijelölése" gomb viszont mindet bejelölte — pontosan a jelzett „egyet vagy az összeset" viselkedés.
+- **⚠️ A TANULSÁG (ez a fontos):** a **tiszta szabály** (`toggleNotificationSelection`) végig **helyes** volt, és a tesztje **zöld** — a hiba a **bekötésben** élt, amit a szabály tesztje nem lát. Ezért az állapot mostantól **külön, tesztelhető osztály**: `NotificationSelection` (`toggle`, `selectAll`, `clear`, `retainOnly`, `countWithin`, `contains`, `ids`) a `lib/services/notification_selection_plan.dart`-ban, a képernyő pedig csak hívja. A „több sor is kijelölhető" tulajdonság így **közvetlenül mérhető**.
+- **A JAVÍTÁS:** a képernyő `final NotificationSelection _selection` mezőt használ (nincs `_selected`, nincs kaszkád); a fejléc száma `_selection.countWithin(items)` (csak a **látható** sorokat számolja, ezért egy eltűnt sor nem hagy hamis darabszámot); az „összes kijelölése" `_selection.selectAll(...)`; fület váltva `_selection.clear()`.
+- **BIZONYÍTÉK:** `flutter analyze lib test` **tiszta**; `flutter test` **703/703** (a kör előtt 685); a `test/services/notification_selection_plan_test.dart` **18/18** — benne **6 új** állapot-teszt (két különböző sor **megmarad egymás mellett**; ugyanaz kétszer leenged; üres azonosító nem jelöl; selectAll/clear/retainOnly; a fejléc csak a láthatót számolja; a halmaz kívülről nem módosítható) és a **forrás-lint**, ami a képernyőn **tiltja a `..clear()` kaszkádot** (a kommenteket kiszűrve, mert a fejléc szándékosan idézi a hibás mintát). **Mutációs bizonyíték:** a `selectedNow: !contains(id)` → `true` visszaállításával **1 teszt elhasalt**, majd a fájl **byte-pontosan** visszaállt (SHA-256 egyezik).
+- **Csomag:** `build/HUHS-v1.0.0+351-release.aab` (versionCode **351**, 80,60 MB, SHA-256 `8E60616B14D46E39E1F1E30D7549B10EBCE22FE667FBF57453B113504AD6BDF9`) — `pubspec.yaml` `1.0.0+351`, changelog-bejegyzés, Play-jegyzet (a rövid blokk a **351 javítását és a 350 újdonságait** írja le, mert a 350 még ellenőrzés alatt volt). **A plugin és a függvények változatlanok** (2.7.0 / telepítve), ezért **nem kell újratölteni semmit**.
+- **⚠️ A PLAY ÁLLAPOTA:** a zárt teszt sávján a **349 van élesben**; a **350 ellenőrzés alatt** volt, ezért a 351 **lecseréli** (a 350-et a Play Console-ban el lehet dobni). `lastPublishedBuild: 349`.
+
 ### 350: DJ-adatlap szerkesztése, értesítés-kijelölés, magyar „Adatlap átvétele", görgetés (2026-09-22, AAB **350** + plugin **2.7.0**)
 
 - **A TULAJDONOS NÉGY KÉRÉSE:** (1) *„Ha az achievement notifyra nyomok, megnyílik a saját adatlap, viszont nem tudok legörgetni az aljára rendesen"*; (2) *„Aki claimelte a dj adatlapját, tudja szerkeszteni is."*; (3) *„a Claim helyett jó lenne valami rendes magyar megfelelő és természetesen javítani mindenhol ahol szerepel ez a szó, adj rá ötleteket"*; (4) *„Notifyt esetleg lehessen kijelölni is törléshez, hogy azt törölhessem amit akarok és még se egyszerre az egészet vagy egyenként lenne úgy."*

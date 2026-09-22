@@ -62,13 +62,18 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
   /// Kijelölés mód (a tulajdonos kérése, 2026-09-22): így **azt** lehet
   /// törölni, amit kijelölsz — nem az egész fület, és nem is egyenként.
+  ///
+  /// ⚠️ Az állapot szándékosan a tesztelt `NotificationSelection` osztályban van:
+  /// a korábbi képernyő-szintű megoldás (`_selected..clear()..addAll(...)`) a
+  /// kaszkád miatt **mindig csak egy** azonosítót tartott meg — éles hiba volt
+  /// („egyszerre csak egyet lehet kijelölni").
   bool _selecting = false;
-  final Set<String> _selected = <String>{};
+  final NotificationSelection _selection = NotificationSelection();
 
   Future<void> _deleteSelected(List<AppNotification> items) async {
     final ids = deletableNotificationIds(
       items: items,
-      selected: _selected,
+      selected: _selection.ids,
       uid: FirebaseAuth.instance.currentUser?.uid,
     );
     if (ids.isEmpty) return;
@@ -76,7 +81,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       final removed = await NotificationService().deleteIds(ids);
       if (!mounted) return;
       setState(() {
-        _selected.clear();
+        _selection.clear();
         _selecting = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -91,17 +96,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
   }
 
   void _toggleSelection(String id) {
-    setState(() {
-      _selected
-        ..clear()
-        ..addAll(
-          toggleNotificationSelection(
-            _selected,
-            id,
-            selectedNow: !_selected.contains(id.trim()),
-          ),
-        );
-    });
+    setState(() => _selection.toggle(id));
   }
 
   Future<void> _handleAction(
@@ -375,7 +370,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                           // Kijelölés közben a fejléc megmondja, hány sor van
                           // kijelölve — így nem kell a listát számolgatni.
                           _selecting
-                              ? notificationSelectionLabel(_selected.length)
+                              ? notificationSelectionLabel(
+                                  _selection.countWithin(items),
+                                )
                               : 'Értesítések',
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
@@ -386,20 +383,18 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                           tooltip: 'Összes kijelölése ezen a fülön',
                           onPressed: items.isEmpty
                               ? null
-                              : () => setState(() {
-                                  _selected
-                                    ..clear()
-                                    ..addAll(
-                                      items.map((item) => item.id.trim()),
-                                    );
-                                }),
+                              : () => setState(
+                                  () => _selection.selectAll(
+                                    items.map((item) => item.id),
+                                  ),
+                                ),
                           icon: const Icon(Icons.select_all_rounded, size: 20),
                         ),
                         const SizedBox(width: 6),
                         IconButton(
                           style: actionStyle,
                           tooltip: 'Kijelöltek törlése',
-                          onPressed: _selected.isEmpty
+                          onPressed: _selection.countWithin(items) == 0
                               ? null
                               : () => unawaited(_deleteSelected(items)),
                           icon: const Icon(Icons.delete_outline, size: 20),
@@ -409,7 +404,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                           style: actionStyle,
                           tooltip: 'Kijelölés kikapcsolása',
                           onPressed: () => setState(() {
-                            _selected.clear();
+                            _selection.clear();
                             _selecting = false;
                           }),
                           icon: const Icon(Icons.close_rounded, size: 20),
@@ -422,7 +417,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                               ? null
                               : () => setState(() {
                                   _selecting = true;
-                                  _selected.clear();
+                                  _selection.clear();
                                 }),
                           icon: const Icon(
                             Icons.check_circle_outline,
@@ -501,7 +496,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                         _showArchived = selection.first;
                         // Fület váltva a kijelölés törlődik: a másik fül más
                         // listát mutat, ott a régi kijelölés félrevezetne.
-                        _selected.clear();
+                        _selection.clear();
                         _selecting = false;
                       });
                     },
@@ -544,10 +539,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                                     : () => unawaited(_open(context, item)),
                                 leading: _selecting
                                     ? Icon(
-                                        _selected.contains(item.id.trim())
+                                        _selection.contains(item.id)
                                             ? Icons.check_box
                                             : Icons.check_box_outline_blank,
-                                        color: _selected.contains(item.id.trim())
+                                        color: _selection.contains(item.id)
                                             ? colors.primary
                                             : colors.onSurfaceVariant,
                                       )

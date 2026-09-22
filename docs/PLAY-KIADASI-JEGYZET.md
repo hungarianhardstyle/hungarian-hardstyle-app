@@ -1,8 +1,10 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 350 megy fel** (versionCode **350**, `1.0.0`). A zárt teszt sávján
+> **Most a 351 megy fel** (versionCode **351**, `1.0.0`). A zárt teszt sávján
 > **mérve a 349 van élesben** (`node tools/check-play-track.mjs`, 2026-09-22: alpha = completed,
-> „349 (1.0.0)"), ezért a rövid (1.) blokk **már csak a 350 újdonságait** írja le.
+> „349 (1.0.0)"), és a **350 még ellenőrzés alatt** volt, amikor ez a javítás elkészült — ezért a
+> rövid (1.) blokk a **351 javítását és a 350 újdonságait** együtt írja le (ha a 350 közben
+> kimegy, akkor is jó, csak ismétlődik benne valami).
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -10,11 +12,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 350
+currentBuild: 351
 currentVersion: 1.0.0
 lastPublishedBuild: 349
-aab: build/HUHS-v1.0.0+350-release.aab
-sha256: 0CA04B764B825EAD4ED0EB08913377A3F1246B8616F79D3F7D62B40B3F90D215
+aab: build/HUHS-v1.0.0+351-release.aab
+sha256: 8E60616B14D46E39E1F1E30D7549B10EBCE22FE667FBF57453B113504AD6BDF9
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -33,7 +35,7 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-22, a legfrissebb mér�
 - **A production sáv viszont üres:** a termékkör megnyitása a Play zárt teszt követelményéhez kötött (személyes fejlesztői fióknál legalább **12 tesztelő / 14 nap** folyamatos zárt teszt), ezért az „élesítés" **nem** egy újabb AAB feltöltése, hanem a production access megnyitása + kiadás a meglévő bundle-ből.
 - **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 350 automatikusan felváltja a 349-et; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
 - A feltöltött AAB-ek a Playen (a 2026-09-22-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 342, 345, 346, 347, 348, **349**.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**349**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 349 volt — ezért az **1. pont** blokkja már csak a **350** újdonságait írja le. A **production** kiadáshoz a **hosszabb, 329–350 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**349**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 349 volt — ezért az **1. pont** blokkja már csak a **350/351** újdonságait írja le. A **production** kiadáshoz a **hosszabb, 329–351 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
 
@@ -68,29 +70,29 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+350-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+351-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **350** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 80.58 MB |
-| SHA-256 | C32D602A7159782321EF02A135D2974E9E6163FA01514654278967B9E0AA6B56 |
+| Verziókód | **351** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 80.60 MB |
+| SHA-256 | 8E60616B14D46E39E1F1E30D7549B10EBCE22FE667FBF57453B113504AD6BDF9 |
 
-**Miért a 350-et kell feltenni:** a **349 már élesben van** a zárt teszt sávján (mérve,
-completed), és a 350 négy újdonságot hoz: az **átvett DJ-adatlap szerkesztése** az appban
-(név, valódi név, város, ország, bemutatkozás, közösségi linkek, képcsere), az
-**értesítések kijelölése törléshez**, a **„Claim" helyett magyar szó** („Adatlap átvétele"),
-és a **görgetés javítása** az adatlapok alján. **Ugyanaz a verziókód nem tölthető fel újra**,
-ezért minden javítás új verziókódot kap. A 350-ben **minden** eddigi funkció is benne van.
-**A 349-et ez váltja.**
+**Miért a 351-et kell feltenni:** a 350-ben az **értesítés-kijelölés nem működött jól** — a
+tulajdonos jelzése: *„a notify kijelölésnél egyszerre csak egyet lehet kijelölni"*, illetve
+*„csak egyet vagy az összeset"*. A gyökér a képernyő állapotkezelése volt
+(`_selected..clear()..addAll(...)` — a `clear()` előbb fut, ezért minden koppintás **egy** elemet
+hagyott), nem a kijelölés szabálya. A 351 ezt javítja, és az állapot **tesztelt osztályba** került
+(`NotificationSelection`). A 351-ben a **350 minden újdonsága is benne van** (adatlap-szerkesztés,
+kijelölés, magyar „Adatlap átvétele", görgetés). **Ugyanaz a verziókód nem tölthető fel újra**,
+ezért minden javítás új verziókódot kap.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 350 mindegyiket tartalmazza, és kisebb
-> verziókódú csomagot a Play amúgy sem fogadna el.
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 351 mindegyiket tartalmazza, és kisebb
+> verziókódú csomagot a Play amúgy sem fogadna el. Ha a **350 még ellenőrzés alatt** van, azt
+> **eldobhatod**: a 351 ugyanaz, plusz a javítás.
 
-**A plugin ehhez 2.7.0** (`build/huhs-mobile-api-2.7.0.zip`) — **ezt fel kell tölteni**, mert
-ebben van az új `dj-profile` írás-végpont (a DJ-adatlap szerkesztése) **és** a gyorsítótár
-javítása: a 2.6.0-ban a `/artists/<id>/claim-emails` (privát cím) bekerülhetett a nyilvános
-válasz-gyorsítótárba. A **szerveroldali függvények is telepítve vannak**
-(`firebase deploy --only functions`), ezért a `free_link` javítás és az új
-`updateClaimedArtistProfile` callable már él.
+**A plugin ehhez 2.7.0** (`build/huhs-mobile-api-2.7.0.zip`) — **ez már fent van** (élőben
+igazolva: `apiVersion = 2.7.0`, a privát végpontok védettek), ezért **nem kell újra feltölteni**.
+A **szerveroldali függvények is telepítve vannak** (`firebase deploy --only functions`), ezért a
+`free_link` javítás és az új `updateClaimedArtistProfile` callable már él.
 
 ## 1. Play Console — RÖVID (ezt másold be)
 
@@ -102,13 +104,13 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
+- Javítva: az értesítéseknél mostantól TÖBB sor is kijelölhető egyszerre (eddig csak egy).
 - ÚJ: az átvett DJ-adatlapodat te szerkesztheted (név, bemutatkozás, linkek, kép).
 - ÚJ: az értesítéseket ki lehet jelölni törléshez — csak azt törlöd, amit akarsz.
-- A „Claim" helyett magyar szó: „Adatlap átvétele".
-- Javítva: az adatlapok aljára rendesen le lehet görgetni.
+- „Adatlap átvétele" a „Claim" helyett; az adatlapok aljára rendesen le lehet görgetni.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–350 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–351 összesítő)
 
 **Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
 felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
@@ -124,14 +126,14 @@ felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapj�
 - Javítva: reklámos letöltés, tabletes kiadvány, villogó listák, görgetés.
 ```
 
-## 1c. Play Console — CSAK a 350-hez, bővebben (tartalék)
+## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
-megjeleníteni. **Ez is csak a 350-et írja le** (a 349 már élesben van a zárt teszt sávján).
+megjeleníteni. **Ez a 351 javítását és a 350 újdonságait is leírja.**
 
 ```play-notes
+- Javítva: az értesítéseknél mostantól több sor is kijelölhető egyszerre — eddig minden koppintás lecserélte az előzőt.
 - ÚJ: az átvett DJ-adatlapodat te szerkesztheted az appban — név, valódi név, város, ország, bemutatkozás, közösségi linkek és a kép cseréje.
-- ÚJ: az értesítéseket ki lehet jelölni törléshez, így csak azt törlöd, amit akarsz — nem az egészet és nem is egyenként.
 - A „Claim" helyett mindenhol magyar szó áll: „Adatlap átvétele", „Átvétel visszavonása".
 - Javítva: az adatlapok (saját profil, hír, esemény, DJ, szervező) aljára rendesen le lehet görgetni.
 ```
@@ -151,6 +153,10 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 351 — az értesítés-kijelölés javítása (több sor egyszerre)
+- **Javítva:** az **értesítéseknél mostantól több sor is kijelölhető egyszerre**. Eddig minden koppintás **lecserélte** az előző kijelölést — ezért csak egyet lehetett kijelölni, vagy az „összes kijelölése" gombbal mindet. A gyökér a képernyő állapotkezelése volt (a `clear()` előbb futott, mint a váltás kiszámítása), nem a kijelölés szabálya; az állapot mostantól **tesztelt osztályban** él.
+- A 351 a **350 minden újdonságát** is tartalmazza (lásd a következő bejegyzést).
 
 ### 350 — a DJ-adatlap szerkesztése, értesítés-kijelölés, magyar „Adatlap átvétele"
 - **ÚJ:** az **átvett DJ-adatlapodat te szerkesztheted** az appban: név, valódi név, város, ország, bemutatkozás, közösségi linkek, valamint a **profil- és borítókép cseréje**. Amit **nem** tudsz átírni (szándékosan): a foglalási e-mail cím, a privát címed, a mûfajok és a ház döntései (láthatóság, kiemelés) — a képernyő ezt meg is mondja.
@@ -441,7 +447,7 @@ SHA-256 `352223459F8DC5318321303B8BF835623AE8856465F15412E03D5002F744F2E9`).
 
 1. `node tools/check-play-notes.mjs` — a Play-blokkok hossza és a build-lefedettség.
 2. `flutter test test/data/app_changelog_test.dart` — az app changelogja egyezik a `pubspec.yaml`-lel.
-3. Az AAB verziókódja a merge-elt manifestből: **350** (versionName `1.0.0`, a production AdMob App ID bent, a teszt App ID nincs).
+3. Az AAB verziókódja a merge-elt manifestből: **351** (versionName `1.0.0`, a production AdMob App ID bent, a teszt App ID nincs).
 4. `node tools/verify-native-admin-menu.mjs` — a natív admin menüpontjai és a plugin végpontjai egyeznek.
 5. `node tools/verify-achievement-points.mjs` — az achievement-pontok konzisztenciája (ÉLES, csak olvas).
 6. `node tools/verify-achievement-guide.mjs` — az Achievement-útmutató szövege egyezik a kóddal (napi keretek, pontértékek, létező források).
