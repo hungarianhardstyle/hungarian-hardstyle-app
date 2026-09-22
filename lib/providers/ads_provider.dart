@@ -36,6 +36,23 @@ const productionRewardedAdUnitId = String.fromEnvironment(
   defaultValue: _configuredProductionRewardedId,
 );
 
+// Az **iOS** egységazonosítók (a tulajdonos AdMob konzoljából).
+//
+// ⚠️ Amíg ÜRESEK, az iOS a Google **teszt** egységeit használja — ez azért
+// helyes, mert az `Info.plist`-ben jelenleg a Google **teszt**
+// `GADApplicationIdentifier` szerepel (a kettő összeillik). Az iOS **soha** nem
+// esik vissza az Android egységére: azt a `lib/services/ad_unit_plan.dart`
+// tiszta döntése zárja ki.
+//
+// Amint megvannak a valódi iOS egységek, elég ezeket a dart-define-okat
+// megadni — **kód nem változik**:
+//   --dart-define=HUHS_ADMOB_BANNER_ID_IOS=ca-app-pub-…/…
+//   --dart-define=HUHS_ADMOB_REWARDED_ID_IOS=ca-app-pub-…/…
+// és az Info.plist `GADApplicationIdentifier`-ét az iOS AdMob **app** ID-ra kell
+// állítani.
+const iosBannerAdUnitId = String.fromEnvironment('HUHS_ADMOB_BANNER_ID_IOS');
+const iosRewardedAdUnitId = String.fromEnvironment('HUHS_ADMOB_REWARDED_ID_IOS');
+
 final adsEnabledProvider = Provider<bool>((ref) {
   return useTestAds ||
       (productionAdMobAppId.isNotEmpty && productionBannerAdUnitId.isNotEmpty);

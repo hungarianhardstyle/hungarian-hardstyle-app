@@ -4,9 +4,11 @@ import 'dart:convert';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../providers/ads_provider.dart';
+import 'ad_unit_plan.dart';
 import '../core/firebase/firebase_callable.dart';
 
 class LabelPurchaseService with WidgetsBindingObserver {
@@ -359,9 +361,14 @@ class LabelPurchaseService with WidgetsBindingObserver {
     if (user == null || user.isAnonymous) {
       throw StateError('A reklámos feloldáshoz be kell jelentkezni.');
     }
-    final unitId = useTestAds
-        ? 'ca-app-pub-3940256099942544/5224354917'
-        : productionRewardedAdUnitId;
+    // Ugyanaz a tiszta platform-döntés, mint a reklámcsíknál: Androidon a régi
+    // érték, iOS-en a saját (vagy a Google teszt) egység.
+    final unitId = resolveRewardedAdUnitId(
+      platform: defaultTargetPlatform,
+      testAds: useTestAds,
+      androidId: productionRewardedAdUnitId,
+      iosId: iosRewardedAdUnitId,
+    );
     if (unitId.isEmpty) {
       throw StateError('A jutalmazott reklám azonosítója nincs beállítva.');
     }

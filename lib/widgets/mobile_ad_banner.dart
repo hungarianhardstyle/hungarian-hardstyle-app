@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 
 import '../providers/ads_provider.dart';
+import '../services/ad_unit_plan.dart';
 
 class MobileAdBanner extends ConsumerStatefulWidget {
   const MobileAdBanner({super.key});
@@ -93,9 +95,16 @@ class _MobileAdBannerState extends ConsumerState<MobileAdBanner>
       return;
     }
     final ad = BannerAd(
-      adUnitId: useTestAds
-          ? 'ca-app-pub-3940256099942544/6300978111'
-          : productionBannerAdUnitId,
+      // A platform-döntés a tiszta `ad_unit_plan.dart`-ban van: az **Android**
+      // ág ott bitre a régi viselkedést adja (a `productionBannerAdUnitId`-t),
+      // az iOS pedig a saját egységét, vagy — ha az még nincs — a Google
+      // **teszt** egységét, soha nem az Androidét.
+      adUnitId: resolveBannerAdUnitId(
+        platform: defaultTargetPlatform,
+        testAds: useTestAds,
+        androidId: productionBannerAdUnitId,
+        iosId: iosBannerAdUnitId,
+      ),
       size: size,
       request: const AdRequest(),
       listener: BannerAdListener(
