@@ -29,6 +29,7 @@ import '../../services/referral_link_service.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../../widgets/achievement_badge_card.dart';
 import '../../widgets/community_profile_form_fields.dart';
+import '../../widgets/chat_emoji_button.dart';
 import '../../widgets/keyboard_dismiss_button.dart';
 import '../../widgets/profile_content_card.dart';
 import '../more/favorites_screen.dart';
@@ -1338,6 +1339,10 @@ class _Composer extends StatelessWidget {
                   onPressed: onPickGallery,
                   icon: const Icon(Icons.photo_library_outlined),
                 ),
+                // ⚠️ iOS-en a rendszerbillentyűzeten NINCS emoji-kulcs (Androidon
+                // van), ezért itt kap egy gombot — Androidon ez a widget semmit
+                // nem rajzol (lásd `chat_emoji_button.dart`).
+                ChatEmojiButton(controller: controller, focusNode: focusNode),
                 // ⚠️ A fejléc gombja MESSZE van attól, ahova írás közben nézünk
                 // (a tulajdonos jelzése szerint „nincs" — pedig ott volt).
                 // Ezért ugyanaz a widget itt is ott van, közvetlenül a Küldés
