@@ -26,10 +26,12 @@ void main() {
 
     test('van EGY közös widget, és a billentyűzet állapotára figyel', () {
       expect(widget, contains('class KeyboardDismissButton'));
+      // ⚠️ A NYERS platform-érték: a MediaQuery-t a külső Scaffold lenullázza,
+      // ezért azzal a gomb soha nem jelent meg (mérve, 2026-09-22).
       expect(
         widget,
-        contains('MediaQuery.viewInsetsOf(context).bottom > 0'),
-        reason: 'ettől a függőségtől épül újra, amikor a billentyűzet mozog',
+        contains('View.of(context).viewInsets.bottom > 0'),
+        reason: 'a nyers platform-értéktől függ, nem a Scaffold által szűrttől',
       );
       expect(
         widget,
@@ -41,7 +43,7 @@ void main() {
     test('csak nyitott billentyűzetnél foglal helyet', () {
       expect(
         widget,
-        contains('if (!keyboardVisible) return const SizedBox.shrink();'),
+        contains('if (!visible) return const SizedBox.shrink();'),
         reason: 'zárt billentyűzetnél nem lehet látható/kitöltő elem',
       );
     });
