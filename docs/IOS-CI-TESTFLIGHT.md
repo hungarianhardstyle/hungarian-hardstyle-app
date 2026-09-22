@@ -512,11 +512,28 @@ benne forrás-lint, ami **tiltja** a `missing reward data` 400-as ág visszatér
 telepítve (`Deploy complete!`), a végpont mérve: aláírás nélkül
 `200 "validated"`, `transaction_id`-vel aláírás nélkül `400`.
 
-**⚠️ Nyitott kérdés, amit a következő teszt dönt el:** a Google **teszt**-reklámjai
-küldenek-e egyáltalán SSV-visszahívást. Ha nem, akkor a jutalmazott feloldás
-**teszt-reklámmal nem próbálható** — csak éles reklámmal (azaz az AdMob-jóváhagyás
-után). A mérés módja egyszerű: az URL beállítása után ismételd meg a tesztet, és
-nézd meg, megjelent-e új hívás a `functions:log`-ban.
+**✅ A NYITOTT KÉRDÉS ELDŐLT (mérve, 2026-09-22): a TESZT-reklám NEM küld SSV-t.**
+Az URL beállítása **és** a konzol sikeres érvényesítése után a jutalmazott teszt
+lefutott, a szerver viszont **egyetlen visszahívást sem kapott**:
+
+```
+node tools/check-ssv-state.mjs --hours 6
+  admob_reward_transactions: 29 összesen, ebből a szűrésre 0
+  label_ad_unlocks:          22 összesen, ebből a szűrésre 0
+  => NINCS visszahívás a szűrt időszakban: az AdMob nem hívta a végpontot.
+```
+
+A legfrissebb tranzakció **2026-09-21 22:46** — a mai iOS-tesztekből **egyetlen
+rekord sem** keletkezett. Vagyis a jutalmazott feloldás **teszt-reklámmal nem
+próbálható**: csak éles reklámmal, azaz az AdMob-jóváhagyás után. Ez **nem
+kódhiba** — a Google teszt-kreatívjai egyszerűen nem gyakorolják az SSV-utat.
+
+**Az eszköz erre: `node tools/check-ssv-state.mjs`** (`--hours N`, `--release ID`,
+`--require`, `--self-test` 4/4). Egy paranccsal megmondja, melyik eset áll fenn:
+(a) meg sem érkezett a visszahívás → AdMob-beállítás a hibás, (b) megérkezett, de
+**későn** — a kliens ugyanis csak **20 másodpercig** vár (`waitForAdUnlock`), ezért
+egy lassú SSV mellett a felhasználó hiába nézte meg a reklámot, vagy
+(c) megérkezett és jóváírt → a hiba a kliens oldalán van.
 
 **⚠️ ÉS A MÉLYEBB TANULSÁG (a Google saját ajánlása):** az
 [iOS SSV-dokumentáció](https://developers.google.com/admob/ios/ssv) szerint
