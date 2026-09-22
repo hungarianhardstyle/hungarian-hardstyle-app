@@ -581,6 +581,27 @@ vödör-kulcsa**, valamint a két változat-lista egyezése), `flutter analyze` 
 A függvények telepítve: `grantAdUnlock` **létrehozva**, `admobRewardedSsv`
 frissítve.
 
+#### ✅ ÉLESBEN IGAZOLVA a készüléken (2026-09-22, mérve)
+
+A tulajdonos a friss builddel végigcsinálta a feloldást — *„felmegy a reklámért
+letöltés is"* —, és **mindkét oldal** igazolja:
+
+| Mit mértem | Hogyan | Eredmény |
+|---|---|---|
+| a kliens kérte a jóváírást | `firebase functions:log --only grantAdUnlock` | `{"event":"admob_unlock_client_granted","uid":"WDCijBqR…","releaseId":12123,"variant":"mp3_96"}` (19:37:38) |
+| a jóváírás **le is íródott** | `label_ad_unlocks/WDCijBqR…_12123` | `unlockedAt` + `clientGrantedAt`: **2026-09-22T19:37:37.955Z**, `variants: {mp3_96: true}` |
+| az SSV **nem** igazolta (helyes) | ugyanaz a rekord | `ssvVerifiedAt` **nincs** — a teszt-reklám nem küld visszahívást |
+| a letöltés is lefut | a tulajdonos visszajelzése | ✅ |
+
+**⚠️ KÖZBEN A SAJÁT DIAGNOSZTIKAI ESZKÖZÖM HIBÁJA IS ELŐKERÜLT ÉS JAVÍTVA:**
+a `check-ssv-state.mjs` a `createdAt`-nek adott elsőbbséget, a `label_ad_unlocks`
+rekord viszont **ugyanaz marad, csak frissül** (merge) — a 2026-08-12-i
+`createdAt` mellett a friss `unlockedAt`/`clientGrantedAt` **láthatatlan** volt,
+ezért az eszköz „nincs visszahívás"-t jelentett egy **megtörtént** jóváírásra.
+Mostantól a **legfrissebb** értelmezhető időbélyeg nyer, és a záró sor
+**megkülönbözteti** a két utat (SSV-igazolt vs. `clientGrantedAt`). Az önteszt
+**6/6** — benne a „merge-elt rekord frissnek számít" eset őre.
+
 **⚠️ Ismert korlát (mérve, 2026-09-22):** az AdMob konzol **Alkalmazások**
 mikro-frontendje a CDP-vezérelt Chrome-profilban **nem indul el** (a Kezdőlap
 renderel, az Alkalmazások útvonal nem; nincs JS-hiba és nincs bukott kérés) — ezért

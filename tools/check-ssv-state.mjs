@@ -26,9 +26,37 @@ export function asText(value) {
   return String(value);
 }
 
-/** A rekord idobelyege (tobbfele mezonev, mert a ket gyujtemeny mas). */
+/** A rekord idobelyege: a LEGFRISSEBB ismert idobelyeg-mezo. */
+const STAMP_FIELDS = [
+  'createdAt',
+  'unlockedAt',
+  'clientGrantedAt',
+  'ssvVerifiedAt',
+  'updatedAt',
+];
+
+/**
+ * A rekord LEGFRISSEBB idobelyege.
+ *
+ * ⚠️ MÉRT HIBA (2026-09-22, a saját eszközömé): korábban a `createdAt` élvezett
+ * elsőbbséget. A `label_ad_unlocks` rekord viszont **ugyanaz marad, csak frissül**
+ * (merge) — egy 2026-08-12-i `createdAt` mellett a friss `unlockedAt` /
+ * `clientGrantedAt` így **láthatatlan** volt, és az eszköz „nincs visszahívás"-t
+ * jelentett egy olyan jóváírásra, ami **megtörtént**. Ezért a legfrissebb
+ * értelmezhető időbélyeg nyer, nem az első mező.
+ */
 export function stampOf(doc) {
-  return asText(doc?.createdAt || doc?.unlockedAt || doc?.updatedAt || '');
+  let latest = 0;
+  let text = '';
+  for (const field of STAMP_FIELDS) {
+    const raw = asText(doc?.[field]);
+    const t = Date.parse(raw);
+    if (Number.isFinite(t) && t >= latest) {
+      latest = t;
+      text = raw;
+    }
+  }
+  return text;
 }
 
 /**
@@ -86,7 +114,32 @@ function selfTest() {
   console.log('  onteszt 4 (darabszam korlat):', limit.length === 2 ? 'OK' : `HIBA (${limit.length})`);
   if (limit.length !== 2) throw new Error('a limit rossz');
 
-  console.log('  ONTESZT: 4/4 OK');
+  // ⚠️ AZ ESZKÖZ SAJÁT HIBÁJÁNAK ŐRE (mérve 2026-09-22): a `label_ad_unlocks`
+  // rekord ugyanaz marad, csak FRISSÜL — a létrehozás dátuma örökre régi. A
+  // friss `unlockedAt`/`clientGrantedAt` nélkül az eszköz elavultnak hinné, és
+  // „nincs visszahívás"-t jelentene egy MEGTÖRTÉNT jóváírásra.
+  const merged = [
+    {
+      id: 'e',
+      releaseId: 9,
+      uid: 'u5',
+      createdAt: '2026-08-12T21:40:13Z',
+      unlockedAt: '2026-09-22T19:37:37Z',
+      clientGrantedAt: '2026-09-22T19:37:37Z',
+    },
+  ];
+  const fresh = recentRecords(merged, {
+    hours: 24,
+    now: Date.parse('2026-09-23T00:00:00Z'),
+    limit: 5,
+  });
+  console.log('  onteszt 5 (merge-elt rekord frissnek szamit):', fresh.length === 1 ? 'OK' : `HIBA (${fresh.length})`);
+  if (fresh.length !== 1) throw new Error('a merge-elt rekordot elavultnak hitte');
+  console.log('  onteszt 6 (a legfrissebb idobelyeg nyer):',
+    stampOf(merged[0]) === '2026-09-22T19:37:37Z' ? 'OK' : `HIBA (${stampOf(merged[0])})`);
+  if (stampOf(merged[0]) !== '2026-09-22T19:37:37Z') throw new Error('nem a legfrissebb időbélyeget adta');
+
+  console.log('  ONTESZT: 6/6 OK');
 }
 
 function parseArgs(argv) {
@@ -123,14 +176,22 @@ async function main() {
     console.log('   ', line(d, { variants: JSON.stringify(d.variants || {}) }));
   }
 
-  // A lényeg egy mondatban: érkezett-e MOSTANÁBAN visszahívás?
+  // A lényeg egy mondatban. ⚠️ KÉT KÜLÖN ÚT van, és nem szabad összemosni:
+  // az SSV (AdMob-igazolt) visszahívás és a KLIENS-oldali azonnali jóváírás
+  // (`clientGrantedAt`). A mai felállásban az utóbbi a VÁRT út — a Google
+  // teszt-reklámja ugyanis egyáltalán nem küld visszahívást.
   // ⚠️ Az alap kilépési kód 0 (a LEKÉRDEZÉS sikerült) — a „nincs visszahívás"
   // nem hiba. Aki hibaként akarja kezelni, adja meg a `--require`-ot.
   const hasRecent = txRecent.length > 0;
+  const clientRecent = unRecent.filter((d) => d.clientGrantedAt).length;
+  const ssvRecent = unRecent.filter((d) => d.ssvVerifiedAt).length;
   console.log(
     hasRecent
-      ? '  => ÉRKEZETT visszahívás a szűrt időszakban.'
-      : '  => NINCS visszahívás a szűrt időszakban: az AdMob nem hívta a végpontot.',
+      ? `  => ÉRKEZETT SSV-visszahívás a szűrt időszakban (AdMob-igazolt: ${ssvRecent}).`
+      : clientRecent > 0
+        ? `  => SSV-visszahívás NINCS, de ${clientRecent} KLIENS-oldali jóváírás történt ` +
+          '(clientGrantedAt) — ez a várt út, amíg az AdMob nem küld visszahívást.'
+        : '  => NINCS visszahívás ÉS nincs kliens-oldali jóváírás sem a szűrt időszakban.',
   );
   if (!hasRecent && args.require) {
     console.log('  (--require: ez most hibás kilépési kódot ad)');
