@@ -32,6 +32,11 @@ on:
       - codex/v1.0
     paths:
       - 'ios/**'
+      # ⚠️ A `lib/**` és a `test/**` AZÉRT kell, mert a telefonos teszthez
+      # MINDEN kódváltozásból új IPA kell — enélkül egy Dart-javítás nem
+      # indítana buildet, és nem lenne mit újratelepíteni.
+      - 'lib/**'
+      - 'test/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/ios-unsigned-check.yml'

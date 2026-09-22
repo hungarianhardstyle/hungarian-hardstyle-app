@@ -11,6 +11,7 @@ import '../../core/errors/user_facing_error.dart';
 import '../../core/input/sentence_capitalization_formatter.dart';
 import '../../services/community_service.dart';
 import '../more/community_users_screen.dart';
+import '../../widgets/keyboard_dismiss_button.dart';
 
 const _privateMessageEmojis = [
   '🙂',
@@ -237,7 +238,12 @@ class _PrivateMessageUserSearchScreenState
   Widget build(BuildContext context) {
     final currentUid = _service.auth.currentUser?.uid;
     return Scaffold(
-      appBar: AppBar(title: const Text('Új privát üzenet')),
+      appBar: AppBar(
+        title: const Text('Új privát üzenet'),
+        // iOS-en nincs rendszer-vissza gomb, amivel a billentyűzetet be lehetne
+        // zárni — nyitott billentyűzetnél ez a gomb jelenik meg a fejlécben.
+        actions: const [KeyboardDismissButton()],
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _service.getRegisteredPublicProfiles(),
         builder: (context, snapshot) {
@@ -278,6 +284,8 @@ class _PrivateMessageUserSearchScreenState
               ),
               Expanded(
                 child: ListView.builder(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   itemCount: profiles.length,
                   itemBuilder: (context, index) {
                     final profile = profiles[index];
@@ -733,6 +741,9 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
               future: _partnerProfile,
               builder: (context, profileSnapshot) => ListView.builder(
                 reverse: true,
+                // A lista húzásával is eltűnjön a billentyűzet (iOS-szokás).
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: const EdgeInsets.all(12),
                 itemCount: messages.length,
                 itemBuilder: (context, index) {
@@ -929,6 +940,9 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
           ),
         ),
         actions: [
+          // iOS-en nincs rendszer-vissza gomb a billentyűzethez — nyitott
+          // billentyűzetnél ez jelenik meg a fejlécben.
+          const KeyboardDismissButton(),
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'block') _block();

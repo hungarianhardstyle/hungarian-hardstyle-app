@@ -29,6 +29,7 @@ import '../../services/referral_link_service.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../../widgets/achievement_badge_card.dart';
 import '../../widgets/community_profile_form_fields.dart';
+import '../../widgets/keyboard_dismiss_button.dart';
 import '../../widgets/profile_content_card.dart';
 import '../more/favorites_screen.dart';
 import '../more/community_users_screen.dart';
@@ -1077,7 +1078,12 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Chat'),          actions: [
+          title: const Text('Chat'),
+          actions: [
+            // iOS-en nincs rendszer-vissza gomb, amivel a billentyűzetet be
+            // lehetne zárni — ezért itt van a fejlécben (csak nyitott
+            // billentyűzetnél látszik).
+            const KeyboardDismissButton(),
             IconButton(
               tooltip: 'Privát üzenetek',
               style: IconButton.styleFrom(
@@ -1158,6 +1164,10 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                         onRefresh: _refreshChat,
                         child: ListView.builder(
                           controller: _chatScrollController,
+                          // A lista húzásával is eltűnjön a billentyűzet
+                          // (iOS-en ez a megszokott gesztus).
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                           // A végére kerül a „töltés"/„ez a beszélgetés eleje"
                           // sor, ezért +1.
