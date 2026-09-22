@@ -701,16 +701,20 @@ az `Info.plist`-be került. **A viszonyítási alap** ugyanez az eszköz a javí
 - **AMI A KÉSZÜLÉKEN MÁR MEGMÉRVE (a tulajdonos koppintotta végig, 2026-09-22):**
   a **közösségi profilok** és a **ranglista** betöltenek (az App Check javítása után),
   a **banner** megjelenik (Google teszt-egység), a **megvásárolt zene zárképernyőn is
-  szól**, a **DJ-adatlap** hozzá van rendelve, a **Touch ID** megy, a **jutalmazott
-  feloldás** végig lefut (reklám → azonnali jóváírás → letöltés), a **rádió**
-  teljesen működik, az **emoji-gomb** megjelenik a közösségi chatben (Androidon nem),
-  és a **billentyűzet-elrejtő gomb** látszik a beviteli sávban (lásd lentebb).
-- **AMI MÉG NINCS MEGMÉRVE:** a **Google-bejelentkezés**, továbbá a **valódi iOS
-  reklámbevétel** (az AdMob-jóváhagyásig a teszt-egységek mennek) és a **StoreKit**.
-  **Face ID nem releváns:** a tesztkészülék iPhone SE (2. generáció), azon **Touch ID**
-  van — a biometrikus kapu ezen a készüléken a Touch ID-n keresztül megy.
-  A `pymobiledevice3` indítani, naplózni és képernyőképet készíteni tud, **koppintani
-  nem** — ezért kell a tulajdonos keze a viselkedés igazolásához.
+  szól**, a **DJ-adatlap** hozzá van rendelve, a **Touch ID** megy, a
+  **Google-bejelentkezés** megy (a `google_sign_in_ios` a becsatolt plistből olvassa a
+  kliens-azonosítót), a **jutalmazott feloldás** végig lefut (reklám → azonnali
+  jóváírás → letöltés), a **rádió** teljesen működik (Android-paritás), az
+  **emoji-gomb** megjelenik a közösségi chatben (Androidon nem), és a
+  **billentyűzet-elrejtő gomb** látszik a beviteli sávban (lásd lentebb).
+- **AMI MÉG HÁTRAVAN — és mindegyik pénz vagy jóváhagyás kérdése, nem kód:**
+  a **valódi iOS reklámbevétel** (az AdMob store-link jóváhagyása az App Store-os
+  megjelenést feltételezi; addig szándékosan a teszt-egységek mennek) és a
+  **StoreKit-vásárlások**. **Face ID nem releváns:** a tesztkészülék iPhone SE
+  (2. generáció), azon **Touch ID** van — a biometrikus kapu ezen a készüléken a
+  Touch ID-n keresztül megy. A `pymobiledevice3` indítani, naplózni és képernyőképet
+  készíteni tud, **koppintani nem** — ezért kellett a tulajdonos keze minden
+  viselkedés igazolásához.
 
 ### A billentyűzet-elrejtő gomb — két gyökér, és KÉT hamis pozitív teszt (2026-09-22)
 
