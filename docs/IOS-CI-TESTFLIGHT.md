@@ -151,13 +151,19 @@ Kézzel (Firebase Console → Project settings → Add app → iOS):
 
 ### G) GitHub Actions
 
-Nincs teendő: a workflow a repóban van, és **szándékosan csak kézzel indítható**
-(GitHub → **Actions → „iOS fordítás-ellenőrzés" → Run workflow**). Azért nem indul
-minden pushnál, mert privát repóban a macOS-perc **10× szorzóval** fogy
-(~200 perc/hó), egy futás pedig 15-25 perc — a napi több kiadás mellett ez néhány
-push után kimerítené a keretet, és a valódi kiadásokra nem maradna. Ha van keret,
-a workflow-ban a `push:` blokk **kikommentezve** ott van, csak ki kell venni a
-kommentből.
+Nincs teendő: a workflow a repóban van, és **magától elindul**, ha az `ios/**`, a
+`pubspec.yaml`/`pubspec.lock` vagy maga a workflow fájl változik a `codex/v1.0`
+ágon. Kézzel is indítható: **Actions → „iOS fordítás-ellenőrzés" → Run workflow**.
+
+⚠️ **A kézi gomb csapdája (mérve):** a `workflow_dispatch` gombot a GitHub csak
+akkor mutatja, ha a workflow az **alapértelmezett** branch-en is ott van — ez
+ebben a repóban a **`master`**, nem a `codex/v1.0`. Ezért van mellette `push`
+trigger is: enélkül **semmi** nem indítaná el a workflow-t.
+
+💰 **Ez ingyenes.** A repó **publikus**, és a standard GitHub-hosted runnerek
+publikus repóban **nem fogyasztanak keretet** (a macOS 10× szorzó csak fizetős
+csomagnál számítana). Ha a repó valaha privát lesz, a `push:` triggert vedd ki —
+privátban a macOS-perc tízszeres szorzóval fogy.
 
 ---
 

@@ -13,33 +13,28 @@
 # LÉNYEGE (az iOS-fordítás) előbb fusson, mint a tesztkészlet. Így ha egy teszt
 # platformfüggő okból elhasal macOS-en, az nem rejti el az iOS-eredményt.
 #
-# ⚠️ KÖLTSÉG: privát repóban a macOS-perc tízszeres szorzóval fogy a 2000
-# ingyenes percből, azaz ~200 macOS-perc / hó. Egy futás kb. 15-25 perc. Ezért
-# ez a workflow **csak kézzel indítható** (`workflow_dispatch`) — így nem
-# fogyasztja a keretet minden egyes pushnál, és nem lesz piros a félkész
-# munkafától sem.
+# ⚠️ KÖLTSÉG: a repó **publikus**, ezért a standard GitHub-hosted macOS runner
+# **ingyenes** (a 10× szorzó csak fizetős keretnél számítana). Egy futás kb.
+# 15-25 perc. Ha a repó valaha privát lesz, a push-triggert érdemes kikapcsolni:
+# privátban a macOS-perc tízszeres szorzóval fogy (~200 macOS-perc / hó).
 
 name: iOS fordítás-ellenőrzés
 
 on:
-  # ⚠️ SZÁNDÉKOSAN CSAK KÉZI INDÍTÁS.
-  # Privát repóban a macOS-perc 10× szorzóval fogy (~200 perc/hó), egy futás
-  # pedig 15-25 perc — ha a `lib/**`-ra automatikusan indulna, néhány push után
-  # kimerülne a keret, és a valódi kiadásokra nem maradna. Indítás:
-  # GitHub → Actions → „iOS fordítás-ellenőrzés" → Run workflow.
-  # Ha van elegendő keret, a push-blokk kikommentezésével automatizálható.
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - codex/v1.0
-  #     - main
-  #   paths:
-  #     - 'ios/**'
-  #     - 'lib/**'
-  #     - 'test/**'
-  #     - 'pubspec.yaml'
-  #     - 'pubspec.lock'
-  #     - '.github/workflows/ios-unsigned-check.yml'
+  # ⚠️ MIÉRT KELL A `push` IS (mérve): a `workflow_dispatch` „Run workflow"
+  # gombot a GitHub csak akkor mutatja, ha a workflow az **alapértelmezett**
+  # branch-en is ott van — az pedig ebben a repóban a **`master`**, nem a
+  # `codex/v1.0`. Kézi indítás nélkül tehát semmi nem indítaná el.
+  # A szűrő szándékosan szűk: csak az iOS-releváns fájlokra indul.
+  push:
+    branches:
+      - codex/v1.0
+    paths:
+      - 'ios/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/ios-unsigned-check.yml'
 
 concurrency:
   group: ios-check-${{ github.ref }}
