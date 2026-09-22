@@ -1,0 +1,293 @@
+# Plugin 2.7.0 — a claimelt (átvett) DJ-adatlap szerkesztése + a nyilvános gyorsítótár javítása
+#
+# Ez a fájl a 2.6.0 → 2.7.0 KÜLÖNBSÉG, hogy a plugin változása külön is átnézhető legyen
+# (a plugin forrása nincs git-ben: a `.tmp-api-260/huhs-mobile-api` fában él, és a
+# `tools/build-plugin-zip.mjs` csomagolja ZIP-be).
+#
+### huhs-mobile-api.php
+diff --git a/huhs-mobile-api.php b/huhs-mobile-api.php
+--- a/huhs-mobile-api.php
++++ b/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.6.0
++ * Version: 2.7.0
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.6.0');
++define('HUHS_API_VERSION', '2.7.0');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+### includes/api-artists.php
+warning: in the working copy of 'C:\Users\deero\AppData\Local\Temp\huhs-260-pristine\huhs-mobile-api\includes\api-artists.php', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'C:\Users\deero\hungarian_hardstyle_app\.tmp-api-260\huhs-mobile-api\includes\api-artists.php', LF will be replaced by CRLF the next time Git touches it
+diff --git a/includes/api-artists.php b/includes/api-artists.php
+--- a/includes/api-artists.php
++++ b/includes/api-artists.php
+@@ -79,6 +79,216 @@ function huhs_register_artists_api()
+             return current_user_can('manage_options');
+         },
+     ));
++
++    // ⚠️ A CLAIMELT (átvett) DJ-adatlap szerkesztése.
++    //
++    // MIÉRT KÜLÖN ÚTVONAL (`/dj-profile/...`) ÉS NEM `/artists/...`:
++    //  1. a nyilvános gyorsítótár engedélylistája **előtagra** illeszkedik
++    //     (`huhs_public_cache_route()`), ezért minden `/artists/...` alatti út
++    //     cache-elhetőnek látszott — egy írás-végpontnak ott nincs helye;
++    //  2. a `POST` szándékos: a gyorsítótár csak `GET`/`HEAD` választ tárol.
++    //
++    // A JOGOSULTSÁG: a végpontot a **HUHS szervere** hívja a WordPress
++    // admin-alkalmazásjelszavával, ezért itt `manage_options` a kapu — azt, hogy
++    // a hívó **magáé az adatlap**, a szerver oldalán a `artist_claims` gyűjtemény
++    // dönti el (a Firebase-függvény ellenőrzi, mielőtt ide hív).
++    register_rest_route('huhs/v1', '/dj-profile/(?P<id>\d+)', array(
++        'methods'             => WP_REST_Server::CREATABLE,
++        'callback'            => 'huhs_update_claimed_artist_profile',
++        'permission_callback' => function () {
++            return current_user_can('manage_options');
++        },
++        'args'                => array(
++            'id' => array(
++                'sanitize_callback' => 'absint',
++                'validate_callback' => function ($value) {
++                    return absint($value) > 0;
++                },
++            ),
++        ),
++    ));
++}
++
++/**
++ * A DJ által szerkeszthető mezők: META-kulcs → típus.
++ *
++ * ⚠️ SZÁNDÉKOSAN SZŰK: a **foglalási e-mail** (`booking_email`) és a ház
++ * döntései (`visible`, `featured`, `booking_via_huhs`), valamint a taxonómiák
++ * (`genre`, `huhs_artist_category`) **nincsenek** itt. A booking e-mail az
++ * adatlap-átvétel igazolása — ha a DJ átírhatná, egy másik fiók is átvehetné az
++ * adatlapot. A `contact_email` (privát cím) szintén nem szerkeszthető innen.
++ *
++ * A sanitálás ugyanaz, mint a WordPress-admin mentésénél
++ * (`artist-save.php` → `huhs_save_artist_meta`): szöveg → `sanitize_text_field`,
++ * URL → `esc_url_raw`. A képek a beküldés útját követik (`logo_url`,
++ * `hero_image_url` — Cloudinary URL-ek), ezért azokra külön, szigorú szabály van.
++ */
++function huhs_artist_editable_fields()
++{
++    return array(
++        'real_name'  => 'text',
++        'city'       => 'text',
++        'country'    => 'text',
++        'website'    => 'url',
++        'facebook'   => 'url',
++        'instagram'  => 'url',
++        'tiktok'     => 'url',
++        'spotify'    => 'url',
++        'soundcloud' => 'url',
++        'youtube'    => 'url',
++    );
++}
++
++/** Egyetlen mező sanitálása a fenti típusok szerint. */
++function huhs_artist_sanitize_editable_value($type, $value)
++{
++    $raw = is_string($value) ? trim(wp_unslash($value)) : '';
++    if ('url' === $type) {
++        return esc_url_raw($raw, array('http', 'https'));
++    }
++    return sanitize_text_field($raw);
++}
++
++/**
++ * A kép-csere: csak **Cloudinary** kép URL fogadható el (a beküldés is ide tölt).
++ * Üres érték = „ne nyúlj hozzá"; a törlés nem cél.
++ */
++function huhs_artist_sanitize_image_url($value)
++{
++    $raw = is_string($value) ? trim(wp_unslash($value)) : '';
++    if ('' === $raw) {
++        return '';
++    }
++    $url = esc_url_raw($raw, array('https'));
++    $host = strtolower((string) wp_parse_url($url, PHP_URL_HOST));
++    if ('res.cloudinary.com' !== $host) {
++        return '';
++    }
++    return $url;
++}
++
++/**
++ * A claimelt (átvett) DJ-adatlap szerkesztése — a HUHS szerverének hívására.
++ *
++ * Amit ír:
++ *  - `title` → `post_title` (max 120 karakter),
++ *  - `biography` → `post_content` (max 6000 karakter, `wpautop(esc_html())` —
++ *    ugyanaz a minta, mint a natív admin írásánál: a szöveg nem tartalmazhat HTML-t),
++ *  - a `huhs_artist_editable_fields()` mezői → post meta,
++ *  - `logo_url` / `hero_image_url` → post meta, **és** a hozzá tartozó
++ *    attachment-azonosító (`logo` / `hero_image`) **nullázása**: a nyilvános
++ *    válasz az azonosítót előnyben részesíti, ezért enélkül a régi kép maradna.
++ *
++ * Amit NEM ír: `booking_email`, `contact_email`, `visible`, `featured`,
++ * `booking_via_huhs`, `genre`, taxonómiák, slug, állapot.
++ *
++ * A válasz **ugyanaz a payload**, mint a nyilvános `/artists/<id>` végponté
++ * (`huhs_build_artist_response(..., true)`), hogy az app egyből frissíthessen.
++ */
++function huhs_update_claimed_artist_profile(WP_REST_Request $request)
++{
++    $artist_id = absint($request->get_param('id'));
++    $post = get_post($artist_id);
++
++    if (!$post || $post->post_type !== 'huhs_artist') {
++        return new WP_Error('huhs_artist_not_found', 'Nincs ilyen DJ-adatlap.', array('status' => 404));
++    }
++
++    $params = $request->get_json_params();
++    if (!is_array($params)) {
++        $params = $request->get_params();
++    }
++    if (!is_array($params)) {
++        $params = array();
++    }
++
++    $updated = array();
++    $post_fields = array();
++
++    if (array_key_exists('title', $params)) {
++        $title = sanitize_text_field(trim((string) wp_unslash($params['title'])));
++        $title = function_exists('mb_substr') ? mb_substr($title, 0, 120) : substr($title, 0, 120);
++        if ('' !== $title && $title !== $post->post_title) {
++            $post_fields['post_title'] = $title;
++            $updated[] = 'title';
++        }
++    }
++
++    if (array_key_exists('biography', $params)) {
++        $raw_bio = trim((string) wp_unslash($params['biography']));
++        $raw_bio = function_exists('mb_substr') ? mb_substr($raw_bio, 0, 6000) : substr($raw_bio, 0, 6000);
++        $content = '' === $raw_bio ? '' : wpautop(esc_html($raw_bio));
++        if ($content !== $post->post_content) {
++            $post_fields['post_content'] = $content;
++            $updated[] = 'biography';
++        }
++    }
++
++    if (!empty($post_fields)) {
++        $post_fields['ID'] = $artist_id;
++        $result = wp_update_post($post_fields, true);
++        if (is_wp_error($result)) {
++            return new WP_Error(
++                'huhs_artist_profile_save_failed',
++                'Az adatlap mentése nem sikerült.',
++                array('status' => 500)
++            );
++        }
++    }
++
++    foreach (huhs_artist_editable_fields() as $meta_key => $type) {
++        if (!array_key_exists($meta_key, $params)) {
++            continue;
++        }
++        $value = huhs_artist_sanitize_editable_value($type, $params[$meta_key]);
++        $limit = 'country' === $meta_key ? 80 : 160;
++        $value = function_exists('mb_substr') ? mb_substr($value, 0, $limit) : substr($value, 0, $limit);
++        if ((string) get_post_meta($artist_id, $meta_key, true) === $value) {
++            continue;
++        }
++        update_post_meta($artist_id, $meta_key, $value);
++        $updated[] = $meta_key;
++    }
++
++    foreach (array('logo_url' => 'logo', 'hero_image_url' => 'hero_image') as $url_key => $attachment_key) {
++        if (!array_key_exists($url_key, $params)) {
++            continue;
++        }
++        $url = huhs_artist_sanitize_image_url($params[$url_key]);
++        if ('' === $url) {
++            return new WP_Error(
++                'huhs_artist_profile_invalid',
++                'A kép csak Cloudinary-linkkel cserélhető.',
++                array('status' => 400)
++            );
++        }
++        update_post_meta($artist_id, $url_key, $url);
++        // A nyilvános válasz az attachment-azonosítót előnyben részesíti: ha ez
++        // megmarad, a régi kép látszana tovább.
++        update_post_meta($artist_id, $attachment_key, 0);
++        $updated[] = $url_key;
++    }
++
++    if (empty($updated)) {
++        return new WP_Error(
++            'huhs_artist_profile_invalid',
++            'Nem érkezett menthető mező.',
++            array('status' => 400)
++        );
++    }
++
++    // A nyilvános válasz-gyorsítótár a post-mentésre magától ürül, a
++    // meta-írásra viszont NEM (`http-cache.php`), ezért itt kifejezetten kérjük.
++    if (function_exists('huhs_invalidate_public_cache')) {
++        huhs_invalidate_public_cache();
++    }
++
++    clean_post_cache($artist_id);
++
++    return new WP_REST_Response(array(
++        'updated' => array_values(array_unique($updated)),
++        'artist'  => huhs_build_artist_response(get_post($artist_id), true),
++    ), 200);
+ }
+ 
+ /**
+### includes/http-cache.php
+warning: in the working copy of 'C:\Users\deero\AppData\Local\Temp\huhs-260-pristine\huhs-mobile-api\includes\http-cache.php', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'C:\Users\deero\hungarian_hardstyle_app\.tmp-api-260\huhs-mobile-api\includes\http-cache.php', LF will be replaced by CRLF the next time Git touches it
+diff --git a/includes/http-cache.php b/includes/http-cache.php
+--- a/includes/http-cache.php
++++ b/includes/http-cache.php
+@@ -179,12 +179,34 @@ function huhs_cacheable_response_headers($headers) {
+ }
+ 
+ function huhs_public_cache_route($route) {
++    if (!is_string($route)) {
++        return false;
++    }
++    // ⚠️ PRIVÁT AL-ÚTVONALAK KIZÁRÁSA (éles hiba javítása, 2.7.0).
++    //
++    // Az engedélylista **előtagra** illeszkedik, ezért a `/huhs/v1/artists/<id>/claim-emails`
++    // végpont is beleesett — pedig az `manage_options`-szal védett, és a DJ
++    // **privát** e-mail címét adja vissza. Mivel a gyorsítótár a
++    // `rest_pre_dispatch`-ben (illetve a plugin betöltésekor, a hitelesítés
++    // ELŐTT) kiszolgál, egy korábbi, hitelesített hívás válasza 120 másodpercig
++    // **azonosítatlan** kérésre is kijöhetett volna. A fájl saját feltétele
++    // szerint ide csak olyan útvonal kerülhet, amely `permission_callback =>
++    // '__return_true'` és nem olvas felhasználó-specifikus adatot.
++    //
++    // Ezért ami „privát" a nevében/útjában, az soha nem cache-elhető. Az új
++    // írás-végpontok szándékosan POST-ot és külön útvonalat használnak
++    // (`/dj-profile/<id>`), így eleve kimaradnak.
++    foreach (array('/claim-emails', '/dj-profile') as $private_fragment) {
++        if (false !== strpos($route, $private_fragment)) {
++            return false;
++        }
++    }
+     // /poll/active and /prize/active are time-gated: the window state is
+     // computed when the response is built, so the stored copy can keep a
+     // just-opened poll/prize hidden, or a just-closed one visible, for at most
+     // one cache lifetime (120 s). This is the SINGLE allow-list; every header
+     // and 304 path calls this function (see the note at the top of the file).
+-    return is_string($route) && (bool) preg_match('#^/huhs/v1/(posts|events|releases|artists|organizers|faq|translations|achievements/badges|poll/active|prize/active)(/|$)#', $route);
++    return (bool) preg_match('#^/huhs/v1/(posts|events|releases|artists|organizers|faq|translations|achievements/badges|poll/active|prize/active)(/|$)#', $route);
+ }
+ 
+ function huhs_public_cache_version() {

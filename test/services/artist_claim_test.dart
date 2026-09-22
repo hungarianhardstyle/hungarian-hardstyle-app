@@ -92,13 +92,15 @@ void main() {
     });
 
     test('a saját claim levétele is elérhető („lekéne szedni rólam")', () {
-      expect(screen, contains('Claim visszavonása'));
+      // A felületen a „claim" helyett magyar szó áll (2026-09-22: „Adatlap
+      // átvétele"), a belső hívás viszont változatlan.
+      expect(screen, contains('Átvétel visszavonása'));
       expect(screen, contains('_releaseArtistClaim('));
       expect(service, contains("'releaseArtistClaim'"));
     });
 
     test('a foglalt adatlapot megnevezzük (nincs néma gomb)', () {
-      expect(screen, contains('már claimelte egy fiók'));
+      expect(screen, contains('már átvette egy fiók'));
     });
 
     test('a beégetett hibaüzenet helyett a szerver üzenete jön', () {

@@ -6,6 +6,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/content/html_linkifier.dart';
+import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/post.dart';
 import '../../services/wordpress_service.dart';
@@ -106,9 +107,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
           final landscape =
               MediaQuery.orientationOf(context) == Orientation.landscape;
           return SingleChildScrollView(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.viewPaddingOf(context).bottom + 24,
-            ),
+            padding: EdgeInsets.only(bottom: scrollBottomInset(context)),
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(

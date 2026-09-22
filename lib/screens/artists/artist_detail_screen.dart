@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/content/html_linkifier.dart';
+import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../models/artist.dart';
@@ -13,6 +14,7 @@ import '../../widgets/genre_chip.dart';
 import '../../providers/artists_provider.dart';
 import '../../widgets/event_card.dart';
 import '../../providers/community_provider.dart';
+import 'artist_edit_screen.dart';
 
 class ArtistDetailScreen extends ConsumerWidget {
   final int artistId;
@@ -112,7 +114,7 @@ class _ArtistContent extends ConsumerWidget {
         .replaceAll('\n', '<br>');
   }
 
-  /// A claim elküldése.
+  /// Az adatlap **átvétele** (a felületen ez a szó áll a „claim" helyén).
   ///
   /// ⚠️ A gomb **csak** akkor látszik, ha a szerver szerint egyezik valamelyik
   /// e-mail cím (booking vagy privát) — a döntés a szerveré, ezért itt nincs
@@ -125,7 +127,7 @@ class _ArtistContent extends ConsumerWidget {
       ref.invalidate(artistClaimStatusProvider(artist.id));
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A DJ-adatlap claimelése sikeres.')),
+        const SnackBar(content: Text('Az adatlap átvétele sikerült.')),
       );
     } catch (error) {
       if (!context.mounted) return;
@@ -134,7 +136,7 @@ class _ArtistContent extends ConsumerWidget {
     }
   }
 
-  /// A claim **visszavonása** (a saját claimet bárki, a hibásat az admin).
+  /// Az átvétel **visszavonása** (a sajátját bárki, a hibásat az admin).
   ///
   /// Azért van rá szükség, mert élesben egy idegen DJ-adatlap került a
   /// tulajdonos fiókjára, és eddig **semmilyen** úton nem lehetett levenni.
@@ -143,8 +145,9 @@ class _ArtistContent extends ConsumerWidget {
       await ref.read(communityServiceProvider).releaseArtistClaim(artist.id);
       ref.invalidate(artistClaimStatusProvider(artist.id));
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('A claim visszavonva.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Az átvétel visszavonva.')),
+      );
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context)
@@ -353,16 +356,34 @@ class _ArtistContent extends ConsumerWidget {
                                     const SizedBox(width: 10),
                                     const Expanded(
                                       child: Text(
-                                        'Ez a te DJ-adatlapod (claimelve).',
+                                        'Ez a te DJ-adatlapod.',
                                       ),
                                     ),
                                     TextButton(
                                       onPressed: () =>
                                           _releaseArtistClaim(context, ref),
-                                      child: const Text('Claim visszavonása'),
+                                      child: const Text('Átvétel visszavonása'),
                                     ),
                                   ],
                                 ),
+                              ),
+                            ),
+                          // Aki átvette az adatlapot, az **szerkesztheti** is
+                          // (a tulajdonos kérése, 2026-09-22). A jogosultságot a
+                          // szerver dönti el (`claim.mine`), és a mentést is ő
+                          // ellenőrzi.
+                          if (claim.mine)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: FilledButton.icon(
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) =>
+                                        ArtistEditScreen(artist: artist),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.edit_outlined),
+                                label: const Text('Adatlap szerkesztése'),
                               ),
                             )
                           else if (claim.canClaim)
@@ -371,14 +392,14 @@ class _ArtistContent extends ConsumerWidget {
                               child: OutlinedButton.icon(
                                 onPressed: () => _claimArtist(context, ref),
                                 icon: const Icon(Icons.verified_user_outlined),
-                                label: const Text('DJ-adatlap claimelése'),
+                                label: const Text('Adatlap átvétele'),
                               ),
                             )
                           else if (claim.claimed)
                             const Padding(
                               padding: EdgeInsets.only(top: 16),
                               child: Text(
-                                'Ezt a DJ-adatlapot már claimelte egy fiók.',
+                                'Ezt a DJ-adatlapot már átvette egy fiók.',
                                 style: TextStyle(color: Colors.white70),
                               ),
                             ),
@@ -496,9 +517,8 @@ class _ArtistContent extends ConsumerWidget {
                           ],
                         ),
                       ),
-                    SizedBox(
-                      height: MediaQuery.viewPaddingOf(context).bottom + 28,
-                    ),
+                    // A rendszer alsó sávja + levegő (egy szabály, egy helyen).
+                    const ScrollBottomInset(extra: 28),
                   ],
                 ),
               ),

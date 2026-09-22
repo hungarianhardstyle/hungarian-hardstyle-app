@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/navigation/in_app_browser.dart';
 import '../../core/errors/user_facing_error.dart';
+import '../../core/layout/scroll_bottom_inset.dart';
 import '../../models/event.dart';
 import '../../models/achievement.dart';
 import '../../providers/community_provider.dart';
@@ -379,8 +380,13 @@ class _CommunityPublicProfileScreenState
           final memberSince = memberSinceMillis != null && memberSinceMillis > 0
               ? DateTime.fromMillisecondsSinceEpoch(memberSinceMillis).toLocal()
               : null;
+          // ⚠️ A görgethető oldal ALJÁRA kell a rendszer alsó sávja + levegő,
+          // különben az utolsó kártya takarásban marad és úgy tűnik, mintha nem
+          // lehetne a végére görgetni. A tulajdonos jelzése (2026-09-22):
+          // *„ha az achievement notifyra nyomok, megnyílik a saját adatlap,
+          // viszont nem tudok legörgetni az aljára rendesen"*.
           return ListView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
             children: [
               Center(
                 child: SizedBox.square(
@@ -647,6 +653,9 @@ class _CommunityPublicProfileScreenState
                   service: service,
                 ),
               ],
+              // A rendszer alsó sávja + szándékos levegő (lásd a fenti
+              // megjegyzést): enélkül az utolsó kártya takarásban marad.
+              const ScrollBottomInset(),
             ],
           );
         },
@@ -1567,7 +1576,7 @@ class _ClaimedArtistCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     const Text(
-                      'Claimelt DJ-adatlap',
+                      'Átvett DJ-adatlap',
                       style: TextStyle(color: Colors.white70, fontSize: 12.5),
                     ),
                   ],

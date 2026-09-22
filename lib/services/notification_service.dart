@@ -84,6 +84,37 @@ class NotificationService {
     await firestore.collection('notifications').doc(notification.id).delete();
   }
 
+  /// A **kijelölt** értesítések törlése (a tulajdonos kérése, 2026-09-22).
+  ///
+  /// MIÉRT külön függvény: az egyenkénti törlés soronként egy-egy kérést indít,
+  /// a kijelölés viszont **több** soré — ezért kötegelt írás megy (450-es
+  /// darabokban, ugyanaz a minta, mint a többi tömeges műveletnél).
+  ///
+  /// A bemenet **már szűrt** azonosítókat vár (csak a saját soroké): ezt a
+  /// tiszta `notification_selection_plan.dart` állítja elő, és a Firestore
+  /// szabály is ugyanezt kéri. Visszaadja a törölt sorok számát.
+  Future<int> deleteIds(Iterable<String> ids) async {
+    final uid = auth.currentUser?.uid;
+    if (uid == null || auth.currentUser?.isAnonymous == true) return 0;
+    final clean = <String>[];
+    final seen = <String>{};
+    for (final id in ids) {
+      final value = id.trim();
+      if (value.isEmpty || !seen.add(value)) continue;
+      clean.add(value);
+    }
+    if (clean.isEmpty) return 0;
+    for (var offset = 0; offset < clean.length; offset += 450) {
+      final batch = firestore.batch();
+      final end = (offset + 450).clamp(0, clean.length);
+      for (final id in clean.sublist(offset, end)) {
+        batch.delete(firestore.collection('notifications').doc(id));
+      }
+      await batch.commit();
+    }
+    return clean.length;
+  }
+
   /// Az AKTÍV vagy az ARCHIVÁLT értesítések törlése.
   ///
   /// A tulajdonos jelzése: *„ha az aktív fülön nyomok egy összes törlését, töröl

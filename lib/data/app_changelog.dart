@@ -38,6 +38,16 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 350,
+    changes: [
+      'ÚJ: az átvett DJ-adatlapodat mostantól te szerkesztheted az appban — név, valódi név, város, ország, bemutatkozás, közösségi linkek és a kép cseréje. A foglalási e-mail cím és a mûfajok továbbra is a Hungarian Hardstyle kezében maradnak.',
+      'ÚJ: az értesítéseket ki lehet jelölni törléshez — így csak azt törlöd, amit akarsz, nem az egész listát és nem is egyenként. A fejlécben a pipa ikon indítja a kijelölést.',
+      'A „Claim" helyett mindenhol magyar szó áll: „Adatlap átvétele" — az átvétel visszavonása, az átvett adatlap jelölése és a hibaszövegek is ezt használják.',
+      'Javítva: az értesítésre megnyíló saját adatlap aljára mostantól rendesen le lehet görgetni (az utolsó kártya nem marad a rendszer sávja alatt). Ugyanez a javítás a hír-, esemény-, DJ- és szervező-adatlapokon is egységes lett.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 349,
     changes: [
       'Javítva: a jutalmazott reklámmal feloldható ingyenes külső link mostantól tényleg megnyílik — eddig hiába futott le a reklám, a feloldás elveszett.',

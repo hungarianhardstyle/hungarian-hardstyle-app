@@ -68,6 +68,11 @@ const {
   claimedArtistIds,
 } = require('./artist-claim-plan');
 const {
+  normalizeArtistProfileUpdate,
+  artistEditAllowed,
+  artistEditErrorMessage,
+} = require('./artist-profile-plan');
+const {
   chatReactionNotification,
   chatReplyNotification,
 } = require('./chat-notification-plan');
@@ -5417,6 +5422,100 @@ exports.getClaimedArtistsForUser = functions.runWith({ enforceAppCheck: true }).
   const snapshot = await db.collection('artist_claims').where('uid', '==', uid).get();
   return { artistIds: claimedArtistIds(snapshot.docs.map((doc) => doc.data())) };
 });
+
+/**
+ * A **claimelt (átvett) DJ-adatlap szerkesztése** — a tulajdonos kérése
+ * (2026-09-22): *„Aki claimelte a dj adatlapját, tudja szerkeszteni is."*
+ *
+ * A LÁNC: app → ez a callable → WordPress privát végpont
+ * (`POST /huhs/v1/dj-profile/<id>`). A **jogosultság** itt dől el: a hívónak
+ * bejelentkezett fióknak kell lennie, és az `artist_claims/<artistId>`
+ * dokumentumnak pont az ő uid-jét kell tartalmaznia. A WordPress-végpont ezért
+ * kaphat `manage_options` kaput: csak a mi szerverünk hívja.
+ *
+ * A bemenet normalizálása (hossz, link, kép) a tiszta
+ * `artist-profile-plan.js`-ben van — ott van minden hibaok is, magyarul.
+ */
+exports.updateClaimedArtistProfile = functions
+  .runWith({
+    enforceAppCheck: false,
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
+      throw new HttpsError('unauthenticated', 'Az adatlap szerkesztéséhez be kell jelentkezni.');
+    }
+    const artistId = Number(data?.artistId);
+    if (!Number.isInteger(artistId) || artistId < 1) {
+      throw new HttpsError('invalid-argument', 'Érvényes DJ-adatlap szükséges.');
+    }
+    if (!(await allowCall(context.auth.uid, 'artist_profile_edit', 10))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok szerkesztés, próbáld később.');
+    }
+
+    // 1. Az átvétel ellenőrzése: csak a saját, átvett adatlap szerkeszthető.
+    const claim = await db.collection('artist_claims').doc(String(artistId)).get();
+    const guard = artistEditAllowed({
+      claimUid: claim.exists ? claim.data()?.uid : '',
+      callerUid: context.auth.uid,
+    });
+    if (!guard.allowed) {
+      securityLog('artist_profile_edit_denied', context);
+      throw new HttpsError('permission-denied', artistEditErrorMessage(guard.reason));
+    }
+
+    // 2. A bemenet szűrése (a hibaok magyarul jön onnan).
+    const normalized = normalizeArtistProfileUpdate(data?.fields);
+    if (!normalized.ok) {
+      throw new HttpsError('invalid-argument', normalized.message);
+    }
+
+    // 3. Írás a WordPressben (a mezőnevek már a WP nevei).
+    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+    let response;
+    try {
+      response = await fetch(`${WORDPRESS_BASE_URL}/dj-profile/${artistId}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(normalized.fields),
+      });
+    } catch (error) {
+      console.warn(JSON.stringify({
+        event: 'artist_profile_edit_failed',
+        artistId,
+        message: String(error?.message || error),
+      }));
+      throw new HttpsError('unavailable', 'Az adatlap mentése most nem sikerült. Próbáld újra.');
+    }
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.warn(JSON.stringify({
+        event: 'artist_profile_edit_http',
+        status: response.status,
+        artistId,
+      }));
+      // A WordPress magyar hibaüzenetét adjuk tovább, ha van; különben általános.
+      const message = String(payload?.message || '').trim();
+      throw new HttpsError(
+        response.status === 404 ? 'not-found' : 'failed-precondition',
+        message || 'Az adatlap mentése nem sikerült.',
+      );
+    }
+
+    console.info(JSON.stringify({
+      event: 'artist_profile_edit_ok',
+      artistId,
+      fields: normalized.fields ? Object.keys(normalized.fields).length : 0,
+    }));
+
+    return {
+      updated: Array.isArray(payload?.updated) ? payload.updated : [],
+      artist: payload?.artist && typeof payload.artist === 'object' ? payload.artist : null,
+    };
+  });
 
 exports.verifyLabelPurchase = functions
   .runWith({

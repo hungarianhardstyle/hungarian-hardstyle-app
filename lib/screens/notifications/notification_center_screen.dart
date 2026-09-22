@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../models/app_notification.dart';
+import '../../services/notification_selection_plan.dart';
 import '../../services/notification_service.dart';
 import '../../services/community_service.dart';
 import '../../services/wordpress_service.dart';
@@ -58,6 +59,50 @@ class NotificationCenterScreen extends StatefulWidget {
 class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
   bool _showArchived = false;
   bool _openingNotification = false;
+
+  /// Kijelölés mód (a tulajdonos kérése, 2026-09-22): így **azt** lehet
+  /// törölni, amit kijelölsz — nem az egész fület, és nem is egyenként.
+  bool _selecting = false;
+  final Set<String> _selected = <String>{};
+
+  Future<void> _deleteSelected(List<AppNotification> items) async {
+    final ids = deletableNotificationIds(
+      items: items,
+      selected: _selected,
+      uid: FirebaseAuth.instance.currentUser?.uid,
+    );
+    if (ids.isEmpty) return;
+    try {
+      final removed = await NotificationService().deleteIds(ids);
+      if (!mounted) return;
+      setState(() {
+        _selected.clear();
+        _selecting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(notificationDeletedLabel(removed))),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A kijelöltek törlése nem sikerült.')),
+      );
+    }
+  }
+
+  void _toggleSelection(String id) {
+    setState(() {
+      _selected
+        ..clear()
+        ..addAll(
+          toggleNotificationSelection(
+            _selected,
+            id,
+            selectedNow: !_selected.contains(id.trim()),
+          ),
+        );
+    });
+  }
 
   Future<void> _handleAction(
     BuildContext context,
@@ -327,37 +372,95 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Értesítések',
+                          // Kijelölés közben a fejléc megmondja, hány sor van
+                          // kijelölve — így nem kell a listát számolgatni.
+                          _selecting
+                              ? notificationSelectionLabel(_selected.length)
+                              : 'Értesítések',
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
                       ),
-                      IconButton(
-                        style: actionStyle,
-                        tooltip: 'Összes olvasottra jelölése',
-                        onPressed: items.isEmpty
-                            ? null
-                            : () => unawaited(_markAllRead(context)),
-                        icon: const Icon(Icons.done_all_rounded, size: 20),
-                      ),
-                      const SizedBox(width: 6),
-                      IconButton(
-                        style: actionStyle,
-                        // A tooltip is megmondja, MELYIK fulett töröl — a gomb a
-                        // látható fülre vonatkozik, nem mindenre.
-                        tooltip: _showArchived
-                            ? 'Összes archivált törlése'
-                            : 'Összes aktív törlése',
-                        onPressed: items.isEmpty
-                            ? null
-                            : () => unawaited(_deleteAll(context)),
-                        icon: const Icon(Icons.delete_sweep_outlined, size: 20),
-                      ),
-                      const SizedBox(width: 6),
-                      IconButton(
-                        style: actionStyle,
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                      ),
+                      if (_selecting) ...[
+                        IconButton(
+                          style: actionStyle,
+                          tooltip: 'Összes kijelölése ezen a fülön',
+                          onPressed: items.isEmpty
+                              ? null
+                              : () => setState(() {
+                                  _selected
+                                    ..clear()
+                                    ..addAll(
+                                      items.map((item) => item.id.trim()),
+                                    );
+                                }),
+                          icon: const Icon(Icons.select_all_rounded, size: 20),
+                        ),
+                        const SizedBox(width: 6),
+                        IconButton(
+                          style: actionStyle,
+                          tooltip: 'Kijelöltek törlése',
+                          onPressed: _selected.isEmpty
+                              ? null
+                              : () => unawaited(_deleteSelected(items)),
+                          icon: const Icon(Icons.delete_outline, size: 20),
+                        ),
+                        const SizedBox(width: 6),
+                        IconButton(
+                          style: actionStyle,
+                          tooltip: 'Kijelölés kikapcsolása',
+                          onPressed: () => setState(() {
+                            _selected.clear();
+                            _selecting = false;
+                          }),
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                        ),
+                      ] else ...[
+                        IconButton(
+                          style: actionStyle,
+                          tooltip: 'Kijelölés törléshez',
+                          onPressed: items.isEmpty
+                              ? null
+                              : () => setState(() {
+                                  _selecting = true;
+                                  _selected.clear();
+                                }),
+                          icon: const Icon(
+                            Icons.check_circle_outline,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        IconButton(
+                          style: actionStyle,
+                          tooltip: 'Összes olvasottra jelölése',
+                          onPressed: items.isEmpty
+                              ? null
+                              : () => unawaited(_markAllRead(context)),
+                          icon: const Icon(Icons.done_all_rounded, size: 20),
+                        ),
+                        const SizedBox(width: 6),
+                        IconButton(
+                          style: actionStyle,
+                          // A tooltip is megmondja, MELYIK fulett töröl — a gomb a
+                          // látható fülre vonatkozik, nem mindenre.
+                          tooltip: _showArchived
+                              ? 'Összes archivált törlése'
+                              : 'Összes aktív törlése',
+                          onPressed: items.isEmpty
+                              ? null
+                              : () => unawaited(_deleteAll(context)),
+                          icon: const Icon(
+                            Icons.delete_sweep_outlined,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        IconButton(
+                          style: actionStyle,
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -394,7 +497,13 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       ),
                     ),
                     onSelectionChanged: (selection) {
-                      setState(() => _showArchived = selection.first);
+                      setState(() {
+                        _showArchived = selection.first;
+                        // Fület váltva a kijelölés törlődik: a másik fül más
+                        // listát mutat, ott a régi kijelölés félrevezetne.
+                        _selected.clear();
+                        _selecting = false;
+                      });
                     },
                   ),
                 ),
@@ -428,15 +537,28 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                               ),
                               child: ListTile(
                                 minVerticalPadding: 8,
-                                onTap: () => unawaited(_open(context, item)),
-                                leading: Icon(
-                                  item.isRead
-                                      ? Icons.notifications_none
-                                      : Icons.notifications_active,
-                                  color: item.isRead
-                                      ? colors.onSurfaceVariant
-                                      : colors.primary,
-                                ),
+                                // Kijelölés módban a koppintás **jelöl**, nem
+                                // nyit meg — így lehet több sort kijelölni.
+                                onTap: _selecting
+                                    ? () => _toggleSelection(item.id)
+                                    : () => unawaited(_open(context, item)),
+                                leading: _selecting
+                                    ? Icon(
+                                        _selected.contains(item.id.trim())
+                                            ? Icons.check_box
+                                            : Icons.check_box_outline_blank,
+                                        color: _selected.contains(item.id.trim())
+                                            ? colors.primary
+                                            : colors.onSurfaceVariant,
+                                      )
+                                    : Icon(
+                                        item.isRead
+                                            ? Icons.notifications_none
+                                            : Icons.notifications_active,
+                                        color: item.isRead
+                                            ? colors.onSurfaceVariant
+                                            : colors.primary,
+                                      ),
                                 title: Text(
                                   item.title.isEmpty ? 'Értesítés' : item.title,
                                   style: Theme.of(context)
@@ -457,28 +579,31 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                                         size: 10,
                                         color: colors.primary,
                                       ),
-                                    PopupMenuButton<String>(
-                                      tooltip: 'Értesítés műveletei',
-                                      onSelected: (action) => unawaited(
-                                        _handleAction(context, item, action),
-                                      ),
-                                      itemBuilder: (_) => [
-                                        if (!item.isRead)
-                                          const PopupMenuItem(
-                                            value: 'read',
-                                            child: Text('Olvasottnak jelölés'),
-                                          ),
-                                        if (!item.isArchived)
-                                          const PopupMenuItem(
-                                            value: 'archive',
-                                            child: Text('Archiválás'),
-                                          ),
-                                        const PopupMenuItem(
-                                          value: 'delete',
-                                          child: Text('Törlés'),
+                                    // Kijelölés módban nincs soronkénti menü: ott a
+                                    // koppintás jelöl, a művelet pedig a fejlécben van.
+                                    if (!_selecting)
+                                      PopupMenuButton<String>(
+                                        tooltip: 'Értesítés műveletei',
+                                        onSelected: (action) => unawaited(
+                                          _handleAction(context, item, action),
                                         ),
-                                      ],
-                                    ),
+                                        itemBuilder: (_) => [
+                                          if (!item.isRead)
+                                            const PopupMenuItem(
+                                              value: 'read',
+                                              child: Text('Olvasottnak jelölés'),
+                                            ),
+                                          if (!item.isArchived)
+                                            const PopupMenuItem(
+                                              value: 'archive',
+                                              child: Text('Archiválás'),
+                                            ),
+                                          const PopupMenuItem(
+                                            value: 'delete',
+                                            child: Text('Törlés'),
+                                          ),
+                                        ],
+                                      ),
                                   ],
                                 ),
                               ),

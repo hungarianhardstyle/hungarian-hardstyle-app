@@ -1388,6 +1388,30 @@ class CommunityService {
     );
   }
 
+  /// Az **átvett** DJ-adatlap szerkesztése (a tulajdonos kérése, 2026-09-22:
+  /// *„Aki claimelte a dj adatlapját, tudja szerkeszteni is."*).
+  ///
+  /// A jogosultságot **a szerver** dönti el (`artist_claims` + a hívó uid-je),
+  /// a mezőket pedig a szerver szűri (`artist-profile-plan.js`): ide csak azok a
+  /// kulcsok mennek, amiket a DJ tényleg szerkeszthet. A booking e-mail, a
+  /// privát cím és a ház döntései **soha** nem szerepelnek a kimenetben.
+  Future<List<String>> updateClaimedArtistProfile(
+    int artistId,
+    Map<String, dynamic> fields,
+  ) async {
+    if (auth.currentUser?.emailVerified != true) {
+      throw StateError('Hitelesített e-mailes fiók szükséges.');
+    }
+    final result = await callFirebaseCallable<Map<String, dynamic>>(
+      'updateClaimedArtistProfile',
+      parameters: {'artistId': artistId, 'fields': fields},
+    );
+    final updated = result.data['updated'];
+    return updated is List
+        ? updated.map((value) => value.toString()).toList(growable: false)
+        : const [];
+  }
+
   /// A DJ-adatlap claim-jogosultsága (a **szerver** dönt, e-mail cím nélkül).
   ///
   /// A tulajdonos jelzése szerint a claim gomb csak akkor jelenhet meg, ha a

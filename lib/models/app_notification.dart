@@ -12,6 +12,7 @@ class AppNotification {
     required this.readAt,
     required this.archivedAt,
     this.senderId = '',
+    this.recipientUid = '',
   });
 
   final String id;
@@ -24,6 +25,12 @@ class AppNotification {
   final DateTime? readAt;
   final DateTime? archivedAt;
   final String senderId;
+
+  /// Az értesítés **jogosultja**. Azért van a modellben, mert a kijelölt
+  /// értesítések törlésénél **csak a saját** sorok azonosítója mehet ki (a
+  /// biztonsági szabály is ezt kéri), és ezt így tiszta függvényben lehet
+  /// mérni (`notification_selection_plan.dart`).
+  final String recipientUid;
 
   bool get isRead => readAt != null;
   bool get isArchived => archivedAt != null;
@@ -48,6 +55,7 @@ class AppNotification {
           ? archivedTimestamp.toDate()
           : null,
       senderId: data['senderId']?.toString().trim() ?? '',
+      recipientUid: data['recipientUid']?.toString().trim() ?? '',
     );
   }
 }

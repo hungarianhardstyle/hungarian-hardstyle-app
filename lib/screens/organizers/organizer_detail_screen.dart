@@ -4,6 +4,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/content/html_linkifier.dart';
+import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/organizer.dart';
 import '../../widgets/genre_chip.dart';
@@ -314,9 +315,8 @@ class _OrganizerContent extends StatelessWidget {
                         ),
                       ),
                     ],
-                    SizedBox(
-                      height: MediaQuery.viewPaddingOf(context).bottom + 28,
-                    ),
+                    // A rendszer alsó sávja + levegő (egy szabály, egy helyen).
+                    const ScrollBottomInset(extra: 28),
                   ],
                 ),
               ),

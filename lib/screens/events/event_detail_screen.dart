@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/content/html_linkifier.dart';
+import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/event.dart';
 import '../artists/artist_detail_screen.dart';
@@ -637,9 +638,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                       )
                     else
                       const SizedBox(height: 24),
-                    SizedBox(
-                      height: MediaQuery.viewPaddingOf(context).bottom + 24,
-                    ),
+                    // A rendszer alsó sávja + levegő (egy szabály, egy helyen).
+                    const ScrollBottomInset(),
                   ],
                 ),
               ),

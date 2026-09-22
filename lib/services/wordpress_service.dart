@@ -1674,6 +1674,14 @@ class WordpressService {
     }
   }
 
+  /// Kép feltöltése a Cloudinary-ra — **ugyanaz az ellenőrzött út**, mint a
+  /// beküldésnél (JPG/PNG/WebP, legfeljebb 5 MB, valódi kép-bájtok).
+  ///
+  /// MIÉRT publikus: a DJ a saját (átvett) adatlapján cserélhet képet, és ott
+  /// ugyanazt a szabályt kell használni — nem egy második feltöltő utat.
+  Future<String> uploadProfileImage(SubmissionImage image) =>
+      _uploadCloudinaryImage(image);
+
   Future<String> _uploadCloudinaryImage(SubmissionImage image) async {
     try {
       final extension = image.name.split('.').last.toLowerCase();
