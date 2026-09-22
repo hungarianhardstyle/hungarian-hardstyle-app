@@ -87,7 +87,20 @@ jobs:
         # fiók nélkül is működik — és pont ez a sideloadolt TESZT-build célja.
         # Az éles iOS build (Codemagic → TestFlight) szándékosan NEM kapja meg
         # ezt a zászlót; ott App Attest a helyes út, regisztrált szolgáltatóval.
-        run: flutter build ios --release --no-codesign --dart-define=HUHS_APP_CHECK_DEBUG_IOS=true
+        # ⚠️ Az iOS reklám-egységazonosítók **GitHub-változókból** (`vars.*`)
+        # jönnek, ezért a bevezetésük NEM kér kódmódosítást: elég a
+        # Settings → Secrets and variables → Actions → **Variables** alatt
+        # létrehozni a `HUHS_ADMOB_BANNER_ID_IOS` és `HUHS_ADMOB_REWARDED_ID_IOS`
+        # változót (a Firebase Console-ból/AdMob-ból kapott `ca-app-pub-…/…`).
+        # Ha nincsenek beállítva, az érték **üres string** marad — és pontosan ez a
+        # mai, biztonságos viselkedés: az `ad_unit_plan.dart` ilyenkor a Google
+        # **hivatalos teszt-egységeire** esik vissza, ezért a reklám így is megjelenik.
+        # (Ez a lépés szándékosan a tesztek ELŐTT van — lásd lentebb.)
+        run: |
+          flutter build ios --release --no-codesign \
+            --dart-define=HUHS_APP_CHECK_DEBUG_IOS=true \
+            --dart-define=HUHS_ADMOB_BANNER_ID_IOS=${{ vars.HUHS_ADMOB_BANNER_ID_IOS }} \
+            --dart-define=HUHS_ADMOB_REWARDED_ID_IOS=${{ vars.HUHS_ADMOB_REWARDED_ID_IOS }}
 
       # --- Aláírás nélküli IPA a kézi teszteléshez -------------------------
       # Az `.ipa` a valóságban egy zip, benne `Payload/Runner.app` — nincs

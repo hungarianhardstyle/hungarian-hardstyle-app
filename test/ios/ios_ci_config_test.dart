@@ -196,6 +196,43 @@ void main() {
         reason: 'az iOS-forditas legyen a tesztkeszlet elott',
       );
     });
+
+    test('az iOS reklam-egysegazonositok GitHub-valtozokbol jonnek', () {
+      final workflow = _read('.github/workflows/ios-unsigned-check.yml');
+      final ads = _read('lib/providers/ads_provider.dart');
+
+      // ⚠️ MIÉRT `vars.*`: így a valódi iOS egység-azonosítók bevezetése
+      // **nem kér kódmódosítást**, és beállítatlanul **üres string** marad —
+      // azaz pontosan a mai, biztonságos viselkedés él tovább (a Google
+      // hivatalos teszt-egységei). Ha valaki beégetné az éles azonosítót,
+      // ez a teszt elhasal.
+      for (final name in const [
+        'HUHS_ADMOB_BANNER_ID_IOS',
+        'HUHS_ADMOB_REWARDED_ID_IOS',
+      ]) {
+        expect(
+          workflow,
+          contains('--dart-define=$name=\${{ vars.$name }}'),
+          reason: 'a(z) $name a CI-ből, GitHub-változóból jöjjön (nem beégetve)',
+        );
+        expect(
+          ads,
+          contains("String.fromEnvironment('$name')"),
+          reason: 'a(z) $name nevet a kliens is pontosan így olvassa',
+        );
+      }
+
+      // ⚠️ A debug App Check-szolgáltató KIZÁRÓLAG a sideloadolt teszt-buildbe
+      // való: a produkciós (TestFlight) build App Attest-tel megy, különben egy
+      // éles appban a debug szolgáltató ütné ki az attestation-t.
+      expect(workflow, contains('HUHS_APP_CHECK_DEBUG_IOS=true'),
+          reason: 'a sideloadolt teszt-build igenis kapja meg');
+      expect(
+        _read('codemagic.yaml'),
+        isNot(contains('HUHS_APP_CHECK_DEBUG_IOS')),
+        reason: 'a TestFlight-build NEM kaphat debug App Check-szolgáltatót',
+      );
+    });
   });
 }
 
