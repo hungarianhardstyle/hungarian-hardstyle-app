@@ -27,12 +27,28 @@
 	<!-- Google Mobile Ads test App ID; replace before production iOS ads. -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<!-- Csak HTTPS-t használunk, ezért nem kell minden TestFlight-feltöltésnél
+	     az export-compliance kérdőívet kitölteni. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Beküldési képek, flyerek és profilképek elkészítéséhez használjuk a kamerát.</string>
+	<!-- A biometrikus belépés (local_auth) iOS-en Face ID/Touch ID: a rendszer
+	     kötelezően kéri ezt a szöveget, enélkül a Face ID hitelesítés elhal. -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>Az ujjlenyomatod vagy a Face ID használatával gyorsan beléphetsz a saját fiókodba.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Beküldési képek, flyerek és profilképek kiválasztásához használjuk a fotókönyvtárat.</string>
+	<!-- iOS 14.5+ óta a reklámcélú követéshez engedély kell (ATT). -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Azért kérjük, hogy a reklámok jobban illeszkedjenek hozzád. Ha nem engeded, az app ugyanúgy működik.</string>
+	<!-- A rádió és a megvásárolt zene háttérben, zárképernyőn is szól. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

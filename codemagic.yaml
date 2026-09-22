@@ -1,0 +1,118 @@
+# Codemagic CI — iOS build és TestFlight-feltöltés
+#
+# MIÉRT EZ A FELOSZTÁS (a GitHub Actions workflow-val együtt):
+#   - GitHub Actions (macOS runner): `flutter analyze` + `flutter test` +
+#     ALÁÍRÁS NÉLKÜLI iOS-fordítás. Ez a gyors, ingyenes(!) kapu: nem kell
+#     hozzá Apple Developer fiók, és nem fogyasztja a Codemagic perceit.
+#   - Codemagic (ez a fájl): a VALÓDI, aláírt .ipa és a TestFlight-feltöltés.
+#     Ez az, amihez Apple Developer Program tagság kell.
+# A felosztás szándékos: a drága macOS-perceket (500 ingyenes perc/hó) csak a
+# tényleg aláírt buildre költjük.
+#
+# A RÉSZLETES, KÉZI ELŐKÉSZÍTŐ LÉPÉSEK: docs/IOS-CI-TESTFLIGHT.md
+
+workflows:
+  # ------------------------------------------------------------------
+  # 1) Aláírás nélküli fordítás-ellenőrzés — MA is futtatható,
+  #    Apple Developer fiók NÉLKÜL. Arra jó, hogy kiderüljön: az iOS-projekt
+  #    egyáltalán lefordul-e (Podfile, pluginok, deployment target).
+  # ------------------------------------------------------------------
+  ios-unsigned-check:
+    name: iOS fordítás-ellenőrzés (aláírás nélkül)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      flutter: 3.47.2
+      # A `latest` a Codemagic default Xcode-ját használja. Kiadás előtt
+      # érdemes konkrét verzióra szorítani (pl. `xcode: 26.6`), hogy a build
+      # jövő héten is ugyanaz legyen, mint ma.
+      xcode: latest
+      cocoapods: default
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+    scripts:
+      - name: Függőségek
+        script: flutter pub get
+      - name: Statikus elemzés
+        script: flutter analyze
+      # A teljes tesztkészlet a GitHub Actions workflow-ban fut (ingyenes).
+      # Itt szándékosan nem, hogy ne fogyjon a Codemagic-perc.
+      - name: iOS fordítás (aláírás nélkül)
+        script: flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/iphoneos/Runner.app
+      - /tmp/xcodebuild_logs/*.log
+
+  # ------------------------------------------------------------------
+  # 2) Aláírt .ipa + TestFlight — ehhez KELL az Apple Developer Program
+  #    tagság ($99/év) és az App Store Connect API-kulcs.
+  #    A futtatás előtt lásd: docs/IOS-CI-TESTFLIGHT.md
+  # ------------------------------------------------------------------
+  ios-testflight:
+    name: iOS TestFlight (aláírt)
+    instance_type: mac_mini_m2
+    max_build_duration: 120
+    integrations:
+      # A Codemagic UI-ban így NEVEZD EL a Developer Portal integrációt,
+      # különben ez a hivatkozás nem talál semmit.
+      app_store_connect: HUHS_APPLE
+    environment:
+      flutter: 3.47.2
+      xcode: latest
+      cocoapods: default
+      # A bundle ID és az Android applicationId szándékosan UGYANAZ
+      # (hu.hungarianhardstyle.app) — egy termék, egy azonosító.
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: hu.hungarianhardstyle.app
+      groups:
+        # Titkos környezeti változók a Codemagic UI-ban:
+        #   ios_firebase          -> GOOGLE_SERVICE_INFO_PLIST_BASE64
+        #   appstore_credentials  -> APP_STORE_CONNECT_PRIVATE_KEY / _KEY_IDENTIFIER / _ISSUER_ID
+        - ios_firebase
+        - appstore_credentials
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+    scripts:
+      - name: Függőségek
+        script: flutter pub get
+      - name: Statikus elemzés
+        script: flutter analyze
+      - name: Firebase iOS konfiguráció (GoogleService-Info.plist)
+        script: |
+          # A `firebase_core` iOS-en a csomagba ágyazott plist-ből indul.
+          # A fájl NEM titkos, de gépfüggő, ezért a repóban nem verziózzuk:
+          # CI-ben base64-ként jön a titkos változóból.
+          PLIST="ios/Runner/GoogleService-Info.plist"
+          if [ -f "$PLIST" ]; then
+            echo "A GoogleService-Info.plist már a repóban van, nem nyúlok hozzá."
+          elif [ -n "$GOOGLE_SERVICE_INFO_PLIST_BASE64" ]; then
+            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > "$PLIST"
+            echo "A GoogleService-Info.plist a titkos változóból elkészült."
+          else
+            echo "HIBA: hiányzik az ios/Runner/GoogleService-Info.plist, és a" >&2
+            echo "GOOGLE_SERVICE_INFO_PLIST_BASE64 titkos változó sem adott." >&2
+            echo "Enélkül az app iOS-en indulás közben elszáll (firebase_core)." >&2
+            exit 1
+          fi
+      - name: Aláírás beállítása a Xcode-projekten
+        script: xcode-project use-profiles
+      - name: Aláírt .ipa építése
+        script: flutter build ipa --release --export-options-plist=$HOME/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      # A dSYM kell a Crashlytics-féle szimbolizáláshoz, ha egyszer lesz.
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Feltöltés után TestFlight. A béta-review-hoz NEM küldjük be
+        # automatikusan: az belső teszteléshez nem kell, csak lassít.
+        submit_to_testflight: true
+        # Ha külső tesztelő csoportot is ki akarsz szolgálni, vedd ki a
+        # kommentből, és a csoport nevét pontosan írd be (App Store Connect).
+        # beta_groups:
+        #   - Külső tesztelők
