@@ -59,6 +59,9 @@ const { playProductMatches } = require('./play-product-plan');
 const {
   decodeSsvCustomData,
   classifyVerifiedSsvCallback,
+  normalizeAdUnlockRequest,
+  mergeUnlockVariants,
+  CLIENT_UNLOCK_LIMITS,
 } = require('./admob-ssv-plan');
 const {
   adUnlockGrantsVariant,
@@ -1154,8 +1157,17 @@ exports.getGameResults = wordPressCall(async (data, context) => {
 
 const labelProductSyncSecrets = [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD, GOOGLE_PLAY_SERVICE_ACCOUNT_JSON];
 
-async function allowCall(uid, key, limit = 20) {
-  const bucket = Math.floor(Date.now() / 60_000);
+/**
+ * Kérés-keret (rate limit) fiókonként.
+ *
+ * @param {string} uid
+ * @param {string} key a vödör neve
+ * @param {number} limit ennyi kérés mehet át egy ablakban
+ * @param {number} windowMs az ablak hossza — alapból **1 perc** (a régi
+ *   viselkedés változatlan), de a napi keretekhez hosszabb ablak is adható.
+ */
+async function allowCall(uid, key, limit = 20, windowMs = 60_000) {
+  const bucket = Math.floor(Date.now() / windowMs);
   const ref = db
     .collection('rate_limits')
     .doc(crypto.createHash('sha256').update(`${key}:${uid}:${bucket}`).digest('hex'));
@@ -6773,6 +6785,71 @@ exports.syncQueuedWordPressLabelProducts = onDocumentCreated(
   },
 );
 
+/**
+ * **Azonnali jóváírás a kliens visszahívásából** (tulajdonosi döntés, 2026-09-22).
+ *
+ * MIÉRT: a Google SSV-dokumentációja szerint a jutalmat a **kliens**
+ * visszahívásából kell azonnal megadni, az SSV pedig utólag ellenőriz — különben
+ * egy lassú vagy elmaradó visszahívás miatt a felhasználó megnézte a reklámot és
+ * nem kap semmit. Ez **mérve** nem elmélet: a kliens csak **20 másodpercig** vár
+ * (`waitForAdUnlock`), a Google **teszt**-reklámja pedig **egyáltalán nem** küld
+ * SSV-t (2026-09-22: nulla visszahívás két tesztből).
+ *
+ * ⚠️ Két keret fogja vissza (percenkénti ÉS napi), és a rekord megkapja a
+ * `clientGrantedAt` jelzést. Az SSV később ugyanerre a dokumentumra írja a
+ * `transactionId`-t és az `ssvVerifiedAt`-et — így az adatból látszik, mely
+ * feloldások mögött NINCS AdMob-igazolás. Amiről ez NEM véd: a fizetős tételek
+ * (`label_entitlements`) érintetlenek, a reklámos feloldás csak az **ingyenes**
+ * sáv, tehát a kockázat elmaradt reklámbevétel, nem eladott zenék ára.
+ */
+exports.grantAdUnlock = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
+    throw new HttpsError('unauthenticated', 'A reklámos feloldáshoz be kell jelentkezni.');
+  }
+  const uid = context.auth.uid;
+  const request = normalizeAdUnlockRequest({
+    releaseId: data?.releaseId,
+    variant: data?.variant,
+  });
+  if (!request.ok) throw new HttpsError('invalid-argument', request.reason);
+  const { releaseId, variant } = request;
+
+  const unlockRef = db.collection('label_ad_unlocks').doc(`${uid}_${releaseId}`);
+  // ⚠️ Ha már megvan, NE fogyasszon keretet: a kliens hálózati hiba után
+  // újrapróbálkozhat, és ilyenkor nem szabad „büntetni".
+  const existing = await unlockRef.get();
+  if (existing.exists && activeAdUnlock(existing.data(), releaseId, variant)) {
+    return { unlocked: true, already: true };
+  }
+
+  const daily = CLIENT_UNLOCK_LIMITS.daily;
+  if (!(await allowCall(uid, daily.key, daily.limit, daily.windowMs))) {
+    throw new HttpsError(
+      'resource-exhausted',
+      'Elérted a napi reklámos feloldások számát. Próbáld holnap.',
+    );
+  }
+  const burst = CLIENT_UNLOCK_LIMITS.burst;
+  if (!(await allowCall(uid, burst.key, burst.limit, burst.windowMs))) {
+    throw new HttpsError('resource-exhausted', 'Túl sok reklámos feloldás egyszerre.');
+  }
+
+  await unlockRef.set(
+    {
+      uid,
+      releaseId,
+      variants: mergeUnlockVariants(existing.data()?.variants, variant),
+      unlockedAt: FieldValue.serverTimestamp(),
+      clientGrantedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+  console.info(
+    JSON.stringify({ event: 'admob_unlock_client_granted', uid, releaseId, variant }),
+  );
+  return { unlocked: true, already: false };
+});
+
 exports.getLabelAdUnlockStatus = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
   if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') {
     throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
@@ -6910,10 +6987,6 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
       if ((await tx.get(transaction)).exists) return;
       const unlockRef = db.collection('label_ad_unlocks').doc(`${uid}_${releaseId}`);
       const unlock = await tx.get(unlockRef);
-      const existingVariants =
-        unlock.exists && unlock.data()?.variants && typeof unlock.data().variants === 'object'
-          ? unlock.data().variants
-          : {};
       tx.set(transaction, {
         uid,
         releaseId,
@@ -6925,8 +6998,12 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
           uid,
           releaseId,
           transactionId,
-          variants: { ...existingVariants, [variant]: true },
+          variants: mergeUnlockVariants(unlock.data()?.variants, variant),
           unlockedAt: FieldValue.serverTimestamp(),
+          // ⚠️ Ez különbözteti meg az AdMob által IGAZOLT feloldást a
+          // kliens-oldali azonnali jóváírástól (`clientGrantedAt`): ha egy
+          // rekordon nincs `ssvVerifiedAt`, ahhoz nem érkezett visszahívás.
+          ssvVerifiedAt: FieldValue.serverTimestamp(),
         },
         { merge: true },
       );

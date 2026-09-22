@@ -546,6 +546,41 @@ felhasználóknál is előfordulhat (hálózat, AdMob-kimaradás). A javítás i
 **tulajdonosi döntés**, mert a szigorú kapu egyben visszaélést is fog: ha a kliens
 azonnal jóváírhat, egy módosított kliens reklám nélkül is feloldhat.
 
+#### ✅ A TULAJDONOS DÖNTÉSE: **B** — azonnali jóváírás + utólagos SSV (2026-09-22)
+
+A fenti mérés után a tulajdonos a **B** változatot választotta. A megvalósítás:
+
+| Réteg | Mi történik |
+|---|---|
+| **Kliens** (`release_detail_screen.dart`) | a reklám lefutása után **azonnal** hívja a `grantAdUnlock` callable-t; ha az nem megy át (napi keret, hálózat), **visszaesik** a régi útra: `waitForAdUnlock` (SSV, legfeljebb 20 s) |
+| **Szerver** (`grantAdUnlock`) | ellenőrzi a bemenetet a **tiszta** `normalizeAdUnlockRequest`-tal, majd jóváírja a `label_ad_unlocks` rekordot `clientGrantedAt` jelöléssel |
+| **SSV** (`admobRewardedSsv`) | ugyanarra a rekordra írja a `transactionId`-t és az **`ssvVerifiedAt`**-et — így az adatból látszik, mely feloldás mögött **nincs** AdMob-igazolás |
+
+**A visszaélés fékezése (két keret, ugyanazzal az eszközzel, mint a többi végpont):**
+
+- **percenkénti burst** — `ad_unlock_client`, 3 kérés/perc (senki nem néz meg háromnál
+  több jutalmazott reklámot egy perc alatt);
+- **napi plafon** — `ad_unlock_client_daily`, **20 feloldás/nap** fiókonként. Ez a
+  valódi megkötés: egy módosított kliens reklám nélkül sem tudja kinyitni a teljes
+  kínálatot.
+
+⚠️ **Amiről ez NEM véd:** a fizetős tételek (`label_entitlements`) érintetlenek — a
+reklámos feloldás csak az **ingyenes** sáv, tehát a kockázat **elmaradt
+reklámbevétel**, nem eladott zenék ára. Az eltérések az adatból visszakereshetők:
+`ssvVerifiedAt` nélküli, de `clientGrantedAt`-es rekordok.
+
+**A keret-kezelőt ehhez bővíteni kellett:** az `allowCall(uid, key, limit)` eddig
+**percenkénti** vödör volt; mostantól `allowCall(uid, key, limit, windowMs = 60_000)`
+— az alapérték **változatlan**, ezért a meglévő hívások viselkedése bitre ugyanaz.
+
+**Bizonyíték:** `functions/admob-ssv-plan.test.cjs` **12/12** (benne: ugyanaz a
+bemenet-szabály a kliens útra, a változat-térkép nem veszíti el a korábbi
+változatokat — a 349-es hiba őre —, a napi keret nagyobb a burstnél és **más a
+vödör-kulcsa**, valamint a két változat-lista egyezése), `flutter analyze` tiszta,
+`test/widgets/release_landscape_and_flicker_test.dart` + `test/ios` **54/54**.
+A függvények telepítve: `grantAdUnlock` **létrehozva**, `admobRewardedSsv`
+frissítve.
+
 **⚠️ Ismert korlát (mérve, 2026-09-22):** az AdMob konzol **Alkalmazások**
 mikro-frontendje a CDP-vezérelt Chrome-profilban **nem indul el** (a Kezdőlap
 renderel, az Alkalmazások útvonal nem; nincs JS-hiba és nincs bukott kérés) — ezért

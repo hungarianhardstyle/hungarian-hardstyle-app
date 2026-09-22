@@ -15,7 +15,30 @@
 // jelenthet, mert nem tudjuk, kinek szólna.
 
 /** A reklámos feloldásnál használt változatok (a kliens ezt küldi). */
-const SSV_VARIANTS = Object.freeze(['free_wav', 'free_link', 'mp3_96', 'mp3_128']);
+const AD_UNLOCK_VARIANTS = Object.freeze(['free_wav', 'free_link', 'mp3_96', 'mp3_128']);
+
+/**
+ * A **kliens-oldali** azonnali jóváírás keretei (tulajdonosi döntés, 2026-09-22).
+ *
+ * MIÉRT KELL: a Google SSV-dokumentációja szerint a jutalmat a **kliens
+ * visszahívásából** kell azonnal megadni, az SSV pedig utólag ellenőriz. Emiatt a
+ * kliens is kérhet jóváírást — ezt a két keret fogja vissza:
+ *
+ *  * `burst` — egy percen belül ennyi kérés mehet át (senki nem néz meg háromnál
+ *    több jutalmazott reklámot egy perc alatt);
+ *  * `daily` — a valódi megkötés: egy fiók ennyi reklámos feloldást kaphat egy
+ *    nap. Ez teszi kockázatossá, hogy egy módosított kliens reklám nélkül
+ *    próbálja kinyitni a teljes kínálatot.
+ *
+ * ⚠️ Amiről ez NEM véd: a fizetős tételek (`label_entitlements`) érintetlenek, a
+ * reklámos feloldás csak az **ingyenes** sáv. A veszteség tehát elmaradt
+ * reklámbevétel, nem eladott zenék ára — és az SSV-vel összevetve naplóból
+ * látszik (`admob_ssv_granted` vs. `clientGrantedAt` nélküli rekordok).
+ */
+const CLIENT_UNLOCK_LIMITS = Object.freeze({
+  burst: { key: 'ad_unlock_client', limit: 3, windowMs: 60_000 },
+  daily: { key: 'ad_unlock_client_daily', limit: 20, windowMs: 24 * 60 * 60 * 1000 },
+});
 
 /**
  * A `custom_data` kibontása. A kliens base64url-kódolt JSON-t küld
@@ -44,8 +67,39 @@ function decodeSsvCustomData(raw) {
   const releaseId = Number(decoded.releaseId || 0);
   const variant = String(decoded.variant || 'mp3_128').trim();
   if (!uid || !Number.isInteger(releaseId) || releaseId < 1) return null;
-  if (!SSV_VARIANTS.includes(variant)) return null;
+  if (!AD_UNLOCK_VARIANTS.includes(variant)) return null;
   return { uid, releaseId, variant };
+}
+
+/**
+ * A **kliens** kérésének ellenőrzése (a callable bemenete).
+ * Ugyanaz a szabály, mint az SSV-nél — egy helyen.
+ *
+ * @returns {{ok: true, releaseId: number, variant: string}|
+ *   {ok: false, reason: string}}
+ */
+function normalizeAdUnlockRequest({ releaseId, variant } = {}) {
+  const id = Number(releaseId || 0);
+  if (!Number.isInteger(id) || id < 1) {
+    return { ok: false, reason: 'Érvénytelen kiadvány-azonosító.' };
+  }
+  const name = String(variant || 'mp3_96').trim();
+  if (!AD_UNLOCK_VARIANTS.includes(name)) {
+    return { ok: false, reason: 'Érvénytelen reklámos feloldási változat.' };
+  }
+  return { ok: true, releaseId: id, variant: name };
+}
+
+/**
+ * A meglévő `variants` térkép bővítése EGY változattal.
+ * ⚠️ Szándékosan NEM írja felül a többit: egy kiadványon több változat is
+ * feloldható (pl. `free_link` ÉS `mp3_96`), és a 349-es hiba pont egy ilyen
+ * elveszett változat volt.
+ */
+function mergeUnlockVariants(existing, variant) {
+  const base =
+    existing && typeof existing === 'object' && !Array.isArray(existing) ? existing : {};
+  return { ...base, [variant]: true };
 }
 
 /**
@@ -70,7 +124,12 @@ function classifyVerifiedSsvCallback({ customData, decoded } = {}) {
 }
 
 module.exports = {
-  SSV_VARIANTS,
+  AD_UNLOCK_VARIANTS,
+  // Visszamenőleges név (a meglévő hívók/testsztek miatt) — UGYANAZ a lista.
+  SSV_VARIANTS: AD_UNLOCK_VARIANTS,
+  CLIENT_UNLOCK_LIMITS,
   decodeSsvCustomData,
+  normalizeAdUnlockRequest,
+  mergeUnlockVariants,
   classifyVerifiedSsvCallback,
 };

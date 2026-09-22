@@ -119,5 +119,35 @@ void main() {
       expect(screen, contains("_claimReward('free_link')"));
       expect(screen, contains("variant: 'free_link'"));
     });
+
+    test('a jutalom a KLIENS visszahívásából azonnal jár, az SSV csak igazol', () {
+      // ⚠️ MÉRVE (2026-09-22): a jóváírás eddig kizárólag az SSV-re várt, a
+      // kliens pedig csak 20 másodpercig — a Google **teszt**-reklámja viszont
+      // egyáltalán nem küld SSV-t (nulla visszahívás két tesztből), így a
+      // felhasználó megnézte a reklámot és nem kapott semmit. A Google saját
+      // ajánlása: a jutalom a kliens visszahívásából AZONNAL jár, az SSV utólag
+      // ellenőriz. Ez a teszt azt őrzi, hogy az azonnali út megvan, ÉS hogy a
+      // régi (SSV-re váró) út is megmaradt tartalékként.
+      final screen = read('lib/screens/releases/release_detail_screen.dart');
+      final grantIndex = screen.indexOf('grantAdUnlock(');
+      final waitIndex = screen.indexOf('waitForAdUnlock(');
+      expect(grantIndex, greaterThan(0),
+          reason: 'a jutalmat azonnal jóvá kell írni a kliens visszahívásából');
+      expect(waitIndex, greaterThan(grantIndex),
+          reason: 'az SSV-várás csak TARTALÉK lehet, az azonnali jóváírás UTÁN');
+
+      final service = read('lib/services/label_purchase_service.dart');
+      expect(service, contains("'grantAdUnlock'"),
+          reason: 'a callable neve pontosan ez');
+      expect(service, contains('Future<bool> grantAdUnlock('));
+      // ⚠️ Az azonnali jóváírás hibája nem viheti el a reklámot: ilyenkor a
+      // hívó a régi útra esik vissza, ezért itt NEM szabad dobni.
+      final body = service.substring(
+        service.indexOf('Future<bool> grantAdUnlock('),
+        service.indexOf('Future<bool> waitForAdUnlock('),
+      );
+      expect(body, contains('catch (_)'));
+      expect(body, contains('return false'));
+    });
   });
 }

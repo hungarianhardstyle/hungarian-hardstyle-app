@@ -320,6 +320,33 @@ class LabelPurchaseService with WidgetsBindingObserver {
     return data['downloadUrl'] as String;
   }
 
+  /// **Azonnali jóváírás a kliens visszahívásából** — a Google SSV-ajánlása.
+  ///
+  /// MIÉRT KELL (mérve, 2026-09-22): a jóváírás eddig **kizárólag** a
+  /// szerveroldali SSV-visszahívásra várt, a kliens pedig csak **20 másodpercig**
+  /// (`waitForAdUnlock`). Ha a visszahívás lassabb vagy elmarad — a Google
+  /// **teszt**-reklámja pedig egyáltalán nem küld ilyet —, a felhasználó
+  /// megnézte a reklámot és **nem kapott semmit**.
+  ///
+  /// A szerver két kerettel (percenkénti + **napi**) fogja vissza ezt az utat, a
+  /// rekordra `clientGrantedAt` jelzés kerül, az SSV pedig utólag igazol.
+  ///
+  /// @returns true, ha a feloldás megvan (akár most írtuk jóvá, akár már megvolt).
+  Future<bool> grantAdUnlock(int releaseId, {String variant = 'mp3_96'}) async {
+    try {
+      final result = await callFirebaseCallable<Map<String, dynamic>>(
+        'grantAdUnlock',
+        parameters: {'releaseId': releaseId, 'variant': variant},
+      );
+      return result.data['unlocked'] == true;
+    } catch (_) {
+      // ⚠️ A hibát NEM dobjuk tovább: a hívó ilyenkor a régi útra esik vissza
+      // (megvárja az SSV-visszaigazolást). Egy elhasalt azonnali jóváírás
+      // (napi keret, hálózat) nem viheti el a felhasználó reklámját.
+      return false;
+    }
+  }
+
   Future<bool> waitForAdUnlock({
     required int releaseId,
     String variant = 'mp3_96',

@@ -868,12 +868,26 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       );
       if (!earned) throw StateError('A reklám megtekintése nem fejeződött be.');
       if (mounted) {
-        setState(() => _message = 'A reklám jóváírásának ellenőrzése…');
+        setState(() => _message = 'A jutalom jóváírása…');
       }
-      final unlocked = await _purchases.waitForAdUnlock(
-        releaseId: _release.id,
+      // ⚠️ A Google SSV-ajánlása: a jutalmat a KLIENS visszahívásából azonnal
+      // adjuk meg, az SSV pedig utólag igazol. Enélkül egy lassú (vagy teszt-
+      // reklámnál elmaradó) visszahívás miatt a felhasználó hiába nézte meg a
+      // reklámot. Ha az azonnali jóváírás nem megy át (napi keret, hálózat),
+      // visszaesünk a régi útra: megvárjuk a szerveroldali visszaigazolást.
+      var unlocked = await _purchases.grantAdUnlock(
+        _release.id,
         variant: variant,
       );
+      if (!unlocked) {
+        if (mounted) {
+          setState(() => _message = 'A reklám jóváírásának ellenőrzése…');
+        }
+        unlocked = await _purchases.waitForAdUnlock(
+          releaseId: _release.id,
+          variant: variant,
+        );
+      }
       if (!unlocked) {
         throw StateError(
           'A reklám lefutott, de a feloldás nem érkezett meg. Próbáld újra később.',

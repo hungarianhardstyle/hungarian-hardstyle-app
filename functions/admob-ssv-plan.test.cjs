@@ -5,7 +5,11 @@ const path = require('node:path');
 
 const {
   SSV_VARIANTS,
+  AD_UNLOCK_VARIANTS,
+  CLIENT_UNLOCK_LIMITS,
   decodeSsvCustomData,
+  normalizeAdUnlockRequest,
+  mergeUnlockVariants,
   classifyVerifiedSsvCallback,
 } = require('./admob-ssv-plan');
 
@@ -146,4 +150,69 @@ test('forras-lint: a kezelo a tiszta modult hasznalja, es NEM ad 400-at a probar
   // reklám, mégsem nyílt meg" hibát nem lehet visszamérni (csak a Firestore-ból).
   assert.match(source, /event: 'admob_ssv_granted'/);
   assert.match(source, /event: 'admob_ssv_probe_validated'/);
+});
+
+test('a KLIENS-oldali azonnali jovairas bemenetet ugyanaz a szabaly ellenorzi', () => {
+  // ⚠️ A tulajdonosi döntés (2026-09-22, „B"): a jutalom a kliens
+  // visszahívásából AZONNAL jár, az SSV csak utólag igazol. A bemenet
+  // ellenőrzése ezért UGYANAZ, mint az SSV-nél — egy helyen él.
+  assert.deepEqual(normalizeAdUnlockRequest({ releaseId: 12405, variant: 'free_link' }), {
+    ok: true,
+    releaseId: 12405,
+    variant: 'free_link',
+  });
+  // A hiányzó változat a kliens alapértéke: mp3_96 (nem mp3_128 — az az SSV
+  // visszamenőleges alapértéke).
+  assert.deepEqual(normalizeAdUnlockRequest({ releaseId: 7 }), {
+    ok: true,
+    releaseId: 7,
+    variant: 'mp3_96',
+  });
+
+  for (const bad of [
+    { releaseId: 0, variant: 'free_link' },
+    { releaseId: -2, variant: 'free_link' },
+    { releaseId: 1.5, variant: 'free_link' },
+    { releaseId: 'abc', variant: 'free_link' },
+    { releaseId: 12, variant: 'wav' },
+    { releaseId: 12, variant: 'PAID' },
+  ]) {
+    const result = normalizeAdUnlockRequest(bad);
+    assert.equal(result.ok, false, `várt elutasítás: ${JSON.stringify(bad)}`);
+    assert.ok(result.reason.length > 0);
+  }
+});
+
+test('a valtozat-térkép bővítése NEM veszíti el a korábbi változatokat', () => {
+  // A 349-es hiba pont egy elveszett változat volt (`free_link`): ha a
+  // jóváírás felülírná a térképet, a korábban kiváltott jogosultság tűnne el.
+  assert.deepEqual(mergeUnlockVariants({ mp3_96: true }, 'free_link'), {
+    mp3_96: true,
+    free_link: true,
+  });
+  assert.deepEqual(mergeUnlockVariants(undefined, 'mp3_128'), { mp3_128: true });
+  // Szemét bemenet (tömb, szöveg) ne törje el a mentést.
+  assert.deepEqual(mergeUnlockVariants(['mp3_96'], 'mp3_96'), { mp3_96: true });
+  assert.deepEqual(mergeUnlockVariants('semmi', 'mp3_96'), { mp3_96: true });
+  // És a bemenetet NE módosítsa (a Firestore adata közös referenciában él).
+  const original = { mp3_96: true };
+  mergeUnlockVariants(original, 'free_wav');
+  assert.deepEqual(original, { mp3_96: true });
+});
+
+test('a kliens-oldali jovairas keretei: percenkenti burst ES napi plafon', () => {
+  const { burst, daily } = CLIENT_UNLOCK_LIMITS;
+  assert.equal(burst.windowMs, 60_000);
+  assert.equal(daily.windowMs, 24 * 60 * 60 * 1000);
+  // A napi keret a valódi megkötés: nem szabad kisebbnek lennie a burstnél,
+  // különben egy szorgalmas felhasználó a burst miatt akadna el.
+  assert.ok(daily.limit > burst.limit, 'a napi keret legyen nagyobb a burstnél');
+  // És a két vödör NE ugyanaz a kulcs legyen, különben az egyik keret elnyelné
+  // a másikat (a bucket csak az ablak hosszában tér el).
+  assert.notEqual(burst.key, daily.key);
+});
+
+test('a harom valtozat-lista ugyanaz (nem tud szethuzni)', () => {
+  assert.deepEqual([...AD_UNLOCK_VARIANTS], [...SSV_VARIANTS]);
+  assert.ok(AD_UNLOCK_VARIANTS.includes('free_link'));
 });
