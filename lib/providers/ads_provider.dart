@@ -36,20 +36,21 @@ const productionRewardedAdUnitId = String.fromEnvironment(
   defaultValue: _configuredProductionRewardedId,
 );
 
-// Az **iOS** egységazonosítók (a tulajdonos AdMob konzoljából).
+// Az **iOS** egységazonosítók (a tulajdonos AdMob konzoljából, 2026-09-22).
 //
-// ⚠️ Amíg ÜRESEK, az iOS a Google **teszt** egységeit használja — ez azért
-// helyes, mert az `Info.plist`-ben jelenleg a Google **teszt**
-// `GADApplicationIdentifier` szerepel (a kettő összeillik). Az iOS **soha** nem
-// esik vissza az Android egységére: azt a `lib/services/ad_unit_plan.dart`
-// tiszta döntése zárja ki.
+// ⚠️ iOS-en SOSEM eshet vissza az Android egységére: azt a
+// `lib/services/ad_unit_plan.dart` tiszta döntése zárja ki. Ezért ha itt ÜRES az
+// érték (pl. helyi futtatás `--dart-define` nélkül), az iOS a Google **teszt**
+// egységeit használja — a fejlesztéshez ez a helyes.
 //
-// Amint megvannak a valódi iOS egységek, elég ezeket a dart-define-okat
-// megadni — **kód nem változik**:
-//   --dart-define=HUHS_ADMOB_BANNER_ID_IOS=ca-app-pub-…/…
-//   --dart-define=HUHS_ADMOB_REWARDED_ID_IOS=ca-app-pub-…/…
-// és az Info.plist `GADApplicationIdentifier`-ét az iOS AdMob **app** ID-ra kell
-// állítani.
+// A **produkciós** értékek a CI-ből jönnek (kód nem tárolja őket, mert így
+// egy helyen élnek, és a sideloadolt teszt-buildtől függetlenül állíthatók):
+//   HUHS_ADMOB_BANNER_ID_IOS    = ca-app-pub-7714662594685378/5511193968
+//   HUHS_ADMOB_REWARDED_ID_IOS  = ca-app-pub-7714662594685378/7238016636
+// GitHub Actions: GitHub-változóból (`vars.*`); Codemagic: a `codemagic.yaml`-ból.
+// Az `Info.plist` `GADApplicationIdentifier`-je ugyanennek az AdMob appnak a
+// azonosítója (`ca-app-pub-7714662594685378~6550697484`) — a Google teszt app
+// ID-ja (`…3940256099942544~1458002511`) ide nem kerülhet vissza.
 const iosBannerAdUnitId = String.fromEnvironment('HUHS_ADMOB_BANNER_ID_IOS');
 const iosRewardedAdUnitId = String.fromEnvironment('HUHS_ADMOB_REWARDED_ID_IOS');
 

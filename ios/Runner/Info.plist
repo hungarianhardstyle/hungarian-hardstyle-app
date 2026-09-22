@@ -36,9 +36,14 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<!-- Google Mobile Ads test App ID; replace before production iOS ads. -->
+	<!-- Az iOS AdMob **app** azonosító (a tulajdonos konzoljából, 2026-09-22).
+	     ⚠️ A Google teszt app ID-ja (`ca-app-pub-3940256099942544~1458002511`)
+	     ide NEM kerülhet vissza: az csak fejlesztésre való, és egy App Store-ba
+	     küldött buildben tiltott. A hozzá tartozó egységazonosítók a CI-ből
+	     jönnek (`--dart-define=HUHS_ADMOB_*_ID_IOS`), lásd a codemagic.yaml-t
+	     és a .github/workflows/ios-unsigned-check.yml-t. -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-7714662594685378~6550697484</string>
 	<!-- Csak HTTPS-t használunk, ezért nem kell minden TestFlight-feltöltésnél
 	     az export-compliance kérdőívet kitölteni. -->
 	<key>ITSAppUsesNonExemptEncryption</key>

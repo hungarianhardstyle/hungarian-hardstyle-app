@@ -333,6 +333,16 @@ attestation-re vonatkozik, a debug tokenes útra **nem**. Ezért a sideloadolt
 teszteléshez **nem kell** sem fizetős fiók, sem DeviceCheck-kulcs. Az éles App Attest
 majd a TestFlight-körben kerül be (a tulajdonos `teamId`-jével + entitlementtel).
 
+**⚠️ EZ A TESTFLIGHT-KÖR ELŐTT KÖTELEZŐ LÉPÉS (különben megismétlődik a hiba).**
+A produkciós build — helyesen — **nem** kapja meg a debug zászlót, ezért App
+Attest-tel/DeviceCheck-kel próbál attestálni, az iOS apphoz viszont **nincs
+regisztrálva szolgáltató** a Firebase Console-ban (a sor `Attestation providers`
+oszlopa `–`). Ha így menne fel a TestFlightra, az `enforceAppCheck: true`
+callable-ok (**közösségi profilok, ranglista, átvett DJ-adatlapok**) **HTTP 401**-et
+adnának — pontosan az a hiba, amit itt feltártunk. A szolgáltatót tehát az
+Apple-tagság megszerzése **után azonnal** regisztrálni kell (DeviceCheck:
+`keyId` + `.p8` kulcs, vagy App Attest: `teamId` + entitlement).
+
 **⚠️ A debug token a telepítéshez kötődik.** Ha a container **törlődik** (eltávolítás +
 újratelepítés, nem frissítés), az app **új** tokent generál — azt újra regisztrálni kell.
 Frissítésnél (mint nálunk is) az app-adatok és így a token **megmaradnak**.
@@ -387,6 +397,11 @@ a **nyilvános** megjelenést:
    bevezetése csak az App Store-os megjelenés után van értelme — addig a valódi
    egységek **egyáltalán nem** szolgálnának ki hirdetést, ami **rosszabb** a
    teszt-reklámnál.
+   **✅ ÁLLAPOT (2026-09-22):** az iOS app és a két egység **létrejött** az AdMobban,
+   az azonosítók be vannak kötve (lásd lentebb). **Ha a banner vagy a jutalmazott
+   mégsem jelenik meg**, az nem kódhiba, hanem ez a **jóváhagyási kapu** — ilyenkor
+   a `gh variable delete HUHS_ADMOB_BANNER_ID_IOS` (és `…_REWARDED_ID_IOS`)
+   visszaállítja a teszt-egységeket, amíg az AdMob jóvá nem hagyja az appot.
 3. **Push (FCM):** APNs kulcs a Firebase-ben + `aps-environment` entitlement.
    Az entitlement csak akkor kerülhet a projektbe, ha az App ID-nál a Push
    capability **be van kapcsolva** — különben az aláírás elhasal.
@@ -404,16 +419,21 @@ a **nyilvános** megjelenést:
 
 ---
 
-### Hogyan kerülnek be a valódi iOS reklám-azonosítók (kódmódosítás nélkül)
+### A valódi iOS reklám-azonosítók — ✅ **BEÁLLÍTVA (2026-09-22)**
 
-Az AdMob **egység**-azonosítók **GitHub-változókból** jönnek, ezért a bevezetésük
-nem kér commitot:
-
-| Érték | Hol él | Teendő |
+| Érték | Mi az | Hol él |
 |---|---|---|
-| AdMob **App ID** (`ca-app-pub-…~…`) | `ios/Runner/Info.plist` → `GADApplicationIdentifier` | ez az **egyetlen** kódmódosítás |
-| **Banner** egység (`ca-app-pub-…/…`) | GitHub → Settings → Secrets and variables → Actions → **Variables** → `HUHS_ADMOB_BANNER_ID_IOS` | `gh variable set HUHS_ADMOB_BANNER_ID_IOS --body "<id>"` |
-| **Jutalmazott** egység | ugyanott: `HUHS_ADMOB_REWARDED_ID_IOS` | `gh variable set HUHS_ADMOB_REWARDED_ID_IOS --body "<id>"` |
+| `ca-app-pub-7714662594685378~6550697484` | AdMob **iOS app ID** | `ios/Runner/Info.plist` → `GADApplicationIdentifier` |
+| `ca-app-pub-7714662594685378/5511193968` | **Banner** („HUHS banner") | GitHub-változó `HUHS_ADMOB_BANNER_ID_IOS` **és** `codemagic.yaml` |
+| `ca-app-pub-7714662594685378/7238016636` | **Jutalmazott** („HUHS jutalmazott") | GitHub-változó `HUHS_ADMOB_REWARDED_ID_IOS` **és** `codemagic.yaml` |
+
+A két **egység**-azonosító szándékosan **nem** a Dart-kódban él: a GitHub Actions
+GitHub-változóból (`vars.*`), a Codemagic a `codemagic.yaml`-ból adja át
+`--dart-define`-nal. Így a sideloadolt teszt-build és a TestFlight-build külön
+állítható, és a `test/ios/ios_ci_config_test.dart` **őrzi**, hogy a **valódi** app ID
+bekerüljön, a Google teszt app ID viszont **ki ne** szivárogjon. Az **Android**
+app ID (`…~1123886696`) és az Android egységek **változatlanok** — egy kiadó
+(`pub-7714662594685378`), két külön app.
 
 A `.github/workflows/ios-unsigned-check.yml` mindkettőt átadja `--dart-define`-nal, a
 `test/ios/ios_ci_config_test.dart` pedig **őrzi**, hogy ne lehessen beégetni őket, és

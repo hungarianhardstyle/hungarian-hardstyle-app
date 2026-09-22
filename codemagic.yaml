@@ -39,7 +39,14 @@ workflows:
       # A teljes tesztkészlet a GitHub Actions workflow-ban fut (ingyenes).
       # Itt szándékosan nem, hogy ne fogyjon a Codemagic-perc.
       - name: iOS fordítás (aláírás nélkül)
-        script: flutter build ios --release --no-codesign
+        script: |
+          # Az iOS reklám-egységazonosítók NEM titkosak (a kész binárisban úgyis
+          # benne vannak), ezért itt élnek; a Codemagic UI-ból felülírhatók.
+          # ⚠️ A GitHub Actions ugyanezt GitHub-változóból adja át — a kettő
+          # szándékosan ugyanaz, hogy a két úton ugyanaz az app szülessen meg.
+          flutter build ios --release --no-codesign \
+            --dart-define=HUHS_ADMOB_BANNER_ID_IOS=${HUHS_ADMOB_BANNER_ID_IOS:-ca-app-pub-7714662594685378/5511193968} \
+            --dart-define=HUHS_ADMOB_REWARDED_ID_IOS=${HUHS_ADMOB_REWARDED_ID_IOS:-ca-app-pub-7714662594685378/7238016636}
     artifacts:
       - build/ios/iphoneos/Runner.app
       - /tmp/xcodebuild_logs/*.log
@@ -100,7 +107,13 @@ workflows:
       - name: Aláírás beállítása a Xcode-projekten
         script: xcode-project use-profiles
       - name: Aláírt .ipa építése
-        script: flutter build ipa --release --export-options-plist=$HOME/export_options.plist
+        script: |
+          # ⚠️ A produkciós TestFlight-build is kapja meg a valódi iOS
+          # egységazonosítókat (a valódi app ID az Info.plist-ben van) — enélkül
+          # a kiadott app a Google **teszt**-egységeivel indulna.
+          flutter build ipa --release --export-options-plist=$HOME/export_options.plist \
+            --dart-define=HUHS_ADMOB_BANNER_ID_IOS=${HUHS_ADMOB_BANNER_ID_IOS:-ca-app-pub-7714662594685378/5511193968} \
+            --dart-define=HUHS_ADMOB_REWARDED_ID_IOS=${HUHS_ADMOB_REWARDED_ID_IOS:-ca-app-pub-7714662594685378/7238016636}
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log

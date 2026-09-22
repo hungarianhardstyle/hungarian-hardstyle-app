@@ -233,6 +233,37 @@ void main() {
         reason: 'a TestFlight-build NEM kaphat debug App Check-szolgáltatót',
       );
     });
+
+    test('az iOS reklam-identitas valodi (a Google TESZT app ID nem mehet ki)', () {
+      // A tulajdonos AdMob konzoljából (2026-09-22). Ezek **nyilvános**
+      // azonosítók (a kész binárisban úgyis benne vannak), nem titkok — de
+      // attól még pontosan egy helyen kell élniük, és a teszt app ID nem
+      // szivároghat ki a kiadott csomagba.
+      const appId = 'ca-app-pub-7714662594685378~6550697484';
+      const bannerId = 'ca-app-pub-7714662594685378/5511193968';
+      const rewardedId = 'ca-app-pub-7714662594685378/7238016636';
+      const googleTestAppId = 'ca-app-pub-3940256099942544~1458002511';
+
+      // ⚠️ Az ÉRTÉKET mérjük, nem a fájl szövegét: a teszt app ID-t a
+      // figyelmeztető komment szándékosan megemlíti, az nem hiba.
+      final gad = RegExp(r'<key>GADApplicationIdentifier</key>\s*<string>([^<]+)</string>')
+          .firstMatch(_read('ios/Runner/Info.plist'))
+          ?.group(1);
+      expect(gad, appId,
+          reason: 'az iOS AdMob app ID az Info.plist-ben él — és ez a VALÓDI');
+      expect(gad, isNot(googleTestAppId),
+          reason: 'a Google teszt app ID-ja nem kerülhet kiadott buildbe');
+
+      final appIds = RegExp(r'ca-app-pub-\d+~\d+').allMatches(appId).length;
+      expect(appIds, 1, reason: 'az app ID alakja `…~…`, az egységé `…/…`');
+
+      final codemagic = _read('codemagic.yaml');
+      for (final id in [bannerId, rewardedId]) {
+        expect(codemagic, contains(id),
+            reason: 'a TestFlight-build is a VALÓDI iOS egységekkel induljon '
+                '(különben a kiadott app a teszt-egységeket használná)');
+      }
+    });
   });
 }
 
