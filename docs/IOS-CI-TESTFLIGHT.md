@@ -490,8 +490,27 @@ https://us-central1-hungarian-hardstyle.cloudfunctions.net/admobRewardedSsv
 ```
 
 AdMob → **Hirdetési egységek** → a jutalmazott egység szerkesztése →
-**Szerveroldali ellenőrzés (SSV)** → a fenti URL. (A mező melletti *Ellenőrzés* gomb
-pontosan azt a `200 "validated"` választ kapja, amit fent mértünk.)
+**Szerveroldali ellenőrzés (SSV)** → a fenti URL. Az **„Egyéni adatok" mező
+maradjon ÜRES** — a `custom_data`-t a kliens küldi `setServerSideOptions`-szal,
+a konzolba írt érték csak elrontaná a próbát.
+
+**⚠️ KÖZBEN A SAJÁT KEZELŐNK HIBÁJA IS ELŐKERÜLT — javítva (2026-09-22).**
+Az AdMob konzol *„URL ellenőrzése"* gombja **400-at** kapott
+(*„A szerver a következő HTTP-válaszkódot küldte: 400"*). A napló megmondta,
+miért: `{"reason":"missing reward data"}` — a kezelő ezt az ágat az
+**aláírás-ellenőrzés UTÁN** futtatta, a validátor viszont **valódi aláírással, de
+`custom_data` nélkül** hív. Ezért a `!customData` ág 400-at adott, és **a konzol
+soha nem tudta volna érvényesíteni az URL-t** — a beállítás így bizonytalan.
+
+A javítás: a „nincs `custom_data`" eset mostantól **próba** (`200 "validated"`),
+**jóváírás nélkül** — az aláírást továbbra sem lehet megkerülni, mert a döntés az
+aláírás-ellenőrzés **után** születik. A döntés a tiszta
+`functions/admob-ssv-plan.js`-be került (`classifyVerifiedSsvCallback`,
+`decodeSsvCustomData`), a `functions/admob-ssv-plan.test.cjs` **8/8** teszteli —
+benne forrás-lint, ami **tiltja** a `missing reward data` 400-as ág visszatérését,
+és kimondja, hogy jóváírni csak ellenőrzött aláírással szabad. A függvény
+telepítve (`Deploy complete!`), a végpont mérve: aláírás nélkül
+`200 "validated"`, `transaction_id`-vel aláírás nélkül `400`.
 
 **⚠️ Nyitott kérdés, amit a következő teszt dönt el:** a Google **teszt**-reklámjai
 küldenek-e egyáltalán SSV-visszahívást. Ha nem, akkor a jutalmazott feloldás

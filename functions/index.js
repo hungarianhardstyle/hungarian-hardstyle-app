@@ -57,6 +57,10 @@ const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 const { playProductMatches } = require('./play-product-plan');
 const {
+  decodeSsvCustomData,
+  classifyVerifiedSsvCallback,
+} = require('./admob-ssv-plan');
+const {
   adUnlockGrantsVariant,
   labelLibraryPayload,
   purchaseVerificationBudget,
@@ -6889,23 +6893,18 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
     }
     const valid = verificationResults.some((result) => result.valid);
     if (!valid) return reject('invalid signature');
-    if (!customData) return reject('missing reward data');
-    let decoded;
-    try {
-      decoded = JSON.parse(Buffer.from(customData, 'base64url').toString('utf8'));
-    } catch (_) {
-      decoded = JSON.parse(Buffer.from(decodeURIComponent(customData), 'base64url').toString('utf8'));
+    // ⚠️ A végső döntés a tiszta modulban él (`./admob-ssv-plan`): a „valódi
+    // aláírás, de ÜRES custom_data" eset az AdMob konzol **validátora**, amire
+    // 200-at kell adni (különben a beállítás hibát jelez) — jóváírás nélkül.
+    // Korábban ez 400 volt, ezért a konzol sosem tudta érvényesíteni az URL-t.
+    const decoded = customData ? decodeSsvCustomData(customData) : null;
+    const decision = classifyVerifiedSsvCallback({ customData, decoded });
+    if (decision.action === 'validate') {
+      console.info(JSON.stringify({ event: 'admob_ssv_probe_validated' }));
+      return res.status(200).send('validated');
     }
-    const uid = String(decoded.uid || '').trim();
-    const releaseId = Number(decoded.releaseId || 0);
-    const variant = String(decoded.variant || 'mp3_128').trim();
-    if (
-      !uid ||
-      !Number.isInteger(releaseId) ||
-      releaseId < 1 ||
-      !['free_wav', 'free_link', 'mp3_96', 'mp3_128'].includes(variant)
-    )
-      return reject('invalid reward data');
+    if (decision.action === 'reject') return reject(decision.reason);
+    const { uid, releaseId, variant } = decision;
     const transaction = db.collection('admob_reward_transactions').doc(transactionId);
     await db.runTransaction(async (tx) => {
       if ((await tx.get(transaction)).exists) return;
