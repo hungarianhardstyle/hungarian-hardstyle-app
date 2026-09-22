@@ -280,9 +280,18 @@ a **nyilvános** megjelenést:
 
 ## 7. ŐSZINTE KORLÁTOK
 
-- **A pipeline-t nem tudtam lefuttatni:** ezen a gépen Windows van, macOS/Xcode
-  nincs. A `codemagic.yaml` és a GitHub Actions workflow a **hivatalos Codemagic
-  sémákból** készült (idézett dokumentáció), de élesben még nem futott.
+- **A CI MÁR FUTOTT, ÉS ZÖLD (2026-09-22, mérve):** a GitHub Actions **2. futása**
+  (`af47542a`) **12m4s alatt sikeres** lett — `flutter analyze`, az
+  **iOS-fordítás** és a teljes tesztkészlet is:
+  `✓ Built build/ios/iphoneos/Runner.app (60.0MB)` (release, eszközre, aláírás
+  nélkül). **Ez az első valaha mért bizonyíték arra, hogy a projekt lefordul
+  iOS-re.** Az **1. futás még elhasalt** — az `ios/Podfile` miatt (lásd a fenti
+  táblázatot). Vagyis a pipeline pontosan azt tette, amiért épült: az első
+  futásából derült ki egy valódi, addig láthatatlan hiba.
+- **A `codemagic.yaml` viszont MÉG NEM futott élesben:** az aláírt
+  TestFlight-feltöltéshez Apple Developer Program tagság kell ($99/év), az pedig
+  még nincs meg. A Codemagic workflow-je a hivatalos sémákból készült, de élesben
+  igazolatlan.
 - A **Codemagic Xcode-verzió** szándékosan `latest` — kiadás előtt érdemes
   konkrét verzióra szorítani, hogy a build reprodukálható legyen.
 - Az **ikon-javítás** méréssel és szemrevételezéssel igazolt (alfa nincs, a kép
