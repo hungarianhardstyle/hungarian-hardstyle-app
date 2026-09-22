@@ -404,6 +404,36 @@ a **nyilvános** megjelenést:
 
 ---
 
+### Hogyan kerülnek be a valódi iOS reklám-azonosítók (kódmódosítás nélkül)
+
+Az AdMob **egység**-azonosítók **GitHub-változókból** jönnek, ezért a bevezetésük
+nem kér commitot:
+
+| Érték | Hol él | Teendő |
+|---|---|---|
+| AdMob **App ID** (`ca-app-pub-…~…`) | `ios/Runner/Info.plist` → `GADApplicationIdentifier` | ez az **egyetlen** kódmódosítás |
+| **Banner** egység (`ca-app-pub-…/…`) | GitHub → Settings → Secrets and variables → Actions → **Variables** → `HUHS_ADMOB_BANNER_ID_IOS` | `gh variable set HUHS_ADMOB_BANNER_ID_IOS --body "<id>"` |
+| **Jutalmazott** egység | ugyanott: `HUHS_ADMOB_REWARDED_ID_IOS` | `gh variable set HUHS_ADMOB_REWARDED_ID_IOS --body "<id>"` |
+
+A `.github/workflows/ios-unsigned-check.yml` mindkettőt átadja `--dart-define`-nal, a
+`test/ios/ios_ci_config_test.dart` pedig **őrzi**, hogy ne lehessen beégetni őket, és
+hogy a debug App Check-szolgáltató **csak** a sideloadolt buildbe kerüljön.
+Beállítatlanul **üres string** → a Google teszt-egységei (ez a mai viselkedés).
+
+**⚠️ A sorrend nem mindegy.** A konzol szerint *„a hirdetések megjelenítése előtt az
+alkalmazásokat jóvá kell hagyni"*, és a fiók-ellenőrző lista a **store-link** hiánya
+miatt **3/4**-en áll. Ezért a **valódi egységek bekapcsolása csak az App Store-os
+megjelenés + AdMob-jóváhagyás után** van értelme: addig a teszt-egységek mutatnak
+hirdetést, a valódiak **semmit**. Visszaváltás egy paranccsal:
+`gh variable delete <név>`.
+
+**⚠️ Ismert korlát (mérve, 2026-09-22):** az AdMob konzol **Alkalmazások**
+mikro-frontendje a CDP-vezérelt Chrome-profilban **nem indul el** (a Kezdőlap
+renderel, az Alkalmazások útvonal nem; nincs JS-hiba és nincs bukott kérés) — ezért
+az app + egységek létrehozása **kézi lépés** a tulajdonos böngészőjében.
+
+---
+
 ## 6. Hibakeresés
 
 | Tünet | Ok / teendő |
