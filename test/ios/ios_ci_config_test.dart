@@ -232,6 +232,19 @@ void main() {
         isNot(contains('HUHS_APP_CHECK_DEBUG_IOS')),
         reason: 'a TestFlight-build NEM kaphat debug App Check-szolgáltatót',
       );
+
+      // ⚠️ Ugyanez a minta a reklámoknál: a sideloadolt TESZT-buildnek
+      // garantáltan töltő reklám kell (különben a jutalmazott feloldás nem is
+      // próbálható), a produkciós build viszont a VALÓDI egységekkel megy.
+      expect(workflow, contains('HUHS_ENABLE_TEST_ADS=true'),
+          reason: 'a sideloadolt build teszt-reklámot használjon: a valódi iOS '
+              'egységek az AdMob-jóváhagyásig nem töltenek, és ilyenkor a '
+              'jutalmazott feloldás el sem indul');
+      expect(
+        _read('codemagic.yaml'),
+        isNot(contains('HUHS_ENABLE_TEST_ADS')),
+        reason: 'a kiadott app nem használhat teszt-reklámot',
+      );
     });
 
     test('az iOS reklam-identitas valodi (a Google TESZT app ID nem mehet ki)', () {

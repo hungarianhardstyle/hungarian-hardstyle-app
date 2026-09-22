@@ -96,9 +96,18 @@ jobs:
         # mai, biztonságos viselkedés: az `ad_unit_plan.dart` ilyenkor a Google
         # **hivatalos teszt-egységeire** esik vissza, ezért a reklám így is megjelenik.
         # (Ez a lépés szándékosan a tesztek ELŐTT van — lásd lentebb.)
+        # ⚠️ A `HUHS_ENABLE_TEST_ADS` a SIDELOADOLT buildbe való, és MÉRT okból:
+        # az iOS AdMob appot az Apple/AdMob még nem hagyta jóvá (a konzol szerint
+        # a store-link hiányzik), ezért a VALÓDI egységek **nem töltenek** — és
+        # ilyenkor a jutalmazott feloldás el sem indul. Ez a zászló a Google
+        # **teszt**-egységeit használja (azok mindig töltenek), ÉS átengedi a
+        # hozzájárulás-kaput is (`prepareAdConsent`/`canRequestAds` kimarad).
+        # A produkciós TestFlight-build ezt NEM kapja meg: ott a valódi egységek
+        # mennek (lásd a `codemagic.yaml`-t).
         run: |
           flutter build ios --release --no-codesign \
             --dart-define=HUHS_APP_CHECK_DEBUG_IOS=true \
+            --dart-define=HUHS_ENABLE_TEST_ADS=true \
             --dart-define=HUHS_ADMOB_BANNER_ID_IOS=${{ vars.HUHS_ADMOB_BANNER_ID_IOS }} \
             --dart-define=HUHS_ADMOB_REWARDED_ID_IOS=${{ vars.HUHS_ADMOB_REWARDED_ID_IOS }}
 

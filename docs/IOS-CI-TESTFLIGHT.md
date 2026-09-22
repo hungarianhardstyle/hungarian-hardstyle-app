@@ -447,6 +447,18 @@ megjelenés + AdMob-jóváhagyás után** van értelme: addig a teszt-egységek 
 hirdetést, a valódiak **semmit**. Visszaváltás egy paranccsal:
 `gh variable delete <név>`.
 
+**⚠️ Ezért a sideloadolt build `HUHS_ENABLE_TEST_ADS=true`-vel épül** (a GitHub
+Actions adja át). Az AdMob-jóváhagyásig a valódi iOS egységek **nem töltenek**, és
+ilyenkor nemcsak a banner marad üres, hanem a **jutalmazott feloldás el sem indul**
+(a `RewardedAd.load` hibára fut, és a felület *„Most nincs elérhető reklám"* /
+*„Nem sikerült betölteni a reklámot"* üzenetet adja). A teszt-zászló a Google
+**teszt**-egységeit használja (azok mindig töltenek), **és** átengedi a
+hozzájárulás-kaput is (`prepareAdConsent`/`canRequestAds` kimarad) — iOS-en ez friss
+telepítésnél számít, mert az UMP/ATT űrlap állapota blokkolhatja a kérést.
+A **TestFlight**-build ezt a zászlót szándékosan **nem** kapja meg. Ez **nem** a
+sideload hibája: ugyanez történne egy aláírt buildben is, amíg az AdMob nem hagyja
+jóvá az appot.
+
 **⚠️ Ismert korlát (mérve, 2026-09-22):** az AdMob konzol **Alkalmazások**
 mikro-frontendje a CDP-vezérelt Chrome-profilban **nem indul el** (a Kezdőlap
 renderel, az Alkalmazások útvonal nem; nincs JS-hiba és nincs bukott kérés) — ezért
