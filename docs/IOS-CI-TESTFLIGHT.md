@@ -215,6 +215,44 @@ Ha az **15.0 alatti**, akkor az app ezen a készüléken nem telepíthető — �
 Flutter 3.47 minimuma is iOS 15, **lejjebb vinni nem lehet**, vagyis ilyenkor
 másik (iOS 15+) tesztkészülék kell.
 
+### Ingyenes út a telefonra — Apple Developer tagság NÉLKÜL (7 naponta megújítva)
+
+A CI **feltölt egy aláírás nélküli `.ipa`-t** (`HUHS-ios-unsigned-ipa` artefakt),
+amit a **Sideloadly** nevű ingyenes Windows-program a **saját ingyenes Apple
+ID-dal aláír**, és USB-n felrakja a telefonra. Ez a
+[Habr-cikk](https://habr.com/en/articles/1058788/) által leírt, működő lánc — a
+szerző pontosan ezt csinálta Flutterrel, Mac és $99 nélkül. **Négy lépés:**
+
+1. **Fejlesztői mód a telefonon.** iOS 16 óta kötelező, és a kapcsoló csak
+   **azután** jelenik meg, hogy egy fejlesztői aláírással készült app már
+   felkerült a készülékre (tyúk-tojás). Ehhez egy segédprogram kell Windows-on:
+   **Tenorshare iCareFone** (az „Enable Developer Mode" az ingyenes részben van),
+   alternatíva **3uTools** vagy **AltServer**. Utána:
+   *Beállítások → Adatvédelem és biztonság → Fejlesztői mód*.
+2. **Az IPA letöltése:** GitHub → **Actions** → a legutóbbi **zöld** futás →
+   **Artifacts → `HUHS-ios-unsigned-ipa`** (14 napig marad meg).
+3. **Sideloadly** (ingyenes, Windows): telefon USB-n, Apple ID beírása, az `.ipa`
+   kiválasztása, **Start** — kb. 2-3 perc.
+4. **A profil megbízhatónak jelölése:** *Beállítások → Általános → VPN és
+   eszközkezelés* → a saját Apple ID → **Megbízás**.
+
+**⚠️ Az ingyenes Apple ID korlátai — ezek tények, nem hibák:**
+
+| Korlát | Mit jelent a gyakorlatban |
+|---|---|
+| Az aláírás **7 napig** érvényes | utána újra át kell húzni a Sideloadly-val |
+| Egyszerre **max. 3 app** | a Sideloadly gyakran **véletlen utótagot** tesz a bundle ID-ra, ezért a frissítés **új appnak** látszik, és az app-adatok nem maradnak meg |
+| Egyes **entitlementek** nem elérhetők | a **push értesítés** (`aps-environment`) biztosan nem megy így — nekünk amúgy sincs még |
+| **App Check** | ⚠️ a `firebase_app_check` iOS-en App Attest/DeviceCheck alapú; az App Attest **entitlementet** kér, amit ingyenes fiók nem ad. Ezért **előfordulhat**, hogy egy App Check-kel védett callable elutasítja a kérést. Androidon ez Play Integrity-vel már megy; iOS-en a Firebase Console-ban kell regisztrálni a szolgáltatót (App Check → Apps → iOS app). Ha ez gondot okoz, a végleges út a TestFlight |
+| **Helyi fájlok** | a „Megvásárolt zenéim" letöltései az újratelepítésnél elvesznek (új bundle ID) |
+
+**Ez tehát tesztelésre való, nem terjesztésre.** A végleges út a **TestFlight**
+(fizetős tagsággal): nincs 7 napos lejárat, nincs kábel, a tesztelőket meghívóval
+lehet hozzáadni, és az App Attest is működik.
+
+> ⚠️ **A Sideloadly-úthoz NEM kell (és nem is szabad) `pod install`:** ez a projekt
+> Swift Package Manager-t használ — egy Podfile elhasalását már megmértük.
+
 ---
 
 ## 4. Költség (őszintén)

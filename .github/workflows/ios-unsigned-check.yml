@@ -78,5 +78,30 @@ jobs:
       - name: iOS fordítás (aláírás nélkül)
         run: flutter build ios --release --no-codesign
 
+      # --- Aláírás nélküli IPA a kézi teszteléshez -------------------------
+      # Az `.ipa` a valóságban egy zip, benne `Payload/Runner.app` — nincs
+      # benne semmi varázslat, és NEM kell hozzá Apple Developer fiók. Ezt a
+      # fájlt tölti le a tulajdonos, és a Sideloadly **ingyenes Apple ID-val**
+      # aláírja + felrakja a telefonra (7 napos érvényességgel).
+      # ⚠️ Ez a lépés SZÁNDÉKOSAN a tesztek ELŐTT van: így a letölthető csomag
+      # akkor is elkészül, ha egy teszt elhasal.
+      - name: Aláírás nélküli IPA csomagolása
+        run: |
+          cd build/ios/iphoneos
+          rm -rf Payload
+          mkdir -p Payload
+          cp -R Runner.app Payload/
+          zip -qr Runner-unsigned.ipa Payload
+          ls -lh Runner-unsigned.ipa
+          echo "--- a csomag tartalma ---"
+          unzip -l Runner-unsigned.ipa | head -5
+
+      - name: Letölthető csomag feltöltése
+        uses: actions/upload-artifact@v4
+        with:
+          name: HUHS-ios-unsigned-ipa
+          retention-days: 14
+          path: build/ios/iphoneos/Runner-unsigned.ipa
+
       - name: Tesztek
         run: flutter test
