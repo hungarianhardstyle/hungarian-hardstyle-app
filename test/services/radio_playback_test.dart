@@ -66,9 +66,39 @@ void main() {
     test('az iOS-út valódi lejátszó, és kezeli a stop utáni újraindítást', () {
       expect(service, contains('AudioPlayer('));
       expect(service, contains('ProcessingState.idle'),
-          reason: 'a stop utáni play különben néma marad (load() kell)');
+          reason: 'a stop utáni play különben néma marad (friss forrás kell)');
       expect(service, contains('unawaited(_player.play())'),
           reason: 'a stream végtelen, a play() future soha nem fejeződik be');
+    });
+
+    test('az iOS-út VISSZASZERZI a hang-sessiont (ez volt a néma hiba)', () {
+      // ⚠️ MÉRT GYÖKÉR (2026-09-22): a `just_audio` `play()`-je a
+      // `AudioSession.setActive(true)` sikerétől függ, és ha az `false`, akkor
+      // **kivétel nélkül, némán** nem indul el a lejátszás. A projekt a
+      // sessiont csak induláskor konfigurálja, az `setActive` viszont tranziens:
+      // a leállított előzetes/zene után elveszik — ezért nem indult újra a rádió.
+      expect(service, contains("import 'package:audio_session/audio_session.dart';"));
+      expect(service, contains('AudioSession.instance'));
+      expect(service, contains('session.setActive(true)'));
+      expect(service, contains('_activateSession()'),
+          reason: 'a play() előtt vissza kell szerezni a sessiont');
+      // A visszaszerzés a lejátszás ELŐTT legyen a kódban.
+      expect(service.indexOf('await _activateSession()'),
+          lessThan(service.indexOf('await _player.setUrl(url)')));
+    });
+
+    test('a hangfókusz-megszakítás is bekötött (Android-paritás)', () {
+      // Androidon a natív szolgáltatás intézi: másik zene-app/hívás esetén
+      // elhallgat, majd magától visszatér. iOS-en ezt eddig SEMMI nem figyelte.
+      expect(service, contains('interruptionEventStream'));
+      expect(service, contains('becomingNoisyEventStream'));
+      expect(service, contains('AudioInterruptionType.pause'),
+          reason: 'csak pause típusú megszakítás után folytatjuk magunktól — '
+              'egy másik zene-apptól nem vesszük vissza a fókusz');
+      // Fejhallgató-kihúzás után NEM folytatjuk.
+      expect(service.contains('_resumeAfterInterruption = false;\n        if (_player.playing)'),
+          isTrue,
+          reason: 'a becomingNoisy ág törölje a folytatás szándékát');
     });
 
     test('a widget a platform-rétegen megy át, nem nyúl a csatornához', () {

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
@@ -55,21 +56,101 @@ class AndroidRadioPlayback implements RadioPlayback {
 ///
 /// ⚠️ A stream **végtelen**, ezért a `play()` future-je soha nem fejeződik be —
 /// ugyanaz a minta, mint az előzetes lejátszónál (`unawaited(_player.play())`).
-/// A `stop()` utáni újraindításhoz újra be kell tölteni a forrást
-/// (`ProcessingState.idle` → `load()`), különben a zárképernyő play gombja néma.
 class StreamRadioPlayback implements RadioPlayback {
   StreamRadioPlayback({AudioPlayer? player}) : _player = player ?? AudioPlayer();
 
   final AudioPlayer _player;
   String? _url;
+  bool _sessionEventsBound = false;
+  bool _resumeAfterInterruption = false;
+
+  /// A **hangfókusz-események** bekötése — Android-paritás.
+  ///
+  /// A tulajdonos kérése az Androidnál: *„ha megy a háttérben a rádió és valaki
+  /// elindít pl. egy spotifyt, akkor kussoljon be a rádió, ha kikapcsolja a
+  /// spotifyt… menjen tovább a rádió"*. Androidon ezt a natív szolgáltatás
+  /// intézi; iOS-en eddig **semmi** nem figyelte a megszakításokat, ezért egy
+  /// hívás vagy másik zene-app után a rádió **némán elhallgatott** (a session
+  /// elveszett, és a `just_audio` nem jelzi — lásd `_activateSession`).
+  ///
+  /// ⚠️ Csak **`pause` típusú** megszakítás után folytatjuk magunktól: egy másik
+  /// zene-apptól nem vesszük vissza a fókuszt. Ugyanaz a szabály, mint a
+  /// zenénél (`main.dart`).
+  Future<void> _bindSessionEvents() async {
+    if (_sessionEventsBound) return;
+    _sessionEventsBound = true;
+    try {
+      final session = await AudioSession.instance;
+      session.interruptionEventStream.listen((event) {
+        if (event.begin) {
+          _resumeAfterInterruption = _player.playing;
+          if (_player.playing) unawaited(_player.pause());
+          return;
+        }
+        final wasPlaying = _resumeAfterInterruption;
+        _resumeAfterInterruption = false;
+        if (!wasPlaying) return;
+        if (event.type != AudioInterruptionType.pause &&
+            event.type != AudioInterruptionType.unknown) {
+          return;
+        }
+        final url = _url;
+        if (url == null || url.isEmpty) return;
+        unawaited(play(url));
+      });
+      // Fejhallgató kihúzása: a rendszer jelzi — ilyenkor nem folytatjuk.
+      session.becomingNoisyEventStream.listen((_) {
+        _resumeAfterInterruption = false;
+        if (_player.playing) unawaited(_player.pause());
+      });
+    } catch (error) {
+      debugPrint('rádió: a hangfókusz-figyelés nem köthető be: $error');
+    }
+  }
+
+  /// A hang-session visszaszerzése — **iOS-en ez a lényeg.**
+  ///
+  /// ⚠️ MÉRT GYÖKÉR (2026-09-22, `just_audio-0.10.6`, `just_audio.dart`
+  /// 1097–1120. sor): a `play()` a `AudioSession.setActive(true)` **sikerétől**
+  /// függ, és ha az `false`, akkor a lejátszás **kivétel nélkül, némán** nem
+  /// indul el — csak `playing = false` lesz. A `_setPlatformActive` hibáit is
+  /// elnyeli (`catchError((e) async => null)`). A projekt a sessiont csak
+  /// **induláskor** konfigurálja (`main.dart`), az `setActive` viszont
+  /// **tranziens**: a leállított előzetes/zene után elveszik.
+  ///
+  /// Ez volt a tünet oka: a rádió elindult, az előzetes elhallgattatta, majd
+  /// **nem indult újra** — és semmi nem jelezte, miért.
+  ///
+  /// @returns true, ha a session aktív.
+  Future<bool> _activateSession() async {
+    try {
+      final session = await AudioSession.instance;
+      return await session.setActive(true);
+    } catch (error) {
+      debugPrint('rádió: a hang-session aktiválása hibára futott: $error');
+      return false;
+    }
+  }
 
   @override
   Future<void> play(String url) async {
-    if (_url != url) {
+    await _bindSessionEvents();
+    // A sessiont **a lejátszás előtt** szerezzük vissza; ha elsőre nem megy,
+    // rövid várakozás után még egyszer (a másik lejátszó épp tehette tönkre).
+    if (!await _activateSession()) {
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      if (!await _activateSession()) {
+        debugPrint(
+          'rádió: a hang-session nem aktiválható — a lejátszás néma maradna',
+        );
+      }
+    }
+    // ⚠️ A `stop()` utáni újraindításhoz FRISS forrás kell (`setUrl`), nem
+    // `load()`: a live streamet az iOS `AVPlayer` a leállítás után így veszi
+    // újra, és így az élő adás szélére csatlakozik vissza.
+    if (_url != url || _player.processingState == ProcessingState.idle) {
       _url = url;
       await _player.setUrl(url);
-    } else if (_player.processingState == ProcessingState.idle) {
-      await _player.load();
     }
     unawaited(_player.play());
   }
