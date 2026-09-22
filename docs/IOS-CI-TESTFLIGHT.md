@@ -698,12 +698,37 @@ az `Info.plist`-be került. **A viszonyítási alap** ugyanez az eszköz a javí
   (`The sandbox is not in sync with the Podfile.lock`). **Ez a hiba nem
   feltételezésből, hanem az első CI-futás naplójából derült ki** — pontosan ezért
   épült a pipeline.
-- **AMI A KÉSZÜLÉKEN MÉG NINCS MEGMÉRVE (őszintén):** a képernyőnkénti viselkedés —
-  a **billentyűzet-elrejtő gomb** a chatokban, a privát üzenetek, a **DJ-adatlap
-  átvétele/szerkesztése**, a **közösségi profilok** és a **ranglista** betöltése —,
-  továbbá a **háttér-hanglejátszás zárképernyőn** (az `audio_service` iOS-en az
-  `AVAudioSession`-t használja, ami más, mint az Android zenei fókusz-kezelése), a
-  **Face ID**, a **Google-bejelentkezés** és a **reklámok** (iOS-en egyelőre a Google
-  **teszt** egységei mennek, mert az AdMob iOS app még nincs regisztrálva). Ezek
-  **koppintást** igényelnek a készüléken — a `pymobiledevice3` indítani, naplózni és
-  képernyőképet készíteni tud, **koppintani nem**.
+- **AMI A KÉSZÜLÉKEN MÁR MEGMÉRVE (a tulajdonos koppintotta végig, 2026-09-22):**
+  a **közösségi profilok** és a **ranglista** betöltenek (az App Check javítása után),
+  a **banner** megjelenik (Google teszt-egység), a **megvásárolt zene zárképernyőn is
+  szól**, a **DJ-adatlap** hozzá van rendelve, a **Touch ID** megy, a **jutalmazott
+  feloldás** végig lefut (reklám → azonnali jóváírás → letöltés), és a **rádió**
+  teljesen működik (lásd lentebb).
+- **AMI MÉG NINCS MEGMÉRVE:** a **Google-bejelentkezés**, a **billentyűzet-elrejtő
+  gomb** a beviteli sávban (a fejlécben igazolt), továbbá a **valódi iOS
+  reklámbevétel** (az AdMob-jóváhagyásig a teszt-egységek mennek) és a **StoreKit**.
+  **Face ID nem releváns:** a tesztkészülék iPhone SE (2. generáció), azon **Touch ID**
+  van — a biometrikus kapu ezen a készüléken a Touch ID-n keresztül megy.
+  A `pymobiledevice3` indítani, naplózni és képernyőképet készíteni tud, **koppintani
+  nem** — ezért kell a tulajdonos keze a viselkedés igazolásához.
+
+### A rádió iOS-en — három hiba, három gyökér (2026-09-22, mind mérve)
+
+A tulajdonos jelzése: *„Rádió nem megy egyáltalán"*, majd *„megy a rádió, de nem úgy
+ahogy androidon… mindent tudjon amit a current android tud"*.
+
+| # | Tünet | Gyökér | Javítás |
+|---|---|---|---|
+| 1 | a rádió **el sem indul** | a lejátszás **kizárólag** natív Android szolgáltatáson ment (`MethodChannel('hu_hs/radio')` → `RadioPlaybackService.kt`); iOS-en minden hívás `MissingPluginException`-be futott, amit a hívók `try/catch`-e **elnémított** | `lib/services/radio_playback.dart`: platformonkénti lejátszás — Android a **változatlan** csatorna, iOS `just_audio` a streamre. A platform-döntés tiszta függvény (`radioUsesNativeService`), a widgetből **eltűnt** a csatorna |
+| 2 | az **előzetes után nem tér vissza** | a `just_audio` `play()`-je a `AudioSession.setActive(true)` sikerétől függ, és ha az `false`, **kivétel nélkül, némán** nem indít (`just_audio.dart:1097–1120`; a platform hibáit is elnyeli). A sessiont a projekt csak **induláskor** konfigurálja, az `setActive` viszont **tranziens** | a session **visszaszerzése a lejátszás előtt**, 250 ms után ismételve; a `stop()` utáni újraindítás **friss forrással** (`setUrl`) |
+| 3 | **YouTube után nem tér vissza** | (a) a `just_audio` a saját kezelőjével **hamarabb lefut**, ezért a mi figyelőnk már `playing = false`-ot olvasott → nem is próbáltunk visszatérni; (b) az iOS a megszakítás **végét előbb jelezheti**, mint hogy a másik app elengedi a sessiont | a **szándék** követése (`_wantPlaying`) a pillanatnyi állapot helyett, és a visszatérés **legfeljebb 5 próbával** (`_resumeWithRetries`), típus-szűrés nélkül |
+
+**Android-paritás, ami ezzel együtt jött:** `duck` (pl. navigációs hang) → 40%-ra
+halkít, majd a **kért** hangerőt állítja vissza (nem vakon 1.0-t); **fejhallgató-kihúzás**
+→ nem folytatja; **leállítás** → törli a szándékot.
+
+**⚠️ A tanulság, ami általános:** mindhárom hiba **néma** volt — nem volt kivétel, nem
+volt üzenet, csak „nem történt semmi". Ez a projekt visszatérő hiba-osztálya (a
+lejátszó némasága, a `free_link` feloldás, az App Check, a jutalmazott jóváírás).
+Ezért a javítások mellé **naplózás** is került (`debugPrint`), hogy legközelebb ne
+kelljen találgatni.
