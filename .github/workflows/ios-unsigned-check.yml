@@ -145,10 +145,13 @@ jobs:
       # Ha a GitHub-változók nincsenek beállítva (teszt-egységekre visszaváltva),
       # az egység-ellenőrzés kimarad — az app ID viszont mindig ellenőrzött.
       - name: A csomag reklám-identitásának ellenőrzése
-        run: |
-          node tools/verify-ios-ipa.mjs build/ios/iphoneos/Payload/Runner.app \
-            --banner="${{ vars.HUHS_ADMOB_BANNER_ID_IOS }}" \
-            --rewarded="${{ vars.HUHS_ADMOB_REWARDED_ID_IOS }}"
+        # ⚠️ `--test-ads`: ez a build szándékosan a Google **teszt**-egységeit
+        # használja (lásd a fenti `HUHS_ENABLE_TEST_ADS`-t), ezért azt mérjük,
+        # hogy a futásidejű döntés tényleg a teszt-egységre esik — ÉS hogy a
+        # Google teszt **APP** ID-ja (a tiltott érték) ne kerüljön a csomagba.
+        # A produkciós (TestFlight) csomagot a `codemagic.yaml` ellenőrzi, a
+        # VALÓDI egységekkel.
+        run: node tools/verify-ios-ipa.mjs build/ios/iphoneos/Payload/Runner.app --test-ads
 
       - name: Tesztek
         run: flutter test

@@ -490,7 +490,15 @@ Vagyis a `--dart-define` **tényleg átért** a befordított Dart-kódba, az app
 az `Info.plist`-be került. **A viszonyítási alap** ugyanez az eszköz a javítás
 **előtti** csomagon: mind a négy ellenőrzés elhasalt, és a Google teszt app ID-t az
 `Info.plist`-ben találta meg — vagyis az eszköz nem „mindig zöld". Az `--self-test`
-**3/3 OK**, és a CI is lefuttatja (`A csomag reklám-identitásának ellenőrzése`).
+**5/5 OK**.
+
+**Két mód (2026-09-22 óta):**
+
+- **`--test-ads`** — a **sideloadolt** csomag ellenőrzése: a Google **teszt**-egységeit
+  várja (ezt a build szándékosan használja, lásd `HUHS_ENABLE_TEST_ADS`), és azt,
+  hogy a tiltott teszt **app** ID ne kerüljön a csomagba. A GitHub Actions ezt futtatja.
+- **kapcsoló nélkül** — a **produkciós** csomag ellenőrzése: a **valódi** iOS
+  egységeket várja. A Codemagic TestFlight-lépése ezt futtatja a kész `.ipa`-n.
 
 ---
 

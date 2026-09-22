@@ -276,6 +276,28 @@ void main() {
             reason: 'a TestFlight-build is a VALÓDI iOS egységekkel induljon '
                 '(különben a kiadott app a teszt-egységeket használná)');
       }
+
+      // ⚠️ A sideloadolt (teszt-reklámos) csomag ellenőrzése `--test-ads`-szal
+      // fut, a produkciós pedig a VALÓDI értékekkel — a kettő nem csúszhat el.
+      final workflow = _read('.github/workflows/ios-unsigned-check.yml');
+      expect(workflow, contains('--test-ads'),
+          reason: 'a sideloadolt build a teszt-egységeket méri');
+      expect(codemagic, contains('verify-ios-ipa.mjs'),
+          reason: 'a TestFlight-csomag is legyen lemérve, ne csak a sideloadolt');
+
+      // A verifier aláértéke egyezzen a codemagic.yaml beépített értékeivel,
+      // különben a produkciós ellenőrzés mást mérne, mint amit valójában építünk.
+      final verifier = _read('tools/verify-ios-ipa.mjs');
+      for (final name in ['BANNER', 'REWARDED']) {
+        final fromYaml = RegExp('HUHS_ADMOB_${name}_ID_IOS:-([^}]+)\\}')
+            .firstMatch(codemagic)!
+            .group(1)!
+            .trim();
+        final fromTool =
+            RegExp("DEFAULT_$name = '([^']+)'").firstMatch(verifier)!.group(1)!;
+        expect(fromTool, fromYaml,
+            reason: 'a verifier a $name értékét ugyanúgy várja, mint a CI építi');
+      }
     });
   });
 }

@@ -114,6 +114,22 @@ workflows:
           flutter build ipa --release --export-options-plist=$HOME/export_options.plist \
             --dart-define=HUHS_ADMOB_BANNER_ID_IOS=${HUHS_ADMOB_BANNER_ID_IOS:-ca-app-pub-7714662594685378/5511193968} \
             --dart-define=HUHS_ADMOB_REWARDED_ID_IOS=${HUHS_ADMOB_REWARDED_ID_IOS:-ca-app-pub-7714662594685378/7238016636}
+      # ⚠️ A rossz reklám-azonosító NÉMÁN jelentkezik: az app elindul, minden
+      # képernyő betölt, csak épp nem szolgál ki hirdetést — és a jutalmazott
+      # feloldás el sem indul. Ezért a KÉSZ, aláírt csomagot is lemérjük, és itt
+      # a VALÓDI egységeket várjuk (a sideloadolt build ezzel szemben szándékosan
+      # teszt-egységeket használ, lásd a GitHub Actions workflow-t).
+      - name: A kész csomag reklám-identitásának ellenőrzése
+        script: |
+          IPA=$(ls build/ios/ipa/*.ipa 2>/dev/null | head -1)
+          if [ -z "$IPA" ]; then
+            echo "HIBA: nem találom a legyártott .ipa-t (build/ios/ipa/*.ipa)." >&2
+            exit 1
+          fi
+          rm -rf /tmp/ipa-check
+          mkdir -p /tmp/ipa-check
+          unzip -q "$IPA" -d /tmp/ipa-check
+          node tools/verify-ios-ipa.mjs /tmp/ipa-check/Payload/Runner.app
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
