@@ -215,26 +215,62 @@ Ha az **15.0 alatti**, akkor az app ezen a készüléken nem telepíthető — �
 Flutter 3.47 minimuma is iOS 15, **lejjebb vinni nem lehet**, vagyis ilyenkor
 másik (iOS 15+) tesztkészülék kell.
 
-### Ingyenes út a telefonra — Apple Developer tagság NÉLKÜL (7 naponta megújítva)
+### Ingyenes út a telefonra — ✅ **VÉGIG MŰKÖDÖTT, mérve (2026-09-22)**
 
-A CI **feltölt egy aláírás nélküli `.ipa`-t** (`HUHS-ios-unsigned-ipa` artefakt),
-amit a **Sideloadly** nevű ingyenes Windows-program a **saját ingyenes Apple
-ID-dal aláír**, és USB-n felrakja a telefonra. Ez a
-[Habr-cikk](https://habr.com/en/articles/1058788/) által leírt, működő lánc — a
-szerző pontosan ezt csinálta Flutterrel, Mac és $99 nélkül. **Négy lépés:**
+A CI aláírás nélküli `.ipa`-t ad (`HUHS-ios-unsigned-ipa` artefakt), a
+**Sideloadly** pedig a **saját ingyenes Apple ID-dal aláírja és USB-n felrakja**.
+Ez a [Habr-cikk](https://habr.com/en/articles/1058788/) lánca — és **élesben
+lefutott** egy iPhone SE (2. gen), **iOS 26.7** készüléken. A Sideloadly saját
+adatbázisa igazolja, hiba nélkül:
 
-1. **Fejlesztői mód a telefonon.** iOS 16 óta kötelező, és a kapcsoló csak
-   **azután** jelenik meg, hogy egy fejlesztői aláírással készült app már
-   felkerült a készülékre (tyúk-tojás). Ehhez egy segédprogram kell Windows-on:
-   **Tenorshare iCareFone** (az „Enable Developer Mode" az ingyenes részben van),
-   alternatíva **3uTools** vagy **AltServer**. Utána:
-   *Beállítások → Adatvédelem és biztonság → Fejlesztői mód*.
-2. **Az IPA letöltése:** GitHub → **Actions** → a legutóbbi **zöld** futás →
-   **Artifacts → `HUHS-ios-unsigned-ipa`** (14 napig marad meg).
-3. **Sideloadly** (ingyenes, Windows): telefon USB-n, Apple ID beírása, az `.ipa`
-   kiválasztása, **Start** — kb. 2-3 perc.
-4. **A profil megbízhatónak jelölése:** *Beállítások → Általános → VPN és
-   eszközkezelés* → a saját Apple ID → **Megbízás**.
+```
+name             = Hungarian Hardstyle          last_error   = (üres)
+final_bundle_id  = hu.hungarianhardstyle.app.JQPJ793V65       failures     = 0
+version          = 1.0.0                        known_ttl    = 7 nap
+telepítve        = 2026-09-22 14:55:15          auto-refresh = 96 óra múlva
+```
+
+#### ⚠️ A KÉT DOLOG, AMI TÉNYLEG KELL (ezek nélkül fél nap elmegy vele)
+
+1. **iTunes (web) ÉS iCloud (web) telepítve legyen** — a Sideloadly ezt
+   kifejezetten megköveteli ([sideloadly.io](https://sideloadly.io/), „Before you
+   install"). **Az illesztőprogram önmagában NEM elég:** az `Apple Mobile Device
+   Support`-tal a Sideloadly ugyan **látja** a készüléket a listában, de a
+   számláló **0** marad, a **`Start` letiltva**, és a hitelesítés (anisette) el
+   sem indul — mert ahhoz az iCloud kell.
+   ```
+   winget install --id Apple.iTunes -e      # iTunes (web) 12.13.11.1
+   winget install --id Apple.iCloud -e      # „iCloud (Legacy)" 7.21
+   ```
+   **Utána indítsd újra a Sideloadly-t** — a függőség-ellenőrzés indításkor fut.
+2. **A profil megbízása a telefonon** — enélkül az app nem indul el:
+   *Beállítások → Általános → **VPN és eszközkezelés*** → a **„Fejlesztői app"**
+   szakaszban az Apple ID sorára koppintva → **megbízása** → megerősítés.
+   A sor a megbízás ELŐTT **„Nem megbízható"**, utána **„Megbízható"**.
+
+#### A fejlesztői mód (iOS 16+ óta kötelező) — GUI nélkül, parancssorból
+
+A kapcsoló csak azután jelenik meg, hogy egy fejlesztői aláírással készült app már
+felkerült a készülékre (tyúk-tojás). **Nem kell hozzá iCareFone/3uTools** — a
+`pymobiledevice3` elvégzi (a telefon legyen **feloldva** és a gép **megbízva**):
+
+```
+pymobiledevice3 amfi reveal-developer-mode    # megjeleníti a kapcsolót
+pymobiledevice3 amfi developer-mode-status    # false -> true
+```
+Utána a telefonon: *Beállítások → Adatvédelem és biztonság → Fejlesztői mód* →
+be → kód → újraindítás → megerősítés. (A `reveal` **megjeleníti**, a `true`-ra
+állítás a **tulajdonos koppintása** — az Apple így kéri a beleegyezést.)
+
+#### A négy lépés, ami végül lefutott
+
+1. **Illesztőprogram:** `winget install --id Apple.AppleMobileDeviceSupport -e`
+2. **Fejlesztői mód** a fenti CLI-vel, majd bekapcsolás a telefonon
+3. **IPA letöltése:** GitHub → **Actions** → a legutóbbi **zöld** futás →
+   **Artifacts → `HUHS-ios-unsigned-ipa`** (14 napig marad meg), **vagy** a gépen:
+   `gh run download <run-id> --name HUHS-ios-unsigned-ipa --dir build/ios-ipa`
+4. **Sideloadly:** telefon USB-n + feloldva → az `.ipa` behúzása → az Apple ID
+   beírása → **Start** → majd a **profil megbízása** a telefonon (fent)
 
 **⚠️ Az ingyenes Apple ID korlátai — ezek tények, nem hibák:**
 
