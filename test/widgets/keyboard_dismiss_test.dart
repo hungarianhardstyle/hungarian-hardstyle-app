@@ -73,20 +73,44 @@ void main() {
         priv,
         contains("import '../../widgets/keyboard_dismiss_button.dart';"),
       );
-      // Két fejléc: a beszélgetés és az „Új privát üzenet" képernyő.
+      // Három hely: a beszélgetés és az „Új privát üzenet" fejléce, VALAMINT a
+      // beszélgetés beviteli sávja (a Küldés mellett).
       // ⚠️ Az import `keyboard_dismiss_button.dart` (snake_case), ezért az NEM
-      // számolódik bele — pontosan 2 valódi felhasználás van.
+      // számolódik bele — pontosan 3 valódi felhasználás van.
       expect(
         'KeyboardDismissButton('.allMatches(priv).length,
-        2,
-        reason: 'a beszélgetés és az „Új privát üzenet" fejléce is kapja meg; '
-            'ha ez 1, akkor valamelyik privát képernyő kimaradt',
+        3,
+        reason: 'a két fejléc ÉS a beviteli sáv is kapja meg; ha ez 1-2, akkor '
+            'valamelyik hely kimaradt',
       );
       expect(
         'ScrollViewKeyboardDismissBehavior.onDrag'.allMatches(priv).length,
         greaterThanOrEqualTo(2),
         reason: 'a beszélgetés- és a keresőlista is húzásra rejtsen',
       );
+    });
+
+    test('a gomb a BEVITELI SÁVBAN is ott van, nem csak a fejlécben', () {
+      // ⚠️ MÉRT TANULSÁG (2026-09-22): a gomb be volt kötve a fejlécbe, a
+      // widget-teszt igazolta is, hogy megjelenik — a tulajdonos mégis azt
+      // jelentette, hogy „nincs". Az ok **nem hiba, hanem hely**: írás közben a
+      // beviteli sávra nézünk, nem a képernyő tetejére. Ezért ugyanaz a widget a
+      // Küldés mellett is ott van (zárva magától eltűnik).
+      final chat = _read('lib/screens/community/community_screen.dart');
+      final priv = _read('lib/screens/community/private_messages_screen.dart');
+
+      // A közösségi Chat beviteli sávja: `Spacer()` után, a sor jobb szélén.
+      expect(chat, contains('const Spacer(),\n                const KeyboardDismissButton(),'),
+          reason: 'a közösségi Chat beviteli sávjában is ott kell lennie');
+      expect('KeyboardDismissButton('.allMatches(chat).length, 2,
+          reason: 'fejléc + beviteli sáv');
+
+      // A privát chat beviteli sávja: közvetlenül a Küldés előtt.
+      final sendIndex = priv.indexOf('onPressed: _sending ? null : _send,');
+      final keyboardIndex = priv.lastIndexOf('const KeyboardDismissButton(),');
+      expect(keyboardIndex, greaterThan(0));
+      expect(keyboardIndex, lessThan(sendIndex),
+          reason: 'a gomb a Küldés mellett legyen, ne máshol a fájlban');
     });
 
     test('az Android-út (PopScope) érintetlen maradt', () {

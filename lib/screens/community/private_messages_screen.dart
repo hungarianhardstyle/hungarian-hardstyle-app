@@ -1054,6 +1054,9 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
                     tooltip: 'Emotikon',
                     onPressed: _showEmojiPicker,
                   ),
+                  // ⚠️ Ugyanaz a gomb, mint a fejlécben — ide is, a Küldés mellé,
+                  // mert írás közben ide nézünk. Zárva magától eltűnik.
+                  const KeyboardDismissButton(),
                   IconButton(
                     onPressed: _sending ? null : _send,
                     icon: _sending

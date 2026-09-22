@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
+import '../services/radio_playback.dart';
 
 class RadioPlayerBar extends StatefulWidget {
   const RadioPlayerBar({super.key});
@@ -17,31 +18,27 @@ const _radioStreamUrl = 'https://stream.realhardstyle.nl';
 
 Future<void> stopRadioPlayback() async {
   try {
-    await const MethodChannel('hu_hs/radio').invokeMethod<void>('stop');
+    await radioPlayback.stop();
   } catch (_) {}
   radioPlayingState.value = false;
 }
 
 Future<void> resumeRadioPlayback() async {
   try {
-    await const MethodChannel('hu_hs/radio')
-        .invokeMethod<void>('play', _radioStreamUrl);
+    await radioPlayback.play(_radioStreamUrl);
     radioPlayingState.value = true;
   } catch (_) {}
 }
 
 Future<bool> isRadioPlaybackActive() async {
   try {
-    return await const MethodChannel('hu_hs/radio')
-            .invokeMethod<bool>('isPlaying') ??
-        radioPlayingState.value;
+    return await radioPlayback.isPlaying() ?? radioPlayingState.value;
   } catch (_) {
     return radioPlayingState.value;
   }
 }
 
 class _RadioPlayerBarState extends State<RadioPlayerBar> {
-  static const _channel = MethodChannel('hu_hs/radio');
   static final _streamUri = Uri.parse('https://stream.realhardstyle.nl');
   String _title = 'Real Hardstyle FM';
   bool _muted = false;
@@ -90,7 +87,7 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
 
   Future<void> _syncPlaying() async {
     try {
-      final playing = await _channel.invokeMethod<bool>('isPlaying') ?? false;
+      final playing = await radioPlayback.isPlaying() ?? false;
       if (!mounted) return;
       setState(() => _playing = playing);
       radioPlayingState.value = playing;
@@ -117,23 +114,23 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
     _toggleBusy = true;
     try {
       final isPlaying =
-          await _channel.invokeMethod<bool>('isPlaying') ?? _playing;
+          await radioPlayback.isPlaying() ?? _playing;
       if (isPlaying) {
         // A preview can stop the native player while this widget still has a
         // stale snapshot. If the UI says stopped, clear that stale native
         // state before handling the user's new Play tap.
         if (!_playing) {
-          await _channel.invokeMethod<void>('stop');
+          await radioPlayback.stop();
           radioPlayingState.value = false;
         }
         if (!_playing) {
-          await _channel.invokeMethod<void>('play', _streamUri.toString());
+          await radioPlayback.play(_streamUri.toString());
           if (mounted) setState(() => _playing = true);
           radioPlayingState.value = true;
           _startMetadataRefresh();
           return;
         }
-        await _channel.invokeMethod<void>('stop');
+        await radioPlayback.stop();
         _stopMetadataRefresh();
         if (mounted) {
           setState(() {
@@ -146,7 +143,7 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
         // The preview may have started while the native radio call was
         // awaiting. Never allow the radio to win that race.
         if (releasePreviewPlayingState.value) return;
-        await _channel.invokeMethod<void>('play', _streamUri.toString());
+        await radioPlayback.play(_streamUri.toString());
         if (releasePreviewPlayingState.value) {
           await stopRadioPlayback();
           return;
@@ -299,7 +296,7 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
               tooltip: _muted ? 'Némítás feloldása' : 'Némítás',
               onPressed: () {
                 setState(() => _muted = !_muted);
-                _channel.invokeMethod<void>('volume', _muted ? 0.0 : 1.0);
+                radioPlayback.setVolume(_muted ? 0.0 : 1.0);
               },
               style: IconButton.styleFrom(
                 side: BorderSide.none,

@@ -1338,6 +1338,12 @@ class _Composer extends StatelessWidget {
                   onPressed: onPickGallery,
                   icon: const Icon(Icons.photo_library_outlined),
                 ),
+                // ⚠️ A fejléc gombja MESSZE van attól, ahova írás közben nézünk
+                // (a tulajdonos jelzése szerint „nincs" — pedig ott volt).
+                // Ezért ugyanaz a widget itt is ott van, közvetlenül a Küldés
+                // fölött; zárva magától eltűnik, így nem foglal helyet.
+                const Spacer(),
+                const KeyboardDismissButton(),
               ],
             ),
             SizedBox(
