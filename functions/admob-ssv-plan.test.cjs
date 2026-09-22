@@ -141,4 +141,9 @@ test('forras-lint: a kezelo a tiszta modult hasznalja, es NEM ad 400-at a probar
     'a jóváírás CSAK az aláírás-ellenőrzés után történhet');
   assert.doesNotMatch(source, /reject\('invalid reward data'\)/,
     'a döntés a tiszta modulban van, nem a kezelőben');
+
+  // ⚠️ A sikeres jóváírás is legyen mérhető a naplóból: enélkül egy „lefutott a
+  // reklám, mégsem nyílt meg" hibát nem lehet visszamérni (csak a Firestore-ból).
+  assert.match(source, /event: 'admob_ssv_granted'/);
+  assert.match(source, /event: 'admob_ssv_probe_validated'/);
 });

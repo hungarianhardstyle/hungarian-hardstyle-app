@@ -6931,6 +6931,18 @@ exports.admobRewardedSsv = functions.https.onRequest(async (req, res) => {
         { merge: true },
       );
     });
+    // ⚠️ A SIKERES jóváírás is hagyjon nyomot: enélkül a naplóból nem lehet
+    // megmondani, hogy a jutalom megérkezett-e (csak a Firestore-ból), és egy
+    // „lefutott a reklám, mégsem nyílt meg" hibát nem lehet visszamérni.
+    console.info(
+      JSON.stringify({
+        event: 'admob_ssv_granted',
+        uid,
+        releaseId,
+        variant,
+        transactionId,
+      }),
+    );
     return res.status(200).send('ok');
   } catch (error) {
     console.warn(
