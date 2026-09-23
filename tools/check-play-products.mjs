@@ -233,12 +233,25 @@ async function main() {
             track,
           });
           const list = regionCodes(country.data?.countries);
+          const restOfWorld = country.data?.restOfWorld === true;
+          const syncWithProduction = country.data?.syncWithProduction === true;
           console.log(
             `Sáv „${track}": ${list.length} ország` +
               (list.includes(REGION)
                 ? `  (${REGION} benne van)`
                 : `  ⚠️ ${REGION} NINCS benne`),
           );
+          // ⚠️ EZ A KÉT MEZŐ DÖNTI EL, HOGY A LISTA VALÓBAN AZ-E, AMIT A VEVEK
+          // LÁTNAK: ha a sáv a production listáját használja, a fenti országok
+          // csak tájékoztatóak (a production lehet üres is!).
+          console.log(
+            `      restOfWorld=${restOfWorld}  syncWithProduction=${syncWithProduction}`,
+          );
+          if (syncWithProduction) {
+            console.log(
+              '      ⚠️ ez a sáv a PRODUCTION ország-listáját használja — a fenti lista önmagában félrevezető',
+            );
+          }
           if (list.length) {
             console.log(
               `      országok: ${list.slice(0, 24).join(', ')}${list.length > 24 ? ' …' : ''}`,
@@ -247,12 +260,16 @@ async function main() {
             // eltérés van, a `LABEL_PRODUCT_REGIONS` listát kell igazítani.
             const expected = [...EXPECTED_REGIONS].sort().join(',');
             const actual = [...list].sort().join(',');
-            console.log(
-              expected === actual
-                ? `      ✔ ez pontosan a termékek elvárt ország-listája (${EXPECTED_REGIONS.join(', ')})`
-                : `      ⚠️ ELTÉR a termékek elvárt listájától (${EXPECTED_REGIONS.join(', ')}) — ` +
-                  'a LABEL_PRODUCT_REGIONS-t igazítani kell!',
-            );
+            if (syncWithProduction) {
+              console.log('      (az elvárt lista egyeztetése kihagyva: a sáv production-nel szinkronizál)');
+            } else {
+              console.log(
+                expected === actual
+                  ? `      ✔ ez pontosan a termékek elvárt ország-listája (${EXPECTED_REGIONS.join(', ')})`
+                  : `      ⚠️ ELTÉR a termékek elvárt listájától (${EXPECTED_REGIONS.join(', ')}) — ` +
+                    'a LABEL_PRODUCT_REGIONS-t igazítani kell!',
+              );
+            }
           }
         } catch (error) {
           const message = String(error?.message || error).replace(/\s+/g, ' ');
