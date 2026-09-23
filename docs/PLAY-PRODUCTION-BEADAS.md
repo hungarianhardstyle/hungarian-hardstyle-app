@@ -16,7 +16,8 @@ van a mérés módja — ahol nem tudtam mérni, az **szándékosan jelölve** v
 | Csomagnév | `hu.hungarianhardstyle.app` | `check-play-track.mjs` |
 | Zárt teszt (`alpha`) | **352** (completed), a kiadási szöveggel | `check-play-track.mjs` |
 | `beta` | üres, **production-nel szinkronizál** | `check-play-products.mjs --tracks` |
-| `production` | **0 ország**, nincs kiadás | `check-play-products.mjs --tracks` |
+| `production` | **352 beküldve** — `completed`, a nyilvános összesítő kiadási szöveggel | `check-play-track.mjs` |
+| Nyilvános bolt-lap | **404** (a bírálat még fut) | `check-play-listing.mjs` |
 | `internal` | 278 (completed) + egy üres piszkozat → **dobd el** | `check-play-track.mjs` |
 | Nyilvános bolt-lap | **404** (zárt tesztben nincs) — várt eredmény | `check-play-listing.mjs` |
 | Termékek országa | **9 ország**: HU, AT, HR, SI, SK, NL, CZ, RS, UA | `check-play-products.mjs` |
@@ -142,6 +143,14 @@ frissíteni kell** — különben az oldal nem lenne igaz.
 
 ## 7. Ami MÉRVE nem hiba (hogy ne keressük újra)
 
+- ⚠️ **„A verziókódot (352) már felhasználták"** — a Play egy verziókódot **csak egyszer** fogad el,
+  és a 352 **már fent van** a zárt tesztből. **Nem kell új AAB**: a kiadás-létrehozásnál a
+  **`Könyvtárból`** (*Add from library*) opcióval a **meglévő** csomag választható, vagy a zárt teszt
+  kiadásából a **`Kiadás előléptetése`** (*Promote release*) használható. Ugyanaz a csomag **több
+  sávon is lehet** — pont ezért tesztelünk zárt körben, majd léptetünk elő.
+- ⚠️ **A kiadás beküldése nem kérdezi a fióktörlési URL-t és a bírálói fiókot** — azok az
+  **„Alkalmazás tartalma" nyilatkozatok** között vannak, **nem** a kiadás-varázslóban. **Attól még
+  kitöltendők**, mert a bírálat ellenőrzi őket.
 - **A 4 `DRAFT` termék** (12699 „Goze – Change of Pace") **szándékos**: a kiadvány `upcoming`,
   megjelenés **2026-09-25**; a megjelenés napján a szinkron **automatikusan aktiválja** őket.
 - **A 12475 „Dutch Master – Take Some" és a 12471 „BAZ+"** `is_free = true`, ezért **szándékosan**

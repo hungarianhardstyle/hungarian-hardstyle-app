@@ -199,7 +199,29 @@ ország kerül, azokban a felhasználók **telepíteni tudnak, de vásárolni ne
 
 ---
 
-## 8. Ellenőrző lista a végére
+## 8. Gyakori hibák — és a megoldásuk
+
+### „A verziókódot (352) már felhasználták. Próbálkozz másikkal."
+
+**Ez NEM hiba a csomagban.** A Play egy verziókódot **csak egyszer fogad el**, és a 352-es AAB
+**már fent van** a zárt tesztből. A megoldás: **ne tölts fel fájlt újra**, hanem:
+
+- a kiadás-létrehozásnál válaszd a **`Könyvtárból`** / *Add from library* lehetőséget, és jelöld ki a
+  **már feltöltött** csomagot; **vagy**
+- a zárt teszt kiadásából indítva: **`Kiadás előléptetése`** / *Promote release* → cél: **Éles verzió**.
+
+Ugyanaz a csomag **több sávon is lehet** — pont ezért tesztelünk zárt körben, majd léptetünk elő.
+
+### A kiadás beküldése **nem** kérdezi a fióktörlési URL-t és a bírálói fiókot
+
+Ez **normális**: azok az **„Alkalmazás tartalma" nyilatkozatok** között vannak (adatbiztonság,
+alkalmazás-hozzáférés), **nem** a kiadás-varázslóban. **Attól még kitöltendők** — a **bírálat**
+ellenőrzi őket, és a hiányuk az elutasítás egyik leggyakoribb oka (főleg az
+**Alkalmazás-hozzáférése**, mert az app bejelentkezést kér).
+
+---
+
+## 9. Ellenőrző lista a végére
 
 - [ ] Az **Alkalmazás tartalma** oldalon **minden sor zöld** (nincs „Hiányos")
 - [ ] Az **Alkalmazás-hozzáférése** sor kitöltve a bírálói fiókkal
