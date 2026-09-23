@@ -11,6 +11,43 @@ segít megtalálni).
 
 ---
 
+## 0. Ha nem találod a menüt (ezt olvasd először)
+
+A Play Console menüje **verziónként és fiókonként máshogy néz ki**, ezért ha a fenti útvonal nálad
+nincs meg, **nem baj** — két biztos módszer van:
+
+### a) Először ellenőrizd, hogy az ALKALMAZÁSON BELÜL vagy-e
+
+Az **alkalmazás szintű** menük (köztük az „Alkalmazás tartalma") **csak akkor látszanak**, ha kiválasztottad
+az appot. A bal oldali menüben **látnod kell** ezeket:
+
+- **Tesztelés és kiadás** (*Test and release*)
+- **Megjelenés a Play Áruházban** (*Store presence*)
+- **Elemzések** (*Statistics*)
+
+Ha **ezek nincsenek** a menüben (csak „Minden alkalmazás", „Értesítések", „Pénzkereset", „Beállítások"),
+akkor a **fiók szintjén** vagy: a **Kezdőlapon** kattints az **alkalmazás nevére** (`hu.hungarianhardstyle.app`),
+és utána jelennek meg az app-menük.
+
+### b) Használd a Console KERESŐJÉT (ez a leggyorsabb)
+
+A Console **tetején** van egy **keresőmező** (*„Keresés a Play Console-ban"* / *Search Play Console*).
+Írd be: **`App content`** (az angol szó a magyar felületen is működik), és a találatból **egyenesen
+az oldalra ugrasz** — nem kell menüt böngészni. Ugyanígy:
+`Data safety`, `Content rating`, `Target audience`, `App access`, `Production`, `Countries`.
+
+### c) A Kezdőlap beállítási listája
+
+A Console **Kezdőlapján** (*Dashboard*) egy **beállítási lépéslista** is van („Alkalmazás beállítása" /
+*Set up your app*), benne közvetlen hivatkozásokkal — például **„Tartalom megadása"** /
+*Provide app content*. Ha a menüben nem találod, ott biztosan ott van.
+
+### d) Ha így sem megy
+
+Küldj **képernyőképet a bal oldali menüről**, és megmondom pontosan, melyik sor kell.
+
+---
+
 ## 1. „Alkalmazás tartalma" — ide kell a legtöbb nyilatkozat
 
 **Útvonal:** bal oldali menü → **Szabályzati program** → **Alkalmazás tartalma**
