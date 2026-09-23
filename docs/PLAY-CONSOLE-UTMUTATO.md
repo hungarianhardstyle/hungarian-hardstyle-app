@@ -27,32 +27,39 @@ Felhasználók számának növelése
 Bevételszerzés a Playjel
 ```
 
-⚠️ **Ebben a felépítésben NINCS „Szabályzati program → Alkalmazás tartalma" menüpont** — a
-nyilatkozatok máshonnan érhetők el. **Három biztos út**, ebben a sorrendben:
+⚠️ **Ebben a felépítésben NINCS „Szabályzati program → Alkalmazás tartalma" menüpont, és a
+tulajdonos Console-jában KERESŐ sincs** (ez mérve van, nem feltételezés). A nyilatkozatok ezért
+**más úton** érhetők el — ebben a sorrendben:
 
-### a) A Console KERESŐJE — ez a leggyorsabb
+### a) Görgesd le a bal oldali menüt (a lista hosszabb lehet, mint amit látsz)
 
-A Console **tetején** (a lap fejlécében) van egy **keresőmező** (nagyító ikon):
-*„Keresés a Play Console-ban"* / *Search Play Console*. Írd be: **`App content`**
-(vagy `alkalmazás tartalma`) — az angol szó a magyar felületen is működik —, és a találatból
-**egyenesen az oldalra ugrasz**. Ugyanígy működik: `Data safety`, `Content rating`,
-`Target audience`, `App access`, `Production`, `Countries`.
+A bal oldali menü **görgethető**, és a csoportok **kattintásra kinyílnak**. Nézd meg, hogy a
+látható pontok (**Irányítópult … Bevételszerzés a Playjel**) alatt van-e **tovább** —
+ilyen nevekkel: **Szabályzati program**, **Megjelenés a Play Áruházban**.
+Ez a legvalószínűbb magyarázat arra, hogy nálad „nincs ilyen".
 
-### b) A „Közzétételi áttekintő" — a képernyőképen is ez van nyitva
+### b) „Közzétételi áttekintő" — a hiányzó teendők listája
 
-**Bal menü → Közzétételi áttekintő** (*Publishing overview*) az az oldal, amely **felsorolja a
-közzététel előtt hiányzó teendőket**. Ha a nyilatkozatok hiányosak, itt **hivatkozás** mutat rájuk —
-kattints a sorra.
+**Bal menü → Közzétételi áttekintő** (*Publishing overview*). Ez az oldal **felsorolja, mi hiányzik
+a közzététel előtt**, és a sorok **hivatkozásként** visznek a megfelelő űrlapra. Ha a nyilatkozatok
+hiányosak, **innen egy kattintással** oda lehet jutni.
 
-### c) Az „Irányítópult" beállítási listája
+### c) „Irányítópult" — a beállítási lépéslista
 
-**Bal menü → Irányítópult** (*Dashboard*): az oldalon egy **beállítási lépéslista** van
+**Bal menü → Irányítópult** (*Dashboard*). Az oldalon egy **beállítási lépéslista** van
 („Alkalmazás beállítása" / *Set up your app*), benne **közvetlen hivatkozásokkal** — például
-**„Tartalom megadása"** / *Provide app content*. Innen is eljutsz ugyanoda.
+**„Tartalom megadása"** / *Provide app content*. Innen is ugyanoda jutsz.
 
-### d) Ha egyik sem megy
+### d) „Tesztelés és közzététel" — ez biztosan megvan
 
-Küldj **képernyőképet az Irányítópultról** (vagy a kereső találatairól), és megmondom, melyik sor kell.
+**Bal menü → Tesztelés és közzététel** (*Test and release*): itt van az **Éles kiadás**
+(országok + kiadás létrehozása), a **Zárt tesztelés** és a **Belső tesztelés**. Ez a három teendő
+**nem** nyilatkozat, ezért ezek azonnal elvégezhetők innen.
+
+### e) Ha egyik sem megy
+
+Küldj **képernyőképet az Irányítópultról** vagy a **Közzétételi áttekintőről**, és megmondom
+pontosan, melyik sor kell.
 
 > **Megjegyzés:** az app-szintű menük azért látszanak, mert **jó helyen vagy** („Tesztelés és
 > közzététel" a menüben van). A fiók szintjén („Minden alkalmazás") ezek **nem** lennének ott.
