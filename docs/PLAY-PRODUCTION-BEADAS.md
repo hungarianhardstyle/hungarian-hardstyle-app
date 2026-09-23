@@ -23,7 +23,7 @@ van a mérés módja — ahol nem tudtam mérni, az **szándékosan jelölve** v
 | Termékek állapota | 56 `ACTIVE`, 4 `DRAFT` (a 12699 megjelenéséig) | `check-play-products.mjs` |
 | Adatvédelmi nyilatkozat | **él** (HTTP 200) | `…/adatvedelmi-nyilatkozat/` |
 | ÁSZF | **él** (HTTP 200) | `…/altalanos-szerzodesi-feltetelek-aszf/` |
-| **Fióktörlési weboldal** | **NINCS (404)** ← hiányzik, lásd 3. pont | `…/fiok-torles/` |
+| **Fióktörlési weboldal** | **él**: `https://hungarianhardstyle.hu/fiok-torles/` (HTTP 200, #12843) | `node tools/create-deletion-page.mjs` |
 | Aláírás | **1 identitás** | `check-signing-identity.mjs` |
 | Plugin | 2.7.0 fent, élőben igazolt | `verify-submission-payout.mjs --live` |
 | Szerver-függvények | telepítve (benne a 9 országos termék-javítás) | `firebase deploy` |
@@ -65,39 +65,42 @@ válaszainkkal:
 
 ---
 
-## 3. ⚠️ HIÁNYZÓ ELEM: a fióktörlési **webes hivatkozás** (az appban VAN törlés!)
+## 3. ✅ A fióktörlési **webes hivatkozás** — KÉSZ
 
 **Az appban van fióktörlés** (Beállítások → fiók törlése, a szerveren végigfutó, visszaigazolt
-folyamattal — ezt a `tools/verify-live-account-deletion.mjs` élőben méri) — **ez az egyik követelmény,
-és teljesül**.
+folyamattal — ezt a `tools/verify-live-account-deletion.mjs` élőben méri).
 
-A Play Data safety szakasza viszont **pluszban** kér egy **URL-t**, ahol a felhasználó **az app
-nélkül** is kérheti a fiókja törlését („Delete account URL"). Ez ma **404**:
+A Play Data safety szakasza **pluszban** kér egy **URL-t**, ahol a felhasználó **az app nélkül** is
+kérheti a törlést („Delete account URL"). Ez **elkészült és él**:
 
-- `https://hungarianhardstyle.hu/fiok-torles/` → **404**
-- `https://hungarianhardstyle.hu/adattorles/` → **404**
+> **`https://hungarianhardstyle.hu/fiok-torles/`** (oldal-azonosító **#12843**, HTTP **200**)
 
-**A teendő:** egy rövid oldal a honlapon (pl. `fiok-torles` slug), amin ez áll: mi törlődik (fiók,
-profil, chat-üzenetek, kedvencek, feltöltött képek), mi **marad** (a megvásárolt zenék jogosultsága a
-Play-nél és a számlázási előzmény a jogszabályi megőrzés miatt), meddig tart (legfeljebb 30 nap), és
-hogyan lehet kérni (appból egy koppintás, vagy e-mail az `info@hungarianhardstyle.hu`-ra).
-**A tartalmat megírom neked** — csak szólj.
+A szöveget a **kód írja le, nem találgatás**: a `functions/index.js` `deleteUserReferences()` és
+`deleteCommunityUser()` tényleges viselkedését tartalmazza — mi törlődik (fiók, profil, képek, chat,
+kommentek, pontok, szavazatok, DJ-átvételek, **vásárlási jogosultsági rekordok**), mi **marad**
+(a **Google Play-vásárlás** a Google-fiókodnál — új fiókkal **újra ellenőrizhető**, nem kell újra
+fizetni), és mennyi idő alatt (fiók **azonnal**, feltöltött képek **≤48 óra**, e-mailes kérés
+**≤30 nap**).
+
+**A szöveg verziókezelve él** a `tools/create-deletion-page.mjs`-ben (`--confirm` nélkül nem ír;
+`--confirm --update` frissíti). **⚠️ Ha az éles törlés viselkedése változik, ezt a szöveget is
+frissíteni kell** — különben az oldal nem lenne igaz.
 
 ---
 
 ## 4. A kiadás lépései (sorrendben)
 
 1. **App content** (2. pont) — minden „Hiányos" elem kitöltése, a teszt-fiók megadásával (6. pont).
-2. **Fióktörlési oldal** (3. pont) — létrehozás + bemásolás a Console-ba.
-3. **Production sáv országai** — **pontosan a 9 ország** (1. pont).
-4. **Kiadás létrehozása** a **már feltöltött 352 bundle-ből** — **nem kell új AAB**, mert a 352
+   - **A korhatár/célközönség döntés megvan: 16+** (a tulajdonos döntése, 2026-09-22).
+   - **A fióktörlési URL készen van** (3. pont) — ezt kell a Data safety mezőjébe bemásolni.
+2. **Production sáv országai** — **pontosan a 9 ország** (1. pont).
+3. **Kiadás létrehozása** a **már feltöltött 352 bundle-ből** — **nem kell új AAB**, mert a 352
    tartalmilag ugyanaz, mint a zárt tesztben élesben lévő csomag. (Ha időközben kliensváltozás
    történik, akkor új verziókód kell, és újra végig kell menni a changelogon.)
-5. **Fokozatos kigördítés**: 20% → (1–2 nap után) 50% → 100%. Így egy váratlan hiba csak a
-   felhasználók egy részét érinti.
-6. **Bírálat** — az első nyilvános kiadás bírálata jellemzően **1–7 nap**; utána automatikusan
-   kigördül a beállított százalékig.
-7. **Ellenőrzés a kiadás után** (5. pont) — a nyilvános bolt-lap és a termékek ország-listája.
+4. **Kigördítés: azonnal 100%** (a tulajdonos döntése, 2026-09-22).
+5. **Bírálat** — az első nyilvános kiadás bírálata jellemzően **1–7 nap**; utána automatikusan
+   kigördül.
+6. **Ellenőrzés a kiadás után** (5. pont) — a nyilvános bolt-lap és a termékek ország-listája.
 
 ---
 
@@ -113,18 +116,25 @@ hogyan lehet kérni (appból egy koppintás, vagy e-mail az `info@hungarianhards
 
 ---
 
-## 6. Nyitott döntések (a tulajdonosé)
+## 6. Döntések és ami még nyitott
 
-1. **Korhatár / célközönség:** a chat és a felhasználói tartalom miatt **16+ vagy 18+** a reális.
-   (A 13 év alatti célközönség a szigorú családi szabályokat vonná be — nem javaslom.)
-2. **Hír-deklaráció:** vállaljuk-e a „news app" nyilatkozatot (az app ad hírtartalmat) — **igen a
-   javaslat**, mert a hírszekció látható.
-3. **Teszt-fiók a bírálóknak:** melyik e-mail címmel jöjjön létre (pl. `review@hungarianhardstyle.hu`
-   vagy egy meglévő tesztfiók), és legyen-e benne néhány kedvenc/üzenet, hogy a bíráló lásson
-   tartalmat.
-4. **Fióktörlési oldal:** megírjam-e a szöveget (3. pont), és a WordPress adminban te hozod létre,
-   vagy csináljam meg a meglévő szerveres úton (jóváhagyással).
-5. **Kigördítés:** 20% → 100% fokozatosan (javaslat), vagy azonnal 100%.
+**A tulajdonos döntései (2026-09-22):**
+
+1. **Korhatár / célközönség: 16+** — a chat és a felhasználói tartalom miatt reális, és nem vonja be
+   a szigorú családi szabályokat. (Az IARC-kérdőívet ennek megfelelően kell kitölteni; a 13 év alatti
+   célközönséget **nem** választjuk.)
+2. **Fióktörlési oldal: KÉSZ** (3. pont) — én hoztam létre, a Play Data safety mezőjébe ez az URL való.
+3. **Kigördítés: azonnal 100%.**
+
+**Ami még nyitott (Console-only):**
+
+4. **Hír-deklaráció:** az app ad hírtartalmat, ezért a „news app" kérdésre **igent** kell mondani
+   (javaslat). Ezt a Console-ban kell megjelölni.
+5. **Bírálói teszt-fiók (App access):** ⚠️ **a legkritikusabb** — az app bejelentkezést kér, ezért a
+   bírálónak meg kell adni egy **működő teszt-fiókot** (e-mail + jelszó), és leírni, hol érdemes
+   körülnéznie (zene, chat, kedvencek). Enélkül a bírálat **nem tud belépni**, és elutasítják.
+   **A címet a tulajdonos adja meg** (pl. `review@hungarianhardstyle.hu` vagy egy meglévő tesztfiók).
+6. **Adatbiztonsági nyilatkozat** (Data safety) — a 2. pont táblázata szerint, a fióktörlési URL-lel.
 
 ---
 
