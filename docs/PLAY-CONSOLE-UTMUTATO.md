@@ -11,40 +11,51 @@ segít megtalálni).
 
 ---
 
-## 0. Ha nem találod a menüt (ezt olvasd először)
+## 0. Hol van az „Alkalmazás tartalma"? — a MÉRT menü alapján
 
-A Play Console menüje **verziónként és fiókonként máshogy néz ki**, ezért ha a fenti útvonal nálad
-nincs meg, **nem baj** — két biztos módszer van:
+**A tulajdonos Console-jában a bal oldali menü (2026-09-23-i képernyőkép) pontosan ezeket mutatja:**
 
-### a) Először ellenőrizd, hogy az ALKALMAZÁSON BELÜL vagy-e
+```
+Irányítópult
+Statisztikák
+Közzétételi áttekintő
+A Google Play védi
+─────
+Tesztelés és közzététel
+Ellenőrzés és fejlesztés
+Felhasználók számának növelése
+Bevételszerzés a Playjel
+```
 
-Az **alkalmazás szintű** menük (köztük az „Alkalmazás tartalma") **csak akkor látszanak**, ha kiválasztottad
-az appot. A bal oldali menüben **látnod kell** ezeket:
+⚠️ **Ebben a felépítésben NINCS „Szabályzati program → Alkalmazás tartalma" menüpont** — a
+nyilatkozatok máshonnan érhetők el. **Három biztos út**, ebben a sorrendben:
 
-- **Tesztelés és kiadás** (*Test and release*)
-- **Megjelenés a Play Áruházban** (*Store presence*)
-- **Elemzések** (*Statistics*)
+### a) A Console KERESŐJE — ez a leggyorsabb
 
-Ha **ezek nincsenek** a menüben (csak „Minden alkalmazás", „Értesítések", „Pénzkereset", „Beállítások"),
-akkor a **fiók szintjén** vagy: a **Kezdőlapon** kattints az **alkalmazás nevére** (`hu.hungarianhardstyle.app`),
-és utána jelennek meg az app-menük.
+A Console **tetején** (a lap fejlécében) van egy **keresőmező** (nagyító ikon):
+*„Keresés a Play Console-ban"* / *Search Play Console*. Írd be: **`App content`**
+(vagy `alkalmazás tartalma`) — az angol szó a magyar felületen is működik —, és a találatból
+**egyenesen az oldalra ugrasz**. Ugyanígy működik: `Data safety`, `Content rating`,
+`Target audience`, `App access`, `Production`, `Countries`.
 
-### b) Használd a Console KERESŐJÉT (ez a leggyorsabb)
+### b) A „Közzétételi áttekintő" — a képernyőképen is ez van nyitva
 
-A Console **tetején** van egy **keresőmező** (*„Keresés a Play Console-ban"* / *Search Play Console*).
-Írd be: **`App content`** (az angol szó a magyar felületen is működik), és a találatból **egyenesen
-az oldalra ugrasz** — nem kell menüt böngészni. Ugyanígy:
-`Data safety`, `Content rating`, `Target audience`, `App access`, `Production`, `Countries`.
+**Bal menü → Közzétételi áttekintő** (*Publishing overview*) az az oldal, amely **felsorolja a
+közzététel előtt hiányzó teendőket**. Ha a nyilatkozatok hiányosak, itt **hivatkozás** mutat rájuk —
+kattints a sorra.
 
-### c) A Kezdőlap beállítási listája
+### c) Az „Irányítópult" beállítási listája
 
-A Console **Kezdőlapján** (*Dashboard*) egy **beállítási lépéslista** is van („Alkalmazás beállítása" /
-*Set up your app*), benne közvetlen hivatkozásokkal — például **„Tartalom megadása"** /
-*Provide app content*. Ha a menüben nem találod, ott biztosan ott van.
+**Bal menü → Irányítópult** (*Dashboard*): az oldalon egy **beállítási lépéslista** van
+(„Alkalmazás beállítása" / *Set up your app*), benne **közvetlen hivatkozásokkal** — például
+**„Tartalom megadása"** / *Provide app content*. Innen is eljutsz ugyanoda.
 
-### d) Ha így sem megy
+### d) Ha egyik sem megy
 
-Küldj **képernyőképet a bal oldali menüről**, és megmondom pontosan, melyik sor kell.
+Küldj **képernyőképet az Irányítópultról** (vagy a kereső találatairól), és megmondom, melyik sor kell.
+
+> **Megjegyzés:** az app-szintű menük azért látszanak, mert **jó helyen vagy** („Tesztelés és
+> közzététel" a menüben van). A fiók szintjén („Minden alkalmazás") ezek **nem** lennének ott.
 
 ---
 
