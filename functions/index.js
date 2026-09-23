@@ -55,7 +55,10 @@ const { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, send
 const { generateAuthActionLink } = require('./auth_action_link');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
-const { playProductMatches } = require('./play-product-plan');
+const {
+  playProductMatches,
+  purchaseOptionStateAction,
+} = require('./play-product-plan');
 const {
   decodeSsvCustomData,
   classifyVerifiedSsvCallback,
@@ -6299,6 +6302,117 @@ function productIdFromResponse(product) {
   return String(product?.productId || '').trim();
 }
 
+/**
+ * A vásárlási opció **állapotának** rendbe tétele (activate / deactivate).
+ *
+ * MIÉRT külön függvény: a `state` a Play válaszában **csak olvasható** (a séma
+ * szerint „output only … use the dedicated endpoints instead"), ezért a termék
+ * PATCH-csel **nem** állítható. Emiatt két helyről kell hívni:
+ *   1. friss létrehozás/PATCH után (`upsertPlayProduct`),
+ *   2. a **„változatlan termék" gyors-úton** is — különben egy meg nem jelent
+ *      kiadvány a megjelenés napján **sem** vált volna vásárolhatóvá, mert a
+ *      gyors-út korán visszatér (éles hiba, mérve 2026-09-22: a legfrissebb
+ *      kiadvány 4 terméke `DRAFT`).
+ *
+ * A döntés a tiszta `purchaseOptionStateAction`-ban van (`play-product-plan.js`).
+ */
+async function syncPlayPurchaseOptionState(
+  androidPublisher,
+  release,
+  productId,
+  product,
+  purchaseOptionId,
+  definition = null,
+) {
+  const options = Array.isArray(product?.purchaseOptions) ? product.purchaseOptions : [];
+  const option =
+    options.find((item) => String(item?.purchaseOptionId || '') === String(purchaseOptionId)) ||
+    (options.length === 1 ? options[0] : null);
+  const releaseIsUpcoming = release?.is_upcoming === true;
+  const action = purchaseOptionStateAction({
+    releaseIsUpcoming,
+    currentState: option?.state,
+  });
+  // ⚠️ A `none` ág **nem hív API-t**: a `state` hiánya/ACTIVE állapota rendben
+  // van, és a felesleges GET itt termékenként futna minden 5 perces körben.
+  if (action === 'none') return action;
+
+  const optionId = String(option?.purchaseOptionId || purchaseOptionId);
+  await androidPublisher.monetization.onetimeproducts.purchaseOptions.batchUpdateStates({
+    packageName: GOOGLE_PLAY_PACKAGE_NAME,
+    productId,
+    requestBody: {
+      requests: [
+        action === 'deactivate'
+          ? {
+              deactivatePurchaseOptionRequest: {
+                packageName: GOOGLE_PLAY_PACKAGE_NAME,
+                productId,
+                purchaseOptionId: optionId,
+                latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
+              },
+            }
+          : {
+              activatePurchaseOptionRequest: {
+                packageName: GOOGLE_PLAY_PACKAGE_NAME,
+                productId,
+                purchaseOptionId: optionId,
+                latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
+              },
+            },
+      ],
+    },
+  });
+  console.info('label_product_sync_option_state', {
+    releaseId: Number(release?.id || 0),
+    type: definition?.type || null,
+    productId,
+    optionId,
+    action,
+  });
+
+  // Cselekvés után **egyszer** ellenőrizzük: ha az állapot mégsem a kívánt,
+  // azt ki kell mondani (a hívó gyors-útja nem ellenőriz). Ez a hívás csak
+  // akkor fut, ha tényleg változtattunk — a steady state nem fizet érte.
+  const verified = (
+    await androidPublisher.monetization.onetimeproducts.get({
+      packageName: GOOGLE_PLAY_PACKAGE_NAME,
+      productId,
+    })
+  ).data;
+  const verifiedOption =
+    verified.purchaseOptions?.find((item) => item.purchaseOptionId === optionId) ||
+    verified.purchaseOptions?.[0];
+  const verifiedState = String(verifiedOption?.state || '').toUpperCase();
+  // A megjelenés előtti követelmény a „nem vásárolható", nem egy konkrét Play
+  // állapot-szöveg: a katalógusban több nem-aktív állapot is van, és egy
+  // ismeretlen elutasítása elbuktatná a szinkront egy valójában biztonságos
+  // terméknél.
+  const stateIsCorrect = releaseIsUpcoming
+    ? verifiedState !== 'ACTIVE'
+    : verifiedState === 'ACTIVE';
+  if (!verifiedOption || !stateIsCorrect) {
+    throw new Error(
+      releaseIsUpcoming
+        ? `Play purchase option is still active before the release date: ${productId}`
+        : `Play purchase option is not active after sync: ${productId}`,
+    );
+  }
+  console.log('label_product_sync_play_verified', {
+    releaseId: Number(release?.id || 0),
+    type: definition?.type || null,
+    productId,
+    purchaseOptionId: verifiedOption.purchaseOptionId,
+    purchaseOptionState: verifiedOption.state,
+    releaseIsUpcoming,
+    huAvailability:
+      verifiedOption.regionalPricingAndAvailabilityConfigs?.find(
+        (item) => item.regionCode === 'HU',
+      )?.availability || 'missing',
+  });
+  return action;
+}
+
 async function upsertPlayProduct(androidPublisher, release, definition, productId, price) {
   let current = null;
   try {
@@ -6367,6 +6481,19 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
       productId,
       price,
     });
+    // ⚠️ A PATCH nem változtatna semmit, DE a vásárlási opció **állapotát** külön
+    // kell rendbe tenni: a `state` nem írható a termék PATCH-csel (csak a
+    // dedikált `purchaseOptions.batchUpdateStates` végponttal). Enélkül egy
+    // meg nem jelent kiadvány a megjelenés napján **sem** vált volna
+    // vásárolhatóvá, mert a gyors-út korán visszatér.
+    await syncPlayPurchaseOptionState(
+      androidPublisher,
+      release,
+      productId,
+      current,
+      purchaseOptionId,
+      definition,
+    );
     return productId;
   }
   // Use the documented single-product upsert endpoint. The previous code
@@ -6470,70 +6597,15 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
   // date. The scheduled sync runs every five minutes, so the option activates
   // itself on the day without anybody pressing anything.
   const releaseIsUpcoming = release?.is_upcoming === true;
-  const currentState = String(savedOption.state || '').toUpperCase();
-
-  if (releaseIsUpcoming ? currentState === 'ACTIVE' : currentState !== 'ACTIVE') {
-    const optionId = savedOption.purchaseOptionId || purchaseOptionId;
-    await androidPublisher.monetization.onetimeproducts.purchaseOptions.batchUpdateStates({
-      packageName: GOOGLE_PLAY_PACKAGE_NAME,
-      productId,
-      requestBody: {
-        requests: [
-          releaseIsUpcoming
-            ? {
-                deactivatePurchaseOptionRequest: {
-                  packageName: GOOGLE_PLAY_PACKAGE_NAME,
-                  productId,
-                  purchaseOptionId: optionId,
-                  latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
-                },
-              }
-            : {
-                activatePurchaseOptionRequest: {
-                  packageName: GOOGLE_PLAY_PACKAGE_NAME,
-                  productId,
-                  purchaseOptionId: optionId,
-                  latencyTolerance: 'PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT',
-                },
-              },
-        ],
-      },
-    });
-  }
-
-  const verified = (
-    await androidPublisher.monetization.onetimeproducts.get({
-      packageName: GOOGLE_PLAY_PACKAGE_NAME,
-      productId,
-    })
-  ).data;
-  const verifiedOption =
-    verified.purchaseOptions?.find(
-      (option) => option.purchaseOptionId === (savedOption.purchaseOptionId || purchaseOptionId),
-    ) || verified.purchaseOptions?.[0];
-  const verifiedState = String(verifiedOption?.state || '').toUpperCase();
-  // The pre-release requirement is "not buyable", not one specific Play state
-  // string: the catalog has more than one non-active state, and rejecting an
-  // unknown one would fail the sync for a product that is in fact safe.
-  const stateIsCorrect = releaseIsUpcoming ? verifiedState !== 'ACTIVE' : verifiedState === 'ACTIVE';
-  if (!verifiedOption || !stateIsCorrect) {
-    throw new Error(
-      releaseIsUpcoming
-        ? `Play purchase option is still active before the release date: ${productId}`
-        : `Play purchase option is not active after sync: ${productId}`,
-    );
-  }
-  console.log('label_product_sync_play_verified', {
-    releaseId: Number(release.id),
-    type: definition.type,
+  await syncPlayPurchaseOptionState(
+    androidPublisher,
+    release,
     productId,
-    purchaseOptionId: verifiedOption.purchaseOptionId,
-    purchaseOptionState: verifiedOption.state,
-    releaseIsUpcoming,
-    huAvailability:
-      verifiedOption.regionalPricingAndAvailabilityConfigs?.find((item) => item.regionCode === 'HU')?.availability ||
-      'missing',
-  });
+    saved,
+    purchaseOptionId,
+    definition,
+  );
+
   return productIdFromResponse(saved) || productId;
 }
 

@@ -23,8 +23,13 @@
  *     és elérhetőséget kell mutatnia;
  *   - a `purchaseOptionId` és a `buyOption` megléte is kell (ezeket küldjük).
  *
- * AMIT SZÁNDÉKOSAN NEM HASONLÍT: a `state` (a PATCH nem tartalmazza, tehát nem
- * is változtatná meg — a döntésbe véve csak felesleges írásokat okozna).
+ * AMIT SZÁNDÉKOSAN NEM HASONLÍT: a `state`. A `state` ugyanis **nem írható** a
+ * PATCH-csel (a séma szerint „output only … use the dedicated endpoints
+ * instead"), ezért az állapotot **külön** kell rendbe tenni
+ * (`purchaseOptionStateAction` + a `purchaseOptions.batchUpdateStates` végpont).
+ * Ha a döntés a `state`-et is figyelné, egy meg nem jelent kiadványnál minden
+ * 5 perces körben felesleges PATCH indulna — pont az a hiba-osztály, amit ez a
+ * modul megszüntetett.
  */
 function playProductMatches(current, desired) {
   const {
@@ -68,4 +73,32 @@ function playProductMatches(current, desired) {
   return true;
 }
 
-module.exports = { playProductMatches };
+/**
+ * Mit kell tenni a **vásárlási opció állapotával**?
+ *
+ * Ez a döntés azért él külön, mert a `state`:
+ *   - **nem** írható a termék PATCH-csel (csak a dedikált
+ *     `purchaseOptions.batchUpdateStates` végponttal),
+ *   - ezért a „változatlan termék = nincs írás" gyors-úton is **le kell futnia**.
+ *
+ * ⚠️ ÉLES HIBA, AMIT EZ A DÖNTÉS JAVÍT (2026-09-22, mérve): a gyors-út
+ * (`playProductMatches` → `return productId`) **korán visszatért**, ezért a
+ * megjelenés napján az aktiválás **soha nem futott volna le** — a kiadvány
+ * terméke `DRAFT` állapotban ragadt volna, minden jelzés nélkül (a Play
+ * egyszerűen nem adta volna el). A mérés ezt mutatta: a legfrissebb kiadvány
+ * (12699) 4 terméke `DRAFT`, a többi 56 `ACTIVE`.
+ *
+ * Szabály: meg nem jelent kiadvány = **nem vásárolható** (deactivate), megjelent
+ * kiadvány = **vásárolható** (activate). A `state` **hiánya** régi, aktív
+ * terméket jelent, ezért azt nem bántjuk (különben minden körben írnánk).
+ */
+function purchaseOptionStateAction({ releaseIsUpcoming, currentState } = {}) {
+  const state = String(currentState || '').toUpperCase();
+  if (releaseIsUpcoming === true) {
+    return state === 'ACTIVE' ? 'deactivate' : 'none';
+  }
+  if (!state) return 'none';
+  return state === 'ACTIVE' ? 'none' : 'activate';
+}
+
+module.exports = { playProductMatches, purchaseOptionStateAction };

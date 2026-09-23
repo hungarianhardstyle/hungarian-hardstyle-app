@@ -3,7 +3,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { playProductMatches } = require('./play-product-plan');
+const {
+  playProductMatches,
+  purchaseOptionStateAction,
+} = require('./play-product-plan');
 
 /**
  * A „változatlan termék → nincs felesleges írás" döntés bizonyítása.
@@ -146,4 +149,121 @@ test('a döntés a valódi Play-választ kapja (nem a kérést használja alapna
     source.indexOf('if (playProductMatches(') + 200,
   );
   assert.match(call, /playProductMatches\(current,/, 'az első argumentum a Play-válasz (current)');
+});
+
+// ---------------------------------------------------------------------------
+// A VÁSÁRLÁSI OPCIÓ ÁLLAPOTA — éles hiba javítása (2026-09-22, mérve)
+//
+// A tünet: egy meg nem jelent kiadvány terméke `DRAFT` állapotban van (helyes,
+// mert a Play nem adhatja el a megjelenés előtt) — DE a szinkron
+// „változatlan termék → nincs írás" gyors-útja **korán visszatért**, ezért a
+// megjelenés napján az aktiválás **soha nem futott volna le**: a kiadvány
+// terméke örökre `DRAFT` maradt volna, minden jelzés nélkül.
+//
+// A mérés (élő Play API, 60 termék): a legfrissebb kiadvány (12699) 4 terméke
+// `DRAFT`, a többi 56 `ACTIVE`.
+// ---------------------------------------------------------------------------
+
+test('a vásárlási opció állapota: megjelent kiadvány DRAFT termékét AKTIVÁLNI kell', () => {
+  assert.equal(
+    purchaseOptionStateAction({ releaseIsUpcoming: false, currentState: 'DRAFT' }),
+    'activate',
+  );
+  assert.equal(
+    purchaseOptionStateAction({ releaseIsUpcoming: false, currentState: 'INACTIVE' }),
+    'activate',
+  );
+});
+
+test('a vásárlási opció állapota: ami már jó, azt nem bántjuk (nincs felesleges írás)', () => {
+  // Megjelent + ACTIVE → nincs teendő.
+  assert.equal(
+    purchaseOptionStateAction({ releaseIsUpcoming: false, currentState: 'ACTIVE' }),
+    'none',
+  );
+  // A `state` HIÁNYA régi, aktív terméket jelent — nem írunk.
+  assert.equal(
+    purchaseOptionStateAction({ releaseIsUpcoming: false, currentState: '' }),
+    'none',
+  );
+  assert.equal(purchaseOptionStateAction({ releaseIsUpcoming: false }), 'none');
+});
+
+test('a vásárlási opció állapota: meg nem jelent kiadvány NEM vásárolható', () => {
+  // Ha valaki kézzel aktiválta a Play Console-ban, vissza kell venni.
+  assert.equal(
+    purchaseOptionStateAction({ releaseIsUpcoming: true, currentState: 'ACTIVE' }),
+    'deactivate',
+  );
+  // A már inaktív (DRAFT) állapot rendben van — nem írunk minden körben.
+  assert.equal(
+    purchaseOptionStateAction({ releaseIsUpcoming: true, currentState: 'DRAFT' }),
+    'none',
+  );
+  assert.equal(
+    purchaseOptionStateAction({ releaseIsUpcoming: true, currentState: '' }),
+    'none',
+  );
+});
+
+test('a „változatlan termék" gyors-út NEM függhet a state-től (nincs írás-amplifikáció)', () => {
+  // Ha a `playProductMatches` a DRAFT állapotot eltérésnek venné, egy meg nem
+  // jelent kiadványnál MINDEN 5 perces körben PATCH indulna — pont az a hiba,
+  // amit ez a modul megszüntetett. Ezért az állapotot külön kezeljük.
+  const draft = playProduct({
+    purchaseOptions: [
+      {
+        ...playProduct().purchaseOptions[0],
+        state: 'DRAFT',
+      },
+    ],
+  });
+  assert.equal(
+    playProductMatches(draft, desired()),
+    true,
+    'a DRAFT állapot nem a PATCH dolga — a döntés ne blokkolja a gyors-utat',
+  );
+});
+
+test('FORRÁS-LINT: az aktiválás a gyors-úton IS lefut (ez volt az éles hiba)', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8');
+  const start = source.indexOf('async function upsertPlayProduct(');
+  const end = source.indexOf('async function updateWordPressReleaseProducts(', start);
+  assert.ok(start > 0 && end > start, 'az upsertPlayProduct megtalálható');
+  const body = source.slice(start, end);
+
+  assert.match(body, /syncPlayPurchaseOptionState\(/, 'az állapot-rendezés bekötve');
+  // 1. a gyors-út (egyezésnél) is rendbe teszi az állapotot
+  const early = body.indexOf('if (playProductMatches(');
+  const earlyReturn = body.indexOf('return productId;', early);
+  const earlySlice = body.slice(early, earlyReturn);
+  assert.match(
+    earlySlice,
+    /syncPlayPurchaseOptionState\(/,
+    'a gyors-úton is le kell futnia az állapot-rendezésnek',
+  );
+  // 2. a PATCH utáni ágon is
+  const patch = body.indexOf('.onetimeproducts.patch(');
+  assert.ok(
+    body.indexOf('syncPlayPurchaseOptionState(', patch) > patch,
+    'a PATCH után is rendbe tesszük az állapotot',
+  );
+  // 3. a `state`-et NEM a PATCH-csel állítjuk (az nem is írható így)
+  assert.doesNotMatch(
+    body,
+    /releaseIsUpcoming \? currentState/,
+    'a régi, gyors-utat kihagyó inline blokk nem térhet vissza',
+  );
+  // 4. a döntés a tiszta modulban van (a közös állapot-rendezőben)
+  const helperStart = source.indexOf('async function syncPlayPurchaseOptionState(');
+  assert.ok(helperStart > 0, 'a syncPlayPurchaseOptionState megvan');
+  assert.match(
+    source.slice(helperStart, helperStart + 900),
+    /purchaseOptionStateAction\(\{/,
+    'a döntés a tiszta modulból jön',
+  );
+  // 5. a `releaseIsUpcoming` a verzió-ellenőrzés bemenete — a DEFINÍCIÓ is kell
+  //    (ez a mező egyszer már kiesett egy refaktor alatt: futásidejű hiba lett
+  //    volna, amit csak a kód kiíratása mutatott meg)
+  assert.match(body, /const releaseIsUpcoming = release\?\.is_upcoming === true;/);
 });
