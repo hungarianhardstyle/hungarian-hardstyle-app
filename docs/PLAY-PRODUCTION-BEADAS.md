@@ -58,7 +58,7 @@ válaszainkkal:
 | 3 | **Hirdetések** | **Tartalmaz hirdetést: IGEN** (AdMob: banner + jutalmazott videó) | Ha nem jelöljük, az elutasítás oka lehet |
 | 4 | **Célközönség** (target audience) | **Döntés kell** (lásd 5. pont) — a chat és a felhasználói tartalom miatt a **13 év alatti** célközönség **nem** választható | A „gyerekeknek is" választás szigorú családi szabályokat vonna be |
 | 5 | **Hírek** (news app) | Az app **hírtartalmat is ad** (hírek, események) → a „news app" kérdésre **igent** kell mondani, és vállalni a hírekre vonatkozó szabályt | Ha nem jelöljük, de van hírszekció, az elutasítás oka lehet |
-| 6 | **Alkalmazás-hozzáférés** (App access) | ⚠️ **BEJELENTKEZÉS KÖTELEZŐ** → a bírálóknak **teszt-fiókot kell adni** (e-mail + jelszó), és leírni, hol érdemes körülnézniük (zene, chat, kedvencek). **Ez nélkül a bírálat nem tud belépni, és elutasítják.** | Ez a leggyakoribb elutasítási ok a bejelentkezést igénylő appoknál |
+| 6 | **Alkalmazás-hozzáférés** (App access) | ✅ **KÉSZ:** a bírálói teszt-fiók **létrejött** — `review@hungarianhardstyle.hu` (igazolt e-mail, a bejelentkezés **élőben igazolva**, a szerver is elfogadta). A jelszót a `node tools/create-review-account.mjs` adja ki / állítja újra — **a repóban titkot nem tárolunk**, ezért a jelszó itt **nincs benne**. | Az app bejelentkezést kér: enélkül a bírálat nem tud belépni, és elutasítják |
 | 7 | **Felhasználói tartalom** (UGC) | Van chat, cikk-komment, DJ/szervező beküldés — **van jelentés és tiltás** (a funkció létezik, ezt a nyilatkozatban meg kell adni) | A UGC-szabály megköveteli a bejelentés/blokkolás meglétét |
 | 8 | Pénzügyi / egészségügyi / kormányzati | **nem** érintett | — |
 | 9 | **Adatvédelmi irányelv URL** | `https://hungarianhardstyle.hu/adatvedelmi-nyilatkozat/` (**él**), ÁSZF: `…/altalanos-szerzodesi-feltetelek-aszf/` (**él**) | Mérve, HTTP 200 |
@@ -130,10 +130,12 @@ frissíteni kell** — különben az oldal nem lenne igaz.
 
 4. **Hír-deklaráció:** az app ad hírtartalmat, ezért a „news app" kérdésre **igent** kell mondani
    (javaslat). Ezt a Console-ban kell megjelölni.
-5. **Bírálói teszt-fiók (App access):** ⚠️ **a legkritikusabb** — az app bejelentkezést kér, ezért a
-   bírálónak meg kell adni egy **működő teszt-fiókot** (e-mail + jelszó), és leírni, hol érdemes
-   körülnéznie (zene, chat, kedvencek). Enélkül a bírálat **nem tud belépni**, és elutasítják.
-   **A címet a tulajdonos adja meg** (pl. `review@hungarianhardstyle.hu` vagy egy meglévő tesztfiók).
+5. **Bírálói teszt-fiók (App access): ✅ KÉSZ.** A `review@hungarianhardstyle.hu` fiók létrejött,
+   **igazolt e-maillel**, és a bejelentkezés (e-mail + jelszó) **élőben igazolva** — a szerver is
+   elfogadta (`getMyLabelLibrary` → 200). **A jelszót a `tools/create-review-account.mjs` adja ki**
+   (`--confirm` létrehoz, `--confirm --reset` új jelszót állít), és **a repóban titkot nem tárolunk**,
+   ezért a jelszó itt szándékosan nincs benne. ⚠️ A bírálat **után** érdemes új jelszót adni vagy a
+   fiókot törölni.
 6. **Adatbiztonsági nyilatkozat** (Data safety) — a 2. pont táblázata szerint, a fióktörlési URL-lel.
 
 ---
