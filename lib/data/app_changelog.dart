@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 352,
+    changes: [
+      'ÚJ: „Vásárlási diagnosztika" a „Több → Az appról" képernyőn. Ha egy vásárlás nem indul el, egy gomb megmutatja, mit válaszol a Google Play az adott készüléken: hány terméket lát, milyen áron és pénznemben, és mi volt a legutóbbi hiba kódja — a jelentést egy mozdulattal el lehet küldeni.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 351,
     changes: [
       'Javítva: az értesítéseknél mostantól TÖBB sor is kijelölhető egyszerre — eddig minden koppintás lecserélte az előző kijelölést, ezért csak egyet vagy az összeset lehetett.',

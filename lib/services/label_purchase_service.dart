@@ -9,6 +9,7 @@ import 'package:flutter/widgets.dart';
 
 import '../providers/ads_provider.dart';
 import 'ad_unit_plan.dart';
+import 'purchase_diagnostics_plan.dart';
 import '../core/firebase/firebase_callable.dart';
 
 class LabelPurchaseService with WidgetsBindingObserver {
@@ -38,6 +39,17 @@ class LabelPurchaseService with WidgetsBindingObserver {
   Set<String> lastNotFoundProductIds = const {};
   String? lastProductQueryError;
   Set<String> lastProductQueryIds = const {};
+
+  /// A **legutóbbi vásárlási hiba** a Play-től — a vásárlási diagnosztikához.
+  ///
+  /// MIÉRT: a 2026-09-22-i ország-hibánál („A tétel nem áll rendelkezésre az
+  /// adott országban") a hibaüzenetet a **Play saját ablaka** írta ki, a kódunk
+  /// pedig **nem látta** a nyers hibakódot — ezért több körön át csak
+  /// következtetni lehetett. Ez a négy mező teszi láthatóvá, amit a Play mond.
+  String? lastPurchaseErrorCode;
+  String? lastPurchaseErrorMessage;
+  String? lastPurchaseErrorProductId;
+  DateTime? lastPurchaseErrorAt;
   final Set<String> _backgroundProductIds = <String>{};
   Timer? _backgroundRetryTimer;
   bool _backgroundSyncRunning = false;
@@ -188,6 +200,7 @@ class LabelPurchaseService with WidgetsBindingObserver {
   void listen() {
     _subscription ??= _store.purchaseStream.listen((items) async {
       for (final purchase in items) {
+        _recordPurchaseError(purchase);
         final key = _purchaseKey(purchase);
         // Retain every event until the release screen confirms both server
         // verification and Play completion. This also covers a screen that
@@ -251,6 +264,91 @@ class LabelPurchaseService with WidgetsBindingObserver {
   String _purchaseKey(PurchaseDetails purchase) {
     final token = purchase.verificationData.serverVerificationData;
     return '${purchase.productID}:$token';
+  }
+
+  /// A Play-től kapott vásárlási hiba megőrzése (a diagnosztikához).
+  ///
+  /// Csak a **hibás** eseményeket rögzítjük, és **nem** nyúlunk a
+  /// vásárlásfeldolgozáshoz: ez kizárólag megfigyelés.
+  void _recordPurchaseError(PurchaseDetails purchase) {
+    if (purchase.status != PurchaseStatus.error) return;
+    lastPurchaseErrorCode = purchase.error?.code;
+    lastPurchaseErrorMessage = purchase.error?.message;
+    lastPurchaseErrorProductId = purchase.productID;
+    lastPurchaseErrorAt = DateTime.now();
+  }
+
+  /// **Vásárlási diagnosztika** — mit lát a Play Billing **ezen a készüléken**?
+  ///
+  /// ⚠️ SZÁNDÉKOSAN a `_catalogCache`-et **megkerüli**: a diagnosztika értéke a
+  /// **friss, nyers** Play-válasz (a gyorsítótárból épp az látszana, amit
+  /// korábban mentettünk, és pont az a kérdés, mit ad a Play **most**).
+  /// Nem indít vásárlást és nem ír semmit.
+  Future<PurchaseDiagnosticsInput> diagnose(
+    Iterable<String> productIds, {
+    String platform = '',
+    String appVersion = '',
+    String accountEmail = '',
+  }) async {
+    final ids = productIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet();
+    lastProductQueryIds = ids;
+    lastNotFoundProductIds = const {};
+    lastProductQueryError = null;
+
+    var available = false;
+    String? queryError;
+    final products = <PurchaseDiagnosticProduct>[];
+    final notFound = <String>[];
+
+    try {
+      available = await _store.isAvailable();
+    } catch (error) {
+      queryError = 'isAvailable: $error';
+    }
+    lastStoreAvailable = available;
+
+    if (available && ids.isNotEmpty) {
+      try {
+        final batch = await _store.queryProductDetails(ids);
+        final error = batch.error;
+        if (error != null) {
+          queryError = '${error.code}: ${error.message}';
+        }
+        for (final product in batch.productDetails) {
+          products.add(
+            PurchaseDiagnosticProduct(
+              id: product.id,
+              title: product.title,
+              price: product.price,
+              currencyCode: product.currencyCode,
+            ),
+          );
+        }
+        notFound.addAll(batch.notFoundIDs);
+      } catch (error) {
+        queryError = error.toString();
+      }
+    }
+
+    lastNotFoundProductIds = notFound.toSet();
+    lastProductQueryError = queryError;
+
+    return PurchaseDiagnosticsInput(
+      storeAvailable: available,
+      queriedIds: ids.toList(growable: false),
+      products: products,
+      notFoundIds: notFound,
+      queryError: queryError,
+      lastErrorCode: lastPurchaseErrorCode,
+      lastErrorMessage: lastPurchaseErrorMessage,
+      lastErrorProductId: lastPurchaseErrorProductId,
+      platform: platform,
+      appVersion: appVersion,
+      accountEmail: accountEmail,
+    );
   }
 
   Future<bool> buy(ProductDetails product) => _store.buyNonConsumable(

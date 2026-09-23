@@ -12,11 +12,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 351
+currentBuild: 352
 currentVersion: 1.0.0
-lastPublishedBuild: 349
-aab: build/HUHS-v1.0.0+351-release.aab
-sha256: 8E60616B14D46E39E1F1E30D7549B10EBCE22FE667FBF57453B113504AD6BDF9
+lastPublishedBuild: 351
+aab: build/HUHS-v1.0.0+352-release.aab
+sha256: 0396D2AC7C3E48C2FAF368ABA0F28220D50B8300E9B91E8465718085E2671974
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -25,17 +25,17 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-22, a legfrissebb mér�
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **349** — „349 (1.0.0)", a rövid kiadási szöveggel |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **351** — „351 (1.0.0)", a rövid kiadási szöveggel |
 | beta | üres | — |
 | production | üres | — |
 | internal | completed + egy **üres piszkozat** | 278 |
 
-- **A 349 élesben van** a zárt teszt sávján (completed) — ezt a mérés igazolja (2026-09-22).
-  A **350** csomag a következő feltöltés.
+- **A 351 élesben van** a zárt teszt sávján (completed) — ezt a mérés igazolja (2026-09-22, `node tools/check-play-track.mjs`). A **352** csomag a következő feltöltés.
 - **A production sáv viszont üres:** a termékkör megnyitása a Play zárt teszt követelményéhez kötött (személyes fejlesztői fióknál legalább **12 tesztelő / 14 nap** folyamatos zárt teszt), ezért az „élesítés" **nem** egy újabb AAB feltöltése, hanem a production access megnyitása + kiadás a meglévő bundle-ből.
-- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 350 automatikusan felváltja a 349-et; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
-- A feltöltött AAB-ek a Playen (a 2026-09-22-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 342, 345, 346, 347, 348, **349**.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**349**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 349 volt — ezért az **1. pont** blokkja már csak a **350/351** újdonságait írja le. A **production** kiadáshoz a **hosszabb, 329–351 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
+- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 352 automatikusan felváltja a 351-et; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
+- A feltöltött AAB-ek a Playen (a 2026-09-22-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 347, 348, 349, 350, **351**.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**351**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 351 volt — ezért az **1. pont** blokkja már csak a **352** újdonságát írja le. A **production** kiadáshoz a **hosszabb, 329–352 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták.
+- **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
 
@@ -70,29 +70,31 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+351-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+352-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **351** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 80.60 MB |
-| SHA-256 | 8E60616B14D46E39E1F1E30D7549B10EBCE22FE667FBF57453B113504AD6BDF9 |
+| Verziókód | **352** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 80.67 MB |
+| SHA-256 | 0396D2AC7C3E48C2FAF368ABA0F28220D50B8300E9B91E8465718085E2671974 |
 
-**Miért a 351-et kell feltenni:** a 350-ben az **értesítés-kijelölés nem működött jól** — a
-tulajdonos jelzése: *„a notify kijelölésnél egyszerre csak egyet lehet kijelölni"*, illetve
-*„csak egyet vagy az összeset"*. A gyökér a képernyő állapotkezelése volt
-(`_selected..clear()..addAll(...)` — a `clear()` előbb fut, ezért minden koppintás **egy** elemet
-hagyott), nem a kijelölés szabálya. A 351 ezt javítja, és az állapot **tesztelt osztályba** került
-(`NotificationSelection`). A 351-ben a **350 minden újdonsága is benne van** (adatlap-szerkesztés,
-kijelölés, magyar „Adatlap átvétele", görgetés). **Ugyanaz a verziókód nem tölthető fel újra**,
-ezért minden javítás új verziókódot kap.
+**Miért a 352-t kell feltenni:** a 351 élesítése után a tulajdonos **ugyanazt a vásárlási hibát**
+jelezte a **táblagépen** („ez a tétel nem áll rendelkezésedre az országodban"), miközben **ugyanazzal
+a Google-fiókkal a telefonon már működött** a vásárlás. A nyomozás során kiderült, hogy a hibaüzenetet
+a **Play saját ablaka** írja ki, és a kódunk **nem látta** sem a nyers hibakódot, sem azt, hogy a Play
+egyáltalán visszaadta-e a terméket — ezért több körön át **következtetni** kellett. A 352 ezt a hiányzó
+**műszert** adja: a „Több → Az appról" képernyőn egy **Vásárlási diagnosztika** szakasz egy gombnyomásra
+megmutatja a friss, nyers Play-választ (hány termék, milyen áron és **pénznemben**), és a legutóbbi
+vásárlási hiba **kódját** — a jelentés pedig egy mozdulattal a vágólapra tehető és elküldhető.
+**A 352 a 351 minden javítását is tartalmazza** (értesítés-kijelölés, DJ-adatlap szerkesztése, magyar
+„Adatlap átvétele", görgetés). **Ugyanaz a verziókód nem tölthető fel újra**, ezért minden javítás új
+verziókódot kap.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 351 mindegyiket tartalmazza, és kisebb
-> verziókódú csomagot a Play amúgy sem fogadna el. Ha a **350 még ellenőrzés alatt** van, azt
-> **eldobhatod**: a 351 ugyanaz, plusz a javítás.
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 352 mindegyiket tartalmazza, és kisebb
+> verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.7.0** (`build/huhs-mobile-api-2.7.0.zip`) — **ez már fent van** (élőben
 igazolva: `apiVersion = 2.7.0`, a privát végpontok védettek), ezért **nem kell újra feltölteni**.
-A **szerveroldali függvények is telepítve vannak** (`firebase deploy --only functions`), ezért a
-`free_link` javítás és az új `updateClaimedArtistProfile` callable már él.
+A **szerveroldali függvények is telepítve vannak** (`firebase deploy --only functions`), benne a
+**kilenc országra bővített termék-régiók** javításával (a 60 termék mind a 9 országban elérhető).
 
 ## 1. Play Console — RÖVID (ezt másold be)
 
@@ -104,10 +106,7 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Javítva: az értesítéseknél mostantól TÖBB sor is kijelölhető egyszerre (eddig csak egy).
-- ÚJ: az átvett DJ-adatlapodat te szerkesztheted (név, bemutatkozás, linkek, kép).
-- ÚJ: az értesítéseket ki lehet jelölni törléshez — csak azt törlöd, amit akarsz.
-- „Adatlap átvétele" a „Claim" helyett; az adatlapok aljára rendesen le lehet görgetni.
+- ÚJ: „Vásárlási diagnosztika" a Több → Az appról képernyőn: ha egy vásárlás nem indul el, egy gomb megmutatja, mit válaszol a Google Play ezen a készüléken.
 ```
 
 ## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–351 összesítő)
@@ -153,6 +152,11 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 352 — vásárlási diagnosztika (a vásárlási hiba kivizsgálásához)
+- **ÚJ:** a **Több → Az appról** képernyőn megjelent a **Vásárlási diagnosztika** szakasz. Egy gomb megmutatja, amit eddig **nem láttunk**: hogy a Google Play vásárlási szolgáltatása elérhető-e az adott készüléken, **hány terméket** ad vissza a Play, milyen **áron és pénznemben**, mit **nem** adott vissza, és mi volt a **legutóbbi vásárlási hiba nyers kódja** (a Play saját üzenetével együtt). A jelentés egy mozdulattal a **vágólapra** tehető.
+- **Miért kellett:** a tulajdonos a táblagépen ugyanazt a vásárlási hibát kapta („ez a tétel nem áll rendelkezésedre az országodban"), mint korábban a telefonon — **ugyanazzal a Google-fiókkal**, amellyel a telefonon már működik a vásárlás. A hibaüzenetet a **Play saját ablaka** írja ki, a kódunk pedig **nem látta** a hibakódot, ezért csak következtetni lehetett. Ez a kiadás azt a hiányzó **műszert** adja hozzá — vásárlást nem indít és nem ír semmit.
+- A **352 a 351 minden javítását is tartalmazza** (értesítés-kijelölés, DJ-adatlap szerkesztése, magyar „Adatlap átvétele", görgetés).
 
 ### 351 — az értesítés-kijelölés javítása (több sor egyszerre)
 - **Javítva:** az **értesítéseknél mostantól több sor is kijelölhető egyszerre**. Eddig minden koppintás **lecserélte** az előző kijelölést — ezért csak egyet lehetett kijelölni, vagy az „összes kijelölése" gombbal mindet. A gyökér a képernyő állapotkezelése volt (a `clear()` előbb futott, mint a váltás kiszámítása), nem a kijelölés szabálya; az állapot mostantól **tesztelt osztályban** él.
