@@ -58,6 +58,8 @@ const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 const {
   playProductMatches,
   purchaseOptionStateAction,
+  regionalPricingConfigs,
+  mergeRegionalConfigs,
 } = require('./play-product-plan');
 const {
   decodeSsvCustomData,
@@ -6409,6 +6411,11 @@ async function syncPlayPurchaseOptionState(
       verifiedOption.regionalPricingAndAvailabilityConfigs?.find(
         (item) => item.regionCode === 'HU',
       )?.availability || 'missing',
+    // Hány országban vásárolható meg a termék? (A 2026-09-22-i ország-hiba
+    // naplóból való visszaigazolása: ennek minden terméknél 8-nak kell lennie.)
+    regionCount: Array.isArray(verifiedOption.regionalPricingAndAvailabilityConfigs)
+      ? verifiedOption.regionalPricingAndAvailabilityConfigs.length
+      : 0,
   });
   return action;
 }
@@ -6436,23 +6443,27 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
     current?.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId) ||
     current?.purchaseOptions?.[0] ||
     null;
-  const regionalPrices = new Map(
-    (currentOption?.regionalPricingAndAvailabilityConfigs || [])
-      .filter((item) => item?.regionCode)
-      .map((item) => [String(item.regionCode), item]),
-  );
-  regionalPrices.set('HU', {
-    regionCode: 'HU',
-    price: { currencyCode: 'HUF', units: String(price), nanos: 0 },
-    availability: 'AVAILABLE',
-  });
+  // ⚠️ MINDEN ország, ahol az alkalmazás elérhető — nem csak Magyarország.
+  //
+  // ÉLES HIBA (2026-09-22, mérve): a termékek `regionalPricingAndAvailabilityConfigs`
+  // listája **kizárólag** `HU` volt mind a 60 terméknél, miközben az app 8
+  // országban érhető el — ezért egy nem magyar Play-fiókkal minden tételre ez a
+  // hiba jött: *„A tétel nem áll rendelkezésre az adott országban."* A kívánt
+  // régiók és a helyi árak a tiszta `play-product-plan.js`-ben élnek, hogy a
+  // szinkron és a döntés (`playProductMatches`) ne tudjon széthúzni.
+  const desiredRegions = regionalPricingConfigs(price);
   const purchaseOption = {
     purchaseOptionId,
     buyOption: currentOption?.buyOption || {
       legacyCompatible: true,
       multiQuantityEnabled: false,
     },
-    regionalPricingAndAvailabilityConfigs: [...regionalPrices.values()],
+    // A meglévő (akár kézzel, a Play Console-ban beállított) régiókat
+    // MEGTARTJUK — a tulajdonos kérése: „semmit ne kapcsolj ki".
+    regionalPricingAndAvailabilityConfigs: mergeRegionalConfigs(
+      currentOption?.regionalPricingAndAvailabilityConfigs,
+      desiredRegions,
+    ),
   };
   if (currentOption?.newRegionsConfig) purchaseOption.newRegionsConfig = currentOption.newRegionsConfig;
   const product = {
@@ -6474,12 +6485,20 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
   // SZÁNDÉKOSAN nem gyorsítótár: minden körben megnézzük a Play valódi
   // állapotát, ezért egy kézzel, a Play Console-ban átírt terméket továbbra is
   // AZONNAL észreveszünk és javítunk — csak a fölösleges írást spóroljuk meg.
-  if (playProductMatches(current, { title, description, price, purchaseOptionId })) {
+  const unchanged = playProductMatches(current, {
+    title,
+    description,
+    price,
+    purchaseOptionId,
+    regions: desiredRegions,
+  });
+  if (unchanged) {
     console.log('label_product_sync_play_unchanged', {
       releaseId: Number(release.id),
       type: definition.type,
       productId,
       price,
+      regionCount: desiredRegions.length,
     });
     // ⚠️ A PATCH nem változtatna semmit, DE a vásárlási opció **állapotát** külön
     // kell rendbe tenni: a `state` nem írható a termék PATCH-csel (csak a
