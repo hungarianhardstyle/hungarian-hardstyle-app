@@ -110,6 +110,7 @@ frissíteni kell** — különben az oldal nem lenne igaz.
 | Mit | Eszköz | Amit néz |
 |---|---|---|
 | Megjelent-e a nyilvános bolt-lap | `node tools/check-play-listing.mjs` | a Play-oldal állapota (404 helyett **200**) |
+| Teljes-e a bolt-lap tartalma | `node tools/check-play-listing-content.mjs` | leírások hossza + kötelező képek (ikon, grafikus fejléc, telefonos képernyőképek) |
 | Mi van élesben | `node tools/check-play-track.mjs` | sávonkénti build és állapot |
 | Egyezik-e az ország-lista | `node tools/check-play-products.mjs --tracks` | a production sáv országai vs. a termékek 9 országa |
 | A kiadási szöveg kint van-e | `node tools/check-play-notes.mjs` | a changelog és a meta konzisztenciája |
