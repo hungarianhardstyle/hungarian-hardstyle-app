@@ -210,6 +210,7 @@ test('a helyi árak a JÓVÁHAGYOTT értékek (550 Ft → 1,49 EUR / 39 CZK / 16
     { regionCode: 'HR', availability: 'AVAILABLE', price: { currencyCode: 'EUR', units: '1', nanos: 490000000 } },
     { regionCode: 'SI', availability: 'AVAILABLE', price: { currencyCode: 'EUR', units: '1', nanos: 490000000 } },
     { regionCode: 'SK', availability: 'AVAILABLE', price: { currencyCode: 'EUR', units: '1', nanos: 490000000 } },
+    { regionCode: 'NL', availability: 'AVAILABLE', price: { currencyCode: 'EUR', units: '1', nanos: 490000000 } },
     { regionCode: 'CZ', availability: 'AVAILABLE', price: { currencyCode: 'CZK', units: '39', nanos: 0 } },
     { regionCode: 'RS', availability: 'AVAILABLE', price: { currencyCode: 'RSD', units: '169', nanos: 0 } },
     { regionCode: 'UA', availability: 'AVAILABLE', price: { currencyCode: 'UAH', units: '59', nanos: 0 } },
@@ -229,7 +230,7 @@ test('minden termék MINDEN országban elérhető, ahol az app (és a magyar ár
     'a magyar ár a magyar ár (nincs átváltás)',
   );
   const others = configs.filter((config) => config.regionCode !== 'HU');
-  assert.equal(others.length, 7, 'a 7 külföldi ország is benne van');
+  assert.equal(others.length, LABEL_PRODUCT_REGIONS.length - 1, 'a külföldi országok is benne vannak');
 });
 
 test('a helyi ár nem csökken, ha a magyar ár nő (nincs fordított átváltás)', () => {
@@ -345,7 +346,7 @@ test('a PATCH törzse megtartja a meglévő országokat és felülírja a mieink
   const codes = merged.map((item) => item.regionCode).sort();
   assert.deepEqual(
     codes,
-    ['AT', 'CZ', 'DE', 'HR', 'HU', 'RS', 'SI', 'SK', 'UA'],
+    ['AT', 'CZ', 'DE', 'HR', 'HU', 'NL', 'RS', 'SI', 'SK', 'UA'],
     'a DE (kézi) megmarad, a többi régió bekerül',
   );
   const hungary = merged.find((item) => item.regionCode === 'HU');
@@ -391,7 +392,13 @@ test('FORRÁS-LINT: a szinkron a tiszta modulból veszi a régiókat és az ára
   // A régiók és az árfolyamok EGY helyen élnek: az index.js nem tartalmazhat
   // ország-besorolást vagy átszámítást.
   const indexSource = fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8');
-  const regionLiterals = ["regionCode: 'AT'", "regionCode: 'CZ'", "regionCode: 'RS'", "regionCode: 'UA'"];
+  const regionLiterals = [
+    "regionCode: 'AT'",
+    "regionCode: 'CZ'",
+    "regionCode: 'NL'",
+    "regionCode: 'RS'",
+    "regionCode: 'UA'",
+  ];
   for (const literal of regionLiterals) {
     assert.equal(
       indexSource.includes(literal),
@@ -408,11 +415,11 @@ test('FORRÁS-LINT: a szinkron a tiszta modulból veszi a régiókat és az ára
   }
 });
 
-test('FORRÁS-LINT: a régió-lista az app 8 országát fedi (a zárt teszt sávját)', () => {
+test('FORRÁS-LINT: a régió-lista az app országait fedi (a zárt teszt sávját + NL)', () => {
   assert.deepEqual(
     LABEL_PRODUCT_REGIONS.map((item) => item.regionCode),
-    ['HU', 'AT', 'HR', 'SI', 'SK', 'CZ', 'RS', 'UA'],
-    'a termékek ott érhetők el, ahol az app',
+    ['HU', 'AT', 'HR', 'SI', 'SK', 'NL', 'CZ', 'RS', 'UA'],
+    'a termékek ott érhetők el, ahol az app (és a kérésre hozzáadott Hollandia)',
   );
 });
 

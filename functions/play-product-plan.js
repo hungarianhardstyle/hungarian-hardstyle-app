@@ -45,9 +45,11 @@
  * rendben van) — így a hiba egyértelműen a **termékek ország-listájában** volt.
  *
  * A szabály ezért: **ott legyen megvásárolható, ahol az app elérhető.**
- * A lista az app zárt teszt sávjának országai (mérve: AT, CZ, HR, HU, RS, SI,
- * SK, UA). Ha a Play Console-ban változik a sáv ország-listája, **ezt a listát
- * is** át kell írni — a `tools/check-play-products.mjs` kiírja mindkettőt,
+ * A lista az app zárt teszt sávjának országai (mérve 2026-09-22-én: AT, CZ, HR,
+ * HU, RS, SI, SK, UA) **+ NL**, amelyet a tulajdonos kérésére adtunk hozzá
+ * (a Play Console-beli sáv-listát ő bővíti — lásd a lista feletti megjegyzést a
+ * sorrendről). Ha a Play Console-ban változik a sáv ország-listája, **ezt a
+ * listát is** át kell írni — a `tools/check-play-products.mjs` kiírja mindkettőt,
  * ezért az eltérés nem maradhat észrevétlen.
  */
 const LABEL_PRODUCT_REGIONS = [
@@ -56,6 +58,12 @@ const LABEL_PRODUCT_REGIONS = [
   { regionCode: 'HR', currencyCode: 'EUR' },
   { regionCode: 'SI', currencyCode: 'EUR' },
   { regionCode: 'SK', currencyCode: 'EUR' },
+  // ⚠️ Hollandia a tulajdonos kérésére került be (2026-09-22). EUR-t használ,
+  // ezért **nem** kellett új árdöntés: a jóváhagyott euró-ár érvényes rá is.
+  // A **sorrend számít**: a termékek előbb kapják meg az országot, és csak
+  // utána kerül be a Play Console-ban a sáv ország-listájába — különben lenne
+  // egy ablak, amiben valaki telepíteni tud, de vásárolni nem.
+  { regionCode: 'NL', currencyCode: 'EUR' },
   { regionCode: 'CZ', currencyCode: 'CZK' },
   { regionCode: 'RS', currencyCode: 'RSD' },
   { regionCode: 'UA', currencyCode: 'UAH' },
