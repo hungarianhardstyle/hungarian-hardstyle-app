@@ -1,0 +1,112 @@
+# Plugin 2.9.0 — a DJ privát (kapcsolattartó) e-mail címe látható és javítható
+#
+# A plugin forrása nincs git-ben: a `.tmp-api-260/huhs-mobile-api` fában él, és a
+# `tools/build-plugin-zip.mjs` csomagolja ZIP-be. Ez a fájl a 2.8.0 → 2.9.0
+# KÜLÖNBSÉG, hogy a változás külön is átnézhető legyen.
+#
+# A TULAJDONOS JELZÉSE (2026-09-24): „kérésre nem tudom átírni egy artist/dj
+# privát mail címét se a WP Apiban se a natív huhs vezérlőben. Meg látni se látom
+# sehol, pedig igény lenne mindkettőre, főleg ha elbaszta a delikvens."
+#
+# MÉRT GYÖKÉR: a `contact_email` meta (ez a privát cím, ami a beküldésből kerül
+# át, és az adatlap átvételét is igazolja)
+#   * a natív admin mezőlistájából hiányzott (a `booking_email` benne volt),
+#   * a WP admin DJ-meta-boxából szintén,
+#   * és a mentés sem ismerte.
+#
+# A JAVÍTÁS mindhárom helyen, 4 fájlban:
+#   - includes/api-admin.php  : a mező bekerült a DJ admin-mezőlistába (type: email)
+#   - includes/artists.php    : a WP admin meta-boxban külön mező, jelöléssel, hogy
+#                               NEM publikus
+#   - includes/artist-save.php: a mentés is írja, `sanitize_email`-en át
+#   - huhs-mobile-api.php     : verzió 2.9.0
+#
+# ⚠️ A natív admin űrlapja SZERVER-VEZÉRELT (a mezőket a szerver írja le), ezért
+# ehhez NEM kellett új app-verzió: a mező a következő megnyitáskor megjelenik.
+#
+# ⚠️ Amit a javítás NEM érint: a privát cím továbbra sem kerül a NYILVÁNOS
+# adatlap válaszába (`huhs_build_artist_response`) — az csak a védett
+# `claim-emails` végponton jön ki. Ezt a
+# `functions/artist-private-email.test.cjs` (6/6) őrzi.
+
+diff --git a/tmp/plugin-280/huhs-mobile-api/huhs-mobile-api.php b/.tmp-api-260/huhs-mobile-api/huhs-mobile-api.php
+index 0173e557..42523b97 100644
+--- a/tmp/plugin-280/huhs-mobile-api/huhs-mobile-api.php
++++ b/.tmp-api-260/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.8.0
++ * Version: 2.9.0
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.8.0');
++define('HUHS_API_VERSION', '2.9.0');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/tmp/plugin-280/huhs-mobile-api/includes/api-admin.php b/.tmp-api-260/huhs-mobile-api/includes/api-admin.php
+index de173fd2..debfd9f4 100644
+--- a/tmp/plugin-280/huhs-mobile-api/includes/api-admin.php
++++ b/.tmp-api-260/huhs-mobile-api/includes/api-admin.php
+@@ -650,6 +650,14 @@ function huhs_admin_resource_fields($post_type)
+             array('key' => 'soundcloud', 'label' => 'SoundCloud', 'type' => 'url'),
+             array('key' => 'youtube', 'label' => 'YouTube', 'type' => 'url'),
+             array('key' => 'booking_email', 'label' => 'Booking e-mail', 'type' => 'email'),
++            // ⚠️ A **privát** (kapcsolattartó) e-mail: NEM publikus, a nyilvános
++            // adatlapról szándékosan kimarad — viszont az adminnak látnia és
++            // javítania kell tudnia (a tulajdonos jelzése, 2026-09-24: „nem tudom
++            // átírni egy artist/dj privát mail címét se a WP Apiban se a natív
++            // huhs vezérlőben, meg látni se látom sehol"). Ez a mező az admin
++            // űrlapon keresztül olvasható és írható; a `type: 'email'` miatt a
++            // mentés `sanitize_email`-en megy át.
++            array('key' => 'contact_email', 'label' => 'Privát e-mail (kapcsolattartó, az adatlap átvételéhez)', 'type' => 'email'),
+             array('key' => 'booking_via_huhs', 'label' => 'Booking a Hungarian Hardstyle-on keresztül', 'type' => 'bool'),
+             array('key' => 'hero_image', 'label' => 'Profilkép média ID', 'type' => 'int'),
+             array('key' => 'logo', 'label' => 'Logó média ID', 'type' => 'int'),
+diff --git a/tmp/plugin-280/huhs-mobile-api/includes/artist-save.php b/.tmp-api-260/huhs-mobile-api/includes/artist-save.php
+index 93b93f2b..a24773dd 100644
+--- a/tmp/plugin-280/huhs-mobile-api/includes/artist-save.php
++++ b/.tmp-api-260/huhs-mobile-api/includes/artist-save.php
+@@ -36,6 +36,10 @@ function huhs_save_artist_meta($post_id)
+         'soundcloud',
+         'youtube',
+         'booking_email',
++        // A privát (kapcsolattartó) cím szerkeszthető a WP adminban is
++        // (2026-09-24): eddig a beküldésből került át, és sehol nem lehetett
++        // javítani. A mentés `sanitize_email`-en megy át.
++        'contact_email',
+         'logo',
+         'hero_image',
+     );
+@@ -48,7 +52,7 @@ function huhs_save_artist_meta($post_id)
+ 
+         $value = $_POST[$field];
+ 
+-        if ($field === 'booking_email') {
++        if ($field === 'booking_email' || $field === 'contact_email') {
+             update_post_meta($post_id, $field, sanitize_email($value));
+             continue;
+         }
+diff --git a/tmp/plugin-280/huhs-mobile-api/includes/artists.php b/.tmp-api-260/huhs-mobile-api/includes/artists.php
+index 5675f3cc..10296a1f 100644
+--- a/tmp/plugin-280/huhs-mobile-api/includes/artists.php
++++ b/.tmp-api-260/huhs-mobile-api/includes/artists.php
+@@ -154,6 +154,11 @@ function huhs_artist_meta_box_callback($post)
+     echo '<hr>';
+     echo '<h3>Fellépés kérése</h3>';
+     huhs_text_field($post, 'booking_email', 'Nyilvános booking e-mail');
++    // ⚠️ A privát (kapcsolattartó) cím: **nem** kerül a nyilvános adatlapra, de
++    // a tulajdonosnak itt kell tudnia látni és javítani (a beküldésből kerül át,
++    // és ez igazolja az adatlap átvételét is). A tulajdonos jelzése, 2026-09-24:
++    // eddig SEHOL nem látszott és nem volt átírható.
++    huhs_text_field($post, 'contact_email', 'Privát e-mail (kapcsolattartó) — NEM publikus, az adatlap átvételéhez');
+     huhs_checkbox_field($post, 'booking_via_huhs', 'Fellépés szervezése a Hungarian Hardstyle-on keresztül (info@hungarianhardstyle.hu)');
+ 
+     echo '<hr>';

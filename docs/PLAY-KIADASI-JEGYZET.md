@@ -360,11 +360,27 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A kérdőív eredményeinél már a kérdőív saját válaszai látszanak az éves szavazás adatai helyett.
 - A nyereményjátéknál eltűnt a felesleges kép mező.
 
-## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.8.0)
+## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.9.0)
 
-A plugin csomag: `build/huhs-mobile-api-2.8.0.zip` (45 fájl, 149,5 KB,
-SHA-256 `595775ACE6E90EA7251CBAE1C19A74BE369F853500BFB4AA012A16CF4AF31476`).
-A változás verziókövetve: `docs/plugin-2.8.0-prize-description.patch`.
+A plugin csomag: `build/huhs-mobile-api-2.9.0.zip` (45 fájl, 150,2 KB,
+SHA-256 `B6B1C1F96D6E7869800B502F24F2C7F964FA1D91E08EAE32166C6580116B4CA9`).
+A változás verziókövetve: `docs/plugin-2.9.0-private-email.patch`.
+
+### 2.9.0 — a DJ privát (kapcsolattartó) e-mail címe látható és javítható (2026-09-24)
+
+```text
+- JAVÍTVA: a DJ-adatlap PRIVÁT (kapcsolattartó) e-mail címe (contact_email meta) mostantól
+  látszik ÉS javítható a natív HUHS vezérlőben (DJ-k → szerkesztés) és a WordPress admin
+  DJ-adatlapján is. Eddig sehol nem lehetett látni és átírni — pedig ez a cím igazolja az
+  adatlap átvételét, ezért egy elírt cím miatt a DJ nem tudta átvenni a saját adatlapját.
+- A natív admin űrlapja szerver-vezérelt, ezért ehhez NEM kellett új app-verzió: a mező a
+  következő megnyitáskor megjelenik.
+- A cím továbbra sem publikus: a nyilvános adatlap válaszába nem kerül bele, csak a védett
+  claim-emails végponton jön ki.
+- Az érintett fájlok: includes/api-admin.php (natív admin mező), includes/artists.php
+  (WP admin meta-box), includes/artist-save.php (mentés sanitize_email-lel),
+  huhs-mobile-api.php (verzió).
+```
 
 ### 2.8.0 — a nyeremény leírása a NYITOTT játékban is kimegy (2026-09-24)
 
