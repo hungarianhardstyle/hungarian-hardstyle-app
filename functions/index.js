@@ -88,6 +88,7 @@ const {
   chatReactionNotification,
   chatReplyNotification,
 } = require('./chat-notification-plan');
+const { pickActorName, actorNameOrGeneric } = require('./actor-name-plan');
 const {
   MAX_ATTEMPTS: EMAIL_RETRY_MAX_ATTEMPTS,
   nextRetryDelayMs,
@@ -726,13 +727,22 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
       const admins = (await db.collection('community_profiles').get()).docs.filter(
         (admin) => admin.data()?.accessRole === 'admin',
       );
+      // A tulajdonos jelzése: *„valaki írt egy hírhez kommentet … odaírhatná,
+      // hogy KI"* — ezért a szövegben a **hozzászóló neve** és egy rövid
+      // szövegrészlet is ott van (a név a hozzászóló saját profiljából jön,
+      // ugyanabból, amit a hozzászólásra is írunk).
+      const commenterName = actorNameOrGeneric({
+        communityName: profile.displayName,
+      });
+      const commentSnippet =
+        text.length > 80 ? `${text.slice(0, 80)}…` : text;
       await Promise.all(
         admins.map((admin) =>
           createNotificationBestEffort({
             recipientUid: admin.id,
             type: 'article_comment',
             title: 'Új hozzászólás érkezett',
-            body: 'Új hozzászólás érkezett egy cikkhez. Ellenőrizd a közösségi tartalmak között.',
+            body: `${commenterName} hozzászólt egy cikkhez: „${commentSnippet}”`,
             targetType: 'article',
             targetId: String(postId),
             dedupeKey: `article-comment-notification:${postId}:${id}:${admin.id}`,
@@ -2340,9 +2350,10 @@ exports.toggleChatReaction = functions.runWith({ enforceAppCheck: false }).https
   // kell"*). A döntés (kit értesítünk, mikor NEM, mi a naplókulcs) a tiszta
   // `chat-notification-plan.js`-ben van, hogy mérhető legyen; itt csak a kiírás
   // történik. Push-t szándékosan NEM küldünk.
-  const reactorName = String(
-    ((await db.collection('community_profiles').doc(uid).get()).data() || {}).displayName || '',
-  ).trim();
+  //
+  // A NÉV több forrásból jön (`resolveActorName`), mert a tulajdonos jelezte,
+  // hogy néha nem derült ki, KI lájkolt (`actor-name-plan.js`).
+  const reactorName = await resolveActorName(uid);
   const reactionNotification = chatReactionNotification({
     authorId,
     reactorUid: uid,
@@ -3811,6 +3822,43 @@ async function createNotificationBestEffort(payload) {
     );
     return false;
   }
+}
+
+/**
+ * A cselekvő NEVE az értesítéshez — **több forrásból** (a tulajdonos jelzése:
+ * *„odaírhatná, hogy KI likeolta"*).
+ *
+ * MIÉRT kell a lánc: éles mérés szerint a chat-lájk értesítés néha „Egy HUHS
+ * tag" lett, holott a profilban volt név — a régi kód ugyanis **csak** a
+ * `community_profiles` dokumentumból olvasott, és ha az abban a pillanatban
+ * üres volt, a név elveszett. A sorrend szándékos (közösségi → nyilvános →
+ * Auth), a döntés a tiszta `actor-name-plan.js`-ben van.
+ *
+ * Minden lépés best-effort: egy olvasási hiba nem bukhatja el a hívást (a
+ * lájk/komment akkor is menjen be), ezért a hibák itt elnyelődnek.
+ */
+async function resolveActorName(uid) {
+  const cleanUid = String(uid || '').trim();
+  if (!cleanUid) return '';
+  const readName = async (path) => {
+    try {
+      const snapshot = await db.doc(path).get();
+      return snapshot.exists ? snapshot.data()?.displayName : '';
+    } catch (_) {
+      return '';
+    }
+  };
+  const communityName = await readName(`community_profiles/${cleanUid}`);
+  const publicName = communityName ? '' : await readName(`public_profiles/${cleanUid}`);
+  let authName = '';
+  if (!communityName && !publicName) {
+    try {
+      authName = (await admin.auth().getUser(cleanUid)).displayName || '';
+    } catch (_) {
+      authName = '';
+    }
+  }
+  return pickActorName({ communityName, publicName, authName });
 }
 
 async function notifyUsersToRateCompletedEvents() {

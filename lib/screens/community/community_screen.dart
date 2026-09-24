@@ -22,6 +22,7 @@ import '../../providers/community_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../services/chat_paging.dart';
+import '../../services/chat_focus_plan.dart';
 import '../../services/community_service.dart';
 import '../../services/chat_display_preferences.dart';
 import '../../widgets/brand_loading_indicator.dart';
@@ -734,7 +735,15 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
 class LiveFeedScreen extends ConsumerStatefulWidget {
   final VoidCallback? onProfileDeleted;
 
-  const LiveFeedScreen({super.key, this.onProfileDeleted});
+  /// Az értesítésből érkező üzenet-azonosító.
+  ///
+  /// A tulajdonos kérése (2026-09-24): *„a chatnél meg odaugorhatna arra az
+  /// üzenetre amit lájkoltak, ha a notifyre nyomok"* — ezért a Chat-értesítés
+  /// koppintásakor a képernyő **erre az üzenetre** görget és rövid ideig
+  /// kiemeli. Üresen a szokásos chat nyílik (a legfrissebb üzenetekkel).
+  final String? focusPostId;
+
+  const LiveFeedScreen({super.key, this.onProfileDeleted, this.focusPostId});
 
   @override
   ConsumerState<LiveFeedScreen> createState() => _LiveFeedScreenState();
@@ -779,6 +788,23 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   bool _loadingOlder = false;
   bool _reachedChatStart = false;
 
+  /// Az értesítésből megjelölt üzenet (a notify koppintásakor).
+  String? _focusTarget;
+
+  /// A megjelölt üzenet kártyájának kulcsa — ezzel görgetünk pontosan oda.
+  final GlobalKey _focusKey = GlobalKey();
+
+  /// Épp kiemelt üzenet (rövid ideig látszik, hogy megtalálja a felhasználó).
+  String? _highlightedPostId;
+
+  /// Hány régebbi lapot töltöttünk be **az odaugráshoz** (a lap-korlát ehhez van).
+  int _focusPagesLoaded = 0;
+
+  /// Végeztünk-e az odaugrással (megtaláltuk, vagy feladtuk).
+  bool _focusFinished = false;
+
+  Timer? _highlightTimer;
+
   /// A régebbi lap mérete. 30 üzenet laponként: ennyi olvasás, és a felhasználó
   /// hamarabb lát eredményt, mintha 100-at kérnénk egyszerre.
   static const int _olderPageSize = 30;
@@ -815,11 +841,24 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     );
     _chatScrollController.addListener(_maybeLoadOlderPosts);
     _prepareAnonymousUser();
+    final target = widget.focusPostId?.trim() ?? '';
+    if (target.isNotEmpty) {
+      _focusTarget = target;
+      // Az első képkocka után: ekkor van értelme a listáról dönteni.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _resolveFocus(ref.read(communityPostsProvider).valueOrNull ?? const []);
+        }
+      });
+    } else {
+      _focusFinished = true;
+    }
   }
 
   @override
   void dispose() {
     _chatScrollController.removeListener(_maybeLoadOlderPosts);
+    _highlightTimer?.cancel();
     _chatScrollController.dispose();
     _showJumpToNewest.dispose();
     _authSubscription?.cancel();
@@ -888,6 +927,100 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       0,
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
+    );
+  }
+
+  /// Eldönti, hogy a megjelölt üzenet a betöltött listában van-e; ha nincs,
+  /// lapoz tovább (a döntés a tiszta `chat_focus_plan.dart`-ban van).
+  ///
+  /// ⚠️ Ez a metódus `setState`-et NEM hív közvetlenül a `build` alatt: minden
+  /// tényleges munka (görgetés, lapozás) **post-frame** callbackben fut, ezért
+  /// a hívó a `build`-ből és a lapozás befejezése után is hívhatja.
+  void _resolveFocus(List<CommunityPost> newest) {
+    if (_focusFinished || !mounted) return;
+    final target = _focusTarget;
+    if (target == null || target.isEmpty) {
+      _focusFinished = true;
+      return;
+    }
+    final plan = chatFocusPlan(
+      focusId: target,
+      newestIds: newest.map((post) => post.id).toList(growable: false),
+      olderIds: _olderPosts.map((post) => post.id).toList(growable: false),
+      reachedStart: _reachedChatStart,
+      loadedPages: _focusPagesLoaded,
+    );
+    switch (plan.status) {
+      case ChatFocusStatus.found:
+        _focusFinished = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) unawaited(_scrollToFocusedPost());
+        });
+      case ChatFocusStatus.keepLoading:
+        if (_loadingOlder) return;
+        _focusPagesLoaded++;
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted) return;
+          await _loadOlderPosts();
+          if (!mounted) return;
+          _resolveFocus(
+            ref.read(communityPostsProvider).valueOrNull ?? const [],
+          );
+        });
+      case ChatFocusStatus.giveUp:
+        // Az üzenet nincs a betölthető ablakban (nagyon régi, vagy törölték):
+        // ilyenkor a chat a szokásos módon nyílik, nem görgetünk találomra.
+        _focusFinished = true;
+    }
+  }
+
+  /// Odagörget a megjelölt üzenethez, és rövid ideig kiemeli.
+  Future<void> _scrollToFocusedPost() async {
+    final target = _focusTarget;
+    if (!mounted || target == null || target.isEmpty) return;
+    setState(() => _highlightedPostId = target);
+    // Egy képkockát adunk a kártyának, hogy felépüljön.
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    if (!mounted) return;
+    if (_focusKey.currentContext == null && _chatScrollController.hasClients) {
+      // A kártya még nincs felépítve (mélyen van a listában): a lapozás miatt a
+      // lista VÉGÉhez közel van, ezért oda ugrunk, és onnan már pontosítunk.
+      await _chatScrollController.animateTo(
+        _chatScrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      if (!mounted) return;
+    }
+    final targetContext = _focusKey.currentContext;
+    if (targetContext != null && targetContext.mounted) {
+      await Scrollable.ensureVisible(
+        targetContext,
+        alignment: 0.3,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+    _highlightTimer?.cancel();
+    _highlightTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _highlightedPostId = null);
+    });
+  }
+
+  /// A megjelölt üzenet kártyáját kiemelő keret (csak az érintett kártyára).
+  Widget _withFocusHighlight(Widget card, String postId) {
+    if (_highlightedPostId != postId) return card;
+    return Container(
+      key: _focusKey,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary,
+          width: 2,
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: card,
     );
   }
 
@@ -1067,6 +1200,12 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final posts = ref.watch(communityPostsProvider);
+    // Az értesítésből megjelölt üzenet megkeresése: az élő ablak **megérkezésekor**
+    // egyszer lefut (nem minden buildben), a tényleges munka post-frame.
+    ref.listen<AsyncValue<List<CommunityPost>>>(communityPostsProvider, (_, next) {
+      final loaded = next.valueOrNull;
+      if (loaded != null && !_focusFinished) _resolveFocus(loaded);
+    });
     final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
     return PopScope<void>(
       // The IME should consume the first Android back press while typing.
@@ -1175,23 +1314,29 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                           itemCount: items.length + _olderPosts.length + 1,
                           itemBuilder: (_, index) {
                             if (index < items.length) {
-                              return _PostCard(
-                                post: items[index],
-                                compact: !landscape,
-                                profileRefreshGeneration:
-                                    _profileRefreshGeneration,
-                                onReply: () => _replyTo(items[index]),
+                              return _withFocusHighlight(
+                                _PostCard(
+                                  post: items[index],
+                                  compact: !landscape,
+                                  profileRefreshGeneration:
+                                      _profileRefreshGeneration,
+                                  onReply: () => _replyTo(items[index]),
+                                ),
+                                items[index].id,
                               );
                             }
                             final olderIndex = index - items.length;
                             if (olderIndex < _olderPosts.length) {
                               final post = _olderPosts[olderIndex];
-                              return _PostCard(
-                                post: post,
-                                compact: !landscape,
-                                profileRefreshGeneration:
-                                    _profileRefreshGeneration,
-                                onReply: () => _replyTo(post),
+                              return _withFocusHighlight(
+                                _PostCard(
+                                  post: post,
+                                  compact: !landscape,
+                                  profileRefreshGeneration:
+                                      _profileRefreshGeneration,
+                                  onReply: () => _replyTo(post),
+                                ),
+                                post.id,
                               );
                             }
                             return _chatPagingFooter();

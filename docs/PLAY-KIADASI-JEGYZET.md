@@ -1,14 +1,13 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 356 megy fel** (versionCode **356**, `1.0.0`). A zárt teszt sávján **mérve a 353 van
-> élesben** (`node tools/check-play-track.mjs`, 2026-09-24), a **production sávon pedig a 352**
-> (completed). **A 356 tartalmazza a 355-öt és a 354-et is** (a nyereményjáték javításai + a DJ
-> megjelenései), ezért **ezt kell feltenni** — a 354-et és a 355-öt nem érdemes külön feltölteni. A
-> rövid (1.) blokk **csak a nyereményjáték változását** írja le (ez a felhasználónak látható
-> újdonság), a nyilvános kiadáshoz pedig az **1b. blokk** való (352–356 összesítő), mert a nyilvános
-> felhasználók a 329–351 szöveget látták. **A 356 annyival több a 355-nél, hogy megkapta a Play által
-> kért `enableEdgeToEdge()` hívást** — ez **mérten nem változtat a felületen** (lásd a lenti
-> „Miért a 356-ot" szakaszt), ezért a Play-szöveg ugyanaz marad.
+> **Most a 357 megy fel** (versionCode **357**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> 2026-09-24 este): a **zárt teszt sávján a 356 fut** (`completed`, 100%), a **production sávon pedig a
+> 355** — vagyis a nyilvános felhasználók már megkapták a DJ-megjelenéseket és a nyereményjáték
+> javításait, de a **hírlevél-javítást (356) és az értesítés-javítást (357) még nem**. **A 357 a 356
+> minden javítását is tartalmazza**, ezért **ezt kell feltenni**. A rövid (1.) blokk **csak a 357
+> újdonságait** írja le (értesítés: ki lájkolt / hova ugrik), a nyilvános kiadáshoz pedig az **1b.
+> blokk** való (**356–357 összesítő**), mert a nyilvános felhasználók legutóbb a **352–356**
+> összesítőt kapták a 355-tel.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -16,29 +15,29 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 356
+currentBuild: 357
 currentVersion: 1.0.0
-lastPublishedBuild: 352
-aab: build/HUHS-v1.0.0+356-release.aab
-sha256: AE0563A7A35B7D3E0869DB810CBF5ACF9DD480F011E97054992EFCED6D618430
+lastPublishedBuild: 355
+aab: build/HUHS-v1.0.0+357-release.aab
+sha256: 019B54CCDB0B2EE52F13B493FEEB1DAE14E090844D0C6410B1ADCEF69F244B81
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
-A Play Developer API-t **olvasásra** kérdezve (2026-09-24, a legfrissebb mérés):
+A Play Developer API-t **olvasásra** kérdezve (2026-09-24 este, a legfrissebb mérés):
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **production (nyilvános)** | **completed** (100%-ban kigördült) | **352** — „352 (1.0.0)" |
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **355** — „355 (1.0.0)" |
-| beta | üres | — |
+| **production (nyilvános)** | **completed** (100%-ban kigördült) | **355** — „355 (1.0.0)" |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **356** — „356 (1.0.0)" |
+| beta | completed (100%) | 354 |
 | internal | completed + egy **üres piszkozat** | 278 |
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
-- **A nyilvános kiadás megvan:** a production sávon a **352** van (`completed`), a bolt-lap **200**-at ad. A **zárt tesztben már a 355 fut** (a tulajdonos feltöltötte, `completed` 100%, a kiadási szöveggel), a **356** csomag a következő feltöltés.
-- A feltöltött AAB-ek a Playen (a 2026-09-24-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 351, 352, 353, 354, **355**.
-- **⚠️ A 356-ot MÉG NEM töltötte fel senki** (a fenti mérés szerint a lista a 355-nél végződik) — ezért a hírlevél-javítás **belekerült a 356-ba**, és **a 356-ot kell feltenni** (a 355-öt nem, azt a 356 tartalmazza). **Ha a Play mégis elutasítaná a 356-ot „már használt verziókód" miatt, akkor a 357-et kell építeni** — ez az egyetlen eset, amiben új verziókód kell.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**352**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 352. A **nyilvános** kiadáshoz az **1b. blokk** való (352–356 összesítő), mert a nyilvános felhasználók legutóbb a **329–351** szöveget kapták. **⚠️ Az 1b. blokkban szándékosan benne van a 352 vásárlási diagnosztikája is:** az a nyilvános szövegben még nem szerepelt (a 352 a production sávon a 329–351 összesítővel ment ki).
+- **A nyilvános kiadás megvan:** a production sávon a **355** van (`completed`, a **352–356 összesítő** szöveggel), a bolt-lap **200**-at ad. A **zárt tesztben a 356 fut** (a tulajdonos feltöltötte, `completed` 100%, a hírlevél-blokkal), a **357** csomag a következő feltöltés.
+- A feltöltött AAB-ek a Playen (a 2026-09-24 esti mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 352, 353, 354, 355, **356**.
+- **⚠️ ÚJ VERZIÓKÓD KELL (357):** a 356-ot a tulajdonos **már feltöltötte** a zárt tesztre, ezért **ugyanaz a verziókód nem használható újra** — a 357 tartalmazza a 356-ot is (hírlevél-javítás), plusz az értesítés-javítást. A `beta` sávon a **354** van (ez a nyílt teszt csatorna), ott **nem** kell külön lépni.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**355**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 355. A **nyilvános** kiadáshoz az **1b. blokk** való (**356–357 összesítő**): a nyilvános felhasználók a 355-tel a **352–356** összesítőt kapták, tehát ami **azóta** történt, az a hírlevél-védelem és az értesítés-javítás.
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -74,45 +73,41 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+356-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+357-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **356** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 81,36 MB (a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz — a letöltött kód a 353 mérése szerint 9,86 MB DEX) |
-| SHA-256 | AE0563A7A35B7D3E0869DB810CBF5ACF9DD480F011E97054992EFCED6D618430 |
+| Verziókód | **357** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 81,38 MB (a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz — a letöltött kód a 353 mérése szerint 9,86 MB DEX) |
+| SHA-256 | 019B54CCDB0B2EE52F13B493FEEB1DAE14E090844D0C6410B1ADCEF69F244B81 |
 
-> **⚠️ A 356-ot 2026-09-24-én KÉTSZER is ÚJRAÉPÍTETTEM** (ugyanaz a verziókód, mert a Playre **még nem került fel**): a csomag mostantól a **hírlevél-javítást** is tartalmazza, és az app-changelog is a végleges. **A korábban kihirdetett 356 fájlokat (`4C30E378…`, majd `5C8A5487…`) ne használd** — ez a végleges (`AE0563A7…`).
+> **⚠️ A 357 azért kell, mert a 356-ot a tulajdonos MÁR FELTÖLTTÖTTE a zárt tesztre** (mérve: `alpha = 356 completed 100%`) — ugyanaz a verziókód nem használható újra. A 357 a **356 minden javítását** tartalmazza (hírlevél-védelem, `enableEdgeToEdge`, nyereményjáték, DJ-megjelenések) **plusz az új értesítés-javítást**.
 
-**Miért a 356-ot kell feltenni (és miért nem a 355-öt vagy a 354-et):** a 356 **magában foglalja a
-355-öt** (a nyereményjáték két javítása) **és a 354-et is** (a DJ-adatlap „Megjelenései" szakasza),
-ezért egy csomagot kell feltenni:
+**Miért a 357-et kell feltenni (és miért nem a 356-ot vagy a 355-öt):** a 357 **magában foglalja a 356-ot** (hírlevél-javítás + a Play „teljes képernyős mód" javaslata) **és a 355-öt, a 354-et is**, ezért egy csomagot kell feltenni:
 
-- **ÚJ: a nyeremény leírása a játék ALATT is látszik.** A gyökér **kettős** volt: a WordPress a
-  nyitott játéknál üresen küldte a `prize_type` / `prize_description` mezőket (csak a sorsolás után
-  adta ki), és az app a nyitott nézetben **egyáltalán nem** rajzolta ki őket. Mindkettő javítva:
-  a **plugin 2.8.0** kiküldi a mezőket, az app pedig ugyanazzal a közös megjelenítővel rajzolja ki,
-  mint a nyertes-nézet.
-- **Javítva: a nyereményjáték azonnal megnyílik.** A „játszottál már?" állapot eddig minden
-  megnyitásnál megvárta a teljes szerver-körutat (Cloud Function → WordPress; hidegen ez
-  **másodperceket** jelent). Mostantól a telefon a **legutóbbi ismert szerver-választ** rajzolja ki
-  azonnal — **akkor is, ha az „még nem játszottál"** —, és közben a háttérben ellenőriz. Ha a
-  válasz eltér, a jelzés frissül (a szerver az erősebb forrás).
-- **A DJ-adatlap „Megjelenései" szakasza (ez volt a 354):** a DJ azon kiadványai, amelyekben
-  szerepel — legfrissebbel az élen, „Összes megjelenése" gombbal.
-- **A 356 újdonsága a Play „teljes képernyős mód" javaslatára:** a `MainActivity` megkapta a
-  `enableEdgeToEdge()` hívást. **Ez a felhasználónak nem látható:** Android 15/16-on a rendszer
-  (targetSdk 36 mellett) **amúgy is kötelezően** teljes képernyős, a régebbi Androidokon pedig
-  **mérten semmi nem mozdul el** — két csomagot összevetve (android-34 emulátor) a felület sorai
-  bitre egyeznek, csak a statuszsáv sávja lesz ~11%-kal sötétebb. Ezért **a Play-szöveg nem
-  változik**, és nem került be új pont az app changelogjába sem.
+- **ÚJ (a 357): az értesítések megnevezik a cselekvőt.** A tulajdonos jelzése: *„jön notify hogy
+  kedvelték egy chat üzenetem, meg arról is hogy valaki írt egy hírhez kommentet, de odaírhatná,
+  hogy KI likeolta"*. **A mért gyökér** (éles `notifications` gyűjtemény, csak olvasva): az 5
+  chat-lájk értesítésből **2-ben nem volt név** („Egy HUHS tag kedvelte a Chat-üzenetedet."),
+  viszont a küldő profiljában **mindkét esetben volt** `displayName` — a kód csak **egyetlen**
+  forrásból (`community_profiles`) olvasott. Mostantól a név **több forrásból** jön (közösségi
+  profil → nyilvános profil → Auth-név), és a **cikk-komment** értesítés is megnevezi a hozzászólót
+  egy rövid szövegrészlettel. **Ez szerveroldali javítás** (`functions/index.js` +
+  `actor-name-plan.js`), ezért **már a feltöltés előtt él** — a 357 ehhez nem kell.
+- **ÚJ (a 357): a Chat-értesítésre koppintva az app arra az üzenetre ugrik**, amelyről szól (és
+  rövid ideig ki is emeli). Eddig a Chat csak a legfrissebb üzenetekkel nyílt meg. **Ehhez kell a
+  357** (`LiveFeedScreen(focusPostId: …)` + `chat_focus_plan.dart`; a megtaláláshoz legfeljebb
+  10 lapot (300 üzenetet) lapozunk, utána nem görgetünk találomra).
+- **A 356 újdonsága (benne van):** a hírlevélnél **nem megy ki újra** a megerősítő e-mail ugyanarra
+  a címre (plugin **2.10.0** + app-oldali üzenet), és a `MainActivity` megkapta a Play által kért
+  `enableEdgeToEdge()` hívást (**mérten nem változtat a felületen** — lásd a 356 bejegyzést).
+- **Amit ez a kiadás is tartalmaz (a 355-ből és a 354-ből):** a nyeremény leírása a játék ALATT is
+  látszik + a nyereményjáték azonnali nyitása; a DJ-adatlap „Megjelenései" szakasza.
 
-**⚠️ A plugin a nyeremény-leíráshoz 2.8.0** (`build/huhs-mobile-api-2.8.0.zip`) — ez **már fent van**
-(élőben mérve: a `/prize/active` kiadja a `prize_type` / `prize_description` mezőket). **A most
-feltöltendő plugin a 2.9.0** (`build/huhs-mobile-api-2.9.0.zip`), mert abban **benne van a 2.8.0
-javítása is**, plusz a **DJ privát e-mail címe** látható és javítható a natív vezérlőben és a WP
-adminban. A változások átnézhetők: `docs/plugin-2.8.0-prize-description.patch`,
-`docs/plugin-2.9.0-private-email.patch`.
+**⚠️ A plugin ehhez 2.10.0** (`build/huhs-mobile-api-2.10.0.zip`) — **ez már fent van** (a tulajdonos
+feltöltötte; benne van a 2.8.0 és a 2.9.0 javítása is: nyeremény-leírás, DJ privát e-mail). A
+változások átnézhetők: `docs/plugin-2.8.0-prize-description.patch`,
+`docs/plugin-2.9.0-private-email.patch`, `docs/plugin-2.10.0-newsletter-cooldown.patch`.
 
-**A 356 a 355 (és így a 353) minden javítását is tartalmazza** (a Firebase-család major emelése + a lassú betöltés
+**A 357 a 356 (és így a 355, 354, 353) minden javítását is tartalmazza** (a Firebase-család major emelése + a lassú betöltés
 javítása: kvíz-állapot, claim-állapot, előtöltés), és a 352 vásárlási diagnosztikáját is. A 353
 mérései változatlanul érvényesek a csomagra:
 
@@ -150,23 +145,19 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- A hírlevélnél nem megy ki újra a megerősítő e-mail, ha már feliratkoztál vagy már kiment.
-- A nyereményjátéknál látszik a nyeremény leírása, már a játék alatt is.
-- A nyereményjáték azonnal megnyílik: a „játszottál már?" állapot a mentett válaszból jön.
+- Az értesítéseknél látszik, ki kedvelte a Chat-üzenetedet, és ki szólt hozzá egy cikkhez.
+- A Chat-értesítésre koppintva az app arra az üzenetre ugrik, amelyről az értesítés szól.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (352–356 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (356–357 összesítő)
 
-**Ezt használd, amikor a 356 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
-**329–351** összesítőt kapták — ők ezt az öt sort kapják (a 352 vásárlási diagnosztikája a nyilvános
-szövegben még nem szerepelt).
+**Ezt használd, amikor a 357 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
+**352–356** összesítőt kapták a 355-tel — ők ezt a három sort kapják (ami azóta történt):
 
 ```play-notes
-- A DJ-adatlapon látszanak a DJ megjelenései (a kiadványok, amelyekben szerepel).
-- A nyereményjátéknál látszik a nyeremény leírása, és a játék azonnal megnyílik.
-- ÚJ: „Vásárlási diagnosztika" a Több → Az appról képernyőn.
-- A kvíz azonnal jelzi, hogy már játszottál; a DJ-adatlap „ez az enyém" állapota is azonnal jön.
-- Belső frissítés: a Firebase-összetevők újabb verzióra kerültek; látható újdonság nincs.
+- Az értesítéseknél látszik, ki kedvelte a Chat-üzenetedet, és ki szólt hozzá egy cikkhez.
+- A Chat-értesítésre koppintva az app arra az üzenetre ugrik, amelyről az értesítés szól.
+- A hírlevélnél nem megy ki újra a megerősítő e-mail, ha már feliratkoztál vagy már kiment.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -196,6 +187,11 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 357 — az értesítések megmondják, KI tette, és a Chat-értesítés a helyére ugrik
+- **Javítva (a tulajdonos jelzése: „jön notify hogy kedvelték egy chat üzenetem, meg arról is hogy valaki írt egy hírhez kommentet, de odaírhatná, hogy KI likeolta"):** az értesítéseknél **látszik a cselekvő neve**. **A mért gyökér** (éles `notifications` gyűjtemény): az 5 chat-lájk értesítésből **2-ben nem volt név** („Egy HUHS tag kedvelte a Chat-üzenetedet."), pedig a küldő profiljában **mindkét esetben volt** `displayName` — a szerver **egyetlen** forrásból (`community_profiles`) olvasott. Mostantól a név **több forrásból** jön (közösségi profil → nyilvános profil → Auth-név), és a **cikk-komment** értesítés is megnevezi a hozzászólót egy rövid szövegrészlettel. **Ez szerveroldali javítás** (külön telepítés, `firebase deploy --only functions`), ezért az új értesítéseknél a 357 nélkül is jó.
+- **Javítva (a tulajdonos kérése: „a chatnél meg odaugorhatna arra az üzenetre amit lájkoltak, ha a notifyre nyomok"):** a **Chat-értesítésre koppintva** az app a Chat képernyőn **arra az üzenetre görget** (és rövid ideig ki is emeli), amelyről az értesítés szól — eddig csak a legfrissebb üzenetekkel nyílt meg. A megkereséshez legfeljebb **10 lapot (300 üzenetet)** lapozunk, utána nem görgetünk találomra (`lib/services/chat_focus_plan.dart` + `LiveFeedScreen(focusPostId: …)`).
+- **Amit ez a kiadás is tartalmaz (a 356-ból):** a hírlevélnél nem megy ki újra a megerősítő e-mail ugyanarra a címre (plugin **2.10.0**), és a Play „teljes képernyős mód" javaslatára az `enableEdgeToEdge()` hívás (**mérten nem változtat a felületen**); **(a 355-ből):** a nyeremény leírása a játék alatt + azonnali nyitás; **(a 354-ből):** a DJ-adatlap „Megjelenései" szakasza.
 
 ### 356 — a hírlevél nem küldi ki újra a megerősítő levelet + a Play „teljes képernyős mód" javaslata
 - **Javítva (a tulajdonos jelzése: „hírlevél feliratkozásnál ugyanazt az email címet bármennyiszer be tudják küldeni és kimegy az ellenőrző mail is"):** a hírlevél-feliratkozásnál **ugyanarra a címre nem megy ki újra a megerősítő e-mail.** A gyökér a szerveren volt: ha a cím `pending` állapotban volt (kiment a levél, de nem kattintottak rá), **minden beküldés** új kérést indított a Mailchimpre, az pedig újra kiküldte a megerősítő levelet — a felületen korlátlanul. **Ehhez a plugin 2.10.0 kell** (`build/huhs-mobile-api-2.10.0.zip`): e-mailenkénti várakozás (alapból 15 perc), amelyen belül a Mailchimp-hívást meg sem indítjuk. Az app a háromféle **sikeres** választ megkülönbözteti (`newsletter_plan.dart`), és a hozzá tartozó szöveget mutatja: „elküldtük", „már fel van iratkozva", „már kiment, X perc múlva kérhetsz újat". A szavazásnál a hírlevél hibája **nem viheti el a szavazatot** (try/catch).

@@ -246,10 +246,13 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         return;
       }
       if (notification.targetType == 'chat') {
-        // A Chat-értesítés (lájk vagy válasz) a **Chat** képernyőt nyitja — a
-        // tulajdonos kérése ugyanis az volt, hogy ezekről az app értesítsen.
+        // A Chat-értesítés (lájk vagy válasz) a **Chat** képernyőt nyitja, és a
+        // tulajdonos kérése szerint **arra az üzenetre** görget, amelyről szól
+        // (`targetId` a chat-bejegyzés azonosítója).
         await navigator.push(
-          MaterialPageRoute<void>(builder: (_) => const LiveFeedScreen()),
+          MaterialPageRoute<void>(
+            builder: (_) => LiveFeedScreen(focusPostId: target),
+          ),
         );
         return;
       }

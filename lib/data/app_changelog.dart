@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 357,
+    changes: [
+      'Az értesítéseknél mostantól látszik, KI kedvelte a Chat-üzenetedet, és ki szólt hozzá egy cikkhez — eddig csak annyi volt, hogy „kedvelték", illetve „valaki hozzászólt".',
+      'A Chat-értesítésre koppintva a Chat egyenesen arra az üzenetre ugrik, amelyről az értesítés szól, és rövid ideig ki is emeli — nem kell magadtól megkeresni.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 356,
     changes: [
       'A hírlevélnél nem megy ki újra a megerősítő e-mail arra a címre, amelyre már kiment — a képernyő megmondja, hogy már feliratkoztál, vagy hogy hamarosan újra kérheted. Eddig ugyanarra a címre korlátlanul lehetett megerősítő levelet generálni.',
