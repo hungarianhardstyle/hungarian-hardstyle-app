@@ -1,0 +1,65 @@
+# Plugin 2.8.0 — a nyeremény leírása a NYITOTT játékban is kimegy
+#
+# A plugin forrása nincs git-ben: a `.tmp-api-260/huhs-mobile-api` fában él, és a
+# `tools/build-plugin-zip.mjs` csomagolja ZIP-be. Ez a fájl a 2.7.0 → 2.8.0
+# KÜLÖNBSÉG, hogy a változás külön is átnézhető legyen.
+#
+# MÉRT GYÖKÉR (2026-09-24): a WordPress a nyitott játéknál üresen küldte a
+# `prize_type` / `prize_description` mezőket, ezért az appban a „Nyeremény
+# leírása" a játék alatt soha nem látszott — csak a sorsolás után. A mező saját
+# súgója viszont azt ígéri, hogy „a nyertes és a játékosok látják".
+#
+# ÉRINTETT FÁJLOK: `huhs-mobile-api.php` (verzió 2.8.0), `includes/prize.php`
+# (a javítás). A `huhs_prize_api_pending()` és a sorsolás utáni ág VÁLTOZATLAN.
+#
+# Amit a javítás NEM érint: a helyes válasz továbbra sem megy ki a nyilvános
+# válaszban, és a játékos-azonosító/hash sem. Ezt a
+# `functions/prize-active-payload.test.cjs` (6/6) őrzi.
+
+diff --git a/tmp/plugin-270/huhs-mobile-api/huhs-mobile-api.php b/.tmp-api-260/huhs-mobile-api/huhs-mobile-api.php
+index fd26d782..0173e557 100644
+--- a/tmp/plugin-270/huhs-mobile-api/huhs-mobile-api.php
++++ b/.tmp-api-260/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.7.0
++ * Version: 2.8.0
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.7.0');
++define('HUHS_API_VERSION', '2.8.0');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/tmp/plugin-270/huhs-mobile-api/includes/prize.php b/.tmp-api-260/huhs-mobile-api/includes/prize.php
+index b82162b2..4808fc8c 100644
+--- a/tmp/plugin-270/huhs-mobile-api/includes/prize.php
++++ b/.tmp-api-260/huhs-mobile-api/includes/prize.php
+@@ -683,11 +683,15 @@ function huhs_prize_api_active()
+             'answers' => $payload,
+             'start' => (string) get_post_meta($prize_id, '_huhs_prize_start', true),
+             'end' => (string) get_post_meta($prize_id, '_huhs_prize_end', true),
+-            // A nyeremeny reszletei szandekosan NEM mennek ki a jatek elott: a
+-            // kartya azt mondja, hogy „Nyereményjáték", a nyeremeny leirasa
+-            // pedig a sorsolas utan jelenik meg a nyertessel egyutt.
+-            'prize_type' => '',
+-            'prize_description' => '',
++            // ⚠️ A nyeremény részletei **a játék alatt is** kimennek (2026-09-24,
++            // plugin 2.8.0). KORÁBBAN szándékosan üresek voltak, és csak a
++            // sorsolás után jelentek meg — a tulajdonos viszont jelezte, hogy a
++            // kitöltött „Nyeremény leírása" nem kerül bele a játékba. A mező
++            // saját súgója is azt ígéri, hogy „a nyertes és a játékosok látják",
++            // ezért a két viselkedés közül ez a helyes: a játékos lássa, miért
++            // játszik. A **helyes válasz** továbbra sem megy ki.
++            'prize_type' => (string) get_post_meta($prize_id, '_huhs_prize_type', true),
++            'prize_description' => (string) get_post_meta($prize_id, '_huhs_prize_description', true),
+             'winner' => null,
+         )));
+     }

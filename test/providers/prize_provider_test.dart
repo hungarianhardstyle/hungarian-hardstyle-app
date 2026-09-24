@@ -92,6 +92,13 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  /// Néhány mikrotask-fordulat: a háttérellenőrzés befejezéséhez.
+  Future<void> pumpMicrotasks([int turns = 20]) async {
+    for (var i = 0; i < turns; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+  }
+
   /// A mentett játékeredményt ugyanúgy írjuk, ahogy az app is teszi.
   Future<void> seedPlayed(
     String uid,
@@ -183,20 +190,32 @@ void main() {
     });
 
     test('a jatek utan ujra lekérdez (nem ragad be a regi valasz)', () async {
+      // ⚠️ A cache-kör óta a szerződés kétszeres: az **első** válasz a mentett
+      // állapotból jön (ezért nincs várakozás), a **háttérellenőrzés** viszont
+      // lefut, és a mentést a friss szerver-válaszra cseréli — a KÖVETKEZŐ
+      // olvasás már a helyes állapotot adja.
       final service = _FakePrizeService(prize: _openPrize);
       final container = _container(service);
-      await container.read(prizePlayProvider(777).future);
+      expect((await container.read(prizePlayProvider(777).future)).played, isFalse);
       expect(service.statusCalls, 1);
 
-      // A jatekos kozben jatszott (mondjuk a sorsolas idejen mar jatszott):
+      // A jatekos kozben jatszott (mondjuk masik keszuleken):
       service.status = const HuhsPrizePlay(played: true, correct: false);
       container.invalidate(prizePlayProvider(777));
 
-      final play = await container.read(prizePlayProvider(777).future);
+      final stale = await container.read(prizePlayProvider(777).future);
+      expect(
+        stale.played,
+        isFalse,
+        reason: 'a mentett válaszból azonnal rajzol — nem vár a hálózatra',
+      );
 
-      expect(service.statusCalls, 2);
-      expect(play.played, isTrue);
-      expect(play.correct, isFalse);
+      await pumpMicrotasks();
+      final fresh = await container.read(prizePlayProvider(777).future);
+
+      expect(fresh.played, isTrue, reason: 'a háttérellenőrzés frissítette');
+      expect(fresh.correct, isFalse);
+      expect(service.statusCalls, greaterThanOrEqualTo(2));
     });
 
     test('ervenytelen azonosito nem indit halozati kereset', () async {
@@ -251,23 +270,94 @@ void main() {
       expect(service.statusCalls, 1);
     });
 
-    test('a háttérellenőrzés törli a mentett eredményt, ha a szerver nem játszott', () async {
+    test('a háttérellenőrzés a szerver válaszát írja be, ha az eltér', () async {
+      // A mentett állapot **szerver-válasz**, ezért a háttérellenőrzés nem
+      // törli, hanem a friss válaszra cseréli: így a KÖVETKEZŐ megnyitás is
+      // azonnali lesz (ez a kör lényege: a nyereményjáték ne várjon a hálózatra).
       await seedPlayed('teszt-uid', 777, correct: true, answerIndex: 1);
       final service = _FakePrizeService(prize: _openPrize);
       final container = _container(service);
 
       expect((await container.read(prizePlayProvider(777).future)).played, isTrue);
 
-      for (var i = 0; i < 10 && service.statusCalls == 0; i++) {
+      final prefs = await SharedPreferences.getInstance();
+      for (var i = 0; i < 20; i++) {
+        final stored = prefs.getString('huhs.played.prize.teszt-uid.777');
+        if (stored != null && stored.contains('"played":false')) break;
         await Future<void>.delayed(Duration.zero);
       }
       expect(service.statusCalls, 1);
-
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('huhs.played.prize.teszt-uid.777'), isNull);
+      expect(
+        prefs.getString('huhs.played.prize.teszt-uid.777'),
+        contains('"played":false'),
+        reason: 'a friss szerver-válasz kerül a mentésbe, nem törlés',
+      );
 
       container.invalidate(prizePlayProvider(777));
       expect((await container.read(prizePlayProvider(777).future)).played, isFalse);
+    });
+
+    /* -------------------------------------------------------------- */
+    /* „100 év mire betölt" — a nyereményjáték azonnali nyitása        */
+    /* -------------------------------------------------------------- */
+
+    test(
+      'mentett „még nem játszottál" válasznál is AZONNAL jön a válasz',
+      () async {
+        // A tulajdonos jelzése a most futó nyereményjátékra: *„100 év mire
+        // betölt"*. A mért ok: a válaszlehetőségek csak a szerver válasza után
+        // jelenhettek meg, a szerver-körút pedig hidegen másodperceket jelent.
+        // A bizonyítás ugyanaz, mint a „már játszottam" esetben: a szerver
+        // kérése **soha nem fejeződik be**, a provider mégis azonnal válaszol.
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+          'huhs.played.prize.teszt-uid.777',
+          '{"played":false,"correct":false,"answerIndex":null}',
+        );
+        final service = _FakePrizeService(prize: _openPrize)
+          ..statusGate = Completer<HuhsPrizePlay>();
+        final container = _container(service);
+
+        final play = await container
+            .read(prizePlayProvider(777).future)
+            .timeout(const Duration(seconds: 2));
+
+        expect(play.played, isFalse, reason: 'játszhat — jöhetnek a válaszok');
+        expect(
+          service.statusCalls,
+          1,
+          reason: 'a háttérellenőrzés elindult, de NEM blokkol',
+        );
+      },
+    );
+
+    test('mentett „nem játszott", de a szerver szerint már játszott: frissül', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'huhs.played.prize.teszt-uid.777',
+        '{"played":false,"correct":false,"answerIndex":null}',
+      );
+      final service = _FakePrizeService(
+        prize: _openPrize,
+        status: const HuhsPrizePlay(played: true, correct: true, answerIndex: 2),
+      );
+      final container = _container(service);
+
+      expect((await container.read(prizePlayProvider(777).future)).played, isFalse);
+
+      // A háttérellenőrzés lefut, és eltérést talál.
+      for (var i = 0; i < 10 && service.statusCalls == 0; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      for (var i = 0; i < 10; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
+
+      expect(
+        prefs.getString('huhs.played.prize.teszt-uid.777'),
+        contains('"played":true'),
+        reason: 'a szerver az erősebb forrás',
+      );
     });
   });
 

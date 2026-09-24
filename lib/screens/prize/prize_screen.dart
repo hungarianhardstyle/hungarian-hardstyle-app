@@ -8,6 +8,7 @@ import '../../providers/prize_provider.dart';
 import '../../services/vote_memory.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
+import '../../widgets/prize_reward_details.dart';
 
 /// Nyeremenyjatek — a kviz sajat képernyője.
 ///
@@ -170,6 +171,18 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
             prize.question,
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
           ),
+          // A nyeremény részletei **a játék alatt is** látszanak (a tulajdonos
+          // jelzése: „nem kerül bele a játék leírása"). Ugyanaz a widget, mint a
+          // nyertes-nézetben, ezért a kettő nem tud széthúzni; üresen nem
+          // rajzol semmit.
+          if (prize.prizeType.isNotEmpty || prize.prizeDescription.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: PrizeRewardDetails(
+                prizeType: prize.prizeType,
+                prizeDescription: prize.prizeDescription,
+              ),
+            ),
           const SizedBox(height: 12),
           if (!registered)
             const Text(
@@ -288,17 +301,10 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
           ],
           if (prize.prizeType.isNotEmpty || prize.prizeDescription.isNotEmpty) ...[
             const SizedBox(height: 14),
-            const Divider(height: 1),
-            const SizedBox(height: 12),
-            if (prize.prizeType.isNotEmpty)
-              Text(
-                'Nyeremény: ${prize.prizeType}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            if (prize.prizeDescription.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(prize.prizeDescription),
-            ],
+            PrizeRewardDetails(
+              prizeType: prize.prizeType,
+              prizeDescription: prize.prizeDescription,
+            ),
           ],
           const SizedBox(height: 12),
           const Text(

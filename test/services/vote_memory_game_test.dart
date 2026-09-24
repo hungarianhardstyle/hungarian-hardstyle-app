@@ -134,6 +134,65 @@ void main() {
       expect(VoteMemory.prizePlaySync('uid-A', 10), isNull);
     });
 
+    test('a „még nem játszottál" szerver-válasz is megjegyződik (azonnali nyitás)', () async {
+      // A tulajdonos jelzése a nyereményjátékra: *„100 év mire betölt"*. A
+      // képernyő ezért a **szerver válaszából** (akkor is, ha az „nem
+      // játszottál") azonnal rajzol, és csak a háttérben egyeztet.
+      await VoteMemory.markPrizeChecked(
+        'uid-A',
+        9,
+        const HuhsPrizePlay(played: false, correct: false),
+      );
+
+      final play = VoteMemory.prizePlaySync('uid-A', 9);
+      expect(play, isNotNull, reason: 'a mentett válasz olvasható');
+      expect(play!.played, isFalse);
+
+      final stored = await VoteMemory.prizePlay('uid-A', 9);
+      expect(stored?.played, isFalse);
+    });
+
+    test('a „nem játszott" állapot más fiókra nem szivárog át', () async {
+      await VoteMemory.markPrizeChecked(
+        'uid-A',
+        9,
+        const HuhsPrizePlay(played: false, correct: false),
+      );
+      expect(VoteMemory.prizePlaySync('uid-B', 9), isNull);
+    });
+
+    test('változatlan válasz nem ad felesleges értesítést', () async {
+      var notifications = 0;
+      void listener() => notifications += 1;
+      VoteMemory.revision.addListener(listener);
+      addTearDown(() => VoteMemory.revision.removeListener(listener));
+
+      const notPlayed = HuhsPrizePlay(played: false, correct: false);
+      await VoteMemory.markPrizeChecked('uid-A', 9, notPlayed);
+      expect(notifications, 1);
+      await VoteMemory.markPrizeChecked('uid-A', 9, notPlayed);
+      expect(notifications, 1, reason: 'ugyanaz a válasz: nincs újrarajzolás');
+
+      // Ha viszont megváltozik (játszott), értesít.
+      await VoteMemory.markPrizeChecked(
+        'uid-A',
+        9,
+        const HuhsPrizePlay(played: true, correct: true, answerIndex: 1),
+      );
+      expect(notifications, 2);
+      expect(VoteMemory.prizePlaySync('uid-A', 9)!.played, isTrue);
+    });
+
+    test('a törlés a „nem játszott" jelzést is elviszi', () async {
+      await VoteMemory.markPrizeChecked(
+        'uid-A',
+        9,
+        const HuhsPrizePlay(played: false, correct: false),
+      );
+      await VoteMemory.clearPrizePlayed('uid-A', 9);
+      expect(VoteMemory.prizePlaySync('uid-A', 9), isNull);
+    });
+
     test('minden írás ÉRTESÍTÉST ad (a kártya magától frissül)', () async {
       var notifications = 0;
       void listener() => notifications += 1;

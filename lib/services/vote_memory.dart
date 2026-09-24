@@ -245,12 +245,48 @@ class VoteMemory {
       'correct': play.correct,
       'answerIndex': play.answerIndex,
     });
+    // ⚠️ A memóriabeli tükör **ELŐBB** frissül, mint a lemez — ugyanaz a
+    // szabály, mint a törlésnél: fordítva egy mikrotasknyi ablakban a régi
+    // értéket olvasnánk vissza (ezt egy provider-teszt buktatta el).
+    _stringCache[key] = encoded;
+    revision.value += 1;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(key, encoded);
     } catch (_) {}
+  }
+
+  /// A **szerver válaszának** megjegyzése a nyereményjátéknál — akkor is, ha a
+  /// válasz az, hogy **még nem játszottál**.
+  ///
+  /// **MIÉRT KELL A „NEM JÁTSZOTT" IS:** a tulajdonos jelzése szerint a
+  /// nyereményjáték képernyője *„100 év alatt"* töltött be. A mért ok a
+  /// képernyő szabálya volt: a válaszlehetőségek **csak akkor** jelenhetnek meg,
+  /// ha a szerver kifejezetten azt mondta, hogy ez a fiók még nem játszott —
+  /// ezért minden megnyitás megvárta a **teljes szerver-körutat** (Cloud Function
+  /// → WordPress), ami hidegen **másodperceket** jelent. A mentett válasz ezt
+  /// megspórolja: a képernyő azonnal a legutóbbi **szerver-válaszból** rajzol, a
+  /// háttérben pedig egyeztet.
+  ///
+  /// ⚠️ **Ez soha nem tipp:** ide kizárólag a szerver válasza kerülhet
+  /// (`prizeVote`), ezért a mentett állapot ugyanazt jelenti, mint a friss —
+  /// csak régebbi. Ha a háttérellenőrzés eltérést talál, a jelzés frissül.
+  static Future<void> markPrizeChecked(String? uid, int prizeId, HuhsPrizePlay play) async {
+    final key = _uidKey(uid, prizeId, _prizePrefix);
+    if (key == null) return;
+    final encoded = jsonEncode(<String, dynamic>{
+      'played': play.played,
+      'correct': play.correct,
+      'answerIndex': play.answerIndex,
+    });
+    if (_stringCache[key] == encoded) return;
+    // ⚠️ Ugyanaz a sorrend, mint a `markPrizePlayed`-nél: a tükör előbb.
     _stringCache[key] = encoded;
     revision.value += 1;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(key, encoded);
+    } catch (_) {}
   }
 
   static Future<void> clearPrizePlayed(String? uid, int prizeId) async {

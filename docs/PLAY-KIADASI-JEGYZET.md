@@ -1,10 +1,11 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 354 megy fel** (versionCode **354**, `1.0.0`). A zárt teszt sávján **mérve a 353 van
+> **Most a 355 megy fel** (versionCode **355**, `1.0.0`). A zárt teszt sávján **mérve a 353 van
 > élesben** (`node tools/check-play-track.mjs`, 2026-09-24), a **production sávon pedig a 352**
-> (completed) — ezért a rövid (1.) blokk **csak a 354** változását írja le, a nyilvános kiadáshoz
-> pedig az **1b. blokk** való (352–354 összesítő), mert a nyilvános felhasználók a 329–351
-> szöveget látták.
+> (completed). **A 355 tartalmazza a 354-et is** (a DJ megjelenései), ezért **ezt kell feltenni** —
+> a 354-et nem érdemes külön feltölteni. A rövid (1.) blokk **csak a 355** változását írja le, a
+> nyilvános kiadáshoz pedig az **1b. blokk** való (352–355 összesítő), mert a nyilvános
+> felhasználók a 329–351 szöveget látták.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -12,11 +13,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 354
+currentBuild: 355
 currentVersion: 1.0.0
 lastPublishedBuild: 352
-aab: build/HUHS-v1.0.0+354-release.aab
-sha256: CED7CBFDD6515C662839633EB11794711D47F8CEDD4BC0ECBEDF2550613B48B8
+aab: build/HUHS-v1.0.0+355-release.aab
+sha256: F8D2132D83CC69D2378887181CE23FA0BED2AE218D8E9645E806A8921860AF82
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -69,26 +70,35 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+354-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+355-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **354** (a merge-elt release manifestből visszaolvasva) |
+| Verziókód | **355** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 81,33 MB (a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz — a letöltött kód a 353 mérése szerint 9,86 MB DEX) |
-| SHA-256 | CED7CBFDD6515C662839633EB11794711D47F8CEDD4BC0ECBEDF2550613B48B8 |
+| SHA-256 | F8D2132D83CC69D2378887181CE23FA0BED2AE218D8E9645E806A8921860AF82 |
 
-**Miért a 354-at kell feltenni:** a tulajdonos kérése (2026-09-24): *„kéne olyan az appba, hogy a
-dj adatlapon legyen ott a megjelenése is"* — pontosítva: **a kiadványok, amelyekben a DJ szerepel**
-(a következő fellépéseket a szakasz már mutatja). A 354 ezért **kliens-oldali újdonság**:
+**Miért a 355-öt kell feltenni (és miért nem a 354-et):** a 355 **magában foglalja a 354-et is**
+(a DJ-adatlap „Megjelenései" szakasza), és hozza a **nyereményjáték két javítását**
+(a tulajdonos jelzései: *„a nyereményjátékba nem kerül bele a játék leírása"* és *„100 év mire
+betölt"*):
 
-- **ÚJ: „Megjelenései" szakasz a DJ-adatlapon.** Azok a kiadványok, amelyekben az adott DJ szerepel —
-  a **legfrissebbel az élen**, négy darabig, alatta az **„Összes megjelenése"** gomb a teljes listára
-  visz. A szűrést a **szerver** végzi (`/releases?artist=<id>`, élőben mérve), a lista pedig a
-  **mentett** válaszból azonnal jön — ezért nincs külön cache és nincs villogás.
-- **A kiadvány-kártya közös:** ugyanaz a `ReleaseCard`, amit a kiadványok listája használ (borító,
-  előadók, megjelenés dátuma, műfaj), és koppintásra a **kiadvány adatlapját** nyitja meg.
-- **Üresen nem látszik:** ha a DJ-nek nincs megjelenése, a szakasz **nem hagy helyet** maga után; a
-  szakasz hiba esetén sem tesz hibadobozt a DJ-adatlap közepére.
+- **ÚJ: a nyeremény leírása a játék ALATT is látszik.** A gyökér **kettős** volt: a WordPress a
+  nyitott játéknál üresen küldte a `prize_type` / `prize_description` mezőket (csak a sorsolás után
+  adta ki), és az app a nyitott nézetben **egyáltalán nem** rajzolta ki őket. Mindkettő javítva:
+  a **plugin 2.8.0** kiküldi a mezőket, az app pedig ugyanazzal a közös megjelenítővel rajzolja ki,
+  mint a nyertes-nézet.
+- **Javítva: a nyereményjáték azonnal megnyílik.** A „játszottál már?" állapot eddig minden
+  megnyitásnál megvárta a teljes szerver-körutat (Cloud Function → WordPress; hidegen ez
+  **másodperceket** jelent). Mostantól a telefon a **legutóbbi ismert szerver-választ** rajzolja ki
+  azonnal — **akkor is, ha az „még nem játszottál"** —, és közben a háttérben ellenőriz. Ha a
+  válasz eltér, a jelzés frissül (a szerver az erősebb forrás).
+- **A DJ-adatlap „Megjelenései" szakasza (ez volt a 354):** a DJ azon kiadványai, amelyekben
+  szerepel — legfrissebbel az élen, „Összes megjelenése" gombbal.
 
-**A 354 a 353 minden javítását is tartalmazza** (a Firebase-család major emelése + a lassú betöltés
+**⚠️ A plugin ehhez 2.8.0** (`build/huhs-mobile-api-2.8.0.zip`) — **ezt fel kell tölteni**, különben
+a nyeremény leírása továbbra sem megy ki a nyitott játékban. A változás átnézhető:
+`docs/plugin-2.8.0-prize-description.patch`.
+
+**A 355 a 353 minden javítását is tartalmazza** (a Firebase-család major emelése + a lassú betöltés
 javítása: kvíz-állapot, claim-állapot, előtöltés), és a 352 vásárlási diagnosztikáját is. A 353
 mérései változatlanul érvényesek a csomagra:
 
@@ -126,21 +136,21 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ: a DJ-adatlapon látszanak a DJ megjelenései: azok a kiadványok, amelyekben szerepel.
-- A legfrissebb négy van elöl, az „Összes megjelenése" gomb a teljes listát nyitja.
-- A kiadvány-kártya koppintásra megnyitja az adatlapot.
+- A nyereményjátéknál látszik a nyeremény leírása, már a játék alatt is.
+- A nyereményjáték azonnal megnyílik: a „játszottál már?" állapot a mentett válaszból jön.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (352–354 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (352–355 összesítő)
 
-**Ezt használd, amikor a 354 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
-**329–351** összesítőt kapták — ők ezt a négy sort kapják (a 352 vásárlási diagnosztikája a nyilvános
+**Ezt használd, amikor a 355 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
+**329–351** összesítőt kapták — ők ezt az öt sort kapják (a 352 vásárlási diagnosztikája a nyilvános
 szövegben még nem szerepelt).
 
 ```play-notes
-- ÚJ: a DJ-adatlapon látszanak a DJ megjelenései: azok a kiadványok, amelyekben szerepel.
-- ÚJ: „Vásárlási diagnosztika" a Több → Az appról képernyőn: egy gomb megmutatja, mit válaszol a Google Play.
-- A kvíz azonnal jelzi, hogy már játszottál; a DJ-adatlap „ez az enyém" állapota és a profil kártyái azonnal jönnek.
+- A DJ-adatlapon látszanak a DJ megjelenései (a kiadványok, amelyekben szerepel).
+- A nyereményjátéknál látszik a nyeremény leírása, és a játék azonnal megnyílik.
+- ÚJ: „Vásárlási diagnosztika" a Több → Az appról képernyőn.
+- A kvíz azonnal jelzi, hogy már játszottál; a DJ-adatlap „ez az enyém" állapota is azonnal jön.
 - Belső frissítés: a Firebase-összetevők újabb verzióra kerültek; látható újdonság nincs.
 ```
 
@@ -171,6 +181,12 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 355 — a nyeremény leírása a játék alatt + azonnali nyitás
+- **Javítva (a tulajdonos jelzése: „a nyereményjátékba nem kerül bele a játék leírása"):** a **nyeremény leírása és típusa mostantól a játék ALATT is látszik** — eddig csak a sorsolás után, a nyertes mellett. A gyökér **kettős** volt: a WordPress a nyitott játéknál üresen küldte ezeket a mezőket (csak sorsolás után adta ki), és az app a nyitott nézetben nem is rajzolta ki őket. **Ehhez a plugin 2.8.0 kell** (`build/huhs-mobile-api-2.8.0.zip`).
+- **Javítva (a tulajdonos jelzése: „100 év mire betölt"):** a **nyereményjáték azonnal megnyílik.** A „játszottál már?" állapot eddig minden megnyitásnál megvárta a teljes szerver-körutat (app → Cloud Function → WordPress), ami hidegen **több másodperc** volt. Mostantól a telefon a **legutóbbi ismert szerver-válaszból** rajzol azonnal — **akkor is, ha az „még nem játszottál"** —, a háttérben pedig ellenőriz; ha a válasz eltér, a jelzés frissül (a szerver az erősebb forrás).
+- **Amit ez a kiadás is tartalmaz (a 354-ből):** a **DJ-adatlap „Megjelenései"** szakasza — a DJ azon kiadványai, amelyekben szerepel, a legfrissebbel az élen, „Összes megjelenése" gombbal.
+- **A 355 a 353 minden javítását is tartalmazza** (Firebase-család major emelése + a lassú betöltés javítása) és a 352 vásárlási diagnosztikáját.
 
 ### 354 — a DJ megjelenései a DJ-adatlapon
 - **ÚJ (a tulajdonos kérése):** a **DJ-adatlapon** megjelent a **„Megjelenései"** szakasz: azok a **kiadványok, amelyekben az adott DJ szerepel** — a **legfrissebbel az élen**. Négy kiadvány látszik rögtön, alatta az **„Összes megjelenése"** gomb nyitja a **teljes, DJ-re szűrt listát**.
@@ -344,11 +360,30 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A kérdőív eredményeinél már a kérdőív saját válaszai látszanak az éves szavazás adatai helyett.
 - A nyereményjátéknál eltűnt a felesleges kép mező.
 
-## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.6.0)
+## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.8.0)
 
-A plugin csomag: `build/huhs-mobile-api-2.6.0.zip` (45 fájl, 147,0 KB,
-SHA-256 `289E8CC099DD6B43D131A736E54740A8F8232769C9D7DDE633272AAC4901BCFE`).
-A változás verziókövetve: `docs/plugin-2.6.0-dj-claim.patch`.
+A plugin csomag: `build/huhs-mobile-api-2.8.0.zip` (45 fájl, 149,5 KB,
+SHA-256 `595775ACE6E90EA7251CBAE1C19A74BE369F853500BFB4AA012A16CF4AF31476`).
+A változás verziókövetve: `docs/plugin-2.8.0-prize-description.patch`.
+
+### 2.8.0 — a nyeremény leírása a NYITOTT játékban is kimegy (2026-09-24)
+
+```text
+- JAVÍTVA: a /prize/active végpont a NYITOTT játéknál is kiküldi a prize_type és a
+  prize_description mezőt (a _huhs_prize_type / _huhs_prize_description meta).
+- ELŐTTE szándékosan üres volt, és csak a sorsolás után jelent meg — a tulajdonos viszont
+  jelezte, hogy a kitöltött „Nyeremény leírása" nem kerül bele a játékba, a mező súgója
+  pedig azt ígéri, hogy a játékosok látják. Ezért a nyitott ág is kiküldi.
+- A HELYES válasz továbbra sem megy ki a nyilvános válaszban (sem a játékos-hash/uid).
+  Ezt a functions/prize-active-payload.test.cjs (6/6) őrzi.
+- Az érintett fájlok: includes/prize.php (a javítás), huhs-mobile-api.php (verzió).
+```
+
+### 2.6.0 — a privát claim-e-mail végpont és a cím-pótlás (2026-09-21)
+
+A csomag: `build/huhs-mobile-api-2.6.0.zip` (45 fájl, 147,0 KB, SHA-256
+`289E8CC099DD6B43D131A736E54740A8F8232769C9D7DDE633272AAC4901BCFE`), a változás:
+`docs/plugin-2.6.0-dj-claim.patch`.
 
 **Mit hoz a 2.6.0 (az előző, 2.5.9 óta):**
 ```text
