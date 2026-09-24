@@ -23,7 +23,9 @@ import { PROJECT, secretMultiline } from './lib/live-firebase.mjs';
 const require = createRequire(path.join(process.cwd(), 'functions', 'index.js'));
 const { google } = require('googleapis');
 
-const packageName = process.argv[2] || 'hu.hungarianhardstyle.app';
+const positional = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
+const packageName = positional[0] || 'hu.hungarianhardstyle.app';
+const showHashes = process.argv.includes('--hashes');
 
 async function main() {
   const serviceAccount = JSON.parse(secretMultiline('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON'));
@@ -53,8 +55,21 @@ async function main() {
       }
     }
     const bundles = await client.edits.bundles.list({ packageName, editId });
-    const codes = (bundles.data.bundles || []).map((bundle) => bundle.versionCode).sort((a, b) => a - b);
+    const bundleList = bundles.data.bundles || [];
+    const codes = bundleList.map((bundle) => bundle.versionCode).sort((a, b) => a - b);
     console.log(`\nFELTÖLTÖTT AAB-ek (versionCode): ${codes.join(', ') || 'egy sincs'}`);
+    // ⚠️ MIÉRT KELL A LENYOMAT: ha egy verziókódot **újraépítünk** (pl. ugyanaz a
+    // 353, de javításokkal), a Playről csak a `versionCode` látszik — abból nem
+    // derül ki, hogy a **régi** vagy az **új** csomag van-e fent. A lenyomat
+    // összevethető a helyi `build/HUHS-*.aab` fájlokkal (`Get-FileHash`).
+    if (showHashes) {
+      console.log('\nFeltöltött csomagok lenyomata (a Play szerint):');
+      for (const bundle of [...bundleList].sort((a, b) => a.versionCode - b.versionCode)) {
+        console.log(`  ${bundle.versionCode}: sha256=${bundle.sha256 || '(nincs megadva)'}`);
+      }
+    } else {
+      console.log('  (a csomagok lenyomatához: --hashes)');
+    }
   } finally {
     // Az olvasáshoz is edit kell; a végén töröljük, hogy semmi ne maradjon.
     await client.edits.delete({ packageName, editId }).catch(() => {});
