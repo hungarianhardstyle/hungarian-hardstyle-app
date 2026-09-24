@@ -8,6 +8,7 @@ import 'package:hungarian_hardstyle_app/models/prize.dart';
 import 'package:hungarian_hardstyle_app/providers/community_provider.dart';
 import 'package:hungarian_hardstyle_app/providers/prize_provider.dart';
 import 'package:hungarian_hardstyle_app/services/prize_service.dart';
+import 'package:hungarian_hardstyle_app/services/vote_memory.dart';
 import 'package:hungarian_hardstyle_app/widgets/prize_entry_card.dart';
 
 const _openPrize = HuhsPrize(
@@ -146,6 +147,8 @@ void main() {
     // használ. Mock nélkül a plugin-hívás nem fejeződik be a teszt-környezetben,
     // ezért a képernyő „töltés" állapotban maradna (pumpAndSettle timeout).
     TestWidgetsFlutterBinding.ensureInitialized();
+    // A statikus (memóriabeli) tükör sem szivároghat át a következő tesztbe.
+    VoteMemory.resetForTests();
     SharedPreferences.setMockInitialValues({});
   });
 

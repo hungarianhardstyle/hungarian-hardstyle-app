@@ -8,6 +8,7 @@ import 'package:hungarian_hardstyle_app/models/poll.dart';
 import 'package:hungarian_hardstyle_app/providers/community_provider.dart';
 import 'package:hungarian_hardstyle_app/providers/poll_provider.dart';
 import 'package:hungarian_hardstyle_app/services/poll_service.dart';
+import 'package:hungarian_hardstyle_app/services/vote_memory.dart';
 
 /// Szamlalo szolgaltatas: nem megy a halozatra, de rögzíti, mit kértek tőle.
 class _FakePollService extends PollService {
@@ -88,6 +89,10 @@ ProviderContainer _containerWith(_FakePollService fake, {String? uid = 'teszt-ui
 void main() {
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
+    // A VoteMemory statikus (memóriabeli) tükre nem szivároghat át a
+    // következő tesztbe — a mockolt SharedPreferences igen, ezért mindkettőt
+    // nullázni kell.
+    VoteMemory.resetForTests();
     SharedPreferences.setMockInitialValues({});
   });
 

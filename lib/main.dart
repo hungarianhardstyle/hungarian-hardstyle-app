@@ -14,6 +14,7 @@ import 'core/navigation/app_navigator.dart';
 import 'providers/ads_provider.dart';
 import 'services/push_notification_service.dart';
 import 'services/referral_link_service.dart';
+import 'services/vote_memory.dart';
 import 'services/label_purchase_service.dart';
 import 'services/public_content_warmer.dart';
 import 'services/music_audio_handler.dart';
@@ -37,6 +38,11 @@ Future<void> main() async {
   await initializeDateFormatting('hu_HU');
   await initializeFirebaseRuntime();
   await _initializeAppCheck();
+  // A „már játszottál / már szavaztál" emlékezet **a `runApp` előtt** betöltődik
+  // a memóriába, ezért a kvíz kártyája és a képernyő már az első képkockán a
+  // helyes állapotot rajzolja (a tulajdonos jelzése: *„a kviz is írhatná, hogy
+  // már játszottál … kell pár másodperc mire beáll"*).
+  await VoteMemory.preload();
   // A háttér-lejátszó **a `runApp` előtt** indul, mert a lejátszó példány csak
   // utána jön létre (enélkül a megvásárolt zene nem szólna háttérben).
   await _initializeBackgroundAudio();

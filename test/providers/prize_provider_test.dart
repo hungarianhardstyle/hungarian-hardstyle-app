@@ -8,6 +8,7 @@ import 'package:hungarian_hardstyle_app/models/prize.dart';
 import 'package:hungarian_hardstyle_app/providers/community_provider.dart';
 import 'package:hungarian_hardstyle_app/providers/prize_provider.dart';
 import 'package:hungarian_hardstyle_app/services/prize_service.dart';
+import 'package:hungarian_hardstyle_app/services/vote_memory.dart';
 /// A nyeremenyjatek PROVIDEREI: a jatek es a sajat jatszott-allapot a
 /// szerverrol jon.
 ///
@@ -84,6 +85,10 @@ ProviderContainer _container(PrizeService service, {String? uid = 'teszt-uid'}) 
 void main() {
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
+    // A VoteMemory statikus (memóriabeli) tükre nem szivároghat át a
+    // következő tesztbe — a mockolt SharedPreferences igen, ezért mindkettőt
+    // nullázni kell.
+    VoteMemory.resetForTests();
     SharedPreferences.setMockInitialValues({});
   });
 

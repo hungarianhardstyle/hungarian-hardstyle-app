@@ -60,6 +60,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     super.initState();
     _timelineItems = [...widget.game.timelineItems]..shuffle(Random());
     _answers = List<int>.filled(widget.game.questions.length, -1);
+    // ⚠️ A „már játszottál" jelzés **még az első képkocka előtt** beáll, a
+    // memóriabeli emlékezetből (szinkron, lemez- és hálózatmentes). Enélkül a
+    // képernyő néhány másodpercig játszhatónak látszott, mert az állapot csak
+    // az auth-jelzés és a lemezolvasás után derült ki.
+    _playedHint = VoteMemory.isGamePlayedSync(
+      FirebaseAuth.instance.currentUser?.uid,
+      widget.game.id,
+    );
     if (widget.resultsOnly) {
       _loadResults();
     } else {
@@ -89,7 +97,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   Future<void> _loadSubmissionStatus() async {
-    await FirebaseAuth.instance.authStateChanges().first;
+    // Az auth-állapot első jelzésére **csak akkor** várunk, ha még nincs
+    // bejelentkezett fiók: különben feleslegesen késleltetné a memóriabeli
+    // „már játszottál" jelzést és a szerver-kérdést is.
+    if (FirebaseAuth.instance.currentUser == null) {
+      await FirebaseAuth.instance.authStateChanges().first;
+    }
     if (!_isRegisteredUser) {
       if (mounted) setState(() => _checkingSubmission = false);
       return;
@@ -98,9 +111,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     //    azonnal ezt mutatja (nem látszik játszhatónak a kvíz a szerver
     //    válaszáig). A szerver ezután megerősíti vagy törli.
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    final remembered = await VoteMemory.isGamePlayed(uid, widget.game.id);
+    final remembered =
+        VoteMemory.isGamePlayedSync(uid, widget.game.id) ||
+        await VoteMemory.isGamePlayed(uid, widget.game.id);
     if (!mounted) return;
-    if (remembered) setState(() => _playedHint = true);
+    if (remembered && !_playedHint) setState(() => _playedHint = true);
     try {
       final status = await ref
           .read(wordpressServiceProvider)

@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/achievement_provider.dart';
+import '../../providers/community_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/voting_provider.dart';
@@ -24,6 +25,7 @@ import '../../widgets/home_action_card.dart';
 import '../../widgets/poll_entry_button.dart';
 import '../../widgets/prize_entry_card.dart';
 import '../../services/notification_service.dart';
+import '../../services/vote_memory.dart';
 import '../notifications/notification_center_screen.dart';
 import '../community/community_screen.dart';
 import '../more/community_users_screen.dart';
@@ -517,14 +519,15 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _ActiveGameCard extends StatelessWidget {
+class _ActiveGameCard extends ConsumerWidget {
   const _ActiveGameCard({required this.game, this.resultsOnly = false});
 
   final HuhsGame game;
   final bool resultsOnly;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(currentUidProvider);
     return InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: () => Navigator.of(context).push(
@@ -595,21 +598,40 @@ class _ActiveGameCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(
-                        resultsOnly
-                            ? Icons.leaderboard_outlined
-                            : Icons.play_circle_outline_rounded,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        resultsOnly
-                            ? 'Eredménylista megnyitása'
-                            : 'Játék megnyitása',
-                      ),
-                    ],
+                  // A „már játszottál" állapot a **helyi emlékezetből** jön
+                  // (szinkron, lemez- és hálózatmentes), és a beküldés után
+                  // **magától** frissül (`VoteMemory.revision`). A szerver
+                  // továbbra is a hiteles forrás: ha az emlékezet téved, a
+                  // `GameScreen` törli a jelzést, és a kártya visszavált.
+                  ValueListenableBuilder<int>(
+                    valueListenable: VoteMemory.revision,
+                    builder: (context, _, _) {
+                      final played =
+                          !resultsOnly &&
+                          VoteMemory.isGamePlayedSync(uid, game.id);
+                      return Row(
+                        children: [
+                          Icon(
+                            played
+                                ? Icons.leaderboard_outlined
+                                : resultsOnly
+                                ? Icons.leaderboard_outlined
+                                : Icons.play_circle_outline_rounded,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              played
+                                  ? 'Már játszottál — eredmény megtekintése'
+                                  : resultsOnly
+                                  ? 'Eredménylista megnyitása'
+                                  : 'Játék megnyitása',
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
