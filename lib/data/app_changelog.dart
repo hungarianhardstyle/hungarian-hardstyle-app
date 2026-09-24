@@ -40,8 +40,7 @@ const appChangelog = <AppReleaseNotes>[
     version: '1.0.0',
     build: 356,
     changes: [
-      'A nyereményjátéknál mostantól látszik a nyeremény leírása is, már a játék alatt — eddig csak a sorsolás után, a nyertes mellett jelent meg.',
-      'A nyereményjáték azonnal megnyílik: a „játszottál már?" állapotot a telefon a legutóbbi ismert válaszból rajzolja ki, és közben a háttérben ellenőrzi a szerverrel. Eddig minden megnyitás megvárta a szerver válaszát (hidegen ez több másodperc volt).',
+      'A hírlevélnél nem megy ki újra a megerősítő e-mail arra a címre, amelyre már kiment — a képernyő megmondja, hogy már feliratkoztál, vagy hogy hamarosan újra kérheted. Eddig ugyanarra a címre korlátlanul lehetett megerősítő levelet generálni.',
     ],
   ),
   AppReleaseNotes(

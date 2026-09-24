@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/errors/user_facing_error.dart';
 
 import '../../core/navigation/in_app_browser.dart';
+import '../../services/newsletter_plan.dart';
 import '../../services/wordpress_service.dart';
 
 class NewsletterScreen extends StatefulWidget {
@@ -39,18 +40,20 @@ class _NewsletterScreenState extends State<NewsletterScreen> {
 
     setState(() => _submitting = true);
     try {
-      await _service.subscribeNewsletter(
+      final result = await _service.subscribeNewsletter(
         email: _emailController.text,
         consent: _consent,
       );
       if (!mounted) return;
-      _emailController.clear();
-      setState(() => _consent = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ellenőrizd az e-mail-fiókodat a megerősítéshez.'),
-        ),
-      );
+      // A címet csak akkor töröljük, ha tényleg kiment a megerősítő e-mail —
+      // ha csak „már kiment korábban”, a felhasználó lássa, melyik címről van szó.
+      if (result.outcome == NewsletterOutcome.confirmationSent) {
+        _emailController.clear();
+        setState(() => _consent = false);
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(newsletterMessage(result))));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(

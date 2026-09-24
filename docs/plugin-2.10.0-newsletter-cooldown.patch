@@ -1,0 +1,123 @@
+# Plugin 2.10.0 — a hírlevél-feliratkozás nem küldi ki korlátlanul a megerősítő levelet
+#
+# A plugin forrása nincs git-ben: a `.tmp-api-260/huhs-mobile-api` fában él, és a
+# `tools/build-plugin-zip.mjs` csomagolja ZIP-be. Ez a fájl a 2.9.0 → 2.10.0
+# KÜLÖNBSÉG, hogy a változás külön is átnézhető legyen (2 fájl, +30/−4 sor).
+#
+# A TULAJDONOS JELZÉSE (2026-09-24): „hírlevél feliratkozásnál ugyanazt az email
+# címet bármennyiszer be tudják küldeni és kimegy az ellenőrző mail is, kéne
+# valami ellenörzés erre, ha már feliratkozott" — megerősítve: „mailchimpre megy
+# a feliratkozás".
+#
+# MÉRT GYÖKÉR (a kódból): a `POST /huhs/v1/newsletter/subscribe` a Mailchimp
+# `lists/{audience}/members/{md5(email)}` állapotát kiolvasta ugyan, de CSAK a
+# `subscribed` állapotnál állt meg. Ha a cím `pending` (kiment a megerősítő
+# levél, de nem kattintottak rá), akkor MINDEN beküldés egy új
+# `PUT status=pending` hívást indított a Mailchimpre — a Mailchimp pedig ilyenkor
+# újra kiküldi a megerősítő levelet. Így egy felületen korlátlanul lehetett
+# levelet generálni ugyanarra a címre. Ugyanezt a végpontot hívja a szavazási ág
+# is (hozzájárulásnál), ezért ott is többször kimehetett.
+#
+# A JAVÍTÁS (2 fájl):
+#   - includes/newsletter.php : e-mailenkénti várakozás (WP transient, alapból
+#                               15 perc, `huhs_newsletter_resend_cooldown`
+#                               szűrővel állítható). A várakozáson belül a
+#                               Mailchimp-hívást MEG SEM indítjuk, ezért nem
+#                               megy ki levél; a válasz sikeres
+#                               (`already_requested`, `state=confirmation_pending`,
+#                               `retry_after`), hogy a régi app se lásson hibát.
+#                               A várakozás csak SIKERES Mailchimp-válasz után
+#                               indul, tehát egy hibás kísérlet nem zárja ki a
+#                               címest a valódi újrapróbálkozásból.
+#   - huhs-mobile-api.php     : verzió 2.10.0
+#
+# AMIT NEM VÁLTOZTATTUNK: a `subscribed` cím továbbra is korán, Mailchimp-hívás
+# nélkül, `already_subscribed` jelzéssel tér vissza; az IP-alapú rate limit
+# (`huhs_ip_rate_limited`, 5/60 s) megmarad; a Mailchimp-kulcs továbbra is csak a
+# szerveren van.
+#
+# ⚠️ A FELÜLET OLDALA (AAB 356, ugyanez a kör): a régi app a választ nem nézte,
+# ezért minden esetben azt írta: „Ellenőrizd az e-mail-fiókodat a megerősítéshez."
+# Mostantól a `newsletter_plan.dart` (tiszta modul) három kimenetelt ismer
+# (`confirmationSent` / `alreadySubscribed` / `confirmationPending`), és a
+# képernyő a hozzá tartozó szöveget mutatja. A szavazási ág pedig **nem veszhet
+# el** a hírlevél hibáján: a hívás try/catch-ben van.
+#
+# ⚠️ Amit ez a javítás NEM tud: a Mailchimp-konzolban beállított dupla opt-in
+# viselkedését nem írja felül — azt a mi végpontunk előtti várakozás fogja meg.
+# A várakozás szándékosan NEM örök érvényű: 15 perc után a cím újra kérhet
+# megerősítő levelet (ha az első elveszett), csak nem lehet belőle végtelen sor.
+
+diff --git a/tmp/plugin-290/huhs-mobile-api/huhs-mobile-api.php b/.tmp-api-260/huhs-mobile-api/huhs-mobile-api.php
+index 42523b97..0562abdb 100644
+--- a/tmp/plugin-290/huhs-mobile-api/huhs-mobile-api.php
++++ b/.tmp-api-260/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.9.0
++ * Version: 2.10.0
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.9.0');
++define('HUHS_API_VERSION', '2.10.0');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/tmp/plugin-290/huhs-mobile-api/includes/newsletter.php b/.tmp-api-260/huhs-mobile-api/includes/newsletter.php
+index bab1206f..29537d4c 100644
+--- a/tmp/plugin-290/huhs-mobile-api/includes/newsletter.php
++++ b/.tmp-api-260/huhs-mobile-api/includes/newsletter.php
+@@ -62,10 +62,30 @@ function huhs_newsletter_subscribe(WP_REST_Request $request)
+         $existing_data = json_decode(wp_remote_retrieve_body($existing), true);
+         $existing_status = sanitize_key((string) ($existing_data['status'] ?? ''));
+         if ($existing_status === 'subscribed') {
+-            return new WP_REST_Response(array('subscribed' => true, 'already_subscribed' => true, 'double_opt_in' => false), 200);
++            return new WP_REST_Response(array('subscribed' => true, 'already_subscribed' => true, 'double_opt_in' => false, 'state' => 'subscribed'), 200);
+         }
+     }
+ 
++    // CÍM-ALAPÚ ÚJRAKÜLDÉS-VÉDELEM (2026-09-24): ugyanarra a címre a megerősítő
++    // e-mailt nem küldjük ki minden egyes beküldésre. Enélkül a felület
++    // korlátlanul tudott megerősítő levelet generálni ugyanarra a címre (a
++    // tulajdonos jelzése). A Mailchimp-hívást itt MEG SEM indítjuk, ezért nem
++    // megy ki levél; a válasz viszont sikeres, hogy a régi app se lásson hibát.
++    // A várakozás szűrővel állítható: `huhs_newsletter_resend_cooldown`.
++    $cooldown = (int) apply_filters('huhs_newsletter_resend_cooldown', 15 * MINUTE_IN_SECONDS);
++    $cooldown_key = 'huhs_newsletter_requested_' . $subscriber_hash;
++    $last_requested = (int) get_transient($cooldown_key);
++    if ($cooldown > 0 && $last_requested > 0) {
++        $retry_after = max(60, ($last_requested + $cooldown) - time());
++        return new WP_REST_Response(array(
++            'subscribed' => true,
++            'already_requested' => true,
++            'double_opt_in' => false,
++            'state' => 'confirmation_pending',
++            'retry_after' => $retry_after,
++        ), 200);
++    }
++
+     if ($existing_status === '') {
+         $response = wp_remote_post($base_url, array(
+             'timeout' => 15,
+@@ -103,7 +123,13 @@ function huhs_newsletter_subscribe(WP_REST_Request $request)
+         return new WP_Error('newsletter_failed', 'A feliratkozás nem sikerült.', array('status' => 502));
+     }
+ 
+-    return new WP_REST_Response(array('subscribed' => true, 'double_opt_in' => true), 200);
++    // Csak a SIKERES kérés után indul a várakozás, hogy egy hibás kísérlet ne
++    // zárja ki a címest a valódi újrapróbálkozásból.
++    if ($cooldown > 0) {
++        set_transient($cooldown_key, time(), $cooldown);
++    }
++
++    return new WP_REST_Response(array('subscribed' => true, 'already_requested' => false, 'double_opt_in' => true, 'state' => 'confirmation_sent'), 200);
+ }
+ 
+ add_action('admin_menu', function () {

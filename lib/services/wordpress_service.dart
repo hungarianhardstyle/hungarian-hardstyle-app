@@ -17,6 +17,7 @@ import '../models/release.dart';
 import '../models/submission_image.dart';
 import '../core/firebase/firebase_callable.dart';
 import '../models/voting.dart';
+import 'newsletter_plan.dart';
 import 'wordpress_head_cache.dart';
 import 'wordpress_tag_cache.dart';
 
@@ -958,14 +959,24 @@ class WordpressService {
     return false;
   }
 
-  Future<void> subscribeNewsletter({
+  /// Hírlevél-feliratkozás.
+  ///
+  /// A szerver **háromféle sikeres** választ adhat (kiment a megerősítő e-mail /
+  /// már fel van iratkozva / már kiment, ezért nem küldjük ki újra) — ezért nem
+  /// `void`, hanem a tiszta [NewsletterResult], hogy a felület a helyes szöveget
+  /// mutassa. A döntés a szerveren van, a feldolgozás a `newsletter_plan.dart`-ban.
+  Future<NewsletterResult> subscribeNewsletter({
     required String email,
     required bool consent,
   }) async {
     try {
-      await _dio.post(
+      final response = await _dio.post(
         '/newsletter/subscribe',
         data: {'email': email.trim(), 'consent': consent},
+      );
+      final raw = response.data;
+      return newsletterResultFromResponse(
+        raw is Map ? Map<String, dynamic>.from(raw) : null,
       );
     } on DioException catch (e) {
       throw Exception(

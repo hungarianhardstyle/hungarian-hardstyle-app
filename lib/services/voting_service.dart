@@ -201,7 +201,15 @@ class VotingService {
         !user.isAnonymous &&
         user.email != null &&
         user.email!.trim().isNotEmpty) {
-      await wordpress.subscribeNewsletter(email: user.email!, consent: true);
+      // A hírlevél-feliratkozás **soha nem viheti el a szavazatot**: ha a
+      // hírlevél-szolgáltatás épp hibázik (vagy a régi, védelem nélküli
+      // szerver rate limitel), a szavazat akkor is menjen be. A duplikált
+      // megerősítő levelet a szerver oldali cím-várakozás fogja meg.
+      try {
+        await wordpress.subscribeNewsletter(email: user.email!, consent: true);
+      } catch (_) {
+        // szándékosan elnyeljük: a szavazat a fontos
+      }
     }
     await callFirebaseCallable<void>(
       'submitVotingBallot',

@@ -270,8 +270,20 @@ test('FORRÁS-LINT: a plugin új végpontja POST + manage_options, és a gyorsí
   assert.match(fn, /return false;/);
 });
 
-test('FORRÁS-LINT: a plugin verziója 2.7.0', () => {
+test('FORRÁS-LINT: a plugin verziója legalább 2.7.0', () => {
+  // ⚠️ Szándékosan NEM pontos verziót kérünk: a DJ-adatlap szerkesztése a
+  // 2.7.0-ban került be, és minden további plugin-kiadás (2.8.0, 2.9.0, 2.10.0, …)
+  // emeli a verziót. A pontos egyezés minden új kiadásnál eltörné ezt a tesztet
+  // anélkül, hogy bármi elromlott volna (ez a 2.8.0-nál meg is történt).
   const main = pluginFile('huhs-mobile-api.php');
-  assert.match(main, /\* Version: 2\.7\.0/);
-  assert.match(main, /define\('HUHS_API_VERSION', '2\.7\.0'\)/);
+  const header = main.match(/^\s*\*\s*Version:\s*(\d+)\.(\d+)\.(\d+)\s*$/m);
+  assert.ok(header, 'van verzió a plugin fejlécében');
+  const version = [Number(header[1]), Number(header[2]), Number(header[3])];
+  assert.ok(
+    version[0] > 2 || (version[0] === 2 && version[1] >= 7),
+    `a verzió legalább 2.7.0 legyen, ez: ${version.join('.')}`,
+  );
+  const constant = main.match(/define\('HUHS_API_VERSION',\s*'(\d+\.\d+\.\d+)'\)/);
+  assert.ok(constant, 'van HUHS_API_VERSION konstans');
+  assert.equal(constant[1], version.join('.'), 'a fejléc és a konstans egyezik');
 });

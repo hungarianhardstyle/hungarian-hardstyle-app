@@ -94,8 +94,24 @@ test('a privát cím a védett claim-emails végponton továbbra is kijön', () 
   assert.match(api, /'contact_email'\s*=>\s*strtolower\(\(string\)\s*sanitize_email\(get_post_meta/);
 });
 
-test('a plugin verziója 2.9.0', () => {
+test('a plugin verziója legalább 2.9.0 (a privát cím ekkor került be)', () => {
+  // ⚠️ Szándékosan NEM pontos verziót kérünk: a privát cím a 2.9.0-ban került be,
+  // és minden további plugin-kiadás (2.10.0, …) emeli a verziót. A pontos
+  // egyezés minden új kiadásnál eltörné ezt a tesztet anélkül, hogy bármi
+  // elromlott volna.
   const main = pluginFile('huhs-mobile-api.php');
-  assert.match(main, /^\s*\*\s*Version:\s*2\.9\.0\s*$/m);
-  assert.match(main, /HUHS_API_VERSION',\s*'2\.9\.0'/);
+  const header = main.match(/^\s*\*\s*Version:\s*(\d+)\.(\d+)\.(\d+)\s*$/m);
+  assert.ok(header, 'van verzió a plugin fejlécében');
+  const version = [Number(header[1]), Number(header[2]), Number(header[3])];
+  assert.ok(
+    version[0] > 2 || (version[0] === 2 && version[1] >= 9),
+    `a verzió legalább 2.9.0 legyen, ez: ${version.join('.')}`,
+  );
+  const constant = main.match(/HUHS_API_VERSION',\s*'(\d+\.\d+\.\d+)'/);
+  assert.ok(constant, 'van HUHS_API_VERSION konstans');
+  assert.equal(
+    constant[1],
+    version.join('.'),
+    'a fejléc verziója és a konstans ugyanaz (különben a diagnosztika hazudik)',
+  );
 });

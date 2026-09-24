@@ -20,7 +20,7 @@ currentBuild: 356
 currentVersion: 1.0.0
 lastPublishedBuild: 352
 aab: build/HUHS-v1.0.0+356-release.aab
-sha256: 4C30E3789AECDDC4F596FBC54338BAB91BD7272FC3FD056213AB626B485D49EE
+sha256: AE0563A7A35B7D3E0869DB810CBF5ACF9DD480F011E97054992EFCED6D618430
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -30,14 +30,15 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-24, a legfrissebb mér�
 | Sáv | Állapot | Build |
 |---|---|---|
 | **production (nyilvános)** | **completed** (100%-ban kigördült) | **352** — „352 (1.0.0)" |
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **353** — „353 (1.0.0)" |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **355** — „355 (1.0.0)" |
 | beta | üres | — |
 | internal | completed + egy **üres piszkozat** | 278 |
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
-- **A nyilvános kiadás megvan:** a production sávon a **352** van (`completed`), a bolt-lap **200**-at ad. A **zárt tesztben már a 353 fut** (a tulajdonos eszközén is megérkezett), a **354** csomag a következő feltöltés.
-- A feltöltött AAB-ek a Playen (a 2026-09-24-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 349, 350, 351, **352**, **353**.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**352**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 352 — ezért az **1. pont** blokkja már csak a **354** újdonságát írja le. A **nyilvános** kiadáshoz az **1b. blokk** való (352–354 összesítő), mert a nyilvános felhasználók legutóbb a **329–351** szöveget kapták. **⚠️ Az 1b. blokkban szándékosan benne van a 352 vásárlási diagnosztikája is:** az a nyilvános szövegben még nem szerepelt (a 352 a production sávon a 329–351 összesítővel ment ki).
+- **A nyilvános kiadás megvan:** a production sávon a **352** van (`completed`), a bolt-lap **200**-at ad. A **zárt tesztben már a 355 fut** (a tulajdonos feltöltötte, `completed` 100%, a kiadási szöveggel), a **356** csomag a következő feltöltés.
+- A feltöltött AAB-ek a Playen (a 2026-09-24-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 351, 352, 353, 354, **355**.
+- **⚠️ A 356-ot MÉG NEM töltötte fel senki** (a fenti mérés szerint a lista a 355-nél végződik) — ezért a hírlevél-javítás **belekerült a 356-ba**, és **a 356-ot kell feltenni** (a 355-öt nem, azt a 356 tartalmazza). **Ha a Play mégis elutasítaná a 356-ot „már használt verziókód" miatt, akkor a 357-et kell építeni** — ez az egyetlen eset, amiben új verziókód kell.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**352**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 352. A **nyilvános** kiadáshoz az **1b. blokk** való (352–356 összesítő), mert a nyilvános felhasználók legutóbb a **329–351** szöveget kapták. **⚠️ Az 1b. blokkban szándékosan benne van a 352 vásárlási diagnosztikája is:** az a nyilvános szövegben még nem szerepelt (a 352 a production sávon a 329–351 összesítővel ment ki).
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -77,7 +78,9 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 | Verzió | `1.0.0` (versionName) |
 | Verziókód | **356** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 81,36 MB (a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz — a letöltött kód a 353 mérése szerint 9,86 MB DEX) |
-| SHA-256 | 4C30E3789AECDDC4F596FBC54338BAB91BD7272FC3FD056213AB626B485D49EE |
+| SHA-256 | AE0563A7A35B7D3E0869DB810CBF5ACF9DD480F011E97054992EFCED6D618430 |
+
+> **⚠️ A 356-ot 2026-09-24-én KÉTSZER is ÚJRAÉPÍTETTEM** (ugyanaz a verziókód, mert a Playre **még nem került fel**): a csomag mostantól a **hírlevél-javítást** is tartalmazza, és az app-changelog is a végleges. **A korábban kihirdetett 356 fájlokat (`4C30E378…`, majd `5C8A5487…`) ne használd** — ez a végleges (`AE0563A7…`).
 
 **Miért a 356-ot kell feltenni (és miért nem a 355-öt vagy a 354-et):** a 356 **magában foglalja a
 355-öt** (a nyereményjáték két javítása) **és a 354-et is** (a DJ-adatlap „Megjelenései" szakasza),
@@ -147,6 +150,7 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
+- A hírlevélnél nem megy ki újra a megerősítő e-mail, ha már feliratkoztál vagy már kiment.
 - A nyereményjátéknál látszik a nyeremény leírása, már a játék alatt is.
 - A nyereményjáték azonnal megnyílik: a „játszottál már?" állapot a mentett válaszból jön.
 ```
@@ -193,10 +197,10 @@ bemásolni (mert a 329 nem ment ki).
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
 
-### 356 — a Play „teljes képernyős mód" javaslata (a felületen nem látszik)
-- **Mi történt:** a `MainActivity` megkapta az `enableEdgeToEdge()` hívást (`androidx.activity`), pontosan azt, amit a Play Console „teljes képernyős mód" kártyája kér. **Android 15/16-on semmi nem változik** (targetSdk 36 mellett a rendszer amúgy is kötelezően így futtatja az appot), és a **régebbi Androidokon sem** — ezt **két csomag összevetésével mértem** (alap 355 vs. + hívás) egy **android-34** emulátoron: a felület sorai bitre egyeznek (`360, 419, 494, …, 2138, 2337, 2364, 2374`), az ablak viszont tényleg megkapta a `layoutInDisplayCutoutMode=always` attribútumot. Az egyetlen látható eltérés a statuszsáv sávjának ~11%-kal sötétebb árnyalata.
+### 356 — a hírlevél nem küldi ki újra a megerősítő levelet + a Play „teljes képernyős mód" javaslata
+- **Javítva (a tulajdonos jelzése: „hírlevél feliratkozásnál ugyanazt az email címet bármennyiszer be tudják küldeni és kimegy az ellenőrző mail is"):** a hírlevél-feliratkozásnál **ugyanarra a címre nem megy ki újra a megerősítő e-mail.** A gyökér a szerveren volt: ha a cím `pending` állapotban volt (kiment a levél, de nem kattintottak rá), **minden beküldés** új kérést indított a Mailchimpre, az pedig újra kiküldte a megerősítő levelet — a felületen korlátlanul. **Ehhez a plugin 2.10.0 kell** (`build/huhs-mobile-api-2.10.0.zip`): e-mailenkénti várakozás (alapból 15 perc), amelyen belül a Mailchimp-hívást meg sem indítjuk. Az app a háromféle **sikeres** választ megkülönbözteti (`newsletter_plan.dart`), és a hozzá tartozó szöveget mutatja: „elküldtük", „már fel van iratkozva", „már kiment, X perc múlva kérhetsz újat". A szavazásnál a hírlevél hibája **nem viheti el a szavazatot** (try/catch).
+- **A 356 újdonsága a Play „teljes képernyős mód" javaslatára:** a `MainActivity` megkapta a `enableEdgeToEdge()` hívást. **Ez a felhasználónak nem látható:** Android 15/16-on a rendszer (targetSdk 36 mellett) **amúgy is kötelezően** teljes képernyős, a régebbi Androidokon pedig **mérten semmi nem mozdul el** — két csomagot összevetve (android-34 emulátor) a felület sorai bitre egyeznek, csak a statuszsáv sávja lesz ~11%-kal sötétebb.
 - **Amit ez a kiadás is tartalmaz (a 355-ből):** a nyeremény leírása a játék alatt + a nyereményjáték azonnali nyitása; **(a 354-ből):** a DJ-adatlap „Megjelenései" szakasza; **(a 353-ból):** a Firebase-család frissítése és a lassú betöltés javítása; és a 352 vásárlási diagnosztikája.
-- **Ezért nincs új pont az app changelogjában:** a felhasználó számára ez a kiadás ugyanaz, mint a 355 — a changelog a **356** számot viseli (`lib/data/app_changelog.dart`), hogy a „mi újság?" szöveg a telepített verzióhoz illeszkedjen.
 
 ### 355 — a nyeremény leírása a játék alatt + azonnali nyitás
 - **Javítva (a tulajdonos jelzése: „a nyereményjátékba nem kerül bele a játék leírása"):** a **nyeremény leírása és típusa mostantól a játék ALATT is látszik** — eddig csak a sorsolás után, a nyertes mellett. A gyökér **kettős** volt: a WordPress a nyitott játéknál üresen küldte ezeket a mezőket (csak sorsolás után adta ki), és az app a nyitott nézetben nem is rajzolta ki őket. **Ehhez a plugin 2.8.0 kell** (`build/huhs-mobile-api-2.8.0.zip`).
@@ -376,11 +380,25 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A kérdőív eredményeinél már a kérdőív saját válaszai látszanak az éves szavazás adatai helyett.
 - A nyereményjátéknál eltűnt a felesleges kép mező.
 
-## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.9.0)
+## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.10.0)
 
-A plugin csomag: `build/huhs-mobile-api-2.9.0.zip` (45 fájl, 150,2 KB,
-SHA-256 `B6B1C1F96D6E7869800B502F24F2C7F964FA1D91E08EAE32166C6580116B4CA9`).
-A változás verziókövetve: `docs/plugin-2.9.0-private-email.patch`.
+A plugin csomag: `build/huhs-mobile-api-2.10.0.zip` (45 fájl, 150,7 KB,
+SHA-256 `6D95DE5AA65FA9CEB94A5410B612F41AA62F51F78C9AEF0D560E030A2998442F`).
+A változás verziókövetve: `docs/plugin-2.10.0-newsletter-cooldown.patch`.
+
+### 2.10.0 — a hírlevél nem küldi ki korlátlanul a megerősítő levelet (2026-09-24)
+
+```text
+- JAVÍTVA: a hírlevél-feliratkozásnál ugyanarra az e-mail-címre nem megy ki újra és újra a
+  megerősítő levél. Eddig a cím state=pending állapotában MINDEN beküldés új kérést indított
+  a Mailchimpre, az pedig újra kiküldte a megerősítő e-mailt — a felületen korlátlanul.
+- Mostantól e-mailenkénti várakozás van (alapból 15 perc): a várakozáson belül a Mailchimp
+  hívást meg sem indítjuk, a válasz pedig megmondja, mennyi van hátra.
+- A már megerősített (subscribed) cím továbbra is azonnal jelzést kap, levél nélkül.
+- Az app ezért (356) háromféle választ tud megkülönböztetni, és a hozzá tartozó szöveget
+  mutatja; a szavazás pedig nem veszhet el a hírlevél hibáján.
+- Az érintett fájlok: includes/newsletter.php (cím-várakozás), huhs-mobile-api.php (verzió).
+```
 
 ### 2.9.0 — a DJ privát (kapcsolattartó) e-mail címe látható és javítható (2026-09-24)
 
