@@ -16,7 +16,7 @@ currentBuild: 353
 currentVersion: 1.0.0
 lastPublishedBuild: 352
 aab: build/HUHS-v1.0.0+353-release.aab
-sha256: 77A86BFB2D5E747815933101C3573F07A1F63452AC1C9D403A82538A5EE01589
+sha256: CE669CD629709E7525EC756AA0206CE2EBE789870DABAEC1BE160F0578F3FFAB
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -72,8 +72,8 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 | Fájl | `build/HUHS-v1.0.0+353-release.aab` |
 | Verzió | `1.0.0` (versionName) |
 | Verziókód | **353** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 81,25 MB — **de lásd a lenti magyarázatot** (a fájl azért nagyobb 0,58 MB-tal a 352-nél, mert a Play-oldali `proguard.map` +1,09 MB, ami **nem** megy le a felhasználóhoz) |
-| SHA-256 | 77A86BFB2D5E747815933101C3573F07A1F63452AC1C9D403A82538A5EE01589 |
+| Méret | 81,32 MB — **de lásd a lenti magyarázatot** (a fájl nagyobb a 352-nél, mert a Play-oldali `proguard.map` +1 MB, ami **nem** megy le a felhasználóhoz) |
+| SHA-256 | CE669CD629709E7525EC756AA0206CE2EBE789870DABAEC1BE160F0578F3FFAB |
 
 **Miért a 353-at kell feltenni:** a 352 élesítése után a tulajdonos jelezte a Play *„4 művelet javasolt"*
 paneljének 4. pontját (R8-optimalizálás, 36/37/37%). A **mérés** (`tools/analyze-r8-config.mjs`) megmutatta,
@@ -116,18 +116,22 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Belső frissítés: a bejelentkezés, az adatbázis, az értesítések és a vásárlás mögötti Firebase-összetevők újabb verzióra kerültek (a Google legfrissebb javításaival). Látható újdonság nincs, a működés változatlan.
+- A kvíz azonnal mutatja, hogy már játszottál.
+- A DJ-adatlap „ez az enyém / átvehető" állapota és a profil DJ-adatlap kártyái azonnal megjelennek.
+- Belső frissítés: a Firebase-összetevők (bejelentkezés, adatbázis, értesítések) újabb verzióra kerültek; látható újdonság nincs.
 ```
 
 ## 1b. Play Console — a NYILVÁNOS kiadáshoz (352–353 összesítő)
 
 **Ezt használd, amikor a 353 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
-**329–351** összesítőt kapták — ők ezt a két sort kapják (a 352 vásárlási diagnosztikája a nyilvános
+**329–351** összesítőt kapták — ők ezt a négy sort kapják (a 352 vásárlási diagnosztikája a nyilvános
 szövegben még nem szerepelt).
 
 ```play-notes
 - ÚJ: „Vásárlási diagnosztika" a Több → Az appról képernyőn: ha egy vásárlás nem indul el, egy gomb megmutatja, mit válaszol a Google Play ezen a készüléken.
-- Belső frissítés: a bejelentkezés, az adatbázis, az értesítések és a vásárlás mögötti Firebase-összetevők újabb verzióra kerültek. Látható újdonság nincs, a működés változatlan.
+- A kvíz azonnal mutatja, hogy már játszottál.
+- A DJ-adatlap „ez az enyém / átvehető" állapota és a profil DJ-adatlap kártyái azonnal megjelennek.
+- Belső frissítés: a Firebase-összetevők újabb verzióra kerültek; látható újdonság nincs.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -158,8 +162,11 @@ bemásolni (mert a 329 nem ment ki).
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
 
-### 353 — a Firebase-összetevők frissítése (mért R8-nyereség, látható újdonság nincs)
-- **Belső frissítés:** a Firebase-család (bejelentkezés, adatbázis, értesítések, App Check, Cloud Functions) **új verzióra** került, a Google legfrissebb javításaival. **Látható újdonság nincs**, a működés változatlan.
+### 353 — a Firebase-összetevők frissítése + a lassú betöltés javítása
+- **Javítva (a tulajdonos jelzése: „sok adat lassan tölt be"):** a **kvíz** már az első képkockán mutatja, hogy **már játszottál** (a telefon megjegyzi, és a háttérben egyeztet a szerverrel) — eddig pár másodpercig úgy látszott, mintha újra lehetne játszani.
+- **Javítva:** a **DJ-adatlap „ez az enyém / átvehető"** állapota (a `getArtistClaimStatus` döntése, szerveroldalon mérve ~1,4 s) és a **profil „DJ-adatlap" kártyái** mostantól a **mentett válaszból azonnal** megjelennek, a szerver pedig a háttérben frissít. Ha nincs hálózat, a **mentett** állapot marad (nincs hiba-képernyő).
+- **ÚJ (háttérben):** bejelentkezés után az app **előtölti** a saját claim-adatait és a saját profilját, ezért az első megnyitás is azonnali.
+- **Belső frissítés:** a Firebase-család (bejelentkezés, adatbázis, értesítések, App Check, Cloud Functions) **új verzióra** került, a Google legfrissebb javításaival.
 - **Amit ez a háttérben jelent (mérve):** az R8-optimalizálás a riport szerint **54,33% → 92,09%** (obfuszkiálás 54,52% → **92,28%**, csökkentés 54,46% → **92,22%**), a becsomagolt **DEX 12,03 MB → 9,86 MB**, mégpedig **3 helyett 2 DEX-fájllal**, és **eltűnt a becsomagolt, elavult SafetyNet** könyvtár (**394 osztály → 0**). Utóbbi pontosan az volt, amit a Play kiadás-irányítópultja jelzett.
 - **Miért lett ekkora a nyereség:** a blokkolt kód **39,78%-át egyetlen, a Google-től származó keep-szabály** adta (`-keep class com.google.android.gms.internal.** { *; }` a `firebase-auth` 23.2.1-ből) — ezt a **24.2.0-s** kiadás **már nem tartalmazza**. A mérés eszköze: `node tools/analyze-r8-config.mjs`.
 - **A WordPress-plugin NEM változott** (2.7.0), és a **szerveroldali függvények sem** — **nincs API-oldali változás**, ezért a plugin kiadásjegyzékébe nem kerül bejegyzés.

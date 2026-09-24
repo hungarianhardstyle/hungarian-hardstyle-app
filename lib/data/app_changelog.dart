@@ -40,7 +40,9 @@ const appChangelog = <AppReleaseNotes>[
     version: '1.0.0',
     build: 353,
     changes: [
-      'Belső frissítés: a bejelentkezés, az adatbázis, az értesítések és a vásárlás mögötti Firebase-összetevők újabb verzióra kerültek (a Google legfrissebb javításaival). Látható újdonság nincs, a működés változatlan.',
+      'A kvíz azonnal mutatja, hogy már játszottál — nem kell megvárni a betöltést.',
+      'A DJ-adatlap „ez az enyém / átvehető" állapota és a profil DJ-adatlap kártyái azonnal megjelennek: a telefon a legutóbbi ismert állapotot mutatja, és közben a háttérben frissít.',
+      'Belső frissítés: a bejelentkezés, az adatbázis, az értesítések és a vásárlás mögötti Firebase-összetevők újabb verzióra kerültek (a Google legfrissebb javításaival).',
     ],
   ),
   AppReleaseNotes(

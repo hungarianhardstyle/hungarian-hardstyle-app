@@ -2400,9 +2400,18 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
         _profileDataUid = user.uid;
       });
       unawaited(_refreshOwnProfileAfterPaint(user.uid));
+      // ⚠️ A claimelt DJ-adatlapok **a mentett válaszból azonnal** jönnek (a
+      // bejelentkezés utáni előtöltés ezt is melegíti), és a szerver a
+      // háttérben egyeztet — eddig minden profilnyitásnál külön callable körút
+      // futott, ezért a jelzés csak később jelent meg.
+      final claimed = ref.read(claimedArtistsOfUserProvider(user.uid));
+      final claimedNow = claimed.valueOrNull;
+      if (claimedNow != null && claimedNow.isNotEmpty) {
+        setState(() => _claimedArtistIds = claimedNow);
+      }
       unawaited(
-        _service
-            .myClaimedArtists()
+        ref
+            .read(claimedArtistsOfUserProvider(user.uid).future)
             .then((claimedArtistIds) {
               if (mounted && _service.auth.currentUser?.uid == user.uid) {
                 setState(() => _claimedArtistIds = claimedArtistIds);
