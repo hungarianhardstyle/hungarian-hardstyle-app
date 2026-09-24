@@ -1,5 +1,27 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### „Sok adat lassan tölt be" — MIÉRT, MÉRVE (2026-09-24; kód + hálózat mérve, döntés előtt)
+
+- **A TULAJDONOS JELZÉSE:** *„sok adat lassan tölt be, pl az hogy a dj adatlap az »enyém« stb nem lenne jobb minden ilyen adatot cacheben tárolni és a háttérben frissíteni? villogás nélkül persze"*.
+- **A VÁLASZ RÖVIDEN: IGEN — és a mintát már használjuk is, csak nem mindenhol.** A **WordPress-alapú** adat (DJ-lista, DJ-adatlap, kiadványok, hírek, események) **már cache-first + háttérfrissítés**: `WordpressService._persistentCacheTtl` (5 perc), `_persistentJsonCache`, `WordpressHeadCache` (mentett JSON + ETag/HEAD-egyeztetés + `publicContentRefreshGeneration`), és a `labelLibraryProvider` ugyanezt csinálja (`keepAlive` + mentett lista azonnal + háttéregyeztetés + 30 s-es időzítő). **Ami viszont NINCS cache-elve: a Cloud Function callable-ok** (pl. `getArtistClaimStatus` = „ez az enyém?", `getClaimedArtistsForUser`), és **a képernyőkben lévő ~50 `FutureBuilder`**, amik providert és `keepAlive`-t megkerülve kérnek le.
+- **ÚJ ESZKÖZ (csak olvasás): `tools/check-content-latency.mjs`** (`--self-test` 6/6, `--runs N`). Méri a nyilvános WordPress-végpontokat, a privát `claim-emails` végpontot (ez a claim-ellenőrzés szerveroldali költsége) és a `getArtistClaimStatus` callable boot-idejét.
+- **MÉRT ÉRTÉKEK (2026-09-24, otthoni hálózat, 3 futás/végpont):**
+
+| Mit | hidegen (1. futás) | melegen |
+|---|---|---|
+| DJ-adatlap `/artists/12812` | **1520 ms** | 558–587 ms |
+| DJ-lista `/artists` | **1941 ms** | 606–746 ms |
+| Kiadványok `/releases` | 545 ms | 545–554 ms |
+| Hírek `/posts` | 541 ms | 541–653 ms |
+| privát `/artists/12812/claim-emails` (a claim-döntés szerveroldali része) | **1418 ms** | 1306–1446 ms |
+| `getArtistClaimStatus` callable (boot, hitelesítés nélkül) | **4035 ms** | 146–196 ms |
+
+- **EBBŐL KÖVETKEZIK a tulajdonos panasza, számokkal:** a DJ-adatlap megnyitása = WordPress adatlap (~0,55 s melegen) **+** claim-callable (boot + szerveroldali privát hívás ~1,3–1,4 s) → **másfél-két másodperc**, és az „ez az enyém / átvehető" rész **csak ezután** jelenik meg. A WordPress-oldal **melegen is ~0,55 s**, mert a hálózat + a WordPress válaszideje ennyi — **mentett válaszból ez ~0 ms**.
+- **A JAVASLAT (a döntés a tulajdonosé, még NEM épült meg):** a **már meglévő** minta általánosítása — **mentett adat azonnal, hálózat a háttérben** — egy újrahasznosítható rétegbe (`AsyncCacheStore` + tiszta `cache_plan` modul), és bekötni **először a legfájóbb helyekre**: (1) **claim-állapot** (a „ez az enyém" sor és a claim-gomb), (2) DJ-adatlap, (3) a profil „DJ-adatlap" szekciója (`getClaimedArtistsForUser`, ma `FutureBuilder`-rel), (4) kiadványok/könyvtár, (5) **előtöltés** bejelentkezés után. Emellett szerveroldalon **egy batchelt callable** (`getArtistClaimStatuses`): 1 hívás N helyett.
+- **A „villogás nélkül" garancia (ez a lényeg):** minden érintett képernyő `AsyncValue`-ből **a korábbi értéket rajzolja** (`valueOrNull` + `skipLoadingOnReload: true`), a mentett adat **hiba esetén sem törlődik** (a régi lista jobb, mint a hiba-képernyő), és a cache **soha nem megy vissza `loading`-ba**, ha van mit mutatni.
+- **⚠️ KOCKÁZATOK, amiket kezelni kell:** (1) **fiókváltás** — a mentett kulcs tartalmazza a **UID-t**, különben az előző fiók claim-állapota átlátszana (a könyvtárnál már így van); (2) **elavulás** — TTL + háttérfrissítés + a felületen a „húzd le a frissítéshez" út; (3) **amit SOHA nem szabad cache-ből kiszolgálni**: vásárlás-ellenőrzés (`verifyLabelPurchase`), törlés, admin-írások — ott csak a „mutasd a régit, amíg jön az új" minta jöhet szóba, a döntés soha; (4) **valós idejű adat** (chat, jelenlét, értesítés) marad stream.
+- **📌 A TULAJDONOS DÖNTÉSE:** *még nincs* — ez a szakasz a **mérést és a tervet** rögzíti. A következő kör a választott hatókörrel indul, és **új AAB-ot** igényel (kliens-oldali változás).
+
 ### A Firebase-család major emelése — a Play „R8-optimalizálás" javaslatának megszüntetése (2026-09-24, AAB **353**)
 
 - **A TULAJDONOS DÖNTÉSE:** az R8-kutatás után *„Indítsuk el a Firebase major kört"* — a cél a **mért ok megszüntetése**, nem a keep-szabályok tuningolása.
