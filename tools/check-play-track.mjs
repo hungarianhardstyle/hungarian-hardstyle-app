@@ -45,8 +45,15 @@ async function main() {
     for (const track of list) {
       console.log(`SÁV: ${track.track}`);
       for (const release of track.releases || []) {
+        // ⚠️ A `userFraction` a **fokozatos kigördítés** aránya: ha ez 1-nél
+        // kisebb, akkor a felhasználók/tesztelők **egy része** még nem kapja
+        // meg a buildet — pontosan ez a leggyakoribb „feltettem, de nem kapom
+        // meg" ok (a másik a Play-gyorsítótár és a rossz fiók a tesztelői listán).
+        const fraction =
+          release.userFraction == null ? '100%' : `${Math.round(release.userFraction * 100)}%`;
         console.log(
           `   állapot=${release.status} build=${(release.versionCodes || []).join(', ')} ` +
+            `kigördítés=${fraction} ` +
             `név=${release.name || '-'} feltöltve=${release.releaseNotes ? 'van kiadási szöveg' : 'nincs szöveg'}`,
         );
         for (const note of release.releaseNotes || []) {
