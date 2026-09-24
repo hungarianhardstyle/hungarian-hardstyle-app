@@ -1,11 +1,14 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 355 megy fel** (versionCode **355**, `1.0.0`). A zárt teszt sávján **mérve a 353 van
+> **Most a 356 megy fel** (versionCode **356**, `1.0.0`). A zárt teszt sávján **mérve a 353 van
 > élesben** (`node tools/check-play-track.mjs`, 2026-09-24), a **production sávon pedig a 352**
-> (completed). **A 355 tartalmazza a 354-et is** (a DJ megjelenései), ezért **ezt kell feltenni** —
-> a 354-et nem érdemes külön feltölteni. A rövid (1.) blokk **csak a 355** változását írja le, a
-> nyilvános kiadáshoz pedig az **1b. blokk** való (352–355 összesítő), mert a nyilvános
-> felhasználók a 329–351 szöveget látták.
+> (completed). **A 356 tartalmazza a 355-öt és a 354-et is** (a nyereményjáték javításai + a DJ
+> megjelenései), ezért **ezt kell feltenni** — a 354-et és a 355-öt nem érdemes külön feltölteni. A
+> rövid (1.) blokk **csak a nyereményjáték változását** írja le (ez a felhasználónak látható
+> újdonság), a nyilvános kiadáshoz pedig az **1b. blokk** való (352–356 összesítő), mert a nyilvános
+> felhasználók a 329–351 szöveget látták. **A 356 annyival több a 355-nél, hogy megkapta a Play által
+> kért `enableEdgeToEdge()` hívást** — ez **mérten nem változtat a felületen** (lásd a lenti
+> „Miért a 356-ot" szakaszt), ezért a Play-szöveg ugyanaz marad.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -13,11 +16,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 355
+currentBuild: 356
 currentVersion: 1.0.0
 lastPublishedBuild: 352
-aab: build/HUHS-v1.0.0+355-release.aab
-sha256: F8D2132D83CC69D2378887181CE23FA0BED2AE218D8E9645E806A8921860AF82
+aab: build/HUHS-v1.0.0+356-release.aab
+sha256: 4C30E3789AECDDC4F596FBC54338BAB91BD7272FC3FD056213AB626B485D49EE
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -70,16 +73,15 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+355-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+356-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **355** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 81,33 MB (a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz — a letöltött kód a 353 mérése szerint 9,86 MB DEX) |
-| SHA-256 | F8D2132D83CC69D2378887181CE23FA0BED2AE218D8E9645E806A8921860AF82 |
+| Verziókód | **356** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 81,36 MB (a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz — a letöltött kód a 353 mérése szerint 9,86 MB DEX) |
+| SHA-256 | 4C30E3789AECDDC4F596FBC54338BAB91BD7272FC3FD056213AB626B485D49EE |
 
-**Miért a 355-öt kell feltenni (és miért nem a 354-et):** a 355 **magában foglalja a 354-et is**
-(a DJ-adatlap „Megjelenései" szakasza), és hozza a **nyereményjáték két javítását**
-(a tulajdonos jelzései: *„a nyereményjátékba nem kerül bele a játék leírása"* és *„100 év mire
-betölt"*):
+**Miért a 356-ot kell feltenni (és miért nem a 355-öt vagy a 354-et):** a 356 **magában foglalja a
+355-öt** (a nyereményjáték két javítása) **és a 354-et is** (a DJ-adatlap „Megjelenései" szakasza),
+ezért egy csomagot kell feltenni:
 
 - **ÚJ: a nyeremény leírása a játék ALATT is látszik.** A gyökér **kettős** volt: a WordPress a
   nyitott játéknál üresen küldte a `prize_type` / `prize_description` mezőket (csak a sorsolás után
@@ -93,12 +95,21 @@ betölt"*):
   válasz eltér, a jelzés frissül (a szerver az erősebb forrás).
 - **A DJ-adatlap „Megjelenései" szakasza (ez volt a 354):** a DJ azon kiadványai, amelyekben
   szerepel — legfrissebbel az élen, „Összes megjelenése" gombbal.
+- **A 356 újdonsága a Play „teljes képernyős mód" javaslatára:** a `MainActivity` megkapta a
+  `enableEdgeToEdge()` hívást. **Ez a felhasználónak nem látható:** Android 15/16-on a rendszer
+  (targetSdk 36 mellett) **amúgy is kötelezően** teljes képernyős, a régebbi Androidokon pedig
+  **mérten semmi nem mozdul el** — két csomagot összevetve (android-34 emulátor) a felület sorai
+  bitre egyeznek, csak a statuszsáv sávja lesz ~11%-kal sötétebb. Ezért **a Play-szöveg nem
+  változik**, és nem került be új pont az app changelogjába sem.
 
-**⚠️ A plugin ehhez 2.8.0** (`build/huhs-mobile-api-2.8.0.zip`) — **ezt fel kell tölteni**, különben
-a nyeremény leírása továbbra sem megy ki a nyitott játékban. A változás átnézhető:
-`docs/plugin-2.8.0-prize-description.patch`.
+**⚠️ A plugin a nyeremény-leíráshoz 2.8.0** (`build/huhs-mobile-api-2.8.0.zip`) — ez **már fent van**
+(élőben mérve: a `/prize/active` kiadja a `prize_type` / `prize_description` mezőket). **A most
+feltöltendő plugin a 2.9.0** (`build/huhs-mobile-api-2.9.0.zip`), mert abban **benne van a 2.8.0
+javítása is**, plusz a **DJ privát e-mail címe** látható és javítható a natív vezérlőben és a WP
+adminban. A változások átnézhetők: `docs/plugin-2.8.0-prize-description.patch`,
+`docs/plugin-2.9.0-private-email.patch`.
 
-**A 355 a 353 minden javítását is tartalmazza** (a Firebase-család major emelése + a lassú betöltés
+**A 356 a 355 (és így a 353) minden javítását is tartalmazza** (a Firebase-család major emelése + a lassú betöltés
 javítása: kvíz-állapot, claim-állapot, előtöltés), és a 352 vásárlási diagnosztikáját is. A 353
 mérései változatlanul érvényesek a csomagra:
 
@@ -115,10 +126,10 @@ mérései változatlanul érvényesek a csomagra:
 indításnál is számít), és **eltűnt** a becsomagolt, elavult **SafetyNet** könyvtár (ez volt a Play-panel
 1. javaslata). **Látható újdonság nincs** — a bejelentkezés, az adatbázis, az értesítések és a vásárlás
 működése változatlan; a csomag a Google legfrissebb javításait hozza.
-**A 354 a 353 minden javítását is tartalmazza.** **Ugyanaz a verziókód nem
+**A 356 a 355 (és a 354) minden javítását is tartalmazza.** **Ugyanaz a verziókód nem
 tölthető fel újra**, ezért minden javítás új verziókódot kap.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 354 mindegyiket tartalmazza, és kisebb
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 356 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.7.0** (`build/huhs-mobile-api-2.7.0.zip`) — **ez már fent van** (élőben
@@ -140,9 +151,9 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 - A nyereményjáték azonnal megnyílik: a „játszottál már?" állapot a mentett válaszból jön.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (352–355 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (352–356 összesítő)
 
-**Ezt használd, amikor a 355 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
+**Ezt használd, amikor a 356 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
 **329–351** összesítőt kapták — ők ezt az öt sort kapják (a 352 vásárlási diagnosztikája a nyilvános
 szövegben még nem szerepelt).
 
@@ -181,6 +192,11 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 356 — a Play „teljes képernyős mód" javaslata (a felületen nem látszik)
+- **Mi történt:** a `MainActivity` megkapta az `enableEdgeToEdge()` hívást (`androidx.activity`), pontosan azt, amit a Play Console „teljes képernyős mód" kártyája kér. **Android 15/16-on semmi nem változik** (targetSdk 36 mellett a rendszer amúgy is kötelezően így futtatja az appot), és a **régebbi Androidokon sem** — ezt **két csomag összevetésével mértem** (alap 355 vs. + hívás) egy **android-34** emulátoron: a felület sorai bitre egyeznek (`360, 419, 494, …, 2138, 2337, 2364, 2374`), az ablak viszont tényleg megkapta a `layoutInDisplayCutoutMode=always` attribútumot. Az egyetlen látható eltérés a statuszsáv sávjának ~11%-kal sötétebb árnyalata.
+- **Amit ez a kiadás is tartalmaz (a 355-ből):** a nyeremény leírása a játék alatt + a nyereményjáték azonnali nyitása; **(a 354-ből):** a DJ-adatlap „Megjelenései" szakasza; **(a 353-ból):** a Firebase-család frissítése és a lassú betöltés javítása; és a 352 vásárlási diagnosztikája.
+- **Ezért nincs új pont az app changelogjában:** a felhasználó számára ez a kiadás ugyanaz, mint a 355 — a changelog a **356** számot viseli (`lib/data/app_changelog.dart`), hogy a „mi újság?" szöveg a telepített verzióhoz illeszkedjen.
 
 ### 355 — a nyeremény leírása a játék alatt + azonnali nyitás
 - **Javítva (a tulajdonos jelzése: „a nyereményjátékba nem kerül bele a játék leírása"):** a **nyeremény leírása és típusa mostantól a játék ALATT is látszik** — eddig csak a sorsolás után, a nyertes mellett. A gyökér **kettős** volt: a WordPress a nyitott játéknál üresen küldte ezeket a mezőket (csak sorsolás után adta ki), és az app a nyitott nézetben nem is rajzolta ki őket. **Ehhez a plugin 2.8.0 kell** (`build/huhs-mobile-api-2.8.0.zip`).

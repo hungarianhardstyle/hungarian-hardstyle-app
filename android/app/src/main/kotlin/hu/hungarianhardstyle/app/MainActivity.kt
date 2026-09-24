@@ -5,10 +5,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaScannerConnection
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
+import androidx.activity.enableEdgeToEdge
 import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
@@ -26,6 +28,22 @@ import com.ryanheise.audioservice.AudioServiceFragmentActivity
 // belépés (BiometricPrompt) és a többi Metódus-csatorna változatlanul működik.
 class MainActivity : AudioServiceFragmentActivity() {
     private var systemBackCallback: OnBackInvokedCallback? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // A Play Console „teljes képernyős mód" javaslata: Android 15+ (targetSdk 35
+        // felett) a rendszer **kötelezően** teljes képernyős, ezért ott ez a hívás
+        // nem változtat semmit. A visszamenőleges kompatibilitás miatt kell: így a
+        // régebbi Androidokon is ugyanígy indul az app.
+        //
+        // MÉRVE (2026-09-24, android-34 emulátor, ugyanaz a két csomag): a hívás
+        // tényleg lefut (az ablak `mAttrs`-ában megjelenik a
+        // `layoutInDisplayCutoutMode=always`), a **felület viszont pixelre ugyanaz**
+        // marad — a sorok (360, 419, 494, …, 2138, 2337, 2364, 2374) egyeznek, csak
+        // a statuszsáv sávja lesz ~11%-kal sötétebb. Ezért nem tud eltörni tőle
+        // semmi; a részletek az AGENTS.md-ben.
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
