@@ -10,9 +10,10 @@ import '../../core/navigation/in_app_browser.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../models/artist.dart';
 import '../../models/artist_claim_status.dart';
-import '../../widgets/genre_chip.dart';
 import '../../providers/artists_provider.dart';
+import '../../widgets/artist_releases_section.dart';
 import '../../widgets/event_card.dart';
+import '../../widgets/genre_chip.dart';
 import '../../providers/community_provider.dart';
 import 'artist_edit_screen.dart';
 
@@ -515,7 +516,14 @@ class _ArtistContent extends ConsumerWidget {
                         },
                       ),
                     ],
-                    if (artist.upcomingEvents.isNotEmpty)
+                    // A DJ **megjelenései** (azok a kiadványok, amelyekben
+                    // szerepel) — a tulajdonos kérése, 2026-09-24. A szakasz
+                    // maga dönti el, hogy látszik-e: ha nincs adat, nem rajzol
+                    // semmit (nincs üres fejléc, nincs villogás).
+                    ArtistReleasesSection(
+                      artistId: artist.id,
+                      artistName: artist.title,
+                    ),                    if (artist.upcomingEvents.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
                         child: Column(
@@ -590,6 +598,8 @@ class _ArtistContent extends ConsumerWidget {
   }
 }
 
+/// A DJ **megjelenései** szakasz a `lib/widgets/artist_releases_section.dart`-ban
+/// él (külön, **tesztelhető** widgetként) — itt csak a helye van meg.
 class _MissingArtist extends StatelessWidget {
   final String name;
 

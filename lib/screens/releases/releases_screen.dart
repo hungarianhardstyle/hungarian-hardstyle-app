@@ -1,17 +1,13 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../models/release.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/releases_provider.dart';
 import '../../providers/news_provider.dart';
-import '../../services/wordpress_service.dart';
 import '../../widgets/content_refresh_icon.dart';
-import '../../widgets/detail_prefetch.dart';
-import 'release_detail_screen.dart';
+import '../../widgets/release_card.dart';
 import 'free_releases_screen.dart';
 
 class ReleasesScreen extends ConsumerStatefulWidget {
@@ -176,7 +172,7 @@ class ReleasesScreenState extends ConsumerState<ReleasesScreen>
                       itemCount: items.length,
                       itemBuilder: (context, index) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _ReleaseCard(release: items[index]),
+                        child: ReleaseCard(release: items[index]),
                       ),
                     ),
                   ),
@@ -189,84 +185,7 @@ class ReleasesScreenState extends ConsumerState<ReleasesScreen>
   }
 }
 
-class _ReleaseCard extends StatelessWidget {
-  final HuhsRelease release;
-
-  const _ReleaseCard({required this.release});
-
-  @override
-  Widget build(BuildContext context) {
-    return DetailPrefetch(
-      onPrefetch: () => WordpressService().getRelease(release.id),
-      child: _buildCard(context),
-    );
-  }
-
-  Widget _buildCard(BuildContext context) {
-    final coverCacheWidth = (150 * MediaQuery.devicePixelRatioOf(context))
-        .round()
-        .clamp(300, 600);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => ReleaseDetailScreen(release: release),
-          ),
-        ),
-        child: SizedBox(
-          height: 150,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                width: 150,
-                child: release.coverUrl.isEmpty
-                    ? const ColoredBox(
-                        color: Color(0xFF242424),
-                        child: Icon(
-                          Icons.album,
-                          size: 42,
-                          color: Colors.redAccent,
-                        ),
-                      )
-                    : CachedNetworkImage(
-                        imageUrl: release.coverUrl,
-                        fit: BoxFit.cover,
-                        memCacheWidth: coverCacheWidth,
-                        maxWidthDiskCache: coverCacheWidth,
-                      ),
-              ),
-              Expanded(
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-                  title: Text(
-                    release.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text(
-                    [
-                      if (release.artists.isNotEmpty)
-                        release.artists
-                            .map((artist) => artist.name)
-                            .join(' · '),
-                      if (release.releaseDate.isNotEmpty)
-                        release.isUpcoming
-                            ? 'Hamarosan · Megjelenés: ${release.releaseDate}'
-                            : 'Megjelenés: ${release.releaseDate}',
-                      if (release.genre.isNotEmpty) release.genre,
-                    ].join('\n'),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+// A kiadvány-kártya (`ReleaseCard`) közös: a `lib/widgets/release_card.dart`-ban
+// él, mert a DJ-adatlap „Megjelenései" szakasza is ugyanezt rajzolja. Egy helyen
+// tartva a két felület nem tud széthúzni (ez a 351-es tanulság: a szabály lehet
+// helyes, a bekötés hibás).

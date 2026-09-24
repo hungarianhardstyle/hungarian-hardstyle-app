@@ -1,10 +1,10 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 353 megy fel** (versionCode **353**, `1.0.0`). A zárt teszt sávján **mérve a 352 van
-> élesben** (`node tools/check-play-track.mjs`, 2026-09-24), és a **352 a production sávon is
-> kint van** (completed) — ezért a rövid (1.) blokk **csak a 353** változását írja le, a nyilvános
-> kiadáshoz pedig az **1b. blokk** való (352–353 összesítő), mert a nyilvános felhasználók a
-> 329–351 szöveget látták.
+> **Most a 354 megy fel** (versionCode **354**, `1.0.0`). A zárt teszt sávján **mérve a 353 van
+> élesben** (`node tools/check-play-track.mjs`, 2026-09-24), a **production sávon pedig a 352**
+> (completed) — ezért a rövid (1.) blokk **csak a 354** változását írja le, a nyilvános kiadáshoz
+> pedig az **1b. blokk** való (352–354 összesítő), mert a nyilvános felhasználók a 329–351
+> szöveget látták.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -12,11 +12,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 353
+currentBuild: 354
 currentVersion: 1.0.0
 lastPublishedBuild: 352
-aab: build/HUHS-v1.0.0+353-release.aab
-sha256: CE669CD629709E7525EC756AA0206CE2EBE789870DABAEC1BE160F0578F3FFAB
+aab: build/HUHS-v1.0.0+354-release.aab
+sha256: CED7CBFDD6515C662839633EB11794711D47F8CEDD4BC0ECBEDF2550613B48B8
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -26,14 +26,14 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-24, a legfrissebb mér�
 | Sáv | Állapot | Build |
 |---|---|---|
 | **production (nyilvános)** | **completed** (100%-ban kigördült) | **352** — „352 (1.0.0)" |
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **352** — „352 (1.0.0)" |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **353** — „353 (1.0.0)" |
 | beta | üres | — |
 | internal | completed + egy **üres piszkozat** | 278 |
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
-- **A nyilvános kiadás megvan:** a production sávon a **352** van (`completed`), a bolt-lap **200**-at ad (korábban 404 volt, mert a bírálat futott). A **353** csomag a következő feltöltés.
-- A feltöltött AAB-ek a Playen (a 2026-09-24-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 347, 348, 349, 350, 351, **352**.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**352**) azt jelöli, hogy a legutóbb kiment build a 352 — ezért az **1. pont** blokkja már csak a **353** újdonságát írja le. A **nyilvános** kiadáshoz az **1b. blokk** való (352–353 összesítő), mert a nyilvános felhasználók legutóbb a **329–351** szöveget kapták. **⚠️ Az 1b. blokkban szándékosan benne van a 352 vásárlási diagnosztikája is:** az a nyilvános szövegben még nem szerepelt (a 352 a production sávon a 329–351 összesítővel ment ki).
+- **A nyilvános kiadás megvan:** a production sávon a **352** van (`completed`), a bolt-lap **200**-at ad. A **zárt tesztben már a 353 fut** (a tulajdonos eszközén is megérkezett), a **354** csomag a következő feltöltés.
+- A feltöltött AAB-ek a Playen (a 2026-09-24-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 349, 350, 351, **352**, **353**.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**352**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 352 — ezért az **1. pont** blokkja már csak a **354** újdonságát írja le. A **nyilvános** kiadáshoz az **1b. blokk** való (352–354 összesítő), mert a nyilvános felhasználók legutóbb a **329–351** szöveget kapták. **⚠️ Az 1b. blokkban szándékosan benne van a 352 vásárlási diagnosztikája is:** az a nyilvános szövegben még nem szerepelt (a 352 a production sávon a 329–351 összesítővel ment ki).
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -69,18 +69,28 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+353-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+354-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **353** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 81,32 MB — **de lásd a lenti magyarázatot** (a fájl nagyobb a 352-nél, mert a Play-oldali `proguard.map` +1 MB, ami **nem** megy le a felhasználóhoz) |
-| SHA-256 | CE669CD629709E7525EC756AA0206CE2EBE789870DABAEC1BE160F0578F3FFAB |
+| Verziókód | **354** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 81,33 MB (a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz — a letöltött kód a 353 mérése szerint 9,86 MB DEX) |
+| SHA-256 | CED7CBFDD6515C662839633EB11794711D47F8CEDD4BC0ECBEDF2550613B48B8 |
 
-**Miért a 353-at kell feltenni:** a 352 élesítése után a tulajdonos jelezte a Play *„4 művelet javasolt"*
-paneljének 4. pontját (R8-optimalizálás, 36/37/37%). A **mérés** (`tools/analyze-r8-config.mjs`) megmutatta,
-hogy a blokkolt kód **39,78%-át egyetlen, a Google-től származó keep-szabály** adta: a **firebase-auth
-23.2.1** AAR-jában lévő `-keep class com.google.android.gms.internal.** { *; }`. Ezért a **Firebase-család
-major verzióra lépett** (core 4.15.0, auth 6.7.0, firestore 6.10.0, cloud_functions 6.5.0, messaging 16.7.0,
-app_check 0.4.8) — és **a 353 méri a nyereséget**:
+**Miért a 354-at kell feltenni:** a tulajdonos kérése (2026-09-24): *„kéne olyan az appba, hogy a
+dj adatlapon legyen ott a megjelenése is"* — pontosítva: **a kiadványok, amelyekben a DJ szerepel**
+(a következő fellépéseket a szakasz már mutatja). A 354 ezért **kliens-oldali újdonság**:
+
+- **ÚJ: „Megjelenései" szakasz a DJ-adatlapon.** Azok a kiadványok, amelyekben az adott DJ szerepel —
+  a **legfrissebbel az élen**, négy darabig, alatta az **„Összes megjelenése"** gomb a teljes listára
+  visz. A szűrést a **szerver** végzi (`/releases?artist=<id>`, élőben mérve), a lista pedig a
+  **mentett** válaszból azonnal jön — ezért nincs külön cache és nincs villogás.
+- **A kiadvány-kártya közös:** ugyanaz a `ReleaseCard`, amit a kiadványok listája használ (borító,
+  előadók, megjelenés dátuma, műfaj), és koppintásra a **kiadvány adatlapját** nyitja meg.
+- **Üresen nem látszik:** ha a DJ-nek nincs megjelenése, a szakasz **nem hagy helyet** maga után; a
+  szakasz hiba esetén sem tesz hibadobozt a DJ-adatlap közepére.
+
+**A 354 a 353 minden javítását is tartalmazza** (a Firebase-család major emelése + a lassú betöltés
+javítása: kvíz-állapot, claim-állapot, előtöltés), és a 352 vásárlási diagnosztikáját is. A 353
+mérései változatlanul érvényesek a csomagra:
 
 | Mérce | 352 | 353 |
 |---|---|---|
@@ -95,10 +105,10 @@ app_check 0.4.8) — és **a 353 méri a nyereséget**:
 indításnál is számít), és **eltűnt** a becsomagolt, elavult **SafetyNet** könyvtár (ez volt a Play-panel
 1. javaslata). **Látható újdonság nincs** — a bejelentkezés, az adatbázis, az értesítések és a vásárlás
 működése változatlan; a csomag a Google legfrissebb javításait hozza.
-**A 353 a 352 minden javítását is tartalmazza** (vásárlási diagnosztika). **Ugyanaz a verziókód nem
+**A 354 a 353 minden javítását is tartalmazza.** **Ugyanaz a verziókód nem
 tölthető fel újra**, ezért minden javítás új verziókódot kap.
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 353 mindegyiket tartalmazza, és kisebb
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 354 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.7.0** (`build/huhs-mobile-api-2.7.0.zip`) — **ez már fent van** (élőben
@@ -116,21 +126,21 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- A kvíz azonnal mutatja, hogy már játszottál.
-- A DJ-adatlap „ez az enyém / átvehető" állapota és a profil DJ-adatlap kártyái azonnal megjelennek.
-- Belső frissítés: a Firebase-összetevők (bejelentkezés, adatbázis, értesítések) újabb verzióra kerültek; látható újdonság nincs.
+- ÚJ: a DJ-adatlapon látszanak a DJ megjelenései: azok a kiadványok, amelyekben szerepel.
+- A legfrissebb négy van elöl, az „Összes megjelenése" gomb a teljes listát nyitja.
+- A kiadvány-kártya koppintásra megnyitja az adatlapot.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (352–353 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (352–354 összesítő)
 
-**Ezt használd, amikor a 353 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
+**Ezt használd, amikor a 354 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
 **329–351** összesítőt kapták — ők ezt a négy sort kapják (a 352 vásárlási diagnosztikája a nyilvános
 szövegben még nem szerepelt).
 
 ```play-notes
-- ÚJ: „Vásárlási diagnosztika" a Több → Az appról képernyőn: ha egy vásárlás nem indul el, egy gomb megmutatja, mit válaszol a Google Play ezen a készüléken.
-- A kvíz azonnal mutatja, hogy már játszottál.
-- A DJ-adatlap „ez az enyém / átvehető" állapota és a profil DJ-adatlap kártyái azonnal megjelennek.
+- ÚJ: a DJ-adatlapon látszanak a DJ megjelenései: azok a kiadványok, amelyekben szerepel.
+- ÚJ: „Vásárlási diagnosztika" a Több → Az appról képernyőn: egy gomb megmutatja, mit válaszol a Google Play.
+- A kvíz azonnal jelzi, hogy már játszottál; a DJ-adatlap „ez az enyém" állapota és a profil kártyái azonnal jönnek.
 - Belső frissítés: a Firebase-összetevők újabb verzióra kerültek; látható újdonság nincs.
 ```
 
@@ -161,6 +171,13 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 354 — a DJ megjelenései a DJ-adatlapon
+- **ÚJ (a tulajdonos kérése):** a **DJ-adatlapon** megjelent a **„Megjelenései"** szakasz: azok a **kiadványok, amelyekben az adott DJ szerepel** — a **legfrissebbel az élen**. Négy kiadvány látszik rögtön, alatta az **„Összes megjelenése"** gomb nyitja a **teljes, DJ-re szűrt listát**.
+- **A kártya ugyanaz, mint a kiadványok listájában:** borító, előadók, megjelenés dátuma, műfaj — koppintásra a **kiadvány adatlapja** nyílik meg (a részletes adat már a lista rajzolásakor elkezd töltődni, ezért a megnyitás azonnali).
+- **Miért azonnali:** a szűrést a **szerver** végzi (`/releases?artist=<id>`), a választ pedig az app a **mentett** példányból rajzolja ki, és a háttérben egyeztet — ezért nincs villogás, és a szakasz **mentett adatból hálózat nélkül is** látszik. Ha a DJ-nek nincs megjelenése, a szakasz **nem hagy helyet** maga után.
+- **Amit szándékosan NEM tettünk:** nem nyúltunk a **közelgő fellépések** szakaszhoz (az már mutatja a következő eseményeket), és nem változtattunk a kiadvány-adatlapon vagy a vásárlásban.
+- **A 354 a 353 minden javítását is tartalmazza** (Firebase-család major emelése + a lassú betöltés javítása) és a 352 vásárlási diagnosztikáját.
 
 ### 353 — a Firebase-összetevők frissítése + a lassú betöltés javítása
 - **Javítva (a tulajdonos jelzése: „sok adat lassan tölt be"):** a **kvíz** már az első képkockán mutatja, hogy **már játszottál** (a telefon megjegyzi, és a háttérben egyeztet a szerverrel) — eddig pár másodpercig úgy látszott, mintha újra lehetne játszani.

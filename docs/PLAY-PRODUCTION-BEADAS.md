@@ -13,17 +13,17 @@ van a mérés módja — ahol nem tudtam mérni, az **szándékosan jelölve** v
 
 > **A kiadás lezárult:** a **bírálat lefutott**, a bolt-lap **HTTP 200**, a `production` sávon a
 > **352** van (`completed`). **Ez a dokumentum ezzel betöltötte a célját** — a további kiadások
-> menete a **`docs/PLAY-KIADASI-JEGYZET.md`**-ben van (a **353** már ott van, feltöltésre készen).
+> menete a **`docs/PLAY-KIADASI-JEGYZET.md`**-ben van (a **354** már ott van, feltöltésre készen).
 
 | Mit | Állapot | Mérés |
 |---|---|---|
 | Csomagnév | `hu.hungarianhardstyle.app` | `check-play-track.mjs` |
 | **Nyilvános bolt-lap** | **HTTP 200 — ÉL** (korábban 404 volt, mert a bírálat futott) | `check-play-listing.mjs` |
 | `production` | **352** (`completed`, 100%-ban kigördült) | `check-play-track.mjs` |
-| Zárt teszt (`alpha`) | **352** (completed), a kiadási szöveggel | `check-play-track.mjs` |
+| Zárt teszt (`alpha`) | **353** (completed), a kiadási szöveggel | `check-play-track.mjs` |
 | `beta` | üres, **production-nel szinkronizál** | `check-play-products.mjs --tracks` |
 | `internal` | 278 (completed) + egy üres piszkozat → **dobd el** | `check-play-track.mjs` |
-| Következő csomag | **353** (Firebase major emelés + mért R8-nyereség): `build/HUHS-v1.0.0+353-release.aab` | `check-play-notes.mjs` |
+| Következő csomag | **354** (DJ-megjelenések a DJ-adatlapon; a 353 Firebase major emelését is tartalmazza): `build/HUHS-v1.0.0+354-release.aab` | `check-play-notes.mjs` |
 | Termékek országa | **9 ország**: HU, AT, HR, SI, SK, NL, CZ, RS, UA | `check-play-products.mjs` |
 | Termékek állapota | 56 `ACTIVE`, 4 `DRAFT` (a 12699 megjelenéséig) | `check-play-products.mjs` |
 | Adatvédelmi nyilatkozat | **él** (HTTP 200) | `…/adatvedelmi-nyilatkozat/` |

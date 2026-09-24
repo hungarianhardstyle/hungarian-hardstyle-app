@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 354,
+    changes: [
+      'ÚJ: a DJ-adatlapon mostantól látszanak a DJ megjelenései — azok a kiadványok, amelyekben szerepel. A legfrissebb van elöl, négy darabig, alatta pedig az „Összes megjelenése" gomb nyitja a teljes listát.',
+      'A kiadvány-kártya ugyanaz, mint a kiadványok listájában: a borítót, az előadókat, a megjelenés dátumát és a műfajt mutatja, és koppintásra megnyílik az adatlap.',
+      'A szakasz a mentett adatból azonnal megjelenik, és csak akkor látszik, ha a DJ-nek van megjelenése — üresen nem hagy helyet.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 353,
     changes: [
       'A kvíz azonnal mutatja, hogy már játszottál — nem kell megvárni a betöltést.',
