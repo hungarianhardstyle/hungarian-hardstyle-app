@@ -89,6 +89,10 @@ function parseArgs(argv) {
     rewarded: DEFAULT_REWARDED,
     testAds: false,
     selfTest: false,
+    // `--contains=<szoveg>`: bizonyitek arra, hogy egy adott Dart-szimbólum
+    // vagy szoveg TENYLEG benne van a csomagban (a CI-artefakt a `pubspec.yaml`
+    // buildszamat es a kodbazist is tartalmazza-e?). Tobb is megadhato.
+    contains: [],
   };
   for (const a of argv) {
     if (a === '--self-test') args.selfTest = true;
@@ -96,6 +100,7 @@ function parseArgs(argv) {
     else if (a.startsWith('--app-id=')) args.appId = a.slice(9);
     else if (a.startsWith('--banner=')) args.banner = a.slice(9);
     else if (a.startsWith('--rewarded=')) args.rewarded = a.slice(11);
+    else if (a.startsWith('--contains=')) args.contains.push(a.slice(11));
     else if (!a.startsWith('--')) args.app = a;
   }
   return args;
@@ -128,6 +133,16 @@ function checkApp(args) {
     forbidden: true,
     files: forbidden.hits.map((h) => h.file),
   });
+  // A kod-eredet bizonyitasa: minden `--contains=` szovegnek benne kell lennie.
+  for (const text of args.contains ?? []) {
+    const { hits } = findInTree(args.app, text);
+    results.push({
+      label: 'tartalmazza',
+      value: text,
+      ok: hits.length > 0,
+      files: hits.map((h) => h.file),
+    });
+  }
   return results;
 }
 
@@ -196,7 +211,22 @@ function selfTest() {
     console.log('  onteszt 5 (teszt-egyseg VALODI modban):', realBad.length === 2 ? 'OK (eszrevette)' : `HIBA (${realBad.length})`);
     if (realBad.length !== 2) throw new Error('a teszt-egyseget valodi modban nem jelezte hibanak');
 
-    console.log('  ONTESZT: 5/5 OK');
+    // 6) `--contains=`: a megadott szoveget MEG KELL talalnia, a hianyzo viszont
+    //    hassaljon el — kulonben az eszkoz hamis biztonsagot adna.
+    writeFileSync(join(dir, 'App'), Buffer.from('...Osszes megjelenese (6)...'));
+    const withText = checkApp({
+      app: dir, appId: DEFAULT_APP_ID, banner: DEFAULT_BANNER, rewarded: DEFAULT_REWARDED,
+      contains: ['Osszes megjelenese'],
+    }).filter((r) => r.label === 'tartalmazza');
+    const withTextMissing = checkApp({
+      app: dir, appId: DEFAULT_APP_ID, banner: DEFAULT_BANNER, rewarded: DEFAULT_REWARDED,
+      contains: ['nincs ilyen szoveg a csomagban'],
+    }).filter((r) => r.label === 'tartalmazza');
+    const containsOk = withText.length === 1 && withText[0].ok && withTextMissing.length === 1 && !withTextMissing[0].ok;
+    console.log('  onteszt 6 (--contains=):', containsOk ? 'OK' : 'HIBA');
+    if (!containsOk) throw new Error('a --contains= nem a valos tartalmat merte');
+
+    console.log('  ONTESZT: 6/6 OK');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -206,7 +236,7 @@ const args = parseArgs(process.argv.slice(2));
 if (args.selfTest) {
   selfTest();
 } else if (!args.app) {
-  console.error('  Hasznalat: node tools/verify-ios-ipa.mjs <kimzipelt Runner.app> [--test-ads] [--self-test]');
+  console.error('  Hasznalat: node tools/verify-ios-ipa.mjs <kimzipelt Runner.app> [--test-ads] [--contains=<szoveg>]... [--self-test]');
   process.exit(2);
 } else {
   if (!statSync(args.app).isDirectory()) {
