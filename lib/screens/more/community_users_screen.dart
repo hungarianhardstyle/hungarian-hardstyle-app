@@ -592,7 +592,6 @@ class _CommunityPublicProfileScreenState
                 const SizedBox(height: 18),
                 _ClaimedArtistsSection(
                   userId: widget.userId,
-                  service: service,
                 ),
                 const SizedBox(height: 18),
                 const Text(
@@ -1472,44 +1471,28 @@ class _ConnectionRequestTileState extends State<_ConnectionRequestTile> {
 /// `artist_claims` gyűjteményt a biztonsági szabályok más felhasználóról **nem**
 /// engedik olvasni (`firestore.rules`). Ha nincs claim — vagy a hívás hibázik —,
 /// a szakasz **el sem jelenik**: a profil nem mutat üres fejlécet.
-class _ClaimedArtistsSection extends StatefulWidget {
-  const _ClaimedArtistsSection({required this.userId, required this.service});
+class _ClaimedArtistsSection extends ConsumerWidget {
+  const _ClaimedArtistsSection({required this.userId});
 
   final String userId;
-  final CommunityService service;
 
   @override
-  State<_ClaimedArtistsSection> createState() => _ClaimedArtistsSectionState();
-}
-
-class _ClaimedArtistsSectionState extends State<_ClaimedArtistsSection> {
-  late Future<List<int>> _future;
-
-  @override
-  void initState() {
-    super.initState();
-    _future = widget.service.claimedArtistsOfUser(widget.userId);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<int>>(
-      future: _future,
-      builder: (context, snapshot) {
-        final ids = snapshot.data ?? const <int>[];
-        if (ids.isEmpty) return const SizedBox.shrink();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'DJ-adatlap',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            for (final id in ids) _ClaimedArtistCard(artistId: id),
-          ],
-        );
-      },
+  Widget build(BuildContext context, WidgetRef ref) {
+    // ⚠️ Cache-first: a kártyák a **mentett** válaszból azonnal megjelennek, a
+    // szerver a háttérben egyeztet (eddig minden profil-megnyitásnál új callable
+    // körút futott, és a szekció csak utána jelent meg).
+    final ids = ref.watch(claimedArtistsOfUserProvider(userId)).valueOrNull;
+    if (ids == null || ids.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'DJ-adatlap',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        for (final id in ids) _ClaimedArtistCard(artistId: id),
+      ],
     );
   }
 }

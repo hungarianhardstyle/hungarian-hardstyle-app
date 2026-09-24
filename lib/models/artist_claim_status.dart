@@ -42,4 +42,26 @@ class ArtistClaimStatus {
       reason: json['reason'] is String ? json['reason'] as String : '',
     );
   }
+
+  /// A **mentéshez** (cache-first betöltés + háttérfrissítés).
+  ///
+  /// Ugyanaz a négy mező, ugyanabban a sorrendben, mint a [fromJson] olvassa —
+  /// így a mentett és a friss alak **összehasonlítható** (nem rajzolunk feleslegesen).
+  Map<String, Object?> toJson() => <String, Object?>{
+    'claimed': claimed,
+    'mine': mine,
+    'canClaim': canClaim,
+    'reason': reason,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is ArtistClaimStatus &&
+      other.claimed == claimed &&
+      other.mine == mine &&
+      other.canClaim == canClaim &&
+      other.reason == reason;
+
+  @override
+  int get hashCode => Object.hash(claimed, mine, canClaim, reason);
 }

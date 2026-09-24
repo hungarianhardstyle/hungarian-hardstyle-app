@@ -124,6 +124,17 @@ class _ArtistContent extends ConsumerWidget {
   Future<void> _claimArtist(BuildContext context, WidgetRef ref) async {
     try {
       await ref.read(communityServiceProvider).claimArtist(artist.id);
+      // A tudott új állapotot **előbb** megjegyezzük, különben az újraszámolás
+      // a régi mentett választ olvasná vissza (villanás).
+      await rememberArtistClaimStatus(
+        uid: ref.read(currentUidProvider),
+        artistId: artist.id,
+        status: const ArtistClaimStatus(
+          claimed: true,
+          mine: true,
+          canClaim: false,
+        ),
+      );
       ref.invalidate(artistClaimStatusProvider(artist.id));
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -143,6 +154,16 @@ class _ArtistContent extends ConsumerWidget {
   Future<void> _releaseArtistClaim(BuildContext context, WidgetRef ref) async {
     try {
       await ref.read(communityServiceProvider).releaseArtistClaim(artist.id);
+      // Ugyanaz a sorrend, mint az átvételnél: előbb a tudott új állapot.
+      await rememberArtistClaimStatus(
+        uid: ref.read(currentUidProvider),
+        artistId: artist.id,
+        status: const ArtistClaimStatus(
+          claimed: false,
+          mine: false,
+          canClaim: true,
+        ),
+      );
       ref.invalidate(artistClaimStatusProvider(artist.id));
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

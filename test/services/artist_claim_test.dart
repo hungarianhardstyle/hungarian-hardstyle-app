@@ -144,8 +144,10 @@ void main() {
       expect(profile, contains('_ClaimedArtistCard'));
       expect(
         profile,
-        contains('claimedArtistsOfUser(widget.userId)'),
-        reason: 'a lista a szerverről jön (a claimeket a szabályok védik)',
+        contains('claimedArtistsOfUserProvider(userId)'),
+        reason:
+            'a lista a szerverről jön (a claimeket a szabályok védik), '
+            'de cache-first: a mentett válaszból azonnal megjelenik',
       );
       expect(
         profile,
