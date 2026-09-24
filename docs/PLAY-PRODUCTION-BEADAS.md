@@ -9,17 +9,21 @@ van a mérés módja — ahol nem tudtam mérni, az **szándékosan jelölve** v
 
 ---
 
-## 0. Mért állapot (2026-09-22)
+## 0. Mért állapot (2026-09-24 — a nyilvános kiadás ÉL)
+
+> **A kiadás lezárult:** a **bírálat lefutott**, a bolt-lap **HTTP 200**, a `production` sávon a
+> **352** van (`completed`). **Ez a dokumentum ezzel betöltötte a célját** — a további kiadások
+> menete a **`docs/PLAY-KIADASI-JEGYZET.md`**-ben van (a **353** már ott van, feltöltésre készen).
 
 | Mit | Állapot | Mérés |
 |---|---|---|
 | Csomagnév | `hu.hungarianhardstyle.app` | `check-play-track.mjs` |
+| **Nyilvános bolt-lap** | **HTTP 200 — ÉL** (korábban 404 volt, mert a bírálat futott) | `check-play-listing.mjs` |
+| `production` | **352** (`completed`, 100%-ban kigördült) | `check-play-track.mjs` |
 | Zárt teszt (`alpha`) | **352** (completed), a kiadási szöveggel | `check-play-track.mjs` |
 | `beta` | üres, **production-nel szinkronizál** | `check-play-products.mjs --tracks` |
-| `production` | **352 beküldve** — `completed`, a nyilvános összesítő kiadási szöveggel | `check-play-track.mjs` |
-| Nyilvános bolt-lap | **404** (a bírálat még fut) | `check-play-listing.mjs` |
 | `internal` | 278 (completed) + egy üres piszkozat → **dobd el** | `check-play-track.mjs` |
-| Nyilvános bolt-lap | **404** (zárt tesztben nincs) — várt eredmény | `check-play-listing.mjs` |
+| Következő csomag | **353** (Firebase major emelés + mért R8-nyereség): `build/HUHS-v1.0.0+353-release.aab` | `check-play-notes.mjs` |
 | Termékek országa | **9 ország**: HU, AT, HR, SI, SK, NL, CZ, RS, UA | `check-play-products.mjs` |
 | Termékek állapota | 56 `ACTIVE`, 4 `DRAFT` (a 12699 megjelenéséig) | `check-play-products.mjs` |
 | Adatvédelmi nyilatkozat | **él** (HTTP 200) | `…/adatvedelmi-nyilatkozat/` |

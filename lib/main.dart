@@ -161,10 +161,10 @@ const _appCheckDebugIos = bool.fromEnvironment(
 );
 
 /// Az iOS-en használt App Check-szolgáltató.
-AppleProvider get _appleAppCheckProvider =>
+AppleAppCheckProvider get _appleAppCheckProvider =>
     (kDebugMode || _appCheckDebugIos)
-    ? AppleProvider.debug
-    : AppleProvider.appAttestWithDeviceCheckFallback;
+    ? const AppleDebugProvider()
+    : const AppleAppAttestWithDeviceCheckFallbackProvider();
 
 Future<void> _initializeAppCheck() async {
   try {
@@ -174,11 +174,11 @@ Future<void> _initializeAppCheck() async {
     // (enforceAppCheck: false), so attaching tokens here cannot block content
     // loading. Enforcement can be enabled later, after this build ships.
     await FirebaseAppCheck.instance.activate(
-      androidProvider: kDebugMode
-          ? AndroidProvider.debug
-          : AndroidProvider.playIntegrity,
+      providerAndroid: kDebugMode
+          ? const AndroidDebugProvider()
+          : const AndroidPlayIntegrityProvider(),
       // iOS: lásd a fenti `_appleAppCheckProvider` magyarázatát.
-      appleProvider: _appleAppCheckProvider,
+      providerApple: _appleAppCheckProvider,
     );
   } catch (_) {
     // App Check must never block startup or content loading.

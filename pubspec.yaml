@@ -3,7 +3,7 @@ description: "Hungarian Hardstyle mobile application"
 
 publish_to: 'none'
 
-version: 1.0.0+352
+version: 1.0.0+353
 
 environment:
   sdk: ^3.13.2
@@ -38,13 +38,18 @@ dependencies:
   shared_preferences: ^2.5.3
   local_auth: ^2.3.0
   google_mobile_ads: ^9.1.0
-  firebase_core: ^3.15.2
-  firebase_app_check: ^0.3.2
-  firebase_messaging: ^15.2.10
-  firebase_auth: ^5.6.2
-  cloud_firestore: ^5.6.12
+  # A Firebase-család EGYÜTT lép (a FlutterFire pluginok a _flutterfire_internals
+  # csomagon és a Firebase BoM-on osztoznak, ezért részleges emelés nem biztonságos).
+  # A 2026-09-24-i emelés oka MÉRT: a firebase-auth 23.2.1 AAR beépített
+  # proguard.txt-je `-keep class com.google.android.gms.internal.** { *; }`-t hozott,
+  # ami egymaga a blokkolt kód ~40%-át adta (lásd AGENTS.md + tools/analyze-r8-config.mjs).
+  firebase_core: ^4.15.0
+  firebase_app_check: ^0.4.8
+  firebase_messaging: ^16.7.0
+  firebase_auth: ^6.7.0
+  cloud_firestore: ^6.10.0
   google_sign_in: ^6.2.2
-  cloud_functions: 5.6.2
+  cloud_functions: ^6.5.0
   in_app_purchase: ^3.2.3
   flutter_secure_storage: ^10.3.1
   otp: ^3.2.0

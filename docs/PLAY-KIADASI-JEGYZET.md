@@ -1,10 +1,10 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 351 megy fel** (versionCode **351**, `1.0.0`). A zárt teszt sávján
-> **mérve a 349 van élesben** (`node tools/check-play-track.mjs`, 2026-09-22: alpha = completed,
-> „349 (1.0.0)"), és a **350 még ellenőrzés alatt** volt, amikor ez a javítás elkészült — ezért a
-> rövid (1.) blokk a **351 javítását és a 350 újdonságait** együtt írja le (ha a 350 közben
-> kimegy, akkor is jó, csak ismétlődik benne valami).
+> **Most a 353 megy fel** (versionCode **353**, `1.0.0`). A zárt teszt sávján **mérve a 352 van
+> élesben** (`node tools/check-play-track.mjs`, 2026-09-24), és a **352 a production sávon is
+> kint van** (completed) — ezért a rövid (1.) blokk **csak a 353** változását írja le, a nyilvános
+> kiadáshoz pedig az **1b. blokk** való (352–353 összesítő), mert a nyilvános felhasználók a
+> 329–351 szöveget látták.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -12,29 +12,28 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 352
+currentBuild: 353
 currentVersion: 1.0.0
-lastPublishedBuild: 351
-aab: build/HUHS-v1.0.0+352-release.aab
-sha256: 0396D2AC7C3E48C2FAF368ABA0F28220D50B8300E9B91E8465718085E2671974
+lastPublishedBuild: 352
+aab: build/HUHS-v1.0.0+353-release.aab
+sha256: 77A86BFB2D5E747815933101C3573F07A1F63452AC1C9D403A82538A5EE01589
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
-A Play Developer API-t **olvasásra** kérdezve (2026-09-22, a legfrissebb mérés):
+A Play Developer API-t **olvasásra** kérdezve (2026-09-24, a legfrissebb mérés):
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **351** — „351 (1.0.0)", a rövid kiadási szöveggel |
+| **production (nyilvános)** | **completed** (100%-ban kigördült) | **352** — „352 (1.0.0)" |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **352** — „352 (1.0.0)" |
 | beta | üres | — |
-| production | üres | — |
 | internal | completed + egy **üres piszkozat** | 278 |
+| **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
-- **A 351 élesben van** a zárt teszt sávján (completed) — ezt a mérés igazolja (2026-09-22, `node tools/check-play-track.mjs`). A **352** csomag a következő feltöltés.
-- **A production sáv viszont üres:** a termékkör megnyitása a Play zárt teszt követelményéhez kötött (személyes fejlesztői fióknál legalább **12 tesztelő / 14 nap** folyamatos zárt teszt), ezért az „élesítés" **nem** egy újabb AAB feltöltése, hanem a production access megnyitása + kiadás a meglévő bundle-ből.
-- **A zárt teszt sávján egyszerre egy kiadás él**, ezért a 352 automatikusan felváltja a 351-et; az **internal sávon maradt üres piszkozatot** a Play Console-ban **el kell dobni** (Discard), különben ott marad.
-- A feltöltött AAB-ek a Playen (a 2026-09-22-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 347, 348, 349, 350, **351**.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**351**) azt jelöli, hogy a **zárt teszt sávjára legutóbb kikerült** build a 351 volt — ezért az **1. pont** blokkja már csak a **352** újdonságát írja le. A **production** kiadáshoz a **hosszabb, 329–351 összesítő** blokk való (1b. pont), mert a nyilvános felhasználók legutóbb a **328**-at kapták. **⚠️ Az 1b. blokk szándékosan nem sorolja a 352 vásárlási diagnosztikát:** az egy **támogatási eszköz** (a „Több → Az appról" képernyőn), nem felhasználói újdonság — a tételes listában (3. pont) és az app Névjegyében viszont benne van.
+- **A nyilvános kiadás megvan:** a production sávon a **352** van (`completed`), a bolt-lap **200**-at ad (korábban 404 volt, mert a bírálat futott). A **353** csomag a következő feltöltés.
+- A feltöltött AAB-ek a Playen (a 2026-09-24-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 347, 348, 349, 350, 351, **352**.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**352**) azt jelöli, hogy a legutóbb kiment build a 352 — ezért az **1. pont** blokkja már csak a **353** újdonságát írja le. A **nyilvános** kiadáshoz az **1b. blokk** való (352–353 összesítő), mert a nyilvános felhasználók legutóbb a **329–351** szöveget kapták. **⚠️ Az 1b. blokkban szándékosan benne van a 352 vásárlási diagnosztikája is:** az a nyilvános szövegben még nem szerepelt (a 352 a production sávon a 329–351 összesítővel ment ki).
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -70,25 +69,36 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+352-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+353-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **352** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 80.67 MB |
-| SHA-256 | 0396D2AC7C3E48C2FAF368ABA0F28220D50B8300E9B91E8465718085E2671974 |
+| Verziókód | **353** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 81,25 MB — **de lásd a lenti magyarázatot** (a fájl azért nagyobb 0,58 MB-tal a 352-nél, mert a Play-oldali `proguard.map` +1,09 MB, ami **nem** megy le a felhasználóhoz) |
+| SHA-256 | 77A86BFB2D5E747815933101C3573F07A1F63452AC1C9D403A82538A5EE01589 |
 
-**Miért a 352-t kell feltenni:** a 351 élesítése után a tulajdonos **ugyanazt a vásárlási hibát**
-jelezte a **táblagépen** („ez a tétel nem áll rendelkezésedre az országodban"), miközben **ugyanazzal
-a Google-fiókkal a telefonon már működött** a vásárlás. A nyomozás során kiderült, hogy a hibaüzenetet
-a **Play saját ablaka** írja ki, és a kódunk **nem látta** sem a nyers hibakódot, sem azt, hogy a Play
-egyáltalán visszaadta-e a terméket — ezért több körön át **következtetni** kellett. A 352 ezt a hiányzó
-**műszert** adja: a „Több → Az appról" képernyőn egy **Vásárlási diagnosztika** szakasz egy gombnyomásra
-megmutatja a friss, nyers Play-választ (hány termék, milyen áron és **pénznemben**), és a legutóbbi
-vásárlási hiba **kódját** — a jelentés pedig egy mozdulattal a vágólapra tehető és elküldhető.
-**A 352 a 351 minden javítását is tartalmazza** (értesítés-kijelölés, DJ-adatlap szerkesztése, magyar
-„Adatlap átvétele", görgetés). **Ugyanaz a verziókód nem tölthető fel újra**, ezért minden javítás új
-verziókódot kap.
+**Miért a 353-at kell feltenni:** a 352 élesítése után a tulajdonos jelezte a Play *„4 művelet javasolt"*
+paneljének 4. pontját (R8-optimalizálás, 36/37/37%). A **mérés** (`tools/analyze-r8-config.mjs`) megmutatta,
+hogy a blokkolt kód **39,78%-át egyetlen, a Google-től származó keep-szabály** adta: a **firebase-auth
+23.2.1** AAR-jában lévő `-keep class com.google.android.gms.internal.** { *; }`. Ezért a **Firebase-család
+major verzióra lépett** (core 4.15.0, auth 6.7.0, firestore 6.10.0, cloud_functions 6.5.0, messaging 16.7.0,
+app_check 0.4.8) — és **a 353 méri a nyereséget**:
 
-> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 352 mindegyiket tartalmazza, és kisebb
+| Mérce | 352 | 353 |
+|---|---|---|
+| R8 optimalizálás (a riport szerint) | 54,33% | **92,09%** |
+| R8 obfuszkiálás | 54,52% | **92,28%** |
+| R8 csökkentés | 54,46% | **92,22%** |
+| Visszatartott elemek | 92 912 | **15 756** |
+| DEX a csomagban | 12,03 MB / **3 fájl** | **9,86 MB / 2 fájl** |
+| Becsomagolt SafetyNet | 394 osztály | **0** (a manifestből és a mappingből is eltűnt) |
+
+**Amit ez jelent:** kisebb a letöltött **kód** (a DEX 18%-kal kisebb, és eggyel kevesebb DEX-fájl — ez az
+indításnál is számít), és **eltűnt** a becsomagolt, elavult **SafetyNet** könyvtár (ez volt a Play-panel
+1. javaslata). **Látható újdonság nincs** — a bejelentkezés, az adatbázis, az értesítések és a vásárlás
+működése változatlan; a csomag a Google legfrissebb javításait hozza.
+**A 353 a 352 minden javítását is tartalmazza** (vásárlási diagnosztika). **Ugyanaz a verziókód nem
+tölthető fel újra**, ezért minden javítás új verziókódot kap.
+
+> **FONTOS:** a **korábbi AAB-eket ne töltsd fel** — a 353 mindegyiket tartalmazza, és kisebb
 > verziókódú csomagot a Play amúgy sem fogadna el.
 
 **A plugin ehhez 2.7.0** (`build/huhs-mobile-api-2.7.0.zip`) — **ez már fent van** (élőben
@@ -106,23 +116,18 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ: „Vásárlási diagnosztika" a Több → Az appról képernyőn: ha egy vásárlás nem indul el, egy gomb megmutatja, mit válaszol a Google Play ezen a készüléken.
+- Belső frissítés: a bejelentkezés, az adatbázis, az értesítések és a vásárlás mögötti Firebase-összetevők újabb verzióra kerültek (a Google legfrissebb javításaival). Látható újdonság nincs, a működés változatlan.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (329–351 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (352–353 összesítő)
 
-**Ezt akkor használd, amikor a production sávra kikerül az első nyilvános kiadás**, mert a
-felhasználók legutóbb a **328**-at kapták — ők ezt a teljes listát kapják.
+**Ezt használd, amikor a 353 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
+**329–351** összesítőt kapták — ők ezt a két sort kapják (a 352 vásárlási diagnosztikája a nyilvános
+szövegben még nem szerepelt).
 
 ```play-notes
-- Értesítés: chat-lájk, -válasz, komment-válasz; az ikon mutatja az olvasatlanokat.
-- A rádió folyamatosan szól, a videó az appban.
-- Aktivitási pont és vásárlási pont (+20) is jár.
-- ÚJ: „Megvásárolt zenéim", kvíz azonnali jelzése.
-- ÚJ: zene kikapcsolt képernyőn is; elnavigálva is vezérelhető.
-- ÚJ: az átvett DJ-adatlapod szerkeszthető; értesítések kijelölése.
-- „Adatlap átvétele" a „Claim" helyett.
-- Javítva: reklámos letöltés, tabletes kiadvány, villogó listák, görgetés.
+- ÚJ: „Vásárlási diagnosztika" a Több → Az appról képernyőn: ha egy vásárlás nem indul el, egy gomb megmutatja, mit válaszol a Google Play ezen a készüléken.
+- Belső frissítés: a bejelentkezés, az adatbázis, az értesítések és a vásárlás mögötti Firebase-összetevők újabb verzióra kerültek. Látható újdonság nincs, a működés változatlan.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -152,6 +157,13 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 353 — a Firebase-összetevők frissítése (mért R8-nyereség, látható újdonság nincs)
+- **Belső frissítés:** a Firebase-család (bejelentkezés, adatbázis, értesítések, App Check, Cloud Functions) **új verzióra** került, a Google legfrissebb javításaival. **Látható újdonság nincs**, a működés változatlan.
+- **Amit ez a háttérben jelent (mérve):** az R8-optimalizálás a riport szerint **54,33% → 92,09%** (obfuszkiálás 54,52% → **92,28%**, csökkentés 54,46% → **92,22%**), a becsomagolt **DEX 12,03 MB → 9,86 MB**, mégpedig **3 helyett 2 DEX-fájllal**, és **eltűnt a becsomagolt, elavult SafetyNet** könyvtár (**394 osztály → 0**). Utóbbi pontosan az volt, amit a Play kiadás-irányítópultja jelzett.
+- **Miért lett ekkora a nyereség:** a blokkolt kód **39,78%-át egyetlen, a Google-től származó keep-szabály** adta (`-keep class com.google.android.gms.internal.** { *; }` a `firebase-auth` 23.2.1-ből) — ezt a **24.2.0-s** kiadás **már nem tartalmazza**. A mérés eszköze: `node tools/analyze-r8-config.mjs`.
+- **A WordPress-plugin NEM változott** (2.7.0), és a **szerveroldali függvények sem** — **nincs API-oldali változás**, ezért a plugin kiadásjegyzékébe nem kerül bejegyzés.
+- A **353 a 352 vásárlási diagnosztikáját is tartalmazza**.
 
 ### 352 — vásárlási diagnosztika (a vásárlási hiba kivizsgálásához)
 - **ÚJ:** a **Több → Az appról** képernyőn megjelent a **Vásárlási diagnosztika** szakasz. Egy gomb megmutatja, amit eddig **nem láttunk**: hogy a Google Play vásárlási szolgáltatása elérhető-e az adott készüléken, **hány terméket** ad vissza a Play, milyen **áron és pénznemben**, mit **nem** adott vissza, és mi volt a **legutóbbi vásárlási hiba nyers kódja** (a Play saját üzenetével együtt). A jelentés egy mozdulattal a **vágólapra** tehető.

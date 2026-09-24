@@ -11,9 +11,10 @@ import 'package:flutter_test/flutter_test.dart';
 ///
 /// Az ok **kétrétű**, és mindkettő mérve van:
 ///
-///  1. az `activate()` iOS-en alapból `AppleProvider.deviceCheck`-et használ
-///     (ez az enum alapértéke a `firebase_app_check` csomagban), és **ehhez az
-///     apphoz nem volt regisztrálva szolgáltató** → a szerver elutasította;
+///  1. az `activate()` iOS-en alapból a DeviceCheck szolgáltatót használja
+///     (`AppleDeviceCheckProvider` az alapérték a `firebase_app_check`
+///     csomagban), és **ehhez az apphoz nem volt regisztrálva szolgáltató** →
+///     a szerver elutasította;
 ///  2. a regisztrációhoz **Apple Developer fiók kell**: az App Check API szerint
 ///     a DeviceCheck konfighoz `keyId` **és** `privateKey` (`.p8`) kötelező.
 ///
@@ -21,28 +22,51 @@ import 'package:flutter_test/flutter_test.dart';
 /// egyetlen út, ami Apple-fiók nélkül is működik (Androidon debugban ugyanez
 /// megy). Az éles iOS build (Codemagic → TestFlight) **nem** kapja meg a
 /// zászlót: ott App Attest a helyes út, regisztrált szolgáltatóval.
+///
+/// **2026-09-24 — a Firebase-család major emelése (core 4.x / app_check 0.4.x)
+/// átnevezte az API-t:** a régi `AndroidProvider`/`AppleProvider` enum és az
+/// `androidProvider`/`appleProvider` paraméterek **elavultak**, helyettük
+/// provider-osztályok mennek (`AndroidDebugProvider`,
+/// `AndroidPlayIntegrityProvider`, `AppleDebugProvider`,
+/// `AppleAppAttestWithDeviceCheckFallbackProvider`). **A viselkedés
+/// változatlan** — ezt a teszt bitre rögzíti, és azt is, hogy az elavult
+/// paraméterek **ne** kerüljenek vissza.
 void main() {
   String read(String path) =>
       File(path).readAsStringSync().replaceAll('\r\n', '\n');
 
   group('az Android App Check-útja VÁLTOZATLAN', () {
-    test('az androidProvider kifejezése bitre a régi', () {
+    test('az Android-szolgáltató kifejezése bitre a régi viselkedés', () {
       final main = read('lib/main.dart');
       expect(
         main,
         contains(
-          'androidProvider: kDebugMode\n'
-          '          ? AndroidProvider.debug\n'
-          '          : AndroidProvider.playIntegrity,',
+          'providerAndroid: kDebugMode\n'
+          '          ? const AndroidDebugProvider()\n'
+          '          : const AndroidPlayIntegrityProvider(),',
         ),
         reason: 'az Android útja nem változhat: debug → debug, release → '
             'Play Integrity (ez regisztrálva van, és élesben működik)',
       );
     });
 
+    test('az elavult androidProvider/appleProvider paraméter NINCS használatban', () {
+      final main = read('lib/main.dart');
+      expect(
+        main,
+        isNot(contains('androidProvider:')),
+        reason: 'a 0.4.x-ben elavult, és egy következő major kiveszi',
+      );
+      expect(
+        main,
+        isNot(contains('appleProvider:')),
+        reason: 'a 0.4.x-ben elavult, és egy következő major kiveszi',
+      );
+    });
+
     test('az iOS-ág KÜLÖN paraméter, nem írja át az Androidét', () {
       final main = read('lib/main.dart');
-      expect(main, contains('appleProvider: _appleAppCheckProvider'));
+      expect(main, contains('providerApple: _appleAppCheckProvider'));
       expect(
         main,
         contains("'HUHS_APP_CHECK_DEBUG_IOS'"),
@@ -57,16 +81,16 @@ void main() {
 
     test('az iOS-szolgáltató kiválasztása a két helyes értéket használja', () {
       final main = read('lib/main.dart');
-      expect(main, contains('AppleProvider.debug'));
+      expect(main, contains('AppleDebugProvider()'));
       expect(
         main,
-        contains('AppleProvider.appAttestWithDeviceCheckFallback'),
+        contains('AppleAppAttestWithDeviceCheckFallbackProvider()'),
         reason: 'élesben App Attest, DeviceCheck visszaeséssel',
       );
-      // A tartósan beégetett deviceCheck NEM lehet a választás: pont az volt a hiba.
+      // A tartósan beégetett DeviceCheck NEM lehet a választás: pont az volt a hiba.
       expect(
         main,
-        isNot(contains('AppleProvider.deviceCheck,')),
+        isNot(contains('AppleDeviceCheckProvider()')),
         reason: 'a csupasz DeviceCheck az alapérték volt — az nem elég',
       );
     });
