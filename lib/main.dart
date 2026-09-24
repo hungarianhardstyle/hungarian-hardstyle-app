@@ -19,6 +19,7 @@ import 'services/label_purchase_service.dart';
 import 'services/public_content_warmer.dart';
 import 'services/music_audio_handler.dart';
 import 'widgets/startup_gate.dart';
+import 'widgets/account_prefetch.dart';
 import 'widgets/radio_player_bar.dart';
 import 'widgets/session_watcher.dart';
 import 'widgets/profile_access_gate.dart';
@@ -220,7 +221,12 @@ class HungarianHardstyleApp extends StatelessWidget {
 
       // ProfileAccessGate contains editable TextFields. It must remain below
       // the root Navigator so EditableText can access Navigator.overlay.
-      home: _watchSession(const StartupGate()),
+      // Az `AccountPrefetch` a **bejelentkezés után egyszer** melegíti a
+      // fiókhoz kötött adatokat (claim-állapot, saját DJ-adatlapok), ezért az
+      // első megnyitás is a mentett válaszból indul.
+      home: _watchSession(
+        AccountPrefetch(child: const StartupGate()),
+      ),
     );
   }
 
