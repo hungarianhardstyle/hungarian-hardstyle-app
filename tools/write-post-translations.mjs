@@ -23,17 +23,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { secret } from './lib/live-firebase.mjs';
+import { META_KEYS } from './lib/translation-meta.mjs';
 
 const WP_BASE = 'https://hungarianhardstyle.hu/wp-json/wp/v2';
 const EN_DIR = 'tmp/newsroom-en/en';
 const HU_FILE = 'tmp/newsroom-en/hu-posts.json';
 
-/** A három meta kulcs — egy helyen, hogy a tesztek és a plugin ne széthúzzanak. */
-export const META_KEYS = {
-  title: '_huhs_title_en',
-  excerpt: '_huhs_excerpt_en',
-  content: '_huhs_content_en',
-};
+/** A három meta kulcs — közös modulból (a tartalom-író is ezt használja). */
+export { META_KEYS };
 
 /** A fordításból meta payload (tiszta függvény). */
 export function metaPayload(translation) {
@@ -269,11 +266,15 @@ async function main() {
   return failed ? 1 : 0;
 }
 
-main()
-  .then((code) => {
-    process.exitCode = code;
-  })
-  .catch((error) => {
-    console.error(`HIBA: ${error.message}`);
-    process.exitCode = 2;
-  });
+// ⚠️ A `main()` CSAK közvetlen futtatáskor induljon: az első változat betöltéskor
+// is lefutott, ezért a tartalom-író importja összekeverte a két eszközt.
+if (process.argv[1] && process.argv[1].endsWith('write-post-translations.mjs')) {
+  main()
+    .then((code) => {
+      process.exitCode = code;
+    })
+    .catch((error) => {
+      console.error(`HIBA: ${error.message}`);
+      process.exitCode = 2;
+    });
+}

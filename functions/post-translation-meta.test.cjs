@@ -192,7 +192,22 @@ test('a 2.12.0 végpontjai a KÖZÖS fordítási kaput használják', () => {
     'angol ágon a has_en igazra vált (a payload jelzi, mit kap az app)',
   );
 
-  for (const file of OTHER_CONTENT_FILES) {
+  // ⚠️ A KIADVÁNY szándékosan kimarad: az egyetlen szövege a **cím**, ami név
+  // (kiadvány/szám címe), és a payloadban nincs leírás sem — fordítani való
+  // prózai szöveg nincs. Ezért ott a kód nem is hívja a közös kaput.
+  const contentFiles = OTHER_CONTENT_FILES.filter((file) => !file.includes('api-releases'));
+  assert.deepEqual(
+    contentFiles,
+    [
+      'includes/api-events.php',
+      'includes/api-artists.php',
+      'includes/api-organizers.php',
+      'includes/translation-cron.php',
+    ],
+    'a nyelvet ismerő végpontok: esemény, DJ, szervező (+ a cron); a kiadvány nem',
+  );
+
+  for (const file of contentFiles) {
     if (file.endsWith('translation-cron.php')) continue;
     const source = pluginFile(file);
     assert.match(
@@ -207,6 +222,14 @@ test('a 2.12.0 végpontjai a KÖZÖS fordítási kaput használják', () => {
     );
     assert.match(source, /'has_en'\s*=>/, `${file}: a payloadban ott a has_en jelző`);
   }
+
+  // A kiadvány válasza változatlan (nincs benne fordítási meta).
+  const releases = pluginFile('includes/api-releases.php');
+  assert.equal(
+    /huhs_translation_meta_values\(/.test(releases),
+    false,
+    'a kiadvány címe név: nem fordítjuk (nincs benne fordítási hívás)',
+  );
 });
 
 test('a WP-cron fordítás API-kulcs NÉLKÜL nem csinál semmit', () => {

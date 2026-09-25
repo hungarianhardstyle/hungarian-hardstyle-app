@@ -458,9 +458,9 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 kiadványokat is angolul kapja** — a meglévő 2.11.0 csak a cikkeket tudja. A meglévő tartalom
 fordítása utána következik (a plugin addig a **magyar** szöveget adja ezeknél, hiba nélkül).
 
-A plugin csomag: `build/huhs-mobile-api-2.12.0.zip` (47 fájl, 163,0 KB,
-SHA-256 `5AF7B83BB1188B3E834DCD9E7FD9FA9DC03AFB5BEB9AD0F9D1758AB55420DF08`).
-A változás verziókövetve: `docs/plugin-2.12.0-english-fields.patch` (7 fájl, +406/−52 sor).
+A plugin csomag: `build/huhs-mobile-api-2.12.0.zip` (47 fájl, 163,1 KB,
+SHA-256 `7AAD9A34D138CE7F3A199F36BD7DC1CAEEC1A45C6A4F7B3EC76EFC35C07BACB1`).
+A változás verziókövetve: `docs/plugin-2.12.0-english-fields.patch` (7 fájl, +407/−49 sor).
 
 ### 2.12.0 — angol mezők az eseménynek, DJ-nek, szervezőnek és kiadványnak + automatikus fordítás (2026-09-25)
 
@@ -473,6 +473,9 @@ A változás verziókövetve: `docs/plugin-2.12.0-english-fields.patch` (7 fájl
   megy ki `has_en = false`-szal (a payload sosem kevert nyelvű).
 - A mezőnevek VÁLTOZATLANOK (a cikknél title/excerpt/content, a DJ-nál title/biography/excerpt,
   a szervezőnél és eseménynél title/description), ezért az appnak nem kell új feldolgozó.
+- ⚠️ A KIADVÁNY szándékosan kimarad a fordításból: az egyetlen szöveges mezője a CÍM, ami NÉV
+  (kiadvány/szám címe) — mérve 21 kiadvány, 0 fordítható prózai szöveg. A meta regisztrálva van
+  (egy jövőbeli leíráshoz), de a végpont nem hívja a fordítást.
 - WP-cron: publikáláskor a fordítás automatikusan elindulhat (save_post → wp_schedule_single_event).
   ⚠️ API-KULCS NÉLKÜL SZÁNDÉKOSAN NEM CSINÁL SEMMIT: a kulcsot a `huhs_translation_api_key`
   opció (vagy szűrő) adja; ha üres, a folyamat el sem indul, külső hívást nem indít.

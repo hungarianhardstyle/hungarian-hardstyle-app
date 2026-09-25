@@ -239,7 +239,7 @@ index 24706d19..3be0fa5c 100644
          'country'        => get_post_meta($organizer_id, 'country', true),
          'genres'         => $genres,
 diff --git a/huhs-mobile-api/includes/api-releases.php b/huhs-mobile-api/includes/api-releases.php
-index 8c64e2d8..c7b6e2ae 100644
+index 8c64e2d8..b4fbe549 100644
 --- a/huhs-mobile-api/includes/api-releases.php
 +++ b/huhs-mobile-api/includes/api-releases.php
 @@ -35,7 +35,7 @@ function huhs_get_release_detail(WP_REST_Request $request)
@@ -251,7 +251,7 @@ index 8c64e2d8..c7b6e2ae 100644
  }
  
  function huhs_get_releases(WP_REST_Request $request)
-@@ -43,19 +43,22 @@ function huhs_get_releases(WP_REST_Request $request)
+@@ -43,18 +43,23 @@ function huhs_get_releases(WP_REST_Request $request)
      $search = sanitize_text_field((string) $request->get_param('search'));
      $artist_id = absint($request->get_param('artist'));
      $summary = filter_var($request->get_param('summary'), FILTER_VALIDATE_BOOLEAN);
@@ -270,51 +270,26 @@ index 8c64e2d8..c7b6e2ae 100644
 -function huhs_build_release_summary($post)
 +function huhs_build_release_summary($post, $lang = 'hu')
  {
++    // A kiadvány egyetlen szövege a **cím**, ami név (kiadvány/ szám címe) — azt
++    // szándékosan nem fordítjuk, és a payloadban nincs leírás sem. A `$lang`
++    // paraméter ezért csak a hívói felület egységessége miatt van itt.
++    unset($lang);
      $id = (int) $post->ID;
-+    // A kért nyelv (2.12.0): a kiadványnál a CÍM a fordítható szöveg.
-+    $translation = huhs_translation_meta_values($id, $lang, $post->post_title, '');
      $cover_id = absint(get_post_meta($id, 'cover', true));
      $artist_ids = json_decode((string) get_post_meta($id, 'artists', true), true);
-     $artists = array();
-@@ -80,7 +83,7 @@ function huhs_build_release_summary($post)
-         if ($product_id !== '') $products[] = array('id' => $product_id, 'type' => $key, 'label' => $label);
-     }
-     return array(
--        'id' => $id, 'title' => huhs_clean_title($post->post_title), 'release_date' => $release_date,
-+        'id' => $id, 'title' => huhs_clean_title($translation['title']), 'has_en' => $translation['has_en'], 'release_date' => $release_date,
-         // The release date gate is decided here, once, for both the list and the
-         // detail payload: the app must not have to re-derive it from a date
-         // string in its own timezone. `presave_url` is only exposed while the
-@@ -97,9 +100,10 @@ function huhs_build_release_summary($post)
+@@ -97,8 +102,11 @@ function huhs_build_release_summary($post)
      );
  }
  
 -function huhs_build_release_response($post)
 +function huhs_build_release_response($post, $lang = 'hu')
  {
++    // A cím itt NÉV (kiadvány/szám címe) — nem fordítjuk; lásd a summary feletti
++    // magyarázatot. A `$lang` csak a hívói felület egységessége miatt van itt.
++    unset($lang);
      $id = (int) $post->ID;
-+    $translation = huhs_translation_meta_values($id, $lang, $post->post_title, '');
      $artist_ids = json_decode((string) get_post_meta($id, 'artists', true), true);
      $artists = array();
-     foreach ((array) $artist_ids as $artist_id) {
-@@ -107,7 +111,7 @@ function huhs_build_release_response($post)
-         if ($artist && $artist->post_type === 'huhs_artist') $artists[] = array('id' => (int) $artist->ID, 'name' => huhs_clean_title($artist->post_title));
-     }
-     $preview = esc_url_raw(get_post_meta($id, 'preview_url', true));
--    $tracks = $preview ? array(array('title' => huhs_clean_title($post->post_title), 'preview_url' => $preview)) : array();
-+    $tracks = $preview ? array(array('title' => huhs_clean_title($translation['title']), 'preview_url' => $preview)) : array();
-     $products = array();
-     $product_prices = array();
-     foreach (array(
-@@ -142,7 +146,7 @@ function huhs_build_release_response($post)
-     $is_free = (bool) get_post_meta($id, 'is_free', true);
-     $free_external_link = $is_free ? esc_url_raw(get_post_meta($id, 'free_external_link', true)) : '';
-     $is_upcoming = huhs_release_is_upcoming($release_date);
--    return array('id' => $id, 'title' => huhs_clean_title($post->post_title), 'release_date' => $release_date, 'is_upcoming' => $is_upcoming, 'presave_url' => $is_upcoming ? esc_url_raw(get_post_meta($id, 'presave_url', true)) : '', 'is_free' => $is_free, 'free_external_link' => $free_external_link, 'cover' => $cover_id ? wp_get_attachment_image_url($cover_id, 'large') : '', 'genre' => sanitize_text_field(get_post_meta($id, 'genre', true)), 'artists' => $artists, 'tracks' => $tracks, 'links' => $links, 'products' => $products, 'product_prices' => $product_prices, 'versions' => $versions, 'audio_status' => sanitize_key(get_post_meta($id, 'audio_processing_status', true)));
-+    return array('id' => $id, 'title' => huhs_clean_title($translation['title']), 'has_en' => $translation['has_en'], 'release_date' => $release_date, 'is_upcoming' => $is_upcoming, 'presave_url' => $is_upcoming ? esc_url_raw(get_post_meta($id, 'presave_url', true)) : '', 'is_free' => $is_free, 'free_external_link' => $free_external_link, 'cover' => $cover_id ? wp_get_attachment_image_url($cover_id, 'large') : '', 'genre' => sanitize_text_field(get_post_meta($id, 'genre', true)), 'artists' => $artists, 'tracks' => $tracks, 'links' => $links, 'products' => $products, 'product_prices' => $product_prices, 'versions' => $versions, 'audio_status' => sanitize_key(get_post_meta($id, 'audio_processing_status', true)));
- }
- 
- function huhs_update_release_play_products(WP_REST_Request $request)
 diff --git a/huhs-mobile-api/includes/post-translation-meta.php b/huhs-mobile-api/includes/post-translation-meta.php
 index bcb5a6db..5afe5c40 100644
 --- a/huhs-mobile-api/includes/post-translation-meta.php
