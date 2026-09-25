@@ -4,8 +4,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/release.dart';
 import 'releases_screen.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/release_preview_player.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../services/label_purchase_service.dart';
@@ -525,12 +527,12 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 if (release.audioStatus == 'queued')
                   const Padding(
                     padding: EdgeInsets.only(top: 8),
-                    child: Text('A hanganyag feldolgozása folyamatban van.'),
+                    child: AppText('A hanganyag feldolgozása folyamatban van.'),
                   ),
                 if (release.audioStatus == 'failed')
                   const Padding(
                     padding: EdgeInsets.only(top: 8),
-                    child: Text('A hanganyag feldolgozása nem sikerült.'),
+                    child: AppText('A hanganyag feldolgozása nem sikerült.'),
                   ),
                 // Before the release date the fan can listen to the 60-second preview
                 // and pre-save the release, but nothing can be bought or downloaded.
@@ -559,7 +561,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                               color: Colors.redAccent,
                             ),
                             SizedBox(width: 8),
-                            Text(
+                            AppText(
                               'Hamarosan',
                               style: TextStyle(
                                 color: Colors.redAccent,
@@ -584,7 +586,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                               onPressed: () => openInAppBrowser(
                                 context,
                                 release.presaveUrl,
-                                title: 'Előrendelés',
+                                title: tr(context, 'Előrendelés'),
                               ),
                               icon: const Icon(Icons.bookmark_add_outlined),
                               label: const Text('PRESAVE'),
@@ -642,8 +644,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 if (!release.isUpcoming && release.hasFreeWav)
                   Card(
                     child: ListTile(
-                      title: const Text('WAV feloldása reklámmal'),
-                      subtitle: const Text(
+                      title: const AppText('WAV feloldása reklámmal'),
+                      subtitle: const AppText(
                         'A jutalmazott reklám megtekintése után a WAV letölthető.',
                       ),
                       trailing: FilledButton(
@@ -659,8 +661,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 else if (!release.isUpcoming && !release.isFree)
                   Card(
                     child: ListTile(
-                      title: const Text('96 kbps MP3 feloldása reklámmal'),
-                      subtitle: const Text(
+                      title: const AppText('96 kbps MP3 feloldása reklámmal'),
+                      subtitle: const AppText(
                         'A jutalmazott reklám megtekintése után a fájl letölthető.',
                       ),
                       trailing: FilledButton(
@@ -689,8 +691,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                     release.freeExternalLink.isNotEmpty)
                   Card(
                     child: ListTile(
-                      title: const Text('Ingyenes külső link'),
-                      subtitle: const Text(
+                      title: const AppText('Ingyenes külső link'),
+                      subtitle: const AppText(
                         'A jutalmazott reklám megtekintése után megnyitható.',
                       ),
                       trailing: FilledButton(
@@ -711,7 +713,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                     )
                     .isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  const Text(
+                  const AppText(
                     'Elérhető változatok',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
@@ -732,7 +734,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                 ],
                 if (release.links.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  const Text(
+                  const AppText(
                     'Hol érhető el?',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
@@ -801,7 +803,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
         ),
         trailing: verified
             ? IconButton(
-                tooltip: 'Letöltés',
+                tooltip: tr(context, 'Letöltés'),
                 icon: const Icon(Icons.download),
                 onPressed: () => _download(_downloadVariant(configured.id)),
               )

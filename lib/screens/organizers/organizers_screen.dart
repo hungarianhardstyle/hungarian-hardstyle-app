@@ -4,11 +4,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/organizer.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/organizers_provider.dart';
 import '../../services/wordpress_service.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/detail_prefetch.dart';
 import '../../widgets/favorite_button.dart';
@@ -54,7 +56,7 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
     final organizers = ref.watch(organizersProvider(_search));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Szervezők')),
+      appBar: AppBar(title: const AppText('Szervezők')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -79,7 +81,7 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
                         Row(
                           children: [
                             const Expanded(
-                              child: Text(
+                              child: AppText(
                                 'Szervezők',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -94,7 +96,7 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
                         TextField(
                           onChanged: _onSearchChanged,
                           decoration: InputDecoration(
-                            hintText: 'Keresés szervezők között…',
+                            hintText: tr(context, 'Keresés szervezők között…'),
                             prefixIcon: const Icon(Icons.search),
                             filled: true,
                             fillColor: const Color(0xFF171717),
@@ -133,7 +135,7 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
                         SliverFillRemaining(
                           hasScrollBody: false,
                           child: Center(
-                            child: Text(
+                            child: AppText(
                               'Nincs találat.',
                               style: TextStyle(
                                 fontSize: 18,
@@ -297,7 +299,7 @@ class _OrganizerError extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          const AppText(
             'Nem sikerült betölteni a szervezőket.',
             style: TextStyle(color: Colors.white70),
           ),
@@ -305,7 +307,7 @@ class _OrganizerError extends StatelessWidget {
           FilledButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text('Újrapróbálás'),
+            label: const AppText('Újrapróbálás'),
           ),
         ],
       ),

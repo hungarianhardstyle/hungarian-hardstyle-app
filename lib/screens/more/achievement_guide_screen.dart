@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/achievement_provider.dart';
 import '../../services/achievement_service.dart';
+import '../../core/i18n/tr.dart';
+import '../../widgets/app_text.dart';
 
 /// `Több → Achievementek`: hogyan működik a pontrendszer.
 ///
@@ -110,7 +112,7 @@ class AchievementGuideScreen extends ConsumerWidget {
     // lenni.
     final levels = ref.watch(achievementLevelsProvider).valueOrNull;
     return Scaffold(
-      appBar: AppBar(title: const Text('Achievement rendszer')),
+      appBar: AppBar(title: const AppText('Achievement rendszer')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 8, 18, 30),
         children: [
@@ -148,8 +150,8 @@ class AchievementGuideScreen extends ConsumerWidget {
           Card(
             child: ListTile(
               leading: const Icon(Icons.visibility_outlined),
-              title: const Text('Megjelenés'),
-              subtitle: const Text(
+              title: const AppText('Megjelenés'),
+              subtitle: const AppText(
                 'A jelvényed a profilodon látható. A chatben a neve mellett is megjeleníthető, ha ezt a Beállításokban engedélyezed.',
               ),
             ),
@@ -158,8 +160,8 @@ class AchievementGuideScreen extends ConsumerWidget {
           Card(
             child: ListTile(
               leading: const Icon(Icons.image_outlined),
-              title: const Text('Jelvénygrafikák'),
-              subtitle: const Text(
+              title: const AppText('Jelvénygrafikák'),
+              subtitle: const AppText(
                 'A jelvények grafikáit és a szintek pontszámait a HUHS adminisztrátora kezeli, ezért itt mindig a jelenlegi állapot látszik.',
               ),
             ),
@@ -177,7 +179,7 @@ class _IntroCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: Padding(
       padding: const EdgeInsets.all(16),
-      child: Text(
+      child: AppText(
         'Az achievement rendszerben a HUHS közösségben végzett valódi aktivitásért pontokat szerezhetsz. A pontszámod alapján rangot és grafikus jelvényt kapsz.',
         style: Theme.of(context).textTheme.bodyLarge,
       ),
@@ -211,14 +213,17 @@ class _LevelTile extends StatelessWidget {
           style: const TextStyle(color: Colors.white, fontSize: 11),
         ),
       ),
-      title: Text(
+      title: AppText(
         level.name,
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      subtitle: Text(
+      subtitle: AppText(
         level.description.isEmpty
-            ? '${level.minPoints} ponttól'
-            : '${level.minPoints} pont • ${level.description}',
+            ? trArgs(context, '{n} ponttól', {'n': '${level.minPoints}'})
+            : trArgs(context, '{n} pont • {d}', {
+                'n': '${level.minPoints}',
+                'd': level.description,
+              }),
       ),
     ),
   );
@@ -231,8 +236,8 @@ class _ActivityTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
     child: ListTile(
-      title: Text(activity.title),
-      subtitle: Text(activity.detail),
+      title: AppText(activity.title),
+      subtitle: AppText(activity.detail),
       trailing: Text(
         activity.points,
         style: const TextStyle(

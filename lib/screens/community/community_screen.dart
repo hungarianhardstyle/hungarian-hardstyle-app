@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/community_post.dart';
 import '../../models/achievement.dart';
 import '../../models/event.dart';
@@ -28,6 +29,7 @@ import '../../services/chat_mention_plan.dart';
 import '../../services/chat_mention_source.dart';
 import '../../services/community_service.dart';
 import '../../services/chat_display_preferences.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../services/referral_link_service.dart';
 import '../../widgets/submission_image_picker.dart';
@@ -180,7 +182,7 @@ class CommunityAvatarButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final fallback = IconButton(
-      tooltip: 'Profil',
+      tooltip: tr(context, 'Profil'),
       onPressed: onPressed,
       icon: const ProfileAvatar(imageUrl: '', initial: 'H', size: 36),
     );
@@ -203,7 +205,7 @@ class CommunityAvatarButton extends ConsumerWidget {
             : 'HU';
         final initial = name.characters.first.toUpperCase();
         return IconButton(
-          tooltip: 'Profil',
+          tooltip: tr(context, 'Profil'),
           onPressed: onPressed,
           icon: ProfileAvatar(
             imageUrl: rawUrl,
@@ -278,7 +280,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
     String current,
   ) async {
     final value = await _pickAdminRole(
-      title: 'Fiók-szerepkör',
+      title: tr(context, 'Fiók-szerepkör'),
       current: current,
       options: const [
         ('dj', 'DJ'),
@@ -302,7 +304,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
     String current,
   ) async {
     final value = await _pickAdminRole(
-      title: 'Hozzáférési jog',
+      title: tr(context, 'Hozzáférési jog'),
       current: current,
       options: const [
         (CommunityService.accessNone, 'Nincs jogosultság'),
@@ -329,21 +331,21 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
     final value = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Felhasználónév módosítása'),
+        title: const AppText('Felhasználónév módosítása'),
         content: TextField(
           controller: controller,
           autofocus: true,
           maxLength: 40,
-          decoration: const InputDecoration(labelText: 'Új nyilvános név'),
+          decoration: InputDecoration(labelText: tr(context, 'Új nyilvános név')),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, controller.text),
-            child: const Text('Mentés'),
+            child: const AppText('Mentés'),
           ),
         ],
       ),
@@ -372,7 +374,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
   Widget build(BuildContext context) {
     final service = ref.watch(communityServiceProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Közösségi adminisztráció')),
+      appBar: AppBar(title: const AppText('Közösségi adminisztráció')),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: service.watchProfiles(),
         builder: (context, snapshot) {
@@ -404,8 +406,8 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.dashboard_customize_outlined),
-                title: const Text('HUHS Vezérlőközpont'),
-                subtitle: const Text('WordPress Mobile API adminisztráció'),
+                title: const AppText('HUHS Vezérlőközpont'),
+                subtitle: const AppText('WordPress Mobile API adminisztráció'),
                 trailing: const Icon(Icons.open_in_new),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -414,12 +416,12 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                 ),
               ),
               if (profiles.isEmpty)
-                const Center(child: Text('Még nincs regisztrált profil.')),
+                const Center(child: AppText('Még nincs regisztrált profil.')),
               if (profiles.isNotEmpty)
                 const ListTile(
                   leading: Icon(Icons.people_outline),
-                  title: Text('Felhasználók'),
-                  subtitle: Text('Regisztrált felhasználók és jogosultságok'),
+                  title: AppText('Felhasználók'),
+                  subtitle: AppText('Regisztrált felhasználók és jogosultságok'),
                 ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -432,14 +434,14 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                           child: TextField(
                             controller: _pinnedText,
                             maxLines: 2,
-                            decoration: const InputDecoration(
-                              labelText: 'Rögzített Chat-üzenet',
+                            decoration: InputDecoration(
+                              labelText: tr(context, 'Rögzített Chat-üzenet'),
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         IconButton(
-                          tooltip: 'Küldés és rögzítés',
+                          tooltip: tr(context, 'Küldés és rögzítés'),
                           icon: const Icon(Icons.push_pin_outlined),
                           onPressed: () async {
                             final text = _pinnedText.text.trim();
@@ -468,8 +470,8 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                 child: TextField(
                   controller: _search,
                   onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    labelText: 'Felhasználó keresése',
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Felhasználó keresése'),
                     prefixIcon: Icon(Icons.search),
                   ),
                 ),
@@ -483,7 +485,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                     ),
                   ),
                   icon: const Icon(Icons.flag_outlined),
-                  label: const Text('Jelentések kezelése'),
+                  label: const AppText('Jelentések kezelése'),
                 ),
               ),
               /*
@@ -530,22 +532,22 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                     child: PopupMenuButton<String>(
-                      tooltip: 'Szerepkör szűrése',
+                      tooltip: tr(context, 'Szerepkör szűrése'),
                       offset: const Offset(0, 58),
                       color: const Color(0xFF171717),
                       onSelected: (value) =>
                           setState(() => _roleFilter = value),
                       itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'all', child: Text('Mindenki')),
-                        PopupMenuItem(value: 'admin', child: Text('Admin')),
+                        PopupMenuItem(value: 'all', child: AppText('Mindenki')),
+                        PopupMenuItem(value: 'admin', child: AppText('Admin')),
                         PopupMenuItem(value: 'dj', child: Text('DJ')),
                         PopupMenuItem(
                           value: 'organizer',
-                          child: Text('Szervező'),
+                          child: AppText('Szervező'),
                         ),
                         PopupMenuItem(
                           value: 'partygoer',
-                          child: Text('Bulizó'),
+                          child: AppText('Bulizó'),
                         ),
                       ],
                       child: Container(
@@ -560,7 +562,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Text('Szerepkör szűrése'),
+                            const AppText('Szerepkör szűrése'),
                             const Spacer(),
                             Text(_roleFilterLabel()),
                             const SizedBox(width: 8),
@@ -583,7 +585,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                       return Card(
                         child: ListTile(
                           leading: IconButton(
-                            tooltip: 'Felhasználó törlése',
+                            tooltip: tr(context, 'Felhasználó törlése'),
                             icon: const Icon(Icons.person_remove_outlined),
                             onPressed: doc.id == service.auth.currentUser?.uid
                                 ? null
@@ -591,10 +593,10 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                                     final confirmed = await showDialog<bool>(
                                       context: context,
                                       builder: (dialogContext) => AlertDialog(
-                                        title: const Text(
+                                        title: const AppText(
                                           'Felhasználó törlése',
                                         ),
-                                        content: const Text(
+                                        content: const AppText(
                                           'A profil, a Chat-üzenetek és a bejelentkezés is törlődik. Folytatod?',
                                         ),
                                         actions: [
@@ -603,14 +605,14 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                                               dialogContext,
                                               false,
                                             ),
-                                            child: const Text('Mégse'),
+                                            child: const AppText('Mégse'),
                                           ),
                                           FilledButton(
                                             onPressed: () => Navigator.pop(
                                               dialogContext,
                                               true,
                                             ),
-                                            child: const Text('Törlés'),
+                                            child: const AppText('Törlés'),
                                           ),
                                         ],
                                       ),
@@ -1421,7 +1423,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Center(
-          child: Text(
+          child: AppText(
             'Ez a beszélgetés eleje.',
             style: TextStyle(fontSize: 12, color: Colors.white54),
           ),
@@ -1434,7 +1436,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
         child: TextButton(
           key: const Key('chat-load-older'),
           onPressed: () => unawaited(_loadOlderPosts()),
-          child: const Text('Régebbi üzenetek betöltése'),
+          child: const AppText('Régebbi üzenetek betöltése'),
         ),
       ),
     );
@@ -1461,14 +1463,14 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Chat'),
+          title: const AppText('Chat'),
           actions: [
             // iOS-en nincs rendszer-vissza gomb, amivel a billentyűzetet be
             // lehetne zárni — ezért itt van a fejlécben (csak nyitott
             // billentyűzetnél látszik).
             const KeyboardDismissButton(),
             IconButton(
-              tooltip: 'Privát üzenetek',
+              tooltip: tr(context, 'Privát üzenetek'),
               style: IconButton.styleFrom(
                 backgroundColor: Theme.of(context)
                     .colorScheme
@@ -1544,7 +1546,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                   ),
                 ),
                 data: (items) => items.isEmpty
-                    ? const Center(child: Text('Még nincs bejegyzés.'))
+                    ? const Center(child: AppText('Még nincs bejegyzés.'))
                     : RefreshIndicator(
                         onRefresh: _refreshChat,
                         child: ListView.builder(
@@ -1617,7 +1619,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
           builder: (context, show, _) => show
               ? FloatingActionButton.small(
                   key: const Key('chat-jump-newest'),
-                  tooltip: 'Ugrás a legfrissebb üzenethez',
+                  tooltip: tr(context, 'Ugrás a legfrissebb üzenethez'),
                   onPressed: _jumpToNewest,
                   child: const Icon(Icons.arrow_upward_rounded),
                 )
@@ -1703,8 +1705,8 @@ class _Composer extends StatelessWidget {
               minLines: 1,
               maxLines: 4,
               textInputAction: TextInputAction.newline,
-              decoration: const InputDecoration(
-                hintText: 'Írj valamit a közösségnek…',
+              decoration: InputDecoration(
+                hintText: tr(context, 'Írj valamit a közösségnek…'),
                 border: InputBorder.none,
               ),
             ),
@@ -1734,13 +1736,13 @@ class _Composer extends StatelessWidget {
               children: [
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  tooltip: 'Kamera',
+                  tooltip: tr(context, 'Kamera'),
                   onPressed: onTakePhoto,
                   icon: const Icon(Icons.camera_alt_outlined),
                 ),
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  tooltip: 'Kép kiválasztása',
+                  tooltip: tr(context, 'Kép kiválasztása'),
                   onPressed: onPickGallery,
                   icon: const Icon(Icons.photo_library_outlined),
                 ),
@@ -1766,7 +1768,7 @@ class _Composer extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.send),
-                label: const Text('Küldés'),
+                label: const AppText('Küldés'),
               ),
             ),
           ],
@@ -1891,16 +1893,16 @@ class _PostCardState extends ConsumerState<_PostCard> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Üzenet törlése'),
-        content: const Text('Biztosan törlöd ezt a Chat-üzenetet?'),
+        title: const AppText('Üzenet törlése'),
+        content: const AppText('Biztosan törlöd ezt a Chat-üzenetet?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Törlés'),
+            child: const AppText('Törlés'),
           ),
         ],
       ),
@@ -1920,7 +1922,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
     final updated = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Üzenet szerkesztése'),
+        title: const AppText('Üzenet szerkesztése'),
         content: TextFormField(
           initialValue: editedText,
           autofocus: true,
@@ -1930,11 +1932,11 @@ class _PostCardState extends ConsumerState<_PostCard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, editedText),
-            child: const Text('Mentés'),
+            child: const AppText('Mentés'),
           ),
         ],
       ),
@@ -2040,7 +2042,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
     // Eltűnt célpont (törölt cikk/DJ) vagy hálózati hiba: szólunk, nem
     // omlunk össze — a hivatkozás nem tudja magát megjavítani.
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('A hivatkozott tartalom nem érhető el.')),
+      const SnackBar(content: AppText('A hivatkozott tartalom nem érhető el.')),
     );
   }
 
@@ -2113,18 +2115,18 @@ class _PostCardState extends ConsumerState<_PostCard> {
                     ),
                   if (canModeratePosts || canReportOrBlock)
                     PopupMenuButton<String>(
-                      tooltip: 'Üzenetműveletek',
+                      tooltip: tr(context, 'Üzenetműveletek'),
                       onSelected: _handleMenuAction,
                       itemBuilder: (context) => [
                         if (canEditPost)
                           const PopupMenuItem(
                             value: 'edit',
-                            child: Text('Szerkesztés'),
+                            child: AppText('Szerkesztés'),
                           ),
                         if (canDeletePost)
                           const PopupMenuItem(
                             value: 'delete',
-                            child: Text('Törlés'),
+                            child: AppText('Törlés'),
                           ),
                         if (canPinPost)
                           PopupMenuItem(
@@ -2138,11 +2140,11 @@ class _PostCardState extends ConsumerState<_PostCard> {
                         if (canReportOrBlock) ...[
                           const PopupMenuItem(
                             value: 'report',
-                            child: Text('Jelentés'),
+                            child: AppText('Jelentés'),
                           ),
                           const PopupMenuItem(
                             value: 'block',
-                            child: Text('Blokkolás'),
+                            child: AppText('Blokkolás'),
                           ),
                         ],
                       ],
@@ -2153,7 +2155,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
             if (post.pinned)
               const Padding(
                 padding: EdgeInsets.only(top: 6),
-                child: Text(
+                child: AppText(
                   'Rögzített üzenet',
                   style: TextStyle(color: Colors.redAccent, fontSize: 11),
                 ),
@@ -2191,7 +2193,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
                           top: 4,
                           right: 4,
                           child: IconButton.filled(
-                            tooltip: 'Bezárás',
+                            tooltip: tr(context, 'Bezárás'),
                             onPressed: () => Navigator.of(dialogContext).pop(),
                             icon: const Icon(Icons.close),
                           ),
@@ -2246,7 +2248,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
                 ActionChip(
                   visualDensity: widget.compact ? VisualDensity.compact : null,
                   avatar: const Icon(Icons.reply, size: 16),
-                  label: const Text('Válasz'),
+                  label: const AppText('Válasz'),
                   onPressed: widget.onReply,
                 ),
                 ...['❤️', '🔥', '🙌'].map((emoji) {
@@ -2983,22 +2985,22 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
         final code = await showDialog<String>(
           context: context,
           builder: (dialogContext) => AlertDialog(
-            title: const Text('Authenticator-kód'),
+            title: const AppText('Authenticator-kód'),
             content: TextField(
               controller: controller,
               autofocus: true,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: '6 számjegyű kód'),
+              decoration: InputDecoration(labelText: tr(context, '6 számjegyű kód')),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Mégse'),
+                child: const AppText('Mégse'),
               ),
               FilledButton(
                 onPressed: () =>
                     Navigator.pop(dialogContext, controller.text.trim()),
-                child: const Text('Feloldás'),
+                child: const AppText('Feloldás'),
               ),
             ],
           ),
@@ -3128,20 +3130,20 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     final email = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('E-mail-cím módosítása'),
+        title: const AppText('E-mail-cím módosítása'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(labelText: 'Új e-mail-cím'),
+          decoration: InputDecoration(labelText: tr(context, 'Új e-mail-cím')),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, controller.text),
-            child: const Text('Küldés'),
+            child: const AppText('Küldés'),
           ),
         ],
       ),
@@ -3217,7 +3219,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Jelszó módosítása'),
+          title: const AppText('Jelszó módosítása'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -3226,7 +3228,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                   controller: current,
                   obscureText: !currentVisible,
                   decoration: InputDecoration(
-                    labelText: 'Jelenlegi jelszó',
+                    labelText: tr(context, 'Jelenlegi jelszó'),
                     suffixIcon: IconButton(
                       tooltip: currentVisible ? 'Elrejtés' : 'Megjelenítés',
                       icon: Icon(
@@ -3244,7 +3246,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                   controller: next,
                   obscureText: !nextVisible,
                   decoration: InputDecoration(
-                    labelText: 'Új jelszó',
+                    labelText: tr(context, 'Új jelszó'),
                     suffixIcon: IconButton(
                       tooltip: nextVisible ? 'Elrejtés' : 'Megjelenítés',
                       icon: Icon(
@@ -3259,7 +3261,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                   controller: confirm,
                   obscureText: !confirmVisible,
                   decoration: InputDecoration(
-                    labelText: 'Új jelszó megerősítése',
+                    labelText: tr(context, 'Új jelszó megerősítése'),
                     suffixIcon: IconButton(
                       tooltip: confirmVisible ? 'Elrejtés' : 'Megjelenítés',
                       icon: Icon(
@@ -3279,11 +3281,11 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Mégse'),
+              child: const AppText('Mégse'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Mentés'),
+              child: const AppText('Mentés'),
             ),
           ],
         ),
@@ -3328,21 +3330,21 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Újrahitelesítés'),
+        title: const AppText('Újrahitelesítés'),
         content: TextField(
           controller: password,
           obscureText: true,
           autofocus: true,
-          decoration: const InputDecoration(labelText: 'Jelenlegi jelszó'),
+          decoration: InputDecoration(labelText: tr(context, 'Jelenlegi jelszó')),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Ellenőrzés'),
+            child: const AppText('Ellenőrzés'),
           ),
         ],
       ),
@@ -3408,7 +3410,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     final selected = await showDialog<String>(
       context: context,
       builder: (dialogContext) => SimpleDialog(
-        title: const Text('Szerepkör'),
+        title: const AppText('Szerepkör'),
         children: [
           for (final option in const {
             'dj': 'DJ',
@@ -3453,7 +3455,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       if (!context.mounted) return;
       if (match == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Az esemény már nem érhető el.')),
+          const SnackBar(content: AppText('Az esemény már nem érhető el.')),
         );
         return;
       }
@@ -3465,7 +3467,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Az esemény nem tölthető be.')),
+          const SnackBar(content: AppText('Az esemény nem tölthető be.')),
         );
       }
     }
@@ -3510,7 +3512,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       ListTile(
         contentPadding: EdgeInsets.zero,
         leading: const Icon(Icons.badge_outlined),
-        title: const Text('Szerepkör'),
+        title: const AppText('Szerepkör'),
         subtitle: Text(
           _service.isAdmin
               ? '${_roleLabel(_service.isOwner ? 'organizer' : _role)} / Admin'
@@ -3521,7 +3523,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.calendar_month_outlined),
-          title: const Text('A közösség tagja'),
+          title: const AppText('A közösség tagja'),
           subtitle: Text(
             MaterialLocalizations.of(context)
                 .formatMediumDate(_memberSince!.toLocal()),
@@ -3533,7 +3535,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.notes_outlined),
-          title: const Text('Bemutatkozás'),
+          title: const AppText('Bemutatkozás'),
           subtitle: Text(_bio.text.trim()),
         ),
       if (_social.values.any((controller) => controller.text.trim().isNotEmpty))
@@ -3564,12 +3566,12 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
             ),
           ),
           icon: const Icon(Icons.library_music_outlined),
-          label: const Text('Saját DJ-adatlap megnyitása'),
+          label: const AppText('Saját DJ-adatlap megnyitása'),
         ),
       if (_claimedArtistIds.isNotEmpty) const SizedBox(height: 8),
       if (profileFavorites.isNotEmpty) ...[
         const SizedBox(height: 16),
-        const Text(
+        const AppText(
           'Kedvelt tartalmak',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
@@ -3600,7 +3602,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
-              const Text(
+              const AppText(
                 'Események, ahol ott leszek',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -3608,7 +3610,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                 ProfileContentCard(
                   icon: Icons.event_outlined,
                   title: event.data()['title'] as String? ?? 'Esemény',
-                  subtitle: 'Esemény, ahol ott leszek',
+                  subtitle: tr(context, 'Esemény, ahol ott leszek'),
                   onTap: () {
                     final eventId = (event.data()['eventId'] as num?)?.toInt();
                     if (eventId != null) {
@@ -3634,7 +3636,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           await _loadProfile();
         },
         icon: const Icon(Icons.edit_outlined),
-        label: const Text('Profil szerkesztése'),
+        label: const AppText('Profil szerkesztése'),
       ),
       if (_service.isAdmin) ...[
         const SizedBox(height: 8),
@@ -3645,7 +3647,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
             ),
           ),
           icon: const Icon(Icons.admin_panel_settings_outlined),
-          label: const Text('Közösségi adminisztráció'),
+          label: const AppText('Közösségi adminisztráció'),
         ),
       ],
       const SizedBox(height: 8),
@@ -3654,7 +3656,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           MaterialPageRoute<void>(builder: (_) => const FavoritesScreen()),
         ),
         icon: const Icon(Icons.favorite_outline),
-        label: const Text('Kedvencek'),
+        label: const AppText('Kedvencek'),
       ),
       const SizedBox(height: 8),
       OutlinedButton.icon(
@@ -3664,7 +3666,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           ),
         ),
         icon: const Icon(Icons.people_outline),
-        label: const Text('Ismerősök'),
+        label: const AppText('Ismerősök'),
       ),
       const SizedBox(height: 8),
       OutlinedButton.icon(
@@ -3674,7 +3676,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           ),
         ),
         icon: const Icon(Icons.block_outlined),
-        label: const Text('Blokkolt felhasználók'),
+        label: const AppText('Blokkolt felhasználók'),
       ),
       const SizedBox(height: 18),
       OutlinedButton.icon(
@@ -3682,7 +3684,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           await _service.signOut();
         },
         icon: const Icon(Icons.logout),
-        label: const Text('Kijelentkezés'),
+        label: const AppText('Kijelentkezés'),
       ),
     ];
   }
@@ -3718,7 +3720,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                       children: [
                         CircularProgressIndicator(),
                         SizedBox(height: 12),
-                        Text('Betöltés…'),
+                        AppText('Betöltés…'),
                       ],
                     )
                   : Column(
@@ -3727,7 +3729,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                         Text(_profileError!),
                         TextButton(
                           onPressed: () => _loadProfile(force: true),
-                          child: const Text('Újrapróbálás'),
+                          child: const AppText('Újrapróbálás'),
                         ),
                       ],
                     ),
@@ -3802,17 +3804,17 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 if (_name.text.trim().isEmpty)
-                                                  const Text(
+                                                  const AppText(
                                                     'A felhasználónév megadása kötelező.',
                                                   ),
                                                 if (user.email == null ||
                                                     user.email!.trim().isEmpty)
-                                                  const Text(
+                                                  const AppText(
                                                     'Adj meg e-mail-címet és erősítsd meg 24 órán belül.',
                                                   )
                                                 else if (user.emailVerified !=
                                                     true) ...[
-                                                  const Text(
+                                                  const AppText(
                                                     'Erősítsd meg az e-mail-címedet 24 órán belül.',
                                                   ),
                                                   OutlinedButton.icon(
@@ -3857,12 +3859,12 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                       Icons
                                                           .mark_email_read_outlined,
                                                     ),
-                                                    label: const Text(
+                                                    label: const AppText(
                                                       'Megerősítő e-mail újraküldése',
                                                     ),
                                                   ),
                                                 ] else
-                                                  const Text(
+                                                  const AppText(
                                                     'Adj meg egy megjelenési nevet.',
                                                   ),
                                               ],
@@ -3878,7 +3880,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                         leading: Icon(
                                           Icons.admin_panel_settings_outlined,
                                         ),
-                                        title: Text('Szerepkör'),
+                                        title: AppText('Szerepkör'),
                                         subtitle: Text(
                                           '${_roleLabel(_service.isOwner ? 'organizer' : _role)} / Admin',
                                         ),
@@ -3891,9 +3893,9 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                 _role == 'partygoer'
                                             ? _role
                                             : 'partygoer',
-                                        decoration: const InputDecoration(
-                                          labelText: 'Szerepkör',
-                                          helperText: 'Válaszd ki, hogyan használod az appot.',
+                                        decoration: InputDecoration(
+                                          labelText: tr(context, 'Szerepkör'),
+                                          helperText: tr(context, 'Válaszd ki, hogyan használod az appot.'),
                                         ),
                                         items: const [
                                           DropdownMenuItem(
@@ -3902,11 +3904,11 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                           ),
                                           DropdownMenuItem(
                                             value: 'organizer',
-                                            child: Text('Szervező'),
+                                            child: AppText('Szervező'),
                                           ),
                                           DropdownMenuItem(
                                             value: 'partygoer',
-                                            child: Text('Bulizó'),
+                                            child: AppText('Bulizó'),
                                           ),
                                         ],
                                         onChanged: _roleMissing
@@ -3929,15 +3931,15 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                         icon: const Icon(
                                           Icons.admin_panel_settings_outlined,
                                         ),
-                                        label: const Text(
+                                        label: const AppText(
                                           'Közösségi adminisztráció',
                                         ),
                                       ),
                                     const SizedBox(height: 20),
                                     SubmissionImagePicker(
                                       image: _profileImage,
-                                      title: 'Profilkép',
-                                      helperText: 'Opcionális kép; monogram jelenik meg, ha nincs feltöltve.',
+                                      title: tr(context, 'Profilkép'),
+                                      helperText: tr(context, 'Opcionális kép; monogram jelenik meg, ha nincs feltöltve.'),
                                       onChanged: (image) => setState(() {
                                         _profileImage = image;
                                         if (image != null) {
@@ -3947,7 +3949,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                     ),
                                     if (_profileImage != null ||
                                         _profileImageUrl.isNotEmpty) ...[
-                                      const Text(
+                                      const AppText(
                                         'Kép igazítása (húzás és nagyítás)',
                                       ),
                                       Center(
@@ -4010,7 +4012,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                     FilledButton.icon(
                                       onPressed: _busy ? null : _saveProfile,
                                       icon: const Icon(Icons.save_outlined),
-                                      label: const Text('Profil mentése'),
+                                      label: const AppText('Profil mentése'),
                                     ),
                                     if (user.providerData.any(
                                       (provider) =>
@@ -4024,7 +4026,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                         icon: const Icon(
                                           Icons.password_outlined,
                                         ),
-                                        label: const Text('Jelszó módosítása'),
+                                        label: const AppText('Jelszó módosítása'),
                                       ),
                                     ],
                                     const SizedBox(height: 8),
@@ -4033,7 +4035,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                       icon: const Icon(
                                         Icons.alternate_email_outlined,
                                       ),
-                                      label: const Text(
+                                      label: const AppText(
                                         'E-mail-cím módosítása',
                                       ),
                                     ),
@@ -4053,10 +4055,10 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                             ),
                                           ),
                                       icon: const Icon(Icons.favorite_outline),
-                                      label: const Text('Kedvencek'),
+                                      label: const AppText('Kedvencek'),
                                     ),
                                     const SizedBox(height: 8),
-                                    const Text(
+                                    const AppText(
                                       'Tervezett események az Ott leszek funkcióval jelennek majd meg.',
                                     ),
                                     const SizedBox(height: 18),
@@ -4065,7 +4067,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                         await _service.signOut();
                                       },
                                       icon: const Icon(Icons.logout),
-                                      label: const Text('Kijelentkezés'),
+                                      label: const AppText('Kijelentkezés'),
                                     ),
                                     const SizedBox(height: 8),
                                     TextButton.icon(
@@ -4077,10 +4079,10 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                     context: context,
                                                     builder: (dialogContext) =>
                                                         AlertDialog(
-                                                          title: const Text(
+                                                          title: const AppText(
                                                             'Profil törlése',
                                                           ),
-                                                          content: const Text(
+                                                          content: const AppText(
                                                             'A profilod, a Chat-üzeneteid és a bejelentkezésed is törlődik. Folytatod?',
                                                           ),
                                                           actions: [
@@ -4090,7 +4092,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                                     dialogContext,
                                                                     false,
                                                                   ),
-                                                              child: const Text(
+                                                              child: const AppText(
                                                                 'Mégse',
                                                               ),
                                                             ),
@@ -4100,7 +4102,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                                     dialogContext,
                                                                     true,
                                                                   ),
-                                                              child: const Text(
+                                                              child: const AppText(
                                                                 'Profil törlése',
                                                               ),
                                                             ),
@@ -4119,7 +4121,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                 context: context,
                                                 builder: (dialogContext) =>
                                                     AlertDialog(
-                                                      title: const Text(
+                                                      title: const AppText(
                                                         'Végső megerősítés',
                                                       ),
                                                       content: TextField(
@@ -4127,8 +4129,8 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                             typedConfirmation,
                                                         autofocus: true,
                                                         decoration:
-                                                            const InputDecoration(
-                                                              labelText: 'Írd be: TÖRLÉS',
+                                                            InputDecoration(
+                                                              labelText: tr(context, 'Írd be: TÖRLÉS'),
                                                             ),
                                                       ),
                                                       actions: [
@@ -4138,7 +4140,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                                 dialogContext,
                                                                 false,
                                                               ),
-                                                          child: const Text(
+                                                          child: const AppText(
                                                             'Mégse',
                                                           ),
                                                         ),
@@ -4151,7 +4153,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                                         .trim() ==
                                                                     'TÖRLÉS',
                                                               ),
-                                                          child: const Text(
+                                                          child: const AppText(
                                                             'Törlés megerősítése',
                                                           ),
                                                         ),
@@ -4208,12 +4210,12 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                       icon: const Icon(
                                         Icons.delete_forever_outlined,
                                       ),
-                                      label: const Text('Profil törlése'),
+                                      label: const AppText('Profil törlése'),
                                     ),
                                   ]
                                 : _readOnlyProfileWidgets(user, profileInitial))
                           : [
-                              const Text(
+                              const AppText(
                                 'Regisztráció és bejelentkezés',
                                 style: TextStyle(
                                   fontSize: 24,
@@ -4233,7 +4235,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                   textCapitalization: TextCapitalization.words,
                                   onChanged: _checkRegistrationName,
                                   decoration: InputDecoration(
-                                    labelText: 'Megjelenő név',
+                                    labelText: tr(context, 'Megjelenő név'),
                                     errorText: _registrationNameError,
                                   ),
                                 ),
@@ -4250,7 +4252,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                 controller: _password,
                                 obscureText: !_passwordVisible,
                                 decoration: InputDecoration(
-                                  labelText: 'Jelszó',
+                                  labelText: tr(context, 'Jelszó'),
                                   suffixIcon: IconButton(
                                     tooltip: _passwordVisible
                                         ? 'Elrejtés'
@@ -4275,25 +4277,25 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                     icon: const Icon(
                                       Icons.auto_fix_high_outlined,
                                     ),
-                                    label: const Text('Erős jelszó ajánlása'),
+                                    label: const AppText('Erős jelszó ajánlása'),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
                                 TextField(
                                   controller: _passwordConfirmation,
                                   obscureText: !_passwordVisible,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Jelszó megerősítése',
+                                  decoration: InputDecoration(
+                                    labelText: tr(context, 'Jelszó megerősítése'),
                                   ),
                                 ),
-                                const Text(
+                                const AppText(
                                   'A regisztráció után megerősítő e-mailt küldünk. '
                                   'A profil használatához erősítsd meg a címedet.',
                                   style: TextStyle(color: Colors.white70),
                                 ),
                                 ..._socialFields(),
                                 const SizedBox(height: 6),
-                                const Text(
+                                const AppText(
                                   'A profil védelméhez a regisztráció után opcionális kétfaktoros védelem kapcsolható be a Beállításokban.',
                                   style: TextStyle(color: Colors.white70),
                                 ),
@@ -4302,8 +4304,8 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                   onTap: _busy ? null : _chooseRole,
                                   borderRadius: BorderRadius.circular(12),
                                   child: InputDecorator(
-                                    decoration: const InputDecoration(
-                                      labelText: 'Szerepkör',
+                                    decoration: InputDecoration(
+                                      labelText: tr(context, 'Szerepkör'),
                                       suffixIcon: Icon(Icons.arrow_drop_down),
                                     ),
                                     child: Text(_roleLabel(_role)),
@@ -4320,9 +4322,9 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                     ),
                                     LengthLimitingTextInputFormatter(16),
                                   ],
-                                  decoration: const InputDecoration(
-                                    labelText: 'Ajánlókód (opcionális)',
-                                    helperText: 'Ha kaptál kódot egy HUHS-felhasználótól.',
+                                  decoration: InputDecoration(
+                                    labelText: tr(context, 'Ajánlókód (opcionális)'),
+                                    helperText: tr(context, 'Ha kaptál kódot egy HUHS-felhasználótól.'),
                                   ),
                                 ),
                               ],
@@ -4337,7 +4339,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                               OutlinedButton.icon(
                                 onPressed: _busy ? null : _google,
                                 icon: const Icon(Icons.login),
-                                label: const Text('Folytatás Google-fiókkal'),
+                                label: const AppText('Folytatás Google-fiókkal'),
                               ),
                               if (!_register)
                                 TextButton(
@@ -4361,7 +4363,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                             _message(_chatError(error));
                                           }
                                         },
-                                  child: const Text('Jelszó visszaállítása'),
+                                  child: const AppText('Jelszó visszaállítása'),
                                 ),
                               if (!_register)
                                 TextButton(
@@ -4388,7 +4390,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                             _message(_chatError(error));
                                           }
                                         },
-                                  child: const Text(
+                                  child: const AppText(
                                     'Ellenőrző e-mail újraküldése',
                                   ),
                                 ),

@@ -11,6 +11,7 @@ import '../../models/game.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/news_provider.dart';
 import '../../services/vote_memory.dart';
+import '../../widgets/app_text.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key, required this.game, this.resultsOnly = false});
@@ -157,7 +158,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A hangrészlet most nem tölthető be.')),
+          const SnackBar(content: AppText('A hangrészlet most nem tölthető be.')),
         );
       }
     }
@@ -259,7 +260,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               OutlinedButton.icon(
                 onPressed: _submitted || _playedHint ? null : _playAudio,
                 icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('Zenerészlet lejátszása'),
+                label: const AppText('Zenerészlet lejátszása'),
               ),
             ],
             const SizedBox(height: 16),
@@ -303,7 +304,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             if (!_complete && !_submitted && !_playedHint)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
-                child: Text(
+                child: AppText(
                   'Minden kérdésre válaszolj a beküldés előtt.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -339,11 +340,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const AppText(
                   'Ebben a kvízben már játszottál',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                Text(
+                AppText(
                   'Egy pillanat — betöltjük az eredményedet.',
                   style: theme.textTheme.bodySmall,
                 ),
@@ -373,7 +374,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             OutlinedButton.icon(
               onPressed: _loadResults,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Újrapróbálás'),
+              label: const AppText('Újrapróbálás'),
             ),
           ],
         ),
@@ -381,7 +382,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
     if (_results.isEmpty) {
       return const _GamePanel(
-        child: Text(
+        child: AppText(
           'Ehhez a játékhoz még nincs megjeleníthető eredmény.',
           textAlign: TextAlign.center,
         ),
@@ -391,7 +392,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Eredménylista', style: Theme.of(context).textTheme.titleLarge),
+          AppText('Eredménylista', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           for (final result in _results)
             ListTile(
@@ -417,13 +418,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(height: 10),
-          Text(
+          AppText(
             'Regisztráció szükséges',
             style: Theme.of(context).textTheme.titleMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
-          Text(
+          AppText(
             'A játékot meg tudod nézni, de a válaszadáshoz regisztrált felhasználói fiók kell.',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -440,12 +441,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          AppText(
             'Rendezd időrendbe',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 6),
-          Text(
+          AppText(
             'Tartsd hosszan az elemet, majd húzd a helyére.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
@@ -545,7 +546,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             size: 38,
           ),
           const SizedBox(height: 8),
-          const Text('Köszönjük a játékodat!'),
+          const AppText('Köszönjük a játékodat!'),
           const SizedBox(height: 4),
           Text(
             'Az eredményeket a játék lezárása után láthatod${_resultsUntilLabel()}.',
@@ -598,7 +599,7 @@ class _GameHero extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('JÁTÉK', style: Theme.of(context).textTheme.labelMedium),
+                AppText('JÁTÉK', style: Theme.of(context).textTheme.labelMedium),
                 const SizedBox(height: 4),
                 Text(game.summary.isEmpty ? 'Próbáld ki magad!' : game.summary),
               ],

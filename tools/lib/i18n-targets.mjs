@@ -57,13 +57,27 @@ export function isTranslationTarget({ value, before }) {
   const hasSpace = /\s/.test(trimmed);
   const isCapitalizedWord = /^[A-ZÁÉÍÓÖŐÚÜŰ][a-záéíóöőúüű]+$/.test(trimmed);
   if (!hasAccent && !hasSpace && !isCapitalizedWord) return false;
-  return isUiContext(before);
+  // A már körbefordított szöveg is **kulcs** (a szótárban benne kell lennie),
+  // csak nem kell újra bekötni.
+  return isUiContext(before) || isWrappedContext(before);
 }
 
-/** UI-környezet: `Text(`/`SelectableText(`/… vagy ismert felirat-paraméter. */
+/** UI-környezet: `Text(`/`SelectableText(`/`AppText(` vagy ismert felirat-paraméter. */
 export function isUiContext(before) {
-  if (/(?:^|[\s(,{[])(?:Text|SelectableText)\s*\(\s*$/.test(before)) return true;
+  if (/(?:^|[\s(,{[])(?:Text|SelectableText|AppText)\s*\(\s*$/.test(before)) return true;
   return UI_NAMED_PARAMS.some((name) => new RegExp(`\\b${name}\\s*:\\s*$`).test(before));
+}
+
+/**
+ * Már körbefordított szöveg: `tr(context, '…')` vagy `trArgs(context, '…')`.
+ *
+ * EZ A KULCS-SZÁMLÁLÁSHOZ KELL: a bekötés után a szöveg körül már ott a hívás,
+ * ezért a kontextus megszűnik „UI-kontextusnak" lenni. Ha az extraktor nem
+ * ismerné fel, a szótár-lefedettség mérése **hamisan** 21 szövegre esne vissza
+ * (mérve pontosan ez történt), és a fordítatlan kulcsok észrevétlenek maradnának.
+ */
+export function isWrappedContext(before) {
+  return /\btr(?:Args)?\(\s*context\s*,\s*$/.test(before);
 }
 
 export const UI_NAMED_PARAMS = [

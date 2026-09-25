@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../core/i18n/tr.dart';
 import '../models/release.dart';
+import 'app_text.dart';
 import 'radio_player_bar.dart';
 
 class ReleasePreviewPlayer extends StatefulWidget {
@@ -148,7 +150,7 @@ class _ReleasePreviewPlayerState extends State<ReleasePreviewPlayer>
     if (widget.track.previewUrl.isEmpty) {
       return ListTile(
         title: Text('${widget.index + 1}. ${widget.track.title}'),
-        subtitle: const Text('Preview még nem érhető el.'),
+        subtitle: const AppText('Preview még nem érhető el.'),
       );
     }
     return Card(
@@ -161,7 +163,7 @@ class _ReleasePreviewPlayerState extends State<ReleasePreviewPlayer>
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  tooltip: 'Preview lejátszása',
+                  tooltip: tr(context, 'Preview lejátszása'),
                   icon: const Icon(
                     Icons.play_circle_fill,
                     color: Colors.redAccent,
@@ -170,7 +172,7 @@ class _ReleasePreviewPlayerState extends State<ReleasePreviewPlayer>
                   onPressed: playing ? null : _playPreview,
                 ),
                 IconButton(
-                  tooltip: 'Preview leállítása',
+                  tooltip: tr(context, 'Preview leállítása'),
                   icon: const Icon(
                     Icons.stop_circle,
                     color: Colors.redAccent,

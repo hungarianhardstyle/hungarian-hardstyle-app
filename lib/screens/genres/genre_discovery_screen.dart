@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import '../../core/errors/user_facing_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/artist.dart';
 import '../../models/event.dart';
 import '../../models/post.dart';
 import '../../providers/news_provider.dart';
 import '../../services/wordpress_service.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/event_card.dart';
 import '../artists/artist_detail_screen.dart';
 import '../news/news_detail_screen.dart';
@@ -195,9 +197,9 @@ class _GenreDiscoveryScreenState extends ConsumerState<GenreDiscoveryScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              _Section(title: 'Események', child: _eventContent()),
+              _Section(title: tr(context, 'Események'), child: _eventContent()),
               _Section(title: 'DJ-k', child: _artistContent()),
-              _Section(title: 'Hírek', child: _postContent()),
+              _Section(title: tr(context, 'Hírek'), child: _postContent()),
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16),
@@ -307,5 +309,5 @@ class _Empty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      const Text('Nincs találat.', style: TextStyle(color: Colors.white70));
+      const AppText('Nincs találat.', style: TextStyle(color: Colors.white70));
 }

@@ -7,6 +7,7 @@ import '../../core/content/html_linkifier.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/organizer.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/genre_chip.dart';
 import '../../providers/organizers_provider.dart';
 import '../../providers/favorites_provider.dart';
@@ -31,7 +32,7 @@ class OrganizerDetailScreen extends ConsumerWidget {
     final organizer = ref.watch(organizerDetailProvider(organizerId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Szervezői adatlap')),
+      appBar: AppBar(title: const AppText('Szervezői adatlap')),
       body: organizer.when(
         // ⚠️ Háttér-frissítésnél a korábbi adatlap marad (nem villan spinner).
         skipLoadingOnReload: true,
@@ -54,7 +55,7 @@ class OrganizerDetailScreen extends ConsumerWidget {
                   onPressed: () =>
                       ref.invalidate(organizerDetailProvider(organizerId)),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Újrapróbálás'),
+                  label: const AppText('Újrapróbálás'),
                 ),
               ],
             ),
@@ -254,7 +255,7 @@ class _OrganizerContent extends StatelessWidget {
                                 onPressed: () =>
                                     openInAppBrowser(context, organizer.webUrl),
                                 icon: const Icon(Icons.badge_outlined),
-                                label: const Text('Webes adatlap'),
+                                label: const AppText('Webes adatlap'),
                               ),
                           ],
                         ),
@@ -262,7 +263,7 @@ class _OrganizerContent extends StatelessWidget {
                     if (description.isNotEmpty) ...[
                       const Padding(
                         padding: EdgeInsets.only(top: 28, bottom: 4),
-                        child: Text(
+                        child: AppText(
                           'Bemutatkozás',
                           style: TextStyle(
                             fontSize: 24,
@@ -300,7 +301,7 @@ class _OrganizerContent extends StatelessWidget {
                     if (organizer.upcomingEvents.isNotEmpty) ...[
                       const Padding(
                         padding: EdgeInsets.only(top: 24, bottom: 16),
-                        child: Text(
+                        child: AppText(
                           'Közelgő események',
                           style: TextStyle(
                             fontSize: 24,
@@ -346,7 +347,7 @@ class _MissingOrganizer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Szervezői adatlap')),
+      appBar: AppBar(title: const AppText('Szervezői adatlap')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),

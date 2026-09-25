@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../core/navigation/content_target.dart';
 import '../../models/app_notification.dart';
 import '../../services/notification_selection_plan.dart';
 import '../../services/notification_service.dart';
 import '../../services/community_service.dart';
+import '../../widgets/app_text.dart';
 import '../more/community_users_screen.dart';
 import '../community/community_screen.dart';
 import '../community/private_messages_screen.dart';
@@ -85,7 +87,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A kijelöltek törlése nem sikerült.')),
+        const SnackBar(content: AppText('A kijelöltek törlése nem sikerült.')),
       );
     }
   }
@@ -111,7 +113,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A művelet nem sikerült.')),
+          const SnackBar(content: AppText('A művelet nem sikerült.')),
         );
       }
     }
@@ -141,11 +143,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Törlés'),
+            child: const AppText('Törlés'),
           ),
         ],
       ),
@@ -156,7 +158,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Az értesítések törlése nem sikerült.')),
+          const SnackBar(content: AppText('Az értesítések törlése nem sikerült.')),
         );
       }
     }
@@ -169,7 +171,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Az értesítések frissítése nem sikerült.'),
+            content: AppText('Az értesítések frissítése nem sikerült.'),
           ),
         );
       }
@@ -339,7 +341,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       if (_selecting) ...[
                         IconButton(
                           style: actionStyle,
-                          tooltip: 'Összes kijelölése ezen a fülön',
+                          tooltip: tr(context, 'Összes kijelölése ezen a fülön'),
                           onPressed: items.isEmpty
                               ? null
                               : () => setState(
@@ -352,7 +354,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                         const SizedBox(width: 6),
                         IconButton(
                           style: actionStyle,
-                          tooltip: 'Kijelöltek törlése',
+                          tooltip: tr(context, 'Kijelöltek törlése'),
                           onPressed: _selection.countWithin(items) == 0
                               ? null
                               : () => unawaited(_deleteSelected(items)),
@@ -361,7 +363,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                         const SizedBox(width: 6),
                         IconButton(
                           style: actionStyle,
-                          tooltip: 'Kijelölés kikapcsolása',
+                          tooltip: tr(context, 'Kijelölés kikapcsolása'),
                           onPressed: () => setState(() {
                             _selection.clear();
                             _selecting = false;
@@ -371,7 +373,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       ] else ...[
                         IconButton(
                           style: actionStyle,
-                          tooltip: 'Kijelölés törléshez',
+                          tooltip: tr(context, 'Kijelölés törléshez'),
                           onPressed: items.isEmpty
                               ? null
                               : () => setState(() {
@@ -386,7 +388,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                         const SizedBox(width: 6),
                         IconButton(
                           style: actionStyle,
-                          tooltip: 'Összes olvasottra jelölése',
+                          tooltip: tr(context, 'Összes olvasottra jelölése'),
                           onPressed: items.isEmpty
                               ? null
                               : () => unawaited(_markAllRead(context)),
@@ -425,12 +427,12 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       ButtonSegment<bool>(
                         value: false,
                         icon: Icon(Icons.notifications_none),
-                        label: Text('Aktív'),
+                        label: AppText('Aktív'),
                       ),
                       ButtonSegment<bool>(
                         value: true,
                         icon: Icon(Icons.archive_outlined),
-                        label: Text('Archivált'),
+                        label: AppText('Archivált'),
                       ),
                     ],
                     selected: {_showArchived},
@@ -464,7 +466,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 Expanded(
                   child: snapshot.hasError
                       ? const Center(
-                          child: Text('Az értesítések nem tölthetők be.'),
+                          child: AppText('Az értesítések nem tölthetők be.'),
                         )
                       : items.isEmpty
                       ? Center(
@@ -537,7 +539,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                                     // koppintás jelöl, a művelet pedig a fejlécben van.
                                     if (!_selecting)
                                       PopupMenuButton<String>(
-                                        tooltip: 'Értesítés műveletei',
+                                        tooltip: tr(context, 'Értesítés műveletei'),
                                         onSelected: (action) => unawaited(
                                           _handleAction(context, item, action),
                                         ),
@@ -545,16 +547,16 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                                           if (!item.isRead)
                                             const PopupMenuItem(
                                               value: 'read',
-                                              child: Text('Olvasottnak jelölés'),
+                                              child: AppText('Olvasottnak jelölés'),
                                             ),
                                           if (!item.isArchived)
                                             const PopupMenuItem(
                                               value: 'archive',
-                                              child: Text('Archiválás'),
+                                              child: AppText('Archiválás'),
                                             ),
                                           const PopupMenuItem(
                                             value: 'delete',
-                                            child: Text('Törlés'),
+                                            child: AppText('Törlés'),
                                           ),
                                         ],
                                       ),

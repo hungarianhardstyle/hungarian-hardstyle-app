@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../core/navigation/in_app_browser.dart';
+import '../../widgets/app_text.dart';
 
 class SpotifyPlaylistsScreen extends StatelessWidget {
   const SpotifyPlaylistsScreen({super.key});
@@ -37,7 +39,7 @@ class SpotifyPlaylistsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Spotify Playlistek')),
+      appBar: AppBar(title: const AppText('Spotify Playlistek')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -84,7 +86,7 @@ class SpotifyPlaylistsScreen extends StatelessWidget {
       return;
     }
     if (context.mounted) {
-      await openInAppBrowser(context, url, title: 'Spotify');
+      await openInAppBrowser(context, url, title: tr(context, 'Spotify'));
     }
   }
 }

@@ -5,10 +5,12 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:otp/otp.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../services/push_notification_service.dart';
 import '../../services/community_service.dart';
 import '../../services/chat_display_preferences.dart';
 import '../../services/wordpress_service.dart';
+import '../../widgets/app_text.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -81,7 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('A telefonos kódos feloldás nem sikerült.'),
+            content: AppText('A telefonos kódos feloldás nem sikerült.'),
           ),
         );
       }
@@ -108,12 +110,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final verified = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Authenticator beállítása'),
+        title: const AppText('Authenticator beállítása'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Add meg ezt a kulcsot a Google Authenticatorban:'),
+            const AppText('Add meg ezt a kulcsot a Google Authenticatorban:'),
             const SizedBox(height: 10),
             SelectableText(
               secret!,
@@ -123,21 +125,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TextField(
               controller: controller,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: '6 számjegyű kód'),
+              decoration: InputDecoration(labelText: tr(context, '6 számjegyű kód')),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(
               dialogContext,
               controller.text.trim().length == 6,
             ),
-            child: const Text('Ellenőrzés'),
+            child: const AppText('Ellenőrzés'),
           ),
         ],
       ),
@@ -151,7 +153,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
+            content: AppText(
               'A kód nem érvényes. Az authenticator nem lett bekapcsolva.',
             ),
           ),
@@ -176,7 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
+            content: AppText(
               'A biometrikus feloldás nem érhető el. Engedélyezd a telefon beállításaiban.',
             ),
           ),
@@ -224,13 +226,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     setState(() => _clearingCache = false);
     ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('A gyorsítótár törölve.')));
+        .showSnackBar(const SnackBar(content: AppText('A gyorsítótár törölve.')));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Beállítások')),
+      appBar: AppBar(title: const AppText('Beállítások')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -255,7 +257,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Card(
                       child: SwitchListTile(
                         secondary: const Icon(Icons.notifications_outlined),
-                        title: const Text('Értesítések'),
+                        title: const AppText('Értesítések'),
                         subtitle: Text(
                           _loading
                               ? 'Beállítás betöltése…'
@@ -274,8 +276,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           secondary: const Icon(
                             Icons.workspace_premium_outlined,
                           ),
-                          title: const Text('Achievement a chatben'),
-                          subtitle: const Text(
+                          title: const AppText('Achievement a chatben'),
+                          subtitle: const AppText(
                             'A jelvény a felhasználó neve elé kerül, egy sorban',
                           ),
                           value: enabled,
@@ -288,7 +290,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Card(
                       child: SwitchListTile(
                         secondary: const Icon(Icons.password_outlined),
-                        title: const Text('Android-kódos feloldás'),
+                        title: const AppText('Android-kódos feloldás'),
                         subtitle: Text(
                           _deviceCodeEnabled
                               ? 'A telefon PIN-kódjával, jelszavával vagy mintájával'
@@ -304,7 +306,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Card(
                       child: SwitchListTile(
                         secondary: const Icon(Icons.lock_clock_outlined),
-                        title: const Text('Google Authenticator'),
+                        title: const AppText('Google Authenticator'),
                         subtitle: const Text(
                           'Csak e-mail/jelszavas fióknál használható',
                         ),
@@ -316,7 +318,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Card(
                       child: SwitchListTile(
                         secondary: const Icon(Icons.fingerprint),
-                        title: const Text('Biometrikus feloldás'),
+                        title: const AppText('Biometrikus feloldás'),
                         subtitle: Text(
                           _biometricEnabled
                               ? 'A mentett profil feloldása ujjlenyomattal vagy arcfelismeréssel'
@@ -334,8 +336,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           SwitchListTile(
                             secondary: const Icon(Icons.article_outlined),
-                            title: const Text('Új hírek'),
-                            subtitle: const Text(
+                            title: const AppText('Új hírek'),
+                            subtitle: const AppText(
                               'Értesítés új hír közzétételekor',
                             ),
                             value: _newsNotificationsEnabled,
@@ -353,8 +355,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           SwitchListTile(
                             secondary: const Icon(Icons.event_outlined),
-                            title: const Text('Új események'),
-                            subtitle: const Text(
+                            title: const AppText('Új események'),
+                            subtitle: const AppText(
                               'Értesítés új esemény közzétételekor',
                             ),
                             value: _eventNotificationsEnabled,
@@ -372,8 +374,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           SwitchListTile(
                             secondary: const Icon(Icons.album_outlined),
-                            title: const Text('Új release-ek'),
-                            subtitle: const Text(
+                            title: const AppText('Új release-ek'),
+                            subtitle: const AppText(
                               'Értesítés új release közzétételekor',
                             ),
                             value: _releaseNotificationsEnabled,
@@ -392,8 +394,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           SwitchListTile(
                             secondary: const Icon(Icons.alarm_outlined),
-                            title: const Text('Esemény-emlékeztetők'),
-                            subtitle: const Text('Egy héttel előtte és aznap'),
+                            title: const AppText('Esemény-emlékeztetők'),
+                            subtitle: const AppText('Egy héttel előtte és aznap'),
                             value: _reminderNotificationsEnabled,
                             onChanged: _loading || !_notificationsEnabled
                                 ? null
@@ -412,8 +414,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             secondary: const Icon(
                               Icons.workspace_premium_outlined,
                             ),
-                            title: const Text('Achievement-szintlépések'),
-                            subtitle: const Text(
+                            title: const AppText('Achievement-szintlépések'),
+                            subtitle: const AppText(
                               'Értesítés új rang vagy jelvény elérésekor',
                             ),
                             value: _achievementNotificationsEnabled,
@@ -437,8 +439,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Card(
                       child: ListTile(
                         leading: Icon(Icons.cleaning_services_outlined),
-                        title: Text('Gyorsítótár'),
-                        subtitle: Text(
+                        title: AppText('Gyorsítótár'),
+                        subtitle: AppText(
                           'A képek gyorsítótárát az app automatikusan kezeli.',
                         ),
                         trailing: Icon(Icons.delete_outline),

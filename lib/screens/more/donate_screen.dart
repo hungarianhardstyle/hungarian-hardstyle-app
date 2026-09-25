@@ -1,3 +1,4 @@
+import '../../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -11,19 +12,19 @@ class DonateScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Támogatás')),
+      appBar: AppBar(title: const AppText('Támogatás')),
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
           const Icon(Icons.favorite, color: Colors.redAccent, size: 68),
           const SizedBox(height: 18),
-          const Text(
+          const AppText(
             'Segítsd a munkánkat',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          const Text(
+          const AppText(
             'A támogatás hozzájárul a Hungarian Hardstyle app és közösség fejlesztéséhez.',
             textAlign: TextAlign.center,
           ),
@@ -32,7 +33,7 @@ class DonateScreen extends StatelessWidget {
             onPressed: () =>
                 launchUrl(_donateUri, mode: LaunchMode.externalApplication),
             icon: const Icon(Icons.payment),
-            label: const Text('Támogatás PayPallal'),
+            label: const AppText('Támogatás PayPallal'),
           ),
         ],
       ),

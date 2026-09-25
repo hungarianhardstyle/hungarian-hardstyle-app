@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/tr.dart';
 import '../../providers/community_provider.dart';
+import '../../widgets/app_text.dart';
 import '../community/admin_resource_editor_screen.dart';
 
 /// A WordPress admin-művelet, amit a kérdőív-eredmények képernyő használ.
@@ -187,19 +189,19 @@ class _PollResultsScreenState extends ConsumerState<PollResultsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kérdőív eredményei'),
+        title: const AppText('Kérdőív eredményei'),
         actions: [
           // ÚJ: a tulajdonos kérése — a natív adminból **létre is** lehessen hozni
           // kérdőívet, ne csak megnézni. Ugyanazt az űrlapot nyitja, mint a
           // szerkesztés (a mezőket a szerver írja le).
           IconButton(
             key: const Key('poll-create'),
-            tooltip: 'Új kérdőív',
+            tooltip: tr(context, 'Új kérdőív'),
             onPressed: () => _openEditor(context),
             icon: const Icon(Icons.add),
           ),
           IconButton(
-            tooltip: 'Frissítés',
+            tooltip: tr(context, 'Frissítés'),
             onPressed: _refresh,
             icon: const Icon(Icons.refresh),
           ),
@@ -216,7 +218,7 @@ class _PollResultsScreenState extends ConsumerState<PollResultsScreen> {
           }
           final polls = pollsSnapshot.data ?? const <_PollOption>[];
           if (polls.isEmpty) {
-            return const Center(child: Text('Nincs elérhető kérdőív.'));
+            return const Center(child: AppText('Nincs elérhető kérdőív.'));
           }
           final selected = _selected ??= polls.first;
           _summaryFuture ??= _loadSummary(selected);
@@ -250,8 +252,8 @@ class _PollResultsScreenState extends ConsumerState<PollResultsScreen> {
           key: const Key('poll-results-select'),
           initialValue: selected.id,
           isExpanded: true,
-          decoration: const InputDecoration(
-            labelText: 'Kérdőív',
+          decoration: InputDecoration(
+            labelText: tr(context, 'Kérdőív'),
             border: OutlineInputBorder(),
           ),
           items: [
@@ -276,7 +278,7 @@ class _PollResultsScreenState extends ConsumerState<PollResultsScreen> {
           const Card(
             child: Padding(
               padding: EdgeInsets.all(16),
-              child: Text('Ehhez a kérdőívhez nem érkezett adat.'),
+              child: AppText('Ehhez a kérdőívhez nem érkezett adat.'),
             ),
           )
         else ...[
@@ -288,7 +290,7 @@ class _PollResultsScreenState extends ConsumerState<PollResultsScreen> {
           ),
           const SizedBox(height: 14),
           if (summary.options.isEmpty)
-            const Text('Nincs válaszlehetőség beállítva.')
+            const AppText('Nincs válaszlehetőség beállítva.')
           else
             for (final option in summary.options)
               Card(
@@ -323,7 +325,7 @@ class _PollResultsScreenState extends ConsumerState<PollResultsScreen> {
                 ),
               ),
           const SizedBox(height: 10),
-          const Text(
+          const AppText(
             'Az eredmény a leadott szavazatokból számol újra, ezért a lezárt kérdőíveknél is pontos marad. Ez az oldal csak adminisztrátornak látszik.',
             style: TextStyle(fontSize: 12, color: Colors.white60),
           ),

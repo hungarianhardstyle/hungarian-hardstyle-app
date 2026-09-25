@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../providers/community_provider.dart';
 import '../../services/submission_rules.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/huhs_corner_logo.dart';
 import '../artists/artists_screen.dart';
 import '../organizers/organizers_screen.dart';
@@ -79,7 +81,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             const Row(
               children: [
                 Expanded(
-                  child: Text(
+                  child: AppText(
                     'Több',
                     style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                   ),
@@ -91,10 +93,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             TextField(
               controller: _search,
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 prefixIcon: Icon(Icons.search),
-                labelText: 'Keresés a Több menüben',
-                hintText: 'Akár egy karakterrel',
+                labelText: tr(context, 'Keresés a Több menüben'),
+                hintText: tr(context, 'Akár egy karakterrel'),
               ),
             ),
             const SizedBox(height: 14),

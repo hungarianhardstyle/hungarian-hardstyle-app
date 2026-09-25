@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/community_provider.dart';
 import '../../models/event.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/huhs_corner_logo.dart';
@@ -171,7 +172,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     onRefresh: _refreshEvents,
                   ),
                   const SizedBox(height: 80),
-                  const Text(
+                  const AppText(
                     'Nem sikerült betölteni az eseményeket.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white70),
@@ -181,7 +182,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     child: FilledButton.icon(
                       onPressed: () => ref.invalidate(eventsProvider),
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Újrapróbálás'),
+                      label: const AppText('Újrapróbálás'),
                     ),
                   ),
                 ],
@@ -218,7 +219,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                       ),
                       const SizedBox(height: 80),
                       const Center(
-                        child: Text(
+                        child: AppText(
                           'Nincs közelgő esemény.',
                           style: TextStyle(fontSize: 18, color: Colors.white70),
                         ),
@@ -319,7 +320,7 @@ class _EventsHeader extends StatelessWidget {
         Row(
           children: [
             const Expanded(
-              child: Text(
+              child: AppText(
                 'Események',
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
               ),
@@ -333,7 +334,7 @@ class _EventsHeader extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: onSubmit,
             icon: const Icon(Icons.add_circle_outline),
-            label: const Text('Esemény beküldése'),
+            label: const AppText('Esemény beküldése'),
           ),
       ],
     );
@@ -373,7 +374,7 @@ class _PastEventsSection extends StatelessWidget {
     if (events.isEmpty) return const SizedBox.shrink();
     return ExpansionTile(
       tilePadding: EdgeInsets.zero,
-      title: const Text('Korábbi események'),
+      title: const AppText('Korábbi események'),
       subtitle: Text('${events.length}${hasMore ? '+' : ''} lejárt esemény'),
       children: [
         for (final event in events)

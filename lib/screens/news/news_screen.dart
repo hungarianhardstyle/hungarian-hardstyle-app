@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../providers/news_provider.dart';
 import '../../models/post.dart';
 import '../../core/errors/user_facing_error.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/huhs_corner_logo.dart';
@@ -122,7 +124,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                   Row(
                                     children: [
                                       const Expanded(
-                                        child: Text(
+                                        child: AppText(
                                           'Hírek',
                                           style: TextStyle(
                                             fontSize: 30,
@@ -141,7 +143,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                     controller: _searchController,
                                     onChanged: _onSearchChanged,
                                     decoration: InputDecoration(
-                                      hintText: 'Keresés hírek között...',
+                                      hintText: tr(context, 'Keresés hírek között...'),
                                       prefixIcon: const Icon(Icons.search),
                                       suffixIcon:
                                           _searchController.text.isNotEmpty
@@ -216,7 +218,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                   ],
                                   if (stickyPosts.isNotEmpty) ...[
                                     const SizedBox(height: 18),
-                                    const Text(
+                                    const AppText(
                                       'Kiemelt hírek',
                                       style: TextStyle(
                                         fontSize: 24,
@@ -228,7 +230,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                       AdaptiveNewsCard(post: post),
                                   ],
                                   const SizedBox(height: 18),
-                                  const Text(
+                                  const AppText(
                                     'Friss hírek',
                                     style: TextStyle(
                                       fontSize: 24,
@@ -288,7 +290,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                               .refresh();
                                         },
                                         icon: const Icon(Icons.refresh),
-                                        label: const Text('Újrapróbálás'),
+                                        label: const AppText('Újrapróbálás'),
                                       ),
                                     ],
                                   ),
@@ -299,7 +301,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                 return const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 60),
                                   child: Center(
-                                    child: Text(
+                                    child: AppText(
                                       'Nincs találat.',
                                       style: TextStyle(
                                         fontSize: 18,

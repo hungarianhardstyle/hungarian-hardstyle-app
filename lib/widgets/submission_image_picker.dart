@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/submission_image.dart';
+import 'app_text.dart';
 
 class SubmissionImagePicker extends StatelessWidget {
   static const maxBytes = 5 * 1024 * 1024;
@@ -69,13 +70,13 @@ class SubmissionImagePicker extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: () => _pick(context, ImageSource.camera),
                 icon: const Icon(Icons.photo_camera_outlined),
-                label: const Text('Fotó készítése'),
+                label: const AppText('Fotó készítése'),
               ),
               if (image != null)
                 TextButton.icon(
                   onPressed: () => onChanged(null),
                   icon: const Icon(Icons.delete_outline),
-                  label: const Text('Törlés'),
+                  label: const AppText('Törlés'),
                 ),
             ],
           ),
@@ -99,7 +100,7 @@ class SubmissionImagePicker extends StatelessWidget {
 
       if (bytes.length > maxBytes) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A kép legfeljebb 5 MB lehet.')),
+          const SnackBar(content: AppText('A kép legfeljebb 5 MB lehet.')),
         );
         return;
       }
@@ -107,7 +108,7 @@ class SubmissionImagePicker extends StatelessWidget {
       final extension = file.name.split('.').last.toLowerCase();
       if (!const {'jpg', 'jpeg', 'png', 'webp'}.contains(extension)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('JPG, PNG vagy WebP képet válassz.')),
+          const SnackBar(content: AppText('JPG, PNG vagy WebP képet válassz.')),
         );
         return;
       }
@@ -116,7 +117,7 @@ class SubmissionImagePicker extends StatelessWidget {
     } catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nem sikerült kiválasztani a képet.')),
+        const SnackBar(content: AppText('Nem sikerült kiválasztani a képet.')),
       );
     }
   }

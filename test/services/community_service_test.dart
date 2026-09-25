@@ -121,7 +121,7 @@ void main() {
     final source = File('lib/screens/community/community_screen.dart')
         .readAsStringSync();
     expect(source, contains("final createdAt = data['createdAt'];"));
-    expect(source, contains("const Text('A közösség tagja')"));
+    expect(source, contains("const AppText('A közösség tagja')"));
   });
 
   test('a publikus profilvetület tartalmazza a tagság kezdetét', () {

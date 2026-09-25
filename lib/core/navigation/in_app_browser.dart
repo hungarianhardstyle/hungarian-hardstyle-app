@@ -1,3 +1,5 @@
+import '../../widgets/app_text.dart';
+import '../i18n/tr.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -124,7 +126,7 @@ class _InAppBrowserScreenState extends State<InAppBrowserScreen> {
           title: Text(widget.title, overflow: TextOverflow.ellipsis),
           actions: [
             IconButton(
-              tooltip: 'Megnyitás külső böngészőben',
+              tooltip: tr(context, 'Megnyitás külső böngészőben'),
               onPressed: () async {
                 final url = await _controller.currentUrl();
                 final uri = Uri.tryParse(url ?? '');
@@ -151,7 +153,7 @@ class _InAppBrowserScreenState extends State<InAppBrowserScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 IconButton(
-                  tooltip: 'Vissza',
+                  tooltip: tr(context, 'Vissza'),
                   onPressed: () async {
                     if (await _controller.canGoBack()) {
                       await _controller.goBack();
@@ -160,7 +162,7 @@ class _InAppBrowserScreenState extends State<InAppBrowserScreen> {
                   icon: const Icon(Icons.arrow_back),
                 ),
                 IconButton(
-                  tooltip: 'Előre',
+                  tooltip: tr(context, 'Előre'),
                   onPressed: () async {
                     if (await _controller.canGoForward()) {
                       await _controller.goForward();
@@ -169,7 +171,7 @@ class _InAppBrowserScreenState extends State<InAppBrowserScreen> {
                   icon: const Icon(Icons.arrow_forward),
                 ),
                 IconButton(
-                  tooltip: 'Újratöltés',
+                  tooltip: tr(context, 'Újratöltés'),
                   onPressed: _controller.reload,
                   icon: const Icon(Icons.refresh),
                 ),
@@ -184,6 +186,6 @@ class _InAppBrowserScreenState extends State<InAppBrowserScreen> {
 
 void _showOpenError(BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Nem sikerült megnyitni a linket.')),
+    const SnackBar(content: AppText('Nem sikerült megnyitni a linket.')),
   );
 }

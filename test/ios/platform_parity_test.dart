@@ -60,7 +60,7 @@ void main() {
       expect(spotify, contains('LaunchMode.externalNonBrowserApplication'));
       expect(
         spotify,
-        contains("openInAppBrowser(context, url, title: 'Spotify')"),
+        contains("openInAppBrowser(context, url, title: tr(context, 'Spotify'))"),
         reason: 'ha a natív megnyitás nem sikerül, a böngészőnek kell jönnie',
       );
     });

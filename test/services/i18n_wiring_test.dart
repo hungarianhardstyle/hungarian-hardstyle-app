@@ -31,8 +31,15 @@ void main() {
       final decoded = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
       expect(decoded, isNotEmpty);
       for (final entry in decoded.entries) {
-        expect(entry.key.trim(), entry.key, reason: 'a kulcs nem tartalmazhat szóközt a szélén');
-        expect((entry.value as String).trim(), isNotEmpty, reason: 'üres fordítás: ${entry.key}');
+        // ⚠️ A kulcs szélén LEHET szóköz: a kódban vannak összefűzött
+        // szövegrészek (pl. `'… a letöltés '`), és a kulcsnak pontosan kell
+        // egyeznie a forrásszöveggel. Csak a csupa-szóköz kulcs tilos.
+        expect(entry.key.trim(), isNotEmpty, reason: 'üres kulcs a szótárban');
+        expect(
+          (entry.value as String).trim(),
+          isNotEmpty,
+          reason: 'üres fordítás: ${entry.key}',
+        );
       }
     });
 
@@ -88,6 +95,26 @@ void main() {
       // A fejlécben ikon nélkül (mérve ~25 px-cel keskenyebb), és a kapcsoló
       // a jobb oldali csoport végén van.
       expect(home, contains('LanguageSwitchButton(showIcon: false)'));
+    });
+
+    test('a felület szövegei be vannak kötve a fordítóba (nem esett vissza)', () {
+      final files = Directory('lib')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.dart'))
+          .toList();
+      var appText = 0;
+      var tr = 0;
+      for (final file in files) {
+        final source = file.readAsStringSync();
+        appText += RegExp(r'AppText\(').allMatches(source).length;
+        tr += RegExp(r'\btr(?:Args)?\(context,').allMatches(source).length;
+      }
+      // A mért érték 2026-09-25-én: 581 AppText + 202 tr = 783 bekötött szöveg.
+      // A küszöbök szándékosan a mért érték alatt vannak (kisebb változás nem
+      // buktat), de egy visszaesést (a körbefordítás visszavonását) igen.
+      expect(appText, greaterThan(450), reason: 'az AppText-bekötés megvan');
+      expect(tr, greaterThan(150), reason: 'a tr(...)-bekötés megvan');
     });
   });
 

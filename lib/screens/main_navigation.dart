@@ -9,6 +9,8 @@ import 'home/home_screen.dart';
 import 'more/more_screen.dart';
 import 'news/news_screen.dart';
 import 'releases/releases_screen.dart';
+import '../core/i18n/tr.dart';
+import '../widgets/app_text.dart';
 import '../widgets/radio_player_bar.dart';
 import '../services/app_badge_sync.dart';
 import '../services/app_update_service.dart';
@@ -84,21 +86,21 @@ class _MainNavigationState extends State<MainNavigation>
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Új verzió érhető el'),
-          content: const Text(
+          title: const AppText('Új verzió érhető el'),
+          content: const AppText(
             'Frissítsd az alkalmazást a legújabb javításokért.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Most nem'),
+              child: const AppText('Most nem'),
             ),
             FilledButton(
               onPressed: () async {
                 await AppUpdateService().start(info);
                 if (dialogContext.mounted) Navigator.of(dialogContext).pop();
               },
-              child: const Text('Frissítés'),
+              child: const AppText('Frissítés'),
             ),
           ],
         ),
@@ -171,16 +173,16 @@ class _MainNavigationState extends State<MainNavigation>
       final exit = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Kilépés'),
-          content: const Text('Biztosan ki szeretnél lépni az alkalmazásból?'),
+          title: const AppText('Kilépés'),
+          content: const AppText('Biztosan ki szeretnél lépni az alkalmazásból?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Mégse'),
+              child: const AppText('Mégse'),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Kilépés'),
+              child: const AppText('Kilépés'),
             ),
           ],
         ),
@@ -260,32 +262,32 @@ class _MainNavigationState extends State<MainNavigation>
         NavigationDestination(
           icon: _navGraphic('nav_home'),
           selectedIcon: _navGraphic('nav_home', selected: true),
-          label: 'Kezdőlap',
+          label: tr(context, 'Kezdőlap'),
         ),
         NavigationDestination(
           icon: _navGraphic('nav_news'),
           selectedIcon: _navGraphic('nav_news', selected: true),
-          label: 'Hírek',
+          label: tr(context, 'Hírek'),
         ),
         NavigationDestination(
           icon: _navGraphic('nav_events'),
           selectedIcon: _navGraphic('nav_events', selected: true),
-          label: 'Események',
+          label: tr(context, 'Események'),
         ),
         NavigationDestination(
           icon: _navGraphic('nav_chat'),
           selectedIcon: _navGraphic('nav_chat', selected: true),
-          label: 'Chat',
+          label: tr(context, 'Chat'),
         ),
         NavigationDestination(
           icon: _navGraphic('nav_label'),
           selectedIcon: _navGraphic('nav_label', selected: true),
-          label: 'Label',
+          label: tr(context, 'Label'),
         ),
         NavigationDestination(
           icon: _navGraphic('nav_more'),
           selectedIcon: _navGraphic('nav_more', selected: true),
-          label: 'Több',
+          label: tr(context, 'Több'),
         ),
       ],
     ),
@@ -301,31 +303,31 @@ class _MainNavigationState extends State<MainNavigation>
       NavigationRailDestination(
         icon: _navGraphic('nav_home'),
         selectedIcon: _navGraphic('nav_home', selected: true),
-        label: Text('Kezdőlap'),
+        label: AppText('Kezdőlap'),
       ),
       NavigationRailDestination(
         icon: _navGraphic('nav_news'),
         selectedIcon: _navGraphic('nav_news', selected: true),
-        label: Text('Hírek'),
+        label: AppText('Hírek'),
       ),
       NavigationRailDestination(
         icon: _navGraphic('nav_events'),
         selectedIcon: _navGraphic('nav_events', selected: true),
-        label: Text('Események'),
+        label: AppText('Események'),
       ),
       NavigationRailDestination(
         icon: _navGraphic('nav_chat'),
         selectedIcon: _navGraphic('nav_chat', selected: true),
-        label: Text('Chat'),
+        label: AppText('Chat'),
       ),
       NavigationRailDestination(
         icon: _navGraphic('nav_label'),
         selectedIcon: _navGraphic('nav_label', selected: true),
-        label: Text('Label'),
+        label: AppText('Label'),
       ),
       NavigationRailDestination(
         icon: _navGraphic('nav_more'),
-        label: Text('Több'),
+        label: AppText('Több'),
       ),
     ],
   );

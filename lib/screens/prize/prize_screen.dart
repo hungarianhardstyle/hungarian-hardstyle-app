@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/prize.dart';
 import '../../providers/community_provider.dart';
+import '../../widgets/app_text.dart';
 import '../community/prize_admin_screen.dart';
 import '../../providers/prize_provider.dart';
 import '../../services/vote_memory.dart';
@@ -105,7 +106,7 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
     final prize = widget.prize;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nyereményjáték'),
+        title: const AppText('Nyereményjáték'),
         actions: prize.isOpen
             ? [ContentRefreshIcon(onRefresh: _refreshStatus)]
             : null,
@@ -185,7 +186,7 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
             ),
           const SizedBox(height: 12),
           if (!registered)
-            const Text(
+            const AppText(
               'A játékhoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána játszhatsz.',
             )
           else
@@ -200,7 +201,7 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
                 key: const Key('prize-admin-open'),
                 onPressed: _openAdmin,
                 icon: const Icon(Icons.groups_outlined, size: 20),
-                label: const Text('Résztvevők (admin)'),
+                label: const AppText('Résztvevők (admin)'),
               ),
             ),
           ],
@@ -222,7 +223,7 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
         padding: EdgeInsets.symmetric(vertical: 18),
         child: Center(child: BrandLoadingIndicator()),
       ),
-      error: (_, _) => const Text(
+      error: (_, _) => const AppText(
         'A játék állapotát most nem sikerült lekérdezni. Ellenőrizd a kapcsolatot, és próbáld újra a jobb felső frissítés ikonnal.',
       ),
       data: (play) =>
@@ -266,7 +267,7 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
+        const AppText(
           'Egy fiók egyszer játszhat, a válasz utólag nem módosítható. Csak a helyes válasz nyerhet.',
           style: TextStyle(fontSize: 12, color: Colors.white60),
         ),
@@ -307,7 +308,7 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
             ),
           ],
           const SizedBox(height: 12),
-          const Text(
+          const AppText(
             'Gratulálunk a nyertesnek! A részleteket e-mailben is elküldtük.',
             style: TextStyle(fontSize: 12, color: Colors.white60),
           ),
@@ -331,7 +332,7 @@ class _PlayedResult extends StatelessWidget {
           Icon(Icons.check_circle_outline, size: 20),
           SizedBox(width: 8),
           Expanded(
-            child: Text(
+            child: AppText(
               'Helyes válasz! Részt veszel a sorsolásban — a nyertest a játék lezárása után hirdetjük ki.',
             ),
           ),
@@ -343,7 +344,7 @@ class _PlayedResult extends StatelessWidget {
         Icon(Icons.cancel_outlined, size: 20),
         SizedBox(width: 8),
         Expanded(
-          child: Text(
+          child: AppText(
             'Sajnos nem ez volt a helyes válasz. Ebben a játékban már nem tudsz újra próbálkozni — a következő játéknál ott leszünk!',
           ),
         ),

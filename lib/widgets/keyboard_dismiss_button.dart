@@ -1,3 +1,4 @@
+import '../core/i18n/tr.dart';
 import 'package:flutter/material.dart';
 
 /// **Billentyűzet-elrejtő gomb a fejlécben és a beviteli sávban.**
@@ -73,7 +74,7 @@ class _KeyboardDismissButtonState extends State<KeyboardDismissButton>
     if (!visible) return const SizedBox.shrink();
 
     return IconButton(
-      tooltip: 'Billentyűzet elrejtése',
+      tooltip: tr(context, 'Billentyűzet elrejtése'),
       icon: const Icon(Icons.keyboard_hide_rounded),
       onPressed: () => FocusManager.instance.primaryFocus?.unfocus(),
     );

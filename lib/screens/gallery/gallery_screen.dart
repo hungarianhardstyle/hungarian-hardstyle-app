@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/post.dart';
 import '../../services/image_saver.dart';
+import '../../widgets/app_text.dart';
 
 class GalleryScreen extends StatefulWidget {
   final List<GalleryImage> images;
@@ -46,7 +48,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
         title: Text("${_current + 1} / ${widget.images.length}"),
         actions: [
           IconButton(
-            tooltip: 'Kép mentése',
+            tooltip: tr(context, 'Kép mentése'),
             icon: const Icon(Icons.download_outlined),
             onPressed: () async {
               try {
@@ -56,13 +58,13 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 );
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Kép mentve a galériába.')),
+                  const SnackBar(content: AppText('Kép mentve a galériába.')),
                 );
               } catch (error) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text(
+                    content: AppText(
                       'A kép mentése nem sikerült. Ellenőrizd a tárhelyengedélyt, majd próbáld újra.',
                     ),
                   ),

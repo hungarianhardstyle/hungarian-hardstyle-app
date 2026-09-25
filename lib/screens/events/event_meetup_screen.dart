@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/event.dart';
 import '../../providers/community_provider.dart';
 import '../../core/errors/user_facing_error.dart';
+import '../../widgets/app_text.dart';
 
 class EventMeetupScreen extends ConsumerStatefulWidget {
   final HuhsEvent event;
@@ -79,7 +80,7 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
     if (widget.event.isPast) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Lejárt eseményen már nem módosítható a Meetup.'),
+          content: AppText('Lejárt eseményen már nem módosítható a Meetup.'),
         ),
       );
       return;
@@ -129,11 +130,11 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
     final user = service.auth.currentUser;
     if (user == null || user.isAnonymous) {
       return const Scaffold(
-        body: Center(child: Text('Regisztráció szükséges.')),
+        body: Center(child: AppText('Regisztráció szükséges.')),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Meetup')),
+      appBar: AppBar(title: const AppText('Meetup')),
       body: FutureBuilder<String?>(
         future: _attendanceFuture,
         builder: (context, attendance) {
@@ -146,7 +147,7 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
-              const Text(
+              const AppText(
                 'Azok láthatók itt, akik erre az eseményre Meetupot jeleztek.',
               ),
               const SizedBox(height: 12),
@@ -154,7 +155,7 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
                 future: _meetupFuture,
                 builder: (context, meetup) => SwitchListTile.adaptive(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Találkoznék ezen az eseményen'),
+                  title: const AppText('Találkoznék ezen az eseményen'),
                   subtitle: Text(
                     attending
                         ? 'Ezt minden regisztrált felhasználó láthatja.'
@@ -174,7 +175,7 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
                   if (entries.isEmpty) {
                     return const Padding(
                       padding: EdgeInsets.only(top: 16),
-                      child: Text('Egyelőre senki nem jelzett Meetupot.'),
+                      child: AppText('Egyelőre senki nem jelzett Meetupot.'),
                     );
                   }
                   return Column(

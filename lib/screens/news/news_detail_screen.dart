@@ -10,6 +10,7 @@ import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/post.dart';
 import '../../services/wordpress_service.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/post_embed_card.dart';
 import '../../widgets/post_shortcode_card.dart';
 import '../../widgets/news_reaction_button.dart';
@@ -223,7 +224,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
                     if (post.embeds.isNotEmpty) ...[
                       const Padding(
                         padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
-                        child: Text(
+                        child: AppText(
                           'Média',
                           style: TextStyle(
                             fontSize: 24,
@@ -239,7 +240,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
                     if (post.shortcodes.isNotEmpty) ...[
                       const Padding(
                         padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
-                        child: Text(
+                        child: AppText(
                           'Interaktív tartalom',
                           style: TextStyle(
                             fontSize: 24,
@@ -259,7 +260,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
                     if (post.galleryImages.isNotEmpty) ...[
                       const Padding(
                         padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
-                        child: Text(
+                        child: AppText(
                           "Galéria",
                           style: TextStyle(
                             fontSize: 24,

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/profile_submission.dart';
 import '../../models/submission_image.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/profile_submission_provider.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/submission_image_picker.dart';
 
 class OrganizerSubmissionScreen extends ConsumerStatefulWidget {
@@ -52,7 +54,7 @@ class _OrganizerSubmissionScreenState
     if (!_formKey.currentState!.validate()) return;
     if (_genres.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Válassz legalább egy műfajt.')),
+        const SnackBar(content: AppText('Válassz legalább egy műfajt.')),
       );
       return;
     }
@@ -80,12 +82,12 @@ class _OrganizerSubmissionScreenState
         context: context,
         builder: (context) => AlertDialog(
           icon: const Icon(Icons.check_circle, color: Color(0xFFE53935)),
-          title: const Text('Beküldés sikeres'),
+          title: const AppText('Beküldés sikeres'),
           content: Text(message),
           actions: [
             FilledButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Rendben'),
+              child: const AppText('Rendben'),
             ),
           ],
         ),
@@ -104,7 +106,7 @@ class _OrganizerSubmissionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Szervező beküldése')),
+      appBar: AppBar(title: const AppText('Szervező beküldése')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -130,7 +132,7 @@ class _OrganizerSubmissionScreenState
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(18, 20, 18, 40),
                       children: [
-                        const Text(
+                        const AppText(
                           'Szervező beküldése',
                           style: TextStyle(
                             fontSize: 28,
@@ -138,7 +140,7 @@ class _OrganizerSubmissionScreenState
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        const AppText(
                           'A szervezői adatlap csak ellenőrzés és jóváhagyás után jelenhet meg.',
                           style: TextStyle(color: Colors.white70, height: 1.4),
                         ),
@@ -166,11 +168,11 @@ class _OrganizerSubmissionScreenState
                                 child: CircularProgressIndicator(),
                               ),
                               error: (error, stack) =>
-                                  const Text('A műfajok betöltése sikertelen.'),
+                                  const AppText('A műfajok betöltése sikertelen.'),
                               data: (options) => Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  const AppText(
                                     'Műfajok *',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -201,8 +203,8 @@ class _OrganizerSubmissionScreenState
                             ),
                         SubmissionImagePicker(
                           image: _logo,
-                          title: 'Szervezői logó feltöltése',
-                          helperText: 'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
+                          title: tr(context, 'Szervezői logó feltöltése'),
+                          helperText: tr(context, 'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB'),
                           onChanged: (image) => setState(() => _logo = image),
                         ),
                         _field(
@@ -213,7 +215,7 @@ class _OrganizerSubmissionScreenState
                           maxLines: 6,
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        const AppText(
                           'Weboldal és közösségi linkek',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),

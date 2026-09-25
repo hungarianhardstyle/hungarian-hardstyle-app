@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/news_provider.dart';
+import '../../widgets/app_text.dart';
 import '../artists/artist_detail_screen.dart';
 import '../events/event_detail_screen.dart';
 import '../news/news_detail_screen.dart';
@@ -55,7 +57,7 @@ class FavoritesScreen extends ConsumerWidget {
             );
           } else if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Az esemény már nem érhető el.')),
+              const SnackBar(content: AppText('Az esemény már nem érhető el.')),
             );
           }
           return;
@@ -74,7 +76,7 @@ class FavoritesScreen extends ConsumerWidget {
             );
           } else if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('A hír már nem érhető el.')),
+              const SnackBar(content: AppText('A hír már nem érhető el.')),
             );
           }
           return;
@@ -93,7 +95,7 @@ class FavoritesScreen extends ConsumerWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A kedvenc nem tölthető be.')),
+          const SnackBar(content: AppText('A kedvenc nem tölthető be.')),
         );
       }
     }
@@ -106,26 +108,26 @@ class FavoritesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kedvencek'),
+        title: const AppText('Kedvencek'),
         actions: [
           if (entries.isNotEmpty)
             IconButton(
-              tooltip: 'Összes törlése',
+              tooltip: tr(context, 'Összes törlése'),
               icon: const Icon(Icons.delete_sweep_outlined),
               onPressed: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('Kedvencek törlése'),
-                    content: const Text('Törlöd az összes mentett kedvencet?'),
+                    title: const AppText('Kedvencek törlése'),
+                    content: const AppText('Törlöd az összes mentett kedvencet?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Mégse'),
+                        child: const AppText('Mégse'),
                       ),
                       FilledButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Törlés'),
+                        child: const AppText('Törlés'),
                       ),
                     ],
                   ),
@@ -139,7 +141,7 @@ class FavoritesScreen extends ConsumerWidget {
       ),
       body: entries.isEmpty
           ? const Center(
-              child: Text(
+              child: AppText(
                 'Még nincs mentett kedvenced.',
                 style: TextStyle(color: Colors.white70, fontSize: 18),
               ),
@@ -160,7 +162,7 @@ class FavoritesScreen extends ConsumerWidget {
                     subtitle: Text(_label(entry.kind)),
                     onTap: () => openEntry(context, ref, entry),
                     trailing: IconButton(
-                      tooltip: 'Eltávolítás',
+                      tooltip: tr(context, 'Eltávolítás'),
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () => ref
                           .read(favoritesProvider)

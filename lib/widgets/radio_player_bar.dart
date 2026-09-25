@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../services/radio_playback.dart';
+import 'app_text.dart';
 
 class RadioPlayerBar extends StatefulWidget {
   const RadioPlayerBar({super.key});
@@ -264,7 +265,7 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
                       ),
                       const SizedBox(width: 7),
                       Expanded(
-                        child: Text(
+                        child: AppText(
                           'REAL HARDSTYLE FM',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

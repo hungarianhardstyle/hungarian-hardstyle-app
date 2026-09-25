@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/errors/user_facing_error.dart';
 import '../../services/community_service.dart';
+import '../../widgets/app_text.dart';
 
 class ReferralScreen extends StatefulWidget {
   const ReferralScreen({super.key});
@@ -44,7 +45,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
     await Clipboard.setData(ClipboardData(text: _inviteText(code)));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Az ajánlószöveg a vágólapra másolva.')),
+        const SnackBar(content: AppText('Az ajánlószöveg a vágólapra másolva.')),
       );
     }
   }
@@ -59,7 +60,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajánlás')),
+      appBar: AppBar(title: const AppText('Ajánlás')),
       body: FutureBuilder<String>(
         future: _codeFuture,
         builder: (context, snapshot) {
@@ -81,7 +82,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   FilledButton.icon(
                     onPressed: _retry,
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Újrapróbálás'),
+                    label: const AppText('Újrapróbálás'),
                   ),
                 ],
               ),
@@ -93,13 +94,13 @@ class _ReferralScreenState extends State<ReferralScreen> {
             children: [
               const Icon(Icons.group_add_outlined, size: 64),
               const SizedBox(height: 16),
-              const Text(
+              const AppText(
                 'Hívd meg az ismerőseidet a HUHS appba!',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              const Text(
+              const AppText(
                 'Másold ki az alábbi szöveget, küldd el az ismerősödnek, és ő a regisztrációnál megadhatja az ajánlókódot. Ha az új felhasználó regisztrál, 50 achievement pontot kapsz.',
                 textAlign: TextAlign.center,
               ),
@@ -109,7 +110,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      const Text('A te ajánlókódod'),
+                      const AppText('A te ajánlókódod'),
                       const SizedBox(height: 8),
                       SelectableText(
                         _inviteUrl(code),
@@ -135,16 +136,16 @@ class _ReferralScreenState extends State<ReferralScreen> {
               FilledButton.icon(
                 onPressed: () => _copy(code),
                 icon: const Icon(Icons.copy_outlined),
-                label: const Text('Ajánlás másolása'),
+                label: const AppText('Ajánlás másolása'),
               ),
               const SizedBox(height: 10),
               OutlinedButton.icon(
                 onPressed: () => _share(code),
                 icon: const Icon(Icons.share_outlined),
-                label: const Text('Megosztás…'),
+                label: const AppText('Megosztás…'),
               ),
               const SizedBox(height: 12),
-              const Text(
+              const AppText(
                 'A link a Play Áruházba vezet, a meghívókód telepítés után automatikusan bekerül a regisztrációba. Egy új felhasználó csak egyszer használhat ajánlókódot. Saját kód nem használható, és a pontot a szerver írja jóvá.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white70),

@@ -684,7 +684,7 @@ void main() {
       expect(release, contains('releasePreviewPlayingState.value = false'));
       expect(
         source,
-        contains("tooltip: 'Stop (a szám elejére áll)'"),
+        contains("tooltip: tr(context, 'Stop (a szám elejére áll)')"),
         reason: 'a gomb a sávban is megjelenik',
       );
     });
@@ -700,7 +700,7 @@ void main() {
       );
       expect(
         source,
-        contains("label: const Text('Lista')"),
+        contains("label: const AppText('Lista')"),
         reason: 'a panel a lejátszósávból nyílik',
       );
     });
@@ -832,8 +832,8 @@ void main() {
     test('a listát KÉZZEL lehet rendezni (fel/le), és megmarad', () {
       // A tulajdonos kérése: *„A lista kézi sorrendje (fel/le mozgatás)"*.
       final sheet = _functionBody(source, '_showPlaylist');
-      expect(sheet, contains("tooltip: 'Feljebb'"));
-      expect(sheet, contains("tooltip: 'Lejjebb'"));
+      expect(sheet, contains("tooltip: tr(context, 'Feljebb')"));
+      expect(sheet, contains("tooltip: tr(context, 'Lejjebb')"));
       expect(sheet, contains('Icons.keyboard_arrow_up'));
       expect(sheet, contains('Icons.keyboard_arrow_down'));
       expect(sheet, contains('_movePlaylistEntry'));

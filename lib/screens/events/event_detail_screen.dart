@@ -9,9 +9,11 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/content/html_linkifier.dart';
+import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/event.dart';
+import '../../widgets/app_text.dart';
 import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
 import '../../widgets/genre_chip.dart';
@@ -66,7 +68,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     if (event.isPast) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Lejárt eseményen már nem módosítható a részvétel.'),
+          content: AppText('Lejárt eseményen már nem módosítható a részvétel.'),
         ),
       );
       return;
@@ -95,7 +97,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
         setState(() => _attendanceState = null);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
+            content: AppText(
               'A részvétel mentése nem sikerült. Próbáld újra később.',
             ),
           ),
@@ -138,7 +140,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           ),
         ),
         icon: const Icon(Icons.groups_outlined),
-        label: const Text('Meetup az eseményen'),
+        label: const AppText('Meetup az eseményen'),
       ),
     );
   }
@@ -151,7 +153,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     if (current['myScore'] != null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ezt az eseményt már értékelted.')),
+          const SnackBar(content: AppText('Ezt az eseményt már értékelted.')),
         );
       }
       return;
@@ -160,8 +162,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     final score = await showDialog<int>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Esemény értékelése'),
-        content: const Text('Hány csillagot adsz az eseménynek?'),
+        title: const AppText('Esemény értékelése'),
+        content: const AppText('Hány csillagot adsz az eseménynek?'),
         actions: [
           for (var value = 1; value <= 5; value++)
             TextButton(
@@ -182,7 +184,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Köszönjük az értékelést! +10 achipont.'),
+            content: AppText('Köszönjük az értékelést! +10 achipont.'),
           ),
         );
       }
@@ -231,7 +233,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                 OutlinedButton.icon(
                   onPressed: _rateEvent,
                   icon: const Icon(Icons.star_border),
-                  label: const Text('Esemény értékelése'),
+                  label: const AppText('Esemény értékelése'),
                 ),
             ],
           ),
@@ -266,7 +268,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
   void _showOpenError(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Nem sikerult megnyitni a linket.')),
+      const SnackBar(content: AppText('Nem sikerult megnyitni a linket.')),
     );
   }
 
@@ -436,10 +438,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                     onPressed: () => openSocialLink(
                                       context,
                                       event.facebookEventUrl,
-                                      title: 'Facebook',
+                                      title: tr(context, 'Facebook'),
                                     ),
                                     icon: const Icon(Icons.facebook),
-                                    label: const Text('Facebook'),
+                                    label: const AppText('Facebook'),
                                   ),
                                 if (event.hasTicket)
                                   FilledButton.icon(
@@ -448,7 +450,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                       event.ticketUrl,
                                     ),
                                     icon: const Icon(Icons.confirmation_number),
-                                    label: const Text('Jegyvásárlás'),
+                                    label: const AppText('Jegyvásárlás'),
                                   ),
                                 if (event.hasGoogleMaps)
                                   OutlinedButton.icon(
@@ -457,7 +459,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                       event.googleMapsUrl,
                                     ),
                                     icon: const Icon(Icons.map_outlined),
-                                    label: const Text('Térkép'),
+                                    label: const AppText('Térkép'),
                                   ),
                               ],
                             ),
@@ -525,7 +527,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                         ),
                                       const SizedBox(height: 8),
                                       if (user == null || user.isAnonymous)
-                                        const Text(
+                                        const AppText(
                                           'A részvétel jelöléséhez regisztráció szükséges.',
                                         ),
                                       if (user != null && !user.isAnonymous)
@@ -556,7 +558,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                                     ? Icons.check
                                                     : Icons.event_available,
                                               ),
-                                              label: const Text('Ott leszek'),
+                                              label: const AppText('Ott leszek'),
                                             ),
                                             OutlinedButton(
                                               style: selected == 'not_attending'
@@ -577,7 +579,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                                   : () => _setAttendance(
                                                       'not_attending',
                                                     ),
-                                              child: const Text(
+                                              child: const AppText(
                                                 'Nem leszek ott',
                                               ),
                                             ),

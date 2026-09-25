@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../providers/releases_provider.dart';
+import '../../widgets/app_text.dart';
 import 'release_detail_screen.dart';
 
 class FreeReleasesScreen extends ConsumerWidget {
@@ -15,16 +16,16 @@ class FreeReleasesScreen extends ConsumerWidget {
         .clamp(300, 600);
     final releases = ref.watch(releasesProvider((search: '', artistId: 0)));
     return Scaffold(
-      appBar: AppBar(title: const Text('Ingyenes kiadványok')),
+      appBar: AppBar(title: const AppText('Ingyenes kiadványok')),
       body: releases.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(
-          child: Text('Az ingyenes kiadványok nem tölthetők be.'),
+          child: AppText('Az ingyenes kiadványok nem tölthetők be.'),
         ),
         data: (items) {
           final free = items.where((release) => release.isFree).toList();
           if (free.isEmpty) {
-            return const Center(child: Text('Nincs ingyenes kiadvány.'));
+            return const Center(child: AppText('Nincs ingyenes kiadvány.'));
           }
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
@@ -84,7 +85,7 @@ class FreeReleasesScreen extends ConsumerWidget {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            subtitle: const Text('Ingyenesen letölthető WAV'),
+                            subtitle: const AppText('Ingyenesen letölthető WAV'),
                             trailing: const Icon(Icons.chevron_right),
                           ),
                         ),

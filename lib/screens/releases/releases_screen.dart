@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/tr.dart';
 import '../../providers/releases_provider.dart';
 import '../../providers/news_provider.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/release_card.dart';
 import 'free_releases_screen.dart';
@@ -86,8 +88,8 @@ class ReleasesScreenState extends ConsumerState<ReleasesScreen>
         ? const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Hardstyle Revolution', style: TextStyle(fontSize: 18)),
-              Text('Records', style: TextStyle(fontSize: 18)),
+              AppText('Hardstyle Revolution', style: TextStyle(fontSize: 18)),
+              AppText('Records', style: TextStyle(fontSize: 18)),
             ],
           )
         : Text('${widget.artistName} release-ei');
@@ -98,7 +100,7 @@ class ReleasesScreenState extends ConsumerState<ReleasesScreen>
           if (widget.artistId == 0)
             TextButton.icon(
               icon: const Icon(Icons.local_offer_outlined),
-              label: const Text('Ingyenes kiadványok'),
+              label: const AppText('Ingyenes kiadványok'),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const FreeReleasesScreen(),
@@ -144,11 +146,11 @@ class ReleasesScreenState extends ConsumerState<ReleasesScreen>
                       },
                       decoration: InputDecoration(
                         prefixIcon: Icon(Icons.search),
-                        hintText: 'Release keresése',
+                        hintText: tr(context, 'Release keresése'),
                         suffixIcon: _searchController.text.isEmpty
                             ? null
                             : IconButton(
-                                tooltip: 'Keresés törlése',
+                                tooltip: tr(context, 'Keresés törlése'),
                                 onPressed: () {
                                   _timer?.cancel();
                                   _searchController.clear();
@@ -163,7 +165,7 @@ class ReleasesScreenState extends ConsumerState<ReleasesScreen>
                 if (items.isEmpty)
                   const SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(child: Text('Nincs megjeleníthető release.')),
+                    child: Center(child: AppText('Nincs megjeleníthető release.')),
                   )
                 else
                   SliverPadding(

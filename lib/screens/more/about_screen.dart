@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../data/app_changelog.dart';
 import '../../models/release.dart';
 import '../../providers/releases_provider.dart';
 import '../../services/label_purchase_service.dart';
 import '../../services/purchase_diagnostics_plan.dart';
+import '../../widgets/app_text.dart';
 
 /// Az app adatai és a kiadási jegyzet (changelog).
 ///
@@ -34,7 +36,7 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Az appról')),
+      appBar: AppBar(title: const AppText('Az appról')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -66,13 +68,13 @@ class AboutScreen extends StatelessWidget {
                     color: Color(0xFFE53935),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  const AppText(
                     'Hungarian Hardstyle',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  AppText(
                     'Magyar hardstyle és hardcore közösségi app',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -82,12 +84,12 @@ class AboutScreen extends StatelessWidget {
                   const SizedBox(height: 28),
                   _InfoTile(
                     icon: Icons.info_outline,
-                    label: 'Verzió',
+                    label: tr(context, 'Verzió'),
                     value: version,
                   ),
                   _InfoTile(
                     icon: Icons.language,
-                    label: 'Weboldal',
+                    label: tr(context, 'Weboldal'),
                     value: 'hungarianhardstyle.hu',
                     onTap: () => openInAppBrowser(
                       context,
@@ -96,7 +98,7 @@ class AboutScreen extends StatelessWidget {
                   ),
                   _InfoTile(
                     icon: Icons.mail_outline,
-                    label: 'Kapcsolat',
+                    label: tr(context, 'Kapcsolat'),
                     value: 'info@hungarianhardstyle.hu',
                     onTap: () => launchUrl(
                       Uri(scheme: 'mailto', path: 'info@hungarianhardstyle.hu'),
@@ -144,7 +146,7 @@ class _Changelog extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const AppText(
           'Újdonságok',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
@@ -165,7 +167,7 @@ class _Changelog extends StatelessWidget {
           _ReleaseCard(note: current, current: true),
         if (older.isNotEmpty) ...[
           const SizedBox(height: 18),
-          Text(
+          AppText(
             'Korábbi kiadások',
             style: TextStyle(
               fontSize: 15,
@@ -224,7 +226,7 @@ class _ReleaseCard extends StatelessWidget {
                       color: scheme.primaryContainer,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
+                    child: AppText(
                       'Ez a verzió',
                       style: TextStyle(
                         fontSize: 11,
@@ -336,7 +338,7 @@ class _PurchaseDiagnosticsState extends ConsumerState<_PurchaseDiagnostics> {
     );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('A diagnosztika a vágólapra került.')),
+      const SnackBar(content: AppText('A diagnosztika a vágólapra került.')),
     );
   }
 
@@ -354,12 +356,12 @@ class _PurchaseDiagnosticsState extends ConsumerState<_PurchaseDiagnostics> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const AppText(
               'Vásárlási diagnosztika',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            Text(
+            AppText(
               'Ha a vásárlás nem indul el, ez megmutatja, mit válaszol a Google '
               'Play ezen a készüléken: hány terméket ad vissza, milyen áron és '
               'pénznemben, és mi volt a legutóbbi vásárlási hiba kódja.',
@@ -386,7 +388,7 @@ class _PurchaseDiagnosticsState extends ConsumerState<_PurchaseDiagnostics> {
                   OutlinedButton.icon(
                     onPressed: _copy,
                     icon: const Icon(Icons.copy_all_outlined),
-                    label: const Text('Másolás'),
+                    label: const AppText('Másolás'),
                   ),
                 ],
               ],

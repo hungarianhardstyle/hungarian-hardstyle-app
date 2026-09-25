@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../core/media/youtube_embed.dart';
 import '../core/navigation/in_app_browser.dart';
 import '../models/post.dart';
+import 'app_text.dart';
 
 class PostEmbedCard extends StatefulWidget {
   final PostEmbed embed;
@@ -125,7 +126,7 @@ class _PostEmbedCardState extends State<PostEmbedCard> {
               child: TextButton.icon(
                 onPressed: () => _openExternal(widget.embed.url),
                 icon: const Icon(Icons.open_in_new, size: 18),
-                label: const Text('Megnyitás a YouTube-on'),
+                label: const AppText('Megnyitás a YouTube-on'),
               ),
             ),
           ),
@@ -205,7 +206,7 @@ class _YouTubeLinkCard extends StatelessWidget {
               left: 16,
               right: 16,
               bottom: 12,
-              child: Text(
+              child: AppText(
                 'Videó megnyitása a YouTube-on',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../core/errors/user_facing_error.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../services/newsletter_plan.dart';
 import '../../services/wordpress_service.dart';
+import '../../widgets/app_text.dart';
 
 class NewsletterScreen extends StatefulWidget {
   const NewsletterScreen({super.key});
@@ -32,7 +34,7 @@ class _NewsletterScreenState extends State<NewsletterScreen> {
     if (!_consent) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('A feliratkozáshoz fogadd el a hozzájárulást.'),
+          content: AppText('A feliratkozáshoz fogadd el a hozzájárulást.'),
         ),
       );
       return;
@@ -67,7 +69,7 @@ class _NewsletterScreenState extends State<NewsletterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Hírlevél')),
+      appBar: AppBar(title: const AppText('Hírlevél')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -85,13 +87,13 @@ class _NewsletterScreenState extends State<NewsletterScreen> {
               color: Colors.redAccent,
             ),
             const SizedBox(height: 18),
-            const Text(
+            const AppText(
               'Maradj képben',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            const Text(
+            const AppText(
               'Értesülj az új hírekről és fontos eseményekről e-mailben.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70, fontSize: 16),
@@ -103,8 +105,8 @@ class _NewsletterScreenState extends State<NewsletterScreen> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 enabled: !_submitting,
-                decoration: const InputDecoration(
-                  labelText: 'E-mail-cím',
+                decoration: InputDecoration(
+                  labelText: tr(context, 'E-mail-cím'),
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
                 validator: (value) {
@@ -122,7 +124,7 @@ class _NewsletterScreenState extends State<NewsletterScreen> {
                   ? null
                   : (value) => setState(() => _consent = value ?? false),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Hozzájárulok a hírlevél küldéséhez.'),
+              title: const AppText('Hozzájárulok a hírlevél küldéséhez.'),
               controlAffinity: ListTileControlAffinity.leading,
             ),
             const SizedBox(height: 12),
@@ -135,10 +137,10 @@ class _NewsletterScreenState extends State<NewsletterScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.send_outlined),
-              label: const Text('Feliratkozom'),
+              label: const AppText('Feliratkozom'),
             ),
             const SizedBox(height: 14),
-            const Text(
+            const AppText(
               'A feliratkozás megerősítő e-mailhez kötött.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white54, fontSize: 13),
@@ -147,9 +149,9 @@ class _NewsletterScreenState extends State<NewsletterScreen> {
               onPressed: () => openInAppBrowser(
                 context,
                 _hostedSignupUrl,
-                title: 'Webes hírlevél-feliratkozás',
+                title: tr(context, 'Webes hírlevél-feliratkozás'),
               ),
-              child: const Text('Webes feliratkozási oldal megnyitása'),
+              child: const AppText('Webes feliratkozási oldal megnyitása'),
             ),
           ],
         ),

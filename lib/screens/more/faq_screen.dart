@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/faq.dart';
 import '../../providers/news_provider.dart';
+import '../../widgets/app_text.dart';
 
 final faqProvider = FutureProvider<List<FaqItem>>((ref) {
   ref.watch(publicContentRefreshProvider);
@@ -24,11 +26,11 @@ class _FaqScreenState extends ConsumerState<FaqScreen> {
   Widget build(BuildContext context) {
     final asyncFaq = ref.watch(faqProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Segítség')),
+      appBar: AppBar(title: const AppText('Segítség')),
       body: asyncFaq.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorState(
-          message: 'A segítség most nem tölthető be.',
+          message: tr(context, 'A segítség most nem tölthető be.'),
           onRetry: () => ref.invalidate(faqProvider),
         ),
         data: (items) {
@@ -48,9 +50,9 @@ class _FaqScreenState extends ConsumerState<FaqScreen> {
             children: [
               TextField(
                 onChanged: (value) => setState(() => _query = value),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   prefixIcon: Icon(Icons.search),
-                  hintText: 'Kérdés keresése...',
+                  hintText: tr(context, 'Kérdés keresése...'),
                 ),
               ),
               if (categories.length > 1) ...[
@@ -76,7 +78,7 @@ class _FaqScreenState extends ConsumerState<FaqScreen> {
               if (visible.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 48),
-                  child: Center(child: Text('Nincs találat.')),
+                  child: Center(child: AppText('Nincs találat.')),
                 ),
               ...visible.map(
                 (item) => Card(
@@ -113,7 +115,7 @@ class _ErrorState extends StatelessWidget {
         FilledButton.icon(
           onPressed: onRetry,
           icon: const Icon(Icons.refresh),
-          label: const Text('Újrapróbálás'),
+          label: const AppText('Újrapróbálás'),
         ),
       ],
     ),

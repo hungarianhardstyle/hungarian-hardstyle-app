@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/event_submission.dart';
 import '../../models/submission_image.dart';
 import '../../core/errors/user_facing_error.dart';
@@ -10,6 +11,7 @@ import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/organizers_provider.dart';
 import '../../providers/community_provider.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/submission_image_picker.dart';
 
 class EventSubmissionScreen extends ConsumerStatefulWidget {
@@ -182,12 +184,12 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
         context: context,
         builder: (context) => AlertDialog(
           icon: const Icon(Icons.check_circle, color: Color(0xFFE53935)),
-          title: const Text('Beküldés sikeres'),
+          title: const AppText('Beküldés sikeres'),
           content: Text(message),
           actions: [
             FilledButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Rendben'),
+              child: const AppText('Rendben'),
             ),
           ],
         ),
@@ -259,7 +261,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
     final genres = ref.watch(eventSubmissionGenresProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Esemény beküldése')),
+      appBar: AppBar(title: const AppText('Esemény beküldése')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -285,7 +287,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(18, 20, 18, 40),
                       children: [
-                        const Text(
+                        const AppText(
                           'Küldd be az eseményed',
                           style: TextStyle(
                             fontSize: 28,
@@ -293,20 +295,20 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        const AppText(
                           'A beküldés ellenőrzés után kerülhet fel az oldalra és az alkalmazásba.',
                           style: TextStyle(color: Colors.white70, height: 1.4),
                         ),
                         const SizedBox(height: 24),
                         _field(
                           controller: _titleController,
-                          label: 'Esemény neve *',
+                          label: tr(context, 'Esemény neve *'),
                           icon: Icons.event,
                           validator: _required,
                         ),
                         _pickerTile(
                           icon: Icons.calendar_month,
-                          label: 'Dátum *',
+                          label: tr(context, 'Dátum *'),
                           value: _startDate == null
                               ? 'Válassz dátumot'
                               : DateFormat('yyyy. MM. dd.').format(_startDate!),
@@ -314,7 +316,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                         ),
                         _pickerTile(
                           icon: Icons.schedule,
-                          label: 'Kezdés',
+                          label: tr(context, 'Kezdés'),
                           value:
                               _startTime?.format(context) ??
                               'Válassz időpontot',
@@ -322,7 +324,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                           trailing: _startTime == null
                               ? null
                               : IconButton(
-                                  tooltip: 'Időpont törlése',
+                                  tooltip: tr(context, 'Időpont törlése'),
                                   onPressed: () =>
                                       setState(() => _startTime = null),
                                   icon: const Icon(Icons.close),
@@ -330,7 +332,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                         ),
                         _pickerTile(
                           icon: Icons.event_available,
-                          label: 'Esemény vége',
+                          label: tr(context, 'Esemény vége'),
                           value: _endDate == null
                               ? 'Opcionális – válassz napot'
                               : DateFormat('yyyy. MM. dd.').format(_endDate!),
@@ -338,7 +340,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                           trailing: _endDate == null
                               ? null
                               : IconButton(
-                                  tooltip: 'Vége törlése',
+                                  tooltip: tr(context, 'Vége törlése'),
                                   onPressed: () => setState(() {
                                     _endDate = null;
                                     _endTime = null;
@@ -348,7 +350,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                         ),
                         _pickerTile(
                           icon: Icons.schedule,
-                          label: 'Esemény vége – óra',
+                          label: tr(context, 'Esemény vége – óra'),
                           value:
                               _endTime?.format(context) ??
                               'Opcionális – válassz időpontot',
@@ -356,19 +358,19 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                         ),
                         _field(
                           controller: _venueController,
-                          label: 'Helyszín *',
+                          label: tr(context, 'Helyszín *'),
                           icon: Icons.location_on,
                           validator: _required,
                         ),
                         _field(
                           controller: _cityController,
-                          label: 'Város *',
+                          label: tr(context, 'Város *'),
                           icon: Icons.location_city,
                           validator: _required,
                         ),
                         _field(
                           controller: _zipController,
-                          label: 'Irányítószám *',
+                          label: tr(context, 'Irányítószám *'),
                           icon: Icons.markunread_mailbox,
                           keyboardType: TextInputType.number,
                           inputFormatters: [
@@ -378,13 +380,13 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                         ),
                         _field(
                           controller: _addressController,
-                          label: 'Cím *',
+                          label: tr(context, 'Cím *'),
                           icon: Icons.home,
                           validator: _required,
                         ),
                         _organizerDropdown(ref.watch(organizersProvider(''))),
                         const SizedBox(height: 4),
-                        const Text(
+                        const AppText(
                           'Műfajok *',
                           style: TextStyle(
                             fontSize: 16,
@@ -400,7 +402,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                           error: (error, stack) => Row(
                             children: [
                               const Expanded(
-                                child: Text(
+                                child: AppText(
                                   'Nem sikerült betölteni a műfajokat.',
                                   style: TextStyle(color: Colors.white70),
                                 ),
@@ -409,7 +411,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                                 onPressed: () => ref.invalidate(
                                   eventSubmissionGenresProvider,
                                 ),
-                                child: const Text('Újra'),
+                                child: const AppText('Újra'),
                               ),
                             ],
                           ),
@@ -435,27 +437,27 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                         const SizedBox(height: 20),
                         _field(
                           controller: _emailController,
-                          label: 'Kapcsolattartó e-mail *',
+                          label: tr(context, 'Kapcsolattartó e-mail *'),
                           icon: Icons.email,
                           keyboardType: TextInputType.emailAddress,
                           validator: _validateEmail,
                         ),
                         _field(
                           controller: _urlController,
-                          label: 'Facebook- vagy eseménylink',
+                          label: tr(context, 'Facebook- vagy eseménylink'),
                           icon: Icons.link,
                           keyboardType: TextInputType.url,
                           validator: _validateUrl,
                         ),
                         SubmissionImagePicker(
                           image: _flyer,
-                          title: 'Flyer feltöltése',
-                          helperText: 'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB',
+                          title: tr(context, 'Flyer feltöltése'),
+                          helperText: tr(context, 'Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB'),
                           onChanged: (image) => setState(() => _flyer = image),
                         ),
                         _field(
                           controller: _descriptionController,
-                          label: 'Rövid leírás',
+                          label: tr(context, 'Rövid leírás'),
                           icon: Icons.notes,
                           maxLines: 5,
                         ),
@@ -525,7 +527,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
       padding: const EdgeInsets.only(bottom: 14),
       child: value.when(
         loading: () => const LinearProgressIndicator(),
-        error: (_, _) => const Text(
+        error: (_, _) => const AppText(
           'A szervezők nem tölthetők be.',
           style: TextStyle(color: Colors.white70),
         ),
@@ -533,7 +535,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
           final items = page.items as List;
           return _pickerTile(
             icon: Icons.groups,
-            label: 'Szervező',
+            label: tr(context, 'Szervező'),
             value: _selectedOrganizerName.isEmpty
                 ? 'Nincs kiválasztva'
                 : _selectedOrganizerName,
@@ -545,10 +547,10 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                   child: ListView(
                     shrinkWrap: true,
                     children: [
-                      const ListTile(title: Text('Szervező kiválasztása')),
+                      const ListTile(title: AppText('Szervező kiválasztása')),
                       ListTile(
                         leading: const Icon(Icons.clear),
-                        title: const Text('Nincs kiválasztva'),
+                        title: const AppText('Nincs kiválasztva'),
                         onTap: () => Navigator.pop(sheetContext),
                       ),
                       for (final organizer in items)

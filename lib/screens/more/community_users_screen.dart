@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
@@ -12,6 +13,7 @@ import '../../providers/community_provider.dart';
 import '../../providers/artists_provider.dart';
 import '../../services/community_service.dart';
 import '../../services/wordpress_service.dart';
+import '../../widgets/app_text.dart';
 import '../events/event_detail_screen.dart';
 import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
@@ -50,13 +52,13 @@ class _CommunityUsersScreenState extends ConsumerState<CommunityUsersScreen> {
     final viewer = service.auth.currentUser;
     final isRegistered = viewer != null && !viewer.isAnonymous;
     return Scaffold(
-      appBar: AppBar(title: const Text('Felhasználók')),
+      appBar: AppBar(title: const AppText('Felhasználók')),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: service.watchRegisteredPublicProfiles(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
-              child: Text('A felhasználók nem tölthetők be.'),
+              child: AppText('A felhasználók nem tölthetők be.'),
             );
           }
           if (!snapshot.hasData) {
@@ -83,15 +85,15 @@ class _CommunityUsersScreenState extends ConsumerState<CommunityUsersScreen> {
                 TextField(
                   controller: _search,
                   onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    labelText: 'Felhasználó keresése',
-                    hintText: 'Már egy betűre is keres',
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Felhasználó keresése'),
+                    hintText: tr(context, 'Már egy betűre is keres'),
                     prefixIcon: Icon(Icons.search),
                   ),
                 ),
                 const SizedBox(height: 16),
                 if (profiles.isEmpty)
-                  const Center(child: Text('Nincs találat.')),
+                  const Center(child: AppText('Nincs találat.')),
                 for (final profile in profiles)
                   _UserTile(
                     profile: profile,
@@ -232,7 +234,7 @@ class _CommunityPublicProfileScreenState
       await service.requestConnection(widget.userId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ismerősnek jelölés elküldve.')),
+        const SnackBar(content: AppText('Ismerősnek jelölés elküldve.')),
       );
     } catch (error) {
       if (!mounted) return;
@@ -304,11 +306,11 @@ class _CommunityPublicProfileScreenState
         _connectionStatus = Future.value(null);
       });
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Ismerős törölve.')));
+          .showSnackBar(const SnackBar(content: AppText('Ismerős törölve.')));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Az ismerős törlése nem sikerült.')),
+        const SnackBar(content: AppText('Az ismerős törlése nem sikerült.')),
       );
     }
   }
@@ -318,18 +320,18 @@ class _CommunityPublicProfileScreenState
         await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Felhasználó blokkolása'),
-            content: const Text(
+            title: const AppText('Felhasználó blokkolása'),
+            content: const AppText(
               'Nem tudtok majd egymásnak privát üzenetet küldeni. A blokkolás később a blokkolt felhasználók listájából visszavonható.',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Mégse'),
+                child: const AppText('Mégse'),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Blokkolás'),
+                child: const AppText('Blokkolás'),
               ),
             ],
           ),
@@ -343,7 +345,7 @@ class _CommunityPublicProfileScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Felhasználó blokkolva.')));
+      ).showSnackBar(const SnackBar(content: AppText('Felhasználó blokkolva.')));
       Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) return;
@@ -356,7 +358,7 @@ class _CommunityPublicProfileScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil')),
+      appBar: AppBar(title: const AppText('Profil')),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _profileFuture,
         builder: (context, snapshot) {
@@ -450,7 +452,7 @@ class _CommunityPublicProfileScreenState
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_month_outlined),
-                  title: const Text('A közösség tagja'),
+                  title: const AppText('A közösség tagja'),
                   subtitle: Text(
                     MaterialLocalizations.of(context)
                         .formatMediumDate(memberSince),
@@ -508,7 +510,7 @@ class _CommunityPublicProfileScreenState
                     ),
                   ),
                   icon: const Icon(Icons.mail_outline),
-                  label: const Text('Privát üzenet'),
+                  label: const AppText('Privát üzenet'),
                 ),
                 const SizedBox(height: 8),
                 FutureBuilder<String?>(
@@ -519,11 +521,11 @@ class _CommunityPublicProfileScreenState
                       return OutlinedButton.icon(
                         onPressed: _removeConnection,
                         icon: const Icon(Icons.person_remove_outlined),
-                        label: const Text('Ismerős törlése'),
+                        label: const AppText('Ismerős törlése'),
                       );
                     }
                     if (value == 'pending') {
-                      return const Text('Ismerősjelölés elküldve.');
+                      return const AppText('Ismerősjelölés elküldve.');
                     }
                     if (value?.startsWith('incoming:') == true) {
                       return Wrap(
@@ -533,13 +535,13 @@ class _CommunityPublicProfileScreenState
                             onPressed: _connectionBusy
                                 ? null
                                 : () => _respondConnection(true),
-                            child: const Text('Elfogadás'),
+                            child: const AppText('Elfogadás'),
                           ),
                           OutlinedButton(
                             onPressed: _connectionBusy
                                 ? null
                                 : () => _respondConnection(false),
-                            child: const Text('Elutasítás'),
+                            child: const AppText('Elutasítás'),
                           ),
                         ],
                       );
@@ -547,7 +549,7 @@ class _CommunityPublicProfileScreenState
                     return FilledButton.icon(
                       onPressed: _connectionBusy ? null : _requestConnection,
                       icon: const Icon(Icons.person_add_outlined),
-                      label: const Text('Ismerősnek jelölés'),
+                      label: const AppText('Ismerősnek jelölés'),
                     );
                   },
                 ),
@@ -578,14 +580,14 @@ class _CommunityPublicProfileScreenState
                             ),
                           ),
                           icon: const Icon(Icons.people_outline),
-                          label: const Text('Ismerősök megnyitása'),
+                          label: const AppText('Ismerősök megnyitása'),
                         ),
                       ],
                     );
                   },
                 )
               else
-                const Text(
+                const AppText(
                   'Az ismerőslista regisztrált felhasználóknak érhető el.',
                 ),
               if (isRegistered) ...[
@@ -594,7 +596,7 @@ class _CommunityPublicProfileScreenState
                   userId: widget.userId,
                 ),
                 const SizedBox(height: 18),
-                const Text(
+                const AppText(
                   'Események, ahol ott leszek',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -607,7 +609,7 @@ class _CommunityPublicProfileScreenState
                     if (items.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.only(top: 8),
-                        child: Text('Nincs megjelölt esemény.'),
+                        child: AppText('Nincs megjelölt esemény.'),
                       );
                     }
                     return Column(
@@ -617,7 +619,7 @@ class _CommunityPublicProfileScreenState
                             icon: Icons.event_outlined,
                             title:
                                 item.data()['title'] as String? ?? 'Esemény',
-                            subtitle: 'Esemény, ahol ott lesz',
+                            subtitle: tr(context, 'Esemény, ahol ott lesz'),
                             onTap: () async {
                               final eventId = (item.data()['eventId'] as num?)
                                   ?.toInt();
@@ -705,7 +707,7 @@ class _FavoriteProfilesSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const AppText(
               'Kedvenc DJ-k és szervezők',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
@@ -714,7 +716,7 @@ class _FavoriteProfilesSection extends StatelessWidget {
                 context,
                 item,
                 icon: Icons.album_outlined,
-                subtitle: 'Kedvenc DJ',
+                subtitle: tr(context, 'Kedvenc DJ'),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => ArtistDetailScreen(
@@ -728,7 +730,7 @@ class _FavoriteProfilesSection extends StatelessWidget {
                 context,
                 item,
                 icon: Icons.groups_outlined,
-                subtitle: 'Kedvenc szervező',
+                subtitle: tr(context, 'Kedvenc szervező'),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => OrganizerDetailScreen(
@@ -771,17 +773,17 @@ class CommunityPublicFriendsScreen extends StatelessWidget {
     final viewer = service.auth.currentUser;
     if (viewer == null || viewer.isAnonymous) {
       return const Scaffold(
-        body: Center(child: Text('Regisztráció szükséges.')),
+        body: Center(child: AppText('Regisztráció szükséges.')),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Ismerősök')),
+      appBar: AppBar(title: const AppText('Ismerősök')),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: service.watchConnections(userId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
-              child: Text('Az ismerőslista nem tölthető be.'),
+              child: AppText('Az ismerőslista nem tölthető be.'),
             );
           }
           if (!snapshot.hasData) {
@@ -789,7 +791,7 @@ class CommunityPublicFriendsScreen extends StatelessWidget {
           }
           final friends = snapshot.data?.docs ?? const [];
           if (friends.isEmpty) {
-            return const Center(child: Text('Nincs ismerős.'));
+            return const Center(child: AppText('Nincs ismerős.'));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -817,11 +819,11 @@ class _LegacyCommunityConnectionsScreen extends StatelessWidget {
     final user = service.auth.currentUser;
     if (user == null || user.isAnonymous) {
       return const Scaffold(
-        body: Center(child: Text('Regisztráció szükséges.')),
+        body: Center(child: AppText('Regisztráció szükséges.')),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Ismerősök')),
+      appBar: AppBar(title: const AppText('Ismerősök')),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: service.firestore
             .collection('connection_requests')
@@ -833,7 +835,7 @@ class _LegacyCommunityConnectionsScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (requests.isEmpty) const Text('Nincs függőben lévő felkérés.'),
+              if (requests.isEmpty) const AppText('Nincs függőben lévő felkérés.'),
               for (final request in requests)
                 ListTile(
                   title: Text(
@@ -882,7 +884,7 @@ class CommunityHubScreen extends StatelessWidget {
     final user = service.auth.currentUser;
     final registered = user != null && !user.isAnonymous;
     return Scaffold(
-      appBar: AppBar(title: const Text('Közösség')),
+      appBar: AppBar(title: const AppText('Közösség')),
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
@@ -931,7 +933,7 @@ class CommunityHubScreen extends StatelessWidget {
           if (!registered)
             const Padding(
               padding: EdgeInsets.only(top: 12),
-              child: Text('A közösségi funkciókhoz regisztráció szükséges.'),
+              child: AppText('A közösségi funkciókhoz regisztráció szükséges.'),
             ),
         ],
       ),
@@ -969,13 +971,13 @@ class CommunityBlockedUsersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final service = CommunityService();
     return Scaffold(
-      appBar: AppBar(title: const Text('Blokkolt felhasználók')),
+      appBar: AppBar(title: const AppText('Blokkolt felhasználók')),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: service.watchBlockedUsers(),
         builder: (context, snapshot) {
           final users = snapshot.data?.docs ?? const [];
           if (users.isEmpty) {
-            return const Center(child: Text('Nincs blokkolt felhasználó.'));
+            return const Center(child: AppText('Nincs blokkolt felhasználó.'));
           }
           return ListView.builder(
             itemCount: users.length,
@@ -996,7 +998,7 @@ class CommunityBlockedUsersScreen extends StatelessWidget {
                 ),
                 trailing: TextButton(
                   onPressed: () => service.unblockUser(userId),
-                  child: const Text('Feloldás'),
+                  child: const AppText('Feloldás'),
                 ),
               );
             },
@@ -1014,7 +1016,7 @@ class CommunityReportsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final service = CommunityService();
     return Scaffold(
-      appBar: AppBar(title: const Text('Jelentések kezelése')),
+      appBar: AppBar(title: const AppText('Jelentések kezelése')),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: service.watchReports(),
         builder: (context, snapshot) {
@@ -1028,7 +1030,7 @@ class CommunityReportsScreen extends StatelessWidget {
               .where((report) => report.data()['status'] != 'resolved')
               .toList();
           if (reports.isEmpty) {
-            return const Center(child: Text('Nincs nyitott jelentés.'));
+            return const Center(child: AppText('Nincs nyitott jelentés.'));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -1084,7 +1086,7 @@ class _ReportCard extends StatelessWidget {
     } catch (error) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A jelentés kezelése nem sikerült.')),
+          const SnackBar(content: AppText('A jelentés kezelése nem sikerült.')),
         );
       }
     }
@@ -1130,7 +1132,7 @@ class _ReportCard extends StatelessWidget {
           return Card(
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text('A jelentés adatai nem tölthetők be.'),
+              child: AppText('A jelentés adatai nem tölthetők be.'),
             ),
           );
         }
@@ -1184,7 +1186,7 @@ class _ReportCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
+                      child: AppText(
                         'Üzenet jelentése',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
@@ -1192,14 +1194,14 @@ class _ReportCard extends StatelessWidget {
                     PopupMenuButton<String>(
                       onSelected: (action) => _action(context, action),
                       itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'resolve', child: Text('Lezárás')),
+                        PopupMenuItem(value: 'resolve', child: AppText('Lezárás')),
                         PopupMenuItem(
                           value: 'delete',
-                          child: Text('Üzenet törlése'),
+                          child: AppText('Üzenet törlése'),
                         ),
                         PopupMenuItem(
                           value: 'block',
-                          child: Text('Felhasználó tiltása'),
+                          child: AppText('Felhasználó tiltása'),
                         ),
                       ],
                     ),
@@ -1232,11 +1234,11 @@ class CommunityConnectionsScreen extends StatelessWidget {
     final user = service.auth.currentUser;
     if (user == null || user.isAnonymous) {
       return const Scaffold(
-        body: Center(child: Text('Regisztráció szükséges.')),
+        body: Center(child: AppText('Regisztráció szükséges.')),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Ismerősök')),
+      appBar: AppBar(title: const AppText('Ismerősök')),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: service.firestore
             .collection('connection_requests')
@@ -1248,7 +1250,7 @@ class CommunityConnectionsScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (requests.isEmpty) const Text('Nincs függőben lévő felkérés.'),
+              if (requests.isEmpty) const AppText('Nincs függőben lévő felkérés.'),
               for (final request in requests)
                 _ConnectionRequestTile(
                   key: ValueKey(request.id),
@@ -1558,7 +1560,7 @@ class _ClaimedArtistCard extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    const Text(
+                    const AppText(
                       'Átvett DJ-adatlap',
                       style: TextStyle(color: Colors.white70, fontSize: 12.5),
                     ),

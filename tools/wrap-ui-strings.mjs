@@ -57,6 +57,9 @@ export function planEdits(source, file = 'x.dart') {
   let appText = 0;
   let tr = 0;
   for (const hit of targetsInSource(source, file)) {
+    // Idempotencia: ami már be van kötve (`tr(context, …)`, `AppText(…)`),
+    // ahhoz nem nyúlunk — különben a második futás duplán tekerne.
+    if (hit.wrapped) continue;
     const position = offsetOf(source, hit.line, hit.start);
     const textStart = findTextIdentifier(source, position);
     if (textStart >= 0) {
@@ -147,6 +150,19 @@ export function selfTest() {
 
   const already = "            Text(tr(context, 'Közösség')),\n";
   check('a már körbefordított sor nem változik', transformSource(already, 'lib/a.dart').changed === 0);
+  // ⚠️ Ez a valódi idempotencia-teszt: a bekötött alakokon a második futás
+  // semmit nem változtat.
+  const wrappedForms = [
+    "  tooltip: tr(context, 'Feljebb'),\n",
+    "  label: trArgs(context, '{n} nap', {'n': '1'}),\n",
+    "  const AppText('Lista'),\n",
+    "  label: const AppText('Lista'),\n",
+    "  title: const AppText('Megjelenés'),\n",
+  ];
+  check(
+    'a bekötött alakokon a második futás semmit nem változtat',
+    wrappedForms.every((source) => transformSource(source, 'lib/a.dart').changed === 0),
+  );
 
   const constLine = transformSource("    const Text('Közösség'),\n", 'lib/a.dart');
   check('a const megmarad (AppText)', constLine.source.includes("const AppText('Közösség')"));

@@ -5,10 +5,12 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../core/i18n/tr.dart';
 import '../screens/main_navigation.dart';
 import '../services/community_service.dart';
 import '../services/startup_announcement_cooldown.dart';
 import '../core/navigation/in_app_browser.dart';
+import 'app_text.dart';
 
 class StartupGate extends StatefulWidget {
   const StartupGate({super.key});
@@ -198,7 +200,7 @@ class _StartupGateState extends State<StartupGate>
                                   ),
                                   const SizedBox(width: 8),
                                   const Expanded(
-                                    child: Text(
+                                    child: AppText(
                                       'KIEMELT ESEMÉNY',
                                       style: TextStyle(
                                         fontWeight: FontWeight.w800,
@@ -207,7 +209,7 @@ class _StartupGateState extends State<StartupGate>
                                     ),
                                   ),
                                   IconButton(
-                                    tooltip: 'Bezárás',
+                                    tooltip: tr(context, 'Bezárás'),
                                     onPressed: () => setState(() {
                                       _dismissedAnnouncementUrl = announcement;
                                       _announcementUrl = null;

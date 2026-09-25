@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/tr.dart';
 import '../../providers/community_provider.dart';
+import '../../widgets/app_text.dart';
 
 /// A WordPress admin-művelet a natív szerkesztőhöz (betöltés + mentés).
 ///
@@ -419,8 +421,8 @@ class _AdminResourceEditorScreenState
                 const SizedBox(height: 8),
                 SegmentedButton<String>(
                   segments: const [
-                    ButtonSegment(value: 'publish', label: Text('Közzétéve')),
-                    ButtonSegment(value: 'draft', label: Text('Piszkozat')),
+                    ButtonSegment(value: 'publish', label: AppText('Közzétéve')),
+                    ButtonSegment(value: 'draft', label: AppText('Piszkozat')),
                   ],
                   selected: {_status},
                   onSelectionChanged: (selection) =>
@@ -534,7 +536,7 @@ class _AdminResourceEditorScreenState
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Sor törlése',
+                      tooltip: tr(context, 'Sor törlése'),
                       onPressed: rows.length <= 2
                           ? null
                           : () => setState(() => rows.removeAt(index).dispose()),
@@ -551,7 +553,7 @@ class _AdminResourceEditorScreenState
                     ? null
                     : () => setState(() => rows.add(_ListRow(''))),
                 icon: const Icon(Icons.add),
-                label: const Text('Új lehetőség'),
+                label: const AppText('Új lehetőség'),
               ),
             ),
           ],
@@ -584,7 +586,7 @@ class _AdminResourceEditorScreenState
                 onPressed: () =>
                     setState(() => _questions.add(_QuestionRow())),
                 icon: const Icon(Icons.add),
-                label: const Text('Új kérdés'),
+                label: const AppText('Új kérdés'),
               ),
             ),
           ],
@@ -611,7 +613,7 @@ class _AdminResourceEditorScreenState
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Kérdés törlése',
+                  tooltip: tr(context, 'Kérdés törlése'),
                   onPressed: _questions.length <= 1
                       ? null
                       : () => setState(() => _questions.removeAt(index).dispose()),
@@ -622,7 +624,7 @@ class _AdminResourceEditorScreenState
             TextField(
               key: Key('admin-question-$index-prompt'),
               controller: question.prompt,
-              decoration: const InputDecoration(labelText: 'Kérdés szövege'),
+              decoration: InputDecoration(labelText: tr(context, 'Kérdés szövege')),
             ),
             const SizedBox(height: 8),
             for (var option = 0; option < question.options.length; option++)
@@ -648,7 +650,7 @@ class _AdminResourceEditorScreenState
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Válasz törlése',
+                      tooltip: tr(context, 'Válasz törlése'),
                       onPressed: question.options.length <= 2
                           ? null
                           : () => setState(() {
@@ -672,10 +674,10 @@ class _AdminResourceEditorScreenState
                         () => question.options.add(_ListRow('')),
                       ),
                 icon: const Icon(Icons.add),
-                label: const Text('Új válasz'),
+                label: const AppText('Új válasz'),
               ),
             ),
-            Text(
+            AppText(
               'A helyes választ a sor elején pipáld ki (egy válasz).',
               style: Theme.of(context).textTheme.bodySmall,
             ),

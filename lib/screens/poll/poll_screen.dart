@@ -5,6 +5,7 @@ import '../../models/poll.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/poll_provider.dart';
 import '../../services/vote_memory.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
 import 'poll_results_screen.dart';
@@ -117,7 +118,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
     final registered = user != null && !user.isAnonymous;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kérdőív'),
+        title: const AppText('Kérdőív'),
         actions: [ContentRefreshIcon(onRefresh: _refreshStatus)],
       ),
       body: ListView(
@@ -134,7 +135,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
                     children: [
                       const Icon(Icons.poll_outlined, size: 20),
                       const SizedBox(width: 8),
-                      Text(
+                      AppText(
                         'KÉRDŐÍV',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
@@ -154,7 +155,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
                   ),
                   const SizedBox(height: 12),
                   if (!registered)
-                    const Text(
+                    const AppText(
                       'A szavazáshoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána szavazhatsz.',
                     )
                   else
@@ -186,7 +187,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
               child: OutlinedButton.icon(
                 onPressed: _openResults,
                 icon: const Icon(Icons.bar_chart_outlined, size: 20),
-                label: const Text('Eredmények megtekintése'),
+                label: const AppText('Eredmények megtekintése'),
               ),
             ),
           ],
@@ -210,7 +211,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
       error: (_, _) => const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          AppText(
             'A szavazás állapotát most nem sikerült lekérdezni. Ellenőrizd a kapcsolatot, és próbáld újra a jobb felső frissítés ikonnal.',
           ),
         ],
@@ -256,7 +257,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
+        const AppText(
           'Egy fiók egyszer szavazhat, a szavazat utólag nem módosítható. Az eredmény nem nyilvános.',
           style: TextStyle(fontSize: 12, color: Colors.white60),
         ),
@@ -274,7 +275,7 @@ class _PollThanks extends StatelessWidget {
       children: [
         Icon(Icons.check_circle_outline, size: 20),
         SizedBox(width: 8),
-        Expanded(child: Text('Köszönjük, a szavazatod rögzítettük.')),
+        Expanded(child: AppText('Köszönjük, a szavazatod rögzítettük.')),
       ],
     );
   }

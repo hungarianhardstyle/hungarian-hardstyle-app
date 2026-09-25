@@ -4,11 +4,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/artist.dart';
 import '../../providers/artists_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../services/wordpress_service.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/detail_prefetch.dart';
 import '../../widgets/favorite_button.dart';
@@ -82,7 +84,7 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
                         Row(
                           children: [
                             const Expanded(
-                              child: Text(
+                              child: AppText(
                                 'Magyar DJ-k',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -97,7 +99,7 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
                         TextField(
                           onChanged: _onSearchChanged,
                           decoration: InputDecoration(
-                            hintText: 'Keresés DJ-k között…',
+                            hintText: tr(context, 'Keresés DJ-k között…'),
                             prefixIcon: const Icon(Icons.search),
                             filled: true,
                             fillColor: const Color(0xFF171717),
@@ -113,19 +115,19 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
                           child: Row(
                             children: [
                               _CategoryChip(
-                                label: 'Összes',
+                                label: tr(context, 'Összes'),
                                 selected: _category.isEmpty,
                                 onSelected: () =>
                                     setState(() => _category = ''),
                               ),
                               _CategoryChip(
-                                label: 'Hardstyle',
+                                label: tr(context, 'Hardstyle'),
                                 selected: _category == 'hardstyle',
                                 onSelected: () =>
                                     setState(() => _category = 'hardstyle'),
                               ),
                               _CategoryChip(
-                                label: 'Hardcore',
+                                label: tr(context, 'Hardcore'),
                                 selected: _category == 'hardcore',
                                 onSelected: () =>
                                     setState(() => _category = 'hardcore'),
@@ -164,7 +166,7 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
                           child: Center(
                             child: Padding(
                               padding: EdgeInsets.all(24),
-                              child: Text(
+                              child: AppText(
                                 'Nincs találat.',
                                 style: TextStyle(
                                   fontSize: 18,
@@ -388,7 +390,7 @@ class _ArtistError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            const AppText(
               'Nem sikerült betölteni a DJ-ket.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70),
@@ -397,7 +399,7 @@ class _ArtistError extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Újrapróbálás'),
+              label: const AppText('Újrapróbálás'),
             ),
           ],
         ),

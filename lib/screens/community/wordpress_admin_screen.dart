@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:html/parser.dart' as html_parser;
 
+import '../../core/i18n/tr.dart';
 import '../../models/submission_image.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/community_provider.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../poll/poll_results_screen.dart';
 import '../voting/voting_summary_screen.dart';
@@ -179,7 +181,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                 })
                 .toList(growable: false);
             return AlertDialog(
-              title: const Text('Megnyitandó tartalom'),
+              title: const AppText('Megnyitandó tartalom'),
               content: SizedBox(
                 width: double.maxFinite,
                 height: MediaQuery.sizeOf(dialogContext).height * .62,
@@ -188,9 +190,9 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                     TextField(
                       controller: searchController,
                       onChanged: (value) => setDialogState(() => query = value),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         prefixIcon: Icon(Icons.search),
-                        labelText: 'Keresés a címek között',
+                        labelText: tr(context, 'Keresés a címek között'),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -199,13 +201,13 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                         children: [
                           ListTile(
                             leading: const Icon(Icons.notifications_none),
-                            title: const Text('Nincs cél'),
+                            title: const AppText('Nincs cél'),
                             onTap: () => Navigator.pop(dialogContext, 'none'),
                           ),
                           ListTile(
                             leading: const Icon(Icons.link),
-                            title: const Text('Egyedi link'),
-                            subtitle: const Text('HTTPS-link megadása'),
+                            title: const AppText('Egyedi link'),
+                            subtitle: const AppText('HTTPS-link megadása'),
                             onTap: () => Navigator.pop(dialogContext, 'url'),
                           ),
                           const Divider(),
@@ -238,7 +240,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                           if (filtered.isEmpty)
                             const Padding(
                               padding: EdgeInsets.all(16),
-                              child: Text('Nincs találat.'),
+                              child: AppText('Nincs találat.'),
                             ),
                         ],
                       ),
@@ -249,7 +251,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Mégse'),
+                  child: const AppText('Mégse'),
                 ),
               ],
             );
@@ -280,20 +282,20 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Egyedi push'),
+          title: const AppText('Egyedi push'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   onChanged: (value) => title = value,
-                  decoration: const InputDecoration(labelText: 'Cím'),
+                  decoration: InputDecoration(labelText: tr(context, 'Cím')),
                 ),
                 TextField(
                   onChanged: (value) => body = value,
                   minLines: 2,
                   maxLines: 5,
-                  decoration: const InputDecoration(labelText: 'Üzenet'),
+                  decoration: InputDecoration(labelText: tr(context, 'Üzenet')),
                 ),
                 const SizedBox(height: 12),
                 InkWell(
@@ -305,8 +307,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                     }
                   },
                   child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Megnyitandó tartalom',
+                    decoration: InputDecoration(
+                      labelText: tr(context, 'Megnyitandó tartalom'),
                       suffixIcon: Icon(Icons.open_in_new),
                     ),
                     child: Text(
@@ -333,7 +335,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Mégse'),
+              child: const AppText('Mégse'),
             ),
             FilledButton(
               onPressed: () {
@@ -348,7 +350,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                   'url': selectedTarget == 'url' ? customUrl.trim() : '',
                 });
               },
-              child: const Text('Küldés'),
+              child: const AppText('Küldés'),
             ),
           ],
         ),
@@ -532,7 +534,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: TextField(
                         controller: title,
-                        decoration: const InputDecoration(labelText: 'Cím'),
+                        decoration: InputDecoration(labelText: tr(context, 'Cím')),
                       ),
                     ),
                     Padding(
@@ -541,8 +543,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                         controller: content,
                         minLines: 4,
                         maxLines: 12,
-                        decoration: const InputDecoration(
-                          labelText: 'Tartalom',
+                        decoration: InputDecoration(
+                          labelText: tr(context, 'Tartalom'),
                         ),
                       ),
                     ),
@@ -564,11 +566,11 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                   FocusScope.of(dialogContext).unfocus();
                   Navigator.pop(dialogContext, false);
                 },
-                child: const Text('Mégse'),
+                child: const AppText('Mégse'),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(dialogContext, true),
-                child: const Text('Mentés'),
+                child: const AppText('Mentés'),
               ),
             ],
           ),
@@ -808,14 +810,14 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Felhasználó szerkesztése'),
+        title: const AppText('Felhasználó szerkesztése'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: name,
-                decoration: const InputDecoration(labelText: 'Név'),
+                decoration: InputDecoration(labelText: tr(context, 'Név')),
               ),
               TextField(
                 controller: email,
@@ -824,8 +826,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
               ),
               DropdownButtonFormField<String>(
                 initialValue: role,
-                decoration: const InputDecoration(
-                  labelText: 'WordPress-szerepkör',
+                decoration: InputDecoration(
+                  labelText: tr(context, 'WordPress-szerepkör'),
                 ),
                 items:
                     const [
@@ -850,11 +852,11 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Mentés'),
+            child: const AppText('Mentés'),
           ),
         ],
       ),
@@ -989,13 +991,13 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
             children: [
               TextField(
                 controller: title,
-                decoration: const InputDecoration(labelText: 'Cím'),
+                decoration: InputDecoration(labelText: tr(context, 'Cím')),
               ),
               TextField(
                 controller: content,
                 minLines: 4,
                 maxLines: 12,
-                decoration: const InputDecoration(labelText: 'Tartalom'),
+                decoration: InputDecoration(labelText: tr(context, 'Tartalom')),
               ),
             ],
           ),
@@ -1003,12 +1005,12 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () =>
                 Navigator.pop(context, (title.text.trim(), content.text)),
-            child: const Text('Mentés'),
+            child: const AppText('Mentés'),
           ),
         ],
       ),
@@ -1027,11 +1029,11 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Mégse'),
+              child: const AppText('Mégse'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Igen'),
+              child: const AppText('Igen'),
             ),
           ],
         ),
@@ -1101,41 +1103,41 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           context: context,
           builder: (dialogContext) => StatefulBuilder(
             builder: (context, setDialogState) => AlertDialog(
-              title: const Text('Indítási kép'),
+              title: const AppText('Indítási kép'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SubmissionImagePicker(
                       image: image,
-                      title: 'Kép feltöltése',
-                      helperText: 'A kép Cloudinary-ra kerül, és az app indulásakor bezárható.',
+                      title: tr(context, 'Kép feltöltése'),
+                      helperText: tr(context, 'A kép Cloudinary-ra kerül, és az app indulásakor bezárható.'),
                       onChanged: (value) => setDialogState(() => image = value),
                     ),
                     TextField(
                       controller: url,
-                      decoration: const InputDecoration(
-                        labelText: 'Kép URL-je',
+                      decoration: InputDecoration(
+                        labelText: tr(context, 'Kép URL-je'),
                       ),
                       keyboardType: TextInputType.url,
                     ),
                     TextField(
                       controller: buttonLabel,
-                      decoration: const InputDecoration(
-                        labelText: 'Gomb felirata (például: Jegyek)',
+                      decoration: InputDecoration(
+                        labelText: tr(context, 'Gomb felirata (például: Jegyek)'),
                       ),
                       maxLength: 40,
                     ),
                     TextField(
                       controller: buttonUrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Gomb linkje (HTTPS)',
+                      decoration: InputDecoration(
+                        labelText: tr(context, 'Gomb linkje (HTTPS)'),
                       ),
                       keyboardType: TextInputType.url,
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Megjelenítés engedélyezése'),
+                      title: const AppText('Megjelenítés engedélyezése'),
                       value: enabled,
                       onChanged: (value) =>
                           setDialogState(() => enabled = value),
@@ -1148,11 +1150,11 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                   onPressed: () =>
                       Navigator.pop(dialogContext, ('', false, null, '', null)),
                   icon: const Icon(Icons.delete_outline),
-                  label: const Text('Kép törlése'),
+                  label: const AppText('Kép törlése'),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Mégse'),
+                  child: const AppText('Mégse'),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.pop(dialogContext, (
@@ -1164,7 +1166,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                         ? null
                         : buttonUrl.text.trim(),
                   )),
-                  child: const Text('Mentés'),
+                  child: const AppText('Mentés'),
                 ),
               ],
             ),
@@ -1225,7 +1227,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
   }
 
   Widget _special(dynamic data) {
-    if (data is! Map) return const Center(child: Text('Nincs adat.'));
+    if (data is! Map) return const Center(child: AppText('Nincs adat.'));
     if (_section == 'games') return _gameAdminList(data);
     final entries = data.entries
         .where((entry) => entry.key != 'items' && entry.key != 'sections')
@@ -1241,7 +1243,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
               ),
             ),
             icon: const Icon(Icons.bar_chart_outlined),
-            label: const Text('Szavazási összesítő'),
+            label: const AppText('Szavazási összesítő'),
           ),
         if (_section == 'push')
           FilledButton.icon(
@@ -1249,19 +1251,19 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                 ? null
                 : () => _sendPush(Map<String, dynamic>.from(data)),
             icon: const Icon(Icons.send),
-            label: const Text('Egyedi push létrehozása'),
+            label: const AppText('Egyedi push létrehozása'),
           ),
         if (_section == 'startup')
           FilledButton.icon(
             onPressed: () => _editStartup(Map<String, dynamic>.from(data)),
             icon: const Icon(Icons.edit_outlined),
-            label: const Text('Indítási kép kezelése'),
+            label: const AppText('Indítási kép kezelése'),
           ),
         if (_section == 'trash')
           FilledButton.icon(
             onPressed: _emptyTrash,
             icon: const Icon(Icons.delete_forever),
-            label: const Text('Lomtár ürítése'),
+            label: const AppText('Lomtár ürítése'),
           ),
         if (_section != 'push')
           ...entries.map(
@@ -1290,7 +1292,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
   Widget _gameAdminList(Map<dynamic, dynamic> data) {
     final games = _items(data['items']);
     if (games.isEmpty) {
-      return const Center(child: Text('Nincs még játék az adatbázisban.'));
+      return const Center(child: AppText('Nincs még játék az adatbázisban.'));
     }
     return RefreshIndicator(
       onRefresh: () async => _reload(),
@@ -1380,14 +1382,14 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                       ? null
                       : () => _editSubmission(item),
                   icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Szerkesztés'),
+                  label: const AppText('Szerkesztés'),
                 ),
                 OutlinedButton.icon(
                   onPressed: busy || id == 0
                       ? null
                       : () => _manageSubmission(id, 'trash'),
                   icon: const Icon(Icons.delete_outline),
-                  label: const Text('Lomtár'),
+                  label: const AppText('Lomtár'),
                 ),
                 FilledButton.icon(
                   onPressed: busy || id == 0
@@ -1399,7 +1401,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.check),
-                  label: const Text('Jóváhagyás és piszkozat'),
+                  label: const AppText('Jóváhagyás és piszkozat'),
                 ),
               ],
             ),
@@ -1455,24 +1457,24 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                       OutlinedButton.icon(
                         onPressed: id == 0 ? null : () => _editUser(item),
                         icon: const Icon(Icons.edit_outlined),
-                        label: const Text('Szerkesztés'),
+                        label: const AppText('Szerkesztés'),
                       ),
                       OutlinedButton.icon(
                         onPressed: id == 0 ? null : () => _deleteUser(item),
                         icon: const Icon(Icons.delete_outline),
-                        label: const Text('Törlés'),
+                        label: const AppText('Törlés'),
                       ),
                     ]
                   : [
                       OutlinedButton.icon(
                         onPressed: id == 0 ? null : () => _editResource(item),
                         icon: const Icon(Icons.edit_outlined),
-                        label: const Text('Szerkesztés'),
+                        label: const AppText('Szerkesztés'),
                       ),
                       OutlinedButton.icon(
                         onPressed: id == 0 ? null : () => _trashResource(item),
                         icon: const Icon(Icons.delete_outline),
-                        label: const Text('Lomtár'),
+                        label: const AppText('Lomtár'),
                       ),
                     ],
             ),
@@ -1497,21 +1499,21 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     };
     return Scaffold(
       appBar: AppBar(
-        title: const Text('HUHS Vezérlőközpont'),
+        title: const AppText('HUHS Vezérlőközpont'),
         actions: [
           // ÚJ (a tulajdonos kérése): a kvíz is létrehozható a natív adminból.
           // A szerkesztő a KÖZÖS űrlapot használja, a mezőket a szerver írja le.
           if (_section == 'games')
             IconButton(
               key: const Key('game-create'),
-              tooltip: 'Új kvíz',
+              tooltip: tr(context, 'Új kvíz'),
               onPressed: () =>
                   _openResourceEditor(type: 'huhs_game', typeLabel: 'Kvíz'),
               icon: const Icon(Icons.add),
             ),
           if (_creatableSections.contains(_section))
             IconButton(
-              tooltip: 'Új elem',
+              tooltip: tr(context, 'Új elem'),
               onPressed: _createResource,
               icon: const Icon(Icons.add),
             ),
@@ -1547,9 +1549,9 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               child: TextField(
                 onChanged: (value) => setState(() => _search = value),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   prefixIcon: Icon(Icons.search),
-                  labelText: 'Felhasználó keresése',
+                  labelText: tr(context, 'Felhasználó keresése'),
                 ),
               ),
             ),

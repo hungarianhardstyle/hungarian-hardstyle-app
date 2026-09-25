@@ -11,6 +11,7 @@ import '../../core/errors/user_facing_error.dart';
 import '../../models/artist.dart';
 import '../../models/artist_claim_status.dart';
 import '../../providers/artists_provider.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/artist_releases_section.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/genre_chip.dart';
@@ -70,7 +71,7 @@ class ArtistDetailScreen extends ConsumerWidget {
                   onPressed: () =>
                       ref.invalidate(artistDetailProvider(artistId)),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Újrapróbálás'),
+                  label: const AppText('Újrapróbálás'),
                 ),
               ],
             ),
@@ -139,7 +140,7 @@ class _ArtistContent extends ConsumerWidget {
       ref.invalidate(artistClaimStatusProvider(artist.id));
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Az adatlap átvétele sikerült.')),
+        const SnackBar(content: AppText('Az adatlap átvétele sikerült.')),
       );
     } catch (error) {
       if (!context.mounted) return;
@@ -168,7 +169,7 @@ class _ArtistContent extends ConsumerWidget {
       ref.invalidate(artistClaimStatusProvider(artist.id));
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Az átvétel visszavonva.')),
+        const SnackBar(content: AppText('Az átvétel visszavonva.')),
       );
     } catch (error) {
       if (!context.mounted) return;
@@ -343,7 +344,7 @@ class _ArtistContent extends ConsumerWidget {
                                         artist.webUrl,
                                       ),
                                       icon: const Icon(Icons.language),
-                                      label: const Text('Webes adatlap'),
+                                      label: const AppText('Webes adatlap'),
                                     ),
                                 ],
                               ),
@@ -377,14 +378,14 @@ class _ArtistContent extends ConsumerWidget {
                                     ),
                                     const SizedBox(width: 10),
                                     const Expanded(
-                                      child: Text(
+                                      child: AppText(
                                         'Ez a te DJ-adatlapod.',
                                       ),
                                     ),
                                     TextButton(
                                       onPressed: () =>
                                           _releaseArtistClaim(context, ref),
-                                      child: const Text('Átvétel visszavonása'),
+                                      child: const AppText('Átvétel visszavonása'),
                                     ),
                                   ],
                                 ),
@@ -405,7 +406,7 @@ class _ArtistContent extends ConsumerWidget {
                                   ),
                                 ),
                                 icon: const Icon(Icons.edit_outlined),
-                                label: const Text('Adatlap szerkesztése'),
+                                label: const AppText('Adatlap szerkesztése'),
                               ),
                             )
                           else if (claim.canClaim)
@@ -414,13 +415,13 @@ class _ArtistContent extends ConsumerWidget {
                               child: OutlinedButton.icon(
                                 onPressed: () => _claimArtist(context, ref),
                                 icon: const Icon(Icons.verified_user_outlined),
-                                label: const Text('Adatlap átvétele'),
+                                label: const AppText('Adatlap átvétele'),
                               ),
                             )
                           else if (claim.claimed)
                             const Padding(
                               padding: EdgeInsets.only(top: 16),
-                              child: Text(
+                              child: AppText(
                                 'Ezt a DJ-adatlapot már átvette egy fiók.',
                                 style: TextStyle(color: Colors.white70),
                               ),
@@ -439,7 +440,7 @@ class _ArtistContent extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    const AppText(
                                       'Booking',
                                       style: TextStyle(
                                         fontSize: 19,
@@ -448,7 +449,7 @@ class _ArtistContent extends ConsumerWidget {
                                     ),
                                     const SizedBox(height: 7),
                                     if (artist.bookingViaHuhs) ...[
-                                      const Text(
+                                      const AppText(
                                         'A fellépés a Hungarian Hardstyle-on keresztül szervezhető.',
                                         style: TextStyle(color: Colors.white70),
                                       ),
@@ -481,7 +482,7 @@ class _ArtistContent extends ConsumerWidget {
                     if (biography.isNotEmpty) ...[
                       const Padding(
                         padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
-                        child: Text(
+                        child: AppText(
                           'Bemutatkozás',
                           style: TextStyle(
                             fontSize: 24,
@@ -529,7 +530,7 @@ class _ArtistContent extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            const AppText(
                               'Közelgő események',
                               style: TextStyle(
                                 fontSize: 24,
@@ -579,7 +580,7 @@ class _ArtistContent extends ConsumerWidget {
 
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nem sikerült megnyitni a levelezőt.')),
+        const SnackBar(content: AppText('Nem sikerült megnyitni a levelezőt.')),
       );
     }
   }
@@ -608,7 +609,7 @@ class _MissingArtist extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('DJ adatlap')),
+      appBar: AppBar(title: const AppText('DJ adatlap')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),

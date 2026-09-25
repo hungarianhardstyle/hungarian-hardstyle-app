@@ -1,3 +1,4 @@
+import '../core/i18n/tr.dart';
 import 'package:flutter/material.dart';
 
 class BrandLoadingIndicator extends StatefulWidget {
@@ -45,7 +46,7 @@ class _BrandLoadingIndicatorState extends State<BrandLoadingIndicator>
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Betöltés',
+      label: tr(context, 'Betöltés'),
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) =>

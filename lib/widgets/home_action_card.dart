@@ -1,3 +1,4 @@
+import '../core/i18n/tr.dart';
 import 'package:flutter/material.dart';
 
 /// A főoldali „hero" sorok kozos megjelenese.
@@ -171,7 +172,7 @@ class HomeActionCardPlaceholder extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Semantics(
-        label: 'Betöltés',
+        label: tr(context, 'Betöltés'),
         child: DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(

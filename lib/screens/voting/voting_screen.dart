@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/voting.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/voting_provider.dart';
 import '../../providers/voting_service_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../services/voting_service.dart';
+import '../../widgets/app_text.dart';
 
 class VotingScreen extends ConsumerStatefulWidget {
   const VotingScreen({super.key});
@@ -126,18 +128,18 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
           await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('HUHS hírlevél'),
-              content: const Text(
+              title: const AppText('HUHS hírlevél'),
+              content: const AppText(
                 'Feliratkozol a Hungarian Hardstyle hírlevelére? A szavazás ettől függetlenül is folytatható.',
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Nem'),
+                  child: const AppText('Nem'),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Igen'),
+                  child: const AppText('Igen'),
                 ),
               ],
             ),
@@ -179,7 +181,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
+            content: AppText(
               'A szavazat mentése nem sikerült. Próbáld újra később.',
             ),
           ),
@@ -194,11 +196,11 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
   Widget build(BuildContext context) {
     final voting = ref.watch(votingProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('HUHS szavazás')),
+      appBar: AppBar(title: const AppText('HUHS szavazás')),
       body: voting.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
-          child: Text(
+          child: AppText(
             'A szavazás jelenleg nem tölthető be. Próbáld újra később.',
             textAlign: TextAlign.center,
           ),
@@ -214,14 +216,14 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                         mode: LaunchMode.externalApplication,
                       ),
                       icon: const Icon(Icons.poll_outlined),
-                      label: const Text('Eredmények megtekintése'),
+                      label: const AppText('Eredmények megtekintése'),
                     )
                   : season.isClosed
-                  ? const Text(
+                  ? const AppText(
                       'A szavazás véget ért. Az összesítő az adminisztrátori engedély után lesz elérhető.',
                       textAlign: TextAlign.center,
                     )
-                  : const Text('Jelenleg nincs aktív szavazás.'),
+                  : const AppText('Jelenleg nincs aktív szavazás.'),
             );
           }
           return ListView(
@@ -234,7 +236,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 6),
-              Text(
+              AppText(
                 'Regisztráció nélkül is szavazhatsz. Egy készülékről ebben az évadban csak egyszer lehet leadni a szavazatot.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
@@ -266,7 +268,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
             ),
             const SizedBox(height: 10),
             if (category.candidates.isEmpty)
-              const Text('A jelöltek hamarosan érkeznek.'),
+              const AppText('A jelöltek hamarosan érkeznek.'),
             if (category.key == 'international_dj')
               _internationalPicker(category, voted, selected)
             else
@@ -345,7 +347,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                 'A szavazás elküldéséhez minden kötelező kategóriát ki kell tölteni.\n\n${missing.map((category) => '• ${category.label}: ${category.minVotes} jelölt').join('\n')}',
               )
             else if (!remaining)
-              const Text('Minden kategóriában leadtad a szavazatodat.'),
+              const AppText('Minden kategóriában leadtad a szavazatodat.'),
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: _busy || missing.isNotEmpty || !remaining
@@ -357,7 +359,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.how_to_vote_outlined),
-              label: const Text('Szavazok'),
+              label: const AppText('Szavazok'),
             ),
           ],
         ),
@@ -369,14 +371,14 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
     context: context,
     barrierDismissible: false,
     builder: (context) => AlertDialog(
-      title: const Text('Köszönjük a szavazatod!'),
-      content: const Text(
+      title: const AppText('Köszönjük a szavazatod!'),
+      content: const AppText(
         'A szavazatod sikeresen rögzítettük. Ebben az éves szavazásban erről a készülékről már nem adhatsz le újabb szavazatot.',
       ),
       actions: [
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Bezárás'),
+          child: const AppText('Bezárás'),
         ),
       ],
     ),
@@ -404,7 +406,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
         ),
         if (selectedCandidates.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(
+          AppText(
             'Kiválasztott jelöltek:',
             style: Theme.of(context).textTheme.bodySmall,
           ),
@@ -465,22 +467,22 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text(
+                            child: AppText(
                               'Külföldi hardstyle DJ-k',
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Bezárás',
+                            tooltip: tr(context, 'Bezárás'),
                             onPressed: () => Navigator.pop(context),
                             icon: const Icon(Icons.close),
                           ),
                         ],
                       ),
                       TextField(
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           prefixIcon: Icon(Icons.search),
-                          hintText: 'Keresés név szerint',
+                          hintText: tr(context, 'Keresés név szerint'),
                         ),
                         onChanged: (value) =>
                             setDialogState(() => query = value),
@@ -505,7 +507,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                                 if (value == true && next.length >= 5) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text(
+                                      content: AppText(
                                         'Pontosan 5 jelölt választható.',
                                       ),
                                     ),
@@ -528,7 +530,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                           onPressed: selected.length == 5
                               ? () => Navigator.pop(context, selected)
                               : null,
-                          child: const Text('Kiválasztás'),
+                          child: const AppText('Kiválasztás'),
                         ),
                       ),
                     ],

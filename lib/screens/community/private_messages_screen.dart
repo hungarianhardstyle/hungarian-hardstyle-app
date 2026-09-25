@@ -8,8 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/tr.dart';
 import '../../core/input/sentence_capitalization_formatter.dart';
 import '../../services/community_service.dart';
+import '../../widgets/app_text.dart';
 import '../more/community_users_screen.dart';
 import '../../widgets/keyboard_dismiss_button.dart';
 
@@ -49,16 +51,16 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Beszélgetés törlése'),
-        content: const Text('Törlöd ezt a privát beszélgetést?'),
+        title: const AppText('Beszélgetés törlése'),
+        content: const AppText('Törlöd ezt a privát beszélgetést?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Törlés'),
+            child: const AppText('Törlés'),
           ),
         ],
       ),
@@ -79,18 +81,18 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
     final user = _service.auth.currentUser;
     if (user == null || user.isAnonymous) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Privát üzenetek')),
+        appBar: AppBar(title: const AppText('Privát üzenetek')),
         body: const Center(
-          child: Text('Privát üzenetekhez regisztráció szükséges.'),
+          child: AppText('Privát üzenetekhez regisztráció szükséges.'),
         ),
       );
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Privát üzenetek'),
+        title: const AppText('Privát üzenetek'),
         actions: [
           IconButton(
-            tooltip: 'Új privát üzenet',
+            tooltip: tr(context, 'Új privát üzenet'),
             icon: const Icon(Icons.add),
             onPressed: _startConversation,
           ),
@@ -101,7 +103,7 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
-              child: Text('A beszélgetések nem tölthetők be.'),
+              child: AppText('A beszélgetések nem tölthetők be.'),
             );
           }
           if (!snapshot.hasData) {
@@ -118,7 +120,7 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
               return bTime.compareTo(aTime);
             });
           if (conversations.isEmpty) {
-            return const Center(child: Text('Még nincs privát beszélgetés.'));
+            return const Center(child: AppText('Még nincs privát beszélgetés.'));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(12),
@@ -175,7 +177,7 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
                         itemBuilder: (_) => const [
                           PopupMenuItem(
                             value: 'delete',
-                            child: Text('Beszélgetés törlése'),
+                            child: AppText('Beszélgetés törlése'),
                           ),
                         ],
                       ),
@@ -239,7 +241,7 @@ class _PrivateMessageUserSearchScreenState
     final currentUid = _service.auth.currentUser?.uid;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Új privát üzenet'),
+        title: const AppText('Új privát üzenet'),
         // iOS-en nincs rendszer-vissza gomb, amivel a billentyűzetet be lehetne
         // zárni — nyitott billentyűzetnél ez a gomb jelenik meg a fejlécben.
         actions: const [KeyboardDismissButton()],
@@ -249,7 +251,7 @@ class _PrivateMessageUserSearchScreenState
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
-              child: Text('A felhasználók nem tölthetők be.'),
+              child: AppText('A felhasználók nem tölthetők be.'),
             );
           }
           if (!snapshot.hasData) {
@@ -276,8 +278,8 @@ class _PrivateMessageUserSearchScreenState
                   controller: _search,
                   onChanged: (_) => setState(() {}),
                   autofocus: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Kinek szeretnél írni?',
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Kinek szeretnél írni?'),
                     prefixIcon: Icon(Icons.search),
                   ),
                 ),
@@ -410,7 +412,7 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
       if (bytes.length > CommunityService.maxUploadBytes) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('A kép legfeljebb 5 MB lehet.')),
+            const SnackBar(content: AppText('A kép legfeljebb 5 MB lehet.')),
           );
         }
         return;
@@ -442,7 +444,7 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
           children: [
             InteractiveViewer(child: CachedNetworkImage(imageUrl: imageUrl)),
             IconButton(
-              tooltip: 'Bezárás',
+              tooltip: tr(context, 'Bezárás'),
               onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.close, color: Colors.white, size: 30),
             ),
@@ -461,11 +463,11 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Mégse'),
+                child: const AppText('Mégse'),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Igen'),
+                child: const AppText('Igen'),
               ),
             ],
           ),
@@ -537,22 +539,22 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.reply),
-              title: const Text('Válasz'),
+              title: const AppText('Válasz'),
               onTap: () => Navigator.pop(context, 'reply'),
             ),
             ListTile(
               leading: const Icon(Icons.favorite_border),
-              title: const Text('Szívecske'),
+              title: const AppText('Szívecske'),
               onTap: () => Navigator.pop(context, 'heart'),
             ),
             ListTile(
               leading: const Icon(Icons.edit),
-              title: const Text('Üzenet szerkesztése'),
+              title: const AppText('Üzenet szerkesztése'),
               onTap: () => Navigator.pop(context, 'edit'),
             ),
             ListTile(
               leading: const Icon(Icons.delete_outline),
-              title: const Text('Üzenet törlése'),
+              title: const AppText('Üzenet törlése'),
               onTap: () => Navigator.pop(context, 'delete'),
             ),
           ],
@@ -673,7 +675,7 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
     final edited = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Üzenet szerkesztése'),
+        title: const AppText('Üzenet szerkesztése'),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -684,11 +686,11 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Mentés'),
+            child: const AppText('Mentés'),
           ),
         ],
       ),
@@ -722,7 +724,7 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (!conversationSnapshot.data!.exists) {
-          return const Center(child: Text('Írj egy üzenetet.'));
+          return const Center(child: AppText('Írj egy üzenetet.'));
         }
         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: _service.watchPrivateMessages(_conversationId),
@@ -735,7 +737,7 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
             }
             final messages = snapshot.data!.docs;
             if (messages.isEmpty) {
-              return const Center(child: Text('Írj egy üzenetet.'));
+              return const Center(child: AppText('Írj egy üzenetet.'));
             }
             return FutureBuilder<Map<String, dynamic>>(
               future: _partnerProfile,
@@ -906,7 +908,7 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
     if (user == null || user.isAnonymous) {
       return Scaffold(
         appBar: AppBar(title: Text(widget.otherUserName)),
-        body: const Center(child: Text('Bejelentkezés szükséges.')),
+        body: const Center(child: AppText('Bejelentkezés szükséges.')),
       );
     }
     return Scaffold(
@@ -951,11 +953,11 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
             itemBuilder: (_) => const [
               PopupMenuItem(
                 value: 'block',
-                child: Text('Felhasználó blokkolása'),
+                child: AppText('Felhasználó blokkolása'),
               ),
               PopupMenuItem(
                 value: 'delete',
-                child: Text('Beszélgetés törlése'),
+                child: AppText('Beszélgetés törlése'),
               ),
             ],
           ),
@@ -1011,7 +1013,7 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
                                     right: -8,
                                     top: -8,
                                     child: IconButton(
-                                      tooltip: 'Kép eltávolítása',
+                                      tooltip: tr(context, 'Kép eltávolítása'),
                                       onPressed: () => setState(() {
                                         _pendingImageBytes = null;
                                         _pendingImageName = null;
@@ -1035,8 +1037,8 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
                           maxLines: 3,
                           textInputAction: TextInputAction.newline,
                           style: const TextStyle(fontSize: 16),
-                          decoration: const InputDecoration(
-                            hintText: 'Üzenet…',
+                          decoration: InputDecoration(
+                            hintText: tr(context, 'Üzenet…'),
                             hintStyle: TextStyle(fontSize: 16),
                             border: OutlineInputBorder(),
                           ),
@@ -1047,11 +1049,11 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
                   IconButton(
                     onPressed: _sending ? null : _pickImage,
                     icon: const Icon(Icons.image_outlined),
-                    tooltip: 'Kép küldése',
+                    tooltip: tr(context, 'Kép küldése'),
                   ),
                   IconButton(
                     icon: const Icon(Icons.emoji_emotions_outlined),
-                    tooltip: 'Emotikon',
+                    tooltip: tr(context, 'Emotikon'),
                     onPressed: _showEmojiPicker,
                   ),
                   // ⚠️ Ugyanaz a gomb, mint a fejlécben — ide is, a Küldés mellé,

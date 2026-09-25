@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/chat_mention_plan.dart';
+import 'app_text.dart';
 
 /// A `@`-javaslatok **megjelenítése** a Chat beviteli mezője fölött.
 ///
@@ -106,7 +107,7 @@ class ChatMentionOverlay extends StatelessWidget {
                           style: TextStyle(color: colors.primary),
                         ),
                         if (suggestion.subtitle.trim().isNotEmpty)
-                          Text(
+                          AppText(
                             suggestion.subtitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

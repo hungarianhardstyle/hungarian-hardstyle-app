@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/tr.dart';
 import '../../models/artist.dart';
 import '../../models/submission_image.dart';
 import '../../providers/artists_provider.dart';
 import '../../providers/community_provider.dart';
 import '../../services/artist_profile_form.dart';
 import '../../services/wordpress_service.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/submission_image_picker.dart';
 
 /// Az **átvett** DJ-adatlap szerkesztése.
@@ -132,11 +134,11 @@ class _ArtistEditScreenState extends ConsumerState<ArtistEditScreen> {
     final artist = widget.artist;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Adatlap szerkesztése'),
+        title: const AppText('Adatlap szerkesztése'),
         actions: [
           TextButton(
             onPressed: _saving ? null : () => unawaited(_save()),
-            child: const Text('Mentés'),
+            child: const AppText('Mentés'),
           ),
         ],
       ),
@@ -157,7 +159,7 @@ class _ArtistEditScreenState extends ConsumerState<ArtistEditScreen> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  const AppText(
                     'Ez az átvett adatlapod. A fényképet, a bemutatkozást és a '
                     'linkeket szerkesztheted — a foglalási e-mail cím és a '
                     'mûfajok a Hungarian Hardstyle kezében maradnak.',
@@ -170,14 +172,14 @@ class _ArtistEditScreenState extends ConsumerState<ArtistEditScreen> {
           const SizedBox(height: 8),
           SubmissionImagePicker(
             image: _profileImage,
-            title: 'Profilkép',
-            helperText: 'Ez a kép jelenik meg a DJ-adatlapod tetején.',
+            title: tr(context, 'Profilkép'),
+            helperText: tr(context, 'Ez a kép jelenik meg a DJ-adatlapod tetején.'),
             onChanged: (image) => setState(() => _profileImage = image),
           ),
           SubmissionImagePicker(
             image: _coverImage,
-            title: 'Borítókép',
-            helperText: 'A borítókép a profil mögött látszik.',
+            title: tr(context, 'Borítókép'),
+            helperText: tr(context, 'A borítókép a profil mögött látszik.'),
             onChanged: (image) => setState(() => _coverImage = image),
           ),
           for (final entry in artistTextFieldLabels.entries)
@@ -201,15 +203,15 @@ class _ArtistEditScreenState extends ConsumerState<ArtistEditScreen> {
               controller: _controllers['biography'],
               maxLines: 6,
               maxLength: artistBiographyMaxLength,
-              decoration: const InputDecoration(
-                labelText: 'Bemutatkozás',
+              decoration: InputDecoration(
+                labelText: tr(context, 'Bemutatkozás'),
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
             ),
           ),
           const Divider(height: 28),
-          const Text(
+          const AppText(
             'Közösségi linkek',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),

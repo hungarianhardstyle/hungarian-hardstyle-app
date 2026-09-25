@@ -1,3 +1,4 @@
+import '../../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 
 class PrivacyScreen extends StatelessWidget {
@@ -6,11 +7,11 @@ class PrivacyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Adatvédelem és GDPR')),
+      appBar: AppBar(title: const AppText('Adatvédelem és GDPR')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: const [
-          Text(
+          AppText(
             'Adatkezelési tájékoztató',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
@@ -35,7 +36,7 @@ class PrivacyScreen extends StatelessWidget {
             'felhasználói fiókhoz kötött, elkülönített tárolóba.',
           ),
           SizedBox(height: 14),
-          Text(
+          AppText(
             'Vásárlás és letöltés esetén a Google Play termékazonosítója, a vásárlási token '
             'ellenőrzéséhez szükséges adatok és a felhasználói azonosító kapcsolódhatnak '
             'egymáshoz. A vásárlási jogosultságot a szerver ellenőrzi; a letöltési jogosultság '
@@ -58,7 +59,7 @@ class PrivacyScreen extends StatelessWidget {
             'teljesítéséhez szükséges mértékben továbbítjuk.',
           ),
           SizedBox(height: 14),
-          Text(
+          AppText(
             'Célok és jogalapok: a fiók, a közösségi funkciók, a vásárlás és a letöltés '
             'biztosítása a szerződés teljesítéséhez vagy az azt megelőző lépésekhez szükséges; '
             'a biztonság, csalás- és visszaélés-megelőzés, hibakeresés és moderáció az '
@@ -69,7 +70,7 @@ class PrivacyScreen extends StatelessWidget {
             'adatkezelés jogszerűségét.',
           ),
           SizedBox(height: 14),
-          Text(
+          AppText(
             'Megőrzés és törlés: a fiókhoz és közösségi szolgáltatáshoz kapcsolódó adatokat '
             'addig őrizzük, amíg a szolgáltatás biztosításához szükséges, illetve amíg jogi '
             'igény, biztonsági vagy jogszabályi megőrzési ok indokolja. A hirdetési és '
@@ -80,7 +81,7 @@ class PrivacyScreen extends StatelessWidget {
             'megmaradhatnak.',
           ),
           SizedBox(height: 14),
-          Text(
+          AppText(
             'Érintetti jogok: kérheted a hozzáférést, helyesbítést, törlést, az adatkezelés '
             'korlátozását, az adathordozhatóságot, valamint tiltakozhatsz a jogos érdeken '
             'alapuló adatkezelés ellen. Kérelmedet az info@hungarianhardstyle.hu címen lehet '

@@ -19,6 +19,7 @@ import {
   EXCLUDED_FILES,
   dartFiles,
   isTranslationTarget,
+  isWrappedContext,
   stringLiterals,
 } from './lib/i18n-targets.mjs';
 
@@ -60,6 +61,9 @@ export function targetsInSource(source, file = '') {
         quote: literal.quote,
         start: literal.start,
         end: literal.end,
+        // Már be van kötve (`tr(context, …)` / `AppText(…)`) → kulcs, de nem
+        // szerkesztendő. A wrapper ezt a jelzőt használja az idempotenciához.
+        wrapped: isWrappedContext(before) || /(?:^|[\s(,{[])(?:AppText)\s*\(\s*$/.test(before),
       });
     }
   }

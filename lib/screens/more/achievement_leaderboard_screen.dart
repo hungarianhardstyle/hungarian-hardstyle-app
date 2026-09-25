@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../providers/community_provider.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/resized_network_image.dart';
 import 'community_users_screen.dart';
 
@@ -133,7 +134,7 @@ class _AchievementLeaderboardScreenState
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('HUHS Legenda toplista'),
+      title: const AppText('HUHS Legenda toplista'),
       actions: [
         IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh)),
       ],
@@ -148,7 +149,7 @@ class _AchievementLeaderboardScreenState
             child: FilledButton.icon(
               onPressed: _loadMore,
               icon: const Icon(Icons.refresh),
-              label: const Text('Újrapróbálás'),
+              label: const AppText('Újrapróbálás'),
             ),
           );
         }
@@ -156,7 +157,7 @@ class _AchievementLeaderboardScreenState
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(24),
-              child: Text('Még nincs megjeleníthető toplista.'),
+              child: AppText('Még nincs megjeleníthető toplista.'),
             ),
           );
         }
@@ -174,7 +175,7 @@ class _AchievementLeaderboardScreenState
               if (_error != null) {
                 return TextButton(
                   onPressed: _loadMore,
-                  child: const Text('Betöltési hiba – újrapróbálás'),
+                  child: const AppText('Betöltési hiba – újrapróbálás'),
                 );
               }
               return const Padding(

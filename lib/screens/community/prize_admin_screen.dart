@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/tr.dart';
 import '../../providers/community_provider.dart';
+import '../../widgets/app_text.dart';
 import 'admin_resource_editor_screen.dart';
 
 /// A nyereményjáték-admin WordPress admin-műveletei.
@@ -258,18 +260,18 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nyereményjáték (admin)'),
+        title: const AppText('Nyereményjáték (admin)'),
         actions: [
           // ÚJ: létrehozás a natív adminból (a tulajdonos kérése) — ugyanaz az
           // űrlap, mint a szerkesztésnél, a mezőket a szerver írja le.
           IconButton(
             key: const Key('prize-create'),
-            tooltip: 'Új nyereményjáték',
+            tooltip: tr(context, 'Új nyereményjáték'),
             onPressed: () => _openEditor(context),
             icon: const Icon(Icons.add),
           ),
           IconButton(
-            tooltip: 'Frissítés',
+            tooltip: tr(context, 'Frissítés'),
             onPressed: _refresh,
             icon: const Icon(Icons.refresh),
           ),
@@ -286,7 +288,7 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
           }
           final games = gamesSnapshot.data ?? const <_PrizeOption>[];
           if (games.isEmpty) {
-            return const Center(child: Text('Nincs elérhető nyereményjáték.'));
+            return const Center(child: AppText('Nincs elérhető nyereményjáték.'));
           }
           final selected = _selected ??= games.first;
           _summaryFuture ??= _loadSummary(selected);
@@ -299,8 +301,8 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
                   key: const Key('prize-admin-select'),
                   initialValue: selected.id,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Játék',
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Játék'),
                     border: OutlineInputBorder(),
                   ),
                   items: [
@@ -334,7 +336,7 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
                     final summary = summarySnapshot.data;
                     if (summary == null) {
                       return const Center(
-                        child: Text('Ehhez a játékhoz nincs megjeleníthető adat.'),
+                        child: AppText('Ehhez a játékhoz nincs megjeleníthető adat.'),
                       );
                     }
                     return _summaryBody(summary);
@@ -361,7 +363,7 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 12),
-              FilledButton(onPressed: onRetry, child: const Text('Újrapróbálom')),
+              FilledButton(onPressed: onRetry, child: const AppText('Újrapróbálom')),
             ],
           ],
         ),
@@ -415,7 +417,7 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
             ),
           ),
         const SizedBox(height: 6),
-        const Text(
+        const AppText(
           'Válaszlehetőségek',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -448,7 +450,7 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
         ),
         const SizedBox(height: 6),
         if (summary.participants.isEmpty)
-          const Text('Még senki nem játszott ebben a játékban.')
+          const AppText('Még senki nem játszott ebben a játékban.')
         else
           for (final participant in summary.participants)
             ListTile(

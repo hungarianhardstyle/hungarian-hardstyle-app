@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/post.dart';
 import '../../providers/news_provider.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/news_card.dart';
 
 class TaggedNewsScreen extends ConsumerStatefulWidget {
@@ -112,7 +113,7 @@ class _TaggedNewsScreenState extends ConsumerState<TaggedNewsScreen> {
                 children: const [
                   Padding(
                     padding: EdgeInsets.all(40),
-                    child: Center(child: Text('Nincs cikk ehhez a címkéhez.')),
+                    child: Center(child: AppText('Nincs cikk ehhez a címkéhez.')),
                   ),
                 ],
               )

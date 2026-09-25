@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../core/navigation/in_app_browser.dart';
+import '../../widgets/app_text.dart';
 
 class SocialContactScreen extends StatelessWidget {
   const SocialContactScreen({super.key});
@@ -9,7 +11,7 @@ class SocialContactScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Social és kapcsolat')),
+      appBar: AppBar(title: const AppText('Social és kapcsolat')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -21,29 +23,29 @@ class SocialContactScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(18),
           children: [
-            const Text(
+            const AppText(
               'Kövess minket',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             _LinkTile(
               icon: Icons.facebook,
-              label: 'Facebook',
+              label: tr(context, 'Facebook'),
               value: 'Hungarian Hardstyle',
               onTap: () => openSocialLink(
                 context,
                 'https://www.facebook.com/Hunstyle',
-                title: 'Facebook',
+                title: tr(context, 'Facebook'),
               ),
             ),
             _LinkTile(
               icon: Icons.camera_alt_outlined,
-              label: 'Instagram',
+              label: tr(context, 'Instagram'),
               value: '@hungarianhardstyle',
               onTap: () => openSocialLink(
                 context,
                 'https://www.instagram.com/hungarianhardstyle/',
-                title: 'Instagram',
+                title: tr(context, 'Instagram'),
               ),
             ),
             _LinkTile(
@@ -67,14 +69,14 @@ class SocialContactScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            const AppText(
               'Kapcsolat',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             _LinkTile(
               icon: Icons.language,
-              label: 'Weboldal',
+              label: tr(context, 'Weboldal'),
               value: 'hungarianhardstyle.hu',
               onTap: () =>
                   openInAppBrowser(context, 'https://hungarianhardstyle.hu'),

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/profile_submission.dart';
 import '../../models/submission_image.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/profile_submission_provider.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/submission_image_picker.dart';
 
 class ArtistSubmissionScreen extends ConsumerStatefulWidget {
@@ -106,7 +108,7 @@ class _ArtistSubmissionScreenState
     final options = ref.watch(profileSubmissionOptionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('DJ beküldése')),
+      appBar: AppBar(title: const AppText('DJ beküldése')),
       body: _background(
         LayoutBuilder(
           builder: (context, constraints) {
@@ -131,7 +133,7 @@ class _ArtistSubmissionScreenState
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      const AppText(
                         'Az adatlap csak szerkesztői ellenőrzés és jóváhagyás után jelenhet meg.',
                         style: TextStyle(color: Colors.white70, height: 1.4),
                       ),
@@ -147,20 +149,20 @@ class _ArtistSubmissionScreenState
                         loading: () =>
                             const Center(child: CircularProgressIndicator()),
                         error: (error, stack) => ListTile(
-                          title: const Text(
+                          title: const AppText(
                             'Nem sikerült betölteni a kategóriákat.',
                           ),
                           trailing: TextButton(
                             onPressed: () => ref.invalidate(
                               profileSubmissionOptionsProvider,
                             ),
-                            child: const Text('Újra'),
+                            child: const AppText('Újra'),
                           ),
                         ),
                         data: (value) => Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            const AppText(
                               'Kategória *',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
@@ -180,7 +182,7 @@ class _ArtistSubmissionScreenState
                               }).toList(),
                             ),
                             const SizedBox(height: 16),
-                            const Text(
+                            const AppText(
                               'Műfajok *',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
@@ -220,7 +222,7 @@ class _ArtistSubmissionScreenState
                         value: _bookingViaHuhs,
                         onChanged: (value) =>
                             setState(() => _bookingViaHuhs = value),
-                        title: const Text(
+                        title: const AppText(
                           'Fellépésszervezés a Hungarian Hardstyle-on keresztül',
                         ),
                         subtitle: const Text(
@@ -237,15 +239,15 @@ class _ArtistSubmissionScreenState
                         ),
                       SubmissionImagePicker(
                         image: _profileImage,
-                        title: 'Profilkép feltöltése',
-                        helperText: 'Opcionális · álló portré ajánlott · legfeljebb 5 MB',
+                        title: tr(context, 'Profilkép feltöltése'),
+                        helperText: tr(context, 'Opcionális · álló portré ajánlott · legfeljebb 5 MB'),
                         onChanged: (image) =>
                             setState(() => _profileImage = image),
                       ),
                       SubmissionImagePicker(
                         image: _logo,
-                        title: 'DJ-logó feltöltése',
-                        helperText: 'Opcionális · négyzetes, átlátszó PNG ajánlott · legfeljebb 5 MB',
+                        title: tr(context, 'DJ-logó feltöltése'),
+                        helperText: tr(context, 'Opcionális · négyzetes, átlátszó PNG ajánlott · legfeljebb 5 MB'),
                         onChanged: (image) => setState(() => _logo = image),
                       ),
                       _field(
@@ -256,7 +258,7 @@ class _ArtistSubmissionScreenState
                       ),
                       ExpansionTile(
                         tilePadding: EdgeInsets.zero,
-                        title: const Text('Közösségi és zenei linkek'),
+                        title: const AppText('Közösségi és zenei linkek'),
                         children: _social.entries.map((entry) {
                           return _field(
                             entry.value,
@@ -376,12 +378,12 @@ class _ArtistSubmissionScreenState
     context: context,
     builder: (context) => AlertDialog(
       icon: const Icon(Icons.check_circle, color: Color(0xFFE53935)),
-      title: const Text('Beküldés sikeres'),
+      title: const AppText('Beküldés sikeres'),
       content: Text(message),
       actions: [
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Rendben'),
+          child: const AppText('Rendben'),
         ),
       ],
     ),

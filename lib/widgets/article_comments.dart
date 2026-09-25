@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 
 import '../core/errors/user_facing_error.dart';
 import '../core/firebase/firebase_callable.dart';
+import '../core/i18n/tr.dart';
 import '../core/input/sentence_capitalization_formatter.dart';
 import '../services/community_service.dart';
+import 'app_text.dart';
 import 'resized_network_image.dart';
 
 class ArticleComments extends StatefulWidget {
@@ -89,7 +91,7 @@ class _ArticleCommentsState extends State<ArticleComments> {
     if (user == null || user.isAnonymous) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A hozzászóláshoz jelentkezz be.')),
+          const SnackBar(content: AppText('A hozzászóláshoz jelentkezz be.')),
         );
       }
       return;
@@ -146,7 +148,7 @@ class _ArticleCommentsState extends State<ArticleComments> {
     final updated = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Hozzászólás szerkesztése'),
+        title: const AppText('Hozzászólás szerkesztése'),
         content: TextFormField(
           initialValue: text,
           autofocus: true,
@@ -157,11 +159,11 @@ class _ArticleCommentsState extends State<ArticleComments> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, text),
-            child: const Text('Mentés'),
+            child: const AppText('Mentés'),
           ),
         ],
       ),
@@ -193,11 +195,11 @@ class _ArticleCommentsState extends State<ArticleComments> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Mégse'),
+            child: const AppText('Mégse'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Megerősítés'),
+            child: const AppText('Megerősítés'),
           ),
         ],
       ),
@@ -210,7 +212,7 @@ class _ArticleCommentsState extends State<ArticleComments> {
         await _load();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Köszönjük, a jelentést elküldtük.')),
+          const SnackBar(content: AppText('Köszönjük, a jelentést elküldtük.')),
         );
       }
     } catch (e) {
@@ -240,13 +242,13 @@ class _ArticleCommentsState extends State<ArticleComments> {
           Row(
             children: [
               const Expanded(
-                child: Text(
+                child: AppText(
                   'Hozzászólások',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ),
               IconButton(
-                tooltip: 'Hozzászólások frissítése',
+                tooltip: tr(context, 'Hozzászólások frissítése'),
                 onPressed: _loading ? null : () => _load(),
                 icon: const Icon(Icons.refresh),
               ),
@@ -257,11 +259,11 @@ class _ArticleCommentsState extends State<ArticleComments> {
             Text(_error!),
             TextButton(
               onPressed: () => _load(),
-              child: const Text('Újrapróbálás'),
+              child: const AppText('Újrapróbálás'),
             ),
           ],
           if (!_loading && _error == null && _items.isEmpty)
-            const Text(
+            const AppText(
               'Még nincs hozzászólás. Mondd el elsőként a véleményed!',
             ),
           ..._items.map(
@@ -307,24 +309,24 @@ class _ArticleCommentsState extends State<ArticleComments> {
                               if (item['authorId'] != user.uid)
                                 const PopupMenuItem(
                                   value: 'reply',
-                                  child: Text('Válasz'),
+                                  child: AppText('Válasz'),
                                 ),
                               // A szerző a sajátját, moderátor bárkiét — ez a
                               // szerveren is ugyanígy van kikényszerítve.
                               if (item['authorId'] == user.uid || _moderator)
                                 const PopupMenuItem(
                                   value: 'edit',
-                                  child: Text('Szerkesztés'),
+                                  child: AppText('Szerkesztés'),
                                 ),
                               if (item['authorId'] == user.uid || _moderator)
                                 const PopupMenuItem(
                                   value: 'delete',
-                                  child: Text('Törlés'),
+                                  child: AppText('Törlés'),
                                 ),
                               if (item['authorId'] != user.uid)
                                 const PopupMenuItem(
                                   value: 'report',
-                                  child: Text('Jelentés'),
+                                  child: AppText('Jelentés'),
                                 ),
                             ],
                           ),
@@ -387,7 +389,7 @@ class _ArticleCommentsState extends State<ArticleComments> {
           if (_more)
             TextButton(
               onPressed: _loading ? null : () => _load(next: true),
-              child: const Text('Korábbi hozzászólások'),
+              child: const AppText('Korábbi hozzászólások'),
             ),
           const SizedBox(height: 12),
           ...[
@@ -418,8 +420,8 @@ class _ArticleCommentsState extends State<ArticleComments> {
               minLines: 2,
               maxLines: 5,
               maxLength: 2000,
-              decoration: const InputDecoration(
-                hintText: 'Írd meg a véleményed…',
+              decoration: InputDecoration(
+                hintText: tr(context, 'Írd meg a véleményed…'),
                 border: OutlineInputBorder(),
               ),
             ),

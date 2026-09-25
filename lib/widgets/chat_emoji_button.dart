@@ -1,3 +1,4 @@
+import '../core/i18n/tr.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -135,7 +136,7 @@ class ChatEmojiButton extends StatelessWidget {
     }
     return IconButton(
       visualDensity: VisualDensity.compact,
-      tooltip: 'Emotikon',
+      tooltip: tr(context, 'Emotikon'),
       icon: const Icon(Icons.emoji_emotions_outlined),
       onPressed: () async {
         final emoji = await showChatEmojiPicker(context);

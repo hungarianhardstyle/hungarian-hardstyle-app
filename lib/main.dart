@@ -1,3 +1,4 @@
+import 'core/i18n/tr.dart';
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
@@ -20,6 +21,7 @@ import 'services/vote_memory.dart';
 import 'services/label_purchase_service.dart';
 import 'services/public_content_warmer.dart';
 import 'services/music_audio_handler.dart';
+import 'widgets/app_text.dart';
 import 'widgets/startup_gate.dart';
 import 'widgets/account_prefetch.dart';
 import 'widgets/radio_player_bar.dart';
@@ -209,7 +211,7 @@ class HungarianHardstyleApp extends ConsumerWidget {
     return MaterialApp(
       navigatorKey: appNavigatorKey,
       scaffoldMessengerKey: appScaffoldMessengerKey,
-      title: 'Hungarian Hardstyle',
+      title: tr(context, 'Hungarian Hardstyle'),
       debugShowCheckedModeBanner: false,
 
       theme: AppTheme.darkTheme,
@@ -258,13 +260,13 @@ class HungarianHardstyleApp extends ConsumerWidget {
           if (deleted) {
             appScaffoldMessengerKey.currentState?.showSnackBar(
               const SnackBar(
-                content: Text('A fiókodat törölték. Kijelentkeztettünk.'),
+                content: AppText('A fiókodat törölték. Kijelentkeztettünk.'),
               ),
             );
           }
         },
         onVerified: () => appScaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(content: Text('Az e-mail-címed megerősítve.')),
+          const SnackBar(content: AppText('Az e-mail-címed megerősítve.')),
         ),
         child: StreamBuilder(
           stream: service.auth.userChanges(),
@@ -297,7 +299,7 @@ class HungarianHardstyleApp extends ConsumerWidget {
                   if (result['deleted'] == true) {
                     appScaffoldMessengerKey.currentState?.showSnackBar(
                       const SnackBar(
-                        content: Text(
+                        content: AppText(
                           'A fiókodat törölték. Kijelentkeztettünk.',
                         ),
                       ),

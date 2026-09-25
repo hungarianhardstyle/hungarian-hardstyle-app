@@ -1,3 +1,4 @@
+import '../core/i18n/tr.dart';
 import 'package:flutter/material.dart';
 
 class CommunityProfileTextDraft {
@@ -101,7 +102,7 @@ class CommunityProfileFormFields extends StatelessWidget {
         focusNode: draft.nameFocus,
         onChanged: (_) => draft.markEdited('name'),
         decoration: InputDecoration(
-          labelText: 'Megjelenő név',
+          labelText: tr(context, 'Megjelenő név'),
           helperText: nameHelperText,
         ),
       ),
@@ -112,7 +113,7 @@ class CommunityProfileFormFields extends StatelessWidget {
         focusNode: draft.bioFocus,
         onChanged: (_) => draft.markEdited('bio'),
         maxLines: 3,
-        decoration: const InputDecoration(labelText: 'Bemutatkozás'),
+        decoration: InputDecoration(labelText: tr(context, 'Bemutatkozás')),
       ),
     ],
   );

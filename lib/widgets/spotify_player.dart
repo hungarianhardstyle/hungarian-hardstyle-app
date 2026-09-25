@@ -1,3 +1,4 @@
+import 'app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -50,7 +51,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
                   const Icon(Icons.graphic_eq, color: Colors.green),
                   const SizedBox(width: 12),
                   const Expanded(
-                    child: Text(
+                    child: AppText(
                       "HUHS Radio",
                       style: TextStyle(
                         fontSize: 17,

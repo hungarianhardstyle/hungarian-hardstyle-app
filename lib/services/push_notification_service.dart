@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/i18n/tr.dart';
 import '../core/navigation/app_navigator.dart';
 import '../core/navigation/in_app_browser.dart';
 import '../models/event.dart';
@@ -19,6 +20,7 @@ import '../screens/news/news_detail_screen.dart';
 import '../screens/releases/release_detail_screen.dart';
 import '../screens/community/wordpress_admin_screen.dart';
 import '../screens/community/private_messages_screen.dart';
+import '../widgets/app_text.dart';
 import 'wordpress_service.dart';
 
 class PushNotificationService {
@@ -525,7 +527,7 @@ class _ForegroundPushBannerState extends State<_ForegroundPushBanner> {
                         ],
                         if (widget.canOpen) ...[
                           const SizedBox(height: 8),
-                          const Text(
+                          const AppText(
                             'Koppints a megnyitáshoz',
                             style: TextStyle(
                               color: Color(0xFFFF555A),
@@ -537,7 +539,7 @@ class _ForegroundPushBannerState extends State<_ForegroundPushBanner> {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Bezárás',
+                    tooltip: tr(context, 'Bezárás'),
                     onPressed: widget.onDismiss,
                     icon: const Icon(Icons.close, color: Colors.white70),
                   ),

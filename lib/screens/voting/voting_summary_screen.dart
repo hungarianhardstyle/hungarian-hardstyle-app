@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/tr.dart';
 import '../../models/voting.dart';
 import '../../providers/community_provider.dart';
+import '../../widgets/app_text.dart';
 
 class VotingSummaryScreen extends ConsumerStatefulWidget {
   const VotingSummaryScreen({super.key});
@@ -68,10 +70,10 @@ class _VotingSummaryScreenState extends ConsumerState<VotingSummaryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Szavazási összesítő'),
+        title: const AppText('Szavazási összesítő'),
         actions: [
           IconButton(
-            tooltip: 'Frissítés',
+            tooltip: tr(context, 'Frissítés'),
             onPressed: _refresh,
             icon: const Icon(Icons.refresh),
           ),
@@ -97,7 +99,7 @@ class _VotingSummaryScreenState extends ConsumerState<VotingSummaryScreen> {
           final seasons = seasonsSnapshot.data ?? const <VotingSeason>[];
           if (seasons.isEmpty) {
             return const Center(
-              child: Text('Nincs elérhető szavazási szezon.'),
+              child: AppText('Nincs elérhető szavazási szezon.'),
             );
           }
 
@@ -159,7 +161,7 @@ class _VotingSummaryScreenState extends ConsumerState<VotingSummaryScreen> {
                           mode: LaunchMode.externalApplication,
                         ),
                         icon: const Icon(Icons.open_in_new),
-                        label: const Text('Nyilvános eredmények megnyitása'),
+                        label: const AppText('Nyilvános eredmények megnyitása'),
                       ),
                     ),
                   const SizedBox(height: 8),
@@ -167,7 +169,7 @@ class _VotingSummaryScreenState extends ConsumerState<VotingSummaryScreen> {
                     const Card(
                       child: Padding(
                         padding: EdgeInsets.all(16),
-                        child: Text(
+                        child: AppText(
                           'Ehhez az évadhoz nem érkezett kategóriaadat.',
                         ),
                       ),
@@ -266,8 +268,8 @@ class _VotingSummaryScreenState extends ConsumerState<VotingSummaryScreen> {
     VotingSeason selected,
   ) {
     return InputDecorator(
-      decoration: const InputDecoration(
-        labelText: 'Szavazási évad',
+      decoration: InputDecoration(
+        labelText: tr(context, 'Szavazási évad'),
         border: OutlineInputBorder(),
         contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       ),
@@ -288,7 +290,7 @@ class _VotingSummaryScreenState extends ConsumerState<VotingSummaryScreen> {
                   children: [
                     const Padding(
                       padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
-                      child: Text(
+                      child: AppText(
                         'Szavazási évad kiválasztása',
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),

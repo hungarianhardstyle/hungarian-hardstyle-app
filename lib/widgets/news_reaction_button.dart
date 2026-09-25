@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../services/news_reaction_service.dart';
+import 'app_text.dart';
 
 class NewsReactionButton extends StatefulWidget {
   final int postId;
@@ -109,7 +110,7 @@ class _NewsReactionButtonState extends State<NewsReactionButton> {
       if (mounted) {
         setState(() => _state = previous);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A reakció mentése nem sikerült.')),
+          const SnackBar(content: AppText('A reakció mentése nem sikerült.')),
         );
       }
     } finally {

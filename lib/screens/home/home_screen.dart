@@ -17,6 +17,7 @@ import '../../providers/prize_provider.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/post.dart';
 import '../../models/game.dart';
+import '../../widgets/app_text.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
 import '../../widgets/language_switch_button.dart';
@@ -280,7 +281,7 @@ class HomeScreen extends ConsumerWidget {
                         children: [
                           Row(
                             children: [
-                              Text(
+                              AppText(
                                 'HUNGARIAN HARDSTYLE',
                                 style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(
@@ -335,7 +336,7 @@ class HomeScreen extends ConsumerWidget {
                                           ),
                                     ),
                                     const SizedBox(height: 5),
-                                    Text(
+                                    AppText(
                                       'A magyar hardstyle otthona',
                                       style: Theme.of(context)
                                           .textTheme
@@ -401,7 +402,7 @@ class HomeScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text(
+                    AppText(
                       'Legfrissebb hírek',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
@@ -415,7 +416,7 @@ class HomeScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: 40),
                         child: Column(
                           children: [
-                            const Text(
+                            const AppText(
                               'Nem sikerült betölteni a híreket.',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.white70),
@@ -426,7 +427,7 @@ class HomeScreen extends ConsumerWidget {
                                 ref.invalidate(newsProvider);
                               },
                               icon: const Icon(Icons.refresh),
-                              label: const Text('Újrapróbálás'),
+                              label: const AppText('Újrapróbálás'),
                             ),
                           ],
                         ),
@@ -438,7 +439,7 @@ class HomeScreen extends ConsumerWidget {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 40),
                             child: Center(
-                              child: Text(
+                              child: AppText(
                                 'Nincs hír.',
                                 style: TextStyle(
                                   fontSize: 18,
@@ -464,7 +465,7 @@ class HomeScreen extends ConsumerWidget {
                             HomeActionCard(
                               key: const Key('more-news'),
                               eyebrow: 'HÍREK',
-                              label: 'További hírek',
+                              label: tr(context, 'További hírek'),
                               icon: Icons.arrow_forward_rounded,
                               onTap: onShowMoreNews,
                             ),
@@ -500,7 +501,7 @@ class HomeScreen extends ConsumerWidget {
                       },
                     ),
                     const SizedBox(height: 35),
-                    Text(
+                    AppText(
                       'Közelgő események',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
@@ -515,7 +516,7 @@ class HomeScreen extends ConsumerWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
+                            const AppText(
                               'Nem sikerült betölteni az eseményeket.',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.white70),
@@ -526,7 +527,7 @@ class HomeScreen extends ConsumerWidget {
                                 ref.invalidate(eventsProvider);
                               },
                               icon: const Icon(Icons.refresh),
-                              label: const Text('Újrapróbálás'),
+                              label: const AppText('Újrapróbálás'),
                             ),
                           ],
                         ),
@@ -538,7 +539,7 @@ class HomeScreen extends ConsumerWidget {
                           return const SizedBox(
                             height: 120,
                             child: Center(
-                              child: Text(
+                              child: AppText(
                                 'Nincs közelgő esemény.',
                                 style: TextStyle(
                                   fontSize: 18,
