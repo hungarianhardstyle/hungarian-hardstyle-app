@@ -118,6 +118,36 @@ void main() {
     });
   });
 
+  group('forrás-lint: a TARTALOM nyelve követi a választott nyelvet', () {
+    late String service;
+    late String mainFile;
+
+    setUpAll(() {
+      service = readFile('lib/services/wordpress_service.dart');
+      mainFile = readFile('lib/main.dart');
+    });
+
+    test('a kérés a nyelvi tervből kapja a lang paramétert', () {
+      expect(service, contains('wordpressContentQuery('));
+      expect(service, contains('wordpressCacheContext(language)'));
+      expect(service, contains("import 'wordpress_language_plan.dart';"));
+      expect(service, contains("import '../core/i18n/app_strings.dart';"));
+    });
+
+    test('a cache kulcsa NEM a platform locale-tól függ (az nem a mi nyelvünk)', () {
+      expect(
+        service,
+        isNot(contains('PlatformDispatcher.instance.locale.toLanguageTag()')),
+        reason: 'a mentett válasz nyelve a felületen választott nyelv kell legyen',
+      );
+    });
+
+    test('a gyökér életben tartja a nyelv–tartalom szinkront', () {
+      expect(mainFile, contains('ref.watch(contentLanguageSyncProvider)'));
+      expect(mainFile, contains("import 'providers/content_language_provider.dart';"));
+    });
+  });
+
   group('forrás-lint: a felhasználói tartalom NEM fordul', () {
     test('a chat üzenet szövege nem megy át fordítón', () {
       final chatText = readFile('lib/widgets/chat_message_text.dart');

@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/i18n/app_strings.dart';
 import '../models/artist.dart';
 import '../models/event.dart';
 import '../models/event_submission.dart';
@@ -19,6 +20,7 @@ import '../core/firebase/firebase_callable.dart';
 import '../models/voting.dart';
 import 'newsletter_plan.dart';
 import 'wordpress_head_cache.dart';
+import 'wordpress_language_plan.dart';
 import 'wordpress_tag_cache.dart';
 
 int _readInt(Object? value, {int fallback = 0}) {
@@ -304,14 +306,20 @@ class WordpressService {
     bool forceRefresh = false,
     bool bypassCache = false,
   }) {
-    final query = queryParameters?.map(
-      (key, value) => MapEntry(key, value.toString()),
+    // A kért tartalom nyelve a felületen választott nyelv; a `lang` minden
+    // kérésre megy (a régi végpontok figyelmen kívül hagyják), a cache-kulcs
+    // pedig nyelvenként külön válik — különben a nyelvváltás a mentett, más
+    // nyelvű választ adná vissza. Részletek: `wordpress_language_plan.dart`.
+    final language = AppStrings.language;
+    final query = wordpressContentQuery(
+      queryParameters: queryParameters,
+      language: language,
     );
     final uri = Uri.parse('${_dio.options.baseUrl}$path')
         .replace(queryParameters: query);
     return _headCache.get(
       uri,
-      cacheContext: PlatformDispatcher.instance.locale.toLanguageTag(),
+      cacheContext: wordpressCacheContext(language),
       forceRefresh: forceRefresh,
       bypassCache: bypassCache,
     );
