@@ -50,6 +50,7 @@ $STATE = array(
     'supports' => array(),
     'routes' => array(),
     'capabilities' => array(),
+    'term_meta' => array(),
 );
 
 class WP_Post
@@ -312,6 +313,11 @@ function wp_schedule_event($timestamp, $recurrence, $hook, $args = array())
     return true;
 }
 
+function get_term_meta($term_id, $key, $single = false)
+{
+    return $GLOBALS['STATE']['term_meta'][$term_id][$key] ?? '';
+}
+
 function current_time($type, $gmt = 0)
 {
     return gmdate('Y-m-d H:i:s');
@@ -366,12 +372,29 @@ function sanitize_key($value)
     return strtolower(preg_replace('/[^a-z0-9_\-]/i', '', (string) $value));
 }
 
+/** A bejegyzés címe (a nyeremény/kérdőív kérdésének tartaléka). */
+function get_the_title($postId)
+{
+    $post = $GLOBALS['STATE']['posts'][$postId] ?? null;
+    return $post instanceof WP_Post ? (string) $post->post_title : '';
+}
+
 /* ---- A VALÓDI plugin-fájlok betöltése ------------------------------------ */
 
 require $pluginDir . '/includes/post-translation-meta.php';
 require $pluginDir . '/includes/translation-cron.php';
 require $pluginDir . '/includes/translation-places.php';
 require $pluginDir . '/includes/translation-sweep.php';
+require $pluginDir . '/includes/translation-fields.php';
+require $pluginDir . '/includes/faq.php';
+// ⚠️ 2.14.0: a NYILVÁNOS nyeremény-végpont **valódi** futása a 14. szakaszban.
+// A `posts.php` a `huhs_request_lang()` miatt kell (ez a `lang` egyetlen
+// hiteles forrása), a `poll.php` pedig a `huhs_poll_repair_escapes()` miatt.
+// Ezek a fájlok a betöltéskor **csak** függvényeket definiálnak és hookokat
+// regisztrálnak (a `add_action` stub), ezért a mérés mellékhatás nélkül fut.
+require $pluginDir . '/includes/posts.php';
+require $pluginDir . '/includes/poll.php';
+require $pluginDir . '/includes/prize.php';
 
 /* ---- Segédek a méréshez -------------------------------------------------- */
 
@@ -859,7 +882,8 @@ check(
 $sweepOneType = huhs_translation_sweep_types('huhs_event');
 check(
     'egy típus kérhető, és az érvénytelen érték mindet jelenti',
-    $sweepOneType === array('huhs_event') && huhs_translation_sweep_types('nincs_ilyen') === huhs_translation_post_types()
+    $sweepOneType === array('huhs_event')
+        && huhs_translation_sweep_types('nincs_ilyen') === huhs_translation_all_post_types()
 );
 
 /* ---- 10) A pótlás végpontjai és a cron -------------------------------- */
@@ -910,9 +934,295 @@ check(
 
 $statusData = huhs_translation_status_endpoint()->data;
 check(
-    'a status végpont megadja a típusokat és a várólistát (kulcs nélkül is)',
-    isset($statusData['pending']['huhs_release']) && count($statusData['types']) === 5,
+    'a status végpont mind a kilenc típust és a várólistát megadja (kulcs nélkül is)',
+    isset($statusData['pending']['huhs_release'], $statusData['pending']['huhs_prize']) && count($statusData['types']) === 9,
     json_encode($statusData['pending'])
+);
+
+/* ---- 11) Meta-szövegek fordítása: kérdőív, nyereményjáték (2.14.0) ------ */
+
+$allTypes = huhs_translation_all_post_types();
+check(
+    'a MINDEN típus listája tartalmazza a GYÍK-ot és a meta-szöveges típusokat',
+    in_array('huhs_faq', $allTypes, true)
+        && in_array('huhs_poll', $allTypes, true)
+        && in_array('huhs_prize', $allTypes, true)
+        && in_array('huhs_game', $allTypes, true),
+    implode(',', $allTypes)
+);
+
+$pollSpecs = huhs_translation_field_specs('huhs_poll');
+$prizeSpecs = huhs_translation_field_specs('huhs_prize');
+check(
+    'a mező-térkép a valódi meta-kulcsokat és alakjukat adja',
+    $pollSpecs === array('_huhs_poll_question' => 'text', '_huhs_poll_options' => 'list')
+        && count($prizeSpecs) === 4
+        && $prizeSpecs['_huhs_prize_answers'] === 'list'
+        && huhs_translation_field_specs('post') === array(),
+    json_encode($pollSpecs)
+);
+
+reset_state();
+$GLOBALS['STATE']['posts'][31] = new WP_Post(array(
+    'ID' => 31, 'post_type' => 'huhs_poll', 'post_title' => '', 'post_content' => '',
+    'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][31] = array(
+    '_huhs_poll_question' => 'Tetszik az Applikáció?',
+    '_huhs_poll_options' => wp_json_encode(array('Igen', 'Nem', 'Imádom')),
+    '_huhs_poll_start' => '2026-09-24T15:00',
+);
+$source = huhs_translation_source_fields(31);
+check(
+    'a forrás-mezők beolvasása: szöveg + JSON lista (a dátum NEM szöveg)',
+    $source === array(
+        '_huhs_poll_question' => 'Tetszik az Applikáció?',
+        '_huhs_poll_options' => array('Igen', 'Nem', 'Imádom'),
+    ),
+    json_encode($source)
+);
+check(
+    'a lista-beolvasó a JSON listát kezeli, a nem-JSON-t üresen adja vissza',
+    huhs_translation_field_list_values('["Egy","Kettő"]') === array('Egy', 'Kettő')
+        && huhs_translation_field_list_values('nem json') === array()
+);
+
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+$GLOBALS['STATE']['posts'][31] = new WP_Post(array(
+    'ID' => 31, 'post_type' => 'huhs_poll', 'post_title' => '', 'post_content' => '',
+    'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][31] = array(
+    '_huhs_poll_question' => 'Tetszik az Applikáció?',
+    '_huhs_poll_options' => wp_json_encode(array('Igen', 'Nem', 'Imádom')),
+);
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'fields' => array(
+        '_huhs_poll_question' => 'Do you like the app?',
+        '_huhs_poll_options' => array('Yes', 'No', 'I love it'),
+    ),
+));
+$fieldStatus = huhs_run_field_translation(31);
+$storedFields = json_decode((string) ($GLOBALS['STATE']['meta'][31]['_huhs_translation_fields_en'] ?? ''), true);
+check(
+    'a mező-fordítás lefut és a három válaszlehetőséget is lefordítja',
+    $fieldStatus === 'translated'
+        && ($storedFields['_huhs_poll_question'] ?? '') === 'Do you like the app?'
+        && ($storedFields['_huhs_poll_options'] ?? array()) === array('Yes', 'No', 'I love it'),
+    $fieldStatus . ' / ' . json_encode($storedFields)
+);
+check(
+    'a mező-fordítás naprakészsége igaz (a pótló kör nem viszi újra a várólistára)',
+    huhs_translation_fields_complete(31) === true && huhs_translation_fields_current(31) === true
+);
+$callsAfterFields = count($GLOBALS['STATE']['http']);
+check(
+    'a második futás `uptodate` — nincs új API-hívás',
+    huhs_run_field_translation(31) === 'uptodate'
+        && count($GLOBALS['STATE']['http']) === $callsAfterFields
+);
+
+// A kiolvasás: angolul a fordítás, magyarul a forrás, hiányzó kulcsnál a magyar.
+check(
+    'a kiolvasó angolul a fordítást adja, magyarul a forrást',
+    huhs_translation_text(31, 'en', '_huhs_poll_question', 'Tetszik az Applikáció?') === 'Do you like the app?'
+        && huhs_translation_text(31, 'hu', '_huhs_poll_question', 'Tetszik az Applikáció?') === 'Tetszik az Applikáció?'
+        && huhs_translation_text(31, 'en', '_huhs_prize_type', 'Nyeremény') === 'Nyeremény'
+);
+check(
+    'a lista kiolvasása elemenként esik vissza a magyarra',
+    huhs_translation_list(31, 'en', '_huhs_poll_options', array('Igen', 'Nem', 'Imádom')) === array('Yes', 'No', 'I love it')
+        && huhs_translation_list(31, 'en', '_huhs_prize_answers', array('A', 'B')) === array('A', 'B')
+        && huhs_translation_list(31, 'hu', '_huhs_poll_options', array('Igen')) === array('Igen')
+);
+
+// Hibaág: nem ír félkész fordítást, és jelöli a hibát.
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+$GLOBALS['STATE']['posts'][32] = new WP_Post(array(
+    'ID' => 32, 'post_type' => 'huhs_prize', 'post_title' => '', 'post_content' => '',
+    'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][32] = array('_huhs_prize_question' => 'Mi a neve?');
+$GLOBALS['STATE']['response'] = provider_response(array('title' => 'x'), 500);
+$failedFields = huhs_run_field_translation(32);
+check(
+    'hibás válasznál a mező-fordítás `failed`, és nem ír félig kész térképet',
+    $failedFields === 'failed'
+        && ($GLOBALS['STATE']['meta'][32]['_huhs_translation_fields_en'] ?? '') === ''
+        && ($GLOBALS['STATE']['meta'][32]['_huhs_translation_fields_failed'] ?? '') !== '',
+    $failedFields
+);
+check(
+    'a hibás mező-fordítás nem blokkolja a cím/törzs ágat (külön jelölő)',
+    ($GLOBALS['STATE']['meta'][32]['_huhs_translation_failed'] ?? '') === ''
+);
+
+// A rossz alakú válasz nem ír félkész listát (a hossz nem egyezik).
+$parsed = huhs_translation_parse_fields_response(
+    json_encode(array('choices' => array(array('message' => array('content' => json_encode(array(
+        'fields' => array('_huhs_poll_options' => array('Yes')),
+    ))))))),
+    array('_huhs_poll_options' => array('Igen', 'Nem'))
+);
+check(
+    'a rövidebb válaszlistát elutasítja (nincs félkész fordítás)',
+    $parsed === array(),
+    json_encode($parsed)
+);
+
+/* ---- 12) A GYÍK kategória-nevei --------------------------------------- */
+
+$faqCategories = huhs_translation_faq_category_names();
+check(
+    'a GYÍK kategória-névtár a mért 8 kategóriát tartalmazza',
+    count($faqCategories) === 8 && ($faqCategories['első lépések'] ?? '') === 'Getting Started',
+    (string) count($faqCategories)
+);
+check(
+    'a kategória angolul fordítva, magyarul változatlanul megy ki',
+    huhs_translation_faq_category_name('Első lépések', 'en') === 'Getting Started'
+        && huhs_translation_faq_category_name('Első lépések', 'hu') === 'Első lépések'
+        && huhs_translation_faq_category_name('Ismeretlen kategória', 'en') === 'Ismeretlen kategória'
+);
+reset_state();
+$GLOBALS['STATE']['term_meta'][7] = array('_huhs_name_en' => 'Custom English');
+check(
+    'a kézzel beírt terminus-név nyer a névtárral szemben',
+    huhs_translation_faq_category_name((object) array('term_id' => 7, 'name' => 'Közösség'), 'en') === 'Custom English'
+        && huhs_translation_faq_category_name((object) array('term_id' => 8, 'name' => 'Közösség'), 'en') === 'Community'
+);
+
+/* ---- 13) A pótló kör a meta-szöveges típusokat is viszi ---------------- */
+
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+$GLOBALS['STATE']['posts'][41] = new WP_Post(array(
+    'ID' => 41, 'post_type' => 'huhs_prize', 'post_title' => 'Nyereményjáték',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][41] = array(
+    '_huhs_prize_question' => 'Mi Noisecontrollers igazi neve?',
+    '_huhs_prize_answers' => wp_json_encode(array('Joram Metekohy', 'Bas Oskam')),
+    '_huhs_prize_type' => 'Páros belépő',
+    '_huhs_prize_description' => 'Nyerj páros belépőt!',
+);
+$pendingPrize = huhs_translation_pending_posts('huhs_prize', 10);
+check(
+    'a meta-szöveges elem (üres törzzsel is) a várólistára kerül',
+    count($pendingPrize) === 1 && $pendingPrize[0]->ID === 41,
+    implode(',', array_map(static function ($post) { return $post->ID; }, $pendingPrize))
+);
+
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'fields' => array(
+        '_huhs_prize_question' => 'What is Noisecontrollers real name?',
+        '_huhs_prize_answers' => array('Joram Metekohy', 'Bas Oskam'),
+        '_huhs_prize_type' => 'Double ticket',
+        '_huhs_prize_description' => 'Win a double ticket!',
+    ),
+));
+$prizeRun = huhs_run_translation(41);
+$pendingAfter = huhs_translation_pending_posts('huhs_prize', 10);
+check(
+    'a pótló kör a meta-szöveges elemet is lefordítja (és utána lekerül a listáról)',
+    $prizeRun === 'translated' && count($pendingAfter) === 0,
+    $prizeRun . ' / várólista: ' . count($pendingAfter)
+);
+check(
+    'a meta-szöveges típus a `status` várólistában is szerepel',
+    array_key_exists('huhs_prize', huhs_translation_pending_counts()) === true
+);
+
+/* ---- 14) A nyeremény-játék NYITOTT ága (2.14.0, valódi futás) ---------- */
+
+/*
+ * ⚠️ MIÉRT VAN EZ: a `functions/prize-active-payload.test.cjs` forrás-lint, és a
+ * 2.14.0-ban a minta megváltozott (a nyelvi olvasón át megy ki a mező). Itt a
+ * **tényleges** végpont fut: a magyar payload bájtazonos, az angol a fordítás,
+ * és a **helyes válasz** egyik ágban sem szivárog ki.
+ */
+reset_state();
+$GLOBALS['STATE']['posts'][51] = new WP_Post(array(
+    'ID' => 51, 'post_type' => 'huhs_prize', 'post_title' => 'Nyereményjáték',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][51] = array(
+    '_huhs_prize_question' => 'Mi Noisecontrollers igazi neve?',
+    '_huhs_prize_answers' => wp_json_encode(array('Joram Metekohy', 'Bas Oskam')),
+    '_huhs_prize_type' => 'Páros belépő',
+    '_huhs_prize_description' => 'Nyerj páros belépőt!',
+    '_huhs_prize_correct' => '1',
+    '_huhs_translation_fields_en' => wp_json_encode(array(
+        '_huhs_prize_question' => 'What is Noisecontrollers real name?',
+        '_huhs_prize_answers' => array('Joram Metekohy', 'Bas Oskam'),
+        '_huhs_prize_type' => 'Double ticket',
+        '_huhs_prize_description' => 'Win a double ticket!',
+    )),
+);
+// ⚠️ A naprakészség jelzője KÜLÖN lépésben (a beíró is így teszi): ha az
+// `md5(...)` a fenti tömb-literálon belül lenne, a forrás-meták még NEM
+// léteznének az értékelés pillanatában → üres tömbből számolt hash, és a
+// `has_en` hamisan hamis lenne (ezt a saját mérésem fogta meg).
+$GLOBALS['STATE']['meta'][51]['_huhs_translation_fields_hash'] =
+    md5((string) wp_json_encode(huhs_translation_source_fields(51)));
+$huPrize = huhs_prize_api_active(new WP_REST_Request(array('lang' => 'hu')))->data['prize'];
+$enPrize = huhs_prize_api_active(new WP_REST_Request(array('lang' => 'en')))->data['prize'];
+$noLangPrize = huhs_prize_api_active()->data['prize'];
+
+check(
+    'a nyitott játék a VALÓDI nyereményt küldi (nem üres stringet)',
+    $huPrize['state'] === 'open'
+        && $huPrize['prize_type'] === 'Páros belépő'
+        && $huPrize['prize_description'] === 'Nyerj páros belépőt!'
+        && $noLangPrize['prize_type'] === 'Páros belépő'
+        && $noLangPrize['prize_description'] === 'Nyerj páros belépőt!',
+    json_encode($huPrize)
+);
+check(
+    'angol kérésre a nyitott játék fordítva megy ki (kérdés, válaszok, nyeremény)',
+    $enPrize['question'] === 'What is Noisecontrollers real name?'
+        && $enPrize['answers'] === array(
+            array('index' => 0, 'label' => 'Joram Metekohy'),
+            array('index' => 1, 'label' => 'Bas Oskam'),
+        )
+        && $enPrize['prize_type'] === 'Double ticket'
+        && $enPrize['prize_description'] === 'Win a double ticket!'
+        && $enPrize['has_en'] === true,
+    json_encode($enPrize)
+);
+check(
+    'a magyar kérés bájtazonos (nincs beszóló angol szöveg)',
+    $huPrize['question'] === 'Mi Noisecontrollers igazi neve?'
+        && $huPrize['answers'][0]['label'] === 'Joram Metekohy'
+        && $huPrize['has_en'] === true,
+    json_encode($huPrize)
+);
+check(
+    'a HELYES válasz egyik ágban sem szivárog ki (nincs `correct` a payloadban)',
+    !array_key_exists('correct', $huPrize)
+        && !array_key_exists('correct', $enPrize)
+        && strpos((string) json_encode($enPrize), 'correct') === false
+        && strpos((string) json_encode($huPrize), 'correct') === false,
+    json_encode($enPrize)
+);
+
+reset_state();
+$GLOBALS['STATE']['posts'][52] = new WP_Post(array(
+    'ID' => 52, 'post_type' => 'huhs_prize', 'post_title' => 'Fordítás nélküli játék',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][52] = array(
+    '_huhs_prize_answers' => wp_json_encode(array('Igen', 'Nem')),
+    '_huhs_prize_type' => 'Póló',
+    '_huhs_prize_description' => 'Nyerj pólót!',
+);
+$untranslated = huhs_prize_api_active(new WP_REST_Request(array('lang' => 'en')))->data['prize'];
+check(
+    'fordítás nélkül angol kérésre is a magyar érték megy ki, és `has_en` hamis',
+    $untranslated['prize_type'] === 'Póló'
+        && $untranslated['prize_description'] === 'Nyerj pólót!'
+        && $untranslated['question'] === 'Fordítás nélküli játék'
+        && $untranslated['has_en'] === false,
+    json_encode($untranslated)
 );
 
 echo "\n{$checks} ellenőrzés, {$failures} hiba\n";

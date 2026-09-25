@@ -19,7 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.13.0.zip';
+export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.0.zip';
 export const DEFAULT_SOURCE = '.tmp-api-260/huhs-mobile-api';
 export const EXPECTED_ROOT = 'huhs-mobile-api';
 
@@ -73,16 +73,40 @@ export function packageChecks(read) {
   const sweep = read('includes/translation-sweep.php');
   const sweepCode = stripPhpComments(sweep);
   const places = read('includes/translation-places.php');
+  const fields = read('includes/translation-fields.php');
   const cron = read('includes/translation-cron.php');
   const events = read('includes/api-events.php');
   const artists = read('includes/api-artists.php');
   const organizers = read('includes/api-organizers.php');
   const releases = read('includes/api-releases.php');
+  const faq = read('includes/faq.php');
+  const poll = read('includes/poll.php');
+  const prize = read('includes/prize.php');
 
   return [
-    ['a fejléc és a konstans is 2.13.0', /Version:\s*2\.13\.0/.test(main) && main.includes("HUHS_API_VERSION', '2.13.0'")],
-    ['a fő fájl behúzza a hely-névtárat és a pótló kört',
-      main.includes("includes/translation-places.php") && main.includes("includes/translation-sweep.php")],
+    ['a fejléc és a konstans is 2.14.0', /Version:\s*2\.14\.0/.test(main) && main.includes("HUHS_API_VERSION', '2.14.0'")],
+    ['a fő fájl behúzza a hely-névtárat, a pótló kört és a mező-fordítást',
+      main.includes('includes/translation-places.php') && main.includes('includes/translation-sweep.php')
+        && main.includes('includes/translation-fields.php')],
+    ['a mező-fordítás ismeri a kérdőív és a nyereményjáték meta-kulcsait',
+      fields.includes("'_huhs_poll_question'") && fields.includes("'_huhs_prize_answers'")
+        && fields.includes("'_huhs_prize_description'")],
+    ['a mező-fordítás a lista HOSSZÁT is ellenőrzi (nincs félkész fordítás)',
+      fields.includes('count($translated) === count($source)')],
+    ['a mező-fordításnak SAJÁT hiba-jelölője van (nem blokkolja a cím/törzs ágat)',
+      fields.includes('HUHS_TRANSLATION_FIELDS_FAILED_META')],
+    ['a MINDEN típus listája a meta-szöveges típusokat is tartalmazza',
+      read('includes/post-translation-meta.php').includes('huhs_translation_field_post_types()')],
+    ['a GYÍK a közös kaput használja (kérdés = cím, válasz = törzs)',
+      faq.includes('huhs_translation_meta_values(') && faq.includes('huhs_request_lang($request)')
+        && faq.includes("'has_en'")],
+    ['a GYÍK kategória-neveit névtárból fordítja',
+      faq.includes('huhs_translation_faq_category_names()') && faq.includes("'első lépések' => 'Getting Started'")],
+    ['a kérdőív a mező-fordítást olvassa (kérdés + válaszlehetőségek)',
+      poll.includes('huhs_translation_text(') && poll.includes('huhs_translation_list(')],
+    ['a nyereményjáték a mező-fordítást olvassa (kérdés, válaszok, nyeremény)',
+      prize.includes("'_huhs_prize_question'") && prize.includes("'_huhs_prize_answers'")
+        && prize.includes("'_huhs_prize_description'")],
     ['a pótlás a HIÁNYZÓ angolt keresi (NOT EXISTS)', sweep.includes("'compare' => 'NOT EXISTS'")],
     ['a pótlás a közös fordítást hívja (nincs saját másolat)', sweep.includes('huhs_run_translation($post->ID)')],
     ['a pótlás óránként ütemeződik', sweep.includes("'hourly'") && sweep.includes("'huhs_translation_sweep_event'")],
@@ -97,8 +121,9 @@ export function packageChecks(read) {
     ['a hely-névtár csak angol kérésre nyúl az értékhez', places.includes("if ($lang !== 'en')")],
     ['a cron ujjlenyomatot ír a kész fordításról', cron.includes('HUHS_TRANSLATION_HASH_META')],
     ['a cron nem fordít kétszer ugyanarra a szövegre', cron.includes('huhs_translation_is_current')],
+    ['a cron a meta-szöveges típusokat is fordítja', cron.includes('huhs_run_field_translation(')],
     ['a cron státuszt ad vissza (a pótlás ebből számol)', cron.includes("return 'translated';")],
-    ['a kulcs továbbra sincs a kódban', !/sk-[A-Za-z0-9]{16,}/.test(cron + sweep + places)],
+    ['a kulcs továbbra sincs a kódban', !/sk-[A-Za-z0-9]{16,}/.test(cron + sweep + places + fields)],
     ['az esemény a névtáron át adja az országot', events.includes('huhs_translation_country_value(')],
     ['a DJ a névtáron át adja az országot', artists.includes('huhs_translation_country_value(')],
     ['a szervező a névtáron át adja az országot', organizers.includes('huhs_translation_country_value(')],
@@ -123,10 +148,15 @@ export function selfTest() {
 
   const star = 'x';
   const full = {
-    'huhs-mobile-api.php': 'Version: 2.13.0 HUHS_API_VERSION\', \'2.13.0\' includes/translation-places.php includes/translation-sweep.php',
+    'huhs-mobile-api.php': 'Version: 2.14.0 HUHS_API_VERSION\', \'2.14.0\' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php',
     'includes/translation-sweep.php': "'compare' => 'NOT EXISTS' huhs_run_translation($post->ID) 'hourly' 'huhs_translation_sweep_event' 'limit' 'budget' huhs_translation_retry_delay '/translations/status' '/translations/sweep'",
+    'includes/translation-fields.php': "'_huhs_poll_question' '_huhs_prize_answers' '_huhs_prize_description' count($translated) === count($source) HUHS_TRANSLATION_FIELDS_FAILED_META",
     'includes/translation-places.php': "'magyarország' => 'Hungary' Velence if ($lang !== 'en')",
-    'includes/translation-cron.php': "HUHS_TRANSLATION_HASH_META huhs_translation_is_current return 'translated';",
+    'includes/translation-cron.php': "HUHS_TRANSLATION_HASH_META huhs_translation_is_current huhs_run_field_translation( return 'translated';",
+    'includes/post-translation-meta.php': 'huhs_translation_field_post_types()',
+    'includes/faq.php': "huhs_translation_meta_values( huhs_request_lang($request) 'has_en' huhs_translation_faq_category_names() 'első lépések' => 'Getting Started'",
+    'includes/poll.php': 'huhs_translation_text( huhs_translation_list(',
+    'includes/prize.php': "'_huhs_prize_question' '_huhs_prize_answers' '_huhs_prize_description'",
     'includes/api-events.php': 'huhs_translation_country_value(',
     'includes/api-artists.php': 'huhs_translation_country_value(',
     'includes/api-organizers.php': 'huhs_translation_country_value( use ($lang)',

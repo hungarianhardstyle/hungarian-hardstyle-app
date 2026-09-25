@@ -1,5 +1,4 @@
 import '../core/firebase/firebase_callable.dart';
-import '../core/i18n/app_strings.dart';
 
 /// Egy szint (jelvény) a ranglétrán.
 ///
@@ -64,43 +63,43 @@ class AchievementService {
       slug: 'starter',
       name: 'Kezdő ütem',
       minPoints: 0,
-      description: AppStrings.tr('A HUHS közösség alapjelvénye.'),
+      description: 'A HUHS közösség alapjelvénye.',
     ),
     AchievementLevel(
       slug: 'first-step',
       name: 'Első lépés',
       minPoints: 100,
-      description: AppStrings.tr('Az első közösségi mérföldkő.'),
+      description: 'Az első közösségi mérföldkő.',
     ),
     AchievementLevel(
       slug: 'regular',
       name: 'Rendszeres látogató',
       minPoints: 300,
-      description: AppStrings.tr('Rendszeresen jelen van a közösségben.'),
+      description: 'Rendszeresen jelen van a közösségben.',
     ),
     AchievementLevel(
       slug: 'hardstyle-face',
       name: 'Hardstyle arc',
       minPoints: 700,
-      description: AppStrings.tr('Láthatóan aktív HUHS-közösségi tag.'),
+      description: 'Láthatóan aktív HUHS-közösségi tag.',
     ),
     AchievementLevel(
       slug: 'community',
       name: 'Közösségi ember',
       minPoints: 1500,
-      description: AppStrings.tr('Sokat tesz a közösségi jelenlétért.'),
+      description: 'Sokat tesz a közösségi jelenlétért.',
     ),
     AchievementLevel(
       slug: 'scene-veteran',
       name: 'Scene veteran',
       minPoints: 3000,
-      description: AppStrings.tr('Hosszú távon aktív színtértag.'),
+      description: 'Hosszú távon aktív színtértag.',
     ),
     AchievementLevel(
       slug: 'huhs-legend',
       name: 'HUHS legenda',
       minPoints: 6000,
-      description: AppStrings.tr('Kiemelkedő, tartós közösségi aktivitás.'),
+      description: 'Kiemelkedő, tartós közösségi aktivitás.',
     ),
   ];
 

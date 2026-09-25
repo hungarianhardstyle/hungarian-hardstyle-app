@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../core/i18n/tr.dart';
 import '../models/achievement.dart';
+import 'app_text.dart';
 import 'resized_network_image.dart';
 
 class AchievementBadgeCard extends StatelessWidget {
@@ -57,9 +59,13 @@ class AchievementBadgeCard extends StatelessWidget {
                   ),
           ),
         ),
-        title: Text(achievement.badgeName),
+        // ⚠️ A jelvény neve és leírása a **szerverről** jön (magyar kulcs), ezért
+        // a fordítás a megjelenítés helyén történik a szótárból (2.14.0) — így
+        // angol módban „First Beat” / „Your first community milestone.” látszik.
+        title: AppText(achievement.badgeName),
         subtitle: Text(
-          '${achievement.points} pont • ${achievement.badgeDescription}',
+          '${trArgs(context, '{n} pont', {'n': '${achievement.points}'})}'
+          ' • ${tr(context, achievement.badgeDescription)}',
         ),
       ),
     );

@@ -12,6 +12,16 @@
  *
  * ⚠️ Amit ez a teszt **őriz**: a **helyes válasz** továbbra sem mehet ki a
  * játék lezárása előtt (a `_huhs_prize_correct` meta és a nyertes-hash sem).
+ *
+ * **2.14.0 (2026-09-26) — a minta a nyelvi olvasóra állítva.** A tulajdonos
+ * jelzése (*„a nyereményjáték tartalma magyar maradt"*) után a nyitott ág a
+ * `prize_type` / `prize_description` értéket **a nyelvi olvasón** keresztül adja
+ * ki (`huhs_translation_text($prize_id, $lang, '_huhs_prize_*', <magyar meta>)`).
+ * Ez **nem** gyengíti a fenti szabályt: a magyar érték a **harmadik
+ * argumentum**, ezért a teszt most **azt is** megköveteli, hogy a tartalék a
+ * valódi `get_post_meta(...)` legyen — üres string nem lehet. A viselkedést
+ * (magyar/angol payload, a helyes válasz hiánya) a PHP-harness is méri:
+ * `tools/php/plugin-translation-test.php`, 14. szakasz.
  */
 
 const test = require('node:test');
@@ -27,12 +37,21 @@ function pluginFile(relative) {
     .replace(/\r\n/g, '\n');
 }
 
-/** A `huhs_prize_api_active()` függvény nyitott ága. */
+/** A `huhs_prize_api_active()` függvény nyitott ága.
+ *
+ * ⚠️ 2.14.0: NEM fix karakterszámú ablak (a régi `slice(-900, +1200)` a
+ * hosszabb, több soros `huhs_translation_text(...)` hívásoknál **levágta** a
+ * mezőket — ez hamis bukást adott). A határ most a függvény kezdete, illetve a
+ * nyertes-ág első sora.
+ */
 function openBranch() {
   const source = pluginFile('includes/prize.php');
-  const start = source.indexOf("'state' => 'open'");
-  assert.ok(start > 0, 'megvan a nyitott ag a nyeremény-végpontban');
-  return source.slice(start - 900, start + 1200);
+  const stateAt = source.indexOf("'state' => 'open'");
+  assert.ok(stateAt > 0, 'megvan a nyitott ag a nyeremény-végpontban');
+  const start = source.lastIndexOf('function huhs_prize_api_active', stateAt);
+  const end = source.indexOf('huhs_prize_recent_winner_id', stateAt);
+  assert.ok(start > 0 && end > stateAt, 'a nyitott ág határai megvannak');
+  return source.slice(start, end);
 }
 
 /** A `huhs_prize_api_active()` függvény kihirdetett (nyertes) ága. */
@@ -43,27 +62,51 @@ function drawnBranch() {
   return source.slice(start - 400, start + 900);
 }
 
-test('a nyitott játék kiküldi a nyeremény típusát', () => {
-  const branch = openBranch();
+/**
+ * A nyitott ág egy mezője (2.14.0): a nyelvi olvasón keresztül megy ki, és a
+ * **tartalék a valódi magyar metaérték** — nem üres string.
+ *
+ * A minta szándékosan szigorú: a `huhs_translation_text(...)` **harmadik**
+ * argumentuma a magyar érték, ezért a `get_post_meta` ott kell legyen. Ha
+ * valaki „leegyszerűsíti" a hívást egy üres tartalékra, az teszt **elbukik**.
+ */
+function assertFieldViaReader(branch, field, metaKey) {
+  const viaReader = new RegExp(
+    `'${field}'\\s*=>\\s*huhs_translation_text\\(\\s*\\$prize_id,\\s*\\$lang,\\s*'\\${metaKey}',\\s*`
+      + `\\(string\\)\\s*get_post_meta\\(\\$prize_id,\\s*'\\${metaKey}',\\s*true\\)`,
+  );
   assert.match(
     branch,
-    /'prize_type'\s*=>\s*\(string\)\s*get_post_meta\(\$prize_id,\s*'_huhs_prize_type'/,
-    'a nyitott ág a metaértéket küldi, nem üres stringet',
+    viaReader,
+    `a nyitott ág a(z) ${field} mezőt a nyelvi olvasón át, a valódi metaértékkel adja ki`,
   );
   assert.equal(
-    /'prize_type'\s*=>\s*''/.test(branch),
+    new RegExp(`'${field}'\\s*=>\\s*''`).test(branch),
     false,
-    'a korábbi „szándékosan üres" viselkedés nem térhet vissza',
+    `a(z) ${field} nem lehet üres string (a korábbi „szándékosan üres" viselkedés nem térhet vissza)`,
   );
+}
+
+test('a nyitott játék kiküldi a nyeremény típusát', () => {
+  assertFieldViaReader(openBranch(), 'prize_type', '_huhs_prize_type');
 });
 
 test('a nyitott játék kiküldi a nyeremény leírását', () => {
+  assertFieldViaReader(openBranch(), 'prize_description', '_huhs_prize_description');
+});
+
+test('a nyitott játék a válaszokat is elemenként fordítja', () => {
   const branch = openBranch();
   assert.match(
     branch,
-    /'prize_description'\s*=>\s*\(string\)\s*get_post_meta\(\$prize_id,\s*'_huhs_prize_description'/,
+    /huhs_translation_list\(\$prize_id,\s*\$lang,\s*'_huhs_prize_answers',\s*huhs_prize_answers\(\$prize_id\)\)/,
+    'a válaszlista a nyelvi olvasón át megy ki (a magyar a tartalék)',
   );
-  assert.equal(/[^_]_prize_description'\s*=>\s*''/.test(branch), false);
+  assert.match(
+    branch,
+    /'has_en'\s*=>\s*huhs_translation_fields_current\(\$prize_id\)/,
+    'a válasz megmondja, hogy van-e kész angol fordítás',
+  );
 });
 
 test('a sorsolás után is kimegy a nyeremény (a viselkedés nem sérült)', () => {
@@ -74,17 +117,25 @@ test('a sorsolás után is kimegy a nyeremény (a viselkedés nem sérült)', ()
 
 test('a HELYES válasz továbbra sem megy ki a játék lezárása előtt', () => {
   const source = pluginFile('includes/prize.php');
-  const start = source.indexOf('function huhs_prize_api_active()');
+  // ⚠️ 2.14.0: a nyilvános végpont aláírása `WP_REST_Request $request = null`
+  // (a `lang` miatt) — a keresés ezért a zárójel NÉLKÜL történik, különben a
+  // teszt egy létező függvényt „nem találna meg" (hamis bukás, mért hiba).
+  const start = source.indexOf('function huhs_prize_api_active');
   const end = source.indexOf('function huhs_prize_api_status');
+  assert.ok(start > 0 && end > start, 'megvan a nyilvános végpont');
   const section = source.slice(start, end);
-  assert.ok(section.length > 0, 'megvan a nyilvános végpont');
   assert.equal(
     section.includes('_huhs_prize_correct'),
     false,
     'a helyes válasz indexe nem kerülhet a nyilvános válaszba',
   );
   assert.equal(
-    /player_hash|participant_hash|uid/.test(section),
+    /player_hash|participant_hash/.test(section),
+    false,
+    'a nyilvános végpont nem ad ki játékos-azonosítót',
+  );
+  assert.equal(
+    /\$uid\b/.test(section),
     false,
     'a nyilvános végpont nem ad ki játékos-azonosítót',
   );

@@ -5,8 +5,10 @@
 > (nyilvános, a 352–358 szöveggel), a `beta` sávon a 354. A 364 újdonsága: az **értesítések is a
 > választott nyelven** jönnek (a beállított nyelv a profilban tárolódik, ezért a **push** is a te
 > nyelveden szól), az angol felület **teljessé** vált — a maradék feliratok, a hosszú magyarázó és
-> **jogi szövegek** (adatkezelési tájékoztató) is angolul jelennek meg —, és angol felületen a hírek
-> **kategória-/címke-nevei** is angolul látszanak (a DJ- és márkanevek nem). A 364 a **362/363 minden**
+> **jogi szövegek** (adatkezelési tájékoztató) is angolul jelennek meg —, angol felületen a hírek
+> **kategória-/címke-nevei** is angolul látszanak (a DJ- és márkanevek nem), és az **Achievement-nevek
+> és -leírások** is angolul jelennek meg (a „Közösség" gomb felirata — *Community* — pedig kifér a
+> fejlécben, zsugorítás nélkül). A 364 a **362/363 minden**
 > újdonságát is tartalmazza. ⚠️ **A 361-et, a 362-t és a 363-at ne töltsd fel** — a 364 mindegyiket
 > tartalmazza (mind elkészült, egyik sem került fel).
 > A rövid (1.) blokk **csak a 364 újdonságát** írja le, a nyilvános kiadáshoz az **1b. blokk** való
@@ -22,7 +24,7 @@ currentBuild: 364
 currentVersion: 1.0.0
 lastPublishedBuild: 355
 aab: build/HUHS-v1.0.0+364-release.aab
-sha256: 3D8C260B04EC72C01FA3AA842FDA31C5AC02D4B0E921B54020495C193CD2AF60
+sha256: D65C0EB2CD71A9299C7B3E9177958BD7B42EAD13CBC174979E40A5CC0C24C9A0
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -108,10 +110,10 @@ A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a hí
 | Fájl | `build/HUHS-v1.0.0+364-release.aab` |
 | Verzió | `1.0.0` (versionName) |
 | Verziókód | **364** (a merge-elt release manifestből visszaolvasva: `android:versionCode="364"`, `versionName="1.0.0"`) |
-| Méret | 81,67 MB (85 637 701 bájt) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
-| SHA-256 | `3D8C260B04EC72C01FA3AA842FDA31C5AC02D4B0E921B54020495C193CD2AF60` |
+| Méret | 81,67 MB (85 639 370 bájt) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
+| SHA-256 | `D65C0EB2CD71A9299C7B3E9177958BD7B42EAD13CBC174979E40A5CC0C24C9A0` |
 
-> **⚠️ A 364 a feltöltendő csomag** (versionCode **364**, `1.0.0`), és **2026-09-25-én újraépült**: a hírek kategória-/címke-neveinek angol fordítása is benne van (a tulajdonos nem töltötte fel a korábbi 364-et, ezért **ugyanaz a verziókód** maradhatott — nem vész el verziókód). A **360 a zárt teszt csúcsa** (feltöltve, `completed`), ezért a 364-nél kisebb kódú csomagot a Play **nem** fogadná el; a 361/362/363 elkészült, de **egyik sem került fel**, a **364 mindegyiket tartalmazza**.
+> **⚠️ A 364 a feltöltendő csomag** (versionCode **364**, `1.0.0`), és **2026-09-26-án újraépült**: benne van az **Achievement-nevek/-leírások** angol fordítása és a **„Közösség" gomb kiférésének** javítása is (a tulajdonos a korábbi 364-es csomagokat nem töltötte fel, ezért **ugyanaz a verziókód** maradhatott — nem vész el verziókód). A **360 a zárt teszt csúcsa** (feltöltve, `completed`), ezért a 364-nél kisebb kódú csomagot a Play **nem** fogadná el; a 361/362/363 elkészült, de **egyik sem került fel**, a **364 mindegyiket tartalmazza**.
 > ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 364 azokat is tartalmazza) — a 364 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
 
 **Miért a 360-at kell feltenni (és miért nem a 358-at):** a 360 **magában foglalja a 358-at, a 357-et, a 356-ot, a 355-öt és a 354-et is**, ezért egy csomagot kell feltenni:
@@ -192,10 +194,9 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Az értesítések is a választott nyelven jönnek: Chat-lájk, válasz, megemlítés, hozzászólás, esemény-értékelés, új tartalom és nyeremény is angolul, ha angolra váltottál.
-- A beállított nyelv a profilodban tárolódik, ezért a push értesítések is a te nyelveden szólnak.
-- Az angol felület teljes: a hosszú magyarázó és jogi szövegek (adatkezelési tájékoztató) is angolul jelennek meg.
-- Angol felületnél a hírek kategória- és címke-nevei is angolul jelennek meg.
+- Az értesítések (Chat-lájk, válasz, megemlítés, hozzászólás, esemény-értékelés, új tartalom, nyeremény) és a push is a választott nyelven jönnek.
+- Az angol felület teljes: a hosszú magyarázó és jogi szövegek is angolul jelennek meg.
+- Angol felületnél a hírek kategória-/címke-nevei, valamint az Achievement-nevek és -leírások is angolul jelennek meg.
 ```
 
 ## 1b. Play Console — a NYILVÁNOS kiadáshoz (359–364 összesítő)
@@ -205,9 +206,9 @@ a **352–358** összesítőt kapták, ezért ők ezt az öt újdonságot kapjá
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó a főoldal jobb sarkában — az app felülete angolul is elérhető; a magyar marad az alapértelmezett.
-- Angol felületnél a cikkek, a feliratok és a hírek kategória-/címke-nevei is angolul jelennek meg (a nevek nem).
+- Angol felületnél a cikkek, a feliratok, a hírek kategória-/címke-nevei és az Achievement-nevek is angolul jelennek meg.
 - Az értesítések is a választott nyelven jönnek (a push is), a beállított nyelv a profilodban tárolódik.
-- ÚJ a Chatben: @mindenki — mindenki értesítést kap az üzenetről (csak admin/moderátor), és a Chat-értesítés a megjelölt üzenetre ugrik.
+- ÚJ a Chatben: @mindenki — mindenki értesítést kap (csak admin/moderátor), és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -243,9 +244,12 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - **ÚJ: az angol felület MARADÉK nélkül.** A második kör után megmaradt **147 hely** (amit a `context`-függő bekötő szándékosan kihagyott) be van kötve: **101 hely** a `context` nélküli fordítóval (`AppStrings.tr`), **46 hely** pedig a **megjelenítés helyén** (`AppText`/`AppStrings.tr` a nézetben — mert `const` térképben/lista­ban nem lehet függvényt hívni). Emellett a **határvonal is pontosítva**: a kereső-/hibahívások (`contains`, `startsWith`, `StateError`) **nem** feliratok, ezért kikerültek a célok közül.
 - **Javítva (mérési rés, nem csak szöveg):** a **többsoros, escape-elt bekezdések** (pl. az **adatkezelési tájékoztató** és a rádió jogi szövege) eddig **ki sem kerültek** a célok közül, ezért angol módban magyarul maradtak — a szótár kulcsa mostantól a **feloldott** (valódi) szöveg, és a **12 új kulcs** fordítása is bekerült. Emellett a szótárból **törölve** 10 szemét kulcs (a saját extraktorom korábbi hibájából: regex-minta és interpolációs töredék).
 - **ÚJ: angol felületen a hírek kategória- és címke-nevei is angolul jelennek meg** (pl. `Hírek → News`, `Partyajánló → Party Guide`, `fesztivál → festival`). A fordítás a **megjelenítésnél** történik a beépített szótárból, ezért nincs új hálózat és nincs új WordPress-mező; a **tulajdonnevek** (`Adam Bass`, `adaro`, `#TBT`) és az elírások **szándékosan** változatlanok maradnak, és a **magyar** felület is bájtazonos.
-- **Mérve:** a bekötött helyek **147 → 0** kimaradt (a `const`-helyek a nézetben fordulnak); a szótár **934 kulcs**, a lefedettség **900/900 (100%)**; a „se be nem kötött, se le nem fordított" szövegek **619 → …** (a `screens`/`widgets` rétegben **191 → 0 cél**, a maradék nem cél: technikai azonosító, changelog, `lib/core/**`). A **szótár a címkékhez +22 kulccsal** bővült (**955 kulcs**), és a címke-fordítást új teszt őrzi (7/7, mutációs bizonyíték 3/3).
+- **Mérve:** a bekötött helyek **147 → 0** kimaradt (a `const`-helyek a nézetben fordulnak); a „se be nem kötött, se le nem fordított" szövegek **619 → …** (a `screens`/`widgets` rétegben **191 → 0 cél**, a maradék nem cél: technikai azonosító, changelog, `lib/core/**`). A szótár a címkékhez **+22**, az Achievementekhez **+8** kulccsal bővült (a `Sokat tesz a közösségi jelenlétért.` **duplikált kulcsa** a mérés szerint **törölve**), így a **szótár 964 kulcs**, a célzott szövegek **901/901 (100%)**, duplikált kulcs **0**.
+- **ÚJ (a tulajdonos kérése: *„az Achievement nevek is lehetnének angolul az angol verzióban és a leírása is"*):** angol felületen a **7 Achievement-név és a hozzájuk tartozó leírások is angolul** jelennek meg (pl. `Kezdő ütem → First Beat`, `HUHS legenda → HUHS Legend`), és a pont-egység is fordítva (`{n} pont → {n} points`). A jelvény-katalógus **két** forrásból érkezik (a szerverről és az app tartalék listájából), ezért a fordítás az **app szótárából** történik a megjelenítés helyén — így nincs plusz hálózat, és nyelvváltáskor **azonnal** vált. **Közben egy valódi hiba is javítva:** a `static` adatlisták **betöltéskor** fordítottak, ezért **rögzítették a nyelvet** (angolul indított app magyar módban is angolul mutatta a jelvényeket) — mostantól az adat magyar kulcs, a fordítás a megjelenítésnél.
+- **Javítva (a tulajdonos jelzése: *„Magyarul »Közösség«, Angolul »Community«, de férjen ki"*):** a fejléc küszöbe **fix 360 px** volt a magyar feliratra mérve, ezért angolul a hosszabb „Community" nem fért ki, és a tartalék `FittedBox` **lekicsinyítette az egész fejlécet**. Mostantól a döntés a **tényleges (lefordított) felirat szélességéből** jön: a gomb belső margója 12 → 10 px, a hézagok 8 → 6 px, és a felirat csak akkor jelenik meg, ha **valóban kifér** — így **semmi nem zsugorodik**. Teszt őrzi: mindkét nyelven, **7 képernyőszélességen** nincs túlcsordulás és **nincs zsugorodás**.
+- **Mérve (ehhez a két újításhoz):** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1068/1068**; a fejléc-teszt + az Achievement-teszt **32/32**; a címke-fordítás mutációs bizonyítéka **3/3**; a csomagban (`node tmp/verify-aab-364.mjs`) **versionCode 364**, a **szótár 964 kulcsa** és az új changelog-sor **mindhárom ABI**-ban megvan.
 - **Amit ez a kiadás is tartalmaz:** a 363 (a maradék feliratok köre), a 362 (angol cikktartalom + a többsoros szövegek javítása), a 361 (**HU/EN nyelvváltó**), a 360 (`@mindenki` + Chat-odaugrás), a 359 (hideg indításnál is odaugrik), a 358 (Chat `@`-hivatkozás), a 357 (az értesítés megnevezi a cselekvőt), a 356 (hírlevél-védelem + `enableEdgeToEdge`), a 355/354 (nyeremény-leírás, DJ „Megjelenései").
-- **⚠️ ŐSZINTE KORLÁT:** az **értesítések** nyelve a **profilban tárolt** nyelvből dől el, ezért egy olyan felhasználó, aki **még nem nyitotta meg** a 364-es appot (nincs `language` mezője), **magyar** értesítést kap — az első indítás után ez magától helyreáll. A **chatjelentés** több adminnak megy, ezért a push **nyelvenként csoportosítva** megy (egy csoportos küldés csak egy nyelvet tudna mondani). A **kiadvány/esemény/DJ/szervező** angol **tartalma** továbbra is a plugin **2.12.0** feltöltésére vár. A fordítás gépi — a **jogi szövegeket** érdemes a tulajdonosnak átnéznie.
+- **⚠️ ŐSZINTE KORLÁT:** az **értesítések** nyelve a **profilban tárolt** nyelvből dől el, ezért egy olyan felhasználó, aki **még nem nyitotta meg** a 364-es appot (nincs `language` mezője), **magyar** értesítést kap — az első indítás után ez magától helyreáll. A **chatjelentés** több adminnak megy, ezért a push **nyelvenként csoportosítva** megy (egy csoportos küldés csak egy nyelvet tudna mondani). A **jelvények** neve a **szótárból** fordul, ezért ha a WordPress-adminban **átírod** egy jelvény nevét/leírását, az új szöveg a következő app-verzióig magyarul látszik; a **fejléc** döntése a valós betűtípus szélességét méri. A **kiadvány/esemény/DJ/szervező** angol **tartalma** a plugin **2.14.0** feltöltésére vár (utána a GYÍK, a kérdőív és a nyereményjáték szövege is automatikusan angol lesz). A fordítás gépi — a **jogi szövegeket** érdemes a tulajdonosnak átnéznie.
 
 ### 363 — az angol felület teljessé tétele (a második kör bekötése)
 - **ÚJ (a tulajdonos kérése: „fent a 2.11.0 és így mindent megkéne csinálni"):** angol felületen a **listák, kártyák, gombok és állapotüzenetek** további **több száz** felirata is angolul jelenik meg — ezek eddig azért maradtak magyarul, mert nem a szabályos alakban (`Text('…')`, `label:`) álltak, hanem **feltételes ágban** (`cond ? 'A' : 'B'`), **lista-/térkép-értékben** vagy **alapértékként** (`?? 'A'`). **Mérve:** **327 hely** **44 fájlban** bekötve, amivel a bekötött helyek száma **783 → 1110** körüli; a fordítás továbbra is **be van építve** (nincs hálózat, nincs várakozás).

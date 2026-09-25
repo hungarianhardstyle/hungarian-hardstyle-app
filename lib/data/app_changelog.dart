@@ -44,6 +44,7 @@ const appChangelog = <AppReleaseNotes>[
       'A beállított nyelv a profilodban tárolódik, ezért a push értesítések is a te nyelveden szólnak.',
       'Az angol felület tovább bővült: a hosszú magyarázó és jogi szövegek (adatkezelési tájékoztató, súgók) is angolul jelennek meg.',
       'Angol felületen a hírek kategória- és címke-nevei is angolul jelennek meg (pl. Hírek → News, fesztivál → festival) — a DJ- és márkanevek változatlanok maradnak.',
+      'Angol felületen az Achievement-nevek és -leírások is angolul jelennek meg, és a „Közösség" gomb felirata (Community) is kifér a fejlécben — semmi nem zsugorodik össze.',
     ],
   ),
   AppReleaseNotes(

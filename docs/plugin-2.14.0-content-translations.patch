@@ -1,0 +1,967 @@
+diff --git a/huhs-mobile-api/huhs-mobile-api.php b/huhs-mobile-api/huhs-mobile-api.php
+index affd455e..535a5f2b 100644
+--- a/huhs-mobile-api/huhs-mobile-api.php
++++ b/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.13.0
++ * Version: 2.14.0
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.13.0');
++define('HUHS_API_VERSION', '2.14.0');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+@@ -70,6 +70,8 @@ require_once HUHS_API_PATH . 'includes/post-translation-meta.php';
+ require_once HUHS_API_PATH . 'includes/translation-cron.php';
+ // Ország-/helységnevek angolul (determinisztikus névtár — nincs API-hívás).
+ require_once HUHS_API_PATH . 'includes/translation-places.php';
++// Meta-alapú szövegek (kérdőív, nyereményjáték, GYÍK) fordítása (plugin 2.14.0).
++require_once HUHS_API_PATH . 'includes/translation-fields.php';
+ // A hiányzó fordítások pótlása óránként (plugin 2.13.0) + admin végpontok.
+ // Ez teszi teljessé az automatikát: a plugin előtt létrejött tartalom is
+ // magától angolul jelenik meg, a tulajdonos nem nyúl semmihez.
+diff --git a/huhs-mobile-api/includes/faq.php b/huhs-mobile-api/includes/faq.php
+index 70da3e85..ff3e9418 100644
+--- a/huhs-mobile-api/includes/faq.php
++++ b/huhs-mobile-api/includes/faq.php
+@@ -105,6 +105,9 @@ function huhs_get_faq(WP_REST_Request $request)
+ {
+     $page = max(1, (int) $request->get_param('page'));
+     $per_page = min(100, max(1, (int) $request->get_param('per_page')));
++    // A kért nyelv (2.14.0): a GYÍK kérdése a cím, a válasza a törzs, ezért ez a
++    // végpont ugyanazt a közös kaput használja, mint a cikkek.
++    $lang = huhs_request_lang($request);
+     $tax_query = array();
+     $category = $request->get_param('category');
+ 
+@@ -130,12 +133,21 @@ function huhs_get_faq(WP_REST_Request $request)
+     $items = array();
+     foreach ($query->posts as $post) {
+         $terms = get_the_terms($post, 'huhs_faq_category');
++        $translation = huhs_translation_meta_values(
++            $post->ID,
++            $lang,
++            get_the_title($post),
++            wp_strip_all_tags(apply_filters('the_content', $post->post_content))
++        );
+         $items[] = array(
+             'id' => (int) $post->ID,
+-            'question' => get_the_title($post),
+-            'answer' => wp_strip_all_tags(apply_filters('the_content', $post->post_content)),
+-            'category' => ($terms && !is_wp_error($terms)) ? (string) $terms[0]->name : '',
++            'question' => (string) $translation['title'],
++            'answer' => (string) $translation['content'],
++            'category' => ($terms && !is_wp_error($terms)) ? huhs_translation_faq_category_name($terms[0], $lang) : '',
+             'order' => (int) $post->menu_order,
++            // Nyelvjelző, ugyanúgy, mint a többi végponton (a régi app figyelmen
++            // kívül hagyja).
++            'has_en' => $translation['has_en'],
+         );
+     }
+ 
+@@ -147,3 +159,49 @@ function huhs_get_faq(WP_REST_Request $request)
+         'total_pages' => (int) $query->max_num_pages,
+     ));
+ }
++
++/**
++ * A GYÍK **kategória-neve** a kért nyelven (plugin 2.14.0).
++ *
++ * A kategória egy taxonómia-nevel, ezért nem a cikk-fordítás fordítja. A sorrend:
++ *  1. a terminus saját angol neve (`_huhs_name_en` term meta) — ha a tulajdonos
++ *     kézzel megadja;
++ *  2. a beépített névtár (a mért 8 kategória, 2026-09-25);
++ *  3. különben az eredeti név (nem tippelünk).
++ * Magyar kérésre az eredeti név megy vissza, átalakítás nélkül.
++ */
++function huhs_translation_faq_category_name($term, $lang)
++{
++    $name = is_object($term) ? (string) ($term->name ?? '') : (string) $term;
++    if ($lang !== 'en' || $name === '') {
++        return $name;
++    }
++
++    $term_id = is_object($term) ? (int) ($term->term_id ?? 0) : 0;
++    if ($term_id > 0) {
++        $custom = trim((string) get_term_meta($term_id, '_huhs_name_en', true));
++        if ($custom !== '') {
++            return $custom;
++        }
++    }
++
++    $map = huhs_translation_faq_category_names();
++    $key = huhs_translation_place_key($name);
++
++    return isset($map[$key]) ? $map[$key] : $name;
++}
++
++/** A GYÍK kategóriáinak angol nevei (a mért készlet, 2026-09-25). */
++function huhs_translation_faq_category_names()
++{
++    return array(
++        'első lépések' => 'Getting Started',
++        'közösség' => 'Community',
++        'hírek és értesítések' => 'News and Notifications',
++        'zene és kiadványok' => 'Music and Releases',
++        'játékok' => 'Games',
++        'szavazás és nyereményjáték' => 'Voting and Giveaways',
++        'segítség és adatvédelem' => 'Help and Privacy',
++        'app és közösség' => 'App and Community',
++    );
++}
+diff --git a/huhs-mobile-api/includes/poll.php b/huhs-mobile-api/includes/poll.php
+index 46f968f8..1dfa43dc 100644
+--- a/huhs-mobile-api/includes/poll.php
++++ b/huhs-mobile-api/includes/poll.php
+@@ -396,21 +396,26 @@ add_action('rest_api_init', function () {
+     ));
+ });
+ 
+-function huhs_poll_api_active()
++function huhs_poll_api_active(WP_REST_Request $request = null)
+ {
+     $poll_id = huhs_poll_active_id();
+     if (!$poll_id) return rest_ensure_response(array('poll' => null));
+-    $options = huhs_poll_options($poll_id);
++    // A kért nyelv (2.14.0): a kérdés és a válaszlehetőségek meta-szövegek,
++    // ezért a fordításuk a `_huhs_translation_fields_en` térképből jön.
++    $lang = $request instanceof WP_REST_Request ? huhs_request_lang($request) : 'hu';
++    $options = huhs_translation_list($poll_id, $lang, '_huhs_poll_options', huhs_poll_options($poll_id));
+     $payload = array();
+     foreach ($options as $index => $label) {
+         $payload[] = array('index' => $index, 'label' => $label);
+     }
++    $question_hu = (string) get_post_meta($poll_id, '_huhs_poll_question', true) ?: get_the_title($poll_id);
+     return rest_ensure_response(array('poll' => array(
+         'id' => $poll_id,
+-        'question' => (string) get_post_meta($poll_id, '_huhs_poll_question', true) ?: get_the_title($poll_id),
++        'question' => huhs_translation_text($poll_id, $lang, '_huhs_poll_question', $question_hu),
+         'options' => $payload,
+         'start' => (string) get_post_meta($poll_id, '_huhs_poll_start', true),
+         'end' => (string) get_post_meta($poll_id, '_huhs_poll_end', true),
++        'has_en' => huhs_translation_fields_current($poll_id),
+     )));
+ }
+ 
+diff --git a/huhs-mobile-api/includes/post-translation-meta.php b/huhs-mobile-api/includes/post-translation-meta.php
+index dbeb52fd..4a5d2252 100644
+--- a/huhs-mobile-api/includes/post-translation-meta.php
++++ b/huhs-mobile-api/includes/post-translation-meta.php
+@@ -85,7 +85,24 @@ add_action('init', 'huhs_enable_translation_meta_custom_fields', 99);
+  */
+ function huhs_translation_post_types()
+ {
+-    return array('post', 'huhs_event', 'huhs_artist', 'huhs_organizer', 'huhs_release');
++    return array('post', 'huhs_event', 'huhs_artist', 'huhs_organizer', 'huhs_release', 'huhs_faq');
++}
++
++/**
++ * **Minden** fordítási típus: a cím/törzs típusok **és** a meta-szöveges típusok
++ * (kérdőív, nyereményjáték, játék) — plugin 2.14.0.
++ *
++ * A pótló kör és a mentés-ág ezt használja, ezért egy új típus nem tud
++ * „kiesni": elég a `huhs_translation_field_specs()`-be felvenni.
++ */
++function huhs_translation_all_post_types()
++{
++    $types = huhs_translation_post_types();
++    if (function_exists('huhs_translation_field_post_types')) {
++        $types = array_merge($types, huhs_translation_field_post_types());
++    }
++
++    return array_values(array_unique($types));
+ }
+ 
+ function huhs_register_post_translation_meta()
+diff --git a/huhs-mobile-api/includes/prize.php b/huhs-mobile-api/includes/prize.php
+index 4808fc8c..85737ae2 100644
+--- a/huhs-mobile-api/includes/prize.php
++++ b/huhs-mobile-api/includes/prize.php
+@@ -666,20 +666,24 @@ add_action('rest_api_init', function () {
+  * A helyes valasz SOHA nem megy ki az appba a sorsolas elott, kulonben a
+  * jatekos be tudna skennelni.
+  */
+-function huhs_prize_api_active()
++function huhs_prize_api_active(WP_REST_Request $request = null)
+ {
++    // A kért nyelv (2.14.0): a kérdés, a válaszok, a nyeremény neve és leírása
++    // meta-szövegek — a fordításuk a `_huhs_translation_fields_en` térképből jön.
++    $lang = $request instanceof WP_REST_Request ? huhs_request_lang($request) : 'hu';
+     $prize_id = huhs_prize_active_id();
+     if ($prize_id) {
+-        $answers = huhs_prize_answers($prize_id);
++        $answers = huhs_translation_list($prize_id, $lang, '_huhs_prize_answers', huhs_prize_answers($prize_id));
+         if (!$answers) return rest_ensure_response(array('prize' => null));
+         $payload = array();
+         foreach ($answers as $index => $label) {
+             $payload[] = array('index' => $index, 'label' => $label);
+         }
++        $question_hu = (string) get_post_meta($prize_id, '_huhs_prize_question', true) ?: get_the_title($prize_id);
+         return rest_ensure_response(array('prize' => array(
+             'id' => $prize_id,
+             'state' => 'open',
+-            'question' => (string) get_post_meta($prize_id, '_huhs_prize_question', true) ?: get_the_title($prize_id),
++            'question' => huhs_translation_text($prize_id, $lang, '_huhs_prize_question', $question_hu),
+             'answers' => $payload,
+             'start' => (string) get_post_meta($prize_id, '_huhs_prize_start', true),
+             'end' => (string) get_post_meta($prize_id, '_huhs_prize_end', true),
+@@ -690,8 +694,19 @@ function huhs_prize_api_active()
+             // saját súgója is azt ígéri, hogy „a nyertes és a játékosok látják",
+             // ezért a két viselkedés közül ez a helyes: a játékos lássa, miért
+             // játszik. A **helyes válasz** továbbra sem megy ki.
+-            'prize_type' => (string) get_post_meta($prize_id, '_huhs_prize_type', true),
+-            'prize_description' => (string) get_post_meta($prize_id, '_huhs_prize_description', true),
++            'prize_type' => huhs_translation_text(
++                $prize_id,
++                $lang,
++                '_huhs_prize_type',
++                (string) get_post_meta($prize_id, '_huhs_prize_type', true)
++            ),
++            'prize_description' => huhs_translation_text(
++                $prize_id,
++                $lang,
++                '_huhs_prize_description',
++                (string) get_post_meta($prize_id, '_huhs_prize_description', true)
++            ),
++            'has_en' => huhs_translation_fields_current($prize_id),
+             'winner' => null,
+         )));
+     }
+@@ -700,15 +715,26 @@ function huhs_prize_api_active()
+     if (!$winner_id) return rest_ensure_response(array('prize' => null));
+     $winner = huhs_prize_winner($winner_id);
+     if (!$winner) return rest_ensure_response(array('prize' => null));
++    $winner_question_hu = (string) get_post_meta($winner_id, '_huhs_prize_question', true) ?: get_the_title($winner_id);
+     return rest_ensure_response(array('prize' => array(
+         'id' => $winner_id,
+         'state' => 'drawn',
+-        'question' => (string) get_post_meta($winner_id, '_huhs_prize_question', true) ?: get_the_title($winner_id),
++        'question' => huhs_translation_text($winner_id, $lang, '_huhs_prize_question', $winner_question_hu),
+         'answers' => array(),
+         'start' => (string) get_post_meta($winner_id, '_huhs_prize_start', true),
+         'end' => (string) get_post_meta($winner_id, '_huhs_prize_end', true),
+-        'prize_type' => (string) get_post_meta($winner_id, '_huhs_prize_type', true),
+-        'prize_description' => (string) get_post_meta($winner_id, '_huhs_prize_description', true),
++        'prize_type' => huhs_translation_text(
++            $winner_id,
++            $lang,
++            '_huhs_prize_type',
++            (string) get_post_meta($winner_id, '_huhs_prize_type', true)
++        ),
++        'prize_description' => huhs_translation_text(
++            $winner_id,
++            $lang,
++            '_huhs_prize_description',
++            (string) get_post_meta($winner_id, '_huhs_prize_description', true)
++        ),
+         'winner' => array('name' => $winner['name'], 'drawn_at' => $winner['drawn_at']),
+     )));
+ }
+diff --git a/huhs-mobile-api/includes/translation-cron.php b/huhs-mobile-api/includes/translation-cron.php
+index 7ce19ab8..66bdb8ef 100644
+--- a/huhs-mobile-api/includes/translation-cron.php
++++ b/huhs-mobile-api/includes/translation-cron.php
+@@ -69,7 +69,7 @@ function huhs_schedule_translation_on_publish($post_id, $post = null, $update =
+         return;
+     }
+ 
+-    if (!in_array($post->post_type, huhs_translation_post_types(), true)) {
++    if (!in_array($post->post_type, huhs_translation_all_post_types(), true)) {
+         return;
+     }
+ 
+@@ -85,10 +85,18 @@ function huhs_schedule_translation_on_publish($post_id, $post = null, $update =
+     // egyezik), nem ütemezünk — egy díszítő mentés így nem költ API-hívást, és a
+     // kézzel javított angol szöveget sem írja felül a semmiért.
+     if (function_exists('huhs_translation_is_current')
++        && in_array($post->post_type, huhs_translation_post_types(), true)
+         && huhs_translation_is_current($post_id, huhs_translation_source_hash($post))) {
+         return;
+     }
+ 
++    // Ugyanez a meta-szöveges típusokra (kérdőív, nyereményjáték, játék).
++    if (function_exists('huhs_translation_field_specs')
++        && huhs_translation_field_specs($post->post_type)
++        && huhs_translation_fields_current($post_id)) {
++        return;
++    }
++
+     // Kis késleltetés: a mentés befejeződjön, mielőtt a cron dolgozik.
+     wp_schedule_single_event(time() + 60, 'huhs_translate_post', array($post_id));
+ }
+@@ -190,16 +198,50 @@ function huhs_run_translation($post_id)
+     }
+ 
+     $post = get_post($post_id);
+-    if (!$post instanceof WP_Post || !in_array($post->post_type, huhs_translation_post_types(), true)) {
++    if (!$post instanceof WP_Post || !in_array($post->post_type, huhs_translation_all_post_types(), true)) {
+         return 'invalid';
+     }
+ 
+-    $title = trim((string) $post->post_title);
+-    $content = trim((string) $post->post_content);
+-    if ($title === '' || $content === '') {
++    $statuses = array();
++
++    // 1) A cím és a törzs (cikkek, események, DJ-k, szervezők, kiadványok, GYÍK).
++    if (in_array($post->post_type, huhs_translation_post_types(), true)) {
++        $title = trim((string) $post->post_title);
++        $content = trim((string) $post->post_content);
++        if ($title !== '' && $content !== '') {
++            $statuses[] = huhs_run_content_translation($post, $title, $content);
++        }
++    }
++
++    // 2) A meta-szövegek (kérdőív, nyereményjáték, játék-összefoglaló) — 2.14.0.
++    if (function_exists('huhs_translation_field_specs') && huhs_translation_field_specs($post->post_type)) {
++        $statuses[] = huhs_run_field_translation($post_id);
++    }
++
++    if (!$statuses) {
+         return 'empty';
+     }
+ 
++    // A legrosszabb eredményt adjuk vissza (a pótló kör ebből számol): egy
++    // hibázó rész akkor is látszik, ha a másik rész elkészült.
++    foreach (array('failed', 'partial', 'translated', 'uptodate') as $candidate) {
++        if (in_array($candidate, $statuses, true)) {
++            return $candidate;
++        }
++    }
++
++    return $statuses[0];
++}
++
++/**
++ * A cím/törzs fordítása — a 2.13.0-i logika változatlanul (külön függvényben,
++ * mert a `huhs_run_translation` 2.14.0-tól a meta-mezőket is fordítja).
++ *
++ * @return string 'empty' | 'uptodate' | 'failed' | 'partial' | 'translated'
++ */
++function huhs_run_content_translation($post, $title, $content)
++{
++    $post_id = (int) $post->ID;
+     $hash = huhs_translation_source_hash($post);
+ 
+     // Erre a szövegre már megvan a fordítás — nincs mit tenni.
+diff --git a/huhs-mobile-api/includes/translation-fields.php b/huhs-mobile-api/includes/translation-fields.php
+new file mode 100644
+index 00000000..6d65af14
+--- /dev/null
++++ b/huhs-mobile-api/includes/translation-fields.php
+@@ -0,0 +1,470 @@
++<?php
++
++if (!defined('ABSPATH')) {
++    exit;
++}
++
++/*
++|--------------------------------------------------------------------------
++| Meta-alapú szövegek fordítása (plugin 2.14.0)
++|--------------------------------------------------------------------------
++|
++| MIÉRT KELL (mérve, 2026-09-25, a tulajdonos jelzése): a **kérdőív**, a
++| **nyereményjáték** és a **GYÍK** szövegei angol módban is magyarul jöttek.
++| Ennek az az oka, hogy ezeknek a típusoknak a szövege **nem** a bejegyzés
++| címében/törzsében van (amit a 2.12.0 fordít), hanem **post metában**:
++|
++|   * `_huhs_poll_question`, `_huhs_poll_options` (lista)
++|   * `_huhs_prize_question`, `_huhs_prize_answers` (lista),
++|     `_huhs_prize_type`, `_huhs_prize_description`
++|
++| A megoldás ugyanaz a minta, mint a címnél/törzsnél: a fordítás **külön
++| metába** kerül (`_huhs_translation_fields_en`, JSON), és a végpontok a kért
++| nyelven olvassák. A magyar forrás **változatlan** marad, ezért a magyar ág
++| bájtazonos, és egy hiányzó fordításnál automatikusan a magyar szöveg megy ki
++| (sosem lesz üres a válasz).
++|
++| ⚠️ A GYÍK ezt a réteget **nem** használja: ott a kérdés a cím, a válasz a
++| törzs, ezért az a 2.12.0-s közös kapun megy (`huhs_translation_meta_values`).
++*/
++
++/** A fordítási mezők tárolója (egy JSON objektum bejegyzésenként). */
++const HUHS_TRANSLATION_FIELDS_META = '_huhs_translation_fields_en';
++
++/** A mezők forrás-ujjlenyomata (a „megváltozott a magyar szöveg" esethez). */
++const HUHS_TRANSLATION_FIELDS_HASH_META = '_huhs_translation_fields_hash';
++
++/**
++ * A mező-fordítás **saját** hiba-jelölői.
++ *
++ * ⚠️ MIÉRT KÜLÖN (és nem a közös `_huhs_translation_failed`): a közös jelölő a
++ * **cím/törzs** fordítását is blokkolná, pedig a kettő független — egy
++ * nyereményjátéknál a mezőfordítás hibázhat úgy, hogy a cím/törzs rendben van.
++ */
++const HUHS_TRANSLATION_FIELDS_FAILED_META = '_huhs_translation_fields_failed';
++const HUHS_TRANSLATION_FIELDS_FAILED_AT_META = '_huhs_translation_fields_failed_at';
++
++/**
++ * Típusonként azok a meta-kulcsok, amelyek **szöveges tartalmat** hordoznak.
++ *
++ * A `text` egyetlen szöveg, a `list` pedig JSON-ben tárolt szöveglista
++ * (a WordPressben így élnek a válaszlehetőségek).
++ *
++ * ⚠️ A `huhs_game` `_huhs_game_questions` mezője **szándékosan kimarad**: az egy
++ * beágyazott szerkezet (kérdés + válaszok + helyes válasz), amit ez a réteg nem
++ * tud biztonságosan leképezni — az külön kör.
++ */
++function huhs_translation_field_specs($post_type = '')
++{
++    $specs = array(
++        'huhs_poll' => array(
++            '_huhs_poll_question' => 'text',
++            '_huhs_poll_options' => 'list',
++        ),
++        'huhs_prize' => array(
++            '_huhs_prize_question' => 'text',
++            '_huhs_prize_answers' => 'list',
++            '_huhs_prize_type' => 'text',
++            '_huhs_prize_description' => 'text',
++        ),
++        'huhs_game' => array(
++            '_huhs_game_summary' => 'text',
++        ),
++    );
++
++    if ($post_type === '') {
++        return $specs;
++    }
++
++    return isset($specs[$post_type]) ? $specs[$post_type] : array();
++}
++
++/** Azok a típusok, amelyeknek **meta-szövegük** van (nem a törzsük). */
++function huhs_translation_field_post_types()
++{
++    return array_keys(huhs_translation_field_specs());
++}
++
++/**
++ * Egy JSON-ben tárolt szöveglista beolvasása (string → lista).
++ *
++ * A WordPressben a lista `wp_json_encode`-nal kerül a metába, és előfordulhat
++ * escaping-elt alak is, ezért mindkettőt kezeljük.
++ */
++function huhs_translation_field_list_values($stored)
++{
++    if (is_array($stored)) {
++        $values = $stored;
++    } else {
++        $decoded = function_exists('huhs_poll_repair_escapes')
++            ? huhs_poll_repair_escapes($stored)
++            : $stored;
++        $values = json_decode((string) $decoded, true);
++    }
++
++    if (!is_array($values)) {
++        return array();
++    }
++
++    $out = array();
++    foreach ($values as $value) {
++        if (!is_scalar($value)) {
++            continue;
++        }
++        $text = trim((string) $value);
++        if ($text !== '') {
++            $out[] = $text;
++        }
++    }
++
++    return $out;
++}
++
++/**
++ * A bejegyzés fordítható **magyar** mezői: `meta_kulcs => szöveg vagy lista`.
++ *
++ * Üres érték nem kerül bele: ha nincs mit fordítani, a hívó ezt üres tömbbel
++ * látja, és nem indít felesleges kérést.
++ */
++function huhs_translation_source_fields($post_id)
++{
++    $post = get_post($post_id);
++    if (!$post instanceof WP_Post) {
++        return array();
++    }
++
++    $fields = array();
++    foreach (huhs_translation_field_specs($post->post_type) as $meta_key => $shape) {
++        $raw = get_post_meta($post_id, $meta_key, true);
++        if ($shape === 'list') {
++            $values = huhs_translation_field_list_values($raw);
++            if ($values) {
++                $fields[$meta_key] = $values;
++            }
++            continue;
++        }
++
++        $text = trim((string) $raw);
++        if ($text !== '') {
++            $fields[$meta_key] = $text;
++        }
++    }
++
++    return $fields;
++}
++
++/** A magyar mezők ujjlenyomata (a változás-követéshez). */
++function huhs_translation_fields_source_hash($post_id)
++{
++    return md5((string) wp_json_encode(huhs_translation_source_fields($post_id)));
++}
++
++/** A beírt fordítások (nyers tömb; üres tömb, ha még nincs). */
++function huhs_translation_stored_fields($post_id)
++{
++    // ⚠️ NINCS kérés-szintű `static` gyorsítótár: a beíró UGYANABBAN a
++    // kérésben olvassa vissza (a pótló kör ír, majd rögtön számol), és egy
++    // elavult cache azt eredményezné, hogy a frissen lefordított elem
++    // **újra várólistásnak** látszik — vagyis minden körben felesleges API-hívás
++    // menne rá. A `get_post_meta` a WordPress meta-cache-éből így is olcsó.
++    $raw = (string) get_post_meta($post_id, HUHS_TRANSLATION_FIELDS_META, true);
++    if ($raw === '') {
++        return array();
++    }
++
++    $decoded = json_decode($raw, true);
++
++    return is_array($decoded) ? $decoded : array();
++}
++
++/**
++ * Ez a **pontos** mező-halmaz nemrég hibázott-e? (késleltetéssel)
++ *
++ * Ugyanaz az elv, mint a cím/törzs ágon: egy átmeneti szolgáltató-hiba nem
++ * jelölheti meg az elemet örökre, de a végtelen újrapróbálkozást sem engedjük.
++ */
++function huhs_translation_fields_failed_recently($post_id, $hash)
++{
++    if ($hash === ''
++        || (string) get_post_meta($post_id, HUHS_TRANSLATION_FIELDS_FAILED_META, true) !== $hash) {
++        return false;
++    }
++
++    $at = (int) get_post_meta($post_id, HUHS_TRANSLATION_FIELDS_FAILED_AT_META, true);
++    if ($at <= 0) {
++        return false;
++    }
++
++    $delay = (int) apply_filters('huhs_translation_retry_delay', 6 * HOUR_IN_SECONDS);
++
++    return (time() - $at) < max(60, $delay);
++}
++
++/** A mező-fordítás hibájának jelölése. */
++function huhs_translation_mark_fields_failed($post_id, $hash)
++{
++    update_post_meta($post_id, HUHS_TRANSLATION_FIELDS_FAILED_META, (string) $hash);
++    update_post_meta($post_id, HUHS_TRANSLATION_FIELDS_FAILED_AT_META, time());
++}
++
++/**
++ * A mező fordítása a kért nyelven — **magyar kulcs, angol érték** elven.
++ *
++ * Nem-angol kérésre (és hiányzó fordításra) az **eredeti** érték megy vissza,
++ * ezért a magyar válasz bájtazonos, és nem lesz üres mező.
++ */
++function huhs_translation_text($post_id, $lang, $meta_key, $fallback)
++{
++    if ($lang !== 'en') {
++        return $fallback;
++    }
++
++    $stored = huhs_translation_stored_fields($post_id);
++    if (!isset($stored[$meta_key]) || !is_string($stored[$meta_key])) {
++        return $fallback;
++    }
++
++    $value = trim($stored[$meta_key]);
++
++    return $value === '' ? $fallback : $value;
++}
++
++/** Ugyanaz listára: **elemenként** esik vissza a magyar értékre. */
++function huhs_translation_list($post_id, $lang, $meta_key, $fallback_list)
++{
++    $fallback = array_values(array_filter(array_map('strval', (array) $fallback_list), 'strlen'));
++    if ($lang !== 'en') {
++        return $fallback;
++    }
++
++    $stored = huhs_translation_stored_fields($post_id);
++    if (!isset($stored[$meta_key]) || !is_array($stored[$meta_key])) {
++        return $fallback;
++    }
++
++    $out = array();
++    foreach (array_values($stored[$meta_key]) as $index => $value) {
++        if (!is_scalar($value)) {
++            continue;
++        }
++        $text = trim((string) $value);
++        $out[] = $text === '' ? (string) ($fallback[$index] ?? '') : $text;
++    }
++
++    return $out ? $out : $fallback;
++}
++
++/**
++ * Megvan-e már a **teljes** fordítás ehhez a bejegyzéshez?
++ *
++ * Csak akkor igaz, ha minden nem üres magyar mezőhöz van nem üres fordítás —
++ * ugyanaz az elv, mint a cím/törzs kapujánál (részleges fordítás nem elég).
++ */
++function huhs_translation_fields_complete($post_id)
++{
++    $source = huhs_translation_source_fields($post_id);
++    if (!$source) {
++        return false;
++    }
++
++    $stored = huhs_translation_stored_fields($post_id);
++    foreach ($source as $meta_key => $value) {
++        if (!isset($stored[$meta_key])) {
++            return false;
++        }
++        if (is_array($value)) {
++            $translated = huhs_translation_list($post_id, 'en', $meta_key, $value);
++            if (count($translated) !== count($value)) {
++                return false;
++            }
++            continue;
++        }
++        if (trim((string) $stored[$meta_key]) === '') {
++            return false;
++        }
++    }
++
++    return true;
++}
++
++/**
++ * Naprakész-e a mező-fordítás? (megvan MINDEN mező, és a forrás ugyanaz)
++ *
++ * Ez a „nincs mit tenni" állapot: a mentés-ág ezzel spórolja meg a felesleges
++ * API-hívást, a pótló kör pedig ezzel dönti el, hogy várólistás-e az elem.
++ */
++function huhs_translation_fields_current($post_id)
++{
++    if (!huhs_translation_fields_complete($post_id)) {
++        return false;
++    }
++
++    return (string) get_post_meta($post_id, HUHS_TRANSLATION_FIELDS_HASH_META, true)
++        === huhs_translation_fields_source_hash($post_id);
++}
++
++/* ---- A szolgáltató hívása (meta-mezők) ---------------------------------- */
++/** A mező-fordítás rendszer-üzenete: ugyanaz a kulcs-halmaz, szigorú JSON. */
++function huhs_translation_fields_system_prompt()
++{
++    return 'You translate Hungarian website content of a Hungarian Hardstyle music app into English. '
++        . 'The user message is a JSON object with a "fields" key. Answer with a single JSON object that has '
++        . 'exactly one key, "fields", whose value is an object with the SAME keys as the input object. '
++        . 'Translate every value into English. A value that is a list of strings must stay a list of the same '
++        . 'length, with each element translated. Keep brand names, artist names and release titles unchanged '
++        . '(Hungarian Hardstyle, HUHS, festival and label names). Never return an empty string: if a text is '
++        . 'already English, repeat it unchanged.';
++}
++
++/** A mező-fordítás kérése (hálózat). Hiba esetén `null`. */
++function huhs_translation_request_fields($fields)
++{
++    $provider = huhs_translation_provider();
++    $key = huhs_translation_api_key();
++    if ($key === '' || empty($provider['url']) || !$fields) {
++        return null;
++    }
++
++    $body = array(
++        'model'    => (string) ($provider['model'] ?? 'deepseek-chat'),
++        'messages' => array(
++            array('role' => 'system', 'content' => huhs_translation_fields_system_prompt()),
++            array('role' => 'user', 'content' => wp_json_encode(array('fields' => $fields))),
++        ),
++        'response_format' => array('type' => 'json_object'),
++        'temperature'     => 0,
++    );
++
++    $response = wp_remote_post((string) $provider['url'], array(
++        'timeout' => (int) ($provider['timeout'] ?? 45),
++        'headers' => array(
++            'content-type'  => 'application/json',
++            'authorization' => 'Bearer ' . $key,
++        ),
++        'body'    => wp_json_encode($body),
++    ));
++
++    if (is_wp_error($response)) {
++        return null;
++    }
++    if ((int) wp_remote_retrieve_response_code($response) !== 200) {
++        return null;
++    }
++
++    return huhs_translation_parse_fields_response((string) wp_remote_retrieve_body($response), $fields);
++}
++
++/**
++ * A válasz feldolgozása **hálózat nélkül** — ezért tesztelhető.
++ *
++ * A kimenet csak azokat a kulcsokat tartalmazza, amelyeket kértünk, és csak
++ * akkor, ha nem üres (`text`) vagy a lista hossza egyezik (`list`). Így egy
++ * félreértett válasz nem írhat félkész fordítást.
++ */
++function huhs_translation_parse_fields_response($raw, $requested)
++{
++    $empty = array();
++    $decoded = json_decode((string) $raw, true);
++    if (!is_array($decoded)) {
++        return $empty;
++    }
++
++    $payload = $decoded;
++    if (isset($decoded['choices'][0]['message']['content'])) {
++        $inner = json_decode((string) $decoded['choices'][0]['message']['content'], true);
++        if (!is_array($inner)) {
++            return $empty;
++        }
++        $payload = $inner;
++    }
++
++    $fields = isset($payload['fields']) && is_array($payload['fields']) ? $payload['fields'] : $payload;
++
++    $out = array();
++    foreach ((array) $requested as $meta_key => $source) {
++        if (!array_key_exists($meta_key, $fields)) {
++            continue;
++        }
++        $value = $fields[$meta_key];
++
++        if (is_array($source)) {
++            if (!is_array($value)) {
++                continue;
++            }
++            $translated = array();
++            foreach (array_values($value) as $item) {
++                if (!is_scalar($item)) {
++                    continue;
++                }
++                $text = trim((string) $item);
++                if ($text !== '') {
++                    $translated[] = $text;
++                }
++            }
++            if (count($translated) === count($source)) {
++                $out[$meta_key] = $translated;
++            }
++            continue;
++        }
++
++        if (!is_scalar($value)) {
++            continue;
++        }
++        $text = trim((string) $value);
++        if ($text !== '') {
++            $out[$meta_key] = $text;
++        }
++    }
++
++    return $out;
++}
++
++/**
++ * A meta-szövegek fordítása egy bejegyzésre.
++ *
++ * @return string 'disabled' | 'empty' | 'uptodate' | 'failed' | 'partial' | 'translated'
++ */
++function huhs_run_field_translation($post_id)
++{
++    if (!huhs_translation_enabled()) {
++        return 'disabled';
++    }
++
++    $post = get_post($post_id);
++    if (!$post instanceof WP_Post || !huhs_translation_field_specs($post->post_type)) {
++        return 'empty';
++    }
++
++    $source = huhs_translation_source_fields($post_id);
++    if (!$source) {
++        return 'empty';
++    }
++
++    $hash = huhs_translation_fields_source_hash($post_id);
++    if (huhs_translation_fields_current($post_id)) {
++        return 'uptodate';
++    }
++
++    // Ugyanaz a hiba-késleltetés, mint a cím/törzs ágon: ne pörögjön végtelenül.
++    if (huhs_translation_fields_failed_recently($post_id, $hash)) {
++        return 'failed';
++    }
++
++    $translated = huhs_translation_request_fields($source);
++    if ($translated === null || !$translated) {
++        huhs_translation_mark_fields_failed($post_id, $hash);
++        return 'failed';
++    }
++
++    // Meglévő fordítás megőrzése: csak a hiányzó/új kulcsokat írjuk felül.
++    $stored = huhs_translation_stored_fields($post_id);
++    foreach ($translated as $meta_key => $value) {
++        $stored[$meta_key] = $value;
++    }
++    update_post_meta($post_id, HUHS_TRANSLATION_FIELDS_META, wp_json_encode($stored));
++    update_post_meta($post_id, HUHS_TRANSLATION_FIELDS_HASH_META, $hash);
++    delete_post_meta($post_id, HUHS_TRANSLATION_FIELDS_FAILED_META);
++    delete_post_meta($post_id, HUHS_TRANSLATION_FIELDS_FAILED_AT_META);
++
++    return huhs_translation_fields_complete($post_id) ? 'translated' : 'partial';
++}
+diff --git a/huhs-mobile-api/includes/translation-sweep.php b/huhs-mobile-api/includes/translation-sweep.php
+index 197fdb0b..ea42003a 100644
+--- a/huhs-mobile-api/includes/translation-sweep.php
++++ b/huhs-mobile-api/includes/translation-sweep.php
+@@ -116,10 +116,25 @@ function huhs_translation_mark_failed($post_id, $hash)
+  */
+ function huhs_translation_pending_posts($post_type, $limit = 5)
+ {
+-    if (!in_array($post_type, huhs_translation_post_types(), true)) {
++    if (!in_array($post_type, huhs_translation_all_post_types(), true)) {
+         return array();
+     }
+ 
++    // A várólista két forrásból állhat: a **cím/törzs** fordításából és a
++    // **meta-szövegek** fordításából (2.14.0). A SQL csak előszűrő (bármelyik
++    // hiányzik), a pontos döntést a `huhs_translation_post_needs_work()` adja —
++    // így egy megváltozott forrás vagy egy nemrég hibázott elem is helyesen
++    // kerül ki/be.
++    $meta_query = array('relation' => 'OR');
++    if (in_array($post_type, huhs_translation_post_types(), true)) {
++        $meta_query[] = array('key' => '_huhs_content_en', 'compare' => 'NOT EXISTS');
++        $meta_query[] = array('key' => '_huhs_content_en', 'value' => '', 'compare' => '=');
++    }
++    if (huhs_translation_field_specs($post_type)) {
++        $meta_query[] = array('key' => HUHS_TRANSLATION_FIELDS_META, 'compare' => 'NOT EXISTS');
++        $meta_query[] = array('key' => HUHS_TRANSLATION_FIELDS_META, 'value' => '', 'compare' => '=');
++    }
++
+     $posts = get_posts(array(
+         'post_type' => $post_type,
+         'post_status' => 'publish',
+@@ -127,18 +142,7 @@ function huhs_translation_pending_posts($post_type, $limit = 5)
+         'orderby' => 'ID',
+         'order' => 'ASC',
+         'suppress_filters' => false,
+-        'meta_query' => array(
+-            'relation' => 'OR',
+-            array(
+-                'key' => '_huhs_content_en',
+-                'compare' => 'NOT EXISTS',
+-            ),
+-            array(
+-                'key' => '_huhs_content_en',
+-                'value' => '',
+-                'compare' => '=',
+-            ),
+-        ),
++        'meta_query' => $meta_query,
+     ));
+ 
+     $pending = array();
+@@ -146,26 +150,56 @@ function huhs_translation_pending_posts($post_type, $limit = 5)
+         if (!$post instanceof WP_Post) {
+             continue;
+         }
+-        // Üres magyar törzsnél nincs mit fordítani (és a folyamat sem tudna mit
+-        // kezdeni vele) — az ilyen elem nem tartozik a várólistára.
+-        if (trim((string) $post->post_content) === '' || trim((string) $post->post_title) === '') {
+-            continue;
+-        }
+-        // Tartós hiba: ne próbáljuk minden körben újra.
+-        if (huhs_translation_failed_recently($post->ID, huhs_translation_source_hash($post))) {
+-            continue;
++        if (huhs_translation_post_needs_work($post)) {
++            $pending[] = $post;
+         }
+-        $pending[] = $post;
+     }
+ 
+     return $pending;
+ }
+ 
++/**
++ * Kell-e ezzel az elemmel még foglalkozni? (a pótló kör döntése)
++ *
++ *  * **cím/törzs**: van nem üres magyar szöveg, és nincs naprakész fordítás;
++ *  * **meta-szöveg**: van nem üres magyar mező, és nincs naprakész fordítás;
++ *  * a nemrég hibázott rész kimarad (késleltetés), hogy ne pörögjön végtelenül.
++ */
++function huhs_translation_post_needs_work($post)
++{
++    if (!$post instanceof WP_Post) {
++        return false;
++    }
++
++    if (in_array($post->post_type, huhs_translation_post_types(), true)) {
++        $title = trim((string) $post->post_title);
++        $content = trim((string) $post->post_content);
++        if ($title !== '' && $content !== '') {
++            $hash = huhs_translation_source_hash($post);
++            if (!huhs_translation_is_current($post->ID, $hash)
++                && !huhs_translation_failed_recently($post->ID, $hash)) {
++                return true;
++            }
++        }
++    }
++
++    if (function_exists('huhs_translation_field_specs') && huhs_translation_field_specs($post->post_type)) {
++        if (huhs_translation_source_fields($post->ID) && !huhs_translation_fields_current($post->ID)) {
++            $hash = huhs_translation_fields_source_hash($post->ID);
++            if (!huhs_translation_fields_failed_recently($post->ID, $hash)) {
++                return true;
++            }
++        }
++    }
++
++    return false;
++}
++
+ /** Hány elem vár fordításra típusonként (a `status` végpontnak). */
+ function huhs_translation_pending_counts($limit_per_type = 200)
+ {
+     $counts = array();
+-    foreach (huhs_translation_post_types() as $post_type) {
++    foreach (huhs_translation_all_post_types() as $post_type) {
+         $counts[$post_type] = count(huhs_translation_pending_posts($post_type, $limit_per_type));
+     }
+ 
+@@ -247,7 +281,7 @@ function huhs_translation_sweep($args = array())
+ /** A sweep típuslistája: egy típus, lista, vagy mind (érvénytelen érték = mind). */
+ function huhs_translation_sweep_types($requested)
+ {
+-    $all = huhs_translation_post_types();
++    $all = huhs_translation_all_post_types();
+ 
+     if (is_array($requested)) {
+         $requested = array_values(array_intersect($all, $requested));
+@@ -309,7 +343,7 @@ function huhs_translation_status_endpoint()
+             'url' => (string) ($provider['url'] ?? ''),
+             'model' => (string) ($provider['model'] ?? ''),
+         ),
+-        'types' => huhs_translation_post_types(),
++        'types' => huhs_translation_all_post_types(),
+         'pending' => huhs_translation_pending_counts(),
+     ));
+ }

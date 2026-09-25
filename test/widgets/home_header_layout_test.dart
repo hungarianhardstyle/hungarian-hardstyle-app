@@ -29,8 +29,17 @@ import 'package:hungarian_hardstyle_app/widgets/language_switch_button.dart';
 /// **414 px**, a rendelkezésre álló hely 364 px. Vagyis a kapcsoló bekerülése
 /// **50 px túlcsordulást** okozott a valós (400 px-es) telefon-szélességen — ez
 /// nem teszt-hiba volt, hanem a felület hibája. A javítás: adaptív fejléc.
-/// Ez a fájl **minden** gyakori készülékszélességen megköveteli, hogy ne
-/// csorduljon túl semmi (a „ne törjön el az app" elv).
+///
+/// ⚠️ **A 2026-09-26-i kör (a tulajdonos jelzése: „Angolul »Community«, de
+/// férjen ki"):** a küszöb korábban **fix 360 px** volt, a **magyar** feliratra
+/// mérve. Angolul a „Community" hosszabb, ezért 400 px-en a sor nem fért ki, és
+/// a tartalék `FittedBox` **arányosan lekicsinyítette** a fél fejlécet (a felirat
+/// látszott, de zsugorodva). Mostantól a döntés a **tényleges felirat**
+/// szélességéből jön (`homeHeaderFitsCommunityLabel`), ezért:
+///  * a feliratos ág csak akkor fut, ha valóban kifér,
+///  * **semmi nem zsugorodik** (ezt ez a fájl minden gyakori szélességen és
+///    MINDKÉT nyelven megköveteli — a `FittedBox` csak végső háló),
+///  * és a felirat sosem tűnik el indokolatlanul: ahol kifér, ott látszik.
 class _RegisteredUser extends Fake implements User {
   @override
   bool get isAnonymous => false;
@@ -100,6 +109,15 @@ Future<void> _pumpAt(WidgetTester tester, double width) async {
   await tester.pumpAndSettle();
 }
 
+/// A nyelvkapcsoló feliratának **kifestett** magassága.
+///
+/// ⚠️ MIÉRT `getRect` és nem `getSize`: a `FittedBox` **transzformációval**
+/// kicsinyít, a layout-méret (`getSize`) változatlan maradna — a zsugorodást
+/// csak a transzformált (globális) téglalap mutatja meg.
+double _switchTextHeight(WidgetTester tester, double width, String glyph) {
+  return tester.getRect(find.text(glyph)).height;
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -113,7 +131,7 @@ void main() {
   });
 
   for (final width in _widths) {
-    testWidgets('${width.toInt()} px: a fejléc nem csordul túl', (tester) async {
+    testWidgets('${width.toInt()} px: a fejléc nem csordul túl (magyar)', (tester) async {
       await _pumpAt(tester, width);
       expect(
         tester.takeException(),
@@ -123,6 +141,43 @@ void main() {
       );
       expect(find.byKey(const Key('language-switch-button')), findsOneWidget);
       expect(find.byType(LanguageSwitchButton), findsOneWidget);
+    });
+  }
+
+  for (final width in _widths) {
+    testWidgets('${width.toInt()} px: a fejléc nem csordul túl (angol)', (tester) async {
+      AppStrings.setLanguage(AppLanguage.en);
+      await _pumpAt(tester, width);
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: 'angol felirattal („Community") sem csordulhat túl semmi',
+      );
+      expect(find.byType(LanguageSwitchButton), findsOneWidget);
+    });
+  }
+
+  for (final scenario in [
+    ('magyar', AppLanguage.hu, 'EN'),
+    ('angol', AppLanguage.en, 'HU'),
+  ]) {
+    final (label, language, glyph) = scenario;
+    testWidgets('$label: SEMMI nem zsugorodik egyetlen szélességen sem', (tester) async {
+      AppStrings.setLanguage(language);
+      await _pumpAt(tester, 430);
+      final reference = _switchTextHeight(tester, 430, glyph);
+      expect(reference, greaterThan(0));
+
+      for (final width in _widths) {
+        await _pumpAt(tester, width);
+        final painted = _switchTextHeight(tester, width, glyph);
+        expect(
+          painted,
+          closeTo(reference, 0.5),
+          reason: '${width.toInt()} px-en a fejléc kicsinyítésre került '
+              '($painted < $reference) — a feliratnak ki KELL férnie',
+        );
+      }
     });
   }
 
@@ -142,16 +197,66 @@ void main() {
     expect(find.text('EN'), findsOneWidget);
   });
 
-  testWidgets('szélesebb készüléken marad a Közösség felirat', (tester) async {
-    await _pumpAt(tester, 412);
-    expect(find.text('Közösség'), findsOneWidget);
-    expect(find.text('EN'), findsOneWidget);
+  // ⚠️ FONT-FÜGGETLEN MÉRÉS: a tesztekben az Ahem betűtípus minden karaktert
+  // `fontSize` szélesre rajzol, ezért a feliratok a valóságosnál ~2× szélesebbek.
+  // Ezért nem azt kérjük, hogy „412 px-en látszik a felirat" (az a valós
+  // betűtípussal igaz, Ahem-mel nem), hanem azt, hogy **nagyon széles** helyen
+  // látszik, és hogy a döntés a felirat szélességével együtt mozog.
+  testWidgets('bőven széles helyen MINDKÉT nyelven látszik a felirat', (tester) async {
+    for (final scenario in [
+      ('magyar', AppLanguage.hu, 'Közösség'),
+      ('angol', AppLanguage.en, 'Community'),
+    ]) {
+      final (label, language, expected) = scenario;
+      AppStrings.setLanguage(language);
+      await _pumpAt(tester, 700);
+      expect(find.text(expected), findsOneWidget, reason: '$label felirat 700 px-en');
+      expect(tester.takeException(), isNull);
+    }
   });
 
-  testWidgets('angolos módban a fejléc feliratai is angolul vannak', (tester) async {
-    AppStrings.setLanguage(AppLanguage.en);
-    await _pumpAt(tester, 412);
-    expect(find.text('Community'), findsOneWidget);
-    expect(find.text('HU'), findsOneWidget);
+  testWidgets('a döntés a felirat szélességével együtt mozog (angol előbb vált)', (tester) async {
+    final huWidth = homeHeaderLabelWidth(
+      label: 'Közösség',
+      style: const TextStyle(fontSize: 14),
+      textDirection: TextDirection.ltr,
+    );
+    final enWidth = homeHeaderLabelWidth(
+      label: 'Community',
+      style: const TextStyle(fontSize: 14),
+      textDirection: TextDirection.ltr,
+    );
+    expect(enWidth, greaterThan(huWidth));
+    expect(
+      homeHeaderRequiredWidth(enWidth) - homeHeaderRequiredWidth(huWidth),
+      closeTo(enWidth - huWidth, 0.001),
+      reason: 'a különbség pontosan a feliratok szélesség-különbsége',
+    );
+
+    // Ugyanazon a szélességen: a magyar kifér, az angol már nem.
+    final boundary = homeHeaderRequiredWidth(huWidth) + (enWidth - huWidth) / 2;
+    expect(homeHeaderFitsCommunityLabel(available: boundary, labelWidth: huWidth), isTrue);
+    expect(homeHeaderFitsCommunityLabel(available: boundary, labelWidth: enWidth), isFalse);
+  });
+
+  testWidgets('a gomb „kerete" konstans legalább a valódi méret', (tester) async {
+    await _pumpAt(tester, 700);
+    final button = tester.getSize(find.byKey(const Key('community-hub-button')));
+    final label = tester.getSize(
+      find.descendant(
+        of: find.byKey(const Key('community-hub-button')),
+        matching: find.text('Közösség'),
+      ),
+    );
+    // A felirat szélessége a teszt-betűtípusban (Ahem) szélesebb, mint a valós
+    // arányos betűtípusban, a „keret" (margó + ikon + köz) viszont ugyanaz —
+    // ezért ez a mérés a konstans alsó korlátja.
+    final chrome = button.width - label.width;
+    expect(
+      homeCommunityButtonChrome,
+      greaterThanOrEqualTo(chrome - 1),
+      reason: 'a feltételezett keret ($homeCommunityButtonChrome) kisebb a valósnál ($chrome)',
+    );
+    expect(homeHeaderFixedWidth, greaterThanOrEqualTo(52 + 48 + 48 + 6 + 6 + 60));
   });
 }

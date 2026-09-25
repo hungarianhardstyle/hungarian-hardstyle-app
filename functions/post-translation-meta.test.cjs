@@ -96,8 +96,8 @@ test('a három angol meta kulcs MINDEN támogatott típusra regisztrálva van', 
   const types = [...listMatch[1].matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
   assert.deepEqual(
     types,
-    ['post', 'huhs_event', 'huhs_artist', 'huhs_organizer', 'huhs_release'],
-    'a támogatott típusok: cikk, esemény, DJ, szervező, kiadvány',
+    ['post', 'huhs_event', 'huhs_artist', 'huhs_organizer', 'huhs_release', 'huhs_faq'],
+    'a támogatott típusok: cikk, esemény, DJ, szervező, kiadvány, GYÍK (2.14.0)',
   );
 
   // A regisztráció a listán és a közös mező-térképen megy át (nem másolt blokkok).

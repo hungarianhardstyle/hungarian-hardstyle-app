@@ -35,6 +35,54 @@ import '../more/community_users_screen.dart';
 import '../voting/voting_screen.dart';
 import '../games/game_screen.dart';
 
+/// A főoldali fejléc **fix** elemei (mérve 2026-09-25, 400 px-es felület):
+/// avatar 52, frissítés 48, értesítés 48, a két elem-köz (`homeHeaderGap`),
+/// nyelvkapcsoló 71,2.
+const double homeHeaderFixedWidth = 52 + 48 + 48 + 6 + 6 + 71.2;
+
+/// A „Közösség" gomb **felirat nélküli** kerete: 10 px belső margó mindkét
+/// oldalon + 24 px ikon + 8 px ikon–felirat köz.
+///
+/// ⚠️ A margó 2026-09-26-án **12 → 10 px** lett: a mért fejléc-szükséglet
+/// (magyarul ~370 px) fölé az angol „Community" még ~10 px-et tesz, és pont ennyi
+/// hiányzott a gyakori 360–412 px-es készülékeken. Így a felirat ott is kifér.
+const double homeCommunityButtonChrome = 10 * 2 + 24 + 8;
+
+/// A fejléc-elemek közötti hézag (a korábbi 8 helyett 6 px) — lásd fent.
+const double homeHeaderGap = 6;
+
+/// Ennyi hely kell a **feliratos** Közösség gombhoz a fejlécben.
+///
+/// ⚠️ MIÉRT SZÁMOLT (és nem fix 360 px): a korábbi küszöb a **magyar** feliratra
+/// volt mérve, ezért **angol** módban („Community" hosszabb, mint a „Közösség")
+/// a sor már nem fért ki, és a tartalék `FittedBox` **arányosan lekicsinyítette**
+/// az egész fejlécet — a felirat így is látszott, de zsugorodva. Mostantól a
+/// döntés a **tényleges (lefordított) felirat szélességéből** jön, ezért a
+/// feliratos ág csak akkor fut, ha valóban kifér (a `FittedBox` pedig megmarad
+/// végső biztonsági hálónak).
+double homeHeaderRequiredWidth(double labelWidth) =>
+    homeHeaderFixedWidth + homeCommunityButtonChrome + labelWidth;
+
+/// Kifér-e a feliratos Közösség gomb a rendelkezésre álló helyen?
+bool homeHeaderFitsCommunityLabel({
+  required double available,
+  required double labelWidth,
+}) => available >= homeHeaderRequiredWidth(labelWidth);
+
+/// Egy egysoros felirat szélessége a tényleges betűtípussal (a döntéshez).
+double homeHeaderLabelWidth({
+  required String label,
+  required TextStyle? style,
+  required TextDirection textDirection,
+}) {
+  final painter = TextPainter(
+    text: TextSpan(text: label, style: style),
+    textDirection: textDirection,
+    maxLines: 1,
+  )..layout();
+  return painter.width;
+}
+
 class _NotificationButton extends StatelessWidget {
   const _NotificationButton({required this.count, required this.onPressed});
 
@@ -146,12 +194,27 @@ class HomeScreen extends ConsumerWidget {
                     // miközben 364 px áll rendelkezésre. Ezért a sor a
                     // rendelkezésre álló helyhez igazodik: szűk készüléken a
                     // Közösség gomb ikonná válik és a nyelvkapcsolóról lekerül a
-                    // fordító-ikon, hogy SEMMI ne csorduljon túl. A küszöbök a
-                    // fenti mérésekből jönnek (a 360–393 px-es készülékek a
-                    // szűk ágba esnek).
+                    // fordító-ikon, hogy SEMMI ne csorduljon túl.
+                    // ⚠️ 2026-09-26: a küszöb már **nem** fix 360 px, hanem a
+                    // **tényleges (lefordított) felirat** szélességéből számol
+                    // (`homeHeaderRequiredWidth`) — angolul ugyanis a „Community"
+                    // hosszabb, ezért a régi küszöb mellett a fejléc zsugorodott.
+                    // Így a felirat csak akkor jelenik meg, ha kifér.
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        final tight = constraints.maxWidth < 360;
+                        // A döntés a TÉNYLEGES felirat szélességéből jön (lásd a
+                        // fájl elején), ezért angolul is csak akkor lesz felirat,
+                        // ha kifér — különben ikonná válik, és semmi nem zsugorodik.
+                        final communityLabel = tr(context, 'Közösség');
+                        final labelWidth = homeHeaderLabelWidth(
+                          label: communityLabel,
+                          style: Theme.of(context).textTheme.labelLarge,
+                          textDirection: Directionality.of(context),
+                        );
+                        final tight = !homeHeaderFitsCommunityLabel(
+                          available: constraints.maxWidth,
+                          labelWidth: labelWidth,
+                        );
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -195,7 +258,7 @@ class HomeScreen extends ConsumerWidget {
                                         );
                                       },
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: homeHeaderGap),
                                     if (tight)
                                       IconButton(
                                         key: const Key('community-hub-button'),
@@ -221,11 +284,12 @@ class HomeScreen extends ConsumerWidget {
                                     else
                                       FilledButton.icon(
                                         key: const Key('community-hub-button'),
-                                        // Szűkebb belső margó: mérve ~39 px-cel
-                                        // keskenyebb, ugyanaz a felirat.
+                                        // Szűkebb belső margó (10 px): mérve
+                                        // ~40 px-cel keskenyebb, ugyanaz a felirat
+                                        // — az angol „Community" is kifér vele.
                                         style: FilledButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
+                                            horizontal: 10,
                                           ),
                                           visualDensity: VisualDensity.compact,
                                         ),
@@ -235,9 +299,9 @@ class HomeScreen extends ConsumerWidget {
                                           ),
                                         ),
                                         icon: const Icon(Icons.people_outline),
-                                        label: Text(tr(context, 'Közösség')),
+                                        label: Text(communityLabel),
                                       ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: homeHeaderGap),
                                     // HU/EN kapcsoló a fejléc jobb sarkában: a
                                     // felirat mindig a másik nyelv kódja.
                                     // Ikon nélkül (mérve ~25 px-cel keskenyebb):
