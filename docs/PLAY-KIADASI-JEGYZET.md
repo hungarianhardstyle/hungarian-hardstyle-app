@@ -1,12 +1,11 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 360 megy fel** (versionCode **360**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
-> 2026-09-25): a **zárt teszt sávján a 358 fut** (`completed`, 100%), a **production sávon a 355**,
-> a `beta` sávon a 354. A 360 a **358/359 minden újdonságát** tartalmazza (Chat `@`-hivatkozás,
-> értesítés-nevek, Chat-odaugrás) **plusz két újdonságot**: a Chat-odaugrás **javítását** (mélyen
-> lévő, régebbi üzeneteknél is odaugrik) és a **`@mindenki`** hivatkozást (csak admin/moderátor).
-> A rövid (1.) blokk **csak a 360 újdonságát** írja le, a nyilvános kiadáshoz pedig az
-> **1b. blokk** való (**356–360 összesítő**).
+> **Most a 361 megy fel** (versionCode **361**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> 2026-09-25): a **zárt teszt sávján a 360 fut** (`completed`, 100%), a **production sávon a 358**
+> (nyilvános, a 352–358 szöveggel), a `beta` sávon a 354. A 361 újdonsága: **HU/EN nyelvváltó a
+> főoldal jobb sarkában** — az app felülete (menük, gombok, üzenetek) angolul is elérhető, a magyar
+> marad az alapértelmezett, és a **Chat/felhasználói szöveg nem fordul**. A rövid (1.) blokk **csak a
+> 361 újdonságát** írja le, a nyilvános kiadáshoz pedig az **1b. blokk** való (**359–361 összesítő**).
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -14,11 +13,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 360
+currentBuild: 361
 currentVersion: 1.0.0
 lastPublishedBuild: 355
-aab: build/HUHS-v1.0.0+360-release.aab
-sha256: 0C000AB2BF79EBF0FB27B2B8F356A09518636978F91B875F215A35DC314B26DF
+aab: build/HUHS-v1.0.0+361-release.aab
+sha256: 5B117577B4A7A5932DD06F2EC8ABF0BC1CE84EA241E30C7418A070E90A28E671
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -27,16 +26,16 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-25, a legfrissebb mér�
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **production (nyilvános)** | **completed** (100%-ban kigördült) | **355** — „355 (1.0.0)" |
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **358** — „358 (1.0.0)" |
+| **production (nyilvános)** | **completed** (100%-ban kigördült) | **358** — „358 (1.0.0)" |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **360** — „360 (1.0.0)" |
 | beta | completed (100%) | 354 |
 | internal | completed + egy **üres piszkozat** | 278 |
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
-- **A nyilvános kiadás megvan:** a production sávon a **355** van (`completed`, a **352–356 összesítő** szöveggel), a bolt-lap **200**-at ad. **A zárt tesztben a 358 fut** (a tulajdonos feltöltötte, `completed` 100%) — a feltöltött csomag SHA-256-ja **`64702d11…40264e`**, ami **bájtazonos** a helyben épített `build/HUHS-v1.0.0+358-release.aab`-bal (mérve: `node tools/check-play-track.mjs --hashes`), és a kiadási szöveg a **§1. blokk**.
-- A feltöltött AAB-ek a Playen (a 2026-09-25-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 352, 353, 354, 355, 356, 357, **358**.
-- **A 358 a zárt teszt csúcsa**, ezért **új verziókód csak a következő körben** kell. A `beta` sávon a **354** van (ez a nyílt teszt csatorna), ott **nem** kell külön lépni.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**355**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 355. A **nyilvános** kiadáshoz az **1b. blokk** való (**356–358 összesítő**): a nyilvános felhasználók a 355-tel a **352–356** összesítőt kapták, tehát ami **azóta** történt, az a hírlevél-védelem, az értesítés-javítás és a Chat-hivatkozás.
+- **A nyilvános kiadás megvan:** a production sávon a **358** van (`completed`, a **352–358 összesítő** szöveggel), a bolt-lap **200**-at ad. **A zárt tesztben a 360 fut** (a tulajdonos feltöltötte, `completed` 100%) — a 360 kiadási szövege a **360-as blokk** volt (Chat-odaugrás javítása + `@mindenki`).
+- A feltöltött AAB-ek a Playen (a 2026-09-25-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 352, 353, 354, 355, 356, 357, 358, 359, **360**.
+- **A 360 a zárt teszt csúcsa**, ezért a következő app-változás a **361**. A `beta` sávon a **354** van (ez a nyílt teszt csatorna), ott **nem** kell külön lépni.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**355**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 355 volt; a **358** a 352–358 összesítőt kapta nyilvánosan. A **következő nyilvános** kiadáshoz az **1b. blokk** való (**359–361 összesítő**): ami a 358 óta történt, az a Chat-odaugrás javítása, a `@mindenki` és a **nyelvváltó**.
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -187,21 +186,19 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ a Chatben: @mindenki — mindenki értesítést kap az üzenetről (csak admin/moderátor használhatja).
-- A Chat-értesítésre koppintva az app a mélyebben lévő, régebbi üzenetnél is a megjelölt üzenetre ugrik.
+- ÚJ: HU/EN nyelvváltó a főoldal jobb sarkában — az app felülete mostantól angolul is elérhető.
+- A magyar marad az alapértelmezett, a választás megjegyződik; a Chat és a felhasználók saját szövegei nem fordulnak le.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (356–360 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (359–361 összesítő)
 
-**Ezt használd, amikor a 360 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
-**352–356** összesítőt kapták a 355-tel — ők ezt az öt sort kapják (ami azóta történt):
+**Ezt használd, amikor a 361 a production sávra kerül.** A nyilvános felhasználók legutóbb a **358**-cal
+a **352–358** összesítőt kapták, ezért ők ezt a három újdonságot kapják:
 
 ```play-notes
-- ÚJ a Chatben: @-tal hivatkozhatsz személyre, cikkre, DJ-re, szervezőre, eseményre és kiadványra; a hivatkozás kattintható.
-- Ha valakit megemlítesz, az értesítést kap róla, és a koppintás arra az üzenetre visz.
-- ÚJ: @mindenki — mindenki értesítést kap az üzenetről (csak admin/moderátor).
-- Az értesítéseknél látszik, ki kedvelte a chat-üzenetedet, és ki szólt hozzá egy cikkhez.
-- A hírlevélnél nem megy ki újra a megerősítő e-mail, ha már feliratkoztál.
+- ÚJ: HU/EN nyelvváltó a főoldal jobb sarkában — az app felülete angolul is elérhető; a magyar marad az alapértelmezett.
+- ÚJ a Chatben: @mindenki — mindenki értesítést kap az üzenetről (csak admin/moderátor).
+- A Chat-értesítésre koppintva az app a mélyebben lévő, régebbi üzenetnél is pontosan a megjelölt üzenetre ugrik.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -231,6 +228,14 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 361 — HU/EN nyelvváltó: az app felülete angolul is elérhető
+- **ÚJ (a tulajdonos kérése: „valahogy megkéne oldani az angol nyelvet az appban"):** a **főoldal jobb sarkában** megjelent a **HU/EN kapcsoló** — a felirat mindig a **másik** nyelv kódja (magyar módban „EN"). A váltás **azonnal** átrajzolja a felületet (a már megnyitott képernyőket is), és a választás **megjegyződik**: a következő indításnál is azon a nyelven indul, és a szótár már a `runApp` előtt betölt, ezért nincs „bevillanó" magyar felirat. A magyar marad az **alapértelmezett**, és minden ismeretlen/hibás mentett érték is magyarrá esik vissza.
+- **Amit lefordítottunk:** a **felület szövegei** — mérve **589 egyedi szöveg, 783 helyen** (menük, gombok, címkék, űrlap-feliratok, tippek, hiba- és állapotszövegek). A fordítás **be van építve** az appba (`assets/i18n/en.json`, **609 kulcs**), ezért angol módban **nincs hálózat és nincs várakozás**; ha valamire nincs fordítás, a felirat a **magyar** marad (soha nem üres).
+- **Amit SZÁNDÉKOSAN nem fordítunk:** a **Chat üzenetei, a hozzászólások és a nevek** — a felhasználók saját szövege magyar marad. Ezt a kódban **forrás-lint** is őrzi (a chat-üzenet szövege nem mehet át a fordítón).
+- **Hogyan épül be (a következő köröknek):** a `Text(...)` helyek `AppText(...)`-re cserélődtek (a szöveg a konstruktorban marad, ezért a `const` felület **nem tört el**), a címkék/tooltipek pedig `tr(context, '…')`-t kaptak; az **interpolált** feliratok `trArgs(...)`-tal mennek (`{n}` helyőrzőkkel). A szótár kulcsait **a kód adja** (`tools/extract-ui-strings.mjs`), a lefedettséget a `tools/check-i18n.mjs` méri (**100%**).
+- **Amit ez a kiadás is tartalmaz (a 360-ból):** `@mindenki` a Chatben + a Chat-értesítés pontosan a megjelölt (akár mélyen lévő) üzenetre ugrik; **(a 359-ből):** az odaugrás hideg indításnál is; **(a 358-ból):** a Chat `@`-hivatkozás; **(a 357-ből):** az értesítések megnevezik a cselekvőt; **(a 356-ból):** a hírlevél-védelem és a `enableEdgeToEdge()`.
+- **⚠️ ŐSZINTE KORLÁT:** a **tartalom** (cikkek, események, DJ-k, kiadványok) nyelve **egyelőre magyar** — az angol cikk-változatok a szerveren már élnek (a legutóbbi **30 cikk**, mérve `?lang=en` → 30/30), de az app a tartalmat még magyarul kéri; ez a **következő kör**. A csomagban mérve: a szótár **benne van** (609 kulcs), és **mindhárom ABI** `libapp.so`-jában megvan az `AppText`, `AppStrings`, `LanguageSwitchButton` és `languageProvider` szimbólum, valamint a 361 changelog-sora (UTF-16LE).
 
 ### 360 — `@mindenki` a Chatben + a mélyen lévő üzenethez is odaugrik a Chat-értesítés
 - **ÚJ (a tulajdonos kérése: „kéne egy @mindenki tag is, amit ha beütök, kap mindenki notifyt és csak moderátor/admin használhassa"):** a `@min…` beírásakor az admin/moderátor a **Mindenki** találatot kapja a javaslatlista **első** helyén, és az üzenet elküldésekor **minden regisztrált felhasználó értesítést kap** (mérve: **41** címzett). A jogosultságot a **szerver** kényszeríti (`sanitizeMentions` csak privilegednek engedi; a nem admin küldést kihagyja), a szövegben a `@mindenki` **ki van emelve, de nem kattintható** (nincs mögötte adatlap), és **üres lekérdezésnél nem ajánljuk fel**, hogy egy véletlen koppintás ne küldjön értesítést mindenkinek. A fan-out **legfeljebb 500 címzett** (ma 41), a szerzőt kihagyja, és a hiba nem viheti el a már beírt üzenetet.

@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 361,
+    changes: [
+      'ÚJ: HU/EN nyelvváltó a főoldal jobb sarkában — az app felülete (menük, gombok, üzenetek) angolul is elérhető.',
+      'A magyar marad az alapértelmezett, a választás megjegyződik. A Chat és a felhasználók saját szövegei nem fordulnak le.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 360,
     changes: [
       'ÚJ a Chatben: @mindenki — ha beírod, mindenki értesítést kap az üzenetről. Ezt csak admin/moderátor tudja használni.',
