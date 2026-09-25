@@ -487,6 +487,14 @@ angolul a nyilvános végponton, és hogy az angol **nem** szivárgott-e ki a we
 meta) → a 2.12.0 **még nincs fent**; a cikkek `?lang=en` válasza **30/50** angol (`?lang=hu`: 0), az
 esemény/DJ/szervező 0; a weboldal HTML-jében az angol cím és kivonat **nincs benne**.
 
+**✅ A CSOMAG PHP-JA FUTÁSSAL ELLENŐRIZVE (2026-09-25):** `node tools/run-php-plugin-tests.mjs` — a
+Docker (`php:8.2-cli`) konténerben a **kibontott ZIP-en** fut: **46 PHP fájl `php -l`** szintaxisa +
+**19 viselkedés-ellenőrzés kétszer** (kulcs nélkül/örökölt kulccsal, majd a `HUHS_OPENAI_API_KEY`
+konstans ággal) WordPress-stubokkal. **Eredmény: `MINDEN ELLENŐRZÉS RENDBEN — lintelt fájl: 46,
+viselkedés-körök: 19/19, 19/19`**, és a négy mutáció (fallback-kapu gyengítése, mindkét kulcs-kapu
+kivétele, örökölt-kulcs felismerés elvétele, meta-írás elhagyása) **mind elkapva**, bájtpontos
+visszaállítással. Docker nélkül az eszköz **KIHAGYVA** (indoklással) — a zöld így nem csúszik el.
+
 ### 2.12.0 — angol mezők az eseménynek, DJ-nek, szervezőnek és kiadványnak + automatikus fordítás (2026-09-25)
 
 ```text
