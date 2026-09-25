@@ -1,0 +1,696 @@
+diff --git a/huhs-mobile-api/huhs-mobile-api.php b/huhs-mobile-api/huhs-mobile-api.php
+index fdbb01bf..ab0d2854 100644
+--- a/huhs-mobile-api/huhs-mobile-api.php
++++ b/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.11.0
++ * Version: 2.12.0
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.11.0');
++define('HUHS_API_VERSION', '2.12.0');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+@@ -65,6 +65,9 @@ require_once HUHS_API_PATH . 'includes/meta-fields.php';
+ // Az angol cikk-mezők (rejtett post meta) REST-regisztrációja — a fordítási
+ // folyamat ezekre ír alkalmazás-jelszóval; a webfelület nem olvassa őket.
+ require_once HUHS_API_PATH . 'includes/post-translation-meta.php';
++// Automatikus fordítás új tartalomnál (WP-cron, plugin 2.12.0). API-kulcs
++// nélkül szándékosan nem csinál semmit: nem hív külső szolgáltatást.
++require_once HUHS_API_PATH . 'includes/translation-cron.php';
+ require_once HUHS_API_PATH . 'includes/meta-boxes.php';
+ require_once HUHS_API_PATH . 'includes/meta-save.php';
+ require_once HUHS_API_PATH . 'includes/editor.php';
+diff --git a/huhs-mobile-api/includes/api-artists.php b/huhs-mobile-api/includes/api-artists.php
+index 05f0541e..d27eb587 100644
+--- a/huhs-mobile-api/includes/api-artists.php
++++ b/huhs-mobile-api/includes/api-artists.php
+@@ -377,6 +377,7 @@ function huhs_get_artists(WP_REST_Request $request)
+     $per_page = min(50, max(1, absint($request->get_param('per_page')) ?: 20));
+     $search = sanitize_text_field((string) $request->get_param('search'));
+     $category = sanitize_title((string) $request->get_param('category'));
++    $lang = huhs_request_lang($request);
+ 
+     $tax_query = array();
+     if ($category !== '') {
+@@ -414,8 +415,8 @@ function huhs_get_artists(WP_REST_Request $request)
+ 
+     $query = new WP_Query($query_args);
+ 
+-    $items = array_map(function ($artist) {
+-        return huhs_build_artist_response($artist, false);
++    $items = array_map(function ($artist) use ($lang) {
++        return huhs_build_artist_response($artist, false, $lang);
+     }, $query->posts);
+ 
+     $total_pages = (int) $query->max_num_pages;
+@@ -448,12 +449,19 @@ function huhs_get_artist_detail(WP_REST_Request $request)
+         );
+     }
+ 
+-    return rest_ensure_response(huhs_build_artist_response($artist, true));
++    return rest_ensure_response(huhs_build_artist_response($artist, true, huhs_request_lang($request)));
+ }
+ 
+-function huhs_build_artist_response($artist, $include_events = false)
++function huhs_build_artist_response($artist, $include_events = false, $lang = 'hu')
+ {
+     $artist_id = (int) $artist->ID;
++    // A kért nyelv (2.12.0): cím, bemutató (biography) és kivonat.
++    $translation = huhs_translation_meta_values(
++        $artist_id,
++        $lang,
++        $artist->post_title,
++        $artist->post_content
++    );
+     $genre_value = get_post_meta($artist_id, 'genre', true);
+     $genres = is_array($genre_value)
+         ? $genre_value
+@@ -490,10 +498,13 @@ function huhs_build_artist_response($artist, $include_events = false)
+ 
+     $data = array(
+         'id'             => $artist_id,
+-        'title'          => huhs_clean_title($artist->post_title),
++        'title'          => huhs_clean_title($translation['title']),
++        'has_en'         => $translation['has_en'],
+         'slug'           => $artist->post_name,
+-        'biography'      => huhs_clean_content($artist->post_content),
+-        'excerpt'        => huhs_make_excerpt($artist->post_content, 30),
++        'biography'      => huhs_clean_content($translation['content']),
++        'excerpt'        => $translation['excerpt'] !== ''
++            ? huhs_make_excerpt($translation['excerpt'], 30)
++            : huhs_make_excerpt($translation['content'], 30),
+         'real_name'      => get_post_meta($artist_id, 'real_name', true),
+         'country'        => get_post_meta($artist_id, 'country', true),
+         'city'           => get_post_meta($artist_id, 'city', true),
+@@ -563,7 +574,7 @@ function huhs_get_artist_upcoming_events($artist_id)
+             continue;
+         }
+ 
+-        $upcoming[] = huhs_build_event_response($event);
++        $upcoming[] = huhs_build_event_response($event, $lang);
+     }
+ 
+     return $upcoming;
+diff --git a/huhs-mobile-api/includes/api-events.php b/huhs-mobile-api/includes/api-events.php
+index 756166c9..c414a4ea 100644
+--- a/huhs-mobile-api/includes/api-events.php
++++ b/huhs-mobile-api/includes/api-events.php
+@@ -32,6 +32,7 @@ function huhs_register_events_api()
+ function huhs_get_events(WP_REST_Request $request)
+ {
+     $summary = filter_var($request->get_param('summary'), FILTER_VALIDATE_BOOLEAN);
++    $lang = huhs_request_lang($request);
+     $include_past = filter_var($request->get_param('include_past'), FILTER_VALIDATE_BOOLEAN);
+     $page_param = $request->get_param('page');
+     $per_page_param = $request->get_param('per_page');
+@@ -58,7 +59,7 @@ function huhs_get_events(WP_REST_Request $request)
+ 
+         $date = get_post_meta($event->ID, 'event_end_date', true) ?: get_post_meta($event->ID, 'event_start_date', true);
+         if (!$include_past && $date && strtotime($date) < current_time('timestamp')) continue;
+-        $data[] = $summary ? huhs_build_event_summary($event) : huhs_build_event_response($event);
++        $data[] = $summary ? huhs_build_event_summary($event, $lang) : huhs_build_event_response($event, $lang);
+     }
+ 
+     // Featured események előre, utána dátum szerint
+@@ -93,16 +94,18 @@ function huhs_get_event(WP_REST_Request $request)
+     if (!$event || $event->post_type !== 'huhs_event' || $event->post_status !== 'publish' || !get_post_meta($event->ID, 'visible', true)) {
+         return new WP_Error('huhs_event_not_found', 'Az esemény nem található.', array('status' => 404));
+     }
+-    return rest_ensure_response(huhs_build_event_response($event));
++    return rest_ensure_response(huhs_build_event_response($event, huhs_request_lang($request)));
+ }
+ 
+-function huhs_build_event_summary($event)
++function huhs_build_event_summary($event, $lang = 'hu')
+ {
+     $flyer_id = (int) get_post_meta($event->ID, 'flyer_image', true);
+     $flyer_url = esc_url_raw(get_post_meta($event->ID, 'flyer_image_url', true));
++    $translation = huhs_translation_meta_values($event->ID, $lang, $event->post_title, '');
+     return array(
+         'id' => (int) $event->ID,
+-        'title' => huhs_clean_title($event->post_title),
++        'title' => huhs_clean_title($translation['title']),
++        'has_en' => $translation['has_en'],
+         'description' => '',
+         'start_date' => get_post_meta($event->ID, 'event_start_date', true),
+         'start_time' => get_post_meta($event->ID, 'event_start_time', true),
+@@ -123,11 +126,18 @@ function huhs_build_event_summary($event)
+     );
+ }
+ 
+-function huhs_build_event_response($event)
++function huhs_build_event_response($event, $lang = 'hu')
+ {
+     $flyer_id = (int) get_post_meta($event->ID, 'flyer_image', true);
+     $flyer_url = esc_url_raw(get_post_meta($event->ID, 'flyer_image_url', true));
+     $organizer_id = (int) get_post_meta($event->ID, 'organizer_id', true);
++    // A kért nyelv (2.12.0): a magyar ág bitre ugyanaz, mint eddig.
++    $translation = huhs_translation_meta_values(
++        $event->ID,
++        $lang,
++        $event->post_title,
++        $event->post_content
++    );
+     $artists = array();
+     $artist_ids = json_decode(get_post_meta($event->ID, 'artists', true), true);
+ 
+@@ -159,8 +169,9 @@ function huhs_build_event_response($event)
+ 
+     return array(
+         'id'                 => (int) $event->ID,
+-        'title'              => huhs_clean_title($event->post_title),
+-        'description'        => wpautop($event->post_content),
++        'title'              => huhs_clean_title($translation['title']),
++        'has_en'             => $translation['has_en'],
++        'description'        => wpautop($translation['content']),
+         'start_date'         => get_post_meta($event->ID, 'event_start_date', true),
+         'start_time'         => get_post_meta($event->ID, 'event_start_time', true),
+         'end_date'           => get_post_meta($event->ID, 'event_end_date', true),
+diff --git a/huhs-mobile-api/includes/api-organizers.php b/huhs-mobile-api/includes/api-organizers.php
+index 24706d19..3be0fa5c 100644
+--- a/huhs-mobile-api/includes/api-organizers.php
++++ b/huhs-mobile-api/includes/api-organizers.php
+@@ -48,6 +48,7 @@ function huhs_get_organizers(WP_REST_Request $request)
+     $page = max(1, absint($request->get_param('page')));
+     $per_page = min(50, max(1, absint($request->get_param('per_page')) ?: 20));
+     $search = sanitize_text_field((string) $request->get_param('search'));
++    $lang = huhs_request_lang($request);
+ 
+     $query = new WP_Query(array(
+         'post_type'      => 'huhs_organizer',
+@@ -70,8 +71,8 @@ function huhs_get_organizers(WP_REST_Request $request)
+         'no_found_rows'  => false,
+     ));
+ 
+-    $items = array_map(function ($organizer) {
+-        return huhs_build_organizer_response($organizer, false);
++    $items = array_map(function ($organizer) use ($lang) {
++        return huhs_build_organizer_response($organizer, false, $lang);
+     }, $query->posts);
+     $total_pages = (int) $query->max_num_pages;
+ 
+@@ -103,12 +104,19 @@ function huhs_get_organizer_detail(WP_REST_Request $request)
+         );
+     }
+ 
+-    return rest_ensure_response(huhs_build_organizer_response($organizer, true));
++    return rest_ensure_response(huhs_build_organizer_response($organizer, true, huhs_request_lang($request)));
+ }
+ 
+-function huhs_build_organizer_response($organizer, $include_events = false)
++function huhs_build_organizer_response($organizer, $include_events = false, $lang = 'hu')
+ {
+     $organizer_id = (int) $organizer->ID;
++    // A kért nyelv (2.12.0): cím, leírás és kivonat.
++    $translation = huhs_translation_meta_values(
++        $organizer_id,
++        $lang,
++        $organizer->post_title,
++        $organizer->post_content
++    );
+     $logo_id = (int) get_post_meta($organizer_id, 'logo', true);
+     $logo_url = esc_url_raw(get_post_meta($organizer_id, 'logo_url', true));
+     $featured_id = (int) get_post_thumbnail_id($organizer_id);
+@@ -124,10 +132,13 @@ function huhs_build_organizer_response($organizer, $include_events = false)
+ 
+     $data = array(
+         'id'             => $organizer_id,
+-        'title'          => huhs_clean_title($organizer->post_title),
++        'title'          => huhs_clean_title($translation['title']),
++        'has_en'         => $translation['has_en'],
+         'slug'           => $organizer->post_name,
+-        'description'    => huhs_clean_content($organizer->post_content),
+-        'excerpt'        => huhs_make_excerpt($organizer->post_content, 30),
++        'description'    => huhs_clean_content($translation['content']),
++        'excerpt'        => $translation['excerpt'] !== ''
++            ? huhs_make_excerpt($translation['excerpt'], 30)
++            : huhs_make_excerpt($translation['content'], 30),
+         'city'           => get_post_meta($organizer_id, 'city', true),
+         'country'        => get_post_meta($organizer_id, 'country', true),
+         'genres'         => $genres,
+diff --git a/huhs-mobile-api/includes/api-releases.php b/huhs-mobile-api/includes/api-releases.php
+index 8c64e2d8..c7b6e2ae 100644
+--- a/huhs-mobile-api/includes/api-releases.php
++++ b/huhs-mobile-api/includes/api-releases.php
+@@ -35,7 +35,7 @@ function huhs_get_release_detail(WP_REST_Request $request)
+         !get_post_meta($post->ID, 'visible', true)) {
+         return new WP_Error('release_not_found', 'A kiadvány nem található.', array('status' => 404));
+     }
+-    return rest_ensure_response(huhs_build_release_response($post));
++    return rest_ensure_response(huhs_build_release_response($post, huhs_request_lang($request)));
+ }
+ 
+ function huhs_get_releases(WP_REST_Request $request)
+@@ -43,19 +43,22 @@ function huhs_get_releases(WP_REST_Request $request)
+     $search = sanitize_text_field((string) $request->get_param('search'));
+     $artist_id = absint($request->get_param('artist'));
+     $summary = filter_var($request->get_param('summary'), FILTER_VALIDATE_BOOLEAN);
++    $lang = huhs_request_lang($request);
+     $query = new WP_Query(array('post_type' => 'huhs_release', 'post_status' => 'publish', 'posts_per_page' => 100, 'orderby' => 'date', 'order' => 'DESC', 's' => $search, 'meta_query' => array(array('key' => 'visible', 'value' => '1', 'compare' => '='))));
+     $items = array();
+     foreach ($query->posts as $post) {
+-        $release = $summary ? huhs_build_release_summary($post) : huhs_build_release_response($post);
++        $release = $summary ? huhs_build_release_summary($post, $lang) : huhs_build_release_response($post, $lang);
+         if ($artist_id && !in_array($artist_id, array_column($release['artists'], 'id'), true)) continue;
+         $items[] = $release;
+     }
+     return rest_ensure_response(array('items' => $items));
+ }
+ 
+-function huhs_build_release_summary($post)
++function huhs_build_release_summary($post, $lang = 'hu')
+ {
+     $id = (int) $post->ID;
++    // A kért nyelv (2.12.0): a kiadványnál a CÍM a fordítható szöveg.
++    $translation = huhs_translation_meta_values($id, $lang, $post->post_title, '');
+     $cover_id = absint(get_post_meta($id, 'cover', true));
+     $artist_ids = json_decode((string) get_post_meta($id, 'artists', true), true);
+     $artists = array();
+@@ -80,7 +83,7 @@ function huhs_build_release_summary($post)
+         if ($product_id !== '') $products[] = array('id' => $product_id, 'type' => $key, 'label' => $label);
+     }
+     return array(
+-        'id' => $id, 'title' => huhs_clean_title($post->post_title), 'release_date' => $release_date,
++        'id' => $id, 'title' => huhs_clean_title($translation['title']), 'has_en' => $translation['has_en'], 'release_date' => $release_date,
+         // The release date gate is decided here, once, for both the list and the
+         // detail payload: the app must not have to re-derive it from a date
+         // string in its own timezone. `presave_url` is only exposed while the
+@@ -97,9 +100,10 @@ function huhs_build_release_summary($post)
+     );
+ }
+ 
+-function huhs_build_release_response($post)
++function huhs_build_release_response($post, $lang = 'hu')
+ {
+     $id = (int) $post->ID;
++    $translation = huhs_translation_meta_values($id, $lang, $post->post_title, '');
+     $artist_ids = json_decode((string) get_post_meta($id, 'artists', true), true);
+     $artists = array();
+     foreach ((array) $artist_ids as $artist_id) {
+@@ -107,7 +111,7 @@ function huhs_build_release_response($post)
+         if ($artist && $artist->post_type === 'huhs_artist') $artists[] = array('id' => (int) $artist->ID, 'name' => huhs_clean_title($artist->post_title));
+     }
+     $preview = esc_url_raw(get_post_meta($id, 'preview_url', true));
+-    $tracks = $preview ? array(array('title' => huhs_clean_title($post->post_title), 'preview_url' => $preview)) : array();
++    $tracks = $preview ? array(array('title' => huhs_clean_title($translation['title']), 'preview_url' => $preview)) : array();
+     $products = array();
+     $product_prices = array();
+     foreach (array(
+@@ -142,7 +146,7 @@ function huhs_build_release_response($post)
+     $is_free = (bool) get_post_meta($id, 'is_free', true);
+     $free_external_link = $is_free ? esc_url_raw(get_post_meta($id, 'free_external_link', true)) : '';
+     $is_upcoming = huhs_release_is_upcoming($release_date);
+-    return array('id' => $id, 'title' => huhs_clean_title($post->post_title), 'release_date' => $release_date, 'is_upcoming' => $is_upcoming, 'presave_url' => $is_upcoming ? esc_url_raw(get_post_meta($id, 'presave_url', true)) : '', 'is_free' => $is_free, 'free_external_link' => $free_external_link, 'cover' => $cover_id ? wp_get_attachment_image_url($cover_id, 'large') : '', 'genre' => sanitize_text_field(get_post_meta($id, 'genre', true)), 'artists' => $artists, 'tracks' => $tracks, 'links' => $links, 'products' => $products, 'product_prices' => $product_prices, 'versions' => $versions, 'audio_status' => sanitize_key(get_post_meta($id, 'audio_processing_status', true)));
++    return array('id' => $id, 'title' => huhs_clean_title($translation['title']), 'has_en' => $translation['has_en'], 'release_date' => $release_date, 'is_upcoming' => $is_upcoming, 'presave_url' => $is_upcoming ? esc_url_raw(get_post_meta($id, 'presave_url', true)) : '', 'is_free' => $is_free, 'free_external_link' => $free_external_link, 'cover' => $cover_id ? wp_get_attachment_image_url($cover_id, 'large') : '', 'genre' => sanitize_text_field(get_post_meta($id, 'genre', true)), 'artists' => $artists, 'tracks' => $tracks, 'links' => $links, 'products' => $products, 'product_prices' => $product_prices, 'versions' => $versions, 'audio_status' => sanitize_key(get_post_meta($id, 'audio_processing_status', true)));
+ }
+ 
+ function huhs_update_release_play_products(WP_REST_Request $request)
+diff --git a/huhs-mobile-api/includes/post-translation-meta.php b/huhs-mobile-api/includes/post-translation-meta.php
+index bcb5a6db..5afe5c40 100644
+--- a/huhs-mobile-api/includes/post-translation-meta.php
++++ b/huhs-mobile-api/includes/post-translation-meta.php
+@@ -44,33 +44,94 @@ if (!defined('ABSPATH')) {
+ 
+ add_action('init', 'huhs_register_post_translation_meta');
+ 
++/**
++ * A fordítást támogató post típusok — **egy helyen** (plugin 2.12.0).
++ *
++ * A 2.11.0 csak a cikkeket (`post`) tudta; a 2.12.0 ugyanezt a három meta mezőt
++ * a **huhs_event**, **huhs_artist**, **huhs_organizer** és **huhs_release**
++ * típusra is regisztrálja. A meta kulcsa post-onként él, ezért nincs ütközés:
++ * ugyanaz a `_huhs_title_en` egy eseménynél az esemény angol címét jelenti.
++ *
++ * ⚠️ A lista **egy** forrás: a regisztráció és a fordítási folyamat is ezt
++ * használja, ezért nem tud széthúzni (ha új típus kerül be, mindkettő látja).
++ */
++function huhs_translation_post_types()
++{
++    return array('post', 'huhs_event', 'huhs_artist', 'huhs_organizer', 'huhs_release');
++}
++
+ function huhs_register_post_translation_meta()
+ {
+     $auth_callback = 'huhs_translation_meta_auth_callback';
+ 
+-    register_post_meta('post', '_huhs_title_en', array(
+-        'type'              => 'string',
+-        'single'            => true,
+-        'show_in_rest'      => true,
+-        'sanitize_callback' => 'sanitize_text_field',
+-        'auth_callback'     => $auth_callback,
+-    ));
++    // Mező → sanitize. A döntés indoklása a fájl fejlécében van.
++    $fields = array(
++        '_huhs_title_en'   => 'sanitize_text_field',
++        '_huhs_excerpt_en' => 'wp_kses_post',
++        '_huhs_content_en' => 'wp_kses_post',
++    );
++
++    foreach (huhs_translation_post_types() as $post_type) {
++        foreach ($fields as $meta_key => $sanitize_callback) {
++            register_post_meta($post_type, $meta_key, array(
++                'type'              => 'string',
++                'single'            => true,
++                'show_in_rest'      => true,
++                'sanitize_callback' => $sanitize_callback,
++                'auth_callback'     => $auth_callback,
++            ));
++        }
++    }
++}
++
++/**
++ * A fordítási meta a kért nyelven, a `has_en` kapuval — a 2.12.0 közös szabálya.
++ *
++ * UGYANAZ A KAPU, MINT A CIKKEKNÉL (`huhs_post_language_payload`): angolra csak
++ * akkor váltunk, ha a **cím ÉS a törzs** is megvan (`trim` után nem üres),
++ * különben a magyar érték marad és `has_en = false`. Így egy részleges fordítás
++ * nem ad kevert nyelvű választ, és a válasz soha nem lesz üres.
++ *
++ * A formázás **nem** itt történik: a hívó adja a magyar értékeket pontosan úgy,
++ * ahogy eddig (pl. `wpautop($post->post_content)`), a visszakapott értéket pedig
++ * ugyanúgy formázza — így a magyar ág bájtra azonos marad a 2.11.0-éval.
++ *
++ * @param int    $post_id     A bejegyzés azonosítója.
++ * @param string $lang        `hu` vagy `en` (`huhs_request_lang`).
++ * @param string $title_hu    A magyar cím (már formázva).
++ * @param string $content_hu  A magyar törzs/leírás (már formázva).
++ * @param string $excerpt_hu  A magyar kivonat (ha van ilyen mező).
++ * @return array{has_en: bool, title: string, content: string, excerpt: string}
++ */
++function huhs_translation_meta_values($post_id, $lang, $title_hu, $content_hu, $excerpt_hu = '')
++{
++    $values = array(
++        'has_en'  => false,
++        'title'   => (string) $title_hu,
++        'content' => (string) $content_hu,
++        'excerpt' => (string) $excerpt_hu,
++    );
++
++    // Nem angol kérés: a magyar payload megy vissza, meta-olvasás nélkül.
++    if ($lang !== 'en') {
++        return $values;
++    }
++
++    $title_en = trim((string) get_post_meta($post_id, '_huhs_title_en', true));
++    $content_en = trim((string) get_post_meta($post_id, '_huhs_content_en', true));
++
++    // FALLBACK-KAPU: csak akkor váltunk angolra, ha a fordítás érdemi része
++    // (cím ÉS törzs) megvan. Különben marad a magyar payload.
++    if ($title_en === '' || $content_en === '') {
++        return $values;
++    }
+ 
+-    register_post_meta('post', '_huhs_excerpt_en', array(
+-        'type'              => 'string',
+-        'single'            => true,
+-        'show_in_rest'      => true,
+-        'sanitize_callback' => 'wp_kses_post',
+-        'auth_callback'     => $auth_callback,
+-    ));
++    $values['has_en'] = true;
++    $values['title'] = $title_en;
++    $values['content'] = $content_en;
++    $values['excerpt'] = trim((string) get_post_meta($post_id, '_huhs_excerpt_en', true));
+ 
+-    register_post_meta('post', '_huhs_content_en', array(
+-        'type'              => 'string',
+-        'single'            => true,
+-        'show_in_rest'      => true,
+-        'sanitize_callback' => 'wp_kses_post',
+-        'auth_callback'     => $auth_callback,
+-    ));
++    return $values;
+ }
+ 
+ /**
+diff --git a/huhs-mobile-api/includes/translation-cron.php b/huhs-mobile-api/includes/translation-cron.php
+new file mode 100644
+index 00000000..fc8ea100
+--- /dev/null
++++ b/huhs-mobile-api/includes/translation-cron.php
+@@ -0,0 +1,253 @@
++<?php
++
++if (!defined('ABSPATH')) {
++    exit;
++}
++
++/*
++|--------------------------------------------------------------------------
++| Automatikus fordítás új tartalomnál — plugin 2.12.0 (WP-cron)
++|--------------------------------------------------------------------------
++|
++| A cél: ha egy cikk, esemény, DJ, szervező vagy kiadvány megjelenik, akkor az
++| angol változat **magától** bekerüljön a fordítási metába (ugyanaz a három kulcs,
++| amit a `post-translation-meta.php` regisztrál), hogy az app `lang=en` kérése
++| azonnal angolul válaszoljon.
++|
++| ⚠️ API-KULCS NÉLKÜL EZ A FÁJL **NEM CSINÁL SEMMIT.** A kulcsot a
++| `huhs_translation_api_key` opció (vagy a `huhs_translation_api_key` szűrő)
++| adja; ha üres, a folyamat **el sem indul**, külső hívást nem indít, és nem is
++| naplóz hibát. Ez szándékos: a fordítás szolgáltatás igénybe vétele a tulajdonos
++| döntése, és kulcs nélkül a plugin nem hívhat idegen szolgáltatást.
++|
++| A szolgáltató (a kulcs megadása után) a `huhs_translation_provider` szűrővel
++| választható; az alapértelmezett a DeepSeek csevegő-végpontja, mert a tulajdonos
++| ezt a szolgáltatót használja. A kérés alakja egyszerű: a magyar szövegeket
++| egyetlen JSON-ben adjuk át, és angol JSON-t kérünk vissza (a rendszer-üzenet
++| szigorúan megköti a kimenetet, hogy a válasz gépi ellenőrzéssel feldolgozható
++| legyen). A válasz feldolgozása `huhs_translation_parse_response()`-ban van,
++| ami **nem** hív hálózatot, ezért teszttel mérhető.
++|
++| A fordítás **soha** nem blokkolhatja a publikálást: minden hálózati hívás
++| `wp_remote_post` időkorláttal, a hibák pedig csendben (legfeljebb egy
++| figyelmeztetéssel) elnyelődnek — a cikk attól még megjelenik.
++*/
++
++add_action('save_post', 'huhs_schedule_translation_on_publish', 20, 3);
++
++/**
++ * A fordítás ütemezése publikáláskor (vagy frissítéskor).
++ *
++ * Csak a támogatott típusokra, csak publikált állapotban, és csak ha van kulcs.
++ * A `wp_next_scheduled` ellenőrzés miatt egy cikkenként egyszer fut.
++ */
++function huhs_schedule_translation_on_publish($post_id, $post = null, $update = false)
++{
++    unset($update);
++
++    if (!huhs_translation_enabled()) {
++        return;
++    }
++
++    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
++        return;
++    }
++
++    $post = $post instanceof WP_Post ? $post : get_post($post_id);
++    if (!$post instanceof WP_Post) {
++        return;
++    }
++
++    if (!in_array($post->post_type, huhs_translation_post_types(), true)) {
++        return;
++    }
++
++    if ($post->post_status !== 'publish') {
++        return;
++    }
++
++    if (wp_next_scheduled('huhs_translate_post', array($post_id))) {
++        return;
++    }
++
++    // Kis késleltetés: a mentés befejeződjön, mielőtt a cron dolgozik.
++    wp_schedule_single_event(time() + 60, 'huhs_translate_post', array($post_id));
++}
++
++add_action('huhs_translate_post', 'huhs_run_translation');
++
++/**
++ * Van-e bekapcsolt fordítás? (kulcs + szolgáltató)
++ *
++ * A kulcsot szűrővel is lehet adni (`huhs_translation_api_key`), így a
++ * `wp-config.php`-ba tett konstanssal is működik a kód módosítása nélkül.
++ */
++function huhs_translation_enabled()
++{
++    return huhs_translation_api_key() !== '';
++}
++
++function huhs_translation_api_key()
++{
++    $key = (string) apply_filters('huhs_translation_api_key', get_option('huhs_translation_api_key', ''));
++
++    return trim($key);
++}
++
++/**
++ * A szolgáltató leírása (végpont + modell + kulcs-fejléc).
++ *
++ * A szűrővel más szolgáltató is beköthető (OpenAI, Google), a válasz feldolgozása
++ * viszont a `huhs_translation_parse_response()`-on megy át, ezért a szűrőnek
++ * olyan választ kell adnia, amit az értelmezni tud.
++ */
++function huhs_translation_provider()
++{
++    return apply_filters('huhs_translation_provider', array(
++        'url'     => 'https://api.deepseek.com/chat/completions',
++        'model'   => 'deepseek-chat',
++        'timeout' => 45,
++    ));
++}
++
++/**
++ * A fordítás lefuttatása egy bejegyzésre (WP-cron hívja).
++ *
++ * A magyar szövegeket a bejegyzésből olvassuk, a választ pedig a fordítási
++ * metába írjuk. Ha bármi hiányzik (kulcs, szöveg, érvényes válasz), a
++ * metához **nem nyúlunk** — így a magyar válasz marad az appnak.
++ */
++function huhs_run_translation($post_id)
++{
++    if (!huhs_translation_enabled()) {
++        return;
++    }
++
++    $post = get_post($post_id);
++    if (!$post instanceof WP_Post || !in_array($post->post_type, huhs_translation_post_types(), true)) {
++        return;
++    }
++
++    $title = trim((string) $post->post_title);
++    $content = trim((string) $post->post_content);
++    if ($title === '' || $content === '') {
++        return;
++    }
++
++    $response = huhs_translation_request(array(
++        'title'   => $title,
++        'content' => $content,
++    ));
++
++    if ($response === null) {
++        return;
++    }
++
++    if ($response['title'] !== '') {
++        update_post_meta($post_id, '_huhs_title_en', $response['title']);
++    }
++    if ($response['content'] !== '') {
++        update_post_meta($post_id, '_huhs_content_en', $response['content']);
++    }
++    if ($response['excerpt'] !== '') {
++        update_post_meta($post_id, '_huhs_excerpt_en', $response['excerpt']);
++    }
++}
++
++/**
++ * A szolgáltató hívása — hálózat. Hiba esetén `null` (nem dob, nem naplóz zajt).
++ */
++function huhs_translation_request($texts)
++{
++    $provider = huhs_translation_provider();
++    $key = huhs_translation_api_key();
++
++    if ($key === '' || empty($provider['url'])) {
++        return null;
++    }
++
++    $body = array(
++        'model'    => (string) ($provider['model'] ?? 'deepseek-chat'),
++        'messages' => array(
++            array(
++                'role'    => 'system',
++                'content' => huhs_translation_system_prompt(),
++            ),
++            array(
++                'role'    => 'user',
++                'content' => wp_json_encode(array(
++                    'title'   => (string) ($texts['title'] ?? ''),
++                    'content' => (string) ($texts['content'] ?? ''),
++                )),
++            ),
++        ),
++        'response_format' => array('type' => 'json_object'),
++        'temperature'     => 0,
++    );
++
++    $response = wp_remote_post((string) $provider['url'], array(
++        'timeout' => (int) ($provider['timeout'] ?? 45),
++        'headers' => array(
++            'content-type'  => 'application/json',
++            'authorization' => 'Bearer ' . $key,
++        ),
++        'body'    => wp_json_encode($body),
++    ));
++
++    if (is_wp_error($response)) {
++        return null;
++    }
++
++    if ((int) wp_remote_retrieve_response_code($response) !== 200) {
++        return null;
++    }
++
++    return huhs_translation_parse_response((string) wp_remote_retrieve_body($response));
++}
++
++/**
++ * A rendszer-üzenet: szigorú JSON ki/be, hogy a válasz gépi ellenőrzéssel
++ * feldolgozható legyen (a magyar szöveg marad a kulcs, az angol az érték).
++ */
++function huhs_translation_system_prompt()
++{
++    return 'You translate Hungarian website content of a Hungarian Hardstyle music app into English. '
++        . 'Answer with a single JSON object with exactly the keys "title", "content" and "excerpt". '
++        . 'Keep the HTML structure of "content" (paragraphs, links, lists) intact, keep brand names '
++        . '(Hungarian Hardstyle, HUHS, artist, festival and release names) unchanged, and never return '
++        . 'an empty string: if a text is already English, repeat it unchanged.';
++}
++
++/**
++ * A szolgáltató válaszának feldolgozása — **hálózat nélkül**, ezért tesztelhető.
++ *
++ * Elfogadja a csevegő-végpont alakját (`choices[0].message.content`, ami maga is
++ * JSON-szöveg), és a `null`/hibás válaszra üres mezőket ad — így a hívó nem ír
++ * félkész fordítást a metába.
++ *
++ * @return array{title: string, content: string, excerpt: string}
++ */
++function huhs_translation_parse_response($raw)
++{
++    $empty = array('title' => '', 'content' => '', 'excerpt' => '');
++
++    $decoded = json_decode((string) $raw, true);
++    if (!is_array($decoded)) {
++        return $empty;
++    }
++
++    $payload = $decoded;
++    if (isset($decoded['choices'][0]['message']['content'])) {
++        $inner = json_decode((string) $decoded['choices'][0]['message']['content'], true);
++        if (!is_array($inner)) {
++            return $empty;
++        }
++        $payload = $inner;
++    }
++
++    return array(
++        'title'   => trim(wp_strip_all_tags((string) ($payload['title'] ?? ''))),
++        'content' => trim((string) ($payload['content'] ?? '')),
++        'excerpt' => trim((string) ($payload['excerpt'] ?? '')),
++    );
++}

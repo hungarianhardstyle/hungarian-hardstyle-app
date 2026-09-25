@@ -42,6 +42,14 @@ const META_KEYS = ['_huhs_title_en', '_huhs_excerpt_en', '_huhs_content_en'];
 const META_FILE = 'includes/post-translation-meta.php';
 /** A nyilvános végpontok (itt dől el a `lang`). */
 const POSTS_FILE = 'includes/posts.php';
+/** A 2.12.0 további nyelvet ismerő végpontjai + a WP-cron fordítás. */
+const OTHER_CONTENT_FILES = [
+  'includes/api-events.php',
+  'includes/api-artists.php',
+  'includes/api-organizers.php',
+  'includes/api-releases.php',
+  'includes/translation-cron.php',
+];
 
 function pluginFile(relative) {
   return fs.readFileSync(path.join(PLUGIN_ROOT, relative), 'utf8').replace(/\r\n/g, '\n');
@@ -68,48 +76,62 @@ function pluginPhpFiles() {
 // 1. Meta-regisztráció
 // ---------------------------------------------------------------------------
 
-/** Egy `register_post_meta('post', '<kulcs>', array( … ))` blokk forrása. */
-function metaBlock(key) {
+/** A `<kulcs> => '<szűrő>'` pár a közös mező-térképből (2.12.0). */
+function fieldSanitizer(key) {
   const source = pluginFile(META_FILE);
-  const start = source.indexOf(`register_post_meta('post', '${key}'`);
-  assert.ok(start > 0, `megvan a(z) ${key} regisztrációja a ${META_FILE}-ban`);
-  const end = source.indexOf('));', start);
-  assert.ok(end > start, `lezárul a(z) ${key} regisztrációs blokkja`);
-  return source.slice(start, end + 2);
+  const match = new RegExp(`'${key}'\\s*=>\\s*'([a-z_]+)'`).exec(source);
+  assert.ok(match, `megvan a(z) ${key} szűrője a ${META_FILE}-ban`);
+  return match[1];
 }
 
-test('a három angol meta kulcs a `post` típusra van regisztrálva', () => {
+test('a három angol meta kulcs MINDEN támogatott típusra regisztrálva van', () => {
   const source = pluginFile(META_FILE);
+  // A típusok egy helyen élnek (2.12.0): a cikkek mellett az esemény, a DJ,
+  // a szervező és a kiadvány is.
+  const listMatch = /function huhs_translation_post_types\(\)\s*\{([\s\S]*?)\}/.exec(source);
+  assert.ok(listMatch, 'megvan a huhs_translation_post_types() függvény');
+  const types = [...listMatch[1].matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
+  assert.deepEqual(
+    types,
+    ['post', 'huhs_event', 'huhs_artist', 'huhs_organizer', 'huhs_release'],
+    'a támogatott típusok: cikk, esemény, DJ, szervező, kiadvány',
+  );
+
+  // A regisztráció a listán és a közös mező-térképen megy át (nem másolt blokkok).
+  assert.match(
+    source,
+    /foreach \(huhs_translation_post_types\(\) as \$post_type\)/,
+    'a regisztráció végigmegy a típusokon',
+  );
+  assert.match(
+    source,
+    /register_post_meta\(\$post_type, \$meta_key, array\(/,
+    'a register_post_meta a típust és a kulcsot paraméterként kapja',
+  );
   for (const key of META_KEYS) {
-    assert.equal(
-      (source.match(new RegExp(`register_post_meta\\('post', '${key}'`, 'g')) || []).length,
-      1,
-      `${key}: pontosan egyszer regisztrálva, a post típusra`,
-    );
+    assert.match(source, new RegExp(`'${key}'\\s*=>\\s*'`), `${key}: benne van a mező-térképben`);
   }
 });
 
 test('a regisztráció REST-en írható: show_in_rest + sanitize_callback + auth_callback', () => {
-  for (const key of META_KEYS) {
-    const block = metaBlock(key);
-    assert.match(block, /'type'\s*=>\s*'string'/, `${key}: string típus`);
-    assert.match(block, /'single'\s*=>\s*true/, `${key}: single`);
-    assert.match(
-      block,
-      /'show_in_rest'\s*=>\s*true/,
-      `${key}: show_in_rest => true (enélkül a REST el sem fogadná az írást)`,
-    );
-    assert.match(
-      block,
-      /'sanitize_callback'\s*=>\s*'[a-z_]+'/,
-      `${key}: van sanitize_callback`,
-    );
-    assert.match(
-      block,
-      /'auth_callback'\s*=>\s*\$auth_callback/,
-      `${key}: van auth_callback (a védett kulcs írásához kötelező)`,
-    );
-  }
+  const source = pluginFile(META_FILE);
+  const start = source.indexOf('function huhs_register_post_translation_meta(');
+  assert.ok(start > 0, 'megvan a regisztráló függvény');
+  const body = source.slice(start, source.indexOf('\n}', start));
+
+  assert.match(body, /'type'\s*=>\s*'string'/, 'string típus');
+  assert.match(body, /'single'\s*=>\s*true/, 'single');
+  assert.match(
+    body,
+    /'show_in_rest'\s*=>\s*true/,
+    'show_in_rest => true (enélkül a REST el sem fogadná az írást)',
+  );
+  assert.match(body, /'sanitize_callback'\s*=>\s*\$sanitize_callback/, 'van sanitize_callback');
+  assert.match(
+    body,
+    /'auth_callback'\s*=>\s*\$auth_callback/,
+    'van auth_callback (a védett kulcs írásához kötelező)',
+  );
 });
 
 test('az auth_callback az `edit_posts` képességet kéri (a folyamat így tud írni)', () => {
@@ -125,37 +147,97 @@ test('az auth_callback az `edit_posts` képességet kéri (a folyamat így tud �
 });
 
 test('a TARTALOM szűrője HTML-t megtartó (wp_kses_post), nem sanitize_text_field', () => {
-  const block = metaBlock('_huhs_content_en');
-  assert.match(
-    block,
-    /'sanitize_callback'\s*=>\s*'wp_kses_post'/,
-    'a cikk törzse HTML: a wp_kses_post a helyes szűrő',
-  );
   assert.equal(
-    /'sanitize_callback'\s*=>\s*'sanitize_text_field'/.test(block),
-    false,
-    'a sanitize_text_field MINDEN taget kidobna (a cikk egyetlen futó szöveggé esne szét)',
-  );
-  assert.equal(
-    /'sanitize_callback'\s*=>\s*'sanitize_textarea_field'/.test(block),
-    false,
-    'a sanitize_textarea_field is kidobná a tageket',
+    fieldSanitizer('_huhs_content_en'),
+    'wp_kses_post',
+    'a cikk törzse HTML: a wp_kses_post a helyes szűrő (a sanitize_text_field '
+      + 'MINDEN taget kidobna, és a cikk egyetlen futó szöveggé esne szét)',
   );
 });
 
 test('a CÍM viszont sima szöveg (sanitize_text_field), a KIVONAT HTML-tartó', () => {
-  assert.match(
-    metaBlock('_huhs_title_en'),
-    /'sanitize_callback'\s*=>\s*'sanitize_text_field'/,
+  assert.equal(
+    fieldSanitizer('_huhs_title_en'),
+    'sanitize_text_field',
     'a cím egyetlen sor, nem tartalmazhat HTML-t',
   );
   // A kivonat dokumentált döntés: a cikkből örökölhet egyszerű formázást,
   // ezért a testvérével azonos (HTML-t megtartó) szűrőt kap.
-  assert.match(
-    metaBlock('_huhs_excerpt_en'),
-    /'sanitize_callback'\s*=>\s*'wp_kses_post'/,
+  assert.equal(
+    fieldSanitizer('_huhs_excerpt_en'),
+    'wp_kses_post',
     'a kivonat a törzzsel azonos szűrőt kap (dokumentált döntés)',
   );
+});
+
+// ---------------------------------------------------------------------------
+// 1b. A 2.12.0: ugyanez a szabály az eseményre, DJ-re, szervezőre és kiadványra
+// ---------------------------------------------------------------------------
+
+test('a 2.12.0 végpontjai a KÖZÖS fordítási kaput használják', () => {
+  const meta = pluginFile(META_FILE);
+  // A kapu egy helyen él, és ugyanaz, mint a cikkeknél: cím ÉS törzs kell.
+  const start = meta.indexOf('function huhs_translation_meta_values(');
+  assert.ok(start > 0, 'megvan a közös huhs_translation_meta_values()');
+  const body = meta.slice(start, meta.indexOf('\n}', start));
+  assert.match(body, /if \(\$lang !== 'en'\) \{/, 'magyar ágon nem olvas metát');
+  assert.match(
+    body,
+    /if \(\$title_en === '' \|\| \$content_en === ''\) \{/,
+    'a FALLBACK-kapu ugyanaz, mint a cikkeknél (cím ÉS törzs kell)',
+  );
+  assert.match(
+    body,
+    /\$values\['has_en'\] = true;/,
+    'angol ágon a has_en igazra vált (a payload jelzi, mit kap az app)',
+  );
+
+  for (const file of OTHER_CONTENT_FILES) {
+    if (file.endsWith('translation-cron.php')) continue;
+    const source = pluginFile(file);
+    assert.match(
+      source,
+      /huhs_translation_meta_values\(/,
+      `${file}: a közös kaput használja (nem saját, eltérő szabályt)`,
+    );
+    assert.match(
+      source,
+      /huhs_request_lang\(\$request\)/,
+      `${file}: a végpont a kérésből olvassa a nyelvet`,
+    );
+    assert.match(source, /'has_en'\s*=>/, `${file}: a payloadban ott a has_en jelző`);
+  }
+});
+
+test('a WP-cron fordítás API-kulcs NÉLKÜL nem csinál semmit', () => {
+  const source = pluginFile('includes/translation-cron.php');
+  assert.match(
+    source,
+    /function huhs_translation_enabled\(\)[\s\S]{0,200}return huhs_translation_api_key\(\) !== '';/,
+    'a bekapcsolás feltétele a nem üres kulcs',
+  );
+  assert.match(source, /function huhs_translation_api_key\(\)/, 'a kulcs egy helyen olvasódik');
+  assert.match(
+    source,
+    /get_option\('huhs_translation_api_key', ''\)/,
+    'a kulcs opcióból jön (nem a kódban van)',
+  );
+  // A hálózati hívás CSAK a kulcs-ellenőrzés után, egyetlen helyen történik.
+  const request = source.slice(source.indexOf('function huhs_translation_request('));
+  assert.match(request, /if \(\$key === '' \|\| empty\(\$provider\['url'\]\)\) \{\s*return null;/,
+    'kulcs nélkül visszatér, hívás előtt');
+  assert.match(source, /huhs_translation_enabled\(\)/, 'a cron-ág is ellenőrzi a kulcsot');
+});
+
+test('a fordítási válasz feldolgozása hálózat nélkül, hibára üres', () => {
+  const source = pluginFile('includes/translation-cron.php');
+  const start = source.indexOf('function huhs_translation_parse_response(');
+  assert.ok(start > 0, 'megvan a válasz-feldolgozó');
+  const body = source.slice(start, start + 1200);
+  assert.match(body, /json_decode/, 'a választ JSON-ként értelmezi');
+  assert.match(body, /'choices'\]\[0\]\['message'\]\['content'\]/, 'a csevegő-végpont alakját ismeri');
+  assert.match(body, /\$empty = array\('title' => '', 'content' => '', 'excerpt' => ''\)/,
+    'hibás válasznál üres mezők (nem írunk félkész fordítást)');
 });
 
 // ---------------------------------------------------------------------------
@@ -432,10 +514,13 @@ test('az angol kulcsokat CSAK a regisztráció és a lang=en ág ismeri', () => 
   });
 
   assert.deepEqual(
-    referencing,
-    [META_FILE, POSTS_FILE],
+    referencing.filter((file) => file !== META_FILE && file !== POSTS_FILE && !OTHER_CONTENT_FILES.includes(file)),
+    [],
     'a témának/sablonnak/shortcode-nak nem szabad ezeket a kulcsokat ismernie',
   );
+  // A cikkek és a 2.12.0 végpontok valóban ismerik őket.
+  assert.ok(referencing.includes(META_FILE), 'a regisztráció ismeri a kulcsokat');
+  assert.ok(referencing.includes(POSTS_FILE), 'a cikk-végpont ismeri a kulcsokat');
 
   // A posts.php-ban minden előfordulás a lang=en ágon belül van.
   const source = pluginFile(POSTS_FILE);

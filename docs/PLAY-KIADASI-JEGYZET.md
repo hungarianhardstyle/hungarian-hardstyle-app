@@ -451,11 +451,35 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A kérdőív eredményeinél már a kérdőív saját válaszai látszanak az éves szavazás adatai helyett.
 - A nyereményjátéknál eltűnt a felesleges kép mező.
 
-## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.11.0)
+## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.12.0)
 
-A plugin csomag: `build/huhs-mobile-api-2.11.0.zip` (46 fájl, 154,1 KB,
-SHA-256 `6D660533BB4414F69556DC2B074189440857D5B88E967A1F62086AF5C7BD4446`).
-A változás verziókövetve: `docs/plugin-2.11.0-english-fields.patch` (3 fájl, +198/−13 sor).
+**📌 A TULAJDONOS LÉPÉSE:** a **`build/huhs-mobile-api-2.12.0.zip`** feltöltése a WordPressre
+(a 2.11.0-t cseréli). **Ez teszi lehetővé, hogy az app az eseményeket, DJ-ket, szervezőket és
+kiadványokat is angolul kapja** — a meglévő 2.11.0 csak a cikkeket tudja. A meglévő tartalom
+fordítása utána következik (a plugin addig a **magyar** szöveget adja ezeknél, hiba nélkül).
+
+A plugin csomag: `build/huhs-mobile-api-2.12.0.zip` (47 fájl, 163,0 KB,
+SHA-256 `5AF7B83BB1188B3E834DCD9E7FD9FA9DC03AFB5BEB9AD0F9D1758AB55420DF08`).
+A változás verziókövetve: `docs/plugin-2.12.0-english-fields.patch` (7 fájl, +406/−52 sor).
+
+### 2.12.0 — angol mezők az eseménynek, DJ-nek, szervezőnek és kiadványnak + automatikus fordítás (2026-09-25)
+
+```text
+- UGYANAZ a három rejtett meta mező (`_huhs_title_en`, `_huhs_excerpt_en`, `_huhs_content_en`)
+  mostantól a huhs_event, huhs_artist, huhs_organizer és huhs_release típusra is regisztrálva van
+  (egy helyen: huhs_translation_post_types()).
+- A `lang=en` kérés ezeknél a végpontoknál is angolul válaszol — UGYANAZZAL a fallback-kapuval,
+  mint a cikkeknél: angolra csak akkor váltunk, ha a CÍM ÉS a törzs is megvan, különben a magyar
+  megy ki `has_en = false`-szal (a payload sosem kevert nyelvű).
+- A mezőnevek VÁLTOZATLANOK (a cikknél title/excerpt/content, a DJ-nál title/biography/excerpt,
+  a szervezőnél és eseménynél title/description), ezért az appnak nem kell új feldolgozó.
+- WP-cron: publikáláskor a fordítás automatikusan elindulhat (save_post → wp_schedule_single_event).
+  ⚠️ API-KULCS NÉLKÜL SZÁNDÉKOSAN NEM CSINÁL SEMMIT: a kulcsot a `huhs_translation_api_key`
+  opció (vagy szűrő) adja; ha üres, a folyamat el sem indul, külső hívást nem indít.
+  A szolgáltató a `huhs_translation_provider` szűrővel váltható (alap: DeepSeek csevegő-végpont).
+- A webnyilvános oldal VÁLTOZATLAN: az angol továbbra is csak rejtett meta, a téma/shortcode
+  nem olvassa (forrás-lint őrzi).
+```
 
 ### 2.11.0 — angol cikk-mezők (rejtett meta) + `lang` paraméter (2026-09-25)
 
