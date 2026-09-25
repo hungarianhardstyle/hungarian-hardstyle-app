@@ -55,7 +55,7 @@ class _NewsletterScreenState extends State<NewsletterScreen> {
       }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(newsletterMessage(result))));
+      ).showSnackBar(SnackBar(content: AppText(newsletterMessage(result))));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(

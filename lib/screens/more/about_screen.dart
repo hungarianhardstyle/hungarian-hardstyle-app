@@ -402,7 +402,7 @@ class _PurchaseDiagnosticsState extends ConsumerState<_PurchaseDiagnostics> {
             ],
             if (result != null) ...[
               const SizedBox(height: 12),
-              Text(
+              AppText(
                 purchaseDiagnosticsVerdictText(verdict!),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),

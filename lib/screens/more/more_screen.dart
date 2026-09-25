@@ -338,6 +338,6 @@ class _Notice extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.all(14),
-    child: Text(text, style: const TextStyle(color: Colors.white70)),
+    child: AppText(text, style: const TextStyle(color: Colors.white70)),
   );
 }

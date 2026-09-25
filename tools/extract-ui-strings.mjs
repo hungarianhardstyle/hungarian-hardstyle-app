@@ -29,6 +29,39 @@ export const CHUNK_DIR = 'tmp/i18n/chunks';
 export const CHUNK_SIZE = 60;
 
 /**
+ * A Dart a **szomszédos** string-literálokat összefűzi (`'a ' 'b'` → `'a b'`), a
+ * vesszővel elválasztottakat viszont nem. A futásidejű szöveg ezért a fűzött
+ * változat, és a szótárnak **azt** kell ismernie — különben a fordítás csendben
+ * nem érvényesül (mérve: 10 ilyen hely volt a 361/362-ben).
+ *
+ * @returns {{value: string, endLine: number, endColumn: number}|null} a fűzött
+ *   érték és az UTOLSÓ töredék vége, ha a literál többsoros fűzésben áll.
+ */
+export function joinedLiteral(lines, index, literal) {
+  // CSAK akkor fűzés, ha a literál után a sorban nincs más (főleg **vessző** nem).
+  if (lines[index].slice(literal.end).trim() !== '') return null;
+
+  let value = literal.value;
+  let endLine = index;
+  let endColumn = literal.end;
+  let cursor = index;
+
+  while (cursor + 1 < lines.length) {
+    const next = lines[cursor + 1];
+    if (!/^\s*'/.test(next) && !/^\s*"/.test(next)) break;
+    const [part] = stringLiterals(next);
+    if (!part || part.start !== next.search(/['"]/)) break;
+    value += part.value;
+    cursor += 1;
+    endLine = cursor;
+    endColumn = part.end;
+    if (next.slice(part.end).trim() !== '') break;
+  }
+
+  if (endLine === index) return null;
+  return { value, endLine, endColumn };
+}
+/**
  * A literal ELŐTTI kontextus: az adott sor prefixe + az előző **nem üres** sorok
  * (legfeljebb 120 karakterig). Erre azért van szükség, mert a gyakori
  * `Text(\n  'szöveg',\n)` alakban a `Text(` egy korábbi sorban van.
@@ -53,14 +86,22 @@ export function targetsInSource(source, file = '') {
     if (trimmed.startsWith('//') || trimmed.startsWith('///')) continue;
     for (const literal of stringLiterals(line)) {
       const before = contextBefore(lines, index, literal.start);
-      if (!isTranslationTarget({ value: literal.value, before })) continue;
+      // ⚠️ A Dart a szomszédos literálokat ÖSSZEFŰZI: a **futásidejű** szöveg a
+      // fűzött változat, ezért a szótár kulcsa is az (különben a fordítás csendben
+      // nem érvényesül — mérve 10 ilyen hely volt a 361/362-ben).
+      const joined = joinedLiteral(lines, index, literal);
+      const value = joined ? joined.value : literal.value;
+      if (!isTranslationTarget({ value, before })) continue;
       hits.push({
         file,
         line: index + 1,
-        value: literal.value,
+        value,
         quote: literal.quote,
         start: literal.start,
-        end: literal.end,
+        end: joined ? joined.endColumn : literal.end,
+        // A fűzött töredékeket EGYÜTT kell bekötni (a `tr(context, 'a' 'b')`
+        // érvényes, a `tr(context, 'a') 'b'` viszont nem).
+        spansLines: joined ? joined.endLine - index : 0,
         // Már be van kötve (`tr(context, …)` / `AppText(…)`) → kulcs, de nem
         // szerkesztendő. A wrapper ezt a jelzőt használja az idempotenciához.
         wrapped: isWrappedContext(before) || /(?:^|[\s(,{[])(?:AppText)\s*\(\s*$/.test(before),
