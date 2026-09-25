@@ -14,12 +14,19 @@ import 'package:flutter_test/flutter_test.dart';
 /// új értesítés-típus nem tud csendben néma koppintássá válni.
 void main() {
   late String router;
+  late String resolver;
   late String server;
 
   setUpAll(() {
     String read(String path) =>
         File(path).readAsStringSync().replaceAll('\r\n', '\n');
     router = read('lib/screens/notifications/notification_center_screen.dart');
+    // ⚠️ 2026-09-24: a célpont-feloldás **közös** lett (`content_target.dart`),
+    // mert a Chat-`@`hivatkozás ugyanazokra a képernyőkre visz — és pont a
+    // másolt ágak miatt veszett el korábban a DJ- és a szervező-koppintás.
+    // Ezért a „mit nyit meg" állítást a KÖZÖS feloldóban mérjük, a központban
+    // pedig azt, hogy **átadja** neki (nincs benne többé saját másolat).
+    resolver = read('lib/core/navigation/content_target.dart');
     server = read('functions/index.js');
   });
 
@@ -48,17 +55,23 @@ void main() {
   });
 
   test('a DJ-értesítés a DJ-adatlapot nyitja (ez volt a hiba)', () {
-    expect(router, contains("targetType == 'artist'"));
+    // A központ **átadja** a közös feloldónak…
+    expect(router, contains("'artist'"));
+    expect(router, contains('await openContentTarget('));
+    // …és a feloldó nyitja az adott DJ adatlapját.
+    expect(resolver, contains("case 'artist':"));
     expect(
-      router,
+      resolver,
       contains('ArtistDetailScreen(artistId: id)'),
       reason: 'a koppintásnak az adott DJ adatlapjára kell vinnie',
     );
   });
 
   test('a szervező-értesítés is nyit (ugyanaz a hiba-osztály)', () {
-    expect(router, contains("targetType == 'organizer'"));
-    expect(router, contains('OrganizerDetailScreen(organizerId: id)'));
+    expect(router, contains("'organizer'"));
+    expect(router, contains('await openContentTarget('));
+    expect(resolver, contains("case 'organizer':"));
+    expect(resolver, contains('OrganizerDetailScreen(organizerId: id)'));
   });
 
   test('a chatjelentés is nyit (nem szám azonosítóval)', () {

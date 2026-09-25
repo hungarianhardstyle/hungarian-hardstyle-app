@@ -4,6 +4,13 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 
+// A cikk-komment értesítés a 357-es kör óta a `actor-name-plan.js` tiszta
+// függvényével oldja fel a hozzászóló nevét (`actorNameOrGeneric`). A vizsgált
+// szelet (`exports.articleComments =` … `const WORDPRESS_BASE_URL`) ezt a
+// függvényt NEM tartalmazza, ezért a vm-kontextusba be kell tenni — de a
+// **VALÓDI** modult, hogy a teszt ne hazudjon a név-viselkedésről.
+const { actorNameOrGeneric } = require('./actor-name-plan.js');
+
 function fixture() {
   const records = new Map();
   const dailyActivity = [];
@@ -45,6 +52,7 @@ function fixture() {
       return true;
     },
     createNotificationBestEffort: async () => true,
+    actorNameOrGeneric,
     fetch: async () => ({ ok: true, json: async () => ({ id: 123 }) }), AbortSignal,
   };
   const source = fs.readFileSync(`${__dirname}/index.js`, 'utf8');

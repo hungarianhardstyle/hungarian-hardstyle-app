@@ -3,19 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../core/navigation/content_target.dart';
 import '../../models/app_notification.dart';
 import '../../services/notification_selection_plan.dart';
 import '../../services/notification_service.dart';
 import '../../services/community_service.dart';
-import '../../services/wordpress_service.dart';
 import '../more/community_users_screen.dart';
 import '../community/community_screen.dart';
 import '../community/private_messages_screen.dart';
-import '../artists/artist_detail_screen.dart';
-import '../organizers/organizer_detail_screen.dart';
-import '../events/event_detail_screen.dart';
-import '../news/news_detail_screen.dart';
-import '../releases/release_detail_screen.dart';
 
 class NotificationCenterScreen extends StatefulWidget {
   const NotificationCenterScreen({super.key});
@@ -199,10 +194,12 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     final target = notification.targetId;
     try {
       if (notification.targetType == 'profile' && target.isNotEmpty) {
-        await navigator.push(
-          MaterialPageRoute<void>(
-            builder: (_) => CommunityPublicProfileScreen(userId: target),
-          ),
+        // A személy-célpont **közös** feloldása (a Chat-`@`hivatkozás
+        // ugyanezt hívja) — így a kettő nem tud széthúzni.
+        await openContentTarget(
+          navigator,
+          targetType: notification.targetType,
+          targetId: target,
         );
         return;
       }
@@ -277,64 +274,23 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       }
       final id = int.tryParse(target);
       if (id == null) return;
-      if (notification.targetType == 'news' ||
-          notification.targetType == 'article') {
-        final post = await WordpressService().getPost(id);
-        if (navigator.mounted) {
-          await navigator.push(
-            MaterialPageRoute<void>(
-              builder: (_) => NewsDetailScreen(post: post),
-            ),
-          );
-        }
-      } else if (notification.targetType == 'event') {
-        final event = (await WordpressService().getEvents(includePast: true))
-            .firstWhere(
-              (item) => item.id == id,
-              orElse: () => throw StateError('Event not found'),
-            );
-        if (navigator.mounted) {
-          await navigator.push(
-            MaterialPageRoute<void>(
-              builder: (_) => EventDetailScreen(event: event),
-            ),
-          );
-        }
-      } else if (notification.targetType == 'release') {
-        final release = (await WordpressService().getReleases()).firstWhere(
-          (item) => item.id == id,
-          orElse: () => throw StateError('Release not found'),
+      // A tartalom-célpontok (cikk, esemény, kiadvány, DJ, szervező)
+      // feloldása **közös** (`openContentTarget`) — ugyanaz, amit a Chat
+      // `@`hivatkozása hív. A korábbi, itt másolt ágak pontosan ezek voltak
+      // (ugyanazok a képernyők, ugyanaz a sorrend), csak egy helyen.
+      if (const {
+        'news',
+        'article',
+        'event',
+        'release',
+        'artist',
+        'organizer',
+      }.contains(notification.targetType)) {
+        await openContentTarget(
+          navigator,
+          targetType: notification.targetType,
+          targetId: target,
         );
-        if (navigator.mounted) {
-          await navigator.push(
-            MaterialPageRoute<void>(
-              builder: (_) => ReleaseDetailScreen(release: release),
-            ),
-          );
-        }
-      } else if (notification.targetType == 'artist') {
-        // ⚠️ ÉLES HIBA VOLT: a „Új DJ került fel" értesítés (`type: new_artist`,
-        // `targetType: artist`, `targetId: <DJ azonosító>`) **egyik ágba sem**
-        // esett bele, ezért a koppintás **semmit** nem csinált — az adatlap nem
-        // nyílt meg. Az azonosító itt már megvan (`id`), ezért elég megnyitni a
-        // DJ-adatlapot.
-        if (navigator.mounted) {
-          await navigator.push(
-            MaterialPageRoute<void>(
-              builder: (_) => ArtistDetailScreen(artistId: id),
-            ),
-          );
-        }
-      } else if (notification.targetType == 'organizer') {
-        // Ugyanaz a hiba-osztály: az „Új szervező került fel" értesítés sem
-        // nyitott semmit.
-        if (navigator.mounted) {
-          await navigator.push(
-            MaterialPageRoute<void>(
-              builder: (_) => OrganizerDetailScreen(organizerId: id),
-            ),
-          );
-        }
       }
     } catch (_) {
       // The inbox remains usable if a newly-created WP item is not visible yet.

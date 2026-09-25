@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 358,
+    changes: [
+      'ÚJ a Chatben: @-tal hivatkozhatsz valakire vagy valamire — személyre, cikkre, DJ-re, szervezőre, eseményre és kiadványra. Elég beírni a @ jelet és a név első betűit, a lehetőségeket magától feldobja.',
+      'A hivatkozás kattintható: a személynél a profilja, a cikknél a cikk, a DJ-nél az adatlapja, a szervezőnél, az eseménynél és a kiadványnál a saját oldala nyílik meg.',
+      'Ha valakit megemlítesz, az értesítést kap róla, és a koppintás egyenesen arra a Chat-üzenetre visz.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 357,
     changes: [
       'Az értesítéseknél mostantól látszik, KI kedvelte a Chat-üzenetedet, és ki szólt hozzá egy cikkhez — eddig csak annyi volt, hogy „kedvelték", illetve „valaki hozzászólt".',

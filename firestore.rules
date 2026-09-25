@@ -66,7 +66,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'authorId', 'authorName', 'authorImageUrl', 'authorRole',
           'authorAccessRole', 'isAnonymous', 'text', 'replyToText', 'imageUrl', 'imagePublicId',
-          'reactions', 'reactionBy', 'pinned', 'createdAt', 'editedAt'
+          'reactions', 'reactionBy', 'pinned', 'createdAt', 'editedAt', 'mentions'
         ])
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.authorName is string
@@ -78,6 +78,30 @@ service cloud.firestore {
         && (!request.resource.data.keys().hasAny(['replyToText'])
             || (request.resource.data.replyToText is string
                 && request.resource.data.replyToText.size() <= 200))
+        // @-HIVATKOZASOK (mention) — a tulajdonos keresere a Chat-uzenet
+        // hivatkozhat szemelyre, cikkre, DJ-re, szervezore, esemenyre es
+        // kiadvanyra (`{type, id, label}`).
+        //
+        // ! A Firestore-szabaly nyelvében NEM lehet listan vegigiteralni, ezert
+        // itt csak a DARABSZAM (max 10) es az ELSO elem alakja ellenorizheto.
+        // A tobbi elem alakjat es a jogosultsagot a SZERVER ellenorzi: a
+        // SZERVER ellenorzi: a `publishChatPost` callable a `sanitizeMentions`-szal
+        // (tiszta modul: `functions/chat-mention-plan.js`) — az app egyetlen
+        // irasi utja ez, ezert a korlat nem vesz el, csak masik szinten van
+        // kikenyszeritve. Ha a kliens megis kozvetlenul irna (a callable
+        // megkerulesevel), az elso elemen tul egy rossz alaku hivatkozas
+        // atcsuszhat — ez tudatos kompromisszum, mert a nyelv ezt nem teszi
+        // lehetove.
+        && (!request.resource.data.keys().hasAny(['mentions'])
+            || (request.resource.data.mentions is list
+                && request.resource.data.mentions.size() <= 10
+                && (request.resource.data.mentions.size() == 0
+                    || (request.resource.data.mentions[0].keys().hasOnly(['type', 'id', 'label'])
+                        && request.resource.data.mentions[0].type is string
+                        && request.resource.data.mentions[0].id is string
+                        && request.resource.data.mentions[0].id.size() <= 64
+                        && request.resource.data.mentions[0].label is string
+                        && request.resource.data.mentions[0].label.size() <= 80))))
         && isAllowedUploadedImage(request.resource.data.imageUrl)
         && (!request.resource.data.keys().hasAny(['imagePublicId'])
             || (request.resource.data.imagePublicId is string

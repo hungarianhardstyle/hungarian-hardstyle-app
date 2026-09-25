@@ -1142,13 +1142,24 @@ class CommunityService {
     return 'partygoer';
   }
 
-  Future<void> publishPost({
+  /// Chat-üzenet közzététele a szerveren (`publishChatPost` callable).
+  ///
+  /// A [mentions] a `@`hivatkozások strukturált listája (`{type, id, label}` —
+  /// lásd `chat_mention_plan.dart`). MIÉRT a szöveg MELLETT megy: a szöveg
+  /// olvasható marad (régi appok is látják a `@Nevet`), a kattintás viszont az
+  /// **azonosító** alapján történik, nem szöveg-parse-szal.
+  ///
+  /// ⚠️ A jogosultságot a **szerver** kényszeríti: a nem admin/moderátor
+  /// tartalom-hivatkozásait kihagyja (a szöveg marad), és visszaadja a
+  /// kihagyottak számát — ez a visszatérési érték, amit a felület jelez.
+  Future<int> publishPost({
     required String text,
     Uint8List? imageBytes,
     bool pinned = false,
     String? replyToText,
     String? replyToName,
     String? replyToAuthorId,
+    List<Map<String, Object>> mentions = const <Map<String, Object>>[],
   }) async {
     final user = await ensureAnonymousUser();
     final isAnonymous = user.isAnonymous;
@@ -1177,7 +1188,10 @@ class CommunityService {
       );
       imageUrl = uploadedImage.url;
     }
-    await callFirebaseCallable<void>(
+    // A callable válasza a `mentions` szűrés eredményét is hordozza
+    // (`droppedMentions`), ezért NEM `void`-ként olvassuk: a felület ebből
+    // tudja meg, hogy néhány hivatkozás nem lett kattintható.
+    final result = await callFirebaseCallable<Object?>(
       'publishChatPost',
       parameters: {
         'text': trimmed,
@@ -1207,8 +1221,19 @@ class CommunityService {
         if (uploadedImage?.publicId.isNotEmpty == true)
           'imagePublicId': uploadedImage!.publicId,
         if (pinned) 'pinned': true,
+        // A strukturált hivatkozások (`[{type, id, label}]`) — a régi minta
+        // szerint csak akkor kerül a paraméterek közé, ha van mit küldeni.
+        if (mentions.isNotEmpty) 'mentions': mentions,
       },
     );
+    final data = result.data;
+    if (data is Map) {
+      final dropped = data['droppedMentions'];
+      if (dropped is num) return dropped.toInt();
+    }
+    // Régi/üres válasz (még nem telepített szerver): nem találgatunk, és nem is
+    // bukunk el — az üzenet elküldve, kihagyott hivatkozás nem ismert.
+    return 0;
   }
 
   /// A Chat-üzenet reakciójának váltása; visszaadja a **saját** új állapotot.

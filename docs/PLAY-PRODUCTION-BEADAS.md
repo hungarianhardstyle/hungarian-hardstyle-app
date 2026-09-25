@@ -23,7 +23,7 @@ van a mérés módja — ahol nem tudtam mérni, az **szándékosan jelölve** v
 | Zárt teszt (`alpha`) | **353** (completed), a kiadási szöveggel | `check-play-track.mjs` |
 | `beta` | üres, **production-nel szinkronizál** | `check-play-products.mjs --tracks` |
 | `internal` | 278 (completed) + egy üres piszkozat → **dobd el** | `check-play-track.mjs` |
-| Következő csomag | **357** (értesítések: ki lájkolt / ki kommentelt + a Chat-értesítés a megjelölt üzenetre ugrik; a 356 hírlevél-védelmét és `enableEdgeToEdge`-jét, a 355 nyeremény-javításait, a 354 DJ-megjelenéseit és a 353 Firebase major emelését is tartalmazza): `build/HUHS-v1.0.0+357-release.aab`, plugin **2.10.0** (már fent) | `check-play-notes.mjs` |
+| Következő csomag | **358** (Chat `@`-hivatkozás: személy/cikk/DJ/szervező/esemény/kiadvány + értesítés a megemlítettnek; a 357 értesítés-javítását és a 356 hírlevél-védelmét is tartalmazza): `build/HUHS-v1.0.0+358-release.aab`, plugin **2.10.0** (már fent) | `check-play-notes.mjs` |
 | Termékek országa | **9 ország**: HU, AT, HR, SI, SK, NL, CZ, RS, UA | `check-play-products.mjs` |
 | Termékek állapota | 56 `ACTIVE`, 4 `DRAFT` (a 12699 megjelenéséig) | `check-play-products.mjs` |
 | Adatvédelmi nyilatkozat | **él** (HTTP 200) | `…/adatvedelmi-nyilatkozat/` |

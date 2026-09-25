@@ -15,6 +15,7 @@ import '../../models/community_post.dart';
 import '../../models/achievement.dart';
 import '../../models/event.dart';
 import '../../models/submission_image.dart';
+import '../../core/navigation/content_target.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../core/input/sentence_capitalization_formatter.dart';
@@ -23,12 +24,16 @@ import '../../providers/events_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../services/chat_paging.dart';
 import '../../services/chat_focus_plan.dart';
+import '../../services/chat_mention_plan.dart';
+import '../../services/chat_mention_source.dart';
 import '../../services/community_service.dart';
 import '../../services/chat_display_preferences.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../services/referral_link_service.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../../widgets/achievement_badge_card.dart';
+import '../../widgets/chat_mention_overlay.dart';
+import '../../widgets/chat_message_text.dart';
 import '../../widgets/community_profile_form_fields.dart';
 import '../../widgets/chat_emoji_button.dart';
 import '../../widgets/keyboard_dismiss_button.dart';
@@ -765,6 +770,45 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   /// notify"*) a szerver a szerző UID-ját kapja ebben a mezőben.
   String? _replyToAuthorId;
   bool _anonymous = true;
+
+  /// A `@`hivatkozás javaslatainak **adatforrása** (hálózat + cache).
+  ///
+  /// ⚠️ Lustán jön létre: a képernyő létrehozásakor még **nem** szabad Firebase-t
+  /// (Auth/Firestore) érinteni — a widget-tesztek provider-felülírással, Firebase
+  /// nélkül futtatják ezt a képernyőt, és egy mező-inicializáló ott elhasalna.
+  /// Ráadásul így a hálózat is csak az első `@`-ra indul.
+  ChatMentionSource? _mentionSourceLazy;
+  ChatMentionSource get _mentionSource =>
+      _mentionSourceLazy ??= ChatMentionSource(community: _service);
+
+  /// Az éppen gépelt `@`-token (`null` = nincs aktív hivatkozás).
+  MentionQuery? _mentionQuery;
+
+  /// A kurzor, amikor a [mentionQuery] keletkezett — a beszúrás ezt használja.
+  int _mentionCaret = 0;
+
+  /// A listában látszó javaslatok (a tiszta szűrő eredménye).
+  List<MentionSuggestion> _mentionSuggestions = const <MentionSuggestion>[];
+
+  /// A már betöltött **személy**-javaslatok (egyszer, lustán, cache-elve).
+  List<MentionSuggestion>? _mentionUsers;
+
+  /// A már betöltött **tartalom**-javaslatok (csak admin/moderátornak).
+  Map<String, List<MentionSuggestion>> _mentionContent =
+      const <String, List<MentionSuggestion>>{};
+
+  /// A kiválasztott hivatkozások (a szövegbe beírt célpontok).
+  ///
+  /// ⚠️ Ez csak **jelölt**: a küldésnél a szövegben **ténylegesen benne lévő**
+  /// hivatkozások mennek át (`mentionSpans`), ezért egy visszatörölt `@név`
+  /// nem küld magával felesleges hivatkozást.
+  final List<ChatMentionTarget> _mentions = <ChatMentionTarget>[];
+
+  /// Indult-e már a javaslatok betöltése (a hálózat csak **egyszer** fut).
+  bool _mentionDataRequested = false;
+
+  /// A bejelentkezett fiók hivatkozás-jogosultsága (`accessRole`).
+  String? _mentionAccessRole;
   String _avatarUrl = '';
   String _avatarLetter = 'H';
   double _avatarFocusX = 50;
@@ -840,6 +884,9 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       (_) => _refreshPublicProfiles(),
     );
     _chatScrollController.addListener(_maybeLoadOlderPosts);
+    // A `@`javaslatlista a beviteli mező **változásaira** épül (gépelés ÉS
+    // kurzormozgatás is jelzést ad) — ezért itt egy listener, nem `onChanged`.
+    _textController.addListener(_onComposerChanged);
     _prepareAnonymousUser();
     final target = widget.focusPostId?.trim() ?? '';
     if (target.isNotEmpty) {
@@ -858,6 +905,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   @override
   void dispose() {
     _chatScrollController.removeListener(_maybeLoadOlderPosts);
+    _textController.removeListener(_onComposerChanged);
     _highlightTimer?.cancel();
     _chatScrollController.dispose();
     _showJumpToNewest.dispose();
@@ -1113,12 +1161,18 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     }
     setState(() => _sending = true);
     try {
-      await _service.publishPost(
+      // Csak azok a hivatkozások mennek ki, amelyek a szövegben **tényleg
+      // benne vannak** — a szerver ezt még egyszer szűri (jogosultság, korlát).
+      final mentions = _activeMentions();
+      final dropped = await _service.publishPost(
         text: _textController.text,
         imageBytes: _image,
         replyToText: _replyToText,
         replyToName: _replyToName,
         replyToAuthorId: _replyToAuthorId,
+        mentions: mentions
+            .map((target) => target.toMap())
+            .toList(growable: false),
       );
       _textController.clear();
       if (mounted) {
@@ -1127,7 +1181,20 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
           _replyToText = null;
           _replyToName = null;
           _replyToAuthorId = null;
+          // A kiválasztott hivatkozások az üzenettel elmentek — a következő
+          // üzenetbe nem szivárognak át.
+          _mentions.clear();
+          _mentionQuery = null;
+          _mentionSuggestions = const <MentionSuggestion>[];
         });
+      }
+      if (dropped > 0) {
+        // A szerver jelezte, hogy néhány hivatkozás kiesett (nem
+        // admin/moderátor tartalom-hivatkozás): a szöveg olvasható maradt, de
+        // a koppintás nem lesz ott — ezt röviden meg kell mondani.
+        _showMessage(
+          'Néhány hivatkozás nem kattintható (csak adminnak/moderátornak jár).',
+        );
       }
     } catch (error) {
       _showMessage(_chatError(error));
@@ -1150,6 +1217,132 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       _replyToAuthorId = post.authorId.trim();
     });
     _composerFocusNode.requestFocus();
+  }
+
+  /// A beviteli mező változott: van-e épp aktív `@`-token, és mi az.
+  ///
+  /// A tulajdonos kérése: *„Elkezdem irni a betűket és dobja fel a
+  /// lehetőségeket."* A token felismerése a tiszta
+  /// [activeMentionQuery]-ben van (a kurzor előtti `@`, egy szóközig).
+  void _onComposerChanged() {
+    final selection = _textController.selection;
+    final caret = selection.isValid
+        ? selection.baseOffset
+        : _textController.text.length;
+    final query = activeMentionQuery(_textController.text, caret);
+    if (query == null) {
+      if (_mentionQuery == null && _mentionSuggestions.isEmpty) return;
+      setState(() {
+        _mentionQuery = null;
+        _mentionSuggestions = const <MentionSuggestion>[];
+      });
+      return;
+    }
+    _mentionCaret = caret;
+    setState(() => _mentionQuery = query);
+    unawaited(_refreshMentionSuggestions());
+  }
+
+  /// A javaslatok (újra)számolása az éppen aktív tokenhez.
+  ///
+  /// Az adat **egyszer** töltődik le ([_ensureMentionData]) — a szűrés minden
+  /// további betűnél abból a cache-ből megy, hálózat nélkül.
+  Future<void> _refreshMentionSuggestions() async {
+    await _ensureMentionData();
+    if (!mounted) return;
+    final query = _mentionQuery;
+    if (query == null) return;
+    setState(() {
+      _mentionSuggestions = mentionSuggestions(
+        query: query.query,
+        users: _mentionUsers ?? const <MentionSuggestion>[],
+        content: _mentionContent,
+        privileged: mentionPrivileged(_mentionAccessRole),
+      );
+    });
+  }
+
+  /// A javaslatok adatforrásának betöltése — **lustán, egyszer**.
+  ///
+  /// A személyek mindenkinek járnak; a tartalom **csak** adminnak/moderátornak
+  /// ([mentionPrivileged]) — ez a tulajdonos döntése. A jogosultságot a
+  /// **szerver** kényszeríti, ez a kapu csak UX.
+  Future<void> _ensureMentionData() async {
+    if (_mentionDataRequested) return;
+    _mentionDataRequested = true;
+    try {
+      _mentionAccessRole = await _loadMentionAccessRole();
+      _mentionUsers = await _mentionSource.mentionUserSuggestions();
+      if (!mentionPrivileged(_mentionAccessRole)) return;
+      _mentionContent = await _mentionSource.mentionContentSuggestions();
+    } catch (_) {
+      // A javaslatlista **soha** nem törheti el a Chatet: hiba esetén marad az
+      // ami van (vagy üres lista), a beviteli mező és a küldés változatlanul
+      // működik. A `@` kézzel beírva is elmegy, csak nem lesz kattintható.
+      _mentionUsers ??= const <MentionSuggestion>[];
+      _mentionContent = const <String, List<MentionSuggestion>>{};
+    }
+  }
+
+  /// A hivatkozás-jogosultság a profilból (`accessRole`).
+  ///
+  /// A tulajdonos e-mail-címe a szerverhez hasonlóan **admin** akkor is, ha a
+  /// profil `accessRole` mezője még nem állt be.
+  Future<String?> _loadMentionAccessRole() async {
+    final user = _service.auth.currentUser;
+    if (user == null || user.isAnonymous) return CommunityService.accessNone;
+    if (CommunityService.isOwnerEmail(user.email)) {
+      return CommunityService.accessAdmin;
+    }
+    try {
+      final data = (await _service.profile()).data() ?? const <String, dynamic>{};
+      return data['accessRole'] as String?;
+    } catch (_) {
+      // Hálózati hiba: nem találgatunk — tartalom-javaslat nélkül is működik
+      // a személy-hivatkozás.
+      return null;
+    }
+  }
+
+  /// Egy javaslat kiválasztása: a `@token` helyére a név kerül, a kurzor a név
+  /// UTÁ, és a célpont bekerül a küldendő hivatkozások közé.
+  ///
+  /// Ugyanaz a `type:id` **nem** kerülhet be kétszer (a szerver is összevonja).
+  void _selectMention(MentionSuggestion suggestion) {
+    final query = _mentionQuery;
+    if (query == null) return;
+    final insertion = insertMention(
+      text: _textController.text,
+      query: query,
+      caret: _mentionCaret,
+      label: suggestion.label,
+    );
+    _textController.value = TextEditingValue(
+      text: insertion.text,
+      selection: TextSelection.collapsed(offset: insertion.caret),
+    );
+    setState(() {
+      _mentionQuery = null;
+      _mentionSuggestions = const <MentionSuggestion>[];
+      final target = suggestion.toTarget();
+      final key = '${target.type}:${target.id}';
+      final already = _mentions.any(
+        (item) => '${item.type}:${item.id}' == key,
+      );
+      if (!already) _mentions.add(target);
+    });
+  }
+
+  /// A **szövegben ténylegesen benne lévő** hivatkozások (a küldéshez).
+  ///
+  /// ⚠️ MIÉRT nem a `_mentions` megy ki nyersen: a felhasználó visszatörölheti
+  /// a `@nevet` a szövegből, ilyenkor a célpontról nem tudhatunk semmit — a
+  /// tiszta [mentionSpans] adja meg, mi van valóban ott.
+  List<ChatMentionTarget> _activeMentions() {
+    final spans = mentionSpans(_textController.text, _mentions);
+    return List<ChatMentionTarget>.unmodifiable(
+      spans.map((span) => span.target),
+    );
   }
 
   Future<void> _openProfile() async {
@@ -1288,6 +1481,8 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                 _replyToName = null;
                 _replyToAuthorId = null;
               }),
+              suggestions: _mentionSuggestions,
+              onSuggestionTap: _selectMention,
             );
             final postList = Expanded(
               child: posts.when(
@@ -1397,6 +1592,12 @@ class _Composer extends StatelessWidget {
   final VoidCallback onSend;
   final VoidCallback onRemoveImage;
 
+  /// Az éppen látszó `@`javaslatok (üresen a lista **semmit** nem rajzol).
+  final List<MentionSuggestion> suggestions;
+
+  /// Egy javaslat kiválasztása (a szövegbeszúrás a képernyő dolga).
+  final ValueChanged<MentionSuggestion> onSuggestionTap;
+
   const _Composer({
     required this.controller,
     required this.focusNode,
@@ -1410,6 +1611,8 @@ class _Composer extends StatelessWidget {
     required this.onPickGallery,
     required this.onSend,
     required this.onRemoveImage,
+    required this.suggestions,
+    required this.onSuggestionTap,
   });
 
   @override
@@ -1434,6 +1637,13 @@ class _Composer extends StatelessWidget {
                   onDeleted: onClearReply,
                 ),
               ),
+            // A javaslatlista a beviteli sor **fölött**: így nem takarja a
+            // gépelt szöveget, és a válasz- illetve kép-előnézet helyén sem
+            // változtat. Üresen ez a widget semmit nem rajzol.
+            ChatMentionOverlay(
+              suggestions: suggestions,
+              onSelected: onSuggestionTap,
+            ),
             TextField(
               controller: controller,
               focusNode: focusNode,
@@ -1761,6 +1971,24 @@ class _PostCardState extends ConsumerState<_PostCard> {
     );
   }
 
+  /// Egy `@`hivatkozás koppintása → a **közös** célpont-feloldó.
+  ///
+  /// ⚠️ MIÉRT közös (`openContentTarget`): az értesítés-központ ugyanezt hívja,
+  /// így a hivatkozás és az értesítés **nem tud széthúzni** (a 351-es tanulság).
+  Future<void> _openMention(ChatMentionTarget target) async {
+    final opened = await openContentTarget(
+      Navigator.of(context),
+      targetType: target.type,
+      targetId: target.id,
+    );
+    if (opened || !mounted) return;
+    // Eltűnt célpont (törölt cikk/DJ) vagy hálózati hiba: szólunk, nem
+    // omlunk össze — a hivatkozás nem tudja magát megjavítani.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('A hivatkozott tartalom nem érhető el.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
@@ -1877,7 +2105,14 @@ class _PostCardState extends ConsumerState<_PostCard> {
               ),
             if (post.text.isNotEmpty) ...[
               SizedBox(height: widget.compact ? 7 : 10),
-              Text(post.text),
+              // A `@`hivatkozások **kattinthatók** — a tárolt célpontok
+              // (`mentions`) alapján, nem szöveg-parse-szal. Hivatkozás nélkül
+              // ez bitre ugyanaz, mint a korábbi sima szöveg-megjelenítés.
+              ChatMessageText(
+                text: post.text,
+                mentions: post.mentions,
+                onTap: _openMention,
+              ),
             ],
             if (post.imageUrl.isNotEmpty) ...[
               SizedBox(height: widget.compact ? 7 : 10),

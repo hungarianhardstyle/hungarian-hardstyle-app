@@ -88,6 +88,10 @@ const {
   chatReactionNotification,
   chatReplyNotification,
 } = require('./chat-notification-plan');
+const {
+  sanitizeMentions,
+  chatMentionNotifications,
+} = require('./chat-mention-plan');
 const { pickActorName, actorNameOrGeneric } = require('./actor-name-plan');
 const {
   MAX_ATTEMPTS: EMAIL_RETRY_MAX_ATTEMPTS,
@@ -2408,6 +2412,15 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
   const authorImageUrl = /^https:\/\/res\.cloudinary\.com\/fjxo93em\/image\/upload\/.+/.test(profileImage)
     ? profileImage
     : '';
+  // @-HIVATKOZÁSOK (mention) — a JOGOSULTSÁGOT a szerver kényszeríti ki (a
+  // kliens-oldali szűrés csak UX). A `user` hivatkozás mindenkinek jár, a
+  // TARTALOM-hivatkozás (cikk/DJ/szervező/esemény/kiadvány) csak adminnak és
+  // moderátornak: a többit a `sanitizeMentions` **kihagyja** (a szöveg marad), és
+  // a kihagyottak számát visszaadjuk a kliensnek (`droppedMentions`). A döntés a
+  // tiszta `chat-mention-plan.js`-ben van, hogy mérhető legyen.
+  const { mentions, dropped: droppedMentions } = sanitizeMentions(data?.mentions, {
+    privileged: accessRole === 'admin' || accessRole === 'moderator',
+  });
   const ref = db.collection('live_feed_posts').doc();
   await ref.set({
     authorId: uid,
@@ -2419,6 +2432,9 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
     text,
     ...(replyToText ? { replyToText } : {}),
     ...(replyToText && replyToName ? { replyToName } : {}),
+    // Csak akkor kerül a dokumentumba, ha maradt érvényes hivatkozás — így a
+    // régi (mezőt nem ismerő) olvasók ugyanazt a dokumentumot látják.
+    ...(mentions.length ? { mentions } : {}),
     imageUrl,
     ...(imagePublicId ? { imagePublicId } : {}),
     reactions: {},
@@ -2440,7 +2456,24 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
   if (replyNotification) {
     await createNotificationBestEffort(replyNotification);
   }
-  return { id: ref.id };
+  // @-HIVATKOZÁS ÉRTESÍTÉS — a megemlített SZEMÉLYEK kapnak értesítést (a
+  // tulajdonos döntése: minden megemlített, de legfeljebb 5/üzenet). Ugyanúgy
+  // best-effort, elemenként, hibát elnyelve, ahogy a válasz-értesítés is: egy
+  // elbukott értesítés nem viheti el a már beírt üzenetet. A `targetType: 'chat'`
+  // + `targetId` miatt a koppintás a 357-es kör óta **arra az üzenetre** visz.
+  const mentionNotifications = chatMentionNotifications({
+    postId: ref.id,
+    authorId: uid,
+    authorName: displayName,
+    mentions,
+    text,
+  });
+  for (const mentionNotification of mentionNotifications) {
+    await createNotificationBestEffort(mentionNotification);
+  }
+  // Visszafelé kompatibilis: az `id` marad, mellé jön a kihagyott hivatkozások
+  // száma, amit a kliens kiírhat („N hivatkozást nem sikerült beilleszteni").
+  return { id: ref.id, droppedMentions };
 });
 
 exports.manageConnection = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {

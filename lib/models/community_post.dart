@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../services/chat_mention_plan.dart';
+
 class CommunityPost {
   final String id;
   final String authorName;
@@ -26,6 +28,16 @@ class CommunityPost {
   final Map<String, String> reactionBy;
   final DateTime createdAt;
 
+  /// A Chat-`@`hivatkozásai (`{type, id, label}`) — a **kattintható** részekhez.
+  ///
+  /// MIÉRT kell a modellben: a kattintás nem szöveg-parse, hanem a tárolt
+  /// **azonosító** alapján megy (uid / WordPress-azonosító), ezért a
+  /// megjelenítéshez pontosan ezt a listát kell ismerni. A szerver
+  /// (`publishChatPost`) szűri és korlátozza (max. [mentionMaxCount]), a
+  /// feldolgozás pedig a tiszta [ChatMentionTarget.listFrom] — a hibás vagy
+  /// ismeretlen elemek **kimaradnak**, nem törnek el egy üzenetet.
+  final List<ChatMentionTarget> mentions;
+
   /// Mikor szerkesztette a szerzo (vagy egy admin) az uzenetet.
   ///
   /// `null`, ha az uzenet meg soha nem volt szerkesztve — a felulet ilyenkor
@@ -47,6 +59,7 @@ class CommunityPost {
     required this.pinned,
     required this.reactions,
     this.reactionBy = const <String, String>{},
+    this.mentions = const <ChatMentionTarget>[],
     required this.createdAt,
     this.editedAt,
   });
@@ -86,6 +99,7 @@ class CommunityPost {
                   return map;
                 })
           : const <String, String>{},
+      mentions: ChatMentionTarget.listFrom(data['mentions']),
       createdAt: timestamp is Timestamp ? timestamp.toDate() : DateTime.now(),
       editedAt: edited is Timestamp ? edited.toDate() : null,
     );

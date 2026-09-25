@@ -312,3 +312,132 @@ test('a törölt felhasználó profilja közben tiltott marad (isRegistered)', a
     setDoc(doc(db, 'community_profiles', USER_A), profilePayload('Teszt Törölt')),
   );
 });
+
+/* ------------------------------------------------------------------ */
+/* Chat-@hivatkozás (mention) — a `mentions` mező szabálya             */
+/* ------------------------------------------------------------------ */
+
+/*
+ * A tulajdonos kérése: *„egy @xy betűvel tudjak hivatkozni a chaten cikkre,
+ * djre, szervezőre, eseményre, kiadványra vagy személyre/userre"*.
+ *
+ * A `live_feed_posts` create-szabálya `keys().hasOnly([...])`, ezért a
+ * `mentions` mező **nincs** benne automatikusan: enélkül a kliens írása
+ * elutasításra kerülne. Ez a szabály viszont önmagában nem elég a teljes
+ * védelemhez, mert a Firestore-szabály nyelvében **nem lehet listán
+ * végigiterálni** — itt csak a darabszám (max 10) és az ELSŐ elem alakja
+ * mérhető. A többi elem alakját és a jogosultságot a szerver (a
+ * `publishChatPost` callable → `sanitizeMentions`) ellenőrzi; azt a
+ * `functions/chat-mention-plan.test.cjs` méri.
+ */
+
+const mention = (type, id, label) => ({ type, id, label });
+
+const chatCreatePayload = (authorUid, extra = {}) => ({
+  authorId: authorUid,
+  authorName: 'Teszt Elek',
+  authorImageUrl: '',
+  authorRole: 'partygoer',
+  authorAccessRole: 'none',
+  isAnonymous: false,
+  text: 'Nézd meg @Kobakologia!',
+  replyToText: '',
+  imageUrl: '',
+  reactions: {},
+  reactionBy: {},
+  pinned: false,
+  createdAt: Timestamp.now(),
+  ...extra,
+});
+
+// A create-szabály a `firebase.sign_in_provider` claimet is nézi (nem lehet
+// névtelen), ezért a tokenbe beadjuk — a bejelentkezési mód jelszavas.
+const chatWriter = (uid, email) =>
+  env.authenticatedContext(uid, {
+    email,
+    firebase: { sign_in_provider: 'password' },
+  }).firestore();
+
+test('a SZEMÉLY- és a TARTALOM-hivatkozás is bekerülhet (a mentions mező átment a whitelisten)', async () => {
+  const db = chatWriter('mention-author', 'mention@example.com');
+
+  await assertSucceeds(
+    setDoc(
+      doc(db, 'live_feed_posts', 'mention-post-1'),
+      chatCreatePayload('mention-author', {
+        mentions: [
+          mention('user', 'uid-1', 'Kobakologia'),
+          mention('event', '12505', 'Hard Base Classic'),
+        ],
+      }),
+    ),
+  );
+
+  const stored = await getDoc(doc(db, 'live_feed_posts', 'mention-post-1'));
+  assert.equal(stored.data().mentions.length, 2, 'a hivatkozások elmentődtek');
+});
+
+test('a 10 hivatkozás belefér, a 11. már nem (a szabály a DARABSZÁMOT nézi)', async () => {
+  const db = chatWriter('mention-author-2', 'mention2@example.com');
+  const ten = Array.from({ length: 10 }, (_, index) =>
+    mention('user', `uid-${index}`, `Tag ${index}`),
+  );
+
+  await assertSucceeds(
+    setDoc(
+      doc(db, 'live_feed_posts', 'mention-post-10'),
+      chatCreatePayload('mention-author-2', { mentions: ten }),
+    ),
+  );
+  await assertFails(
+    setDoc(
+      doc(db, 'live_feed_posts', 'mention-post-11'),
+      chatCreatePayload('mention-author-2', {
+        mentions: [...ten, mention('user', 'uid-10', 'Tag 10')],
+      }),
+    ),
+  );
+});
+
+test('a whitelist-en kívüli mező és a rossz alakú hivatkozás továbbra is elutasított', async () => {
+  const db = chatWriter('mention-author-3', 'mention3@example.com');
+  const payload = (extra) => chatCreatePayload('mention-author-3', extra);
+
+  // 1) a create-whitelistbe nem tartozó mező — a `mentions` bevétele nem nyitott
+  //    kaput arra, hogy bármi más is bekerüljön a dokumentumba.
+  await assertFails(
+    setDoc(doc(db, 'live_feed_posts', 'mention-post-x1'), payload({ mentionCount: 1 })),
+  );
+
+  // 2) az ELSŐ hivatkozás alakja: csak `type`, `id`, `label` lehet benne.
+  await assertFails(
+    setDoc(
+      doc(db, 'live_feed_posts', 'mention-post-x2'),
+      payload({
+        mentions: [{ type: 'user', id: 'uid-1', label: 'Kobakologia', extra: 'nem oda való' }],
+      }),
+    ),
+  );
+
+  // 3) a hosszkorlátok (id ≤ 64, label ≤ 80) az első elemen.
+  await assertFails(
+    setDoc(
+      doc(db, 'live_feed_posts', 'mention-post-x3'),
+      payload({ mentions: [mention('user', 'uid-1', 'y'.repeat(81))] }),
+    ),
+  );
+  await assertFails(
+    setDoc(
+      doc(db, 'live_feed_posts', 'mention-post-x4'),
+      payload({ mentions: [mention('user', 'x'.repeat(65), 'Kobakologia')] }),
+    ),
+  );
+
+  // 4) a `mentions` csak lista lehet.
+  await assertFails(
+    setDoc(
+      doc(db, 'live_feed_posts', 'mention-post-x5'),
+      payload({ mentions: { type: 'user', id: 'uid-1', label: 'Kobakologia' } }),
+    ),
+  );
+});
