@@ -252,6 +252,32 @@ test('a WP-cron fordítás API-kulcs NÉLKÜL nem csinál semmit', () => {
   assert.match(source, /huhs_translation_enabled\(\)/, 'a cron-ág is ellenőrzi a kulcsot');
 });
 
+test('a WP-cron az ÖRÖKÖLT OpenAI-kulcsot is elfogadja (nem kell új kulcs)', () => {
+  const source = pluginFile('includes/translation-cron.php');
+  // Az örökölt kulcs forrásai (a régi `translations.php` ugyanezt használta).
+  assert.match(source, /get_option\('huhs_openai_api_key', ''\)/, 'az örökölt opciót is olvassa');
+  assert.match(source, /defined\('HUHS_OPENAI_API_KEY'\)/, 'a konstansot is elfogadja');
+  // Az ELSŐDLEGES kulcs nyer: az örökölt ág csak az elsődleges ÜRES esetén fut.
+  const primaryAt = source.indexOf("get_option('huhs_translation_api_key', '')");
+  const legacyAt = source.indexOf("get_option('huhs_openai_api_key', '')");
+  assert.ok(primaryAt > 0 && legacyAt > primaryAt, 'az örökölt kulcs csak tartalék');
+  assert.match(
+    source,
+    /if \(trim\(\$key\) !== ''\) \{\s*return trim\(\$key\);\s*\}/,
+    'az elsődleges kulcs azonnal visszatér',
+  );
+  // A szolgáltató a kulcs forrását követi (különben 401 lenne az idegen végponton).
+  assert.match(source, /function huhs_translation_api_key_is_legacy\(\)/, 'van örökség-felismerés');
+  assert.match(
+    source,
+    /huhs_translation_api_key_is_legacy\(\)\s*\?\s*array\([\s\S]{0,160}api\.openai\.com\/v1\/chat\/completions/,
+    'örökölt kulcsnál az OpenAI végpontja az alapérték',
+  );
+  assert.match(source, /api\.deepseek\.com\/chat\/completions/, 'az elsődleges kulcsnál marad a DeepSeek');
+  // A kulcsot továbbra sem a kód tartalmazza, csak opció/konstans/szűrő.
+  assert.doesNotMatch(source, /sk-[A-Za-z0-9]{10,}/, 'nincs kulcs a forrásban');
+});
+
 test('a fordítási válasz feldolgozása hálózat nélkül, hibára üres', () => {
   const source = pluginFile('includes/translation-cron.php');
   const start = source.indexOf('function huhs_translation_parse_response(');

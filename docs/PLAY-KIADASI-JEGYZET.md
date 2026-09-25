@@ -475,9 +475,17 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 kiadványokat is angolul kapja** — a meglévő 2.11.0 csak a cikkeket tudja. A meglévő tartalom
 fordítása utána következik (a plugin addig a **magyar** szöveget adja ezeknél, hiba nélkül).
 
-A plugin csomag: `build/huhs-mobile-api-2.12.0.zip` (47 fájl, 163,1 KB,
-SHA-256 `7AAD9A34D138CE7F3A199F36BD7DC1CAEEC1A45C6A4F7B3EC76EFC35C07BACB1`).
-A változás verziókövetve: `docs/plugin-2.12.0-english-fields.patch` (7 fájl, +407/−49 sor).
+A plugin csomag: `build/huhs-mobile-api-2.12.0.zip` (47 fájl, 159,8 KB,
+SHA-256 `C39D2BDF2AF179AF89CCD22610E2F7A37209B388EBC9541536B14FD6C500EF9B`).
+A változás verziókövetve: `docs/plugin-2.12.0-english-fields.patch` (7 fájl, +453/−49 sor,
+SHA-256 `BC594D58D2065DF37C7A0849E58031027EE264E82402587540A159CF16410208`).
+
+**📌 ÁLLAPOTMÉRÉS EGY PARANCCSAL:** `node tools/check-content-english-live.mjs` — megmondja, hogy a
+plugin támogatja-e már az esemény/DJ/szervező angol mezőt (azaz fent van-e a 2.12.0), hány cikk van
+angolul a nyilvános végponton, és hogy az angol **nem** szivárgott-e ki a weboldalra. **Frissen mérve
+(2026-09-25):** `post` **támogatott**, `huhs_event`/`huhs_artist`/`huhs_organizer` **nem** (0 `_huhs_*`
+meta) → a 2.12.0 **még nincs fent**; a cikkek `?lang=en` válasza **30/50** angol (`?lang=hu`: 0), az
+esemény/DJ/szervező 0; a weboldal HTML-jében az angol cím és kivonat **nincs benne**.
 
 ### 2.12.0 — angol mezők az eseménynek, DJ-nek, szervezőnek és kiadványnak + automatikus fordítás (2026-09-25)
 
@@ -497,6 +505,11 @@ A változás verziókövetve: `docs/plugin-2.12.0-english-fields.patch` (7 fájl
   ⚠️ API-KULCS NÉLKÜL SZÁNDÉKOSAN NEM CSINÁL SEMMIT: a kulcsot a `huhs_translation_api_key`
   opció (vagy szűrő) adja; ha üres, a folyamat el sem indul, külső hívást nem indít.
   A szolgáltató a `huhs_translation_provider` szűrővel váltható (alap: DeepSeek csevegő-végpont).
+  ✅ **ÖRÖKÖLT KULCS (2026-09-25-e óta):** ha az elsődleges kulcs üres, de a **korábbi OpenAI-próba**
+  kulcsa megvan (`huhs_openai_api_key` opció vagy `HUHS_OPENAI_API_KEY` konstans), akkor **azt**
+  használja, és a szolgáltató automatikusan az **OpenAI** csevegő-végpontja lesz — így a feltöltés
+  után **nem kell új kulcsot szerezni**, ha a régi még a beállításokban van. Ha mindkettő megvan, az
+  elsődleges (`huhs_translation_api_key`) nyer.
 - A webnyilvános oldal VÁLTOZATLAN: az angol továbbra is csak rejtett meta, a téma/shortcode
   nem olvassa (forrás-lint őrzi).
 ```

@@ -412,10 +412,10 @@ index bcb5a6db..5afe5c40 100644
  /**
 diff --git a/huhs-mobile-api/includes/translation-cron.php b/huhs-mobile-api/includes/translation-cron.php
 new file mode 100644
-index 00000000..fc8ea100
+index 00000000..860296ca
 --- /dev/null
 +++ b/huhs-mobile-api/includes/translation-cron.php
-@@ -0,0 +1,253 @@
+@@ -0,0 +1,299 @@
 +<?php
 +
 +if (!defined('ABSPATH')) {
@@ -437,6 +437,12 @@ index 00000000..fc8ea100
 +| adja; ha üres, a folyamat **el sem indul**, külső hívást nem indít, és nem is
 +| naplóz hibát. Ez szándékos: a fordítás szolgáltatás igénybe vétele a tulajdonos
 +| döntése, és kulcs nélkül a plugin nem hívhat idegen szolgáltatást.
++|
++| ⚠️ ÖRÖKSÉG-KULCS: ha az elsődleges kulcs üres, de a korábbi próbálkozás
++| OpenAI-kulcsa megvan (`huhs_openai_api_key` opció vagy `HUHS_OPENAI_API_KEY`
++| konstans), akkor **azt** használjuk, és a szolgáltató az OpenAI csevegő-végpontja
++| lesz — így a plugin feltöltése után nem kell új kulcsot szerezni. Ha mindkettő
++| megvan, az elsődleges (`huhs_translation_api_key`) nyer.
 +|
 +| A szolgáltató (a kulcs megadása után) a `huhs_translation_provider` szűrővel
 +| választható; az alapértelmezett a DeepSeek csevegő-végpontja, mert a tulajdonos
@@ -508,8 +514,37 @@ index 00000000..fc8ea100
 +function huhs_translation_api_key()
 +{
 +    $key = (string) apply_filters('huhs_translation_api_key', get_option('huhs_translation_api_key', ''));
++    if (trim($key) !== '') {
++        return trim($key);
++    }
 +
-+    return trim($key);
++    // ⚠️ ÖRÖKSÉG-KULCS (2026-09-25): a tulajdonos korábbi próbálkozásának
++    // OpenAI-kulcsa (`huhs_openai_api_key` opció vagy `HUHS_OPENAI_API_KEY`
++    // konstans) — a régi `includes/translations.php` ezt használta. Ha az megvan,
++    // akkor **nem kell új kulcsot szerezni**: a szolgáltató ilyenkor az OpenAI
++    // csevegő-végpontja lesz (lásd `huhs_translation_provider()`), és a fordítás
++    // a plugin feltöltése után magától elindul.
++    $legacy = defined('HUHS_OPENAI_API_KEY')
++        ? (string) HUHS_OPENAI_API_KEY
++        : (string) get_option('huhs_openai_api_key', '');
++
++    return trim((string) apply_filters('huhs_translation_legacy_api_key', $legacy));
++}
++
++/**
++ * Az ÖRÖKSÉG-kulcs van-e használatban? (azaz az elsődleges kulcs üres)
++ *
++ * Ebből dől el a szolgáltató alapértéke: OpenAI-kulccsal az OpenAI végpontja
++ * kell, különben a kulcsot egy idegen szolgáltatónak küldenénk (401).
++ */
++function huhs_translation_api_key_is_legacy()
++{
++    $primary = (string) apply_filters('huhs_translation_api_key', get_option('huhs_translation_api_key', ''));
++    if (trim($primary) !== '') {
++        return false;
++    }
++
++    return huhs_translation_api_key() !== '';
 +}
 +
 +/**
@@ -518,14 +553,25 @@ index 00000000..fc8ea100
 + * A szűrővel más szolgáltató is beköthető (OpenAI, Google), a válasz feldolgozása
 + * viszont a `huhs_translation_parse_response()`-on megy át, ezért a szűrőnek
 + * olyan választ kell adnia, amit az értelmezni tud.
++ *
++ * Az alapérték a kulcs forrását követi: örökölt OpenAI-kulcsnál az OpenAI
++ * csevegő-végpontja (a válasz alakja ugyanaz: `choices[0].message.content`).
 + */
 +function huhs_translation_provider()
 +{
-+    return apply_filters('huhs_translation_provider', array(
-+        'url'     => 'https://api.deepseek.com/chat/completions',
-+        'model'   => 'deepseek-chat',
-+        'timeout' => 45,
-+    ));
++    $default = huhs_translation_api_key_is_legacy()
++        ? array(
++            'url'     => 'https://api.openai.com/v1/chat/completions',
++            'model'   => 'gpt-4o-mini',
++            'timeout' => 45,
++        )
++        : array(
++            'url'     => 'https://api.deepseek.com/chat/completions',
++            'model'   => 'deepseek-chat',
++            'timeout' => 45,
++        );
++
++    return apply_filters('huhs_translation_provider', $default);
 +}
 +
 +/**
