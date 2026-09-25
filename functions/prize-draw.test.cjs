@@ -1,4 +1,30 @@
-const { test, before, beforeEach } = require('node:test');
+const nodeTest = require('node:test');
+// ⚠️ Ez a suite a Firestore-EMULÁTORON fut, mert a VALÓDI függvényeket méri.
+// Emulátor nélkül (pl. sima `node --test`) a Firebase Admin nem talál
+// hitelesítést („Could not load the default credentials"), és a suite HAMIS
+// pirosat mutatna — ezért ilyenkor minden teszt „kihagyva" jelzést kap, a suite
+// pedig zölden lefut. Emulátorral a tesztek valóban lefutnak.
+//
+// Futtatás emulátorral (a repository gyökeréből):
+//   npx firebase emulators:exec --only firestore --project demo-huhs \
+//     "node functions/prize-draw.test.cjs"
+const EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST;
+const TEST_SKIP = EMULATOR_HOST
+  ? false
+  : 'Firestore-emulátor nélkül kihagyva (FIRESTORE_EMULATOR_HOST nincs beállítva)';
+// A hookok is emulátorhoz kötöttek: kihagyott futásnál NE is regisztráljuk őket,
+// különben a `before`/`beforeEach` a kihagyott teszteknél is elindulna, és a
+// Firebase Admin hitelesítés nélkül hibát dobna (ez volt a `push-dedupe` esete).
+const guardHook = (hook) => (fn, options) => (TEST_SKIP ? undefined : hook(fn, options));
+const before = guardHook(nodeTest.before);
+const beforeEach = guardHook(nodeTest.beforeEach);
+const after = guardHook(nodeTest.after);
+function test(name, options, fn) {
+  if (typeof options === 'function') {
+    return nodeTest.test(name, { skip: TEST_SKIP }, options);
+  }
+  return nodeTest.test(name, { ...options, skip: TEST_SKIP || options?.skip }, fn);
+}
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');

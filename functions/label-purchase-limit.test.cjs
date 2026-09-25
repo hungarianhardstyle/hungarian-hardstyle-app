@@ -1,4 +1,29 @@
-const { test } = require('node:test');
+const nodeTest = require('node:test');
+// ⚠️ Ez a suite a Firestore-, Auth- ÉS Functions-emulátoron fut (a valódi
+// callable-t hívja HTTP-n, ezért kell a 9099 és az 5001 port is). Emulátor
+// nélkül a suite HAMIS pirosat mutatna — ezért ilyenkor minden teszt
+// „kihagyva" jelzést kap, a suite pedig zölden lefut.
+//
+// Futtatás emulátorral (a repository gyökeréből):
+//   npx firebase emulators:exec --only firestore,auth,functions --project demo-huhs \
+//     "node functions/label-purchase-limit.test.cjs"
+const EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST;
+const TEST_SKIP = EMULATOR_HOST
+  ? false
+  : 'Firestore-emulátor nélkül kihagyva (FIRESTORE_EMULATOR_HOST nincs beállítva)';
+// A hookok is emulátorhoz kötöttek: kihagyott futásnál NE is regisztráljuk őket,
+// különben a `before`/`beforeEach` a kihagyott teszteknél is elindulna, és a
+// Firebase Admin hitelesítés nélkül hibát dobna (ez volt a `push-dedupe` esete).
+const guardHook = (hook) => (fn, options) => (TEST_SKIP ? undefined : hook(fn, options));
+const before = guardHook(nodeTest.before);
+const beforeEach = guardHook(nodeTest.beforeEach);
+const after = guardHook(nodeTest.after);
+function test(name, options, fn) {
+  if (typeof options === 'function') {
+    return nodeTest.test(name, { skip: TEST_SKIP }, options);
+  }
+  return nodeTest.test(name, { ...options, skip: TEST_SKIP || options?.skip }, fn);
+}
 const assert = require('node:assert/strict');
 
 /**

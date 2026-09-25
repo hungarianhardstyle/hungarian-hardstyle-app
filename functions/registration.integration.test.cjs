@@ -1,4 +1,58 @@
-const { test, before, after } = require('node:test');
+const nodeTest = require('node:test');
+// ⚠️ Ez INTEGRÁCIÓS suite: a Firestore-, Auth- ÉS Functions-emulátort használja
+// (a valódi callable-okat hívja HTTP-n). Emulátor nélkül a Firebase Admin nem
+// talál hitelesítést, és a suite HAMIS pirosat mutatna — ezért ilyenkor minden
+// teszt „kihagyva" jelzést kap, a suite pedig zölden lefut.
+//
+// Futtatás emulátorral (a repository gyökeréből):
+//   npx firebase emulators:exec --only firestore,auth,functions --project demo-huhs \
+//     "node --test functions/registration.integration.test.cjs"
+// Ehhez a `FIREBASE_DEBUG_MODE=true` + `FIREBASE_DEBUG_FEATURES={"skipTokenVerification":true}`
+// környezet kell (App Check-hez kötött callable-ok), vagy használd:
+//   node tools/run-function-tests.mjs --emulator
+const EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST;
+const TEST_SKIP = EMULATOR_HOST
+  ? false
+  : 'Firestore-emulátor nélkül kihagyva (FIRESTORE_EMULATOR_HOST nincs beállítva)';
+// ⚠️ APP CHECK A CALLABLE-OKNÁL (mért viselkedés, 2026-09-25): a
+// `checkRegistrationEligibility` és a `checkDisplayNameAvailability` szerveroldalon
+// `runWith({enforceAppCheck: true})`, és a `firebase-functions` HTTP-rétege a
+// **hiányzó** App Check-tokent **emulátorban is** elutasítja:
+//   https.js: `if (tokenStatus.app === "MISSING" && options.enforceAppCheck)
+//              throw new HttpsError("unauthenticated", "Unauthenticated")`
+// → ez volt a 6 piros teszt 401-e (nem a mi kódunk, és nem is az Auth hiánya).
+// Az emulátor nem tud valódi App Check-tokent hitelesíteni, ezért a futtató
+// (tools/run-function-tests.mjs) a `skipTokenVerification` debug-szolgáltatással
+// indítja a functions runtime-ot, és ilyenkor egy aláíratlan (csak dekódolt)
+// tokent küldünk. Debug-mód nélkül ezek a tesztek NEM hazudnak zöldet: kihagyva
+// futnak, egyértelmű indokkal.
+const APP_CHECK_DEBUG = process.env.FIREBASE_DEBUG_MODE === 'true';
+const APP_CHECK_SKIP = TEST_SKIP
+  ? false
+  : APP_CHECK_DEBUG
+    ? false
+    : 'App Check-hez kötött callable — emulátorban FIREBASE_DEBUG_MODE=true kell '
+      + '(lásd tools/run-function-tests.mjs)';
+const APP_CHECK_TOKEN = APP_CHECK_DEBUG
+  ? [
+      Buffer.from(JSON.stringify({alg: 'none', typ: 'JWT'})).toString('base64url'),
+      Buffer.from(JSON.stringify({
+        sub: '1:1234567890:android:emulator',
+        exp: 4102444800,
+      })).toString('base64url'),
+      'c2ln',
+    ].join('.')
+  : '';
+const guardHook = (hook) => (fn, options) => (TEST_SKIP ? undefined : hook(fn, options));
+const before = guardHook(nodeTest.before);
+const beforeEach = guardHook(nodeTest.beforeEach);
+const after = guardHook(nodeTest.after);
+function test(name, options, fn) {
+  if (typeof options === 'function') {
+    return nodeTest.test(name, { skip: TEST_SKIP }, options);
+  }
+  return nodeTest.test(name, { ...options, skip: TEST_SKIP || options?.skip }, fn);
+}
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const {initializeApp} = require('firebase-admin/app');
@@ -28,9 +82,11 @@ async function auth(path, body) {
 }
 
 async function callable(name, data, token) {
+  const headers = token ? {authorization: `Bearer ${token}`} : {};
+  if (APP_CHECK_TOKEN) headers['X-Firebase-AppCheck'] = APP_CHECK_TOKEN;
   return post(`${functionsBase}/${name}`, {
     data,
-  }, token ? {authorization: `Bearer ${token}`} : {});
+  }, headers);
 }
 
 function markerId(email) {
@@ -70,7 +126,7 @@ test('új e-mailes regisztráció és megerősítetlen belépés', async () => {
   assert.equal(lookup.body.users[0].emailVerified, false);
 });
 
-test('regisztrációs jogosultság és megerősítőlevél-hívás', async () => {
+test('regisztrációs jogosultság és megerősítőlevél-hívás', {skip: APP_CHECK_SKIP}, async () => {
   const eligibility = await callable('checkRegistrationEligibility', {
     email: account.email,
   });
@@ -97,7 +153,7 @@ test('azonos UID névfoglalásának idempotens újrapróbálása', async () => {
   assert.equal(second.response.status, 200);
 });
 
-test('foglalt név Auth létrehozása előtt felismerhető, a foglalás pedig atomikus', async () => {
+test('foglalt név Auth létrehozása előtt felismerhető, a foglalás pedig atomikus', {skip: APP_CHECK_SKIP}, async () => {
   const name = `Reserved User ${Date.now()}`;
   const before = await callable('checkDisplayNameAvailability', {displayName: name});
   assert.equal(before.response.status, 200, JSON.stringify(before.body));
@@ -141,7 +197,7 @@ test('a friss, részleges fiók takarítási futás előtt megmarad', async () =
   assert.equal(current.body.users[0].localId, account.localId);
 });
 
-test('önkéntes és egyszerű admin törlés után az e-mail újraregisztrálható', async () => {
+test('önkéntes és egyszerű admin törlés után az e-mail újraregisztrálható', {skip: APP_CHECK_SKIP}, async () => {
   for (const reason of ['voluntary-deletion', 'administrator-deletion']) {
     const email = `${reason}-${Date.now()}@example.test`;
     await seedMarker(email, {
@@ -155,7 +211,7 @@ test('önkéntes és egyszerű admin törlés után az e-mail újraregisztrálha
   }
 });
 
-test('explicit admin és abuse tiltás blokkolja az újraregisztrációt', async () => {
+test('explicit admin és abuse tiltás blokkolja az újraregisztrációt', {skip: APP_CHECK_SKIP}, async () => {
   for (const [reason, source] of [['administrator-ban', 'admin'], ['abuse', 'abuse-system']]) {
     const email = `${reason}-${Date.now()}@example.test`;
     await seedMarker(email, {blocked: true, reason, source, deletionType: 'identity-ban'});
@@ -164,14 +220,14 @@ test('explicit admin és abuse tiltás blokkolja az újraregisztrációt', async
   }
 });
 
-test('felhasználók közötti blokkolás nem érinti a regisztrációt', async () => {
+test('felhasználók közötti blokkolás nem érinti a regisztrációt', {skip: APP_CHECK_SKIP}, async () => {
   const email = `user-block-${Date.now()}@example.test`;
   await seedMarker(email, {blocked: true, reason: 'user-block', source: 'community', deletionType: 'user-block'});
   const result = await callable('checkRegistrationEligibility', {email});
   assert.equal(result.response.status, 200);
 });
 
-test('legacy, ok nélküli törlési marker nem blokkol', async () => {
+test('legacy, ok nélküli törlési marker nem blokkol', {skip: APP_CHECK_SKIP}, async () => {
   const email = `legacy-${Date.now()}@example.test`;
   await seedMarker(email, {blocked: true, reason: 'administrator-deletion'});
   const result = await callable('checkRegistrationEligibility', {email});
