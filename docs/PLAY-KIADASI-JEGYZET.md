@@ -1,11 +1,13 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 361 megy fel** (versionCode **361**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> **Most a 362 megy fel** (versionCode **362**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-09-25): a **zárt teszt sávján a 360 fut** (`completed`, 100%), a **production sávon a 358**
-> (nyilvános, a 352–358 szöveggel), a `beta` sávon a 354. A 361 újdonsága: **HU/EN nyelvváltó a
-> főoldal jobb sarkában** — az app felülete (menük, gombok, üzenetek) angolul is elérhető, a magyar
-> marad az alapértelmezett, és a **Chat/felhasználói szöveg nem fordul**. A rövid (1.) blokk **csak a
-> 361 újdonságát** írja le, a nyilvános kiadáshoz pedig az **1b. blokk** való (**359–361 összesítő**).
+> (nyilvános, a 352–358 szöveggel), a `beta` sávon a 354. A 362 újdonsága: angol felületnél a
+> **legutóbbi cikkek is angolul** jelennek meg (a fordítást a szerver adja, a weboldalon nem látszik),
+> és **nyelvváltáskor a betöltött tartalom is frissül**. ⚠️ **A 361-et nem kell feltölteni** — az
+> ugyanazt tudja, mint a 362, csak a tartalom-nyelv nélkül (a 361 elkészült, de nem került fel).
+> A rövid (1.) blokk **csak a 362 újdonságát** írja le, a nyilvános kiadáshoz az **1b. blokk** való
+> (**359–362 összesítő**).
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -13,11 +15,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 361
+currentBuild: 362
 currentVersion: 1.0.0
 lastPublishedBuild: 355
-aab: build/HUHS-v1.0.0+361-release.aab
-sha256: 5B117577B4A7A5932DD06F2EC8ABF0BC1CE84EA241E30C7418A070E90A28E671
+aab: build/HUHS-v1.0.0+362-release.aab
+sha256: 40F488AB366D065F3E38B4FE8AF54B4D56022A9F7B5CD3B25BBA012150C9CF3F
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -186,17 +188,19 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó a főoldal jobb sarkában — az app felülete mostantól angolul is elérhető.
-- A magyar marad az alapértelmezett, a választás megjegyződik; a Chat és a felhasználók saját szövegei nem fordulnak le.
+- Angol felületnél a legutóbbi cikkek is angolul jelennek meg (a fordítást a szerver adja).
+- Nyelvváltáskor a betöltött tartalom is frissül, ezért nem marad más nyelvű lista a képernyőn.
+- ÚJ: HU/EN nyelvváltó a főoldal jobb sarkában — az app felülete angolul is elérhető, a magyar marad az alapértelmezett.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (359–361 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (359–362 összesítő)
 
-**Ezt használd, amikor a 361 a production sávra kerül.** A nyilvános felhasználók legutóbb a **358**-cal
-a **352–358** összesítőt kapták, ezért ők ezt a három újdonságot kapják:
+**Ezt használd, amikor a 362 a production sávra kerül.** A nyilvános felhasználók legutóbb a **358**-cal
+a **352–358** összesítőt kapták, ezért ők ezt a négy újdonságot kapják:
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó a főoldal jobb sarkában — az app felülete angolul is elérhető; a magyar marad az alapértelmezett.
+- Angol felületnél a legutóbbi cikkek is angolul jelennek meg.
 - ÚJ a Chatben: @mindenki — mindenki értesítést kap az üzenetről (csak admin/moderátor).
 - A Chat-értesítésre koppintva az app a mélyebben lévő, régebbi üzenetnél is pontosan a megjelölt üzenetre ugrik.
 ```
@@ -228,6 +232,13 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 362 — a cikkek angolul (a felület nyelve a tartalmat is átváltja)
+- **ÚJ:** angol felületnél a **legutóbbi cikkek is angolul** jelennek meg. A fordítást a **szerver** adja: a WordPress a cikk **rejtett meta** mezőjében tárolja az angol címet, kivonatot és törzset (a weboldalon **nem** látszik), az app pedig a kérésben elküldött `lang` paraméterrel kéri. **Mérve élesben:** `?lang=en` → **30/30 cikk angolul** (`has_en: true`), `?lang=hu` → **30/30 magyarul, változatlanul** (a plugin **2.11.0** kell hozzá — fent van).
+- **ÚJ: nyelvváltáskor a betöltött tartalom is frissül** — eddig csak a feliratok váltottak volna, a memóriában lévő lista a régi nyelven maradt volna. A mentett válasz (ETag-es cache) is **nyelvenként külön** tárolódik, ezért nem keveredhet a két nyelv. **Mérve:** a `lang` paramétert **mind a 13** tartalom-végpont elviseli (a státusz nyelvvel és nélküle ugyanaz), így semmi nem tud eltörni, és a plugin következő verziója (esemény/DJ/szervező/kiadvány) **app-frissítés nélkül** érvényesül.
+- **Amit ez a kiadás is tartalmaz (a 361-ből):** a **HU/EN nyelvváltó** a főoldal jobb sarkában a teljes felület angol szótárával (**589 egyedi szöveg**, 783 helyen), és a magyar fallback (ha nincs fordítás, a felirat magyar marad).
+- **Amit SZÁNDÉKOSAN nem fordítunk:** a **Chat üzenetei, a hozzászólások és a nevek** — a felhasználók saját szövege magyar marad.
+- **⚠️ ŐSZINTE KORLÁT:** az **események, DJ-k, szervezők és kiadványok** szövege **egyelőre magyar** — ezek angol mezőit a plugin **2.12.0** hozza (utána a meglévő tartalom fordítása következik); a 361-es csomagot **nem kell feltölteni**, mert ugyanazt tudja, mint a 362, csak a tartalom-nyelv nélkül.
 
 ### 361 — HU/EN nyelvváltó: az app felülete angolul is elérhető
 - **ÚJ (a tulajdonos kérése: „valahogy megkéne oldani az angol nyelvet az appban"):** a **főoldal jobb sarkában** megjelent a **HU/EN kapcsoló** — a felirat mindig a **másik** nyelv kódja (magyar módban „EN"). A váltás **azonnal** átrajzolja a felületet (a már megnyitott képernyőket is), és a választás **megjegyződik**: a következő indításnál is azon a nyelven indul, és a szótár már a `runApp` előtt betölt, ezért nincs „bevillanó" magyar felirat. A magyar marad az **alapértelmezett**, és minden ismeretlen/hibás mentett érték is magyarrá esik vissza.

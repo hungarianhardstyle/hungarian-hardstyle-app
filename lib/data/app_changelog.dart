@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 362,
+    changes: [
+      'Angol felületnél a legutóbbi cikkek is angolul jelennek meg — a fordítást a szerver adja.',
+      'Nyelvváltáskor a betöltött tartalom is frissül, ezért nem marad más nyelvű lista a képernyőn.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 361,
     changes: [
       'ÚJ: HU/EN nyelvváltó a főoldal jobb sarkában — az app felülete (menük, gombok, üzenetek) angolul is elérhető.',
