@@ -34,6 +34,11 @@ if ($mode === 'legacy-constant') {
 
 define('ABSPATH', __DIR__ . '/');
 
+// A WordPress idő-konstansai (a 2.13.0 sweep-je ezeket használja).
+defined('MINUTE_IN_SECONDS') || define('MINUTE_IN_SECONDS', 60);
+defined('HOUR_IN_SECONDS') || define('HOUR_IN_SECONDS', 3600);
+defined('DAY_IN_SECONDS') || define('DAY_IN_SECONDS', 86400);
+
 $STATE = array(
     'options' => array(),
     'meta' => array(),
@@ -43,6 +48,8 @@ $STATE = array(
     'scheduled' => array(),
     'posts' => array(),
     'supports' => array(),
+    'routes' => array(),
+    'capabilities' => array(),
 );
 
 class WP_Post
@@ -51,12 +58,45 @@ class WP_Post
     public $post_type;
     public $post_title;
     public $post_content;
+    public $post_excerpt = '';
+    public $post_status = 'publish';
 
     public function __construct($data)
     {
         foreach ($data as $key => $value) {
             $this->$key = $value;
         }
+    }
+}
+
+/** A REST-végpontok stubja: a `WP_REST_Server::CREATABLE` értékét használjuk. */
+class WP_REST_Server
+{
+    const CREATABLE = 'POST';
+}
+
+class WP_REST_Request
+{
+    private $params;
+
+    public function __construct($params = array())
+    {
+        $this->params = $params;
+    }
+
+    public function get_param($key)
+    {
+        return $this->params[$key] ?? null;
+    }
+}
+
+class WP_REST_Response
+{
+    public $data;
+
+    public function __construct($data = null, $status = 200)
+    {
+        $this->data = $data;
     }
 }
 
@@ -175,6 +215,103 @@ function update_post_meta($postId, $key, $value)
     return true;
 }
 
+function delete_post_meta($postId, $key)
+{
+    unset($GLOBALS['STATE']['meta'][$postId][$key]);
+    return true;
+}
+
+/**
+ * A `get_posts()` stubja — **csak azt a szűrést** valósítja meg, amit a pótló kör
+ * használ: típus + állapot + a `meta_query` NOT EXISTS / üres érték ága.
+ */
+function get_posts($args = array())
+{
+    $type = $args['post_type'] ?? 'post';
+    $status = $args['post_status'] ?? 'publish';
+    $limit = (int) ($args['posts_per_page'] ?? 5);
+    $idsOnly = ($args['fields'] ?? '') === 'ids';
+    $out = array();
+
+    foreach ($GLOBALS['STATE']['posts'] as $id => $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+        if ($post->post_type !== $type) {
+            continue;
+        }
+        if ($status !== 'any' && $post->post_status !== $status) {
+            continue;
+        }
+        if (!stub_meta_query_matches($id, $args['meta_query'] ?? array())) {
+            continue;
+        }
+        $out[] = $idsOnly ? $id : $post;
+        if ($limit > 0 && count($out) >= $limit) {
+            break;
+        }
+    }
+
+    return $out;
+}
+
+function stub_meta_query_matches($postId, $metaQuery)
+{
+    if (empty($metaQuery)) {
+        return true;
+    }
+
+    $relation = strtoupper((string) ($metaQuery['relation'] ?? 'AND'));
+    $results = array();
+
+    foreach ($metaQuery as $key => $clause) {
+        if ($key === 'relation' || !is_array($clause)) {
+            continue;
+        }
+        $value = $GLOBALS['STATE']['meta'][$postId][$clause['key']] ?? null;
+        $compare = strtoupper((string) ($clause['compare'] ?? '='));
+        if ($compare === 'NOT EXISTS') {
+            $results[] = $value === null;
+            continue;
+        }
+        $results[] = (string) $value === (string) ($clause['value'] ?? '');
+    }
+
+    if (empty($results)) {
+        return true;
+    }
+
+    return $relation === 'OR' ? in_array(true, $results, true) : !in_array(false, $results, true);
+}
+
+function absint($value)
+{
+    return abs((int) $value);
+}
+
+function register_rest_route($namespace, $route, $args = array())
+{
+    $GLOBALS['STATE']['routes'][] = array('namespace' => $namespace, 'route' => $route, 'args' => $args);
+    return true;
+}
+
+function current_user_can($capability, ...$args)
+{
+    $GLOBALS['STATE']['capabilities'][] = $capability;
+    return true;
+}
+
+function rest_ensure_response($response)
+{
+    return $response instanceof WP_REST_Response ? $response : new WP_REST_Response($response);
+}
+
+function wp_schedule_event($timestamp, $recurrence, $hook, $args = array())
+{
+    $GLOBALS['STATE']['scheduled'][] = array($hook, $args, $timestamp, $recurrence);
+    return true;
+}
+
 function current_time($type, $gmt = 0)
 {
     return gmdate('Y-m-d H:i:s');
@@ -233,6 +370,8 @@ function sanitize_key($value)
 
 require $pluginDir . '/includes/post-translation-meta.php';
 require $pluginDir . '/includes/translation-cron.php';
+require $pluginDir . '/includes/translation-places.php';
+require $pluginDir . '/includes/translation-sweep.php';
 
 /* ---- Segédek a méréshez -------------------------------------------------- */
 
@@ -268,6 +407,19 @@ function provider_response($payload, $code = 200)
         'body' => json_encode(array(
             'choices' => array(array('message' => array('content' => json_encode($payload)))),
         )),
+    );
+}
+
+/**
+ * Csak a FORDÍTÁS meta-kulcsai (a 2.13.0 belső jelzői — ujjlenyomat, hiba —
+ * szándékosan kimaradnak): a „nincs félkész fordítás" állítás erre szól.
+ */
+function translation_metas($postId)
+{
+    $meta = $GLOBALS['STATE']['meta'][$postId] ?? array();
+    return array_intersect_key(
+        $meta,
+        array_flip(array('_huhs_title_en', '_huhs_content_en', '_huhs_excerpt_en'))
     );
 }
 
@@ -418,8 +570,13 @@ $GLOBALS['STATE']['posts'][6] = new WP_Post(array(
     'post_content' => 'Leírás',
 ));
 $GLOBALS['STATE']['response'] = provider_response(array('title' => 'x'), 500);
-huhs_run_translation(6);
-check('HTTP 500 esetén NINCS meta-írás', count($GLOBALS['STATE']['meta']) === 0);
+$status500 = huhs_run_translation(6);
+check(
+    'HTTP 500 esetén NINCS fordítás-meta (csak a hibajelző), és a státusz `failed`',
+    count(translation_metas(6)) === 0 && $status500 === 'failed'
+        && ($GLOBALS['STATE']['meta'][6]['_huhs_translation_failed'] ?? '') !== '',
+    json_encode($GLOBALS['STATE']['meta'][6] ?? array()) . ' / ' . $status500
+);
 
 reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
 $GLOBALS['STATE']['posts'][7] = new WP_Post(array(
@@ -429,8 +586,11 @@ $GLOBALS['STATE']['posts'][7] = new WP_Post(array(
     'post_content' => 'Leírás',
 ));
 $GLOBALS['STATE']['response'] = array('code' => 200, 'body' => 'nem json');
-huhs_run_translation(7);
-check('értelmezhetetlen válaszból NINCS meta-írás (nincs félkész fordítás)', count($GLOBALS['STATE']['meta']) === 0);
+$statusBad = huhs_run_translation(7);
+check(
+    'értelmezhetetlen válaszból NINCS fordítás-meta (nincs félkész fordítás)',
+    count(translation_metas(7)) === 0 && $statusBad === 'failed'
+);
 
 reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
 $GLOBALS['STATE']['posts'][8] = new WP_Post(array(
@@ -517,6 +677,242 @@ check(
     'a támogatás a KÉSŐI init-en kapcsolódik (99)',
     count($initHooks) === 1 && $initHooks[0]['priority'] === 99,
     json_encode($initHooks)
+);
+
+/* ---- 7) A 2.13.0 hely-névtára (ország/város) ---------------------------- */
+
+reset_state();
+check(
+    'a magyar ág BÁJTRA ugyanaz (a névtár nem nyúl a magyar értékhez)',
+    huhs_translation_country_value('Magyarország', 'hu') === 'Magyarország'
+        && huhs_translation_city_value('Bécs', 'hu') === 'Bécs'
+);
+check(
+    'angol kérésre az ország angol neve megy ki',
+    huhs_translation_country_value('Magyarország', 'en') === 'Hungary'
+        && huhs_translation_country_value('ausztria', 'en') === 'Austria',
+    huhs_translation_country_value('Magyarország', 'en')
+);
+check(
+    'angol kérésre a város angol neve megy ki (Bécs → Vienna)',
+    huhs_translation_city_value('Bécs', 'en') === 'Vienna'
+        && huhs_translation_city_value('Budapest', 'en') === 'Budapest',
+    huhs_translation_city_value('Bécs', 'en')
+);
+check(
+    'ismeretlen névre NEM tippel (marad az eredeti)',
+    huhs_translation_country_value('Narnia', 'en') === 'Narnia'
+        && huhs_translation_city_value('Gárdony', 'en') === 'Gárdony'
+);
+check(
+    'a "Velence" csapda: a magyar város nem lesz Venice',
+    huhs_translation_city_value('Velence', 'en') === 'Velence'
+);
+check(
+    'üres értékre nem hív hibát és üres marad',
+    huhs_translation_country_value('', 'en') === '' && huhs_translation_country_value(null, 'en') === null
+);
+
+/* ---- 8) Az ujjlenyomat: ugyanarra a szövegre nem fordítunk kétszer ------ */
+
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+$GLOBALS['STATE']['posts'][11] = new WP_Post(array(
+    'ID' => 11,
+    'post_type' => 'huhs_event',
+    'post_title' => 'Esemény',
+    'post_content' => '<p>Leírás</p>',
+));
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'title' => 'Event',
+    'content' => '<p>Description</p>',
+    'excerpt' => 'Description',
+));
+$first = huhs_run_translation(11);
+$callsAfterFirst = count($GLOBALS['STATE']['http']);
+check(
+    'az első fordítás `translated`, és beírja az ujjlenyomatot',
+    $first === 'translated'
+        && huhs_translation_stored_hash(11) === huhs_translation_source_hash($GLOBALS['STATE']['posts'][11]),
+    $first
+);
+
+$second = huhs_run_translation(11);
+check(
+    'ugyanarra a magyar szövegre a második hívás `uptodate` — NINCS új API-hívás',
+    $second === 'uptodate' && count($GLOBALS['STATE']['http']) === $callsAfterFirst,
+    $second . ' / hívások: ' . count($GLOBALS['STATE']['http'])
+);
+
+$GLOBALS['STATE']['posts'][11]->post_content = '<p>Megváltozott leírás</p>';
+$GLOBALS['STATE']['response'] = provider_response(array('title' => 'Event', 'content' => '<p>Changed</p>'));
+$third = huhs_run_translation(11);
+check(
+    'megváltozott magyar szövegre ÚJRA fordít (a szerkesztés nem marad angol nélkül)',
+    $third === 'translated' && count($GLOBALS['STATE']['http']) === $callsAfterFirst + 1,
+    $third
+);
+
+$GLOBALS['STATE']['response'] = provider_response(array('title' => 'Event', 'content' => '', 'excerpt' => ''));
+$GLOBALS['STATE']['posts'][11]->post_content = '<p>Harmadik változat</p>';
+$partial = huhs_run_translation(11);
+check(
+    'fél válasz (nincs törzs) `partial`, és NEM jelöli késznek (a pótlás kijavítja)',
+    $partial === 'partial'
+        && huhs_translation_stored_hash(11) !== huhs_translation_source_hash($GLOBALS['STATE']['posts'][11])
+        && huhs_translation_failed_recently(11, huhs_translation_source_hash($GLOBALS['STATE']['posts'][11])) === true,
+    $partial
+);
+
+/* ---- 9) A pótló kör (sweep) -------------------------------------------- */
+
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+$GLOBALS['STATE']['posts'][21] = new WP_Post(array(
+    'ID' => 21, 'post_type' => 'huhs_artist', 'post_title' => 'DJ Egy', 'post_content' => '<p>Bemutatkozó</p>',
+    'post_status' => 'publish',
+));
+$GLOBALS['STATE']['posts'][22] = new WP_Post(array(
+    'ID' => 22, 'post_type' => 'huhs_artist', 'post_title' => 'DJ Kettő', 'post_content' => '',
+    'post_status' => 'publish',
+));
+$GLOBALS['STATE']['posts'][23] = new WP_Post(array(
+    'ID' => 23, 'post_type' => 'huhs_artist', 'post_title' => 'Piszkozat', 'post_content' => '<p>Vázlat</p>',
+    'post_status' => 'draft',
+));
+$GLOBALS['STATE']['posts'][24] = new WP_Post(array(
+    'ID' => 24, 'post_type' => 'huhs_event', 'post_title' => 'Esemény', 'post_content' => '<p>Leírás</p>',
+    'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][25] = array('_huhs_title_en' => 'Done', '_huhs_content_en' => 'Done body');
+$GLOBALS['STATE']['posts'][25] = new WP_Post(array(
+    'ID' => 25, 'post_type' => 'huhs_artist', 'post_title' => 'Kész', 'post_content' => '<p>Kész szöveg</p>',
+    'post_status' => 'publish',
+));
+
+$pendingArtists = huhs_translation_pending_posts('huhs_artist', 10);
+check(
+    'a várólistán csak a publikált, szöveges, angol NÉLKÜLI elem van',
+    count($pendingArtists) === 1 && $pendingArtists[0]->ID === 21,
+    implode(',', array_map(static function ($post) { return $post->ID; }, $pendingArtists))
+);
+check(
+    'az üres törzsű, a piszkozat és a már lefordított elem nem várólistás',
+    count(huhs_translation_pending_posts('huhs_artist', 10)) === 1
+);
+check(
+    'a "nincs kulcs" esetben a pótlás semmit nem tesz',
+    ($mode === 'legacy-constant')
+        ? true
+        : (reset_state() === null && huhs_translation_sweep(array('limit' => 5))['checked'] === 0)
+);
+if ($mode === 'legacy-constant') {
+    echo "  (a kulcs nélküli pótlás ebben a futásban szándékosan kimarad — a konstans kulcsot ad)\n";
+}
+
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+$GLOBALS['STATE']['scheduled'] = array();
+$GLOBALS['STATE']['posts'][21] = new WP_Post(array(
+    'ID' => 21, 'post_type' => 'huhs_artist', 'post_title' => 'DJ Egy', 'post_content' => '<p>Bemutatkozó</p>',
+    'post_status' => 'publish',
+));
+$GLOBALS['STATE']['posts'][24] = new WP_Post(array(
+    'ID' => 24, 'post_type' => 'huhs_event', 'post_title' => 'Esemény', 'post_content' => '<p>Leírás</p>',
+    'post_status' => 'publish',
+));
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'title' => 'Translated', 'content' => '<p>Translated body</p>', 'excerpt' => 'Translated',
+));
+
+// ⚠️ A költségvetést a várólista MEGLÉTEKOR kell mérni — különben a kapu
+// elvétele nem látszana (üres listán a kör úgyis nullát csinál). Ezt a saját
+// mutációs bizonyíték buktatta meg: az első változat a fordítás UTÁN mérte,
+// ezért „nem kapta el" eredményt adott.
+$sweepNoBudget = huhs_translation_sweep(array('limit' => 5, 'budget' => 0));
+check(
+    'a költségvetés (0 másodperc) leállítja a kört, mielőtt bármit fordítana',
+    $sweepNoBudget['checked'] === 0 && count($GLOBALS['STATE']['http']) === 0,
+    json_encode($sweepNoBudget['by_type'])
+);
+
+$sweep = huhs_translation_sweep(array('limit' => 5, 'budget' => 30));
+check(
+    'a pótlás mindkét típus hiányzó fordítását lefuttatja',
+    $sweep['enabled'] === true && $sweep['checked'] === 2 && $sweep['translated'] === 2 && $sweep['failed'] === 0,
+    json_encode($sweep['by_type'])
+);
+check(
+    'a pótlás után a várólista ürül (nincs több hiányzó angol)',
+    $sweep['pending']['huhs_artist'] === 0 && $sweep['pending']['huhs_event'] === 0,
+    json_encode($sweep['pending'])
+);
+check(
+    'a pótlás nem hoz létre felhasználói értesítést (nincs `save_post` hívás a körben)',
+    count($GLOBALS['STATE']['scheduled']) === 0
+);
+
+$sweepAgain = huhs_translation_sweep(array('limit' => 5, 'budget' => 30));
+check(
+    'a második pótlás már nem fordít semmit (nincs felesleges API-költés)',
+    $sweepAgain['translated'] === 0 && count($GLOBALS['STATE']['http']) === 2,
+    json_encode($sweepAgain['by_type'])
+);
+
+$sweepOneType = huhs_translation_sweep_types('huhs_event');
+check(
+    'egy típus kérhető, és az érvénytelen érték mindet jelenti',
+    $sweepOneType === array('huhs_event') && huhs_translation_sweep_types('nincs_ilyen') === huhs_translation_post_types()
+);
+
+/* ---- 10) A pótlás végpontjai és a cron -------------------------------- */
+
+reset_state();
+huhs_register_translation_sweep_api();
+$routes = array();
+foreach ($GLOBALS['STATE']['routes'] as $route) {
+    $routes[$route['route']] = $route['args'];
+}
+check(
+    'a `translations/status` (GET) és a `translations/sweep` (POST) végpont bejegyződik',
+    isset($routes['/translations/status'], $routes['/translations/sweep'])
+        && $routes['/translations/status']['methods'] === 'GET'
+        && $routes['/translations/sweep']['methods'] === WP_REST_Server::CREATABLE,
+    implode(', ', array_keys($routes))
+);
+
+$GLOBALS['STATE']['capabilities'] = array();
+$allowed = ($routes['/translations/sweep']['permission_callback'])();
+check(
+    'a pótlás végpontja `manage_options` jogosultságot kér',
+    $allowed === true && in_array('manage_options', $GLOBALS['STATE']['capabilities'], true),
+    implode(',', $GLOBALS['STATE']['capabilities'])
+);
+
+$sweepHooks = array_column($GLOBALS['STATE']['actions'], 'hook');
+check(
+    'a pótló kör saját cron-eseményre és az init-re is feliratkozik',
+    in_array('huhs_translation_sweep_event', $sweepHooks, true)
+        && in_array('init', $sweepHooks, true),
+    implode(',', $sweepHooks)
+);
+
+$GLOBALS['STATE']['scheduled'] = array();
+huhs_schedule_translation_sweep();
+$recurring = array_values(array_filter(
+    $GLOBALS['STATE']['scheduled'],
+    static function ($entry) {
+        return $entry[0] === 'huhs_translation_sweep_event';
+    }
+));
+check(
+    'a pótlás ÓRÁNKÉNT is ütemeződik (nem csak a mentésre vár)',
+    count($recurring) === 1 && $recurring[0][3] === 'hourly',
+    json_encode($recurring)
+);
+
+$statusData = huhs_translation_status_endpoint()->data;
+check(
+    'a status végpont megadja a típusokat és a várólistát (kulcs nélkül is)',
+    isset($statusData['pending']['huhs_release']) && count($statusData['types']) === 5,
+    json_encode($statusData['pending'])
 );
 
 echo "\n{$checks} ellenőrzés, {$failures} hiba\n";

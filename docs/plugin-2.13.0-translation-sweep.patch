@@ -1,0 +1,850 @@
+diff --git a/huhs-mobile-api/huhs-mobile-api.php b/huhs-mobile-api/huhs-mobile-api.php
+index ab0d2854..affd455e 100644
+--- a/huhs-mobile-api/huhs-mobile-api.php
++++ b/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.12.0
++ * Version: 2.13.0
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.12.0');
++define('HUHS_API_VERSION', '2.13.0');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+@@ -68,6 +68,12 @@ require_once HUHS_API_PATH . 'includes/post-translation-meta.php';
+ // Automatikus fordítás új tartalomnál (WP-cron, plugin 2.12.0). API-kulcs
+ // nélkül szándékosan nem csinál semmit: nem hív külső szolgáltatást.
+ require_once HUHS_API_PATH . 'includes/translation-cron.php';
++// Ország-/helységnevek angolul (determinisztikus névtár — nincs API-hívás).
++require_once HUHS_API_PATH . 'includes/translation-places.php';
++// A hiányzó fordítások pótlása óránként (plugin 2.13.0) + admin végpontok.
++// Ez teszi teljessé az automatikát: a plugin előtt létrejött tartalom is
++// magától angolul jelenik meg, a tulajdonos nem nyúl semmihez.
++require_once HUHS_API_PATH . 'includes/translation-sweep.php';
+ require_once HUHS_API_PATH . 'includes/meta-boxes.php';
+ require_once HUHS_API_PATH . 'includes/meta-save.php';
+ require_once HUHS_API_PATH . 'includes/editor.php';
+diff --git a/huhs-mobile-api/includes/api-artists.php b/huhs-mobile-api/includes/api-artists.php
+index d27eb587..e466199a 100644
+--- a/huhs-mobile-api/includes/api-artists.php
++++ b/huhs-mobile-api/includes/api-artists.php
+@@ -506,8 +506,10 @@ function huhs_build_artist_response($artist, $include_events = false, $lang = 'h
+             ? huhs_make_excerpt($translation['excerpt'], 30)
+             : huhs_make_excerpt($translation['content'], 30),
+         'real_name'      => get_post_meta($artist_id, 'real_name', true),
+-        'country'        => get_post_meta($artist_id, 'country', true),
+-        'city'           => get_post_meta($artist_id, 'city', true),
++        // ⚠️ 2.13.0: az ország/város név — determinisztikus névtár fordítja
++        // (`translation-places.php`), nem az AI. A magyar ág változatlan.
++        'country'        => huhs_translation_country_value(get_post_meta($artist_id, 'country', true), $lang),
++        'city'           => huhs_translation_city_value(get_post_meta($artist_id, 'city', true), $lang),
+         'genres'         => $genres,
+         'categories'     => $categories,
+         'logo'           => $logo ?: '',
+@@ -531,13 +533,13 @@ function huhs_build_artist_response($artist, $include_events = false, $lang = 'h
+     );
+ 
+     if ($include_events) {
+-        $data['upcoming_events'] = huhs_get_artist_upcoming_events($artist_id);
++        $data['upcoming_events'] = huhs_get_artist_upcoming_events($artist_id, $lang);
+     }
+ 
+     return $data;
+ }
+ 
+-function huhs_get_artist_upcoming_events($artist_id)
++function huhs_get_artist_upcoming_events($artist_id, $lang = 'hu')
+ {
+     $events = get_posts(array(
+         'post_type'      => 'huhs_event',
+diff --git a/huhs-mobile-api/includes/api-events.php b/huhs-mobile-api/includes/api-events.php
+index c414a4ea..38be7674 100644
+--- a/huhs-mobile-api/includes/api-events.php
++++ b/huhs-mobile-api/includes/api-events.php
+@@ -156,6 +156,12 @@ function huhs_build_event_response($event, $lang = 'hu')
+         : explode(',', (string) $genre_value);
+     $genres = array_values(array_unique(array_filter(array_map('trim', $genres))));
+ 
++    // ⚠️ 2.13.0: a helyszín országa/városa **név**, nem prózai szöveg, ezért nem
++    // az AI fordítja, hanem a determinisztikus névtár (`translation-places.php`).
++    // A magyar ág bájtazonos: a függvények `hu`-ra az eredeti értéket adják.
++    $venue_city = huhs_translation_city_value(get_post_meta($event->ID, 'venue_city', true), $lang);
++    $venue_country = huhs_translation_country_value(get_post_meta($event->ID, 'venue_country', true), $lang);
++
+     $google_maps = get_post_meta($event->ID, 'google_maps', true);
+     if (!$google_maps) {
+         $google_maps = huhs_event_maps_url(array(
+@@ -177,10 +183,10 @@ function huhs_build_event_response($event, $lang = 'hu')
+         'end_date'           => get_post_meta($event->ID, 'event_end_date', true),
+         'end_time'           => get_post_meta($event->ID, 'event_end_time', true),
+         'venue_name'         => get_post_meta($event->ID, 'venue_name', true),
+-        'venue_city'         => get_post_meta($event->ID, 'venue_city', true),
++        'venue_city'         => $venue_city,
+         'venue_zip'          => get_post_meta($event->ID, 'venue_zip', true),
+         'venue_address'      => get_post_meta($event->ID, 'venue_address', true),
+-        'venue_country'      => get_post_meta($event->ID, 'venue_country', true),
++        'venue_country'      => $venue_country,
+         'google_maps'        => $google_maps,
+         'facebook_event_url' => get_post_meta($event->ID, 'facebook_event_url', true),
+         'genres'             => $genres,
+diff --git a/huhs-mobile-api/includes/api-organizers.php b/huhs-mobile-api/includes/api-organizers.php
+index 3be0fa5c..d1c22990 100644
+--- a/huhs-mobile-api/includes/api-organizers.php
++++ b/huhs-mobile-api/includes/api-organizers.php
+@@ -139,8 +139,10 @@ function huhs_build_organizer_response($organizer, $include_events = false, $lan
+         'excerpt'        => $translation['excerpt'] !== ''
+             ? huhs_make_excerpt($translation['excerpt'], 30)
+             : huhs_make_excerpt($translation['content'], 30),
+-        'city'           => get_post_meta($organizer_id, 'city', true),
+-        'country'        => get_post_meta($organizer_id, 'country', true),
++        // ⚠️ 2.13.0: az ország/város név — determinisztikus névtár fordítja
++        // (`translation-places.php`), nem az AI. A magyar ág változatlan.
++        'city'           => huhs_translation_city_value(get_post_meta($organizer_id, 'city', true), $lang),
++        'country'        => huhs_translation_country_value(get_post_meta($organizer_id, 'country', true), $lang),
+         'genres'         => $genres,
+         'logo'           => $logo ?: '',
+         'featured_image' => $featured_image ?: '',
+@@ -156,13 +158,13 @@ function huhs_build_organizer_response($organizer, $include_events = false, $lan
+     );
+ 
+     if ($include_events) {
+-        $data['upcoming_events'] = huhs_get_organizer_upcoming_events($organizer_id);
++        $data['upcoming_events'] = huhs_get_organizer_upcoming_events($organizer_id, $lang);
+     }
+ 
+     return $data;
+ }
+ 
+-function huhs_get_organizer_upcoming_events($organizer_id)
++function huhs_get_organizer_upcoming_events($organizer_id, $lang = 'hu')
+ {
+     $events = get_posts(array(
+         'post_type'      => 'huhs_event',
+@@ -191,5 +193,14 @@ function huhs_get_organizer_upcoming_events($organizer_id)
+         ),
+     ));
+ 
+-    return array_map('huhs_build_event_response', $events);
++    // ⚠️ 2.13.0: a nyelvet **át kell adni** — az `array_map('huhs_build_event_response', …)`
++    // csak egy argumentumot ad, ezért a `$lang` a függvény alapértékére (`hu`)
++    // esett vissza, és a szervező adatlapján a közelgő események angol módban is
++    // magyarul jelentek meg (mért hiba).
++    return array_map(
++        static function ($event) use ($lang) {
++            return huhs_build_event_response($event, $lang);
++        },
++        $events
++    );
+ }
+diff --git a/huhs-mobile-api/includes/translation-cron.php b/huhs-mobile-api/includes/translation-cron.php
+index 860296ca..7ce19ab8 100644
+--- a/huhs-mobile-api/includes/translation-cron.php
++++ b/huhs-mobile-api/includes/translation-cron.php
+@@ -37,6 +37,11 @@ if (!defined('ABSPATH')) {
+ | A fordítás **soha** nem blokkolhatja a publikálást: minden hálózati hívás
+ | `wp_remote_post` időkorláttal, a hibák pedig csendben (legfeljebb egy
+ | figyelmeztetéssel) elnyelődnek — a cikk attól még megjelenik.
++|
++| ⚠️ 2.13.0: a mentés-ág megkapja az **ujjlenyomat-ellenőrzést** (ugyanarra a
++| magyar szövegre nem fordítunk kétszer), a hiányzó fordításokat pedig az
++| `includes/translation-sweep.php` pótolja óránként — a plugin előtt létrejött
++| tartalom is magától angolul jelenik meg.
+ */
+ 
+ add_action('save_post', 'huhs_schedule_translation_on_publish', 20, 3);
+@@ -76,6 +81,14 @@ function huhs_schedule_translation_on_publish($post_id, $post = null, $update =
+         return;
+     }
+ 
++    // ⚠️ 2.13.0: ha EBBEN a szövegben már megvan az angol fordítás (ujjlenyomat
++    // egyezik), nem ütemezünk — egy díszítő mentés így nem költ API-hívást, és a
++    // kézzel javított angol szöveget sem írja felül a semmiért.
++    if (function_exists('huhs_translation_is_current')
++        && huhs_translation_is_current($post_id, huhs_translation_source_hash($post))) {
++        return;
++    }
++
+     // Kis késleltetés: a mentés befejeződjön, mielőtt a cron dolgozik.
+     wp_schedule_single_event(time() + 60, 'huhs_translate_post', array($post_id));
+ }
+@@ -161,23 +174,42 @@ function huhs_translation_provider()
+  *
+  * A magyar szövegeket a bejegyzésből olvassuk, a választ pedig a fordítási
+  * metába írjuk. Ha bármi hiányzik (kulcs, szöveg, érvényes válasz), a
+- * metához **nem nyúlunk** — így a magyar válasz marad az appnak.
++ * fordítási metához **nem nyúlunk** — így a magyar válasz marad az appnak.
++ *
++ * ⚠️ 2.13.0: a függvény **státuszt ad vissza** (a pótló kör ebből számol), és
++ * két belső meta jelet vezet:
++ *   * `_huhs_translation_hash`        — erre a magyar szövegre készült a fordítás;
++ *   * `_huhs_translation_failed[_at]` — ez a szöveg nemrég hibázott (ne pörögjön).
++ *
++ * @return string 'disabled' | 'invalid' | 'empty' | 'uptodate' | 'failed' | 'partial' | 'translated'
+  */
+ function huhs_run_translation($post_id)
+ {
+     if (!huhs_translation_enabled()) {
+-        return;
++        return 'disabled';
+     }
+ 
+     $post = get_post($post_id);
+     if (!$post instanceof WP_Post || !in_array($post->post_type, huhs_translation_post_types(), true)) {
+-        return;
++        return 'invalid';
+     }
+ 
+     $title = trim((string) $post->post_title);
+     $content = trim((string) $post->post_content);
+     if ($title === '' || $content === '') {
+-        return;
++        return 'empty';
++    }
++
++    $hash = huhs_translation_source_hash($post);
++
++    // Erre a szövegre már megvan a fordítás — nincs mit tenni.
++    if (huhs_translation_is_current($post_id, $hash)) {
++        return 'uptodate';
++    }
++
++    // Ugyanez a szöveg nemrég hibázott: a késleltetésig nem próbáljuk újra.
++    if (huhs_translation_failed_recently($post_id, $hash)) {
++        return 'failed';
+     }
+ 
+     $response = huhs_translation_request(array(
+@@ -186,7 +218,15 @@ function huhs_run_translation($post_id)
+     ));
+ 
+     if ($response === null) {
+-        return;
++        huhs_translation_mark_failed($post_id, $hash);
++        return 'failed';
++    }
++
++    // ⚠️ Teljesen üres válasz (pl. értelmezhetetlen JSON) = hiba, nem „részleges":
++    // így a pótló kör is hibaként számol vele, és a napló nem hígul.
++    if ($response['title'] === '' && $response['content'] === '' && $response['excerpt'] === '') {
++        huhs_translation_mark_failed($post_id, $hash);
++        return 'failed';
+     }
+ 
+     if ($response['title'] !== '') {
+@@ -198,6 +238,24 @@ function huhs_run_translation($post_id)
+     if ($response['excerpt'] !== '') {
+         update_post_meta($post_id, '_huhs_excerpt_en', $response['excerpt']);
+     }
++
++    // ⚠️ „Kész" csak akkor, ha **ez a válasz** adta mindkettőt (cím ÉS törzs) —
++    // ugyanaz a kapu, mint a kiolvasóé. A MEGLÉVŐ metát nem szabad nézni: egy
++    // megváltozott magyar szövegnél a régi angol még ott van, és attól még nem
++    // „kész" az új fordítás. (Mérve: a régi metára épített ellenőrzés a fél
++    // választ `translated`-nek hazudta, és az elavult angolt jelölte késznek.)
++    $done = $response['title'] !== '' && $response['content'] !== '';
++
++    if (!$done) {
++        huhs_translation_mark_failed($post_id, $hash);
++        return 'partial';
++    }
++
++    update_post_meta($post_id, HUHS_TRANSLATION_HASH_META, $hash);
++    delete_post_meta($post_id, HUHS_TRANSLATION_FAILED_META);
++    delete_post_meta($post_id, HUHS_TRANSLATION_FAILED_AT_META);
++
++    return 'translated';
+ }
+ 
+ /**
+diff --git a/huhs-mobile-api/includes/translation-places.php b/huhs-mobile-api/includes/translation-places.php
+new file mode 100644
+index 00000000..ba75f371
+--- /dev/null
++++ b/huhs-mobile-api/includes/translation-places.php
+@@ -0,0 +1,207 @@
++<?php
++
++if (!defined('ABSPATH')) {
++    exit;
++}
++
++/*
++|--------------------------------------------------------------------------
++| Ország- és helységnevek angolul — plugin 2.13.0
++|--------------------------------------------------------------------------
++|
++| MIÉRT KELL (mérve, 2026-09-25): az app `lang=en` kérése eddig a fordítási
++| metákat adta vissza (cím, törzs, kivonat), a **meta-mezők** viszont
++| változatlanul magyarul mentek ki. A mérés szerint angol módban ez volt a
++| legláthatóbb magyar szöveg a DJ-/szervező-/esemény-adatlapon:
++|
++|   country / venue_country = "Magyarország"   (17 DJ, 4 szervező, minden esemény)
++|   city  = "Bécs"
++|
++| Ezek **nem prózai szövegek**, hanem nevek, ezért nem a fordítási folyamat
++| (AI) dolgozik rajtuk: egy **determinisztikus névtár** fordítja őket. Ez
++| előny: nincs API-hívás, nincs késleltetés, és a válasz mindig ugyanaz.
++|
++| ⚠️ AMIT SZÁNDÉKOSAN NEM FORDÍTUNK:
++|  * a **helyszín neve** (`venue_name`) tulajdonnév ("Stenk", "SPOTx Club",
++|    "Surfcamping - Gárdony") — nem szabad fordítani;
++|  * az ismeretlen ország/helység érték **változatlanul** megy ki (nincs
++|    tippelés): a névtár csak a biztos neveket tartalmazza;
++|  * a magyar ág (`lang=hu`) **bájtazonos** marad a 2.12.0-éval (a függvény a
++|    nem-angol kérésre az eredeti értéket adja vissza, átalakítás nélkül).
++|
++| ⚠️ A "Velence" CSAPDA (ezért nincs a helység-névtárban): a Velence olasz
++| város angolul Venice, DE a magyar Velence (a Velencei-tó melletti város,
++| ahol a Hard Lake események vannak) ugyanígy "Velence" — egy vak névtár a
++| magyar esemény helyszínét fordítaná félre. Ezért a helység-lista csak
++| **egyértelmű** magyar exonimákat tartalmaz.
++*/
++
++/**
++ * Magyar országnév → angol név.
++ *
++ * A kulcs **kisbetűs, ékezet-megtartó** alak (a `huhs_translation_place_key()`
++ * így normalizál); az érték a bevett angol név.
++ */
++function huhs_translation_country_names()
++{
++    return array(
++        'magyarország' => 'Hungary',
++        'ausztria' => 'Austria',
++        'németország' => 'Germany',
++        'hollandia' => 'Netherlands',
++        'belgium' => 'Belgium',
++        'franciaország' => 'France',
++        'olaszország' => 'Italy',
++        'spanyolország' => 'Spain',
++        'portugália' => 'Portugal',
++        'egyesült királyság' => 'United Kingdom',
++        'nagy-britannia' => 'United Kingdom',
++        'írország' => 'Ireland',
++        'svájc' => 'Switzerland',
++        'ausztrália' => 'Australia',
++        'lengyelország' => 'Poland',
++        'csehország' => 'Czechia',
++        'szlovákia' => 'Slovakia',
++        'szlovénia' => 'Slovenia',
++        'horvátország' => 'Croatia',
++        'szerbia' => 'Serbia',
++        'románia' => 'Romania',
++        'bulgária' => 'Bulgaria',
++        'görögország' => 'Greece',
++        'törökország' => 'Turkey',
++        'svédország' => 'Sweden',
++        'norvégia' => 'Norway',
++        'dánia' => 'Denmark',
++        'finnország' => 'Finland',
++        'izland' => 'Iceland',
++        'észtország' => 'Estonia',
++        'lettország' => 'Latvia',
++        'litvánia' => 'Lithuania',
++        'oroszország' => 'Russia',
++        'ukrajna' => 'Ukraine',
++        'luxemburg' => 'Luxembourg',
++        'málta' => 'Malta',
++        'ciprus' => 'Cyprus',
++        'egyesült államok' => 'United States',
++        'amerikai egyesült államok' => 'United States',
++        'usa' => 'United States',
++        'kanada' => 'Canada',
++        'mexikó' => 'Mexico',
++        'brazília' => 'Brazil',
++        'argentína' => 'Argentina',
++        'új-zéland' => 'New Zealand',
++        'japán' => 'Japan',
++        'dél-korea' => 'South Korea',
++        'kína' => 'China',
++        'thaiföld' => 'Thailand',
++        'indonézia' => 'Indonesia',
++        'india' => 'India',
++        'izrael' => 'Israel',
++        'egyiptom' => 'Egypt',
++        'marokkó' => 'Morocco',
++        'tunézia' => 'Tunisia',
++        'dél-afrikai köztársaság' => 'South Africa',
++        'szingapúr' => 'Singapore',
++        'malajzia' => 'Malaysia',
++        'egyesült arab emírségek' => 'United Arab Emirates',
++        'szaúd-arábia' => 'Saudi Arabia',
++        'katar' => 'Qatar',
++    );
++}
++
++/**
++ * Magyar helységnév → angol név — **csak egyértelmű exonimák**.
++ *
++ * A lista szándékosan rövid: ami kétértelmű lehet (lásd a "Velence" csapdát a
++ * fájl fejlécében), az **nincs** benne, mert ott a félrefordítás rosszabb, mint
++ * a magyar név meghagyása.
++ */
++function huhs_translation_city_names()
++{
++    return array(
++        'bécs' => 'Vienna',
++        'prága' => 'Prague',
++        'varsó' => 'Warsaw',
++        'krakkó' => 'Krakow',
++        'koppenhága' => 'Copenhagen',
++        'brüsszel' => 'Brussels',
++        'antwerpen' => 'Antwerp',
++        'róma' => 'Rome',
++        'nápoly' => 'Naples',
++        'milánó' => 'Milan',
++        'lisszabon' => 'Lisbon',
++        'kijev' => 'Kyiv',
++        'moszkva' => 'Moscow',
++        'szentpétervár' => 'Saint Petersburg',
++        'bukarest' => 'Bucharest',
++        'belgrád' => 'Belgrade',
++        'zágráb' => 'Zagreb',
++        'pozsony' => 'Bratislava',
++        'kassa' => 'Košice',
++        'kolozsvár' => 'Cluj-Napoca',
++        'újvidék' => 'Novi Sad',
++        'athén' => 'Athens',
++        'isztambul' => 'Istanbul',
++        'köln' => 'Cologne',
++        'münchen' => 'Munich',
++        'bázel' => 'Basel',
++        'genf' => 'Geneva',
++        'hága' => 'The Hague',
++    );
++}
++
++/**
++ * A névtár kulcsa: kisbetűs, ékezet-megtartó, összevont whitespace.
++ *
++ * ⚠️ Az ékezetet **megtartjuk** (nem `sanitize_title`-szerűen dobjuk el): a
++ * "Bécs" és a "Becs" így nem keveredik, és a névtár kulcsai olvashatók maradnak.
++ */
++function huhs_translation_place_key($value)
++{
++    $raw = trim((string) $value);
++    $raw = preg_replace('/\s+/u', ' ', $raw);
++    if (function_exists('mb_strtolower')) {
++        return mb_strtolower($raw, 'UTF-8');
++    }
++    return strtolower($raw);
++}
++
++/**
++ * Az ország angol neve a kért nyelven.
++ *
++ * Nem-angol kérésre az **eredeti értéket** adja vissza (a magyar ág így
++ * bájtazonos marad), és ismeretlen névre sem tippel: ilyenkor szintén az
++ * eredeti érték megy ki.
++ */
++function huhs_translation_country_value($value, $lang)
++{
++    if ($lang !== 'en') {
++        return $value;
++    }
++
++    $key = huhs_translation_place_key($value);
++    if ($key === '') {
++        return $value;
++    }
++
++    $names = huhs_translation_country_names();
++
++    return isset($names[$key]) ? $names[$key] : $value;
++}
++
++/** A helységnév angol neve — ugyanazzal a szabállyal, mint az országnál. */
++function huhs_translation_city_value($value, $lang)
++{
++    if ($lang !== 'en') {
++        return $value;
++    }
++
++    $key = huhs_translation_place_key($value);
++    if ($key === '') {
++        return $value;
++    }
++
++    $names = huhs_translation_city_names();
++
++    return isset($names[$key]) ? $names[$key] : $value;
++}
+diff --git a/huhs-mobile-api/includes/translation-sweep.php b/huhs-mobile-api/includes/translation-sweep.php
+new file mode 100644
+index 00000000..197fdb0b
+--- /dev/null
++++ b/huhs-mobile-api/includes/translation-sweep.php
+@@ -0,0 +1,364 @@
++<?php
++
++if (!defined('ABSPATH')) {
++    exit;
++}
++
++/*
++|--------------------------------------------------------------------------
++| Önjavító fordítás-pótlás (sweep) — plugin 2.13.0
++|--------------------------------------------------------------------------
++|
++| MIÉRT KELL (mérve, 2026-09-25): a 2.12.0 automatikus fordítása a **mentésre**
++| épül (`save_post` → WP-cron). Ez két esetben nem elég:
++|
++|  1. a plugin előtt létrejött tartalom (mérve: 6 régi esemény és a régebbi
++|     cikkek angol nélkül maradtak — a mentésük már megtörtént, mielőtt a
++|     fordítás létezett);
++|  2. ha egy mentés idején a szolgáltató hibázott (nincs újrapróbálkozás).
++|
++| Erre való ez a fájl: **óránként** végigmegy a publikált tartalmakon, és amelyik
++| elemen van magyar szöveg, de nincs angol fordítás, azt lefordítja. Így a
++| hiányzó angol **magától** pótlódik, a tulajdonos nem nyúl semmihez.
++|
++| ⚠️ NEM NYÚL A MEGLÉVŐ FORDÍTÁSHOZ. A pótlás csak azt az elemet fordítja,
++| amelyiken **nincs** `_huhs_content_en`. A magyar szöveg **megváltozását** a
++| mentés (`save_post`) kezeli — ott a `_huhs_translation_hash` dönti el, hogy
++| kell-e újra fordítani.
++|
++| ⚠️ A KÖLTSÉG KORLÁTOZVA: futásonként típusonként legfeljebb `limit` elem, és
++| legfeljebb `budget` másodperc (a WP-cron egy látogató kérésében fut!). A
++| tartós hibát a `_huhs_translation_failed` + `_huhs_translation_failed_at`
++| jegyzi, és csak késleltetés után próbálja újra (nem pörög végtelenül).
++|
++| ⚠️ NINCS MELLÉKHATÁS: a pótlás közvetlenül a fordítást hívja (meta-írás), nem
++| `wp_update_post`-ot — ezért nem indul tőle értesítés (push), és a
++| `save_post`-lánc sem fut le. Ez szándékos: a pótlás nem hozhat létre
++| felhasználói értesítést.
++*/
++
++const HUHS_TRANSLATION_HASH_META = '_huhs_translation_hash';
++const HUHS_TRANSLATION_FAILED_META = '_huhs_translation_failed';
++const HUHS_TRANSLATION_FAILED_AT_META = '_huhs_translation_failed_at';
++
++/**
++ * A magyar forrás ujjlenyomata (cím + törzs).
++ *
++ * Ebből dől el, hogy a meglévő angol **erre a szövegre** készült-e. A `md5`
++ * elég: nem biztonsági, hanem változás-követési célra van.
++ */
++function huhs_translation_source_hash($post)
++{
++    $title = trim((string) $post->post_title);
++    $content = trim((string) $post->post_content);
++
++    return md5($title . "\n" . $content);
++}
++
++/** Az utoljára fordított forrás ujjlenyomata (ha volt ilyen). */
++function huhs_translation_stored_hash($post_id)
++{
++    return (string) get_post_meta($post_id, HUHS_TRANSLATION_HASH_META, true);
++}
++
++/**
++ * A meglevő angol fordítás **erre a magyar szövegre** készült-e?
++ *
++ * Csak akkor igaz, ha az ujjlenyomat egyezik ÉS a fordítás érdemi része
++ * (cím+törzs) megvan — vagyis ugyanaz a kapu, amit a kiolvasó is használ.
++ */
++function huhs_translation_is_current($post_id, $hash)
++{
++    if ($hash === '' || huhs_translation_stored_hash($post_id) !== $hash) {
++        return false;
++    }
++
++    return trim((string) get_post_meta($post_id, '_huhs_title_en', true)) !== ''
++        && trim((string) get_post_meta($post_id, '_huhs_content_en', true)) !== '';
++}
++
++/**
++ * Ezt a pontos szöveget mostanában már megpróbáltuk és hibázott?
++ *
++ * A késleltetés (`huhs_translation_retry_delay`, alap 6 óra) azért kell, mert
++ * egy átmeneti szolgáltató-hiba nem jelölheti meg az elemet örökre.
++ */
++function huhs_translation_failed_recently($post_id, $hash)
++{
++    if ($hash === '' || (string) get_post_meta($post_id, HUHS_TRANSLATION_FAILED_META, true) !== $hash) {
++        return false;
++    }
++
++    $at = (int) get_post_meta($post_id, HUHS_TRANSLATION_FAILED_AT_META, true);
++    if ($at <= 0) {
++        return false;
++    }
++
++    $delay = (int) apply_filters('huhs_translation_retry_delay', 6 * HOUR_IN_SECONDS);
++
++    return (time() - $at) < max(60, $delay);
++}
++
++/** A tartós hiba jelölése (ujjlenyomat + időpont). */
++function huhs_translation_mark_failed($post_id, $hash)
++{
++    update_post_meta($post_id, HUHS_TRANSLATION_FAILED_META, (string) $hash);
++    update_post_meta($post_id, HUHS_TRANSLATION_FAILED_AT_META, time());
++}
++
++/**
++ * A fordításra váró elemek egy típusból (WP_Query szinten szűrve).
++ *
++ * A szűrő a `_huhs_content_en` **hiányára** szól, ezért a lista a pótlás
++ * előrehaladtával magától ürül — nincs szükség "kurzor" állapotra.
++ *
++ * @return WP_Post[]
++ */
++function huhs_translation_pending_posts($post_type, $limit = 5)
++{
++    if (!in_array($post_type, huhs_translation_post_types(), true)) {
++        return array();
++    }
++
++    $posts = get_posts(array(
++        'post_type' => $post_type,
++        'post_status' => 'publish',
++        'posts_per_page' => max(1, (int) $limit),
++        'orderby' => 'ID',
++        'order' => 'ASC',
++        'suppress_filters' => false,
++        'meta_query' => array(
++            'relation' => 'OR',
++            array(
++                'key' => '_huhs_content_en',
++                'compare' => 'NOT EXISTS',
++            ),
++            array(
++                'key' => '_huhs_content_en',
++                'value' => '',
++                'compare' => '=',
++            ),
++        ),
++    ));
++
++    $pending = array();
++    foreach ($posts as $post) {
++        if (!$post instanceof WP_Post) {
++            continue;
++        }
++        // Üres magyar törzsnél nincs mit fordítani (és a folyamat sem tudna mit
++        // kezdeni vele) — az ilyen elem nem tartozik a várólistára.
++        if (trim((string) $post->post_content) === '' || trim((string) $post->post_title) === '') {
++            continue;
++        }
++        // Tartós hiba: ne próbáljuk minden körben újra.
++        if (huhs_translation_failed_recently($post->ID, huhs_translation_source_hash($post))) {
++            continue;
++        }
++        $pending[] = $post;
++    }
++
++    return $pending;
++}
++
++/** Hány elem vár fordításra típusonként (a `status` végpontnak). */
++function huhs_translation_pending_counts($limit_per_type = 200)
++{
++    $counts = array();
++    foreach (huhs_translation_post_types() as $post_type) {
++        $counts[$post_type] = count(huhs_translation_pending_posts($post_type, $limit_per_type));
++    }
++
++    return $counts;
++}
++
++/**
++ * A pótlás lefuttatása — a WP-cron (óránként) és a REST-végpont is ezt hívja.
++ *
++ * @param array $args {
++ *     @type string|array $type   Egy típus, típuslista, vagy üres = mind.
++ *     @type int          $limit  Típusonkénti felső korlát (alap 5, max 20).
++ *     @type int          $budget Másodpercben mért keret (alap 20, max 60).
++ * }
++ * @return array{enabled: bool, checked: int, translated: int, failed: int, skipped: int, by_type: array, pending: array}
++ */
++function huhs_translation_sweep($args = array())
++{
++    $types = huhs_translation_sweep_types($args['type'] ?? '');
++    $limit = (int) ($args['limit'] ?? 5);
++    $limit = max(1, min(20, $limit));
++    $budget = (int) ($args['budget'] ?? 20);
++    $budget = max(0, min(60, $budget));
++
++    $result = array(
++        'enabled' => huhs_translation_enabled(),
++        'checked' => 0,
++        'translated' => 0,
++        'failed' => 0,
++        'skipped' => 0,
++        'by_type' => array(),
++        'pending' => array(),
++    );
++
++    // Kulcs nélkül a pótlás sem indul (mint a mentés-ágon): nincs hívás, nincs írás.
++    if (!$result['enabled']) {
++        return $result;
++    }
++
++    $deadline = time() + $budget;
++
++    foreach ($types as $post_type) {
++        $type_stats = array('checked' => 0, 'translated' => 0, 'failed' => 0, 'skipped' => 0);
++
++        if (time() >= $deadline) {
++            $result['by_type'][$post_type] = $type_stats;
++            continue;
++        }
++
++        foreach (huhs_translation_pending_posts($post_type, $limit) as $post) {
++            if (time() >= $deadline) {
++                break;
++            }
++
++            $status = huhs_run_translation($post->ID);
++            $type_stats['checked']++;
++            $result['checked']++;
++
++            if ($status === 'translated') {
++                $type_stats['translated']++;
++                $result['translated']++;
++            } elseif ($status === 'failed' || $status === 'partial') {
++                $type_stats['failed']++;
++                $result['failed']++;
++            } else {
++                $type_stats['skipped']++;
++                $result['skipped']++;
++            }
++        }
++
++        $result['by_type'][$post_type] = $type_stats;
++    }
++
++    $result['pending'] = huhs_translation_pending_counts();
++
++    return $result;
++}
++
++/** A sweep típuslistája: egy típus, lista, vagy mind (érvénytelen érték = mind). */
++function huhs_translation_sweep_types($requested)
++{
++    $all = huhs_translation_post_types();
++
++    if (is_array($requested)) {
++        $requested = array_values(array_intersect($all, $requested));
++        return $requested ? $requested : $all;
++    }
++
++    $requested = sanitize_key((string) $requested);
++    if ($requested === '' || !in_array($requested, $all, true)) {
++        return $all;
++    }
++
++    return array($requested);
++}
++
++/* ---- REST: állapot és pótlás (csak admin) -------------------------------- */
++
++add_action('rest_api_init', 'huhs_register_translation_sweep_api');
++
++/**
++ * Két végpont, szándékosan külön:
++ *  - `GET /translations/status`  — csak olvas: mi vár még fordításra;
++ *  - `POST /translations/sweep`  — lefuttatja a pótlást (ez ír).
++ *
++ * A jogosultság `manage_options`: ugyanaz a kapu, mint a többi admin-végponté
++ * (a HUHS szervere az admin alkalmazás-jelszavával hívja).
++ */
++function huhs_register_translation_sweep_api()
++{
++    register_rest_route('huhs/v1', '/translations/status', array(
++        'methods' => 'GET',
++        'callback' => 'huhs_translation_status_endpoint',
++        'permission_callback' => function () {
++            return current_user_can('manage_options');
++        },
++    ));
++
++    register_rest_route('huhs/v1', '/translations/sweep', array(
++        'methods' => WP_REST_Server::CREATABLE,
++        'callback' => 'huhs_translation_sweep_endpoint',
++        'permission_callback' => function () {
++            return current_user_can('manage_options');
++        },
++        'args' => array(
++            'type' => array('sanitize_callback' => 'sanitize_key'),
++            'limit' => array('sanitize_callback' => 'absint'),
++            'budget' => array('sanitize_callback' => 'absint'),
++        ),
++    ));
++}
++
++/** Az állapot: be van-e kapcsolva, melyik szolgáltató, mi vár fordításra. */
++function huhs_translation_status_endpoint()
++{
++    $provider = huhs_translation_provider();
++
++    return rest_ensure_response(array(
++        'enabled' => huhs_translation_enabled(),
++        'provider' => array(
++            'url' => (string) ($provider['url'] ?? ''),
++            'model' => (string) ($provider['model'] ?? ''),
++        ),
++        'types' => huhs_translation_post_types(),
++        'pending' => huhs_translation_pending_counts(),
++    ));
++}
++
++/** A pótlás futtatása a kérés paramétereivel. */
++function huhs_translation_sweep_endpoint(WP_REST_Request $request)
++{
++    return rest_ensure_response(huhs_translation_sweep(array(
++        'type' => $request->get_param('type'),
++        'limit' => $request->get_param('limit') ?: 5,
++        'budget' => $request->get_param('budget') ?: 20,
++    )));
++}
++
++/* ---- WP-cron: óránkénti önjavítás --------------------------------------- */
++
++add_action('init', 'huhs_schedule_translation_sweep');
++
++/**
++ * Az óránkénti pótlás ütemezése.
++ *
++ * A `huhs_translation_sweep_enabled` szűrővel kikapcsolható (a fordítás
++ * működik tovább a mentés-ágon), a `huhs_translation_sweep_limit` /
++ * `huhs_translation_sweep_budget` szűrőkkel pedig szabályozható a költség.
++ */
++function huhs_schedule_translation_sweep()
++{
++    if (!apply_filters('huhs_translation_sweep_enabled', true)) {
++        return;
++    }
++
++    if (wp_next_scheduled('huhs_translation_sweep_event')) {
++        return;
++    }
++
++    wp_schedule_event(time() + 5 * MINUTE_IN_SECONDS, 'hourly', 'huhs_translation_sweep_event');
++}
++
++add_action('huhs_translation_sweep_event', 'huhs_run_translation_sweep_event');
++
++/** A cron-kör: kis adag, hogy egy látogató kérése ne lassuljon észrevehetően. */
++function huhs_run_translation_sweep_event()
++{
++    if (!huhs_translation_enabled()) {
++        return;
++    }
++
++    huhs_translation_sweep(array(
++        'limit' => (int) apply_filters('huhs_translation_sweep_limit', 3),
++        'budget' => (int) apply_filters('huhs_translation_sweep_budget', 20),
++    ));
++}

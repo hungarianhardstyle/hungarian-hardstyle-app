@@ -43,6 +43,7 @@ const appChangelog = <AppReleaseNotes>[
       'Az értesítések is a választott nyelven jönnek: a Chat-lájk, a válasz, a megemlítés, a hozzászólás, az esemény-értékelés, az új tartalom, a nyeremény és az ismerősnek jelölés szövege is angolul jelenik meg, ha angolra váltottál.',
       'A beállított nyelv a profilodban tárolódik, ezért a push értesítések is a te nyelveden szólnak.',
       'Az angol felület tovább bővült: a hosszú magyarázó és jogi szövegek (adatkezelési tájékoztató, súgók) is angolul jelennek meg.',
+      'Angol felületen a hírek kategória- és címke-nevei is angolul jelennek meg (pl. Hírek → News, fesztivál → festival) — a DJ- és márkanevek változatlanok maradnak.',
     ],
   ),
   AppReleaseNotes(

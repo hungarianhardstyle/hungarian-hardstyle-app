@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/post.dart';
 import '../../providers/news_provider.dart';
 import '../../widgets/app_text.dart';
@@ -91,7 +92,9 @@ class _TaggedNewsScreenState extends ConsumerState<TaggedNewsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('#${widget.tag}')),
+      // A címke a WordPress-ből jön (adat), ezért a fordítás a megjelenítésnél
+      // történik; a `#` a kulcson kívül van (2.14.0).
+      appBar: AppBar(title: Text('#${tr(context, widget.tag)}')),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: _posts.isEmpty && _loading

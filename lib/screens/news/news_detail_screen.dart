@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/content/html_linkifier.dart';
 import '../../core/i18n/app_strings.dart';
+import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/post.dart';
@@ -167,7 +168,10 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
                               runSpacing: 8,
                               children: post.tags.map((tag) {
                                 return ActionChip(
-                                  label: Text('#$tag'),
+                                  // A címke a WordPress-ből jön (adat), ezért a
+                                  // fordítás a megjelenítésnél történik; a `#`
+                                  // szándékosan a kulcson KÍVÜL van (2.14.0).
+                                  label: Text('#${tr(context, tag)}'),
                                   onPressed: () => Navigator.of(context).push(
                                     MaterialPageRoute<void>(
                                       builder: (_) =>

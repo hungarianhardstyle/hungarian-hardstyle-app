@@ -185,9 +185,13 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                               : state.categories[categoryIndex -
                                                     1];
                                           final categoryId = category?.id ?? 0;
+                                          // ⚠️ A kategórianév a WordPress-ből jön
+                                          // (adat), ezért a fordítása a
+                                          // MEGJELENÍTÉSNÉL történik: a szótár
+                                          // kulcsa a magyar név (2.14.0).
                                           final label = category == null
                                               ? tr(context, 'Összes')
-                                              : category.name;
+                                              : tr(context, category.name);
                                           final isSelected =
                                               state.selectedCategoryId ==
                                               categoryId;

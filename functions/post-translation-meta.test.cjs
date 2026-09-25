@@ -42,13 +42,16 @@ const META_KEYS = ['_huhs_title_en', '_huhs_excerpt_en', '_huhs_content_en'];
 const META_FILE = 'includes/post-translation-meta.php';
 /** A nyilvános végpontok (itt dől el a `lang`). */
 const POSTS_FILE = 'includes/posts.php';
-/** A 2.12.0 további nyelvet ismerő végpontjai + a WP-cron fordítás. */
+/** A 2.12.0 további nyelvet ismerő végpontjai + a WP-cron fordítás és a pótlás. */
 const OTHER_CONTENT_FILES = [
   'includes/api-events.php',
   'includes/api-artists.php',
   'includes/api-organizers.php',
   'includes/api-releases.php',
   'includes/translation-cron.php',
+  // A 2.13.0 önjavító pótlása: ez is jogosult ismerni a fordítási kulcsokat
+  // (azt méri, hogy egy elemen megvan-e már az angol).
+  'includes/translation-sweep.php',
 ];
 
 function pluginFile(relative) {
@@ -195,20 +198,25 @@ test('a 2.12.0 végpontjai a KÖZÖS fordítási kaput használják', () => {
   // ⚠️ A KIADVÁNY szándékosan kimarad: az egyetlen szövege a **cím**, ami név
   // (kiadvány/szám címe), és a payloadban nincs leírás sem — fordítani való
   // prózai szöveg nincs. Ezért ott a kód nem is hívja a közös kaput.
-  const contentFiles = OTHER_CONTENT_FILES.filter((file) => !file.includes('api-releases'));
+  //
+  // ⚠️ A cron és a 2.13.0 pótló köre **munkás**, nem végpont: nem kérést szolgál
+  // ki, ezért nincs benne `huhs_request_lang()` és payload — azokat külön méri a
+  // saját PHP-tesztjük (tools/php/plugin-translation-test.php).
+  const workerFiles = ['includes/translation-cron.php', 'includes/translation-sweep.php'];
+  const contentFiles = OTHER_CONTENT_FILES.filter(
+    (file) => !file.includes('api-releases') && !workerFiles.includes(file),
+  );
   assert.deepEqual(
     contentFiles,
     [
       'includes/api-events.php',
       'includes/api-artists.php',
       'includes/api-organizers.php',
-      'includes/translation-cron.php',
     ],
-    'a nyelvet ismerő végpontok: esemény, DJ, szervező (+ a cron); a kiadvány nem',
+    'a nyelvet ismerő végpontok: esemény, DJ, szervező; a kiadvány nem',
   );
 
   for (const file of contentFiles) {
-    if (file.endsWith('translation-cron.php')) continue;
     const source = pluginFile(file);
     assert.match(
       source,
@@ -222,6 +230,12 @@ test('a 2.12.0 végpontjai a KÖZÖS fordítási kaput használják', () => {
     );
     assert.match(source, /'has_en'\s*=>/, `${file}: a payloadban ott a has_en jelző`);
   }
+
+  // A pótló kör a hiányzó angolt keresi, és a mentés-ág fordítását hívja — nem
+  // saját másolatot készít a logikából.
+  const sweepSource = pluginFile('includes/translation-sweep.php');
+  assert.match(sweepSource, /'compare'\s*=>\s*'NOT EXISTS'/, 'a pótlás a hiányzó angolt keresi');
+  assert.match(sweepSource, /huhs_run_translation\(\$post->ID\)/, 'a pótlás a közös fordítást hívja');
 
   // A kiadvány válasza változatlan (nincs benne fordítási meta).
   const releases = pluginFile('includes/api-releases.php');

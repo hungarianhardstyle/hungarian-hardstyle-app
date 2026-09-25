@@ -1,0 +1,234 @@
+#!/usr/bin/env node
+/**
+ * A szállítandó plugin-CSOMAG ellenőrzése: a ZIP ugyanaz-e, mint a forrás, és
+ * benne vannak-e a kiadás kritikus elemei.
+ *
+ * MIÉRT ESZKÖZ: a csomagot a `tools/build-plugin-zip.mjs` írja, a viselkedését a
+ * `tools/run-php-plugin-tests.mjs` méri — de eddig **semmi** nem mérte azt, hogy
+ * a ZIP **tartalma** (fájllista, bájtok) megegyezik-e a forráskönyvtárral, és
+ * hogy a release kritikus sorai tényleg bekerültek-e a csomagba. Ez a hiányzó láncszem.
+ *
+ * Használat:
+ *   node tools/verify-plugin-package.mjs                    # 2.13.0 (alap)
+ *   node tools/verify-plugin-package.mjs --zip=build/x.zip --source=.tmp-api-260/huhs-mobile-api
+ *   node tools/verify-plugin-package.mjs --self-test
+ */
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.13.0.zip';
+export const DEFAULT_SOURCE = '.tmp-api-260/huhs-mobile-api';
+export const EXPECTED_ROOT = 'huhs-mobile-api';
+
+/** Rekurzív fájllista (relatív, `/` elválasztóval), rendezve. */
+export function listFiles(dir) {
+  const out = [];
+  const walk = (current, prefix) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(path.join(current, entry.name), relative);
+      else if (entry.isFile()) out.push(relative);
+    }
+  };
+  walk(dir, '');
+  return out.sort();
+}
+
+/** Két fájllista összevetése (hiányzó / plusz). */
+export function compareFileLists(zipFiles, sourceFiles) {
+  const zipSet = new Set(zipFiles);
+  const sourceSet = new Set(sourceFiles);
+  return {
+    missing: sourceFiles.filter((file) => !zipSet.has(file)),
+    extra: zipFiles.filter((file) => !sourceSet.has(file)),
+  };
+}
+
+/**
+ * A PHP megjegyzések eltávolítása — a tiltó ellenőrzésekhez kell.
+ *
+ * ⚠️ MIÉRT (mért hiba): a pótló kör fejlécében **szövegként** szerepel, hogy
+ * „nem `wp_update_post`-ot hívunk" — a nyers `includes()` keresés ezért
+ * hamisan bukott. A tiltást a **kódra** kell mérni, nem a kommentre.
+ */
+export function stripPhpComments(source) {
+  return String(source)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .map((line) => line.replace(/\/\/.*$/, ''))
+    .join('\n');
+}
+
+/**
+ * A 2.13.0 kritikus tartalmi elemei — `read(relative)` adja a fájlok szövegét.
+ *
+ * Minden sor egy állítás; a `read` szándékosan injektálható, hogy önteszttel
+ * mérhető legyen (nem csak a valódi ZIP-en).
+ */
+export function packageChecks(read) {
+  const main = read('huhs-mobile-api.php');
+  const sweep = read('includes/translation-sweep.php');
+  const sweepCode = stripPhpComments(sweep);
+  const places = read('includes/translation-places.php');
+  const cron = read('includes/translation-cron.php');
+  const events = read('includes/api-events.php');
+  const artists = read('includes/api-artists.php');
+  const organizers = read('includes/api-organizers.php');
+  const releases = read('includes/api-releases.php');
+
+  return [
+    ['a fejléc és a konstans is 2.13.0', /Version:\s*2\.13\.0/.test(main) && main.includes("HUHS_API_VERSION', '2.13.0'")],
+    ['a fő fájl behúzza a hely-névtárat és a pótló kört',
+      main.includes("includes/translation-places.php") && main.includes("includes/translation-sweep.php")],
+    ['a pótlás a HIÁNYZÓ angolt keresi (NOT EXISTS)', sweep.includes("'compare' => 'NOT EXISTS'")],
+    ['a pótlás a közös fordítást hívja (nincs saját másolat)', sweep.includes('huhs_run_translation($post->ID)')],
+    ['a pótlás óránként ütemeződik', sweep.includes("'hourly'") && sweep.includes("'huhs_translation_sweep_event'")],
+    ['a pótlás korlátozza a költséget (limit + budget)', sweep.includes("'limit'") && sweep.includes("'budget'")],
+    ['a pótlás NEM hoz létre felhasználói értesítést (nincs wp_update_post / ütemezés a kódban)',
+      !/wp_update_post\s*\(/.test(sweepCode) && !/wp_schedule_single_event\s*\(/.test(sweepCode)],
+    ['a tartós hiba késleltetve próbálkozik újra', sweep.includes('huhs_translation_retry_delay')],
+    ['a pótlás admin végpontjai bent vannak (status + sweep)',
+      sweep.includes("'/translations/status'") && sweep.includes("'/translations/sweep'")],
+    ['az ország-névtárban benne van a Magyarország → Hungary', places.includes("'magyarország' => 'Hungary'")],
+    ['a "Velence" csapda dokumentálva van (nem fordítjuk félre)', places.includes('Velence') && !places.includes("'velence' =>")],
+    ['a hely-névtár csak angol kérésre nyúl az értékhez', places.includes("if ($lang !== 'en')")],
+    ['a cron ujjlenyomatot ír a kész fordításról', cron.includes('HUHS_TRANSLATION_HASH_META')],
+    ['a cron nem fordít kétszer ugyanarra a szövegre', cron.includes('huhs_translation_is_current')],
+    ['a cron státuszt ad vissza (a pótlás ebből számol)', cron.includes("return 'translated';")],
+    ['a kulcs továbbra sincs a kódban', !/sk-[A-Za-z0-9]{16,}/.test(cron + sweep + places)],
+    ['az esemény a névtáron át adja az országot', events.includes('huhs_translation_country_value(')],
+    ['a DJ a névtáron át adja az országot', artists.includes('huhs_translation_country_value(')],
+    ['a szervező a névtáron át adja az országot', organizers.includes('huhs_translation_country_value(')],
+    ['a szervező átadja a nyelvet a közelgő eseményeknek', organizers.includes('use ($lang)')],
+    ['a kiadvány végpont továbbra sem hív fordítást', !releases.includes('huhs_translation_meta_values(')],
+  ];
+}
+
+export function selfTest() {
+  const checks = [];
+  const check = (label, ok) => checks.push({ label, ok });
+
+  check(
+    'a fájllista-összevetés azonos listára nem jelez semmit',
+    JSON.stringify(compareFileLists(['a.php', 'b/c.php'], ['a.php', 'b/c.php'])) === '{"missing":[],"extra":[]}',
+  );
+  check(
+    'a hiányzó és a plusz fájlt is jelzi',
+    JSON.stringify(compareFileLists(['a.php'], ['a.php', 'b.php'])) === '{"missing":["b.php"],"extra":[]}'
+      && JSON.stringify(compareFileLists(['a.php', 'x.php'], ['a.php'])).includes('x.php'),
+  );
+
+  const star = 'x';
+  const full = {
+    'huhs-mobile-api.php': 'Version: 2.13.0 HUHS_API_VERSION\', \'2.13.0\' includes/translation-places.php includes/translation-sweep.php',
+    'includes/translation-sweep.php': "'compare' => 'NOT EXISTS' huhs_run_translation($post->ID) 'hourly' 'huhs_translation_sweep_event' 'limit' 'budget' huhs_translation_retry_delay '/translations/status' '/translations/sweep'",
+    'includes/translation-places.php': "'magyarország' => 'Hungary' Velence if ($lang !== 'en')",
+    'includes/translation-cron.php': "HUHS_TRANSLATION_HASH_META huhs_translation_is_current return 'translated';",
+    'includes/api-events.php': 'huhs_translation_country_value(',
+    'includes/api-artists.php': 'huhs_translation_country_value(',
+    'includes/api-organizers.php': 'huhs_translation_country_value( use ($lang)',
+    'includes/api-releases.php': star,
+  };
+  const readFull = (relative) => full[relative] ?? '';
+  const okChecks = packageChecks(readFull);
+  check('a teljes (szintetikus) csomagon minden tartalmi ellenőrzés zöld', okChecks.every(([, ok]) => ok));
+
+  const missingSweep = packageChecks((relative) => (relative === 'includes/translation-sweep.php' ? '' : readFull(relative)));
+  check(
+    'a hiányzó pótló kört észreveszi (nem hamis zöld)',
+    missingSweep.some(([, ok]) => !ok),
+  );
+  const leakedKey = packageChecks((relative) => (relative === 'includes/translation-cron.php' ? 'sk-abcdefghijklmnop1234' : readFull(relative)));
+  check(
+    'a kódba került kulcsot észreveszi',
+    leakedKey.some(([label, ok]) => label.includes('kulcs') && !ok),
+  );
+  const notifyCheck = (sweepSource) =>
+    packageChecks((relative) => (relative === 'includes/translation-sweep.php' ? sweepSource : readFull(relative)))
+      .find(([label]) => label.includes('felhasználói értesítést'))[1];
+
+  check(
+    'a megjegyzésben szereplő tiltott hívás nem buktat (a tiltás a KÓDRA szól)',
+    notifyCheck(`${full['includes/translation-sweep.php']}\n// nem wp_update_post-ot hívunk, hanem meta-írást`) === true,
+  );
+  check(
+    'a valódi wp_update_post hívást viszont elkapja',
+    notifyCheck(`${full['includes/translation-sweep.php']}\nwp_update_post(array('ID' => 1));`) === false,
+  );
+  return checks;
+}
+
+function main() {
+  if (process.argv.includes('--self-test')) {
+    const checks = selfTest();
+    for (const check of checks) console.log(`${check.ok ? 'OK  ' : 'HIBA'} ${check.label}`);
+    const failed = checks.filter((check) => !check.ok).length;
+    console.log(`\n${checks.length - failed}/${checks.length} önteszt rendben`);
+    return failed ? 1 : 0;
+  }
+
+  const arg = (name, fallback) => {
+    const found = process.argv.find((value) => value.startsWith(`--${name}=`));
+    return found ? found.slice(name.length + 3) : fallback;
+  };
+  const zipPath = path.resolve(REPO_ROOT, arg('zip', DEFAULT_ZIP));
+  const sourcePath = path.resolve(REPO_ROOT, arg('source', DEFAULT_SOURCE));
+
+  if (!fs.existsSync(zipPath)) {
+    console.log(`HIBA  nincs ilyen csomag: ${zipPath}`);
+    return 1;
+  }
+
+  const extractDir = path.join(REPO_ROOT, 'tmp', 'zipcheck');
+  fs.rmSync(extractDir, { recursive: true, force: true });
+  fs.mkdirSync(extractDir, { recursive: true });
+  const extracted = spawnSync('tar', ['-xf', zipPath, '-C', extractDir], { encoding: 'utf8' });
+  if (extracted.status !== 0) {
+    console.log(`HIBA  a kibontás hibázott: ${extracted.stderr}`);
+    return 1;
+  }
+
+  const roots = fs.readdirSync(extractDir);
+  let failed = 0;
+  const report = (label, ok, detail = '') => {
+    if (!ok) failed += 1;
+    console.log(`${ok ? 'OK  ' : 'HIBA'} ${label}${detail && !ok ? ` — ${detail}` : ''}`);
+  };
+
+  report(`a csomag gyökérkönyvtára \`${EXPECTED_ROOT}/\``, roots.length === 1 && roots[0] === EXPECTED_ROOT, roots.join(', '));
+
+  const pluginRoot = path.join(extractDir, EXPECTED_ROOT);
+  const zipFiles = listFiles(pluginRoot);
+  const sourceFiles = listFiles(sourcePath);
+  const { missing, extra } = compareFileLists(zipFiles, sourceFiles);
+  report(
+    `a fájllista egyezik a forrással (${sourceFiles.length} fájl)`,
+    missing.length === 0 && extra.length === 0,
+    `hiányzik: ${missing.join(', ')} | plusz: ${extra.join(', ')}`,
+  );
+
+  const different = [];
+  for (const file of sourceFiles) {
+    if (missing.includes(file)) continue;
+    const a = fs.readFileSync(path.join(pluginRoot, file));
+    const b = fs.readFileSync(path.join(sourcePath, file));
+    if (!a.equals(b)) different.push(file);
+  }
+  report('a fájlok bájtazonosak', different.length === 0, different.join(', '));
+
+  const read = (relative) => {
+    const full = path.join(pluginRoot, relative);
+    return fs.existsSync(full) ? fs.readFileSync(full, 'utf8') : '';
+  };
+  for (const [label, ok] of packageChecks(read)) report(label, ok);
+
+  console.log(failed ? `\nHIBA — ${failed} ellenőrzés bukott` : '\nMINDEN ELLENŐRZÉS RENDBEN');
+  return failed ? 1 : 0;
+}
+
+if (process.argv[1] && process.argv[1].endsWith('verify-plugin-package.mjs')) {
+  process.exitCode = main();
+}
