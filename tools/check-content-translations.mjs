@@ -33,8 +33,9 @@ export const BRAND_ALLOWLIST = [
   // helyszínek (a DJ-bemutatókban szerepelnek)
   'Akvárium', 'Arzenál', 'Víztorony', 'Nagyerdei', 'Hajó', 'Bálna', 'Dürer',
   'Balaton', 'Sziget', 'Budapest', 'SiMa', 'Café',
-  // városok, személynevek
+  // városok, személynevek, fellépőnevek (a line-upokban szerepelnek)
   'Siófok', 'Balázs', 'Dániel', 'Bence', 'Máté', 'Gábor', 'Zoltán', 'Attila',
+  'HÖFSTÄTTERS', 'Höfstätters',
 ];
 
 /** A HTML-tagek sorrendje (a nyitó/záró jelekkel) — a szerkezet ujjlenyomata. */
