@@ -844,6 +844,20 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   /// Hány régebbi lapot töltöttünk be **az odaugráshoz** (a lap-korlát ehhez van).
   int _focusPagesLoaded = 0;
 
+  /// A megjelölt üzenet **indexe** a megjelenített listában (a tervből). Ebből
+  /// becsüljük a görgetési pozíciót, mert a kártya gyakran még nincs felépítve.
+  int? _focusIndex;
+
+  /// Hányszor próbáljuk meg a becsült pozícióra ugrani (a `maxScrollExtent`
+  /// maga is becslés, ezért lehet, hogy az első ugrás nem elég pontos).
+  static const int _focusScrollAttempts = 4;
+
+  /// A megjelenített lista hossza (élő ablak + betöltött régebbiek + a láb sor).
+  int get _focusItemCount =>
+      (ref.read(communityPostsProvider).valueOrNull?.length ?? 0) +
+      _olderPosts.length +
+      1;
+
   /// Végeztünk-e az odaugrással (megtaláltuk, vagy feladtuk).
   bool _focusFinished = false;
 
@@ -1007,6 +1021,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     switch (plan.status) {
       case ChatFocusStatus.found:
         _focusFinished = true;
+        _focusIndex = plan.index;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) unawaited(_scrollToFocusedPost());
         });
@@ -1043,6 +1058,14 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   }
 
   /// Odagörget a megjelölt üzenethez, és rövid ideig kiemeli.
+  ///
+  /// ⚠️ A `ListView` **csak a látható** elemeket építi fel, ezért a megjelölt
+  /// kártya kontextusa (amit a `Scrollable.ensureVisible` kér) gyakran **nincs
+  /// meg**. A korábbi kód ilyenkor a lista **végére** ugrott — az a legrégebbi
+  /// üzeneteket mutatja, nem a megjelöltet (a tulajdonos jelzése: *„régebbi chat
+  /// üzivel nem megy, újabba igen"*). Mostantól a cél **indexéből becsült**
+  /// pozícióra ugrunk (`chatScrollEstimateForIndex`), és néhányszor ismétlünk,
+  /// mert a `maxScrollExtent` maga is a felépített gyerekekből számolt becslés.
   Future<void> _scrollToFocusedPost() async {
     final target = _focusTarget;
     if (!mounted || target == null || target.isEmpty) return;
@@ -1050,12 +1073,19 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     // Egy képkockát adunk a kártyának, hogy felépüljön.
     await Future<void>.delayed(const Duration(milliseconds: 80));
     if (!mounted) return;
-    if (_focusKey.currentContext == null && _chatScrollController.hasClients) {
-      // A kártya még nincs felépítve (mélyen van a listában): a lapozás miatt a
-      // lista VÉGÉhez közel van, ezért oda ugrunk, és onnan már pontosítunk.
+    for (var attempt = 0; attempt < _focusScrollAttempts; attempt++) {
+      final current = _focusKey.currentContext;
+      if (current != null && current.mounted) break;
+      final index = _focusIndex;
+      if (index == null || !_chatScrollController.hasClients) break;
+      final offset = chatScrollEstimateForIndex(
+        index: index,
+        itemCount: _focusItemCount,
+        maxScrollExtent: _chatScrollController.position.maxScrollExtent,
+      );
       await _chatScrollController.animateTo(
-        _chatScrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
+        offset,
+        duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
       await Future<void>.delayed(const Duration(milliseconds: 120));
@@ -1996,6 +2026,11 @@ class _PostCardState extends ConsumerState<_PostCard> {
   /// ⚠️ MIÉRT közös (`openContentTarget`): az értesítés-központ ugyanezt hívja,
   /// így a hivatkozás és az értesítés **nem tud széthúzni** (a 351-es tanulság).
   Future<void> _openMention(ChatMentionTarget target) async {
+    // A `@mindenki` **nem adatlap**: nincs hova navigálni (az értesítést a
+    // szerver küldi mindenkinek). A szövegben kiemelve látszik, de nem
+    // kattintható — ez itt csak biztonsági háló, hogy semmilyen úton ne
+    // induljon el a feloldás és ne villanjon fel a „nem elérhető" üzenet.
+    if (target.type == mentionTypeEveryone) return;
     final opened = await openContentTarget(
       Navigator.of(context),
       targetType: target.type,

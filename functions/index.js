@@ -91,6 +91,9 @@ const {
 const {
   sanitizeMentions,
   chatMentionNotifications,
+  chatEveryoneNotifications,
+  EVERYONE_TYPE,
+  MAX_EVERYONE_RECIPIENTS,
 } = require('./chat-mention-plan');
 const { pickActorName, actorNameOrGeneric } = require('./actor-name-plan');
 const {
@@ -2471,9 +2474,53 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
   for (const mentionNotification of mentionNotifications) {
     await createNotificationBestEffort(mentionNotification);
   }
+  // @MINDENKI („everyone") — FAN-OUT: a címzettek a `community_profiles`
+  // dokumentumai (a dokumentum AZONOSÍTÓJA a uid; mérve **41** profil,
+  // `tools/check-everyone-reach.mjs`, 2026-09-25). A szerzőt kihagyjuk, és
+  // legfeljebb `MAX_EVERYONE_RECIPIENTS` (500) értesítés mehet ki. A lista
+  // lekérése és az írások is best-effort-ak: egy elbukott olvasás/írás **nem**
+  // viheti el a már beírt üzenetet — ezért a blokk try/catch-ben fut, az írások
+  // pedig `createNotificationBestEffort`-tal mennek (az soha nem dob). 50-es
+  // kötegekben párhuzamosítunk, hogy ne egyszerre 41+ írás induljon.
+  let everyoneNotified = 0;
+  if (mentions.some((mention) => mention.type === EVERYONE_TYPE)) {
+    try {
+      const recipientsSnapshot = await db
+        .collection('community_profiles')
+        .limit(MAX_EVERYONE_RECIPIENTS)
+        .get();
+      const everyoneNotifications = chatEveryoneNotifications({
+        postId: ref.id,
+        authorId: uid,
+        authorName: displayName,
+        excerpt: text,
+        // A szerzőt itt is kihagyjuk (a tiszta helper is megteszi).
+        recipientUids: recipientsSnapshot.docs
+          .map((document) => document.id)
+          .filter((recipientUid) => recipientUid && recipientUid !== uid),
+      });
+      for (let index = 0; index < everyoneNotifications.length; index += 50) {
+        await Promise.all(
+          everyoneNotifications
+            .slice(index, index + 50)
+            .map((notification) => createNotificationBestEffort(notification)),
+        );
+      }
+      everyoneNotified = everyoneNotifications.length;
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'chat_everyone_notify_failed',
+          postId: ref.id,
+          message: error?.message || String(error),
+        }),
+      );
+    }
+  }
   // Visszafelé kompatibilis: az `id` marad, mellé jön a kihagyott hivatkozások
-  // száma, amit a kliens kiírhat („N hivatkozást nem sikerült beilleszteni").
-  return { id: ref.id, droppedMentions };
+  // száma, amit a kliens kiírhat („N hivatkozást nem sikerült beilleszteni"),
+  // valamint a ténylegesen értesített címzettek száma (`everyoneNotified`).
+  return { id: ref.id, droppedMentions, everyoneNotified };
 });
 
 exports.manageConnection = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {

@@ -41,6 +41,10 @@ Future<bool> openContentTarget(
   final type = targetType.trim().toLowerCase();
   final target = targetId.trim();
   if (type.isEmpty || target.isEmpty) return false;
+  // A `@mindenki` **nem tartalom-célpont**: nincs hova navigálni (a szerver
+  // küldi mindenkinek az értesítést). Szándékosan **némán** tér vissza, hogy a
+  // koppintás ne dobjon hibát és ne is nyisson fölösleges képernyőt.
+  if (type == 'everyone') return false;
   try {
     switch (type) {
       // A személy: a hivatkozás `user`, az értesítés `profile` — mindkettő

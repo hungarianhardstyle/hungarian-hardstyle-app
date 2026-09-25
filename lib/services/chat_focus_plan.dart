@@ -96,3 +96,33 @@ ChatFocusPlan chatFocusPlan({
   }
   return const ChatFocusPlan(status: ChatFocusStatus.keepLoading);
 }
+
+/// A cél kártya **becsült** görgetési pozíciója (logikai képpontban).
+///
+/// ⚠️ MIÉRT KELL (mért hiba, 2026-09-25): a `ListView` **csak a látható**
+/// elemeket építi fel, ezért egy mélyen lévő (vagy épp még fel nem épült)
+/// megjelölt üzenet kártyájának **nincs kontextusa**, a
+/// `Scrollable.ensureVisible` pedig pontosan azt kéri. A korábbi kód ilyenkor a
+/// lista **végére** ugrott (`maxScrollExtent`) — az a **legrégebbi** üzeneteket
+/// mutatja, nem a megjelöltet, ezért a tulajdonos azt látta, hogy *„régebbi chat
+/// üzivel nem megy, újabba igen"* (és a legfrissebbel is csak akkor, ha a kártya
+/// már fel volt épülve).
+///
+/// A híd: a lista **átlagos sormagasságából** becsüljük meg a célt
+/// (`maxScrollExtent / (itemCount - 1)`), oda ugrunk, és onnan már pontosít a
+/// `ensureVisible`. Több kör is kellhet, mert a `maxScrollExtent` maga is
+/// becslés (a Flutter a felépített gyerekekből számolja) — ezért a képernyő
+/// legfeljebb néhányszor ismétli.
+double chatScrollEstimateForIndex({
+  required int index,
+  required int itemCount,
+  required double maxScrollExtent,
+}) {
+  if (index <= 0) return 0;
+  if (itemCount <= 1) return 0;
+  if (!maxScrollExtent.isFinite || maxScrollExtent <= 0) return 0;
+  final average = maxScrollExtent / (itemCount - 1);
+  final estimate = index * average;
+  if (estimate <= 0) return 0;
+  return estimate > maxScrollExtent ? maxScrollExtent : estimate;
+}

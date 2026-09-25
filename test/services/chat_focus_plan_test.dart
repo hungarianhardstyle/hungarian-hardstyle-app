@@ -130,5 +130,54 @@ void main() {
         );
       });
     });
+
+    // ⚠️ A tulajdonos jelzése (2026-09-25): *„egy régebbi chat like … rányomtam
+    // és nem dobott a chat üzire … régebbi chat üzivel nem megy, újabba igen"*.
+    // A gyökér a **görgetés** volt: a `ListView` csak a látható elemeket építi
+    // fel, ezért a mélyen lévő kártya kontextusa nincs meg, a régi kód pedig a
+    // lista VÉGÉRE ugrott. Ez a becslés visz a cél közelébe.
+    group('a cél pozíciójának becslése (a mélyen lévő üzenet odaugrása)', () {
+      double estimate(int index, {int itemCount = 41, double max = 4000}) {
+        return chatScrollEstimateForIndex(
+          index: index,
+          itemCount: itemCount,
+          maxScrollExtent: max,
+        );
+      }
+
+      test('a legfelső üzenet a lista teteje (nem a vége!)', () {
+        expect(
+          estimate(0),
+          0,
+          reason: 'az index 0 mindig a legteteje — ez volt a „legfrissebb sem jó" hiba',
+        );
+      });
+
+      test('a középső üzenet arányosan a lista közepére esik', () {
+        // 41 elem, 4000 px: átlag 100 px/elem → a 25. elem 2500 px-nél van.
+        expect(estimate(25), 2500);
+        expect(estimate(10), 1000);
+      });
+
+      test('az utolsó üzenet a lista végére esik', () {
+        expect(estimate(40), 4000);
+      });
+
+      test('a végét túllépő index a lista végére szorul (nem ugrik túl)', () {
+        expect(estimate(100), 4000);
+      });
+
+      test('negatív index és üres lista nem tör el semmit', () {
+        expect(estimate(-5), 0);
+        expect(estimate(10, itemCount: 1), 0);
+        expect(estimate(10, itemCount: 0), 0);
+      });
+
+      test('értelmetlen görgetési hossz (0, negatív, végtelen) → 0', () {
+        expect(estimate(10, max: 0), 0);
+        expect(estimate(10, max: -100), 0);
+        expect(estimate(10, max: double.infinity), 0);
+      });
+    });
   });
 }

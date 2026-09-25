@@ -118,6 +118,45 @@ void main() {
       );
     });
 
+    // ⚠️ A tulajdonos jelzése (2026-09-25): *„egy régebbi chat like … rányomtam
+    // és nem dobott a chat üzire … régebbi chat üzivel nem megy, újabba igen"*.
+    // A `ListView` csak a látható elemeket építi fel, ezért a mélyen lévő kártya
+    // kontextusa nincs meg; a régi kód ilyenkor a lista VÉGÉRE ugrott (az a
+    // legrégebbi üzeneteket mutatja). A javítás a cél **indexéből** becsül.
+    test('a görgetés a cél INDEXÉBŐL becsül (nem a lista végére ugrik)', () {
+      expect(
+        chat,
+        contains('chatScrollEstimateForIndex('),
+        reason: 'a becslés a tiszta tervben van',
+      );
+      expect(
+        chat,
+        contains('final offset = chatScrollEstimateForIndex('),
+        reason: 'az ugrás pozíciója a becslésből jön',
+      );
+      expect(
+        chat,
+        contains('_focusIndex = plan.index;'),
+        reason: 'az index a terv `found` ágából kerül a képernyőre',
+      );
+      expect(
+        chat,
+        contains('maxScrollExtent: _chatScrollController.position.maxScrollExtent,'),
+        reason: 'a `maxScrollExtent` csak bemenet a becsléshez',
+      );
+      expect(
+        RegExp(r'_chatScrollController\.position\.maxScrollExtent').allMatches(chat).length,
+        1,
+        reason:
+            'a `maxScrollExtent` NEM lehet önálló ugrási cél (ez volt a régi hiba)',
+      );
+      expect(
+        chat,
+        contains('for (var attempt = 0; attempt < _focusScrollAttempts; attempt++)'),
+        reason: 'a `maxScrollExtent` maga is becslés, ezért néhányszor ismétlünk',
+      );
+    });
+
     test('a megtalált üzenethez görget ÉS kiemeli', () {
       expect(chat, contains('Scrollable.ensureVisible('));
       expect(chat, contains('_highlightedPostId'));

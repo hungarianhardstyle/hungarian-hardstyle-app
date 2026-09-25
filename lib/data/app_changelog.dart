@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 360,
+    changes: [
+      'ÚJ a Chatben: @mindenki — ha beírod, mindenki értesítést kap az üzenetről. Ezt csak admin/moderátor tudja használni.',
+      'A Chat-értesítésre koppintva az app mostantól a mélyebben lévő, régebbi üzeneteknél is pontosan a megjelölt üzenetre ugrik.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 359,
     changes: [
       'A Chat-értesítésre koppintva az app mostantól MINDIG a megjelölt üzenetre ugrik — eddig hideg indításnál (amikor a Chat még nem volt megnyitva) ez elmaradhatott.',

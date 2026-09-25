@@ -23,7 +23,7 @@ van a mérés módja — ahol nem tudtam mérni, az **szándékosan jelölve** v
 | Zárt teszt (`alpha`) | **358** (completed) | `check-play-track.mjs` |
 | `beta` | üres, **production-nel szinkronizál** | `check-play-products.mjs --tracks` |
 | `internal` | 278 (completed) + egy üres piszkozat → **dobd el** | `check-play-track.mjs` |
-| Következő csomag | **359** (a Chat-értesítés hideg indításnál is a megjelölt üzenetre ugrik; a 358 `@`-hivatkozását, a 357 értesítés-javítását és a 356 hírlevél-védelmét is tartalmazza): `build/HUHS-v1.0.0+359-release.aab`, plugin **2.10.0** (már fent) | `check-play-notes.mjs` |
+| Következő csomag | **360** (Chat `@mindenki` — mindenki értesítést kap, csak admin/moderátornak; a Chat-értesítés a mélyen lévő üzenethez is odaugrik; a 358 `@`-hivatkozását, a 357 értesítés-javítását és a 356 hírlevél-védelmét is tartalmazza): `build/HUHS-v1.0.0+360-release.aab`, plugin **2.10.0** (már fent) | `check-play-notes.mjs` |
 | Termékek országa | **9 ország**: HU, AT, HR, SI, SK, NL, CZ, RS, UA | `check-play-products.mjs` |
 | Termékek állapota | 56 `ACTIVE`, 4 `DRAFT` (a 12699 megjelenéséig) | `check-play-products.mjs` |
 | Adatvédelmi nyilatkozat | **él** (HTTP 200) | `…/adatvedelmi-nyilatkozat/` |

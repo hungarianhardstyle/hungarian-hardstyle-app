@@ -159,6 +159,73 @@ void main() {
       expect(find.byType(ChatMessageText), findsNothing);
       expect(tester.takeException(), isNull);
     });
+
+    // ⚠️ A tulajdonos kérése (2026-09-25): *„kéne egy @mindenki tag is … csak
+    // moderátor/admin használhassa"*. A `@mindenki` **kiemelve látszik** (hogy
+    // látszódjon: mindenkit megszólított), de **nem kattintható** — nincs mögötte
+    // adatlap, ezért nem szabad „nem elérhető" hibát mutatnia.
+    testWidgets('a @mindenki kiemelt, de NEM kattintható', (tester) async {
+      final tapped = <ChatMentionTarget>[];
+      await tester.pumpWidget(
+        wrap(
+          ChatMessageText(
+            text: 'Figyelem @mindenki, ma este buli!',
+            mentions: const <ChatMentionTarget>[
+              ChatMentionTarget(
+                type: mentionTypeEveryone,
+                id: mentionEveryoneId,
+                label: mentionEveryoneLabel,
+              ),
+            ],
+            onTap: tapped.add,
+          ),
+        ),
+      );
+
+      final span = tester.widget<Text>(find.byType(Text)).textSpan! as TextSpan;
+      final mention = span.children!
+          .whereType<TextSpan>()
+          .firstWhere((child) => child.text == '@mindenki');
+      expect(mention.style?.decoration, TextDecoration.underline);
+      expect(
+        mention.recognizer,
+        isNull,
+        reason: 'a @mindenki nem visz sehova, ezért nincs felismerője',
+      );
+
+      await tester.tapOnText(find.textRange.ofSubstring('@mindenki'));
+      await tester.pump();
+      expect(tapped, isEmpty, reason: 'a koppintás nem ad célpontot a hívónak');
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a @mindenki mellett a személy továbbra is kattintható', (
+      tester,
+    ) async {
+      final tapped = <ChatMentionTarget>[];
+      await tester.pumpWidget(
+        wrap(
+          ChatMessageText(
+            text: '@mindenki és @Kobakologia figyeljetek!',
+            mentions: const <ChatMentionTarget>[
+              ChatMentionTarget(
+                type: mentionTypeEveryone,
+                id: mentionEveryoneId,
+                label: mentionEveryoneLabel,
+              ),
+              kobakologia,
+            ],
+            onTap: tapped.add,
+          ),
+        ),
+      );
+
+      await tester.tapOnText(find.textRange.ofSubstring('@Kobakologia'));
+      await tester.pump();
+
+      expect(tapped.single.type, mentionTypeUser);
+      expect(tapped.single.id, 'uid-1');
+    });
   });
 }
 

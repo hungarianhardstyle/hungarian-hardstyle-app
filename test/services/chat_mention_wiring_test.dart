@@ -315,4 +315,77 @@ void main() {
       );
     });
   });
+
+  // ⚠️ A tulajdonos kérése (2026-09-25): *„kéne egy @mindenki tag is, amit ha
+  // beütök, kap mindenki notifyt és csak moderátor/admin használhassa"*.
+  group('forrás-lint: a @mindenki bekötése', () {
+    late String plan;
+    late String chat;
+    late String target;
+    late String messageText;
+    late String center;
+
+    setUpAll(() {
+      plan = readFile('lib/services/chat_mention_plan.dart');
+      chat = readFile('lib/screens/community/community_screen.dart');
+      target = readFile('lib/core/navigation/content_target.dart');
+      messageText = readFile('lib/widgets/chat_message_text.dart');
+      center = readFile('lib/screens/notifications/notification_center_screen.dart');
+    });
+
+    test('a konstansok egy helyen vannak (kliens és szerver ne széthúzzon)', () {
+      expect(plan, contains("const String mentionTypeEveryone = 'everyone';"));
+      expect(plan, contains("const String mentionEveryoneId = 'everyone';"));
+      expect(plan, contains("const String mentionEveryoneLabel = 'mindenki';"));
+      expect(
+        plan,
+        contains("case mentionTypeEveryone:"),
+        reason: 'a csoportfejléc is kap magyar címkét (Mindenki)',
+      );
+    });
+
+    test('a javaslat CSAK adminnak/moderátornak jön (és csak gépelésre)', () {
+      expect(
+        plan,
+        matches(
+          RegExp(
+            r'if \(privileged &&[\s\S]{0,80}?needle\.isNotEmpty &&[\s\S]{0,80}?mentionEveryoneLabel\.startsWith\(needle\)\)',
+          ),
+        ),
+        reason:
+            'üres lekérdezésnél nem ajánljuk fel (véletlen koppintás mindenkinek küldene)',
+      );
+    });
+
+    test('a koppintás nem indul el a @mindenkinál (nincs mögötte adatlap)', () {
+      expect(
+        target,
+        contains("if (type == 'everyone') return false;"),
+        reason: 'a közös feloldó némán visszatér, nem navigál',
+      );
+      expect(
+        chat,
+        matches(
+          RegExp(
+            r'if \(target\.type == mentionTypeEveryone\) return;[\s\S]{0,120}?openContentTarget\(',
+          ),
+        ),
+        reason: 'a Chat biztonsági hálója a feloldás ELŐTT áll',
+      );
+      expect(
+        messageText,
+        contains('if (target.type == mentionTypeEveryone)'),
+        reason: 'a szövegben a @mindenki nem kap koppintás-felismerőt',
+      );
+    });
+
+    test('az értesítés-központ nem kap külön @mindenki-ágat', () {
+      expect(
+        center,
+        isNot(contains('mentionTypeEveryone')),
+        reason:
+            'a @mindenki értesítés `targetType: chat` (a szerver küldi), ezért a központban nincs külön ág',
+      );
+    });
+  });
 }

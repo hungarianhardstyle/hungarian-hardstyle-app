@@ -42,8 +42,9 @@ class _ChatMessageTextState extends State<ChatMessageText> {
   List<MentionSpan> _spans = const <MentionSpan>[];
 
   /// A találatokhoz tartozó felismerők, **ugyanabban a sorrendben**, mint a
-  /// [mentionSpans] eredménye.
-  final List<TapGestureRecognizer> _recognizers = <TapGestureRecognizer>[];
+  /// [mentionSpans] eredménye. A `@mindenki` helyén `null` áll (nem
+  /// kattintható), ezért a lista hossza itt is egyezik a találatokéval.
+  final List<TapGestureRecognizer?> _recognizers = <TapGestureRecognizer?>[];
 
   @override
   void initState() {
@@ -68,17 +69,27 @@ class _ChatMessageTextState extends State<ChatMessageText> {
 
   void _disposeRecognizers() {
     for (final recognizer in _recognizers) {
-      recognizer.dispose();
+      recognizer?.dispose();
     }
     _recognizers.clear();
   }
 
   /// A hivatkozások és a hozzájuk tartozó felismerők újraszámolása.
+  ///
+  /// ⚠️ A **`@mindenki`** kiemelve látszik (hogy látszódjon: mindenkit
+  /// megszólított), de **nem kattintható**: nincs mögötte adatlap, csak egy
+  /// értesítés-szórás. Ezért ahhoz szándékosan **nincs** felismerő (a lista
+  /// ugyanolyan hosszú marad, csak `null` az adott helyen) — így a koppintás
+  /// nem tud „nem elérhető" hibát mutatni.
   void _syncSpans() {
     _disposeRecognizers();
     _spans = mentionSpans(widget.text, widget.mentions);
     for (final span in _spans) {
       final target = span.target;
+      if (target.type == mentionTypeEveryone) {
+        _recognizers.add(null);
+        continue;
+      }
       _recognizers.add(
         TapGestureRecognizer()..onTap = () => widget.onTap(target),
       );
@@ -107,7 +118,8 @@ class _ChatMessageTextState extends State<ChatMessageText> {
           text: widget.text.substring(span.start, span.end),
           style: linkStyle,
           // A felismerő azonos indexen van, mint a találat; a védelem csak
-          // elméleti (ha valami mégis eltér, nem törünk el egy üzenetet).
+          // elméleti (ha valami mégis eltér, nem törünk el egy üzenetet). A
+          // `@mindenki` helyén `null` áll: kiemelve látszik, de nem kattintható.
           recognizer: index < _recognizers.length ? _recognizers[index] : null,
         ),
       );

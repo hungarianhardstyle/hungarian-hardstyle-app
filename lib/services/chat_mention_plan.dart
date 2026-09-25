@@ -21,6 +21,18 @@ const String mentionTypeOrganizer = 'organizer';
 const String mentionTypeEvent = 'event';
 const String mentionTypeRelease = 'release';
 
+/// **Mindenki** hivatkozás (a tulajdonos kérése, 2026-09-25): *„kéne egy
+/// @mindenki tag is, amit ha beütök, kap mindenki notifyt és csak
+/// moderátor/admin használhassa"*.
+///
+/// ⚠️ Ez **nem** tartalom, hanem egy kiemelt címzett: a szerver
+/// (`functions/chat-mention-plan.js`) csak admin/moderátornak engedi, és
+/// ilyenkor minden regisztrált felhasználónak értesítést ír. Az azonosító és a
+/// címke **központi** konstans, hogy a kliens és a szerver ne tudjon széthúzni.
+const String mentionTypeEveryone = 'everyone';
+const String mentionEveryoneId = 'everyone';
+const String mentionEveryoneLabel = 'mindenki';
+
 /// A tartalom-típusok **sorrendje** a javaslatlistában (ez a felület sorrendje).
 const List<String> mentionContentTypes = <String>[
   mentionTypeArticle,
@@ -45,6 +57,8 @@ String mentionTypeLabel(String type) {
       return 'Események';
     case mentionTypeRelease:
       return 'Kiadványok';
+    case mentionTypeEveryone:
+      return 'Mindenki';
     default:
       return type;
   }
@@ -220,6 +234,11 @@ class MentionSuggestion {
 ///
 /// A szűrés: a lekérdezés a név **elején** áll (erősebb találat) vagy benne van.
 /// Üres lekérdezésnél minden találat jó (a lista eleje látszik).
+///
+/// Admin/moderátornál a **`@mindenki`** az **első** találat, ha a lekérdezés a
+/// „mindenki" szó eleje — de **csak akkor, ha már gépelt valamit**: üres
+/// lekérdezésnél (a `@` beírásakor) szándékosan **nem** ajánljuk fel, mert egy
+/// véletlen koppintás **mindenkinek** értesítést küldene.
 List<MentionSuggestion> mentionSuggestions({
   required String query,
   required List<MentionSuggestion> users,
@@ -229,6 +248,15 @@ List<MentionSuggestion> mentionSuggestions({
 }) {
   final needle = query.trim().toLowerCase();
   final ordered = <MentionSuggestion>[
+    if (privileged &&
+        needle.isNotEmpty &&
+        mentionEveryoneLabel.startsWith(needle))
+      const MentionSuggestion(
+        type: mentionTypeEveryone,
+        id: mentionEveryoneId,
+        label: mentionEveryoneLabel,
+        subtitle: 'Mindenki értesítést kap',
+      ),
     ..._rank(users, needle),
   ];
   if (privileged) {

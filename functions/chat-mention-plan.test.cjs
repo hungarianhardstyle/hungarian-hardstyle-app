@@ -11,10 +11,18 @@
  *     (a szöveg marad), és visszaadja a **kihagyottak számát**;
  *  4. egyelőre **csak a Chat** (a cikk-kommentek nem).
  *
+ * **Később (2026-09-25) ehhez jött az `@mindenki`** (a tulajdonos kérése:
+ * *„kéne egy @mindenki tag is, amit ha beütök, kap mindenki notifyt és csak
+ * moderátor/admin használhassa"*): a típus **csak privileged** küldőnek jár,
+ * **egyszer** szerepelhet, az `id`/`label` pedig a **szerver** kanonikus értéke
+ * (`everyone` / `mindenki`) — a kliens címkéjét nem hisszük el.
+ *
  * Ez a teszt a döntést méri (`functions/chat-mention-plan.js`) — hálózat és
  * Firestore nélkül —, a végén pedig forrás-linttel azt, hogy a `publishChatPost`
- * a tiszta tervet használja **privileged** módban, és hogy a Firestore-szabály
- * ismeri a `mentions` mezőt.
+ * a tiszta tervet használja **privileged** módban, az `@mindenki` fan-outot a
+ * `community_profiles`-ból, kötegelt best-effort írással, és hogy a
+ * Firestore-szabály ismeri a `mentions` mezőt (az `everyone` alakja beleillik,
+ * ezért **nem** kellett bővíteni).
  *
  * Futtatás: node --test functions/chat-mention-plan.test.cjs
  */
@@ -29,8 +37,14 @@ const {
   MAX_MENTIONS,
   MAX_USER_NOTIFICATIONS,
   MAX_EXCERPT_LENGTH,
+  EVERYONE_TYPE,
+  EVERYONE_ID,
+  EVERYONE_LABEL,
+  MAX_EVERYONE_RECIPIENTS,
   sanitizeMentions,
   chatMentionNotifications,
+  chatEveryoneNotification,
+  chatEveryoneNotifications,
 } = require('./chat-mention-plan');
 
 const functionsSource = fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8');
@@ -39,7 +53,7 @@ const rulesSource = fs.readFileSync(path.join(__dirname, '..', 'firestore.rules'
 /** A KIMENET-oldal mezői: a szerző neve körüli idézőjel a magyar helyesírás. */
 const quoted = (excerpt) => `Nagy Anna megemlített a Chatben: „${excerpt}”`;
 
-test('a hat típus és a korlátok exportálva vannak', () => {
+test('a hét típus (hat + everyone) és a korlátok exportálva vannak', () => {
   assert.deepEqual([...MENTION_TYPES], [
     'user',
     'article',
@@ -47,9 +61,15 @@ test('a hat típus és a korlátok exportálva vannak', () => {
     'organizer',
     'event',
     'release',
+    'everyone',
   ]);
   assert.equal(MAX_MENTIONS, 10);
   assert.equal(MAX_USER_NOTIFICATIONS, 5);
+  // Az @mindenki kanonikus alakja és a fan-out plafonja (ma 41 profil van).
+  assert.equal(EVERYONE_TYPE, 'everyone');
+  assert.equal(EVERYONE_ID, 'everyone');
+  assert.equal(EVERYONE_LABEL, 'mindenki');
+  assert.equal(MAX_EVERYONE_RECIPIENTS, 500);
 });
 
 test('nem tömb bemenetre üres lista, és ilyenkor nincs mit kihagyni', () => {
@@ -93,7 +113,10 @@ test('privileged módban mind az öt tartalom-típus átmegy', () => {
   ];
 
   const { mentions, dropped } = sanitizeMentions(raw, { privileged: true });
-  assert.deepEqual(mentions.map((mention) => mention.type), [...MENTION_TYPES]);
+  assert.deepEqual(
+    mentions.map((mention) => mention.type),
+    ['user', 'article', 'artist', 'organizer', 'event', 'release'],
+  );
   assert.equal(dropped, 0);
 });
 
@@ -309,6 +332,254 @@ test('ismeretlen szerzőnél általános alak, hiányzó postId-nál nincs érte
   );
 });
 
+// ---------------------------------------------------------------------------
+// @MINDENKI („everyone") — a tulajdonos kérése (2026-09-25): *„kéne egy
+// @mindenki tag is, amit ha beütök, kap mindenki notifyt és csak
+// moderátor/admin használhassa"*.
+// ---------------------------------------------------------------------------
+
+test('nem privileged @mindenki kiesik (dropped++), és senkit nem értesít', () => {
+  const { mentions, dropped } = sanitizeMentions([
+    { type: 'everyone', id: 'everyone', label: 'mindenki' },
+    { type: 'user', id: 'uid-1', label: 'Kobakologia' },
+  ]);
+
+  assert.deepEqual(mentions, [{ type: 'user', id: 'uid-1', label: 'Kobakologia' }]);
+  assert.equal(dropped, 1, 'az @mindenki ugyanúgy kiesik, mint a tartalom-hivatkozás');
+
+  // A megmaradt hivatkozásokból csak a SZEMÉLY kap értesítést — az `everyone`
+  // soha nem kerül a `chatMentionNotifications` payload-jai közé.
+  const notifications = chatMentionNotifications({
+    postId: 'post-9',
+    authorId: 'author-1',
+    authorName: 'Nagy Anna',
+    mentions,
+    text: 'Szia @Kobakologia és @mindenki',
+  });
+  assert.deepEqual(notifications.map((item) => item.recipientUid), ['uid-1']);
+});
+
+test('privileged @mindenki átmegy, és az id/label a SZERVER kanonikus értéke', () => {
+  const cases = [
+    [{ type: 'everyone', id: 'HACK', label: 'Saját címke' }],
+    [{ type: 'everyone' }],
+    [{ type: 'everyone', id: 12, label: 42 }],
+    [{ type: 'everyone', id: ` ${EVERYONE_ID} `, label: ` ${EVERYONE_LABEL} ` }],
+  ];
+
+  for (const raw of cases) {
+    const { mentions, dropped } = sanitizeMentions(raw, { privileged: true });
+    assert.deepEqual(
+      mentions,
+      [{ type: EVERYONE_TYPE, id: EVERYONE_ID, label: EVERYONE_LABEL }],
+      `a kliens bemenete: ${JSON.stringify(raw)}`,
+    );
+    assert.equal(dropped, 0);
+  }
+});
+
+test('két @mindenki: csak egy marad, a második kihagyottnak számít', () => {
+  const { mentions, dropped } = sanitizeMentions(
+    [
+      { type: 'everyone', id: 'everyone', label: 'mindenki' },
+      { type: 'user', id: 'uid-1', label: 'Kobakologia' },
+      { type: 'everyone', id: 'everyone', label: 'mindenki újra' },
+    ],
+    { privileged: true },
+  );
+
+  assert.deepEqual(mentions, [
+    { type: 'everyone', id: 'everyone', label: 'mindenki' },
+    { type: 'user', id: 'uid-1', label: 'Kobakologia' },
+  ]);
+  assert.equal(dropped, 1);
+});
+
+test('a 10-es plafon @mindenkivel együtt is áll: 1 mindenki + 9 más fér el', () => {
+  const users = Array.from({ length: 12 }, (_, index) => ({
+    type: 'user',
+    id: `uid-${index}`,
+    label: `Tag ${index}`,
+  }));
+
+  const { mentions, dropped } = sanitizeMentions(
+    [{ type: 'everyone', id: 'everyone', label: 'mindenki' }, ...users],
+    { privileged: true },
+  );
+  assert.equal(mentions.length, MAX_MENTIONS);
+  assert.equal(mentions[0].type, 'everyone');
+  assert.deepEqual(
+    mentions.slice(1).map((mention) => mention.id),
+    ['uid-0', 'uid-1', 'uid-2', 'uid-3', 'uid-4', 'uid-5', 'uid-6', 'uid-7', 'uid-8'],
+  );
+  assert.equal(dropped, 3, 'uid-9, uid-10 és uid-11 esik ki');
+
+  // Ha a plafon MÁR betelt, az @mindenki sem fér be — és kihagyottnak számít.
+  const full = sanitizeMentions(
+    [...users.slice(0, MAX_MENTIONS), { type: 'everyone', id: 'everyone', label: 'mindenki' }],
+    { privileged: true },
+  );
+  assert.equal(full.mentions.length, MAX_MENTIONS);
+  assert.equal(full.mentions.some((mention) => mention.type === 'everyone'), false);
+  assert.equal(full.dropped, 1);
+});
+
+test('chatEveryoneNotification: a payload teljes, és a kulcs a címzettől is függ', () => {
+  const base = {
+    postId: 'post-9',
+    authorId: 'author-1',
+    authorName: 'Nagy Anna',
+    excerpt: 'Szia   mindenki!',
+  };
+
+  const notification = chatEveryoneNotification({ ...base, recipientUid: 'uid-2' });
+  assert.deepEqual(notification, {
+    recipientUid: 'uid-2',
+    type: 'chat_mention',
+    title: 'Megemlítettek a Chatben',
+    body: 'Nagy Anna mindenkit megemlített a Chatben: „Szia mindenki!”',
+    targetType: 'chat',
+    targetId: 'post-9',
+    dedupeKey: 'chat-everyone:post-9:uid-2',
+    senderId: 'author-1',
+  });
+
+  // UGYANAZ a post, MÁS címzett → MÁS dedupeKey: különben a `createNotification`
+  // a kulcs hash-e miatt csak az ELSŐ címzettnek írna dokumentumot.
+  const other = chatEveryoneNotification({ ...base, recipientUid: 'uid-3' });
+  assert.notEqual(other.dedupeKey, notification.dedupeKey);
+  assert.match(other.dedupeKey, /post-9/);
+  assert.match(other.dedupeKey, /uid-3/);
+
+  // A részlet itt is 80 karakterre vágva (a közös `mentionExcerpt`-tel).
+  const long = chatEveryoneNotification({
+    ...base,
+    excerpt: 'a'.repeat(120),
+    recipientUid: 'uid-2',
+  });
+  assert.equal(long.body.split('„')[1].slice(0, -1), `${'a'.repeat(MAX_EXCERPT_LENGTH)}…`);
+
+  // Ismeretlen szerzőnél általános alak (mint a személy-értesítésnél).
+  const unnamed = chatEveryoneNotification({ ...base, authorName: '   ', recipientUid: 'uid-2' });
+  assert.equal(unnamed.body, 'Egy HUHS tag mindenkit megemlített a Chatben: „Szia mindenki!”');
+});
+
+test('chatEveryoneNotification: null a szerzőnél és hiányzó kulcsoknál', () => {
+  const base = {
+    postId: 'post-9',
+    authorId: 'author-1',
+    authorName: 'Nagy Anna',
+    excerpt: 'Szia',
+    recipientUid: 'uid-2',
+  };
+
+  assert.equal(
+    chatEveryoneNotification({ ...base, recipientUid: 'author-1' }),
+    null,
+    'a szerző nem kap értesítést a saját üzenetéről',
+  );
+  assert.equal(chatEveryoneNotification({ ...base, recipientUid: '  author-1  ' }), null);
+
+  for (const postId of [undefined, null, '', '   ']) {
+    assert.equal(chatEveryoneNotification({ ...base, postId }), null);
+  }
+  for (const authorId of [undefined, null, '', '   ']) {
+    assert.equal(chatEveryoneNotification({ ...base, authorId }), null);
+  }
+  for (const recipientUid of [undefined, null, '', '   ']) {
+    assert.equal(chatEveryoneNotification({ ...base, recipientUid }), null);
+  }
+  assert.equal(chatEveryoneNotification(), null);
+});
+
+test('a fan-out plafonja MAX_EVERYONE_RECIPIENTS, a szerző és a duplikátum kiesik', () => {
+  const base = {
+    postId: 'post-9',
+    authorId: 'author-1',
+    authorName: 'Nagy Anna',
+    excerpt: 'Szia mindenki!',
+  };
+
+  const many = chatEveryoneNotifications({
+    ...base,
+    recipientUids: Array.from({ length: MAX_EVERYONE_RECIPIENTS + 20 }, (_, index) => `uid-${index}`),
+  });
+  assert.equal(many.length, MAX_EVERYONE_RECIPIENTS, 'a plafon a helperben is érvényes');
+  assert.equal(many[0].recipientUid, 'uid-0');
+  assert.equal(many[MAX_EVERYONE_RECIPIENTS - 1].recipientUid, `uid-${MAX_EVERYONE_RECIPIENTS - 1}`);
+
+  const mixed = chatEveryoneNotifications({
+    ...base,
+    recipientUids: ['uid-1', '  uid-1  ', '', '   ', null, 'author-1', 'uid-2'],
+  });
+  assert.deepEqual(mixed.map((item) => item.recipientUid), ['uid-1', 'uid-2']);
+  assert.equal(new Set(mixed.map((item) => item.dedupeKey)).size, 2);
+  assert.equal(chatEveryoneNotifications().length, 0);
+});
+
+test('a Firestore-szabályt NEM kellett bővíteni: az @mindenki kanonikus alakja beleillik', () => {
+  const entry = { type: EVERYONE_TYPE, id: EVERYONE_ID, label: EVERYONE_LABEL };
+  // A szabály ezt kéri: pont ez a három kulcs, string típus, id ≤ 64, label ≤ 80.
+  assert.deepEqual(Object.keys(entry), ['type', 'id', 'label']);
+  assert.equal(typeof entry.type, 'string');
+  assert.equal(entry.id.length, 8, 'mérve: „everyone” = 8 karakter (≤ 64)');
+  assert.equal(entry.label.length, 8, 'mérve: „mindenki” = 8 karakter (≤ 80)');
+  // A szabály szövegében nincs típus-felsorolás (csak alak + darabszám), ezért
+  // az új típus nem igényel szabálymódosítást.
+  assert.equal(rulesSource.includes('everyone'), false);
+});
+
+test('forrás-lint: a publishChatPost @mindenki fan-outja kötegelt, best-effort és szerző-kihagyó', () => {
+  const start = functionsSource.indexOf('exports.publishChatPost = ');
+  const end = functionsSource.indexOf('exports.manageConnection = ', start);
+  assert.ok(start > 0 && end > start, 'a publishChatPost megtalálható');
+  const body = functionsSource.slice(start, end);
+
+  // 1) Az import a tiszta modulból jön (helper + típus-konstans + plafon).
+  assert.match(
+    functionsSource,
+    /chatEveryoneNotifications,\s*\n\s*EVERYONE_TYPE,\s*\n\s*MAX_EVERYONE_RECIPIENTS,\s*\n\} = require\('\.\/chat-mention-plan'\)/,
+  );
+
+  // 2) A döntés a tiszta helperben van, és a típus-konstansot kéri.
+  assert.match(body, /mentions\.some\(\(mention\) => mention\.type === EVERYONE_TYPE\)/);
+  assert.match(body, /chatEveryoneNotifications\(\{/);
+
+  // 3) A címzettek a community_profiles-ból, a DOKUMENTUM-AZONOSÍTÓVAL, plafonnal.
+  assert.match(
+    body,
+    /\.collection\('community_profiles'\)\s*\.limit\(MAX_EVERYONE_RECIPIENTS\)\s*\.get\(\)/,
+  );
+  assert.match(body, /\.map\(\(document\) => document\.id\)/);
+
+  // 4) A szerzőt kihagyjuk (a tiszta helper is kihagyja, de a hívó is).
+  assert.match(body, /\.filter\(\(recipientUid\) => recipientUid && recipientUid !== uid\)/);
+
+  // 5) Kötegelt (50) párhuzamos írás, best-effort íróval — pontosan egyszer.
+  assert.match(body, /index \+= 50/);
+  assert.match(body, /await Promise\.all\(/);
+  assert.match(body, /createNotificationBestEffort\(notification\)/);
+  assert.equal((body.match(/createNotificationBestEffort\(notification\)/g) || []).length, 1);
+
+  // 6) A fan-out blokk try/catch-ben fut (a helper-hívás a try és a catch között).
+  const everyoneIndex = body.indexOf('chatEveryoneNotifications({');
+  const tryIndex = body.lastIndexOf('try {', everyoneIndex);
+  const catchIndex = body.indexOf('} catch (error) {', everyoneIndex);
+  assert.ok(
+    tryIndex > 0 && tryIndex < everyoneIndex && catchIndex > everyoneIndex,
+    'a fan-out try/catch-ben fut (egy olvasási/kapcsolati hiba nem viheti el a hívást)',
+  );
+  assert.match(body, /event: 'chat_everyone_notify_failed'/);
+
+  // 7) A válasz visszaadja a számokat (a régi `droppedMentions` mellé).
+  assert.match(body, /everyoneNotified = everyoneNotifications\.length;/);
+  assert.match(body, /return \{ id: ref\.id, droppedMentions, everyoneNotified \}/);
+
+  // 8) A fan-out a SZEMÉLY-értesítések UTÁN fut (nem keveredik bele).
+  const mentionIndex = body.indexOf('chatMentionNotifications({');
+  assert.ok(mentionIndex > 0 && everyoneIndex > mentionIndex, 'a fan-out a személy-értesítések után van');
+});
+
 test('a publishChatPost a tiszta tervet használja privileged módban, a szabály pedig ismeri a mentions mezőt', () => {
   const start = functionsSource.indexOf('exports.publishChatPost = ');
   const end = functionsSource.indexOf('exports.manageConnection = ', start);
@@ -328,8 +599,8 @@ test('a publishChatPost a tiszta tervet használja privileged módban, a szabál
   const replyIndex = body.indexOf('createNotificationBestEffort(replyNotification)');
   const mentionIndex = body.indexOf('chatMentionNotifications({');
   assert.ok(replyIndex > 0 && mentionIndex > replyIndex, 'a mention-blokk a válasz-blokk után van');
-  // Visszafelé kompatibilis válasz + a kihagyottak száma.
-  assert.match(body, /return \{ id: ref\.id, droppedMentions \}/);
+  // Visszafelé kompatibilis válasz + a kihagyottak száma (és az @mindenki-szám).
+  assert.match(body, /return \{ id: ref\.id, droppedMentions, everyoneNotified \}/);
 
   // A Firestore-szabály: a whitelistben ott a mező, és a shape-korlát is.
   assert.match(rulesSource, /'reactions', 'reactionBy', 'pinned', 'createdAt', 'editedAt', 'mentions'/);

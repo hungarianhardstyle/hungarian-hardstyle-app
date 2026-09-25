@@ -16,6 +16,18 @@
  *     szöveg marad), és **visszaadja a kihagyottak számát**;
  *  4. egyelőre **csak a Chat** (a cikk-kommentek nem).
  *
+ * KÉSŐBB (2026-09-25) ehhez jött az **`@mindenki`** (a tulajdonos kérése:
+ * *„kéne egy @mindenki tag is, amit ha beütök, kap mindenki notifyt és csak
+ * moderátor/admin használhassa"*):
+ *
+ *  5. az `everyone` típus **csak privileged** küldőnek jár (mint a tartalom-
+ *     hivatkozások), és **egyszer** szerepelhet — a második `dropped`;
+ *  6. az `everyone` **alakját a szerver írja elő** (`id = 'everyone'`,
+ *     `label = 'mindenki'`): a kliens címkéjét **soha nem hisszük el**;
+ *  7. a fan-out **41 címzett ma** (mérve: `tools/check-everyone-reach.mjs`,
+ *     41 dokumentum a `community_profiles`-ban), ezért felső plafonként
+ *     `MAX_EVERYONE_RECIPIENTS = 500` van a biztonság kedvéért.
+ *
  * MIÉRT külön modul (a `chat-notification-plan.js` és az `actor-name-plan.js`
  * mintájára): így a döntés — mi számít érvényes hivatkozásnak, mi esik ki, kit
  * értesítünk és mit írunk a szövegbe — **Firestore és WordPress nélkül
@@ -28,7 +40,9 @@
  * egyetlen írási útja.
  */
 
-/** A hat támogatott hivatkozás-típus, ebben a (megjelenítési) sorrendben. */
+/** A hét támogatott hivatkozás-típus, ebben a (megjelenítési) sorrendben.
+ *  Az `everyone` („@mindenki") a végén van: ez **csak privileged** küldőnek
+ *  jár, és az alakját is a szerver írja elő (lásd `sanitizeMentions`). */
 const MENTION_TYPES = Object.freeze([
   'user',
   'article',
@@ -36,7 +50,17 @@ const MENTION_TYPES = Object.freeze([
   'organizer',
   'event',
   'release',
+  'everyone',
 ]);
+
+/** Az „@mindenki" típus, azonosító és címke — a szerver kanonikus alakja. */
+const EVERYONE_TYPE = 'everyone';
+const EVERYONE_ID = 'everyone';
+const EVERYONE_LABEL = 'mindenki';
+
+/** Egy „@mindenki" üzenet ennyi címzettet szólíthat meg (felső plafon: ma 41
+ *  profil van összesen, mérve a `tools/check-everyone-reach.mjs`-szel). */
+const MAX_EVERYONE_RECIPIENTS = 500;
 
 /** Egy üzenetben összesen ennyi hivatkozás fér el (tulajdonosi döntés). */
 const MAX_MENTIONS = 10;
@@ -74,7 +98,8 @@ function cleanText(value) {
  *
  * @param {*} raw a kliens `mentions` mezője (szándékosan bármi lehet)
  * @param {{privileged?: boolean}} [options] `privileged === true`, ha a szerző
- *        `accessRole`-ja `admin` vagy `moderator` (a tartalom-hivatkozásokhoz)
+ *        `accessRole`-ja `admin` vagy `moderator` (a tartalom-hivatkozásokhoz
+ *        **és** az `everyone`-hoz)
  * @returns {{mentions: Array<{type: string, id: string, label: string}>, dropped: number}}
  *          a megtartott hivatkozások és a **kihagyottak száma**
  *
@@ -91,13 +116,21 @@ function cleanText(value) {
  *  4. az azonos `type:id` párok **összevonódnak** — a duplikátum **nem**
  *     számít kihagyottnak (nem büntetjük azt, aki ugyanazt kétszer küldi);
  *  5. a **10. utáni** érvényes hivatkozás kiesik, és `dropped`-nek számít,
- *     ahogy az érvénytelen vagy nem engedett elem is.
+ *     ahogy az érvénytelen vagy nem engedett elem is;
+ *  6. az `everyone` („@mindenki") **csak `privileged`** módban megy át, és
+ *     **egyszer** szerepelhet — a második előfordulás `dropped` (nem vonjuk
+ *     össze csendben, mint a `type:id` duplikátumot, mert ez itt szándékos
+ *     visszaélés-jelzés);
+ *  7. az `everyone` **`id`/`label` mezőjét a szerver írja felül** a kanonikus
+ *     értékre, ezért annak a kliens által küldött tartalma **soha** nem kerül a
+ *     dokumentumba (és a hiányzó/érvénytelen `id`/`label` sem ok az elutasításra).
  */
 function sanitizeMentions(raw, { privileged = false } = {}) {
   if (!Array.isArray(raw)) return { mentions: [], dropped: 0 };
 
   const mentions = [];
   const seen = new Set();
+  let everyoneSeen = false;
   let dropped = 0;
 
   for (const item of raw) {
@@ -106,8 +139,30 @@ function sanitizeMentions(raw, { privileged = false } = {}) {
     const id = isObject ? mentionField(item.id) : '';
     const label = isObject ? mentionField(item.label) : '';
 
-    const valid = MENTION_TYPES.includes(type)
-      && id.length > 0
+    if (!MENTION_TYPES.includes(type)) {
+      dropped += 1;
+      continue;
+    }
+
+    // @MINDENKI: ide a lenti id/label-érvényesség NEM vonatkozik — a kanonikus
+    // alakot a szerver adja (a kliens címkéje nem hiteles), ezért a hiányzó vagy
+    // hamis `id`/`label` nem elutasítási ok, hanem egyszerűen felülíródik.
+    if (type === EVERYONE_TYPE) {
+      // Jogosultság (mint a tartalom-hivatkozásoknál) + „egyszer" szabály.
+      if (privileged !== true || everyoneSeen) {
+        dropped += 1;
+        continue;
+      }
+      if (mentions.length >= MAX_MENTIONS) {
+        dropped += 1;
+        continue;
+      }
+      everyoneSeen = true;
+      mentions.push({ type: EVERYONE_TYPE, id: EVERYONE_ID, label: EVERYONE_LABEL });
+      continue;
+    }
+
+    const valid = id.length > 0
       && id.length <= MAX_ID_LENGTH
       && label.length > 0
       && label.length <= MAX_LABEL_LENGTH;
@@ -209,6 +264,87 @@ function chatMentionNotifications({ postId, authorId, authorName, mentions, text
   return notifications;
 }
 
+/**
+ * „@mindenki" értesítés **EGY** címzettnek.
+ *
+ * MIÉRT külön helper (és miért nem a `chatMentionNotifications`-ban): az
+ * `everyone` nem egy konkrét `user`-hivatkozás, hanem **fan-out** — a címzettek
+ * listáját a hívó tölti be (`community_profiles`), és **címzetenként** egy
+ * payload kell. A `recipientUid` ezért **paraméter**, nem a `mentions` tömbből
+ * jön; a payloadban viszont benne marad, mert a `createNotification` azt várja.
+ *
+ * @param {object} args
+ * @param {string} args.postId       a Chat-üzenet azonosítója (a célpont)
+ * @param {string} args.authorId     a szerző uid-ja (őt nem értesítjük)
+ * @param {string} args.authorName   a szerző neve (a szövegben)
+ * @param {string} args.excerpt      az üzenet szövege (a helper vágja 80-ra)
+ * @param {string} args.recipientUid az ÉRTESÍTENDŐ címzett uid-ja
+ * @returns {object|null} payload a `createNotificationBestEffort`-hoz, vagy
+ *          `null`, ha nincs `postId`/`authorId`/`recipientUid`, illetve ha a
+ *          címzett **maga a szerző** (önmagát nem értesítjük)
+ *
+ * A `dedupeKey` szándékosan **a címzettől is függ**
+ * (`chat-everyone:{postId}:{recipientUid}`): különben a 41 címzett közül csak az
+ * első kapna értesítést, mert a `createNotification` a kulcs SHA-256-ját teszi
+ * a dokumentum azonosítójává.
+ */
+function chatEveryoneNotification({ postId, authorId, authorName, excerpt, recipientUid } = {}) {
+  const post = cleanText(postId);
+  const author = cleanText(authorId);
+  const recipient = cleanText(recipientUid);
+  if (!post || !author || !recipient) return null;
+  if (recipient === author) return null;
+
+  const name = cleanText(authorName) || GENERIC_AUTHOR_NAME;
+  return {
+    recipientUid: recipient,
+    type: 'chat_mention',
+    title: 'Megemlítettek a Chatben',
+    body: `${name} mindenkit megemlített a Chatben: „${mentionExcerpt(excerpt)}”`,
+    targetType: 'chat',
+    targetId: post,
+    dedupeKey: `chat-everyone:${post}:${recipient}`,
+    senderId: author,
+  };
+}
+
+/**
+ * A teljes „@mindenki" fan-out: címzett-listából payload-lista.
+ *
+ * A plafon (`MAX_EVERYONE_RECIPIENTS = 500`) itt is érvényes, nem csak a
+ * hívóban: így egy elszabadult lista **soha** nem tud 500 írásnál többet
+ * indítani. Az ismétlődő és üres azonosítók kiesnek, a szerző pedig mindig
+ * (még a lista első helyén is).
+ *
+ * @param {object} args
+ * @param {string[]} args.recipientUids a címzettek (a hívó tölti be)
+ * @returns {Array<object>} legfeljebb `MAX_EVERYONE_RECIPIENTS` payload
+ */
+function chatEveryoneNotifications({ postId, authorId, authorName, excerpt, recipientUids } = {}) {
+  const notifications = [];
+  const seen = new Set();
+
+  for (const candidate of Array.isArray(recipientUids) ? recipientUids : []) {
+    if (notifications.length >= MAX_EVERYONE_RECIPIENTS) break;
+    const recipient = cleanText(candidate);
+    if (!recipient || seen.has(recipient)) continue;
+
+    const notification = chatEveryoneNotification({
+      postId,
+      authorId,
+      authorName,
+      excerpt,
+      recipientUid: recipient,
+    });
+    if (!notification) continue;
+
+    seen.add(recipient);
+    notifications.push(notification);
+  }
+
+  return notifications;
+}
+
 module.exports = {
   MENTION_TYPES,
   MAX_MENTIONS,
@@ -216,7 +352,13 @@ module.exports = {
   MAX_ID_LENGTH,
   MAX_LABEL_LENGTH,
   MAX_EXCERPT_LENGTH,
+  EVERYONE_TYPE,
+  EVERYONE_ID,
+  EVERYONE_LABEL,
+  MAX_EVERYONE_RECIPIENTS,
   sanitizeMentions,
   mentionExcerpt,
   chatMentionNotifications,
+  chatEveryoneNotification,
+  chatEveryoneNotifications,
 };

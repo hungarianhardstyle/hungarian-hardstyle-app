@@ -178,6 +178,92 @@ void main() {
       expect(target.id, isNotEmpty);
       expect(target.label, suggestion.label);
     });
+
+    // ⚠️ A tulajdonos kérése (2026-09-25): *„kéne egy @mindenki tag is, amit ha
+    // beütök, kap mindenki notifyt és csak moderátor/admin használhassa"*.
+    group('@mindenki (csak adminnak/moderátornak)', () {
+      List<MentionSuggestion> withEveryone(
+        String query, {
+        bool privileged = true,
+      }) => mentionSuggestions(
+        query: query,
+        users: users,
+        content: content,
+        privileged: privileged,
+      );
+
+      test('nem adminnak EGYÁLTALÁN nem jelenik meg', () {
+        for (final query in <String>['', 'min', 'mindenki']) {
+          final list = mentionSuggestions(query: query, users: users);
+          expect(
+            list.where((item) => item.type == mentionTypeEveryone),
+            isEmpty,
+            reason: 'a „$query" lekérdezésre sem szabad felajánlani',
+          );
+        }
+      });
+
+      test('üres lekérdezésnél (a @ beírásakor) NEM ajánlja fel', () {
+        expect(
+          withEveryone('').where((item) => item.type == mentionTypeEveryone),
+          isEmpty,
+          reason:
+              'egy véletlen koppintás mindenkinek küldene értesítést — csak gépelésre jöjjön',
+        );
+        expect(
+          withEveryone('   ').where((item) => item.type == mentionTypeEveryone),
+          isEmpty,
+        );
+      });
+
+      test('adminnak az ELSŐ találat, ha a szó elejét írja', () {
+        for (final query in <String>['m', 'min', 'mindenki', 'MINDENKI']) {
+          final list = withEveryone(query);
+          expect(
+            list.first.type,
+            mentionTypeEveryone,
+            reason: 'a „$query" lekérdezésre az első találat a mindenki',
+          );
+          expect(list.first.label, mentionEveryoneLabel);
+          expect(list.first.id, mentionEveryoneId);
+          expect(list.first.subtitle, isNotEmpty);
+        }
+      });
+
+      test('a „mindenki" szó közepére nem ajánlja fel', () {
+        expect(
+          withEveryone('denki').where(
+            (item) => item.type == mentionTypeEveryone,
+          ),
+          isEmpty,
+          reason: 'a prefix-szabály szerint csak az elejéről indulva talál',
+        );
+      });
+
+      test('a célpont a kanonikus azonosítót és címkét adja', () {
+        final target = withEveryone('min').first.toTarget();
+        expect(target.type, mentionTypeEveryone);
+        expect(target.id, mentionEveryoneId);
+        expect(target.label, mentionEveryoneLabel);
+        expect(target.toMap(), <String, Object>{
+          'type': 'everyone',
+          'id': 'everyone',
+          'label': 'mindenki',
+        });
+      });
+
+      test('a limitbe bele kell férnie (nem töri el a listát)', () {
+        final list = mentionSuggestions(
+          query: 'min',
+          users: users,
+          content: content,
+          privileged: true,
+          limit: 1,
+        );
+        expect(list, hasLength(1));
+        expect(list.first.type, mentionTypeEveryone);
+      });
+    });
   });
 
   group('ChatMentionTarget', () {
@@ -270,6 +356,41 @@ void main() {
         isEmpty,
       );
     });
+
+    test('a @mindenki is találat (kiemelve látszik a szövegben)', () {
+      final spans = mentionSpans('Sziasztok @mindenki, ma buli!', const [
+        ChatMentionTarget(
+          type: mentionTypeEveryone,
+          id: mentionEveryoneId,
+          label: mentionEveryoneLabel,
+        ),
+      ]);
+      expect(spans, hasLength(1));
+      expect(spans.first.target.type, mentionTypeEveryone);
+      expect(
+        'Sziasztok @mindenki, ma buli!'.substring(
+          spans.first.start,
+          spans.first.end,
+        ),
+        '@mindenki',
+      );
+    });
+
+    test('a @mindenki és egy személy egyszerre is működik', () {
+      final spans = mentionSpans('@mindenki és @Anna figyeljetek', const [
+        ChatMentionTarget(
+          type: mentionTypeEveryone,
+          id: mentionEveryoneId,
+          label: mentionEveryoneLabel,
+        ),
+        ChatMentionTarget(type: mentionTypeUser, id: 'a', label: 'Anna'),
+      ]);
+      expect(spans, hasLength(2));
+      expect(spans.map((span) => span.target.type), <String>[
+        mentionTypeEveryone,
+        mentionTypeUser,
+      ]);
+    });
   });
 
   group('típus-címkék', () {
@@ -280,6 +401,7 @@ void main() {
       expect(mentionTypeLabel(mentionTypeOrganizer), 'Szervezők');
       expect(mentionTypeLabel(mentionTypeEvent), 'Események');
       expect(mentionTypeLabel(mentionTypeRelease), 'Kiadványok');
+      expect(mentionTypeLabel(mentionTypeEveryone), 'Mindenki');
     });
 
     test('a konstansok egyeznek a szerveroldali korlátokkal', () {
