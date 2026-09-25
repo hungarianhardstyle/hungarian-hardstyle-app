@@ -42,6 +42,7 @@ $STATE = array(
     'actions' => array(),
     'scheduled' => array(),
     'posts' => array(),
+    'supports' => array(),
 );
 
 class WP_Post
@@ -75,8 +76,27 @@ class WP_Error
 
 function add_action($hook, $callback, $priority = 10, $accepted = 1)
 {
-    $GLOBALS['STATE']['actions'][] = array('hook' => $hook, 'callback' => $callback);
+    $GLOBALS['STATE']['actions'][] = array('hook' => $hook, 'callback' => $callback, 'priority' => $priority);
     return true;
+}
+
+/**
+ * A `custom-fields` támogatás stubja — e nélkül a REST-en küldött meta
+ * **csendben elveszik** a nem-`post` típusoknál (mért hiba, 2026-09-25).
+ */
+function add_post_type_support($post_type, $feature)
+{
+    $GLOBALS['STATE']['supports'][] = array($post_type, $feature);
+    return true;
+}
+
+function post_type_exists($post_type)
+{
+    return in_array(
+        $post_type,
+        array('post', 'huhs_event', 'huhs_artist', 'huhs_organizer', 'huhs_release'),
+        true
+    );
 }
 
 function add_filter($hook, $callback, $priority = 10, $accepted = 1)
@@ -457,6 +477,46 @@ check(
     'a cron a `save_post`-ra és a saját eseményére is feliratkozik',
     in_array('save_post', $hooks, true) && in_array('huhs_translate_post', $hooks, true),
     implode(',', $hooks)
+);
+
+/* ---- 6) A REST-meta írás ELŐFELTÉTELE: custom-fields támogatás ---------- */
+
+// ⚠️ MÉRT HIBA (2026-09-25): a WordPress a `meta` mezőt csak akkor fogadja el
+// REST-en, ha a post-típus támogatja a `custom-fields`-et. Enélkül a küldött
+// angol meta **csendben elveszett** (POST 200, visszaolvasás üres) a
+// huhs_event/huhs_artist/huhs_organizer/huhs_release típusnál.
+reset_state();
+$GLOBALS['STATE']['supports'] = array();
+huhs_enable_translation_meta_custom_fields();
+$supports = array_map(
+    static function ($entry) {
+        return $entry[0] . ':' . $entry[1];
+    },
+    $GLOBALS['STATE']['supports']
+);
+$expectedSupports = array(
+    'post:custom-fields',
+    'huhs_event:custom-fields',
+    'huhs_artist:custom-fields',
+    'huhs_organizer:custom-fields',
+    'huhs_release:custom-fields',
+);
+check(
+    'mind az öt fordítási típus megkapja a custom-fields támogatást',
+    count(array_intersect($expectedSupports, $supports)) === 5,
+    implode(', ', $supports)
+);
+
+$initHooks = array_values(array_filter(
+    $GLOBALS['STATE']['actions'],
+    static function ($entry) {
+        return $entry['hook'] === 'init' && $entry['callback'] === 'huhs_enable_translation_meta_custom_fields';
+    }
+));
+check(
+    'a támogatás a KÉSŐI init-en kapcsolódik (99)',
+    count($initHooks) === 1 && $initHooks[0]['priority'] === 99,
+    json_encode($initHooks)
 );
 
 echo "\n{$checks} ellenőrzés, {$failures} hiba\n";

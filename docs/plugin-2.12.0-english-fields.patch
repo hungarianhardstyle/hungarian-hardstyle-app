@@ -291,13 +291,41 @@ index 8c64e2d8..b4fbe549 100644
      $artist_ids = json_decode((string) get_post_meta($id, 'artists', true), true);
      $artists = array();
 diff --git a/huhs-mobile-api/includes/post-translation-meta.php b/huhs-mobile-api/includes/post-translation-meta.php
-index bcb5a6db..5afe5c40 100644
+index bcb5a6db..dbeb52fd 100644
 --- a/huhs-mobile-api/includes/post-translation-meta.php
 +++ b/huhs-mobile-api/includes/post-translation-meta.php
-@@ -44,33 +44,94 @@ if (!defined('ABSPATH')) {
+@@ -44,33 +44,122 @@ if (!defined('ABSPATH')) {
  
  add_action('init', 'huhs_register_post_translation_meta');
  
++/**
++ * A `custom-fields` támogatás biztosítása a fordítási típusoknak.
++ *
++ * ⚠️ MIÉRT KELL (mérve, 2026-09-25): a WordPress a `meta` mezőt **csak akkor**
++ * teszi bele a REST-válaszba — és csak akkor fogadja el írásra —, ha a
++ * post-típus támogatja a `custom-fields`-et. A `huhs_event`, `huhs_artist`,
++ * `huhs_organizer` és `huhs_release` típusnál ez nem volt bekapcsolva, ezért a
++ * REST-en küldött angol meta **csendben elveszett**: a `POST` **200-at adott**,
++ * a visszaolvasás viszont **üres** lett (a `post` típusnál ugyanaz a hívás
++ * működött — ez volt a kontroll). A szerveroldali útvonalakat (a WP-cron
++ * `update_post_meta`-ja, a végpontok `get_post_meta`-ja) ez nem érinti, ezért a
++ * hiba csak a **kívülről írt** fordításoknál jelentkezett.
++ *
++ * A `init` 99-es prioritása szándékos: a post-típusok rendszerint a 10-es
++ * prioritáson regisztrálódnak, és a `custom-fields` jelzőt csak a létező
++ * típusra lehet bekapcsolni (ezt a `post_type_exists` őrzi).
++ */
++function huhs_enable_translation_meta_custom_fields()
++{
++    foreach (huhs_translation_post_types() as $post_type) {
++        if (post_type_exists($post_type)) {
++            add_post_type_support($post_type, 'custom-fields');
++        }
++    }
++}
++
++add_action('init', 'huhs_enable_translation_meta_custom_fields', 99);
++
 +/**
 + * A fordítást támogató post típusok — **egy helyen** (plugin 2.12.0).
 + *
@@ -323,6 +351,22 @@ index bcb5a6db..5afe5c40 100644
 -        'single'            => true,
 -        'show_in_rest'      => true,
 -        'sanitize_callback' => 'sanitize_text_field',
+-        'auth_callback'     => $auth_callback,
+-    ));
+-
+-    register_post_meta('post', '_huhs_excerpt_en', array(
+-        'type'              => 'string',
+-        'single'            => true,
+-        'show_in_rest'      => true,
+-        'sanitize_callback' => 'wp_kses_post',
+-        'auth_callback'     => $auth_callback,
+-    ));
+-
+-    register_post_meta('post', '_huhs_content_en', array(
+-        'type'              => 'string',
+-        'single'            => true,
+-        'show_in_rest'      => true,
+-        'sanitize_callback' => 'wp_kses_post',
 -        'auth_callback'     => $auth_callback,
 -    ));
 +    // Mező → sanitize. A döntés indoklása a fájl fejlécében van.
@@ -386,26 +430,12 @@ index bcb5a6db..5afe5c40 100644
 +    if ($title_en === '' || $content_en === '') {
 +        return $values;
 +    }
- 
--    register_post_meta('post', '_huhs_excerpt_en', array(
--        'type'              => 'string',
--        'single'            => true,
--        'show_in_rest'      => true,
--        'sanitize_callback' => 'wp_kses_post',
--        'auth_callback'     => $auth_callback,
--    ));
++
 +    $values['has_en'] = true;
 +    $values['title'] = $title_en;
 +    $values['content'] = $content_en;
 +    $values['excerpt'] = trim((string) get_post_meta($post_id, '_huhs_excerpt_en', true));
- 
--    register_post_meta('post', '_huhs_content_en', array(
--        'type'              => 'string',
--        'single'            => true,
--        'show_in_rest'      => true,
--        'sanitize_callback' => 'wp_kses_post',
--        'auth_callback'     => $auth_callback,
--    ));
++
 +    return $values;
  }
  

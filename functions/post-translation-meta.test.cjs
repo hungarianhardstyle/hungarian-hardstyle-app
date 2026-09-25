@@ -278,6 +278,33 @@ test('a WP-cron az ÖRÖKÖLT OpenAI-kulcsot is elfogadja (nem kell új kulcs)',
   assert.doesNotMatch(source, /sk-[A-Za-z0-9]{10,}/, 'nincs kulcs a forrásban');
 });
 
+test('a fordítási típusok megkapják a custom-fields támogatást (REST-meta írás)', () => {
+  const source = pluginFile('includes/post-translation-meta.php');
+  // ⚠️ MÉRT HIBA (2026-09-25): e nélkül a REST-en küldött meta CSENDBEN elveszik
+  // a huhs_event/huhs_artist/huhs_organizer/huhs_release típusnál (200 + üres
+  // visszaolvasás), miközben a `post` típusnál működik.
+  assert.match(
+    source,
+    /function huhs_enable_translation_meta_custom_fields\(\)/,
+    'van külön függvény a támogatás bekapcsolására',
+  );
+  assert.match(
+    source,
+    /add_post_type_support\(\$post_type, 'custom-fields'\)/,
+    'a custom-fields support bekapcsolódik',
+  );
+  assert.match(source, /post_type_exists\(\$post_type\)/, 'csak létező típusra');
+  // A regisztráció UTÁN kell futnia (a típusok a 10-es prioritáson jönnek létre).
+  assert.match(
+    source,
+    /add_action\('init', 'huhs_enable_translation_meta_custom_fields', 99\)/,
+    'késői init-prioritás (a típusok már regisztráltak)',
+  );
+  // A típuslista EGY forrásból jön (nem másolt lista).
+  const body = source.slice(source.indexOf('function huhs_enable_translation_meta_custom_fields()'));
+  assert.match(body.slice(0, 260), /huhs_translation_post_types\(\)/, 'a közös típuslistát használja');
+});
+
 test('a fordítási válasz feldolgozása hálózat nélkül, hibára üres', () => {
   const source = pluginFile('includes/translation-cron.php');
   const start = source.indexOf('function huhs_translation_parse_response(');

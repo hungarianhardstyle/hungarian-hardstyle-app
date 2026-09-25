@@ -28,12 +28,30 @@ import { META_KEYS } from './lib/translation-meta.mjs';
 export const EN_DIR = 'tmp/content-en/en';
 export const SOURCE_PATH = 'tmp/content-en/source.json';
 
-/** A REST-végpont a post típusonként (a meta ugyanaz). */
-export const REST_BASE_BY_TYPE = {
-  event: 'events',
-  artist: 'artists',
-  organizer: 'organizers',
+/**
+ * A logikai típus → **post-típus** leképezés (a REST-útvonalhoz).
+ *
+ * ⚠️ MÉRT HIBA (2026-09-25): az első változat `events`/`artists`/`organizers`
+ * útvonalat használt, amiből a WordPress `rest_no_route` **404**-et adott — a
+ * valódi útvonal a post-típus neve (`huhs_event`, `huhs_artist`,
+ * `huhs_organizer`), amit a `/wp/v2/types` végpont igazol. Ezért a leképezés
+ * mostantól a **post-típus**, és a tényleges `rest_base`-et futásidőben kérdezzük
+ * le (a lenti érték csak tartalék, ha a típus-lista nem elérhető).
+ */
+export const POST_TYPE_BY_KEY = {
+  event: 'huhs_event',
+  artist: 'huhs_artist',
+  organizer: 'huhs_organizer',
 };
+
+/** A post-típus REST-útvonala: a `/wp/v2/types` a hiteles forrás. */
+export function restBaseFor(type, typesPayload) {
+  const postType = POST_TYPE_BY_KEY[type];
+  if (!postType) return null;
+  const definition = typesPayload?.[postType];
+  const base = definition?.rest_base;
+  return typeof base === 'string' && base.trim() !== '' ? base.trim() : postType;
+}
 
 /** A `"<típus>-<id>"` kulcs felbontása. */
 export function parseKey(key) {
@@ -59,7 +77,7 @@ export function collectTranslations(dir = EN_DIR) {
     const data = JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
     for (const [key, value] of Object.entries(data ?? {})) {
       const parsed = parseKey(key);
-      if (!parsed || !REST_BASE_BY_TYPE[parsed.type]) continue;
+      if (!parsed || !POST_TYPE_BY_KEY[parsed.type]) continue;
       entries.push({ ...parsed, key, ...metaPayload(value) });
     }
   }
@@ -87,8 +105,25 @@ export function selfTest() {
   check('a hibás kulcs null', parseKey('artist') === null && parseKey('artist-x') === null);
   check(
     'az ismeretlen típus kimarad a gyűjtésből',
-    REST_BASE_BY_TYPE['release'] === undefined && REST_BASE_BY_TYPE['x'] === undefined,
+    POST_TYPE_BY_KEY['release'] === undefined && POST_TYPE_BY_KEY['x'] === undefined,
   );
+  check(
+    'a post-típus leképezés a valódi neveket adja',
+    POST_TYPE_BY_KEY.event === 'huhs_event'
+      && POST_TYPE_BY_KEY.artist === 'huhs_artist'
+      && POST_TYPE_BY_KEY.organizer === 'huhs_organizer',
+  );
+  check(
+    'a REST-útvonal a /types válaszából jön (a rest_base az elsődleges)',
+    restBaseFor('event', { huhs_event: { rest_base: 'huhs_event' } }) === 'huhs_event'
+      && restBaseFor('artist', { huhs_artist: { rest_base: 'mas-utvonal' } }) === 'mas-utvonal',
+  );
+  check(
+    'a REST-útvonal a típus nevére esik vissza, ha nincs rest_base',
+    restBaseFor('organizer', { huhs_organizer: {} }) === 'huhs_organizer'
+      && restBaseFor('organizer', null) === 'huhs_organizer',
+  );
+  check('az ismeretlen kulcshoz nincs útvonal', restBaseFor('release', {}) === null);
   check('a payload a három kulcsot adja', Object.keys(metaPayload({})).length === 3);
   check(
     'az IDEGEN meta nem számít angolnak',
@@ -103,7 +138,7 @@ export function selfTest() {
     shouldSkip({ existing: { [META_KEYS.title]: 'a' }, payload: {} }) === false,
   );
   check('a felülírás kikapcsolja a kihagyást', shouldSkip({ existing: { [META_KEYS.title]: 'a', [META_KEYS.content]: 'b' }, payload: {}, force: true }) === false);
-  check('a típus-térkép a hármat ismeri', Object.keys(REST_BASE_BY_TYPE).join(',') === 'event,artist,organizer');
+  check('a típus-térkép a hármat ismeri', Object.keys(POST_TYPE_BY_KEY).join(',') === 'event,artist,organizer');
   return checks;
 }
 
@@ -167,9 +202,20 @@ async function main() {
   let done = 0;
   let skipped = 0;
   let failed = 0;
+  // A REST-útvonalakat EGYSZER kérdezzük le (a `/wp/v2/types` a hiteles forrás).
+  const typesResponse = await wp('/types?context=edit', { auth: authorization() });
+  const typesPayload = typesResponse.ok ? typesResponse.json : null;
+  if (!typesResponse.ok) {
+    console.log(`  FIGYELEM: a /wp/v2/types nem olvasható (HTTP ${typesResponse.status}) — a típus-névre esem vissza.`);
+  }
   for (const entry of translations) {
     const auth = authorization();
-    const base = REST_BASE_BY_TYPE[entry.type];
+    const base = restBaseFor(entry.type, typesPayload);
+    if (!base) {
+      console.log(`  ${entry.key}: ismeretlen típus (${entry.type})`);
+      failed += 1;
+      continue;
+    }
     const before = await wp(`/${base}/${entry.id}?context=edit`, { auth });
     if (!before.ok) {
       console.log(`  ${entry.key}: HIBA a kiolvasásnál (HTTP ${before.status}) ${before.text.slice(0, 120)}`);

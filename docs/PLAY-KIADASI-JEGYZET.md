@@ -475,10 +475,18 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 kiadványokat is angolul kapja** — a meglévő 2.11.0 csak a cikkeket tudja. A meglévő tartalom
 fordítása utána következik (a plugin addig a **magyar** szöveget adja ezeknél, hiba nélkül).
 
-A plugin csomag: `build/huhs-mobile-api-2.12.0.zip` (47 fájl, 159,8 KB,
-SHA-256 `C39D2BDF2AF179AF89CCD22610E2F7A37209B388EBC9541536B14FD6C500EF9B`).
-A változás verziókövetve: `docs/plugin-2.12.0-english-fields.patch` (7 fájl, +453/−49 sor,
-SHA-256 `BC594D58D2065DF37C7A0849E58031027EE264E82402587540A159CF16410208`).
+A plugin csomag: `build/huhs-mobile-api-2.12.0.zip` (47 fájl, 160,3 KB,
+SHA-256 `FABC459B3BA81F96D3421633AF102284704A06FA132C1F21C6D1EA82F31B768A`).
+A változás verziókövetve: `docs/plugin-2.12.0-english-fields.patch` (7 fájl, +483/−51 sor,
+SHA-256 `54D09AB3B76076B4274866BE0777E7CB359EE94C150A0FE298EBFDE3C88B16A7`).
+
+**⚠️ 2026-09-25: a 2.12.0-t MÉG EGYSZER fel kell tölteni** — az első feltöltés után élesben
+mértük, hogy a REST-en küldött angol meta **csendben elveszett** az esemény/DJ/szervező/kiadvány
+típusnál (a `POST` 200-at adott, a visszaolvasás viszont üres lett, miközben a `post` típusnál
+ugyanaz a hívás működött). **A gyökér:** a WordPress a `meta` mezőt csak akkor fogadja el REST-en, ha
+a post-típus támogatja a **`custom-fields`**-et — ez a négy típusnál nem volt bekapcsolva. A javítás
+(`add_post_type_support($post_type, 'custom-fields')` a késői `init`-en) már benne van a fenti
+csomagban, és a szerveroldali utakra (WP-cron, végpontok) ez a hiba nem hatott.
 
 **📌 ÁLLAPOTMÉRÉS EGY PARANCCSAL:** `node tools/check-content-english-live.mjs` — megmondja, hogy a
 plugin támogatja-e már az esemény/DJ/szervező angol mezőt (azaz fent van-e a 2.12.0), hány cikk van
