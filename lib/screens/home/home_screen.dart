@@ -14,10 +14,12 @@ import '../../providers/voting_provider.dart';
 import '../../providers/games_provider.dart';
 import '../../providers/poll_provider.dart';
 import '../../providers/prize_provider.dart';
+import '../../core/i18n/tr.dart';
 import '../../models/post.dart';
 import '../../models/game.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
+import '../../widgets/language_switch_button.dart';
 import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
@@ -44,7 +46,7 @@ class _NotificationButton extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         IconButton(
-          tooltip: 'Értesítések',
+          tooltip: tr(context, 'Értesítések'),
           onPressed: onPressed,
           style: IconButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
@@ -137,52 +139,116 @@ class HomeScreen extends ConsumerWidget {
                     vertical: 12,
                   ),
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        CommunityAvatarButton(
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const CommunityProfileScreen(),
-                            ),
-                          ),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
+                    // ⚠️ A fejléc MÉRT szélességei (400 px-es tesztfelület,
+                    // 2026-09-25): avatar 52, frissítés 48, értesítés 48,
+                    // „Közösség" 178,8, nyelvkapcsoló 71,2 → együtt **414 px**,
+                    // miközben 364 px áll rendelkezésre. Ezért a sor a
+                    // rendelkezésre álló helyhez igazodik: szűk készüléken a
+                    // Közösség gomb ikonná válik és a nyelvkapcsolóról lekerül a
+                    // fordító-ikon, hogy SEMMI ne csorduljon túl. A küszöbök a
+                    // fenti mérésekből jönnek (a 360–393 px-es készülékek a
+                    // szűk ágba esnek).
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final tight = constraints.maxWidth < 360;
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            ContentRefreshIcon(
-                              onRefresh: () => _refreshHome(ref),
-                            ),
-                            StreamBuilder(
-                              stream: Firebase.apps.isEmpty
-                                  ? Stream.value(const <dynamic>[])
-                                  : NotificationService().watchNotifications(),
-                              builder: (context, snapshot) {
-                                final count = snapshot.data is List
-                                    ? (snapshot.data as List)
-                                          .where((item) => !item.isRead)
-                                          .length
-                                    : 0;
-                                return _NotificationButton(
-                                  count: count,
-                                  onPressed: () =>
-                                      NotificationCenterScreen.show(context),
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 8),
-                            FilledButton.icon(
+                            CommunityAvatarButton(
                               onPressed: () => Navigator.of(context).push(
                                 MaterialPageRoute<void>(
-                                  builder: (_) => const CommunityHubScreen(),
+                                  builder: (_) => const CommunityProfileScreen(),
                                 ),
                               ),
-                              icon: const Icon(Icons.people_outline),
-                              label: const Text('Közösség'),
+                            ),
+                            // A jobb oldali csoport `Flexible` + `FittedBox`: ez a
+                            // végső biztonsági háló. Ha egy készüléken mégis
+                            // kevés a hely (a mért szükséglet ~370 px), akkor a
+                            // csoport **arányosan kicsinyítődik** a túlcsordulás
+                            // helyett — így egyetlen felirat sem vész el és nem
+                            // keletkezik sárga csík.
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ContentRefreshIcon(
+                                      onRefresh: () => _refreshHome(ref),
+                                    ),
+                                    StreamBuilder(
+                                      stream: Firebase.apps.isEmpty
+                                          ? Stream.value(const <dynamic>[])
+                                          : NotificationService().watchNotifications(),
+                                      builder: (context, snapshot) {
+                                        final count = snapshot.data is List
+                                            ? (snapshot.data as List)
+                                                  .where((item) => !item.isRead)
+                                                  .length
+                                            : 0;
+                                        return _NotificationButton(
+                                          count: count,
+                                          onPressed: () =>
+                                              NotificationCenterScreen.show(context),
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(width: 8),
+                                    if (tight)
+                                      IconButton(
+                                        key: const Key('community-hub-button'),
+                                        tooltip: tr(context, 'Közösség'),
+                                        onPressed: () => Navigator.of(context).push(
+                                          MaterialPageRoute<void>(
+                                            builder: (_) => const CommunityHubScreen(),
+                                          ),
+                                        ),
+                                        style: IconButton.styleFrom(
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          foregroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        icon: const Icon(Icons.people_outline),
+                                      )
+                                    else
+                                      FilledButton.icon(
+                                        key: const Key('community-hub-button'),
+                                        // Szűkebb belső margó: mérve ~39 px-cel
+                                        // keskenyebb, ugyanaz a felirat.
+                                        style: FilledButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                          ),
+                                          visualDensity: VisualDensity.compact,
+                                        ),
+                                        onPressed: () => Navigator.of(context).push(
+                                          MaterialPageRoute<void>(
+                                            builder: (_) => const CommunityHubScreen(),
+                                          ),
+                                        ),
+                                        icon: const Icon(Icons.people_outline),
+                                        label: Text(tr(context, 'Közösség')),
+                                      ),
+                                    const SizedBox(width: 8),
+                                    // HU/EN kapcsoló a fejléc jobb sarkában: a
+                                    // felirat mindig a másik nyelv kódja.
+                                    // Ikon nélkül (mérve ~25 px-cel keskenyebb):
+                                    // a „HU"/„EN" önmagában is egyértelmű.
+                                    const LanguageSwitchButton(showIcon: false),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
-                        ),
-                      ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 18),
                     Container(

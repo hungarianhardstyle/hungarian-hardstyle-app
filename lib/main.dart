@@ -11,7 +11,9 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/navigation/app_navigator.dart';
+import 'core/i18n/app_language.dart';
 import 'providers/ads_provider.dart';
+import 'providers/language_provider.dart';
 import 'services/push_notification_service.dart';
 import 'services/referral_link_service.dart';
 import 'services/vote_memory.dart';
@@ -37,6 +39,10 @@ Future<void> main() async {
   unawaited(_initializeAdsInBackground());
 
   await initializeDateFormatting('hu_HU');
+  // Az angol dátum-nevek is a `runApp` előtt bekerülnek, hogy a nyelvváltás
+  // **azonnal** hasson (ne kelljen aszinkron újrainicializálás).
+  await initializeDateFormatting('en_US');
+  await preloadAppLanguage();
   await initializeFirebaseRuntime();
   await _initializeAppCheck();
   // A „már játszottál / már szavaztál" emlékezet **a `runApp` előtt** betöltődik
@@ -192,11 +198,14 @@ Future<void> _initializeAppCheck() async {
   }
 }
 
-class HungarianHardstyleApp extends StatelessWidget {
+class HungarianHardstyleApp extends ConsumerWidget {
   const HungarianHardstyleApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // A nyelv itt figyelt: ettől a `MaterialApp` locale-t vált, a feliratok
+    // pedig a `tr(context, …)` Localizations-függősége miatt rajzolódnak újra.
+    final language = ref.watch(languageProvider);
     return MaterialApp(
       navigatorKey: appNavigatorKey,
       scaffoldMessengerKey: appScaffoldMessengerKey,
@@ -209,9 +218,12 @@ class HungarianHardstyleApp extends StatelessWidget {
         child: child ?? const SizedBox.shrink(),
       ),
 
-      locale: const Locale('hu', 'HU'),
+      locale: appLanguageLocale(language),
 
-      supportedLocales: const [Locale('hu', 'HU')],
+      supportedLocales: const [
+        Locale('hu', 'HU'),
+        Locale('en', 'US'),
+      ],
 
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

@@ -73,3 +73,7 @@ flutter:
   assets:
     - assets/logos/
     - assets/images/
+    # Az angol felület-szótár (magyar szöveg → angol). Hiányzó kulcsnál a
+    # felirat a magyar marad, ezért a szótár bővülhet anélkül, hogy bármi
+    # üresen maradna.
+    - assets/i18n/
