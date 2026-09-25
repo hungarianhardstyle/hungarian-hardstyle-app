@@ -19,7 +19,7 @@ currentBuild: 362
 currentVersion: 1.0.0
 lastPublishedBuild: 355
 aab: build/HUHS-v1.0.0+362-release.aab
-sha256: 40F488AB366D065F3E38B4FE8AF54B4D56022A9F7B5CD3B25BBA012150C9CF3F
+sha256: D14F9BDACEF4A641A2D8FCFBB30FA29D06DD33168767D987B1211476ADA46D96
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -239,6 +239,7 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - **Amit ez a kiadás is tartalmaz (a 361-ből):** a **HU/EN nyelvváltó** a főoldal jobb sarkában a teljes felület angol szótárával (**589 egyedi szöveg**, 783 helyen), és a magyar fallback (ha nincs fordítás, a felirat magyar marad).
 - **Amit SZÁNDÉKOSAN nem fordítunk:** a **Chat üzenetei, a hozzászólások és a nevek** — a felhasználók saját szövege magyar marad.
 - **⚠️ ŐSZINTE KORLÁT:** az **események, DJ-k, szervezők és kiadványok** szövege **egyelőre magyar** — ezek angol mezőit a plugin **2.12.0** hozza (utána a meglévő tartalom fordítása következik); a 361-es csomagot **nem kell feltölteni**, mert ugyanazt tudja, mint a 362, csak a tartalom-nyelv nélkül.
+- **Javítva (mérve, a 362 újraépítésének oka):** a **többsoros, összefűzött** szövegek fordítása. A Dart a szomszédos literálokat összefűzi, ezért a **futásidejű** szöveg a fűzött változat — a szótár viszont **10 helyen** csak a **töredéket** ismerte, így a fordítás **csendben nem érvényesült** (angol módban is magyar maradt: a Több/Beállítások sorok, a „Keverés közben…" súgó, a privacy-szakaszok, a vásárlási diagnosztika). **+24 szótár-kulcs**, a megjelenítési helyek bekötve, és új teszt őrzi (a fűzött szöveg kulcsa legyen a szótárban — őrszemmel, mert a teszt első változata nulla helyet vizsgálva zölden hazudott).
 
 ### 361 — HU/EN nyelvváltó: az app felülete angolul is elérhető
 - **ÚJ (a tulajdonos kérése: „valahogy megkéne oldani az angol nyelvet az appban"):** a **főoldal jobb sarkában** megjelent a **HU/EN kapcsoló** — a felirat mindig a **másik** nyelv kódja (magyar módban „EN"). A váltás **azonnal** átrajzolja a felületet (a már megnyitott képernyőket is), és a választás **megjegyződik**: a következő indításnál is azon a nyelven indul, és a szótár már a `runApp` előtt betölt, ezért nincs „bevillanó" magyar felirat. A magyar marad az **alapértelmezett**, és minden ismeretlen/hibás mentett érték is magyarrá esik vissza.

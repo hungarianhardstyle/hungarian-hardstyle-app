@@ -42,6 +42,7 @@ const appChangelog = <AppReleaseNotes>[
     changes: [
       'Angol felületnél a legutóbbi cikkek is angolul jelennek meg — a fordítást a szerver adja.',
       'Nyelvváltáskor a betöltött tartalom is frissül, ezért nem marad más nyelvű lista a képernyőn.',
+      'Több képernyőn (Több, Beállítások, Névjegy, hírlevél, zene) a hosszabb magyarázó szövegek is angolul jelennek meg.',
     ],
   ),
   AppReleaseNotes(

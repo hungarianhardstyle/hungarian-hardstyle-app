@@ -1,5 +1,13 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### A FÜZÖTT (TÖBBSOROS) SZÖVEGEK KULCSA — valódi hiba javítva (2026-09-25)
+
+- **A HIBA (mérve, nem tippelve):** a Dart a **szomszédos** string-literálokat összefűzi (`'a ' 'b'` → `'a b'`), a vesszővel elválasztott argumentumokat viszont nem. A futásidejű szöveg ezért a **fűzött** változat, a szótárban viszont **10 helyen csak a töredék** volt a kulcs → a fordítás **csendben nem érvényesült** (angol módban is magyar maradt). Érintett: a Több/Beállítások sorok, a „Keverés közben…" súgó, a privacy-szakaszok, a kereskedelmi diagnosztika.
+- **A MÉRÉS:** 100 valódi fűzési hely a kódban; ebből **10** olyan, ahol a töredék a szótárban volt. (Az első mérésem **hamis pozitív** volt: a vesszős elválasztást is fűzésnek hitte — a javított szabály a vesszőt kizárja.)
+- **A JAVÍTÁS:** (1) az extraktor a **fűzött** értéket adja kulcsként (`joinedLiteral`, a folytatásokat nem számolja külön — egy bekezdés különben 15 ál-változatot adott); (2) **+24 kulcs** a szótárba (9 fűzött + 14 service-/UI-szöveg + 1 értesítés-mondat), 633 kulcs, lefedettség **598/598 (100%)**; (3) a **megjelenítési helyek** bekötve (`newsletter_screen` SnackBar, `about_screen` diagnosztika-verdikt, `more_screen` `_Notice`), mert a service-üzenetnél a fordítás csak ott érvényesül; (4) új teszt `test/services/i18n_concat_test.dart`.
+- **⚠️ A TESZT ELSŐ VÁLTOZATA ZÖLDEN HAZUDOTT:** a literál-kereső regexet **nyers stringbe** írtam, amitől a minta elromlott, a teszt **nulla helyet vizsgált**, és a mutáció sem buktatta meg. A javított változat két egyszerű regexet használ, **őrszemmel** (`checked > 15`, `skippedInterpolated > 0`), és a mutációt **elkapja** (1 hiányzó kulcs → bukás), a szótár bájtpontos visszaállítása után újra zöld (SHA-256 `4BE8B590…`). **A tanulság: minden lint kapjon „vizsgáltam is valamit" őrszemet.**
+- **A KÖVETKEZŐ KÖRRE MARAD:** a **23 fűzött csoportból 13 interpolált** (`${…}`) — az a `trArgs`-kör (`{n}` helyőrzős kulcsokkal), és a mért 538 UI + 227 service szöveg második köre (lásd a fenti szakaszt).
+
 ### A FELÜLET ANGOL SZÓTÁRA — MÁSODIK KÖR: a mért maradék rés (2026-09-25)
 
 - **A MIÉRT:** az első kör a **szabályalapú** célokat fordította (589 szöveg: `Text('…')`, `label:`, `tooltip:`, `hintText:` …). A kódban viszont vannak olyan magyar szövegek, amik **más alakban** jutnak el a felhasználóhoz (ternary, `map`, `??` alapérték, változóba tett címke, service-üzenet) — ezeket a szabály nem látta.
