@@ -1,5 +1,16 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### A FELÜLET ANGOL SZÓTÁRA — MÁSODIK KÖR: a mért maradék rés (2026-09-25)
+
+- **A MIÉRT:** az első kör a **szabályalapú** célokat fordította (589 szöveg: `Text('…')`, `label:`, `tooltip:`, `hintText:` …). A kódban viszont vannak olyan magyar szövegek, amik **más alakban** jutnak el a felhasználóhoz (ternary, `map`, `??` alapérték, változóba tett címke, service-üzenet) — ezeket a szabály nem látta.
+- **A MÉRÉS (`tmp/measure-unwrapped-buckets.mjs`, csak olvas):** összesen **983** bekötetlen ÉS a szótárban nem szereplő magyar szöveg:
+  - **518 `lib/screens/**` + 20 `lib/widgets/**` = 538 a látható felületen** (a legtöbb: `community_screen` 58, `privacy_screen` 44, `wordpress_admin_screen` 38, `my_music_screen` 33, `release_detail_screen` 33, `more_screen` 29, `achievement_guide_screen` 22),
+  - **227 `lib/services/**`** — főleg **hiba-/állapotüzenetek**, amiket a felület snackbarban meg is jelenít (ezeknél a `context` a MEGJELENÍTÉS helyén van, nem a service-ben),
+  - **104 `lib/data/app_changelog.dart`** — az app **kiadási jegyzete**: szándékosan magyar (történeti lista; a tulajdonos kérése a menükre/achikre/tartalomra szólt),
+  - 77 `lib/core/**`, 37 egyéb.
+- **A KÖVETKEZŐ KÖR TERVE (mérve, nem tippelve):** (1) az extraktor szabályát a **UI-rétegre** is kiterjeszteni (minden ékezetes literál a `screens`/`widgets` alatt), (2) a bekötést `tr(context, …)`-tal, ahol van `context` (az analyzer a pontosan jelzi, hol nincs — ott a megjelenítésnél fordítunk), (3) fordítás chunkokban, ugyanazzal a kapuval (`tools/check-i18n.mjs`), (4) a **service-üzenetek** a megjelenítés helyén (`SnackBar`/`errorText`) kapják a fordítást.
+- **⚠️ ŐSZINTE KORLÁT:** a fenti szám **statikus** mérés a kódból; a valódi látható szövegek ennél kevesebben lehetnek (a napló-/belső szövegek nem látszanak), és a lista nem tartalmazza az **értesítések** szerveroldali szövegeit (azok a Functionsben magyarul vannak — külön kör).
+
 ### PLUGIN 2.12.0 — angol mezők az eseménynek, DJ-nek, szervezőnek és kiadványnak (2026-09-25)
 
 - **MIÉRT:** a 2.11.0 csak a **cikkeket** tudta angolul; az app viszont már **minden** tartalom-kérésre küldi a `lang` paramétert (mérve: **13/13** végpont elviseli, a státusz nyelvvel és nélküle ugyanaz). A 2.12.0 ezt a négy típusra is kiterjeszti — **app-frissítés nélkül**.
