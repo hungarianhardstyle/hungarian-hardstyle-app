@@ -19,6 +19,8 @@ import {
   EXCLUDED_FILES,
   dartFiles,
   isTranslationTarget,
+  isUiLayerFile,
+  isUiLayerTarget,
   isWrappedContext,
   stringLiterals,
 } from './lib/i18n-targets.mjs';
@@ -76,6 +78,22 @@ export function contextBefore(lines, index, start, limit = 120) {
   return context;
 }
 
+/**
+ * A fűzési csoport FOLYTATÁSA-e ez a sor?
+ *
+ * ⚠️ MIÉRT KELL (mért hiba, 2026-09-25): a Dart a szomszédos literálokat
+ * összefűzi, ezért a **csoport első** tagja a futásidejű szöveg. Ha a folytatásokat
+ * is külön célnak vesszük, a bekötő **darabokra vágja** a szöveget:
+ *   `'A ' tr(context, 'B ') tr(context, 'C')` → szintaktikai hiba (519 hiba).
+ */
+export function isContinuation(lines, index) {
+  if (index === 0) return false;
+  const previous = lines[index - 1];
+  const parts = stringLiterals(previous);
+  if (parts.length !== 1) return false;
+  return previous.slice(parts[0].end).trim() === '' && /^\s*['"]/.test(lines[index]);
+}
+
 /** Egy fájl összes célzott literálja (sorrendben, ismétlődéssel). */
 export function targetsInSource(source, file = '') {
   const hits = [];
@@ -84,6 +102,8 @@ export function targetsInSource(source, file = '') {
     const line = lines[index];
     const trimmed = line.trimStart();
     if (trimmed.startsWith('//') || trimmed.startsWith('///')) continue;
+    // A fűzési csoport folytatása nem önálló cél (a csoport első tagja az).
+    if (isContinuation(lines, index)) continue;
     for (const literal of stringLiterals(line)) {
       const before = contextBefore(lines, index, literal.start);
       // ⚠️ A Dart a szomszédos literálokat ÖSSZEFŰZI: a **futásidejű** szöveg a
@@ -91,7 +111,18 @@ export function targetsInSource(source, file = '') {
       // nem érvényesül — mérve 10 ilyen hely volt a 361/362-ben).
       const joined = joinedLiteral(lines, index, literal);
       const value = joined ? joined.value : literal.value;
-      if (!isTranslationTarget({ value, before })) continue;
+      const after = joined
+        ? lines[joined.endLine].slice(joined.endColumn)
+        : line.slice(literal.end);
+      const uiLayer = isUiLayerFile(file)
+        && isUiLayerTarget({ value, before, after });
+      if (!isTranslationTarget({ value, before }) && !uiLayer) continue;
+      // ⚠️ A `uiLayerOnly` jelző: az ilyen szöveg CSAK a UI-réteg szabályával cél,
+      // és a bekötése **hatókör-felismerést** igényel (van-e `BuildContext` a
+      // környező metódusban). A soronkénti bekötő ezért **kihagyja** — mérve: a
+      // vak szabály 501 cserét és **402 hibát** adott (mező-inicializálók,
+      // `const`-helyek), ezért a második kör külön, hatókör-felismerő körben megy.
+      const uiLayerOnly = uiLayer && !isTranslationTarget({ value, before });
       hits.push({
         file,
         line: index + 1,
@@ -102,6 +133,7 @@ export function targetsInSource(source, file = '') {
         // A fűzött töredékeket EGYÜTT kell bekötni (a `tr(context, 'a' 'b')`
         // érvényes, a `tr(context, 'a') 'b'` viszont nem).
         spansLines: joined ? joined.endLine - index : 0,
+        uiLayerOnly,
         // Már be van kötve (`tr(context, …)` / `AppText(…)`) → kulcs, de nem
         // szerkesztendő. A wrapper ezt a jelzőt használja az idempotenciához.
         wrapped: isWrappedContext(before) || /(?:^|[\s(,{[])(?:AppText)\s*\(\s*$/.test(before),

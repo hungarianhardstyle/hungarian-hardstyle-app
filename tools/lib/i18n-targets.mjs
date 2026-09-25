@@ -106,6 +106,40 @@ export function wrapExpression(value) {
   return `tr(context, ${JSON.stringify(value)})`;
 }
 
+/** UI-réteg: a felület fájljai (itt a szövegek többsége megjelenik). */
+export function isUiLayerFile(file) {
+  return file.startsWith('lib/screens/') || file.startsWith('lib/widgets/');
+}
+
+/**
+ * UI-réteg szövege — a szabályalapú célokon **túl**.
+ *
+ * MIÉRT KELL: a felület szövegei nem csak `Text('…')`/`label:` alakban élnek.
+ * Vannak **ternary-ágban** (`cond ? 'A' : 'B'`), **argumentumban**, **lista- vagy
+ * térkép-értékben**, és ezeket az első kör szabálya nem látta (mérve: **468**
+ * valódi rés a UI-rétegben).
+ *
+ * ⚠️ AMIT SZÁNDÉKOSAN KIZÁR: a **térkép-kulcsot** (`'X': value`), az
+ * **összehasonlítást/case-t** (`== 'X'`), az **értékadást** (`= 'X'` — lehet
+ * kereső kulcs) és a `return`-t (a hívó dönti el). Ezeknél a szöveg fordítás
+ * helyett **azonosító** lehet, ezért kézi döntés kell.
+ */
+export function isUiLayerTarget({ value, before, after }) {
+  if (value.includes('$')) return false;
+  if (/\\./.test(value)) return false;
+  if (looksTechnical(value)) return false;
+  const trimmed = value.trim();
+  const hasAccent = HUNGARIAN_LETTERS.test(trimmed);
+  const hasSpace = /\s/.test(trimmed);
+  const isCapitalizedWord = /^[A-ZÁÉÍÓÖŐÚÜŰ][a-záéíóöőúüű]+$/.test(trimmed);
+  if (!hasAccent && !hasSpace && !isCapitalizedWord) return false;
+  if (/^\s*:/.test(after ?? '')) return false;
+  if (/[=!]=\s*$/.test(before) || /\bcase\s+$/.test(before)) return false;
+  if (/=\s*$/.test(before)) return false;
+  if (/\breturn\s*$/.test(before)) return false;
+  return true;
+}
+
 /** Minden `lib/**\/*.dart` fájl. */
 export function dartFiles(root = 'lib') {
   const files = [];
