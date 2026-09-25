@@ -502,7 +502,11 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                     return Card(
                       child: ExpansionTile(
                         leading: const Icon(Icons.flag_outlined),
-                        title: Text('Jelentések (${reports.length})'),
+                        title: AppText(
+                          trArgs(context, 'Jelentések ({n})', {
+                            'n': '${reports.length}',
+                          }),
+                        ),
                         children: [
                           for (final report in reports)
                             ListTile(

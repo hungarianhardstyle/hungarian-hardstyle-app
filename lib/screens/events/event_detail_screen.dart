@@ -228,7 +228,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                 ),
               const SizedBox(height: 6),
               if (myScore != null)
-                Text('Már értékelted: ${List.filled(myScore, '★').join()}')
+                AppText(
+                  trArgs(context, 'Már értékelted: {stars}', {
+                    'stars': List.filled(myScore, '★').join(),
+                  }),
+                )
               else
                 OutlinedButton.icon(
                   onPressed: _rateEvent,
@@ -489,7 +493,13 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text('Ott leszek: $attending résztvevő'),
+                                      AppText(
+                                        trArgs(
+                                          context,
+                                          'Ott leszek: {n} résztvevő',
+                                          {'n': '$attending'},
+                                        ),
+                                      ),
                                       if (user != null && !user.isAnonymous)
                                         FutureBuilder<
                                           List<Map<String, String>>

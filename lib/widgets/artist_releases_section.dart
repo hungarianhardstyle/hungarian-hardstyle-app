@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/i18n/tr.dart';
 import '../providers/releases_provider.dart';
 import '../screens/releases/releases_screen.dart';
 import '../services/artist_releases_plan.dart';
+import 'app_text.dart';
 import 'release_card.dart';
 
 /// A DJ **megjelenései**: azok a kiadványok, amelyekben az adott DJ szerepel.
@@ -68,7 +70,11 @@ class ArtistReleasesSection extends ConsumerWidget {
                 ),
               ),
               icon: const Icon(Icons.library_music_outlined),
-              label: Text('Összes megjelenése (${all.length})'),
+              label: AppText(
+                trArgs(context, 'Összes megjelenése ({n})', {
+                  'n': '${all.length}',
+                }),
+              ),
             ),
         ],
       ),

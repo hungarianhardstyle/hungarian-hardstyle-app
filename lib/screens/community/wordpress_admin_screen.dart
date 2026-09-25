@@ -1368,7 +1368,9 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           children: [
             ListTile(
               title: Text(item['title'] as String? ?? ''),
-              subtitle: Text('Beküldés #$id'),
+              subtitle: AppText(
+                trArgs(context, 'Beküldés #{id}', {'id': '$id'}),
+              ),
             ),
             Text(
               '${item['content'] ?? item['description'] ?? ''}',

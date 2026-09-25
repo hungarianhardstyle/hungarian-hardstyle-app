@@ -490,7 +490,11 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                       const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('Kiválasztva: ${selected.length}/5'),
+                        child: AppText(
+                          trArgs(context, 'Kiválasztva: {n}/5', {
+                            'n': '${selected.length}',
+                          }),
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Expanded(

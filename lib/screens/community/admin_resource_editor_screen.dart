@@ -530,7 +530,9 @@ class _AdminResourceEditorScreenState
                         key: Key('admin-list-$key-$index'),
                         controller: rows[index].controller,
                         decoration: InputDecoration(
-                          labelText: '${index + 1}. lehetőség',
+                          labelText: trArgs(context, '{n}. lehetőség', {
+                            'n': '${index + 1}',
+                          }),
                           isDense: true,
                         ),
                       ),
@@ -644,7 +646,9 @@ class _AdminResourceEditorScreenState
                         key: Key('admin-question-$index-option-$option'),
                         controller: question.options[option].controller,
                         decoration: InputDecoration(
-                          labelText: '${option + 1}. válasz',
+                          labelText: trArgs(context, '{n}. válasz', {
+                            'n': '${option + 1}',
+                          }),
                           isDense: true,
                         ),
                       ),

@@ -46,6 +46,11 @@ export function looksTechnical(value) {
  */
 export function isTranslationTarget({ value, before }) {
   if (value.includes('$')) return false;
+  // A MÁR bekötött szöveg mindenképp kulcs (`tr(context, …)` / `trArgs(…)`):
+  // a technikai heurisztika itt nem szűrhet, különben egy sablon (pl.
+  // `'Beküldés #{id}'`, amiben `#` van) kiesne a szótár-ellenőrzésből — mérve
+  // pontosan ez történt, és a kulcs „szótáron kívüliként" jelent meg.
+  if (isWrappedContext(before)) return true;
   // ⚠️ Escape-elt literal (`\n`, `\'`, `\"`) kimarad: a szótár kulcsa a **valós**
   // szöveg, a forrásban viszont escape-ek vannak — ilyenkor a kulcs és a futásidejű
   // szöveg nem egyezne, és a fordítás csendben nem érvényesülne. Mérve a jelenlegi
@@ -57,9 +62,7 @@ export function isTranslationTarget({ value, before }) {
   const hasSpace = /\s/.test(trimmed);
   const isCapitalizedWord = /^[A-ZÁÉÍÓÖŐÚÜŰ][a-záéíóöőúüű]+$/.test(trimmed);
   if (!hasAccent && !hasSpace && !isCapitalizedWord) return false;
-  // A már körbefordított szöveg is **kulcs** (a szótárban benne kell lennie),
-  // csak nem kell újra bekötni.
-  return isUiContext(before) || isWrappedContext(before);
+  return isUiContext(before);
 }
 
 /** UI-környezet: `Text(`/`SelectableText(`/`AppText(` vagy ismert felirat-paraméter. */

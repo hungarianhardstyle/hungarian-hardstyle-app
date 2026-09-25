@@ -127,6 +127,10 @@ export function selfTest() {
   );
   check('az escape-elt szöveg NEM cél', hit(String.raw`  label: 'Első sor\nMásodik',`).length === 0);
   check(
+    'a MÁR bekötött sablon is kulcs (a # nem szűri ki)',
+    hit("  trArgs(context, 'Beküldés #{id}', {'id': '1'})").length === 1,
+  );
+  check(
     'a nem-UI kontextus NEM cél',
     hit("  final x = 'Közösség és barátai';").length === 0,
   );
