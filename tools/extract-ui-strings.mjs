@@ -23,6 +23,7 @@ import {
   isUiLayerTarget,
   isWrappedContext,
   stringLiterals,
+  unescapeDart,
 } from './lib/i18n-targets.mjs';
 
 /** A `keys.json` és a chunk-könyvtár helye. */
@@ -170,7 +171,10 @@ export function targetsInSource(source, file = '') {
       // fűzött változat, ezért a szótár kulcsa is az (különben a fordítás csendben
       // nem érvényesül — mérve 10 ilyen hely volt a 361/362-ben).
       const joined = joinedLiteral(lines, index, literal);
-      const value = joined ? joined.value : literal.value;
+      // ⚠️ Escape-ek feloldása: a KULCS a valódi (futásidejű) szöveg, mert a
+      // `'…\n\n…'` bekezdéseknél a nyers alak nem egyezne a megjelenő szöveggel.
+      const raw = joined ? joined.value : literal.value;
+      const value = unescapeDart(raw);
       const after = joined
         ? lines[joined.endLine].slice(joined.endColumn)
         : line.slice(literal.end);
@@ -269,7 +273,13 @@ export function selfTest() {
     'a TÖBBSOROS Text( is cél',
     hit("            Text(\n              'Közösség',").length === 1,
   );
-  check('az escape-elt szöveg NEM cél', hit(String.raw`  label: 'Első sor\nMásodik',`).length === 0);
+  // ⚠️ Az escape-elt literal IS cél — a kulcsa viszont a **feloldott** (valódi)
+  // szöveg, ezért a `Text(`-be írt `\n` valódi új sorrá válik a szótárban.
+  const escaped = hit(String.raw`  label: 'Első sor\nMásodik',`);
+  check(
+    'az escape-elt szöveg cél, és a kulcsa FELOLDOTT',
+    escaped.length === 1 && escaped[0].value === 'Első sor\nMásodik',
+  );
   check(
     'a MÁR bekötött sablon is kulcs (a # nem szűri ki)',
     hit("  trArgs(context, 'Beküldés #{id}', {'id': '1'})").length === 1,

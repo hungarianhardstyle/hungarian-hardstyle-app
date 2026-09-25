@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/profile_submission.dart';
 import '../../models/submission_image.dart';
@@ -24,7 +25,7 @@ class _ArtistSubmissionScreenState
   final _name = TextEditingController();
   final _realName = TextEditingController();
   final _city = TextEditingController();
-  final _country = TextEditingController(text: 'Magyarország');
+  final _country = TextEditingController(text: AppStrings.tr('Magyarország'));
   final _biography = TextEditingController();
   final _contactEmail = TextEditingController();
   final _bookingEmail = TextEditingController();
@@ -64,7 +65,7 @@ class _ArtistSubmissionScreenState
     if (!_formKey.currentState!.validate()) return;
 
     if (_categories.isEmpty || _genres.isEmpty) {
-      _message('Válassz legalább egy kategóriát és egy műfajt.');
+      _message(AppStrings.tr('Válassz legalább egy kategóriát és egy műfajt.'));
       return;
     }
 
@@ -125,7 +126,7 @@ class _ArtistSubmissionScreenState
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(18, 20, 18, 40),
                     children: [
-                      const Text(
+                      const AppText(
                         'DJ / előadó beküldése',
                         style: TextStyle(
                           fontSize: 28,

@@ -22,77 +22,77 @@ class AchievementGuideScreen extends ConsumerWidget {
   static final activities = <({String title, String points, String detail})>[
     (
       title: AppStrings.tr('Eseményen ott leszek'),
-      points: '+10 pont',
+      points: AppStrings.tr('+10 pont'),
       detail:
-          'Eseményenként egyszer jár. Amíg jelentkezve vagy rá, addig érvényes: ha lemondod, a pont elvész, visszajelentkezésnél újra jár.',
+          AppStrings.tr('Eseményenként egyszer jár. Amíg jelentkezve vagy rá, addig érvényes: ha lemondod, a pont elvész, visszajelentkezésnél újra jár.'),
     ),
     (
       title: AppStrings.tr('Meetup jelzés'),
-      points: '+5 pont',
+      points: AppStrings.tr('+5 pont'),
       detail:
-          'Meetuponként egyszer jár. Ha lemondod a jelzést, ez a pont is elvész, visszajelzésnél újra jár.',
+          AppStrings.tr('Meetuponként egyszer jár. Ha lemondod a jelzést, ez a pont is elvész, visszajelzésnél újra jár.'),
     ),
     (
       title: AppStrings.tr('Kölcsönös kapcsolat meetupolóval'),
-      points: '+15 pont',
+      points: AppStrings.tr('+15 pont'),
       detail:
-          'Eseményenként és kapcsolatonként jár, ha valódi, kölcsönös kapcsolat születik. Ha a kapcsolat megszűnik, a pont is elvész.',
+          AppStrings.tr('Eseményenként és kapcsolatonként jár, ha valódi, kölcsönös kapcsolat születik. Ha a kapcsolat megszűnik, a pont is elvész.'),
     ),
     (
       title: AppStrings.tr('Esemény utáni értékelés'),
-      points: '+10 pont',
-      detail: 'Eseményenként egyszer adható.',
+      points: AppStrings.tr('+10 pont'),
+      detail: AppStrings.tr('Eseményenként egyszer adható.'),
     ),
     (
       title: AppStrings.tr('Hír kedvelése'),
-      points: '+2 pont',
+      points: AppStrings.tr('+2 pont'),
       detail:
-          'Naponta legfeljebb 3 hír kedveléséért jár pont. A pont végleges: ha kiveszed a lájkot, megmarad, de újralájk sem ad újat.',
+          AppStrings.tr('Naponta legfeljebb 3 hír kedveléséért jár pont. A pont végleges: ha kiveszed a lájkot, megmarad, de újralájk sem ad újat.'),
     ),
     (
       title: AppStrings.tr('Napi aktivitási pont'),
-      points: '+1–5 pont',
+      points: AppStrings.tr('+1–5 pont'),
       detail:
-          'Ha aznap hozzászólsz egy cikkhez vagy írsz a chatbe, a következő napon a szerver kiszámolja, mennyit voltál aktív, és 1–5 pontot ad érte. Naponta egyszer.',
+          AppStrings.tr('Ha aznap hozzászólsz egy cikkhez vagy írsz a chatbe, a következő napon a szerver kiszámolja, mennyit voltál aktív, és 1–5 pontot ad érte. Naponta egyszer.'),
     ),
     (
       title: AppStrings.tr('Cikk kommentelése'),
-      points: '+1 pont',
-      detail: 'Naponta legfeljebb 3 elküldött cikkkommentért jár pont.',
+      points: AppStrings.tr('+1 pont'),
+      detail: AppStrings.tr('Naponta legfeljebb 3 elküldött cikkkommentért jár pont.'),
     ),
     (
       title: AppStrings.tr('Éves HUHS szavazás'),
-      points: '+10 pont',
+      points: AppStrings.tr('+10 pont'),
       detail:
-          'A teljes, minden kötelező kategóriát tartalmazó szavazólap után jár (bejelentkezve).',
+          AppStrings.tr('A teljes, minden kötelező kategóriát tartalmazó szavazólap után jár (bejelentkezve).'),
     ),
     (
       title: AppStrings.tr('Kiadvány megvásárlása'),
-      points: '+20 pont',
+      points: AppStrings.tr('+20 pont'),
       detail:
-          'Minden megvásárolt változatért (MP3/WAV) jár. A vásárlást a Google Play ellenőrzi, ezért nem lehet hamisítani.',
+          AppStrings.tr('Minden megvásárolt változatért (MP3/WAV) jár. A vásárlást a Google Play ellenőrzi, ezért nem lehet hamisítani.'),
     ),
     (
       title: AppStrings.tr('Jóváhagyott beküldés'),
-      points: '+10 pont',
+      points: AppStrings.tr('+10 pont'),
       detail:
-          'Eseményt szervező, DJ-t DJ, szervezőt szervező küldhet be; a pont a jóváhagyáskor jár a beküldőnek. Naponta legfeljebb 3 jóváhagyott beküldésért.',
+          AppStrings.tr('Eseményt szervező, DJ-t DJ, szervezőt szervező küldhet be; a pont a jóváhagyáskor jár a beküldőnek. Naponta legfeljebb 3 jóváhagyott beküldésért.'),
     ),
     (
       title: AppStrings.tr('Profil kitöltése'),
-      points: '+30 pont',
-      detail: 'Egyszeri jóváírás a teljes profilért (név, bemutatkozás, egyező e-mail).',
+      points: AppStrings.tr('+30 pont'),
+      detail: AppStrings.tr('Egyszeri jóváírás a teljes profilért (név, bemutatkozás, egyező e-mail).'),
     ),
     (
       title: AppStrings.tr('Meghívott regisztrációja'),
-      points: '+50 pont',
-      detail: 'Új regisztráció után, szerveroldali ellenőrzéssel.',
+      points: AppStrings.tr('+50 pont'),
+      detail: AppStrings.tr('Új regisztráció után, szerveroldali ellenőrzéssel.'),
     ),
     (
       title: AppStrings.tr('HUHS játékok'),
-      points: 'a játék jutalma',
+      points: AppStrings.tr('a játék jutalma'),
       detail:
-          'A játékhoz beállított jutalom: kvíznél a helyes válaszok aránya szerint sávokban, más játéktípusnál csak teljes pontszámért.',
+          AppStrings.tr('A játékhoz beállított jutalom: kvíznél a helyes válaszok aránya szerint sávokban, más játéktípusnál csak teljes pontszámért.'),
     ),
   ];
 
@@ -138,8 +138,11 @@ class AchievementGuideScreen extends ConsumerWidget {
                   for (final rule in rules)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        '•  $rule',
+                      // ⚠️ A szabály a `const` listában magyar kulcs; a fordítás a
+                      // MEGJELENÍTÉS helyén történik (a `const` listában nem lehet
+                      // függvényt hívni), ezért itt fordítjuk a szöveget.
+                      child: AppText(
+                        '•  ${AppStrings.tr(rule)}',
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                     ),
@@ -239,7 +242,7 @@ class _ActivityTile extends StatelessWidget {
     child: ListTile(
       title: AppText(activity.title),
       subtitle: AppText(activity.detail),
-      trailing: Text(
+      trailing: AppText(
         activity.points,
         style: const TextStyle(
           color: Color(0xFFF03A37),

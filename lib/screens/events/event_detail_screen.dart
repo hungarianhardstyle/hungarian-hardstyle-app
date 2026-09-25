@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/content/html_linkifier.dart';
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
@@ -111,7 +112,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   String _formatDate() {
     try {
       final parsed = DateTime.parse(event.startDate);
-      final date = DateFormat('yyyy. MMMM d.', 'hu_HU').format(parsed);
+      final date = DateFormat(AppStrings.tr('yyyy. MMMM d.'), 'hu_HU').format(parsed);
 
       if (event.startTime.isEmpty) {
         return date;

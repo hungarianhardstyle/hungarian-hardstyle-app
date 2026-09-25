@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/prize.dart';
 import '../../providers/community_provider.dart';
@@ -81,7 +82,7 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
           content: Text(
             error is Exception
                 ? _readableError(error)
-                : 'A játékot most nem sikerült rögzíteni. Próbáld újra.',
+                : AppStrings.tr('A játékot most nem sikerült rögzíteni. Próbáld újra.'),
           ),
         ),
       );

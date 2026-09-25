@@ -35,7 +35,7 @@ class RadioProviderScreen extends StatelessWidget {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text(
+          const AppText(
             'A Hungarian Hardstyle alkalmazásban elérhető rádiót a holland Real Hardstyle üzemelteti. A szolgáltató nyilvános tájékoztatása szerint a működéshez szükséges holland zenei jogkezelői licencekkel (Buma/Stemra és Sena) rendelkezik. A Hungarian Hardstyle nem tárol zenefájlokat saját szerverein, nem üzemeltet rádiós médiaszervert, és nem sugároz saját streamet. Az alkalmazás kizárólag a Real Hardstyle hivatalos, külső streamjét éri el és játssza le a felhasználók számára.',
           ),
         ],

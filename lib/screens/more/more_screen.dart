@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../providers/community_provider.dart';
 import '../../services/submission_rules.dart';
@@ -35,11 +36,11 @@ class MoreScreen extends ConsumerStatefulWidget {
 class _MoreScreenState extends ConsumerState<MoreScreen> {
   final _search = TextEditingController();
   final _expanded = <String>{
-    'Megvásárolt zenéim',
-    'Felfedezés',
-    'Beküldés',
-    'Kapcsolat és támogatás',
-    'Alkalmazás',
+    AppStrings.tr('Megvásárolt zenéim'),
+    AppStrings.tr('Felfedezés'),
+    AppStrings.tr('Beküldés'),
+    AppStrings.tr('Kapcsolat és támogatás'),
+    AppStrings.tr('Alkalmazás'),
   };
 
   @override
@@ -170,7 +171,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ),
               _item(
                 Icons.favorite,
-                'Támogatás / Donate',
+                tr(context, 'Támogatás / Donate'),
                 tr(context, 'Segítsd a Hungarian Hardstyle munkáját'),
                 const DonateScreen(),
               ),

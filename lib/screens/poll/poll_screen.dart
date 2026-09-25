@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/poll.dart';
 import '../../providers/community_provider.dart';
@@ -80,7 +81,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
         _submitting = false;
         _message = error is Exception
             ? _readableError(error)
-            : 'A szavazatot most nem sikerült rögzíteni. Próbáld újra.';
+            : AppStrings.tr('A szavazatot most nem sikerült rögzíteni. Próbáld újra.');
       });
     }
   }

@@ -322,7 +322,7 @@ class HomeScreen extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
+                                    AppText(
                                       'KICK  /  CULTURE  /  COMMUNITY',
                                       style: Theme.of(context)
                                           .textTheme

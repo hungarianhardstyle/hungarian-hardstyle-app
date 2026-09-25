@@ -275,8 +275,8 @@ class _CommunityPublicProfileScreenState
         SnackBar(
           content: Text(
             accept
-                ? 'Ismerős-jelölés elfogadva.'
-                : 'Ismerős-jelölés elutasítva.',
+                ? AppStrings.tr('Ismerős-jelölés elfogadva.')
+                : AppStrings.tr('Ismerős-jelölés elutasítva.'),
           ),
         ),
       );
@@ -558,7 +558,7 @@ class _CommunityPublicProfileScreenState
                 OutlinedButton.icon(
                   onPressed: _blocking ? null : _blockUser,
                   icon: const Icon(Icons.block_outlined),
-                  label: const Text('Blokkolás / letiltás'),
+                  label: const AppText('Blokkolás / letiltás'),
                 ),
               ],
               const SizedBox(height: 18),

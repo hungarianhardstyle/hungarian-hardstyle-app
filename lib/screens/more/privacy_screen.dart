@@ -16,7 +16,7 @@ class PrivacyScreen extends StatelessWidget {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 16),
-          Text(
+          AppText(
             'Hatályos: 2026. augusztus 28.\n\n'
             'Adatkezelő: a Hungarian Hardstyle alkalmazás üzemeltetője. '
             'Az üzemeltető hivatalos jogi nevét, székhelyét és postai elérhetőségét az '
@@ -25,7 +25,7 @@ class PrivacyScreen extends StatelessWidget {
             'adatkezelési folyamatokat foglalja össze.',
           ),
           SizedBox(height: 14),
-          Text(
+          AppText(
             'Milyen adatokat kezelünk?\n\n'
             'A fiók és a közösségi funkciók használatához kezelhetjük a Firebase-fiókhoz '
             'tartozó azonosítót, e-mail-címet, megjelenő nevet, szerepkört, profilképet és '
@@ -45,7 +45,7 @@ class PrivacyScreen extends StatelessWidget {
             'tárolja, csak ellenőrzéshez szükséges, vissza nem fejthető azonosító kerülhet megőrzésre.',
           ),
           SizedBox(height: 14),
-          Text(
+          AppText(
             'Külső szolgáltatók és adatáramlás: Firebase/Firestore és Firebase Authentication '
             '(fiók, közösség, üzenetek, jogosultságok és biztonsági működés), Firebase Cloud '
             'Messaging (push értesítések), Cloudinary (feltöltött profil- és közösségi képek), '

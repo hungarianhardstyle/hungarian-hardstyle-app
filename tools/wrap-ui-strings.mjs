@@ -96,13 +96,6 @@ export function planEdits(source, file = 'x.dart') {
     // Idempotencia: ami már be van kötve (`tr(context, …)`, `AppText(…)`),
     // ahhoz nem nyúlunk — különben a második futás duplán tekerne.
     if (hit.wrapped) continue;
-    // A csak-UI-rétegű szöveg bekötése `context`-et igényel: ha nincs a
-    // hatókörben, KIHAGYJUK (a fordítás a szótárban marad, a szöveg magyarul
-    // jelenik meg — ez nem regresszió, csak később bekötendő).
-    if (hit.uiLayerOnly && !scope[hit.line - 1]) {
-      skipped.push({ line: hit.line, value: hit.value, reason: 'nincs context' });
-      continue;
-    }
     const position = offsetOf(source, hit.line, hit.start);
     // ⚠️ Többsoros (fűzött) csoport: a VÉGE a csoport utolsó sorában van, ezért
     // a záró pozíciót az utolsó sorral kell számolni — különben a kicserélt
@@ -110,6 +103,23 @@ export function planEdits(source, file = 'x.dart') {
     const endPosition = hit.spansLines
       ? offsetOf(source, hit.line + hit.spansLines, hit.end)
       : position + (hit.end - hit.start);
+    // A csak-UI-rétegű szöveg bekötése `context`-et igényel: ha nincs a
+    // hatókörben, KIHAGYJUK (a fordítás a szótárban marad, a szöveg magyarul
+    // jelenik meg — ez nem regresszió, csak később bekötendő).
+    if (hit.uiLayerOnly && !scope[hit.line - 1]) {
+      // ⚠️ A pozíciók IS kellenek: a `tools/wire-skipped-sites.mjs` ezekből
+      // köti be a kimaradt helyeket a `context` nélküli fordítóval.
+      skipped.push({
+        line: hit.line,
+        value: hit.value,
+        reason: 'nincs context',
+        start: position,
+        end: endPosition,
+        raw: source.slice(position, endPosition),
+        spansLines: hit.spansLines,
+      });
+      continue;
+    }
     const textStart = findTextIdentifier(source, position);
     if (textStart >= 0) {
       edits.push({ start: textStart, end: textStart + 4, text: 'AppText', kind: 'app-text', value: hit.value });
@@ -278,11 +288,17 @@ function main() {
   for (const file of files) {
     const source = fs.readFileSync(file, 'utf8');
     const result = transformSource(source, file);
+    // ⚠️ A KIHAGYOTT helyeket akkor is számoljuk, ha a fájlban nincs szerkesztés
+    // (mért hiba: a „0 változás" fájlok kimaradtjai eltűntek a jelentésből, ezért
+    // a második kör valódi maradéka 0-nak látszott).
+    skippedCount += result.skipped.length;
+    if (result.skipped.length && !report.some((entry) => entry.file === file)) {
+      report.push({ file, changed: 0, appText: 0, tr: 0, skipped: result.skipped.length });
+    }
     if (!result.changed) continue;
     if (apply) fs.writeFileSync(file, result.source, 'utf8');
     appText += result.appText;
     tr += result.tr;
-    skippedCount += result.skipped.length;
     filesChanged += 1;
     report.push({ file, changed: result.changed, appText: result.appText, tr: result.tr });
   }

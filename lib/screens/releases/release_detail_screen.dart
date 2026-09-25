@@ -159,13 +159,13 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       if (verified) unawaited(_cacheVerifiedProduct(purchase.productID));
       _message = verified
           ? completed
-                ? 'A vásárlás ellenőrzése és véglegesítése sikeres.'
-                : 'A vásárlás ellenőrzése sikeres, a Play-véglegesítés még folyamatban van.'
+                ? AppStrings.tr('A vásárlás ellenőrzése és véglegesítése sikeres.')
+                : AppStrings.tr('A vásárlás ellenőrzése sikeres, a Play-véglegesítés még folyamatban van.')
           : purchase.status == PurchaseStatus.purchased ||
                 purchase.status == PurchaseStatus.restored
           ? completed
-                ? 'A vásárlás ellenőrzése sikertelen.'
-                : 'A vásárlás ellenőrzése vagy véglegesítése még nem sikerült.'
+                ? AppStrings.tr('A vásárlás ellenőrzése sikertelen.')
+                : AppStrings.tr('A vásárlás ellenőrzése vagy véglegesítése még nem sikerült.')
           : purchase.status == PurchaseStatus.error
           ? _purchases.purchaseErrorMessage(purchase)
           : null;
@@ -772,7 +772,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
         ? tr(context, 'Extended')
         : '';
     final format = id.endsWith('_wav')
-        ? 'WAV / lossless'
+        ? tr(context, 'WAV / lossless')
         : id.endsWith('_mp3_320')
         ? tr(context, 'MP3 320 kbps')
         : id;

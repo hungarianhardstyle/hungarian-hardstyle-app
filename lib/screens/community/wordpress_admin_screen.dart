@@ -523,7 +523,13 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         context: context,
         builder: (dialogContext) => StatefulBuilder(
           builder: (context, setDialogState) => AlertDialog(
-            title: Text('Szerkesztés: ${_sections[_section]}'),
+            // ⚠️ A szekció címkéje `const` térképben magyar kulcs, ezért a
+            // beillesztett értéket itt fordítjuk (a sablon `{n}` helyőrzős kulcs).
+            title: AppText(
+              trArgs(context, 'Szerkesztés: {n}', {
+                'n': AppStrings.tr(_sections[_section] ?? ''),
+              }),
+            ),
             content: SizedBox(
               width: 520,
               height: MediaQuery.sizeOf(context).height * .65,
@@ -985,7 +991,11 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     final result = await showDialog<(String, String)>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Szerkesztés: ${_sections[_section]}'),
+        title: AppText(
+          trArgs(context, 'Szerkesztés: {n}', {
+            'n': AppStrings.tr(_sections[_section] ?? ''),
+          }),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1186,7 +1196,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         );
       }
       if (result.$2 && imageUrl.isEmpty) {
-        _message('Bekapcsolva csak kép URL-lel menthető.');
+        _message(AppStrings.tr('Bekapcsolva csak kép URL-lel menthető.'));
         return;
       }
       final buttonLabelValue = result.$4.trim();
@@ -1199,7 +1209,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
               parsedButtonUrl.scheme != 'https' ||
               parsedButtonUrl.host.isEmpty)) {
         _message(
-          'A gombhoz érvényes HTTPS-link és 1–40 karakteres felirat kell.',
+          AppStrings.tr('A gombhoz érvényes HTTPS-link és 1–40 karakteres felirat kell.'),
         );
         return;
       }
@@ -1215,7 +1225,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         },
       );
       _message(
-        imageUrl.isEmpty ? 'Indítási kép törölve.' : 'Indítási kép mentve.',
+        imageUrl.isEmpty ? 'Indítási kép törölve.' : AppStrings.tr('Indítási kép mentve.'),
       );
       _reload();
     } catch (error) {
@@ -1538,7 +1548,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                         vertical: 8,
                       ),
                       child: ChoiceChip(
-                        label: Text(entry.value),
+                        label: AppText(entry.value),
                         selected: _section == entry.key,
                         onSelected: (_) => _select(entry.key),
                       ),

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/label_library.dart';
 import '../../models/release.dart';
@@ -497,8 +498,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       _excludedFromPlaylist = next;
       if (stopCurrent) _currentIndex = -1;
       _message = wasExcluded
-          ? 'Visszatéve a lejátszási listára.'
-          : 'Kivéve a lejátszási listából — a fájl a készüléken marad.';
+          ? AppStrings.tr('Visszatéve a lejátszási listára.')
+          : AppStrings.tr('Kivéve a lejátszási listából — a fájl a készüléken marad.');
     });
     // A kivétel/betevés az alap-sorrendet változtatja: a szolgáltatás kapja meg.
     unawaited(_scanDownloads());
@@ -833,10 +834,10 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
 
   Future<void> _confirmDelete(LabelQueueEntry entry) async {
     final ok = await _confirm(
-      'Törlés a készülékről',
+      AppStrings.tr('Törlés a készülékről'),
       'A(z) „${entry.nowPlayingLabel}" letöltött fájlja törlődik. '
           'A vásárlás megmarad, ezért bármikor újra letöltheted.',
-      'Törlés',
+      AppStrings.tr('Törlés'),
     );
     if (!ok) return;
     await _downloads.delete(entry);
@@ -855,10 +856,10 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
 
   Future<void> _deleteAll() async {
     final ok = await _confirm(
-      'Letöltött zenék törlése',
-      'Minden letöltött fájl törlődik a készülékről. A vásárlásaid '
-          'megmaradnak, bármikor újra letölthetők.',
-      'Törlés',
+      AppStrings.tr('Letöltött zenék törlése'),
+      AppStrings.tr('Minden letöltött fájl törlődik a készülékről. A vásárlásaid '
+          'megmaradnak, bármikor újra letölthetők.'),
+      AppStrings.tr('Törlés'),
     );
     if (!ok) return;
     await _releaseAudio();

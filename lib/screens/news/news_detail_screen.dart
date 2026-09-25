@@ -6,6 +6,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/content/html_linkifier.dart';
+import '../../core/i18n/app_strings.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/post.dart';
@@ -56,7 +57,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
     try {
       final parsed = DateTime.parse(date);
 
-      return DateFormat('yyyy. MMMM d.', 'hu_HU').format(parsed);
+      return DateFormat(AppStrings.tr('yyyy. MMMM d.'), 'hu_HU').format(parsed);
     } catch (_) {
       return date;
     }

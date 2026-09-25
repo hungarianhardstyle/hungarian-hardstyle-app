@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../services/community_service.dart';
 import '../../widgets/app_text.dart';
@@ -54,7 +55,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
   Future<void> _share(String code) async {
     await Share.share(
       _inviteText(code),
-      subject: 'Hungarian Hardstyle meghívó',
+      subject: AppStrings.tr('Hungarian Hardstyle meghívó'),
     );
   }
 

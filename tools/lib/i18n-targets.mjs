@@ -23,11 +23,41 @@ export const EXCLUDED_FILES = [
 /** Technikai literal: kulcs, útvonal, URL, azonosító — nem szöveg. */
 export function looksTechnical(value) {
   if (!value) return true;
+  // ⚠️ A **prózai** szöveg soha nem technikai (mért hiba, 2026-09-25): az
+  // adatkezelési bekezdés tartalmaz e-mail-címet (`@`), ezért a lenti szűrők
+  // kidobták — pedig az egyértelműen megjelenő szöveg. Az azonosítók és az
+  // útvonalak **nem** tartalmaznak szóközt, ezért ez a kivétel nem szűkít.
+  if (/\S\s+\S\s+\S/.test(value)) return false;
   if (/[/\\@#]/.test(value)) return true;
   if (value.includes('://')) return true;
   if (value.includes('_')) return true;
   if (!/[A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű]/.test(value)) return true;
   return false;
+}
+
+/**
+ * A Dart escape-ek feloldása: a szótár kulcsa a **valós** (futásidejű) szöveg.
+ *
+ * ⚠️ MIÉRT KELL (mért rés, 2026-09-25): a `'Hatályos: …\n\nAdatkezelő: …'` típusú
+ * **többsoros bekezdések** escape-eket tartalmaznak, ezért kimaradtak a célok
+ * közül (a nyers alakban `\n` áll, a futásidejű szövegben viszont valódi új sor) —
+ * így az **adatkezelési tájékoztató** és a többi hosszú bekezdés angol módban
+ * magyarul maradt. A megoldás: a **kulcsot** az escape-ek feloldásával képezzük
+ * (a JSON `\n`-je pontosan a valódi új sort jelenti), a **forrásban** viszont a
+ * nyers literál marad (a bekötés a nyers szeletet használja).
+ */
+export function unescapeDart(value) {
+  return String(value ?? '').replace(/\\(.)/g, (_, char) => {
+    switch (char) {
+      case 'n': return '\n';
+      case 't': return '\t';
+      case 'r': return '\r';
+      case 'b': return '\b';
+      case 'f': return '\f';
+      case '0': return '\0';
+      default: return char;
+    }
+  });
 }
 
 /**
@@ -51,11 +81,9 @@ export function isTranslationTarget({ value, before }) {
   // `'Beküldés #{id}'`, amiben `#` van) kiesne a szótár-ellenőrzésből — mérve
   // pontosan ez történt, és a kulcs „szótáron kívüliként" jelent meg.
   if (isWrappedContext(before)) return true;
-  // ⚠️ Escape-elt literal (`\n`, `\'`, `\"`) kimarad: a szótár kulcsa a **valós**
-  // szöveg, a forrásban viszont escape-ek vannak — ilyenkor a kulcs és a futásidejű
-  // szöveg nem egyezne, és a fordítás csendben nem érvényesülne. Mérve a jelenlegi
-  // 589 kulcs egyikében sincs escape, ezért ez a védelem nem szűkít.
-  if (/\\./.test(value)) return false;
+  // ⚠️ Escape-elt literal (`\n`, `\'`, `\"`): a KULCS az escape-ek feloldásával
+  // készül (`unescapeDart`), ezért ezek **nem esnek ki** — a többsoros
+  // bekezdések (adatkezelési tájékoztató, súgók) épp így jutnak el a felületre.
   if (looksTechnical(value)) return false;
   const trimmed = value.trim();
   const hasAccent = HUNGARIAN_LETTERS.test(trimmed);
@@ -134,10 +162,12 @@ export function isUiLayerFile(file) {
  * **összehasonlítást/case-t** (`== 'X'`), az **értékadást** (`= 'X'` — lehet
  * kereső kulcs) és a `return`-t (a hívó dönti el). Ezeknél a szöveg fordítás
  * helyett **azonosító** lehet, ezért kézi döntés kell.
+ *
+ * ⚠️ ÉS A KERESŐ-/HIBAHÍVÁSOKAT (`NON_UI_CALLS`) — lásd ott a mért hamis pozitívokat.
  */
 export function isUiLayerTarget({ value, before, after }) {
   if (value.includes('$')) return false;
-  if (/\\./.test(value)) return false;
+  // (Az escape-elt literál kulcsa az `unescapeDart`-tal készül — lásd `isTranslationTarget`.)
   if (looksTechnical(value)) return false;
   const trimmed = value.trim();
   const hasAccent = HUNGARIAN_LETTERS.test(trimmed);
@@ -148,8 +178,20 @@ export function isUiLayerTarget({ value, before, after }) {
   if (/[=!]=\s*$/.test(before) || /\bcase\s+$/.test(before)) return false;
   if (/=\s*$/.test(before)) return false;
   if (/\breturn\s*$/.test(before)) return false;
+  if (NON_UI_CALLS.test(before)) return false;
   return true;
 }
+
+/**
+ * Kereső-/összehasonlító hívás és belső hibaszöveg: ezek **nem** feliratok.
+ *
+ * ⚠️ MIÉRT KELL (mért hamis pozitívok, 2026-09-25): a második kör UI-szabálya
+ * befogta a `startsWith('Unknown User ')`, a `contains('felhasználónév már foglalt')`
+ * és a `throw StateError('Profile unlock cancelled')` típusú literálokat. Ezek
+ * soha nem jelennek meg a felületen, viszont **célként** szerepeltek — a mérést
+ * hamisítva. A kizárás szűk: csak a felsorolt hívások argumentumára vonatkozik.
+ */
+export const NON_UI_CALLS = /(?:contains|startsWith|endsWith|indexOf|lastIndexOf|replaceAll|replaceFirst|split|allMatches|RegExp|debugPrint|print|StateError|Exception|ArgumentError|AssertionError|FormatException|Error)\s*\(\s*$/;
 
 /** Minden `lib/**\/*.dart` fájl. */
 export function dartFiles(root = 'lib') {

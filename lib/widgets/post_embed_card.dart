@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../core/i18n/app_strings.dart';
 import '../core/media/youtube_embed.dart';
 import '../core/navigation/in_app_browser.dart';
 import '../models/post.dart';
@@ -310,9 +311,9 @@ double _height(String type) => switch (type) {
 
 String _label(String type) => switch (type) {
   'youtube' => 'YouTube',
-  'spotify' => 'Spotify',
+  'spotify' => AppStrings.tr('Spotify'),
   'soundcloud' => 'SoundCloud',
-  'instagram' => 'Instagram',
+  'instagram' => AppStrings.tr('Instagram'),
   'tiktok' => 'TikTok',
-  _ => 'Beágyazott tartalom',
+  _ => AppStrings.tr('Beágyazott tartalom'),
 };

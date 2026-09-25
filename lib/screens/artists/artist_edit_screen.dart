@@ -216,7 +216,7 @@ class _ArtistEditScreenState extends ConsumerState<ArtistEditScreen> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
-          const Text(
+          const AppText(
             'Teljes címet adj meg (https://…). Ha kiüríted, a link eltűnik.',
             style: TextStyle(color: Colors.white60, fontSize: 12.5),
           ),

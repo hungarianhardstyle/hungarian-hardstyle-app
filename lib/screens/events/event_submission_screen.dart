@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/event_submission.dart';
 import '../../models/submission_image.dart';
@@ -107,7 +108,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
 
     final user = ref.read(communityServiceProvider).auth.currentUser;
     if (user == null || user.isAnonymous) {
-      _showMessage('Eseményt csak regisztrált felhasználó küldhet be.');
+      _showMessage(AppStrings.tr('Eseményt csak regisztrált felhasználó küldhet be.'));
       return;
     }
 
@@ -116,12 +117,12 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
     }
 
     if (_startDate == null) {
-      _showMessage('Válaszd ki az esemény dátumát.');
+      _showMessage(AppStrings.tr('Válaszd ki az esemény dátumát.'));
       return;
     }
 
     if ((_endDate == null) != (_endTime == null)) {
-      _showMessage('Az esemény végét napra és órára együtt add meg.');
+      _showMessage(AppStrings.tr('Az esemény végét napra és órára együtt add meg.'));
       return;
     }
 
@@ -142,14 +143,14 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
       );
       if (!end.isAfter(start)) {
         _showMessage(
-          'Az esemény vége nem lehet a kezdés előtt vagy azzal egy időben.',
+          AppStrings.tr('Az esemény vége nem lehet a kezdés előtt vagy azzal egy időben.'),
         );
         return;
       }
     }
 
     if (_selectedGenres.isEmpty) {
-      _showMessage('Válassz legalább egy műfajt.');
+      _showMessage(AppStrings.tr('Válassz legalább egy műfajt.'));
       return;
     }
 
@@ -228,7 +229,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
     final email = value!.trim();
     return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)
         ? null
-        : 'Adj meg egy érvényes e-mail-címet.';
+        : AppStrings.tr('Adj meg egy érvényes e-mail-címet.');
   }
 
   String? _validateUrl(String? value) {
@@ -246,7 +247,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
     if (requiredError != null) return requiredError;
     return RegExp(r'^\d+$').hasMatch(value!.trim())
         ? null
-        : 'Az irányítószám csak számokat tartalmazhat.';
+        : AppStrings.tr('Az irányítószám csak számokat tartalmazhat.');
   }
 
   String _formatDate(DateTime? value) =>

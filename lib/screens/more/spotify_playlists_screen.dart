@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../widgets/app_text.dart';
@@ -65,11 +66,11 @@ class SpotifyPlaylistsScreen extends StatelessWidget {
                   color: Color(0xFF1DB954),
                   size: 30,
                 ),
-                title: Text(
+                title: AppText(
                   playlist.$1,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text(playlist.$2),
+                subtitle: AppText(playlist.$2),
                 trailing: const Icon(Icons.open_in_new),
                 onTap: () => _openSpotify(context, playlist.$3),
               ),

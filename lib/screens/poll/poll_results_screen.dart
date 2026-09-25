@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../providers/community_provider.dart';
 import '../../widgets/app_text.dart';
@@ -63,8 +64,8 @@ class _PollOption {
 
   String get stateLabel => switch (state) {
     'open' => 'nyitott',
-    'before' => 'még nem indult',
-    _ => 'lezárult',
+    'before' => AppStrings.tr('még nem indult'),
+    _ => AppStrings.tr('lezárult'),
   };
 
   String get label => '$question — $stateLabel · $votes szavazat';
@@ -87,8 +88,8 @@ class _PollSummary {
 
   String get stateLabel => switch (state) {
     'open' => 'nyitott',
-    'before' => 'még nem indult',
-    _ => 'lezárult',
+    'before' => AppStrings.tr('még nem indult'),
+    _ => AppStrings.tr('lezárult'),
   };
 
   static _PollSummary? fromJson(Object? json) {

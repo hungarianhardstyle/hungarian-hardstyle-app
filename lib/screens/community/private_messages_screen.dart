@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../core/input/sentence_capitalization_formatter.dart';
 import '../../services/community_service.dart';
@@ -477,8 +478,8 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
 
   Future<void> _block() async {
     if (!await _confirm(
-      'Felhasználó blokkolása',
-      'Nem tudtok majd egymásnak privát üzenetet küldeni.',
+      AppStrings.tr('Felhasználó blokkolása'),
+      AppStrings.tr('Nem tudtok majd egymásnak privát üzenetet küldeni.'),
     )) {
       return;
     }
@@ -495,8 +496,8 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
 
   Future<void> _deleteConversation() async {
     if (!await _confirm(
-      'Beszélgetés törlése',
-      'Törlöd ezt a privát beszélgetést?',
+      AppStrings.tr('Beszélgetés törlése'),
+      AppStrings.tr('Törlöd ezt a privát beszélgetést?'),
     )) {
       return;
     }
@@ -512,7 +513,7 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
   }
 
   Future<void> _deleteMessage(String id) async {
-    if (!await _confirm('Üzenet törlése', 'Törlöd ezt az üzenetet?')) return;
+    if (!await _confirm(AppStrings.tr('Üzenet törlése'), AppStrings.tr('Törlöd ezt az üzenetet?'))) return;
     try {
       await _service.deletePrivateMessage(
         conversationId: _conversationId,

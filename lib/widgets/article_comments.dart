@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../core/errors/user_facing_error.dart';
 import '../core/firebase/firebase_callable.dart';
+import '../core/i18n/app_strings.dart';
 import '../core/i18n/tr.dart';
 import '../core/input/sentence_capitalization_formatter.dart';
 import '../services/community_service.dart';
@@ -189,8 +190,8 @@ class _ArticleCommentsState extends State<ArticleComments> {
       builder: (context) => AlertDialog(
         title: Text(
           action == 'delete'
-              ? 'Törlöd a hozzászólást?'
-              : 'Jelented a hozzászólást?',
+              ? AppStrings.tr('Törlöd a hozzászólást?')
+              : AppStrings.tr('Jelented a hozzászólást?'),
         ),
         actions: [
           TextButton(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../providers/community_provider.dart';
 import '../../widgets/app_text.dart';
@@ -76,9 +77,9 @@ class _PrizeOption {
 
 String prizeStateLabel(String state) => switch (state) {
   'open' => 'nyitott',
-  'before' => 'még nem indult',
-  'closed' => 'lezárult',
-  _ => 'lezárult',
+  'before' => AppStrings.tr('még nem indult'),
+  'closed' => AppStrings.tr('lezárult'),
+  _ => AppStrings.tr('lezárult'),
 };
 
 class _PrizeParticipant {

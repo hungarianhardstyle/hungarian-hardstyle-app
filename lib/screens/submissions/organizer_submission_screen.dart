@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/profile_submission.dart';
 import '../../models/submission_image.dart';
@@ -23,7 +24,7 @@ class _OrganizerSubmissionScreenState
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _city = TextEditingController();
-  final _country = TextEditingController(text: 'Magyarország');
+  final _country = TextEditingController(text: AppStrings.tr('Magyarország'));
   final _description = TextEditingController();
   final _contactEmail = TextEditingController();
   final Map<String, TextEditingController> _links = {

@@ -237,15 +237,16 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
   final _pinnedText = TextEditingController();
   String _roleFilter = 'all';
 
-  String _roleFilterLabel() =>
-      const {
-        'all': 'Mindenki',
-        'admin': 'Admin',
-        'dj': 'DJ',
-        'organizer': 'Szervező',
-        'partygoer': 'Bulizó',
-      }[_roleFilter] ??
-      'Mindenki';
+  String _roleFilterLabel() => AppStrings.tr(
+    const {
+      'all': 'Mindenki',
+      'admin': 'Admin',
+      'dj': 'DJ',
+      'organizer': 'Szervező',
+      'partygoer': 'Bulizó',
+    }[_roleFilter] ??
+        AppStrings.tr('Mindenki'),
+  );
 
   Future<String?> _pickAdminRole({
     required String title,
@@ -259,10 +260,10 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
         child: ListView(
           shrinkWrap: true,
           children: [
-            ListTile(title: Text(title)),
+            ListTile(title: AppText(title)),
             for (final option in options)
               ListTile(
-                title: Text(option.$2),
+                title: AppText(option.$2),
                 trailing: option.$1 == current
                     ? const Icon(Icons.check, color: Colors.redAccent)
                     : null,
@@ -1191,7 +1192,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
 
   Future<void> _pickImage({required ImageSource source}) async {
     if (_anonymous) {
-      _showMessage('Kép feltöltéséhez regisztráció szükséges.');
+      _showMessage(AppStrings.tr('Kép feltöltéséhez regisztráció szükséges.'));
       return;
     }
     final file = await ImagePicker().pickImage(
@@ -1205,7 +1206,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     }
     final bytes = await file.readAsBytes();
     if (bytes.length > 5 * 1024 * 1024) {
-      _showMessage('A kép legfeljebb 5 MB lehet.');
+      _showMessage(AppStrings.tr('A kép legfeljebb 5 MB lehet.'));
       return;
     }
     if (mounted) setState(() => _image = bytes);
@@ -1213,7 +1214,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
 
   Future<void> _send() async {
     if (_textController.text.trim().isEmpty && _image == null) {
-      _showMessage('Írj egy üzenetet vagy válassz képet.');
+      _showMessage(AppStrings.tr('Írj egy üzenetet vagy válassz képet.'));
       return;
     }
     setState(() => _sending = true);
@@ -1989,8 +1990,8 @@ class _PostCardState extends ConsumerState<_PostCard> {
         SnackBar(
           content: Text(
             action == 'report'
-                ? 'Jelentés elküldve.'
-                : 'Felhasználó blokkolva.',
+                ? AppStrings.tr('Jelentés elküldve.')
+                : AppStrings.tr('Felhasználó blokkolva.'),
           ),
         ),
       );
@@ -2684,7 +2685,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     final result = await _service.refreshCurrentSession();
     if (!mounted || _service.auth.currentUser?.uid != user.uid) return;
     if (result['emailVerifiedChanged'] == true) {
-      _message('Az e-mail-címed megerősítve.');
+      _message(AppStrings.tr('Az e-mail-címed megerősítve.'));
     }
     setState(() {});
   }
@@ -2701,16 +2702,16 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     if (_email.text.trim().isEmpty ||
         _password.text.length < 6 ||
         (_register && _name.text.trim().isEmpty)) {
-      _message('Töltsd ki a mezőket; a jelszó legalább 6 karakter legyen.');
+      _message(AppStrings.tr('Töltsd ki a mezőket; a jelszó legalább 6 karakter legyen.'));
       return;
     }
     if (_register &&
         !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_email.text.trim())) {
-      _message('Adj meg érvényes e-mail-címet.');
+      _message(AppStrings.tr('Adj meg érvényes e-mail-címet.'));
       return;
     }
     if (_register && _password.text != _passwordConfirmation.text) {
-      _message('A két jelszó nem egyezik.');
+      _message(AppStrings.tr('A két jelszó nem egyezik.'));
       return;
     }
     if (_register) {
@@ -2751,13 +2752,13 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
         // profile shows the verification warning and resend action, so signing
         // out here only makes a successful registration look like a failure.
         _message(
-          'Megerősítő e-mailt küldtünk. A profil használatához erősítsd meg a címedet.',
+          AppStrings.tr('Megerősítő e-mailt küldtünk. A profil használatához erősítsd meg a címedet.'),
         );
       } else {
         await _service.signIn(email: _email.text, password: _password.text);
         if (_service.auth.currentUser?.emailVerified != true && mounted) {
           _message(
-            'Erősítsd meg az e-mail-címedet. A profilban újra elküldheted a levelet.',
+            AppStrings.tr('Erősítsd meg az e-mail-címedet. A profilban újra elküldheted a levelet.'),
           );
         }
       }
@@ -2780,7 +2781,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     final message = _chatError(error).toLowerCase();
     return message.contains('felhasználónév már foglalt') ||
             message.contains('display-name-already-in-use')
-        ? 'Ez a felhasználónév már foglalt. Válassz másikat.'
+        ? AppStrings.tr('Ez a felhasználónév már foglalt. Válassz másikat.')
         : null;
   }
 
@@ -3012,7 +3013,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
         );
         controller.dispose();
         if (code == null || !await _service.verifyAuthenticatorCode(code)) {
-          if (mounted) _message('Az authenticator-kód hibás.');
+          if (mounted) _message(AppStrings.tr('Az authenticator-kód hibás.'));
           return false;
         }
       }
@@ -3115,7 +3116,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       // adatokat; csak ennek a UID-nak a cache-e érvénytelenedik.
       CommunityService.clearPublicProfileCache(user.uid);
       CommunityService.clearProfileCache(user.uid);
-      if (mounted) _message('Profil mentve.');
+      if (mounted) _message(AppStrings.tr('Profil mentve.'));
     } catch (error) {
       if (kDebugMode) {
         debugPrint(
@@ -3159,7 +3160,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     try {
       await _service.requestEmailChange(email);
       _message(
-        'Megerősítő linket küldtünk az új e-mail-címre. 24 órád van a megerősítésre.',
+        AppStrings.tr('Megerősítő linket küldtünk az új e-mail-címre. 24 órád van a megerősítésre.'),
       );
     } catch (error) {
       _message(_chatError(error));
@@ -3235,7 +3236,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                   decoration: InputDecoration(
                     labelText: tr(context, 'Jelenlegi jelszó'),
                     suffixIcon: IconButton(
-                      tooltip: currentVisible ? 'Elrejtés' : 'Megjelenítés',
+                      tooltip: currentVisible ? 'Elrejtés' : AppStrings.tr('Megjelenítés'),
                       icon: Icon(
                         currentVisible
                             ? Icons.visibility_off
@@ -3253,7 +3254,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                   decoration: InputDecoration(
                     labelText: tr(context, 'Új jelszó'),
                     suffixIcon: IconButton(
-                      tooltip: nextVisible ? 'Elrejtés' : 'Megjelenítés',
+                      tooltip: nextVisible ? 'Elrejtés' : AppStrings.tr('Megjelenítés'),
                       icon: Icon(
                         nextVisible ? Icons.visibility_off : Icons.visibility,
                       ),
@@ -3268,7 +3269,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                   decoration: InputDecoration(
                     labelText: tr(context, 'Új jelszó megerősítése'),
                     suffixIcon: IconButton(
-                      tooltip: confirmVisible ? 'Elrejtés' : 'Megjelenítés',
+                      tooltip: confirmVisible ? 'Elrejtés' : AppStrings.tr('Megjelenítés'),
                       icon: Icon(
                         confirmVisible
                             ? Icons.visibility_off
@@ -3304,7 +3305,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     }
     if (next.text.length < 6 || next.text != confirm.text) {
       _message(
-        'Az új jelszó legalább 6 karakter legyen, és a két mező egyezzen.',
+        AppStrings.tr('Az új jelszó legalább 6 karakter legyen, és a két mező egyezzen.'),
       );
     } else {
       try {
@@ -3312,7 +3313,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           currentPassword: current.text,
           newPassword: next.text,
         );
-        _message('A jelszó módosítása sikerült.');
+        _message(AppStrings.tr('A jelszó módosítása sikerült.'));
       } catch (error) {
         _message(_chatError(error));
       }
@@ -3398,18 +3399,19 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           key: ValueKey('community-profile-social-${entry.key}'),
           controller: _social[entry.key],
           keyboardType: TextInputType.url,
-          decoration: InputDecoration(labelText: entry.value),
+          decoration: InputDecoration(labelText: AppStrings.tr(entry.value)),
         ),
       ),
   ];
 
-  String _roleLabel(String role) =>
-      const <String, String>{
-        'dj': 'DJ',
-        'organizer': 'Szervező',
-        'partygoer': 'Bulizó',
-      }[role] ??
-      'Bulizó';
+  String _roleLabel(String role) => AppStrings.tr(
+    const <String, String>{
+      'dj': 'DJ',
+      'organizer': 'Szervező',
+      'partygoer': 'Bulizó',
+    }[role] ??
+        AppStrings.tr('Bulizó'),
+  );
 
   Future<void> _chooseRole() async {
     final selected = await showDialog<String>(
@@ -3426,7 +3428,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
               onPressed: () => Navigator.of(dialogContext).pop(option.key),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(option.value),
+                child: AppText(option.value),
               ),
             ),
         ],
