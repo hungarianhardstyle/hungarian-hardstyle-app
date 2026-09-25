@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 363,
+    changes: [
+      'Az angol felületen további sok száz felirat jelenik meg angolul: a listák, kártyák, gombok és állapotüzenetek szövegei, amelyek eddig részben magyarul maradtak.',
+      'A magyar felület változatlan, és a Chat, valamint a felhasználók saját szövegei továbbra sem fordulnak le.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 362,
     changes: [
       'Angol felületnél a legutóbbi cikkek is angolul jelennek meg — a fordítást a szerver adja.',
