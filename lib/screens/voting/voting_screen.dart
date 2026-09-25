@@ -309,7 +309,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                           spacing: 6,
                           children: [
                             if (candidate.spotify.isNotEmpty)
-                              _link('Spotify', candidate.spotify),
+                              _link(tr(context, 'Spotify'), candidate.spotify),
                             if (candidate.youtube.isNotEmpty)
                               _link('YouTube', candidate.youtube),
                           ],
@@ -400,7 +400,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
           icon: const Icon(Icons.arrow_drop_down),
           label: Text(
             selected.isEmpty
-                ? 'Külföldi DJ-k kiválasztása'
+                ? tr(context, 'Külföldi DJ-k kiválasztása')
                 : '${selected.length} kiválasztva',
           ),
         ),

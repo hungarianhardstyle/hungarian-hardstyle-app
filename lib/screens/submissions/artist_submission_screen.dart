@@ -140,11 +140,11 @@ class _ArtistSubmissionScreenState
                       const SizedBox(height: 22),
                       _field(
                         _name,
-                        'DJ-név *',
+                        tr(context, 'DJ-név *'),
                         Icons.graphic_eq,
                         validator: _required,
                       ),
-                      _field(_realName, 'Valódi név', Icons.person_outline),
+                      _field(_realName, tr(context, 'Valódi név'), Icons.person_outline),
                       options.when(
                         loading: () =>
                             const Center(child: CircularProgressIndicator()),
@@ -206,16 +206,16 @@ class _ArtistSubmissionScreenState
                           ],
                         ),
                       ),
-                      _field(_city, 'Város', Icons.location_city),
-                      _field(_country, 'Ország', Icons.public),
+                      _field(_city, tr(context, 'Város'), Icons.location_city),
+                      _field(_country, tr(context, 'Ország'), Icons.public),
                       _field(
                         _contactEmail,
-                        'Privát kapcsolattartó e-mail *',
+                        tr(context, 'Privát kapcsolattartó e-mail *'),
                         Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                         validator: _emailRequired,
                         helper:
-                            'Csak az admin látja, nem kerül ki az adatlapra.',
+                            tr(context, 'Csak az admin látja, nem kerül ki az adatlapra.'),
                       ),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
@@ -232,7 +232,7 @@ class _ArtistSubmissionScreenState
                       if (!_bookingViaHuhs)
                         _field(
                           _bookingEmail,
-                          'Nyilvános booking e-mail',
+                          tr(context, 'Nyilvános booking e-mail'),
                           Icons.mark_email_read_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: _optionalEmail,
@@ -252,7 +252,7 @@ class _ArtistSubmissionScreenState
                       ),
                       _field(
                         _biography,
-                        'Bemutatkozás',
+                        tr(context, 'Bemutatkozás'),
                         Icons.notes,
                         maxLines: 6,
                       ),
@@ -280,7 +280,7 @@ class _ArtistSubmissionScreenState
                                 ),
                               )
                             : const Icon(Icons.send),
-                        label: Text(_submitting ? 'Küldés…' : 'DJ beküldése'),
+                        label: Text(_submitting ? 'Küldés…' : tr(context, 'DJ beküldése')),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(54),
                         ),
@@ -347,7 +347,7 @@ class _ArtistSubmissionScreenState
     if (email.isEmpty) return null;
     return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)
         ? null
-        : 'Érvénytelen e-mail-cím.';
+        : tr(context, 'Érvénytelen e-mail-cím.');
   }
 
   String? _optionalUrl(String? value) {

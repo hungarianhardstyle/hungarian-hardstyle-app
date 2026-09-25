@@ -390,7 +390,7 @@ class _AdminResourceEditorScreenState
           if (!_loading && _error == null)
             TextButton(
               onPressed: _saving ? null : _save,
-              child: Text(_saving ? 'Mentés…' : 'Mentés'),
+              child: Text(_saving ? 'Mentés…' : tr(context, 'Mentés')),
             ),
         ],
       ),
@@ -432,7 +432,7 @@ class _AdminResourceEditorScreenState
                 FilledButton.icon(
                   onPressed: _saving ? null : _save,
                   icon: const Icon(Icons.save_outlined),
-                  label: Text(_isNew ? 'Létrehozás' : 'Mentés'),
+                  label: Text(_isNew ? 'Létrehozás' : tr(context, 'Mentés')),
                 ),
               ],
             ),

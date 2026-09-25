@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../providers/achievement_provider.dart';
 import '../../services/achievement_service.dart';
 import '../../core/i18n/tr.dart';
@@ -18,77 +19,77 @@ class AchievementGuideScreen extends ConsumerWidget {
   const AchievementGuideScreen({super.key});
 
   /// A pontforrások. A `points` a jobb oldali kiemelt érték.
-  static const activities = <({String title, String points, String detail})>[
+  static final activities = <({String title, String points, String detail})>[
     (
-      title: 'Eseményen ott leszek',
+      title: AppStrings.tr('Eseményen ott leszek'),
       points: '+10 pont',
       detail:
           'Eseményenként egyszer jár. Amíg jelentkezve vagy rá, addig érvényes: ha lemondod, a pont elvész, visszajelentkezésnél újra jár.',
     ),
     (
-      title: 'Meetup jelzés',
+      title: AppStrings.tr('Meetup jelzés'),
       points: '+5 pont',
       detail:
           'Meetuponként egyszer jár. Ha lemondod a jelzést, ez a pont is elvész, visszajelzésnél újra jár.',
     ),
     (
-      title: 'Kölcsönös kapcsolat meetupolóval',
+      title: AppStrings.tr('Kölcsönös kapcsolat meetupolóval'),
       points: '+15 pont',
       detail:
           'Eseményenként és kapcsolatonként jár, ha valódi, kölcsönös kapcsolat születik. Ha a kapcsolat megszűnik, a pont is elvész.',
     ),
     (
-      title: 'Esemény utáni értékelés',
+      title: AppStrings.tr('Esemény utáni értékelés'),
       points: '+10 pont',
       detail: 'Eseményenként egyszer adható.',
     ),
     (
-      title: 'Hír kedvelése',
+      title: AppStrings.tr('Hír kedvelése'),
       points: '+2 pont',
       detail:
           'Naponta legfeljebb 3 hír kedveléséért jár pont. A pont végleges: ha kiveszed a lájkot, megmarad, de újralájk sem ad újat.',
     ),
     (
-      title: 'Napi aktivitási pont',
+      title: AppStrings.tr('Napi aktivitási pont'),
       points: '+1–5 pont',
       detail:
           'Ha aznap hozzászólsz egy cikkhez vagy írsz a chatbe, a következő napon a szerver kiszámolja, mennyit voltál aktív, és 1–5 pontot ad érte. Naponta egyszer.',
     ),
     (
-      title: 'Cikk kommentelése',
+      title: AppStrings.tr('Cikk kommentelése'),
       points: '+1 pont',
       detail: 'Naponta legfeljebb 3 elküldött cikkkommentért jár pont.',
     ),
     (
-      title: 'Éves HUHS szavazás',
+      title: AppStrings.tr('Éves HUHS szavazás'),
       points: '+10 pont',
       detail:
           'A teljes, minden kötelező kategóriát tartalmazó szavazólap után jár (bejelentkezve).',
     ),
     (
-      title: 'Kiadvány megvásárlása',
+      title: AppStrings.tr('Kiadvány megvásárlása'),
       points: '+20 pont',
       detail:
           'Minden megvásárolt változatért (MP3/WAV) jár. A vásárlást a Google Play ellenőrzi, ezért nem lehet hamisítani.',
     ),
     (
-      title: 'Jóváhagyott beküldés',
+      title: AppStrings.tr('Jóváhagyott beküldés'),
       points: '+10 pont',
       detail:
           'Eseményt szervező, DJ-t DJ, szervezőt szervező küldhet be; a pont a jóváhagyáskor jár a beküldőnek. Naponta legfeljebb 3 jóváhagyott beküldésért.',
     ),
     (
-      title: 'Profil kitöltése',
+      title: AppStrings.tr('Profil kitöltése'),
       points: '+30 pont',
       detail: 'Egyszeri jóváírás a teljes profilért (név, bemutatkozás, egyező e-mail).',
     ),
     (
-      title: 'Meghívott regisztrációja',
+      title: AppStrings.tr('Meghívott regisztrációja'),
       points: '+50 pont',
       detail: 'Új regisztráció után, szerveroldali ellenőrzéssel.',
     ),
     (
-      title: 'HUHS játékok',
+      title: AppStrings.tr('HUHS játékok'),
       points: 'a játék jutalma',
       detail:
           'A játékhoz beállított jutalom: kvíznél a helyes válaszok aránya szerint sávokban, más játéktípusnál csak teljes pontszámért.',
@@ -118,15 +119,15 @@ class AchievementGuideScreen extends ConsumerWidget {
         children: [
           const _IntroCard(),
           const SizedBox(height: 16),
-          const _SectionTitle('Szintek és jelvények'),
+          _SectionTitle(tr(context, 'Szintek és jelvények')),
           const SizedBox(height: 8),
           ...?levels?.map((level) => _LevelTile(level: level)),
           const SizedBox(height: 18),
-          const _SectionTitle('Miért jár pont?'),
+          _SectionTitle(tr(context, 'Miért jár pont?')),
           const SizedBox(height: 8),
           ...activities.map((activity) => _ActivityTile(activity: activity)),
           const SizedBox(height: 18),
-          const _SectionTitle('Fontos szabályok'),
+          _SectionTitle(tr(context, 'Fontos szabályok')),
           const SizedBox(height: 8),
           Card(
             child: Padding(

@@ -34,7 +34,7 @@ class _FaqScreenState extends ConsumerState<FaqScreen> {
           onRetry: () => ref.invalidate(faqProvider),
         ),
         data: (items) {
-          final categories = <String>{'Összes', ...items.map((e) => e.category)}
+          final categories = <String>{tr(context, 'Összes'), ...items.map((e) => e.category)}
             ..removeWhere((value) => value.trim().isEmpty);
           final visible = items.where((item) {
             final matchesCategory =

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/i18n/tr.dart';
 import '../providers/favorites_provider.dart';
 
 class FavoriteButton extends ConsumerWidget {
@@ -23,8 +24,8 @@ class FavoriteButton extends ConsumerWidget {
 
     return IconButton(
       tooltip: selected
-          ? 'Eltávolítás a kedvencekből'
-          : 'Hozzáadás a kedvencekhez',
+          ? tr(context, 'Eltávolítás a kedvencekből')
+          : tr(context, 'Hozzáadás a kedvencekhez'),
       onPressed: enabled
           ? () => ref.read(favoritesProvider).toggle(kind, id, title)
           : null,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/i18n/tr.dart';
 import '../models/poll.dart';
 import '../providers/poll_provider.dart';
 import '../screens/poll/poll_screen.dart';
@@ -49,7 +50,7 @@ class PollEntryButton extends ConsumerWidget {
   Widget _build(BuildContext context, HuhsPoll poll) {
     return HomeActionCard(
       key: const Key('poll-entry'),
-      eyebrow: 'KÉRDŐÍV',
+      eyebrow: tr(context, 'KÉRDŐÍV'),
       label: poll.question,
       icon: Icons.poll_outlined,
       onTap: () {

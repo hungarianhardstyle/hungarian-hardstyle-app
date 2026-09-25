@@ -51,6 +51,13 @@ void main() {
         greaterThan(0),
         reason: 'ha az asset nincs a pubspecban, a szótár üresen tölt be',
       );
+      // ⚠️ A puszta „> 0" egy **csonka** szótárat is átengedne (a mérés szerint
+      // 921 kulcs van) — ezért a küszöb a mért érték alatt, de érdemben.
+      expect(
+        AppStrings.dictionarySize,
+        greaterThan(800),
+        reason: 'a szótár nem csorbulhat (mért: 921 kulcs)',
+      );
       AppStrings.setLanguage(AppLanguage.en);
       expect(AppStrings.tr('Közösség'), 'Community');
       AppStrings.setLanguage(AppLanguage.hu);
@@ -115,6 +122,39 @@ void main() {
       // buktat), de egy visszaesést (a körbefordítás visszavonását) igen.
       expect(appText, greaterThan(450), reason: 'az AppText-bekötés megvan');
       expect(tr, greaterThan(150), reason: 'a tr(...)-bekötés megvan');
+    });
+
+    test('a MÁSODIK kör is be van kötve (context nélküli helyek is)', () {
+      // A második kör (2026-09-25) a szabályalapú célokon TÚLI UI-szövegeket
+      // kötötte be: ternary-ág, `map`-érték, `??` alapérték, service-üzenet.
+      // Ahol nincs `BuildContext` a hatókörben, ott a `context` nélküli fordító
+      // (`AppStrings.tr`) a helyes alak — ezt a `flutter analyze` jelzi, és a
+      // `tools/fix-context-fallout.mjs` írja át.
+      //
+      // ⚠️ Az `AppStrings.tr(` ág **mérési** szempontból is kényes: amíg az
+      // extraktor nem ismerte fel ezt az alakot, addig az így bekötött helyek
+      // **kiestek a célok közül**, és a lefedettség hamisan 100% lett. Ezért ez a
+      // lint a bekötés mértékét is őrzi (nem csak azt, hogy „van valahol”).
+      final files = Directory('lib')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.dart'))
+          .toList();
+      var appStringsTr = 0;
+      var appStringsTrArgs = 0;
+      var filesWithAppStrings = 0;
+      for (final file in files) {
+        final source = file.readAsStringSync();
+        final plain = RegExp(r'AppStrings\.tr\(').allMatches(source).length;
+        final withArgs = RegExp(r'AppStrings\.trArgs\(').allMatches(source).length;
+        appStringsTr += plain;
+        appStringsTrArgs += withArgs;
+        if (plain + withArgs > 0) filesWithAppStrings += 1;
+      }
+      // Mért érték: 59 `AppStrings.tr(` + 1 `AppStrings.trArgs(`, 11 fájlban.
+      expect(appStringsTr, greaterThan(40), reason: 'a context nélküli bekötés megvan');
+      expect(appStringsTrArgs, greaterThanOrEqualTo(1), reason: 'a trArgs-ág is be van kötve');
+      expect(filesWithAppStrings, greaterThan(5), reason: 'több fájlban, nem egy helyen');
     });
   });
 

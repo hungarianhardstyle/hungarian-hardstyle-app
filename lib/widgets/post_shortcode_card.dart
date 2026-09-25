@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/i18n/tr.dart';
 import '../core/navigation/in_app_browser.dart';
 import '../models/post.dart';
 import '../screens/news/news_detail_screen.dart';
@@ -33,7 +34,7 @@ class PostShortcodeCard extends StatelessWidget {
         title: Text(shortcode.label),
         subtitle: Text(
           related.isEmpty
-              ? 'Megnyitás az alkalmazásban'
+              ? tr(context, 'Megnyitás az alkalmazásban')
               : '${related.length} kapcsolódó cikk',
         ),
         trailing: const Icon(Icons.chevron_right),

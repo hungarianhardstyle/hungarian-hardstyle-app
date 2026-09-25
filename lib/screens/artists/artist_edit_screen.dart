@@ -245,7 +245,7 @@ class _ArtistEditScreenState extends ConsumerState<ArtistEditScreen> {
           FilledButton.icon(
             onPressed: _saving ? null : () => unawaited(_save()),
             icon: const Icon(Icons.save_outlined),
-            label: Text(_saving ? 'Mentés…' : 'Mentés'),
+            label: Text(_saving ? 'Mentés…' : tr(context, 'Mentés')),
           ),
         ],
       ),

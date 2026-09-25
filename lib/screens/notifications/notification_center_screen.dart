@@ -133,12 +133,12 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(
-          archived ? 'Archivált értesítések törlése' : 'Aktív értesítések törlése',
+          archived ? 'Archivált értesítések törlése' : tr(context, 'Aktív értesítések törlése'),
         ),
         content: Text(
           archived
-              ? 'Biztosan törlöd az összes ARCHIVÁLT értesítést? Az aktív fül értesítései megmaradnak.'
-              : 'Biztosan törlöd az összes AKTÍV értesítést? Az archivált értesítések megmaradnak.',
+              ? tr(context, 'Biztosan törlöd az összes ARCHIVÁLT értesítést? Az aktív fül értesítései megmaradnak.')
+              : tr(context, 'Biztosan törlöd az összes AKTÍV értesítést? Az archivált értesítések megmaradnak.'),
         ),
         actions: [
           TextButton(
@@ -334,7 +334,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                               ? notificationSelectionLabel(
                                   _selection.countWithin(items),
                                 )
-                              : 'Értesítések',
+                              : tr(context, 'Értesítések'),
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
                       ),
@@ -400,8 +400,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                           // A tooltip is megmondja, MELYIK fulett töröl — a gomb a
                           // látható fülre vonatkozik, nem mindenre.
                           tooltip: _showArchived
-                              ? 'Összes archivált törlése'
-                              : 'Összes aktív törlése',
+                              ? tr(context, 'Összes archivált törlése')
+                              : tr(context, 'Összes aktív törlése'),
                           onPressed: items.isEmpty
                               ? null
                               : () => unawaited(_deleteAll(context)),
@@ -472,8 +472,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       ? Center(
                           child: Text(
                             _showArchived
-                                ? 'Nincs archivált értesítés.'
-                                : 'Nincs új értesítés.',
+                                ? tr(context, 'Nincs archivált értesítés.')
+                                : tr(context, 'Nincs új értesítés.'),
                             style: TextStyle(color: Colors.white70),
                           ),
                         )

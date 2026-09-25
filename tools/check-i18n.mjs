@@ -17,6 +17,18 @@ import fs from 'node:fs';
 export const KEYS_PATH = 'tmp/i18n/keys.json';
 export const DICTIONARY_PATH = 'assets/i18n/en.json';
 
+/**
+ * A célzott szövegek **alsó** küszöbe — a „hamis 100% lefedettség" ellen.
+ *
+ * MIÉRT KELL (mért hibaosztály, 2026-09-25): a lefedettség nevezője a kódból
+ * kinyert célok száma. Ha az extraktor egy **bekötött alakot** nem ismer fel
+ * (`tr(context, …)` helyett pl. `AppStrings.tr(…)`), akkor azok a szövegek
+ * kiesnek a célok közül — a hiányzó fordítás **nem** hiányzóként jelenik meg,
+ * hanem a nevező csökken, és a kapu zölden **hazudik** („100%”). Ezért a
+ * célszámnak érdemi padlója van: a mért érték 892 (2026-09-25), a padló 880.
+ */
+export const MIN_TARGETS = 880;
+
 /** Magyar ékezet — a fordításban gyanús. */
 export const HUNGARIAN_ACCENTS = /[áéíóöőúüűÁÉÍÓÖŐÚÜŰ]/;
 
@@ -92,6 +104,40 @@ export function hungarianSignals(value) {
   const hits = [...new Set(words.filter((word) => HUNGARIAN_STOPWORDS.includes(word)))];
   if (hits.length) signals.push(`magyar szó: ${hits.join(', ')}`);
   return signals;
+}
+
+/** Minden `lib/**\/*.dart` fájl legfrissebb módosítási ideje (a kulcslista frissességéhez). */
+export function newestDartMtime(root = 'lib') {
+  let newest = 0;
+  const stack = [root];
+  while (stack.length) {
+    const dir = stack.pop();
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) stack.push(full);
+      else if (entry.name.endsWith('.dart')) {
+        const mtime = fs.statSync(full).mtimeMs;
+        if (mtime > newest) newest = mtime;
+      }
+    }
+  }
+  return newest;
+}
+
+/**
+ * Elavult-e a kulcslista?
+ *
+ * ⚠️ MIÉRT KELL (mérve, 2026-09-25): a kapu a `tmp/i18n/keys.json`-t olvassa, nem
+ * futtatja újra az extraktort. A mutációs bizonyíték közben pont ez buktatta meg a
+ * mérést: a szabály mutálása **nem** látszott, mert a kulcslista a régi volt. Egy
+ * elavult kulcslistán a lefedettség zölden hazudhat, ezért ezt jelezzük (és
+ * `--strict`-ben hibává tesszük).
+ */
+export function staleKeys(keysPath = KEYS_PATH, root = 'lib') {
+  if (!fs.existsSync(keysPath)) return { missing: true, stale: true, keysMtime: 0, newest: 0 };
+  const keysMtime = fs.statSync(keysPath).mtimeMs;
+  const newest = newestDartMtime(root);
+  return { missing: false, stale: newest > keysMtime, keysMtime, newest };
 }
 
 /**
@@ -215,6 +261,22 @@ function main() {
     + `helyőrző-hiba: ${stats.placeholders} | változatlan: ${stats.unchanged} | szótáron kívüli kulcs: ${stats.extra}`,
   );
   if (duplicates.length) console.log(`duplikált kulcs a fájlban: ${duplicates.length}`);
+  // ⚠️ A VAKSÁG-KAPU: kevesebb cél, mint a padló → az extraktor valószínűleg nem
+  // ismer fel egy bekötött alakot, ezért a „100%" nem bizonyíték.
+  const blind = stats.targets < MIN_TARGETS;
+  if (blind) {
+    console.log(
+      `⚠️ GYANÚS: célzott szöveg ${stats.targets} < ${MIN_TARGETS} — az extraktor `
+      + 'valószínűleg nem ismer fel egy bekötött alakot (hamis 100% lefedettség).',
+    );
+  }
+  const staleness = staleKeys();
+  if (staleness.stale) {
+    console.log(
+      '⚠️ ELAVULT KULCSLISTA: a kód újabb, mint a '
+      + `${KEYS_PATH} — futtasd: node tools/extract-ui-strings.mjs --write`,
+    );
+  }
 
   const byType = (type) => problems.filter((problem) => problem.type === type);
   for (const problem of byType('magyar').slice(0, 15)) {
@@ -230,7 +292,7 @@ function main() {
     console.log(`  EXTRA   ${JSON.stringify(key)}`);
   }
 
-  const failed = problems.length > 0 || duplicates.length > 0;
+  const failed = problems.length > 0 || duplicates.length > 0 || blind || staleness.stale;
   if (!failed) console.log('\nMINDEN ELLENŐRZÉS RENDBEN.');
   return process.argv.includes('--strict') && failed ? 1 : 0;
 }

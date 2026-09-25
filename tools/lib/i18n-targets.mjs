@@ -72,15 +72,26 @@ export function isUiContext(before) {
 }
 
 /**
- * Már körbefordított szöveg: `tr(context, '…')` vagy `trArgs(context, '…')`.
+ * Már körbefordított szöveg: `tr(context, '…')`, `trArgs(context, '…')`,
+ * `AppStrings.tr('…')` vagy `AppStrings.trArgs('…')`.
  *
  * EZ A KULCS-SZÁMLÁLÁSHOZ KELL: a bekötés után a szöveg körül már ott a hívás,
  * ezért a kontextus megszűnik „UI-kontextusnak" lenni. Ha az extraktor nem
  * ismerné fel, a szótár-lefedettség mérése **hamisan** 21 szövegre esne vissza
  * (mérve pontosan ez történt), és a fordítatlan kulcsok észrevétlenek maradnának.
+ *
+ * ⚠️ AZ `AppStrings.tr(` ÁG IS KELL (2026-09-25): a `context` nélküli helyeket a
+ * `fix-context-fallout.mjs` erre a hívásra írja át. **A mérés pontos:** e forma
+ * nélkül a célszám **ma nem változik** (892 mindkét esetben), mert a 11 érintett
+ * fájl szövegei a UI-réteg szabályával vagy egy másik előfordulásukkal így is
+ * célok — de a **hiányzó ismeret** valódi rés: egy *csak* ilyen alakban,
+ * `lib/services/**`-ban bekötött szöveg kiesne a lefedettség-mérésből, és a kapu
+ * zölden hazudna. Ezért a forma ismert, és a `check-i18n.mjs` `MIN_TARGETS`
+ * őrszemével együtt őrizzük.
  */
 export function isWrappedContext(before) {
-  return /\btr(?:Args)?\(\s*context\s*,\s*$/.test(before);
+  if (/\btr(?:Args)?\(\s*context\s*,\s*$/.test(before)) return true;
+  return /(?:^|[^\w$.])AppStrings\.tr(?:Args)?\(\s*$/.test(before);
 }
 
 export const UI_NAMED_PARAMS = [

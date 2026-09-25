@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/prize.dart';
 import '../../providers/community_provider.dart';
 import '../../widgets/app_text.dart';
@@ -166,7 +167,7 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader('NYEREMÉNYJÁTÉK', Icons.card_giftcard_outlined),
+          _buildHeader(tr(context, 'NYEREMÉNYJÁTÉK'), Icons.card_giftcard_outlined),
           const SizedBox(height: 10),
           Text(
             prize.question,
@@ -263,7 +264,7 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
             onPressed: _selected == null || _submitting
                 ? null
                 : () => _submit(prize),
-            child: Text(_submitting ? 'Küldés…' : 'Játszom'),
+            child: Text(_submitting ? 'Küldés…' : tr(context, 'Játszom')),
           ),
         ),
         const SizedBox(height: 6),

@@ -53,7 +53,7 @@ class AboutScreen extends StatelessWidget {
             builder: (context, snapshot) {
               final info = snapshot.data;
               final version = info == null
-                  ? 'Verzió betöltése…'
+                  ? tr(context, 'Verzió betöltése…')
                   : '${info.version}+${info.buildNumber}';
               final currentBuild = info == null
                   ? null
@@ -158,7 +158,7 @@ class _Changelog extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               child: Text(
                 currentBuild == null
-                    ? 'A kiadási jegyzet betöltése…'
+                    ? tr(context, 'A kiadási jegyzet betöltése…')
                     : 'Ehhez a verzióhoz ($currentBuild) még nincs kiadási jegyzet.',
               ),
             ),
@@ -380,7 +380,7 @@ class _PurchaseDiagnosticsState extends ConsumerState<_PurchaseDiagnostics> {
                         )
                       : const Icon(Icons.receipt_long_outlined),
                   label: Text(
-                    _running ? 'Mérés…' : 'Diagnosztika futtatása',
+                    _running ? 'Mérés…' : tr(context, 'Diagnosztika futtatása'),
                   ),
                 ),
                 if (result != null) ...[

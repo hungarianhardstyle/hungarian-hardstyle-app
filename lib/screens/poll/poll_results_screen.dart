@@ -176,9 +176,9 @@ class _PollResultsScreenState extends ConsumerState<PollResultsScreen> {
   Future<void> _openEditor(BuildContext context) async {
     final created = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) => const AdminResourceEditorScreen(
+        builder: (_) => AdminResourceEditorScreen(
           type: 'huhs_poll',
-          typeLabel: 'Kérdőív',
+          typeLabel: tr(context, 'Kérdőív'),
         ),
       ),
     );

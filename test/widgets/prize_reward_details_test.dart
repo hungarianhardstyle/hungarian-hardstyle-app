@@ -74,9 +74,28 @@ void main() {
           .replaceAll('\r\n', '\n');
     });
 
+    /// A fejléc-hívás helye a **kulcs** alapján.
+    ///
+    /// ⚠️ A felirat a fordítás után **nem** sima literál: `_buildHeader(tr(context,
+    /// 'NYEREMÉNYJÁTÉK'), …)` vagy `_buildHeader(AppStrings.tr('…'))`. A lint ezért
+    /// a kulcsot keresi, és azt kéri, hogy **közvetlenül `_buildHeader(` előtt**
+    /// álljon — így a bekötés nem töri el a mérést, de a „másik felirat" nem
+    /// csúszhat be helyette.
+    int headerIndex(String key) {
+      var from = 0;
+      while (from <= screen.length) {
+        final at = screen.indexOf(key, from);
+        if (at < 0) return -1;
+        final window = screen.substring(at > 60 ? at - 60 : 0, at);
+        if (window.contains('_buildHeader(')) return at;
+        from = at + key.length;
+      }
+      return -1;
+    }
+
     test('a nyitott nézet (NYEREMÉNYJÁTÉK) is kirajzolja a részleteket', () {
-      final openStart = screen.indexOf("_buildHeader('NYEREMÉNYJÁTÉK'");
-      final drawnStart = screen.indexOf("_buildHeader('NYERTES'");
+      final openStart = headerIndex('NYEREMÉNYJÁTÉK');
+      final drawnStart = headerIndex('NYERTES');
       expect(openStart, greaterThan(0), reason: 'megvan a nyitott nézet');
       expect(drawnStart, greaterThan(openStart));
 

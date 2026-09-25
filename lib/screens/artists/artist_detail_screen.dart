@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/content/html_linkifier.dart';
+import '../../core/i18n/app_strings.dart';
+import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../core/errors/user_facing_error.dart';
@@ -61,7 +63,7 @@ class ArtistDetailScreen extends ConsumerWidget {
               children: [
                 Text(
                   fallbackName.isEmpty
-                      ? 'Nem sikerült betölteni a DJ-adatlapot.'
+                      ? tr(context, 'Nem sikerült betölteni a DJ-adatlapot.')
                       : '$fallbackName adatlapját nem sikerült betölteni.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white70),
@@ -468,8 +470,8 @@ class _ArtistContent extends ConsumerWidget {
                                       icon: const Icon(Icons.email_outlined),
                                       label: Text(
                                         artist.bookingViaHuhs
-                                            ? 'Szervezés a Hungarian Hardstyle-on keresztül'
-                                            : 'Fellépés lekötése e-mailben',
+                                            ? tr(context, 'Szervezés a Hungarian Hardstyle-on keresztül')
+                                            : tr(context, 'Fellépés lekötése e-mailben'),
                                       ),
                                     ),
                                   ],
@@ -587,13 +589,13 @@ class _ArtistContent extends ConsumerWidget {
 
   String _socialLabel(String key) {
     return switch (key) {
-      'facebook' => 'Facebook',
-      'instagram' => 'Instagram',
+      'facebook' => AppStrings.tr('Facebook'),
+      'instagram' => AppStrings.tr('Instagram'),
       'tiktok' => 'TikTok',
-      'spotify' => 'Spotify',
+      'spotify' => AppStrings.tr('Spotify'),
       'soundcloud' => 'SoundCloud',
       'youtube' => 'YouTube',
-      'website' => 'Weboldal',
+      'website' => AppStrings.tr('Weboldal'),
       _ => key,
     };
   }
@@ -615,7 +617,7 @@ class _MissingArtist extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Text(
             name.isEmpty
-                ? 'Ehhez a fellépőhöz még nincs összekapcsolt DJ-adatlap.'
+                ? tr(context, 'Ehhez a fellépőhöz még nincs összekapcsolt DJ-adatlap.')
                 : '$name még nincs összekapcsolva egy DJ-adatlappal.',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, fontSize: 17),

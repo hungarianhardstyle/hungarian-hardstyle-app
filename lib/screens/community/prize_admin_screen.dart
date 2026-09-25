@@ -247,9 +247,9 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
   Future<void> _openEditor(BuildContext context) async {
     final created = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) => const AdminResourceEditorScreen(
+        builder: (_) => AdminResourceEditorScreen(
           type: 'huhs_prize',
-          typeLabel: 'Nyereményjáték',
+          typeLabel: tr(context, 'Nyereményjáték'),
         ),
       ),
     );
@@ -400,7 +400,7 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
               title: Text('Nyertes: ${summary.winnerName}'),
               subtitle: Text(
                 summary.winnerAt.isEmpty
-                    ? 'A sorsolás megtörtént.'
+                    ? tr(context, 'A sorsolás megtörtént.')
                     : 'Sorsolás: ${summary.winnerAt}',
               ),
             ),

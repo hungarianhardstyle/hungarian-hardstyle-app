@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/poll.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/poll_provider.dart';
@@ -253,7 +254,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
             onPressed: _selected == null || _submitting
                 ? null
                 : () => _submit(poll),
-            child: Text(_submitting ? 'Küldés…' : 'Szavazok'),
+            child: Text(_submitting ? 'Küldés…' : tr(context, 'Szavazok')),
           ),
         ),
         const SizedBox(height: 6),

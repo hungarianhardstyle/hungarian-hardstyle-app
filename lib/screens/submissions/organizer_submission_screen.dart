@@ -147,19 +147,19 @@ class _OrganizerSubmissionScreenState
                         const SizedBox(height: 22),
                         _field(
                           _name,
-                          'Szervező neve *',
+                          tr(context, 'Szervező neve *'),
                           Icons.groups,
                           _required,
                         ),
-                        _field(_city, 'Város', Icons.location_city, null),
-                        _field(_country, 'Ország', Icons.public, null),
+                        _field(_city, tr(context, 'Város'), Icons.location_city, null),
+                        _field(_country, tr(context, 'Ország'), Icons.public, null),
                         _field(
                           _contactEmail,
-                          'Privát kapcsolattartó e-mail *',
+                          tr(context, 'Privát kapcsolattartó e-mail *'),
                           Icons.email_outlined,
                           _emailRequired,
                           keyboardType: TextInputType.emailAddress,
-                          helper: 'Csak az admin látja.',
+                          helper: tr(context, 'Csak az admin látja.'),
                         ),
                         ref
                             .watch(profileSubmissionOptionsProvider)
@@ -209,7 +209,7 @@ class _OrganizerSubmissionScreenState
                         ),
                         _field(
                           _description,
-                          'Bemutatkozás',
+                          tr(context, 'Bemutatkozás'),
                           Icons.notes,
                           null,
                           maxLines: 6,
@@ -241,7 +241,7 @@ class _OrganizerSubmissionScreenState
                                 )
                               : const Icon(Icons.send),
                           label: Text(
-                            _submitting ? 'Küldés…' : 'Szervező beküldése',
+                            _submitting ? 'Küldés…' : tr(context, 'Szervező beküldése'),
                           ),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(54),
@@ -296,7 +296,7 @@ class _OrganizerSubmissionScreenState
     if (required != null) return required;
     return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value!.trim())
         ? null
-        : 'Érvénytelen e-mail-cím.';
+        : tr(context, 'Érvénytelen e-mail-cím.');
   }
 
   String? _optionalUrl(String? value) {
@@ -309,9 +309,9 @@ class _OrganizerSubmissionScreenState
   }
 
   String _label(String key) => switch (key) {
-    'website' => 'Weboldal',
-    'facebook' => 'Facebook',
-    'instagram' => 'Instagram',
+    'website' => tr(context, 'Weboldal'),
+    'facebook' => tr(context, 'Facebook'),
+    'instagram' => tr(context, 'Instagram'),
     'tiktok' => 'TikTok',
     _ => key,
   };

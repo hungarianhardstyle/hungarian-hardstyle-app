@@ -294,7 +294,7 @@ class _ArticleCommentsState extends State<ArticleComments> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            item['authorName'] as String? ?? 'HUHS tag',
+                            item['authorName'] as String? ?? tr(context, 'HUHS tag'),
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -353,7 +353,7 @@ class _ArticleCommentsState extends State<ArticleComments> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const TextSpan(text: ' hozzászólására: '),
+                              TextSpan(text: tr(context, ' hozzászólására: ')),
                               TextSpan(
                                 text: (item['replyToText'] as String? ?? '')
                                     .trim(),
@@ -430,7 +430,7 @@ class _ArticleCommentsState extends State<ArticleComments> {
               child: FilledButton.icon(
                 onPressed: _sending ? null : _send,
                 icon: const Icon(Icons.send),
-                label: Text(_sending ? 'Küldés…' : 'Hozzászólok'),
+                label: Text(_sending ? 'Küldés…' : tr(context, 'Hozzászólok')),
               ),
             ),
           ],

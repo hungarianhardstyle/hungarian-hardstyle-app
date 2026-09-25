@@ -263,7 +263,7 @@ class _OrganizerCard extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text(
                       organizer.location.isEmpty
-                          ? 'Szervezői adatlap'
+                          ? tr(context, 'Szervezői adatlap')
                           : organizer.location,
                       style: const TextStyle(color: Colors.white70),
                     ),

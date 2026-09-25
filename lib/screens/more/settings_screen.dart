@@ -260,8 +260,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: const AppText('Értesítések'),
                         subtitle: Text(
                           _loading
-                              ? 'Beállítás betöltése…'
-                              : 'Összes értesítés ki- és bekapcsolása',
+                              ? tr(context, 'Beállítás betöltése…')
+                              : tr(context, 'Összes értesítés ki- és bekapcsolása'),
                         ),
                         value: _notificationsEnabled,
                         onChanged: _loading ? null : _setNotifications,
@@ -293,8 +293,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: const AppText('Android-kódos feloldás'),
                         subtitle: Text(
                           _deviceCodeEnabled
-                              ? 'A telefon PIN-kódjával, jelszavával vagy mintájával'
-                              : 'Kikapcsolva – koppints a bekapcsoláshoz',
+                              ? tr(context, 'A telefon PIN-kódjával, jelszavával vagy mintájával')
+                              : tr(context, 'Kikapcsolva – koppints a bekapcsoláshoz'),
                         ),
                         value: _deviceCodeEnabled,
                         inactiveThumbColor: Colors.white,
@@ -321,8 +321,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: const AppText('Biometrikus feloldás'),
                         subtitle: Text(
                           _biometricEnabled
-                              ? 'A mentett profil feloldása ujjlenyomattal vagy arcfelismeréssel'
-                              : 'Kikapcsolva – koppints a bekapcsoláshoz',
+                              ? tr(context, 'A mentett profil feloldása ujjlenyomattal vagy arcfelismeréssel')
+                              : tr(context, 'Kikapcsolva – koppints a bekapcsoláshoz'),
                         ),
                         value: _biometricEnabled,
                         inactiveThumbColor: Colors.white,

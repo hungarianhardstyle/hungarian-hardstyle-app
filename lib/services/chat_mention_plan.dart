@@ -12,6 +12,8 @@
 /// ezért mérhető.
 library;
 
+import '../core/i18n/app_strings.dart';
+
 /// A hivatkozható típusok — a **személy** mindenkinek, a többi csak
 /// adminnak/moderátornak jár.
 const String mentionTypeUser = 'user';
@@ -251,11 +253,11 @@ List<MentionSuggestion> mentionSuggestions({
     if (privileged &&
         needle.isNotEmpty &&
         mentionEveryoneLabel.startsWith(needle))
-      const MentionSuggestion(
+      MentionSuggestion(
         type: mentionTypeEveryone,
         id: mentionEveryoneId,
         label: mentionEveryoneLabel,
-        subtitle: 'Mindenki értesítést kap',
+        subtitle: AppStrings.tr('Mindenki értesítést kap'),
       ),
     ..._rank(users, needle),
   ];

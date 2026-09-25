@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/content/date_formatters.dart';
+import '../core/i18n/tr.dart';
 import '../models/post.dart';
 import '../screens/news/news_detail_screen.dart';
 import '../services/wordpress_service.dart';
@@ -92,7 +93,7 @@ class FeaturedNewsCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(3),
                       ),
                       child: Text(
-                        post.isSticky ? 'KIEMELT HÍR' : 'FRISS HÍR',
+                        post.isSticky ? 'KIEMELT HÍR' : tr(context, 'FRISS HÍR'),
                         style: TextStyle(
                           color: colors.onPrimaryContainer,
                           fontWeight: FontWeight.bold,

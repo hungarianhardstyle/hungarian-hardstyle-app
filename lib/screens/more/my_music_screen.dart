@@ -891,8 +891,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
           icon: Icons.lock_outline,
           title: tr(context, 'A zenéidhez jelentkezz be'),
           body:
-              'A megvásárolt zenék a fiókodhoz tartoznak, ezért csak '
-              'bejelentkezve láthatók és tölthetők le.',
+              tr(context, 'A megvásárolt zenék a fiókodhoz tartoznak, ezért csak '
+              'bejelentkezve láthatók és tölthetők le.'),
         ),
       );
     }
@@ -989,8 +989,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
             icon: Icons.library_music_outlined,
             title: tr(context, 'Még nincs megvásárolt zenéd'),
             body:
-                'A Kiadványok fülön megvásárolt (vagy reklámmal feloldott) '
-                'zenék itt jelennek meg, és innen játszhatók le.',
+                tr(context, 'A Kiadványok fülön megvásárolt (vagy reklámmal feloldott) '
+                'zenék itt jelennek meg, és innen játszhatók le.'),
           ),
           const SizedBox(height: 16),
           Center(
@@ -1347,7 +1347,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                   icon: const Icon(Icons.skip_previous),
                 ),
                 IconButton(
-                  tooltip: _player.playing ? 'Szünet' : 'Lejátszás',
+                  tooltip: _player.playing ? 'Szünet' : tr(context, 'Lejátszás'),
                   onPressed: _togglePlay,
                   icon: Icon(
                     _player.playing ? Icons.pause_circle : Icons.play_circle,
@@ -1370,7 +1370,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        entry?.nowPlayingLabel ?? 'Válassz egy zenét',
+                        entry?.nowPlayingLabel ?? tr(context, 'Válassz egy zenét'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w600),
@@ -1380,7 +1380,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                             ? '${playbackPositionLabel(_cursor, _order.length)} · '
                                   '${_downloaded.length} letöltve'
                             : _downloaded.isEmpty
-                            ? 'Előbb tölts le egy zenét'
+                            ? tr(context, 'Előbb tölts le egy zenét')
                             : '${_downloaded.length} letöltött zene',
                         style: theme.textTheme.bodySmall,
                       ),
@@ -1403,7 +1403,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                   ),
                 ),
                 IconButton(
-                  tooltip: _shuffle ? 'Keverés kikapcsolása' : 'Keverés',
+                  tooltip: _shuffle ? 'Keverés kikapcsolása' : tr(context, 'Keverés'),
                   isSelected: _shuffle,
                   onPressed: _toggleShuffle,
                   icon: const Icon(Icons.shuffle),
@@ -1495,7 +1495,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       Text(
-                        item.isAdOnly ? 'Reklámmal feloldva' : 'Megvásárolva',
+                        item.isAdOnly ? 'Reklámmal feloldva' : tr(context, 'Megvásárolva'),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: item.isAdOnly
                               ? theme.colorScheme.tertiary
@@ -1530,7 +1530,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
       child: Row(
         children: [
           IconButton(
-            tooltip: playing ? 'Szünet' : 'Lejátszás',
+            tooltip: playing ? 'Szünet' : tr(context, 'Lejátszás'),
             onPressed: progress != null
                 ? null
                 : () => isCurrent
@@ -1573,10 +1573,10 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                   progress != null
                       ? 'Letöltés… ${(progress * 100).round()}%'
                       : failed
-                      ? 'A letöltés nem sikerült — próbáld újra'
+                      ? tr(context, 'A letöltés nem sikerült — próbáld újra')
                       : downloaded
-                      ? 'Letöltve a készüléken'
-                      : 'Nincs letöltve',
+                      ? tr(context, 'Letöltve a készüléken')
+                      : tr(context, 'Nincs letöltve'),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 if (progress != null)
@@ -1590,8 +1590,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
           if (downloaded && progress == null)
             IconButton(
               tooltip: _excludedFromPlaylist.contains(entry.key)
-                  ? 'Visszatétel a lejátszási listára'
-                  : 'Kivétel a lejátszási listából (a fájl megmarad)',
+                  ? tr(context, 'Visszatétel a lejátszási listára')
+                  : tr(context, 'Kivétel a lejátszási listából (a fájl megmarad)'),
               onPressed: () => _togglePlaylistMembership(entry),
               icon: Icon(
                 _excludedFromPlaylist.contains(entry.key)

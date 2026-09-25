@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../core/errors/user_facing_error.dart';
@@ -126,16 +127,16 @@ class _UserTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = profile;
-    final name = (data['displayName'] as String? ?? 'HUHS user').trim();
+    final name = (data['displayName'] as String? ?? tr(context, 'HUHS user')).trim();
     final safeName = name.isEmpty ? 'HUHS user' : name;
     final role = switch (data['role'] as String?) {
       'dj' => 'DJ',
-      'organizer' => 'Szervező',
-      _ => 'Bulizó',
+      'organizer' => tr(context, 'Szervező'),
+      _ => tr(context, 'Bulizó'),
     };
     final access = switch (data['accessRole'] as String?) {
-      'admin' => 'Admin',
-      'moderator' => 'Moderátor',
+      'admin' => tr(context, 'Admin'),
+      'moderator' => tr(context, 'Moderátor'),
       _ => null,
     };
     final subtitle = !showAccessRole
@@ -372,7 +373,7 @@ class _CommunityPublicProfileScreenState
           final avatarCacheWidth = (96 * MediaQuery.devicePixelRatioOf(context))
               .round()
               .clamp(192, 384);
-          final name = (data['displayName'] as String? ?? 'HUHS user').trim();
+          final name = (data['displayName'] as String? ?? tr(context, 'HUHS user')).trim();
           final image = service.resolveProfileImage(data);
           final links = Map<String, dynamic>.from(
             data['socialLinks'] as Map? ?? const {},
@@ -618,7 +619,7 @@ class _CommunityPublicProfileScreenState
                           ProfileContentCard(
                             icon: Icons.event_outlined,
                             title:
-                                item.data()['title'] as String? ?? 'Esemény',
+                                item.data()['title'] as String? ?? tr(context, 'Esemény'),
                             subtitle: tr(context, 'Esemény, ahol ott lesz'),
                             onTap: () async {
                               final eventId = (item.data()['eventId'] as num?)
@@ -666,8 +667,8 @@ class _CommunityPublicProfileScreenState
 
   static String _role(String? role) => switch (role) {
     'dj' => 'DJ',
-    'organizer' => 'Szervező',
-    _ => 'Bulizó',
+    'organizer' => AppStrings.tr('Szervező'),
+    _ => AppStrings.tr('Bulizó'),
   };
 }
 
@@ -755,7 +756,7 @@ class _FavoriteProfilesSection extends StatelessWidget {
   }) {
     return ProfileContentCard(
       icon: icon,
-      title: item['title'] as String? ?? 'Ismeretlen',
+      title: item['title'] as String? ?? tr(context, 'Ismeretlen'),
       subtitle: subtitle,
       onTap: onTap,
     );
@@ -839,7 +840,7 @@ class _LegacyCommunityConnectionsScreen extends StatelessWidget {
               for (final request in requests)
                 ListTile(
                   title: Text(
-                    request.data()['from'] as String? ?? 'Felhasználó',
+                    request.data()['from'] as String? ?? tr(context, 'Felhasználó'),
                   ),
                   trailing: Wrap(
                     spacing: 4,
@@ -891,43 +892,43 @@ class CommunityHubScreen extends StatelessWidget {
           _hubTile(
             context,
             Icons.people_outline,
-            'Ismerősök és felkérések',
-            'Ismerőslista, felkérések és státuszok',
+            tr(context, 'Ismerősök és felkérések'),
+            tr(context, 'Ismerőslista, felkérések és státuszok'),
             registered ? const CommunityConnectionsScreen() : null,
           ),
           _hubTile(
             context,
             Icons.forum_outlined,
-            'Privát üzenetek',
-            'A neked küldött és általad küldött privát beszélgetések',
+            tr(context, 'Privát üzenetek'),
+            tr(context, 'A neked küldött és általad küldött privát beszélgetések'),
             registered ? const PrivateMessagesScreen() : null,
           ),
           _hubTile(
             context,
             Icons.favorite_outline,
-            'Kedvencek',
-            'Kedvenc DJ-k és szervezők',
+            tr(context, 'Kedvencek'),
+            tr(context, 'Kedvenc DJ-k és szervezők'),
             const FavoritesScreen(),
           ),
           _hubTile(
             context,
             Icons.mail_outline,
-            'Hírlevél',
-            'Iratkozz fel a Hungarian Hardstyle hírlevelére',
+            tr(context, 'Hírlevél'),
+            tr(context, 'Iratkozz fel a Hungarian Hardstyle hírlevelére'),
             const NewsletterScreen(),
           ),
           _hubTile(
             context,
             Icons.search,
-            'Felhasználók keresése',
-            'Publikus profilok és ismerősnek jelölés',
+            tr(context, 'Felhasználók keresése'),
+            tr(context, 'Publikus profilok és ismerősnek jelölés'),
             registered ? const CommunityUsersScreen() : null,
           ),
           _hubTile(
             context,
             Icons.block_outlined,
-            'Blokkolt felhasználók',
-            'Tiltások megtekintése és feloldása',
+            tr(context, 'Blokkolt felhasználók'),
+            tr(context, 'Tiltások megtekintése és feloldása'),
             registered ? const CommunityBlockedUsersScreen() : null,
           ),
           if (!registered)
@@ -991,7 +992,7 @@ class CommunityBlockedUsersScreen extends StatelessWidget {
                         ?.trim();
                     return Text(
                       name == null || name.isEmpty
-                          ? 'Ismeretlen felhasználó'
+                          ? tr(context, 'Ismeretlen felhasználó')
                           : name,
                     );
                   },
@@ -1041,7 +1042,7 @@ class CommunityReportsScreen extends StatelessWidget {
               final postId = data['postId'] as String? ?? '';
               final reportedUserId = data['reportedUserId'] as String? ?? '';
               final reportedName =
-                  data['reportedUserName'] as String? ?? 'Felhasználó';
+                  data['reportedUserName'] as String? ?? tr(context, 'Felhasználó');
               return _ReportCard(
                 reportId: report.id,
                 data: data,
@@ -1171,10 +1172,10 @@ class _ReportCard extends StatelessWidget {
           reportedProfile?['displayName'] as String?,
           live?['authorName'] as String?,
           reportedUserId,
-        ], 'Felhasználó');
+        ], tr(context, 'Felhasználó'));
         final text = storedText.isNotEmpty
             ? storedText
-            : (live?['text'] as String? ?? 'Üzenet nem érhető el.');
+            : (live?['text'] as String? ?? tr(context, 'Üzenet nem érhető el.'));
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: Padding(
@@ -1310,7 +1311,7 @@ class _FriendTile extends StatelessWidget {
         final name =
             (profile['displayName'] as String? ??
                     connectionData?['displayName'] as String? ??
-                    'HUHS user')
+                    tr(context, 'HUHS user'))
                 .trim();
         final image = service.resolveProfileImage(
           profile,
@@ -1407,7 +1408,7 @@ class _ConnectionRequestTileState extends State<_ConnectionRequestTile> {
         final name =
             (profile['displayName'] as String? ??
                     data['fromName'] as String? ??
-                    'Felhasználó')
+                    tr(context, 'Felhasználó'))
                 .trim();
         final image = widget.service.resolveProfileImage(
           profile,
@@ -1455,7 +1456,7 @@ class _ConnectionRequestTileState extends State<_ConnectionRequestTile> {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: 6),
-                    Text(_handled == true ? 'Elfogadva' : 'Elutasítva'),
+                    Text(_handled == true ? 'Elfogadva' : tr(context, 'Elutasítva')),
                   ],
                 ),
         );

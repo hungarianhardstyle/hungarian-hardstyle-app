@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/tr.dart';
 import '../../services/community_service.dart';
 import '../../widgets/app_text.dart';
 
@@ -75,7 +76,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   Text(
                     snapshot.hasError
                         ? userFacingError(snapshot.error)
-                        : 'Az ajánlókód nem tölthető be.',
+                        : tr(context, 'Az ajánlókód nem tölthető be.'),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),

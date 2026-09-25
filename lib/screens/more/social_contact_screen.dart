@@ -31,7 +31,7 @@ class SocialContactScreen extends StatelessWidget {
             _LinkTile(
               icon: Icons.facebook,
               label: tr(context, 'Facebook'),
-              value: 'Hungarian Hardstyle',
+              value: tr(context, 'Hungarian Hardstyle'),
               onTap: () => openSocialLink(
                 context,
                 'https://www.facebook.com/Hunstyle',
@@ -61,7 +61,7 @@ class SocialContactScreen extends StatelessWidget {
             _LinkTile(
               icon: Icons.smart_display_outlined,
               label: 'YouTube',
-              value: 'Hungarian Hardstyle',
+              value: tr(context, 'Hungarian Hardstyle'),
               onTap: () => openSocialLink(
                 context,
                 'https://www.youtube.com/@HungarianHardstyle',

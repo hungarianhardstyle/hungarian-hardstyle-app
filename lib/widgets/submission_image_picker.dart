@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../core/i18n/tr.dart';
 import '../models/submission_image.dart';
 import 'app_text.dart';
 
@@ -65,7 +66,7 @@ class SubmissionImagePicker extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: () => _pick(context, ImageSource.gallery),
                 icon: const Icon(Icons.photo_library_outlined),
-                label: Text(image == null ? 'Kép kiválasztása' : 'Csere'),
+                label: Text(image == null ? 'Kép kiválasztása' : tr(context, 'Csere')),
               ),
               OutlinedButton.icon(
                 onPressed: () => _pick(context, ImageSource.camera),

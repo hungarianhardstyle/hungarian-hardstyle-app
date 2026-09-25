@@ -149,7 +149,7 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
                       ? profileName!
                       : (fallbackName?.isNotEmpty == true
                             ? fallbackName!
-                            : 'HUHS user');
+                            : tr(context, 'HUHS user'));
                   return Card(
                     child: ListTile(
                       leading: _Avatar(data: profile, name: name),

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/event.dart';
 import '../../providers/community_provider.dart';
 import '../../core/errors/user_facing_error.dart';
@@ -158,8 +159,8 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
                   title: const AppText('Találkoznék ezen az eseményen'),
                   subtitle: Text(
                     attending
-                        ? 'Ezt minden regisztrált felhasználó láthatja.'
-                        : 'A bekapcsoláshoz előbb jelöld be: Ott leszek.',
+                        ? tr(context, 'Ezt minden regisztrált felhasználó láthatja.')
+                        : tr(context, 'A bekapcsoláshoz előbb jelöld be: Ott leszek.'),
                   ),
                   value: meetup.data ?? false,
                   onChanged: widget.event.isPast || !attending || _busy
@@ -191,7 +192,7 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
                       return _MeetupUserTile(
                         userId: entry.id,
                         fallbackName:
-                            (data['displayName'] as String? ?? 'HUHS user')
+                            (data['displayName'] as String? ?? tr(context, 'HUHS user'))
                                 .trim(),
                         fallbackImageUrl: (data['imageUrl'] as String? ?? '')
                             .trim(),
@@ -209,7 +210,7 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
                                       : Icons.favorite_border,
                                 ),
                                 label: Text(
-                                  interested ? 'Visszavonás' : 'Én is',
+                                  interested ? 'Visszavonás' : tr(context, 'Én is'),
                                 ),
                               )
                             : null,

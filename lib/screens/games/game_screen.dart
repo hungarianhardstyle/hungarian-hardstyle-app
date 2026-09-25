@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../models/game.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../providers/news_provider.dart';
@@ -297,8 +298,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   : const Icon(Icons.send_rounded),
               label: Text(
                 _submitted || _playedHint
-                    ? 'Már játszottál'
-                    : 'Válaszok beküldése',
+                    ? tr(context, 'Már játszottál')
+                    : tr(context, 'Válaszok beküldése'),
               ),
             ),
             if (!_complete && !_submitted && !_playedHint)

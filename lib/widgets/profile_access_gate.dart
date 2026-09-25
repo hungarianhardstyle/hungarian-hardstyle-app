@@ -1,3 +1,4 @@
+import '../core/i18n/tr.dart';
 import 'package:flutter/material.dart';
 
 bool hasRequiredProfile(Map<String, dynamic>? data) {
@@ -99,8 +100,8 @@ class _ProfileAccessGateState extends State<ProfileAccessGate> {
                   body: Center(
                     child: Text(
                       state.hasError
-                          ? 'A profil nem tölthető be. Ellenőrizd az internetkapcsolatot.'
-                          : 'Betöltés…',
+                          ? tr(context, 'A profil nem tölthető be. Ellenőrizd az internetkapcsolatot.')
+                          : tr(context, 'Betöltés…'),
                     ),
                   ),
                 ),

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:html/parser.dart' as html_parser;
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/submission_image.dart';
 import '../../core/errors/user_facing_error.dart';
@@ -74,22 +75,22 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     'huhs_organizer',
     'huhs_release',
   };
-  static const _adminFieldLabels = <String, String>{
-    'apiVersion': 'API-verzió',
-    'artists': 'DJ-k száma',
-    'organizers': 'Szervezők száma',
-    'events': 'Események száma',
-    'submissions': 'Függőben lévő beküldések',
-    'baseUrl': 'API-cím',
-    'imageUpload': 'Képfeltöltés',
-    'moderatedSubmissions': 'Beküldések moderálása',
-    'project': 'Projekt',
-    'developer': 'Fejlesztő',
-    'website': 'Weboldal',
-    'configured': 'Beállítás állapota',
-    'registeredDevices': 'Regisztrált eszközök',
-    'audienceId': 'Célközönség azonosítója',
-    'dataCenter': 'Adatközpont',
+  static final _adminFieldLabels = <String, String>{
+    'apiVersion': AppStrings.tr('API-verzió'),
+    'artists': AppStrings.tr('DJ-k száma'),
+    'organizers': AppStrings.tr('Szervezők száma'),
+    'events': AppStrings.tr('Események száma'),
+    'submissions': AppStrings.tr('Függőben lévő beküldések'),
+    'baseUrl': AppStrings.tr('API-cím'),
+    'imageUpload': AppStrings.tr('Képfeltöltés'),
+    'moderatedSubmissions': AppStrings.tr('Beküldések moderálása'),
+    'project': AppStrings.tr('Projekt'),
+    'developer': AppStrings.tr('Fejlesztő'),
+    'website': AppStrings.tr('Weboldal'),
+    'configured': AppStrings.tr('Beállítás állapota'),
+    'registeredDevices': AppStrings.tr('Regisztrált eszközök'),
+    'audienceId': AppStrings.tr('Célközönség azonosítója'),
+    'dataCenter': AppStrings.tr('Adatközpont'),
   };
 
   @override
@@ -153,10 +154,10 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       final type = item['type']?.toString() ?? '';
       if (id == null || '$type:$id' != value) continue;
       final kind = switch (type) {
-        'news' => 'Cikk',
-        'event' => 'Esemény',
-        'release' => 'Release',
-        _ => 'Tartalom',
+        'news' => tr(context, 'Cikk'),
+        'event' => tr(context, 'Esemény'),
+        'release' => tr(context, 'Release'),
+        _ => tr(context, 'Tartalom'),
       };
       return '$kind: ${item['title'] ?? id}';
     }
@@ -215,10 +216,10 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                             final id = (item['id'] as num).toInt();
                             final type = item['type'].toString();
                             final kind = switch (type) {
-                              'news' => 'Cikk',
-                              'event' => 'Esemény',
-                              'release' => 'Release',
-                              _ => 'Tartalom',
+                              'news' => tr(context, 'Cikk'),
+                              'event' => tr(context, 'Esemény'),
+                              'release' => tr(context, 'Release'),
+                              _ => tr(context, 'Tartalom'),
                             };
                             return ListTile(
                               leading: Icon(
@@ -364,7 +365,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     if (result['targetType'] == 'url') {
       final uri = Uri.tryParse(result['url'] as String);
       if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
-        _message('Érvényes HTTPS-linket adj meg.');
+        _message(AppStrings.tr('Érvényes HTTPS-linket adj meg.'));
         return;
       }
     }
@@ -384,7 +385,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
               'url': result['url'],
             },
           );
-      _message('A push elküldve.');
+      _message(AppStrings.tr('A push elküldve.'));
     } catch (error) {
       _message('A push nem sikerült: ${_errorText(error)}');
     } finally {
@@ -608,7 +609,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           method: 'POST',
           body: saveBody,
         );
-        _message('Az elem mentve.');
+        _message(AppStrings.tr('Az elem mentve.'));
         _reload();
       }
     } catch (error) {
@@ -791,7 +792,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                     'status': 'draft',
                   },
           );
-      _message('Az elem létrehozva.');
+      _message(AppStrings.tr('Az elem létrehozva.'));
       _reload();
     } catch (error) {
       _message('A létrehozás nem sikerült: ${_errorText(error)}');
@@ -889,14 +890,14 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       // Korabban ez NEMAN visszatert: a tulajdonos azt hitte, „nem torli a usert",
       // holott a sorhoz nem is tartozott torolheto WordPress-azonosito.
       _message(
-        'Ez a sor nem törölhető innen (nincs WordPress-felhasználó-azonosítója). '
-        'Az app-fiókokat a Közösségi adminisztrációban lehet törölni.',
+        tr(context, 'Ez a sor nem törölhető innen (nincs WordPress-felhasználó-azonosítója). '
+        'Az app-fiókokat a Közösségi adminisztrációban lehet törölni.'),
       );
       return;
     }
     if (!await _confirm(
-      'Felhasználó törlése',
-      'Biztosan törlöd ezt a WordPress-felhasználót? A művelet nem vonható vissza.',
+      tr(context, 'Felhasználó törlése'),
+      tr(context, 'Biztosan törlöd ezt a WordPress-felhasználót? A művelet nem vonható vissza.'),
     )) {
       return;
     }
@@ -919,8 +920,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       return;
     }
     final ok = await _confirm(
-      'Áthelyezés a lomtárba',
-      'Biztosan áthelyezed ezt az elemet a lomtárba?',
+      tr(context, 'Áthelyezés a lomtárba'),
+      tr(context, 'Biztosan áthelyezed ezt az elemet a lomtárba?'),
     );
     if (!ok) return;
     try {
@@ -938,8 +939,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
 
   Future<void> _emptyTrash() async {
     if (!await _confirm(
-      'Lomtár ürítése',
-      'A művelet véglegesen törli a lomtár tartalmát. Folytatod?',
+      tr(context, 'Lomtár ürítése'),
+      tr(context, 'A művelet véglegesen törli a lomtár tartalmát. Folytatod?'),
     )) {
       return;
     }
@@ -951,7 +952,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
             method: 'POST',
             body: {'action': 'empty_trash'},
           );
-      _message('A lomtár kiürítve.');
+      _message(AppStrings.tr('A lomtár kiürítve.'));
       _reload();
     } catch (error) {
       _message('A lomtár ürítése nem sikerült: ${_errorText(error)}');
@@ -1056,7 +1057,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
     /* Legacy technical error formatting is intentionally unreachable. */
     /*
     if (error is FirebaseFunctionsException) {
-      return error.message ?? 'A művelet nem sikerült.';
+      return error.message ?? tr(context, 'A művelet nem sikerült.');
     }
     return '${error ?? ''}'.split('\n#0').first.trim();
   }
@@ -1510,7 +1511,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
               key: const Key('game-create'),
               tooltip: tr(context, 'Új kvíz'),
               onPressed: () =>
-                  _openResourceEditor(type: 'huhs_game', typeLabel: 'Kvíz'),
+                  _openResourceEditor(type: 'huhs_game', typeLabel: tr(context, 'Kvíz')),
               icon: const Icon(Icons.add),
             ),
           if (_creatableSections.contains(_section))
@@ -1590,8 +1591,8 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                   return Center(
                     child: Text(
                       _section == 'trash'
-                          ? 'A lomtár üres.'
-                          : 'Nincs megjeleníthető elem.',
+                          ? tr(context, 'A lomtár üres.')
+                          : tr(context, 'Nincs megjeleníthető elem.'),
                     ),
                   );
                 }

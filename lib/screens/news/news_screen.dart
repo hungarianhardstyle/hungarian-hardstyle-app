@@ -186,7 +186,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                                                     1];
                                           final categoryId = category?.id ?? 0;
                                           final label = category == null
-                                              ? 'Összes'
+                                              ? tr(context, 'Összes')
                                               : category.name;
                                           final isSelected =
                                               state.selectedCategoryId ==

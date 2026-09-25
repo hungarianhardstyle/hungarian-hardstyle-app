@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/i18n/tr.dart';
 import '../models/prize.dart';
 import '../providers/prize_provider.dart';
 import '../screens/prize/prize_screen.dart';
@@ -52,12 +53,12 @@ class PrizeEntryCard extends ConsumerWidget {
     final drawn = !prize.isOpen && winner != null;
     return HomeActionCard(
       key: const Key('prize-entry'),
-      eyebrow: drawn ? 'NYERTES' : 'NYEREMÉNYJÁTÉK',
+      eyebrow: drawn ? 'NYERTES' : tr(context, 'NYEREMÉNYJÁTÉK'),
       label: drawn
           ? (prize.question.isEmpty
                 ? 'Nyertes: ${winner.name}'
                 : '${prize.question} — nyertes: ${winner.name}')
-          : 'Játssz és nyerj! Koppints a részvételhez',
+          : tr(context, 'Játssz és nyerj! Koppints a részvételhez'),
       icon: drawn ? Icons.emoji_events_outlined : Icons.card_giftcard_outlined,
       onTap: () {
         Navigator.of(

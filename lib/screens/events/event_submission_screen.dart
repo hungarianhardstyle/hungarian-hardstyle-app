@@ -310,8 +310,8 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                           icon: Icons.calendar_month,
                           label: tr(context, 'Dátum *'),
                           value: _startDate == null
-                              ? 'Válassz dátumot'
-                              : DateFormat('yyyy. MM. dd.').format(_startDate!),
+                              ? tr(context, 'Válassz dátumot')
+                              : DateFormat(tr(context, 'yyyy. MM. dd.')).format(_startDate!),
                           onTap: _pickDate,
                         ),
                         _pickerTile(
@@ -319,7 +319,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                           label: tr(context, 'Kezdés'),
                           value:
                               _startTime?.format(context) ??
-                              'Válassz időpontot',
+                              tr(context, 'Válassz időpontot'),
                           onTap: _pickTime,
                           trailing: _startTime == null
                               ? null
@@ -334,8 +334,8 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                           icon: Icons.event_available,
                           label: tr(context, 'Esemény vége'),
                           value: _endDate == null
-                              ? 'Opcionális – válassz napot'
-                              : DateFormat('yyyy. MM. dd.').format(_endDate!),
+                              ? tr(context, 'Opcionális – válassz napot')
+                              : DateFormat(tr(context, 'yyyy. MM. dd.')).format(_endDate!),
                           onTap: _pickEndDate,
                           trailing: _endDate == null
                               ? null
@@ -353,7 +353,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                           label: tr(context, 'Esemény vége – óra'),
                           value:
                               _endTime?.format(context) ??
-                              'Opcionális – válassz időpontot',
+                              tr(context, 'Opcionális – válassz időpontot'),
                           onTap: _pickEndTime,
                         ),
                         _field(
@@ -473,7 +473,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                                 )
                               : const Icon(Icons.send),
                           label: Text(
-                            _isSubmitting ? 'Küldés…' : 'Esemény elküldése',
+                            _isSubmitting ? 'Küldés…' : tr(context, 'Esemény elküldése'),
                           ),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(54),
@@ -537,7 +537,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
             icon: Icons.groups,
             label: tr(context, 'Szervező'),
             value: _selectedOrganizerName.isEmpty
-                ? 'Nincs kiválasztva'
+                ? tr(context, 'Nincs kiválasztva')
                 : _selectedOrganizerName,
             onTap: () async {
               final selected = await showModalBottomSheet<int?>(

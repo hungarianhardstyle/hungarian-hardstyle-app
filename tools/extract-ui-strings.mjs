@@ -94,6 +94,26 @@ export function isContinuation(lines, index) {
   return previous.slice(parts[0].end).trim() === '' && /^\s*['"]/.test(lines[index]);
 }
 
+/**
+ * A **már bekötött** szövegek kulcsai egy sorból (`tr(context, '…')`,
+ * `trArgs(context, '{n} …', {…})`, `AppStrings.tr('…')`).
+ *
+ * ⚠️ MIÉRT KELL (mért hiba, 2026-09-25): a `stringLiterals` **nem tudja** kezelni
+ * a beágyazott idézőjelet, ezért a `'${tr(context, 'Nyelv')}: …'` sorban a
+ * `Nyelv` **egyetlen literál-párba sem** esik bele (a beolvasó a `'${tr(context, '`
+ * párt és a `')}: ${x}'` párt látja) — a kulcs így kiesett a mérésből, és a
+ * szótár-lefedettség **hamisan 100%** lehetett. Ez ugyanaz a hibaosztály, mint a
+ * körbefordított alakoknál: a mérőeszköznek **minden** bekötött alakot ismernie
+ * kell.
+ */
+export function wrappedKeysInLine(line) {
+  const keys = [];
+  const pattern = /(?:AppStrings\.)?tr(?:Args)?\(\s*(?:context\s*,\s*)?'((?:[^'\\]|\\.)*)'/g;
+  let match;
+  while ((match = pattern.exec(line)) !== null) keys.push(match[1]);
+  return keys;
+}
+
 /** Egy fájl összes célzott literálja (sorrendben, ismétlődéssel). */
 export function targetsInSource(source, file = '') {
   const hits = [];
@@ -102,10 +122,50 @@ export function targetsInSource(source, file = '') {
     const line = lines[index];
     const trimmed = line.trimStart();
     if (trimmed.startsWith('//') || trimmed.startsWith('///')) continue;
+    // ⚠️ INTERPOLÁLT sor (mért hiba, 2026-09-25): a `${…}` belseje **kód**, nem
+    // szöveg — a naiv literál-kereső viszont ott is lát literálokat
+    // (pl. `'${field['label'] ?? key}'`-ből `'] ?? key}'`), és a bekötésük
+    // **érvénytelen Dartot** adott (60 `expected_token` hiba). Az interpolált
+    // feliratok külön, `trArgs`-körben mennek.
+    //
+    // ⚠️ DE: a sorban lehet **már bekötött** szöveg is (`'${tr(context, 'Nyelv')}: …'`),
+    // és azt a **kulcs-számálásból** nem hagyhatjuk ki — különben a szótár-lefedettség
+    // mérése megint **hamisan 100%** lehet (ugyanaz a hibaosztály, mint a
+    // körbefordított alakoknál). Ezért interpolált sorban **csak a bekötött**
+    // literálokat gyűjtjük (azokhoz a bekötő úgysem nyúl).
+    const interpolated = line.includes('${');
+    if (interpolated) {
+      // A `${…}` belseje kód: innen CSAK a már bekötött kulcsokat vesszük (azok
+      // kulcsok, de nem szerkesztendők). A pozíció szándékosan 0 — a bekötő a
+      // `wrapped` jelzőnél úgyis kihagyja őket.
+      for (const key of wrappedKeysInLine(line)) {
+        if (!key.trim() || /\\./.test(key)) continue;
+        hits.push({
+          file,
+          line: index + 1,
+          value: key,
+          quote: "'",
+          start: 0,
+          end: 0,
+          spansLines: 0,
+          uiLayerOnly: false,
+          wrapped: true,
+        });
+      }
+      continue;
+    }
     // A fűzési csoport folytatása nem önálló cél (a csoport első tagja az).
     if (isContinuation(lines, index)) continue;
     for (const literal of stringLiterals(line)) {
       const before = contextBefore(lines, index, literal.start);
+      const wrappedHere = isWrappedContext(before)
+        || /(?:^|[\s(,{[])(?:AppText)\s*\(\s*$/.test(before);
+      // ⚠️ RAW string (`r'…'`) kihagyása (mért hiba): a benne lévő minta nem
+      // szöveg, a bekötése viszont érvénytelen Dartot adott
+      // (`RegExp(rtr(context, '…'))`). A regex-mintákra nincs is fordítás.
+      const charBefore = line[literal.start - 1];
+      const charBeforeThat = line[literal.start - 2] ?? '';
+      if (charBefore === 'r' && !/[A-Za-z0-9_$]/.test(charBeforeThat)) continue;
       // ⚠️ A Dart a szomszédos literálokat ÖSSZEFŰZI: a **futásidejű** szöveg a
       // fűzött változat, ezért a szótár kulcsa is az (különben a fordítás csendben
       // nem érvényesül — mérve 10 ilyen hely volt a 361/362-ben).
@@ -134,9 +194,10 @@ export function targetsInSource(source, file = '') {
         // érvényes, a `tr(context, 'a') 'b'` viszont nem).
         spansLines: joined ? joined.endLine - index : 0,
         uiLayerOnly,
-        // Már be van kötve (`tr(context, …)` / `AppText(…)`) → kulcs, de nem
-        // szerkesztendő. A wrapper ezt a jelzőt használja az idempotenciához.
-        wrapped: isWrappedContext(before) || /(?:^|[\s(,{[])(?:AppText)\s*\(\s*$/.test(before),
+        // Már be van kötve (`tr(context, …)` / `AppStrings.tr(…)` / `AppText(…)`)
+        // → kulcs, de nem szerkesztendő. A wrapper ezt a jelzőt használja az
+        // idempotenciához.
+        wrapped: wrappedHere,
       });
     }
   }
@@ -185,6 +246,16 @@ export function selfTest() {
   check('a label: szövege cél', hit("  label: 'Közösség',").length === 1);
   check('a tooltip: szövege cél', hit("  tooltip: 'Értesítések',").length === 1);
   check('az interpolált szöveg NEM cél', hit("            Text('Szia \$nev'),").length === 0);
+  // ⚠️ Az interpolált sorban a MÁR BEKÖTÖTT szöveg viszont kulcs kell legyen —
+  // ez zárja be a „hamis 100% lefedettség" rést.
+  check(
+    'az interpolált sorban a bekötött szöveg KULCS',
+    hit("    message: '\${tr(context, 'Nyelv')}: \${x}',").some((h) => h.value === 'Nyelv'),
+  );
+  check(
+    'az AppStrings.tr(...) is bekötött kulcs',
+    hit("    final x = AppStrings.tr('Hiba történt');").length === 1,
+  );
   check('az URL NEM cél', hit("  label: 'https://pelda.hu/hir',").length === 0);
   check('az útvonal NEM cél', hit("  label: 'assets/images/x.png',").length === 0);
   check('az azonosító (snake_case) NEM cél', hit("  label: 'live_feed_posts',").length === 0);

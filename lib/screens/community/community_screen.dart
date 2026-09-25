@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/community_post.dart';
 import '../../models/achievement.dart';
@@ -650,10 +651,10 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                                       }
                                       if (!context.mounted) return;
                                       final message = stillThere == true
-                                          ? 'A fiók törlése nem fejeződött be a szerveren. Próbáld újra.'
+                                          ? tr(context, 'A fiók törlése nem fejeződött be a szerveren. Próbáld újra.')
                                           : cleanupStatus == 'cleanup_pending'
-                                          ? 'A felhasználó törölve; a képek háttértakarítása folyamatban van.'
-                                          : 'A felhasználó törlése sikerült.';
+                                          ? tr(context, 'A felhasználó törölve; a képek háttértakarítása folyamatban van.')
+                                          : tr(context, 'A felhasználó törlése sikerült.');
                                       ScaffoldMessenger.of(context)
                                         ..hideCurrentSnackBar()
                                         ..showSnackBar(
@@ -674,7 +675,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                             onPressed: () => _changeAdminDisplayName(
                               service,
                               doc.id,
-                              data['displayName'] as String? ?? 'HUHS user',
+                              data['displayName'] as String? ?? tr(context, 'HUHS user'),
                             ),
                             style: TextButton.styleFrom(
                               alignment: Alignment.centerLeft,
@@ -683,7 +684,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                data['displayName'] as String? ?? 'HUHS user',
+                                data['displayName'] as String? ?? tr(context, 'HUHS user'),
                               ),
                             ),
                           ),
@@ -692,7 +693,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                             children: [
                               Text(
                                 email.isEmpty
-                                    ? 'E-mail-cím nem érhető el'
+                                    ? tr(context, 'E-mail-cím nem érhető el')
                                     : email,
                               ),
                               TextButton(
@@ -721,10 +722,10 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                                     data['role'] as String? ?? 'partygoer',
                                   ),
                             child: Text(
-                              const {
+                              {
                                     'dj': 'DJ',
-                                    'organizer': 'Szervező',
-                                    'partygoer': 'Bulizó',
+                                    'organizer': tr(context, 'Szervező'),
+                                    'partygoer': tr(context, 'Bulizó'),
                                   }[role] ??
                                   role,
                             ),
@@ -2076,7 +2077,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
         post.authorId != currentUser.uid;
     final canOpenProfile =
         post.authorId.isNotEmpty &&
-        !post.authorName.startsWith('Unknown User ');
+        !post.authorName.startsWith(tr(context, 'Unknown User '));
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
@@ -2137,8 +2138,8 @@ class _PostCardState extends ConsumerState<_PostCard> {
                             value: 'pin',
                             child: Text(
                               post.pinned
-                                  ? 'Rögzítés feloldása'
-                                  : 'Üzenet rögzítése',
+                                  ? tr(context, 'Rögzítés feloldása')
+                                  : tr(context, 'Üzenet rögzítése'),
                             ),
                           ),
                         if (canReportOrBlock) ...[
@@ -2235,9 +2236,9 @@ class _PostCardState extends ConsumerState<_PostCard> {
                           text: widget.post.replyToName,
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        const TextSpan(text: ' üzenetére: '),
+                        TextSpan(text: tr(context, ' üzenetére: ')),
                       ] else
-                        const TextSpan(text: 'Válasz: '),
+                        TextSpan(text: tr(context, 'Válasz: ')),
                       TextSpan(text: widget.post.replyToText),
                     ],
                   ),
@@ -2417,7 +2418,7 @@ class _PostAuthorLabelsState extends State<_PostAuthorLabels> {
             ? numberedName
             : post.authorName.trim().isNotEmpty
             ? post.authorName.trim()
-            : 'HUHS user';
+            : tr(context, 'HUHS user');
         final badgeData = data?['achievementBadge'];
         final hasAchievementData =
             badgeData is Map &&
@@ -2469,14 +2470,14 @@ class _PostAuthorLabelsState extends State<_PostAuthorLabels> {
     final roleLabel = role == 'dj'
         ? 'DJ'
         : role == 'organizer'
-        ? 'Szervező'
+        ? tr(context, 'Szervező')
         : role.isNotEmpty
-        ? 'Bulizó'
+        ? tr(context, 'Bulizó')
         : '';
     final accessLabel = accessRole == CommunityService.accessAdmin
-        ? 'Admin'
+        ? tr(context, 'Admin')
         : accessRole == CommunityService.accessModerator
-        ? 'Moderátor'
+        ? tr(context, 'Moderátor')
         : '';
 
     final badgeImage = achievement.badgeImageUrl.trim();
@@ -3478,12 +3479,12 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
   }
 
   List<Widget> _readOnlyProfileWidgets(User user, String initial) {
-    final socialLabels = const {
-      'facebook': 'Facebook',
-      'instagram': 'Instagram',
+    final socialLabels = {
+      'facebook': tr(context, 'Facebook'),
+      'instagram': tr(context, 'Instagram'),
       'tiktok': 'TikTok',
       'youtube': 'YouTube',
-      'spotify': 'Spotify',
+      'spotify': tr(context, 'Spotify'),
     };
     final profileFavorites = ref
         .watch(favoritesProvider)
@@ -3507,7 +3508,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       Center(
         child: Text(
           _savedProfileName.isEmpty
-              ? 'Profil befejezése szükséges'
+              ? tr(context, 'Profil befejezése szükséges')
               : _savedProfileName,
           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
@@ -3589,10 +3590,10 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
             },
             title: entry.title,
             subtitle: switch (entry.kind) {
-              FavoriteKind.event => 'Esemény',
+              FavoriteKind.event => tr(context, 'Esemény'),
               FavoriteKind.artist => 'DJ',
-              FavoriteKind.organizer => 'Szervező',
-              FavoriteKind.news => 'Hír',
+              FavoriteKind.organizer => tr(context, 'Szervező'),
+              FavoriteKind.news => tr(context, 'Hír'),
             },
             onTap: () => FavoritesScreen.openEntry(context, ref, entry),
           ),
@@ -3613,7 +3614,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
               for (final event in events)
                 ProfileContentCard(
                   icon: Icons.event_outlined,
-                  title: event.data()['title'] as String? ?? 'Esemény',
+                  title: event.data()['title'] as String? ?? tr(context, 'Esemény'),
                   subtitle: tr(context, 'Esemény, ahol ott leszek'),
                   onTap: () {
                     final eventId = (event.data()['eventId'] as num?)?.toInt();
@@ -3708,13 +3709,13 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     final signedIn = user != null && !user.isAnonymous;
     final profileName = _savedProfileName.isNotEmpty
         ? _savedProfileName
-        : 'HUHS user';
+        : tr(context, 'HUHS user');
     final profileInitial = profileName.isEmpty
         ? 'H'
         : profileName.characters.first.toUpperCase();
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.editing ? 'Profil szerkesztése' : 'Profil'),
+        title: Text(widget.editing ? 'Profil szerkesztése' : tr(context, 'Profil')),
       ),
       body: signedIn && _profileDataUid != user.uid
           ? Center(
@@ -3777,7 +3778,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                       child: Text(
                                         _savedProfileName.isNotEmpty
                                             ? _savedProfileName
-                                            : 'Profil befejezése szükséges',
+                                            : tr(context, 'Profil befejezése szükséges'),
                                         style: const TextStyle(
                                           fontSize: 22,
                                           fontWeight: FontWeight.bold,
@@ -3846,10 +3847,10 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                                       .resendEmailVerification();
                                                               _message(
                                                                 outcome == 'already_sent'
-                                                                    ? 'A megerősítő e-mailt már elküldtük.'
+                                                                    ? AppStrings.tr('A megerősítő e-mailt már elküldtük.')
                                                                     : outcome == 'in_flight'
-                                                                    ? 'A megerősítő e-mail küldése folyamatban van.'
-                                                                    : 'A megerősítő e-mailt újraküldtük.',
+                                                                    ? AppStrings.tr('A megerősítő e-mail küldése folyamatban van.')
+                                                                    : AppStrings.tr('A megerősítő e-mailt újraküldtük.'),
                                                               );
                                                             } catch (error) {
                                                               _message(
@@ -4005,9 +4006,9 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                       nameHelperText:
                                           _roleMissing ||
                                               _savedProfileName.isEmpty
-                                          ? 'Ez lesz a nyilvános profilneved.'
+                                          ? tr(context, 'Ez lesz a nyilvános profilneved.')
                                           : _service.isOwner
-                                          ? 'Adminisztrátorként korlátlan névmódosítás'
+                                          ? tr(context, 'Adminisztrátorként korlátlan névmódosítás')
                                           : 'Éves névmódosítási lehetőség: ${1 - _usernameChangesUsed} maradt',
                                     ),
                                     const SizedBox(height: 12),
@@ -4190,8 +4191,8 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                     SnackBar(
                                                       content: Text(
                                                         cleanupStatus == 'cleanup_pending'
-                                                            ? 'A fiók törölve; a képek háttértakarítása folyamatban van.'
-                                                            : 'A profil törlése sikerült.',
+                                                            ? tr(context, 'A fiók törölve; a képek háttértakarítása folyamatban van.')
+                                                            : tr(context, 'A profil törlése sikerült.'),
                                                       ),
                                                     ),
                                                   );
@@ -4229,8 +4230,8 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                               const SizedBox(height: 8),
                               Text(
                                 _register
-                                    ? 'A Chat névvel és képfeltöltéssel használható.'
-                                    : 'Jelentkezz be a közösségi profilodhoz.',
+                                    ? tr(context, 'A Chat névvel és képfeltöltéssel használható.')
+                                    : tr(context, 'Jelentkezz be a közösségi profilodhoz.'),
                               ),
                               const SizedBox(height: 18),
                               if (_register)
@@ -4259,8 +4260,8 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                   labelText: tr(context, 'Jelszó'),
                                   suffixIcon: IconButton(
                                     tooltip: _passwordVisible
-                                        ? 'Elrejtés'
-                                        : 'Megjelenítés',
+                                        ? tr(context, 'Elrejtés')
+                                        : tr(context, 'Megjelenítés'),
                                     onPressed: () => setState(
                                       () =>
                                           _passwordVisible = !_passwordVisible,
@@ -4336,7 +4337,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                               FilledButton(
                                 onPressed: _busy ? null : _submit,
                                 child: Text(
-                                  _register ? 'Regisztráció' : 'Bejelentkezés',
+                                  _register ? 'Regisztráció' : tr(context, 'Bejelentkezés'),
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -4352,7 +4353,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                       : () async {
                                           if (_email.text.trim().isEmpty) {
                                             _message(
-                                              'Add meg az e-mail-címedet.',
+                                              tr(context, 'Add meg az e-mail-címedet.'),
                                             );
                                             return;
                                           }
@@ -4361,7 +4362,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                               _email.text,
                                             );
                                             _message(
-                                              'A jelszó-visszaállító e-mail elküldve.',
+                                              AppStrings.tr('A jelszó-visszaállító e-mail elküldve.'),
                                             );
                                           } catch (error) {
                                             _message(_chatError(error));
@@ -4377,7 +4378,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                           if (_email.text.trim().isEmpty ||
                                               _password.text.isEmpty) {
                                             _message(
-                                              'Add meg az e-mail-címet és a jelszót.',
+                                              tr(context, 'Add meg az e-mail-címet és a jelszót.'),
                                             );
                                             return;
                                           }
@@ -4388,7 +4389,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                   password: _password.text,
                                                 );
                                             _message(
-                                              'Az ellenőrző e-mailt újraküldtük.',
+                                              AppStrings.tr('Az ellenőrző e-mailt újraküldtük.'),
                                             );
                                           } catch (error) {
                                             _message(_chatError(error));
@@ -4406,8 +4407,8 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                       ),
                                 child: Text(
                                   _register
-                                      ? 'Már van fiókom'
-                                      : 'Új fiók létrehozása',
+                                      ? tr(context, 'Már van fiókom')
+                                      : tr(context, 'Új fiók létrehozása'),
                                 ),
                               ),
                             ],

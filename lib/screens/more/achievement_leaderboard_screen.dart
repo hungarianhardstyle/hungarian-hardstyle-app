@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../providers/community_provider.dart';
 import '../../widgets/app_text.dart';
 import '../../widgets/resized_network_image.dart';
@@ -221,8 +222,8 @@ class _LeaderboardTile extends StatelessWidget {
           backgroundColor: const Color(0xFFE53935),
           child: Text('$rank', style: const TextStyle(color: Colors.white)),
         ),
-        title: Text(name?.isNotEmpty == true ? name! : 'HUHS tag'),
-        subtitle: Text(badge?.isNotEmpty == true ? badge! : 'Achievement rang'),
+        title: Text(name?.isNotEmpty == true ? name! : tr(context, 'HUHS tag')),
+        subtitle: Text(badge?.isNotEmpty == true ? badge! : tr(context, 'Achievement rang')),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/release.dart';
 import 'releases_screen.dart';
@@ -574,7 +575,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                         const SizedBox(height: 8),
                         Text(
                           release.releaseDate.isEmpty
-                              ? 'A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.'
+                              ? tr(context, 'A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.')
                               : 'Megjelenés: ${release.releaseDate}. Ekkor válik megvásárolhatóvá és letölthetővé. Addig a 60 másodperces előzetes hallgatható.',
                           style: const TextStyle(color: Colors.white70),
                         ),
@@ -635,8 +636,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                       icon: const Icon(Icons.refresh),
                       label: Text(
                         _loadingProducts
-                            ? 'Termékek betöltése…'
-                            : 'Újrapróbálás',
+                            ? tr(context, 'Termékek betöltése…')
+                            : tr(context, 'Újrapróbálás'),
                       ),
                     ),
                   ),
@@ -654,7 +655,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                             : _adUnlocked
                             ? () => _download('free_wav')
                             : _unlockRewarded,
-                        child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
+                        child: Text(_adUnlocked ? 'Letöltés' : tr(context, 'Feloldás')),
                       ),
                     ),
                   )
@@ -671,7 +672,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                             : _adUnlocked
                             ? () => _download('mp3_96')
                             : _unlockRewarded,
-                        child: Text(_adUnlocked ? 'Letöltés' : 'Feloldás'),
+                        child: Text(_adUnlocked ? 'Letöltés' : tr(context, 'Feloldás')),
                       ),
                     ),
                   ),
@@ -702,7 +703,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                             ? _openFreeExternalLink
                             : _unlockExternalLink,
                         child: Text(
-                          _externalLinkUnlocked ? 'Megnyitás' : 'Feloldás',
+                          _externalLinkUnlocked ? 'Megnyitás' : tr(context, 'Feloldás'),
                         ),
                       ),
                     ),
@@ -766,14 +767,14 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     final radio = id.contains('_radio_');
     final extended = id.contains('_extended_');
     final version = radio
-        ? 'Radio'
+        ? tr(context, 'Radio')
         : extended
-        ? 'Extended'
+        ? tr(context, 'Extended')
         : '';
     final format = id.endsWith('_wav')
         ? 'WAV / lossless'
         : id.endsWith('_mp3_320')
-        ? 'MP3 320 kbps'
+        ? tr(context, 'MP3 320 kbps')
         : id;
     return version.isEmpty ? format : '$version – $format';
   }
@@ -859,7 +860,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       final currentUid = FirebaseAuth.instance.currentUser?.uid;
       if (currentUid == null ||
           FirebaseAuth.instance.currentUser!.isAnonymous) {
-        throw StateError('A reklámos feloldáshoz be kell jelentkezni.');
+        throw StateError(tr(context, 'A reklámos feloldáshoz be kell jelentkezni.'));
       }
       if (await _purchases.hasAdUnlock(_release.id, variant: variant)) {
         return true;
@@ -868,7 +869,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
         _release.id,
         variant: variant,
       );
-      if (!earned) throw StateError('A reklám megtekintése nem fejeződött be.');
+      if (!earned) throw StateError(AppStrings.tr('A reklám megtekintése nem fejeződött be.'));
       if (mounted) {
         setState(() => _message = 'A jutalom jóváírása…');
       }
@@ -892,7 +893,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
       }
       if (!unlocked) {
         throw StateError(
-          'A reklám lefutott, de a feloldás nem érkezett meg. Próbáld újra később.',
+          AppStrings.tr('A reklám lefutott, de a feloldás nem érkezett meg. Próbáld újra később.'),
         );
       }
       if (mounted && FirebaseAuth.instance.currentUser?.uid == currentUid) {
@@ -922,8 +923,8 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     if (mounted) {
       setState(
         () => _message = downloaded
-            ? 'Feloldva, a letöltés elindult.'
-            : 'Feloldva, de a letöltést nem sikerült elindítani.',
+            ? tr(context, 'Feloldva, a letöltés elindult.')
+            : tr(context, 'Feloldva, de a letöltést nem sikerült elindítani.'),
       );
     }
   }
@@ -971,15 +972,15 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
   }
 
   String _versionLabel(String type) => switch (type) {
-    'radio' => 'Radio verzió',
-    'extended' => 'Extended verzió',
+    'radio' => tr(context, 'Radio verzió'),
+    'extended' => tr(context, 'Extended verzió'),
     _ => type,
   };
 
   String _label(String key) => switch (key) {
-    'spotify' => 'Spotify',
-    'apple_music' => 'Apple Music',
-    'beatport' => 'Beatport',
+    'spotify' => tr(context, 'Spotify'),
+    'apple_music' => tr(context, 'Apple Music'),
+    'beatport' => tr(context, 'Beatport'),
     'hardstyle_com' => 'Hardstyle.com',
     'youtube' => 'YouTube',
     _ => key,

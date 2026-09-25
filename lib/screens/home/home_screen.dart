@@ -373,11 +373,11 @@ class HomeScreen extends ConsumerWidget {
                               data: (season) => season.active || season.isClosed
                                   ? HomeActionCard(
                                       key: const Key('voting-entry'),
-                                      eyebrow: 'SZAVAZÁS',
+                                      eyebrow: tr(context, 'SZAVAZÁS'),
                                       label: season.hasPublishedResults
-                                          ? 'Eredmények megtekintése'
+                                          ? tr(context, 'Eredmények megtekintése')
                                           : season.isClosed
-                                          ? 'A szavazás véget ért'
+                                          ? tr(context, 'A szavazás véget ért')
                                           : 'Szavazz a HUHS ${season.year} jelöltjeire',
                                       icon: Icons.how_to_vote_outlined,
                                       onTap: () {
@@ -464,7 +464,7 @@ class HomeScreen extends ConsumerWidget {
                             // nyereményjáték kártya, egységesen".
                             HomeActionCard(
                               key: const Key('more-news'),
-                              eyebrow: 'HÍREK',
+                              eyebrow: tr(context, 'HÍREK'),
                               label: tr(context, 'További hírek'),
                               icon: Icons.arrow_forward_rounded,
                               onTap: onShowMoreNews,
@@ -644,7 +644,7 @@ class _ActiveGameCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    resultsOnly ? 'JÁTÉK EREDMÉNYEI' : 'JÁTÉK',
+                    resultsOnly ? 'JÁTÉK EREDMÉNYEI' : tr(context, 'JÁTÉK'),
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       letterSpacing: 1.4,
@@ -690,10 +690,10 @@ class _ActiveGameCard extends ConsumerWidget {
                           Expanded(
                             child: Text(
                               played
-                                  ? 'Már játszottál — eredmény megtekintése'
+                                  ? tr(context, 'Már játszottál — eredmény megtekintése')
                                   : resultsOnly
-                                  ? 'Eredménylista megnyitása'
-                                  : 'Játék megnyitása',
+                                  ? tr(context, 'Eredménylista megnyitása')
+                                  : tr(context, 'Játék megnyitása'),
                             ),
                           ),
                         ],

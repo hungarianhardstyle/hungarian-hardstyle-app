@@ -4,6 +4,8 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/content/html_linkifier.dart';
+import '../../core/i18n/app_strings.dart';
+import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/organizer.dart';
@@ -45,7 +47,7 @@ class OrganizerDetailScreen extends ConsumerWidget {
               children: [
                 Text(
                   fallbackName.isEmpty
-                      ? 'Nem sikerült betölteni a szervezői adatlapot.'
+                      ? tr(context, 'Nem sikerült betölteni a szervezői adatlapot.')
                       : '$fallbackName adatlapját nem sikerült betölteni.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white70),
@@ -195,9 +197,9 @@ class _OrganizerContent extends StatelessWidget {
                             label: Text(
                               enabled
                                   ? (isFavorite
-                                        ? 'Kedvenc'
-                                        : 'Kedvencekhez adom')
-                                  : 'Regisztráció szükséges',
+                                        ? tr(context, 'Kedvenc')
+                                        : tr(context, 'Kedvencekhez adom'))
+                                  : tr(context, 'Regisztráció szükséges'),
                             ),
                           ),
                         );
@@ -330,9 +332,9 @@ class _OrganizerContent extends StatelessWidget {
 
   String _socialLabel(String key) {
     return switch (key) {
-      'website' => 'Weboldal',
-      'facebook' => 'Facebook',
-      'instagram' => 'Instagram',
+      'website' => AppStrings.tr('Weboldal'),
+      'facebook' => AppStrings.tr('Facebook'),
+      'instagram' => AppStrings.tr('Instagram'),
       'tiktok' => 'TikTok',
       _ => key,
     };
@@ -353,7 +355,7 @@ class _MissingOrganizer extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Text(
             name.isEmpty
-                ? 'Ehhez a szervezőhöz még nincs összekapcsolt adatlap.'
+                ? tr(context, 'Ehhez a szervezőhöz még nincs összekapcsolt adatlap.')
                 : '$name még nincs összekapcsolva egy szervezői adatlappal.',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, fontSize: 17),

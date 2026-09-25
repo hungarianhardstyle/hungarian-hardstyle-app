@@ -100,7 +100,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ),
             ),
             const SizedBox(height: 14),
-            _section('Megvásárolt zenéim', [
+            _section(tr(context, 'Megvásárolt zenéim'), [
               // A tulajdonos kérése: a megvásárolt (vagy reklámmal feloldott)
               // zenékhez **saját, fiókhoz kötött** menüpont, ahol lejátszhatók
               // (a szám végén a következőre lépve) és újra letölthetők.
@@ -109,126 +109,126 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               if (registered)
                 _item(
                   Icons.library_music_outlined,
-                  'Lejátszás és letöltés',
-                  'A megvásárolt zenéid — a fiókodhoz kötve',
+                  tr(context, 'Lejátszás és letöltés'),
+                  tr(context, 'A megvásárolt zenéid — a fiókodhoz kötve'),
                   const MyMusicScreen(),
                 )
               else
                 _notice(
-                  'A megvásárolt zenéidhez jelentkezz be — a vásárlás a '
-                  'fiókodhoz tartozik.',
+                  tr(context, 'A megvásárolt zenéidhez jelentkezz be — a vásárlás a '
+                  'fiókodhoz tartozik.'),
                 ),
             ]),
-            _section('Felfedezés', [
+            _section(tr(context, 'Felfedezés'), [
               _item(
                 Icons.graphic_eq,
                 'DJ-k',
-                'Magyar hardstyle és hardcore előadók',
+                tr(context, 'Magyar hardstyle és hardcore előadók'),
                 const ArtistsScreen(),
               ),
               _item(
                 Icons.groups,
-                'Szervezők',
-                'Hazai eseményszervezők és sorozatok',
+                tr(context, 'Szervezők'),
+                tr(context, 'Hazai eseményszervezők és sorozatok'),
                 const OrganizersScreen(),
               ),
               _item(
                 Icons.queue_music_outlined,
-                'Spotify Playlistek',
-                'Válogatások a keményebb stílusokból',
+                tr(context, 'Spotify Playlistek'),
+                tr(context, 'Válogatások a keményebb stílusokból'),
                 const SpotifyPlaylistsScreen(),
               ),
             ]),
-            _section('Beküldés', [
+            _section(tr(context, 'Beküldés'), [
               if (canArtist)
                 _item(
                   Icons.person_add_alt_1,
-                  'DJ beküldése',
-                  'Új DJ-adatlap jóváhagyásra',
+                  tr(context, 'DJ beküldése'),
+                  tr(context, 'Új DJ-adatlap jóváhagyásra'),
                   const ArtistSubmissionScreen(),
                 ),
               if (canOrganizer)
                 _item(
                   Icons.add_business,
-                  'Szervező beküldése',
-                  'Új szervező jóváhagyásra',
+                  tr(context, 'Szervező beküldése'),
+                  tr(context, 'Új szervező jóváhagyásra'),
                   const OrganizerSubmissionScreen(),
                 ),
               if (!canArtist && !canOrganizer)
                 _notice(
                   registered
                       ? SubmissionRules.notice
-                      : 'A beküldés csak regisztrált felhasználóknak érhető el.',
+                      : tr(context, 'A beküldés csak regisztrált felhasználóknak érhető el.'),
                 ),
             ]),
-            _section('Kapcsolat és támogatás', [
+            _section(tr(context, 'Kapcsolat és támogatás'), [
               _item(
                 Icons.share_outlined,
-                'Social és kapcsolat',
-                'Közösségi oldalak és elérhetőségek',
+                tr(context, 'Social és kapcsolat'),
+                tr(context, 'Közösségi oldalak és elérhetőségek'),
                 const SocialContactScreen(),
               ),
               _item(
                 Icons.favorite,
                 'Támogatás / Donate',
-                'Segítsd a Hungarian Hardstyle munkáját',
+                tr(context, 'Segítsd a Hungarian Hardstyle munkáját'),
                 const DonateScreen(),
               ),
               _callback(
                 Icons.bug_report_outlined,
-                'Hibajelzés',
-                'Hiba jelzése e-mailben, app-verzióval',
+                tr(context, 'Hibajelzés'),
+                tr(context, 'Hiba jelzése e-mailben, app-verzióval'),
                 _sendFeedback,
               ),
               _item(
                 Icons.help_outline,
-                'Segítség',
-                'Rövid válaszok az app használatához',
+                tr(context, 'Segítség'),
+                tr(context, 'Rövid válaszok az app használatához'),
                 const FaqScreen(),
               ),
             ]),
-            _section('Alkalmazás', [
+            _section(tr(context, 'Alkalmazás'), [
               _item(
                 Icons.leaderboard_outlined,
-                'HUHS Legenda toplista',
-                'A legtöbb achievement pontot gyűjtő tagok',
+                tr(context, 'HUHS Legenda toplista'),
+                tr(context, 'A legtöbb achievement pontot gyűjtő tagok'),
                 const AchievementLeaderboardScreen(),
               ),
               _item(
                 Icons.workspace_premium_outlined,
-                'Achievementek',
-                'Pontok, szintek és jelvények részletesen',
+                tr(context, 'Achievementek'),
+                tr(context, 'Pontok, szintek és jelvények részletesen'),
                 const AchievementGuideScreen(),
               ),
               if (registered)
                 _item(
                   Icons.group_add_outlined,
-                  'Ajánlás',
-                  'Hívd meg ismerőseidet és szerezz 50 pontot',
+                  tr(context, 'Ajánlás'),
+                  tr(context, 'Hívd meg ismerőseidet és szerezz 50 pontot'),
                   const ReferralScreen(),
                 ),
               _item(
                 Icons.settings_outlined,
-                'Beállítások',
-                'Értesítések és gyorsítótár',
+                tr(context, 'Beállítások'),
+                tr(context, 'Értesítések és gyorsítótár'),
                 const SettingsScreen(),
               ),
               _item(
                 Icons.privacy_tip_outlined,
-                'Adatvédelem és GDPR',
-                'Adatkezelés, megőrzés és felhasználói jogok',
+                tr(context, 'Adatvédelem és GDPR'),
+                tr(context, 'Adatkezelés, megőrzés és felhasználói jogok'),
                 const PrivacyScreen(),
               ),
               _item(
                 Icons.info_outline,
-                'Az appról',
-                'Verzió, kapcsolat és weboldal',
+                tr(context, 'Az appról'),
+                tr(context, 'Verzió, kapcsolat és weboldal'),
                 const AboutScreen(),
               ),
               _item(
                 Icons.radio,
-                'Rádió szolgáltató',
-                'Real Hardstyle FM',
+                tr(context, 'Rádió szolgáltató'),
+                tr(context, 'Real Hardstyle FM'),
                 const RadioProviderScreen(),
               ),
             ]),

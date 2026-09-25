@@ -52,15 +52,64 @@ export function relativeImportFor(file, target) {
 }
 
 /** Egy fájl összes szerkesztése (abszolút pozíciókkal). */
+/**
+ * Mely sorokban van `context` hatókörben? — **hatókör-felismerés**.
+ *
+ * MIÉRT KELL (mért hiba, 2026-09-25): a vak, soronkénti bekötő a UI-réteg
+ * szabályával **402 hibát** adott, köztük **szintaktikaiakat**: osztály-szintű
+ * mező-inicializálókban (`final x = ['A', 'B'];`) nincs `BuildContext`, és a
+ * `const` helyeken sem lehet függvényt hívni. Ezért csak ott kötünk be, ahol a
+ * környező függvény/metódus fejlécében ott a `BuildContext context`.
+ *
+ * A felismerés konzervatív: a `BuildContext context` fejlécű blokk nyitását
+ * megjegyzi a kapcsos zárójel mélységével, és a blokk bezárásakor elengedi.
+ * Ha valahol mégis téved (pl. `context` egy mező), az **analyzer** megmondja.
+ */
+export function contextScopes(lines) {
+  const inScope = new Array(lines.length).fill(false);
+  let depth = 0;
+  let marker = null; // { depth }
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    // A blokk vége: a mélység a nyitás szintje alá csökken.
+    if (marker && depth < marker.depth) marker = null;
+    inScope[index] = marker !== null;
+    if (/BuildContext\s+context\b/.test(line)) {
+      marker = { depth };
+    }
+    for (const char of line) {
+      if (char === '{') depth += 1;
+      else if (char === '}') depth -= 1;
+    }
+  }
+  return inScope;
+}
+
 export function planEdits(source, file = 'x.dart') {
   const edits = [];
+  const skipped = [];
   let appText = 0;
   let tr = 0;
+  const lines = source.split('\n');
+  const scope = contextScopes(lines);
   for (const hit of targetsInSource(source, file)) {
     // Idempotencia: ami már be van kötve (`tr(context, …)`, `AppText(…)`),
     // ahhoz nem nyúlunk — különben a második futás duplán tekerne.
     if (hit.wrapped) continue;
+    // A csak-UI-rétegű szöveg bekötése `context`-et igényel: ha nincs a
+    // hatókörben, KIHAGYJUK (a fordítás a szótárban marad, a szöveg magyarul
+    // jelenik meg — ez nem regresszió, csak később bekötendő).
+    if (hit.uiLayerOnly && !scope[hit.line - 1]) {
+      skipped.push({ line: hit.line, value: hit.value, reason: 'nincs context' });
+      continue;
+    }
     const position = offsetOf(source, hit.line, hit.start);
+    // ⚠️ Többsoros (fűzött) csoport: a VÉGE a csoport utolsó sorában van, ezért
+    // a záró pozíciót az utolsó sorral kell számolni — különben a kicserélt
+    // szöveg közepére kerül a záró zárójel (mért hiba: `expected_token`).
+    const endPosition = hit.spansLines
+      ? offsetOf(source, hit.line + hit.spansLines, hit.end)
+      : position + (hit.end - hit.start);
     const textStart = findTextIdentifier(source, position);
     if (textStart >= 0) {
       edits.push({ start: textStart, end: textStart + 4, text: 'AppText', kind: 'app-text', value: hit.value });
@@ -69,14 +118,14 @@ export function planEdits(source, file = 'x.dart') {
     }
     edits.push({
       start: position,
-      end: position + (hit.end - hit.start),
-      text: wrapLiteral(source.slice(position, position + (hit.end - hit.start))),
+      end: endPosition,
+      text: wrapLiteral(source.slice(position, endPosition)),
       kind: 'tr',
       value: hit.value,
     });
     tr += 1;
   }
-  return { edits, appText, tr };
+  return { edits, appText, tr, skipped };
 }
 
 /** Sor + oszlop → abszolút pozíció. */
@@ -123,12 +172,12 @@ export function insertImport(source, importLine) {
 
 /** Egy fájl teljes átalakítása (a tesztek ezt hívják). */
 export function transformSource(source, file = 'lib/x.dart') {
-  const { edits, appText, tr } = planEdits(source, file);
-  if (!edits.length) return { source, appText, tr, changed: 0 };
+  const { edits, appText, tr, skipped } = planEdits(source, file);
+  if (!edits.length) return { source, appText, tr, skipped, changed: 0 };
   let updated = applyEdits(source, edits);
   if (appText) updated = insertImport(updated, relativeImportFor(file, APP_TEXT_IMPORT)).source;
   if (tr) updated = insertImport(updated, relativeImportFor(file, TR_IMPORT)).source;
-  return { source: updated, appText, tr, changed: edits.length };
+  return { source: updated, appText, tr, skipped, changed: edits.length };
 }
 
 export function selfTest() {
@@ -223,6 +272,7 @@ function main() {
 
   let appText = 0;
   let tr = 0;
+  let skippedCount = 0;
   let filesChanged = 0;
   const report = [];
   for (const file of files) {
@@ -232,6 +282,7 @@ function main() {
     if (apply) fs.writeFileSync(file, result.source, 'utf8');
     appText += result.appText;
     tr += result.tr;
+    skippedCount += result.skipped.length;
     filesChanged += 1;
     report.push({ file, changed: result.changed, appText: result.appText, tr: result.tr });
   }
@@ -244,7 +295,8 @@ function main() {
   }
   console.log(
     `${apply ? 'ALKALMAZVA' : '[száraz]'} fájl: ${filesChanged}, `
-    + `AppText-csere: ${appText}, tr(...)-csere: ${tr}, összesen: ${appText + tr}`,
+    + `AppText-csere: ${appText}, tr(...)-csere: ${tr}, összesen: ${appText + tr}`
+    + (skippedCount ? `, kihagyva (nincs context): ${skippedCount}` : ''),
   );
   if (!apply) console.log('Az íráshoz add hozzá a --apply kapcsolót.');
   return 0;

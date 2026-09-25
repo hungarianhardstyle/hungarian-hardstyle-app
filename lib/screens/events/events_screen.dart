@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n/tr.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/community_provider.dart';
 import '../../models/event.dart';
@@ -244,11 +245,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     onRefresh: _refreshEvents,
                   ),
                   if (featured.isNotEmpty) ...[
-                    const _EventsSectionTitle('Kiemelt események'),
+                    _EventsSectionTitle(tr(context, 'Kiemelt események')),
                     ...featured.map((event) => EventCard(event: event)),
                   ],
                   if (regular.isNotEmpty) ...[
-                    const _EventsSectionTitle('Események'),
+                    _EventsSectionTitle(tr(context, 'Események')),
                     ...regular.map((event) => EventCard(event: event)),
                   ],
                   if (canLoadUpcoming)
@@ -276,11 +277,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   children: [
                     sections.first,
                     if (featured.isNotEmpty) ...[
-                      const _EventsSectionTitle('Kiemelt események'),
+                      _EventsSectionTitle(tr(context, 'Kiemelt események')),
                       _EventGrid(events: featured),
                     ],
                     if (regular.isNotEmpty) ...[
-                      const _EventsSectionTitle('Események'),
+                      _EventsSectionTitle(tr(context, 'Események')),
                       _EventGrid(events: regular),
                     ],
                     if (canLoadUpcoming)
@@ -406,7 +407,7 @@ class _LoadMoreEventsButton extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.expand_more),
-      label: Text(loading ? 'Betöltés…' : 'További események'),
+      label: Text(loading ? 'Betöltés…' : tr(context, 'További események')),
     ),
   );
 }

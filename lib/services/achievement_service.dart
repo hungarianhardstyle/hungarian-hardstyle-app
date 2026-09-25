@@ -1,4 +1,5 @@
 import '../core/firebase/firebase_callable.dart';
+import '../core/i18n/app_strings.dart';
 
 /// Egy szint (jelvény) a ranglétrán.
 ///
@@ -58,48 +59,48 @@ class AchievementService {
   final AchievementCatalogCaller _catalogCaller;
   /// Az utolsó ismert katalógus (2026-09-19, a WordPressből mérve).
   /// Ez csak tartalék: a hiteles forrás a szerver.
-  static const fallbackLevels = <AchievementLevel>[
+  static final fallbackLevels = <AchievementLevel>[
     AchievementLevel(
       slug: 'starter',
       name: 'Kezdő ütem',
       minPoints: 0,
-      description: 'A HUHS közösség alapjelvénye.',
+      description: AppStrings.tr('A HUHS közösség alapjelvénye.'),
     ),
     AchievementLevel(
       slug: 'first-step',
       name: 'Első lépés',
       minPoints: 100,
-      description: 'Az első közösségi mérföldkő.',
+      description: AppStrings.tr('Az első közösségi mérföldkő.'),
     ),
     AchievementLevel(
       slug: 'regular',
       name: 'Rendszeres látogató',
       minPoints: 300,
-      description: 'Rendszeresen jelen van a közösségben.',
+      description: AppStrings.tr('Rendszeresen jelen van a közösségben.'),
     ),
     AchievementLevel(
       slug: 'hardstyle-face',
       name: 'Hardstyle arc',
       minPoints: 700,
-      description: 'Láthatóan aktív HUHS-közösségi tag.',
+      description: AppStrings.tr('Láthatóan aktív HUHS-közösségi tag.'),
     ),
     AchievementLevel(
       slug: 'community',
       name: 'Közösségi ember',
       minPoints: 1500,
-      description: 'Sokat tesz a közösségi jelenlétért.',
+      description: AppStrings.tr('Sokat tesz a közösségi jelenlétért.'),
     ),
     AchievementLevel(
       slug: 'scene-veteran',
       name: 'Scene veteran',
       minPoints: 3000,
-      description: 'Hosszú távon aktív színtértag.',
+      description: AppStrings.tr('Hosszú távon aktív színtértag.'),
     ),
     AchievementLevel(
       slug: 'huhs-legend',
       name: 'HUHS legenda',
       minPoints: 6000,
-      description: 'Kiemelkedő, tartós közösségi aktivitás.',
+      description: AppStrings.tr('Kiemelkedő, tartós közösségi aktivitás.'),
     ),
   ];
 
