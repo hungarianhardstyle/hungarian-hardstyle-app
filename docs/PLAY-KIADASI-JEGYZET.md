@@ -1,10 +1,10 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 358 megy fel** (versionCode **358**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
-> 2026-09-24 este): a **zárt teszt sávján a 357 fut** (`completed`, 100%), a **production sávon a 355**,
-> a `beta` sávon a 354. **A 358 a 357 minden javítását is tartalmazza** (értesítés-nevek + Chat-odaugrás),
-> ezért **ezt kell feltenni**. A rövid (1.) blokk **csak a 358 újdonságát** írja le (Chat
-> `@`-hivatkozás), a nyilvános kiadáshoz pedig az **1b. blokk** való (**356–358 összesítő**).
+> **A 358 FENT VAN a zárt teszten** (versionCode **358**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> 2026-09-25): a **zárt teszt sávján a 358 fut** (`completed`, 100%, a feltöltött csomag SHA-256-ja
+> **`64702d11…`** = a helyben épített AAB), a **production sávon a 355**, a `beta` sávon a 354.
+> A rövid (1.) blokk **csak a 358 újdonságát** írja le (Chat `@`-hivatkozás), a nyilvános kiadáshoz
+> pedig az **1b. blokk** való (**356–358 összesítő**).
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -21,19 +21,19 @@ sha256: 64702D11E6917075B0BD996C78C5F725F473727375D1CA2F299001414240264E
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
-A Play Developer API-t **olvasásra** kérdezve (2026-09-24 este, a legfrissebb mérés):
+A Play Developer API-t **olvasásra** kérdezve (2026-09-25, a legfrissebb mérés):
 
 | Sáv | Állapot | Build |
 |---|---|---|
 | **production (nyilvános)** | **completed** (100%-ban kigördült) | **355** — „355 (1.0.0)" |
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **357** — „357 (1.0.0)" |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **358** — „358 (1.0.0)" |
 | beta | completed (100%) | 354 |
 | internal | completed + egy **üres piszkozat** | 278 |
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
-- **A nyilvános kiadás megvan:** a production sávon a **355** van (`completed`, a **352–356 összesítő** szöveggel), a bolt-lap **200**-at ad. A **zárt tesztben a 357 fut** (a tulajdonos feltöltötte, `completed` 100%), a **358** csomag a következő feltöltés.
-- A feltöltött AAB-ek a Playen (a 2026-09-24 esti mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 352, 353, 354, 355, 356, **357**.
-- **⚠️ ÚJ VERZIÓKÓD KELL (358):** a 357-et a tulajdonos **már feltöltötte** a zárt tesztre, ezért **ugyanaz a verziókód nem használható újra** — a 358 tartalmazza a 357-et is (értesítés-nevek + Chat-odaugrás), plusz a **Chat `@`-hivatkozást**. A `beta` sávon a **354** van (ez a nyílt teszt csatorna), ott **nem** kell külön lépni.
+- **A nyilvános kiadás megvan:** a production sávon a **355** van (`completed`, a **352–356 összesítő** szöveggel), a bolt-lap **200**-at ad. **A zárt tesztben a 358 fut** (a tulajdonos feltöltötte, `completed` 100%) — a feltöltött csomag SHA-256-ja **`64702d11…40264e`**, ami **bájtazonos** a helyben épített `build/HUHS-v1.0.0+358-release.aab`-bal (mérve: `node tools/check-play-track.mjs --hashes`), és a kiadási szöveg a **§1. blokk**.
+- A feltöltött AAB-ek a Playen (a 2026-09-25-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 352, 353, 354, 355, 356, 357, **358**.
+- **A 358 a zárt teszt csúcsa**, ezért **új verziókód csak a következő körben** kell. A `beta` sávon a **354** van (ez a nyílt teszt csatorna), ott **nem** kell külön lépni.
 - A `play-notes-meta` `lastPublishedBuild` értéke (**355**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 355. A **nyilvános** kiadáshoz az **1b. blokk** való (**356–358 összesítő**): a nyilvános felhasználók a 355-tel a **352–356** összesítőt kapták, tehát ami **azóta** történt, az a hírlevél-védelem, az értesítés-javítás és a Chat-hivatkozás.
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
