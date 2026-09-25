@@ -435,11 +435,27 @@ itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a le
 - A kérdőív eredményeinél már a kérdőív saját válaszai látszanak az éves szavazás adatai helyett.
 - A nyereményjátéknál eltűnt a felesleges kép mező.
 
-## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.10.0)
+## 4. HUHS Mobile API WordPress-plugin — kiadásjegyzék (2.11.0)
 
-A plugin csomag: `build/huhs-mobile-api-2.10.0.zip` (45 fájl, 150,7 KB,
-SHA-256 `6D95DE5AA65FA9CEB94A5410B612F41AA62F51F78C9AEF0D560E030A2998442F`).
-A változás verziókövetve: `docs/plugin-2.10.0-newsletter-cooldown.patch`.
+A plugin csomag: `build/huhs-mobile-api-2.11.0.zip` (46 fájl, 154,1 KB,
+SHA-256 `6D660533BB4414F69556DC2B074189440857D5B88E967A1F62086AF5C7BD4446`).
+A változás verziókövetve: `docs/plugin-2.11.0-english-fields.patch` (3 fájl, +198/−13 sor).
+
+### 2.11.0 — angol cikk-mezők (rejtett meta) + `lang` paraméter (2026-09-25)
+
+```text
+- ÚJ: a cikkek angol változatának helye a WordPressben — három REJTETT post meta mező:
+  _huhs_title_en, _huhs_excerpt_en, _huhs_content_en. A webfelület ezeket NEM olvassa,
+  ezért az angol egyelőre kizárólag az appban jelenik meg (a cikkek magyar permalinkje
+  változatlan, nincs külön angol bejegyzés).
+- ÚJ: a /posts és a /posts/{id} végpont `lang` paramétert kapott (hu az alap, en az angol).
+  Ha egy cikkhez nincs (vagy hiányos) az angol szöveg, a válasz a MAGYAR szöveget adja —
+  üres mező soha nem kerül a felületre. A válasz `has_en` jelzőt is tartalmaz.
+- A meta regisztrációja `show_in_rest`-tel történik (a fordító folyamat alkalmazás-jelszóval
+  írja), és a tartalom szűrője HTML-t megtartó (wp_kses_post), különben a cikk tagek nélkül
+  maradna.
+- A régi appokra nincs hatás: `lang` nélkül (és `lang=hu`-nál) a válasz mezői változatlanok.
+```
 
 ### 2.10.0 — a hírlevél nem küldi ki korlátlanul a megerősítő levelet (2026-09-24)
 

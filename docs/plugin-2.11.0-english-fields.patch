@@ -1,0 +1,303 @@
+diff --git a/huhs-mobile-api/huhs-mobile-api.php b/huhs-mobile-api/huhs-mobile-api.php
+index 0562abdb..fdbb01bf 100644
+--- a/huhs-mobile-api/huhs-mobile-api.php
++++ b/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.10.0
++ * Version: 2.11.0
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.10.0');
++define('HUHS_API_VERSION', '2.11.0');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+@@ -62,6 +62,9 @@ require_once HUHS_API_PATH . 'includes/games.php';
+ require_once HUHS_API_PATH . 'includes/admin-create.php';
+ 
+ require_once HUHS_API_PATH . 'includes/meta-fields.php';
++// Az angol cikk-mezők (rejtett post meta) REST-regisztrációja — a fordítási
++// folyamat ezekre ír alkalmazás-jelszóval; a webfelület nem olvassa őket.
++require_once HUHS_API_PATH . 'includes/post-translation-meta.php';
+ require_once HUHS_API_PATH . 'includes/meta-boxes.php';
+ require_once HUHS_API_PATH . 'includes/meta-save.php';
+ require_once HUHS_API_PATH . 'includes/editor.php';
+diff --git a/huhs-mobile-api/includes/post-translation-meta.php b/huhs-mobile-api/includes/post-translation-meta.php
+new file mode 100644
+index 00000000..bcb5a6db
+--- /dev/null
++++ b/huhs-mobile-api/includes/post-translation-meta.php
+@@ -0,0 +1,91 @@
++<?php
++
++if (!defined('ABSPATH')) {
++    exit;
++}
++
++/*
++|--------------------------------------------------------------------------
++| Angol cikk-mezők (rejtett post meta) — plugin 2.11.0
++|--------------------------------------------------------------------------
++|
++| Az app angol nyelvéhez a cikkek angol szövegét egy fordítási folyamat
++| állítja elő, és három rejtett (vezető aláhúzásos) post metaba írja:
++|
++|   _huhs_title_en    – a cikk címe angolul
++|   _huhs_excerpt_en  – a cikk kivonata angolul
++|   _huhs_content_en  – a cikk törzse angolul (HTML)
++|
++| A WP REST API csak akkor fogadja el az írást a védett kulcsokra, ha a meta
++| regisztrálva van `show_in_rest => true`-val ÉS van `auth_callback`. A
++| folyamat egy szerkesztői/admin felhasználó alkalmazás-jelszavával ír, ezért
++| a kapu az `edit_posts` képesség.
++|
++| ⚠️ A WEBNYILVÁNOS OLDAL SZÁNDÉKOSAN NEM OLVASSA EZEKET A MEZŐKET. A téma,
++| a sablonok és a shortcode-ok változatlanok: az angol szöveg egyelőre
++| kizárólag az app API-ján (`lang=en`) jön ki, a cikkek magyar permalinkje
++| pedig ugyanaz marad (nincs külön angol bejegyzés).
++|
++| Sanitize döntés (és miért):
++|   * `_huhs_title_en`   → `sanitize_text_field`
++|     A cím egyetlen sor, nem tartalmazhat HTML-t; a `sanitize_text_field`
++|     kiszűri a tageket és a sortöréseket, és UTF-8-ban hagyja az ékezetet.
++|   * `_huhs_content_en` → `wp_kses_post`
++|     A törzs HTML (bekezdések, linkek, listák). A `sanitize_text_field`
++|     használata MINDEN tageket kidobna, és a cikk egyetlen futó szöveggé
++|     esne szét — ezért itt kötelező a `wp_kses_post`.
++|   * `_huhs_excerpt_en` → `wp_kses_post`
++|     A kivonat a cikkből örökölhet egyszerű formázást (`<strong>`, `<em>`).
++|     A `sanitize_textarea_field` megőrizné ugyan a sortöréseket, de a
++|     tageket kidobná; mivel a kivonatot az app a törzzsel azonos módon
++|     jeleníti meg, a testvérével azonos szűrőt (`wp_kses_post`) kap, hogy a
++|     két mező viselkedése ne térjen el. A HTML-t itt is meg kell tartani.
++*/
++
++add_action('init', 'huhs_register_post_translation_meta');
++
++function huhs_register_post_translation_meta()
++{
++    $auth_callback = 'huhs_translation_meta_auth_callback';
++
++    register_post_meta('post', '_huhs_title_en', array(
++        'type'              => 'string',
++        'single'            => true,
++        'show_in_rest'      => true,
++        'sanitize_callback' => 'sanitize_text_field',
++        'auth_callback'     => $auth_callback,
++    ));
++
++    register_post_meta('post', '_huhs_excerpt_en', array(
++        'type'              => 'string',
++        'single'            => true,
++        'show_in_rest'      => true,
++        'sanitize_callback' => 'wp_kses_post',
++        'auth_callback'     => $auth_callback,
++    ));
++
++    register_post_meta('post', '_huhs_content_en', array(
++        'type'              => 'string',
++        'single'            => true,
++        'show_in_rest'      => true,
++        'sanitize_callback' => 'wp_kses_post',
++        'auth_callback'     => $auth_callback,
++    ));
++}
++
++/**
++ * A védett (aláhúzással kezdődő) fordítási meta írásának engedélyezése.
++ *
++ * A WordPress a vezető aláhúzásos kulcsokat „protected" metának tekinti, és
++ * alapból elutasítja a REST-en keresztüli írást. A fordítási folyamat egy
++ * szerkesztői/admin felhasználó alkalmazás-jelszavával dolgozik, ezért az
++ * `edit_posts` képesség a helyes kapu — ennél szűkebb (pl. `manage_options`)
++ * nem kell, tágabb (`read`) viszont beengedné a sima előfizetőket is.
++ *
++ * Az OLVASÁST ez a callback nem érinti: a nyilvános `huhs/v1` végpontok a
++ * saját `lang` paraméterük alapján döntenek (lásd includes/posts.php).
++ */
++function huhs_translation_meta_auth_callback($allowed, $meta_key, $post_id, $user_id)
++{
++    return user_can($user_id, 'edit_posts');
++}
+diff --git a/huhs-mobile-api/includes/posts.php b/huhs-mobile-api/includes/posts.php
+index 3a07aa08..24466a65 100644
+--- a/huhs-mobile-api/includes/posts.php
++++ b/huhs-mobile-api/includes/posts.php
+@@ -60,26 +60,30 @@ function huhs_get_post_detail(WP_REST_Request $request)
+         return new WP_Error('post_not_found', 'A hír nem található.', array('status' => 404));
+     }
+ 
+-    return new WP_REST_Response(huhs_build_post($post), 200);
++    return new WP_REST_Response(huhs_build_post($post, true, huhs_request_lang($request)), 200);
+ }
+ 
+-function huhs_build_post($post, $include_related = true)
++function huhs_build_post($post, $include_related = true, $lang = 'hu')
+ {
+-    $content = huhs_clean_content($post->post_content);
++    $translation = huhs_post_language_payload($post, $lang);
+ 
+     return array(
+ 
+         'id' => (int)$post->ID,
+ 
+-        'title' => huhs_clean_title($post->post_title),
++        'title' => $translation['title'],
+ 
+         'date' => huhs_format_date($post->post_date),
+ 
+         'is_sticky' => is_sticky($post->ID),
+ 
+-        'excerpt' => huhs_make_excerpt($content),
++        'excerpt' => $translation['excerpt'],
+ 
+-        'content' => $content,
++        'content' => $translation['content'],
++
++        // Nyelvjelző: `true` csak akkor, ha a cím és a törzs is angolul jött.
++        // Magyar kérésnél (és hiányzó `lang`-nál) mindig `false`.
++        'has_en' => $translation['has_en'],
+ 
+         'featured_image' => huhs_featured_image($post->ID),
+ 
+@@ -111,6 +115,9 @@ function huhs_get_posts(WP_REST_Request $request)
+     $search = sanitize_text_field((string) $request->get_param('search'));
+     $category = absint($request->get_param('category'));
+     $summary = filter_var($request->get_param('summary'), FILTER_VALIDATE_BOOLEAN);
++    // A kért nyelv: `hu` (alap) vagy `en`. Hiányzó/érvénytelen érték → `hu`,
++    // ezért a `lang` nélkül kérő régi appok változatlan választ kapnak.
++    $lang = huhs_request_lang($request);
+     $sticky_param = $request->get_param('sticky');
+     $sticky_filter = ($sticky_param === null || $sticky_param === '')
+         ? null
+@@ -153,7 +160,7 @@ function huhs_get_posts(WP_REST_Request $request)
+ 
+     foreach ($query->posts as $post) {
+ 
+-        $result[] = $summary ? huhs_build_post_summary($post) : huhs_build_post($post);
++        $result[] = $summary ? huhs_build_post_summary($post, $lang) : huhs_build_post($post, true, $lang);
+ 
+     }
+ 
+@@ -169,17 +176,21 @@ function huhs_get_posts(WP_REST_Request $request)
+     ), 200);
+ }
+ 
+-function huhs_build_post_summary($post)
++function huhs_build_post_summary($post, $lang = 'hu')
+ {
+-    $content = huhs_clean_content($post->post_content);
++    $translation = huhs_post_language_payload($post, $lang);
++
+     return array(
+         'id' => (int) $post->ID,
+-        'title' => huhs_clean_title($post->post_title),
++        'title' => $translation['title'],
+         'date' => huhs_format_date($post->post_date),
+ 
+         'is_sticky' => is_sticky($post->ID),
+-        'excerpt' => huhs_make_excerpt($content),
++        'excerpt' => $translation['excerpt'],
++        // A lista-végpont szándékosan nem küldi a törzset (sávszélesség), és
++        // ez a `lang=en`-nél sem változik: a `content` itt mindig üres.
+         'content' => '',
++        'has_en' => $translation['has_en'],
+         'featured_image' => huhs_featured_image($post->ID),
+         'link' => get_permalink($post->ID),
+         'category_ids' => wp_get_post_categories($post->ID),
+@@ -222,7 +233,87 @@ function huhs_get_related_posts($content, $current_id)
+         'orderby' => 'post__in',
+     ));
+ 
++    // A kapcsolódó cikkek szándékosan a magyar (`hu`) alakban maradnak: a
++    // `lang` paraméter csak a hívó cikk saját címére/kivonatára/törzsére hat.
+     return array_map(function ($post) {
+         return huhs_build_post($post, false);
+     }, $related);
+ }
++
++/*
++|--------------------------------------------------------------------------
++| Nyelv (`lang`) — angol cikk-mezők fallback-kel
++|--------------------------------------------------------------------------
++*/
++
++/**
++ * A kért nyelv a `lang` paraméterből: `hu` (alap) vagy `en`.
++ *
++ * Hiányzó vagy ismeretlen érték esetén `hu`. Ez azért fontos, mert a régi
++ * appok egyáltalán nem küldenek `lang`-ot: nekik pontosan a mai választ
++ * kell kapniuk, és egy elgépelt érték sem adhat véletlenül angol szöveget.
++ */
++function huhs_request_lang(WP_REST_Request $request)
++{
++    $lang = strtolower(trim((string) $request->get_param('lang')));
++
++    return $lang === 'en' ? 'en' : 'hu';
++}
++
++/**
++ * A cikk címe/kivonata/törzse a kért nyelven, a `has_en` jelzővel.
++ *
++ * MAGYAR ÁG (`lang=hu`, illetve hiányzó `lang`) — bitre ugyanaz, mint a
++ * 2.10.0-ban: a cím a `post_title`-ból, a törzs a `post_content`-ból, a
++ * kivonat pedig a törzs első 40 szava. Ebben az ágban a fordítási meta
++ * **egyáltalán nem olvasódik**, ezért a magyar válasz gyorsabb és
++ * bájtra azonos marad.
++ *
++ * ANGOL ÁG (`lang=en`) — FALLBACK: az angol értéket CSAK akkor használjuk,
++ * ha az tényleg létezik (a `trim` után nem üres). A cím és a törzs együtt
++ * dönt: ha bármelyik hiányzik, a cikk gyakorlatilag nincs lefordítva, ezért
++ * a válasz a **magyar** marad és `has_en = false`. Így a payload sosem lesz
++ * kevert nyelvű, és a `has_en` egyértelműen megmondja az appnak, mit kapott
++ * — a válasz pedig soha nem lesz üres. A kivonatnak saját angol mezője van;
++ * ha az üres, az angol törzsből képezzük (magyar kivonatra csak akkor esünk
++ * vissza, ha angol törzs sincs, de az a fenti kapu miatt nem fordulhat elő).
++ *
++ * A `link` szándékosan nem itt dől el: minden nyelven a magyar permalink
++ * marad, mert nincs külön angol bejegyzés.
++ */
++function huhs_post_language_payload($post, $lang)
++{
++    $content_hu = huhs_clean_content($post->post_content);
++
++    // Magyar alapérték — erre esik vissza minden hiányzó angol mező.
++    $payload = array(
++        'has_en'  => false,
++        'title'   => huhs_clean_title($post->post_title),
++        'excerpt' => huhs_make_excerpt($content_hu),
++        'content' => $content_hu,
++    );
++
++    // Nem angol kérés: a magyar payload megy vissza, meta-olvasás nélkül.
++    if ($lang !== 'en') {
++        return $payload;
++    }
++
++    $title_en = trim((string) get_post_meta($post->ID, '_huhs_title_en', true));
++    $excerpt_en = trim((string) get_post_meta($post->ID, '_huhs_excerpt_en', true));
++    $content_en = trim((string) get_post_meta($post->ID, '_huhs_content_en', true));
++
++    // FALLBACK-KAPU: csak akkor térünk át angolra, ha a fordítás érdemi része
++    // (cím ÉS törzs) megvan. Különben marad a fenti magyar payload.
++    if ($title_en === '' || $content_en === '') {
++        return $payload;
++    }
++
++    $payload['has_en'] = true;
++    $payload['title'] = huhs_clean_title($title_en);
++    $payload['content'] = huhs_clean_content($content_en);
++    $payload['excerpt'] = $excerpt_en !== ''
++        ? huhs_make_excerpt($excerpt_en)
++        : huhs_make_excerpt($payload['content']);
++
++    return $payload;
++}
