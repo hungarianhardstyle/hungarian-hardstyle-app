@@ -84,12 +84,51 @@ void main() {
       expect(result.index, 1);
     });
 
-    test('üres listáknál sem találgat', () {
-      expect(plan(focusId: 'a').status, ChatFocusStatus.keepLoading);
-      expect(
-        plan(focusId: 'a', reachedStart: true).status,
-        ChatFocusStatus.giveUp,
-      );
+    // ⚠️ A tulajdonos jelzése (2026-09-25): *„chat üzenet like értesítés néha a
+    // megfelelő helyre dob, ha rányomok, néha nem"*. A gyökér az volt, hogy az
+    // üres (még be nem töltött) ablak `keepLoading`-ot adott, ezért a képernyő
+    // lapozásnak számolta a betöltés közbeni köröket, és a 10 lapos keret az
+    // adat megérkezése ELŐTT elfogyott → hideg indításnál nem ugrott oda.
+    group('amíg az élő ablak nem érkezett meg (a „néha nem" hibája)', () {
+      test('az üres ablak VÁRAKOZIK, nem lapoz (nem fogyasztja a keretet)', () {
+        expect(plan(focusId: 'a').status, ChatFocusStatus.waiting);
+        expect(
+          plan(focusId: 'a', loadedPages: 9, maxPages: 10).status,
+          ChatFocusStatus.waiting,
+          reason: 'a keret nem fogy, amíg nincs mit lapozni',
+        );
+      });
+
+      test('a várakozás nem visz a lap-korlátba (10 kör után sem adja fel)', () {
+        // A képernyő a `waiting` ágban nem növeli a lapszámot, ezért a terv
+        // ugyanaz marad, akárhányszor újraszámoljuk.
+        for (var round = 0; round < 25; round++) {
+          expect(plan(focusId: 'a').status, ChatFocusStatus.waiting);
+        }
+      });
+
+      test('ha viszont elfogytak az üzenetek, akkor feladjuk', () {
+        expect(
+          plan(focusId: 'a', reachedStart: true).status,
+          ChatFocusStatus.giveUp,
+        );
+      });
+
+      test('a lap-korlát az üres ablaknál is érvényes (nincs végtelen várás)', () {
+        expect(
+          plan(focusId: 'a', loadedPages: 10, maxPages: 10).status,
+          ChatFocusStatus.giveUp,
+          reason: 'ha az adat sosem jön meg, a keret lezárja a keresést',
+        );
+      });
+
+      test('ha csak a lapozott lista van meg, az is elég a kereséshez', () {
+        expect(
+          plan(focusId: 'z', older: ['x']).status,
+          ChatFocusStatus.keepLoading,
+          reason: 'van mit tovább lapozni',
+        );
+      });
     });
   });
 }

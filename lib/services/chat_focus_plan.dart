@@ -24,6 +24,20 @@ enum ChatFocusStatus {
   /// Még nincs meg, de van mit betölteni (lapozz tovább).
   keepLoading,
 
+  /// **Az élő ablak még nem érkezett meg** (a stream első képe nincs itt):
+  /// ilyenkor nem lapozunk, és **nem fogyasztjuk a lap-keretet** — megvárjuk az
+  /// adatot, mert a képernyő a lista megérkezésekor úgyis újraszámolja a tervet.
+  ///
+  /// ⚠️ MIÉRT KÜLÖN ÁLLAPOT (mért hiba, 2026-09-25): a tulajdonos jelezte, hogy
+  /// a chat-értesítés *„néha a megfelelő helyre dob, néha nem"*. A gyökér az
+  /// volt, hogy az üres ablak `keepLoading`-ot adott, ezért a képernyő
+  /// **lapozásnak számolta** azokat a köröket is, amelyekben nem volt mit
+  /// lapozni (a betöltés közbeni képkockák miatt ez másodpercenként többször
+  /// lefutott) — így a 10 lapos keret **még az adat megérkezése előtt elfogyott**,
+  /// és az odaugrás feladta. Hideg indításnál (amikor a Chat még nem volt nyitva
+  /// ebben a munkamenetben) ezért nem ugrott oda, meleg indításnál viszont igen.
+  waiting,
+
   /// Nem érdemes tovább keresni (nincs azonosító, elfogytak az üzenetek,
   /// vagy elértük a lap-korlátot).
   giveUp,
@@ -73,6 +87,12 @@ ChatFocusPlan chatFocusPlan({
   if (reachedStart) return const ChatFocusPlan(status: ChatFocusStatus.giveUp);
   if (loadedPages >= maxPages) {
     return const ChatFocusPlan(status: ChatFocusStatus.giveUp);
+  }
+  // ⚠️ Az élő ablak még üres: NEM lapozunk és nem fogyasztjuk a keretet. Ez az
+  // ág azért van a lap-korlát UTÁN, hogy a korlát akkor is érvényes maradjon,
+  // ha az adat soha nem érkezik meg.
+  if (newestIds.isEmpty && olderIds.isEmpty) {
+    return const ChatFocusPlan(status: ChatFocusStatus.waiting);
   }
   return const ChatFocusPlan(status: ChatFocusStatus.keepLoading);
 }

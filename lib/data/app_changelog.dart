@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 359,
+    changes: [
+      'A Chat-értesítésre koppintva az app mostantól MINDIG a megjelölt üzenetre ugrik — eddig hideg indításnál (amikor a Chat még nem volt megnyitva) ez elmaradhatott.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 358,
     changes: [
       'ÚJ a Chatben: @-tal hivatkozhatsz valakire vagy valamire — személyre, cikkre, DJ-re, szervezőre, eseményre és kiadványra. Elég beírni a @ jelet és a név első betűit, a lehetőségeket magától feldobja.',

@@ -51,6 +51,73 @@ void main() {
       );
     });
 
+    // ⚠️ A tulajdonos jelzése (2026-09-25): *„chat üzenet like értesítés néha a
+    // megfelelő helyre dob, ha rányomok, néha nem"*. A gyökér: az üres élő ablak
+    // is lapozásnak számított, ezért a 10 lapos keret az adat megérkezése előtt
+    // elfogyott. Ezek a lint-ek a javítás bekötését őrzik.
+    test('az üres élő ablaknál VÁRAKOZIK (nem lapoz, nem fogyaszt keretet)', () {
+      expect(
+        chat,
+        contains('ChatFocusStatus.waiting'),
+        reason: 'a tiszta terv külön állapota az „adat még nincs" esetre',
+      );
+      expect(
+        chat,
+        matches(RegExp(r'case ChatFocusStatus\.waiting:[\s\S]{0,400}?return;')),
+        reason: 'a várakozás nem indít lapozást',
+      );
+    });
+
+    test('a lap-keret csak VALÓDI lapozás után fogy', () {
+      expect(
+        chat,
+        contains('Future<bool> _loadOlderPosts()'),
+        reason: 'a lapozás megmondja, történt-e valódi kérés',
+      );
+      expect(
+        chat,
+        contains('final loaded = await _loadOlderPosts();'),
+        reason: 'a lapozás eredményét meg kell nézni',
+      );
+      // ⚠️ SZÁNDÉKOSAN SZIGORÚ: az első változat csak azt nézte, hogy a
+      // `_focusPagesLoaded++` a `if (!loaded)` UTÁN szerepel a szövegben — az a
+      // mutáció viszont átment rajta, amelyik EGY MÁSIK számlálónövelést tesz a
+      // lapozás ELÉ (a régi hibás sorrend), mert a minta a régi előfordulásra is
+      // illeszkedett. Ezért most a **darabszámot** és a **sorrendet** is kérjük.
+      final loadIndex = chat.indexOf('final loaded = await _loadOlderPosts();');
+      final guardIndex = chat.indexOf('if (!loaded) {');
+      final incrementCount = '_focusPagesLoaded++'.allMatches(chat).length;
+      expect(
+        incrementCount,
+        1,
+        reason: 'a lap-keret pontosan EGY helyen fogy (nincs rejtett növelés)',
+      );
+      expect(
+        chat.indexOf('_focusPagesLoaded++'),
+        greaterThan(guardIndex),
+        reason: 'a számláló a sikeres lapozás UTÁN nő',
+      );
+      expect(
+        guardIndex,
+        greaterThan(loadIndex),
+        reason: 'az eredmény-ellenőrzés a lapozás UTÁN van',
+      );
+      expect(
+        chat,
+        matches(RegExp(r'if \(!loaded\) \{[\s\S]{0,160}?_focusFinished = true;')),
+        reason: 'sikertelen lapozásnál feladjuk (nem pörög tovább)',
+      );
+    });
+
+    test('a betöltés alatt nem indul fölösleges lapozás', () {
+      expect(
+        RegExp(r'if \(!mounted \|\| _focusFinished\) return;').allMatches(chat).length,
+        greaterThanOrEqualTo(2),
+        reason:
+            'a lapozás előtt ÉS utána is ellenőrizzük, hogy közben megérkezett-e az adat',
+      );
+    });
+
     test('a megtalált üzenethez görget ÉS kiemeli', () {
       expect(chat, contains('Scrollable.ensureVisible('));
       expect(chat, contains('_highlightedPostId'));

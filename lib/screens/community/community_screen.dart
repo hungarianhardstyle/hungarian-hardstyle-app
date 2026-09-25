@@ -934,21 +934,25 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
 
   /// A régebbi üzenetek betöltése. Egyszeri lekérdezés, ezért 5000 üzenetnél sem
   /// lassul le a chat: mindig csak a következő 30-at kérjük.
-  Future<void> _loadOlderPosts() async {
+  ///
+  /// Visszatérés: **történt-e valódi lapozás** (indult-e kérés és megjött-e a
+  /// válasz). Az odaugrás ebből tudja, hogy elhasznált-e egy lapot a keretből —
+  /// a „nincs mit lapozni" és a hálózati hiba **nem** fogyaszt lapot.
+  Future<bool> _loadOlderPosts() async {
     final newest = ref.read(communityPostsProvider).valueOrNull;
-    if (newest == null) return;
+    if (newest == null) return false;
     final boundary = ChatPaging.oldestBoundary(<CommunityPost>[
       ...newest,
       ..._olderPosts,
     ]);
-    if (boundary == null) return;
+    if (boundary == null) return false;
     setState(() => _loadingOlder = true);
     try {
       final incoming = await _service.loadOlderPosts(
         before: boundary,
         limit: _olderPageSize,
       );
-      if (!mounted) return;
+      if (!mounted) return false;
       final fresh = ChatPaging.newOlderPosts(
         incoming: incoming,
         newest: newest,
@@ -962,10 +966,12 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
           pageSize: _olderPageSize,
         );
       });
+      return true;
     } catch (_) {
       // Hálózati hiba: nem jelöljük „nincs több"-nek, hogy a következő
       // görgetésnél újra lehessen próbálni.
       if (mounted) setState(() => _loadingOlder = false);
+      return false;
     }
   }
 
@@ -1004,13 +1010,27 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) unawaited(_scrollToFocusedPost());
         });
+      case ChatFocusStatus.waiting:
+        // ⚠️ Az élő ablak még nem érkezett meg: NEM lapozunk és nem fogyasztjuk
+        // a lap-keretet. A `communityPostsProvider` figyelője (lásd `build`)
+        // úgyis újrahív minket, amint megjön az első adat — így a 10 lapos keret
+        // nem ég el a betöltés alatt (ez volt a „néha nem ugrik oda" gyökere).
+        return;
       case ChatFocusStatus.keepLoading:
         if (_loadingOlder) return;
-        _focusPagesLoaded++;
         WidgetsBinding.instance.addPostFrameCallback((_) async {
-          if (!mounted) return;
-          await _loadOlderPosts();
-          if (!mounted) return;
+          // ⚠️ Közben megérkezhetett az adat (és a `found` ág már lefutott):
+          // ilyenkor nem indítunk fölösleges lapozást.
+          if (!mounted || _focusFinished) return;
+          final loaded = await _loadOlderPosts();
+          if (!mounted || _focusFinished) return;
+          if (!loaded) {
+            // Nem volt mit lapozni vagy hálózati hiba: nincs értelme tovább
+            // pörögni (a chat a szokásos módon nyílik).
+            _focusFinished = true;
+            return;
+          }
+          _focusPagesLoaded++;
           _resolveFocus(
             ref.read(communityPostsProvider).valueOrNull ?? const [],
           );

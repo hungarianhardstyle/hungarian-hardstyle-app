@@ -1,10 +1,11 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **A 358 FENT VAN a zárt teszten** (versionCode **358**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
-> 2026-09-25): a **zárt teszt sávján a 358 fut** (`completed`, 100%, a feltöltött csomag SHA-256-ja
-> **`64702d11…`** = a helyben épített AAB), a **production sávon a 355**, a `beta` sávon a 354.
-> A rövid (1.) blokk **csak a 358 újdonságát** írja le (Chat `@`-hivatkozás), a nyilvános kiadáshoz
-> pedig az **1b. blokk** való (**356–358 összesítő**).
+> **Most a 359 megy fel** (versionCode **359**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> 2026-09-25): a **zárt teszt sávján a 358 fut** (`completed`, 100%), a **production sávon a 355**,
+> a `beta` sávon a 354. A 359 a **358 minden újdonságát** tartalmazza (Chat `@`-hivatkozás,
+> értesítés-nevek + Chat-odaugrás) **plusz egy javítást**: a Chat-értesítésre koppintva az app
+> **hideg indításnál is** a megjelölt üzenetre ugrik. A rövid (1.) blokk **csak a 359 újdonságát**
+> írja le, a nyilvános kiadáshoz pedig az **1b. blokk** való (**356–359 összesítő**).
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -12,11 +13,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 358
+currentBuild: 359
 currentVersion: 1.0.0
 lastPublishedBuild: 355
-aab: build/HUHS-v1.0.0+358-release.aab
-sha256: 64702D11E6917075B0BD996C78C5F725F473727375D1CA2F299001414240264E
+aab: build/HUHS-v1.0.0+359-release.aab
+sha256: AB01387AB3E125577DD4AE8156CC96D1B776B32CD353CE363B5657E5672F84FD
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -70,16 +71,25 @@ kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell —
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+358-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+359-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **358** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 81,51 MB (a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz — a letöltött kód a 353 mérése szerint 9,86 MB DEX) |
-| SHA-256 | `64702D11E6917075B0BD996C78C5F725F473727375D1CA2F299001414240264E` |
+| Verziókód | **359** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 81,5 MB (a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz — a letöltött kód a 353 mérése szerint 9,86 MB DEX) |
+| SHA-256 | `AB01387AB3E125577DD4AE8156CC96D1B776B32CD353CE363B5657E5672F84FD` |
 
-> **⚠️ A 358 azért kell, mert a 357-et a tulajdonos MÁR FELTÖLTTÖTTE a zárt tesztre** (mérve: `alpha = 357 completed 100%`) — ugyanaz a verziókód nem használható újra. A 358 a **357 minden javítását** tartalmazza (értesítés-nevek, Chat-odaugrás, hírlevél-védelem, `enableEdgeToEdge`) **plusz a Chat `@`-hivatkozást**.
+> **⚠️ A 359 azért kell, mert a 358-at a tulajdonos MÁR FELTÖLTTÖTTE a zárt tesztre** (mérve: `alpha = 358 completed 100%`) — ugyanaz a verziókód nem használható újra. A 359 a **358 minden újdonságát** tartalmazza (Chat `@`-hivatkozás, értesítés-nevek, Chat-odaugrás, hírlevél-védelem, `enableEdgeToEdge`) **plusz a Chat-odaugrás javítását**.
 
-**Miért a 358-at kell feltenni (és miért nem a 357-et vagy a 356-ot):** a 358 **magában foglalja a 357-et, a 356-ot, a 355-öt és a 354-et is**, ezért egy csomagot kell feltenni:
+**Miért a 359-at kell feltenni (és miért nem a 358-at):** a 359 **magában foglalja a 358-at, a 357-et, a 356-ot, a 355-öt és a 354-et is**, ezért egy csomagot kell feltenni:
 
+- **Javítva (a 359): a Chat-értesítésre koppintva az app MOSTANTÓL MINDIG a megjelölt üzenetre
+  ugrik.** A tulajdonos jelzése: *„chat üzenet like értesítés néha a megfelelő helyre dob, ha
+  rányomok, néha nem"*. **A mért gyökér a kliensben volt:** a Chat fül **lusta** módon épül fel
+  (`MainNavigation._tabs[index] ??=`), ezért ha a Chatet még nem nyitottad meg abban a
+  munkamenetben, az élő ablak **üresen indul** — az odaugrás viszont az üres ablakot is
+  **lapozásnak számolta**, és a betöltés közbeni képkockák (pörgő) miatt a **10 lapos keret
+  másodpercek alatt elfogyott**, még mielőtt az adat megérkezett volna. Hideg indításnál tehát nem
+  ugrott oda, melegnél igen. Mostantól az üres ablaknál **vár** (nem fogyasztja a keretet), és a
+  lap-keret **csak valódi lapozás után** fogy.
 - **ÚJ (a 358): `@`-hivatkozás a Chatben.** A tulajdonos kérése: *„egy @xy betűvel tudjak hivatkozni a
   chaten cikkre, djre, szervezőre, eseményre, kiadványra vagy személyre/userre"*. Gépelés közben a
   javaslatlista **típus szerint csoportosítva** jelenik meg (Személyek / Cikkek / DJ-k / Szervezők /
@@ -140,20 +150,20 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ a Chatben: @-tal hivatkozhatsz személyre, cikkre, DJ-re, szervezőre, eseményre és kiadványra — gépelés közben feldobja a találatokat.
-- A hivatkozás kattintható (a megfelelő adatlap nyílik meg), és akit megemlítesz, az értesítést kap róla.
+- A Chat-értesítésre koppintva az app mostantól mindig a megjelölt üzenetre ugrik — eddig hideg indításnál (amikor a Chatet még nem nyitottad meg) ez elmaradhatott.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (356–358 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (356–359 összesítő)
 
-**Ezt használd, amikor a 358 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
-**352–356** összesítőt kapták a 355-tel — ők ezt a négy sort kapják (ami azóta történt):
+**Ezt használd, amikor a 359 a production sávra kerül**, mert a nyilvános felhasználók legutóbb a
+**352–356** összesítőt kapták a 355-tel — ők ezt az öt sort kapják (ami azóta történt):
 
 ```play-notes
-- ÚJ a Chatben: @-tal hivatkozhatsz személyre, cikkre, DJ-re, szervezőre, eseményre és kiadványra; a hivatkozás kattintható.
-- Ha valakit megemlítesz a Chatben, az értesítést kap róla, és a koppintás arra az üzenetre visz.
+- ÚJ a Chatben: @-tal hivatkozhatsz személyre, cikkre, DJ-re, szervezőre, eseményre és kiadványra — gépelés közben feldobja a találatokat.
+- Ha valakit megemlítesz, az értesítést kap róla; a koppintás arra az üzenetre visz.
 - Az értesítéseknél látszik, ki kedvelte a chat-üzenetedet, és ki szólt hozzá egy cikkhez.
-- A hírlevélnél nem megy ki újra a megerősítő e-mail, ha már feliratkoztál vagy már kiment.
+- A hírlevélnél nem megy ki újra a megerősítő e-mail, ha már feliratkoztál.
+- A Chat-értesítésre koppintva az app mindig a megjelölt üzenetre ugrik.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -183,6 +193,10 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 359 — a Chat-értesítés MOSTANTÓL MINDIG a megjelölt üzenetre ugrik
+- **Javítva (a tulajdonos jelzése: „chat üzenet like értesítés néha a megfelelő helyre dob, ha rányomok, néha nem"):** az odaugrás eddig **hideg indításnál elmaradhatott**. **A mért gyökér (kódból):** a Chat fül **lusta** módon épül fel (`MainNavigation._tabs[index] ??=`), ezért ha a Chatet még nem nyitottad meg abban a munkamenetben, a Chat **élő ablaka üresen indul** (a `communityPostsProvider` hideg). Az odaugrás viszont az üres ablakot is **lapozásnak számolta**, és mivel a betöltés alatt a képernyő **pörgőt** rajzol (folyamatos képkockák), a **10 lapos keret másodpercek alatt elfogyott**, mielőtt az adat megérkezett — ilyenkor a Chat a szokásos módon nyílt meg, odaugrás nélkül. Meleg indításnál (a Chat ebben a munkamenetben már nyitva volt) viszont működött: **ez adta a „néha igen, néha nem" jelenséget.** A javítás a tiszta tervben egy új állapot (`waiting`): amíg az élő ablak üres, az app **vár** (nem lapoz és nem fogyasztja a keretet), az adat megérkezésekor pedig magától megkeresi az üzenetet; emellett a lap-keret **csak valódi lapozás után** fogy, és a post-frame callback nem indít fölösleges lapozást, ha közben megjött az adat.
+- **Amit ez a kiadás is tartalmaz (a 358-ból):** a Chat `@`-hivatkozás (személy, cikk, DJ, szervező, esemény, kiadvány) javaslatlistával, kattintható hivatkozásokkal és értesítéssel; **(a 357-ből):** az értesítések megnevezik a cselekvőt; **(a 356-ból):** a hírlevél-védelem (plugin **2.10.0**) és az `enableEdgeToEdge()`; **(a 355-ből és a 354-ből):** a nyeremény leírása a játék alatt + azonnali nyitás, valamint a DJ-adatlap „Megjelenései" szakasza.
 
 ### 358 — Chat `@`-hivatkozás (személy, cikk, DJ, szervező, esemény, kiadvány)
 - **ÚJ (a tulajdonos kérése: „egy @xy betűvel tudjak hivatkozni a chaten cikkre, djre, szervezőre, eseményre, kiadványra vagy személyre/userre … elkezdem irni a betűket és dobja fel a lehetőségeket"):** a Chat beviteli mezőjében a `@` után **gépelés közben megjelenik a javaslatlista**, típus szerint csoportosítva (Személyek / Cikkek / DJ-k / Szervezők / Események / Kiadványok). A **személy** mindenkinek elérhető, a **tartalom csak adminnak/moderátornak** — ezt a **szerver is kényszeríti** (`publishChatPost`): a nem engedett hivatkozásokat egyszerűen **kihagyja** a mentett listából (a szöveg marad), és visszaadja a kihagyottak számát, amit az app jelez.
