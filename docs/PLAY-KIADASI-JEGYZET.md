@@ -68,6 +68,35 @@ kulcsok között. Új AAB vagy plugin feltöltés **nem** kell hozzá. Ha valaha
 kívül (másik áruház, weboldal), **azt a kulcsot is** regisztrálni kell — ezért érdemes továbbra is
 **egy** kulccsal írni alá mindent.
 
+## 0c. Play-javaslatok: a „teljes képernyős" kártyák — MÉRVE, egyik sem a mi kódunk (2026-09-25)
+
+A Play Console a **358**-as kiadásnál is **két „teljes képernyős" kártyát** mutat (a tulajdonos
+képernyőképe). Mindkettő **javaslat, nem blokkoló** — a 358 a zárt teszten **100%-ban kigördült**.
+A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a híváshelyek keresése):
+
+| Kártya | Mit keres a Play | Amit mértünk a csomagban | Kié a kód |
+|---|---|---|---|
+| „Előfordulhat, hogy a teljes képernyős mód nem jelenik meg minden felhasználónál" | **`enableEdgeToEdge()` / `EdgeToEdge.enable()` híváshelyet** a bytecode-ban | a `MainActivity.onCreate` **hívja** ugyan (356 óta), de az **R8 beinline-olja**, ezért a DEX-ben az `EdgeToEdge` **0 híváshely** — a `WindowCompat.setDecorFitsSystemWindows(...)` önmagában **nem** elég a szkennelésnek | **Flutter-motor** (`PlatformPlugin`) + a mi R8-optimalizálásunk |
+| „Az alkalmazásod elavult API-kat vagy paramétereket használ a teljes képernyős megjelenítéshez" | a régi `setDecorFitsSystemWindows` / `layoutInDisplayCutoutMode` útvonalat | `setDecorFitsSystemWindows` **1 híváshely** (a motor `PlatformPlugin.enableEdgeToEdge()`-je; pontosan a `setSystemUiVisibility(0)` + `setDecorFitsSystemWindows(false)` pár), `layoutInDisplayCutoutMode` **4** hivatkozás (az `androidx.core` `WindowCompat`-ja, R8-összevonva) | **Flutter-motor + Google-könyvtár** (`androidx.core`) |
+
+- **A `-neverinline` próbát is megmértük:** az `android/app/proguard-rules.pro`-ba tett
+  `-neverinline class androidx.activity.EdgeToEdge { *; }` szabályra a build **elhasalt**:
+  *„R8: Unknown option -neverinline"* — a projekt R8-verziója **nem támogatja**, és a `-keep`-nek
+  önmagában nincs hatása a beágyazásra (a `-keep`-pel az `EdgeToEdge` osztály ugyan bennmarad, de
+  **híváshely továbbra sincs**: `EdgeToEdge hivatkozás=24, HÍVÁS=0`). A `-dontoptimize` az egyetlen
+  működő kapcsoló lenne, az viszont a **teljes** optimalizálást kikapcsolja (nagyobb, lassabb
+  csomag) — egy kozmetikai kártyáért nem érdemes. **A proguard-fájl ezért bájtpontosan visszaállt**
+  (SHA-256 `0AE47CC9…`), és a szállítandó csomag **változatlan** (`0C000AB2…`).
+- **A hivatalos követés:** a jelenség nyitott Flutter-hiba:
+  [flutter/flutter#192921](https://github.com/flutter/flutter/issues/192921) — a motor **soha** nem
+  hívja az `EdgeToEdge.enable()`-t (csak a `WindowCompat`-ot), ezért a Play szkennere **minden**
+  Flutter-appnál jelzi. App-oldali megoldás jelenleg **nincs** (a Dartból nem lehet híváshelyet
+  varázsolni a bytecode-ba).
+- **Amit ez jelent:** a **360 feltöltését nem érinti** (a kártyák a 358-nál is ott voltak, és a
+  kiadás 100%-ban kigördült). A **bittérkép-kártya** (harmadik javaslat) ugyanígy **Google Mobile Ads
+  SDK** — lásd a korábbi mérést. **Újramérés** egy paranccsal: `tmp\check-edge-to-edge-dex.ps1`,
+  `tmp\probe-decor-fits.ps1` (a `dexdump`-hoz Android SDK build-tools kell).
+
 ## A feltöltendő AAB (mérve)
 
 | | |
