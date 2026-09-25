@@ -40,12 +40,14 @@ function chatReactionNotification({
   if (!String(selected || '').trim()) return null;
   if (!author || !reactor || author === reactor) return null;
   if (!post) return null;
-  const name = String(reactorName || '').trim() || 'Egy HUHS tag';
+  // ⚠️ A SZÖVEG NEM ITT DŐL EL: a payload `kind`-ot és `params`-ot ad, a szöveget
+  // a `notification-texts.js` oldja fel a **címzett nyelvén** (a név-tartalék is
+  // ott, nyelvenként — korábban itt magyar volt beégetve).
   return {
     recipientUid: author,
     type: 'chat_reaction',
-    title: 'Kedvelték a Chat-üzenetedet',
-    body: `${name} kedvelte a Chat-üzenetedet.`,
+    kind: 'chat_reaction',
+    params: { name: String(reactorName || '').trim() },
     targetType: 'chat',
     targetId: post,
     dedupeKey: `chat-reaction:${post}:${reactor}`,
@@ -79,12 +81,12 @@ function chatReplyNotification({
   if (!String(replyToText || '').trim()) return null;
   if (!recipient || !sender || recipient === sender) return null;
   if (!message) return null;
-  const name = String(senderName || '').trim() || 'Egy HUHS tag';
+  // A szöveg a `notification-texts.js`-ből jön, a címzett nyelvén.
   return {
     recipientUid: recipient,
     type: 'chat_reply',
-    title: 'Válaszoltak a Chat-üzenetedre',
-    body: `${name} válaszolt a Chat-üzenetedre.`,
+    kind: 'chat_reply',
+    params: { name: String(senderName || '').trim() },
     targetType: 'chat',
     targetId: message,
     dedupeKey: `chat-reply:${message}:${recipient}`,

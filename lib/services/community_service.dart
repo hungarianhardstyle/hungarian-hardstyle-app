@@ -18,6 +18,7 @@ import '../models/community_post.dart';
 import '../models/achievement.dart';
 import '../models/artist_claim_status.dart';
 import '../core/firebase/firebase_callable.dart';
+import '../core/i18n/app_language.dart';
 import '../core/images/wordpress_image_url.dart';
 import 'wordpress_service.dart';
 
@@ -1401,6 +1402,30 @@ class CommunityService {
       'claimDisplayName',
       parameters: {'targetUid': userId, 'displayName': displayName},
     );
+  }
+
+  /// A választott felületi nyelv mentése a profilba.
+  ///
+  /// MIÉRT: az értesítéseket és a push üzeneteket a **szerver** írja, ezért a
+  /// címzett nyelvét a `community_profiles/{uid}.language` mezőből olvassa
+  /// (`functions/notification-texts.js`; hiányzó értékre magyar). Ez a hívás
+  /// **best-effort**: hibája nem dob és nem blokkol, mert a nyelv a készüléken
+  /// így is átvált — egy elakadt mentés nem viheti el a felületet.
+  Future<void> saveProfileLanguage(String userId, AppLanguage language) async {
+    final id = userId.trim();
+    if (id.isEmpty) return;
+    if (auth.currentUser?.uid != id) return;
+    try {
+      await firestore.collection('community_profiles').doc(id).set(
+        {
+          'language': appLanguageCode(language),
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    } catch (_) {
+      // Best-effort: a nyelvválasztás a készüléken érvényben marad.
+    }
   }
 
   Future<void> claimArtist(int artistId) async {

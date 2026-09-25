@@ -162,7 +162,7 @@ service cloud.firestore {
           'displayName', 'email', 'role', 'accessRole', 'socialLinks', 'bio',
           'profileImageUrl', 'profileImagePublicId', 'profileFocusX', 'profileFocusY',
           'profileSourceImageUrl', 'profileSourceImagePublicId', 'profileZoom', 'profilePanX', 'profilePanY',
-          'createdAt', 'updatedAt', 'fcmTokens'
+          'createdAt', 'updatedAt', 'fcmTokens', 'language'
         ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() >= 2
@@ -197,6 +197,10 @@ service cloud.firestore {
           || request.resource.data.socialLinks is map)
         && (!request.resource.data.keys().hasAny(['fcmTokens'])
           || request.resource.data.fcmTokens is list)
+        // A felületi nyelv (`hu`/`en`) — ebből dől el a szerveroldali
+        // értesítések nyelve (`functions/notification-texts.js`).
+        && (!request.resource.data.keys().hasAny(['language'])
+          || request.resource.data.language in ['hu', 'en'])
         && (!request.resource.data.keys().hasAny(['role'])
           || (isAdmin()
             ? request.resource.data.role in ['dj', 'organizer', 'partygoer']
@@ -210,8 +214,12 @@ service cloud.firestore {
         && ((request.auth.uid == userId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             'email', 'socialLinks', 'bio', 'profileImageUrl', 'profileImagePublicId',
-            'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileSourceImagePublicId', 'profileZoom', 'profilePanX', 'profilePanY', 'createdAt', 'updatedAt', 'fcmTokens', 'role', 'accessRole'
+            'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileSourceImagePublicId', 'profileZoom', 'profilePanX', 'profilePanY', 'createdAt', 'updatedAt', 'fcmTokens', 'role', 'accessRole', 'language'
           ])
+          // A felületi nyelv (`hu`/`en`) — ebből dől el a szerveroldali
+          // értesítések nyelve (`functions/notification-texts.js`).
+          && (!request.resource.data.keys().hasAny(['language'])
+            || request.resource.data.language in ['hu', 'en'])
           && (!request.resource.data.keys().hasAny(['email'])
             || request.resource.data.email == request.auth.token.email)
           && (!request.resource.data.keys().hasAny(['profileImageUrl'])

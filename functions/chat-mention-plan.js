@@ -233,7 +233,10 @@ function chatMentionNotifications({ postId, authorId, authorName, mentions, text
   if (!post) return [];
 
   const author = cleanText(authorId);
-  const name = cleanText(authorName) || GENERIC_AUTHOR_NAME;
+  // ⚠️ A NÉV-TARTALÉK NEM ITT DŐL EL: a nyers nevet adjuk tovább, a nyelvenkénti
+  // tartalékot (`Egy HUHS tag` / `A HUHS member`) a `notification-texts.js`
+  // tölti ki — különben az angol értesítésbe magyar név kerülne.
+  const name = cleanText(authorName);
   const excerpt = mentionExcerpt(text);
   const notifications = [];
   const notified = new Set();
@@ -249,11 +252,12 @@ function chatMentionNotifications({ postId, authorId, authorName, mentions, text
     if (notifications.length >= MAX_USER_NOTIFICATIONS) break;
 
     notified.add(recipientUid);
+    // ⚠️ A szöveg a `notification-texts.js`-ből jön, a címzett nyelvén.
     notifications.push({
       recipientUid,
       type: 'chat_mention',
-      title: 'Megemlítettek a Chatben',
-      body: `${name} megemlített a Chatben: „${excerpt}”`,
+      kind: 'chat_mention',
+      params: { name, snippet: excerpt },
       targetType: 'chat',
       targetId: post,
       dedupeKey: `chat-mention:${post}:${recipientUid}`,
@@ -295,12 +299,16 @@ function chatEveryoneNotification({ postId, authorId, authorName, excerpt, recip
   if (!post || !author || !recipient) return null;
   if (recipient === author) return null;
 
-  const name = cleanText(authorName) || GENERIC_AUTHOR_NAME;
+  // ⚠️ A NÉV-TARTALÉK NEM ITT DŐL EL: a nyers nevet adjuk tovább, a nyelvenkénti
+  // tartalékot (`Egy HUHS tag` / `A HUHS member`) a `notification-texts.js`
+  // tölti ki — különben az angol értesítésbe magyar név kerülne.
+  const name = cleanText(authorName);
   return {
     recipientUid: recipient,
     type: 'chat_mention',
-    title: 'Megemlítettek a Chatben',
-    body: `${name} mindenkit megemlített a Chatben: „${mentionExcerpt(excerpt)}”`,
+    // A szöveg a `notification-texts.js`-ből jön, a címzett nyelvén.
+    kind: 'chat_everyone',
+    params: { name, snippet: mentionExcerpt(excerpt) },
     targetType: 'chat',
     targetId: post,
     dedupeKey: `chat-everyone:${post}:${recipient}`,

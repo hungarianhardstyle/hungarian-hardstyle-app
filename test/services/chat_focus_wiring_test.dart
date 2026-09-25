@@ -201,13 +201,18 @@ void main() {
 
     test('a cikk-komment értesítés megnevezi a hozzászólót', () {
       expect(index, contains('const commenterName = actorNameOrGeneric('));
+      // ⚠️ A szöveg 2026-09-25 óta a NYELVI KATALÓGUSBÓL jön (a címzett nyelvén),
+      // ezért a payload `kind`-ot és `params`-ot ad — a nevet a katalógus
+      // `{name}` helyőrzője kapja. A magyar szöveget a katalógus tesztje méri
+      // szó szerint (`functions/notification-texts.test.cjs`).
       expect(
         index,
-        matches(
-          RegExp(
-            r"body: `\$\{commenterName\} hozzászólt egy cikkhez",
-          ),
-        ),
+        matches(RegExp(r"kind: 'article_comment',")),
+        reason: 'a szöveg kulcsa a katalógusban van',
+      );
+      expect(
+        index,
+        matches(RegExp(r'params: \{ name: commenterName, snippet: commentSnippet \},')),
         reason: 'a szövegben ott a név (a tulajdonos kérése)',
       );
       expect(

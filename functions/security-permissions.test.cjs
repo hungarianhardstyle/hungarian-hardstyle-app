@@ -231,7 +231,11 @@ test('public profile fallback stays Firebase-only and private notifications carr
   // never waits for WordPress.
   assert.match(getPublicProfileSource, /achievementCatalogIsReliable\(\) \? achievementBadgesCache : null/);
   assert.match(getPublicProfileSource, /publicProfileData\(profile, targetUid, achievement\)/);
-  assert.match(functionsSource, /targetType, targetId, dedupeKey, senderId/);
+  // ⚠️ 2026-09-25: a `createNotification` `kind`-ot és `params`-ot is elfogad (a
+  // szöveget a címzett nyelvén a `notification-texts.js` oldja fel) — a mezők
+  // listája ezért bővült, a szándék ugyanaz (a privát értesítés viszi a küldőt).
+  assert.match(functionsSource, /targetType,\r?\n\s*targetId,\r?\n\s*dedupeKey,\r?\n\s*senderId,/);
+  assert.match(functionsSource, /kind,\r?\n\s*params,/);
   assert.match(functionsSource, /senderId[\s\S]{0,400}dedupeKey: `private_message:/);
 });
 

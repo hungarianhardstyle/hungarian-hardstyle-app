@@ -1,15 +1,15 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 363 megy fel** (versionCode **363**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> **Most a 364 megy fel** (versionCode **364**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-09-25): a **zárt teszt sávján a 360 fut** (`completed`, 100%), a **production sávon a 358**
-> (nyilvános, a 352–358 szöveggel), a `beta` sávon a 354. A 363 újdonsága: az **angol felület
-> sokkal teljesebb** — a listák, kártyák, gombok és állapotüzenetek további **több száz** felirata is
-> angolul jelenik meg (a 362-ben ezek egy része még magyarul maradt). A 363 a **362 minden**
-> újdonságát is tartalmazza: angol felület **nyelvváltóval**, angol **cikktartalom**, és a
-> **többsoros (összefűzött) szövegek** fordításának javítása. ⚠️ **A 361-et és a 362-t ne töltsd fel**
-> — a 363 ugyanazt tudja, csak teljesebben (mindkettő elkészült, de egyik sem került fel).
-> A rövid (1.) blokk **csak a 363 újdonságát** írja le, a nyilvános kiadáshoz az **1b. blokk** való
-> (**359–363 összesítő**).
+> (nyilvános, a 352–358 szöveggel), a `beta` sávon a 354. A 364 újdonsága: az **értesítések is a
+> választott nyelven** jönnek (a beállított nyelv a profilban tárolódik, ezért a **push** is a te
+> nyelveden szól), és az angol felület **teljessé** vált — a maradék feliratok, a hosszú magyarázó és
+> **jogi szövegek** (adatkezelési tájékoztató) is angolul jelennek meg. A 364 a **362/363 minden**
+> újdonságát is tartalmazza. ⚠️ **A 361-et, a 362-t és a 363-at ne töltsd fel** — a 364 mindegyiket
+> tartalmazza (mind elkészült, egyik sem került fel).
+> A rövid (1.) blokk **csak a 364 újdonságát** írja le, a nyilvános kiadáshoz az **1b. blokk** való
+> (**359–364 összesítő**).
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -17,11 +17,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 363
+currentBuild: 364
 currentVersion: 1.0.0
 lastPublishedBuild: 355
-aab: build/HUHS-v1.0.0+363-release.aab
-sha256: 47AD8FD9EE4AA534ED9EF1AB068C31667D69C87FFA92EEE99734818996C559F9
+aab: build/HUHS-v1.0.0+364-release.aab
+sha256: 39DC24F3F82D9916E155D2975A66EC6E2BD179C2395DDA6A0A1DD73EBA30E368
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -38,8 +38,8 @@ A Play Developer API-t **olvasásra** kérdezve (2026-09-25, a legfrissebb mér�
 
 - **A nyilvános kiadás megvan:** a production sávon a **358** van (`completed`, a **352–358 összesítő** szöveggel), a bolt-lap **200**-at ad. **A zárt tesztben a 360 fut** (a tulajdonos feltöltötte, `completed` 100%) — a 360 kiadási szövege a **360-as blokk** volt (Chat-odaugrás javítása + `@mindenki`).
 - A feltöltött AAB-ek a Playen (a 2026-09-25-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 352, 353, 354, 355, 356, 357, 358, 359, **360**.
-- **A 360 a zárt teszt csúcsa**, ezért a következő app-változás a **363** (a 361 és a 362 elkészült, de **egyik sem került fel** — a 363 mindkettőt tartalmazza, ezért azokat **ne** töltsd fel). A `beta` sávon a **354** van (ez a nyílt teszt csatorna), ott **nem** kell külön lépni.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**355**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 355 volt; a **358** a 352–358 összesítőt kapta nyilvánosan. A **következő nyilvános** kiadáshoz az **1b. blokk** való (**359–363 összesítő**): ami a 358 óta történt, az a Chat-odaugrás javítása, a `@mindenki`, a **nyelvváltó** + angol tartalom, és az angol felület teljessé tétele.
+- **A 360 a zárt teszt csúcsa**, ezért a következő app-változás a **364** (a 361, 362 és 363 elkészült, de **egyik sem került fel** — a 364 mindegyiket tartalmazza, ezért azokat **ne** töltsd fel). A `beta` sávon a **354** van (ez a nyílt teszt csatorna), ott **nem** kell külön lépni.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**355**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 355 volt; a **358** a 352–358 összesítőt kapta nyilvánosan. A **következő nyilvános** kiadáshoz az **1b. blokk** való (**359–364 összesítő**): ami a 358 óta történt, az a Chat-odaugrás javítása, a `@mindenki`, a **nyelvváltó** + angol tartalom, az angol felület teljessé tétele és a **többnyelvű értesítések**.
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -190,21 +190,21 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Az angol felületen további sok száz felirat jelenik meg angolul: a listák, kártyák, gombok és állapotüzenetek szövegei.
-- Az angol felületnél a legutóbbi cikkek is angolul jelennek meg (a fordítást a szerver adja).
-- ÚJ: HU/EN nyelvváltó a főoldal jobb sarkában — a magyar marad az alapértelmezett; a Chat és a felhasználók saját szövegei nem fordulnak le.
+- Az értesítések is a választott nyelven jönnek: Chat-lájk, válasz, megemlítés, hozzászólás, esemény-értékelés, új tartalom és nyeremény is angolul, ha angolra váltottál.
+- A beállított nyelv a profilodban tárolódik, ezért a push értesítések is a te nyelveden szólnak.
+- Az angol felület teljes: a hosszú magyarázó és jogi szövegek (adatkezelési tájékoztató) is angolul jelennek meg.
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (359–363 összesítő)
+## 1b. Play Console — a NYILVÁNOS kiadáshoz (359–364 összesítő)
 
-**Ezt használd, amikor a 363 a production sávra kerül.** A nyilvános felhasználók legutóbb a **358**-cal
+**Ezt használd, amikor a 364 a production sávra kerül.** A nyilvános felhasználók legutóbb a **358**-cal
 a **352–358** összesítőt kapták, ezért ők ezt az öt újdonságot kapják:
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó a főoldal jobb sarkában — az app felülete angolul is elérhető; a magyar marad az alapértelmezett.
-- Angol felületnél a legutóbbi cikkek is angolul jelennek meg, és a felület további sok száz felirata is.
-- ÚJ a Chatben: @mindenki — mindenki értesítést kap az üzenetről (csak admin/moderátor).
-- A Chat-értesítésre koppintva az app a mélyebben lévő, régebbi üzenetnél is pontosan a megjelölt üzenetre ugrik.
+- Angol felületnél a legutóbbi cikkek is angolul jelennek meg, és a felület minden felirata is.
+- Az értesítések is a választott nyelven jönnek (a push is), a beállított nyelv a profilodban tárolódik.
+- ÚJ a Chatben: @mindenki — mindenki értesítést kap az üzenetről (csak admin/moderátor), és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -234,6 +234,14 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 364 — az értesítések is a választott nyelven + az angol felület teljessé tétele
+- **ÚJ (a tulajdonos kérése: *„maradék 132 szöveg + az értesítések is"*):** az **értesítések** (a bejövő lista **és** a push) a **címzett nyelvén** szólalnak meg. A szövegek eddig a szerverkódba voltak égetve **magyarul**, ezért az angol felületű felhasználó magyar értesítést kapott. Most egy **nyelvi katalógus** (`functions/notification-texts.js`) adja a szöveget a `kind` + a helyőrzők alapján, a címzett nyelvét pedig a `community_profiles/{uid}.language` mezőből olvassa (ezt az app a nyelvváltáskor **és** bejelentkezéskor írja; hiányzó értékre **magyar** — így egy régi kliens a megszokott szöveget kapja). Érintett: Chat-lájk, Chat-válasz, `@`-megemlítés, `@mindenki`, cikk-komment és válasz, esemény-értékelés kérés, új tartalom (hír/kiadvány/DJ/szervező/esemény), nyeremény-nyertes, ismerősnek jelölés, Meetup-érdeklődés, chatjelentés és a **pont-értesítés** (mind a 14 pontforrás-indoklással).
+- **ÚJ: az angol felület MARADÉK nélkül.** A második kör után megmaradt **147 hely** (amit a `context`-függő bekötő szándékosan kihagyott) be van kötve: **101 hely** a `context` nélküli fordítóval (`AppStrings.tr`), **46 hely** pedig a **megjelenítés helyén** (`AppText`/`AppStrings.tr` a nézetben — mert `const` térképben/lista­ban nem lehet függvényt hívni). Emellett a **határvonal is pontosítva**: a kereső-/hibahívások (`contains`, `startsWith`, `StateError`) **nem** feliratok, ezért kikerültek a célok közül.
+- **Javítva (mérési rés, nem csak szöveg):** a **többsoros, escape-elt bekezdések** (pl. az **adatkezelési tájékoztató** és a rádió jogi szövege) eddig **ki sem kerültek** a célok közül, ezért angol módban magyarul maradtak — a szótár kulcsa mostantól a **feloldott** (valódi) szöveg, és a **12 új kulcs** fordítása is bekerült. Emellett a szótárból **törölve** 10 szemét kulcs (a saját extraktorom korábbi hibájából: regex-minta és interpolációs töredék).
+- **Mérve:** a bekötött helyek **147 → 0** kimaradt (a `const`-helyek a nézetben fordulnak); a szótár **934 kulcs**, a lefedettség **900/900 (100%)**; a „se be nem kötött, se le nem fordított" szövegek **619 → …** (a `screens`/`widgets` rétegben **191 → 0 cél**, a maradék nem cél: technikai azonosító, changelog, `lib/core/**`).
+- **Amit ez a kiadás is tartalmaz:** a 363 (a maradék feliratok köre), a 362 (angol cikktartalom + a többsoros szövegek javítása), a 361 (**HU/EN nyelvváltó**), a 360 (`@mindenki` + Chat-odaugrás), a 359 (hideg indításnál is odaugrik), a 358 (Chat `@`-hivatkozás), a 357 (az értesítés megnevezi a cselekvőt), a 356 (hírlevél-védelem + `enableEdgeToEdge`), a 355/354 (nyeremény-leírás, DJ „Megjelenései").
+- **⚠️ ŐSZINTE KORLÁT:** az **értesítések** nyelve a **profilban tárolt** nyelvből dől el, ezért egy olyan felhasználó, aki **még nem nyitotta meg** a 364-es appot (nincs `language` mezője), **magyar** értesítést kap — az első indítás után ez magától helyreáll. A **chatjelentés** több adminnak megy, ezért a push **nyelvenként csoportosítva** megy (egy csoportos küldés csak egy nyelvet tudna mondani). A **kiadvány/esemény/DJ/szervező** angol **tartalma** továbbra is a plugin **2.12.0** feltöltésére vár. A fordítás gépi — a **jogi szövegeket** érdemes a tulajdonosnak átnéznie.
 
 ### 363 — az angol felület teljessé tétele (a második kör bekötése)
 - **ÚJ (a tulajdonos kérése: „fent a 2.11.0 és így mindent megkéne csinálni"):** angol felületen a **listák, kártyák, gombok és állapotüzenetek** további **több száz** felirata is angolul jelenik meg — ezek eddig azért maradtak magyarul, mert nem a szabályos alakban (`Text('…')`, `label:`) álltak, hanem **feltételes ágban** (`cond ? 'A' : 'B'`), **lista-/térkép-értékben** vagy **alapértékként** (`?? 'A'`). **Mérve:** **327 hely** **44 fájlban** bekötve, amivel a bekötött helyek száma **783 → 1110** körüli; a fordítás továbbra is **be van építve** (nincs hálózat, nincs várakozás).

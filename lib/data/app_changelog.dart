@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 364,
+    changes: [
+      'Az értesítések is a választott nyelven jönnek: a Chat-lájk, a válasz, a megemlítés, a hozzászólás, az esemény-értékelés, az új tartalom, a nyeremény és az ismerősnek jelölés szövege is angolul jelenik meg, ha angolra váltottál.',
+      'A beállított nyelv a profilodban tárolódik, ezért a push értesítések is a te nyelveden szólnak.',
+      'Az angol felület tovább bővült: a hosszú magyarázó és jogi szövegek (adatkezelési tájékoztató, súgók) is angolul jelennek meg.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 363,
     changes: [
       'Az angol felületen további sok száz felirat jelenik meg angolul: a listák, kártyák, gombok és állapotüzenetek szövegei, amelyek eddig részben magyarul maradtak.',

@@ -143,6 +143,56 @@ test('a szokásos profilfrissítés (bio, role) változatlanul működik', async
   );
 });
 
+// ---------------------------------------------------------------------------
+// A felületi nyelv (`language`) — a szerveroldali értesítések nyelve
+//
+// A tulajdonos kérése (2026-09-25): *„az értesítések is"* angolul. A címzett
+// nyelvét a szerver a `community_profiles/{uid}.language` mezőből olvassa
+// (`functions/notification-texts.js`), ezért a kliensnek írhatónak KELL lennie —
+// de csak a két ismert értékre, és csak a saját profilján.
+
+test('a felületi nyelvet a saját profilba be lehet írni (hu/en)', async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(
+      doc(context.firestore(), 'community_profiles', 'user-lang'),
+      profilePayload(FREE_NAME, { email: 'lang@example.com' }),
+    );
+  });
+  const db = firestoreFor('user-lang', 'lang@example.com');
+  await assertSucceeds(
+    updateDoc(doc(db, 'community_profiles', 'user-lang'), { language: 'en' }),
+  );
+  await assertSucceeds(
+    updateDoc(doc(db, 'community_profiles', 'user-lang'), { language: 'hu' }),
+  );
+});
+
+test('ismeretlen nyelvkódot a szabály elutasít', async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(
+      doc(context.firestore(), 'community_profiles', 'user-lang2'),
+      profilePayload(FREE_NAME, { email: 'lang2@example.com' }),
+    );
+  });
+  const db = firestoreFor('user-lang2', 'lang2@example.com');
+  await assertFails(
+    updateDoc(doc(db, 'community_profiles', 'user-lang2'), { language: 'de' }),
+  );
+});
+
+test('más profiljának nyelvét nem lehet átírni', async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(
+      doc(context.firestore(), 'community_profiles', 'user-lang3'),
+      profilePayload(FREE_NAME, { email: 'lang3@example.com' }),
+    );
+  });
+  const db = firestoreFor('user-lang4', 'lang4@example.com');
+  await assertFails(
+    updateDoc(doc(db, 'community_profiles', 'user-lang3'), { language: 'en' }),
+  );
+});
+
 test('a foglalás kollekciója kliensoldalról nem olvasható és nem írható', async () => {
   const db = firestoreFor('user-g', 'g@example.com');
   await assertFails(setDoc(doc(db, 'display_name_claims', 'sajat nev'), { uid: 'user-g' }));

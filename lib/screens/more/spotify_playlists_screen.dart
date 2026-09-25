@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../widgets/app_text.dart';

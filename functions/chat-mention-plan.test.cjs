@@ -46,6 +46,7 @@ const {
   chatEveryoneNotification,
   chatEveryoneNotifications,
 } = require('./chat-mention-plan');
+const { notificationText } = require('./notification-texts');
 
 const functionsSource = fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8');
 const rulesSource = fs.readFileSync(path.join(__dirname, '..', 'firestore.rules'), 'utf8');
@@ -213,8 +214,15 @@ test('csak SZEMÉLY-hivatkozásból lesz értesítés, és a payload teljes', ()
   const notification = notifications[0];
   assert.equal(notification.recipientUid, 'uid-1');
   assert.equal(notification.type, 'chat_mention');
-  assert.equal(notification.title, 'Megemlítettek a Chatben');
-  assert.equal(notification.body, quoted('Szia @Kobakologia!'));
+  // ⚠️ A szöveget a `notification-texts.js` oldja fel a címzett nyelvén — a
+  // payload csak `kind`-ot és `params`-ot ad.
+  assert.equal(notification.kind, 'chat_mention');
+  assert.equal(notification.params.name, 'Nagy Anna');
+  assert.equal(notification.params.snippet, 'Szia @Kobakologia!');
+  assert.equal(
+    notificationText(notification.kind, 'hu', notification.params).body,
+    quoted('Szia @Kobakologia!'),
+  );
   assert.equal(notification.targetType, 'chat');
   assert.equal(notification.targetId, 'post-9');
   assert.equal(notification.dedupeKey, 'chat-mention:post-9:uid-1');
@@ -275,13 +283,17 @@ test('legfeljebb 5 értesítés, és ugyanaz a címzett csak egyszer szól', () 
 test('a részlet whitespace-összevont, legfeljebb 80 karakter, hosszabban …-tal', () => {
   const mentions = [{ type: 'user', id: 'uid-1', label: 'Kobakologia' }];
   const build = (text) =>
-    chatMentionNotifications({
-      postId: 'post-9',
-      authorId: 'author-1',
-      authorName: 'Nagy Anna',
-      mentions,
-      text,
-    })[0].body;
+    notificationText(
+      'chat_mention',
+      'hu',
+      chatMentionNotifications({
+        postId: 'post-9',
+        authorId: 'author-1',
+        authorName: 'Nagy Anna',
+        mentions,
+        text,
+      })[0].params,
+    ).body;
 
   // Whitespace (sortörés, dupla szóköz) összevonva, a szélek trimmelve.
   assert.equal(build('  Szia\n\n  @Kobakologia   ez   jó  '), quoted('Szia @Kobakologia ez jó'));
@@ -305,7 +317,15 @@ test('ismeretlen szerzőnél általános alak, hiányzó postId-nál nincs érte
     mentions,
     text: 'Szia',
   });
-  assert.equal(unnamed[0].body, 'Egy HUHS tag megemlített a Chatben: „Szia”');
+  // A név-tartalék a katalógusban él, nyelvenként.
+  assert.equal(
+    notificationText('chat_mention', 'hu', unnamed[0].params).body,
+    'Egy HUHS tag megemlített a Chatben: „Szia”',
+  );
+  assert.equal(
+    notificationText('chat_mention', 'en', unnamed[0].params).body,
+    'A HUHS member mentioned you in the Chat: “Szia”',
+  );
 
   for (const postId of [undefined, null, '', '   ']) {
     assert.deepEqual(
@@ -436,13 +456,17 @@ test('chatEveryoneNotification: a payload teljes, és a kulcs a címzettől is f
   assert.deepEqual(notification, {
     recipientUid: 'uid-2',
     type: 'chat_mention',
-    title: 'Megemlítettek a Chatben',
-    body: 'Nagy Anna mindenkit megemlített a Chatben: „Szia mindenki!”',
+    kind: 'chat_everyone',
+    params: { name: 'Nagy Anna', snippet: 'Szia mindenki!' },
     targetType: 'chat',
     targetId: 'post-9',
     dedupeKey: 'chat-everyone:post-9:uid-2',
     senderId: 'author-1',
   });
+  assert.equal(
+    notificationText('chat_everyone', 'hu', notification.params).body,
+    'Nagy Anna mindenkit megemlített a Chatben: „Szia mindenki!”',
+  );
 
   // UGYANAZ a post, MÁS címzett → MÁS dedupeKey: különben a `createNotification`
   // a kulcs hash-e miatt csak az ELSŐ címzettnek írna dokumentumot.
@@ -457,11 +481,17 @@ test('chatEveryoneNotification: a payload teljes, és a kulcs a címzettől is f
     excerpt: 'a'.repeat(120),
     recipientUid: 'uid-2',
   });
-  assert.equal(long.body.split('„')[1].slice(0, -1), `${'a'.repeat(MAX_EXCERPT_LENGTH)}…`);
+  assert.equal(
+    notificationText('chat_everyone', 'hu', long.params).body.split('„')[1].slice(0, -1),
+    `${'a'.repeat(MAX_EXCERPT_LENGTH)}…`,
+  );
 
   // Ismeretlen szerzőnél általános alak (mint a személy-értesítésnél).
   const unnamed = chatEveryoneNotification({ ...base, authorName: '   ', recipientUid: 'uid-2' });
-  assert.equal(unnamed.body, 'Egy HUHS tag mindenkit megemlített a Chatben: „Szia mindenki!”');
+  assert.equal(
+    notificationText('chat_everyone', 'hu', unnamed.params).body,
+    'Egy HUHS tag mindenkit megemlített a Chatben: „Szia mindenki!”',
+  );
 });
 
 test('chatEveryoneNotification: null a szerzőnél és hiányzó kulcsoknál', () => {

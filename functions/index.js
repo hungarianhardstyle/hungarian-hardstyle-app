@@ -97,6 +97,12 @@ const {
 } = require('./chat-mention-plan');
 const { pickActorName, actorNameOrGeneric } = require('./actor-name-plan');
 const {
+  DEFAULT_NOTIFICATION_LANGUAGE,
+  achievementReasonKey,
+  normalizeNotificationLanguage,
+  notificationText,
+} = require('./notification-texts');
+const {
   MAX_ATTEMPTS: EMAIL_RETRY_MAX_ATTEMPTS,
   nextRetryDelayMs,
   queueIdentityNotificationRetry,
@@ -748,8 +754,8 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
           createNotificationBestEffort({
             recipientUid: admin.id,
             type: 'article_comment',
-            title: 'Új hozzászólás érkezett',
-            body: `${commenterName} hozzászólt egy cikkhez: „${commentSnippet}”`,
+            kind: 'article_comment',
+            params: { name: commenterName, snippet: commentSnippet },
             targetType: 'article',
             targetId: String(postId),
             dedupeKey: `article-comment-notification:${postId}:${id}:${admin.id}`,
@@ -767,8 +773,9 @@ exports.articleComments = functions.runWith({ enforceAppCheck: false }).https.on
         await createNotificationBestEffort({
           recipientUid: replyToAuthorId,
           type: 'article_comment_reply',
-          title: 'Válaszoltak a hozzászólásodra',
-          body: `${profile.displayName || 'Egy HUHS tag'} válaszolt a hozzászólásodra egy cikknél.`,
+          kind: 'article_comment_reply',
+          // A név-tartalék a katalógusban nyelvenként él (`Egy HUHS tag` / `A HUHS member`).
+          params: { name: profile.displayName },
           targetType: 'article',
           targetId: String(postId),
           dedupeKey: `article-comment-reply:${postId}:${id}:${replyToAuthorId}`,
@@ -1448,23 +1455,16 @@ const DAILY_ACTIVITY_TIERS = [
  * Korábban az értesítés csak annyi volt: „+30 achievement pontot kaptál", ok
  * nélkül. Mostantól minden jóváírás megmondja, **miért** járt.
  */
-function achievementReasonText(sourceKey) {
-  const key = String(sourceKey || '');
-  if (key.startsWith('news-like:')) return 'egy hír kedveléséért';
-  if (key.startsWith('article-comment:')) return 'egy cikkhez írt hozzászólásodért';
-  if (key.startsWith('attendance:')) return 'egy eseményre való jelentkezésedért';
-  if (key.startsWith('meetup:')) return 'egy meetupon való részvételedért';
-  if (key.startsWith('meetup-interest:')) return 'egy meetup iránti érdeklődésedért';
-  if (key.startsWith('event-rating:')) return 'egy esemény értékeléséért';
-  if (key.startsWith('voting:')) return 'az éves szavazáson leadott szavazatodért';
-  if (key.startsWith('game:')) return 'egy játék teljesítéséért';
-  if (key === 'profile-complete') return 'a profilod kitöltéséért';
-  if (key.startsWith('referral:')) return 'egy meghívott barátod regisztrációjáért';
-  if (key.startsWith('news-like-restore:')) return 'egy korábban elveszett lájkpont visszaállításáért';
-  if (key.startsWith('submission:')) return 'egy jóváhagyott beküldésedért';
-  if (key.startsWith('release-purchase:')) return 'egy kiadvány megvásárlásáért';
-  if (key.startsWith('daily-activity:')) return 'a tegnapi közösségi aktivitásodért (hozzászólás és chat)';
-  return 'egy jóváírt tevékenységért';
+/**
+ * A pontforrás indoklása — a **nyelvi katalógusból** (`notification-texts.js`).
+ *
+ * A magyar szövegek szó szerint az eddigiek (a katalógus tesztje őrzi), az angol
+ * pedig ugyanazokat az ágakat adja vissza angolul. A `language` alapértéke a
+ * magyar, ezért a meglévő hívók/tests viselkedése nem változik.
+ */
+function achievementReasonText(sourceKey, language = DEFAULT_NOTIFICATION_LANGUAGE) {
+  const text = notificationText(achievementReasonKey(sourceKey), language);
+  return text ? text.body : '';
 }
 
 async function awardAchievementPoints(uid, delta, sourceKey, notification = null, options = {}) {
@@ -1657,23 +1657,34 @@ async function awardAchievementPoints(uid, delta, sourceKey, notification = null
   });
   if (result.changed && delta > 0) {
     // Az értesítés MINDIG megmondja, miért járt a pont (a tulajdonos kérése).
-    const reason = achievementReasonText(sourceKey);
-    const title = String(notification?.title || `+${delta} achievement pont`);
-    const body = String(
-      notification?.body ||
-        `+${delta} pont ${reason}. Új összpontszámod: ${result.points}.` +
-        (result.levelChanged ? ` Új rangod: „${result.badgeName || 'Achievement'}”.` : ''),
-    );
+    // ⚠️ A szöveg a CÍMZETT nyelvén épül fel: a `kind`-ot és a `params`-ot adjuk
+    // át, a `reason` pedig a `reasonKey`-ből oldódik fel (lásd `notificationText`).
+    // A `notification` felülírás (dinamikus szöveg) változatlanul elsőbbséget élvez.
+    const kind = result.levelChanged ? 'achievement_points_level' : 'achievement_points';
+    const params = {
+      delta,
+      reasonKey: achievementReasonKey(sourceKey),
+      points: result.points,
+      badge: result.badgeName || 'Achievement',
+    };
+    const fallback = notification?.body
+      ? { title: String(notification.title || ''), body: String(notification.body) }
+      : null;
+    const text = fallback
+      || notificationText(kind, await recipientLanguage(uid), params)
+      || { title: `+${delta} achievement pont`, body: achievementReasonText(sourceKey) };
     const notificationCreated = await createNotificationBestEffort({
       recipientUid: uid,
       type: 'achievement_points',
-      title,
-      body,
+      kind: fallback ? undefined : kind,
+      params: fallback ? undefined : params,
+      title: fallback ? fallback.title : undefined,
+      body: fallback ? fallback.body : undefined,
       targetType: 'achievement',
       targetId: uid,
       dedupeKey: `achievement-points:${ledgerId}`,
     });
-    if (notificationCreated) await sendAchievementPushBestEffort(uid, title, body);
+    if (notificationCreated) await sendAchievementPushBestEffort(uid, text.title, text.body);
   }
   return result;
 }
@@ -3854,11 +3865,74 @@ async function sendAchievementPushBestEffort(uid, title, body) {
   }
 }
 
+/**
+ * A címzett nyelve (`community_profiles/{uid}.language`), **futásonként egyszer**
+ * olvasva. Best-effort: hiba vagy hiányzó mező esetén **magyar** — így egy régi
+ * kliens (amely még nem írja a nyelvet) a megszokott magyar szöveget kapja.
+ */
+const recipientLanguageCache = new Map();
+
+async function recipientLanguage(uid) {
+  const id = String(uid || '').trim();
+  if (!id) return DEFAULT_NOTIFICATION_LANGUAGE;
+  if (recipientLanguageCache.has(id)) return recipientLanguageCache.get(id);
+  let language = DEFAULT_NOTIFICATION_LANGUAGE;
+  try {
+    const snapshot = await db.collection('community_profiles').doc(id).get();
+    language = normalizeNotificationLanguage(snapshot.get('language'));
+  } catch (error) {
+    console.warn(
+      JSON.stringify({
+        event: 'recipient_language_read_failed',
+        uid: id.slice(0, 8),
+        message: error?.message || String(error),
+      }),
+    );
+  }
+  recipientLanguageCache.set(id, language);
+  return language;
+}
+
+/**
+ * A szöveg feloldása EGY címzettnek — a push ugyanazt a szöveget kapja, mint a
+ * bejövő lista (`createNotification` ugyanezt a feloldást használja, ezért a
+ * kettő nem tud széthúzni).
+ */
+async function notificationTextFor(uid, kind, params) {
+  const text = notificationText(kind, await recipientLanguage(uid), params || {});
+  return text || { title: '', body: '' };
+}
+
 // Backend-only durable inbox entries. The hash makes retries idempotent.
-async function createNotification({ recipientUid, type, title, body, targetType, targetId, dedupeKey, senderId }) {
+//
+// ⚠️ A SZÖVEG NYELVE: ha a hívó `kind`-ot ad (és nem kész `title`/`body`-t),
+// akkor a szöveg a **címzett** nyelvén épül fel (`notification-texts.js`). A
+// kész `title`/`body` átadása továbbra is működik (néhány hívó saját, dinamikus
+// szöveget ad — pl. admin-felülírás), az változatlanul magyar marad.
+async function createNotification({
+  recipientUid,
+  type,
+  title,
+  body,
+  kind,
+  params,
+  targetType,
+  targetId,
+  dedupeKey,
+  senderId,
+}) {
   const recipient = String(recipientUid || '').trim();
   const key = String(dedupeKey || '').trim();
   if (!recipient || !key) return false;
+  let resolvedTitle = title;
+  let resolvedBody = body;
+  if (kind) {
+    const text = notificationText(kind, await recipientLanguage(recipient), params || {});
+    if (text) {
+      resolvedTitle = text.title;
+      resolvedBody = text.body;
+    }
+  }
   const notificationId = crypto.createHash('sha256').update(key).digest('hex');
   try {
     await db
@@ -3867,10 +3941,10 @@ async function createNotification({ recipientUid, type, title, body, targetType,
       .create({
         recipientUid: recipient,
         type: String(type || 'general').trim(),
-        title: String(title || '')
+        title: String(resolvedTitle || '')
           .trim()
           .slice(0, 120),
-        body: String(body || '')
+        body: String(resolvedBody || '')
           .trim()
           .slice(0, 500),
         targetType: String(targetType || '').trim(),
@@ -3964,11 +4038,12 @@ async function notifyUsersToRateCompletedEvents() {
       const rating = await db.collection('event_ratings').doc(String(eventId)).collection('users').doc(uid).get();
       if (rating.exists) continue;
       const dedupeKey = `event-rating-request:${eventId}:${uid}`;
+      const ratingText = await notificationTextFor(uid, 'event_rating_request', { event: eventTitle });
       const notificationCreated = await createNotificationBestEffort({
         recipientUid: uid,
         type: 'event_rating_request',
-        title: 'Értékeld az eseményt',
-        body: `${eventTitle} véget ért. Értékeld az eseményt az appban.`,
+        kind: 'event_rating_request',
+        params: { event: eventTitle },
         targetType: 'event',
         targetId: String(eventId),
         dedupeKey,
@@ -3980,8 +4055,8 @@ async function notifyUsersToRateCompletedEvents() {
       const result = await sendMulticastToAllTokens(
         {
           notification: {
-            title: 'Értékeld az eseményt',
-            body: `${eventTitle} véget ért. Értékeld az eseményt az appban.`,
+            title: ratingText.title,
+            body: ratingText.body,
           },
           data: { type: 'event_rating_request', eventId: String(eventId) },
         },
@@ -4025,35 +4100,35 @@ async function pollWordPressContentNotifications() {
       path: '/posts',
       targetType: 'news',
       type: 'new_news',
-      title: 'Új hír érkezett',
+      kind: 'new_news',
     },
     {
       key: 'release',
       path: '/releases',
       targetType: 'release',
       type: 'new_release',
-      title: 'Új release érkezett',
+      kind: 'new_release',
     },
     {
       key: 'artist',
       path: '/artists?per_page=50',
       targetType: 'artist',
       type: 'new_artist',
-      title: 'Új DJ került fel',
+      kind: 'new_artist',
     },
     {
       key: 'organizer',
       path: '/organizers?per_page=50',
       targetType: 'organizer',
       type: 'new_organizer',
-      title: 'Új szervező került fel',
+      kind: 'new_organizer',
     },
     {
       key: 'event',
       path: '/events',
       targetType: 'event',
       type: 'new_event',
-      title: 'Új esemény érkezett',
+      kind: 'new_event',
     },
   ];
   const stateRef = db.collection('app_settings').doc('wordpress_content_notifications');
@@ -4130,8 +4205,8 @@ async function pollWordPressContentNotifications() {
         await createNotificationBestEffort({
           recipientUid,
           type: item.type,
-          title: item.title,
-          body: name || item.title,
+          kind: item.kind,
+          params: { name },
           targetType: item.targetType,
           targetId: item.id,
           dedupeKey: `wordpress_content:${item.key}:${item.id}:${item.revision || ''}:${recipientUid}`,
@@ -6299,20 +6374,19 @@ async function drawPrizeWinnerForPrizes(prizes, deps = {}) {
       continue;
     }
 
-    const pushBody =
-      prizeType !== ''
-        ? `Megnyerted a nyereményjátékot: ${prizeType}`
-        : 'Megnyerted a nyereményjátékot!';
+    // A szöveg a NYERTES nyelvén épül fel (a `prizeType` üres, ha nincs megadva).
+    const prizeKind = prizeType !== '' ? 'prize_winner' : 'prize_winner_no_prize';
+    const prizeText = await notificationTextFor(winnerUid, prizeKind, { prize: prizeType });
     await createNotificationBestEffort({
       recipientUid: winnerUid,
       type: 'prize_winner',
-      title: '🏆 Nyertél a nyereményjátékban!',
-      body: pushBody,
+      kind: prizeKind,
+      params: { prize: prizeType },
       targetType: 'prize',
       targetId: String(prizeId),
       dedupeKey: `prize-winner:${prizeId}:${winnerUid}`,
     });
-    await sendAchievementPushBestEffort(winnerUid, '🏆 Nyertél a nyereményjátékban!', pushBody);
+    await sendAchievementPushBestEffort(winnerUid, prizeText.title, prizeText.body);
 
     // A cim a Firebase Auth-bol jon. Ha a fiok idokozben megszunt, nincs hova
     // kuldni — az app-ertesites es a push ilyenkor is megvan, ezert a sorsolas
@@ -7530,12 +7604,13 @@ exports.notifyConnectionRequest = onDocumentWritten(
     const notification = request.notificationRequestedAt?.toMillis?.();
     if (!notification || beforeNotification === notification) return null;
     const sender = (await db.collection('community_profiles').doc(from).get()).data() || {};
-    const name = String(sender.displayName || 'Egy felhasználó').trim();
+    const name = String(sender.displayName || '').trim();
+    const connectionText = await notificationTextFor(to, 'connection_request', { name });
     await createNotificationBestEffort({
       recipientUid: to,
       type: 'connection_request',
-      title: 'Új ismerősnek jelölés',
-      body: `${name} ismerősnek jelölt.`,
+      kind: 'connection_request',
+      params: { name },
       targetType: 'profile',
       targetId: from,
       dedupeKey: `connection_request:${requestId}:${notification}`,
@@ -7553,8 +7628,8 @@ exports.notifyConnectionRequest = onDocumentWritten(
     const result = await sendMulticastToAllTokens(
       {
         notification: {
-          title: 'Új ismerősnek jelölés',
-          body: `${name} ismerősnek jelölt.`,
+          title: connectionText.title,
+          body: connectionText.body,
         },
         data: { type: 'connection_request', senderId: from },
       },
@@ -7624,12 +7699,16 @@ async function handleMeetupInterestNotification(event, deps = {}) {
       .get();
     if (reverseBlocked.exists) continue;
     const sender = (await db.collection('community_profiles').doc(senderId).get()).data() || {};
-    const senderName = String(sender.displayName || 'Egy felhasználó').trim();
+    const senderName = String(sender.displayName || '').trim();
+    const meetupText = await notificationTextFor(meetupUserId, 'meetup_interest', {
+      name: senderName,
+      event: eventTitle,
+    });
     const created = await createNotificationBestEffort({
       recipientUid: meetupUserId,
       type: 'meetup_interest',
-      title: 'Új Meetup érdeklődés',
-      body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`,
+      kind: 'meetup_interest',
+      params: { name: senderName, event: eventTitle },
       targetType: 'event',
       targetId: eventId,
       dedupeKey: `meetup_interest:${eventId}:${meetupUserId}:${senderId}`,
@@ -7640,8 +7719,8 @@ async function handleMeetupInterestNotification(event, deps = {}) {
     const result = await sendPush(
       {
         notification: {
-          title: 'Új Meetup érdeklődés',
-          body: `${senderName} szívesen találkozna veled a(z) ${eventTitle} eseményen.`,
+          title: meetupText.title,
+          body: meetupText.body,
         },
         data: {
           type: 'meetup_interest',
@@ -7812,15 +7891,18 @@ async function handleChatReportNotification(event, deps = {}) {
     })
     .map((profileDoc) => profileDoc.id);
 
-  const reporterName = String(report.reporterName || 'Egy felhasználó').trim();
+  const reporterName = String(report.reporterName || '').trim();
   const reason = String(report.reason || '').trim();
+  // A szöveg a CÍMZETT nyelvén épül fel; a `reason` megléte választja a sablont.
+  const reportKind = reason ? 'chat_report_reason' : 'chat_report';
+  const reportParams = { name: reporterName, reason };
   const created = await Promise.all(
     recipientIds.map((recipientUid) =>
       createNotificationBestEffort({
         recipientUid,
         type: 'chat_report',
-        title: 'Új chatjelentés',
-        body: reason ? `${reporterName}: ${reason}` : `${reporterName} új chatjelentést küldött.`,
+        kind: reportKind,
+        params: reportParams,
         targetType: 'chat_report',
         targetId: reportId,
         dedupeKey: `chat_report:${reportId}:${recipientUid}`,
@@ -7829,35 +7911,50 @@ async function handleChatReportNotification(event, deps = {}) {
   );
   // Ha egyetlen értesítés sem jött létre, ez újrakézbesítés: nincs második push.
   if (!created.some(Boolean)) return null;
-  const tokenLists = await Promise.all(recipientIds.map((uid) => pushTokens(uid)));
-  const uniqueTokens = [
-    ...new Set(
-      tokenLists
-        .flat()
-        .map((token) => token.trim())
-        .filter(Boolean),
-    ),
-  ];
+  // ⚠️ A címzettek nyelve ELTÉRHET (adminok), ezért a push **nyelvenként** megy:
+  // egy csoportos küldés csak egy nyelvet tudna mondani.
+  const recipientsByLanguage = new Map();
+  for (const uid of recipientIds) {
+    const language = await recipientLanguage(uid);
+    if (!recipientsByLanguage.has(language)) recipientsByLanguage.set(language, []);
+    recipientsByLanguage.get(language).push(uid);
+  }
+  const allTokens = [];
+  const responses = [];
+  for (const [language, uids] of recipientsByLanguage) {
+    const text = notificationText(reportKind, language, reportParams) || { title: '', body: '' };
+    const tokenLists = await Promise.all(uids.map((uid) => pushTokens(uid)));
+    const tokens = [...new Set(tokenLists.flat().map((token) => token.trim()).filter(Boolean))];
+    if (!tokens.length) continue;
+    allTokens.push(...tokens);
+    const result = await sendPush(
+      {
+        notification: {
+          title: text.title,
+          body: text.body.slice(0, 160),
+        },
+        data: {
+          type: 'chat_report',
+          reportId,
+        },
+      },
+      tokens,
+    );
+    responses.push(...(result.responses || []));
+  }
+  const uniqueTokens = [...new Set(allTokens)];
   if (!uniqueTokens.length) {
     console.log(JSON.stringify({ event: 'chat_report_no_recipient_token', reportId }));
     return null;
   }
-  const result = await sendPush(
-    {
-      notification: {
-        title: 'Új chatjelentés',
-        body: reason ? `${reporterName}: ${reason}`.slice(0, 160) : `${reporterName} új chatjelentést küldött.`,
-      },
-      data: {
-        type: 'chat_report',
-        reportId,
-      },
-    },
-    uniqueTokens,
-  );
+  const result = {
+    successCount: responses.filter((entry) => entry?.success).length,
+    failureCount: responses.filter((entry) => entry && !entry.success).length,
+    responses,
+  };
 
   const invalidTokens = uniqueTokens.filter(
-    (_, index) => result.responses[index].error?.code === 'messaging/registration-token-not-registered',
+    (_, index) => result.responses[index]?.error?.code === 'messaging/registration-token-not-registered',
   );
   if (invalidTokens.length) {
     await Promise.all(recipientIds.map((uid) => removeTokens(uid, invalidTokens)));

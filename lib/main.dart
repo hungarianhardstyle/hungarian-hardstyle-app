@@ -15,6 +15,7 @@ import 'core/navigation/app_navigator.dart';
 import 'core/i18n/app_language.dart';
 import 'providers/ads_provider.dart';
 import 'providers/content_language_provider.dart';
+import 'providers/profile_language_provider.dart';
 import 'providers/language_provider.dart';
 import 'services/push_notification_service.dart';
 import 'services/referral_link_service.dart';
@@ -212,6 +213,9 @@ class HungarianHardstyleApp extends ConsumerWidget {
     // Nyelvváltáskor a betöltött WordPress-tartalom is érvénytelenné válik
     // (a válasz és a mentett cache is nyelvenként különbözik).
     ref.watch(contentLanguageSyncProvider);
+    // A választott nyelv a **profilba** is bekerül, mert az értesítéseket és a
+    // push üzeneteket a szerver írja — neki tudnia kell a címzett nyelvét.
+    ref.watch(profileLanguageSyncProvider);
     return MaterialApp(
       navigatorKey: appNavigatorKey,
       scaffoldMessengerKey: appScaffoldMessengerKey,

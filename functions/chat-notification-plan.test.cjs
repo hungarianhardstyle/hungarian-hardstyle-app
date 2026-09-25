@@ -7,6 +7,7 @@ const {
   chatReactionNotification,
   chatReplyNotification,
 } = require('./chat-notification-plan');
+const { notificationText } = require('./notification-texts');
 
 /**
  * A tulajdonos kérése:
@@ -50,8 +51,14 @@ test('chat lájk: a SZERZŐ kap értesítést a lájkoló nevvel', () => {
   assert.ok(plan, 'a lájk értesítést ad');
   assert.equal(plan.recipientUid, 'author-1');
   assert.equal(plan.type, 'chat_reaction');
-  assert.equal(plan.title, 'Kedvelték a Chat-üzenetedet');
-  assert.equal(plan.body, 'Kiss Péter kedvelte a Chat-üzenetedet.');
+  // ⚠️ A payload `kind`-ot és `params`-ot ad (a szöveget a
+  // `notification-texts.js` oldja fel a CÍMZETT nyelvén) — a magyar szöveget
+  // ezért a katalóguson át mérjük, hogy a HU élmény ne csúszhasson el.
+  assert.equal(plan.kind, 'chat_reaction');
+  assert.deepEqual(plan.params, { name: 'Kiss Péter' });
+  const hu = notificationText(plan.kind, 'hu', plan.params);
+  assert.equal(hu.title, 'Kedvelték a Chat-üzenetedet');
+  assert.equal(hu.body, 'Kiss Péter kedvelte a Chat-üzenetedet.');
   assert.equal(plan.targetType, 'chat');
   assert.equal(plan.targetId, 'post-9');
   assert.equal(plan.senderId, 'liker-1');
@@ -102,7 +109,9 @@ test('chat lájk: ismeretlen nevű lájkoló sem hagy üres mondatot', () => {
     postId: 'post-9',
     selected: '🙌',
   });
-  assert.equal(plan.body, 'Egy HUHS tag kedvelte a Chat-üzenetedet.');
+  // A név-tartalék a katalógusban él, NYELVENKÉNT.
+  assert.equal(notificationText(plan.kind, 'hu', plan.params).body, 'Egy HUHS tag kedvelte a Chat-üzenetedet.');
+  assert.equal(notificationText(plan.kind, 'en', plan.params).body, 'A HUHS member liked your Chat message.');
 });
 
 test('chat lájk: ugyanaz a lájkoló EGYSZER szól (a naplókulcs azonos)', () => {
@@ -149,8 +158,11 @@ test('chat válasz: a VÁLASZOLT kap értesítést a válaszoló nevével', () =
   assert.ok(plan, 'a válasz értesítést ad');
   assert.equal(plan.recipientUid, 'author-1');
   assert.equal(plan.type, 'chat_reply');
-  assert.equal(plan.title, 'Válaszoltak a Chat-üzenetedre');
-  assert.equal(plan.body, 'Nagy Anna válaszolt a Chat-üzenetedre.');
+  assert.equal(plan.kind, 'chat_reply');
+  assert.deepEqual(plan.params, { name: 'Nagy Anna' });
+  const hu = notificationText(plan.kind, 'hu', plan.params);
+  assert.equal(hu.title, 'Válaszoltak a Chat-üzenetedre');
+  assert.equal(hu.body, 'Nagy Anna válaszolt a Chat-üzenetedre.');
   assert.equal(plan.targetType, 'chat');
   assert.equal(plan.targetId, 'message-7');
   assert.equal(plan.senderId, 'replier-1');
