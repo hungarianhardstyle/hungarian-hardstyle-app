@@ -1,0 +1,120 @@
+#!/usr/bin/env node
+/**
+ * A fordításra szánt UI-szövegek **szabályai** — egy helyen.
+ *
+ * MIÉRT KÜLÖN MODUL: az extraktor (`extract-ui-strings.mjs`), a körbefordító
+ * (`wrap-ui-strings.mjs`) és a szótár-ellenőrző (`check-i18n.mjs`) ugyanezt a
+ * szabályt kell használja. Ha bármelyik eltér, a szótár és a kód széthúz — ezt a
+ * `tools/check-i18n.mjs` öntesztje és a `test/services/i18n_wiring_test.dart`
+ * is őrzi.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+/** Nyelvi jelek: ékezetes magyar betűk. */
+export const HUNGARIAN_LETTERS = /[áéíóöőúüűÁÉÍÓÖŐÚÜŰ]/;
+
+/** Ami SOHA nem fordítás: a felhasználó szövege és a technikai azonosítók. */
+export const EXCLUDED_FILES = [
+  // A chat üzenet a felhasználó szövege — a tulajdonos döntése szerint soha nem fordítjuk.
+  'lib/widgets/chat_message_text.dart',
+];
+
+/** Technikai literal: kulcs, útvonal, URL, azonosító — nem szöveg. */
+export function looksTechnical(value) {
+  if (!value) return true;
+  if (/[/\\@#]/.test(value)) return true;
+  if (value.includes('://')) return true;
+  if (value.includes('_')) return true;
+  if (!/[A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű]/.test(value)) return true;
+  return false;
+}
+
+/**
+ * Fordítható-e ez a literal? (A `context` a literal ELŐTTI forrásszöveg — a
+ * **több soron át** összegyűjtött prefix is, mert a `Text(\n  'szöveg',\n)` alak
+ * nagyon gyakori: az első változat csak az adott sort nézte, és ezért a
+ * `Text(`-es esetek nagy részét **kihagyta** — mérve 564 literál a valós ~700
+ * helyett.)
+ *
+ * 1. nincs `$` interpoláció (a változós feliratok külön, kézi körben mennek),
+ * 2. nem technikai (lásd `looksTechnical`),
+ * 3. magyar ékezet VAGY szóköz VAGY **nagybetűs egyszó** van benne — így a
+ *    `'Hiba'`, `'Vissza'`, `'Igen'` is bejön, a `'home'`, `'news'`,
+ *    `'live_feed_posts'` azonosítók viszont nem,
+ * 4. UI-környezetben áll (Text/… vagy ismert felirat-paraméter).
+ */
+export function isTranslationTarget({ value, before }) {
+  if (value.includes('$')) return false;
+  // ⚠️ Escape-elt literal (`\n`, `\'`, `\"`) kimarad: a szótár kulcsa a **valós**
+  // szöveg, a forrásban viszont escape-ek vannak — ilyenkor a kulcs és a futásidejű
+  // szöveg nem egyezne, és a fordítás csendben nem érvényesülne. Mérve a jelenlegi
+  // 589 kulcs egyikében sincs escape, ezért ez a védelem nem szűkít.
+  if (/\\./.test(value)) return false;
+  if (looksTechnical(value)) return false;
+  const trimmed = value.trim();
+  const hasAccent = HUNGARIAN_LETTERS.test(trimmed);
+  const hasSpace = /\s/.test(trimmed);
+  const isCapitalizedWord = /^[A-ZÁÉÍÓÖŐÚÜŰ][a-záéíóöőúüű]+$/.test(trimmed);
+  if (!hasAccent && !hasSpace && !isCapitalizedWord) return false;
+  return isUiContext(before);
+}
+
+/** UI-környezet: `Text(`/`SelectableText(`/… vagy ismert felirat-paraméter. */
+export function isUiContext(before) {
+  if (/(?:^|[\s(,{[])(?:Text|SelectableText)\s*\(\s*$/.test(before)) return true;
+  return UI_NAMED_PARAMS.some((name) => new RegExp(`\\b${name}\\s*:\\s*$`).test(before));
+}
+
+export const UI_NAMED_PARAMS = [
+  'label',
+  'tooltip',
+  'hintText',
+  'labelText',
+  'helperText',
+  'errorText',
+  'semanticLabel',
+  'message',
+  'title',
+  'subtitle',
+  'description',
+  'content',
+  'counterText',
+  'prefixText',
+  'suffixText',
+];
+
+/** A `tr(context, …)` hívás, amivé a literal alakul. */
+export function wrapExpression(value) {
+  return `tr(context, ${JSON.stringify(value)})`;
+}
+
+/** Minden `lib/**\/*.dart` fájl. */
+export function dartFiles(root = 'lib') {
+  const files = [];
+  (function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.dart')) files.push(full.replaceAll('\\', '/'));
+    }
+  })(root);
+  return files;
+}
+
+/** A literal-ok megkeresése egy sorban (idézőjel-párok, escape-ek kezelve). */
+export function stringLiterals(line) {
+  const found = [];
+  const pattern = /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"/g;
+  let match;
+  while ((match = pattern.exec(line)) !== null) {
+    found.push({
+      value: match[1] ?? match[2] ?? '',
+      quote: match[1] !== undefined ? "'" : '"',
+      start: match.index,
+      end: match.index + match[0].length,
+      raw: match[0],
+    });
+  }
+  return found;
+}
