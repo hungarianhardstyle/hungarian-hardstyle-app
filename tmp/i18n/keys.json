@@ -525,6 +525,14 @@
     ]
   },
   {
+    "value": "Játék",
+    "count": 3,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
     "value": "Közelgő események",
     "count": 3,
     "files": [
@@ -966,14 +974,6 @@
     ]
   },
   {
-    "value": "Játék",
-    "count": 2,
-    "files": [
-      "lib/screens/community/prize_admin_screen.dart",
-      "lib/screens/community/wordpress_admin_screen.dart"
-    ]
-  },
-  {
     "value": "JÁTÉK",
     "count": 2,
     "files": [
@@ -1314,6 +1314,14 @@
     ]
   },
   {
+    "value": "Válasz erre: {text}",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
     "value": "Válassz legalább egy műfajt.",
     "count": 2,
     "files": [
@@ -1350,6 +1358,13 @@
     "files": [
       "lib/screens/events/event_detail_screen.dart",
       "lib/screens/news/news_detail_screen.dart"
+    ]
+  },
+  {
+    "value": " (eddig: {d})",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
     ]
   },
   {
@@ -2603,6 +2618,13 @@
     "count": 1,
     "files": [
       "lib/screens/poll/poll_results_screen.dart"
+    ]
+  },
+  {
+    "value": "Az eredményeket a játék lezárása után láthatod{d}.",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
     ]
   },
   {
@@ -4139,6 +4161,20 @@
     ]
   },
   {
+    "value": "Játék eredményei",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "JÁTÉK EREDMÉNYEI",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
     "value": "Játék megnyitása",
     "count": 1,
     "files": [
@@ -5658,6 +5694,13 @@
     ]
   },
   {
+    "value": "Próbáld ki magad!",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
     "value": "Profil kitöltése",
     "count": 1,
     "files": [
@@ -6338,6 +6381,20 @@
   },
   {
     "value": "Üzenetműveletek",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Válasz {name} hozzászólására: {text}",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Válasz {name} üzenetére: {text}",
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"

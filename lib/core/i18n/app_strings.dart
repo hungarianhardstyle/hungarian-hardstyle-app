@@ -44,9 +44,21 @@ class AppStrings {
   }
 
   /// A felirat: angol módban az angol szöveg, minden más esetben a magyar.
+  ///
+  /// ⚠️ **MÉRT HIBAOSZTÁLY (2026-09-26):** a `parseEnglishDictionary()` a
+  /// szótár **kulcsait `trim()`-eli**, ezért egy „ szóközzel körbevett " kulcsot
+  /// a `tr(' szóközzel körbevett ')` hívás **soha nem talált meg** — a fordítás
+  /// létezett, de **elérhetetlen** volt, és angol módban magyarul maradt.
+  /// Mérve: a szótár **15** ilyen kulcsa közül **mind a 15** fordítás-hívásban
+  /// áll (pl. a chat/hozzászólás „… hozzászólására: " előtagja, az adatvédelmi
+  /// képernyő mondatai, a „Unknown User "). Ezért a keresés **trim-elt
+  /// tartalékkal** is megy: először a pontos kulcs, aztán a vágott alak (a
+  /// szótárban nincs ütközés — mérve).
   static String tr(String hungarian) {
     if (_language != AppLanguage.en) return hungarian;
-    final translated = _english[hungarian];
+    // Először a pontos kulcs, aztán a vágott alak (a szótár kulcsai ugyanis
+    // vágva vannak — lásd a fejlécet; mérve nincs ütközés).
+    final translated = _english[hungarian] ?? _english[hungarian.trim()];
     if (translated == null) return hungarian;
     final trimmed = translated.trim();
     return trimmed.isEmpty ? hungarian : translated;

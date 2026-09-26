@@ -399,9 +399,18 @@ class _ArticleCommentsState extends State<ArticleComments> {
                 alignment: Alignment.centerLeft,
                 child: InputChip(
                   label: Text(
+                    // ⚠️ A válasz-előnézet eddig **nyers, interpolált** szöveg
+                    // volt (az extraktor nem látta), ezért angol módban magyarul
+                    // maradt — mostantól sablon-kulcs + `trArgs`.
                     _replyToName?.isNotEmpty == true
-                        ? 'Válasz $_replyToName hozzászólására: $_replyToText'
-                        : 'Válasz erre: $_replyToText',
+                        ? trArgs(
+                            context,
+                            'Válasz {name} hozzászólására: {text}',
+                            {'name': _replyToName!, 'text': _replyToText!},
+                          )
+                        : trArgs(context, 'Válasz erre: {text}', {
+                            'text': _replyToText!,
+                          }),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

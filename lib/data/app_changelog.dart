@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 367,
+    changes: [
+      'Javítva: angol felületen a játék eredményei képernyő fejléce (és a főoldali „JÁTÉK EREDMÉNYEI" jelvény) is angolul jelenik meg — eddig ezek magyarul maradtak.',
+      'Javítva: angol felületen a válasz-előnézet is angolul szól a Chatben és a hozzászólásoknál („Válasz … üzenetére / hozzászólására").',
+      'Javítva: további angolul maradt feliratok — a hozzászólás-előtag, az adatvédelmi tájékoztató és a Saját zenék súgóinak mondatai (a szótár ezeket eddig nem találta meg).',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 366,
     changes: [
       'Javítva: a kiadványok dátum-címkéje („Megjelenés: …") és a DJ-adatlap „Megjelenései" rovata angol felületen is angolul jelenik meg.',

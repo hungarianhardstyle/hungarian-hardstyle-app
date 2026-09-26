@@ -52,7 +52,7 @@ const dictionaryEntry = entries.find((entry) => entry.endsWith('assets/i18n/en.j
 execFileSync('tar', ['-xf', AAB, '-C', OUT, dictionaryEntry], { maxBuffer: 64 * 1024 * 1024 });
 const dictionary = JSON.parse(fs.readFileSync(`${OUT}/${dictionaryEntry}`, 'utf8'));
 const keyCount = Object.keys(dictionary).length;
-check('a szótár legalább 969 kulcsú', keyCount >= 969, `${keyCount} kulcs`);
+check('a szótár legalább 986 kulcsú', keyCount >= 986, `${keyCount} kulcs`);
 
 for (const [key, expected] of [
   ['Bulizó', 'Partyface'],
@@ -64,6 +64,11 @@ for (const [key, expected] of [
   ['DJ-k', 'DJs'],
   ['Nyeremény', 'Prize'],
   ['Élő adás', 'Live broadcast'],
+  // 367: a játék-eredmény címkéi és a válasz-előnézet (a mért magyar maradványok).
+  ['Játék eredményei', 'Game results'],
+  ['JÁTÉK EREDMÉNYEI', 'GAME RESULTS'],
+  [' (eddig: {d})', ' (until {d})'],
+  ['Válasz {name} üzenetére: {text}', "Reply to {name}'s message: {text}"],
 ]) {
   check(`szótár: ${JSON.stringify(key)} → ${JSON.stringify(expected)}`, dictionary[key] === expected, String(dictionary[key]));
 }
@@ -79,6 +84,10 @@ const changelog = [
   'a főoldal és a Hírek fül listája magától frissül',
   'a válasz idézetére koppintva az app ODAUGRLIK az eredeti üzenetre',
   'a „Bulizó" szerepkör felirata mostantól „Partyface"',
+  // 367: a játék-eredmény fejléc, a válasz-előnézet és a szótár-elérhetőség.
+  'a játék eredményei képernyő fejléce',
+  'a válasz-előnézet is angolul szól',
+  'az adatvédelmi tájékoztató és a Saját zenék súgóinak mondatai',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });

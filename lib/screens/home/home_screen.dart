@@ -750,7 +750,13 @@ class _ActiveGameCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    resultsOnly ? 'JÁTÉK EREDMÉNYEI' : tr(context, 'JÁTÉK'),
+                    // ⚠️ A tulajdonos jelzése (2026-09-26): *„a játék eredményei
+                    // fejléc is magyar maradt, angolra kapcsolva"*. A jelvény
+                    // `resultsOnly` ága **nyers** literál volt, ezért angol módban
+                    // magyarul maradt (az extraktor sem látta).
+                    resultsOnly
+                        ? tr(context, 'JÁTÉK EREDMÉNYEI')
+                        : tr(context, 'JÁTÉK'),
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       letterSpacing: 1.4,

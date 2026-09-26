@@ -89,6 +89,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       if (mounted) setState(() => _results = results);
     } catch (_) {
       if (mounted) {
+        // ⚠️ A tárolt érték a **szótári kulcs** (magyar szöveg), nem kész
+        // fordítás: a nyelv a megjelenítés helyén dől el (`tr(context, …)` a
+        // `_resultsError` kiírásánál), különben a hibaüzenet nyelve
+        // **beleragadna** a `setState`-be.
         setState(
           () => _resultsError = 'Az eredménylista most nem tölthető be.',
         );
@@ -231,7 +235,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(widget.resultsOnly ? 'Játék eredményei' : game.title),
+        // ⚠️ A tulajdonos jelzése: *„a játék eredményei fejléc is magyar maradt,
+        // angolra kapcsolva"*. A címke eddig **nyers** literál volt a ternary
+        // ágában — így az i18n-extraktor nem is látta, ezért a szótárban sem
+        // volt kulcs, és angol módban magyarul maradt.
+        title: Text(
+          widget.resultsOnly ? tr(context, 'Játék eredményei') : game.title,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
@@ -370,7 +380,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       return _GamePanel(
         child: Column(
           children: [
-            Text(_resultsError!, textAlign: TextAlign.center),
+            Text(tr(context, _resultsError!), textAlign: TextAlign.center),
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: _loadResults,
@@ -550,7 +560,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           const AppText('Köszönjük a játékodat!'),
           const SizedBox(height: 4),
           Text(
-            'Az eredményeket a játék lezárása után láthatod${_resultsUntilLabel()}.',
+            trArgs(
+              context,
+              'Az eredményeket a játék lezárása után láthatod{d}.',
+              {'d': _resultsUntilLabel(context)},
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -558,11 +572,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
   }
 
-  String _resultsUntilLabel() {
+  /// A lezárás időpontja a `{d}` helyőrzőbe kerül — ezért **magát a címkét is**
+  /// fordítani kell (`trArgs`), különben a zárójeles „(eddig: …)" rész angol
+  /// módban is magyarul maradna.
+  String _resultsUntilLabel(BuildContext context) {
     final date = DateTime.tryParse(widget.game.resultsUntil)?.toLocal();
     if (date == null) return '';
     String twoDigits(int value) => value.toString().padLeft(2, '0');
-    return ' (eddig: ${date.year}. ${twoDigits(date.month)}. ${twoDigits(date.day)}. ${twoDigits(date.hour)}:${twoDigits(date.minute)})';
+    return trArgs(context, ' (eddig: {d})', {
+      'd':
+          '${date.year}. ${twoDigits(date.month)}. ${twoDigits(date.day)}. '
+          '${twoDigits(date.hour)}:${twoDigits(date.minute)}',
+    });
   }
 }
 
@@ -602,7 +623,11 @@ class _GameHero extends StatelessWidget {
               children: [
                 AppText('JÁTÉK', style: Theme.of(context).textTheme.labelMedium),
                 const SizedBox(height: 4),
-                Text(game.summary.isEmpty ? 'Próbáld ki magad!' : game.summary),
+                Text(
+                  game.summary.isEmpty
+                      ? tr(context, 'Próbáld ki magad!')
+                      : game.summary,
+                ),
               ],
             ),
           ),

@@ -1759,9 +1759,16 @@ class _Composer extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: InputChip(
                   label: Text(
+                    // ⚠️ Ugyanaz a hibaosztály, mint a hozzászólásoknál: nyers,
+                    // interpolált válasz-előnézet → angol módban magyar maradt.
                     replyToName?.isNotEmpty == true
-                        ? 'Válasz $replyToName üzenetére: $replyToText'
-                        : 'Válasz erre: $replyToText',
+                        ? trArgs(context, 'Válasz {name} üzenetére: {text}', {
+                            'name': replyToName!,
+                            'text': replyToText!,
+                          })
+                        : trArgs(context, 'Válasz erre: {text}', {
+                            'text': replyToText!,
+                          }),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

@@ -1,0 +1,3 @@
+- Javítva: angol felületen a játék eredményei képernyő fejléce és a főoldali „JÁTÉK EREDMÉNYEI" jelvény is angolul jelenik meg.
+- Javítva: angol felületen a válasz-előnézet („Válasz … üzenetére / hozzászólására") is angolul szól a Chatben és a hozzászólásoknál.
+- Javítva: további angolul maradt feliratok — a hozzászólás-előtag, az adatvédelmi tájékoztató és a Saját zenék súgóinak mondatai.
