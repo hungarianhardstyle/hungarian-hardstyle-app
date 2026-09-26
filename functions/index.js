@@ -4229,6 +4229,14 @@ async function pollWordPressContentNotifications() {
   let created = 0;
   for (const item of newlyPublished) {
     const name = String(item.item?.title?.rendered || item.item?.title || item.item?.name || '').trim();
+    // ⚠️ A CÍM NYELVENKÉNT (mért hiba, 2026-09-26): a tulajdonos jelezte, hogy
+    // *„most se angol a notifyban a cikk címe"*. A gyökér: az angol lista már
+    // lejött (`englishTitles`), de a létrehozáskor **csak a magyar cím** ment ki
+    // (`params: { name }`), ezért az angol címzett magyar címet kapott. Most
+    // **nyelvi térkép** megy ki, és a `resolveParamValue` a címzett nyelvén
+    // választja ki az értéket.
+    const nameEn = String(item.englishTitles?.get?.(item.id) || '').trim();
+    const localizedName = nameEn && nameEn !== name ? { hu: name, en: nameEn } : name;
     await Promise.all(
       profiles.docs.map(async (profile) => {
         const recipientUid = profile.id;
@@ -4236,7 +4244,7 @@ async function pollWordPressContentNotifications() {
           recipientUid,
           type: item.type,
           kind: item.kind,
-          params: { name },
+          params: { name: localizedName },
           targetType: item.targetType,
           targetId: item.id,
           dedupeKey: `wordpress_content:${item.key}:${item.id}:${item.revision || ''}:${recipientUid}`,

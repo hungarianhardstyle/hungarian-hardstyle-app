@@ -1,0 +1,2 @@
+- Javítva: az értesítésben a cikk (és a kiadás, esemény, DJ) címe is a választott nyelven jelenik meg.
+- A már meglévő értesítéseknél is átfordul a cím — nem kell megvárni az újakat.

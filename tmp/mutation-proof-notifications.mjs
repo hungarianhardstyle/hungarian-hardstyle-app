@@ -13,22 +13,27 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 
 const TEST = 'test/services/notification_language_test.dart';
+const SERVER_TEST = 'functions/wordpress-content-notification-language.test.cjs';
 const SCREEN = 'lib/screens/notifications/notification_center_screen.dart';
 const LOCALIZER = 'lib/core/i18n/notification_texts.dart';
+const SERVER = 'functions/index.js';
 
 const sha = (text) => crypto.createHash('sha256').update(text, 'utf8').digest('hex');
 
-function runTest() {
+function runCommand(command) {
   try {
-    execSync(`flutter test ${TEST}`, { stdio: 'pipe', encoding: 'utf8' });
+    execSync(command, { stdio: 'pipe', encoding: 'utf8' });
     return { ok: true, output: '' };
   } catch (error) {
     if (error.status === undefined || error.status === null) {
-      throw new Error(`a teszt nem futott le (spawn-hiba): ${error.message}`);
+      throw new Error(`a parancs nem futott le (spawn-hiba): ${error.message}`);
     }
     return { ok: false, output: `${error.stdout ?? ''}${error.stderr ?? ''}` };
   }
 }
+
+const runTest = () => runCommand(`flutter test ${TEST}`);
+const runServerTest = () => runCommand(`node --test ${SERVER_TEST}`);
 
 const mutations = [
   {
@@ -77,6 +82,28 @@ const mutations = [
       return source.replace(from, to);
     },
   },
+  {
+    label: 'a szerver újra CSAK a magyar címet adja át (nyelvi térkép nélkül)',
+    file: SERVER,
+    runner: 'server',
+    transform: (source) =>
+      source.replace('params: { name: localizedName },', 'params: { name },'),
+  },
+  {
+    label: 'a tartalom-cím feloldása elvéve a felületről',
+    file: SCREEN,
+    transform: (source) =>
+      source.replace('contentTitle ?? localized.body', 'localized.body'),
+  },
+  {
+    label: 'a feloldás mindig `false` (soha nem kérdezünk tartalmat)',
+    file: 'lib/services/notification_content_titles.dart',
+    transform: (source) =>
+      source.replace(
+        '    if (!contentTypes.contains(type.trim())) return false;',
+        '    if (!contentTypes.contains(type.trim())) return false;\n    return false;',
+      ),
+  },
 ];
 
 let caught = 0;
@@ -92,7 +119,7 @@ for (const mutation of mutations) {
   }
 
   fs.writeFileSync(mutation.file, mutated, 'utf8');
-  const outcome = runTest();
+  const outcome = mutation.runner === 'server' ? runServerTest() : runTest();
   fs.writeFileSync(mutation.file, original, 'utf8');
   const restored = sha(fs.readFileSync(mutation.file, 'utf8')) === originalHash;
 
@@ -112,9 +139,10 @@ console.log(results.join('\n'));
 console.log(`\n${caught}/${mutations.length} mutáció elkapva`);
 
 const final = runTest();
+const finalServer = runServerTest();
 console.log(
-  final.ok
-    ? 'a helyreállított kör ÚJRA ZÖLD'
-    : `HIBA: a helyreállított kör sem zöld:\n${final.output.slice(-600)}`,
+  final.ok && finalServer.ok
+    ? 'a helyreállított kör ÚJRA ZÖLD (kliens + szerver)'
+    : `HIBA: a helyreállított kör sem zöld:\n${(final.output + finalServer.output).slice(-600)}`,
 );
-process.exitCode = caught === mutations.length && final.ok ? 0 : 1;
+process.exitCode = caught === mutations.length && final.ok && finalServer.ok ? 0 : 1;

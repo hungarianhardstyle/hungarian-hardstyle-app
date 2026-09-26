@@ -1,4 +1,6 @@
 [
+  "Javítva: az értesítésben a cikk (és a kiadás, esemény, DJ) címe is a választott nyelven jelenik meg.",
+  "A már meglévő értesítéseknél is átfordul a cím — nem kell megvárni az új értesítéseket.",
   "Javítva: angol felületen az értesítések szövege azonnal a választott nyelven jelenik meg — a régi értesítések is átfordulnak, nem kell megvárni az újakat.",
   "Javítva: a privát üzenet értesítésének címe is a választott nyelven szól (eddig magyar volt).",
   "Javítva: az értesítések törlése ablak „archivált\" címe is angolul jelenik meg.",

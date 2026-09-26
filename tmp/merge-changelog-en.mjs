@@ -29,7 +29,7 @@ const hungarian = JSON.parse(fs.readFileSync(HU, 'utf8'));
 // maradhatott.
 const latest = await import('../tmp/changelog-en-5.mjs');
 
-const english = [...latest.release369, ...latest.release368];
+const english = [...latest.release370, ...latest.release369, ...latest.release368];
 for (const chunk of CHUNKS) {
   const module = await import(`../${chunk}`);
   const values = module.default;
@@ -38,7 +38,7 @@ for (const chunk of CHUNKS) {
   english.push(...values);
 }
 console.log(
-  `tmp/changelog-en-5.mjs: ${latest.release369.length + latest.release368.length} sor (a legfrissebb kiadások)`,
+  `tmp/changelog-en-5.mjs: ${latest.release370.length + latest.release369.length + latest.release368.length} sor (a legfrissebb kiadások)`,
 );
 
 /**
@@ -46,14 +46,15 @@ console.log(
  * egy elcsúszott lista ugyanolyan hosszú lehet).
  */
 const anchors = [
-  [0, 'Javítva: angol felületen az értesítések szövege', 'Fixed: on the English interface notification texts'],
-  [1, 'Javítva: a privát üzenet értesítésének címe', 'Fixed: the title of a private message notification'],
-  [3, 'Javítva: angol felületen a kiadási jegyzet', 'Fixed: on the English interface the release notes'],
-  [5, 'Javítva: angol felületen a játék eredményei', 'Fixed: on the English interface the Game results'],
-  [38, 'A kvíz azonnal mutatja', 'The quiz now shows immediately'],
-  [72, 'Gyorsabb betöltés', 'Faster loading'],
-  [103, 'A hír kedveléséért járó pontot', 'The points for liking a news item'],
-  [136, 'A kérdőív szavazólapja saját képernyőn', 'The poll ballot opens on its own screen'],
+  [0, 'Javítva: az értesítésben a cikk (és a kiadás, esemény, DJ) címe', 'Fixed: the title of the article (and of the release, event or DJ)'],
+  [2, 'Javítva: angol felületen az értesítések szövege', 'Fixed: on the English interface notification texts'],
+  [3, 'Javítva: a privát üzenet értesítésének címe', 'Fixed: the title of a private message notification'],
+  [5, 'Javítva: angol felületen a kiadási jegyzet', 'Fixed: on the English interface the release notes'],
+  [7, 'Javítva: angol felületen a játék eredményei', 'Fixed: on the English interface the Game results'],
+  [40, 'A kvíz azonnal mutatja', 'The quiz now shows immediately'],
+  [74, 'Gyorsabb betöltés', 'Faster loading'],
+  [105, 'A hír kedveléséért járó pontot', 'The points for liking a news item'],
+  [138, 'A kérdőív szavazólapja saját képernyőn', 'The poll ballot opens on its own screen'],
 ];
 
 const problems = [];

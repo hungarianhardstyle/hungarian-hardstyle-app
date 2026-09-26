@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../core/i18n/tr.dart';
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/notification_texts.dart';
+import '../../services/notification_content_titles.dart';
 import '../../core/navigation/content_target.dart';
 import '../../models/app_notification.dart';
 import '../../services/notification_selection_plan.dart';
@@ -67,6 +69,60 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
   /// („egyszerre csak egyet lehet kijelölni").
   bool _selecting = false;
   final NotificationSelection _selection = NotificationSelection();
+
+  /// A **tartalom-címek** a mostani nyelven (kulcs: `nyelv|értesítés-azonosító`).
+  ///
+  /// A `new_news` / `new_release` / `new_event` / `new_artist` /
+  /// `new_organizer` értesítés törzse **maga a cím** (adat), ezért a
+  /// sablon-alapú fordítás nem érinti — a régi sorokhoz a címet a tartalomból
+  /// kérdezzük vissza a mostani nyelven (lásd
+  /// `services/notification_content_titles.dart`).
+  final Map<String, String> _contentTitles = <String, String>{};
+
+  /// Az éppen futó feloldások (ne induljon kétszer ugyanarra a sorra).
+  final Set<String> _pendingContentTitles = <String>{};
+
+  String _titleKey(AppNotification item) =>
+      '${AppStrings.language.name}|${item.id}';
+
+  /// A látható sorok tartalom-címeinek feloldása (egyszer, háttérben).
+  void _scheduleContentTitleResolution(List<AppNotification> items) {
+    if (items.isEmpty) return;
+    for (final item in items) {
+      final key = _titleKey(item);
+      if (_contentTitles.containsKey(key) ||
+          _pendingContentTitles.contains(key)) {
+        continue;
+      }
+      final localized = NotificationTexts.localize(
+        type: item.type,
+        title: item.title,
+        body: item.body,
+      );
+      if (!NotificationContentTitles.needsResolve(
+        type: item.type,
+        targetId: item.targetId,
+        storedBody: item.body,
+        localizedBody: localized.body,
+      )) {
+        continue;
+      }
+      _pendingContentTitles.add(key);
+      final stored = item.body.trim();
+      unawaited(
+        NotificationContentTitles.resolve(
+          targetType: item.targetType,
+          targetId: item.targetId,
+        ).then((title) {
+          _pendingContentTitles.remove(key);
+          if (!mounted) return;
+          final resolved = title?.trim() ?? '';
+          if (resolved.isEmpty || resolved == stored) return;
+          setState(() => _contentTitles[key] = resolved);
+        }),
+      );
+    }
+  }
 
   Future<void> _deleteSelected(List<AppNotification> items) async {
     final ids = deletableNotificationIds(
@@ -325,6 +381,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           ),
           builder: (context, snapshot) {
             final items = snapshot.data ?? const <AppNotification>[];
+            // ⚠️ A tartalom-értesítések TÖRZSE maga a cím (adat), ezért a
+            // sablon-fordítás nem érinti — a régi sorokhoz a címet a mostani
+            // nyelven, a tartalomból kérdezzük vissza (best-effort, gyorsítótárral).
+            _scheduleContentTitleResolution(items);
             final colors = Theme.of(context).colorScheme;
             final actionStyle = IconButton.styleFrom(
               foregroundColor: colors.onSurfaceVariant,
@@ -504,6 +564,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                               title: item.title,
                               body: item.body,
                             );
+                            // A tartalom-cím (cikk/DJ/esemény/…) a mostani
+                            // nyelven — ha már megvan a feloldás.
+                            final contentTitle = _contentTitles[_titleKey(item)];
                             return Material(
                               color: item.isRead
                                   ? colors.surfaceContainer
@@ -549,7 +612,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                                       .titleMedium,
                                 ),
                                 subtitle: Text(
-                                  localized.body,
+                                  contentTitle ?? localized.body,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                 ),

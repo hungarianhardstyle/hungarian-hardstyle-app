@@ -52,7 +52,7 @@ const dictionaryEntry = entries.find((entry) => entry.endsWith('assets/i18n/en.j
 execFileSync('tar', ['-xf', AAB, '-C', OUT, dictionaryEntry], { maxBuffer: 64 * 1024 * 1024 });
 const dictionary = JSON.parse(fs.readFileSync(`${OUT}/${dictionaryEntry}`, 'utf8'));
 const keyCount = Object.keys(dictionary).length;
-check('a szótár legalább 1126 kulcsú', keyCount >= 1126, `${keyCount} kulcs`);
+check('a szótár legalább 1128 kulcsú', keyCount >= 1128, `${keyCount} kulcs`);
 
 // ⚠️ 369: az ÉRTESÍTÉS-katalógus is az appban van (a megjelenítéskori fordításhoz).
 const catalogEntry = entries.find((entry) => entry.endsWith('assets/i18n/notification_texts.json'));
@@ -115,6 +115,8 @@ const changelog = [
   'a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg',
   // 369: az értesítések nyelve (a megjelenítéskori fordítás).
   'angol felületen az értesítések szövege azonnal a választott nyelven jelenik meg',
+  // 370: az értesítésben a cikk címe is a választott nyelven.
+  'az értesítésben a cikk (és a kiadás, esemény, DJ) címe is a választott nyelven',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });

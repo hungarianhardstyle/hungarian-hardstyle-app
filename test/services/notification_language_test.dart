@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hungarian_hardstyle_app/core/i18n/app_language.dart';
 import 'package:hungarian_hardstyle_app/core/i18n/app_strings.dart';
 import 'package:hungarian_hardstyle_app/core/i18n/notification_texts.dart';
+import 'package:hungarian_hardstyle_app/services/notification_content_titles.dart';
 
 /// Az **értesítések** nyelve — a tulajdonos jelzése (2026-09-26):
 /// *„a notifyok még mindig magyarul vannak az angol felületen vagy lassan áll
@@ -201,6 +202,68 @@ void main() {
     });
   });
 
+  group('a tartalom-értesítés CÍME a mostani nyelven (a régi sorokhoz)', () {
+    test('csak a tartalom-típusoknál és csak szám azonosító esetén kérdezünk', () {
+      // A `new_news` törzse maga a cím (adat) → fel kell oldani.
+      expect(
+        NotificationContentTitles.needsResolve(
+          type: 'new_news',
+          targetId: '12845',
+          storedBody: 'Hardstyle találkozó Budapesten',
+          localizedBody: 'Hardstyle találkozó Budapesten',
+        ),
+        isTrue,
+      );
+      // Nem tartalom-típus (a sablon fordítja) → nem kérdezünk.
+      expect(
+        NotificationContentTitles.needsResolve(
+          type: 'chat_reaction',
+          targetId: '12845',
+          storedBody: 'X kedvelte a Chat-üzenetedet.',
+          localizedBody: 'X liked your Chat message.',
+        ),
+        isFalse,
+      );
+      // Nem szám azonosító → nincs mit lekérdezni.
+      expect(
+        NotificationContentTitles.needsResolve(
+          type: 'new_news',
+          targetId: 'abc',
+          storedBody: 'Cím',
+          localizedBody: 'Cím',
+        ),
+        isFalse,
+      );
+      // Ha a sablon MEGVÁLTOZTATTA a törzset, akkor az nem adat → nem kérdezünk.
+      expect(
+        NotificationContentTitles.needsResolve(
+          type: 'new_release',
+          targetId: '99',
+          storedBody: 'Régi cím',
+          localizedBody: 'New title',
+        ),
+        isFalse,
+      );
+    });
+
+    test('a felület a feloldott címet írja ki, és visszaesik a tároltra', () {
+      final screen = File(
+        'lib/screens/notifications/notification_center_screen.dart',
+      ).readAsStringSync().replaceAll(RegExp(r'^\s*//.*$', multiLine: true), '');
+
+      expect(screen.contains('NotificationContentTitles.needsResolve('), isTrue);
+      expect(screen.contains('NotificationContentTitles.resolve('), isTrue);
+      expect(
+        RegExp(r'Text\(\s*contentTitle \?\? localized\.body').hasMatch(screen),
+        isTrue,
+        reason: 'a feloldott cím az elsődleges, a tárolt szöveg a tartalék',
+      );
+      // A szerveroldali térkép is be van kötve (a jövőbeli sorokhoz).
+      final functions = File('functions/index.js').readAsStringSync();
+      expect(functions.contains('params: { name: localizedName }'), isTrue);
+    });
+  });
+
   group('FORRÁS-LINT: a felület a fordítón át ír ki', () {
     test('a NotificationCenter a katalógussal fordít, és nincs nyers ág', () {
       // ⚠️ A **megjegyzéseket** előbb kivesszük: a magyarázó sorok a `Text(` és a
@@ -212,11 +275,10 @@ void main() {
 
       expect(screen.contains('NotificationTexts.localize('), isTrue);
       // A megjelenítés a FORDÍTOTT értéket használja (a cím és a törzs is)…
-      expect(
-        RegExp(r'Text\(\s*localized\.body').hasMatch(screen),
-        isTrue,
-        reason: 'a törzs a fordított értékkel jelenik meg',
-      );
+      // ⚠️ A törzs elsődlegesen a feloldott TARTALOM-cím lehet
+      // (`contentTitle ?? localized.body` — 2026-09-26), ezért itt azt mérjük,
+      // hogy a fordított érték **szerepel** a kiírásban.
+      expect(screen.contains('localized.body'), isTrue);
       expect(RegExp(r'Text\(\s*localized\.title').hasMatch(screen), isTrue);
       // …és SEHOL nem írja ki nyersen a tárolt szöveget.
       expect(

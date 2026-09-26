@@ -1,6 +1,11 @@
 // A Névjegy-changelog angol fordításai — 5. csomag: a **legfrissebb** kiadások
 // sorai (ezek a lista ELEJÉN állnak, ezért a fordítók is elöl mennek, a
 // legfrissebbel kezdve), valamint a Névjegy egyik sablonja.
+export const release370 = [
+  'Fixed: the title of the article (and of the release, event or DJ) in notifications now appears in the selected language as well.',
+  'Titles in the notifications you already received are translated too — you do not have to wait for new ones.',
+];
+
 export const release369 = [
   'Fixed: on the English interface notification texts appear instantly in the selected language — older notifications are translated too, you do not have to wait for new ones.',
   'Fixed: the title of a private message notification also speaks the selected language (it used to be Hungarian).',
