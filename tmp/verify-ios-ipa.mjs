@@ -98,6 +98,22 @@ check(
 // A changelog a Dart AOT csomagban él (a magyar ékezetek miatt UTF-16LE-ként).
 const framework = read('Frameworks/App.framework/App');
 check(
+  'a 374 sora benne van (a „Saját zenéim" fejléce is angolul)',
+  contains(framework, 'a „Saját zenéim" fejlécében angol felületen is angolul szól'),
+);
+check(
+  'a 374 lejátszó-sora is benne van',
+  contains(framework, 'a lejátszó két gombja (szünet, keverés)'),
+);
+check(
+  'a 374 DELETE-sora is benne van',
+  contains(framework, 'a feliraton látható szót kéri (DELETE)'),
+);
+check(
+  'a 374 e-mail-sora is benne van',
+  contains(framework, 'a booking- és hibajelentő e-mail tárgya'),
+);
+check(
   'a 373 sora benne van (a hír-kategóriák is angolul)',
   contains(framework, 'a hírek kategóriái (a kártyákon és a cikk fejlécében) is angolul jelennek meg'),
 );
