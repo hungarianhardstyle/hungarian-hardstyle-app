@@ -105,7 +105,9 @@ class _TaggedNewsScreenState extends ConsumerState<TaggedNewsScreen> {
                   Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'A címke hírei nem tölthetők be.\n$_error',
+                      trArgs(context, 'A címke hírei nem tölthetők be.\n{error}', {
+                        'error': '$_error',
+                      }),
                       textAlign: TextAlign.center,
                     ),
                   ),

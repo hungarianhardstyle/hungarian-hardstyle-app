@@ -226,7 +226,7 @@ class _ArtistSubmissionScreenState
                         title: const AppText(
                           'Fellépésszervezés a Hungarian Hardstyle-on keresztül',
                         ),
-                        subtitle: const Text(
+                        subtitle: const AppText(
                           'A booking levelek az info@hungarianhardstyle.hu címre érkeznek.',
                         ),
                       ),
@@ -281,7 +281,11 @@ class _ArtistSubmissionScreenState
                                 ),
                               )
                             : const Icon(Icons.send),
-                        label: Text(_submitting ? 'Küldés…' : tr(context, 'DJ beküldése')),
+                        label: Text(
+                          _submitting
+                              ? tr(context, 'Küldés…')
+                              : tr(context, 'DJ beküldése'),
+                        ),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(54),
                         ),
@@ -338,7 +342,7 @@ class _ArtistSubmissionScreenState
   );
 
   String? _required(String? value) =>
-      value == null || value.trim().isEmpty ? 'Kötelező mező.' : null;
+      value == null || value.trim().isEmpty ? AppStrings.tr('Kötelező mező.') : null;
 
   String? _emailRequired(String? value) =>
       _required(value) ?? _optionalEmail(value);

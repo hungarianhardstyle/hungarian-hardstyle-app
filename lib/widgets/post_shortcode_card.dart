@@ -31,11 +31,13 @@ class PostShortcodeCard extends StatelessWidget {
       color: const Color(0xFF181818),
       child: ListTile(
         leading: const Icon(Icons.widgets_outlined, color: Colors.redAccent),
-        title: Text(shortcode.label),
+        title: Text(tr(context, shortcode.label)),
         subtitle: Text(
           related.isEmpty
               ? tr(context, 'Megnyitás az alkalmazásban')
-              : '${related.length} kapcsolódó cikk',
+              : trArgs(context, '{n} kapcsolódó cikk', {
+                  'n': '${related.length}',
+                }),
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {

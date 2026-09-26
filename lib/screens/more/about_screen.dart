@@ -392,7 +392,9 @@ class _PurchaseDiagnosticsState extends ConsumerState<_PurchaseDiagnostics> {
                         )
                       : const Icon(Icons.receipt_long_outlined),
                   label: Text(
-                    _running ? 'Mérés…' : tr(context, 'Diagnosztika futtatása'),
+                    _running
+                        ? tr(context, 'Mérés…')
+                        : tr(context, 'Diagnosztika futtatása'),
                   ),
                 ),
                 if (result != null) ...[
@@ -408,7 +410,7 @@ class _PurchaseDiagnosticsState extends ConsumerState<_PurchaseDiagnostics> {
             if (_problem != null) ...[
               const SizedBox(height: 12),
               Text(
-                _problem!,
+                tr(context, _problem!),
                 style: const TextStyle(color: Color(0xFFFFB74D)),
               ),
             ],

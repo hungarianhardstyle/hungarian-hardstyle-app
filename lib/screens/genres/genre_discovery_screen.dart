@@ -190,7 +190,9 @@ class _GenreDiscoveryScreenState extends ConsumerState<GenreDiscoveryScreen> {
             padding: const EdgeInsets.all(18),
             children: [
               Text(
-                '${widget.genre} – kapcsolódó tartalmak',
+                trArgs(context, '{genre} – kapcsolódó tartalmak', {
+                  'genre': widget.genre,
+                }),
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

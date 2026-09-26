@@ -1,18 +1,20 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 373 megy fel** (versionCode **373**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> **Most a 374 megy fel** (versionCode **374**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-09-26): az **ÉLES (production) sávon a 360 fut** (`completed`, 100%), a **zárt teszten (alpha)
-> MÁR A 372**, a `beta` sávon a 354. A 373 a tulajdonos **észrevétel-listáját** javítja: a **DJ- és
-> szervező-leírásban** nem látszik többé a `&amp;` kódolási hiba (Goze, Nu-Clear, Subrage — éles mérés:
-> a magyar leírások 2/17-e, az angolok 3/17-e tartalmazta), és **angol felületen is angolul** szól az
-> esemény ismerős-sora, az éves név-/e-mail-módosítás jelzése, a „Reklámmal feloldva" címke és az
-> „Ismerősök" darabszám; a **magyar pont-értesítésből** eltűnt a szóismétlés („Új összösszpontszámod" →
-> „Új összpontszámod"). A 373 a **372 minden** újdonságát is tartalmazza (a megnyitott adatlapok is
-> átállnak nyelvváltáskor), az pedig a korábbiakét (a Chat **@mindenki** push-ja, a küldő visszajelzése, a
-> hírlista azonnali átállása, az értesítésbe kerülő cikk címe is a választott nyelven, értesítések
-> fordítása, kiadási jegyzet angolul, játék-eredmény fejléc, nyelvváltó, angol tartalom, GYÍK → FAQ,
-> hírlista-frissesség, Chat-ugrás). A nyilvános kiadáshoz a **361–373 összesítő** (1b-2.), a bétához a
-> **355–373 összesítő** (1b-3.) való.
+> MÁR A 372**, a `beta` sávon a 354. A 374 a tulajdonos **észrevételét** javítja: a „Saját zenéim"
+> fejlécében angol felületen is **magyarul maradt a letöltött zenék száma** („11 letöltött zene") — a
+> kiírás nyers, interpolált szöveg volt, amit sem az i18n-extraktor, sem a szótár-kapu nem látott.
+> Ugyanebben a körben **minden** ilyen hely javult: a lejátszó gombjai (szünet, keverés), a némítás, a
+> feltöltés- és hibaüzenetek, az űrlap-ellenőrző szövegek, a kiadvány-adatlap állapotsorai, a
+> törlés-megerősítés szava (angolul mostantól **DELETE** kell) és az e-mail-űrlapok tárgya. **ÚJ KAPU:**
+> `test/services/i18n_untranslated_ui_test.dart` — a felületen nem maradhat fordítatlan magyar felirat
+> (a **csomagban** is mérve: `node tmp/verify-aab.mjs … 374`).
+> A 374 a **373 minden** újdonságát is tartalmazza (a hír-kategóriák angolul, a `&amp;` javítása, a
+> pont-sablon), az pedig a korábbiakét (a megnyitott adatlapok nyelvváltása, a Chat **@mindenki**
+> push-ja, a hírlista azonnali átállása, az értesítések fordítása, kiadási jegyzet angolul, játék-
+> eredmény fejléc, nyelvváltó, angol tartalom, GYÍK → FAQ, hírlista-frissesség, Chat-ugrás). A nyilvános
+> kiadáshoz a **361–374 összesítő** (1b-2.), a bétához a **355–374 összesítő** (1b-3.) való.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -20,16 +22,16 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 373
+currentBuild: 374
 currentVersion: 1.0.0
 lastPublishedBuild: 360
-aab: build/HUHS-v1.0.0+373-release.aab
-sha256: 22DC558F6FF1D862CD4EE77F8386EF9BEAF0E1F9FA6C5AD9D0202B5187FE8325
+aab: build/HUHS-v1.0.0+374-release.aab
+sha256: 1B4EBD5DD6B476491807478D00169D43B7DB866352FC9CB88076CDA3E1E15332
 -->
 
-⚠️ A **373**-at a **372** után kellett építeni (a 372-t, a 371-et, a 370-et és a 369-et **nem** kell
-feltölteni, ha még nem tetted meg: a 373 mindegyiket tartalmazza, és a Play a használt verziókódot amúgy
-is elutasítaná).
+⚠️ A **374**-et a **373** után kellett építeni (a 373-at, a 372-t, a 371-et, a 370-et és a 369-et **nem**
+kell feltölteni, ha még nem tetted meg: a 374 mindegyiket tartalmazza, és a Play a használt verziókódot
+amúgy is elutasítaná).
 ⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.5** — ✅ **mérve: már fent van** (`apiVersion = 2.14.5`, és a
 natív admin űrlapjai mutatják a **kézi angol mezőket**: `_huhs_poll_question_en`,
 `_huhs_poll_options_en`, `_huhs_prize_answers_en`, `_huhs_game_summary_en`). A szerveroldali függvények
@@ -205,9 +207,10 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Javítva: a hírek kategóriái (a kártyákon és a cikk fejlécében) is angolul jelennek meg angol felületen.
-- Javítva: a DJ- és szervező-leírásban nem látszik többé a „&amp;" kódolási hiba — helyette „&" áll; angolul is angol az esemény ismerős-sora, az éves név-/e-mail-módosítás és az „Ismerősök" darabszám.
-- Javítva: a pont-értesítés magyar szövegéből eltűnt a szóismétlés; a megnyitott adatlapok is átállnak nyelvváltáskor.
+- Javítva: a „Saját zenéim" fejlécében angol felületen is angolul szól minden felirat (pl. a letöltött zenék száma).
+- Javítva: angolul szól a lejátszó két gombja (szünet, keverés), a némítás, a feltöltés- és hibajelzések, az űrlap-ellenőrző üzenetek és a kiadvány-adatlap állapotsorai.
+- Javítva: a profil törlésének megerősítése angolul is a feliraton látható szót kéri (DELETE).
+- Javítva: a booking- és hibajelentő e-mail tárgya is a választott nyelven szól.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -225,37 +228,39 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–373** összesítő (a 360 után)
+## 1b-2. Play Console — a **361–374** összesítő (a 360 után)
 
 **Ezt használd, ha a felhasználó a 360-ról jön** (ez az ÉLES sáv jelenlegi buildje) — vagyis csak azok
-az újdonságok szerepelnek benne, amelyek a **361–372** között készültek (a 359/360 `@mindenki`-je
+az újdonságok szerepelnek benne, amelyek a **361–374** között készültek (a 359/360 `@mindenki`-je
 **nincs** benne, mert azt a 360 már megkapta — a **push** viszont új, ezért az benne van). A
 karakter-számot a `tools/check-play-notes.mjs` méri.
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (alap: magyar).
-- Angolul a cikkek, a hírek címkéi, az Achievement-nevek és a GYÍK (FAQ) is.
-- Az értesítések is a választott nyelven jönnek, címekkel.
-- ÚJ a Chatben: @mindenki (push is), és a válasz idézetére koppintva az eredeti üzenetre ugrik.
-- ÚJ: a főoldal és a Hírek fül magától frissül, nyelvváltásra is; a DJ-adatlapon a megjelenések.
+- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető.
+- Angolul a cikkek, a hírek címkéi és a GYÍK (FAQ) is.
+- Az értesítések is a választott nyelven jönnek.
+- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
+- ÚJ: a főoldal és a Hírek fül magától frissül; a DJ-adatlapon a megjelenések.
 - Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a changelog.
+- Javítva: angolul a „Saját zenéim" és a lejátszó gombjai is.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–373** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–374** összesítő)
 
-**Ezt használd, ha a 372-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 374-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-09-26) szerint ott a **354** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a Chat-értesítés odaugrása, a DJ-adatlap megjelenései, a hírlista-frissesség és a mai
 felirat-javítások is.
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (alap: magyar).
-- Angolul a cikkek, a hírek címkéi, az Achievement-nevek és a GYÍK (FAQ) is.
-- Az értesítések is a választott nyelven jönnek, címekkel.
-- ÚJ a Chatben: @mindenki (push is), és a válasz idézetére koppintva az eredeti üzenetre ugrik.
-- ÚJ: a főoldal és a Hírek fül magától frissül, nyelvváltásra is; a DJ-adatlapon a megjelenések.
+- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető.
+- Angolul a cikkek, a hírek címkéi és a GYÍK (FAQ) is.
+- Az értesítések is a választott nyelven jönnek.
+- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
+- ÚJ: a főoldal és a Hírek fül magától frissül; a DJ-adatlapon a megjelenések.
 - Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a changelog.
+- Javítva: angolul a „Saját zenéim" és a lejátszó gombjai is.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -284,6 +289,13 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 374 — a „Saját zenéim" fejléce és **minden** nyers (fordítatlan) felirat
+- **A tulajdonos jelzése** (képernyőkép az angol felületről): *„itt maradt egy magyar szó"* — a „My purchased music" fejlécében **„11 letöltött zene"** állt angolul.
+- **A mért gyökér:** a kiírás `'${_downloaded.length} letöltött zene'` volt, azaz **nyers, interpolált** szöveg. Ezt **egyetlen kapu sem látta**: az i18n-extraktor a `$`-t tartalmazó literált kihagyja, a raw-label audit regexe pedig eleve kizárja. Ezért **kapu is épült** (`test/services/i18n_untranslated_ui_test.dart`): a szonda **95** további ugyanilyen helyet talált (tárolt állapotüzenetek, tooltipek, űrlap-ellenőrzők, e-mail-űrlapok tárgya).
+- **Ami épült:** minden érintett felirat **szótár-kulcs** lett (a szótár **1147 → 1300 kulcs**), a megjelenítés pedig fordít (`tr`/`trArgs`/`AppText`, illetve tárolt állapotnál `Text(tr(context, _message!))`). Angolul mostantól **DELETE** a törlés-megerősítés szava (eddig a felirat DELETE-et kért, de a kód a magyar `TÖRLÉS`-t várta — így angolul **nem is lehetett** törölni).
+- **Mérve:** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1154/1154** (ebből új: `test/services/i18n_untranslated_ui_test.dart` **3/3** — a forrás **nem tartalmaz** fordítatlan magyar feliratot, a megjelenítéskor fordított kulcsok bent vannak a szótárban, és a tulajdonos konkrét kulcsa angolul szól); **mutációs bizonyíték 5/5** (`tmp/mutation-proof-untranslated-ui.mjs`: a nyers „letöltött zene", egy nyers megjelenítési felirat, egy új tárolt üzenet, egy nyers gombfelirat és egy hiányzó szótár-kulcs is **elkapva**, bájtazonos visszaállítással); `node tmp/verify-aab.mjs build/HUHS-v1.0.0+374-release.aab 374` → **versionCode 374**, **1300 kulcsú szótár**, a „letöltött zene" kulcs **a csomagban is angolul**, mind a **huszonnégy** changelog-sor mindhárom ABI-ban.
+- **⚠️ ŐSZINTE KORLÁT:** a **chat** és a felhasználók **saját szövegei** továbbra sem fordulnak (szándékos), és a `RegExp`-minták, illetve a **szerveroldali válaszra illesztő** rész-szövegek szándékosan magyarul maradnak (ezek nem feliratok; a kapu névre szóló kivétellistán tartja őket).
 
 ### 373 — a hír-kategóriák, a `&amp;` kódolási hiba, az angol feliratok és a pont-értesítés szóismétlése
 - **A tulajdonos észrevétel-listája** (képernyőkép a jegyzeteiről): *„a híreknél a kategóriák is magyar"*, `&amp;` a DJ-leírásokban (Goze, Nu-Clear, Subrage), magyar feliratok angol módban (esemény ismerős-sora, éves név-/e-mail-módosítás, „Reklámmal feloldva", „Ismerősök: n", értesítés-kijelölés), és a magyar pont-értesítés szövege („ez a magyarnál javítandó").

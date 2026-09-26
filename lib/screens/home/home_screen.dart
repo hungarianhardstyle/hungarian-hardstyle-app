@@ -484,7 +484,9 @@ class HomeScreen extends ConsumerWidget {
                                           ? tr(context, 'Eredmények megtekintése')
                                           : season.isClosed
                                           ? tr(context, 'A szavazás véget ért')
-                                          : 'Szavazz a HUHS ${season.year} jelöltjeire',
+                                          : trArgs(context, 'Szavazz a HUHS {year} jelöltjeire', {
+                  'year': '${season.year}',
+                }),
                                       icon: Icons.how_to_vote_outlined,
                                       onTap: () {
                                         if (season.hasPublishedResults) {

@@ -246,7 +246,9 @@ class _CommunityPublicProfileScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Az ismerősnek jelölés nem sikerült.\n${userFacingError(error)}',
+            AppStrings.trArgs('Az ismerősnek jelölés nem sikerült.\n{error}', {
+              'error': userFacingError(error),
+            }),
           ),
         ),
       );
@@ -289,8 +291,12 @@ class _CommunityPublicProfileScreenState
         SnackBar(
           content: Text(
             accept
-                ? 'Az elfogadás nem sikerült.\n${userFacingError(error)}'
-                : 'Az elutasítás nem sikerült.\n${userFacingError(error)}',
+                ? AppStrings.trArgs('Az elfogadás nem sikerült.\n{error}', {
+                    'error': userFacingError(error),
+                  })
+                : AppStrings.trArgs('Az elutasítás nem sikerült.\n{error}', {
+                    'error': userFacingError(error),
+                  }),
           ),
         ),
       );
@@ -1212,12 +1218,16 @@ class _ReportCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('Bejelentő: $reporter'),
+                Text(trArgs(context, 'Bejelentő: {name}', {'name': reporter})),
                 Text(
-                  'Jelentett felhasználó: $liveName${reportedUserId.isEmpty ? '' : ' ($reportedUserId)'}',
+                  trArgs(context, 'Jelentett felhasználó: {name}{id}', {
+                    'name': liveName,
+                    'id': reportedUserId.isEmpty ? '' : ' ($reportedUserId)',
+                  }),
                 ),
-                Text('Indok: $reason'),
-                if (postId.isNotEmpty) Text('Bejegyzés: $postId'),
+                Text(trArgs(context, 'Indok: {reason}', {'reason': reason})),
+                if (postId.isNotEmpty)
+                  Text(trArgs(context, 'Bejegyzés: {id}', {'id': postId})),
                 const SizedBox(height: 6),
                 Text(text, maxLines: 6, overflow: TextOverflow.ellipsis),
               ],
@@ -1394,8 +1404,12 @@ class _ConnectionRequestTileState extends State<_ConnectionRequestTile> {
         SnackBar(
           content: Text(
             accept
-                ? 'Az elfogadás nem sikerült.\n${userFacingError(error)}'
-                : 'Az elutasítás nem sikerült.\n${userFacingError(error)}',
+                ? AppStrings.trArgs('Az elfogadás nem sikerült.\n{error}', {
+                    'error': userFacingError(error),
+                  })
+                : AppStrings.trArgs('Az elutasítás nem sikerült.\n{error}', {
+                    'error': userFacingError(error),
+                  }),
           ),
         ),
       );

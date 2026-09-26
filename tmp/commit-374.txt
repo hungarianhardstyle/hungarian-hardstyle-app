@@ -1,0 +1,26 @@
+fix(i18n): a „Sajat zeneim" fejlece es minden nyers felirat angolul (374)
+
+A tulajdonos jelzese: „itt maradt egy magyar szo" — az angol feluleten a
+„My purchased music" fejlecben „11 letoltott zene" allt.
+
+MERT GYOKER: a kiiras nyers, interpolalt szoveg volt
+(`'${_downloaded.length} letoltott zene'`). Ezt egyetlen kapu sem latta:
+az i18n-extraktor a `$`-t tartalmazo literalt kihagyja, a raw-label audit
+regexe pedig eleve kizarja.
+
+AMI EPULT:
+- minden erintett felirat szotar-kulcs lett (a szotar 1147 -> 1300 kulcs),
+  a megjelenites pedig fordul (`tr`/`trArgs`/`AppText`, illetve tarolt
+  allapotnal `Text(tr(context, _message!))`); a szonda 95 ugyanilyen helyet
+  talalt (tarolt uzenetek, tooltipek, urlap-ellenorzok, e-mail-urlapok targya);
+- angolul mostantol DELETE a torles-megerosites szava (eddig a felirat
+  DELETE-et kert, a kod viszont a magyar TORLES-t varta);
+- UJ KAPU: test/services/i18n_untranslated_ui_test.dart — a feluleten nem
+  maradhat forditatalan magyar felirat (megjelenitesi hely + latent hely).
+
+MERVE: flutter analyze lib test -> No issues found!; flutter test ->
+1154/1154; mutacios bizonyitek 5/5 (tmp/mutation-proof-untranslated-ui.mjs);
+node tmp/verify-aab.mjs build/HUHS-v1.0.0+374-release.aab 374 ->
+versionCode 374, 1300 kulcsu szotar, mind a 24 changelog-sor mindharom
+ABI-ban; i18n-kapu 1060 celzott (100%), 0 hianyzo; Play-jegyzet 374-re
+allitva, minden ellenorzes rendben.

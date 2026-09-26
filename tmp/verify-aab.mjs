@@ -52,7 +52,21 @@ const dictionaryEntry = entries.find((entry) => entry.endsWith('assets/i18n/en.j
 execFileSync('tar', ['-xf', AAB, '-C', OUT, dictionaryEntry], { maxBuffer: 64 * 1024 * 1024 });
 const dictionary = JSON.parse(fs.readFileSync(`${OUT}/${dictionaryEntry}`, 'utf8'));
 const keyCount = Object.keys(dictionary).length;
-check('a szótár legalább 1128 kulcsú', keyCount >= 1128, `${keyCount} kulcs`);
+check('a szótár legalább 1300 kulcsú', keyCount >= 1300, `${keyCount} kulcs`);
+// ⚠️ 374: a tulajdonos KONKRÉT jelzése — a „Saját zenéim" fejlécében angol
+// módban is magyarul maradt a letöltött zenék száma. A kulcsnak a **csomagolt**
+// szótárban kell lennie (a megjelenítés ebből fordít).
+check(
+  'a „letöltött zene" kulcs a csomagolt szótárban angolul szól',
+  `${dictionary['{n} letöltött zene'] ?? ''}`.toLowerCase().includes('downloaded'),
+  `${dictionary['{n} letöltött zene'] ?? 'HIÁNYZIK'}`,
+);
+check(
+  'a tárolt állapotüzenetek kulcsai is bent vannak',
+  ['Mentés…', 'Küldés…', 'TÖRLÉS', 'Kötelező mező.'].every((key) =>
+    Object.prototype.hasOwnProperty.call(dictionary, key),
+  ),
+);
 
 // ⚠️ 369: az ÉRTESÍTÉS-katalógus is az appban van (a megjelenítéskori fordításhoz).
 const catalogEntry = entries.find((entry) => entry.endsWith('assets/i18n/notification_texts.json'));
@@ -127,6 +141,12 @@ const changelog = [
   'nem látszik többé a „&amp;" kódolási hiba',
   'az éves név-/e-mail-módosítás jelzése',
   'eltűnt a szóismétlés',
+  // 374: a „Saját zenéim" fejléce (a tulajdonos jelzése), a lejátszó gombjai,
+  // a törlés-megerősítés szava és az e-mail-űrlapok tárgya.
+  'a „Saját zenéim" fejlécében angol felületen is angolul szól',
+  'a lejátszó két gombja (szünet, keverés)',
+  'a feliraton látható szót kéri (DELETE)',
+  'a booking- és hibajelentő e-mail tárgya',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });

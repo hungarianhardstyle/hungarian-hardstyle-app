@@ -1,0 +1,4 @@
+- Javítva: a „Saját zenéim" fejlécében angol felületen is angolul szól minden felirat (pl. a letöltött zenék száma).
+- Javítva: angolul szól a lejátszó két gombja (szünet, keverés), a némítás, a feltöltés- és hibajelzések, az űrlap-ellenőrző üzenetek és a kiadvány-adatlap állapotsorai.
+- Javítva: a profil törlésének megerősítése angolul is a feliraton látható szót kéri (DELETE).
+- Javítva: a booking- és hibajelentő e-mail tárgya is a választott nyelven szól.

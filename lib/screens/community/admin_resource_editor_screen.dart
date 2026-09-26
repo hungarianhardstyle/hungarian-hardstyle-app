@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/user_facing_error.dart';
+import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../providers/community_provider.dart';
 import '../../widgets/app_text.dart';
@@ -304,29 +305,29 @@ class _AdminResourceEditorScreenState
         final min = (field['min'] as num?)?.toInt() ?? 1;
         final max = (field['max'] as num?)?.toInt() ?? 0;
         if (values.length < min) {
-          return '${field['label'] ?? key}: legalább $min érték kell.';
+          return AppStrings.trArgs('{label}: legalább {min} érték kell.', {'label': '${field['label'] ?? key}', 'min': '$min'});
         }
         if (max > 0 && values.length > max) {
-          return '${field['label'] ?? key}: legfeljebb $max érték adható.';
+          return AppStrings.trArgs('{label}: legfeljebb {max} érték adható.', {'label': '${field['label'] ?? key}', 'max': '$max'});
         }
       }
       if (type == 'questions') {
-        if (_questions.isEmpty) return 'Legalább 1 kérdés kell.';
+        if (_questions.isEmpty) return AppStrings.tr('Legalább 1 kérdés kell.');
         for (var index = 0; index < _questions.length; index++) {
           final question = _questions[index];
           final row = index + 1;
           if (question.prompt.text.trim().isEmpty) {
-            return 'A(z) $row. kérdés szövege üres.';
+            return AppStrings.trArgs('A(z) {row}. kérdés szövege üres.', {'row': '$row'});
           }
           final options = question.options
               .map((option) => option.controller.text.trim())
               .where((value) => value.isNotEmpty)
               .toList();
           if (options.length < 2 || options.length > 6) {
-            return 'A(z) $row. kérdéshez 2–6 válaszlehetőség kell.';
+            return AppStrings.trArgs('A(z) {row}. kérdéshez 2–6 válaszlehetőség kell.', {'row': '$row'});
           }
           if (question.correct < 0 || question.correct >= options.length) {
-            return 'A(z) $row. kérdésnél jelöld meg a helyes választ.';
+            return AppStrings.trArgs('A(z) {row}. kérdésnél jelöld meg a helyes választ.', {'row': '$row'});
           }
         }
       }
@@ -359,12 +360,12 @@ class _AdminResourceEditorScreenState
       Navigator.of(context).pop(true);
       _message(
         created
-            ? 'A(z) ${_label()} létrehozva.'
-            : 'A(z) ${_label()} mentve.',
+            ? AppStrings.trArgs('A(z) {label} létrehozva.', {'label': _label()})
+            : AppStrings.trArgs('A(z) {label} mentve.', {'label': _label()}),
       );
     } catch (error) {
       if (!mounted) return;
-      _message('A mentés nem sikerült: ${userFacingError(error)}');
+      _message(AppStrings.trArgs('A mentés nem sikerült: {error}', {'error': userFacingError(error)}));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -383,14 +384,14 @@ class _AdminResourceEditorScreenState
       appBar: AppBar(
         title: Text(
           _isNew
-              ? 'Új ${_label().toLowerCase()}'
-              : '${_label()} szerkesztése',
+              ? trArgs(context, 'Új {label}', {'label': _label().toLowerCase()})
+              : trArgs(context, '{label} szerkesztése', {'label': _label()}),
         ),
         actions: [
           if (!_loading && _error == null)
             TextButton(
               onPressed: _saving ? null : _save,
-              child: Text(_saving ? 'Mentés…' : tr(context, 'Mentés')),
+              child: Text(_saving ? tr(context, 'Mentés…') : tr(context, 'Mentés')),
             ),
         ],
       ),
@@ -411,8 +412,11 @@ class _AdminResourceEditorScreenState
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        'A(z) ${_label().toLowerCase()} a mentés után azonnal '
-                        'megjelenik az appban (kivéve, ha piszkozatot választasz).',
+                        trArgs(
+                          context,
+                          'A(z) {label} a mentés után azonnal megjelenik az appban (kivéve, ha piszkozatot választasz).',
+                          {'label': _label().toLowerCase()},
+                        ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
@@ -432,7 +436,7 @@ class _AdminResourceEditorScreenState
                 FilledButton.icon(
                   onPressed: _saving ? null : _save,
                   icon: const Icon(Icons.save_outlined),
-                  label: Text(_isNew ? 'Létrehozás' : tr(context, 'Mentés')),
+                  label: Text(_isNew ? tr(context, 'Létrehozás') : tr(context, 'Mentés')),
                 ),
               ],
             ),
@@ -497,7 +501,7 @@ class _AdminResourceEditorScreenState
                 : TextInputType.text,
             decoration: InputDecoration(
               labelText: label,
-              helperText: type == 'int' ? 'Szám' : null,
+              helperText: type == 'int' ? tr(context, 'Szám') : null,
             ),
           ),
         );
@@ -610,7 +614,7 @@ class _AdminResourceEditorScreenState
               children: [
                 Expanded(
                   child: Text(
-                    '${index + 1}. kérdés',
+                    trArgs(context, '{n}. kérdés', {'n': '${index + 1}'}),
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),

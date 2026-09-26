@@ -230,7 +230,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${average.toStringAsFixed(1)} / 5 ($count értékelés)',
+                      trArgs(context, '{avg} / 5 ({n} értékelés)', {
+                        'avg': average.toStringAsFixed(1),
+                        'n': '$count',
+                      }),
                     ),
                   ],
                 ),

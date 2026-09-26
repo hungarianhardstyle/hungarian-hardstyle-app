@@ -982,7 +982,9 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
                             dense: true,
                             leading: const Icon(Icons.reply, size: 18),
                             title: Text(
-                              'Válasz: $_replyText',
+                              trArgs(context, 'Válasz: {text}', {
+                                'text': _replyText ?? '',
+                              }),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

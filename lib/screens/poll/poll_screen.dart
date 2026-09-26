@@ -165,7 +165,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
                   if (_message != null) ...[
                     const SizedBox(height: 10),
                     Text(
-                      _message!,
+                      tr(context, _message!),
                       style: const TextStyle(color: Colors.white70),
                     ),
                   ],
@@ -255,7 +255,7 @@ class _PollScreenState extends ConsumerState<PollScreen> {
             onPressed: _selected == null || _submitting
                 ? null
                 : () => _submit(poll),
-            child: Text(_submitting ? 'Küldés…' : tr(context, 'Szavazok')),
+            child: Text(_submitting ? tr(context, 'Küldés…') : tr(context, 'Szavazok')),
           ),
         ),
         const SizedBox(height: 6),

@@ -307,7 +307,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: SwitchListTile(
                         secondary: const Icon(Icons.lock_clock_outlined),
                         title: const AppText('Google Authenticator'),
-                        subtitle: const Text(
+                        subtitle: const AppText(
                           'Csak e-mail/jelszavas fióknál használható',
                         ),
                         value: _authenticatorEnabled,

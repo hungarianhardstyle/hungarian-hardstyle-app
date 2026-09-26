@@ -232,7 +232,9 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
         child: Row(
           children: [
             Tooltip(
-              message: _playing ? 'Leállítás' : tr(context, 'Lejátszás'),
+              message: _playing
+                  ? tr(context, 'Leállítás')
+                  : tr(context, 'Lejátszás'),
               child: Material(
                 color: scheme.primary,
                 shape: const CircleBorder(),
@@ -299,7 +301,7 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
             ),
             const SizedBox(width: 6),
             IconButton(
-              tooltip: _muted ? 'Némítás feloldása' : tr(context, 'Némítás'),
+              tooltip: _muted ? tr(context, 'Némítás feloldása') : tr(context, 'Némítás'),
               onPressed: () {
                 setState(() => _muted = !_muted);
                 radioPlayback.setVolume(_muted ? 0.0 : 1.0);

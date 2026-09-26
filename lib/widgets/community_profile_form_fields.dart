@@ -1,3 +1,4 @@
+import '../core/i18n/app_strings.dart';
 import '../core/i18n/tr.dart';
 import 'package:flutter/material.dart';
 
@@ -134,7 +135,9 @@ Future<Map<String, dynamic>> persistCommunityProfileDraft({
         unicode: true,
       ).hasMatch(normalizedName)) {
     throw StateError(
-      'AUTH/profile-invalid-display-name: Adj meg 2–40 karakteres, érvényes megjelenítési nevet.',
+      AppStrings.tr(
+        'AUTH/profile-invalid-display-name: Adj meg 2–40 karakteres, érvényes megjelenítési nevet.',
+      ),
     );
   }
   await claimDisplayName(normalizedName);
@@ -145,7 +148,9 @@ Future<Map<String, dynamic>> persistCommunityProfileDraft({
   if (storedName != normalizedName ||
       !const {'dj', 'organizer', 'partygoer'}.contains(storedRole)) {
     throw StateError(
-      'AUTH/profile-save-not-confirmed: A profil mentését a szerver nem igazolta vissza. Próbáld újra.',
+      AppStrings.tr(
+        'AUTH/profile-save-not-confirmed: A profil mentését a szerver nem igazolta vissza. Próbáld újra.',
+      ),
     );
   }
   return stored;

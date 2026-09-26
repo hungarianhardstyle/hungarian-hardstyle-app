@@ -399,8 +399,16 @@ void main() {
       expect(source, contains('for (final item in visible) _buildReleaseCard'));
       expect(
         source,
-        contains(r'${visible.length} kiadvány'),
+        contains(r"'releases': '${visible.length}'"),
         reason: 'a fejléc is a látható kiadványokat számolja',
+      );
+      // ⚠️ 2026-09-26: a fejléc felirata **szótári kulcs** lett (a tulajdonos
+      // jelzése: angol módban „11 letöltött zene" maradt) — a nyers
+      // interpoláció helyett `trArgs`-szal megy ki.
+      expect(
+        source,
+        contains('{releases} kiadvány · {tracks} tétel'),
+        reason: 'a fejléc felirata fordítva megy ki (angol módban is angolul)',
       );
       expect(source, contains('.getRelease(releaseId)'));
       expect(

@@ -387,7 +387,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _message(AppStrings.tr('A push elküldve.'));
     } catch (error) {
-      _message('A push nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A push nem sikerült: {error}', {'error': _errorText(error)}));
     } finally {
       if (mounted) setState(() => _sendingPush = false);
     }
@@ -401,7 +401,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           .manageWordPressSubmission(id: id, action: action);
       _reload();
     } catch (error) {
-      _message('A művelet nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A művelet nem sikerült: {error}', {'error': _errorText(error)}));
     } finally {
       if (mounted) setState(() => _busyIds.remove(id));
     }
@@ -426,7 +426,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A mentés nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A mentés nem sikerült: {error}', {'error': _errorText(error)}));
     } finally {
       if (mounted) setState(() => _busyIds.remove(id));
     }
@@ -482,7 +482,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A mentés nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A mentés nem sikerült: {error}', {'error': _errorText(error)}));
     } finally {
       if (mounted) setState(() => _busyIds.remove(id));
     }
@@ -619,7 +619,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         _reload();
       }
     } catch (error) {
-      _message('A szerkesztés nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A szerkesztés nem sikerült: {error}', {'error': _errorText(error)}));
     }
   }
 
@@ -801,7 +801,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       _message(AppStrings.tr('Az elem létrehozva.'));
       _reload();
     } catch (error) {
-      _message('A létrehozás nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A létrehozás nem sikerült: {error}', {'error': _errorText(error)}));
     }
   }
 
@@ -886,7 +886,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A felhasználó mentése nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A felhasználó mentése nem sikerült: {error}', {'error': _errorText(error)}));
     }
   }
 
@@ -916,7 +916,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A felhasználó törlése nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A felhasználó törlése nem sikerült: {error}', {'error': _errorText(error)}));
     }
   }
 
@@ -939,7 +939,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A törlés nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A törlés nem sikerült: {error}', {'error': _errorText(error)}));
     }
   }
 
@@ -961,7 +961,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
       _message(AppStrings.tr('A lomtár kiürítve.'));
       _reload();
     } catch (error) {
-      _message('A lomtár ürítése nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A lomtár ürítése nem sikerült: {error}', {'error': _errorText(error)}));
     }
   }
 
@@ -978,7 +978,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           );
       _reload();
     } catch (error) {
-      _message('A visszaállítás nem sikerült: ${_errorText(error)}');
+      _message(AppStrings.trArgs('A visszaállítás nem sikerült: {error}', {'error': _errorText(error)}));
     }
   }
 
@@ -1225,14 +1225,19 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
         },
       );
       _message(
-        imageUrl.isEmpty ? 'Indítási kép törölve.' : AppStrings.tr('Indítási kép mentve.'),
+        imageUrl.isEmpty
+            ? AppStrings.tr('Indítási kép törölve.')
+            : AppStrings.tr('Indítási kép mentve.'),
       );
       _reload();
     } catch (error) {
       final message = _errorText(error);
       _message(
-        'Az indítási kép mentése nem sikerült: '
-        '${message.contains('Ismeretlen admin művelet') ? 'a HUHS Mobile API 2.4.32 feltöltése szükséges.' : message}',
+        AppStrings.trArgs('Az indítási kép mentése nem sikerült: {detail}', {
+          'detail': message.contains('Ismeretlen admin művelet')
+              ? AppStrings.tr('a HUHS Mobile API 2.4.32 feltöltése szükséges.')
+              : message,
+        }),
       );
     }
   }
@@ -1334,20 +1339,34 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
-                    '${game['type_label'] ?? tr(context, 'Játék')}  •  $status\n'
-                    'Beküldések: ${game['submissions'] ?? 0}  •  '
-                    'Helyes válaszok: ${game['correct_answers'] ?? 0}/'
-                    '${game['total_answers'] ?? 0}',
+                    trArgs(
+                      context,
+                      '{type}  •  {status}\nBeküldések: {submissions}  •  Helyes válaszok: {correct}/{total}',
+                      {
+                        'type': '${game['type_label'] ?? tr(context, 'Játék')}',
+                        'status': status,
+                        'submissions': '${game['submissions'] ?? 0}',
+                        'correct': '${game['correct_answers'] ?? 0}',
+                        'total': '${game['total_answers'] ?? 0}',
+                      },
+                    ),
                   ),
                   isThreeLine: true,
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
                   child: Text(
-                    'Időszak: ${_adminDate(game['start_at'])} – ${_adminDate(game['end_at'])}\n'
-                    'Jutalom: ${game['reward_points'] ?? 0} pont  •  '
-                    'Kérdések: ${game['question_count'] ?? 0}  •  '
-                    'Idővonal-elemek: ${game['timeline_count'] ?? 0}',
+                    trArgs(
+                      context,
+                      'Időszak: {period}\nJutalom: {reward} pont  •  Kérdések: {questions}  •  Idővonal-elemek: {timeline}',
+                      {
+                        'period':
+                            '${_adminDate(game['start_at'])} – ${_adminDate(game['end_at'])}',
+                        'reward': '${game['reward_points'] ?? 0}',
+                        'questions': '${game['question_count'] ?? 0}',
+                        'timeline': '${game['timeline_count'] ?? 0}',
+                      },
+                    ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
@@ -1578,7 +1597,9 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                 if (snapshot.hasError) {
                   return Center(
                     child: Text(
-                      'Az adatok nem tölthetők be.\n${_errorText(snapshot.error)}',
+                      trArgs(context, 'Az adatok nem tölthetők be.\n{error}', {
+                        'error': _errorText(snapshot.error),
+                      }),
                     ),
                   );
                 }

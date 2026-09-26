@@ -110,7 +110,17 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Még hiányzik:\n${missing.map((category) => '${category.label}: ${category.minVotes} választás').join('\n')}',
+            trArgs(context, 'Még hiányzik:\n{list}', {
+              'list': missing
+                  .map(
+                    (category) => trArgs(
+                      context,
+                      '{label}: {n} választás',
+                      {'label': category.label, 'n': '${category.minVotes}'},
+                    ),
+                  )
+                  .join('\n'),
+            }),
           ),
         ),
       );
@@ -231,7 +241,9 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
             children: [
               Text(
                 season.title.isEmpty
-                    ? 'HUHS ${season.year} szavazás'
+                    ? trArgs(context, 'HUHS {year} szavazás', {
+                        'year': '${season.year}',
+                      })
                     : season.title,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
@@ -263,7 +275,14 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
           children: [
             Text(category.label, style: Theme.of(context).textTheme.titleLarge),
             Text(
-              'Válassz pontosan ${category.minVotes} jelöltet (${selected.length}/${category.minVotes})',
+              trArgs(
+                context,
+                'Válassz pontosan {min} jelöltet ({selected}/{min})',
+                {
+                  'min': '${category.minVotes}',
+                  'selected': '${selected.length}',
+                },
+              ),
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 10),
@@ -286,7 +305,9 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Legfeljebb ${category.maxVotes} jelöltet választhatsz.',
+                                    trArgs(context, 'Legfeljebb {n} jelöltet választhatsz.', {
+                                      'n': '${category.maxVotes}',
+                                    }),
                                   ),
                                 ),
                               );
@@ -344,7 +365,21 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
             if (_loadingVoteStatus) const LinearProgressIndicator(minHeight: 2),
             if (missing.isNotEmpty)
               Text(
-                'A szavazás elküldéséhez minden kötelező kategóriát ki kell tölteni.\n\n${missing.map((category) => '• ${category.label}: ${category.minVotes} jelölt').join('\n')}',
+                trArgs(
+                  context,
+                  'A szavazás elküldéséhez minden kötelező kategóriát ki kell tölteni.\n\n{list}',
+                  {
+                    'list': missing
+                        .map(
+                          (category) => trArgs(
+                            context,
+                            '• {label}: {n} jelölt',
+                            {'label': category.label, 'n': '${category.minVotes}'},
+                          ),
+                        )
+                        .join('\n'),
+                  },
+                ),
               )
             else if (!remaining)
               const AppText('Minden kategóriában leadtad a szavazatodat.'),
@@ -401,7 +436,9 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
           label: Text(
             selected.isEmpty
                 ? tr(context, 'Külföldi DJ-k kiválasztása')
-                : '${selected.length} kiválasztva',
+                : trArgs(context, '{n} kiválasztva', {
+                    'n': '${selected.length}',
+                  }),
           ),
         ),
         if (selectedCandidates.isNotEmpty) ...[

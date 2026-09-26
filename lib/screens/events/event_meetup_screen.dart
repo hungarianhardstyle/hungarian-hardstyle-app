@@ -196,7 +196,11 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
                                 .trim(),
                         fallbackImageUrl: (data['imageUrl'] as String? ?? '')
                             .trim(),
-                        subtitle: count == 0 ? 'Meetup' : '$count érdeklődő',
+                        subtitle: count == 0
+                            ? 'Meetup'
+                            : trArgs(context, '{n} érdeklődő', {
+                                'n': '$count',
+                              }),
                         trailing:
                             !widget.event.isPast &&
                                 attending &&
@@ -210,7 +214,9 @@ class _EventMeetupScreenState extends ConsumerState<EventMeetupScreen> {
                                       : Icons.favorite_border,
                                 ),
                                 label: Text(
-                                  interested ? 'Visszavonás' : tr(context, 'Én is'),
+                                  interested
+                                      ? tr(context, 'Visszavonás')
+                                      : tr(context, 'Én is'),
                                 ),
                               )
                             : null,

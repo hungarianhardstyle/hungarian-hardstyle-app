@@ -63,7 +63,7 @@ class _PollOption {
   final int votes;
 
   String get stateLabel => switch (state) {
-    'open' => 'nyitott',
+    'open' => AppStrings.tr('nyitott'),
     'before' => AppStrings.tr('még nem indult'),
     _ => AppStrings.tr('lezárult'),
   };
@@ -87,7 +87,7 @@ class _PollSummary {
   final List<({String label, int count, int percent})> options;
 
   String get stateLabel => switch (state) {
-    'open' => 'nyitott',
+    'open' => AppStrings.tr('nyitott'),
     'before' => AppStrings.tr('még nem indult'),
     _ => AppStrings.tr('lezárult'),
   };
@@ -261,7 +261,18 @@ class _PollResultsScreenState extends ConsumerState<PollResultsScreen> {
             for (final poll in polls)
               DropdownMenuItem<int>(
                 value: poll.id,
-                child: Text(poll.label, overflow: TextOverflow.ellipsis),
+                child: Text(
+                  trArgs(
+                    context,
+                    '{question} — {state} · {n} szavazat',
+                    {
+                      'question': poll.question,
+                      'state': poll.stateLabel,
+                      'n': '${poll.votes}',
+                    },
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
           ],
           onChanged: (id) {
@@ -286,7 +297,10 @@ class _PollResultsScreenState extends ConsumerState<PollResultsScreen> {
           Text(summary.question, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 4),
           Text(
-            'Állapot: ${summary.stateLabel} · összes szavazat: ${summary.total}',
+            trArgs(context, 'Állapot: {state} · összes szavazat: {n}', {
+              'state': summary.stateLabel,
+              'n': '${summary.total}',
+            }),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 14),

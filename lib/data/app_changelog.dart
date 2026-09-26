@@ -38,6 +38,16 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 374,
+    changes: [
+      'Javítva: a „Saját zenéim" fejlécében angol felületen is angolul szól minden felirat (pl. a letöltött zenék száma).',
+      'Javítva: angol felületen is angolul szól a lejátszó két gombja (szünet, keverés), a némítás, a feltöltés- és hibajelzések, az űrlap-ellenőrző üzenetek és a kiadvány-adatlap állapotsorai.',
+      'Javítva: a profil törlésének megerősítése angol felületen is a feliraton látható szót kéri (DELETE).',
+      'Javítva: a booking- és hibajelentő e-mail tárgya is a választott nyelven szól.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 373,
     changes: [
       'Javítva: a hírek kategóriái (a kártyákon és a cikk fejlécében) is angolul jelennek meg angol felületen.',

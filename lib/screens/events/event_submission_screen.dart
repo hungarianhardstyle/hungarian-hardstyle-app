@@ -219,7 +219,7 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
   }
 
   String? _required(String? value) {
-    return value == null || value.trim().isEmpty ? 'Kötelező mező.' : null;
+    return value == null || value.trim().isEmpty ? AppStrings.tr('Kötelező mező.') : null;
   }
 
   String? _validateEmail(String? value) {
@@ -474,7 +474,9 @@ class _EventSubmissionScreenState extends ConsumerState<EventSubmissionScreen> {
                                 )
                               : const Icon(Icons.send),
                           label: Text(
-                            _isSubmitting ? 'Küldés…' : tr(context, 'Esemény elküldése'),
+                            _isSubmitting
+                                ? tr(context, 'Küldés…')
+                                : tr(context, 'Esemény elküldése'),
                           ),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(54),

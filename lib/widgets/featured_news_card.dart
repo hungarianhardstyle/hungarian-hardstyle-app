@@ -94,7 +94,9 @@ class FeaturedNewsCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(3),
                       ),
                       child: Text(
-                        post.isSticky ? 'KIEMELT HÍR' : tr(context, 'FRISS HÍR'),
+                        post.isSticky
+                            ? tr(context, 'KIEMELT HÍR')
+                            : tr(context, 'FRISS HÍR'),
                         style: TextStyle(
                           color: colors.onPrimaryContainer,
                           fontWeight: FontWeight.bold,

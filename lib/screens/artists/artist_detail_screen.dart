@@ -64,7 +64,9 @@ class ArtistDetailScreen extends ConsumerWidget {
                 Text(
                   fallbackName.isEmpty
                       ? tr(context, 'Nem sikerült betölteni a DJ-adatlapot.')
-                      : '$fallbackName adatlapját nem sikerült betölteni.',
+                      : trArgs(context, '{name} adatlapját nem sikerült betölteni.', {
+                          'name': fallbackName,
+                        }),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white70),
                 ),
@@ -576,7 +578,11 @@ class _ArtistContent extends ConsumerWidget {
     final uri = Uri(
       scheme: 'mailto',
       path: artist.effectiveBookingEmail,
-      queryParameters: {'subject': 'Fellépés kérése – ${artist.title}'},
+      queryParameters: {
+        'subject': trArgs(context, 'Fellépés kérése – {artist}', {
+          'artist': artist.title,
+        }),
+      },
     );
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
 
@@ -618,7 +624,9 @@ class _MissingArtist extends StatelessWidget {
           child: Text(
             name.isEmpty
                 ? tr(context, 'Ehhez a fellépőhöz még nincs összekapcsolt DJ-adatlap.')
-                : '$name még nincs összekapcsolva egy DJ-adatlappal.',
+                : trArgs(context, '{name} még nincs összekapcsolva egy DJ-adatlappal.', {
+                    'name': name,
+                  }),
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, fontSize: 17),
           ),

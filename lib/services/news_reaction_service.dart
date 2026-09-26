@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../core/firebase/firebase_callable.dart';
+import '../core/i18n/app_strings.dart';
 
 class NewsReactionState {
   final int count;
@@ -143,8 +144,11 @@ class DailyLikePoints {
   bool get exhausted => count >= limit;
 
   String get label => exhausted
-      ? 'A mai lájkpontod elfogyott.'
-      : 'Ma $count/$limit lájkpont jár.';
+      ? AppStrings.tr('A mai lájkpontod elfogyott.')
+      : AppStrings.trArgs('Ma {count}/{limit} lájkpont jár.', {
+          'count': '$count',
+          'limit': '$limit',
+        });
 }
 
 /// `achievementDailyLimit` mezőből, ha az a mai napra és a hír-lájkra vonatkozik.

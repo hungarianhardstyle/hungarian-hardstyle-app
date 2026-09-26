@@ -127,6 +127,8 @@ class PostShortcode {
 
   const PostShortcode({required this.name, required this.source});
 
+  /// ⚠️ A címke **magyar kulcs**: a megjelenítés fordítja (`tr(context, …)`),
+  /// így nyelvváltáskor is átáll (a 2026-09-26-i kör mérése).
   String get label => switch (name.toLowerCase()) {
     'ays_poll' => 'Interaktív szavazás',
     'irp' => 'Kapcsolódó cikk',

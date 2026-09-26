@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../core/i18n/app_strings.dart';
+import '../core/i18n/tr.dart';
 import '../core/media/youtube_embed.dart';
 import '../core/navigation/in_app_browser.dart';
 import '../models/post.dart';
@@ -230,7 +231,7 @@ class _ExternalLink extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: ListTile(
         leading: const Icon(Icons.open_in_new, color: Colors.redAccent),
-        title: Text('${_label(embed.type)} megnyitása'),
+        title: Text(trArgs(context, '{label} megnyitása', {'label': _label(embed.type)})),
         onTap: () async {
           await _openExternal(embed.url);
         },

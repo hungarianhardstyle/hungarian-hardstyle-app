@@ -48,7 +48,9 @@ class OrganizerDetailScreen extends ConsumerWidget {
                 Text(
                   fallbackName.isEmpty
                       ? tr(context, 'Nem sikerült betölteni a szervezői adatlapot.')
-                      : '$fallbackName adatlapját nem sikerült betölteni.',
+                      : trArgs(context, '{name} adatlapját nem sikerült betölteni.', {
+                          'name': fallbackName,
+                        }),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white70),
                 ),
@@ -356,7 +358,9 @@ class _MissingOrganizer extends StatelessWidget {
           child: Text(
             name.isEmpty
                 ? tr(context, 'Ehhez a szervezőhöz még nincs összekapcsolt adatlap.')
-                : '$name még nincs összekapcsolva egy szervezői adatlappal.',
+                : trArgs(context, '{name} még nincs összekapcsolva egy szervezői adatlappal.', {
+                    'name': name,
+                  }),
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, fontSize: 17),
           ),

@@ -440,7 +440,7 @@ class _ArticleCommentsState extends State<ArticleComments> {
               child: FilledButton.icon(
                 onPressed: _sending ? null : _send,
                 icon: const Icon(Icons.send),
-                label: Text(_sending ? 'Küldés…' : tr(context, 'Hozzászólok')),
+                label: Text(_sending ? tr(context, 'Küldés…') : tr(context, 'Hozzászólok')),
               ),
             ),
           ],

@@ -149,7 +149,9 @@ class _VotingSummaryScreenState extends ConsumerState<VotingSummaryScreen> {
                   _seasonSelector(context, seasons, selected),
                   const SizedBox(height: 16),
                   Text(
-                    'Összes leadott szavazat: ${summary['totalVotes'] ?? 0}',
+                    trArgs(context, 'Összes leadott szavazat: {n}', {
+                      'n': '${summary['totalVotes'] ?? 0}',
+                    }),
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   if (displaySeason.hasPublishedResults)

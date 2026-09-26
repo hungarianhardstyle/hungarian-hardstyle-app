@@ -68,15 +68,10 @@ class _PrizeOption {
   final String winner;
 
   String get stateLabel => prizeStateLabel(state);
-
-  String get label {
-    final base = '$question — $stateLabel · $players játékos';
-    return winner.isEmpty ? base : '$base · 🏆 $winner';
-  }
 }
 
 String prizeStateLabel(String state) => switch (state) {
-  'open' => 'nyitott',
+  'open' => AppStrings.tr('nyitott'),
   'before' => AppStrings.tr('még nem indult'),
   'closed' => AppStrings.tr('lezárult'),
   _ => AppStrings.tr('lezárult'),
@@ -311,7 +306,15 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
                       DropdownMenuItem<int>(
                         value: game.id,
                         child: Text(
-                          game.label,
+                          trArgs(
+                            context,
+                            '{question} — {state} · {n} játékos',
+                            {
+                              'question': game.question,
+                              'state': game.stateLabel,
+                              'n': '${game.players}',
+                            },
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -359,7 +362,9 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'A nyereményjáték adatait most nem sikerült betölteni.\n${userFacingError(error)}',
+              trArgs(context, 'A nyereményjáték adatait most nem sikerült betölteni.\n{error}', {
+                'error': userFacingError(error),
+              }),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -385,10 +390,20 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Text(
-                'Állapot: ${summary.stateLabel}\n'
-                'Játékosok: ${summary.players} · helyes válasz: ${summary.correctCount}\n'
-                'Nyertes megjelenítése: '
-                '${summary.displayDays == 0 ? 'soha nem tűnik el' : '${summary.displayDays} nap'}',
+                trArgs(
+                  context,
+                  'Állapot: {state}\nJátékosok: {players} · helyes válasz: {correct}\nNyertes megjelenítése: {display}',
+                  {
+                    'state': summary.stateLabel,
+                    'players': '${summary.players}',
+                    'correct': '${summary.correctCount}',
+                    'display': summary.displayDays == 0
+                        ? tr(context, 'soha nem tűnik el')
+                        : trArgs(context, '{n} nap', {
+                            'n': '${summary.displayDays}',
+                          }),
+                  },
+                ),
               ),
             ),
           ),
@@ -398,11 +413,13 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
             color: Theme.of(context).colorScheme.secondaryContainer,
             child: ListTile(
               leading: const Text('🏆', style: TextStyle(fontSize: 22)),
-              title: Text('Nyertes: ${summary.winnerName}'),
+              title: Text(trArgs(context, 'Nyertes: {name}', {'name': summary.winnerName})),
               subtitle: Text(
                 summary.winnerAt.isEmpty
                     ? tr(context, 'A sorsolás megtörtént.')
-                    : 'Sorsolás: ${summary.winnerAt}',
+                    : trArgs(context, 'Sorsolás: {date}', {
+                        'date': summary.winnerAt,
+                      }),
               ),
             ),
           ),
@@ -433,7 +450,11 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        answer.correct ? '${answer.label}  ✔ helyes' : answer.label,
+                        answer.correct
+                            ? trArgs(context, '{answer}  ✔ helyes', {
+                                'answer': answer.label,
+                              })
+                            : answer.label,
                       ),
                     ),
                     Text('${answer.count} · ${answer.percent}%'),
@@ -446,7 +467,9 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
           ),
         const SizedBox(height: 14),
         Text(
-          'Résztvevők (${summary.participants.length})',
+          trArgs(context, 'Résztvevők ({n})', {
+            'n': '${summary.participants.length}',
+          }),
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 6),

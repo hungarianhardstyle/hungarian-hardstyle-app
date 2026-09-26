@@ -1,0 +1,6 @@
+{
+  "Javítva: a „Saját zenéim\" fejlécében angol felületen is angolul szól minden felirat (pl. a letöltött zenék száma).": "Fixed: every label on the “My purchased music” screen is now in English on the English interface (for example the number of downloaded tracks).",
+  "Javítva: angol felületen is angolul szól a lejátszó két gombja (szünet, keverés), a némítás, a feltöltés- és hibajelzések, az űrlap-ellenőrző üzenetek és a kiadvány-adatlap állapotsorai.": "Fixed: on the English interface the player’s two buttons (pause, shuffle), mute, the upload and error messages, the form validation messages and the release page status lines are all in English.",
+  "Javítva: a profil törlésének megerősítése angol felületen is a feliraton látható szót kéri (DELETE).": "Fixed: on the English interface the profile deletion confirmation now asks for the word shown on the label (DELETE).",
+  "Javítva: a booking- és hibajelentő e-mail tárgya is a választott nyelven szól.": "Fixed: the subject of the booking and bug report e-mails is now in the selected language."
+}

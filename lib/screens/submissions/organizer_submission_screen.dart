@@ -242,7 +242,9 @@ class _OrganizerSubmissionScreenState
                                 )
                               : const Icon(Icons.send),
                           label: Text(
-                            _submitting ? 'Küldés…' : tr(context, 'Szervező beküldése'),
+                            _submitting
+                                ? tr(context, 'Küldés…')
+                                : tr(context, 'Szervező beküldése'),
                           ),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(54),
@@ -290,7 +292,7 @@ class _OrganizerSubmissionScreenState
   );
 
   String? _required(String? value) =>
-      value == null || value.trim().isEmpty ? 'Kötelező mező.' : null;
+      value == null || value.trim().isEmpty ? AppStrings.tr('Kötelező mező.') : null;
 
   String? _emailRequired(String? value) {
     final required = _required(value);

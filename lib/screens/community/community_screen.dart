@@ -514,10 +514,15 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                             ListTile(
                               dense: true,
                               title: Text(
-                                'Bejegyzés: ${report.data()['postId'] ?? '-'}',
+                                trArgs(context, 'Bejegyzés: {id}', {
+                                  'id': '${report.data()['postId'] ?? '-'}',
+                                }),
                               ),
                               subtitle: Text(
-                                'Ok: ${report.data()['reason'] ?? 'egyéb'}',
+                                trArgs(context, 'Ok: {reason}', {
+                                  'reason':
+                                      '${report.data()['reason'] ?? tr(context, 'egyéb')}',
+                                }),
                               ),
                             ),
                         ],
@@ -532,7 +537,9 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                 collapsedShape: const Border(),
                 leading: const Icon(Icons.people_outline),
                 title: Text(
-                  'Regisztrált felhasználók (${filteredProfiles.length})',
+                  trArgs(context, 'Regisztrált felhasználók ({n})', {
+                    'n': '${filteredProfiles.length}',
+                  }),
                 ),
                 children: [
                   Padding(
@@ -659,7 +666,7 @@ class _CommunityAdminScreenState extends ConsumerState<CommunityAdminScreen> {
                                       ScaffoldMessenger.of(context)
                                         ..hideCurrentSnackBar()
                                         ..showSnackBar(
-                                          SnackBar(content: Text(message)),
+                                          SnackBar(content: Text(tr(context, message))),
                                         );
                                     } catch (error) {
                                       if (!context.mounted) return;
@@ -1253,7 +1260,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
         // admin/moderátor tartalom-hivatkozás): a szöveg olvasható maradt, de
         // a koppintás nem lesz ott — ezt röviden meg kell mondani.
         _showMessage(
-          'Néhány hivatkozás nem kattintható (csak adminnak/moderátornak jár).',
+          AppStrings.tr('Néhány hivatkozás nem kattintható (csak adminnak/moderátornak jár).'),
         );
       }
       if (result.everyoneNotified > 0) {
@@ -1281,7 +1288,10 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   void _showMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 8)),
+      SnackBar(
+        content: Text(tr(context, message)),
+        duration: const Duration(seconds: 8),
+      ),
     );
   }
 
@@ -1631,7 +1641,9 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => Center(
                   child: Text(
-                    'A Chat nem érhető el.\\n${_chatError(error)}',
+                    trArgs(context, 'A Chat nem érhető el.\n{error}', {
+                      'error': _chatError(error),
+                    }),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -2403,7 +2415,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
                     ),
                     backgroundColor: isMine ? scheme.primaryContainer : null,
                     side: isMine ? BorderSide(color: scheme.primary) : null,
-                    tooltip: isMine ? 'Te reagáltál erre' : null,
+                    tooltip: isMine ? tr(context, 'Te reagáltál erre') : null,
                     onPressed: () => _react(emoji),
                   );
                 }),
@@ -3238,7 +3250,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
         );
       }
       if (mounted) {
-        _message('A profil mentése sikertelen: ${_chatError(error)}');
+        _message(AppStrings.trArgs('A profil mentése sikertelen: {error}', {'error': _chatError(error)}));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -3311,7 +3323,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       if (completionNotice != null) _message(completionNotice);
       if (mounted) setState(() {});
     } catch (error) {
-      _message('Google-bejelentkezés nem sikerült: ${_chatError(error)}');
+      _message(AppStrings.trArgs('Google-bejelentkezés nem sikerült: {error}', {'error': _chatError(error)}));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -3555,7 +3567,10 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 8)),
+      SnackBar(
+        content: Text(tr(context, message)),
+        duration: const Duration(seconds: 8),
+      ),
     );
   }
 
@@ -3847,7 +3862,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                   : Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(_profileError!),
+                        Text(tr(context, _profileError!)),
                         TextButton(
                           onPressed: () => _loadProfile(force: true),
                           child: const AppText('Újrapróbálás'),
@@ -4280,7 +4295,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                                 typedConfirmation
                                                                         .text
                                                                         .trim() ==
-                                                                    'TÖRLÉS',
+                                                                    tr(context, 'TÖRLÉS'),
                                                               ),
                                                           child: const AppText(
                                                             'Törlés megerősítése',
@@ -4327,7 +4342,9 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                               } catch (error) {
                                                 if (mounted) {
                                                   _message(
-                                                    'A profil törlése sikertelen: ${_chatError(error)}',
+                                                    AppStrings.trArgs('A profil törlése sikertelen: {error}', {
+                                                      'error': _chatError(error),
+                                                    }),
                                                   );
                                                 }
                                               } finally {
@@ -4461,7 +4478,9 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                               FilledButton(
                                 onPressed: _busy ? null : _submit,
                                 child: Text(
-                                  _register ? 'Regisztráció' : tr(context, 'Bejelentkezés'),
+                                  _register
+                                      ? tr(context, 'Regisztráció')
+                                      : tr(context, 'Bejelentkezés'),
                                 ),
                               ),
                               const SizedBox(height: 8),

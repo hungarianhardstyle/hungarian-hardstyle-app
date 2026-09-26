@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../core/i18n/tr.dart';
+
 import '../services/news_reaction_service.dart';
 import 'app_text.dart';
 
@@ -77,8 +79,10 @@ class _NewsReactionButtonState extends State<NewsReactionButton> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${_dailyPoints!.label} Hírek kedveléséért naponta '
-            '${_dailyPoints!.limit} alkalommal jár pont.',
+            trArgs(context, '{daily} Hírek kedveléséért naponta {n} alkalommal jár pont.', {
+              'daily': _dailyPoints!.label,
+              'n': '${_dailyPoints!.limit}',
+            }),
           ),
         ),
       );

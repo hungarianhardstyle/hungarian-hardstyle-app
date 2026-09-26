@@ -308,8 +308,17 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         scheme: 'mailto',
         path: 'info@hungarianhardstyle.hu',
         queryParameters: {
-          'subject': 'Hibajelzés – Hungarian Hardstyle $version',
-          'body': 'App verzió: $version\n\nHiba leírása:\n',
+          // ⚠️ `AppStrings.trArgs` (nem `context`-es): a hívás `await` UTÁN van,
+          // ezért a `trArgs(context, …)` `use_build_context_synchronously`
+          // figyelmeztetést adna.
+          'subject': AppStrings.trArgs(
+            'Hibajelzés – Hungarian Hardstyle {version}',
+            {'version': version},
+          ),
+          'body': AppStrings.trArgs(
+            'App verzió: {version}\n\nHiba leírása:\n',
+            {'version': version},
+          ),
         },
       ),
       mode: LaunchMode.externalApplication,

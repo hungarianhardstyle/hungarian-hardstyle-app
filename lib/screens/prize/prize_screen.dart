@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/prize.dart';
 import '../../providers/community_provider.dart';
@@ -80,9 +79,10 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            error is Exception
-                ? _readableError(error)
-                : AppStrings.tr('A játékot most nem sikerült rögzíteni. Próbáld újra.'),
+            tr(context,
+                error is Exception
+                    ? _readableError(error)
+                    : 'A játékot most nem sikerült rögzíteni. Próbáld újra.'),
           ),
         ),
       );
@@ -265,7 +265,7 @@ class _PrizeScreenState extends ConsumerState<PrizeScreen> {
             onPressed: _selected == null || _submitting
                 ? null
                 : () => _submit(prize),
-            child: Text(_submitting ? 'Küldés…' : tr(context, 'Játszom')),
+            child: Text(_submitting ? tr(context, 'Küldés…') : tr(context, 'Játszom')),
           ),
         ),
         const SizedBox(height: 6),

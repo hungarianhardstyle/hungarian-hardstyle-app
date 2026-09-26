@@ -40,8 +40,10 @@ class _ReferralScreenState extends State<ReferralScreen> {
         'referrer': 'referral_code=$code',
       }).toString();
 
-  String _inviteText(String code) =>
-      'Csatlakozz a HUHS közösséghez! Regisztrálj az ajánlólinkkel: ${_inviteUrl(code)}';
+  String _inviteText(String code) => AppStrings.trArgs(
+    'Csatlakozz a HUHS közösséghez! Regisztrálj az ajánlólinkkel: {url}',
+    {'url': _inviteUrl(code)},
+  );
 
   Future<void> _copy(String code) async {
     await Clipboard.setData(ClipboardData(text: _inviteText(code)));

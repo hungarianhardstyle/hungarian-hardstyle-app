@@ -123,7 +123,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
       if (mounted) {
         setState(
           () => _message =
-              'A meglévő Google Play-vásárlás visszaállítása folyamatban van…',
+              AppStrings.tr('A meglévő Google Play-vásárlás visszaállítása folyamatban van…'),
         );
       }
       await _restorePurchases();
@@ -185,7 +185,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
       if (mounted) {
         setState(
           () => _message =
-              'A meglévő vásárlás visszaállításához be kell jelentkezni.',
+              AppStrings.tr('A meglévő vásárlás visszaállításához be kell jelentkezni.'),
         );
       }
       return;
@@ -196,7 +196,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
       if (mounted) {
         setState(
           () => _message =
-              'A korábbi Google Play-vásárlások visszaállítása nem sikerült.',
+              AppStrings.tr('A korábbi Google Play-vásárlások visszaállítása nem sikerült.'),
         );
       }
     }
@@ -312,7 +312,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
       if (_release.products.isEmpty) {
         if (mounted) {
           setState(
-            () => _message = 'A Play-termékazonosítók még nem érkeztek meg. Újrapróbálom automatikusan.',
+            () => _message = AppStrings.tr('A Play-termékazonosítók még nem érkeztek meg. Újrapróbálom automatikusan.'),
           );
         }
         _scheduleProductRetry();
@@ -341,7 +341,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
       if (mounted) {
         setState(() {
           _products = const [];
-          _message = 'A Google Play terméklista most nem tölthető be. Próbáld újra később.';
+          _message = AppStrings.tr('A Google Play terméklista most nem tölthető be. Próbáld újra később.');
         });
       }
     } finally {
@@ -354,17 +354,17 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
     if (allConfiguredProductsFound) return;
     if (_purchases.lastNotFoundProductIds.isNotEmpty) {
       setState(
-        () => _message = 'A Google Play Billing ezen az eszközön még nem adta vissza a kiadvány termékét. Újrapróbálom automatikusan.',
+        () => _message = AppStrings.tr('A Google Play Billing ezen az eszközön még nem adta vissza a kiadvány termékét. Újrapróbálom automatikusan.'),
       );
       _scheduleProductRetry();
     } else if (!_purchases.lastStoreAvailable) {
       setState(
-        () => _message = 'A Google Play Billing szolgáltatás még nem áll készen. Újrapróbálom automatikusan.',
+        () => _message = AppStrings.tr('A Google Play Billing szolgáltatás még nem áll készen. Újrapróbálom automatikusan.'),
       );
       _scheduleProductRetry();
     } else {
       setState(
-        () => _message = 'A Google Play Billing lekérdezése nem adott vissza terméket. Újrapróbálom automatikusan.',
+        () => _message = AppStrings.tr('A Google Play Billing lekérdezése nem adott vissza terméket. Újrapróbálom automatikusan.'),
       );
       _scheduleProductRetry();
     }
@@ -633,7 +633,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
                       ),
                   if (_message != null)
                     Text(
-                      _message!,
+                      tr(context, _message!),
                       style: const TextStyle(color: Colors.white70),
                     ),
                 ],
@@ -702,7 +702,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      _message!,
+                      tr(context, _message!),
                       style: const TextStyle(color: Colors.white70),
                     ),
                   ),
@@ -722,7 +722,9 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
                             ? _openFreeExternalLink
                             : _unlockExternalLink,
                         child: Text(
-                          _externalLinkUnlocked ? 'Megnyitás' : tr(context, 'Feloldás'),
+                          _externalLinkUnlocked
+                              ? tr(context, 'Megnyitás')
+                              : tr(context, 'Feloldás'),
                         ),
                       ),
                     ),
@@ -817,7 +819,9 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
         subtitle: Text(
           product?.description.isNotEmpty == true
               ? product!.description
-              : 'Megvásárolható a Google Playen • ${configured.price} Ft',
+              : trArgs(context, 'Megvásárolható a Google Playen • {price} Ft', {
+                  'price': configured.price,
+                }),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
@@ -832,7 +836,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
                 /*
                     ? () => setState(
                         () => _message =
-                            'A vásárlás a Google Playből telepített alkalmazásban érhető el.',
+                            AppStrings.tr('A vásárlás a Google Playből telepített alkalmazásban érhető el.'),
                       )
                     : () => _buy(product), */
                 child: Text(product?.price ?? '${configured.price} Ft'),
@@ -845,7 +849,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.isAnonymous) {
       if (mounted) {
-        setState(() => _message = 'A vásárláshoz előbb be kell jelentkezni.');
+        setState(() => _message = AppStrings.tr('A vásárláshoz előbb be kell jelentkezni.'));
       }
       return;
     }
@@ -854,12 +858,12 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
       if (!started && mounted) {
         setState(
           () => _message =
-              'A Google Play vásárlási ablakát nem sikerült megnyitni.',
+              AppStrings.tr('A Google Play vásárlási ablakát nem sikerült megnyitni.'),
         );
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _message = 'A Google Play vásárlás nem indítható el.');
+        setState(() => _message = AppStrings.tr('A Google Play vásárlás nem indítható el.'));
       }
     }
   }
@@ -873,7 +877,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
     if (_unlocking) return false;
     setState(() {
       _unlocking = true;
-      _message = 'A jutalmazott reklám betöltése…';
+      _message = AppStrings.tr('A jutalmazott reklám betöltése…');
     });
     try {
       final currentUid = FirebaseAuth.instance.currentUser?.uid;
@@ -890,7 +894,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
       );
       if (!earned) throw StateError(AppStrings.tr('A reklám megtekintése nem fejeződött be.'));
       if (mounted) {
-        setState(() => _message = 'A jutalom jóváírása…');
+        setState(() => _message = AppStrings.tr('A jutalom jóváírása…'));
       }
       // ⚠️ A Google SSV-ajánlása: a jutalmat a KLIENS visszahívásából azonnal
       // adjuk meg, az SSV pedig utólag igazol. Enélkül egy lassú (vagy teszt-
@@ -903,7 +907,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
       );
       if (!unlocked) {
         if (mounted) {
-          setState(() => _message = 'A reklám jóváírásának ellenőrzése…');
+          setState(() => _message = AppStrings.tr('A reklám jóváírásának ellenőrzése…'));
         }
         unlocked = await _purchases.waitForAdUnlock(
           releaseId: _release.id,
@@ -935,7 +939,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
     if (!unlocked || !mounted) return;
     setState(() {
       _adUnlocked = true;
-      _message = 'A jutalom jóváírva. A letöltés indul…';
+      _message = AppStrings.tr('A jutalom jóváírva. A letöltés indul…');
     });
     await Future<void>.delayed(const Duration(milliseconds: 350));
     final downloaded = await _download(_rewardVariant);
@@ -958,12 +962,12 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
   Future<void> _openFreeExternalLink() async {
     final uri = Uri.tryParse(_release.freeExternalLink);
     if (uri == null || !{'http', 'https'}.contains(uri.scheme)) {
-      setState(() => _message = 'Az ingyenes külső link érvénytelen.');
+      setState(() => _message = AppStrings.tr('Az ingyenes külső link érvénytelen.'));
       return;
     }
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened && mounted) {
-      setState(() => _message = 'A linket nem sikerült megnyitni.');
+      setState(() => _message = AppStrings.tr('A linket nem sikerült megnyitni.'));
     }
   }
 
@@ -971,7 +975,7 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.isAnonymous) {
       if (mounted) {
-        setState(() => _message = 'A letöltéshez be kell jelentkezni.');
+        setState(() => _message = AppStrings.tr('A letöltéshez be kell jelentkezni.'));
       }
       return false;
     }
