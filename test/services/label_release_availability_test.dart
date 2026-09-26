@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -123,7 +124,19 @@ void main() {
       await target.markMissing(305);
       final preferences = await SharedPreferences.getInstance();
       final payload = preferences.getString('huhs.release.missing')!;
-      expect('305'.allMatches(payload).length, 1);
+      // ⚠️ MÉRT ESZKÖZ-HIBA (javítva, 2026-09-26): a régi ellenőrzés a **nyers**
+      // szövegben számolta a „305" rész-szöveget (`'305'.allMatches(payload)`);
+      // a tárolt JSON viszont az **időpontot is** tartalmazza (`at`), és ha a
+      // timestamp számjegyei között ott a `305` (mért gyakoriság: **0,8%**),
+      // a találatok száma 2 lett → a teszt **hamisan bukott** (a CI-n pontosan
+      // ez történt: „Expected: <1> Actual: <2>", miközben a tároló helyes volt).
+      // Mostantól a **feldolgozott** listát számoljuk: az időpont számjegyei
+      // nem játszanak (`tmp/probe-label-flake-cause.mjs` méri a gyakoriságot).
+      final stored = (jsonDecode(payload) as List)
+          .whereType<Map>()
+          .where((entry) => entry['id'] == 305)
+          .length;
+      expect(stored, 1, reason: 'tároló: $payload');
     });
 
     test('az utolsó törlés után a kulcs eltűnik (nem marad üres lista)', () async {
