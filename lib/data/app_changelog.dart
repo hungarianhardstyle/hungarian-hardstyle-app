@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 368,
+    changes: [
+      'Javítva: angol felületen a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg — a teljes előzmény, a legkorábbi kiadásokig visszamenőleg.',
+      'A kiadási jegyzet sorai mostantól a szótárból fordulnak, ezért nyelvváltáskor azonnal a választott nyelven szólnak.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 367,
     changes: [
       'Javítva: angol felületen a játék eredményei képernyő fejléce (és a főoldali „JÁTÉK EREDMÉNYEI" jelvény) is angolul jelenik meg — eddig ezek magyarul maradtak.',

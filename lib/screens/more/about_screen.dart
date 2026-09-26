@@ -159,7 +159,11 @@ class _Changelog extends StatelessWidget {
               child: Text(
                 currentBuild == null
                     ? tr(context, 'A kiadási jegyzet betöltése…')
-                    : 'Ehhez a verzióhoz ($currentBuild) még nincs kiadási jegyzet.',
+                    : trArgs(
+                        context,
+                        'Ehhez a verzióhoz ({n}) még nincs kiadási jegyzet.',
+                        {'n': '$currentBuild'},
+                      ),
               ),
             ),
           )
@@ -251,7 +255,15 @@ class _ReleaseCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Expanded(child: Text(change)),
+                    Expanded(
+                      // ⚠️ A tulajdonos jelzése (2026-09-26): *„a changelog az
+                      // appban nem angol"* (angol felületen). A sor eddig **nyers**
+                      // volt (`Text(change)`), ezért a magyar szöveg ment ki angol
+                      // módban is. Mostantól a magyar sor a **szótári kulcs**, és a
+                      // kiírás a fordítón megy át — a fordítások a szótárban élnek
+                      // (132 sor, minden kiadásra visszamenőleg).
+                      child: Text(tr(context, change)),
+                    ),
                   ],
                 ),
               ),

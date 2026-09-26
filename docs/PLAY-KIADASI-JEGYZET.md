@@ -1,16 +1,15 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 367 megy fel** (versionCode **367**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> **Most a 368 megy fel** (versionCode **368**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-09-26): az **ÉLES (production) sávon a 360 fut** (`completed`, 100%), a **zárt teszten (alpha)
-> a 365**, a `beta` sávon a 354. A 367 újdonsága (a tulajdonos jelzései alapján): **angol felületen a
-> játék eredményei képernyő fejléce** (és a főoldali „JÁTÉK EREDMÉNYEI" jelvény) **is angolul** jelenik
-> meg; a **válasz-előnézet** („Válasz … üzenetére / hozzászólására") **is angolul szól**; és **további
-> angolul maradt feliratok** javultak (a hozzászólás-előtag, az adatvédelmi tájékoztató és a Saját zenék
-> súgóinak mondatai — ezek a szótárban léteztek, csak a keresés nem találta meg őket). A 367 a **366
-> minden** újdonságát is tartalmazza (kiadvány-dátum és „Megjelenései" angolul, azonnali nyelvváltás,
-> GYÍK → FAQ), az pedig a korábbiakét (nyelvváltó, angol tartalom, többnyelvű értesítések, hírlista-
-> frissesség, Chat-idézet odaugrása, „Partyface"). A nyilvános kiadáshoz a **361–367 összesítő**
-> (1b-2.), a bétához a **355–367 összesítő** (1b-3.) való.
+> a 365**, a `beta` sávon a 354. A 368 újdonsága (a tulajdonos jelzése: *„a changelog az appban nem
+> angol"* — angol felületen): a **kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg**, a
+> **teljes előzmény** a legkorábbi kiadásokig visszamenőleg (134 sor), és a sorok a **szótárból**
+> fordulnak, ezért nyelvváltáskor azonnal váltanak. A 368 a **367 minden** újdonságát is tartalmazza
+> (játék-eredmény fejléc, válasz-előnézet, a „szóközös" szótár-kulcsok), az pedig a korábbiakét
+> (nyelvváltó, angol tartalom, többnyelvű értesítések, hírlista-frissesség, Chat-idézet odaugrása,
+> „Partyface", GYÍK → FAQ). A nyilvános kiadáshoz a **361–368 összesítő** (1b-2.), a bétához a
+> **355–368 összesítő** (1b-3.) való.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -18,19 +17,19 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 367
+currentBuild: 368
 currentVersion: 1.0.0
 lastPublishedBuild: 360
-aab: build/HUHS-v1.0.0+367-release.aab
-sha256: E1100B3E17562565DEAC6BA959B9E490C0A381A1613E6408753E2F4BF0755DB9
+aab: build/HUHS-v1.0.0+368-release.aab
+sha256: 310AF28C5E759D8D96A29EB13536CF66FDC00C79DC02C7995482A6A8A88B2959
 -->
 
-⚠️ A **367**-et a **366** után kellett építeni (a 366-ot **nem** kell feltölteni: a 367 mindenben
-tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
+⚠️ A **368**-at a **367** után kellett építeni (a 367-et **nem** kell feltölteni, ha még nem tetted meg:
+a 368 mindenben tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
 ⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.5** (`build/huhs-mobile-api-2.14.5.zip`, SHA-256
 `68BE6407863D0905B3BB4A164654B354E412C731AA6323F86AF6F9FB6D90DF32`) — ebben vannak a **kézi angol
 mezők** (kérdőív, nyereményjáték, játék-összefoglaló). Az apphoz **nem** kell külön telepítés, csak az
-**AAB (367)** és a **plugin (2.14.5)** feltöltése.
+**AAB (368)** és a **plugin (2.14.5)** feltöltése.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -200,9 +199,8 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Javítva: angol felületen a játék eredményei képernyő fejléce és a főoldali „JÁTÉK EREDMÉNYEI" jelvény is angolul jelenik meg.
-- Javítva: angol felületen a válasz-előnézet („Válasz … üzenetére / hozzászólására") is angolul szól a Chatben és a hozzászólásoknál.
-- Javítva: további angolul maradt feliratok — a hozzászólás-előtag, az adatvédelmi tájékoztató és a Saját zenék súgóinak mondatai.
+- Javítva: angol felületen a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg — a teljes előzmény, a legkorábbi kiadásokig.
+- A kiadási jegyzet sorai a szótárból fordulnak, ezért nyelvváltáskor azonnal a választott nyelven szólnak.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -220,10 +218,10 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–367** összesítő (a 360 után)
+## 1b-2. Play Console — a **361–368** összesítő (a 360 után)
 
 **Ezt használd, ha a felhasználó a 360-ról jön** (ez az ÉLES sáv jelenlegi buildje) — vagyis csak azok
-az újdonságok szerepelnek benne, amelyek a **361–367** között készültek (a 359/360 `@mindenki`-je
+az újdonságok szerepelnek benne, amelyek a **361–368** között készültek (a 359/360 `@mindenki`-je
 **nincs** benne, mert azt a 360 már megkapta). A karakter-számot a `tools/check-play-notes.mjs` méri.
 
 ```play-notes
@@ -231,13 +229,13 @@ az újdonságok szerepelnek benne, amelyek a **361–367** között készültek 
 - Angolul a cikkek, a hírek címkéi, az Achievement-nevek és a GYÍK (FAQ) is.
 - Az értesítések és a push is a választott nyelven jönnek.
 - ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
-- ÚJ: a főoldal és a Hírek fül magától frissül; a DJ-adatlapon látszanak a megjelenések.
-- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és több más felirat is.
+- ÚJ: a főoldal és a Hírek fül magától frissül; a DJ-adatlapon a megjelenések.
+- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet, a changelog és más feliratok.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–367** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–368** összesítő)
 
-**Ezt használd, ha a 367-ot a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 368-at a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-09-26) szerint ott a **354** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki`, a Chat-értesítés
 odaugrása, a DJ-adatlap megjelenései, a hírlista-frissesség és a mai felirat-javítások is.
@@ -248,7 +246,7 @@ odaugrása, a DJ-adatlap megjelenései, a hírlista-frissesség és a mai felira
 - Az értesítések és a push is a választott nyelven jönnek.
 - ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
 - ÚJ: a főoldal és a Hírek fül magától frissül; a DJ-adatlapon a megjelenések.
-- Javítva: angolul a játék-eredmény fejléc és a válasz-előnézet is.
+- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a changelog.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -278,6 +276,12 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 368 — a kiadási jegyzet (changelog) is angolul, a teljes előzmény
+- **Javítva (a tulajdonos jelzése: *„a changelog az appban nem angol"*, majd *„az angol felületen"*):** a Névjegy → **Újdonságok** szakasz a kiadási jegyzet sorait **nyersen** írta ki (`Text(change)`), és a szövegek **nem voltak a szótárban** — ezért angol módban a magyar changelog ment ki. Mostantól a **magyar sor a szótári kulcs**, a kiírás a fordítón megy át, és **mind a 134 sor** (48 kiadás, a legkorábbiakig visszamenőleg) fordítása bekerült a szótárba. A „nincs ehhez a verzióhoz jegyzet" szöveg is **sablon** lett (`Ehhez a verzióhoz ({n}) …`), ezért az sem marad magyar.
+- **Mérve:** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1117/1117** (ebből új: `test/services/i18n_changelog_test.dart` **4/4** — minden sorhoz van fordítás, angol módban **egyetlen sor sem marad magyar**, magyar módban bájtazonos, és a forrás-lint a nyers kiírást tiltja); i18n-kapu → **1121 kulcs, 918/918 célzott (100%), 0 duplikált**; **mutációs bizonyíték 3/3** (`tmp/mutation-proof-changelog.mjs`: a nyers kiírás visszaállítása, egy sor fordításának elvétele a szótárból, a verzió-interpoláció nyersre cserélése — mind **elkapva**, bájtazonos visszaállítással); `node tmp/verify-aab.mjs build/HUHS-v1.0.0+368-release.aab 368` → **versionCode 368**, **1121 kulcsú szótár**, a két új changelog-sor mindhárom ABI-ban.
+- **Amit ez a kiadás is tartalmaz:** a 367 (játék-eredmény fejléc, válasz-előnézet, „szóközös" szótár-kulcsok), a 366, a 365, a 364 és a 363–359 minden újdonsága.
+- **⚠️ ŐSZINTE KORLÁT:** a **Chat** és a **felhasználók saját szövegei** továbbra sem fordulnak (ez szándékos), és a `setState`-tel tárolt átmeneti állapotüzenetek egy része még magyar (pl. „A jutalmazott reklám betöltése…") — külön kör.
 
 ### 367 — a játék-eredmény fejléc és a válasz-előnézet is angolul (+ a szótár „elveszett" kulcsai)
 - **Javítva (a tulajdonos jelzése: *„a játék eredményei fejléc is magyar maradt, angolra kapcsolva"*):** a `GameScreen` fejléce **nyers literál** volt egy ternary ágában (`resultsOnly ? 'Játék eredményei' : game.title`) — ezért az i18n-extraktor **nem látta**, a szótárban **nem volt kulcs**, és angol módban magyarul maradt. Ugyanez a hibaosztály a főoldali **„JÁTÉK EREDMÉNYEI"** jelvényen, a **hero** tartalék szövegén (`Próbáld ki magad!`), a **betöltési hibaüzeneten** és a **zárás-dátum** zárójeles címkéjén (` (eddig: …)`) — mind a fordítón megy át, és mind a hat kulcs bekerült a szótárba.

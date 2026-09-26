@@ -52,7 +52,7 @@ const dictionaryEntry = entries.find((entry) => entry.endsWith('assets/i18n/en.j
 execFileSync('tar', ['-xf', AAB, '-C', OUT, dictionaryEntry], { maxBuffer: 64 * 1024 * 1024 });
 const dictionary = JSON.parse(fs.readFileSync(`${OUT}/${dictionaryEntry}`, 'utf8'));
 const keyCount = Object.keys(dictionary).length;
-check('a szótár legalább 986 kulcsú', keyCount >= 986, `${keyCount} kulcs`);
+check('a szótár legalább 1121 kulcsú', keyCount >= 1121, `${keyCount} kulcs`);
 
 for (const [key, expected] of [
   ['Bulizó', 'Partyface'],
@@ -69,6 +69,12 @@ for (const [key, expected] of [
   ['JÁTÉK EREDMÉNYEI', 'GAME RESULTS'],
   [' (eddig: {d})', ' (until {d})'],
   ['Válasz {name} üzenetére: {text}', "Reply to {name}'s message: {text}"],
+  // 368: a kiadási jegyzet fordításai (a teljes előzmény angolul).
+  ['Ehhez a verzióhoz ({n}) még nincs kiadási jegyzet.', 'There are no release notes for version {n} yet.'],
+  [
+    'Javítva: angol felületen a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg — a teljes előzmény, a legkorábbi kiadásokig visszamenőleg.',
+    'Fixed: on the English interface the release notes (About → What is new) appear in English as well — the full history, back to the earliest releases.',
+  ],
 ]) {
   check(`szótár: ${JSON.stringify(key)} → ${JSON.stringify(expected)}`, dictionary[key] === expected, String(dictionary[key]));
 }
@@ -88,6 +94,10 @@ const changelog = [
   'a játék eredményei képernyő fejléce',
   'a válasz-előnézet is angolul szól',
   'az adatvédelmi tájékoztató és a Saját zenék súgóinak mondatai',
+  // 368: a kiadási jegyzet angolul. ⚠️ A MAGYAR sor a Dart-literál (ezért van a
+  // snapshotban); az ANGOL fordítás az `assets/i18n/en.json`-ban él, ezért azt a
+  // fenti szótár-ellenőrzés méri (a snapshotban nem is lehetne megtalálni).
+  'a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });

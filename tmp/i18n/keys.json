@@ -3104,6 +3104,13 @@
     ]
   },
   {
+    "value": "Ehhez a verzióhoz ({n}) még nincs kiadási jegyzet.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
     "value": "Ehhez az évadhoz nem érkezett kategóriaadat.",
     "count": 1,
     "files": [

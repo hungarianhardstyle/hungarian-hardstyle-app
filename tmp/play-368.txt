@@ -1,0 +1,2 @@
+- Javítva: angol felületen a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg — a teljes előzmény, a legkorábbi kiadásokig.
+- A kiadási jegyzet sorai a szótárból fordulnak, ezért nyelvváltáskor azonnal a választott nyelven szólnak.
