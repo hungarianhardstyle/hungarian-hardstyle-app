@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hungarian_hardstyle_app/core/i18n/app_language.dart';
+import 'package:hungarian_hardstyle_app/core/i18n/app_strings.dart';
 import 'package:hungarian_hardstyle_app/models/post.dart';
 import 'package:hungarian_hardstyle_app/providers/news_provider.dart';
 import 'package:hungarian_hardstyle_app/services/wordpress_service.dart';
@@ -272,6 +274,166 @@ void main() {
         reason:
             'a jelzés után a listának a friss tartalmat kell mutatnia '
             '(nem a mentett példányt)',
+      );
+
+      notifier.dispose();
+      updates.dispose();
+      await tester.pump();
+    });
+  });
+
+  // A tulajdonos jelzése (2026-09-26): *„a legutolsó hír valamiért nincs fent
+  // angolul"* → *„újraindítás után jó"*. A mért gyökér: a háttér-frissítés
+  // azonosítók alapján döntött, a nyelvváltás viszont ugyanazokat az
+  // azonosítókat adja MÁS nyelvű címekkel — így a régi nyelvű lista a helyén
+  // maradt; ráadásul a háttér-út csak az első oldalon futott.
+  group('nyelvváltáskor a hírlista is átáll (ne kelljen újraindítani)', () {
+    late AppLanguage original;
+
+    setUp(() {
+      original = AppStrings.language;
+    });
+
+    tearDown(() {
+      AppStrings.setLanguage(original);
+    });
+
+    testWidgets('ugyanazok az azonosítók, MÁS nyelvű címek: a lista frissül', (
+      tester,
+    ) async {
+      var english = false;
+      final updates = ValueNotifier<int>(0);
+      final notifier = PaginatedNewsNotifier(
+        loadPage:
+            ({
+              required int page,
+              required String search,
+              required int categoryId,
+              required bool forceRefresh,
+            }) async => pageWith([
+              post(1, english ? 'Hard Bass is back' : 'Visszatér a Hard Bass'),
+            ]),
+        loadCategories: () async => const [],
+        contentUpdates: updates,
+        revalidate: ({required String search, required int categoryId}) async {},
+      );
+
+      await tester.pump();
+      expect(notifier.state.posts.single.title, 'Visszatér a Hard Bass');
+
+      // Nyelvváltás: ugyanaz a cikk, angol címmel (és a szolgáltatás jelzése).
+      english = true;
+      AppStrings.setLanguage(AppLanguage.en);
+      updates.value++;
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        notifier.state.posts.single.title,
+        'Hard Bass is back',
+        reason:
+            'a nyelvváltásnak a MÁR betöltött listán is látszania kell '
+            '(az azonosító ugyanaz, ezért a cím is számít az összehasonlításban)',
+      );
+
+      notifier.dispose();
+      updates.dispose();
+      await tester.pump();
+    });
+
+    testWidgets('továbblapozott listánál is az első oldaltól tölt újra', (
+      tester,
+    ) async {
+      final loadedPages = <int>[];
+      final updates = ValueNotifier<int>(0);
+      final notifier = PaginatedNewsNotifier(
+        loadPage:
+            ({
+              required int page,
+              required String search,
+              required int categoryId,
+              required bool forceRefresh,
+            }) async {
+          loadedPages.add(page);
+          return PostsPage(
+            items: [post(page, 'Cikk $page')],
+            page: page,
+            perPage: 1,
+            total: 3,
+            totalPages: 3,
+            hasMore: page < 3,
+          );
+        },
+        loadCategories: () async => const [],
+        contentUpdates: updates,
+        revalidate: ({required String search, required int categoryId}) async {},
+      );
+
+      await tester.pump();
+      await notifier.loadNextPage();
+      await tester.pump();
+      expect(notifier.state.page, 2, reason: 'a lista tovább van lapozva');
+      loadedPages.clear();
+
+      // Nyelvváltás: a lista MINDEN betöltött oldalát el kell dobni.
+      AppStrings.setLanguage(
+        AppStrings.language == AppLanguage.en ? AppLanguage.hu : AppLanguage.en,
+      );
+      updates.value++;
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        loadedPages,
+        contains(1),
+        reason:
+            'nyelvváltáskor az első oldaltól kell újratölteni (különben a '
+            'továbblapozott, régi nyelvű oldalak a helyükön maradnak)',
+      );
+      expect(notifier.state.page, 1, reason: 'a lapozás visszaáll az elejére');
+
+      notifier.dispose();
+      updates.dispose();
+      await tester.pump();
+    });
+  });
+
+  // ⚠️ MIÉRT KELL A CÍM AZ ÖSSZEHASONLÍTÁSBA: a szerver a fordításokat
+  // utólag is javíthatja (a WP-plugin pótló köre), ilyenkor **ugyanazok** az
+  // azonosítók **más** címmel jönnek vissza — a csak azonosító-alapú döntés a
+  // régi címet hagyná a listán.
+  group('a háttérben módosult cím is megjelenik (nem csak az új cikk)', () {
+    testWidgets('ugyanaz az azonosító, más cím: a lista frissül', (tester) async {
+      var edited = false;
+      final updates = ValueNotifier<int>(0);
+      final notifier = PaginatedNewsNotifier(
+        loadPage:
+            ({
+              required int page,
+              required String search,
+              required int categoryId,
+              required bool forceRefresh,
+            }) async =>
+                pageWith([post(1, edited ? 'Javított cím' : 'Eredeti cím')]),
+        loadCategories: () async => const [],
+        contentUpdates: updates,
+        revalidate: ({required String search, required int categoryId}) async {},
+      );
+
+      await tester.pump();
+      expect(notifier.state.posts.single.title, 'Eredeti cím');
+
+      edited = true;
+      updates.value++;
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        notifier.state.posts.single.title,
+        'Javított cím',
+        reason:
+            'a háttérben módosult címet is meg kell jeleníteni (az azonosító '
+            'változatlan, ezért a cím is számít az összehasonlításban)',
       );
 
       notifier.dispose();

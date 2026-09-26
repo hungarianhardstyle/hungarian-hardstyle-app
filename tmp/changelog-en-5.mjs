@@ -4,6 +4,7 @@
 export const release371 = [
   'NEW: an @everyone mention in the Chat now also sends a push notification (banner) — personal @mentions stay silent.',
   'The sender of an @everyone message gets feedback: how many recipients and how many devices were notified.',
+  'Fixed: when you switch language the news list switches over immediately as well — no need to restart the app.',
 ];
 
 export const release370 = [

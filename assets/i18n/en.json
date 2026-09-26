@@ -634,6 +634,7 @@
   "Javítva: ha egy zene indítása nem sikerül, a hang visszakerül a rádióhoz, és az app nem némul el.": "Fixed: if a track fails to start, the sound returns to the radio and the app does not go silent.",
   "Javítva: minden hibaüzenet magyar (eddig a lejátszó hibája angolul jelent meg).": "Fixed: every error message is Hungarian (before the player error appeared in English).",
   "Javítva: nyelvváltáskor a betöltött tartalom (hírek, események, DJ-k, kiadványok) azonnal átvált a választott nyelvre — eddig a mentett lista miatt késlekedett.": "Fixed: when you switch language, the loaded content (news, events, DJs, releases) switches to the selected language immediately — it used to lag because of the saved list.",
+  "Javítva: nyelvváltáskor a hírek listája is azonnal átáll — nem kell újraindítani az appot.": "Fixed: when you switch language the news list switches over immediately as well — no need to restart the app.",
   "Javítva: tableten fekvő nézetben a kiadvány adatlapja nem lesz óriási — a borító és a teljes tartalom is normál méretű.": "Fixed: on a tablet in landscape the release details page is no longer huge — both the cover and the full content are normal size.",
   "Javítva: további angolul maradt feliratok — a hozzászólás-előtag, az adatvédelmi tájékoztató és a Saját zenék súgóinak mondatai (a szótár ezeket eddig nem találta meg).": "Fixed: more labels that stayed Hungarian — the comment prefix, the privacy policy and the My music help texts (the dictionary could not find these before).",
   "Jegyvásárlás": "Buy tickets",

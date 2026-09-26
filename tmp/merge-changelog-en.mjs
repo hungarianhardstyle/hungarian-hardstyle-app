@@ -52,15 +52,15 @@ console.log(
  */
 const anchors = [
   [0, 'ÚJ: a Chat @mindenki értesítéséhez mostantól push', 'NEW: an @everyone mention in the Chat now also sends a push'],
-  [2, 'Javítva: az értesítésben a cikk (és a kiadás, esemény, DJ) címe', 'Fixed: the title of the article (and of the release, event or DJ)'],
-  [4, 'Javítva: angol felületen az értesítések szövege', 'Fixed: on the English interface notification texts'],
-  [5, 'Javítva: a privát üzenet értesítésének címe', 'Fixed: the title of a private message notification'],
-  [7, 'Javítva: angol felületen a kiadási jegyzet', 'Fixed: on the English interface the release notes'],
-  [9, 'Javítva: angol felületen a játék eredményei', 'Fixed: on the English interface the Game results'],
-  [42, 'A kvíz azonnal mutatja', 'The quiz now shows immediately'],
-  [76, 'Gyorsabb betöltés', 'Faster loading'],
-  [107, 'A hír kedveléséért járó pontot', 'The points for liking a news item'],
-  [140, 'A kérdőív szavazólapja saját képernyőn', 'The poll ballot opens on its own screen'],
+  [3, 'Javítva: az értesítésben a cikk (és a kiadás, esemény, DJ) címe', 'Fixed: the title of the article (and of the release, event or DJ)'],
+  [5, 'Javítva: angol felületen az értesítések szövege', 'Fixed: on the English interface notification texts'],
+  [6, 'Javítva: a privát üzenet értesítésének címe', 'Fixed: the title of a private message notification'],
+  [8, 'Javítva: angol felületen a kiadási jegyzet', 'Fixed: on the English interface the release notes'],
+  [10, 'Javítva: angol felületen a játék eredményei', 'Fixed: on the English interface the Game results'],
+  [43, 'A kvíz azonnal mutatja', 'The quiz now shows immediately'],
+  [77, 'Gyorsabb betöltés', 'Faster loading'],
+  [108, 'A hír kedveléséért járó pontot', 'The points for liking a news item'],
+  [141, 'A kérdőív szavazólapja saját képernyőn', 'The poll ballot opens on its own screen'],
 ];
 
 const problems = [];

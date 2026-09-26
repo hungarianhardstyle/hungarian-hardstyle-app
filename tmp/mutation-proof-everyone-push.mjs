@@ -18,9 +18,11 @@ import fs from 'node:fs';
 
 const SERVER = 'functions/index.js';
 const PLAN = 'functions/chat-mention-plan.js';
+const NEWS_PROVIDER = 'lib/providers/news_provider.dart';
 const SERVER_TEST = 'functions/chat-mention-plan.test.cjs';
 const CHAT_PUSH_TEST = 'functions/chat-notification-plan.test.cjs';
 const DART_TEST = 'test/services/chat_mention_wiring_test.dart';
+const NEWS_TEST = 'test/services/news_freshness_test.dart';
 
 const sha = (text) => crypto.createHash('sha256').update(text, 'utf8').digest('hex');
 
@@ -39,6 +41,7 @@ function runCommand(command) {
 const runners = {
   server: () => runCommand(`node --test ${SERVER_TEST} ${CHAT_PUSH_TEST}`),
   dart: () => runCommand(`flutter test ${DART_TEST}`),
+  news: () => runCommand(`flutter test ${NEWS_TEST}`),
 };
 
 /** A fájl saját sorvége (a fájlok CRLF-esek — a `\n`-es horgony „nem találna"). */
@@ -134,6 +137,28 @@ const mutations = [
     transform: (source) =>
       source.replace("      final pushed = data['everyonePushed'];", '      final pushed = 0;'),
   },
+  // A hírlista nyelvváltása (a tulajdonos jelzése: *„a legutolsó hír valamiért
+  // nincs fent angolul"* → *„újraindítás után jó"*).
+  {
+    label: 'az összehasonlítás újra CSAK azonosító-alapú (a nyelvváltás észrevétlen)',
+    file: NEWS_PROVIDER,
+    runner: 'news',
+    transform: (source) =>
+      source.replace(
+        "      if (left[i].id != right[i].id) return false;\n      if (left[i].title != right[i].title) return false;",
+        '      if (left[i].id != right[i].id) return false;',
+      ),
+  },
+  {
+    label: 'nyelvváltáskor nem dobjuk el a betöltött oldalakat (nincs nyelv-ág)',
+    file: NEWS_PROVIDER,
+    runner: 'news',
+    transform: (source) =>
+      source.replace(
+        '    if (_loadedLanguage != AppStrings.language) {\n      unawaited(refresh());\n      return;\n    }\n',
+        '',
+      ),
+  },
 ];
 
 let caught = 0;
@@ -170,10 +195,11 @@ console.log(`\n${caught}/${mutations.length} mutáció elkapva`);
 
 const finalServer = runners.server();
 const finalDart = runners.dart();
-const green = finalServer.ok && finalDart.ok;
+const finalNews = runners.news();
+const green = finalServer.ok && finalDart.ok && finalNews.ok;
 console.log(
   green
-    ? 'a helyreállított kör ÚJRA ZÖLD (szerver + kliens)'
-    : `HIBA: a helyreállított kör sem zöld:\n${(finalServer.output + finalDart.output).slice(-600)}`,
+    ? 'a helyreállított kör ÚJRA ZÖLD (szerver + kliens + hírlista)'
+    : `HIBA: a helyreállított kör sem zöld:\n${(finalServer.output + finalDart.output + finalNews.output).slice(-600)}`,
 );
 process.exitCode = caught === mutations.length && green ? 0 : 1;

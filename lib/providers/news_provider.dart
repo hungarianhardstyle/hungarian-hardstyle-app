@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/i18n/app_language.dart';
+import '../core/i18n/app_strings.dart';
 import '../models/post.dart';
 import '../services/wordpress_service.dart';
 
@@ -238,6 +240,21 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
   final Listenable? _contentUpdates;
   int _requestId = 0;
 
+  /// A **most látható lista nyelve** — ebből ismerjük fel a nyelvváltást.
+  ///
+  /// ⚠️ **MÉRT HIBA (a tulajdonos jelzése, 2026-09-26):** *„a legutolsó hír
+  /// valamiért nincs fent angolul"* → *„újraindítás után jó"*. Két része volt:
+  ///  1. a háttér-frissítés **azonosítók** alapján döntött („ugyanaz a lista"),
+  ///     a nyelvváltás viszont **ugyanazokat** az azonosítókat adja **más
+  ///     nyelvű** címekkel — így a régi nyelvű lista a helyén maradt;
+  ///  2. a háttér-út **csak az első oldalon** futott (`state.page > 1` esetén
+  ///     kilépett), ezért egy továbblapozott lista **újraindításig** a régi
+  ///     nyelven maradt.
+  ///
+  /// Ezért a jelzésre előbb a nyelvet hasonlítjuk: ha megváltozott, a lista
+  /// **minden betöltött oldalát eldobjuk** és az első oldalt töltjük újra.
+  AppLanguage _loadedLanguage = AppStrings.language;
+
   @override
   void dispose() {
     _revalidateTimer?.cancel();
@@ -309,6 +326,7 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
         page: response.page,
         clearError: true,
       );
+      _loadedLanguage = AppStrings.language;
     } catch (error) {
       if (_isStale(requestId)) {
         return;
@@ -325,7 +343,15 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
   /// test megérkezett, a mentett oldal **hálózat nélkül** újraolvasható — így a
   /// lista magától frissül, a felhasználónak nem kell lehúznia.
   void _onContentUpdated() {
-    if (!mounted || state.isLoading || state.isLoadingMore) return;
+    if (!mounted) return;
+    // ⚠️ NYELVVÁLTÁS: a betöltött oldalakat is el kell dobni — a csendes
+    // háttér-frissítés csak az első oldalt cserélné, a régi nyelvű címek
+    // pedig a helyükön maradnának (mért hiba: „a legutolsó hír nem angol").
+    if (_loadedLanguage != AppStrings.language) {
+      unawaited(refresh());
+      return;
+    }
+    if (state.isLoading || state.isLoadingMore) return;
     // Aki már továbblapozott, annak a listáját nem írjuk felül a háttérből:
     // ott a kifejezett frissítés a helyes út (a lista nem ugrál a keze alatt).
     if (state.page > 1) return;
@@ -341,22 +367,30 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
       // `test/services/news_freshness_test.dart` méri).
       final cached = await _getPostsPage(page: 1, forceRefresh: true);
       if (!mounted || cached.items.isEmpty) return;
-      if (_sameIds(cached.items, state.posts)) return;
+      if (_samePosts(cached.items, state.posts)) return;
       state = state.copyWith(
         posts: cached.items,
         hasMore: cached.hasMore,
         page: cached.page,
         clearError: true,
       );
+      _loadedLanguage = AppStrings.language;
     } catch (_) {
       // A háttérellenőrzés hibája nem törölheti a képernyőn lévő listát.
     }
   }
 
-  bool _sameIds(List<Post> left, List<Post> right) {
+  /// Ugyanaz a lista? **Az azonosító MELLETT a cím is számít.**
+  ///
+  /// ⚠️ MÉRT OK: a csak azonosító-alapú összehasonlítás a **nyelvváltást** nem
+  /// vette észre (ugyanazok a cikkek, más nyelvű címek), ezért a régi nyelvű
+  /// lista a helyén maradt mindaddig, amíg a felhasználó újra nem indította az
+  /// appot. A cím a legolcsóbb nyelvenként változó mező, ezért ezt hasonlítjuk.
+  bool _samePosts(List<Post> left, List<Post> right) {
     if (left.length != right.length) return false;
     for (var i = 0; i < left.length; i++) {
       if (left[i].id != right[i].id) return false;
+      if (left[i].title != right[i].title) return false;
     }
     return true;
   }

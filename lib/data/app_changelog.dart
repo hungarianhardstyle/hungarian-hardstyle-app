@@ -42,6 +42,7 @@ const appChangelog = <AppReleaseNotes>[
     changes: [
       'ÚJ: a Chat @mindenki értesítéséhez mostantól push (banner) is jön — a személyes @említés marad csendes.',
       'A @mindenki küldője visszajelzést kap: hány címzett és hány készülék kapott értesítést.',
+      'Javítva: nyelvváltáskor a hírek listája is azonnal átáll — nem kell újraindítani az appot.',
     ],
   ),
   AppReleaseNotes(

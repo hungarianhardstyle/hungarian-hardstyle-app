@@ -117,9 +117,10 @@ const changelog = [
   'angol felületen az értesítések szövege azonnal a választott nyelven jelenik meg',
   // 370: az értesítésben a cikk címe is a választott nyelven.
   'az értesítésben a cikk (és a kiadás, esemény, DJ) címe is a választott nyelven',
-  // 371: a @mindenki push + a küldő visszajelzése.
+  // 371: a @mindenki push + a küldő visszajelzése + a hírlista nyelvváltása.
   'a Chat @mindenki értesítéséhez mostantól push (banner) is jön',
   'A @mindenki küldője visszajelzést kap',
+  'nyelvváltáskor a hírek listája is azonnal átáll',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });
