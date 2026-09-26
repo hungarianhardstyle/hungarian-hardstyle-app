@@ -1,8 +1,11 @@
 # Play Console — kiadási jegyzet (másolható)
 
 > **Most a 365 megy fel** (versionCode **365**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
-> 2026-09-25): a **zárt teszt sávján a 360 fut** (`completed`, 100%), a **production sávon a 358**
-> (nyilvános, a 352–358 szöveggel), a `beta` sávon a 354. A 365 újdonsága: a **főoldal és a Hírek fül
+> 2026-09-26): az **ÉLES (production) sávon a 360 fut** (`completed`, 100%), a **zárt teszten (alpha)
+> már a 365** (`completed`, 100% — a tulajdonos feltöltötte a **361–365** szöveggel), a `beta` sávon a
+> 354. Ezért a **nyilvános kiadáshoz is a 361–365 összesítő** való: a nyilvános felhasználók a **360**-at
+> kapták, vagyis a `@mindenki` és a Chat-odaugrás **már megvan nekik** — a 359/360-as blokk **történeti**.
+> A 365 újdonsága: a **főoldal és a Hírek fül
 > listája magától frissül** — ha új cikk kerül fel, az **legfeljebb egy percen belül** megjelenik
 > (lehúzás nélkül), és amikor az app **előtérbe kerül** (például egy értesítésre nyitod meg), azonnal
 > ellenőrizzük; a **Chatben a válasz idézetére koppintva az app odaugrik az eredeti üzenetre** (és
@@ -11,8 +14,8 @@
 > újdonságát is tartalmazza (többnyelvű értesítések, teljes angol felület, angol Achievement-nevek,
 > a „Közösség"/Community gomb kifér, hírek kategória-/címke-nevei angolul). ⚠️ **A 361–364-et ne
 > töltsd fel** — a 365 mindegyiket tartalmazza.
-> A rövid (1.) blokk **csak a 365 újdonságát** írja le, a nyilvános kiadáshoz az **1b. blokk** való
-> (**359–365 összesítő**).
+> A rövid (1.) blokk **csak a 365 újdonságát** írja le, a nyilvános kiadáshoz az **1b-2. blokk** való
+> (**361–365 összesítő**).
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -22,7 +25,7 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 <!-- play-notes-meta
 currentBuild: 365
 currentVersion: 1.0.0
-lastPublishedBuild: 355
+lastPublishedBuild: 360
 aab: build/HUHS-v1.0.0+365-release.aab
 sha256: 42625F13F3D45FDAEECB04E0D6C1FA64D26E1E72117D845F69CC69BDB5C7AA84
 -->
@@ -33,20 +36,21 @@ tartalmát hozza, plusz az új javításokat.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
-A Play Developer API-t **olvasásra** kérdezve (2026-09-25, a legfrissebb mérés):
+A Play Developer API-t **olvasásra** kérdezve (**2026-09-26**, a legfrissebb mérés):
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **production (nyilvános)** | **completed** (100%-ban kigördült) | **358** — „358 (1.0.0)" |
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **360** — „360 (1.0.0)" |
+| **production (nyilvános — ÉLES)** | **completed** (100%-ban kigördült) | **360** — „360 (1.0.0)" |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **365** — „365 (1.0.0)" |
 | beta | completed (100%) | 354 |
-| internal | completed + egy **üres piszkozat** | 278 |
+| internal | completed (278) + egy **üres piszkozat** | 278 |
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
-- **A nyilvános kiadás megvan:** a production sávon a **358** van (`completed`, a **352–358 összesítő** szöveggel), a bolt-lap **200**-at ad. **A zárt tesztben a 360 fut** (a tulajdonos feltöltötte, `completed` 100%) — a 360 kiadási szövege a **360-as blokk** volt (Chat-odaugrás javítása + `@mindenki`).
-- A feltöltött AAB-ek a Playen (a 2026-09-25-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 352, 353, 354, 355, 356, 357, 358, 359, **360**.
-- **A 360 a zárt teszt csúcsa**, ezért a következő app-változás a **364** (a 361, 362 és 363 elkészült, de **egyik sem került fel** — a 364 mindegyiket tartalmazza, ezért azokat **ne** töltsd fel). A `beta` sávon a **354** van (ez a nyílt teszt csatorna), ott **nem** kell külön lépni.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**355**) azt jelöli, hogy a legutóbb a **nyilvános** sávra kiment build a 355 volt; a **358** a 352–358 összesítőt kapta nyilvánosan. A **következő nyilvános** kiadáshoz az **1b. blokk** való (**359–364 összesítő**): ami a 358 óta történt, az a Chat-odaugrás javítása, a `@mindenki`, a **nyelvváltó** + angol tartalom, az angol felület teljessé tétele és a **többnyelvű értesítések**.
+- **Az ÉLES sávon a 360 van** (`completed`, 100%, a 360-as szöveggel: `@mindenki` + a Chat-értesítés odaugrása) — **ez a mért állapot 2026-09-26-án**, és ez az, amit a nyilvános felhasználók használnak.
+- **A zárt teszten MÁR A 365 FUT** (a tulajdonos feltöltötte, `completed` 100%), és a kiadási szövege **pontosan a 361–365 összesítő** (visszaolvasva a Playről: *„ÚJ: HU/EN nyelvváltó…"*, *„…a válasz idézetére koppintva az app az eredeti üzenetre ugrik"*, *„…a »Bulizó« szerepkör felirata »Partyface«"*).
+- A feltöltött AAB-ek a Playen (a 2026-09-26-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 352, 353, 354, 355, **357**, 358, 359, **360**, **365**.
+- **A 365 a zárt teszt csúcsa**, ezért a következő lépés a **production sávra** való kirollázás (a 361–365 szöveggel), és **nem** kell új AAB-ot feltölteni: a **365-ös csomag már fent van** a Playen, csak át kell vinni a sávot.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**360**) a legutóbb **nyilvánosan** kigördült build — ezért a **következő nyilvános** kiadáshoz a **361–365 összesítő** való (az **1b-2. blokk**): ami a 360 óta történt, az a **nyelvváltó** + angol tartalom, az angol felület teljessé tétele, a **többnyelvű értesítések**, a **hírlista-frissesség**, a **Chat-idézet odaugrása** és a „Partyface" felirat.
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -204,10 +208,12 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 - Angol felületen a „Bulizó" szerepkör felirata mostantól „Partyface".
 ```
 
-## 1b. Play Console — a NYILVÁNOS kiadáshoz (359–365 összesítő)
+## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
 
-**Ezt használd, amikor a 365 a production sávra kerül.** A nyilvános felhasználók legutóbb a **358**-cal
-a **352–358** összesítőt kapták, ezért ők ezt az öt újdonságot kapják:
+⚠️ **2026-09-26-tól ezt NE használd a nyilvános kiadáshoz:** az ÉLES (production) sávon már a **360** van,
+ezért a `@mindenki` és a Chat-odaugrás **már megvan** a felhasználóknak. A helyes blokk a **361–365**
+összesítő (**1b-2.**). Ez a szöveg csak akkor való, ha valaki **358-ról** frissít (illetve történeti
+dokumentációnak marad itt).
 
 ```play-notes
 - ÚJ: a főoldal és a Hírek fül listája magától frissül — az új cikk egy percen belül megjelenik.
