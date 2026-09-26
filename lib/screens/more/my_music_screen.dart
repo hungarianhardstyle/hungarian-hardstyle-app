@@ -1496,7 +1496,9 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       Text(
-                        item.isAdOnly ? 'Reklámmal feloldva' : tr(context, 'Megvásárolva'),
+                        item.isAdOnly
+                            ? tr(context, 'Reklámmal feloldva')
+                            : tr(context, 'Megvásárolva'),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: item.isAdOnly
                               ? theme.colorScheme.tertiary

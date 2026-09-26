@@ -1,3 +1,4 @@
+import '../core/content/html_text.dart';
 import 'event.dart';
 
 class ArtistCategory {
@@ -83,8 +84,8 @@ class Artist {
       id: _readInt(json['id']),
       title: _readString(json['title']),
       slug: _readString(json['slug']),
-      biography: _readString(json['biography']),
-      excerpt: _readString(json['excerpt']),
+      biography: decodeHtmlEntities(_readString(json['biography'])),
+      excerpt: decodeHtmlEntities(_readString(json['excerpt'])),
       realName: _readString(json['real_name']),
       country: _readString(json['country']),
       city: _readString(json['city']),

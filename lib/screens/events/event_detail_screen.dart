@@ -537,8 +537,16 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                                               ),
                                               child: Text(
                                                 mutualAttendance
-                                                    ? 'Közös esemény: te és ${names.join(', ')} is ott lesztek.'
-                                                    : 'Ismerőseid is jönnek: ${names.join(', ')}',
+                                                    ? trArgs(
+                                                        context,
+                                                        'Közös esemény: te és {names} is ott lesztek.',
+                                                        {'names': names.join(', ')},
+                                                      )
+                                                    : trArgs(
+                                                        context,
+                                                        'Ismerőseid is jönnek: {names}',
+                                                        {'names': names.join(', ')},
+                                                      ),
                                               ),
                                             );
                                           },

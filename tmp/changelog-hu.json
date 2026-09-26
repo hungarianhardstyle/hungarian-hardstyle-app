@@ -1,4 +1,7 @@
 [
+  "Javítva: a DJ- és szervező-leírásban nem látszik többé a „&amp;\" kódolási hiba — helyette „&\" áll.",
+  "Javítva: angol felületen is angolul szól az esemény ismerős-sora, az éves név-/e-mail-módosítás jelzése, a „Reklámmal feloldva\" és az „Ismerősök\" darabszám.",
+  "Javítva: a pont-értesítés magyar szövegéből eltűnt a szóismétlés („Új összpontszámod\").",
   "Javítva: nyelvváltáskor a már megnyitott cikk-, esemény- és kiadvány-adatlap is azonnal a választott nyelven szól.",
   "ÚJ: a Chat @mindenki értesítéséhez mostantól push (banner) is jön — a személyes @említés marad csendes.",
   "A @mindenki küldője visszajelzést kap: hány címzett és hány készülék kapott értesítést.",

@@ -53,14 +53,20 @@ List<String> deletableNotificationIds({
   return out;
 }
 
-/// A kijelölés-gomb felirata.
-String notificationSelectionLabel(int count) =>
-    count <= 0 ? 'Jelölj ki értesítéseket' : 'Kijelölve: $count';
+/// A kijelölés-gomb felirata — **szótári kulcs**, nem kész szöveg.
+///
+/// ⚠️ **MÉRT HIBA (a tulajdonos jelzése, 2026-09-26):** *„Értesítéseknél: Jelölj
+/// ki értesítéseket, Kijelölve: 50"* — ez a függvény **kész magyar szöveget**
+/// adott vissza (nyers ternary + interpoláció), ezért angol módban is magyarul
+/// jelent meg, és az i18n-extraktor **nem is látta** (nem UI-literál).
+/// Mostantól a **kulcsot** adja (és a hívó fordítja `trArgs`-szal), így a szótár
+/// kapuja is számon kéri.
+String notificationSelectionKey(int count) =>
+    count <= 0 ? 'Jelölj ki értesítéseket' : 'Kijelölve: {n}';
 
-/// A törlés utáni visszajelzés (a tulajdonos magyar szövegei).
-String notificationDeletedLabel(int count) => count == 1
-    ? '1 értesítés törölve.'
-    : '$count értesítés törölve.';
+/// A törlés utáni visszajelzés **szótári kulcsa** (a hívó fordítja).
+String notificationDeletedKey(int count) =>
+    count == 1 ? '1 értesítés törölve.' : '{n} értesítés törölve.';
 
 /// A kijelöltek közül eltűnt azonosítók eldobása (a lista élő streamből jön,
 /// ezért egy törölt/archivált sor kikerülhet alólunk).

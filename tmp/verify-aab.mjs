@@ -123,6 +123,10 @@ const changelog = [
   'nyelvváltáskor a hírek listája is azonnal átáll',
   // 372: a megnyitott adatlapok is átállnak nyelvváltáskor.
   'nyelvváltáskor a már megnyitott cikk-, esemény- és kiadvány-adatlap',
+  // 373: a &amp; kódolási hiba, az angol feliratok és a pont-sablon.
+  'nem látszik többé a „&amp;" kódolási hiba',
+  'az éves név-/e-mail-módosítás jelzése',
+  'eltűnt a szóismétlés',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });

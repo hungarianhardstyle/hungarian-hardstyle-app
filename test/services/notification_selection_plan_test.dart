@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -124,12 +125,27 @@ void main() {
   });
 
   group('a szövegek', () {
-    test('a fejléc és a visszajelzés magyarul, helyesen', () {
-      expect(notificationSelectionLabel(0), 'Jelölj ki értesítéseket');
-      expect(notificationSelectionLabel(1), 'Kijelölve: 1');
-      expect(notificationSelectionLabel(5), 'Kijelölve: 5');
-      expect(notificationDeletedLabel(1), '1 értesítés törölve.');
-      expect(notificationDeletedLabel(4), '4 értesítés törölve.');
+    // ⚠️ MÓDOSULT (a tulajdonos jelzése, 2026-09-26): *„Értesítéseknél: Jelölj ki
+    // értesítéseket, Kijelölve: 50"* — a függvény **kész magyar szöveget** adott
+    // vissza, ezért angol módban is magyarul jelent meg, és az i18n-extraktor
+    // nem is látta. Mostantól **szótári kulcsot** ad (a hívó fordítja), ezért a
+    // teszt a kulcsot ÉS a szótárbeli fordítást is méri.
+    test('a fejléc és a visszajelzés szótári kulcs (nem kész szöveg)', () {
+      expect(notificationSelectionKey(0), 'Jelölj ki értesítéseket');
+      expect(notificationSelectionKey(1), 'Kijelölve: {n}');
+      expect(notificationSelectionKey(5), 'Kijelölve: {n}');
+      expect(notificationDeletedKey(1), '1 értesítés törölve.');
+      expect(notificationDeletedKey(4), '{n} értesítés törölve.');
+    });
+
+    test('a kulcsokhoz van angol fordítás, és megvan a helyőrző', () {
+      final dictionary =
+          jsonDecode(File('assets/i18n/en.json').readAsStringSync())
+              as Map<String, dynamic>;
+      expect(dictionary['Jelölj ki értesítéseket'], 'Select notifications');
+      expect(dictionary['Kijelölve: {n}'], 'Selected: {n}');
+      expect(dictionary['1 értesítés törölve.'], '1 notification deleted.');
+      expect(dictionary['{n} értesítés törölve.'], '{n} notifications deleted.');
     });
   });
 
@@ -239,7 +255,9 @@ void main() {
         reason: 'kijelölés módban a sorra koppintás jelöl, nem nyit meg',
       );
       // A fejléc adja a kijelölést/törlést, és megmondja a darabszámot.
-      expect(source.contains('notificationSelectionLabel('), isTrue);
+      // ⚠️ 2026-09-26: a felirat **szótári kulcsot** ad (nem kész szöveget),
+      // ezért a hívás neve `notificationSelectionKey`.
+      expect(source.contains('notificationSelectionKey('), isTrue);
       expect(source.contains('Icons.check_circle_outline'), isTrue);
       expect(source.contains('Icons.delete_outline'), isTrue);
       expect(source.contains('Icons.select_all_rounded'), isTrue);

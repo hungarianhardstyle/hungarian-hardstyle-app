@@ -122,10 +122,13 @@ void main() {
         'Teszt Felhasználó mentioned you in the Chat: “Szia, ott leszel?”',
       );
 
+      // ⚠️ 2026-09-26: a magyar sablon szóismétlése javítva
+      // („Új összösszpontszámod" → „Új összpontszámod"), ezért a **tárolt**
+      // (régi) szöveget is a javított alakkal mérjük.
       final points = NotificationTexts.localize(
         type: 'achievement_points',
         title: '+20 achievement pont',
-        body: '+20 pont egy hír kedveléséért. Új összösszpontszámod: 540.',
+        body: '+20 pont egy hír kedveléséért. Új összpontszámod: 540.',
       );
       expect(points.title, '+20 achievement points');
       expect(

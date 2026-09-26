@@ -1,3 +1,4 @@
+import '../core/content/html_text.dart';
 import 'event.dart';
 
 class OrganizerProfile {
@@ -53,8 +54,8 @@ class OrganizerProfile {
       id: _readInt(json['id']),
       title: _readString(json['title']),
       slug: _readString(json['slug']),
-      description: _readString(json['description']),
-      excerpt: _readString(json['excerpt']),
+      description: decodeHtmlEntities(_readString(json['description'])),
+      excerpt: decodeHtmlEntities(_readString(json['excerpt'])),
       city: _readString(json['city']),
       country: _readString(json['country']),
       genres: (json['genres'] as List<dynamic>? ?? const [])

@@ -4125,7 +4125,11 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                           ? tr(context, 'Ez lesz a nyilvános profilneved.')
                                           : _service.isOwner
                                           ? tr(context, 'Adminisztrátorként korlátlan névmódosítás')
-                                          : 'Éves névmódosítási lehetőség: ${1 - _usernameChangesUsed} maradt',
+                                          : trArgs(
+                                              context,
+                                              'Éves névmódosítási lehetőség: {n} maradt',
+                                              {'n': '${1 - _usernameChangesUsed}'},
+                                            ),
                                     ),
                                     const SizedBox(height: 12),
                                     ..._socialFields(),
@@ -4161,7 +4165,11 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                       ),
                                     ),
                                     Text(
-                                      'Éves e-mail-módosítási lehetőség: ${1 - _emailChangesUsed} maradt',
+                                      trArgs(
+                                        context,
+                                        'Éves e-mail-módosítási lehetőség: {n} maradt',
+                                        {'n': '${1 - _emailChangesUsed}'},
+                                      ),
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall,

@@ -9,7 +9,7 @@
     "achievement_points": {
       "hu": {
         "title": "+{delta} achievement pont",
-        "body": "+{delta} pont {reason}. Új összösszpontszámod: {points}."
+        "body": "+{delta} pont {reason}. Új összpontszámod: {points}."
       },
       "en": {
         "title": "+{delta} achievement points",
@@ -19,7 +19,7 @@
     "achievement_points_level": {
       "hu": {
         "title": "+{delta} achievement pont",
-        "body": "+{delta} pont {reason}. Új összösszpontszámod: {points}. Új rangod: „{badge}”."
+        "body": "+{delta} pont {reason}. Új összpontszámod: {points}. Új rangod: „{badge}”."
       },
       "en": {
         "title": "+{delta} achievement points",

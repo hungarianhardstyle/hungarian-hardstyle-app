@@ -139,7 +139,13 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         _selecting = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(notificationDeletedLabel(removed))),
+        SnackBar(
+          content: Text(
+            trArgs(context, notificationDeletedKey(removed), {
+              'n': '$removed',
+            }),
+          ),
+        ),
       );
     } catch (_) {
       if (!mounted) return;
@@ -405,8 +411,15 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                           // Kijelölés közben a fejléc megmondja, hány sor van
                           // kijelölve — így nem kell a listát számolgatni.
                           _selecting
-                              ? notificationSelectionLabel(
-                                  _selection.countWithin(items),
+                              ? trArgs(
+                                  context,
+                                  notificationSelectionKey(
+                                    _selection.countWithin(items),
+                                  ),
+                                  {
+                                    'n':
+                                        '${_selection.countWithin(items)}',
+                                  },
                                 )
                               : tr(context, 'Értesítések'),
                           style: Theme.of(context).textTheme.headlineMedium,

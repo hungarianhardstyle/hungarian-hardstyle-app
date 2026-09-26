@@ -1,0 +1,3 @@
+- Javítva: a DJ- és szervező-leírásban nem látszik többé a „&amp;" kódolási hiba — helyette „&" áll.
+- Javítva: angolul is angol az esemény ismerős-sora, az éves név-/e-mail-módosítás, a „Reklámmal feloldva" és az „Ismerősök" darabszám.
+- Javítva: a pont-értesítés magyar szövegéből eltűnt a szóismétlés; a megnyitott adatlapok is átállnak nyelvváltáskor.

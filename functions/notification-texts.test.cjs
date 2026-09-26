@@ -186,7 +186,10 @@ test('a pont-értesítés a címzett nyelvén épül fel (rangváltással is)', 
     reasonKey: 'achievement_reason_news_like',
     points: 120,
   });
-  assert.equal(hu.body, '+5 pont egy hír kedveléséért. Új összösszpontszámod: 120.');
+  // ⚠️ 2026-09-26: a magyar sablonból javítottuk a szóismétlést
+  // („Új összösszpontszámod" → „Új összpontszámod") — a tulajdonos jelzése:
+  // *„ez a magyarnál javítandó"*.
+  assert.equal(hu.body, '+5 pont egy hír kedveléséért. Új összpontszámod: 120.');
   // A kész `reason` elsőbbséget élvez a `reasonKey`-jel szemben.
   const explicit = notificationText('achievement_points', 'en', { delta: 1, reason: 'for testing', points: 2 });
   assert.equal(explicit.body, '+1 points for testing. Your new total is 2.');

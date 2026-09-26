@@ -570,7 +570,7 @@ class _CommunityPublicProfileScreenState
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Ismerősök: ${friends.length}'),
+                        Text(trArgs(context, 'Ismerősök: {n}', {'n': '${friends.length}'})),
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
                           onPressed: () => Navigator.of(context).push(
@@ -865,8 +865,11 @@ class _LegacyCommunityConnectionsScreen extends StatelessWidget {
               const Divider(),
               StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: service.watchConnections(user.uid),
-                builder: (context, connections) =>
-                    Text('Ismerősök: ${connections.data?.docs.length ?? 0}'),
+                builder: (context, connections) => Text(
+                  trArgs(context, 'Ismerősök: {n}', {
+                    'n': '${connections.data?.docs.length ?? 0}',
+                  }),
+                ),
               ),
             ],
           );
@@ -1266,7 +1269,11 @@ class CommunityConnectionsScreen extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Ismerősök: ${friends.length}'),
+                      Text(
+                        trArgs(context, 'Ismerősök: {n}', {
+                          'n': '${friends.length}',
+                        }),
+                      ),
                       for (final friend in friends)
                         _FriendTile(
                           userId: friend.id,

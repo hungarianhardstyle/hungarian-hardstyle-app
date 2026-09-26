@@ -1,6 +1,12 @@
 // A Névjegy-changelog angol fordításai — 5. csomag: a **legfrissebb** kiadások
 // sorai (ezek a lista ELEJÉN állnak, ezért a fordítók is elöl mennek, a
 // legfrissebbel kezdve), valamint a Névjegy egyik sablonja.
+export const release373 = [
+  'Fixed: the "&amp;" encoding artefact no longer appears in DJ and organizer descriptions — it shows "&" instead.',
+  'Fixed: on the English interface the event friends line, the yearly name/e-mail change notice, the "Unlocked with an ad" label and the friend count are in English too.',
+  'Fixed: a duplicated word was removed from the Hungarian points notification text.',
+];
+
 export const release372 = [
   'Fixed: when you switch language an already open article, event or release page also switches to the selected language immediately.',
 ];

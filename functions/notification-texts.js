@@ -193,7 +193,9 @@ const TEXTS = {
   achievement_points: {
     hu: {
       title: '+{delta} achievement pont',
-      body: '+{delta} pont {reason}. Új összösszpontszámod: {points}.',
+      // ⚠️ JAVÍTVA (a tulajdonos jelzése, 2026-09-26): „Új összösszpontszámod"
+      // volt — a szó kétszer szerepelt benne.
+      body: '+{delta} pont {reason}. Új összpontszámod: {points}.',
     },
     en: {
       title: '+{delta} achievement points',
@@ -203,7 +205,8 @@ const TEXTS = {
   achievement_points_level: {
     hu: {
       title: '+{delta} achievement pont',
-      body: '+{delta} pont {reason}. Új összösszpontszámod: {points}. Új rangod: „{badge}”.',
+      // ⚠️ Ugyanaz a szóismétlés javítva, mint a `achievement_points`-nál.
+      body: '+{delta} pont {reason}. Új összpontszámod: {points}. Új rangod: „{badge}”.',
     },
     en: {
       title: '+{delta} achievement points',
