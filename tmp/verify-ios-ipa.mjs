@@ -19,7 +19,7 @@ import path from 'node:path';
 
 const ipa = process.argv[2] ?? 'build/ios-ipa/Runner-unsigned.ipa';
 const outDir = process.argv[3] ?? 'tmp/ipa-check';
-const build = Number.parseInt(process.argv[4] ?? '365', 10);
+const build = Number.parseInt(process.argv[4] ?? '370', 10);
 
 if (!fs.existsSync(ipa)) {
   console.log(`HIBA  nincs ilyen IPA: ${ipa}`);
@@ -90,6 +90,14 @@ check(
 
 // A changelog a Dart AOT csomagban él (a magyar ékezetek miatt UTF-16LE-ként).
 const framework = read('Frameworks/App.framework/App');
+check(
+  'a 370 sora benne van (az értesítésbe kerülő cikk címe is a választott nyelven)',
+  contains(framework, 'az értesítésben a cikk (és a kiadás, esemény, DJ) címe is a választott nyelven jelenik meg'),
+);
+check(
+  'a 370 „már meglévő értesítések" sora is benne van',
+  contains(framework, 'A már meglévő értesítéseknél is átfordul a cím'),
+);
 check(
   'a 369 sora benne van (az értesítések nyelve)',
   contains(framework, 'angol felületen az értesítések szövege azonnal a választott nyelven jelenik meg'),
