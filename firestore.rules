@@ -65,7 +65,8 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/community_bans/$(request.auth.uid))
         && request.resource.data.keys().hasOnly([
           'authorId', 'authorName', 'authorImageUrl', 'authorRole',
-          'authorAccessRole', 'isAnonymous', 'text', 'replyToText', 'imageUrl', 'imagePublicId',
+          'authorAccessRole', 'isAnonymous', 'text', 'replyToText', 'replyToName', 'replyToId',
+          'imageUrl', 'imagePublicId',
           'reactions', 'reactionBy', 'pinned', 'createdAt', 'editedAt', 'mentions'
         ])
         && request.resource.data.authorId == request.auth.uid
@@ -78,6 +79,15 @@ service cloud.firestore {
         && (!request.resource.data.keys().hasAny(['replyToText'])
             || (request.resource.data.replyToText is string
                 && request.resource.data.replyToText.size() <= 200))
+        // A valasz-idézet celja: a hivatkozott uzenet azonositoja (ebből lesz az
+        // ODAUGRAS a chaten) es a megjelenitett nev. A szerver
+        // (`publishChatPost`) irja oket; itt csak az alak es a hossz a korlat.
+        && (!request.resource.data.keys().hasAny(['replyToName'])
+            || (request.resource.data.replyToName is string
+                && request.resource.data.replyToName.size() <= 80))
+        && (!request.resource.data.keys().hasAny(['replyToId'])
+            || (request.resource.data.replyToId is string
+                && request.resource.data.replyToId.size() <= 128))
         // @-HIVATKOZASOK (mention) — a tulajdonos keresere a Chat-uzenet
         // hivatkozhat szemelyre, cikkre, DJ-re, szervezore, esemenyre es
         // kiadvanyra (`{type, id, label}`).

@@ -246,3 +246,36 @@ test('a kliens ELKÜLDI a válasz célpontját (különben nincs értesítés)',
   assert.match(screenSource, /_replyToAuthorId = post\.authorId\.trim\(\)/);
   assert.match(screenSource, /replyToAuthorId: _replyToAuthorId/);
 });
+
+// A válasz-idézet ODAUGRÁSA (a tulajdonos jelzése, 2026-09-26: „nem azt kértem,
+// hogy egy ablakot dobjon fel, hanem, hogy ugorjon oda a chaten").
+test('a szerver eltárolja a hivatkozott üzenet AZONOSÍTÓJÁT is', () => {
+  const publish = callableBody('publishChatPost', 'manageConnection');
+  assert.match(
+    publish,
+    /const replyToId = typeof data\?\.replyToId === 'string'/,
+    'a callable beolvassa a replyToId paramétert',
+  );
+  assert.match(
+    publish,
+    /\.\.\.\(replyToText && replyToId \? \{ replyToId \} : \{\}\)/,
+    'a dokumentumba csak idézettel együtt kerül bele (a régi olvasók ugyanazt látják)',
+  );
+});
+
+test('a kliens elküldi a hivatkozott üzenet azonosítóját', () => {
+  assert.match(serviceSource, /'replyToId': replyToId!/);
+  assert.match(screenSource, /_replyToId = post\.id/);
+  assert.match(screenSource, /replyToId: _replyToId/);
+});
+
+test('az idézetre koppintás ODAUGRÁST indít, nem ablakot nyit', () => {
+  // ⚠️ Ez a mért visszaesés elleni őr: az első változat `showDialog`-ot nyitott.
+  assert.doesNotMatch(
+    screenSource,
+    /_showOriginalMessage/,
+    'a régi (ablakos) megoldás nem maradhat benne',
+  );
+  assert.match(screenSource, /unawaited\(_jumpToOriginal\(/);
+  assert.match(screenSource, /chatReplyTargetId\(/);
+});

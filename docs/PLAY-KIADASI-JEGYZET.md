@@ -5,7 +5,9 @@
 > (nyilvános, a 352–358 szöveggel), a `beta` sávon a 354. A 365 újdonsága: a **főoldal és a Hírek fül
 > listája magától frissül** — ha új cikk kerül fel, az **legfeljebb egy percen belül** megjelenik
 > (lehúzás nélkül), és amikor az app **előtérbe kerül** (például egy értesítésre nyitod meg), azonnal
-> ellenőrizzük; angol felületen a **„Bulizó" szerepkör felirata „Partyface"**. A 365 a **364 minden**
+> ellenőrizzük; a **Chatben a válasz idézetére koppintva az app odaugrik az eredeti üzenetre** (és
+> rövid ideig kiemeli) — nem nyit külön ablakot; angol felületen a **„Bulizó" szerepkör felirata
+> „Partyface"**. A 365 a **364 minden**
 > újdonságát is tartalmazza (többnyelvű értesítések, teljes angol felület, angol Achievement-nevek,
 > a „Közösség"/Community gomb kifér, hírek kategória-/címke-nevei angolul). ⚠️ **A 361–364-et ne
 > töltsd fel** — a 365 mindegyiket tartalmazza.
@@ -22,7 +24,7 @@ currentBuild: 365
 currentVersion: 1.0.0
 lastPublishedBuild: 355
 aab: build/HUHS-v1.0.0+365-release.aab
-sha256: 9E243B47CA6C74AF9BFF1A754DAC0D0A98B094CB14F2572FD54564887EBE6820
+sha256: 42625F13F3D45FDAEECB04E0D6C1FA64D26E1E72117D845F69CC69BDB5C7AA84
 -->
 
 ⚠️ A **365-öt** kellett építeni a **364** helyett, mert a 364-ről nem tudjuk biztosan, hogy felkerült-e
@@ -198,6 +200,7 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 ```play-notes
 - ÚJ: a főoldal és a Hírek fül listája magától frissül — az új cikk legfeljebb egy percen belül megjelenik, lehúzás nélkül.
 - Az app előtérbe kerülésekor (pl. értesítésre nyitod meg) azonnal ellenőrizzük az új cikkeket.
+- ÚJ: a Chatben a válasz idézetére koppintva az app odaugrik az eredeti üzenetre.
 - Angol felületen a „Bulizó" szerepkör felirata mostantól „Partyface".
 ```
 
@@ -207,11 +210,11 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 a **352–358** összesítőt kapták, ezért ők ezt az öt újdonságot kapják:
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó a főoldalon — az app angolul is elérhető, a magyar marad az alap.
+- ÚJ: a főoldal és a Hírek fül listája magától frissül — az új cikk egy percen belül megjelenik.
+- ÚJ: a Chatben a válasz idézetére koppintva az app odaugrik az eredeti üzenetre.
 - Angol felületnél a cikkek, a feliratok, a hírek kategória-/címke-nevei és az Achievement-nevek is angolul jelennek meg.
 - Az értesítések is a választott nyelven jönnek (a push is); a nyelv a profilodban tárolódik.
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
-- ÚJ: a főoldal és a Hírek fül listája magától frissül — az új cikk egy percen belül megjelenik.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)

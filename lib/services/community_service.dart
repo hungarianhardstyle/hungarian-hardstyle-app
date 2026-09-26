@@ -1160,6 +1160,7 @@ class CommunityService {
     String? replyToText,
     String? replyToName,
     String? replyToAuthorId,
+    String? replyToId,
     List<Map<String, Object>> mentions = const <Map<String, Object>>[],
   }) async {
     final user = await ensureAnonymousUser();
@@ -1217,6 +1218,15 @@ class CommunityService {
             replyToAuthorId.trim().length > 128
                 ? 128
                 : replyToAuthorId.trim().length,
+          ),
+        // A HIVATKOZOTT üzenet azonosítója — ebből lesz az **odauGrás** a chaten
+        // (a tulajdonos kérése: *„ugorjon oda a chaten"*). Csak idézettel együtt
+        // megy ki, és a szerver is csak akkor írja a dokumentumba.
+        if (replyToText?.trim().isNotEmpty == true &&
+            replyToId?.trim().isNotEmpty == true)
+          'replyToId': replyToId!.trim().substring(
+            0,
+            replyToId.trim().length > 128 ? 128 : replyToId.trim().length,
           ),
         'imageUrl': imageUrl,
         if (uploadedImage?.publicId.isNotEmpty == true)

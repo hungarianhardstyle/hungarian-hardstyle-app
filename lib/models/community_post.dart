@@ -13,6 +13,15 @@ class CommunityPost {
   final String text;
   final String replyToText;
   final String replyToName;
+
+  /// A **hivatkozott** üzenet azonosítója (`replyToId`) — az ugráshoz.
+  ///
+  /// ⚠️ MIÉRT (a tulajdonos jelzése, 2026-09-26): *„nem azt kértem, hogy egy
+  /// ablakot dobjon fel, hanem hogy ugorjon oda a chaten"*. Az ugráshoz a
+  /// hivatkozott üzenet azonosítója kell; a **régi** üzeneteknél ez nincs meg
+  /// (a mezőt a 365-ös szerver vezette be), ezért ott a tiszta
+  /// [chatReplyTargetId] szöveg-egyezéssel keres.
+  final String replyToId;
   final String imageUrl;
   final bool pinned;
   final Map<String, int> reactions;
@@ -55,6 +64,7 @@ class CommunityPost {
     required this.text,
     required this.replyToText,
     required this.replyToName,
+    this.replyToId = '',
     required this.imageUrl,
     required this.pinned,
     required this.reactions,
@@ -83,6 +93,7 @@ class CommunityPost {
       text: data['text'] as String? ?? '',
       replyToText: data['replyToText'] as String? ?? '',
       replyToName: data['replyToName'] as String? ?? '',
+      replyToId: data['replyToId'] as String? ?? '',
       imageUrl: data['imageUrl'] as String? ?? '',
       pinned: data['pinned'] == true,
       reactions: data['reactions'] is Map

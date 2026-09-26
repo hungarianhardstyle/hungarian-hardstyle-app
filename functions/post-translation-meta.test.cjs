@@ -233,9 +233,22 @@ test('a 2.12.0 végpontjai a KÖZÖS fordítási kaput használják', () => {
 
   // A pótló kör a hiányzó angolt keresi, és a mentés-ág fordítását hívja — nem
   // saját másolatot készít a logikából.
+  //
+  // ⚠️ 2.14.4: a hívás `$force` paramétert is kap (a kényszerített javító út), és
+  // a várólista előszűrője a **séma-verziót** is figyeli — különben a verzió-kapu
+  // elérhetetlen (ez volt az éles `rnrn` gyökere).
   const sweepSource = pluginFile('includes/translation-sweep.php');
   assert.match(sweepSource, /'compare'\s*=>\s*'NOT EXISTS'/, 'a pótlás a hiányzó angolt keresi');
-  assert.match(sweepSource, /huhs_run_translation\(\$post->ID\)/, 'a pótlás a közös fordítást hívja');
+  assert.match(
+    sweepSource,
+    /HUHS_TRANSLATION_FIELDS_VERSION_META/,
+    'a várólista a séma-verziót is figyeli (a verzió-kapu elérhető)',
+  );
+  assert.match(
+    sweepSource,
+    /huhs_run_translation\(\$post->ID, \$force\)/,
+    'a pótlás a közös fordítást hívja (a `force` javító paraméterrel)',
+  );
 
   // A kiadvány válasza változatlan (nincs benne fordítási meta).
   const releases = pluginFile('includes/api-releases.php');

@@ -179,5 +179,126 @@ void main() {
         expect(estimate(10, max: double.infinity), 0);
       });
     });
+
+    group('a VÁLASZ-IDÉZET célja (a tulajdonos kérése: „ugorjon oda a chaten")', () {
+      const messages = <ChatReplyCandidate>[
+        (id: 'p3', text: 'A legfrissebb üzenet', authorName: 'Anna'),
+        (id: 'p2', text: 'Középső üzenet', authorName: 'Béla'),
+        (id: 'p1', text: 'A legrégebbi üzenet', authorName: 'Anna'),
+      ];
+
+      test('az új válasznál a tárolt azonosító dönt', () {
+        expect(
+          chatReplyTargetId(
+            replyToId: 'p1',
+            replyToText: 'A legrégebbi üzenet',
+            replyToName: 'Anna',
+            messages: messages,
+          ),
+          'p1',
+        );
+      });
+
+      test('az azonosító akkor is nyer, ha a szöveg időközben módosult', () {
+        // A hivatkozott üzenetet szerkesztették: a szöveg-egyezés nem találna,
+        // az azonosító viszont igen.
+        expect(
+          chatReplyTargetId(
+            replyToId: 'p2',
+            replyToText: 'A régi szöveg',
+            replyToName: 'Béla',
+            messages: messages,
+          ),
+          'p2',
+        );
+      });
+
+      test('a RÉGI (azonosító nélküli) idézet szöveg-egyezéssel megy', () {
+        expect(
+          chatReplyTargetId(
+            replyToId: '',
+            replyToText: 'Középső üzenet',
+            replyToName: 'Béla',
+            messages: messages,
+          ),
+          'p2',
+        );
+      });
+
+      test('a 200 karakterre vágott idézet az eredeti ELEJÉVEL egyezik', () {
+        final long = <ChatReplyCandidate>[
+          (id: 'p9', text: 'Első rész ' * 40, authorName: 'Anna'),
+        ];
+        expect(
+          chatReplyTargetId(
+            replyToId: '',
+            replyToText: 'Első rész ' * 20, // a tárolt idézet rövidebb
+            replyToName: 'Anna',
+            messages: long,
+          ),
+          'p9',
+        );
+      });
+
+      test('a fordított irány NEM egyezik (a rövidebb idézet nem fedheti a hosszabbat)', () {
+        expect(
+          chatReplyTargetId(
+            replyToId: '',
+            replyToText: 'Középső üzenet és még sok minden más',
+            replyToName: 'Béla',
+            messages: messages,
+          ),
+          isNull,
+        );
+      });
+
+      test('az eltérő szerző nem ad találatot (nem ugrunk rossz üzenetre)', () {
+        expect(
+          chatReplyTargetId(
+            replyToId: '',
+            replyToText: 'A legrégebbi üzenet',
+            replyToName: 'Béla',
+            messages: messages,
+          ),
+          isNull,
+        );
+      });
+
+      test('a tördelés és a környező szóköz nem zavar', () {
+        expect(
+          chatReplyTargetId(
+            replyToId: '',
+            replyToText: '  Középső\n  üzenet ',
+            replyToName: ' Béla ',
+            messages: messages,
+          ),
+          'p2',
+        );
+      });
+
+      test('ismeretlen azonosító + üres idézet → nincs odaugrás', () {
+        expect(
+          chatReplyTargetId(
+            replyToId: 'nincs-ilyen',
+            replyToText: '',
+            replyToName: '',
+            messages: messages,
+          ),
+          isNull,
+        );
+      });
+
+      test('üres lista → nincs odaugrás (nem tippelünk)', () {
+        expect(
+          chatReplyTargetId(
+            replyToId: 'p1',
+            replyToText: 'A legrégebbi üzenet',
+            replyToName: 'Anna',
+            messages: const [],
+          ),
+          isNull,
+        );
+      });
+    });
   });
 }

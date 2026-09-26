@@ -1228,6 +1228,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
         replyToText: _replyToText,
         replyToName: _replyToName,
         replyToAuthorId: _replyToAuthorId,
+        replyToId: _replyToId,
         mentions: mentions
             .map((target) => target.toMap())
             .toList(growable: false),
@@ -1239,6 +1240,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
           _replyToText = null;
           _replyToName = null;
           _replyToAuthorId = null;
+          _replyToId = null;
           // A kiválasztott hivatkozások az üzenettel elmentek — a következő
           // üzenetbe nem szivárognak át.
           _mentions.clear();
@@ -1273,44 +1275,74 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       _replyToText = post.text.trim();
       _replyToName = post.authorName.trim();
       _replyToAuthorId = post.authorId.trim();
+      _replyToId = post.id;
     });
     _composerFocusNode.requestFocus();
   }
 
-  /// Az idézet megnyitása: az **eredeti üzenet teljes szövege**.
+  /// A válaszhoz tartozó **hivatkozott üzenet azonosítója** (a küldéshez).
+  String? _replyToId;
+
+  /// Az idézetre koppintva **odaugrunk** az eredeti üzenetre a chaten.
   ///
-  /// ⚠️ MIÉRT (a tulajdonos jelzése, 2026-09-26): *„Chatben ha valakinek a
-  /// válaszára jön válasz, akkor ha arra rákattintok, nem történik semmi."* A
-  /// válasz-idézet eddig csak **3 sorig** mutatta a hivatkozott üzenetet, és nem
-  /// volt koppintható. A tulajdonos két lehetőséget ajánlott: *„vagy az eredeti
-  /// üzenetre ugorjon, vagy jelenítse meg az eredeti üzit teljes egészében"* —
-  /// ez a dialógus a **második** utat járja, mert az **minden** esetben működik:
-  /// akkor is, ha a hivatkozott üzenet nincs a betöltött ablakban (nagyon régi),
-  /// és akkor is, ha az maga is egy válasz volt (a teljes szöveg látszik).
+  /// ⚠️ MIÉRT (a tulajdonos jelzése, 2026-09-26): az első változatom egy
+  /// **ablakot** nyitott meg az eredeti szövegével — a tulajdonos visszajelzése:
+  /// *„ez mi? nem azt kértem, hogy egy ablakot dobjon fel, hanem, hogy ugorjon
+  /// oda a chaten"*. Ezért mostantól a koppintás **ugrik**: a cél-azonosítót a
+  /// tiszta [chatReplyTargetId] adja (új üzenetnél `replyToId`, réginél
+  /// szöveg-egyezés), a görgetést és a kiemelést pedig a **már meglévő**
+  /// odaugró út végzi (ugyanaz, ami a Chat-értesítésre is működik).
   ///
-  /// ⚠️ Az ugráshoz az eredeti üzenet **azonosítója** kellene, de a tárolt
-  /// idézet csak szöveget és nevet hordoz (`replyToText`/`replyToName`) — az
-  /// azonosító bevezetése adatmódosítás (a régi üzeneteknél nem lenne meg),
-  /// ezért az ugrás külön kör.
-  Future<void> _showOriginalMessage(CommunityPost post) async {
-    final text = post.replyToText.trim();
-    if (text.isEmpty) return;
-    final name = post.replyToName.trim();
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(name.isEmpty ? AppStrings.tr('Eredeti üzenet') : name),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520, maxHeight: 420),
-          child: SingleChildScrollView(child: Text(text)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: AppText(AppStrings.tr('Bezárás')),
-          ),
-        ],
-      ),
+  /// Ha az üzenet nagyon régi (a 10 lapos kereten túl van, vagy törölték), akkor
+  /// **nem** ugrunk találomra: rövid üzenet jelzi, hogy nincs a betöltött
+  /// beszélgetésben (a hivatkozott szöveg egyébként is ott van az idézetben).
+  Future<void> _jumpToOriginal(CommunityPost post) async {
+    if (post.replyToText.trim().isEmpty && post.replyToId.trim().isEmpty) return;
+    var target = _replyTarget(post);
+    // A régi idézetnél nincs azonosító: ilyenkor **lapozva keressük** (ugyanaz a
+    // keret, mint az értesítéses odaugrásnál).
+    var pagesSearched = 0;
+    while (target == null &&
+        !_reachedChatStart &&
+        !_loadingOlder &&
+        pagesSearched < chatFocusMaxPages) {
+      final loaded = await _loadOlderPosts();
+      if (!mounted) return;
+      pagesSearched++;
+      if (!loaded) break;
+      target = _replyTarget(post);
+    }
+    if (!mounted) return;
+    if (target == null) {
+      _showMessage(
+        AppStrings.tr('Az eredeti üzenet nincs a betöltött beszélgetésben.'),
+      );
+      return;
+    }
+    final focusTarget = target;
+    setState(() {
+      _focusTarget = focusTarget;
+      _focusFinished = false;
+      _focusIndex = null;
+      _focusPagesLoaded = 0;
+    });
+    _resolveFocus(ref.read(communityPostsProvider).valueOrNull ?? const []);
+  }
+
+  /// A válasz-idézet cél-azonosítója a betöltött (élő + lapozott) listákból.
+  String? _replyTarget(CommunityPost post) {
+    final candidates = <ChatReplyCandidate>[
+      for (final item in [
+        ...?ref.read(communityPostsProvider).valueOrNull,
+        ..._olderPosts,
+      ])
+        (id: item.id, text: item.text, authorName: item.authorName),
+    ];
+    return chatReplyTargetId(
+      replyToId: post.replyToId,
+      replyToText: post.replyToText,
+      replyToName: post.replyToName,
+      messages: candidates,
     );
   }
 
@@ -1612,7 +1644,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                                       _profileRefreshGeneration,
                                   onReply: () => _replyTo(items[index]),
                                   onOpenReply: () =>
-                                      _showOriginalMessage(items[index]),
+                                      unawaited(_jumpToOriginal(items[index])),
                                 ),
                                 items[index].id,
                               );
@@ -1627,7 +1659,8 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                                   profileRefreshGeneration:
                                       _profileRefreshGeneration,
                                   onReply: () => _replyTo(post),
-                                  onOpenReply: () => _showOriginalMessage(post),
+                                  onOpenReply: () =>
+                                      unawaited(_jumpToOriginal(post)),
                                 ),
                                 post.id,
                               );
@@ -2270,9 +2303,9 @@ class _PostCardState extends ConsumerState<_PostCard> {
             ],
             SizedBox(height: widget.compact ? 3 : 6),
             if (widget.post.replyToText.isNotEmpty)
-              // ⚠️ Koppintható idézet: megnyitja az eredeti üzenetet TELJES
-              // egészében (a tulajdonos kérése). Az `InkWell` a kártya stílusát
-              // követi, ezért nem kell külön gomb.
+              // ⚠️ Koppintható idézet: **odaugrik** az eredeti üzenetre a chaten
+              // (a tulajdonos kérése: *„ugorjon oda a chaten"* — nem ablakot
+              // kért). Az `InkWell` a kártya stílusát követi.
               InkWell(
                 onTap: widget.onOpenReply,
                 borderRadius: BorderRadius.circular(8),

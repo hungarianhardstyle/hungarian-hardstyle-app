@@ -41,6 +41,7 @@ const appChangelog = <AppReleaseNotes>[
     build: 365,
     changes: [
       'ÚJ: a főoldal és a Hírek fül listája magától frissül — ha új cikk kerül fel, az legfeljebb egy percen belül megjelenik, lehúzás nélkül; amikor az app előtérbe kerül (például egy értesítésre nyitod meg), azonnal ellenőrizzük.',
+      'ÚJ a Chatben: a válasz idézetére koppintva az app ODAUGRLIK az eredeti üzenetre a beszélgetésben (és rövid ideig kiemeli) — nem nyit külön ablakot.',
       'Angol felületen a „Bulizó" szerepkör felirata mostantól „Partyface".',
     ],
   ),

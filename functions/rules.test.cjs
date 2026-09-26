@@ -307,6 +307,55 @@ test('az ADMIN bárki üzenetét szerkesztheti és törölheti', async () => {
   await assertSucceeds(deleteDoc(doc(db, 'live_feed_posts', 'post-e')));
 });
 
+// ---------------------------------------------------------------------------
+// A VÁLASZ-IDÉZET célja (a tulajdonos jelzése, 2026-09-26: „nem azt kértem, hogy
+// egy ablakot dobjon fel, hanem, hogy ugorjon oda a chaten").
+//
+// Az ugráshoz a hivatkozott üzenet azonosítója kell, ezért a `replyToId` és a
+// megjelenített `replyToName` bekerült az engedélyezett kulcsok közé — ezt itt,
+// a SZABÁLLYAL szemben mérjük (nem forrás-linttel).
+// ---------------------------------------------------------------------------
+
+test('a válasz-idézet célja (replyToId + replyToName) bekerülhet az üzenetbe', async () => {
+  const authorUid = 'chat-author-reply';
+  const db = firestoreFor(authorUid, 'reply@example.com');
+
+  await assertSucceeds(
+    setDoc(
+      doc(db, 'live_feed_posts', 'post-reply-ok'),
+      chatPost(authorUid, {
+        replyToText: 'Eredeti üzenet',
+        replyToName: 'Teszt Elek',
+        replyToId: 'post-eredeti',
+      }),
+    ),
+  );
+});
+
+test('a túl hosszú vagy nem szöveges replyToId elutasított', async () => {
+  const authorUid = 'chat-author-reply-bad';
+  const db = firestoreFor(authorUid, 'reply2@example.com');
+
+  await assertFails(
+    setDoc(
+      doc(db, 'live_feed_posts', 'post-reply-long'),
+      chatPost(authorUid, {
+        replyToText: 'Eredeti üzenet',
+        replyToId: 'x'.repeat(129),
+      }),
+    ),
+  );
+  await assertFails(
+    setDoc(
+      doc(db, 'live_feed_posts', 'post-reply-type'),
+      chatPost(authorUid, {
+        replyToText: 'Eredeti üzenet',
+        replyToId: 42,
+      }),
+    ),
+  );
+});
+
 /* ------------------------------------------------------------------ */
 /* A TÖRÖLT FIÓK jelzője                                               */
 /* ------------------------------------------------------------------ */

@@ -97,6 +97,55 @@ ChatFocusPlan chatFocusPlan({
   return const ChatFocusPlan(status: ChatFocusStatus.keepLoading);
 }
 
+/// Egy válasz-idézet jelöltje: a betöltött üzenet azonosítója, szövege és szerzője.
+typedef ChatReplyCandidate = ({String id, String text, String authorName});
+
+/// A válasz-idézet **cél-üzenetének azonosítója** a betöltött listákból.
+///
+/// ⚠️ MIÉRT (a tulajdonos jelzése, 2026-09-26): az idézetre koppintva eddig egy
+/// **ablak** nyílt meg a szöveggel — a tulajdonos viszont ezt kérte: *„nem azt
+/// kértem, hogy egy ablakot dobjon fel, hanem hogy ugorjon oda a chaten"*.
+///
+/// Az ugráshoz a hivatkozott üzenet **azonosítója** kell:
+///  * az **új** válaszok hordozzák (`replyToId`, a szerver írja a
+///    `publishChatPost`-ban),
+///  * a **régi** idézetek viszont csak szöveget és nevet
+///    (`replyToText`/`replyToName`) — ezért ott **szöveg-egyezéssel** keressük ki
+///    a betöltött üzenetek közül (a tárolt idézet 200 karakterre vágott, ezért a
+///    hosszabb eredeti **azzal kezdődik**; fordítva sosem egyezünk).
+///
+/// A lista a **legfrissebbel kezdődik** (a chat így épül fel), ezért az első
+/// egyezés a legvalószínűbb cél. Ha nincs egyezés, `null` — ilyenkor a hívó
+/// tovább lapozhat, vagy jelzi, hogy az üzenet nincs a betöltött beszélgetésben.
+String? chatReplyTargetId({
+  required String replyToId,
+  required String replyToText,
+  required String replyToName,
+  required List<ChatReplyCandidate> messages,
+}) {
+  final id = replyToId.trim();
+  if (id.isNotEmpty && messages.any((message) => message.id == id)) {
+    return id;
+  }
+  final quote = _normalizeChatQuote(replyToText);
+  if (quote.isEmpty) return null;
+  final name = _normalizeChatQuote(replyToName);
+  for (final message in messages) {
+    final text = _normalizeChatQuote(message.text);
+    if (text.isEmpty) continue;
+    if (text != quote && !text.startsWith(quote)) continue;
+    if (name.isNotEmpty && _normalizeChatQuote(message.authorName) != name) {
+      continue;
+    }
+    return message.id;
+  }
+  return null;
+}
+
+/// A whitespace összevonása az egyezéshez (a tárolt idézet tördelése eltérhet).
+String _normalizeChatQuote(String value) =>
+    value.replaceAll(RegExp(r'\s+'), ' ').trim();
+
 /// A cél kártya **becsült** görgetési pozíciója (logikai képpontban).
 ///
 /// ⚠️ MIÉRT KELL (mért hiba, 2026-09-25): a `ListView` **csak a látható**

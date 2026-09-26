@@ -2401,6 +2401,13 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
   // KIT válaszoltunk meg — ebből lesz az értesítés. A kliens küldi (a válaszolt
   // üzenet szerzőjének UID-ja); a `replyToText`/`replyToName` csak a megjelenítés.
   const replyToAuthorId = typeof data?.replyToAuthorId === 'string' ? data.replyToAuthorId.trim().slice(0, 128) : '';
+  // A HIVATKOZOTT UZENET azonositoja — ebbol lesz az appban az ODAUGRAS.
+  //
+  // A tulajdonos jelzese (2026-09-26): „nem azt kertem, hogy egy ablakot dobjon
+  // fel, hanem hogy ugorjon oda a chaten". Az ugrashoz a hivatkozott uzenet
+  // azonositoja kell; a REGI uzeneteknel ez nincs meg (a mezot ez a verzio
+  // vezeti be), ezert az app ott szoveg-egyezessel keres (chatReplyTargetId).
+  const replyToId = typeof data?.replyToId === 'string' ? data.replyToId.trim().slice(0, 128) : '';
   const imagePublicId = typeof data?.imagePublicId === 'string' ? data.imagePublicId.trim() : '';
   const isAnonymous = context.auth.token.firebase?.sign_in_provider === 'anonymous';
   if ((!text && !imageUrl) || text.length > 2000) {
@@ -2446,6 +2453,9 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
     text,
     ...(replyToText ? { replyToText } : {}),
     ...(replyToText && replyToName ? { replyToName } : {}),
+    // Az ugrashoz (csak ha van idézet ÉS azonosító — a régi olvasók ugyanazt a
+    // dokumentumot látják, mint eddig).
+    ...(replyToText && replyToId ? { replyToId } : {}),
     // Csak akkor kerül a dokumentumba, ha maradt érvényes hivatkozás — így a
     // régi (mezőt nem ismerő) olvasók ugyanazt a dokumentumot látják.
     ...(mentions.length ? { mentions } : {}),
