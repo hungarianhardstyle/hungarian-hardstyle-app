@@ -91,6 +91,10 @@ check(
 // A changelog a Dart AOT csomagban él (a magyar ékezetek miatt UTF-16LE-ként).
 const framework = read('Frameworks/App.framework/App');
 check(
+  'a 369 sora benne van (az értesítések nyelve)',
+  contains(framework, 'angol felületen az értesítések szövege azonnal a választott nyelven jelenik meg'),
+);
+check(
   'a 368 sora benne van (a kiadási jegyzet is angolul)',
   contains(framework, 'a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg'),
 );
