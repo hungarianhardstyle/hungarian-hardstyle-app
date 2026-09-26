@@ -198,7 +198,10 @@ class _GenreDiscoveryScreenState extends ConsumerState<GenreDiscoveryScreen> {
               ),
               const SizedBox(height: 20),
               _Section(title: tr(context, 'Események'), child: _eventContent()),
-              _Section(title: 'DJ-k', child: _artistContent()),
+              // ⚠️ A testvérei `tr(context, …)`-ben vannak; ez a felirat maradt ki
+              // (a saját audit-eszközöm találta meg: a szótárban volt fordítás,
+              // de a hely nyersen írta ki — angol módban „DJ-k" jelent meg).
+              _Section(title: tr(context, 'DJ-k'), child: _artistContent()),
               _Section(title: tr(context, 'Hírek'), child: _postContent()),
               if (_error != null)
                 Padding(

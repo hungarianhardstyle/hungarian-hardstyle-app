@@ -59,7 +59,10 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
     final artists = ref.watch(artistsProvider(_query));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('DJ-k')),
+      // ⚠️ A `const Text('DJ-k')` angol módban is magyarul maradt (a menübeli
+      // felirattal együtt — a tulajdonos jelezte). Az `AppText` a szótárból
+      // fordít, és `const` maradhat.
+      appBar: AppBar(title: const AppText('DJ-k')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

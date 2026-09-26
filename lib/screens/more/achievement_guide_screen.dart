@@ -224,9 +224,13 @@ class _LevelTile extends StatelessWidget {
       subtitle: AppText(
         level.description.isEmpty
             ? trArgs(context, '{n} ponttól', {'n': '${level.minPoints}'})
+            // ⚠️ A sablon fordítása önmagában NEM elég: a `{d}` helyőrző értéke
+            // a szerverről (magyarul) jön, ezért **külön** kell fordítani —
+            // enélkül angol módban „700 points • Láthatóan aktív HUHS-közösségi
+            // tag." jelent meg (a tulajdonos képernyőképe, 2026-09-26).
             : trArgs(context, '{n} pont • {d}', {
                 'n': '${level.minPoints}',
-                'd': level.description,
+                'd': tr(context, level.description),
               }),
       ),
     ),

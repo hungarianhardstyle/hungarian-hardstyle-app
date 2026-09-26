@@ -24,7 +24,7 @@ currentBuild: 364
 currentVersion: 1.0.0
 lastPublishedBuild: 355
 aab: build/HUHS-v1.0.0+364-release.aab
-sha256: A60C729BED47A926995135A48016C8F8F20A80539AB5E60B349C327CCA98BD2C
+sha256: AB788F453DD4BABA4000862CCE1714BE8BF958FC92FC351D643488758E56CDB1
 -->
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
@@ -110,10 +110,10 @@ A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a hí
 | Fájl | `build/HUHS-v1.0.0+364-release.aab` |
 | Verzió | `1.0.0` (versionName) |
 | Verziókód | **364** (a merge-elt release manifestből visszaolvasva: `android:versionCode="364"`, `versionName="1.0.0"`) |
-| Méret | 81,67 MB (85 639 441 bájt) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
-| SHA-256 | `A60C729BED47A926995135A48016C8F8F20A80539AB5E60B349C327CCA98BD2C` |
+| Méret | 81,67 MB (85 640 300 bájt) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
+| SHA-256 | `AB788F453DD4BABA4000862CCE1714BE8BF958FC92FC351D643488758E56CDB1` |
 
-> **⚠️ A 364 a feltöltendő csomag** (versionCode **364**, `1.0.0`), és **2026-09-26-án újraépült**: benne van az **Achievement-nevek/-leírások** angol fordítása **a HUHS Legenda toplistában és a közösségi listában is**, valamint a **„Közösség" gomb kiférésének** javítása (a tulajdonos a korábbi 364-es csomagokat nem töltötte fel, ezért **ugyanaz a verziókód** maradhatott — nem vész el verziókód). A **360 a zárt teszt csúcsa** (feltöltve, `completed`), ezért a 364-nél kisebb kódú csomagot a Play **nem** fogadná el; a 361/362/363 elkészült, de **egyik sem került fel**, a **364 mindegyiket tartalmazza**.
+> **⚠️ A 364 a feltöltendő csomag** (versionCode **364**, `1.0.0`), és **2026-09-26-án újraépült**: benne van az **Achievement-nevek/-leírások** angol fordítása **a HUHS Legenda toplistában, a közösségi listában és az Achievement-súgóban is** (a leírás a `{d}` helyőrzőben is fordítva megy ki), valamint a **„DJ-k" menüpont/felirat** angolul (`DJs`) — a tulajdonos képernyőképe és jelzése alapján. A **„Közösség" gomb kiférésének** javítása szintén benne van (a tulajdonos a korábbi 364-es csomagokat nem töltötte fel, ezért **ugyanaz a verziókód** maradhatott — nem vész el verziókód). A **360 a zárt teszt csúcsa** (feltöltve, `completed`), ezért a 364-nél kisebb kódú csomagot a Play **nem** fogadná el; a 361/362/363 elkészült, de **egyik sem került fel**, a **364 mindegyiket tartalmazza**.
 > ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 364 azokat is tartalmazza) — a 364 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
 
 **Miért a 360-at kell feltenni (és miért nem a 358-at):** a 360 **magában foglalja a 358-at, a 357-et, a 356-ot, a 355-öt és a 354-et is**, ezért egy csomagot kell feltenni:

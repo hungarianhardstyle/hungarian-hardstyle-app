@@ -123,7 +123,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             _section(tr(context, 'Felfedezés'), [
               _item(
                 Icons.graphic_eq,
-                'DJ-k',
+                // ⚠️ A tulajdonos jelzése (2026-09-26): „a menüben a DJ-k az
+                // elég magyar" — ez az EGYETLEN menüpont volt, aminek a felirata
+                // nem ment át a fordítón (a szótárban már benne volt: DJ-k → DJs).
+                tr(context, 'DJ-k'),
                 tr(context, 'Magyar hardstyle és hardcore előadók'),
                 const ArtistsScreen(),
               ),

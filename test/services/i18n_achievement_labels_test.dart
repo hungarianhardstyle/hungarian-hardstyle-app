@@ -150,4 +150,49 @@ void main() {
       reason: 'a közösségi lista is fordítja a jelvény-nevet',
     );
   });
+
+  test('FORRÁS-LINT: a leírás a SABLON paramétereként is fordítva megy be', () {
+    // ⚠️ A tulajdonos képernyőképe (2026-09-26): a HUHS Legenda toplista fölött,
+    // az „Achievement system" képernyőn a **nevek** angolul voltak, a
+    // **leírások** viszont magyarul («700 points • Láthatóan aktív HUHS-közösségi
+    // tag.»). Az ok: a `{n} pont • {d}` sablon fordítva volt, de a `{d}` értéke
+    // (a szerverről jövő leírás) **nyersen** került a helyőrzőbe.
+    expect(
+      guide.contains("'d': tr(context, level.description)"),
+      isTrue,
+      reason: 'a leírás a sablonban is fordítva jelenik meg',
+    );
+    expect(
+      guide.contains("'d': level.description"),
+      isFalse,
+      reason: 'a nyers (fordítatlan) leírás nem kerülhet a helyőrzőbe',
+    );
+  });
+
+  test('FORRÁS-LINT: a menü „DJ-k" felirata is a fordítón megy át', () {
+    // ⚠️ A tulajdonos jelzése: „a menüben a DJ-k az elég magyar". A More képernyőn
+    // ez volt az EGYETLEN menüpont, aminek a felirata nem `tr(...)`-ben állt.
+    final more = File('lib/screens/more/more_screen.dart').readAsStringSync();
+    expect(more.contains("tr(context, 'DJ-k')"), isTrue, reason: 'a menüpont felirata fordítva');
+    expect(
+      RegExp(r"^\s+'DJ-k',$", multiLine: true).hasMatch(more),
+      isFalse,
+      reason: 'a nyers „DJ-k" felirat nem térhet vissza a menübe',
+    );
+
+    final artists = File('lib/screens/artists/artists_screen.dart').readAsStringSync();
+    expect(
+      artists.contains("AppBar(title: const AppText('DJ-k'))"),
+      isTrue,
+      reason: 'a DJ-lista fejléce is fordítva jelenik meg',
+    );
+    expect(
+      artists.contains("AppBar(title: const Text('DJ-k'))"),
+      isFalse,
+      reason: 'a nyers cím nem térhet vissza',
+    );
+
+    // Az angol plural a helyes alak (a „DJ's" birtokos lenne) — ezt a szótár adja.
+    expect(dictionary['DJ-k'], 'DJs');
+  });
 }
