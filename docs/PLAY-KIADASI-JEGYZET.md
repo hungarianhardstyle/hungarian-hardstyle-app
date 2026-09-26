@@ -238,6 +238,23 @@ mert azt a 360 már megkapta). **Mérve: 471/500 karakter** (a biztonsági sáv 
 - Angolul a „Bulizó" szerepkör felirata „Partyface".
 ```
 
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–365** összesítő)
+
+**Ezt használd, ha a 365-öt a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+(`node tools/check-play-track.mjs`, 2026-09-26) szerint ott a **354** fut, ezért a béta felhasználók a
+**355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki`, a Chat-értesítés
+odaugrása, a DJ-adatlap megjelenései és a hírlista-frissesség is. **Mérve: 474/500 karakter** (a
+biztonsági sáv 480).
+
+```play-notes
+- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető, a magyar marad az alap.
+- Angolul a cikkek, a feliratok, a hírek címkéi és az Achievement-nevek is megjelennek.
+- Az értesítések és a push is a választott nyelven jönnek.
+- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
+- ÚJ: a főoldal és a Hírek fül magától frissül; az új cikk egy percen belül megjelenik.
+- A DJ-adatlapon látszanak a megjelenések; angolul a „Bulizó" → „Partyface".
+```
+
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
