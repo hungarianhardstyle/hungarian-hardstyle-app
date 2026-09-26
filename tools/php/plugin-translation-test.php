@@ -74,6 +74,9 @@ class WP_Post
 class WP_REST_Server
 {
     const CREATABLE = 'POST';
+    const READABLE = 'GET';
+    const EDITABLE = 'POST, PUT, PATCH';
+    const DELETABLE = 'DELETE';
 }
 
 class WP_REST_Request
@@ -379,6 +382,53 @@ function get_the_title($postId)
     return $post instanceof WP_Post ? (string) $post->post_title : '';
 }
 
+/* ---- WordPress-stubok a JÁTÉK-végponthoz (2.14.1) ------------------------- */
+
+function wp_timezone()
+{
+    return new DateTimeZone('Europe/Budapest');
+}
+
+function esc_url_raw($url)
+{
+    return trim((string) $url);
+}
+
+function sanitize_textarea_field($value)
+{
+    return trim((string) $value);
+}
+
+function wp_unslash($value)
+{
+    return is_string($value) ? stripslashes($value) : $value;
+}
+
+/**
+ * A `rest_api_init` hookok végigfuttatása, hogy a regisztrált útvonalak
+ * (és a hozzájuk tartozó callbackek) elérhetők legyenek a mérésben.
+ */
+function stub_run_rest_routes()
+{
+    foreach ($GLOBALS['STATE']['actions'] as $action) {
+        if ($action['hook'] === 'rest_api_init' && is_callable($action['callback'])) {
+            call_user_func($action['callback']);
+        }
+    }
+}
+
+/** Egy regisztrált útvonal callbackje (a `stub_run_rest_routes()` után). */
+function stub_route_callback($route)
+{
+    foreach ($GLOBALS['STATE']['routes'] as $registered) {
+        if ($registered['route'] === $route && is_callable($registered['args']['callback'] ?? null)) {
+            return $registered['args']['callback'];
+        }
+    }
+
+    return null;
+}
+
 /* ---- A VALÓDI plugin-fájlok betöltése ------------------------------------ */
 
 require $pluginDir . '/includes/post-translation-meta.php';
@@ -395,6 +445,9 @@ require $pluginDir . '/includes/faq.php';
 require $pluginDir . '/includes/posts.php';
 require $pluginDir . '/includes/poll.php';
 require $pluginDir . '/includes/prize.php';
+// ⚠️ 2.14.1: a JÁTÉK-végpontok nyelvi viselkedése (15. szakasz). A `games.php`
+// a betöltéskor csak függvényeket definiál és hookokat regisztrál.
+require $pluginDir . '/includes/games.php';
 
 /* ---- Segédek a méréshez -------------------------------------------------- */
 
@@ -1223,6 +1276,90 @@ check(
         && $untranslated['question'] === 'Fordítás nélküli játék'
         && $untranslated['has_en'] === false,
     json_encode($untranslated)
+);
+
+/* ---- 15) A JÁTÉK-végpont nyelve (2.14.1, valódi futás) ----------------- */
+
+/*
+ * ⚠️ MÉRT HIBA, amit ez a szakasz fog meg (2026-09-26, ÉLES): a
+ * `/games/results/latest?lang=en` a **magyar** összefoglalót adta vissza, mert
+ * a `huhs_game_public_payload()` nem kapott nyelvet, és a `title`/`type_label`
+ * a `HUHS_GAME_TYPES`-ból (magyarul) jött. A 2.14.1 mindkettőt javítja.
+ */
+reset_state();
+stub_run_rest_routes();
+$resultsCallback = stub_route_callback('/games/results/latest');
+$activeCallback = stub_route_callback('/games/active');
+check(
+    'a játék-végpontok regisztrálva vannak (a callback elérhető a méréshez)',
+    is_callable($resultsCallback) && is_callable($activeCallback)
+);
+
+$GLOBALS['STATE']['posts'][61] = new WP_Post(array(
+    'ID' => 61, 'post_type' => 'huhs_game', 'post_title' => 'Hardstyle kvíz #1',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][61] = array(
+    '_huhs_game_type' => 'hardstyle_quiz',
+    '_huhs_game_summary' => 'Teszteld a hardstyle tudásod!',
+    '_huhs_game_start' => '2020-01-01T00:00',
+    '_huhs_game_end' => '2020-01-02T00:00',
+    // ⚠️ A `huhs_game_status()` a start + end + results_until HÁRMASBÓL dönt
+    // (`draft`, ha bármelyik hiányzik). A „closed" állapothoz a `results_until`
+    // a jövőben kell legyen — ezt a saját mérésem fogta meg (null payload).
+    '_huhs_game_results_until' => '2030-01-01T00:00',
+    '_huhs_translation_fields_en' => wp_json_encode(array(
+        '_huhs_game_summary' => 'Test your hardstyle knowledge!',
+    )),
+);
+$GLOBALS['STATE']['meta'][61]['_huhs_translation_fields_hash'] =
+    md5((string) wp_json_encode(huhs_translation_source_fields(61)));
+
+$gameHu = $resultsCallback(new WP_REST_Request(array('lang' => 'hu')))->data;
+$gameEn = $resultsCallback(new WP_REST_Request(array('lang' => 'en')))->data;
+$gameDefault = $resultsCallback(new WP_REST_Request(array()))->data;
+check(
+    'a játék összefoglalója angolul a fordítást adja, magyarul a forrást',
+    $gameEn['summary'] === 'Test your hardstyle knowledge!'
+        && $gameHu['summary'] === 'Teszteld a hardstyle tudásod!'
+        && $gameDefault['summary'] === 'Teszteld a hardstyle tudásod!',
+    json_encode(array('en' => $gameEn['summary'] ?? null, 'hu' => $gameHu['summary'] ?? null))
+);
+check(
+    'a játéktípus neve angolul a névtárból jön, magyarul a HUHS_GAME_TYPES-ból',
+    $gameEn['type_label'] === 'Hardstyle Quiz' && $gameEn['title'] === 'Hardstyle Quiz'
+        && $gameHu['type_label'] === 'Hardstyle kvíz' && $gameHu['title'] === 'Hardstyle kvíz',
+    json_encode(array('en' => $gameEn['type_label'] ?? null, 'hu' => $gameHu['type_label'] ?? null))
+);
+check(
+    'a játék-típus névtár minden típust lefed (és ismeretlen típusra nem tippel)',
+    count(huhs_game_type_labels_en()) === count(HUHS_GAME_TYPES)
+        && huhs_game_type_label('who_is_dj', 'en') === 'Who Is the DJ?'
+        && huhs_game_type_label('nincs_ilyen', 'en') === 'Játék'
+        && huhs_game_type_label('hardstyle_quiz', 'hu') === 'Hardstyle kvíz'
+);
+check(
+    'a játék-végpont a helyes választ nem adja ki (a `correct` kulcs nem megy ki)',
+    !array_key_exists('correct', $gameEn) && !array_key_exists('correct', $gameHu)
+);
+
+$GLOBALS['STATE']['posts'][62] = new WP_Post(array(
+    'ID' => 62, 'post_type' => 'huhs_game', 'post_title' => 'Napi kihívás',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][62] = array(
+    '_huhs_game_type' => 'daily_challenge',
+    '_huhs_game_summary' => 'Napi kihívás szövege',
+    '_huhs_game_start' => '2020-01-01T00:30',
+    '_huhs_game_end' => '2030-01-01T00:00',
+    '_huhs_game_results_until' => '2031-01-01T00:00',
+);
+$activeEn = $activeCallback(new WP_REST_Request(array('lang' => 'en')))->data;
+check(
+    'az AKTÍV játék végpontja is a kért nyelven adja a típust (fordítás nélkül a magyar összefoglalót)',
+    $activeEn['type_label'] === 'Daily Challenge'
+        && $activeEn['summary'] === 'Napi kihívás szövege',
+    json_encode($activeEn)
 );
 
 echo "\n{$checks} ellenőrzés, {$failures} hiba\n";

@@ -1,0 +1,157 @@
+diff --git a/huhs-mobile-api/huhs-mobile-api.php b/huhs-mobile-api/huhs-mobile-api.php
+index 535a5f2b..2e0e025c 100644
+--- a/huhs-mobile-api/huhs-mobile-api.php
++++ b/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.14.0
++ * Version: 2.14.1
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.14.0');
++define('HUHS_API_VERSION', '2.14.1');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/huhs-mobile-api/includes/games.php b/huhs-mobile-api/includes/games.php
+index 4c60f98f..a4cb05ca 100644
+--- a/huhs-mobile-api/includes/games.php
++++ b/huhs-mobile-api/includes/games.php
+@@ -22,6 +22,45 @@ function huhs_game_is_quiz_type($type) {
+     return in_array($type, array('hardstyle_quiz', 'festival_quiz', 'hungarian_hardstyle_quiz'), true);
+ }
+ 
++/**
++ * A játéktípus neve a kért nyelven (plugin 2.14.1).
++ *
++ * MIÉRT NÉVTÁR (és nem API): a játéktípus neve **nem prózai szöveg**, hanem a
++ * plugin saját, rögzített címkéje (`HUHS_GAME_TYPES`) — ugyanaz a helyzet, mint
++ * az ország-/városneveknél (`translation-places.php`) és a GYÍK
++ * kategória-neveinél. Ezért determinisztikus, nincs hívás és nincs költség, a
++ * magyar ág pedig **bájtazonos** marad.
++ *
++ * ⚠️ MÉRT HIBA, amit ez javít (2026-09-26, éles): a `title`/`type_label` a
++ * `HUHS_GAME_TYPES`-ból jött, ezért angol módban is **magyarul** ment ki (a
++ * 2.14.0 csak az összefoglalót fordította, és azt sem olvasta ki a végpont).
++ */
++function huhs_game_type_labels_en() {
++    return array(
++        'daily_challenge' => 'Daily Challenge',
++        'hardstyle_quiz' => 'Hardstyle Quiz',
++        'festival_quiz' => 'Festival Quiz',
++        'hungarian_hardstyle_quiz' => 'Hungarian Hardstyle Quiz',
++        'guess_track' => 'Guess the Track',
++        'guess_artist' => 'Guess the Artist',
++        'timeline' => 'Hardstyle Timeline',
++        'who_is_dj' => 'Who Is the DJ?',
++        'cover_recognition' => 'Recognise the Cover',
++    );
++}
++
++function huhs_game_type_label($type, $lang = 'hu') {
++    $types = defined('HUHS_GAME_TYPES') ? HUHS_GAME_TYPES : array();
++    $fallback = isset($types[$type]) ? $types[$type] : 'Játék';
++    if ($lang !== 'en') {
++        return $fallback;
++    }
++
++    $names = huhs_game_type_labels_en();
++
++    return isset($names[$type]) ? $names[$type] : $fallback;
++}
++
+ add_action('init', function () {
+     register_post_type('huhs_game', array(
+         'labels' => array(
+@@ -510,8 +549,20 @@ add_action('save_post_huhs_game', function ($post_id) {
+     if ($audio_type && !wp_next_scheduled('huhs_game_process_audio', array($post_id))) wp_schedule_single_event(time() + 5, 'huhs_game_process_audio', array($post_id));
+ });
+ 
+-function huhs_game_public_payload($post) {
++/**
++ * A játék nyilvános payloadja a kért nyelven (2.14.1).
++ *
++ * ⚠️ A `$lang` **opcionális** (alap: `hu`), ezért egyetlen régi hívó sem tört el.
++ * A magyar ág bájtazonos: a `huhs_translation_text()` nem-angol kérésre az
++ * eredeti (magyar) metaértéket adja vissza, a típus-név pedig a `HUHS_GAME_TYPES`.
++ *
++ * ⚠️ ŐSZINTE KORLÁT: a `questions` (kérdés + válaszlehetőségek) és a
++ * `timeline_items` **beágyazott** szerkezet, ezért **nem** fordul — az külön kör.
++ */
++function huhs_game_public_payload($post, $lang = 'hu') {
+     $type = get_post_meta($post->ID, '_huhs_game_type', true);
++    $summary_hu = (string) get_post_meta($post->ID, '_huhs_game_summary', true);
++    $type_label = huhs_game_type_label($type, $lang);
+     $media = huhs_game_media_json($post->ID);
+     $questions = array_map(function ($question) {
+         return array('prompt' => $question['prompt'] ?? '', 'options' => array_values($question['options'] ?? array()));
+@@ -521,10 +572,10 @@ function huhs_game_public_payload($post) {
+     }, huhs_game_timeline_items($post->ID));
+     return array(
+         'id' => (int) $post->ID,
+-        'title' => HUHS_GAME_TYPES[$type] ?? 'Játék',
++        'title' => $type_label,
+         'type' => $type,
+-        'type_label' => HUHS_GAME_TYPES[$type] ?? 'Játék',
+-        'summary' => get_post_meta($post->ID, '_huhs_game_summary', true),
++        'type_label' => $type_label,
++        'summary' => huhs_translation_text($post->ID, $lang, '_huhs_game_summary', $summary_hu),
+         'artwork' => huhs_game_resolved_artwork($type, get_post_meta($post->ID, '_huhs_game_artwork', true)),
+         'start_at' => get_post_meta($post->ID, '_huhs_game_start', true),
+         'end_at' => get_post_meta($post->ID, '_huhs_game_end', true),
+@@ -559,9 +610,10 @@ add_action('rest_api_init', function () {
+     register_rest_route('huhs/v1', '/games/active', array(
+         'methods' => WP_REST_Server::READABLE,
+         'permission_callback' => '__return_true',
+-        'callback' => function () {
++        'callback' => function ($request) {
++            $lang = huhs_request_lang($request);
+             $games = get_posts(array('post_type' => 'huhs_game', 'post_status' => 'publish', 'posts_per_page' => -1, 'orderby' => 'date', 'order' => 'ASC'));
+-            foreach ($games as $game) if (huhs_game_status($game->ID) === 'active') return rest_ensure_response(huhs_game_public_payload($game));
++            foreach ($games as $game) if (huhs_game_status($game->ID) === 'active') return rest_ensure_response(huhs_game_public_payload($game, $lang));
+             return rest_ensure_response(null);
+         },
+     ));
+@@ -569,10 +621,11 @@ add_action('rest_api_init', function () {
+     register_rest_route('huhs/v1', '/games/results/latest', array(
+         'methods' => WP_REST_Server::READABLE,
+         'permission_callback' => '__return_true',
+-        'callback' => function () {
++        'callback' => function ($request) {
++            $lang = huhs_request_lang($request);
+             $games = get_posts(array('post_type' => 'huhs_game', 'post_status' => 'publish', 'posts_per_page' => -1, 'orderby' => 'date', 'order' => 'DESC'));
+             foreach ($games as $game) {
+-                if (huhs_game_status($game->ID) === 'closed') return rest_ensure_response(huhs_game_public_payload($game));
++                if (huhs_game_status($game->ID) === 'closed') return rest_ensure_response(huhs_game_public_payload($game, $lang));
+             }
+             return rest_ensure_response(null);
+         },
+@@ -586,7 +639,7 @@ add_action('rest_api_init', function () {
+             if (!$game || $game->post_type !== 'huhs_game' || $game->post_status !== 'publish') return new WP_Error('not_found', 'A játék nem található.', array('status' => 404));
+             $status = huhs_game_status($game->ID);
+             if (!in_array($status, array('active', 'closed'), true)) return new WP_Error('not_available', 'A játék jelenleg nem érhető el.', array('status' => 404));
+-            return rest_ensure_response(huhs_game_public_payload($game));
++            return rest_ensure_response(huhs_game_public_payload($game, huhs_request_lang($request)));
+         },
+     ));
+ 
+@@ -598,7 +651,11 @@ add_action('rest_api_init', function () {
+         'callback' => function ($request) {
+             $game = get_post(absint($request['id']));
+             if (!$game || $game->post_type !== 'huhs_game') return new WP_Error('not_found', 'A játék nem található.', array('status' => 404));
+-            return rest_ensure_response(array_merge(huhs_game_public_payload($game), array('questions' => huhs_game_questions_json($game->ID), 'timeline_items' => huhs_game_timeline_items($game->ID), 'media' => huhs_game_media_json($game->ID))));
++            // ⚠️ A `lang` itt is átmegy (2.14.1): a Firebase-proxy eddig nem
++            // küldött nyelvet, ezért az alapérték (`hu`) ugyanazt adja, mint
++            // eddig — de ha küld, a nyilvános mezők (összefoglaló, típus-név)
++            // is a kért nyelven jönnek.
++            return rest_ensure_response(array_merge(huhs_game_public_payload($game, huhs_request_lang($request)), array('questions' => huhs_game_questions_json($game->ID), 'timeline_items' => huhs_game_timeline_items($game->ID), 'media' => huhs_game_media_json($game->ID))));
+         },
+     ));
+ 

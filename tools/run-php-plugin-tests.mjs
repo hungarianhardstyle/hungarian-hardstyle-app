@@ -27,7 +27,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.0.zip';
+export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.1.zip';
 export const WORK_DIR = 'tmp/php-plugin';
 export const CONTAINER_IMAGE = 'php:8.2-cli';
 
