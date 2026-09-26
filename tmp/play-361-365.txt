@@ -1,0 +1,6 @@
+- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető, a magyar marad az alap.
+- Angolul a cikkek, a feliratok, a hírek címkéi és az Achievement-nevek is megjelennek.
+- Az értesítések és a push is a választott nyelven jönnek; a nyelv a profilodban van.
+- ÚJ: a főoldal és a Hírek fül magától frissül — az új cikk egy percen belül megjelenik.
+- ÚJ a Chatben: a válasz idézetére koppintva az app az eredeti üzenetre ugrik.
+- Angolul a „Bulizó" szerepkör felirata „Partyface".

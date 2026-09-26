@@ -217,6 +217,21 @@ a **352–358** összesítőt kapták, ezért ők ezt az öt újdonságot kapjá
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
+## 1b-2. Play Console — a **361–365** összesítő (a 360 után)
+
+**Ezt használd, ha a felhasználó a 360-ról jön** (zárt teszt) — vagyis csak azok az újdonságok
+szerepelnek benne, amelyek a **361–365** között készültek (a 359/360 `@mindenki`-je **nincs** benne,
+mert azt a 360 már megkapta). **Mérve: 471/500 karakter** (a biztonsági sáv 480).
+
+```play-notes
+- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető, a magyar marad az alap.
+- Angolul a cikkek, a feliratok, a hírek címkéi és az Achievement-nevek is megjelennek.
+- Az értesítések és a push is a választott nyelven jönnek; a nyelv a profilodban van.
+- ÚJ: a főoldal és a Hírek fül magától frissül — az új cikk egy percen belül megjelenik.
+- ÚJ a Chatben: a válasz idézetére koppintva az app az eredeti üzenetre ugrik.
+- Angolul a „Bulizó" szerepkör felirata „Partyface".
+```
+
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
 
 Ugyanaz a kiadás, részletesebben — akkor használd, ha a Play kártyáján több sort akarsz
