@@ -41,10 +41,13 @@ export function pendingTotal(status) {
  * ilyenkor célzottan azt a típust pótolja.
  */
 export function parseArgs(argv, defaults = { limit: 20, budget: 20, rounds: 25 }) {
-  const out = { ...defaults, status: false, type: '' };
+  const out = { ...defaults, status: false, type: '', force: false };
   for (const arg of argv) {
     if (arg === '--status') out.status = true;
     else if (arg === '--self-test') out.selfTest = true;
+    // ⚠️ 2.14.4: `--force` — a megadott típus elemeit akkor is újrafordítja, ha a
+    // tárolt fordítás naprakésznek látszik (sérült/elavult tárolt szöveg javítása).
+    else if (arg === '--force') out.force = true;
     else {
       const numeric = /^--(limit|budget|rounds)=(\d+)$/.exec(arg);
       if (numeric) out[numeric[1]] = Number(numeric[2]);
@@ -99,6 +102,17 @@ export function selfTest() {
     (() => {
       const parsed = parseArgs(['--limit=999', '--budget=999']);
       return parsed.limit === 20 && parsed.budget === 55;
+    })(),
+  );
+  check(
+    // ⚠️ 2.14.4: a `--force` a KÉNYSZERÍTETT újrafordítást kéri (a tárolt,
+    // naprakésznek látszó szöveget is lecseréli) — enélkül egy sérült/elavult
+    // tárolt fordítás örökre bennmaradna.
+    'a `--force` bekapcsolja a kényszerített újrafordítást (és alapból NEM aktív)',
+    (() => {
+      const forced = parseArgs(['--type=huhs_faq', '--force']);
+      const plain = parseArgs(['--type=huhs_faq']);
+      return forced.force === true && plain.force === false;
     })(),
   );
   check(
@@ -193,7 +207,12 @@ async function main() {
     const result = await request(SWEEP_ROUTE, {
       authorization,
       method: 'POST',
-      body: { limit: args.limit, budget: args.budget, ...(args.type ? { type: args.type } : {}) },
+      body: {
+        limit: args.limit,
+        budget: args.budget,
+        ...(args.type ? { type: args.type } : {}),
+        ...(args.force ? { force: true } : {}),
+      },
     });
     const seconds = ((Date.now() - started) / 1000).toFixed(1);
 
