@@ -19,7 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.1.zip';
+export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.2.zip';
 export const DEFAULT_SOURCE = '.tmp-api-260/huhs-mobile-api';
 export const EXPECTED_ROOT = 'huhs-mobile-api';
 
@@ -84,9 +84,10 @@ export function packageChecks(read) {
   const prize = read('includes/prize.php');
   const games = read('includes/games.php');
   const gamesCode = stripPhpComments(games);
+  const fieldsCode = stripPhpComments(fields);
 
   return [
-    ['a fejléc és a konstans is 2.14.1', /Version:\s*2\.14\.1/.test(main) && main.includes("HUHS_API_VERSION', '2.14.1'")],
+    ['a fejléc és a konstans is 2.14.2', /Version:\s*2\.14\.2/.test(main) && main.includes("HUHS_API_VERSION', '2.14.2'")],
     ['a fő fájl behúzza a hely-névtárat, a pótló kört és a mező-fordítást',
       main.includes('includes/translation-places.php') && main.includes('includes/translation-sweep.php')
         && main.includes('includes/translation-fields.php')],
@@ -144,8 +145,18 @@ export function packageChecks(read) {
       (gamesCode.match(/huhs_request_lang\(\$request\)/g) || []).length >= 4],
     ['a játék a magyar ágat nem rontja el (nem-angol kérésre a magyar címke)',
       gamesCode.includes("if ($lang !== 'en')")],
-    ['a játék kérdés-szerkezete szándékosan nem fordul (nincs a mező-térképen)',
-      fields.includes("'_huhs_game_summary'") && !fields.includes("'_huhs_game_questions'")],
+    ['a játék kérdései és válaszai is fordulnak (2.14.2, lapos kulcsokkal)',
+      gamesCode.includes('huhs_translation_game_questions(')
+        && fieldsCode.includes("'_huhs_game_questions' => 'questions'")
+        && fieldsCode.includes('huhs_translation_game_question_texts(')],
+    ['a helyes válasz indexe (`correct`) nem kerül a fordítási kérésbe',
+      !/correct/i.test(/function huhs_translation_game_question_texts\(\$post_id\)[\s\S]*?\n\}/.exec(fieldsCode)?.[0] ?? 'HIBA')],
+    ['a nyilvános játék-payload nem adja ki a `correct` indexet',
+      // ⚠️ Csak a NYILVÁNOS payloadra mérünk: a `correct` a privát (proxy)
+      // útvonalon és a validációban **legitim** módon szerepel.
+      !/'correct'/.test(
+        /function huhs_game_public_payload[\s\S]*?\nfunction huhs_game_create_clip_token/.exec(gamesCode)?.[0] ?? 'HIBA',
+      )],
   ];
 }
 
@@ -165,9 +176,9 @@ export function selfTest() {
 
   const star = 'x';
   const full = {
-    'huhs-mobile-api.php': 'Version: 2.14.1 HUHS_API_VERSION\', \'2.14.1\' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php',
+    'huhs-mobile-api.php': 'Version: 2.14.2 HUHS_API_VERSION\', \'2.14.2\' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php',
     'includes/translation-sweep.php': "'compare' => 'NOT EXISTS' huhs_run_translation($post->ID) 'hourly' 'huhs_translation_sweep_event' 'limit' 'budget' huhs_translation_retry_delay '/translations/status' '/translations/sweep'",
-    'includes/translation-fields.php': "'_huhs_poll_question' '_huhs_prize_answers' '_huhs_prize_description' '_huhs_game_summary' count($translated) === count($source) HUHS_TRANSLATION_FIELDS_FAILED_META",
+    'includes/translation-fields.php': "'_huhs_poll_question' '_huhs_prize_answers' '_huhs_prize_description' '_huhs_game_summary' \"'_huhs_game_questions' => 'questions'\" huhs_translation_game_question_texts($post_id) { return array(); } count($translated) === count($source) HUHS_TRANSLATION_FIELDS_FAILED_META",
     'includes/translation-places.php': "'magyarország' => 'Hungary' Velence if ($lang !== 'en')",
     'includes/translation-cron.php': "HUHS_TRANSLATION_HASH_META huhs_translation_is_current huhs_run_field_translation( return 'translated';",
     'includes/post-translation-meta.php': 'huhs_translation_field_post_types()',
@@ -178,8 +189,8 @@ export function selfTest() {
     'includes/api-artists.php': 'huhs_translation_country_value(',
     'includes/api-organizers.php': 'huhs_translation_country_value( use ($lang)',
     'includes/api-releases.php': star,
-    // A 2.14.1 szintetikus játék-fájlja: minden új ellenőrzés mintája benne van.
-    'includes/games.php': "huhs_translation_text($post->ID, $lang, '_huhs_game_summary' huhs_game_type_label($type, $lang) huhs_game_type_labels_en() "
+    // A 2.14.1/2.14.2 szintetikus játék-fájlja: minden új ellenőrzés mintája benne van.
+    'includes/games.php': "huhs_translation_text($post->ID, $lang, '_huhs_game_summary' huhs_game_type_label($type, $lang) huhs_game_type_labels_en() huhs_translation_game_questions( "
       + "'daily_challenge' 'hardstyle_quiz' 'festival_quiz' 'hungarian_hardstyle_quiz' 'guess_track' 'guess_artist' 'timeline' 'who_is_dj' 'cover_recognition' "
       + "huhs_request_lang($request) huhs_request_lang($request) huhs_request_lang($request) huhs_request_lang($request) if ($lang !== 'en') questions",
   };

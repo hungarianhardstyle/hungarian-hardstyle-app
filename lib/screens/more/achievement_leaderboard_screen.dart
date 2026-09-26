@@ -223,7 +223,13 @@ class _LeaderboardTile extends StatelessWidget {
           child: Text('$rank', style: const TextStyle(color: Colors.white)),
         ),
         title: Text(name?.isNotEmpty == true ? name! : tr(context, 'HUHS tag')),
-        subtitle: Text(badge?.isNotEmpty == true ? badge! : tr(context, 'Achievement rang')),
+        // ⚠️ A jelvény-név a szerverről (magyarul) érkezik — a HUHS Legenda
+        // toplistában a megjelenítés helyén fordítjuk (a tulajdonos jelzése:
+        // „az achievement nevei magyarul vannak az angol verzióban a huhs
+        // legenda toplistában").
+        subtitle: Text(
+          badge?.isNotEmpty == true ? tr(context, badge!) : tr(context, 'Achievement rang'),
+        ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -236,7 +242,10 @@ class _LeaderboardTile extends StatelessWidget {
                 fit: BoxFit.contain,
                 errorWidget: (_, _, _) => const SizedBox.shrink(),
               ),
-            Text('$points pont'),
+            // ⚠️ A pont-egység korábban beégetve volt („$points pont"), ezért
+            // angol módban is magyarul látszott — ugyanaz a hibaosztály, mint a
+            // jelvény-kártyán.
+            Text(trArgs(context, '{n} pont', {'n': '$points'})),
           ],
         ),
       ),

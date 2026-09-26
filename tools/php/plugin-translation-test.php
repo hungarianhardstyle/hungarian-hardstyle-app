@@ -79,7 +79,15 @@ class WP_REST_Server
     const DELETABLE = 'DELETE';
 }
 
-class WP_REST_Request
+/**
+ * A REST-kérés stubja.
+ *
+ * ⚠️ MÉRT HIBA (2026-09-26): a valódi `WP_REST_Request` **tömbként is**
+ * használható (`$request['id']`), és a plugin él ezzel (`/games/(?P<id>\d+)`).
+ * Az első stub csak `get_param()`-ot tudott, ezért a privát útvonal mérése
+ * „Cannot use object of type WP_REST_Request as array" végzetes hibával állt le.
+ */
+class WP_REST_Request implements ArrayAccess
 {
     private $params;
 
@@ -91,6 +99,26 @@ class WP_REST_Request
     public function get_param($key)
     {
         return $this->params[$key] ?? null;
+    }
+
+    public function offsetExists(mixed $offset): bool
+    {
+        return array_key_exists($offset, $this->params);
+    }
+
+    public function offsetGet(mixed $offset): mixed
+    {
+        return $this->params[$offset] ?? null;
+    }
+
+    public function offsetSet(mixed $offset, mixed $value): void
+    {
+        $this->params[$offset] = $value;
+    }
+
+    public function offsetUnset(mixed $offset): void
+    {
+        unset($this->params[$offset]);
     }
 }
 
@@ -1361,6 +1389,110 @@ check(
         && $activeEn['summary'] === 'Napi kihívás szövege',
     json_encode($activeEn)
 );
+
+/* ---- 16) A KVÍZ kérdései és válaszai is fordulnak (2.14.2) ------------ */
+
+/*
+ * ⚠️ A TULAJDONOS KÉRÉSE: *„ha felkerül Poll/Kérdőív, jó lenne ha a válaszok is
+ * lefordulnának angolul … kviz meg nyereményjáték dettó"*. A kérdőív és a
+ * nyeremény válaszai már a 2.14.0-ban fordulnak (mért, éles), a **kvíz**
+ * kérdés-szerkezete viszont beágyazott JSON, ezért eddig kimaradt. A 2.14.2
+ * **lapos kulcsokra** bontja (`_huhs_game_questions.0.prompt`,
+ * `…option.1`), így a modell csak szövegeket lát, a `correct` index pedig
+ * **hozzá sem kerül** a kéréshez.
+ */
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+$GLOBALS['STATE']['posts'][71] = new WP_Post(array(
+    'ID' => 71, 'post_type' => 'huhs_game', 'post_title' => 'Hardstyle kvíz #2',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][71] = array(
+    '_huhs_game_type' => 'hardstyle_quiz',
+    '_huhs_game_summary' => 'Teszteld a tudásod!',
+    '_huhs_game_start' => '2020-01-01T00:00',
+    '_huhs_game_end' => '2020-01-02T00:00',
+    '_huhs_game_results_until' => '2030-01-01T00:00',
+    '_huhs_game_questions' => wp_json_encode(array(
+        array('prompt' => 'Melyik évben alakult a zenekar?', 'options' => array('2005', '2010', '2015'), 'correct' => 1),
+        array('prompt' => 'Ki az énekes?', 'options' => array('Anna', 'Béla'), 'correct' => 0),
+    )),
+);
+$quizSource = huhs_translation_source_fields(71);
+check(
+    'a kvíz forrása LAPOS kulcsokra bomlik (kérdés + válaszlehetőségek)',
+    ($quizSource['_huhs_game_questions.0.prompt'] ?? '') === 'Melyik évben alakult a zenekar?'
+        && ($quizSource['_huhs_game_questions.0.option.0'] ?? '') === '2005'
+        && ($quizSource['_huhs_game_questions.0.option.2'] ?? '') === '2015'
+        && ($quizSource['_huhs_game_questions.1.option.1'] ?? '') === 'Béla',
+    json_encode($quizSource)
+);
+check(
+    'a `correct` index NINCS a fordítási kérésben (nem tud elcsúszni)',
+    !array_key_exists('_huhs_game_questions.0.correct', $quizSource)
+        && strpos((string) wp_json_encode($quizSource), 'correct') === false,
+    json_encode(array_keys($quizSource))
+);
+
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'fields' => array(
+        '_huhs_game_summary' => 'Test your knowledge!',
+        '_huhs_game_questions.0.prompt' => 'In which year was the band formed?',
+        '_huhs_game_questions.0.option.0' => '2005',
+        '_huhs_game_questions.0.option.1' => '2010',
+        '_huhs_game_questions.0.option.2' => '2015',
+        '_huhs_game_questions.1.prompt' => 'Who is the singer?',
+        '_huhs_game_questions.1.option.0' => 'Anna',
+        '_huhs_game_questions.1.option.1' => 'Béla',
+    ),
+));
+$quizStatus = huhs_run_translation(71);
+$quizEn = huhs_translation_game_questions(71, 'en');
+$quizHu = huhs_translation_game_questions(71, 'hu');
+check(
+    'a kvíz fordítása lefut és a kérdések/válaszok angolul jönnek',
+    $quizStatus === 'translated'
+        && ($quizEn[0]['prompt'] ?? '') === 'In which year was the band formed?'
+        && ($quizEn[0]['options'] ?? array()) === array('2005', '2010', '2015')
+        && ($quizEn[1]['prompt'] ?? '') === 'Who is the singer?',
+    $quizStatus . ' / ' . json_encode($quizEn)
+);
+check(
+    'a `correct` index VÁLTOZATLAN marad a fordított szerkezetben',
+    ($quizEn[0]['correct'] ?? null) === 1 && ($quizEn[1]['correct'] ?? null) === 0
+        && ($quizHu[0]['correct'] ?? null) === 1
+);
+check(
+    'a magyar ág bájtazonos (nem-angol kérésre a magyar kérdések)',
+    ($quizHu[0]['prompt'] ?? '') === 'Melyik évben alakult a zenekar?'
+        && ($quizHu[1]['options'] ?? array()) === array('Anna', 'Béla')
+);
+
+$quizPayloadEn = $resultsCallback(new WP_REST_Request(array('lang' => 'en')))->data;
+$quizPayloadHu = $resultsCallback(new WP_REST_Request(array('lang' => 'hu')))->data;
+check(
+    'a NYILVÁNOS játék-végpont angolul a lefordított kérdéseket adja (magyarul a magyarokat)',
+    ($quizPayloadEn['questions'][0]['prompt'] ?? '') === 'In which year was the band formed?'
+        && ($quizPayloadEn['questions'][1]['options'][1] ?? '') === 'Béla'
+        && ($quizPayloadHu['questions'][0]['prompt'] ?? '') === 'Melyik évben alakult a zenekar?',
+    json_encode($quizPayloadEn['questions'] ?? null)
+);
+check(
+    'a nyilvános válasz a `correct` indexet NEM adja ki (a játék nem skennelhető)',
+    !array_key_exists('correct', (array) ($quizPayloadEn['questions'][0] ?? array()))
+        && strpos((string) json_encode($quizPayloadEn['questions'] ?? array()), 'correct') === false
+);
+
+$privateCallback = stub_route_callback('/games/(?P<id>\d+)/private');
+check('a privát (proxy) útvonal callbackje elérhető', is_callable($privateCallback));
+if (is_callable($privateCallback)) {
+    $privateEn = $privateCallback(new WP_REST_Request(array('id' => 71, 'lang' => 'en')))->data;
+    check(
+        'a PRIVÁT útvonalon a lefordított kérdések a `correct` indexszel együtt mennek (a proxynak kell)',
+        ($privateEn['questions'][0]['prompt'] ?? '') === 'In which year was the band formed?'
+            && ($privateEn['questions'][0]['correct'] ?? null) === 1,
+        json_encode($privateEn['questions'][0] ?? null)
+    );
+}
 
 echo "\n{$checks} ellenőrzés, {$failures} hiba\n";
 exit($failures === 0 ? 0 : 1);

@@ -1,0 +1,190 @@
+diff --git a/huhs-mobile-api/huhs-mobile-api.php b/huhs-mobile-api/huhs-mobile-api.php
+index 2e0e025c..8d8fd3d8 100644
+--- a/huhs-mobile-api/huhs-mobile-api.php
++++ b/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.14.1
++ * Version: 2.14.2
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.14.1');
++define('HUHS_API_VERSION', '2.14.2');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/huhs-mobile-api/includes/games.php b/huhs-mobile-api/includes/games.php
+index a4cb05ca..349da6f5 100644
+--- a/huhs-mobile-api/includes/games.php
++++ b/huhs-mobile-api/includes/games.php
+@@ -550,14 +550,15 @@ add_action('save_post_huhs_game', function ($post_id) {
+ });
+ 
+ /**
+- * A játék nyilvános payloadja a kért nyelven (2.14.1).
++ * A játék nyilvános payloadja a kért nyelven (2.14.1, kvíz 2.14.2).
+  *
+  * ⚠️ A `$lang` **opcionális** (alap: `hu`), ezért egyetlen régi hívó sem tört el.
+  * A magyar ág bájtazonos: a `huhs_translation_text()` nem-angol kérésre az
+  * eredeti (magyar) metaértéket adja vissza, a típus-név pedig a `HUHS_GAME_TYPES`.
+  *
+- * ⚠️ ŐSZINTE KORLÁT: a `questions` (kérdés + válaszlehetőségek) és a
+- * `timeline_items` **beágyazott** szerkezet, ezért **nem** fordul — az külön kör.
++ * ⚠️ 2.14.2: a **kérdések és a válaszlehetőségek is** fordulnak
++ * (`huhs_translation_game_questions()`), a `correct` index viszont a nyilvános
++ * payloadba **nem** kerülhet (a helyes válasz a játékos elől rejtve marad).
+  */
+ function huhs_game_public_payload($post, $lang = 'hu') {
+     $type = get_post_meta($post->ID, '_huhs_game_type', true);
+@@ -566,7 +567,7 @@ function huhs_game_public_payload($post, $lang = 'hu') {
+     $media = huhs_game_media_json($post->ID);
+     $questions = array_map(function ($question) {
+         return array('prompt' => $question['prompt'] ?? '', 'options' => array_values($question['options'] ?? array()));
+-    }, huhs_game_questions_json($post->ID));
++    }, huhs_translation_game_questions($post->ID, $lang));
+     $timeline_items = array_map(function ($item) {
+         return array('id' => $item['id'] ?? '', 'artist' => $item['artist'] ?? '', 'track_title' => $item['track_title'] ?? ($item['label'] ?? ''));
+     }, huhs_game_timeline_items($post->ID));
+@@ -653,9 +654,11 @@ add_action('rest_api_init', function () {
+             if (!$game || $game->post_type !== 'huhs_game') return new WP_Error('not_found', 'A játék nem található.', array('status' => 404));
+             // ⚠️ A `lang` itt is átmegy (2.14.1): a Firebase-proxy eddig nem
+             // küldött nyelvet, ezért az alapérték (`hu`) ugyanazt adja, mint
+-            // eddig — de ha küld, a nyilvános mezők (összefoglaló, típus-név)
+-            // is a kért nyelven jönnek.
+-            return rest_ensure_response(array_merge(huhs_game_public_payload($game, huhs_request_lang($request)), array('questions' => huhs_game_questions_json($game->ID), 'timeline_items' => huhs_game_timeline_items($game->ID), 'media' => huhs_game_media_json($game->ID))));
++            // eddig — de ha küld, a nyilvános mezők (összefoglaló, típus-név,
++            // kérdések) is a kért nyelven jönnek. A `correct` index itt MARAD
++            // (ez a megbízható szerver-oldali útvonal).
++            $lang = huhs_request_lang($request);
++            return rest_ensure_response(array_merge(huhs_game_public_payload($game, $lang), array('questions' => huhs_translation_game_questions($game->ID, $lang), 'timeline_items' => huhs_game_timeline_items($game->ID), 'media' => huhs_game_media_json($game->ID))));
+         },
+     ));
+ 
+diff --git a/huhs-mobile-api/includes/translation-fields.php b/huhs-mobile-api/includes/translation-fields.php
+index 6d65af14..4d6b02ad 100644
+--- a/huhs-mobile-api/includes/translation-fields.php
++++ b/huhs-mobile-api/includes/translation-fields.php
+@@ -69,6 +69,10 @@ function huhs_translation_field_specs($post_type = '')
+         ),
+         'huhs_game' => array(
+             '_huhs_game_summary' => 'text',
++            // ⚠️ 2.14.2: a kvíz kérdései/válaszai is fordulnak — a beágyazott
++            // szerkezetet a `huhs_translation_source_fields()` bontja lapos
++            // kulcsokra, a `correct` index soha nem kerül a kérésbe.
++            '_huhs_game_questions' => 'questions',
+         ),
+     );
+ 
+@@ -125,6 +129,12 @@ function huhs_translation_field_list_values($stored)
+  *
+  * Üres érték nem kerül bele: ha nincs mit fordítani, a hívó ezt üres tömbbel
+  * látja, és nem indít felesleges kérést.
++ *
++ * ⚠️ A `questions` alak (2.14.2) **lapos kulcsokra bontja** a beágyazott
++ * kérdés-szerkezetet (`_huhs_game_questions.0.prompt`,
++ * `_huhs_game_questions.0.option.1`, …). Így a szolgáltató **soha nem lát
++ * szerkezetet** (csak szövegeket), a `correct` index pedig **hozzá sem kerül** a
++ * kéréshez — ezért nem tud elcsúszni a helyes válasz.
+  */
+ function huhs_translation_source_fields($post_id)
+ {
+@@ -135,6 +145,15 @@ function huhs_translation_source_fields($post_id)
+ 
+     $fields = array();
+     foreach (huhs_translation_field_specs($post->post_type) as $meta_key => $shape) {
++        if ($shape === 'questions') {
++            foreach (huhs_translation_game_question_texts($post_id) as $flat_key => $text) {
++                if ($text !== '') {
++                    $fields[$flat_key] = $text;
++                }
++            }
++            continue;
++        }
++
+         $raw = get_post_meta($post_id, $meta_key, true);
+         if ($shape === 'list') {
+             $values = huhs_translation_field_list_values($raw);
+@@ -153,6 +172,76 @@ function huhs_translation_source_fields($post_id)
+     return $fields;
+ }
+ 
++/**
++ * A kvíz kérdéseinek szövegei **lapos kulcsokkal** (2.14.2).
++ *
++ * A kulcs alakja pontosan ugyanaz, mint amit a kiolvasó használ, ezért a
++ * fordítás és a visszaolvasás nem tud szétcsúszni. A `correct` index
++ * **szándékosan nem** kerül bele.
++ */
++function huhs_translation_game_question_texts($post_id)
++{
++    if (!function_exists('huhs_game_questions_json')) {
++        return array();
++    }
++
++    $out = array();
++    foreach (array_values(huhs_game_questions_json($post_id)) as $index => $question) {
++        $prompt = trim((string) ($question['prompt'] ?? ''));
++        if ($prompt !== '') {
++            $out["_huhs_game_questions.{$index}.prompt"] = $prompt;
++        }
++        foreach (array_values((array) ($question['options'] ?? array())) as $option_index => $option) {
++            $text = trim((string) $option);
++            if ($text !== '') {
++                $out["_huhs_game_questions.{$index}.option.{$option_index}"] = $text;
++            }
++        }
++    }
++
++    return $out;
++}
++
++/**
++ * A kvíz kérdései a kért nyelven (2.14.2) — **elemenként** visszaesve a magyarra.
++ *
++ * A `correct` index és a szerkezet **változatlan**: csak a `prompt` és az
++ * `options` szövegei cserélődnek. Nem-angol kérésre a bemenet bájtazonos.
++ */
++function huhs_translation_game_questions($post_id, $lang = 'hu')
++{
++    if (!function_exists('huhs_game_questions_json')) {
++        return array();
++    }
++
++    $questions = array_values(huhs_game_questions_json($post_id));
++    if ($lang !== 'en' || !$questions) {
++        return $questions;
++    }
++
++    foreach ($questions as $index => $question) {
++        $prompt = (string) ($question['prompt'] ?? '');
++        $questions[$index]['prompt'] = huhs_translation_text(
++            $post_id,
++            $lang,
++            "_huhs_game_questions.{$index}.prompt",
++            $prompt
++        );
++        $options = array();
++        foreach (array_values((array) ($question['options'] ?? array())) as $option_index => $option) {
++            $options[] = huhs_translation_text(
++                $post_id,
++                $lang,
++                "_huhs_game_questions.{$index}.option.{$option_index}",
++                (string) $option
++            );
++        }
++        $questions[$index]['options'] = $options;
++    }
++
++    return $questions;
++}
++
+ /** A magyar mezők ujjlenyomata (a változás-követéshez). */
+ function huhs_translation_fields_source_hash($post_id)
+ {

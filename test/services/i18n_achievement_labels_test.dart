@@ -98,4 +98,56 @@ void main() {
     expect(card.contains('tr(context, achievement.badgeDescription)'), isTrue, reason: 'a leírás fordítva jelenik meg');
     expect(card.contains("trArgs(context, '{n} pont'"), isTrue, reason: 'a pont-egység is fordítva (nem beégetett „pont")');
   });
+
+  test('a SZERVERRŐL jövő jelvény-szövegek is a szótárban vannak', () {
+    // ⚠️ A tulajdonos jelzése (2026-09-26): „az achievement leírása még magyar az
+    // angol verzióban" / „a nevek magyarul vannak a HUHS legenda toplistában".
+    // A szerver (plugin `includes/achievements.php`) ezeket a **magyar** szövegeket
+    // küldi — a megjelenítés fordítja őket, ezért a szótárnak MINDET fednie kell.
+    const serverStrings = <String>[
+      'Kezdő ütem', 'Első lépés', 'Rendszeres látogató', 'Hardstyle arc',
+      'Közösségi ember', 'Scene veteran', 'HUHS legenda',
+      'A HUHS közösség alapjelvénye.', 'Az első közösségi mérföldkő.',
+      'Rendszeresen jelen van a közösségben.', 'Láthatóan aktív HUHS-közösségi tag.',
+      'Sokat tesz a közösségi jelenlétért.', 'Hosszú távon aktív színtértag.',
+      'Kiemelkedő, tartós közösségi aktivitás.',
+      // A modell és a plugin tartalékai (akkor látszanak, ha nincs leírás/név):
+      'Közösségi aktivitással megszerzett jelvény.', 'HUHS jelvény', 'HUHS tag',
+      'Achievement rang',
+    ];
+    final missing = serverStrings.where((key) => !dictionary.containsKey(key)).toList();
+    expect(missing, isEmpty, reason: 'nincs fordítás ezekre: $missing');
+
+    final bad = <String>[];
+    for (final key in serverStrings) {
+      final value = (dictionary[key] as String?)?.trim() ?? '';
+      if (value.isEmpty || value == key) bad.add('$key → "$value"');
+    }
+    expect(bad, isEmpty, reason: 'gyanús (üres vagy változatlan) fordítás: $bad');
+  });
+
+  test('FORRÁS-LINT: a toplista és a közösségi lista is fordítja a jelvény-nevet', () {
+    final leaderboard = File('lib/screens/more/achievement_leaderboard_screen.dart').readAsStringSync();
+    final community = File('lib/screens/community/community_screen.dart').readAsStringSync();
+
+    // A HUHS Legenda toplista: a szerverről jövő nevet a megjelenítés fordítja.
+    expect(
+      leaderboard.contains('tr(context, badge!)'),
+      isTrue,
+      reason: 'a toplista a szótárból fordítja a jelvény-nevet',
+    );
+    expect(
+      leaderboard.contains("Text('\$points pont')"),
+      isFalse,
+      reason: 'a pont-egység nem lehet beégetve a toplistában',
+    );
+    expect(leaderboard.contains("trArgs(context, '{n} pont'"), isTrue, reason: 'a pont-egység fordítva');
+
+    // A közösségi lista sora (chat/community): ugyanaz a szerver-string.
+    expect(
+      community.contains('tr(context, achievement.badgeName)'),
+      isTrue,
+      reason: 'a közösségi lista is fordítja a jelvény-nevet',
+    );
+  });
 }

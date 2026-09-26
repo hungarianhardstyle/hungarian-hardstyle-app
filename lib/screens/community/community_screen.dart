@@ -2518,7 +2518,10 @@ class _PostAuthorLabelsState extends State<_PostAuthorLabels> {
             ),
           if (showAchievement)
             TextSpan(
-              text: '${achievement.badgeName} • ',
+              // ⚠️ A jelvény-név a SZERVERRŐL jön (magyarul), ezért a
+              // megjelenítés helyén fordítjuk — enélkül angol módban magyar
+              // jelvénynév maradt volna a közösségi lista soraiban.
+              text: '${tr(context, achievement.badgeName)} • ',
               style: const TextStyle(color: Colors.amberAccent, fontSize: 11),
             ),
           TextSpan(

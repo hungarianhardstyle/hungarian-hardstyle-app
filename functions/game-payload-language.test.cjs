@@ -118,17 +118,77 @@ test('a nyilvános játék-végpontok átadják a kért nyelvet', () => {
   }
 });
 
-test('a kérdés-szerkezet szándékosan nem fordul (dokumentált korlát)', () => {
+test('a kvíz kérdései és válaszai is fordulnak (2.14.2)', () => {
+  const source = games();
   const section = payloadSection();
   assert.match(
     section,
-    /'questions'\s*=>\s*\$questions/,
-    'a kérdések a saját olvasójukból jönnek (nem a nyelvi olvasóból)',
+    /\$questions\s*=\s*array_map\([\s\S]*?huhs_translation_game_questions\(\$post->ID,\s*\$lang\)/,
+    'a nyilvános payload a nyelvi olvasón át adja a kérdéseket',
+  );
+  assert.match(section, /'questions'\s*=>\s*\$questions/, 'a kérdések a payloadba kerülnek');
+  assert.equal(
+    /huhs_game_questions_json\(\$post->ID\)/.test(section),
+    false,
+    'a nyers kérdés-olvasás (a 2.14.1 előtti állapot) nem térhet vissza',
+  );
+  const fields = pluginFile('includes/translation-fields.php');
+  assert.match(
+    fields,
+    /function huhs_translation_game_question_texts\(\$post_id\)/,
+    'a beágyazott szerkezetet lapos kulcsokra bontó függvény megvan',
+  );
+  assert.match(
+    fields,
+    /function huhs_translation_game_questions\(\$post_id,\s*\$lang = 'hu'\)/,
+    'a kvíz-kiolvasó a kért nyelvet kapja (alapértékkel)',
+  );
+  assert.match(fields, /'_huhs_game_questions'\s*=>\s*'questions'/);
+  // ⚠️ A `questions` ág a **forrás-beolvasóban** is be kell legyen kötve: ha ott
+  // kimarad, a laposító függvény „szép, de használatlan" marad, és a kérdések
+  // fordítás nélkül mennek ki (ezt a mutációs bizonyíték méri).
+  const collector = /function huhs_translation_source_fields\(\$post_id\)[\s\S]*?\n\}/.exec(fields)?.[0] ?? '';
+  assert.ok(collector.length > 0, 'megvan a forrás-beolvasó');
+  assert.match(collector, /\$shape === 'questions'/, 'a forrás-beolvasó ismeri a `questions` alakot');
+  assert.match(
+    collector,
+    /huhs_translation_game_question_texts\(\$post_id\)/,
+    'a forrás-beolvasó meghívja a laposítót',
+  );
+});
+
+test('a helyes válasz (correct) nem szivárog a nyilvános payloadba', () => {
+  const section = payloadSection();
+  assert.equal(
+    section.includes("'correct'"),
+    false,
+    'a nyilvános payload nem adja ki a helyes válasz indexét',
+  );
+  const fields = pluginFile('includes/translation-fields.php');
+  const flatten = /function huhs_translation_game_question_texts\(\$post_id\)[\s\S]*?\n\}/.exec(fields)?.[0] ?? '';
+  assert.ok(flatten.length > 0, 'megvan a laposító függvény');
+  // ⚠️ A „létezik" nem elég: a laposításnak TÉNYLEG elő kell állítania a
+  // dokumentált kulcsokat (ezt a saját mutációs bizonyítékom kapta el: a
+  // „laposítás elvétele" mutáció így 0 bukót adott — lásd a tanulságot).
+  assert.match(
+    flatten,
+    /huhs_game_questions_json\(\$post_id\)/,
+    'a laposítás a valódi kérdés-olvasóból dolgozik',
+  );
+  assert.match(
+    flatten,
+    /"_huhs_game_questions\.\{\$index\}\.prompt"/,
+    'a kérdés kulcsa a dokumentált alakot kapja',
+  );
+  assert.match(
+    flatten,
+    /"_huhs_game_questions\.\{\$index\}\.option\.\{\$option_index\}"/,
+    'a válaszlehetőség kulcsa is a dokumentált alakot kapja',
   );
   assert.equal(
-    /_huhs_game_questions/.test(section),
+    /correct/.test(flatten),
     false,
-    'a beágyazott kérdés-szerkezetet nem vezetjük át a lapos mező-fordítón',
+    'a laposítás nem viszi be a `correct` indexet a fordítási kérésbe',
   );
 });
 
