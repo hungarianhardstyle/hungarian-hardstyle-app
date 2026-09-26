@@ -186,7 +186,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ),
               _item(
                 Icons.help_outline,
-                tr(context, 'Segítség'),
+                // ⚠️ A tulajdonos kérése (2026-09-26): *„az lehetne FAQ amúgy,
+                // magyarba meg GYÍK"* — a magyar felirat **GYÍK**, az angol
+                // fordítás **FAQ** (a szótár adja: `GYÍK → FAQ`).
+                tr(context, 'GYÍK'),
                 tr(context, 'Rövid válaszok az app használatához'),
                 const FaqScreen(),
               ),

@@ -46,7 +46,7 @@ class ArtistDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          title.trim().isEmpty ? 'DJ adatlap' : title,
+          title.trim().isEmpty ? tr(context, 'DJ adatlap') : title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

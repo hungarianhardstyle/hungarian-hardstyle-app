@@ -410,7 +410,7 @@ class _PrizeAdminScreenState extends ConsumerState<PrizeAdminScreen> {
           Card(
             child: ListTile(
               title: Text(
-                summary.prizeType.isEmpty ? 'Nyeremény' : summary.prizeType,
+                summary.prizeType.isEmpty ? tr(context, 'Nyeremény') : summary.prizeType,
               ),
               subtitle: summary.prizeDescription.isEmpty
                   ? null

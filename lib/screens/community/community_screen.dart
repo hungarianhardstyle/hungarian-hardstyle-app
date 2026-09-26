@@ -3328,7 +3328,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                   decoration: InputDecoration(
                     labelText: tr(context, 'Jelenlegi jelszó'),
                     suffixIcon: IconButton(
-                      tooltip: currentVisible ? 'Elrejtés' : AppStrings.tr('Megjelenítés'),
+                      tooltip: currentVisible ? AppStrings.tr('Elrejtés') : AppStrings.tr('Megjelenítés'),
                       icon: Icon(
                         currentVisible
                             ? Icons.visibility_off
@@ -3346,7 +3346,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                   decoration: InputDecoration(
                     labelText: tr(context, 'Új jelszó'),
                     suffixIcon: IconButton(
-                      tooltip: nextVisible ? 'Elrejtés' : AppStrings.tr('Megjelenítés'),
+                      tooltip: nextVisible ? AppStrings.tr('Elrejtés') : AppStrings.tr('Megjelenítés'),
                       icon: Icon(
                         nextVisible ? Icons.visibility_off : Icons.visibility,
                       ),
@@ -3361,7 +3361,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                   decoration: InputDecoration(
                     labelText: tr(context, 'Új jelszó megerősítése'),
                     suffixIcon: IconButton(
-                      tooltip: confirmVisible ? 'Elrejtés' : AppStrings.tr('Megjelenítés'),
+                      tooltip: confirmVisible ? AppStrings.tr('Elrejtés') : AppStrings.tr('Megjelenítés'),
                       icon: Icon(
                         confirmVisible
                             ? Icons.visibility_off
@@ -3809,7 +3809,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
         : profileName.characters.first.toUpperCase();
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.editing ? 'Profil szerkesztése' : tr(context, 'Profil')),
+        title: Text(widget.editing ? tr(context, 'Profil szerkesztése') : tr(context, 'Profil')),
       ),
       body: signedIn && _profileDataUid != user.uid
           ? Center(

@@ -365,7 +365,7 @@ class _ArtistCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle.isEmpty ? 'DJ adatlap' : subtitle,
+                    subtitle.isEmpty ? tr(context, 'DJ adatlap') : subtitle,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Colors.white70),

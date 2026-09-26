@@ -100,7 +100,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          post.title.trim().isEmpty ? 'Hír' : post.title,
+          post.title.trim().isEmpty ? tr(context, 'Hír') : post.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

@@ -376,7 +376,11 @@ class _PastEventsSection extends StatelessWidget {
     return ExpansionTile(
       tilePadding: EdgeInsets.zero,
       title: const AppText('Korábbi események'),
-      subtitle: Text('${events.length}${hasMore ? '+' : ''} lejárt esemény'),
+      subtitle: Text(
+        trArgs(context, '{n} lejárt esemény', {
+          'n': '${events.length}${hasMore ? '+' : ''}',
+        }),
+      ),
       children: [
         for (final event in events)
           Padding(
@@ -407,7 +411,7 @@ class _LoadMoreEventsButton extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.expand_more),
-      label: Text(loading ? 'Betöltés…' : tr(context, 'További események')),
+      label: Text(loading ? tr(context, 'Betöltés…') : tr(context, 'További események')),
     ),
   );
 }

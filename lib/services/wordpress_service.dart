@@ -650,6 +650,38 @@ class WordpressService {
     unawaited(_removePersistentJson('huhs.wp.releases.$cacheKey'));
   }
 
+  /// **Nyelvváltás**: a nyelvfüggetlen, feldolgozott gyorsítótárak eldobása.
+  ///
+  /// ⚠️ MÉRT OK (a tulajdonos jelzése, 2026-09-26): *„nyelvváltáskor lassan áll át
+  /// az adott nyelvre"*. A **jelzés** már megvolt (`contentLanguageSyncProvider`
+  /// felhúzza a `publicContentRefreshGeneration`-t, és a tartalom-provide­rek
+  /// figyelik is), a **feldolgozott** listák viszont **nyelvfüggetlen kulccsal**
+  /// élnek (`_postsCache` 30 s, `_eventsCache` 45 s, a részlet-cache-ek 2–5 perc)
+  /// — ezért a jelzés utáni újraolvasás a **régi nyelvű** listát adta vissza
+  /// hálózat nélkül, és a váltás csak a cache lejárta után látszott.
+  ///
+  /// A HTTP-szintű (head) cache ezzel szemben **nyelvenként külön** tárol
+  /// (`wordpressCacheContext`), ezért azt nem kell (és nem is szabad) eldobni.
+  ///
+  /// ⚠️ A generációt **itt nem** növeljük: azt a `contentLanguageSyncProvider`
+  /// teszi (egy váltás = egy jelzés), különben kétszeres újratöltés indulna.
+  void onContentLanguageChanged() {
+    _postsCache.clear();
+    _postDetailCache.clear();
+    _eventsCache.clear();
+    _eventDetailCache.clear();
+    _releasesCache.clear();
+    _releaseDetailCache.clear();
+    _artistsCache.clear();
+    _artistCache.clear();
+    _organizersCache.clear();
+    _organizerCache.clear();
+    _faqCache.clear();
+    _activeGameCache.clear();
+    _latestGameResultsCache.clear();
+    _gameResultsCache.clear();
+  }
+
   Future<PostsPage> getPosts({
     int page = 1,
     int perPage = 10,

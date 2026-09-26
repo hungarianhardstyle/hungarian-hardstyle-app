@@ -49,7 +49,13 @@ class ArtistReleasesSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            artistReleasesLabel(all.length),
+            // ⚠️ MÉRT HIBA (a tulajdonos jelzése, 2026-09-26: *„volt ami magyar
+            // maradt, pl a djk-nél a Megjelenései"*): a cím eddig **nyersen**
+            // ment ki (`artistReleasesLabel(...)` magyar kulcsot ad vissza), és
+            // a szótárban sem volt a `Megjelenése`/`Megjelenései` pár. A tiszta
+            // függvény továbbra is **magyar kulcsot** ad (a magyar oldal
+            // bájtazonos), a fordítás a megjelenítés helyén történik.
+            tr(context, artistReleasesLabel(all.length)),
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),

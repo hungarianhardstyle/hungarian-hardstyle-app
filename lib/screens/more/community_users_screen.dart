@@ -1430,7 +1430,7 @@ class _ConnectionRequestTileState extends State<_ConnectionRequestTile> {
                 ? Text(name.isEmpty ? 'F' : name.characters.first.toUpperCase())
                 : null,
           ),
-          title: Text(name.isEmpty ? 'Felhasználó' : name),
+          title: Text(name.isEmpty ? tr(context, 'Felhasználó') : name),
           // Optimista: a koppintásra azonnal ez a jelzés jelenik meg, nem a
           // hívás visszaérkezése után.
           trailing: _handled == null

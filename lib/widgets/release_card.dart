@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../core/i18n/tr.dart';
 import '../models/release.dart';
 import '../screens/releases/release_detail_screen.dart';
 import '../services/wordpress_service.dart';
@@ -76,10 +77,20 @@ class ReleaseCard extends StatelessWidget {
                         release.artists
                             .map((artist) => artist.name)
                             .join(' · '),
+                      // ⚠️ MÉRT HIBA (a tulajdonos képernyőképe, 2026-09-26): a
+                      // kiadvány-kártyán a `Megjelenés: 2026-09…` címke angol
+                      // módban is **magyar** maradt — interpolált szöveg, ezért
+                      // sem az extraktor nem látta, sem a fordító nem futott
+                      // rajta. A dátum a helyőrzőben megy be (`{d}`), így a
+                      // szótár a teljes sablont fordítja.
                       if (release.releaseDate.isNotEmpty)
                         release.isUpcoming
-                            ? 'Hamarosan · Megjelenés: ${release.releaseDate}'
-                            : 'Megjelenés: ${release.releaseDate}',
+                            ? trArgs(context, 'Hamarosan · Megjelenés: {d}', {
+                                'd': release.releaseDate,
+                              })
+                            : trArgs(context, 'Megjelenés: {d}', {
+                                'd': release.releaseDate,
+                              }),
                       if (release.genre.isNotEmpty) release.genre,
                     ].join('\n'),
                     maxLines: 2,

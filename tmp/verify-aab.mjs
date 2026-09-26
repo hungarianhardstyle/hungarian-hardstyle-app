@@ -73,6 +73,9 @@ const contains = (buffer, text) =>
   'NINCS';
 
 const changelog = [
+  'a kiadványok dátum-címkéje',
+  'nyelvváltáskor a betöltött tartalom',
+  'A GYÍK neve angolul',
   'a főoldal és a Hírek fül listája magától frissül',
   'a válasz idézetére koppintva az app ODAUGRLIK az eredeti üzenetre',
   'a „Bulizó" szerepkör felirata mostantól „Partyface"',

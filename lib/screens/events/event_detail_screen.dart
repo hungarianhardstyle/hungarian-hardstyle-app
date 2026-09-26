@@ -344,7 +344,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          event.title.trim().isEmpty ? 'Esemény' : event.title,
+          event.title.trim().isEmpty ? tr(context, 'Esemény') : event.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

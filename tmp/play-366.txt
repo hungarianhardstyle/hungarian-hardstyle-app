@@ -1,0 +1,3 @@
+- Javítva: angol felületen a kiadványok dátuma és a DJ-adatlap „Megjelenései" rovata is angolul jelenik meg.
+- Javítva: nyelvváltáskor a betöltött tartalom azonnal átvált a választott nyelvre.
+- A GYÍK neve angolul „FAQ", és a válaszaiban nincs többé formázás-szemét.

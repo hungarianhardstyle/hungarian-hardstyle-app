@@ -1,21 +1,14 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 365 megy fel** (versionCode **365**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> **Most a 366 megy fel** (versionCode **366**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-09-26): az **ÉLES (production) sávon a 360 fut** (`completed`, 100%), a **zárt teszten (alpha)
-> már a 365** (`completed`, 100% — a tulajdonos feltöltötte a **361–365** szöveggel), a `beta` sávon a
-> 354. Ezért a **nyilvános kiadáshoz is a 361–365 összesítő** való: a nyilvános felhasználók a **360**-at
-> kapták, vagyis a `@mindenki` és a Chat-odaugrás **már megvan nekik** — a 359/360-as blokk **történeti**.
-> A 365 újdonsága: a **főoldal és a Hírek fül
-> listája magától frissül** — ha új cikk kerül fel, az **legfeljebb egy percen belül** megjelenik
-> (lehúzás nélkül), és amikor az app **előtérbe kerül** (például egy értesítésre nyitod meg), azonnal
-> ellenőrizzük; a **Chatben a válasz idézetére koppintva az app odaugrik az eredeti üzenetre** (és
-> rövid ideig kiemeli) — nem nyit külön ablakot; angol felületen a **„Bulizó" szerepkör felirata
-> „Partyface"**. A 365 a **364 minden**
-> újdonságát is tartalmazza (többnyelvű értesítések, teljes angol felület, angol Achievement-nevek,
-> a „Közösség"/Community gomb kifér, hírek kategória-/címke-nevei angolul). ⚠️ **A 361–364-et ne
-> töltsd fel** — a 365 mindegyiket tartalmazza.
-> A rövid (1.) blokk **csak a 365 újdonságát** írja le, a nyilvános kiadáshoz az **1b-2. blokk** való
-> (**361–365 összesítő**).
+> a 365** (a 361–365 szöveggel), a `beta` sávon a 354. A 366 újdonsága: **angol felületen a kiadványok
+> dátuma** („Megjelenés: …") **és a DJ-adatlap „Megjelenései" rovata is angolul** jelenik meg;
+> **nyelvváltáskor a betöltött tartalom azonnal átvált** (eddig a mentett lista miatt késlekedett);
+> a **GYÍK neve angolul „FAQ"**, és a válaszaiban **nincs többé formázás-szemét** (a `</p>` tagek
+> eltűntek). A 366 a **365 minden** újdonságát is tartalmazza (hírlista-frissesség, Chat-idézet
+> odaugrása, „Partyface"), az pedig a 361–364-ét (nyelvváltó, angol tartalom, többnyelvű értesítések).
+> A nyilvános kiadáshoz a **361–366 összesítő** (1b-2.), a bétához a **355–366 összesítő** (1b-3.) való.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -23,16 +16,16 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 365
+currentBuild: 366
 currentVersion: 1.0.0
 lastPublishedBuild: 360
-aab: build/HUHS-v1.0.0+365-release.aab
-sha256: 42625F13F3D45FDAEECB04E0D6C1FA64D26E1E72117D845F69CC69BDB5C7AA84
+aab: build/HUHS-v1.0.0+366-release.aab
+sha256: A3EC0BF71C6F158422570EC548CE3FB81F294CEBC81505EF01C48F2B04CA15E9
 -->
 
-⚠️ A **365-öt** kellett építeni a **364** helyett, mert a 364-ről nem tudjuk biztosan, hogy felkerült-e
-a Playre — ha már használt verziókód, a Play **elutasítaná** a feltöltést. A 365 mindenben a 364
-tartalmát hozza, plusz az új javításokat.
+⚠️ A **366**-ot a **365** után kellett építeni, mert a 365-ös csomag **már fent van a Playen** (a zárt
+teszten) — a Play a használt verziókódot elutasítaná. A 366 mindenben a 365 tartalmát hozza, plusz a
+nyelvi javításokat.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -202,10 +195,9 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ: a főoldal és a Hírek fül listája magától frissül — az új cikk legfeljebb egy percen belül megjelenik, lehúzás nélkül.
-- Az app előtérbe kerülésekor (pl. értesítésre nyitod meg) azonnal ellenőrizzük az új cikkeket.
-- ÚJ: a Chatben a válasz idézetére koppintva az app odaugrik az eredeti üzenetre.
-- Angol felületen a „Bulizó" szerepkör felirata mostantól „Partyface".
+- Javítva: angol felületen a kiadványok dátuma és a DJ-adatlap „Megjelenései" rovata is angolul jelenik meg.
+- Javítva: nyelvváltáskor a betöltött tartalom azonnal átvált a választott nyelvre.
+- A GYÍK neve angolul „FAQ", és a válaszaiban nincs többé formázás-szemét.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -223,36 +215,34 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–365** összesítő (a 360 után)
+## 1b-2. Play Console — a **361–366** összesítő (a 360 után)
 
-**Ezt használd, ha a felhasználó a 360-ról jön** (zárt teszt) — vagyis csak azok az újdonságok
-szerepelnek benne, amelyek a **361–365** között készültek (a 359/360 `@mindenki`-je **nincs** benne,
-mert azt a 360 már megkapta). **Mérve: 471/500 karakter** (a biztonsági sáv 480).
-
-```play-notes
-- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető, a magyar marad az alap.
-- Angolul a cikkek, a feliratok, a hírek címkéi és az Achievement-nevek is megjelennek.
-- Az értesítések és a push is a választott nyelven jönnek; a nyelv a profilodban van.
-- ÚJ: a főoldal és a Hírek fül magától frissül — az új cikk egy percen belül megjelenik.
-- ÚJ a Chatben: a válasz idézetére koppintva az app az eredeti üzenetre ugrik.
-- Angolul a „Bulizó" szerepkör felirata „Partyface".
-```
-
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–365** összesítő)
-
-**Ezt használd, ha a 365-öt a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
-(`node tools/check-play-track.mjs`, 2026-09-26) szerint ott a **354** fut, ezért a béta felhasználók a
-**355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki`, a Chat-értesítés
-odaugrása, a DJ-adatlap megjelenései és a hírlista-frissesség is. **Mérve: 474/500 karakter** (a
-biztonsági sáv 480).
+**Ezt használd, ha a felhasználó a 360-ról jön** (ez az ÉLES sáv jelenlegi buildje) — vagyis csak azok
+az újdonságok szerepelnek benne, amelyek a **361–366** között készültek (a 359/360 `@mindenki`-je
+**nincs** benne, mert azt a 360 már megkapta). **Mérve: 455/500 karakter** (a biztonsági sáv 480).
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó — az app angolul is elérhető, a magyar marad az alap.
-- Angolul a cikkek, a feliratok, a hírek címkéi és az Achievement-nevek is megjelennek.
+- Angolul a cikkek, a hírek címkéi, az Achievement-nevek és a GYÍK is.
 - Az értesítések és a push is a választott nyelven jönnek.
 - ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
-- ÚJ: a főoldal és a Hírek fül magától frissül; az új cikk egy percen belül megjelenik.
-- A DJ-adatlapon látszanak a megjelenések; angolul a „Bulizó" → „Partyface".
+- ÚJ: a főoldal és a Hírek fül magától frissül; nyelvváltáskor minden azonnal átvált.
+- A DJ-adatlapon látszanak a megjelenések; angolul: „Bulizó" → „Partyface".
+```
+
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–366** összesítő)
+
+**Ezt használd, ha a 366-ot a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+(`node tools/check-play-track.mjs`, 2026-09-26) szerint ott a **354** fut, ezért a béta felhasználók a
+**355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki`, a Chat-értesítés
+odaugrása, a DJ-adatlap megjelenései és a hírlista-frissesség is. **Mérve: 418/500 karakter.**
+
+```play-notes
+- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető, a magyar marad az alap.
+- Angolul a cikkek, a hírek címkéi, az Achievement-nevek és a GYÍK (FAQ) is.
+- Az értesítések és a push is a választott nyelven jönnek; nyelvváltáskor minden átvált.
+- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
+- ÚJ: a főoldal és a Hírek fül magától frissül; a DJ-adatlapon látszanak a megjelenések.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -282,6 +272,17 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 366 — a kiadvány-dátum és a „Megjelenései" is angolul + azonnali nyelvváltás + a GYÍK/FAQ
+- **Javítva (a tulajdonos jelzései: *„itt is maradt magyar"* — képernyőkép a Label fülről: `Megjelenés: 2026-09…` —, *„pl a djk-nél a Megjelenései"*, *„ami még gond, nyelvváltáskor lassan áll át az adott nyelvre"*, *„a help menüben bentmaradtak a formázások mint a /P stb angolul, meg az lehetne FAQ amúgy, magyarba meg GYÍK"*):**
+  1. **A kiadvány-dátum** (`Megjelenés: {d}`) és a **„Hamarosan · Megjelenés: {d}"** változat eddig **interpolált, nyers** szöveg volt — ezért sem az i18n-extraktor nem látta, sem a fordító nem érintette; mostantól **sablonkulcs** (`Megjelenés: {d} → Release: {d}`) a kártyán és az adatlapon (2 helyen).
+  2. **A DJ-adatlap „Megjelenései" rovata** a tiszta `artistReleasesLabel()` **magyar kulcsát** írta ki nyersen; a szótárban sem volt a `Megjelenése`/`Megjelenései` pár — mindkettő bekerült (`Appearance`/`Appearances`), a cím pedig a fordítón megy át.
+  3. **Nyelvváltás:** a **jelzés** már megvolt (`contentLanguageSyncProvider`), a **feldolgozott** listák viszont nyelvfüggetlen kulccsal élnek (30 s / 45 s / 2–5 perc) — ezért a váltás csak a cache lejárta után látszott. Új `WordpressService.onContentLanguageChanged()` dobja el ezeket a jelzés **előtt** (egy váltás = egy jelzés, nem kettő).
+  4. **GYÍK:** a magyar felirat **GYÍK** (a menüben és a képernyő címében), az angol fordítás **FAQ** (`GYÍK → FAQ` kulcs). A **válaszok** formázás-szemete (a mért **31/33** angol válasz `<p>…</p>` burkolással jött) a **parse-ban** tisztul (`faqPlainText()`): a `</p>` bekezdéshatár, a `<br>` sortörés lesz, az entitások feloldódnak — a magyar válaszok (0/33 HTML) bájtazonosak maradnak.
+  5. **További nyers címkék egy menetben** (a `tmp/audit-raw-labels.mjs` listájából): DJ-adatlap fejléc, esemény-/híradatlap fejléc, „Felhasználó", „Kép kiválasztása", „Letöltés" (2 hely), „Betöltés…", „{n} lejárt esemény", „Nincs kiválasztva", profil-szerkesztő cím, „Nyeremény", játék-típus — és a **jelszó-mezők tooltipjei** (`Elrejtés`). A `Text('…')` gyanús lista **17 → 3** (a maradék 2 „HUHS user" szándékosan angol).
+- **Mérve:** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1106/1106**; `node tools/check-i18n.mjs --strict` → **977 kulcs, 909/909 célzott (100%), 0 duplikált**; a nyelvi kör **mutációs bizonyítéka 4/4** (`tmp/mutation-proof-language.mjs`: nyers dátum-címke, nyers „Megjelenései", a GYÍK-tisztítás elvétele, a lista-eldobás elvétele — mind **elkapva**, bájtazonos visszaállítással); `node tmp/verify-aab.mjs … 366` → **versionCode 366**, **977 kulcsú szótár**, mind a hat changelog-sor mindhárom ABI-ban.
+- **Amit ez a kiadás is tartalmaz:** a 365 (hírlista-frissesség, Chat-idézet odaugrása, „Partyface"), a 364 (többnyelvű értesítések, teljes angol felület, angol Achievement-nevek, a „Közösség" gomb kifér, hírek kategória-/címke-nevei), a 363–359 minden újdonsága.
+- **⚠️ ŐSZINTE KORLÁT:** az idézet odaugrása a **privát beszélgetésben** még nem működik (külön kör), és az audit szerint **maradnak** átmeneti állapotüzenetek, amelyek némelyike magyarul szól (pl. a jutalmazott reklám folyamatában: „A jutalmazott reklám betöltése…"), mert azok `setState`-tel **tárolt** szövegek — ezek átírása külön kör (a szótár-kulcs + a megjelenítés fordítása kell hozzá).
 
 ### 365 — a hírlista magától frissül + a „Partyface" felirat
 - **ÚJ (a tulajdonos jelzése: *„ha felteszek egy hírt, nagyon lassan kerül ki a főoldalra, vagy a hírek tab alá"*):** a **főoldal** és a **Hírek fül** listája **percenként csendesen egyeztet** a szerverrel (ETag/HEAD, ami **304**-et ad — mért: 399 ms, 0 bájt), és **előtérbe kerüléskor** (pl. egy értesítésre megnyitva) **azonnal** ellenőriz. A mérés szerint a szerver **azonnal** a friss listát adná (a plugin a publikáláskor érvényteleníti a cache-ét), a késés az app oldalán volt: a nyitott képernyő **egyáltalán nem kérdezte meg** a szervert, ezért az új cikk csak lehúzásra vagy újraindításra jelent meg. A háttérben beérkező változás mostantól **egy körben** megjelenik (a mentett, feldolgozott lista is érvénytelenül, ezért nem a régi példány marad a képernyőn).

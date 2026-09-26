@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 366,
+    changes: [
+      'Javítva: a kiadványok dátum-címkéje („Megjelenés: …") és a DJ-adatlap „Megjelenései" rovata angol felületen is angolul jelenik meg.',
+      'Javítva: nyelvváltáskor a betöltött tartalom (hírek, események, DJ-k, kiadványok) azonnal átvált a választott nyelvre — eddig a mentett lista miatt késlekedett.',
+      'A GYÍK neve angolul „FAQ", és a válaszaiban nincs többé formázás-szemét (a `</p>` tagek eltűntek).',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 365,
     changes: [
       'ÚJ: a főoldal és a Hírek fül listája magától frissül — ha új cikk kerül fel, az legfeljebb egy percen belül megjelenik, lehúzás nélkül; amikor az app előtérbe kerül (például egy értesítésre nyitod meg), azonnal ellenőrizzük.',

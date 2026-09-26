@@ -40,6 +40,9 @@ class LanguageController extends Notifier<AppLanguage> {
   AppLanguage build() => AppStrings.language;
 
   /// Nyelv váltása + mentés. A mentés hibája nem akadályozhatja a váltást.
+  ///
+  /// ⚠️ A tartalom érvénytelenítése **nem** itt történik, hanem a
+  /// `contentLanguageSyncProvider`-ben (egy helyen, egy jelzéssel) — lásd ott.
   Future<void> select(AppLanguage language) async {
     AppStrings.setLanguage(language);
     if (language != state) state = language;

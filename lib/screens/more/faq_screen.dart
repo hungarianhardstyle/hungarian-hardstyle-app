@@ -26,7 +26,7 @@ class _FaqScreenState extends ConsumerState<FaqScreen> {
   Widget build(BuildContext context) {
     final asyncFaq = ref.watch(faqProvider);
     return Scaffold(
-      appBar: AppBar(title: const AppText('Segítség')),
+      appBar: AppBar(title: const AppText('GYÍK')),
       body: asyncFaq.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorState(

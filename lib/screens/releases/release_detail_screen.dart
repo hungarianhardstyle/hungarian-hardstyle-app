@@ -491,7 +491,11 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
-                      'Megjelenés: ${release.releaseDate}',
+                      // ⚠️ MÉRT HIBA (2026-09-26): interpolált szöveg volt, ezért
+                      // angol módban magyarul maradt — lásd a kártyát is.
+                      trArgs(context, 'Megjelenés: {d}', {
+                        'd': release.releaseDate,
+                      }),
                       style: const TextStyle(color: Colors.white70),
                     ),
                   ),
@@ -576,7 +580,11 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                         Text(
                           release.releaseDate.isEmpty
                               ? tr(context, 'A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.')
-                              : 'Megjelenés: ${release.releaseDate}. Ekkor válik megvásárolhatóvá és letölthetővé. Addig a 60 másodperces előzetes hallgatható.',
+                              : trArgs(
+                                  context,
+                                  'Megjelenés: {d}. Ekkor válik megvásárolhatóvá és letölthetővé. Addig a 60 másodperces előzetes hallgatható.',
+                                  {'d': release.releaseDate},
+                                ),
                           style: const TextStyle(color: Colors.white70),
                         ),
                         if (release.presaveUrl.isNotEmpty) ...[
@@ -655,7 +663,9 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                             : _adUnlocked
                             ? () => _download('free_wav')
                             : _unlockRewarded,
-                        child: Text(_adUnlocked ? 'Letöltés' : tr(context, 'Feloldás')),
+                        child: Text(
+                          _adUnlocked ? tr(context, 'Letöltés') : tr(context, 'Feloldás'),
+                        ),
                       ),
                     ),
                   )
@@ -672,7 +682,9 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
                             : _adUnlocked
                             ? () => _download('mp3_96')
                             : _unlockRewarded,
-                        child: Text(_adUnlocked ? 'Letöltés' : tr(context, 'Feloldás')),
+                        child: Text(
+                          _adUnlocked ? tr(context, 'Letöltés') : tr(context, 'Feloldás'),
+                        ),
                       ),
                     ),
                   ),

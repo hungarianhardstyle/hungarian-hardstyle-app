@@ -19,9 +19,18 @@ import 'language_provider.dart';
 ///
 /// A gyökérben egyszer `ref.watch`-oljuk (`HungarianHardstyleApp`), így a
 /// figyelés az app teljes élettartamára él.
+///
+/// ⚠️ **A MÁSODIK LÉPÉS IS KELL (mért hiba, 2026-09-26):** a jelzés önmagában
+/// nem volt elég — a tulajdonos azt jelezte, hogy *„nyelvváltáskor lassan áll át
+/// az adott nyelvre"*. A jelzés ugyanis a providereket építi újra, azok viszont a
+/// szolgáltatás **feldolgozott** (nyelvfüggetlen kulcsú) gyorsítótárából
+/// olvastak, amely 30 s / 45 s / 2–5 percig él — ezért a váltás csak a cache
+/// lejárta után látszott. Ezért a jelzés **előtt** eldobjuk ezeket a listákat
+/// (`onContentLanguageChanged()`), így az újratöltés tényleg az új nyelven megy.
 final contentLanguageSyncProvider = Provider<void>((ref) {
   ref.listen<AppLanguage>(languageProvider, (previous, next) {
     if (previous == next) return;
+    WordpressService().onContentLanguageChanged();
     WordpressService.publicContentRefreshGeneration.value++;
   });
 });

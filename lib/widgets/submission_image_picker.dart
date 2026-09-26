@@ -66,7 +66,11 @@ class SubmissionImagePicker extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: () => _pick(context, ImageSource.gallery),
                 icon: const Icon(Icons.photo_library_outlined),
-                label: Text(image == null ? 'Kép kiválasztása' : tr(context, 'Csere')),
+                label: Text(
+                  image == null
+                      ? tr(context, 'Kép kiválasztása')
+                      : tr(context, 'Csere'),
+                ),
               ),
               OutlinedButton.icon(
                 onPressed: () => _pick(context, ImageSource.camera),

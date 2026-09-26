@@ -721,7 +721,7 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
           child: InputDecorator(
             decoration: InputDecoration(labelText: label),
             child: Text(
-              currentLabel.isEmpty ? 'Nincs kiválasztva' : currentLabel.first,
+              currentLabel.isEmpty ? tr(context, 'Nincs kiválasztva') : currentLabel.first,
             ),
           ),
         ),
@@ -1329,12 +1329,12 @@ class _WordPressAdminScreenState extends ConsumerState<WordPressAdminScreen> {
                   ),
                 ListTile(
                   title: Text(
-                    '${game['title'] ?? 'Játék'}',
+                    '${game['title'] ?? tr(context, 'Játék')}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
-                    '${game['type_label'] ?? 'Játék'}  •  $status\n'
+                    '${game['type_label'] ?? tr(context, 'Játék')}  •  $status\n'
                     'Beküldések: ${game['submissions'] ?? 0}  •  '
                     'Helyes válaszok: ${game['correct_answers'] ?? 0}/'
                     '${game['total_answers'] ?? 0}',
