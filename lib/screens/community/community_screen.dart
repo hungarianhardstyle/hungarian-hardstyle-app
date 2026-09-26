@@ -1277,6 +1277,43 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
     _composerFocusNode.requestFocus();
   }
 
+  /// Az idézet megnyitása: az **eredeti üzenet teljes szövege**.
+  ///
+  /// ⚠️ MIÉRT (a tulajdonos jelzése, 2026-09-26): *„Chatben ha valakinek a
+  /// válaszára jön válasz, akkor ha arra rákattintok, nem történik semmi."* A
+  /// válasz-idézet eddig csak **3 sorig** mutatta a hivatkozott üzenetet, és nem
+  /// volt koppintható. A tulajdonos két lehetőséget ajánlott: *„vagy az eredeti
+  /// üzenetre ugorjon, vagy jelenítse meg az eredeti üzit teljes egészében"* —
+  /// ez a dialógus a **második** utat járja, mert az **minden** esetben működik:
+  /// akkor is, ha a hivatkozott üzenet nincs a betöltött ablakban (nagyon régi),
+  /// és akkor is, ha az maga is egy válasz volt (a teljes szöveg látszik).
+  ///
+  /// ⚠️ Az ugráshoz az eredeti üzenet **azonosítója** kellene, de a tárolt
+  /// idézet csak szöveget és nevet hordoz (`replyToText`/`replyToName`) — az
+  /// azonosító bevezetése adatmódosítás (a régi üzeneteknél nem lenne meg),
+  /// ezért az ugrás külön kör.
+  Future<void> _showOriginalMessage(CommunityPost post) async {
+    final text = post.replyToText.trim();
+    if (text.isEmpty) return;
+    final name = post.replyToName.trim();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(name.isEmpty ? AppStrings.tr('Eredeti üzenet') : name),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520, maxHeight: 420),
+          child: SingleChildScrollView(child: Text(text)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: AppText(AppStrings.tr('Bezárás')),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// A beviteli mező változott: van-e épp aktív `@`-token, és mi az.
   ///
   /// A tulajdonos kérése: *„Elkezdem irni a betűket és dobja fel a
@@ -1574,6 +1611,8 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                                   profileRefreshGeneration:
                                       _profileRefreshGeneration,
                                   onReply: () => _replyTo(items[index]),
+                                  onOpenReply: () =>
+                                      _showOriginalMessage(items[index]),
                                 ),
                                 items[index].id,
                               );
@@ -1588,6 +1627,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                                   profileRefreshGeneration:
                                       _profileRefreshGeneration,
                                   onReply: () => _replyTo(post),
+                                  onOpenReply: () => _showOriginalMessage(post),
                                 ),
                                 post.id,
                               );
@@ -1789,11 +1829,20 @@ class _PostCard extends ConsumerStatefulWidget {
   final bool compact;
   final int profileRefreshGeneration;
   final VoidCallback onReply;
+
+  /// Az **idézet** megnyitása (a hivatkozott üzenet teljes szövege).
+  ///
+  /// ⚠️ A tulajdonos jelzése (2026-09-26): *„Chatben ha valakinek a válaszára
+  /// jön válasz, akkor ha arra rákattintok, nem történik semmi."* Az idézet
+  /// eddig egy **koppintás nélküli** `Container` volt — mostantól megnyitja az
+  /// eredeti (teljes) üzenetet.
+  final VoidCallback? onOpenReply;
   const _PostCard({
     required this.post,
     required this.compact,
     required this.profileRefreshGeneration,
     required this.onReply,
+    this.onOpenReply,
   });
 
   @override
@@ -2221,30 +2270,37 @@ class _PostCardState extends ConsumerState<_PostCard> {
             ],
             SizedBox(height: widget.compact ? 3 : 6),
             if (widget.post.replyToText.isNotEmpty)
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      if (widget.post.replyToName.isNotEmpty) ...[
-                        TextSpan(
-                          text: widget.post.replyToName,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(text: tr(context, ' üzenetére: ')),
-                      ] else
-                        TextSpan(text: tr(context, 'Válasz: ')),
-                      TextSpan(text: widget.post.replyToText),
-                    ],
+              // ⚠️ Koppintható idézet: megnyitja az eredeti üzenetet TELJES
+              // egészében (a tulajdonos kérése). Az `InkWell` a kártya stílusát
+              // követi, ezért nem kell külön gomb.
+              InkWell(
+                onTap: widget.onOpenReply,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        if (widget.post.replyToName.isNotEmpty) ...[
+                          TextSpan(
+                            text: widget.post.replyToName,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: tr(context, ' üzenetére: ')),
+                        ] else
+                          TextSpan(text: tr(context, 'Válasz: ')),
+                        TextSpan(text: widget.post.replyToText),
+                      ],
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             Wrap(

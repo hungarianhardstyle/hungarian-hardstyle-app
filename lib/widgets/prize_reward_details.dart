@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/i18n/tr.dart';
+
 /// A **nyeremény részletei** (típus + leírás) — egy helyen, két nézetben.
 ///
 /// **A tulajdonos jelzése:** *„a nyereményjátékba nem kerül bele a játék
@@ -33,8 +35,13 @@ class PrizeRewardDetails extends StatelessWidget {
         const Divider(height: 1),
         const SizedBox(height: 12),
         if (type.isNotEmpty)
+          // ⚠️ A tulajdonos képernyőképe (2026-09-26): angol módban
+          // „Nyeremény: Couple entry…" jelent meg — a **címke** maradt magyar,
+          // mert a `'Nyeremény: $type'` egyetlen literál volt (a szótárban a
+          // `Nyeremény` kulcs külön él). Ezért a címkét a megjelenítés helyén
+          // fordítjuk, az érték (a szerverről) változatlan.
           Text(
-            'Nyeremény: $type',
+            '${tr(context, 'Nyeremény')}: $type',
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         if (description.isNotEmpty) ...[

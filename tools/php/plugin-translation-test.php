@@ -243,7 +243,12 @@ function get_post_meta($postId, $key, $single = false)
 
 function update_post_meta($postId, $key, $value)
 {
-    $GLOBALS['STATE']['meta'][$postId][$key] = $value;
+    // ⚠️ A VALÓS WordPress `update_metadata()` **`wp_unslash()`-ol** a meta
+    // értékén (mert feltételezi, hogy az `$_POST`-ból jön). Ezért a backslash-ek
+    // – köztük a **JSON-escape-ek** (`\r\n`, `\uXXXX`) – elvesznek, ha a beíró
+    // nem `wp_slash()`-ol előtte. A stub ezt **utánozza**, különben a mérés
+    // zölden hazudna (mért éles hiba, 2026-09-26: „rnrn" a nyeremény leírásában).
+    $GLOBALS['STATE']['meta'][$postId][$key] = is_string($value) ? wp_unslash($value) : $value;
     return true;
 }
 
@@ -430,6 +435,12 @@ function sanitize_textarea_field($value)
 function wp_unslash($value)
 {
     return is_string($value) ? stripslashes($value) : $value;
+}
+
+/** A WordPress `wp_slash()` stubja (a `update_post_meta()` ellensúlyozásához). */
+function wp_slash($value)
+{
+    return is_string($value) ? addslashes($value) : $value;
 }
 
 /**
@@ -1245,6 +1256,8 @@ $GLOBALS['STATE']['meta'][51] = array(
 // `has_en` hamisan hamis lenne (ezt a saját mérésem fogta meg).
 $GLOBALS['STATE']['meta'][51]['_huhs_translation_fields_hash'] =
     md5((string) wp_json_encode(huhs_translation_source_fields(51)));
+// A 2.14.3-as séma-verzió is kell a „naprakész" jelzéshez (a beíró írja).
+$GLOBALS['STATE']['meta'][51]['_huhs_translation_fields_version'] = HUHS_TRANSLATION_FIELDS_VERSION;
 $huPrize = huhs_prize_api_active(new WP_REST_Request(array('lang' => 'hu')))->data['prize'];
 $enPrize = huhs_prize_api_active(new WP_REST_Request(array('lang' => 'en')))->data['prize'];
 $noLangPrize = huhs_prize_api_active()->data['prize'];
@@ -1493,6 +1506,113 @@ if (is_callable($privateCallback)) {
         json_encode($privateEn['questions'][0] ?? null)
     );
 }
+
+/* ---- 17) A meta-írás ESCAPE-jei (mért ÉLES hiba, 2026-09-26) ---------- */
+
+/*
+ * ⚠️ A TULAJDONOS KÉPERNYŐKÉPE: angol módban a nyeremény leírásában **`rnrn`**
+ * jelent meg új sor helyett („October 17!rnrnParticipate…"). A mérés: a magyar
+ * forrásban **valódi** `\r\n` van, az angolban viszont `rn` — vagyis a JSON
+ * escape-ek **backslash-e elveszett**.
+ *
+ * A gyökér: a WordPress `update_metadata()` **`wp_unslash()`-ol** a meta értékén,
+ * ezért a `wp_json_encode()` által írt `\r\n` / `\uXXXX` escape-ekből `rn` /
+ * `uXXXX` lesz. A beírónak `wp_slash()`-olnia kell (a plugin más helyein ez a
+ * minta dokumentálva is van: `poll.php`, `prize.php`).
+ */
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+$GLOBALS['STATE']['posts'][81] = new WP_Post(array(
+    'ID' => 81, 'post_type' => 'huhs_prize', 'post_title' => 'Nyeremény',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][81] = array(
+    '_huhs_prize_question' => 'Mi a neve?',
+    '_huhs_prize_answers' => wp_json_encode(array('Béla', 'Anna')),
+    '_huhs_prize_type' => 'Páros belépő',
+    '_huhs_prize_description' => "Első sor!\r\n\r\nMásodik sor.",
+);
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'fields' => array(
+        '_huhs_prize_question' => 'What is his name?',
+        '_huhs_prize_answers' => array('Béla', 'Anna'),
+        '_huhs_prize_type' => 'Couple entry',
+        '_huhs_prize_description' => "First line!\r\n\r\nSecond line — with Béla.",
+    ),
+));
+$escapeStatus = huhs_run_field_translation(81);
+$escapeStored = huhs_translation_stored_fields(81);
+$escapeDescription = (string) ($escapeStored['_huhs_prize_description'] ?? '');
+check(
+    'a meta-írás MEGŐRZI a JSON-escape-eket (valódi új sor, nem „rn")',
+    $escapeStatus === 'translated'
+        && strpos($escapeDescription, "\r\n") !== false
+        && strpos($escapeDescription, 'rnrn') === false,
+    $escapeStatus . ' / ' . json_encode($escapeDescription)
+);
+check(
+    // ⚠️ A saját első változatom itt **hibás volt**: a `wp_json_encode()` a nem-ASCII
+    // karaktereket **szándékosan** `\u00e9` alakban írja, ezért a nyers JSON-ben
+    // keresni a `u00e9`-t értelmetlen (a tárolt érték viszont helyes). A helyes
+    // mérés: a **visszaolvasott** érték bájtazonos az elvárttal, és a nyers meta
+    // érvényes JSON.
+    'az ékezetes válasz is helyesen íródik vissza (nincs „u00e9" szemét)',
+    ($escapeStored['_huhs_prize_answers'] ?? array()) === array('Béla', 'Anna')
+        && is_array(json_decode((string) get_post_meta(81, HUHS_TRANSLATION_FIELDS_META, true), true)),
+    json_encode($escapeStored['_huhs_prize_answers'] ?? null)
+);
+check(
+    'a kiolvasó a valódi új sort adja vissza (a megjelenítés sort törhet)',
+    huhs_translation_text(81, 'en', '_huhs_prize_description', 'x') === "First line!\r\n\r\nSecond line — with Béla.",
+    json_encode(huhs_translation_text(81, 'en', '_huhs_prize_description', 'x'))
+);
+check(
+    'a beíró kiírja a séma-verziót, és az elem naprakész',
+    (int) get_post_meta(81, HUHS_TRANSLATION_FIELDS_VERSION_META, true) === HUHS_TRANSLATION_FIELDS_VERSION
+        && huhs_translation_fields_current(81) === true,
+    (string) get_post_meta(81, HUHS_TRANSLATION_FIELDS_VERSION_META, true)
+);
+// ⚠️ A RÉGI (hibás escape-ekkel mentett) fordítások újragenerálása: ha a
+// verziójelölő hiányzik (2.14.2 és előtte), az elem **nem** naprakész, ezért a
+// pótló kör egyszer újrafordítja — enélkül a `rn` / `u00e9` szemét örökre benne
+// maradna, mert a forrás-ujjlenyomat változatlan.
+delete_post_meta(81, HUHS_TRANSLATION_FIELDS_VERSION_META);
+check(
+    'a régi (verziójelölő nélküli) fordítás NEM naprakész → a pótló kör újraviszi',
+    huhs_translation_fields_current(81) === false
+);
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'fields' => array(
+        '_huhs_prize_question' => 'What is his name?',
+        '_huhs_prize_answers' => array('Béla', 'Anna'),
+        '_huhs_prize_type' => 'Couple entry',
+        '_huhs_prize_description' => "First line!\r\n\r\nSecond line — with Béla.",
+    ),
+));
+check(
+    'az újrafuttatott fordítás újra naprakész (és megint helyes az escape)',
+    huhs_run_field_translation(81) === 'uptodate' || huhs_translation_fields_current(81) === true,
+    (string) get_post_meta(81, HUHS_TRANSLATION_FIELDS_VERSION_META, true)
+);
+
+// A CÍM/TÖRZS ág is `wp_slash()`-ol: ha a fordítás **backslasht** tartalmaz
+// (pl. `\n`, `\"`), az `update_metadata()` unslash-e nélküle elveszítené.
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+$GLOBALS['STATE']['posts'][82] = new WP_Post(array(
+    'ID' => 82, 'post_type' => 'huhs_event', 'post_title' => 'Magyar esemény',
+    'post_content' => 'Magyar leírás', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'title' => 'English event',
+    'content' => "Első sor\nMásodik sor: \"idézet\" és C:\\\\path",
+    'excerpt' => 'Short',
+));
+huhs_run_translation(82);
+check(
+    'a cím/törzs fordfítás is megőrzi a backslasht (nincs „unslash" roncsolás)',
+    get_post_meta(82, '_huhs_content_en', true) === "Első sor\nMásodik sor: \"idézet\" és C:\\\\path"
+        && get_post_meta(82, '_huhs_title_en', true) === 'English event',
+    json_encode(get_post_meta(82, '_huhs_content_en', true))
+);
 
 echo "\n{$checks} ellenőrzés, {$failures} hiba\n";
 exit($failures === 0 ? 0 : 1);

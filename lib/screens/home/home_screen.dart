@@ -35,21 +35,29 @@ import '../more/community_users_screen.dart';
 import '../voting/voting_screen.dart';
 import '../games/game_screen.dart';
 
-/// A főoldali fejléc **fix** elemei (mérve 2026-09-25, 400 px-es felület):
-/// avatar 52, frissítés 48, értesítés 48, a két elem-köz (`homeHeaderGap`),
-/// nyelvkapcsoló 71,2.
-const double homeHeaderFixedWidth = 52 + 48 + 48 + 6 + 6 + 71.2;
-
-/// A „Közösség" gomb **felirat nélküli** kerete: 10 px belső margó mindkét
-/// oldalon + 24 px ikon + 8 px ikon–felirat köz.
+/// A főoldali fejléc **fix** elemei — 2026-09-26-án **kisebbre mérve**, mert a
+/// tulajdonos képernyőképe szerint angol módban a „Community" felirat **nem fért
+/// ki**, és a gomb csak ikonként látszott („mintha a gomb se lenne Community").
 ///
-/// ⚠️ A margó 2026-09-26-án **12 → 10 px** lett: a mért fejléc-szükséglet
-/// (magyarul ~370 px) fölé az angol „Community" még ~10 px-et tesz, és pont ennyi
-/// hiányzott a gyakori 360–412 px-es készülékeken. Így a felirat ott is kifér.
-const double homeCommunityButtonChrome = 10 * 2 + 24 + 8;
+/// A korábbi értékek (avatar 52, frissítés 48, értesítés 48, hézag 6+6,
+/// nyelvkapcsoló 71,2 = **231,2 px**) mellett egy 360 px-es készüléken
+/// (`available = 324`) a feliratra **40 px** maradt volna — az „Community"
+/// viszont ~70 px. Ezért most:
+/// avatar 44, frissítés 42, értesítés 42, hézag 4+4, nyelvkapcsoló 52 → **188 px**,
+/// így a feliratra **~96 px** marad 360 px-en, és ~66 px 320 px-en.
+/// (A méreteket a fejléc `SizedBox` + `FittedBox` kombinációval éri el, ezért a
+/// megosztott ikon-widgeteket nem kellett átírni.)
+const double homeHeaderFixedWidth = 44 + 42 + 42 + 4 + 4 + 52;
 
-/// A fejléc-elemek közötti hézag (a korábbi 8 helyett 6 px) — lásd fent.
-const double homeHeaderGap = 6;
+/// A „Közösség" gomb **felirat nélküli** kerete: 8 px belső margó mindkét
+/// oldalon + 18 px ikon + 8 px ikon–felirat köz (a korábbi 10/24/8 helyett).
+///
+/// ⚠️ A 8 px ikon–felirat köz a **mért** érték: a `FilledButton.icon` alapértéke
+/// ennyi, és a teszt ezt a konstanst a valós renderelt kerethez méri.
+const double homeCommunityButtonChrome = 8 * 2 + 18 + 8;
+
+/// A fejléc-elemek közötti hézag (a korábbi 6 helyett 4 px).
+const double homeHeaderGap = 4;
 
 /// Ennyi hely kell a **feliratos** Közösség gombhoz a fejlécben.
 ///
@@ -218,10 +226,22 @@ class HomeScreen extends ConsumerWidget {
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            CommunityAvatarButton(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => const CommunityProfileScreen(),
+                            // ⚠️ A fix elemeket `SizedBox` + `FittedBox` szorítja a
+                            // számolt keretbe: így a megosztott ikon-widgeteket
+                            // (`ContentRefreshIcon`, avatar, nyelvkapcsoló) nem
+                            // kellett átírni, mégis marad hely a „Community"
+                            // feliratnak (lásd a fájl elején a mért számokat).
+                            SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: CommunityAvatarButton(
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => const CommunityProfileScreen(),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -238,8 +258,15 @@ class HomeScreen extends ConsumerWidget {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    ContentRefreshIcon(
-                                      onRefresh: () => _refreshHome(ref),
+                                    SizedBox(
+                                      width: 42,
+                                      height: 42,
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: ContentRefreshIcon(
+                                          onRefresh: () => _refreshHome(ref),
+                                        ),
+                                      ),
                                     ),
                                     StreamBuilder(
                                       stream: Firebase.apps.isEmpty
@@ -251,10 +278,17 @@ class HomeScreen extends ConsumerWidget {
                                                   .where((item) => !item.isRead)
                                                   .length
                                             : 0;
-                                        return _NotificationButton(
-                                          count: count,
-                                          onPressed: () =>
-                                              NotificationCenterScreen.show(context),
+                                        return SizedBox(
+                                          width: 42,
+                                          height: 42,
+                                          child: FittedBox(
+                                            fit: BoxFit.contain,
+                                            child: _NotificationButton(
+                                              count: count,
+                                              onPressed: () =>
+                                                  NotificationCenterScreen.show(context),
+                                            ),
+                                          ),
                                         );
                                       },
                                     ),
@@ -284,12 +318,13 @@ class HomeScreen extends ConsumerWidget {
                                     else
                                       FilledButton.icon(
                                         key: const Key('community-hub-button'),
-                                        // Szűkebb belső margó (10 px): mérve
-                                        // ~40 px-cel keskenyebb, ugyanaz a felirat
-                                        // — az angol „Community" is kifér vele.
+                                        // Szűkebb belső margó (8 px) és kisebb
+                                        // ikon (18 px) — a mért keret így 40 px,
+                                        // ezért az angol „Community" is kifér
+                                        // (lásd a fájl elején a számításokat).
                                         style: FilledButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
+                                            horizontal: 8,
                                           ),
                                           visualDensity: VisualDensity.compact,
                                         ),
@@ -298,7 +333,7 @@ class HomeScreen extends ConsumerWidget {
                                             builder: (_) => const CommunityHubScreen(),
                                           ),
                                         ),
-                                        icon: const Icon(Icons.people_outline),
+                                        icon: const Icon(Icons.people_outline, size: 18),
                                         label: Text(communityLabel),
                                       ),
                                     const SizedBox(width: homeHeaderGap),
@@ -306,7 +341,14 @@ class HomeScreen extends ConsumerWidget {
                                     // felirat mindig a másik nyelv kódja.
                                     // Ikon nélkül (mérve ~25 px-cel keskenyebb):
                                     // a „HU"/„EN" önmagában is egyértelmű.
-                                    const LanguageSwitchButton(showIcon: false),
+                                    const SizedBox(
+                                      width: 52,
+                                      height: 42,
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: LanguageSwitchButton(showIcon: false),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),

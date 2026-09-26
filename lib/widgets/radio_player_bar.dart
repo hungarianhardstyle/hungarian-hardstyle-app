@@ -210,7 +210,11 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
 
   @override
   Widget build(BuildContext context) {
-    final trackTitle = _title == 'Real Hardstyle FM' ? 'Élő adás' : _title;
+    // ⚠️ A tulajdonos képernyőképe (2026-09-26): angol módban a rádiósávban
+    // „Élő adás" jelent meg. Ez a **ternary-ág** osztály: a felirat nyersen állt,
+    // a szótárban sem volt — ezért a megjelenítés helyén fordítjuk, és a
+    // fordítás is bekerült.
+    final trackTitle = _title == 'Real Hardstyle FM' ? tr(context, 'Élő adás') : _title;
     final compact = MediaQuery.orientationOf(context) == Orientation.landscape;
 
     final scheme = Theme.of(context).colorScheme;

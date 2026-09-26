@@ -4144,12 +4144,32 @@ async function pollWordPressContentNotifications() {
   const newlyPublished = [];
 
   for (const endpoint of endpoints) {
-    const response = await fetch(`${WORDPRESS_BASE_URL}${endpoint.path}`, {
-      headers: { Accept: 'application/json' },
-    });
-    if (!response.ok) throw new Error(`WordPress ${endpoint.key} lista: HTTP ${response.status}`);
-    const body = await response.json();
-    const items = Array.isArray(body) ? body : Array.isArray(body?.items) ? body.items : [];
+    // ⚠️ A NYELV (mért hiba, 2026-09-26): a tulajdonos jelezte, hogy „a notifyban
+    // a cikk címe nem angol". A lista eddig **nyelv nélkül** jött le, ezért a cím
+    // magyar volt, és az angol címzett is azt kapta. Most **nyelvenként** kérjük
+    // le (`lang=hu` az alapérték, `lang=en` a fordítás), és a cím a címzett
+    // nyelvén megy ki (`resolveParamValue` a `notification-texts.js`-ben).
+    const fetchList = async (lang) => {
+      const separator = endpoint.path.includes('?') ? '&' : '?';
+      const path = lang ? `${endpoint.path}${separator}lang=${lang}` : endpoint.path;
+      const response = await fetch(`${WORDPRESS_BASE_URL}${path}`, {
+        headers: { Accept: 'application/json' },
+      });
+      if (!response.ok) return null;
+      const body = await response.json();
+      return Array.isArray(body) ? body : Array.isArray(body?.items) ? body.items : [];
+    };
+
+    const items = await fetchList('hu');
+    if (!items) throw new Error(`WordPress ${endpoint.key} lista: HTTP hiba`);
+    // Az angol lista **opcionális**: ha nem jön le, marad a magyar cím (a régi
+    // viselkedés) — az értesítés soha nem törik el a fordítás miatt.
+    const itemsEn = (await fetchList('en')) || [];
+    const englishTitles = new Map(
+      itemsEn
+        .map((item) => [String(item?.id || '').trim(), String(item?.title?.rendered || item?.title || item?.name || '').trim()])
+        .filter(([id, title]) => id && title),
+    );
     const ids = items
       .map((item) => String(item?.id || '').trim())
       .filter(Boolean)
@@ -4178,11 +4198,11 @@ async function pollWordPressContentNotifications() {
       if (!id) continue;
       const revision = revisions[id] || '';
       if (!oldIds.has(id)) {
-        newlyPublished.push({ ...endpoint, id, item, revision });
+        newlyPublished.push({ ...endpoint, id, item, revision, englishTitles });
         continue;
       }
       if (hasRevisions && revision && oldRevisions[id] && revision !== oldRevisions[id]) {
-        newlyPublished.push({ ...endpoint, id, item, revision });
+        newlyPublished.push({ ...endpoint, id, item, revision, englishTitles });
       }
     }
   }

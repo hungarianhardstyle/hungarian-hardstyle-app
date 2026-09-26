@@ -275,11 +275,36 @@ const PLACEHOLDER_DEFAULTS = {
   name: { hu: 'Egy HUHS tag', en: 'A HUHS member' },
 };
 
+/**
+ * Egy helyőrző-érték feloldása a nyelvre.
+ *
+ * ⚠️ MIÉRT KELL (mért hiba, 2026-09-26): a tulajdonos jelezte, hogy **az
+ * értesítésben a cikk címe nem angol** angol módban. A gyökér: a WordPress
+ * listát a szerver **nyelv nélkül** kérte le, ezért a cím magyarul jött, és az
+ * angol címzett is azt kapta. A megoldás: a hívó **nyelvenkénti térképet** adhat
+ * (`{ hu: '…', en: '…' }`), és a szöveg a címzett nyelvén választja ki az értéket.
+ *
+ * A sima szöveg (nem térkép) változatlanul működik, a hiányzó nyelv pedig a
+ * magyarra esik vissza — így egy régi hívó sem törik el.
+ */
+function resolveParamValue(value, language) {
+  if (value === undefined || value === null) return value;
+  if (typeof value !== 'object' || Array.isArray(value)) return value;
+  const code = normalizeNotificationLanguage(language);
+  const candidates = [value[code], value[DEFAULT_NOTIFICATION_LANGUAGE], value.en, value.hu];
+  for (const candidate of candidates) {
+    if (candidate !== undefined && candidate !== null && String(candidate).trim() !== '') {
+      return candidate;
+    }
+  }
+  return '';
+}
+
 /** A `{helyőrző}` kitöltése; a hiányzó paraméter az alapérték vagy üres string. */
 function fillTemplate(template, params, language) {
   return String(template ?? '').replace(/\{(\w+)\}/g, (_match, key) => {
-    const value = params?.[key];
-    if (value !== undefined && value !== null && String(value).trim() !== '') return String(value);
+    const raw = resolveParamValue(params?.[key], language);
+    if (raw !== undefined && raw !== null && String(raw).trim() !== '') return String(raw);
     const fallback = PLACEHOLDER_DEFAULTS[key];
     if (fallback) return fallback[language] ?? fallback[DEFAULT_NOTIFICATION_LANGUAGE];
     return '';
@@ -328,4 +353,5 @@ module.exports = {
   achievementReasonText,
   normalizeNotificationLanguage,
   notificationText,
+  resolveParamValue,
 };

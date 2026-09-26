@@ -257,6 +257,17 @@ void main() {
       greaterThanOrEqualTo(chrome - 1),
       reason: 'a feltételezett keret ($homeCommunityButtonChrome) kisebb a valósnál ($chrome)',
     );
-    expect(homeHeaderFixedWidth, greaterThanOrEqualTo(52 + 48 + 48 + 6 + 6 + 60));
+    // ⚠️ A 2026-09-26-i szűkítés (a tulajdonos képernyőképe: „mintha a gomb se
+    // lenne Community") után a **valódi** követelmény ez: 360 px-es készüléken
+    // (available = 360 − 36) a feliratra legalább 80 px maradjon — ennyi kell a
+    // valós betűtípusú „Community" szövegnek. A teszt betűtípusa (Ahem) ~2×
+    // szélesebb, ezért a mérés **font-független** (a konstansokra mérünk).
+    const available360 = 360 - 36;
+    final labelBudget = available360 - homeHeaderFixedWidth - homeCommunityButtonChrome;
+    expect(
+      labelBudget,
+      greaterThanOrEqualTo(80),
+      reason: 'a Community feliratra csak $labelBudget px marad 360 px-en',
+    );
   });
 }

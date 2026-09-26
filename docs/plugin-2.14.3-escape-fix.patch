@@ -1,0 +1,123 @@
+diff --git a/huhs-mobile-api/huhs-mobile-api.php b/huhs-mobile-api/huhs-mobile-api.php
+index 8d8fd3d8..9aa787c7 100644
+--- a/huhs-mobile-api/huhs-mobile-api.php
++++ b/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.14.2
++ * Version: 2.14.3
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.14.2');
++define('HUHS_API_VERSION', '2.14.3');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/huhs-mobile-api/includes/translation-cron.php b/huhs-mobile-api/includes/translation-cron.php
+index 66bdb8ef..7acefb16 100644
+--- a/huhs-mobile-api/includes/translation-cron.php
++++ b/huhs-mobile-api/includes/translation-cron.php
+@@ -271,14 +271,18 @@ function huhs_run_content_translation($post, $title, $content)
+         return 'failed';
+     }
+ 
++    // ⚠️ `wp_slash()`: a WordPress `update_metadata()` unslash-el, ezért a
++    // fordításban lévő backslash (és ezzel pl. egy `\"` vagy `\n`) elveszne.
++    // A mért éles eset a JSON-mezőket érintette (`rnrn` / `u00e9`), de itt is
++    // ugyanaz a minta kell — a HTML is tartalmazhat backslasht.
+     if ($response['title'] !== '') {
+-        update_post_meta($post_id, '_huhs_title_en', $response['title']);
++        update_post_meta($post_id, '_huhs_title_en', wp_slash($response['title']));
+     }
+     if ($response['content'] !== '') {
+-        update_post_meta($post_id, '_huhs_content_en', $response['content']);
++        update_post_meta($post_id, '_huhs_content_en', wp_slash($response['content']));
+     }
+     if ($response['excerpt'] !== '') {
+-        update_post_meta($post_id, '_huhs_excerpt_en', $response['excerpt']);
++        update_post_meta($post_id, '_huhs_excerpt_en', wp_slash($response['excerpt']));
+     }
+ 
+     // ⚠️ „Kész" csak akkor, ha **ez a válasz** adta mindkettőt (cím ÉS törzs) —
+diff --git a/huhs-mobile-api/includes/translation-fields.php b/huhs-mobile-api/includes/translation-fields.php
+index 4d6b02ad..6a6cb4da 100644
+--- a/huhs-mobile-api/includes/translation-fields.php
++++ b/huhs-mobile-api/includes/translation-fields.php
+@@ -31,6 +31,23 @@ if (!defined('ABSPATH')) {
+ /** A fordítási mezők tárolója (egy JSON objektum bejegyzésenként). */
+ const HUHS_TRANSLATION_FIELDS_META = '_huhs_translation_fields_en';
+ 
++/**
++ * A tárolt mező-fordítás **séma-verziója** (2026-09-26, 2.14.3).
++ *
++ * ⚠️ MIÉRT KELL: a 2.14.2-ig a beíró `wp_slash()` nélkül mentett, ezért a
++ * WordPress `update_metadata()` unslash-e **szétroncsolta a JSON-escape-eket**
++ * (`\r\n` → `rn`, `\u00e9` → `u00e9`) — ez **élesben** meg is jelent (a
++ * nyeremény leírásában „October 17!rnrnParticipate…"). A javított író önmagában
++ * nem elég: a **meglévő, hibás** fordításokat újra kell generálni. A verziójelölő
++ * ezt teszi lehetővé: a `huhs_translation_fields_current()` csak akkor mondja
++ * „naprakész"-nek az elemet, ha **ebben a verzióban** készült — különben a pótló
++ * kör egyszer újrafordítja (kis halmaz: kérdőív, nyeremény, játékok).
++ */
++const HUHS_TRANSLATION_FIELDS_VERSION = 2;
++
++/** A tárolt séma-verzió meta-kulcsa. */
++const HUHS_TRANSLATION_FIELDS_VERSION_META = '_huhs_translation_fields_version';
++
+ /** A mezők forrás-ujjlenyomata (a „megváltozott a magyar szöveg" esethez). */
+ const HUHS_TRANSLATION_FIELDS_HASH_META = '_huhs_translation_fields_hash';
+ 
+@@ -377,10 +394,15 @@ function huhs_translation_fields_complete($post_id)
+ }
+ 
+ /**
+- * Naprakész-e a mező-fordítás? (megvan MINDEN mező, és a forrás ugyanaz)
++ * Naprakész-e a mező-fordítás? (megvan MINDEN mező, a forrás ugyanaz, ÉS a
++ * tárolt séma-verzió a jelenlegi)
+  *
+  * Ez a „nincs mit tenni" állapot: a mentés-ág ezzel spórolja meg a felesleges
+  * API-hívást, a pótló kör pedig ezzel dönti el, hogy várólistás-e az elem.
++ *
++ * ⚠️ A verzió-ellenőrzés azért kell, hogy a **régi, hibás escape-ekkel** mentett
++ * fordítások (2.14.2 és előtte: `rn` / `u00e9`) egyszer **maguktól** újra
++ * elkészüljenek — lásd a `HUHS_TRANSLATION_FIELDS_VERSION` fejlécét.
+  */
+ function huhs_translation_fields_current($post_id)
+ {
+@@ -388,6 +410,11 @@ function huhs_translation_fields_current($post_id)
+         return false;
+     }
+ 
++    if ((int) get_post_meta($post_id, HUHS_TRANSLATION_FIELDS_VERSION_META, true)
++        !== HUHS_TRANSLATION_FIELDS_VERSION) {
++        return false;
++    }
++
+     return (string) get_post_meta($post_id, HUHS_TRANSLATION_FIELDS_HASH_META, true)
+         === huhs_translation_fields_source_hash($post_id);
+ }
+@@ -550,8 +577,15 @@ function huhs_run_field_translation($post_id)
+     foreach ($translated as $meta_key => $value) {
+         $stored[$meta_key] = $value;
+     }
+-    update_post_meta($post_id, HUHS_TRANSLATION_FIELDS_META, wp_json_encode($stored));
+-    update_post_meta($post_id, HUHS_TRANSLATION_FIELDS_HASH_META, $hash);
++    // ⚠️ `wp_slash()` KELL (mért éles hiba, 2026-09-26): a WordPress
++    // `update_metadata()` **`wp_unslash()`-ol**, ezért a `wp_json_encode()` írta
++    // escape-ekből (`\r\n`, `\uXXXX`, `\"`) elveszne a backslash — a tárolt
++    // szöveg `rnrn` / `u00e9` szemétté válna (a nyeremény leírásában ez **élesben**
++    // meg is jelent: „October 17!rnrnParticipate…"). Ugyanez a minta van a plugin
++    // más helyein is (`poll.php`, `prize.php`).
++    update_post_meta($post_id, HUHS_TRANSLATION_FIELDS_META, wp_slash(wp_json_encode($stored)));
++    update_post_meta($post_id, HUHS_TRANSLATION_FIELDS_HASH_META, wp_slash($hash));
++    update_post_meta($post_id, HUHS_TRANSLATION_FIELDS_VERSION_META, HUHS_TRANSLATION_FIELDS_VERSION);
+     delete_post_meta($post_id, HUHS_TRANSLATION_FIELDS_FAILED_META);
+     delete_post_meta($post_id, HUHS_TRANSLATION_FIELDS_FAILED_AT_META);
+ 

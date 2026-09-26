@@ -19,7 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.2.zip';
+export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.3.zip';
 export const DEFAULT_SOURCE = '.tmp-api-260/huhs-mobile-api';
 export const EXPECTED_ROOT = 'huhs-mobile-api';
 
@@ -87,7 +87,7 @@ export function packageChecks(read) {
   const fieldsCode = stripPhpComments(fields);
 
   return [
-    ['a fejléc és a konstans is 2.14.2', /Version:\s*2\.14\.2/.test(main) && main.includes("HUHS_API_VERSION', '2.14.2'")],
+    ['a fejléc és a konstans is 2.14.3', /Version:\s*2\.14\.3/.test(main) && main.includes("HUHS_API_VERSION', '2.14.3'")],
     ['a fő fájl behúzza a hely-névtárat, a pótló kört és a mező-fordítást',
       main.includes('includes/translation-places.php') && main.includes('includes/translation-sweep.php')
         && main.includes('includes/translation-fields.php')],
@@ -157,6 +157,16 @@ export function packageChecks(read) {
       !/'correct'/.test(
         /function huhs_game_public_payload[\s\S]*?\nfunction huhs_game_create_clip_token/.exec(gamesCode)?.[0] ?? 'HIBA',
       )],
+    // ---- 2.14.3: a meta-írás escape-jei (mért éles hiba) --------------------
+    ['a mező-fordítás írása `wp_slash()`-ol (a WordPress unslash-e nem roncsolhatja a JSON-escape-eket)',
+      fieldsCode.includes('wp_slash(wp_json_encode($stored))')],
+    ['a séma-verzió jelölő megvan (a régi, hibás escape-ekkel mentett fordítások újragenerálódnak)',
+      fieldsCode.includes('HUHS_TRANSLATION_FIELDS_VERSION = 2')
+        && fieldsCode.includes('HUHS_TRANSLATION_FIELDS_VERSION_META')],
+    ['a naprakészség a séma-verziót is megköveteli',
+      /function huhs_translation_fields_current\(\$post_id\)[\s\S]*?HUHS_TRANSLATION_FIELDS_VERSION\b/.test(fieldsCode)],
+    ['a cím/törzs fordítás írása is `wp_slash()`-ol',
+      cron.includes("wp_slash($response['")],
   ];
 }
 
@@ -176,11 +186,11 @@ export function selfTest() {
 
   const star = 'x';
   const full = {
-    'huhs-mobile-api.php': 'Version: 2.14.2 HUHS_API_VERSION\', \'2.14.2\' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php',
+    'huhs-mobile-api.php': 'Version: 2.14.3 HUHS_API_VERSION\', \'2.14.3\' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php',
     'includes/translation-sweep.php': "'compare' => 'NOT EXISTS' huhs_run_translation($post->ID) 'hourly' 'huhs_translation_sweep_event' 'limit' 'budget' huhs_translation_retry_delay '/translations/status' '/translations/sweep'",
-    'includes/translation-fields.php': "'_huhs_poll_question' '_huhs_prize_answers' '_huhs_prize_description' '_huhs_game_summary' \"'_huhs_game_questions' => 'questions'\" huhs_translation_game_question_texts($post_id) { return array(); } count($translated) === count($source) HUHS_TRANSLATION_FIELDS_FAILED_META",
+    'includes/translation-fields.php': "'_huhs_poll_question' '_huhs_prize_answers' '_huhs_prize_description' '_huhs_game_summary' \"'_huhs_game_questions' => 'questions'\" huhs_translation_game_question_texts($post_id) { return array(); } count($translated) === count($source) HUHS_TRANSLATION_FIELDS_FAILED_META wp_slash(wp_json_encode($stored)) HUHS_TRANSLATION_FIELDS_VERSION = 2 HUHS_TRANSLATION_FIELDS_VERSION_META function huhs_translation_fields_current($post_id) { HUHS_TRANSLATION_FIELDS_VERSION",
     'includes/translation-places.php': "'magyarország' => 'Hungary' Velence if ($lang !== 'en')",
-    'includes/translation-cron.php': "HUHS_TRANSLATION_HASH_META huhs_translation_is_current huhs_run_field_translation( return 'translated';",
+    'includes/translation-cron.php': "HUHS_TRANSLATION_HASH_META huhs_translation_is_current huhs_run_field_translation( return 'translated'; wp_slash($response['title'])",
     'includes/post-translation-meta.php': 'huhs_translation_field_post_types()',
     'includes/faq.php': "huhs_translation_meta_values( huhs_request_lang($request) 'has_en' huhs_translation_faq_category_names() 'első lépések' => 'Getting Started'",
     'includes/poll.php': 'huhs_translation_text( huhs_translation_list(',
