@@ -98,6 +98,18 @@ check(
 // A changelog a Dart AOT csomagban él (a magyar ékezetek miatt UTF-16LE-ként).
 const framework = read('Frameworks/App.framework/App');
 check(
+  'a 373 sora benne van (a hír-kategóriák is angolul)',
+  contains(framework, 'a hírek kategóriái (a kártyákon és a cikk fejlécében) is angolul jelennek meg'),
+);
+check(
+  'a 373 &amp; sora is benne van',
+  contains(framework, 'nem látszik többé a „&amp;" kódolási hiba'),
+);
+check(
+  'a 373 felirat-sora is benne van',
+  contains(framework, 'az éves név-/e-mail-módosítás jelzése'),
+);
+check(
   'a 372 sora benne van (a megnyitott adatlapok is átállnak)',
   contains(framework, 'nyelvváltáskor a már megnyitott cikk-, esemény- és kiadvány-adatlap'),
 );
