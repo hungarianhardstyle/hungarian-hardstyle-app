@@ -1222,7 +1222,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
       // Csak azok a hivatkozások mennek ki, amelyek a szövegben **tényleg
       // benne vannak** — a szerver ezt még egyszer szűri (jogosultság, korlát).
       final mentions = _activeMentions();
-      final dropped = await _service.publishPost(
+      final result = await _service.publishPost(
         text: _textController.text,
         imageBytes: _image,
         replyToText: _replyToText,
@@ -1248,12 +1248,27 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
           _mentionSuggestions = const <MentionSuggestion>[];
         });
       }
-      if (dropped > 0) {
+      if (result.dropped > 0) {
         // A szerver jelezte, hogy néhány hivatkozás kiesett (nem
         // admin/moderátor tartalom-hivatkozás): a szöveg olvasható maradt, de
         // a koppintás nem lesz ott — ezt röviden meg kell mondani.
         _showMessage(
           'Néhány hivatkozás nem kattintható (csak adminnak/moderátornak jár).',
+        );
+      }
+      if (result.everyoneNotified > 0) {
+        // A „@mindenki" visszajelzése (a tulajdonos jelzése: *„nem küld
+        // notifyt"* — a mérés szerint elment, csak **nem látszott**). A küldő
+        // maga szándékosan nem kap értesítést, ezért itt kapja meg a számokat:
+        // hány címzett és hány készülék (push).
+        _showMessage(
+          AppStrings.trArgs(
+            'Mindenki értesítést kapott: {n} címzett, ebből {p} push.',
+            {
+              'n': '${result.everyoneNotified}',
+              'p': '${result.everyonePushed}',
+            },
+          ),
         );
       }
     } catch (error) {

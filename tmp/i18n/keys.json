@@ -5225,6 +5225,13 @@
     ]
   },
   {
+    "value": "Mindenki értesítést kapott: {n} címzett, ebből {p} push.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
     "value": "Most nem",
     "count": 1,
     "files": [

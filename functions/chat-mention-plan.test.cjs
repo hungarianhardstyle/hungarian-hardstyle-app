@@ -45,6 +45,8 @@ const {
   chatMentionNotifications,
   chatEveryoneNotification,
   chatEveryoneNotifications,
+  chatEveryonePushMessage,
+  everyonePushTargets,
 } = require('./chat-mention-plan');
 const { notificationText } = require('./notification-texts');
 
@@ -547,6 +549,68 @@ test('a fan-out plafonja MAX_EVERYONE_RECIPIENTS, a szerző és a duplikátum ki
   assert.equal(chatEveryoneNotifications().length, 0);
 });
 
+// A „@mindenki" PUSH-a (a tulajdonos jelzése, 2026-09-26: *„ja a @mindenki tag
+// nem működik, nem küld notifyt"* — a mérés szerint a lista-bejegyzések
+// létrejöttek, push viszont nem ment; a döntése: a @mindenki kapjon push-t, a
+// személyes @említés maradjon csendes).
+test('a @mindenki push-adata arra az üzenetre mutat, és a törzs 80 karakter', () => {
+  const message = chatEveryonePushMessage({
+    postId: 'post-9',
+    authorId: 'uid-author',
+    text: '  Ma   este @mindenki!  ',
+  });
+  assert.deepEqual(message.data, {
+    type: 'chat_everyone',
+    postId: 'post-9',
+    targetType: 'chat',
+    targetId: 'post-9',
+    senderId: 'uid-author',
+  });
+  assert.equal(message.body, 'Ma este @mindenki!', 'a törzs a tömörített szöveg');
+
+  // A vágás ugyanaz, mint a listabeli értesítésnél (közös `mentionExcerpt`).
+  const long = chatEveryonePushMessage({ postId: 'p', authorId: 'a', text: 'x'.repeat(200) });
+  assert.equal(long.body.length, MAX_EXCERPT_LENGTH + 1, '80 karakter + a levágás jele');
+  assert.equal(long.body.endsWith('…'), true);
+
+  // `postId` nélkül nincs értelmes célpont — nem találgatunk.
+  assert.equal(chatEveryonePushMessage({ authorId: 'a', text: 'szia' }), null);
+  assert.equal(chatEveryonePushMessage(), null);
+});
+
+test('push CSAK új értesítésnek, bekapcsolt értesítésnél és tokennel megy', () => {
+  const targets = everyonePushTargets([
+    // 1) rendben: új értesítés, nincs kikapcsolva, van token
+    { uid: 'uid-1', created: true, tokens: ['t1', 't1', ' t2 '], preferences: {} },
+    // 2) újrakézbesítés (created=false): nem küldünk második push-t
+    { uid: 'uid-2', created: false, tokens: ['t3'], preferences: {} },
+    // 3) kikapcsolt értesítés: a listába bekerül, push-t nem kap
+    { uid: 'uid-3', created: true, tokens: ['t4'], preferences: { enabled: false } },
+    // 4) nincs token
+    { uid: 'uid-4', created: true, tokens: [], preferences: {} },
+    // 5) üres/hibás sorok
+    { uid: '   ', created: true, tokens: ['t5'] },
+    null,
+    'uid-6',
+    [],
+  ]);
+
+  assert.deepEqual(targets, [{ uid: 'uid-1', tokens: ['t1', 't2'] }]);
+  // Nem tömb bemenetre üres lista (nem dob).
+  for (const raw of [undefined, null, 'uid-1', 42, {}]) {
+    assert.deepEqual(everyonePushTargets(raw), []);
+  }
+  // A `preferences` hiánya/bármilyen alakja nem dönt véletlenül: csak a
+  // kifejezett `false` tilt (a `null`/szöveg nem).
+  assert.deepEqual(
+    everyonePushTargets([
+      { uid: 'a', created: true, tokens: ['t'], preferences: null },
+      { uid: 'b', created: true, tokens: ['t'], preferences: { enabled: 'nem' } },
+    ]).map((item) => item.uid),
+    ['a', 'b'],
+  );
+});
+
 test('a Firestore-szabályt NEM kellett bővíteni: az @mindenki kanonikus alakja beleillik', () => {
   const entry = { type: EVERYONE_TYPE, id: EVERYONE_ID, label: EVERYONE_LABEL };
   // A szabály ezt kéri: pont ez a három kulcs, string típus, id ≤ 64, label ≤ 80.
@@ -565,10 +629,10 @@ test('forrás-lint: a publishChatPost @mindenki fan-outja kötegelt, best-effort
   assert.ok(start > 0 && end > start, 'a publishChatPost megtalálható');
   const body = functionsSource.slice(start, end);
 
-  // 1) Az import a tiszta modulból jön (helper + típus-konstans + plafon).
+  // 1) Az import a tiszta modulból jön (helper + típus-konstans + plafon + push).
   assert.match(
     functionsSource,
-    /chatEveryoneNotifications,\s*\n\s*EVERYONE_TYPE,\s*\n\s*MAX_EVERYONE_RECIPIENTS,\s*\n\} = require\('\.\/chat-mention-plan'\)/,
+    /chatEveryoneNotifications,\s*\n\s*chatEveryonePushMessage,\s*\n\s*everyonePushTargets,\s*\n\s*EVERYONE_TYPE,\s*\n\s*MAX_EVERYONE_RECIPIENTS,\s*\n\} = require\('\.\/chat-mention-plan'\)/,
   );
 
   // 2) A döntés a tiszta helperben van, és a típus-konstansot kéri.
@@ -603,11 +667,37 @@ test('forrás-lint: a publishChatPost @mindenki fan-outja kötegelt, best-effort
 
   // 7) A válasz visszaadja a számokat (a régi `droppedMentions` mellé).
   assert.match(body, /everyoneNotified = everyoneNotifications\.length;/);
-  assert.match(body, /return \{ id: ref\.id, droppedMentions, everyoneNotified \}/);
+  assert.match(body, /return \{ id: ref\.id, droppedMentions, everyoneNotified, everyonePushed \}/);
 
   // 8) A fan-out a SZEMÉLY-értesítések UTÁN fut (nem keveredik bele).
   const mentionIndex = body.indexOf('chatMentionNotifications({');
   assert.ok(mentionIndex > 0 && everyoneIndex > mentionIndex, 'a fan-out a személy-értesítések után van');
+
+  // 9) PUSH: a döntés a tiszta helperben, a küldés kötegelt és best-effort.
+  assert.match(body, /everyonePushTargets\(candidates\)/);
+  assert.match(body, /chatEveryonePushMessage\(\{ postId: ref\.id, authorId: uid, text \}\)/);
+  // Az „új volt-e" tény számít: a listabeli írások eredményét megtartjuk.
+  assert.match(body, /created: results\[position\] === true/);
+  assert.match(body, /notificationPreferences \|\| \{\}/);
+  assert.match(body, /index \+= 10/, 'a push-küldés is kötegelt');
+  assert.match(body, /sendMulticastToAllTokens\(/);
+  // A cím a címzett nyelvén, ugyanabból a katalógusból (mint a lista szövege).
+  assert.match(body, /notificationText\('chat_everyone', language, \{/);
+  assert.match(body, /messaging\/registration-token-not-registered/);
+  assert.match(body, /removePushTokens\(target\.uid, invalidTokens\)/);
+  assert.match(body, /event: 'chat_everyone_push_failed'/);
+  // A push-blokk a fan-out blokkon BELÜL, saját try/catch-ben fut: egy push-hiba
+  // sem viheti el sem a listabeli értesítéseket, sem az üzenetet.
+  const pushIndex = body.indexOf('everyonePushTargets(candidates)');
+  const pushTry = body.lastIndexOf('try {', pushIndex);
+  const pushCatch = body.indexOf('} catch (error) {', pushIndex);
+  assert.ok(
+    pushTry > everyoneIndex && pushCatch > pushIndex,
+    'a push a fan-out blokkban, saját try/catch-ben fut',
+  );
+  // A PUSH a lista-írások UTÁN indul (különben nem tudná, mi az új).
+  const writeIndex = body.indexOf('everyoneNotified = everyoneNotifications.length;');
+  assert.ok(writeIndex > 0 && pushIndex > writeIndex, 'a push a lista-írások után indul');
 });
 
 test('a publishChatPost a tiszta tervet használja privileged módban, a szabály pedig ismeri a mentions mezőt', () => {
@@ -629,8 +719,8 @@ test('a publishChatPost a tiszta tervet használja privileged módban, a szabál
   const replyIndex = body.indexOf('createNotificationBestEffort(replyNotification)');
   const mentionIndex = body.indexOf('chatMentionNotifications({');
   assert.ok(replyIndex > 0 && mentionIndex > replyIndex, 'a mention-blokk a válasz-blokk után van');
-  // Visszafelé kompatibilis válasz + a kihagyottak száma (és az @mindenki-szám).
-  assert.match(body, /return \{ id: ref\.id, droppedMentions, everyoneNotified \}/);
+  // Visszafelé kompatibilis válasz + a kihagyottak száma (és az @mindenki-számok).
+  assert.match(body, /return \{ id: ref\.id, droppedMentions, everyoneNotified, everyonePushed \}/);
 
   // A Firestore-szabály: a whitelistben ott a mező, és a shape-korlát is.
   assert.match(rulesSource, /'reactions', 'reactionBy', 'pinned', 'createdAt', 'editedAt', 'mentions'/);

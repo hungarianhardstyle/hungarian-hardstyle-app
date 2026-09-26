@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 371,
+    changes: [
+      'ÚJ: a Chat @mindenki értesítéséhez mostantól push (banner) is jön — a személyes @említés marad csendes.',
+      'A @mindenki küldője visszajelzést kap: hány címzett és hány készülék kapott értesítést.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 370,
     changes: [
       'Javítva: az értesítésben a cikk (és a kiadás, esemény, DJ) címe is a választott nyelven jelenik meg.',

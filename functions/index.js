@@ -92,6 +92,8 @@ const {
   sanitizeMentions,
   chatMentionNotifications,
   chatEveryoneNotifications,
+  chatEveryonePushMessage,
+  everyonePushTargets,
   EVERYONE_TYPE,
   MAX_EVERYONE_RECIPIENTS,
 } = require('./chat-mention-plan');
@@ -2504,6 +2506,7 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
   // pedig `createNotificationBestEffort`-tal mennek (az soha nem dob). 50-es
   // kötegekben párhuzamosítunk, hogy ne egyszerre 41+ írás induljon.
   let everyoneNotified = 0;
+  let everyonePushed = 0;
   if (mentions.some((mention) => mention.type === EVERYONE_TYPE)) {
     try {
       const recipientsSnapshot = await db
@@ -2520,14 +2523,108 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
           .map((document) => document.id)
           .filter((recipientUid) => recipientUid && recipientUid !== uid),
       });
+      // Az „új volt-e" tény kell a push-döntéshez (egy újrakézbesítés nem
+      // küldhet második push-t) — ezért az írások eredményét megtartjuk.
+      const writeResults = [];
       for (let index = 0; index < everyoneNotifications.length; index += 50) {
-        await Promise.all(
-          everyoneNotifications
-            .slice(index, index + 50)
-            .map((notification) => createNotificationBestEffort(notification)),
+        const chunk = everyoneNotifications.slice(index, index + 50);
+        const results = await Promise.all(
+          chunk.map((notification) => createNotificationBestEffort(notification)),
         );
+        chunk.forEach((notification, position) => {
+          writeResults.push({
+            uid: String(notification.recipientUid || '').trim(),
+            created: results[position] === true,
+          });
+        });
       }
       everyoneNotified = everyoneNotifications.length;
+
+      // PUSH a „@mindenki" értesítéshez (a tulajdonos döntése, 2026-09-26: a
+      // BÉJÖVŐ LISTA bejegyzése mellé **banner is** menjen — a személyes
+      // `@említés` szándékosan csendes marad). A döntés (új értesítés,
+      // bekapcsolt értesítés, van token) a tiszta `everyonePushTargets`-ben van.
+      try {
+        const candidates = [];
+        for (let index = 0; index < writeResults.length; index += 20) {
+          const chunk = writeResults.slice(index, index + 20);
+          const loaded = await Promise.all(
+            chunk.map(async (entry) => {
+              if (!entry.created) return { uid: entry.uid, created: false, tokens: [], preferences: {} };
+              const privateData =
+                (await db.collection('private_user_data').doc(entry.uid).get()).data() || {};
+              return {
+                uid: entry.uid,
+                created: true,
+                preferences: privateData.notificationPreferences || {},
+                tokens: await getPushTokens(entry.uid),
+              };
+            }),
+          );
+          candidates.push(...loaded);
+        }
+        const targets = everyonePushTargets(candidates);
+        const message = chatEveryonePushMessage({ postId: ref.id, authorId: uid, text });
+        for (let index = 0; index < targets.length; index += 10) {
+          const chunk = targets.slice(index, index + 10);
+          const counts = await Promise.all(
+            chunk.map(async (target) => {
+              // A cím a címzett nyelvén (ugyanaz a katalógus, mint a listában) —
+              // a `recipientLanguage` gyorsítótáraz, ezért nem olvas újra.
+              const language = await recipientLanguage(target.uid);
+              const pushText = notificationText('chat_everyone', language, {
+                name: displayName,
+                snippet: message ? message.body : '',
+              });
+              try {
+                const result = await sendMulticastToAllTokens(
+                  {
+                    notification: {
+                      title: pushText ? pushText.title : 'Megemlítettek a Chatben',
+                      body: pushText ? pushText.body : message ? message.body : '',
+                    },
+                    data: message ? message.data : { type: 'chat_everyone' },
+                  },
+                  target.tokens,
+                );
+                const invalidTokens = target.tokens.filter(
+                  (_, position) =>
+                    result.responses[position]?.error?.code ===
+                    'messaging/registration-token-not-registered',
+                );
+                if (invalidTokens.length) await removePushTokens(target.uid, invalidTokens);
+                return result.successCount || 0;
+              } catch (error) {
+                console.warn(
+                  JSON.stringify({
+                    event: 'chat_everyone_push_failed_one',
+                    uid: target.uid.slice(0, 8),
+                    message: error?.message || String(error),
+                  }),
+                );
+                return 0;
+              }
+            }),
+          );
+          everyonePushed += counts.reduce((sum, value) => sum + value, 0);
+        }
+        console.log(
+          JSON.stringify({
+            event: 'chat_everyone_push_result',
+            postId: ref.id,
+            targets: targets.length,
+            successCount: everyonePushed,
+          }),
+        );
+      } catch (error) {
+        console.warn(
+          JSON.stringify({
+            event: 'chat_everyone_push_failed',
+            postId: ref.id,
+            message: error?.message || String(error),
+          }),
+        );
+      }
     } catch (error) {
       console.warn(
         JSON.stringify({
@@ -2540,8 +2637,9 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
   }
   // Visszafelé kompatibilis: az `id` marad, mellé jön a kihagyott hivatkozások
   // száma, amit a kliens kiírhat („N hivatkozást nem sikerült beilleszteni"),
-  // valamint a ténylegesen értesített címzettek száma (`everyoneNotified`).
-  return { id: ref.id, droppedMentions, everyoneNotified };
+  // valamint a ténylegesen értesített címzettek száma (`everyoneNotified`) és a
+  // push-t is kapott készülékek száma (`everyonePushed`).
+  return { id: ref.id, droppedMentions, everyoneNotified, everyonePushed };
 });
 
 exports.manageConnection = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {

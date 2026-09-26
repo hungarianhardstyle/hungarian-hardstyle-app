@@ -1153,7 +1153,13 @@ class CommunityService {
   /// ⚠️ A jogosultságot a **szerver** kényszeríti: a nem admin/moderátor
   /// tartalom-hivatkozásait kihagyja (a szöveg marad), és visszaadja a
   /// kihagyottak számát — ez a visszatérési érték, amit a felület jelez.
-  Future<int> publishPost({
+  ///
+  /// A második szám (`everyoneNotified`) a **@mindenki** hivatkozás fan-outjának
+  /// a mérete (hány címzett kapott bejegyzést a bejövő listájába), a harmadik
+  /// (`everyonePushed`) pedig az, hány **készülékre** ment ki push — ebből lesz a
+  /// küldő visszajelzése (a tulajdonos jelzése: *„a @mindenki tag nem működik,
+  /// nem küld notifyt"* — a mérés szerint működött, csak **nem látszott**).
+  Future<({int dropped, int everyoneNotified, int everyonePushed})> publishPost({
     required String text,
     Uint8List? imageBytes,
     bool pinned = false,
@@ -1240,11 +1246,17 @@ class CommunityService {
     final data = result.data;
     if (data is Map) {
       final dropped = data['droppedMentions'];
-      if (dropped is num) return dropped.toInt();
+      final everyone = data['everyoneNotified'];
+      final pushed = data['everyonePushed'];
+      return (
+        dropped: dropped is num ? dropped.toInt() : 0,
+        everyoneNotified: everyone is num ? everyone.toInt() : 0,
+        everyonePushed: pushed is num ? pushed.toInt() : 0,
+      );
     }
     // Régi/üres válasz (még nem telepített szerver): nem találgatunk, és nem is
     // bukunk el — az üzenet elküldve, kihagyott hivatkozás nem ismert.
-    return 0;
+    return (dropped: 0, everyoneNotified: 0, everyonePushed: 0);
   }
 
   /// A Chat-üzenet reakciójának váltása; visszaadja a **saját** új állapotot.

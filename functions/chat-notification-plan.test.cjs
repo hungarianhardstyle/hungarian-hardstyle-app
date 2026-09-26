@@ -224,17 +224,36 @@ test('a két hívó a tiszta tervet használja', () => {
   assert.match(publish, /chatReplyNotification\(/);
 });
 
-test('a két hívó NEM küld push-t (a tulajdonos kérése: „csak notify")', () => {
+// ⚠️ MÓDOSULT A SZÁNDÉK (a tulajdonos döntése, 2026-09-26): a **@mindenki**
+// kap push-t (*„ja a @mindenki tag nem működik, nem küld notifyt"* → a választott
+// lehetőség: „Push is menjen a @mindenkihez"). A **válasz** és a **személyes
+// @említés** viszont továbbra is néma (csak a bejövő lista) — ezt a lint már
+// **hely szerint** méri: a push-hívás csak a `chatEveryoneNotifications({`
+// blokk UTÁN lehet, a reakció-ágon pedig egyáltalán nem.
+test('a válasz/személy-értesítés NEM küld push-t, a @mindenki igen', () => {
   const reaction = callableBody('toggleChatReaction', 'publishChatPost');
   const publish = callableBody('publishChatPost', 'manageConnection');
-  for (const [name, body] of [
-    ['toggleChatReaction', reaction],
-    ['publishChatPost', publish],
-  ]) {
-    assert.doesNotMatch(body, /sendMulticastToAllTokens/, `${name} nem küld push-t`);
-    assert.doesNotMatch(body, /sendEachForMulticast/, `${name} nem hívja a Firebase API-t`);
-    assert.doesNotMatch(body, /sendAchievementPushBestEffort/, `${name} nem küld pont-push-t`);
-  }
+  assert.doesNotMatch(reaction, /sendMulticastToAllTokens/, 'toggleChatReaction nem küld push-t');
+  assert.doesNotMatch(reaction, /sendEachForMulticast/, 'toggleChatReaction nem hívja a Firebase API-t');
+  assert.doesNotMatch(reaction, /sendAchievementPushBestEffort/, 'toggleChatReaction nem küld pont-push-t');
+
+  assert.doesNotMatch(publish, /sendEachForMulticast/, 'publishChatPost nem hívja közvetlenül a Firebase API-t');
+  assert.doesNotMatch(publish, /sendAchievementPushBestEffort/, 'publishChatPost nem küld pont-push-t');
+
+  // A push-hívás CSAK a @mindenki fan-out blokkjában lehet: az első előfordulás
+  // a fan-out hívása UTÁN van, a válasz- és a személy-értesítés előtt pedig nincs.
+  const everyoneIndex = publish.indexOf('chatEveryoneNotifications({');
+  const pushIndex = publish.indexOf('sendMulticastToAllTokens(');
+  assert.ok(everyoneIndex > 0, 'a @mindenki fan-out megvan');
+  assert.ok(
+    pushIndex > everyoneIndex,
+    'a push csak a @mindenki blokkban (a fan-out után) indul',
+  );
+  assert.equal(
+    publish.slice(0, everyoneIndex).includes('sendMulticastToAllTokens'),
+    false,
+    'a válasz/személy-értesítés ágán nincs push',
+  );
 });
 
 test('a kliens ELKÜLDI a válasz célpontját (különben nincs értesítés)', () => {

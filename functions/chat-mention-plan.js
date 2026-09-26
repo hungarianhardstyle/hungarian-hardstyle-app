@@ -353,6 +353,79 @@ function chatEveryoneNotifications({ postId, authorId, authorName, excerpt, reci
   return notifications;
 }
 
+/**
+ * A „@mindenki" **PUSH** üzenetének adat-része (tiszta: se I/O, se katalógus).
+ *
+ * MIÉRT (a tulajdonos jelzése, 2026-09-26): *„ja a @mindenki tag nem működik,
+ * nem küld notifyt"*. A mérés szerint a **bejövő lista** bejegyzései
+ * létrejöttek (44 címzett), **push viszont nem ment** — a chat-hivatkozások
+ * szándékosan némák voltak. A tulajdonos döntése: a **@mindenki** kapjon push-t
+ * (a személyes `@említés` marad csendes). A cím a `notification-texts.js`-ből
+ * jön a hívóban (nyelvenként), itt csak az **adat** készül, hogy a koppintás
+ * **arra az üzenetre** vigyen (ugyanaz a `targetType: 'chat'` + `targetId`, mint
+ * a listabeli értesítésnél).
+ *
+ * @param {object} args
+ * @param {string} args.postId   a Chat-üzenet azonosítója
+ * @param {string} args.authorId a szerző uid-ja (a `senderId` mezőhöz)
+ * @param {string} args.text     az üzenet szövege (a push törzséhez, 80 karakter)
+ * @returns {{data: object, body: string}|null} `null`, ha nincs `postId`
+ */
+function chatEveryonePushMessage({ postId, authorId, text } = {}) {
+  const post = cleanText(postId);
+  if (!post) return null;
+  return {
+    data: {
+      type: 'chat_everyone',
+      postId: post,
+      targetType: 'chat',
+      targetId: post,
+      senderId: cleanText(authorId),
+    },
+    body: mentionExcerpt(text),
+  };
+}
+
+/**
+ * Kiknek megy **PUSH** a „@mindenki" értesítésből — tiszta szűrés.
+ *
+ * Három szándékos szabály (mind mérve a `chat-mention-plan.test.cjs`-ben):
+ *  1. **csak az ÚJ értesítés** kap push-t (`created === true`): egy
+ *     újrakézbesítésnél a `createNotification` `false`-t ad, és ilyenkor a
+ *     felhasználó már kapott push-t — nem zúdítunk rá másodikat (ugyanaz a
+ *     szabály, mint a privát üzenetnél);
+ *  2. aki **kikapcsolta** az értesítést (`notificationPreferences.enabled ===
+ *     false`), annak **nem** megy push (a bejövő listába igen — az nem zavaró);
+ *  3. **token nélkül** nincs mit küldeni (a tokenek duplikátum nélkül).
+ *
+ * @param {Array<{uid: string, created: boolean, tokens: string[], preferences: object}>} entries
+ * @returns {Array<{uid: string, tokens: string[]}>} a push célpontjai
+ */
+function everyonePushTargets(entries) {
+  const targets = [];
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const uid = cleanText(entry.uid);
+    if (!uid) continue;
+    if (entry.created !== true) continue;
+    const preferences =
+      entry.preferences && typeof entry.preferences === 'object' && !Array.isArray(entry.preferences)
+        ? entry.preferences
+        : {};
+    if (preferences.enabled === false) continue;
+    const tokens = [
+      ...new Set(
+        (Array.isArray(entry.tokens) ? entry.tokens : [])
+          .map((token) => cleanText(token))
+          .filter((token) => token.length > 0),
+      ),
+    ];
+    if (!tokens.length) continue;
+    targets.push({ uid, tokens });
+  }
+  return targets;
+}
+
 module.exports = {
   MENTION_TYPES,
   MAX_MENTIONS,
@@ -369,4 +442,6 @@ module.exports = {
   chatMentionNotifications,
   chatEveryoneNotification,
   chatEveryoneNotifications,
+  chatEveryonePushMessage,
+  everyonePushTargets,
 };

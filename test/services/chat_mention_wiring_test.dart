@@ -55,8 +55,13 @@ void main() {
     });
 
     test('a szerver visszajelzését (droppedMentions) a hívó megkapja', () {
-      expect(service, contains('Future<int> publishPost('));
+      // ⚠️ 2026-09-26: a visszatérési érték **rekord** lett, mert a @mindenki
+      // fan-out mérete (`everyoneNotified`) és a push-szám (`everyonePushed`) is
+      // kell a küldő visszajelzéséhez.
+      expect(service, contains('Future<({int dropped, int everyoneNotified, int everyonePushed})> publishPost('));
       expect(service, contains("data['droppedMentions']"));
+      expect(service, contains("data['everyoneNotified']"));
+      expect(service, contains("data['everyonePushed']"));
       expect(
         service,
         isNot(contains("callFirebaseCallable<void>(\n      'publishChatPost'")),
@@ -120,7 +125,7 @@ void main() {
     });
 
     test('a kihagyott hivatkozásokat (droppedMentions) jelzi', () {
-      expect(chat, contains('if (dropped > 0)'));
+      expect(chat, contains('if (result.dropped > 0)'));
       expect(
         chat,
         contains('Néhány hivatkozás nem kattintható'),
@@ -385,6 +390,65 @@ void main() {
         isNot(contains('mentionTypeEveryone')),
         reason:
             'a @mindenki értesítés `targetType: chat` (a szerver küldi), ezért a központban nincs külön ág',
+      );
+    });
+  });
+
+  // A tulajdonos jelzése (2026-09-26): *„ja a @mindenki tag nem működik, nem
+  // küld notifyt"*. Az ÉLES mérés szerint a bejövő listabeli értesítések
+  // létrejöttek (44 címzett), **push viszont nem ment** — és a küldő semmilyen
+  // visszajelzést nem kapott. A döntése: a @mindenki kapjon push-t. Ez a csoport
+  // a **kliens** oldalát őrzi: a visszajelzést és a push koppintás-útvonalát.
+  group('forrás-lint: a @mindenki visszajelzése és a push-útvonala', () {
+    late String service;
+    late String chat;
+    late String push;
+    late String dictionary;
+
+    setUpAll(() {
+      service = readFile('lib/services/community_service.dart');
+      chat = readFile('lib/screens/community/community_screen.dart');
+      push = readFile('lib/services/push_notification_service.dart');
+      dictionary = readFile('assets/i18n/en.json');
+    });
+
+    test('a küldő visszajelzést kap a fan-out méretéről (magáról nem szól)', () {
+      const template = 'Mindenki értesítést kapott: {n} címzett, ebből {p} push.';
+      expect(chat, contains(template), reason: 'a magyar szöveg a szótári kulcs');
+      expect(
+        chat,
+        contains("AppStrings.trArgs(\n            '$template'"),
+        reason: 'a kiírás a fordítón megy át (angol módban is angol)',
+      );
+      expect(chat, contains('if (result.everyoneNotified > 0)'));
+      expect(chat, contains("'n': '\${result.everyoneNotified}'"));
+      expect(chat, contains("'p': '\${result.everyonePushed}'"));
+      expect(
+        dictionary,
+        contains('"$template": "Everyone was notified: {n} recipients, {p} of them via push."'),
+        reason: 'a helyőrzők a fordításban is megmaradnak',
+      );
+    });
+
+    test('a @mindenki PUSH koppintása a Chat azon üzenetére visz', () {
+      expect(
+        push,
+        contains("import '../screens/community/community_screen.dart';"),
+      );
+      expect(
+        push,
+        matches(
+          RegExp(
+            r"if \(type == 'chat_everyone' \|\| type == 'chat_mention'\)[\s\S]{0,400}?LiveFeedScreen\(focusPostId: postId\)",
+          ),
+        ),
+        reason: 'ugyanaz az út, mint a listabeli értesítésnél (odaugrás az üzenetre)',
+      );
+      expect(push, contains("message.data['postId'] ?? message.data['targetId']"));
+      expect(
+        push,
+        contains("(type == 'chat_everyone' || type == 'chat_mention') &&"),
+        reason: 'a fölértesítés is koppintható (különben némán elveszne)',
       );
     });
   });

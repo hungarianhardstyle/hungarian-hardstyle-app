@@ -214,7 +214,7 @@ class _FakeChatService extends CommunityService {
   String? lastReplyToText;
 
   @override
-  Future<int> publishPost({
+  Future<({int dropped, int everyoneNotified, int everyonePushed})> publishPost({
     required String text,
     Uint8List? imageBytes,
     bool pinned = false,
@@ -226,7 +226,7 @@ class _FakeChatService extends CommunityService {
   }) async {
     lastReplyToText = replyToText;
     lastReplyToId = replyToId;
-    return 0;
+    return (dropped: 0, everyoneNotified: 0, everyonePushed: 0);
   }
 
   @override

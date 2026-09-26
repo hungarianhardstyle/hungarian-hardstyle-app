@@ -20,6 +20,7 @@ import '../screens/news/news_detail_screen.dart';
 import '../screens/releases/release_detail_screen.dart';
 import '../screens/community/wordpress_admin_screen.dart';
 import '../screens/community/private_messages_screen.dart';
+import '../screens/community/community_screen.dart';
 import '../widgets/app_text.dart';
 import 'wordpress_service.dart';
 
@@ -195,6 +196,25 @@ class PushNotificationService {
         return;
       }
 
+      // „@mindenki" PUSH (2026-09-26): a Chat képernyőt nyitja, és **arra az
+      // üzenetre** görget, amelyikről szól — ugyanaz az út, mint a bejövő
+      // listabeli értesítésnél (`LiveFeedScreen(focusPostId: …)`). Az azonosító
+      // itt NEM szám (Firestore-azonosító), ezért külön ág kell.
+      if (type == 'chat_everyone' || type == 'chat_mention') {
+        final postId =
+            (message.data['postId'] ?? message.data['targetId'])
+                ?.toString()
+                .trim() ??
+            '';
+        if (postId.isEmpty) return;
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => LiveFeedScreen(focusPostId: postId),
+          ),
+        );
+        return;
+      }
+
       if (type == 'achievement_points' && targetUserId.isNotEmpty) {
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
@@ -308,7 +328,16 @@ class PushNotificationService {
     );
     final url =
         (message.data['url'] ?? message.data['link'])?.toString().trim() ?? '';
+    // A „@mindenki" push célpontja egy **Chat-üzenet** (nem szám azonosító):
+    // enélkül a fölértesítés nem lenne koppintható.
+    final chatPostId =
+        (message.data['postId'] ?? message.data['targetId'])
+            ?.toString()
+            .trim() ??
+        '';
     return type == 'submission' ||
+        ((type == 'chat_everyone' || type == 'chat_mention') &&
+            chatPostId.isNotEmpty) ||
         (type == 'connection_request' && senderId.isNotEmpty) ||
         (type == 'meetup_interest' && senderId.isNotEmpty) ||
         (type == 'private_message' &&

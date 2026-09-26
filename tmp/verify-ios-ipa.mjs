@@ -39,8 +39,15 @@ const read = (relative) => {
   return fs.existsSync(full) ? fs.readFileSync(full) : Buffer.alloc(0);
 };
 
+// ⚠️ MÉRT ESZKÖZ-HIBA (javítva, a 370-es körben): a Dart AOT-snapshot a
+// **csak Latin-1 karakterekből** álló szöveget **egy bájtos** alakban tárolja
+// (nem UTF-8-ként!), a `—` (U+2014) viszont két bájtos stringet kényszerít ki.
+// Ezért a „Javítva: az értesítésben a cikk …" sor keresése **hamis bukást**
+// adott (a sor benne volt, csak latin1 alakban). Mindhárom kódolást mérjük.
 const contains = (buffer, needle) =>
-  buffer.includes(Buffer.from(needle, 'utf8')) || buffer.includes(Buffer.from(needle, 'utf16le'));
+  buffer.includes(Buffer.from(needle, 'utf8'))
+  || buffer.includes(Buffer.from(needle, 'utf16le'))
+  || buffer.includes(Buffer.from(needle, 'latin1'));
 
 check('a csomag `Payload/Runner.app`-ot tartalmaz', fs.existsSync(app));
 
