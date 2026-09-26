@@ -21,6 +21,9 @@ const MUSIC = 'lib/screens/more/my_music_screen.dart';
 const USERS = 'lib/screens/more/community_users_screen.dart';
 const TEXTS = 'functions/notification-texts.js';
 
+const TEXT_TEXTS = 'lib/core/i18n/content_labels.dart';
+const NEWS_CARD = 'lib/widgets/news_card.dart';
+
 const TEST = 'test/services/html_entities_and_labels_test.dart';
 const SELECTION_TEST = 'test/services/notification_selection_plan_test.dart';
 
@@ -85,6 +88,21 @@ const mutations = [
         "      body: '+{delta} pont {reason}. Új összpontszámod: {points}.',",
         "      body: '+{delta} pont {reason}. Új összösszpontszámod: {points}.',",
       ),
+  },
+  // A tulajdonos jelzése: *„a híreknél a kategóriák is magyar"*.
+  {
+    label: 'a kategória-sor újra fordítás nélkül megy ki (nyers join)',
+    file: NEWS_CARD,
+    transform: (source) =>
+      source.replace(
+        '                    articleCategoriesLabel(context, post.articleCategories),',
+        "                    post.articleCategories.join(' · '),",
+      ),
+  },
+  {
+    label: 'a kategória-címke nem fordít (a nyers nevet adja vissza)',
+    file: TEXT_TEXTS,
+    transform: (source) => source.replace('    final label = tr(context, name);', '    final label = name;'),
   },
 ];
 

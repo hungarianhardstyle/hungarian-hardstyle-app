@@ -40,6 +40,7 @@ const appChangelog = <AppReleaseNotes>[
     version: '1.0.0',
     build: 373,
     changes: [
+      'Javítva: a hírek kategóriái (a kártyákon és a cikk fejlécében) is angolul jelennek meg angol felületen.',
       'Javítva: a DJ- és szervező-leírásban nem látszik többé a „&amp;" kódolási hiba — helyette „&" áll.',
       'Javítva: angol felületen is angolul szól az esemény ismerős-sora, az éves név-/e-mail-módosítás jelzése, a „Reklámmal feloldva" és az „Ismerősök" darabszám.',
       'Javítva: a pont-értesítés magyar szövegéből eltűnt a szóismétlés („Új összpontszámod").',

@@ -525,6 +525,13 @@
     ]
   },
   {
+    "value": "Ismerősök: {n}",
+    "count": 3,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
     "value": "Játék",
     "count": 3,
     "files": [
@@ -3433,10 +3440,24 @@
     ]
   },
   {
+    "value": "Éves e-mail-módosítási lehetőség: {n} maradt",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
     "value": "Éves HUHS szavazás",
     "count": 1,
     "files": [
       "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Éves névmódosítási lehetőség: {n} maradt",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
     ]
   },
   {
@@ -4140,6 +4161,13 @@
     ]
   },
   {
+    "value": "Ismerőseid is jönnek: {names}",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
     "value": "Ismerősjelölés elküldve.",
     "count": 1,
     "files": [
@@ -4746,6 +4774,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Közös esemény: te és {names} is ott lesztek.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
     ]
   },
   {
@@ -5856,6 +5891,13 @@
   },
   {
     "value": "reklám",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Reklámmal feloldva",
     "count": 1,
     "files": [
       "lib/screens/more/my_music_screen.dart"

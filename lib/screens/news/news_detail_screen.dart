@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/content/html_linkifier.dart';
 import '../../core/i18n/app_strings.dart';
+import '../../core/i18n/content_labels.dart';
 import '../../core/i18n/content_language_reload.dart';
 import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
@@ -159,7 +160,10 @@ class _NewsDetailScreenState extends State<NewsDetailScreen>
                           if (post.articleCategories.isNotEmpty) ...[
                             const SizedBox(height: 10),
                             Text(
-                              post.articleCategories.join(' · '),
+                              articleCategoriesLabel(
+                                context,
+                                post.articleCategories,
+                              ),
                               style: const TextStyle(
                                 color: Colors.redAccent,
                                 fontSize: 14,

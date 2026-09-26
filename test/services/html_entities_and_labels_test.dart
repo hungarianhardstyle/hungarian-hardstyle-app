@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hungarian_hardstyle_app/core/content/html_text.dart';
+import 'package:hungarian_hardstyle_app/core/i18n/app_language.dart';
+import 'package:hungarian_hardstyle_app/core/i18n/app_strings.dart';
+import 'package:hungarian_hardstyle_app/core/i18n/content_labels.dart';
 import 'package:hungarian_hardstyle_app/models/artist.dart';
 import 'package:hungarian_hardstyle_app/models/organizer.dart';
 
@@ -19,6 +23,9 @@ import 'package:hungarian_hardstyle_app/models/organizer.dart';
 ///    Ismerősök: 1"* → ezek **nyers** (interpolált) feliratok voltak, ezért
 ///    angol módban magyarul jelentek meg, és a szótár-kapu sem látta őket.
 void main() {
+  /// Forrás beolvasása EOL-egységesítve (a fájlok CRLF-esek).
+  String read(String path) =>
+      File(path).readAsStringSync().replaceAll('\r\n', '\n');
   group('HTML-entitás a DJ- és szervező-leírásban (mért hiba)', () {
     test('a DJ-életrajz entitásai feloldódnak', () {
       final artist = Artist.fromJson({
@@ -65,10 +72,91 @@ void main() {
     });
   });
 
-  group('forrás-lint: a nyers feliratok helyén kulcs + fordítás van', () {
-    String read(String path) =>
-        File(path).readAsStringSync().replaceAll('\r\n', '\n');
+  group('a cikk kategória-sora a MOSTANI nyelven (a tulajdonos jelzése)', () {
+    // *„a híreknél a kategóriák is magyar"* — a kategórianevek adatként jönnek
+    // a WordPress-ből, ezért a megjelenítésnél kell fordítani. Éles mérés
+    // (`tmp/probe-news-categories.mjs`): a 11 élő kategóriából 10-nek van
+    // fordítása, a `#TBT` eleve angol (nyelvfüggetlen).
+    testWidgets('angol módban a kategóriák is angolul szólnak', (tester) async {
+      final original = AppStrings.language;
+      final dictionary =
+          jsonDecode(File('assets/i18n/en.json').readAsStringSync())
+              as Map<String, dynamic>;
+      AppStrings.setEnglish(
+        dictionary.map((key, value) => MapEntry(key, '$value')),
+      );
+      addTearDown(() {
+        AppStrings.setLanguage(original);
+        AppStrings.setEnglish(null);
+      });
 
+      late String label;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              label = articleCategoriesLabel(context, const [
+                'Hírek',
+                'Partyajánló',
+                ' #TBT ',
+                '',
+              ]);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+      expect(label, 'Hírek · Partyajánló · #TBT', reason: 'magyarul változatlan');
+
+      AppStrings.setLanguage(AppLanguage.en);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              label = articleCategoriesLabel(context, const [
+                'Hírek',
+                'Partyajánló',
+                '#TBT',
+              ]);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+      expect(
+        label,
+        'News · Party Guide · #TBT',
+        reason: 'a kártya és a cikk-fejléc kategória-sora is fordul',
+      );
+    });
+
+    test('a kártyák és a fejléc a közös címkét használják (nem nyers join)', () {
+      for (final path in const [
+        'lib/widgets/news_card.dart',
+        'lib/widgets/featured_news_card.dart',
+        'lib/screens/news/news_detail_screen.dart',
+      ]) {
+        final source = read(path);
+        expect(
+          source,
+          contains('articleCategoriesLabel('),
+          reason: '$path: hiányzó fordítás',
+        );
+        expect(
+          source,
+          isNot(contains("articleCategories.join(' · ')")),
+          reason: '$path: nyers `join` maradt',
+        );
+        expect(
+          source,
+          contains("import '"),
+          reason: '$path: import kell',
+        );
+      }
+    });
+  });
+
+  group('forrás-lint: a nyers feliratok helyén kulcs + fordítás van', () {
     test('a jelentett helyeken nincs nyers, interpolált felirat', () {
       const expectations = <String, List<String>>{
         'lib/screens/events/event_detail_screen.dart': [

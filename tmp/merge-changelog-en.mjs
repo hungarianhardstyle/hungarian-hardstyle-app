@@ -53,18 +53,19 @@ console.log(
  * egy elcsúszott lista ugyanolyan hosszú lehet).
  */
 const anchors = [
-  [0, 'Javítva: a DJ- és szervező-leírásban', 'Fixed: the "&amp;" encoding artefact'],
-  [3, 'Javítva: nyelvváltáskor a már megnyitott cikk-', 'Fixed: when you switch language an already open article'],
-  [4, 'ÚJ: a Chat @mindenki értesítéséhez mostantól push', 'NEW: an @everyone mention in the Chat now also sends a push'],
-  [7, 'Javítva: az értesítésben a cikk (és a kiadás, esemény, DJ) címe', 'Fixed: the title of the article (and of the release, event or DJ)'],
-  [9, 'Javítva: angol felületen az értesítések szövege', 'Fixed: on the English interface notification texts'],
-  [10, 'Javítva: a privát üzenet értesítésének címe', 'Fixed: the title of a private message notification'],
-  [12, 'Javítva: angol felületen a kiadási jegyzet', 'Fixed: on the English interface the release notes'],
-  [14, 'Javítva: angol felületen a játék eredményei', 'Fixed: on the English interface the Game results'],
-  [47, 'A kvíz azonnal mutatja', 'The quiz now shows immediately'],
-  [81, 'Gyorsabb betöltés', 'Faster loading'],
-  [112, 'A hír kedveléséért járó pontot', 'The points for liking a news item'],
-  [145, 'A kérdőív szavazólapja saját képernyőn', 'The poll ballot opens on its own screen'],
+  [0, 'Javítva: a hírek kategóriái', 'Fixed: the news categories'],
+  [1, 'Javítva: a DJ- és szervező-leírásban', 'Fixed: the "&amp;" encoding artefact'],
+  [4, 'Javítva: nyelvváltáskor a már megnyitott cikk-', 'Fixed: when you switch language an already open article'],
+  [5, 'ÚJ: a Chat @mindenki értesítéséhez mostantól push', 'NEW: an @everyone mention in the Chat now also sends a push'],
+  [8, 'Javítva: az értesítésben a cikk (és a kiadás, esemény, DJ) címe', 'Fixed: the title of the article (and of the release, event or DJ)'],
+  [10, 'Javítva: angol felületen az értesítések szövege', 'Fixed: on the English interface notification texts'],
+  [11, 'Javítva: a privát üzenet értesítésének címe', 'Fixed: the title of a private message notification'],
+  [13, 'Javítva: angol felületen a kiadási jegyzet', 'Fixed: on the English interface the release notes'],
+  [15, 'Javítva: angol felületen a játék eredményei', 'Fixed: on the English interface the Game results'],
+  [48, 'A kvíz azonnal mutatja', 'The quiz now shows immediately'],
+  [82, 'Gyorsabb betöltés', 'Faster loading'],
+  [113, 'A hír kedveléséért járó pontot', 'The points for liking a news item'],
+  [146, 'A kérdőív szavazólapja saját képernyőn', 'The poll ballot opens on its own screen'],
 ];
 
 const problems = [];

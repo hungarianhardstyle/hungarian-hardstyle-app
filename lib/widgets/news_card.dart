@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/content/date_formatters.dart';
+import '../core/i18n/content_labels.dart';
 import '../models/post.dart';
 import '../screens/news/news_detail_screen.dart';
 import '../services/wordpress_service.dart';
@@ -98,7 +99,10 @@ class NewsCard extends StatelessWidget {
                         if (post.articleCategories.isNotEmpty) ...[
                           const SizedBox(height: 6),
                           Text(
-                            post.articleCategories.join(' · '),
+                            articleCategoriesLabel(
+                              context,
+                              post.articleCategories,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -203,7 +207,7 @@ class _CompactNewsCardContent extends StatelessWidget {
                 if (post.articleCategories.isNotEmpty) ...[
                   const SizedBox(height: 5),
                   Text(
-                    post.articleCategories.join(' · '),
+                    articleCategoriesLabel(context, post.articleCategories),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: Colors.redAccent, fontSize: 12),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/content/date_formatters.dart';
+import '../core/i18n/content_labels.dart';
 import '../core/i18n/tr.dart';
 import '../models/post.dart';
 import '../screens/news/news_detail_screen.dart';
@@ -123,7 +124,10 @@ class FeaturedNewsCard extends StatelessWidget {
                     if (post.articleCategories.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
-                        post.articleCategories.join(' · '),
+                        articleCategoriesLabel(
+                          context,
+                          post.articleCategories,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
