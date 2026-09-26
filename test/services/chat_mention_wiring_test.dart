@@ -400,13 +400,11 @@ void main() {
   // visszajelzést nem kapott. A döntése: a @mindenki kapjon push-t. Ez a csoport
   // a **kliens** oldalát őrzi: a visszajelzést és a push koppintás-útvonalát.
   group('forrás-lint: a @mindenki visszajelzése és a push-útvonala', () {
-    late String service;
     late String chat;
     late String push;
     late String dictionary;
 
     setUpAll(() {
-      service = readFile('lib/services/community_service.dart');
       chat = readFile('lib/screens/community/community_screen.dart');
       push = readFile('lib/services/push_notification_service.dart');
       dictionary = readFile('assets/i18n/en.json');
