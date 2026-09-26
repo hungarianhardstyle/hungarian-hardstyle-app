@@ -294,11 +294,33 @@ class WordpressService {
             : _decodePossiblyPrefixedJson(response.data ?? ''),
       );
     },
-    onUpdated: () => publicContentRefreshGeneration.value++,
+    onUpdated: _onHeadContentUpdated,
   );
 
   static final ValueNotifier<int> publicContentRefreshGeneration =
       ValueNotifier<int>(0);
+
+  /// A rétegzett cache jelzése: **valóban megváltozott** a szerver tartalma.
+  ///
+  /// ⚠️ **MÉRT OK, MIÉRT NEM ELÉG A JELZÉS (2026-09-26):** a head-cache a
+  /// mentett választ **feldolgozva** is gyorsítótárazza (`_postsCache`, 30 s),
+  /// ezért a jelzés utáni újraolvasás a **régi** listát adta vissza — a friss
+  /// tartalom csak egy MÁSODIK jelzésre jelent meg (mért kétkörös késés: a
+  /// felhasználó a lehúzásig a régi listát látta). Ezért a jelzés előtt a
+  /// feldolgozott másolatokat eldobjuk: így a következő olvasás a **friss**
+  /// head-cache bejegyzést dolgozza fel, hálózat nélkül (a `_get` a mentés
+  /// UTÁN hívja ezt a visszahívást).
+  void _onHeadContentUpdated() {
+    _postsCache.clear();
+    _releasesCache.clear();
+    _eventsCache.clear();
+    _faqCache.clear();
+    _artistsCache.clear();
+    _organizersCache.clear();
+    _activeGameCache.clear();
+    _latestGameResultsCache.clear();
+    publicContentRefreshGeneration.value++;
+  }
 
   Future<Object?> _getHeadCached(
     String path, {
@@ -772,6 +794,51 @@ class WordpressService {
     // new or withdrawn articles are not hidden indefinitely.
     final page = await getPosts();
     return page.items;
+  }
+
+  /// A főoldali hírlista **csendes** újraegyeztetése (a `getLatestPosts` útja).
+  Future<void> revalidateLatestPosts() => revalidatePosts();
+
+  /// Egy hírlista-lekérdezés csendes újraegyeztetése ETag-gal (HEAD, majd csak
+  /// változáskor GET).
+  ///
+  /// ⚠️ **MÉRT OK (2026-09-26, éles szonda — `tmp/probe-news-freshness.mjs`):**
+  /// a szerver a publikáláskor **azonnal** érvényteleníti a saját cache-ét, a
+  /// válasz stabil ETag-ot ad, a kondicionális HEAD pedig **304**-et (mért:
+  /// 399 ms, 0 bájt). A késés tehát **nem** a szerveren volt: az app a nyitott
+  /// főoldalon/hírek fülön **egyáltalán nem kérdezte meg** a szervert, ezért az
+  /// új cikk csak lehúzásra (vagy újraindításra) jelent meg. Ez az út percenként
+  /// egy kicsi (304-es) kérést indít, és **nem** ír a képernyőre: a friss test
+  /// megérkezésekor a [publicContentRefreshGeneration] értesíti a felületeket.
+  ///
+  /// A [forceRefresh] szándékos: csak a kényszerített út adja a szerver
+  /// **aktuális** állapotát (a megjelenítési út a mentett példányt szolgálja ki,
+  /// és a háttérben egyeztet).
+  Future<void> revalidatePosts({
+    int page = 1,
+    int perPage = 10,
+    String search = '',
+    int categoryId = 0,
+    bool? sticky,
+  }) async {
+    final normalizedSearch = search.trim();
+    final hasSearch = normalizedSearch.isNotEmpty;
+    try {
+      await _getHeadCached(
+        '/posts',
+        queryParameters: {
+          'page': page,
+          'per_page': hasSearch ? 100 : perPage,
+          'summary': !hasSearch,
+          if (hasSearch) 'search': normalizedSearch,
+          if (categoryId > 0) 'category': categoryId,
+          if (sticky != null) 'sticky': sticky ? 1 : 0,
+        },
+        forceRefresh: true,
+      );
+    } catch (_) {
+      // A csendes egyeztetés hibája nem érintheti a képernyőn lévő listát.
+    }
   }
 
   /// Sticky posts for the "Kiemelt" row of the news screen.

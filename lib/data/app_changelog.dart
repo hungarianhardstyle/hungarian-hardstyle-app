@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 365,
+    changes: [
+      'ÚJ: a főoldal és a Hírek fül listája magától frissül — ha új cikk kerül fel, az legfeljebb egy percen belül megjelenik, lehúzás nélkül; amikor az app előtérbe kerül (például egy értesítésre nyitod meg), azonnal ellenőrizzük.',
+      'Angol felületen a „Bulizó" szerepkör felirata mostantól „Partyface".',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 364,
     changes: [
       'Az értesítések is a választott nyelven jönnek: a Chat-lájk, a válasz, a megemlítés, a hozzászólás, az esemény-értékelés, az új tartalom, a nyeremény és az ismerősnek jelölés szövege is angolul jelenik meg, ha angolra váltottál.',

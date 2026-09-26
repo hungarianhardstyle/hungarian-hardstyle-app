@@ -292,6 +292,15 @@ function get_posts($args = array())
     return $out;
 }
 
+/**
+ * A `meta_query` kiértékelése a stubban.
+ *
+ * ⚠️ HŰEN kell utánoznia a WordPress viselkedését, különben a mérés hamis:
+ *  - `NOT EXISTS` → LEFT JOIN, a hiányzó meta is illeszkedik;
+ *  - minden más összehasonlítás → INNER JOIN, tehát **hiányzó metára hamis**
+ *    (ezért kell a verzió-kapunál a külön `NOT EXISTS` ág);
+ *  - `<` / `>` `type => NUMERIC` esetén számként hasonlít.
+ */
 function stub_meta_query_matches($postId, $metaQuery)
 {
     if (empty($metaQuery)) {
@@ -307,11 +316,27 @@ function stub_meta_query_matches($postId, $metaQuery)
         }
         $value = $GLOBALS['STATE']['meta'][$postId][$clause['key']] ?? null;
         $compare = strtoupper((string) ($clause['compare'] ?? '='));
+        $target = (string) ($clause['value'] ?? '');
         if ($compare === 'NOT EXISTS') {
             $results[] = $value === null;
             continue;
         }
-        $results[] = (string) $value === (string) ($clause['value'] ?? '');
+        // INNER JOIN: hiányzó metával egyetlen összehasonlítás sem igaz.
+        if ($value === null) {
+            $results[] = false;
+            continue;
+        }
+        if ($compare === '<' || $compare === '>') {
+            $left = (float) $value;
+            $right = (float) $target;
+            $results[] = $compare === '<' ? $left < $right : $left > $right;
+            continue;
+        }
+        if ($compare === '!=') {
+            $results[] = (string) $value !== $target;
+            continue;
+        }
+        $results[] = (string) $value === $target;
     }
 
     if (empty($results)) {
@@ -1612,6 +1637,207 @@ check(
     get_post_meta(82, '_huhs_content_en', true) === "Első sor\nMásodik sor: \"idézet\" és C:\\\\path"
         && get_post_meta(82, '_huhs_title_en', true) === 'English event',
     json_encode(get_post_meta(82, '_huhs_content_en', true))
+);
+
+/* ---- 18) A séma-verzió kapuja ELÉRHETŐ + kényszerített javítás (2.14.4) - */
+
+/*
+ * ⚠️ MÉRT ÉLES HIBA (2026-09-26, a 2.14.3 feltöltése UTÁN): a tulajdonos
+ * képernyőképén a nyeremény leírásában **továbbra is `rnrn`** állt, és a
+ * `translations/status` a nyereményre **0 várólistást** mutatott.
+ *
+ * A gyökér: a pótló kör SQL-előszűrője (`huhs_translation_pending_posts()`)
+ * csak a **hiányzó/üres** fordításra szűrt, a séma-verzió kapuja viszont pont a
+ * **meglévő, de régi sémával mentett** fordításokat akarja újragenerálni — így a
+ * kapu **elérhetetlen** volt: a kör 0 elemet vizsgált, és a roncsolt szöveg
+ * (forrás-ujjlenyomat változatlan) örökre benne maradt volna.
+ *
+ * Ez a szakasz **viselkedésmérést** ad: a stub `meta_query`-je hűen utánozza a
+ * WordPress join-viselkedését (NOT EXISTS = LEFT JOIN, minden más = INNER JOIN),
+ * ezért a mérés megkülönbözteti a javított és a hibás változatot.
+ */
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+
+// (a) RÉGI séma: van tárolt fordítás, de nincs verziójelölő (2.14.2 és előtte).
+$GLOBALS['STATE']['posts'][91] = new WP_Post(array(
+    'ID' => 91, 'post_type' => 'huhs_prize', 'post_title' => 'Nyeremény',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][91] = array(
+    '_huhs_prize_question' => 'Mi a neve?',
+    '_huhs_prize_answers' => wp_json_encode(array('Béla', 'Anna')),
+    '_huhs_prize_type' => 'Páros belépő',
+    '_huhs_prize_description' => "Első sor!\r\n\r\nMásodik sor.",
+);
+// ⚠️ A RONCSOLT tárolt érték előállítása: ezt tette a 2.14.2-es író, mert az
+// `update_metadata()` unslash-elt (a `\r\n` → `rn`, a `\u00e9` → `u00e9`).
+$damagedStored = str_replace(
+    '\\',
+    '',
+    wp_json_encode(array(
+        '_huhs_prize_question' => 'What is his name?',
+        '_huhs_prize_answers' => array('Béla', 'Anna'),
+        '_huhs_prize_type' => 'Couple entry',
+        '_huhs_prize_description' => "First line!\r\n\r\nSecond line — with Béla.",
+    ))
+);
+update_post_meta(91, HUHS_TRANSLATION_FIELDS_META, $damagedStored);
+update_post_meta(
+    91,
+    HUHS_TRANSLATION_FIELDS_HASH_META,
+    huhs_translation_fields_source_hash(91)
+);
+check(
+    'a roncsolt tárolt fordítás ELŐÁLL (a mért éles hiba reprodukálva)',
+    strpos((string) huhs_translation_text(91, 'en', '_huhs_prize_description', ''), 'rnrn') !== false,
+    json_encode(huhs_translation_text(91, 'en', '_huhs_prize_description', ''))
+);
+check(
+    'a verziójelölő nélküli (régi sémás) elem NEM naprakész',
+    huhs_translation_fields_current(91) === false
+);
+$legacyQueue = huhs_translation_pending_posts('huhs_prize', 5);
+$legacyIds = array_map(function ($post) {
+    return (int) $post->ID;
+}, $legacyQueue);
+check(
+    // ⚠️ EZ a mért hiba lényege: a kapu csak akkor ér valamit, ha az elem
+    // egyáltalán bekerül a vizsgálandó listába.
+    'a régi sémás elem BEMATEMATIKA a várólistába (a verzió-kapu elérhető)',
+    in_array(91, $legacyIds, true),
+    json_encode($legacyIds)
+);
+
+// (b) Még régebbi verzió-szám (egy későbbi verzió-emelés esete).
+update_post_meta(91, HUHS_TRANSLATION_FIELDS_VERSION_META, (string) (HUHS_TRANSLATION_FIELDS_VERSION - 1));
+check(
+    'a KORÁBBI verziószámmal írt elem is bekerül (a kapu később is működik)',
+    in_array(91, array_map(function ($post) {
+        return (int) $post->ID;
+    }, huhs_translation_pending_posts('huhs_prize', 5)), true)
+);
+
+// (c) Ellenpróba: a NAPRAKÉSZ elem nem kerül a várólistába (nincs hamis kör).
+update_post_meta(91, HUHS_TRANSLATION_FIELDS_VERSION_META, HUHS_TRANSLATION_FIELDS_VERSION);
+check(
+    'a naprakész elem NEM kerül a várólistába (nincs felesleges API-hívás)',
+    !in_array(91, array_map(function ($post) {
+        return (int) $post->ID;
+    }, huhs_translation_pending_posts('huhs_prize', 5)), true)
+);
+
+// (d) A kényszerített javítás (`force`): a tárolt fordítás nem dönt, mert épp
+// azt akarjuk lecserélni — így javul a roncsolt szöveg.
+//
+// ⚠️ A mérés csak akkor ér valamit, ha az elem **naprakésznek LÁTSZIK** (ez volt
+// az éles helyzet): verziójelölő a jelenlegi értékkel + egyező forrás-ujjlenyomat,
+// de a tárolt szöveg roncsolt. Enélkül a `force` shortcutja nem is látszana.
+update_post_meta(91, HUHS_TRANSLATION_FIELDS_META, $damagedStored);
+update_post_meta(91, HUHS_TRANSLATION_FIELDS_VERSION_META, HUHS_TRANSLATION_FIELDS_VERSION);
+update_post_meta(
+    91,
+    HUHS_TRANSLATION_FIELDS_HASH_META,
+    huhs_translation_fields_source_hash(91)
+);
+check(
+    'a roncsolt szöveg naprakésznek LÁTSZIK (ez volt az éles helyzet)',
+    huhs_translation_fields_current(91) === true
+        && strpos((string) huhs_translation_text(91, 'en', '_huhs_prize_description', ''), 'rnrn') !== false
+);
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'fields' => array(
+        '_huhs_prize_question' => 'What is his name?',
+        '_huhs_prize_answers' => array('Béla', 'Anna'),
+        '_huhs_prize_type' => 'Couple entry',
+        '_huhs_prize_description' => "First line!\r\n\r\nSecond line — with Béla.",
+    ),
+));
+check(
+    'kényszerítés NÉLKÜL nem indul felesleges hívás (a naprakész elem marad)',
+    huhs_run_translation(91) === 'uptodate'
+        && strpos((string) huhs_translation_text(91, 'en', '_huhs_prize_description', ''), 'rnrn') !== false
+);
+$forcedQueue = array_map(function ($post) {
+    return (int) $post->ID;
+}, huhs_translation_pending_posts('huhs_prize', 5, true));
+check(
+    'a kényszerített út a naprakésznek látszó elemet is kiválasztja',
+    in_array(91, $forcedQueue, true),
+    json_encode($forcedQueue)
+);
+$forcedStatus = huhs_run_translation(91, true);
+check(
+    'a kényszerített futás lecseréli a roncsolt szöveget (valódi sortörés, ékezet)',
+    $forcedStatus === 'translated'
+        && huhs_translation_text(91, 'en', '_huhs_prize_description', '') === "First line!\r\n\r\nSecond line — with Béla."
+        && strpos((string) huhs_translation_text(91, 'en', '_huhs_prize_description', ''), 'rnrn') === false,
+    $forcedStatus . ' / ' . json_encode(huhs_translation_text(91, 'en', '_huhs_prize_description', ''))
+);
+
+// (d2) Ugyanez a PÓTLÓ KÖR valódi útján: a `force` a végponttól a fordításig
+// végig kell hogy érjen (különben a javítás csak kézi hívással működne).
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'fields' => array(
+        '_huhs_prize_question' => 'What is his name?',
+        '_huhs_prize_answers' => array('Béla', 'Anna'),
+        '_huhs_prize_type' => 'Couple entry',
+        '_huhs_prize_description' => "First line!\r\n\r\nSecond line — with Béla.",
+    ),
+));
+$GLOBALS['STATE']['http'][] = array('url' => 'https://api.openai.com/v1/chat/completions');
+$sweepForced = huhs_translation_sweep(array(
+    'type' => 'huhs_prize',
+    'limit' => 1,
+    'budget' => 5,
+    'force' => true,
+));
+check(
+    // ⚠️ Ez a mérés a `force` ÁTVITELÉT fogja meg: a pótló kör a saját útján
+    // hívja a fordítót, ezért a paraméter elvétele itt azonnal látszik.
+    'a pótló kör `force` útja is lecseréli a roncsolt szöveget',
+    ($sweepForced['translated'] ?? 0) >= 1
+        && strpos((string) huhs_translation_text(91, 'en', '_huhs_prize_description', ''), 'rnrn') === false,
+    json_encode(array('translated' => $sweepForced['translated'] ?? null))
+);
+
+// (e) A cím/törzs ág kényszerített újragenerálása (a sérült esemény-leírás útja).
+reset_state(array('huhs_openai_api_key' => 'sk-legacy-option'));
+$GLOBALS['STATE']['posts'][92] = new WP_Post(array(
+    'ID' => 92, 'post_type' => 'huhs_event', 'post_title' => 'Esemény',
+    'post_content' => 'Magyar leírás', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][92] = array(
+    '_huhs_content_en' => "Damaged<p>rn</p>text",
+    '_huhs_title_en' => 'Event',
+);
+$GLOBALS['STATE']['meta'][92]['_huhs_translation_hash'] = huhs_translation_source_hash(
+    $GLOBALS['STATE']['posts'][92]
+);
+check(
+    'a naprakész cím/törzs fordfítás a kényszerített úton mégis kiválasztódik',
+    in_array(92, array_map(function ($post) {
+        return (int) $post->ID;
+    }, huhs_translation_pending_posts('huhs_event', 5, true)), true)
+);
+$GLOBALS['STATE']['response'] = provider_response(array(
+    'title' => 'Event',
+    'content' => "<p>Real paragraph</p>\r\n<p>Second</p>",
+    'excerpt' => 'Short',
+));
+$forcedContentStatus = huhs_run_translation(92, true);
+check(
+    'a kényszerített futás a cím/törzs ágat is újraírja (a `rn` eltűnik)',
+    $forcedContentStatus === 'translated'
+        && get_post_meta(92, '_huhs_content_en', true) === "<p>Real paragraph</p>\r\n<p>Second</p>",
+    $forcedContentStatus . ' / ' . json_encode(get_post_meta(92, '_huhs_content_en', true))
+);
+check(
+    'a „van fordítható forrás" döntés helyes (üres elemre hamis)',
+    huhs_translation_post_has_source($GLOBALS['STATE']['posts'][92]) === true
+        && huhs_translation_post_has_source(new WP_Post(array(
+            'ID' => 93, 'post_type' => 'huhs_event', 'post_title' => 'Üres',
+            'post_content' => '', 'post_status' => 'publish',
+        ))) === false
 );
 
 echo "\n{$checks} ellenőrzés, {$failures} hiba\n";

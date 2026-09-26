@@ -71,10 +71,52 @@ class PublicContentRefreshMirror extends ValueNotifier<int> {
 
 // Home news must be recreated after leaving the screen so a withdrawn/draft
 // post cannot remain in the long-lived provider state.
+/// A hírlisták csendes újraegyeztetésének üteme.
+///
+/// ⚠️ **MÉRT OK (2026-09-26, éles szonda + a `tesztek`):** a szerver a
+/// publikáláskor azonnal érvényteleníti a cache-ét, és a kondicionális HEAD-re
+/// **304**-et ad (mért: 399 ms, 0 bájt) — a késés az app oldalán volt, mert a
+/// nyitott főoldal/hírek fül **egyáltalán nem** kérdezte meg a szervert. Ez az
+/// ütem egy kicsi ETag-egyeztetést indít, és nem ír a képernyőre (a friss test
+/// megérkezésekor a jelzés frissíti a felületet), ezért a lapozás és a
+/// kirajzolás közben nem történik semmi látható.
+const Duration newsRevalidateInterval = Duration(seconds: 60);
+
+/// A hírlista csendes egyeztetője.
+///
+/// Szándékosan **provider**: a viselkedés így hálózat nélkül, időzítő-vezérelten
+/// mérhető (lásd `test/services/news_freshness_test.dart`).
+final newsRevalidateProvider = Provider<Future<void> Function()>((ref) {
+  final service = ref.watch(wordpressServiceProvider);
+  return service.revalidateLatestPosts;
+});
+
+/// A főoldali hírlista betöltője.
+///
+/// Ugyanaz a mérési ok, mint a [newsRevalidateProvider]-nél: a szolgáltatás
+/// egyke (`WordpressService()`), ezért a betöltést provideren át adjuk tovább —
+/// így a frissességi viselkedés hálózat nélkül mérhető.
+final latestPostsProvider = Provider<Future<List<Post>> Function()>((ref) {
+  return ref.watch(wordpressServiceProvider).getLatestPosts;
+});
+
+/// Elindítja a csendes egyeztetést a felület élettartamára, és a provider
+/// eldobásakor le is állítja (nem marad életben időzítő a lebontott képernyő
+/// után).
+Timer startNewsRevalidation(
+  Ref ref,
+  Future<void> Function() revalidate, {
+  Duration interval = newsRevalidateInterval,
+}) {
+  final timer = Timer.periodic(interval, (_) => unawaited(revalidate()));
+  ref.onDispose(timer.cancel);
+  return timer;
+}
+
 final newsProvider = FutureProvider.autoDispose<List<Post>>((ref) async {
   ref.watch(publicContentRefreshProvider);
-  final service = ref.watch(wordpressServiceProvider);
-  return service.getLatestPosts();
+  startNewsRevalidation(ref, ref.watch(newsRevalidateProvider));
+  return ref.watch(latestPostsProvider)();
 });
 
 final stickyNewsProvider = FutureProvider.autoDispose<List<Post>>((ref) async {
@@ -154,10 +196,16 @@ typedef NewsPageLoader =
 
 typedef NewsCategoriesLoader = Future<List<NewsCategory>> Function();
 
+/// A hírek fül csendes újraegyeztetése: a **jelenlegi** szűrőre kér egy
+/// ETag-egyeztetést (nem ír a listára, csak jelzést ad, ha változott).
+typedef NewsRevalidate =
+    Future<void> Function({required String search, required int categoryId});
+
 class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
   PaginatedNewsNotifier({
     required this.loadPage,
     required this.loadCategories,
+    this.revalidate,
     Listenable? contentUpdates,
   }) : // A privát mezőhöz nem lehet `this._x` nevű NÉVES paramétert adni, ezért
        // szándékos a kézi hozzárendelés (ugyanaz a minta, mint a
@@ -168,12 +216,21 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
     _contentUpdates?.addListener(_onContentUpdated);
     _loadCategories();
     _loadFirstPage();
+    _revalidateTimer = Timer.periodic(
+      newsRevalidateInterval,
+      (_) => unawaited(_revalidateSilently()),
+    );
   }
 
   static const int perPage = 10;
 
   final NewsPageLoader loadPage;
   final NewsCategoriesLoader loadCategories;
+
+  /// A csendes (ETag/HEAD) egyeztetés útja. Ha nincs megadva, nem indul.
+  final NewsRevalidate? revalidate;
+
+  Timer? _revalidateTimer;
 
   /// A WordPress-gyorsítótár jelzése, amikor a **háttérben** beérkezett egy új
   /// test (ETag-változás). Ezen keresztül frissül a lista anélkül, hogy a
@@ -183,8 +240,23 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
 
   @override
   void dispose() {
+    _revalidateTimer?.cancel();
     _contentUpdates?.removeListener(_onContentUpdated);
     super.dispose();
+  }
+
+  /// Csendes egyeztetés a jelenlegi szűrőre (lásd [newsRevalidateInterval]).
+  Future<void> _revalidateSilently() async {
+    final revalidate = this.revalidate;
+    if (revalidate == null) return;
+    try {
+      await revalidate(
+        search: state.search,
+        categoryId: state.selectedCategoryId,
+      );
+    } catch (_) {
+      // A csendes egyeztetés hibája nem érintheti a képernyőn lévő listát.
+    }
   }
 
   Future<void> _loadCategories() async {
@@ -262,7 +334,12 @@ class PaginatedNewsNotifier extends StateNotifier<PaginatedNewsState> {
 
   Future<void> _applyBackgroundUpdate() async {
     try {
-      final cached = await _getPostsPage(page: 1);
+      // ⚠️ MÉRT OK (2026-09-26): a jelzés után a listát **kényszerített** úton
+      // olvassuk vissza. A megjelenítési út ugyanis a mentett (régi) példányt
+      // adná vissza, és a friss cikk csak egy MÁSODIK jelzésre jelent volna meg
+      // — a felhasználó a lehúzásig a régi listát látta (ezt a
+      // `test/services/news_freshness_test.dart` méri).
+      final cached = await _getPostsPage(page: 1, forceRefresh: true);
       if (!mounted || cached.items.isEmpty) return;
       if (_sameIds(cached.items, state.posts)) return;
       state = state.copyWith(
@@ -372,6 +449,15 @@ final paginatedNewsProvider =
         // a továbblapozott listát dobná el.
         contentUpdates: ref.read(publicContentRefreshProvider),
         loadCategories: service.getCategories,
+        // A csendes egyeztetés ugyanazt a lekérdezést egyezteti, amit a fül
+        // mutat (a keresés és a kategória a hívás pillanatában érvényes).
+        revalidate:
+            ({required String search, required int categoryId}) =>
+                service.revalidatePosts(
+                  search: search,
+                  categoryId: categoryId,
+                  sticky: false,
+                ),
         loadPage:
             ({
               required int page,

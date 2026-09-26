@@ -126,8 +126,7 @@ void main() {
     }
   });
 
-  test('FORRÁS-LINT: a megjelenítési helyek tényleg fordítanak', () {
-    final newsScreen = File('lib/screens/news/news_screen.dart').readAsStringSync();
+  test('FORRÁS-LINT: a megjelenítési helyek tényleg fordítanak', () {    final newsScreen = File('lib/screens/news/news_screen.dart').readAsStringSync();
     final detailScreen = File('lib/screens/news/news_detail_screen.dart').readAsStringSync();
     final taggedScreen = File('lib/screens/news/tagged_news_screen.dart').readAsStringSync();
 
@@ -146,5 +145,20 @@ void main() {
       isTrue,
       reason: 'a címke-oldal címe a szótárból fordul',
     );
+  });
+
+  test('a „Bulizó" szerepkör angolul „Partyface" (a tulajdonos kérése)', () {
+    // ⚠️ A belső szerepkör-**érték** (`partygoer`) adat (Firestore, rules, API):
+    // az NEM változik. Csak a megjelenített felirat fordítása ez.
+    expect(
+      dictionary['Bulizó'],
+      'Partyface',
+      reason: 'a szerepkör-felirat angolul Partyface (nem Partygoer)',
+    );
+    AppStrings.setEnglish(
+      dictionary.map((key, value) => MapEntry(key, '$value')),
+    );
+    AppStrings.setLanguage(AppLanguage.en);
+    expect(AppStrings.tr('Bulizó'), 'Partyface');
   });
 }

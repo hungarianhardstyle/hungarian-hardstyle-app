@@ -1,0 +1,6540 @@
+[
+  {
+    "value": "Mégse",
+    "count": 27,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/main_navigation.dart",
+      "lib/screens/more/community_users_screen.dart",
+      "lib/screens/more/favorites_screen.dart",
+      "lib/screens/more/settings_screen.dart",
+      "lib/screens/notifications/notification_center_screen.dart",
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Újrapróbálás",
+    "count": 15,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart",
+      "lib/screens/artists/artists_screen.dart",
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/events/events_screen.dart",
+      "lib/screens/games/game_screen.dart",
+      "lib/screens/home/home_screen.dart",
+      "lib/screens/more/achievement_leaderboard_screen.dart",
+      "lib/screens/more/faq_screen.dart",
+      "lib/screens/more/referral_screen.dart",
+      "lib/screens/news/news_screen.dart",
+      "lib/screens/organizers/organizer_detail_screen.dart",
+      "lib/screens/organizers/organizers_screen.dart",
+      "lib/screens/releases/release_detail_screen.dart",
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Mentés",
+    "count": 13,
+    "files": [
+      "lib/screens/artists/artist_edit_screen.dart",
+      "lib/screens/community/admin_resource_editor_screen.dart",
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Szervező",
+    "count": 12,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/events/event_submission_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Törlés",
+    "count": 12,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/more/favorites_screen.dart",
+      "lib/screens/more/my_music_screen.dart",
+      "lib/screens/notifications/notification_center_screen.dart",
+      "lib/widgets/article_comments.dart",
+      "lib/widgets/submission_image_picker.dart"
+    ]
+  },
+  {
+    "value": "Bulizó",
+    "count": 11,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Facebook",
+    "count": 9,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart",
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/events/event_detail_screen.dart",
+      "lib/screens/more/social_contact_screen.dart",
+      "lib/screens/organizers/organizer_detail_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "HUHS user",
+    "count": 9,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/events/event_meetup_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Instagram",
+    "count": 8,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart",
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/social_contact_screen.dart",
+      "lib/screens/organizers/organizer_detail_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart",
+      "lib/widgets/post_embed_card.dart"
+    ]
+  },
+  {
+    "value": "Bemutatkozás",
+    "count": 7,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart",
+      "lib/screens/artists/artist_edit_screen.dart",
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/organizers/organizer_detail_screen.dart",
+      "lib/screens/submissions/artist_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart",
+      "lib/widgets/community_profile_form_fields.dart"
+    ]
+  },
+  {
+    "value": "Bezárás",
+    "count": 7,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/voting/voting_screen.dart",
+      "lib/services/push_notification_service.dart",
+      "lib/widgets/startup_gate.dart"
+    ]
+  },
+  {
+    "value": "Események",
+    "count": 7,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/events/events_screen.dart",
+      "lib/screens/genres/genre_discovery_screen.dart",
+      "lib/screens/main_navigation.dart"
+    ]
+  },
+  {
+    "value": "Nincs találat.",
+    "count": 7,
+    "files": [
+      "lib/screens/artists/artists_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/genres/genre_discovery_screen.dart",
+      "lib/screens/more/community_users_screen.dart",
+      "lib/screens/more/faq_screen.dart",
+      "lib/screens/news/news_screen.dart",
+      "lib/screens/organizers/organizers_screen.dart"
+    ]
+  },
+  {
+    "value": "Spotify",
+    "count": 7,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart",
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/spotify_playlists_screen.dart",
+      "lib/screens/releases/release_detail_screen.dart",
+      "lib/screens/voting/voting_screen.dart",
+      "lib/widgets/post_embed_card.dart"
+    ]
+  },
+  {
+    "value": "Weboldal",
+    "count": 6,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/more/about_screen.dart",
+      "lib/screens/more/social_contact_screen.dart",
+      "lib/screens/organizers/organizer_detail_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Admin",
+    "count": 5,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény",
+    "count": 5,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Feloldás",
+    "count": 5,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart",
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Szerepkör",
+    "count": 5,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Szerkesztés",
+    "count": 5,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "+10 pont",
+    "count": 4,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Beszélgetés törlése",
+    "count": 4,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Felhasználó",
+    "count": 4,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Frissítés",
+    "count": 4,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart",
+      "lib/screens/main_navigation.dart",
+      "lib/screens/poll/poll_results_screen.dart",
+      "lib/screens/voting/voting_summary_screen.dart"
+    ]
+  },
+  {
+    "value": "Hírek",
+    "count": 4,
+    "files": [
+      "lib/screens/genres/genre_discovery_screen.dart",
+      "lib/screens/main_navigation.dart",
+      "lib/screens/news/news_screen.dart"
+    ]
+  },
+  {
+    "value": "Hungarian Hardstyle",
+    "count": 4,
+    "files": [
+      "lib/main.dart",
+      "lib/screens/more/about_screen.dart",
+      "lib/screens/more/social_contact_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerősök",
+    "count": 4,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Kedvencek",
+    "count": 4,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart",
+      "lib/screens/more/favorites_screen.dart"
+    ]
+  },
+  {
+    "value": "Kérdőív",
+    "count": 4,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/poll/poll_results_screen.dart",
+      "lib/screens/poll/poll_screen.dart"
+    ]
+  },
+  {
+    "value": "lezárult",
+    "count": 4,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart",
+      "lib/screens/poll/poll_results_screen.dart"
+    ]
+  },
+  {
+    "value": "Megjelenítés",
+    "count": 4,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Privát üzenetek",
+    "count": 4,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Profil",
+    "count": 4,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Regisztráció szükséges.",
+    "count": 4,
+    "files": [
+      "lib/screens/events/event_meetup_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Szervező beküldése",
+    "count": 4,
+    "files": [
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Szervezők",
+    "count": 4,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/organizers/organizers_screen.dart"
+    ]
+  },
+  {
+    "value": "Tartalom",
+    "count": 4,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Üzenet törlése",
+    "count": 4,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "A kép legfeljebb 5 MB lehet.",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/widgets/submission_image_picker.dart"
+    ]
+  },
+  {
+    "value": "Beállítások",
+    "count": 3,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Beküldés sikeres",
+    "count": 3,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart",
+      "lib/screens/submissions/artist_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Blokkolt felhasználók",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Chat",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/main_navigation.dart"
+    ]
+  },
+  {
+    "value": "Cím",
+    "count": 3,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "DJ beküldése",
+    "count": 3,
+    "files": [
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Eredmények megtekintése",
+    "count": 3,
+    "files": [
+      "lib/screens/home/home_screen.dart",
+      "lib/screens/poll/poll_screen.dart",
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Értesítések",
+    "count": 3,
+    "files": [
+      "lib/screens/home/home_screen.dart",
+      "lib/screens/more/settings_screen.dart",
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Felhasználó blokkolása",
+    "count": 3,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Felhasználó keresése",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Felhasználó törlése",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Hírlevél",
+    "count": 3,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/more/community_users_screen.dart",
+      "lib/screens/more/newsletter_screen.dart"
+    ]
+  },
+  {
+    "value": "Igen",
+    "count": 3,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Közelgő események",
+    "count": 3,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart",
+      "lib/screens/home/home_screen.dart",
+      "lib/screens/organizers/organizer_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Közösség",
+    "count": 3,
+    "files": [
+      "lib/screens/home/home_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Közösségi adminisztráció",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Küldés",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Lejátszás",
+    "count": 3,
+    "files": [
+      "lib/screens/more/my_music_screen.dart",
+      "lib/widgets/radio_player_bar.dart"
+    ]
+  },
+  {
+    "value": "Lomtár",
+    "count": 3,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "még nem indult",
+    "count": 3,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart",
+      "lib/screens/poll/poll_results_screen.dart"
+    ]
+  },
+  {
+    "value": "Megvásárolt zenéim",
+    "count": 3,
+    "files": [
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Mindenki",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Moderátor",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Műfajok *",
+    "count": 3,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart",
+      "lib/screens/submissions/artist_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Nyereményjáték",
+    "count": 3,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/prize/prize_screen.dart"
+    ]
+  },
+  {
+    "value": "Összes",
+    "count": 3,
+    "files": [
+      "lib/screens/artists/artists_screen.dart",
+      "lib/screens/more/faq_screen.dart",
+      "lib/screens/news/news_screen.dart"
+    ]
+  },
+  {
+    "value": "Profil törlése",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Rendben",
+    "count": 3,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart",
+      "lib/screens/submissions/artist_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Szervezői adatlap",
+    "count": 3,
+    "files": [
+      "lib/screens/organizers/organizer_detail_screen.dart",
+      "lib/screens/organizers/organizers_screen.dart"
+    ]
+  },
+  {
+    "value": "Több",
+    "count": 3,
+    "files": [
+      "lib/screens/main_navigation.dart",
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Üzenet szerkesztése",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Válasz",
+    "count": 3,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "{n} pont",
+    "count": 2,
+    "files": [
+      "lib/screens/more/achievement_leaderboard_screen.dart",
+      "lib/widgets/achievement_badge_card.dart"
+    ]
+  },
+  {
+    "value": "6 számjegyű kód",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "A felhasználók nem tölthetők be.",
+    "count": 2,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "A fiókodat törölték. Kijelentkeztettünk.",
+    "count": 2,
+    "files": [
+      "lib/main.dart"
+    ]
+  },
+  {
+    "value": "A közösség tagja",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "A művelet nem sikerült.",
+    "count": 2,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Adatlap szerkesztése",
+    "count": 2,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart",
+      "lib/screens/artists/artist_edit_screen.dart"
+    ]
+  },
+  {
+    "value": "Adatvédelem és GDPR",
+    "count": 2,
+    "files": [
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
+    "value": "Ajánlás",
+    "count": 2,
+    "files": [
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/more/referral_screen.dart"
+    ]
+  },
+  {
+    "value": "Alkalmazás",
+    "count": 2,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Az appról",
+    "count": 2,
+    "files": [
+      "lib/screens/more/about_screen.dart",
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Az e-mail-címed megerősítve.",
+    "count": 2,
+    "files": [
+      "lib/main.dart",
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Az esemény már nem érhető el.",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/favorites_screen.dart"
+    ]
+  },
+  {
+    "value": "Beküldés",
+    "count": 2,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Betöltés",
+    "count": 2,
+    "files": [
+      "lib/widgets/brand_loading_indicator.dart",
+      "lib/widgets/home_action_card.dart"
+    ]
+  },
+  {
+    "value": "Betöltés…",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/widgets/profile_access_gate.dart"
+    ]
+  },
+  {
+    "value": "Blokkolás",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Cikk",
+    "count": 2,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "DJ-k",
+    "count": 2,
+    "files": [
+      "lib/screens/genres/genre_discovery_screen.dart",
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "E-mail-cím módosítása",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Ellenőrzés",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Emotikon",
+    "count": 2,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/widgets/chat_emoji_button.dart"
+    ]
+  },
+  {
+    "value": "Érvénytelen e-mail-cím.",
+    "count": 2,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény beküldése",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart",
+      "lib/screens/events/events_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény értékelése",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Események, ahol ott leszek",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Felfedezés",
+    "count": 2,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Felhasználó blokkolva.",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Felhasználók",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "HUHS Legenda toplista",
+    "count": 2,
+    "files": [
+      "lib/screens/more/achievement_leaderboard_screen.dart",
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "HUHS tag",
+    "count": 2,
+    "files": [
+      "lib/screens/more/achievement_leaderboard_screen.dart",
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "HUHS Vezérlőközpont",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Indítási kép",
+    "count": 2,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Ingyenes kiadványok",
+    "count": 2,
+    "files": [
+      "lib/screens/releases/free_releases_screen.dart",
+      "lib/screens/releases/releases_screen.dart"
+    ]
+  },
+  {
+    "value": "Írj egy üzenetet.",
+    "count": 2,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "JÁTÉK",
+    "count": 2,
+    "files": [
+      "lib/screens/games/game_screen.dart",
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelenlegi jelszó",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelentés",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Jelentések kezelése",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelszó módosítása",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Kapcsolat",
+    "count": 2,
+    "files": [
+      "lib/screens/more/about_screen.dart",
+      "lib/screens/more/social_contact_screen.dart"
+    ]
+  },
+  {
+    "value": "Kapcsolat és támogatás",
+    "count": 2,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Kedvenc DJ-k és szervezők",
+    "count": 2,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "KÉRDŐÍV",
+    "count": 2,
+    "files": [
+      "lib/screens/poll/poll_screen.dart",
+      "lib/widgets/poll_entry_button.dart"
+    ]
+  },
+  {
+    "value": "Kezdőlap",
+    "count": 2,
+    "files": [
+      "lib/screens/main_navigation.dart"
+    ]
+  },
+  {
+    "value": "Kiemelt események",
+    "count": 2,
+    "files": [
+      "lib/screens/events/events_screen.dart"
+    ]
+  },
+  {
+    "value": "Kijelentkezés",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Kikapcsolva – koppints a bekapcsoláshoz",
+    "count": 2,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Kilépés",
+    "count": 2,
+    "files": [
+      "lib/screens/main_navigation.dart"
+    ]
+  },
+  {
+    "value": "Label",
+    "count": 2,
+    "files": [
+      "lib/screens/main_navigation.dart"
+    ]
+  },
+  {
+    "value": "Letöltés",
+    "count": 2,
+    "files": [
+      "lib/screens/more/my_music_screen.dart",
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Lomtár ürítése",
+    "count": 2,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Magyarország",
+    "count": 2,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Megjelenő név",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/widgets/community_profile_form_fields.dart"
+    ]
+  },
+  {
+    "value": "Megnyitandó tartalom",
+    "count": 2,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült betölteni az eseményeket.",
+    "count": 2,
+    "files": [
+      "lib/screens/events/events_screen.dart",
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs függőben lévő felkérés.",
+    "count": 2,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs kiválasztva",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs közelgő esemény.",
+    "count": 2,
+    "files": [
+      "lib/screens/events/events_screen.dart",
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "NYEREMÉNYJÁTÉK",
+    "count": 2,
+    "files": [
+      "lib/screens/prize/prize_screen.dart",
+      "lib/widgets/prize_entry_card.dart"
+    ]
+  },
+  {
+    "value": "Opcionális · JPG, PNG vagy WebP · legfeljebb 5 MB",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Ország",
+    "count": 2,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Privát kapcsolattartó e-mail *",
+    "count": 2,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Profil befejezése szükséges",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Profilkép",
+    "count": 2,
+    "files": [
+      "lib/screens/artists/artist_edit_screen.dart",
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Rádió szolgáltató",
+    "count": 2,
+    "files": [
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/more/radio_provider_screen.dart"
+    ]
+  },
+  {
+    "value": "Real Hardstyle FM",
+    "count": 2,
+    "files": [
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/more/radio_provider_screen.dart"
+    ]
+  },
+  {
+    "value": "Regisztráció szükséges",
+    "count": 2,
+    "files": [
+      "lib/screens/games/game_screen.dart",
+      "lib/screens/organizers/organizer_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Release",
+    "count": 2,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Segítség",
+    "count": 2,
+    "files": [
+      "lib/screens/more/faq_screen.dart",
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Social és kapcsolat",
+    "count": 2,
+    "files": [
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/more/social_contact_screen.dart"
+    ]
+  },
+  {
+    "value": "Spotify Playlistek",
+    "count": 2,
+    "files": [
+      "lib/screens/more/more_screen.dart",
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "Szavazási összesítő",
+    "count": 2,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/voting/voting_summary_screen.dart"
+    ]
+  },
+  {
+    "value": "Szavazok",
+    "count": 2,
+    "files": [
+      "lib/screens/poll/poll_screen.dart",
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Szerepkör szűrése",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Szerkesztés: {n}",
+    "count": 2,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Törlöd ezt a privát beszélgetést?",
+    "count": 2,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Új privát üzenet",
+    "count": 2,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Újra",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart",
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Válassz legalább egy műfajt.",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Város",
+    "count": 2,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart",
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Webes adatlap",
+    "count": 2,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart",
+      "lib/screens/organizers/organizer_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "yyyy. MM. dd.",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "yyyy. MMMM d.",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart",
+      "lib/screens/news/news_detail_screen.dart"
+    ]
+  },
+  {
+    "value": " hozzászólására: ",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": " üzenetére: ",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "{n} pont • {d}",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "{n} ponttól",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "{n}. lehetőség",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "{n}. válasz",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "+1 pont",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "+1–5 pont",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "+15 pont",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "+2 pont",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "+20 pont",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "+30 pont",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "+5 pont",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "+50 pont",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "96 kbps MP3 feloldása reklámmal",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A bekapcsoláshoz előbb jelöld be: Ott leszek.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_meetup_screen.dart"
+    ]
+  },
+  {
+    "value": "A beküldés csak regisztrált felhasználóknak érhető el.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "A beküldés ellenőrzés után kerülhet fel az oldalra és az alkalmazásba.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "A beszélgetések nem tölthetők be.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "A biometrikus feloldás nem érhető el. Engedélyezd a telefon beállításaiban.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "A borítókép a profil mögött látszik.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_edit_screen.dart"
+    ]
+  },
+  {
+    "value": "A Chat névvel és képfeltöltéssel használható.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A diagnosztika a vágólapra került.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "A felhasználó törlése sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A felhasználó törölve; a képek háttértakarítása folyamatban van.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A felhasználónév megadása kötelező.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A feliratkozás megerősítő e-mailhez kötött.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/newsletter_screen.dart"
+    ]
+  },
+  {
+    "value": "A feliratkozáshoz fogadd el a hozzájárulást.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/newsletter_screen.dart"
+    ]
+  },
+  {
+    "value": "A fellépés a Hungarian Hardstyle-on keresztül szervezhető.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A fiók törlése nem fejeződött be a szerveren. Próbáld újra.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A fiók törölve; a képek háttértakarítása folyamatban van.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A gombhoz érvényes HTTPS-link és 1–40 karakteres felirat kell.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "A gyorsítótár törölve.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "A hanganyag feldolgozása folyamatban van.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A hanganyag feldolgozása nem sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A hangrészlet most nem tölthető be.",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "A helyes választ a sor elején pipáld ki (egy válasz).",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "A hír kedveléséért és a cikkkommentért naponta legfeljebb 3-3 alkalommal jár pont, a jóváhagyott beküldésekért szintén 3.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "A hír már nem érhető el.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/favorites_screen.dart"
+    ]
+  },
+  {
+    "value": "A hivatkozott tartalom nem érhető el.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A hozzászóláshoz jelentkezz be.",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "A HUHS közösség alapjelvénye.",
+    "count": 1,
+    "files": [
+      "lib/services/achievement_service.dart"
+    ]
+  },
+  {
+    "value": "A Hungarian Hardstyle alkalmazásban elérhető rádiót a holland Real Hardstyle üzemelteti. A szolgáltató nyilvános tájékoztatása szerint a működéshez szükséges holland zenei jogkezelői licencekkel (Buma/Stemra és Sena) rendelkezik. A Hungarian Hardstyle nem tárol zenefájlokat saját szerverein, nem üzemeltet rádiós médiaszervert, és nem sugároz saját streamet. Az alkalmazás kizárólag a Real Hardstyle hivatalos, külső streamjét éri el és játssza le a felhasználók számára.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/radio_provider_screen.dart"
+    ]
+  },
+  {
+    "value": "A játék állapotát most nem sikerült lekérdezni. Ellenőrizd a kapcsolatot, és próbáld újra a jobb felső frissítés ikonnal.",
+    "count": 1,
+    "files": [
+      "lib/screens/prize/prize_screen.dart"
+    ]
+  },
+  {
+    "value": "a játék jutalma",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "A játékhoz beállított jutalom: kvíznél a helyes válaszok aránya szerint sávokban, más játéktípusnál csak teljes pontszámért.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "A játékhoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána játszhatsz.",
+    "count": 1,
+    "files": [
+      "lib/screens/prize/prize_screen.dart"
+    ]
+  },
+  {
+    "value": "A játékot meg tudod nézni, de a válaszadáshoz regisztrált felhasználói fiók kell.",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "A játékot most nem sikerült rögzíteni. Próbáld újra.",
+    "count": 1,
+    "files": [
+      "lib/screens/prize/prize_screen.dart"
+    ]
+  },
+  {
+    "value": "A jelentés adatai nem tölthetők be.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "A jelentés kezelése nem sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "A jelöltek hamarosan érkeznek.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "A jelszó módosítása sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A jelszó-visszaállító e-mail elküldve.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A jelvény a felhasználó neve elé kerül, egy sorban",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "A jelvényed a profilodon látható. A chatben a neve mellett is megjeleníthető, ha ezt a Beállításokban engedélyezed.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "A jelvények grafikáit és a szintek pontszámait a HUHS adminisztrátora kezeli, ezért itt mindig a jelenlegi állapot látszik.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "A jutalmazott reklám megtekintése után a fájl letölthető.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A jutalmazott reklám megtekintése után a WAV letölthető.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A jutalmazott reklám megtekintése után megnyitható.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A kedvenc nem tölthető be.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/favorites_screen.dart"
+    ]
+  },
+  {
+    "value": "A kép Cloudinary-ra kerül, és az app indulásakor bezárható.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "A kép mentése nem sikerült. Ellenőrizd a tárhelyengedélyt, majd próbáld újra.",
+    "count": 1,
+    "files": [
+      "lib/screens/gallery/gallery_screen.dart"
+    ]
+  },
+  {
+    "value": "A képek gyorsítótárát az app automatikusan kezeli.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "A két jelszó nem egyezik.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A kiadási jegyzet betöltése…",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "A kiadó zenéi egy helyen",
+    "count": 1,
+    "files": [
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A Kiadványok fülön megvásárolt (vagy reklámmal feloldott) zenék itt jelennek meg, és innen játszhatók le.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "A kiadványok most nem érhetők el",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "A kijelöltek törlése nem sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "A kód nem érvényes. Az authenticator nem lett bekapcsolva.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "A közösségi funkciókhoz regisztráció szükséges.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "A lájkpont végleges: ha kiveszed a lájkot, a pont megmarad, de az újralájk sem ad újat.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "A legtöbb achievement pontot gyűjtő tagok",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "A letöltés nem sikerült — próbáld újra",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "A link a Play Áruházba vezet, a meghívókód telepítés után automatikusan bekerül a regisztrációba. Egy új felhasználó csak egyszer használhat ajánlókódot. Saját kód nem használható, és a pontot a szerver írja jóvá.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/referral_screen.dart"
+    ]
+  },
+  {
+    "value": "A lomtár kiürítve.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "A lomtár üres.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "A magyar hardstyle otthona",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "A megerősítő e-mail küldése folyamatban van.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A megerősítő e-mailt már elküldtük.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A megerősítő e-mailt újraküldtük.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A megvásárolt zenéid — a fiókodhoz kötve",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "A megvásárolt zenéidhez jelentkezz be — a vásárlás a fiókodhoz tartozik.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "A megvásárolt zenék a fiókodhoz tartoznak, ezért csak bejelentkezve láthatók és tölthetők le.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "A mentett profil feloldása ujjlenyomattal vagy arcfelismeréssel",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "A műfajok betöltése sikertelen.",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "A művelet véglegesen törli a lomtár tartalmát. Folytatod?",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "A napi aktivitási pont (1–5) a lezárt nap után, naponta egyszer jár: a szerver a cikkhez írt hozzászólásaidból és a chat-üzeneteidből számolja.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "A neked küldött és általad küldött privát beszélgetések",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "A nem letöltött tételek nincsenek a listában — azokat a kiadvány kártyáján tudod letölteni.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "A nyilakkal rendezheted a sorrendet — fiókonként megjegyzi.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "A profil nem tölthető be. Ellenőrizd az internetkapcsolatot.",
+    "count": 1,
+    "files": [
+      "lib/widgets/profile_access_gate.dart"
+    ]
+  },
+  {
+    "value": "A profil törlése sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A profil védelméhez a regisztráció után opcionális kétfaktoros védelem kapcsolható be a Beállításokban.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A profil, a Chat-üzenetek és a bejelentkezés is törlődik. Folytatod?",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A profilod, a Chat-üzeneteid és a bejelentkezésed is törlődik. Folytatod?",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A push elküldve.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "A rádiót a Real Hardstyle FM szolgáltatja.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/radio_provider_screen.dart"
+    ]
+  },
+  {
+    "value": "A rangod mindig a legmagasabb elért szinted jelvénye.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "A reakció mentése nem sikerült.",
+    "count": 1,
+    "files": [
+      "lib/widgets/news_reaction_button.dart"
+    ]
+  },
+  {
+    "value": "A regisztráció után megerősítő e-mailt küldünk. A profil használatához erősítsd meg a címedet.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "A reklám lefutott, de a feloldás nem érkezett meg. Próbáld újra később.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A reklám megtekintése nem fejeződött be.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A reklámos feloldáshoz be kell jelentkezni.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A részvétel jelöléséhez regisztráció szükséges.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A részvétel mentése nem sikerült. Próbáld újra később.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A segítség most nem tölthető be.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/faq_screen.dart"
+    ]
+  },
+  {
+    "value": "A sorsolás megtörtént.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "A szavazás állapotát most nem sikerült lekérdezni. Ellenőrizd a kapcsolatot, és próbáld újra a jobb felső frissítés ikonnal.",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_screen.dart"
+    ]
+  },
+  {
+    "value": "A szavazás jelenleg nem tölthető be. Próbáld újra később.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "A szavazás véget ért",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "A szavazás véget ért. Az összesítő az adminisztrátori engedély után lesz elérhető.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "A szavazáshoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána szavazhatsz.",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_screen.dart"
+    ]
+  },
+  {
+    "value": "A szavazat mentése nem sikerült. Próbáld újra később.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "A szavazatod sikeresen rögzítettük. Ebben az éves szavazásban erről a készülékről már nem adhatsz le újabb szavazatot.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "A szavazatot most nem sikerült rögzíteni. Próbáld újra.",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_screen.dart"
+    ]
+  },
+  {
+    "value": "A szervezői adatlap csak ellenőrzés és jóváhagyás után jelenhet meg.",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "A szervezők nem tölthetők be.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "A támogatás hozzájárul a Hungarian Hardstyle app és közösség fejlesztéséhez.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/donate_screen.dart"
+    ]
+  },
+  {
+    "value": "A te ajánlókódod",
+    "count": 1,
+    "files": [
+      "lib/screens/more/referral_screen.dart"
+    ]
+  },
+  {
+    "value": "A telefon PIN-kódjával, jelszavával vagy mintájával",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "A telefonos kódos feloldás nem sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "A teljes, minden kötelező kategóriát tartalmazó szavazólap után jár (bejelentkezve).",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "A vásárlás ellenőrzése és véglegesítése sikeres.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A vásárlás ellenőrzése sikeres, a Play-véglegesítés még folyamatban van.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A vásárlás ellenőrzése sikertelen.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A vásárlás ellenőrzése vagy véglegesítése még nem sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A zenéid most nem érhetők el",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "A zenéidhez jelentkezz be",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Achievement a chatben",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Achievement rang",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_leaderboard_screen.dart"
+    ]
+  },
+  {
+    "value": "Achievement rendszer",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Achievement-szintlépések",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Achievementek",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Adatkezelés, megőrzés és felhasználói jogok",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Adatkezelési tájékoztató",
+    "count": 1,
+    "files": [
+      "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
+    "value": "Adatközpont",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Adatlap átvétele",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Add meg az e-mail-címedet.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Add meg az e-mail-címet és a jelszót.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Add meg ezt a kulcsot a Google Authenticatorban:",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Adj meg e-mail-címet és erősítsd meg 24 órán belül.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Adj meg egy érvényes e-mail-címet.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Adj meg egy megjelenési nevet.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Adj meg érvényes e-mail-címet.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Adminisztrátorként korlátlan névmódosítás",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Ajánlás másolása",
+    "count": 1,
+    "files": [
+      "lib/screens/more/referral_screen.dart"
+    ]
+  },
+  {
+    "value": "Ajánlókód (opcionális)",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Akár egy karakterrel",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Aktív",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Aktív értesítések törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Android-kódos feloldás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "API-cím",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "API-verzió",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Apple Music",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Archiválás",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Archivált",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Áthelyezés a lomtárba",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Áttekintés",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Átvétel visszavonása",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Átvett DJ-adatlap",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Authenticator beállítása",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Authenticator-kód",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Az achievement rendszerben a HUHS közösségben végzett valódi aktivitásért pontokat szerezhetsz. A pontszámod alapján rangot és grafikus jelvényt kapsz.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Az adatlap átvétele sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Az adatlap csak szerkesztői ellenőrzés és jóváhagyás után jelenhet meg.",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Az ajánlókód nem tölthető be.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/referral_screen.dart"
+    ]
+  },
+  {
+    "value": "Az ajánlószöveg a vágólapra másolva.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/referral_screen.dart"
+    ]
+  },
+  {
+    "value": "Az átvétel visszavonva.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Az authenticator-kód hibás.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Az elem létrehozva.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Az elem mentve.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Az ellenőrző e-mailt újraküldtük.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Az első közösségi mérföldkő.",
+    "count": 1,
+    "files": [
+      "lib/services/achievement_service.dart"
+    ]
+  },
+  {
+    "value": "Az eredmény a leadott szavazatokból számol újra, ezért a lezárt kérdőíveknél is pontos marad. Ez az oldal csak adminisztrátornak látszik.",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_results_screen.dart"
+    ]
+  },
+  {
+    "value": "Az értesítések frissítése nem sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Az értesítések nem tölthetők be.",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Az értesítések törlése nem sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Az esemény nem tölthető be.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Az esemény vége nem lehet a kezdés előtt vagy azzal egy időben.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Az esemény végét napra és órára együtt add meg.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Az esemény- és meetup-pont eseményenként (meetuponként) egyszer jár, és a jelentkezésedhez igazodik: lemondásnál elvész, visszajelentkezésnél újra jár.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Az ingyenes kiadványok nem tölthetők be.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/free_releases_screen.dart"
+    ]
+  },
+  {
+    "value": "Az irányítószám csak számokat tartalmazhat.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Az ismerős törlése nem sikerült.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Az ismerőslista nem tölthető be.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Az ismerőslista regisztrált felhasználóknak érhető el.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Az új jelszó legalább 6 karakter legyen, és a két mező egyezzen.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Azok láthatók itt, akik erre az eseményre Meetupot jeleztek.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_meetup_screen.dart"
+    ]
+  },
+  {
+    "value": "Beágyazott tartalom",
+    "count": 1,
+    "files": [
+      "lib/widgets/post_embed_card.dart"
+    ]
+  },
+  {
+    "value": "Beállítás állapota",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Beállítás betöltése…",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Beatport",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Bejelentkezés",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Bejelentkezés szükséges.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Bekapcsolva csak kép URL-lel menthető.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Beküldés #{id}",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Beküldések",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Beküldések moderálása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Betöltési hiba – újrapróbálás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_leaderboard_screen.dart"
+    ]
+  },
+  {
+    "value": "Billentyűzet elrejtése",
+    "count": 1,
+    "files": [
+      "lib/widgets/keyboard_dismiss_button.dart"
+    ]
+  },
+  {
+    "value": "Biometrikus feloldás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Biztosan áthelyezed ezt az elemet a lomtárba?",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Biztosan ki szeretnél lépni az alkalmazásból?",
+    "count": 1,
+    "files": [
+      "lib/screens/main_navigation.dart"
+    ]
+  },
+  {
+    "value": "Biztosan törlöd az összes AKTÍV értesítést? Az archivált értesítések megmaradnak.",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Biztosan törlöd az összes ARCHIVÁLT értesítést? Az aktív fül értesítései megmaradnak.",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Biztosan törlöd ezt a Chat-üzenetet?",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Biztosan törlöd ezt a WordPress-felhasználót? A művelet nem vonható vissza.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Blokkolás / letiltás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Booking",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Borítókép",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_edit_screen.dart"
+    ]
+  },
+  {
+    "value": "Célközönség azonosítója",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Célok és jogalapok: a fiók, a közösségi funkciók, a vásárlás és a letöltés biztosítása a szerződés teljesítéséhez vagy az azt megelőző lépésekhez szükséges; a biztonság, csalás- és visszaélés-megelőzés, hibakeresés és moderáció az üzemeltető jogos érdeke lehet; a hírlevél, a nem szükséges értesítések és a személyre szabott hirdetési megoldások a szükséges hozzájárulás alapján működnek; jogi vagy számviteli kötelezettség esetén az adatkezelés jogszabályon alapul. A hozzájárulás bármikor visszavonható, de ez nem érinti a visszavonás előtti adatkezelés jogszerűségét.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
+    "value": "Cikk kommentelése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Cím *",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Classic hardstyle lista",
+    "count": 1,
+    "files": [
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "Csak az admin látja, nem kerül ki az adatlapra.",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Csak az admin látja.",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Csak magyar zenékkel",
+    "count": 1,
+    "files": [
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "Csere",
+    "count": 1,
+    "files": [
+      "lib/widgets/submission_image_picker.dart"
+    ]
+  },
+  {
+    "value": "Dátum *",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Diagnosztika futtatása",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "DJ / előadó beküldése",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "DJ adatlap",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "DJ-k száma",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "DJ-logó feltöltése",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "DJ-név *",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "E-mail-cím",
+    "count": 1,
+    "files": [
+      "lib/screens/more/newsletter_screen.dart"
+    ]
+  },
+  {
+    "value": "E-mail-cím nem érhető el",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Ebben a kvízben már játszottál",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "Egy fiók egyszer játszhat, a válasz utólag nem módosítható. Csak a helyes válasz nyerhet.",
+    "count": 1,
+    "files": [
+      "lib/screens/prize/prize_screen.dart"
+    ]
+  },
+  {
+    "value": "Egy fiók egyszer szavazhat, a szavazat utólag nem módosítható. Az eredmény nem nyilvános.",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_screen.dart"
+    ]
+  },
+  {
+    "value": "Egy héttel előtte és aznap",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Egy pillanat — betöltjük az eredményedet.",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "Egyedi link",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Egyedi push",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Egyedi push létrehozása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Egyelőre senki nem jelzett Meetupot.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_meetup_screen.dart"
+    ]
+  },
+  {
+    "value": "Egyszeri jóváírás a teljes profilért (név, bemutatkozás, egyező e-mail).",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Ehhez a fellépőhöz még nincs összekapcsolt DJ-adatlap.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Ehhez a játékhoz még nincs megjeleníthető eredmény.",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "Ehhez a játékhoz nincs megjeleníthető adat.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Ehhez a kérdőívhez nem érkezett adat.",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_results_screen.dart"
+    ]
+  },
+  {
+    "value": "Ehhez a szervezőhöz még nincs összekapcsolt adatlap.",
+    "count": 1,
+    "files": [
+      "lib/screens/organizers/organizer_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Ehhez az évadhoz nem érkezett kategóriaadat.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_summary_screen.dart"
+    ]
+  },
+  {
+    "value": "Elérhető változatok",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Elfogadás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ellenőrző e-mail újraküldése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Élő adás",
+    "count": 1,
+    "files": [
+      "lib/widgets/radio_player_bar.dart"
+    ]
+  },
+  {
+    "value": "Előbb tölts le egy zenét",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Elölről",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Előre",
+    "count": 1,
+    "files": [
+      "lib/core/navigation/in_app_browser.dart"
+    ]
+  },
+  {
+    "value": "Előrendelés",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Előző",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Elrejtés",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Eltávolítás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/favorites_screen.dart"
+    ]
+  },
+  {
+    "value": "Eltávolítás a kedvencekből",
+    "count": 1,
+    "files": [
+      "lib/widgets/favorite_button.dart"
+    ]
+  },
+  {
+    "value": "Elutasítás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Elutasítva",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Én is",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_meetup_screen.dart"
+    ]
+  },
+  {
+    "value": "Eredeti üzenet",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Eredménylista",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "Eredménylista megnyitása",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Érintetti jogok: kérheted a hozzáférést, helyesbítést, törlést, az adatkezelés korlátozását, az adathordozhatóságot, valamint tiltakozhatsz a jogos érdeken alapuló adatkezelés ellen. Kérelmedet az info@hungarianhardstyle.hu címen lehet benyújtani; az üzemeltető a személyazonosság ellenőrzéséhez szükséges adatot kérhet. A kérelmeket indokolatlan késedelem nélkül, főszabály szerint egy hónapon belül kell megválaszolni. Jogod van panaszt tenni a lakóhelyed, tartózkodási helyed vagy a jogsértés feltételezett helye szerinti adatvédelmi hatóságnál; Magyarországon ez a NAIH (https://www.naih.hu).",
+    "count": 1,
+    "files": [
+      "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
+    "value": "Erős jelszó ajánlása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Erősítsd meg az e-mail-címedet 24 órán belül.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Erősítsd meg az e-mail-címedet. A profilban újra elküldheted a levelet.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Értesítés műveletei",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Értesítés új esemény közzétételekor",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Értesítés új hír közzétételekor",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Értesítés új rang vagy jelvény elérésekor",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Értesítés új release közzétételekor",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Értesítések és gyorsítótár",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Értesülj az új hírekről és fontos eseményekről e-mailben.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/newsletter_screen.dart"
+    ]
+  },
+  {
+    "value": "Érvényes HTTPS-linket adj meg.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény elküldése",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény neve *",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény utáni értékelés",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény vége",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény vége – óra",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény-emlékeztetők",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény, ahol ott lesz",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény, ahol ott leszek",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Események száma",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Eseményen ott leszek",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Eseményenként egyszer adható.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Eseményenként egyszer jár. Amíg jelentkezve vagy rá, addig érvényes: ha lemondod, a pont elvész, visszajelentkezésnél újra jár.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Eseményenként és kapcsolatonként jár, ha valódi, kölcsönös kapcsolat születik. Ha a kapcsolat megszűnik, a pont is elvész.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Eseményt csak regisztrált felhasználó küldhet be.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Eseményt szervező, DJ-t DJ, szervezőt szervező küldhet be; a pont a jóváhagyáskor jár a beküldőnek. Naponta legfeljebb 3 jóváhagyott beküldésért.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Éves HUHS szavazás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Extended",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Extended verzió",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Ez a beszélgetés eleje.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Ez a felhasználónév már foglalt. Válassz másikat.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Ez a kép jelenik meg a DJ-adatlapod tetején.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_edit_screen.dart"
+    ]
+  },
+  {
+    "value": "Ez a sor nem törölhető innen (nincs WordPress-felhasználó-azonosítója). Az app-fiókokat a Közösségi adminisztrációban lehet törölni.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Ez a te DJ-adatlapod.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Ez a verzió",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "Ez az átvett adatlapod. A fényképet, a bemutatkozást és a linkeket szerkesztheted — a foglalási e-mail cím és a mûfajok a Hungarian Hardstyle kezében maradnak.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_edit_screen.dart"
+    ]
+  },
+  {
+    "value": "Ez lesz a nyilvános profilneved.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Ezt a DJ-adatlapot már átvette egy fiók.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Ezt az eseményt már értékelted.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Ezt minden regisztrált felhasználó láthatja.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_meetup_screen.dart"
+    ]
+  },
+  {
+    "value": "Facebook- vagy eseménylink",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Fejlesztő",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Felhasználó szerkesztése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Felhasználó tiltása",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Felhasználók keresése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Felhasználónév módosítása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Feliratkozol a Hungarian Hardstyle hírlevelére? A szavazás ettől függetlenül is folytatható.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Feliratkozom",
+    "count": 1,
+    "files": [
+      "lib/screens/more/newsletter_screen.dart"
+    ]
+  },
+  {
+    "value": "Feljebb",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Fellépés lekötése e-mailben",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Fellépésszervezés a Hungarian Hardstyle-on keresztül",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Feloldva, a letöltés elindult.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Feloldva, de a letöltést nem sikerült elindítani.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Fiók-szerepkör",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Flyer feltöltése",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Folytatás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Folytatás Google-fiókkal",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Fontos szabályok",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Fotó készítése",
+    "count": 1,
+    "files": [
+      "lib/widgets/submission_image_picker.dart"
+    ]
+  },
+  {
+    "value": "FRISS HÍR",
+    "count": 1,
+    "files": [
+      "lib/widgets/featured_news_card.dart"
+    ]
+  },
+  {
+    "value": "Friss hírek",
+    "count": 1,
+    "files": [
+      "lib/screens/news/news_screen.dart"
+    ]
+  },
+  {
+    "value": "Frissítsd az alkalmazást a legújabb javításokért.",
+    "count": 1,
+    "files": [
+      "lib/screens/main_navigation.dart"
+    ]
+  },
+  {
+    "value": "Függőben lévő beküldések",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Galéria",
+    "count": 1,
+    "files": [
+      "lib/screens/news/news_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Gomb felirata (például: Jegyek)",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Gomb linkje (HTTPS)",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Google Authenticator",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Gratulálunk a nyertesnek! A részleteket e-mailben is elküldtük.",
+    "count": 1,
+    "files": [
+      "lib/screens/prize/prize_screen.dart"
+    ]
+  },
+  {
+    "value": "Gyorsítótár",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Ha a vásárlás nem indul el, ez megmutatja, mit válaszol a Google Play ezen a készüléken: hány terméket ad vissza, milyen áron és pénznemben, és mi volt a legutóbbi vásárlási hiba kódja.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "Ha aznap hozzászólsz egy cikkhez vagy írsz a chatbe, a következő napon a szerver kiszámolja, mennyit voltál aktív, és 1–5 pontot ad érte. Naponta egyszer.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Ha kaptál kódot egy HUHS-felhasználótól.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Hamarosan",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Hány csillagot adsz az eseménynek?",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Hardcore",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artists_screen.dart"
+    ]
+  },
+  {
+    "value": "Hardstyle",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artists_screen.dart"
+    ]
+  },
+  {
+    "value": "Hardstyle Revolution",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/releases_screen.dart"
+    ]
+  },
+  {
+    "value": "Hardstyle Revolution – Daily Hardstyle",
+    "count": 1,
+    "files": [
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "Hardstyle Revolution – Daily Rawstyle",
+    "count": 1,
+    "files": [
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "Hardstyle Revolution – Hard Base classics",
+    "count": 1,
+    "files": [
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "Hardstyle Revolution label lista",
+    "count": 1,
+    "files": [
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "Hatályos: 2026. augusztus 28.\n\nAdatkezelő: a Hungarian Hardstyle alkalmazás üzemeltetője. Az üzemeltető hivatalos jogi nevét, székhelyét és postai elérhetőségét az aktuális webes impresszummal egyezően kell feltüntetni. Kapcsolat: info@hungarianhardstyle.hu. Ez a tájékoztató az alkalmazásban megvalósított adatkezelési folyamatokat foglalja össze.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
+    "value": "Hazai eseményszervezők és sorozatok",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Helyes válasz! Részt veszel a sorsolásban — a nyertest a játék lezárása után hirdetjük ki.",
+    "count": 1,
+    "files": [
+      "lib/screens/prize/prize_screen.dart"
+    ]
+  },
+  {
+    "value": "Helyszín *",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Hiba jelzése e-mailben, app-verzióval",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Hibajelzés",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Hír",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Hír kedvelése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "HÍREK",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Hívd meg az ismerőseidet a HUHS appba!",
+    "count": 1,
+    "files": [
+      "lib/screens/more/referral_screen.dart"
+    ]
+  },
+  {
+    "value": "Hívd meg ismerőseidet és szerezz 50 pontot",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Hol érhető el?",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Hosszú távon aktív színtértag.",
+    "count": 1,
+    "files": [
+      "lib/services/achievement_service.dart"
+    ]
+  },
+  {
+    "value": "Hozzáadás a kedvencekhez",
+    "count": 1,
+    "files": [
+      "lib/widgets/favorite_button.dart"
+    ]
+  },
+  {
+    "value": "Hozzáférési jog",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Hozzájárulok a hírlevél küldéséhez.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/newsletter_screen.dart"
+    ]
+  },
+  {
+    "value": "Hozzászólás szerkesztése",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Hozzászólások",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Hozzászólások frissítése",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Hozzászólok",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "HTTPS-link megadása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "HUHS hírlevél",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "HUHS játékok",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "HUHS Radio",
+    "count": 1,
+    "files": [
+      "lib/widgets/spotify_player.dart"
+    ]
+  },
+  {
+    "value": "HUHS szavazás",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "HUNGARIAN HARDSTYLE",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Hungarian Hardstyle meghívó",
+    "count": 1,
+    "files": [
+      "lib/screens/more/referral_screen.dart"
+    ]
+  },
+  {
+    "value": "Hungarian Hardstyle playlist",
+    "count": 1,
+    "files": [
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "Időpont törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Indítási kép kezelése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Indítási kép mentve.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Ingyenes külső link",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Ingyenesen letölthető WAV",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/free_releases_screen.dart"
+    ]
+  },
+  {
+    "value": "Interaktív tartalom",
+    "count": 1,
+    "files": [
+      "lib/screens/news/news_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Irányítószám *",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Iratkozz fel a Hungarian Hardstyle hírlevelére",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Írd be: TÖRLÉS",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Írd meg a véleményed…",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Írj egy üzenetet vagy válassz képet.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Írj valamit a közösségnek…",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismeretlen",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismeretlen felhasználó",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerős törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerős törölve.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerős-jelölés elfogadva.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerős-jelölés elutasítva.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerősjelölés elküldve.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerőslista, felkérések és státuszok",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerősnek jelölés",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerősnek jelölés elküldve.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerősök és felkérések",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Ismerősök megnyitása",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Játék",
+    "count": 1,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Játék megnyitása",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Játszom",
+    "count": 1,
+    "files": [
+      "lib/screens/prize/prize_screen.dart"
+    ]
+  },
+  {
+    "value": "Játssz és nyerj! Koppints a részvételhez",
+    "count": 1,
+    "files": [
+      "lib/widgets/prize_entry_card.dart"
+    ]
+  },
+  {
+    "value": "Jegyvásárlás",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelenleg nincs aktív szavazás.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelented a hozzászólást?",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Jelentés elküldve.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelentések ({n})",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelentkezz be a közösségi profilodhoz.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelszó",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelszó megerősítése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelszó visszaállítása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelvénygrafikák",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Jogi információ",
+    "count": 1,
+    "files": [
+      "lib/screens/more/radio_provider_screen.dart"
+    ]
+  },
+  {
+    "value": "Jóváhagyás és piszkozat",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Jóváhagyott beküldés",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "JPG, PNG vagy WebP képet válassz.",
+    "count": 1,
+    "files": [
+      "lib/widgets/submission_image_picker.dart"
+    ]
+  },
+  {
+    "value": "Kamera",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Kapcsolattartó e-mail *",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Kategória *",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Kedvelt tartalmak",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Kedvenc",
+    "count": 1,
+    "files": [
+      "lib/screens/organizers/organizer_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Kedvenc DJ",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Kedvenc szervező",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Kedvencek törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/favorites_screen.dart"
+    ]
+  },
+  {
+    "value": "Kedvencekhez adom",
+    "count": 1,
+    "files": [
+      "lib/screens/organizers/organizer_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Kép eltávolítása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Kép feltöltése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Kép feltöltéséhez regisztráció szükséges.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Kép igazítása (húzás és nagyítás)",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Kép kiválasztása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Kép küldése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Kép mentése",
+    "count": 1,
+    "files": [
+      "lib/screens/gallery/gallery_screen.dart"
+    ]
+  },
+  {
+    "value": "Kép mentve a galériába.",
+    "count": 1,
+    "files": [
+      "lib/screens/gallery/gallery_screen.dart"
+    ]
+  },
+  {
+    "value": "Kép törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Kép URL-je",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Képfeltöltés",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Kérdés keresése...",
+    "count": 1,
+    "files": [
+      "lib/screens/more/faq_screen.dart"
+    ]
+  },
+  {
+    "value": "Kérdés szövege",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "Kérdés törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "Kérdőív eredményei",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_results_screen.dart"
+    ]
+  },
+  {
+    "value": "Keresés a címek között",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Keresés a Több menüben",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Keresés DJ-k között…",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artists_screen.dart"
+    ]
+  },
+  {
+    "value": "Keresés hírek között...",
+    "count": 1,
+    "files": [
+      "lib/screens/news/news_screen.dart"
+    ]
+  },
+  {
+    "value": "Keresés név szerint",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Keresés szervezők között…",
+    "count": 1,
+    "files": [
+      "lib/screens/organizers/organizers_screen.dart"
+    ]
+  },
+  {
+    "value": "Keresés törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/releases_screen.dart"
+    ]
+  },
+  {
+    "value": "Keverés",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Keverés közben a sorrend nem szerkeszthető — kapcsold ki a keverést a lejátszósávban.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Kezdés",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Kiadvány betöltése…",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Kiadvány megvásárlása",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Kiadványok böngészése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "KICK  /  CULTURE  /  COMMUNITY",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Kiemelkedő, tartós közösségi aktivitás.",
+    "count": 1,
+    "files": [
+      "lib/services/achievement_service.dart"
+    ]
+  },
+  {
+    "value": "KIEMELT ESEMÉNY",
+    "count": 1,
+    "files": [
+      "lib/widgets/startup_gate.dart"
+    ]
+  },
+  {
+    "value": "Kiemelt hírek",
+    "count": 1,
+    "files": [
+      "lib/screens/news/news_screen.dart"
+    ]
+  },
+  {
+    "value": "Kijelölés kikapcsolása",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Kijelölés törléshez",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Kijelöltek törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Kinek szeretnél írni?",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Kiválasztás",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Kiválasztott jelöltek:",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Kiválasztva: {n}/5",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Kivétel a lejátszási listából",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Kivétel a lejátszási listából (a fájl megmarad)",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Kivéve a lejátszási listából — a fájl a készüléken marad.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Koppints a megnyitáshoz",
+    "count": 1,
+    "files": [
+      "lib/services/push_notification_service.dart"
+    ]
+  },
+  {
+    "value": "Korábbi események",
+    "count": 1,
+    "files": [
+      "lib/screens/events/events_screen.dart"
+    ]
+  },
+  {
+    "value": "Korábbi hozzászólások",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Korábbi kiadások",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "Kölcsönös kapcsolat meetupolóval",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Köszönjük a játékodat!",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "Köszönjük a szavazatod!",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Köszönjük az értékelést! +10 achipont.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Köszönjük, a jelentést elküldtük.",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Köszönjük, a szavazatod rögzítettük.",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_screen.dart"
+    ]
+  },
+  {
+    "value": "Kövess minket",
+    "count": 1,
+    "files": [
+      "lib/screens/more/social_contact_screen.dart"
+    ]
+  },
+  {
+    "value": "Következő",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Közösségi és zenei linkek",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Közösségi linkek",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_edit_screen.dart"
+    ]
+  },
+  {
+    "value": "Közösségi oldalak és elérhetőségek",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Közzétéve",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "Küldd be az eseményed",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Küldés és rögzítés",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Külföldi DJ-k kiválasztása",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Külföldi hardstyle DJ-k",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Külső szolgáltatók és adatáramlás: Firebase/Firestore és Firebase Authentication (fiók, közösség, üzenetek, jogosultságok és biztonsági működés), Firebase Cloud Messaging (push értesítések), Cloudinary (feltöltött profil- és közösségi képek), WordPress (publikus hírek, események, DJ-k, szervezők, beküldések és a védett letöltési végpont), Google Play Billing (vásárlás és tranzakció-ellenőrzés), Google AdMob és annak hozzájárulás-kezelése (banner- és jutalmazott hirdetések), valamint Mailchimp (külön feliratkozással kért hírlevél). Az egyes szolgáltatók saját adatkezelési tájékoztatója is irányadó; szerepük az adott folyamatban adatfeldolgozó vagy önálló adatkezelő lehet. Az adatokat csak a szolgáltatás, biztonság, visszaélés-megelőzés, jogosultság-ellenőrzés és jogi kötelezettség teljesítéséhez szükséges mértékben továbbítjuk.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
+    "value": "Kvíz",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Kvíz és játékok",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Láthatóan aktív HUHS-közösségi tag.",
+    "count": 1,
+    "files": [
+      "lib/services/achievement_service.dart"
+    ]
+  },
+  {
+    "value": "Legfrissebb hírek",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Lejárt eseményen már nem módosítható a Meetup.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_meetup_screen.dart"
+    ]
+  },
+  {
+    "value": "Lejárt eseményen már nem módosítható a részvétel.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Lejátszás és letöltés",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Lejátszási lista",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Lejjebb",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Letöltött zenék törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Letöltve a készüléken",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Lezárás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Lista",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Magyar DJ-k",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artists_screen.dart"
+    ]
+  },
+  {
+    "value": "Magyar hardstyle és hardcore előadók",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Magyar hardstyle és hardcore közösségi app",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "Már egy betűre is keres",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Már értékelted: {stars}",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Már játszottál",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "Már játszottál — eredmény megtekintése",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Már van fiókom",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Maradj képben",
+    "count": 1,
+    "files": [
+      "lib/screens/more/newsletter_screen.dart"
+    ]
+  },
+  {
+    "value": "Másolás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "Másold ki az alábbi szöveget, küldd el az ismerősödnek, és ő a regisztrációnál megadhatja az ajánlókódot. Ha az új felhasználó regisztrál, 50 achievement pontot kapsz.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/referral_screen.dart"
+    ]
+  },
+  {
+    "value": "Média",
+    "count": 1,
+    "files": [
+      "lib/screens/news/news_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Meetup",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_meetup_screen.dart"
+    ]
+  },
+  {
+    "value": "Meetup az eseményen",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Meetup jelzés",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Meetuponként egyszer jár. Ha lemondod a jelzést, ez a pont is elvész, visszajelzésnél újra jár.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Még nincs bejegyzés.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Még nincs hozzászólás. Mondd el elsőként a véleményed!",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Még nincs megjeleníthető toplista.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_leaderboard_screen.dart"
+    ]
+  },
+  {
+    "value": "Még nincs megvásárolt zenéd",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Még nincs mentett kedvenced.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/favorites_screen.dart"
+    ]
+  },
+  {
+    "value": "Még nincs privát beszélgetés.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Még nincs regisztrált profil.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Még senki nem játszott ebben a játékban.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Megerősítés",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Megerősítő e-mail újraküldése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Megerősítő e-mailt küldtünk. A profil használatához erősítsd meg a címedet.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Megerősítő linket küldtünk az új e-mail-címre. 24 órád van a megerősítésre.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Meghívott regisztrációja",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Megjelenés",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Megjelenítés engedélyezése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Megnyitás a YouTube-on",
+    "count": 1,
+    "files": [
+      "lib/widgets/post_embed_card.dart"
+    ]
+  },
+  {
+    "value": "Megnyitás az alkalmazásban",
+    "count": 1,
+    "files": [
+      "lib/widgets/post_shortcode_card.dart"
+    ]
+  },
+  {
+    "value": "Megnyitás külső böngészőben",
+    "count": 1,
+    "files": [
+      "lib/core/navigation/in_app_browser.dart"
+    ]
+  },
+  {
+    "value": "Megosztás…",
+    "count": 1,
+    "files": [
+      "lib/screens/more/referral_screen.dart"
+    ]
+  },
+  {
+    "value": "Megőrzés és törlés: a fiókhoz és közösségi szolgáltatáshoz kapcsolódó adatokat addig őrizzük, amíg a szolgáltatás biztosításához szükséges, illetve amíg jogi igény, biztonsági vagy jogszabályi megőrzési ok indokolja. A hirdetési és hírlevél-hozzájárulás visszavonása után az erre épülő kezelést megszüntetjük. A saját profil törlése az alkalmazásból indítható; ez a Firebase Auth-fiók és a hozzá kapcsolt közösségi adatok törlését kezdeményezi. Egyes, jogszabály alapján megőrzendő vagy jogi igényhez szükséges adatok a szükséges időre korlátozottan megmaradhatnak.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
+    "value": "Mégsem",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Megvásárolva",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Miért jár pont?",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Milyen adatokat kezelünk?\n\nA fiók és a közösségi funkciók használatához kezelhetjük a Firebase-fiókhoz tartozó azonosítót, e-mail-címet, megjelenő nevet, szerepkört, profilképet és a beállításokat. Kezeljük továbbá a Chat- és privát üzeneteket, az üzenetekhez kapcsolódó képeket, a blokkolási és ismerősi kapcsolatokat, a hírreakciókat, kedvenceket, szavazatokat, esemény-részvételt és a beküldések adatait. A push értesítésekhez a készülék Firebase Cloud Messaging tokenje kerülhet a felhasználói fiókhoz kötött, elkülönített tárolóba.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
+    "value": "Minden kategóriában leadtad a szavazatodat.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Minden kérdésre válaszolj a beküldés előtt.",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "Minden letöltött fájl törlődik a készülékről. A vásárlásaid megmaradnak, bármikor újra letölthetők.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Minden megvásárolt változatért (MP3/WAV) jár. A vásárlást a Google Play ellenőrzi, ezért nem lehet hamisítani.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Mindenki értesítést kap",
+    "count": 1,
+    "files": [
+      "lib/services/chat_mention_plan.dart"
+    ]
+  },
+  {
+    "value": "Most nem",
+    "count": 1,
+    "files": [
+      "lib/screens/main_navigation.dart"
+    ]
+  },
+  {
+    "value": "MP3 320 kbps",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Napi aktivitási pont",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Naponta legfeljebb 3 elküldött cikkkommentért jár pont.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Naponta legfeljebb 3 hír kedveléséért jár pont. A pont végleges: ha kiveszed a lájkot, megmarad, de újralájk sem ad újat.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem leszek ott",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerult megnyitni a linket.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült betölteni a DJ-adatlapot.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült betölteni a DJ-ket.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artists_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült betölteni a híreket.",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült betölteni a kategóriákat.",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült betölteni a műfajokat.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült betölteni a szervezői adatlapot.",
+    "count": 1,
+    "files": [
+      "lib/screens/organizers/organizer_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült betölteni a szervezőket.",
+    "count": 1,
+    "files": [
+      "lib/screens/organizers/organizers_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült kiválasztani a képet.",
+    "count": 1,
+    "files": [
+      "lib/widgets/submission_image_picker.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült megnyitni a levelezőt.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerült megnyitni a linket.",
+    "count": 1,
+    "files": [
+      "lib/core/navigation/in_app_browser.dart"
+    ]
+  },
+  {
+    "value": "Nem tudtok majd egymásnak privát üzenetet küldeni.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Nem tudtok majd egymásnak privát üzenetet küldeni. A blokkolás később a blokkolt felhasználók listájából visszavonható.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Némítás",
+    "count": 1,
+    "files": [
+      "lib/widgets/radio_player_bar.dart"
+    ]
+  },
+  {
+    "value": "Név",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Névjegy",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs adat.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs archivált értesítés.",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs blokkolt felhasználó.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs cél",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs cikk ehhez a címkéhez.",
+    "count": 1,
+    "files": [
+      "lib/screens/news/tagged_news_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs elérhető kérdőív.",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_results_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs elérhető nyereményjáték.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs elérhető szavazási szezon.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_summary_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs hír.",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs ingyenes kiadvány.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/free_releases_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs ismerős.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs jogosultság",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs letöltve",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs még játék az adatbázisban.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs megjeleníthető elem.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs megjeleníthető release.",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/releases_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs megjelölt esemény.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs nyitott jelentés.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs új értesítés.",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Nincs válaszlehetőség beállítva.",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_results_screen.dart"
+    ]
+  },
+  {
+    "value": "Nyelv",
+    "count": 1,
+    "files": [
+      "lib/widgets/language_switch_button.dart"
+    ]
+  },
+  {
+    "value": "Nyeremény",
+    "count": 1,
+    "files": [
+      "lib/widgets/prize_reward_details.dart"
+    ]
+  },
+  {
+    "value": "Nyereményjáték (admin)",
+    "count": 1,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Nyilvános booking e-mail",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Nyilvános eredmények megnyitása",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_summary_screen.dart"
+    ]
+  },
+  {
+    "value": "Olvasottnak jelölés",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Opcionális – válassz időpontot",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Opcionális – válassz napot",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Opcionális · álló portré ajánlott · legfeljebb 5 MB",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Opcionális · négyzetes, átlátszó PNG ajánlott · legfeljebb 5 MB",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Opcionális kép; monogram jelenik meg, ha nincs feltöltve.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Ott leszek",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Ott leszek: {n} résztvevő",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Összes aktív törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Összes archivált törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Összes értesítés ki- és bekapcsolása",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Összes kijelölése ezen a fülön",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Összes megjelenése ({n})",
+    "count": 1,
+    "files": [
+      "lib/widgets/artist_releases_section.dart"
+    ]
+  },
+  {
+    "value": "Összes olvasottra jelölése",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "Összes törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/favorites_screen.dart"
+    ]
+  },
+  {
+    "value": "Piszkozat",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "Pontok, szintek és jelvények részletesen",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Pontosan 5 jelölt választható.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Preview leállítása",
+    "count": 1,
+    "files": [
+      "lib/widgets/release_preview_player.dart"
+    ]
+  },
+  {
+    "value": "Preview lejátszása",
+    "count": 1,
+    "files": [
+      "lib/widgets/release_preview_player.dart"
+    ]
+  },
+  {
+    "value": "Preview még nem érhető el.",
+    "count": 1,
+    "files": [
+      "lib/widgets/release_preview_player.dart"
+    ]
+  },
+  {
+    "value": "Privát üzenet",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Privát üzenetekhez regisztráció szükséges.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Profil kitöltése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Profil mentése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Profil mentve.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Profil szerkesztése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Profilkép feltöltése",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Projekt",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Publikus profilok és ismerősnek jelölés",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Push",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Radio",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Radio verzió",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Rawstyle zenékkel",
+    "count": 1,
+    "files": [
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "REAL HARDSTYLE FM",
+    "count": 1,
+    "files": [
+      "lib/widgets/radio_player_bar.dart"
+    ]
+  },
+  {
+    "value": "realhardstyle.nl megnyitása",
+    "count": 1,
+    "files": [
+      "lib/screens/more/radio_provider_screen.dart"
+    ]
+  },
+  {
+    "value": "Records",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/releases_screen.dart"
+    ]
+  },
+  {
+    "value": "Régebbi üzenetek betöltése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Regisztráció és bejelentkezés",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Regisztráció nélkül is szavazhatsz. Egy készülékről ebben az évadban csak egyszer lehet leadni a szavazatot.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "Regisztrált eszközök",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Regisztrált felhasználók és jogosultságok",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "reklám",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Release keresése",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/releases_screen.dart"
+    ]
+  },
+  {
+    "value": "Rendezd időrendbe",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "Rendszeresen jelen van a közösségben.",
+    "count": 1,
+    "files": [
+      "lib/services/achievement_service.dart"
+    ]
+  },
+  {
+    "value": "Résztvevők (admin)",
+    "count": 1,
+    "files": [
+      "lib/screens/prize/prize_screen.dart"
+    ]
+  },
+  {
+    "value": "Rögzítés feloldása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Rögzített Chat-üzenet",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Rögzített üzenet",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Rövid leírás",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Rövid válaszok az app használatához",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Saját DJ-adatlap megnyitása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Sajnos nem ez volt a helyes válasz. Ebben a játékban már nem tudsz újra próbálkozni — a következő játéknál ott leszünk!",
+    "count": 1,
+    "files": [
+      "lib/screens/prize/prize_screen.dart"
+    ]
+  },
+  {
+    "value": "Segítsd a Hungarian Hardstyle munkáját",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Segítsd a munkánkat",
+    "count": 1,
+    "files": [
+      "lib/screens/more/donate_screen.dart"
+    ]
+  },
+  {
+    "value": "Sokat tesz a közösségi jelenlétért.",
+    "count": 1,
+    "files": [
+      "lib/services/achievement_service.dart"
+    ]
+  },
+  {
+    "value": "Sor törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "Stop (a szám elejére áll)",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "SZAVAZÁS",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Szavazási állás",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Szavazási évad",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_summary_screen.dart"
+    ]
+  },
+  {
+    "value": "Szavazási évad kiválasztása",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_summary_screen.dart"
+    ]
+  },
+  {
+    "value": "Szervezés a Hungarian Hardstyle-on keresztül",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Szervező kiválasztása",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Szervező neve *",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Szervezői logó feltöltése",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Szervezők száma",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Szintek és jelvények",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Szívecske",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Találkoznék ezen az eseményen",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_meetup_screen.dart"
+    ]
+  },
+  {
+    "value": "Támogatás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/donate_screen.dart"
+    ]
+  },
+  {
+    "value": "Támogatás / Donate",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Támogatás PayPallal",
+    "count": 1,
+    "files": [
+      "lib/screens/more/donate_screen.dart"
+    ]
+  },
+  {
+    "value": "Tárhely ürítése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Tartsd hosszan az elemet, majd húzd a helyére.",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "Teljes címet adj meg (https://…). Ha kiüríted, a link eltűnik.",
+    "count": 1,
+    "files": [
+      "lib/screens/artists/artist_edit_screen.dart"
+    ]
+  },
+  {
+    "value": "Térkép",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Termékek betöltése…",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Tervezett események az Ott leszek funkcióval jelennek majd meg.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Tiltások megtekintése és feloldása",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "További események",
+    "count": 1,
+    "files": [
+      "lib/screens/events/events_screen.dart"
+    ]
+  },
+  {
+    "value": "További hírek",
+    "count": 1,
+    "files": [
+      "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Töltsd ki a mezőket; a jelszó legalább 6 karakter legyen.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Törlés a készülékről",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Törlés a készülékről (a vásárlás megmarad)",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Törlés megerősítése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Törlöd a hozzászólást?",
+    "count": 1,
+    "files": [
+      "lib/widgets/article_comments.dart"
+    ]
+  },
+  {
+    "value": "Törlöd az összes mentett kedvencet?",
+    "count": 1,
+    "files": [
+      "lib/screens/more/favorites_screen.dart"
+    ]
+  },
+  {
+    "value": "Törlöd ezt az üzenetet?",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Ugrás a legfrissebb üzenethez",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Ugyanazért a tevékenységért egyszer jár pont — a rendszer mindig a szerveren ellenőrzi.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Új DJ-adatlap jóváhagyásra",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Új e-mail-cím",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Új elem",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Új események",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Új fiók létrehozása",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Új hírek",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Új jelszó",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Új jelszó megerősítése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Új kérdés",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "Új kérdőív",
+    "count": 1,
+    "files": [
+      "lib/screens/poll/poll_results_screen.dart"
+    ]
+  },
+  {
+    "value": "Új kvíz",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Új lehetőség",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "Új nyereményjáték",
+    "count": 1,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Új nyilvános név",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Új regisztráció után, szerveroldali ellenőrzéssel.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Új release-ek",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Új szervező jóváhagyásra",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Új válasz",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "Új verzió érhető el",
+    "count": 1,
+    "files": [
+      "lib/screens/main_navigation.dart"
+    ]
+  },
+  {
+    "value": "Újdonságok",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "Újrahitelesítés",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Újrapróbálom",
+    "count": 1,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Újratöltés",
+    "count": 1,
+    "files": [
+      "lib/core/navigation/in_app_browser.dart"
+    ]
+  },
+  {
+    "value": "Unknown User ",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Üzenet",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Üzenet jelentése",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Üzenet nem érhető el.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Üzenet rögzítése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Üzenet…",
+    "count": 1,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Üzenetműveletek",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Válasz törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "Válasz: ",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Válaszd ki az esemény dátumát.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Válaszd ki, hogyan használod az appot.",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Válaszlehetőségek",
+    "count": 1,
+    "files": [
+      "lib/screens/community/prize_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Válaszok beküldése",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  },
+  {
+    "value": "Válassz dátumot",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Válassz egy zenét",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Válassz időpontot",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Válassz legalább egy kategóriát és egy műfajt.",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Valódi név",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/artist_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Válogatások a keményebb stílusokból",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Város *",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Vásárlás és letöltés esetén a Google Play termékazonosítója, a vásárlási token ellenőrzéséhez szükséges adatok és a felhasználói azonosító kapcsolódhatnak egymáshoz. A vásárlási jogosultságot a szerver ellenőrzi; a letöltési jogosultság csak ellenőrzött vásárlás vagy az adott változathoz tartozó jutalmazott feloldás után adható ki. A vásárlási token nyers értékét az alkalmazás adatbázisa nem tárolja, csak ellenőrzéshez szükséges, vissza nem fejthető azonosító kerülhet megőrzésre.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
+    "value": "Vásárlási diagnosztika",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "Vége törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "Végső megerősítés",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Vegyes hardstyle playlist",
+    "count": 1,
+    "files": [
+      "lib/screens/more/spotify_playlists_screen.dart"
+    ]
+  },
+  {
+    "value": "Verzió",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "Verzió betöltése…",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "Verzió, kapcsolat és weboldal",
+    "count": 1,
+    "files": [
+      "lib/screens/more/more_screen.dart"
+    ]
+  },
+  {
+    "value": "Videó megnyitása a YouTube-on",
+    "count": 1,
+    "files": [
+      "lib/widgets/post_embed_card.dart"
+    ]
+  },
+  {
+    "value": "Vissza",
+    "count": 1,
+    "files": [
+      "lib/core/navigation/in_app_browser.dart"
+    ]
+  },
+  {
+    "value": "Visszatétel a lejátszási listára",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Visszatéve a lejátszási listára.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "WAV / lossless",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "WAV feloldása reklámmal",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Webes feliratkozási oldal megnyitása",
+    "count": 1,
+    "files": [
+      "lib/screens/more/newsletter_screen.dart"
+    ]
+  },
+  {
+    "value": "Webes hírlevél-feliratkozás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/newsletter_screen.dart"
+    ]
+  },
+  {
+    "value": "Weboldal és közösségi linkek",
+    "count": 1,
+    "files": [
+      "lib/screens/submissions/organizer_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "WordPress Mobile API adminisztráció",
+    "count": 1,
+    "files": [
+      "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "WordPress-szerepkör",
+    "count": 1,
+    "files": [
+      "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Zenerészlet lejátszása",
+    "count": 1,
+    "files": [
+      "lib/screens/games/game_screen.dart"
+    ]
+  }
+]

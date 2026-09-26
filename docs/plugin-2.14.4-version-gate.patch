@@ -1,0 +1,260 @@
+diff --git a/huhs-mobile-api/huhs-mobile-api.php b/huhs-mobile-api/huhs-mobile-api.php
+index 9aa787c7..7f7f7d88 100644
+--- a/huhs-mobile-api/huhs-mobile-api.php
++++ b/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.14.3
++ * Version: 2.14.4
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.14.3');
++define('HUHS_API_VERSION', '2.14.4');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/huhs-mobile-api/includes/translation-cron.php b/huhs-mobile-api/includes/translation-cron.php
+index 7acefb16..45b4b218 100644
+--- a/huhs-mobile-api/includes/translation-cron.php
++++ b/huhs-mobile-api/includes/translation-cron.php
+@@ -191,7 +191,7 @@ function huhs_translation_provider()
+  *
+  * @return string 'disabled' | 'invalid' | 'empty' | 'uptodate' | 'failed' | 'partial' | 'translated'
+  */
+-function huhs_run_translation($post_id)
++function huhs_run_translation($post_id, $force = false)
+ {
+     if (!huhs_translation_enabled()) {
+         return 'disabled';
+@@ -209,13 +209,13 @@ function huhs_run_translation($post_id)
+         $title = trim((string) $post->post_title);
+         $content = trim((string) $post->post_content);
+         if ($title !== '' && $content !== '') {
+-            $statuses[] = huhs_run_content_translation($post, $title, $content);
++            $statuses[] = huhs_run_content_translation($post, $title, $content, $force);
+         }
+     }
+ 
+     // 2) A meta-szövegek (kérdőív, nyereményjáték, játék-összefoglaló) — 2.14.0.
+     if (function_exists('huhs_translation_field_specs') && huhs_translation_field_specs($post->post_type)) {
+-        $statuses[] = huhs_run_field_translation($post_id);
++        $statuses[] = huhs_run_field_translation($post_id, $force);
+     }
+ 
+     if (!$statuses) {
+@@ -239,13 +239,15 @@ function huhs_run_translation($post_id)
+  *
+  * @return string 'empty' | 'uptodate' | 'failed' | 'partial' | 'translated'
+  */
+-function huhs_run_content_translation($post, $title, $content)
++function huhs_run_content_translation($post, $title, $content, $force = false)
+ {
+     $post_id = (int) $post->ID;
+     $hash = huhs_translation_source_hash($post);
+ 
+     // Erre a szövegre már megvan a fordítás — nincs mit tenni.
+-    if (huhs_translation_is_current($post_id, $hash)) {
++    // ⚠️ `$force` (2.14.4): kényszerített újragenerálás — a tárolt (esetleg
++    // sérült) fordítás ilyenkor nem dönt, mert épp azt akarjuk lecserélni.
++    if (!$force && huhs_translation_is_current($post_id, $hash)) {
+         return 'uptodate';
+     }
+ 
+diff --git a/huhs-mobile-api/includes/translation-fields.php b/huhs-mobile-api/includes/translation-fields.php
+index 6a6cb4da..b11b14f2 100644
+--- a/huhs-mobile-api/includes/translation-fields.php
++++ b/huhs-mobile-api/includes/translation-fields.php
+@@ -540,7 +540,7 @@ function huhs_translation_parse_fields_response($raw, $requested)
+  *
+  * @return string 'disabled' | 'empty' | 'uptodate' | 'failed' | 'partial' | 'translated'
+  */
+-function huhs_run_field_translation($post_id)
++function huhs_run_field_translation($post_id, $force = false)
+ {
+     if (!huhs_translation_enabled()) {
+         return 'disabled';
+@@ -557,7 +557,9 @@ function huhs_run_field_translation($post_id)
+     }
+ 
+     $hash = huhs_translation_fields_source_hash($post_id);
+-    if (huhs_translation_fields_current($post_id)) {
++    // ⚠️ `$force` (2.14.4): a tárolt fordítás nem dönt — a sérült (régi
++    // escape-ekkel mentett) szöveget akarjuk lecserélni.
++    if (!$force && huhs_translation_fields_current($post_id)) {
+         return 'uptodate';
+     }
+ 
+diff --git a/huhs-mobile-api/includes/translation-sweep.php b/huhs-mobile-api/includes/translation-sweep.php
+index ea42003a..14023640 100644
+--- a/huhs-mobile-api/includes/translation-sweep.php
++++ b/huhs-mobile-api/includes/translation-sweep.php
+@@ -112,14 +112,43 @@ function huhs_translation_mark_failed($post_id, $hash)
+  * A szűrő a `_huhs_content_en` **hiányára** szól, ezért a lista a pótlás
+  * előrehaladtával magától ürül — nincs szükség "kurzor" állapotra.
+  *
++ * @param string $post_type A típus.
++ * @param int    $limit     Legfeljebb ennyi elem.
++ * @param bool   $force     Kényszerített újragenerálás (a mentett fordítás nem
++ *                          dönt): a „megjavult íróval írjuk újra" esetre.
+  * @return WP_Post[]
+  */
+-function huhs_translation_pending_posts($post_type, $limit = 5)
++function huhs_translation_pending_posts($post_type, $limit = 5, $force = false)
+ {
+     if (!in_array($post_type, huhs_translation_all_post_types(), true)) {
+         return array();
+     }
+ 
++    $query = array(
++        'post_type' => $post_type,
++        'post_status' => 'publish',
++        'posts_per_page' => max(1, (int) $limit),
++        'orderby' => 'ID',
++        'order' => 'ASC',
++        'suppress_filters' => false,
++    );
++
++    if ($force) {
++        // ⚠️ 2.14.4: kényszerített újragenerálás. A mentett fordítás itt nem
++        // dönthet (ez a lényeg), ezért csak az számít, hogy van-e fordítható
++        // forrás. Erre a javító útra akkor van szükség, ha a TÁROLT fordítás
++        // sérült (pl. a 2.14.2 előtti escape-hiba `rn`/`u00e9` szemete), és a
++        // forrás-ujjlenyomat változatlansága miatt magától nem indulna újra.
++        $posts = get_posts($query);
++        $usable = array();
++        foreach ($posts as $post) {
++            if ($post instanceof WP_Post && huhs_translation_post_has_source($post)) {
++                $usable[] = $post;
++            }
++        }
++        return $usable;
++    }
++
+     // A várólista két forrásból állhat: a **cím/törzs** fordításából és a
+     // **meta-szövegek** fordításából (2.14.0). A SQL csak előszűrő (bármelyik
+     // hiányzik), a pontos döntést a `huhs_translation_post_needs_work()` adja —
+@@ -133,17 +162,36 @@ function huhs_translation_pending_posts($post_type, $limit = 5)
+     if (huhs_translation_field_specs($post_type)) {
+         $meta_query[] = array('key' => HUHS_TRANSLATION_FIELDS_META, 'compare' => 'NOT EXISTS');
+         $meta_query[] = array('key' => HUHS_TRANSLATION_FIELDS_META, 'value' => '', 'compare' => '=');
++        // ⚠️ 2.14.4 — A SÉMA-VERZIÓ KAPUJA (mért éles hiba javítása).
++        //
++        // A fenti két ág csak a **soha nem fordított** elemeket hozza be, a
++        // verzió-kapu (`huhs_translation_fields_current()`) viszont pont a
++        // **már lefordított**, de RÉGI sémával (hibás escape-ekkel) mentett
++        // elemeket akarja újragenerálni. Enélkül a kapu **elérhetetlen** volt:
++        // a pótló kör 0 elemet vizsgált a nyeremény/kérdőív/játék típusokban,
++        // ezért a nyeremény leírásában élesben ott maradt az `rnrn`
++        // (mérve 2026-09-26: `pending = {huhs_prize: 0}`, miközben a tárolt
++        // leírás roncsolt volt).
++        //
++        // A `NOT EXISTS` a 2.14.3 előtt mentett elemeket hozza be (nincs
++        // verzió-jelölőjük), a `<` (NUMERIC) pedig egy **korábbi** verzióval
++        // írtakat — így a kapu egy későbbi verzió-emelésnél is működik.
++        // ⚠️ Szándékosan nem `!=`: annak a join-viselkedése a hiányzó metára
++        // WordPress-verziófüggő, a `<` + `NOT EXISTS` viszont egyértelmű.
++        $meta_query[] = array(
++            'key' => HUHS_TRANSLATION_FIELDS_VERSION_META,
++            'compare' => 'NOT EXISTS',
++        );
++        $meta_query[] = array(
++            'key' => HUHS_TRANSLATION_FIELDS_VERSION_META,
++            'value' => (string) HUHS_TRANSLATION_FIELDS_VERSION,
++            'compare' => '<',
++            'type' => 'NUMERIC',
++        );
+     }
+ 
+-    $posts = get_posts(array(
+-        'post_type' => $post_type,
+-        'post_status' => 'publish',
+-        'posts_per_page' => max(1, (int) $limit),
+-        'orderby' => 'ID',
+-        'order' => 'ASC',
+-        'suppress_filters' => false,
+-        'meta_query' => $meta_query,
+-    ));
++    $query['meta_query'] = $meta_query;
++    $posts = get_posts($query);
+ 
+     $pending = array();
+     foreach ($posts as $post) {
+@@ -158,6 +206,28 @@ function huhs_translation_pending_posts($post_type, $limit = 5)
+     return $pending;
+ }
+ 
++/** Van-e egyáltalán fordítható (nem üres) magyar forrása az elemnek? */
++function huhs_translation_post_has_source($post)
++{
++    if (!$post instanceof WP_Post) {
++        return false;
++    }
++
++    if (in_array($post->post_type, huhs_translation_post_types(), true)
++        && trim((string) $post->post_title) !== ''
++        && trim((string) $post->post_content) !== '') {
++        return true;
++    }
++
++    if (function_exists('huhs_translation_source_fields')
++        && huhs_translation_field_specs($post->post_type)
++        && huhs_translation_source_fields($post->ID)) {
++        return true;
++    }
++
++    return false;
++}
++
+ /**
+  * Kell-e ezzel az elemmel még foglalkozni? (a pótló kör döntése)
+  *
+@@ -223,6 +293,9 @@ function huhs_translation_sweep($args = array())
+     $limit = max(1, min(20, $limit));
+     $budget = (int) ($args['budget'] ?? 20);
+     $budget = max(0, min(60, $budget));
++    // 2.14.4: kényszerített újragenerálás (a mentett fordítás nem dönt) — a
++    // sérült tárolt szövegek javítására. Csak admin-végpontról érhető el.
++    $force = !empty($args['force']);
+ 
+     $result = array(
+         'enabled' => huhs_translation_enabled(),
+@@ -249,12 +322,12 @@ function huhs_translation_sweep($args = array())
+             continue;
+         }
+ 
+-        foreach (huhs_translation_pending_posts($post_type, $limit) as $post) {
++        foreach (huhs_translation_pending_posts($post_type, $limit, $force) as $post) {
+             if (time() >= $deadline) {
+                 break;
+             }
+ 
+-            $status = huhs_run_translation($post->ID);
++            $status = huhs_run_translation($post->ID, $force);
+             $type_stats['checked']++;
+             $result['checked']++;
+ 
+@@ -328,6 +401,7 @@ function huhs_register_translation_sweep_api()
+             'type' => array('sanitize_callback' => 'sanitize_key'),
+             'limit' => array('sanitize_callback' => 'absint'),
+             'budget' => array('sanitize_callback' => 'absint'),
++            'force' => array('sanitize_callback' => 'rest_sanitize_boolean'),
+         ),
+     ));
+ }
+@@ -355,6 +429,9 @@ function huhs_translation_sweep_endpoint(WP_REST_Request $request)
+         'type' => $request->get_param('type'),
+         'limit' => $request->get_param('limit') ?: 5,
+         'budget' => $request->get_param('budget') ?: 20,
++        // 2.14.4: `force=1` — a megadott típus elemeit akkor is újrafordítja, ha
++        // a tárolt fordítás naprakésznek látszik (sérült tárolt szöveg javítása).
++        'force' => $request->get_param('force'),
+     )));
+ }
+ 

@@ -19,7 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.3.zip';
+export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.4.zip';
 export const DEFAULT_SOURCE = '.tmp-api-260/huhs-mobile-api';
 export const EXPECTED_ROOT = 'huhs-mobile-api';
 
@@ -87,7 +87,7 @@ export function packageChecks(read) {
   const fieldsCode = stripPhpComments(fields);
 
   return [
-    ['a fejléc és a konstans is 2.14.3', /Version:\s*2\.14\.3/.test(main) && main.includes("HUHS_API_VERSION', '2.14.3'")],
+    ['a fejléc és a konstans is 2.14.4', /Version:\s*2\.14\.4/.test(main) && main.includes("HUHS_API_VERSION', '2.14.4'")],
     ['a fő fájl behúzza a hely-névtárat, a pótló kört és a mező-fordítást',
       main.includes('includes/translation-places.php') && main.includes('includes/translation-sweep.php')
         && main.includes('includes/translation-fields.php')],
@@ -111,7 +111,8 @@ export function packageChecks(read) {
       prize.includes("'_huhs_prize_question'") && prize.includes("'_huhs_prize_answers'")
         && prize.includes("'_huhs_prize_description'")],
     ['a pótlás a HIÁNYZÓ angolt keresi (NOT EXISTS)', sweep.includes("'compare' => 'NOT EXISTS'")],
-    ['a pótlás a közös fordítást hívja (nincs saját másolat)', sweep.includes('huhs_run_translation($post->ID)')],
+    ['a pótlás a közös fordítást hívja (nincs saját másolat)',
+      sweep.includes('huhs_run_translation($post->ID, $force)')],
     ['a pótlás óránként ütemeződik', sweep.includes("'hourly'") && sweep.includes("'huhs_translation_sweep_event'")],
     ['a pótlás korlátozza a költséget (limit + budget)', sweep.includes("'limit'") && sweep.includes("'budget'")],
     ['a pótlás NEM hoz létre felhasználói értesítést (nincs wp_update_post / ütemezés a kódban)',
@@ -167,6 +168,28 @@ export function packageChecks(read) {
       /function huhs_translation_fields_current\(\$post_id\)[\s\S]*?HUHS_TRANSLATION_FIELDS_VERSION\b/.test(fieldsCode)],
     ['a cím/törzs fordítás írása is `wp_slash()`-ol',
       cron.includes("wp_slash($response['")],
+    // ---- 2.14.4: a séma-verzió kapuja ELÉRHETŐ + kényszerített javítás -----
+    // ⚠️ MÉRT ÉLES HIBA: a 2.14.3 verzió-kapuja **elérhetetlen** volt, mert a
+    // pótló kör SQL-előszűrője csak a HIÁNYZÓ/üres fordításra szűrt — a
+    // nyeremény leírásában élesben ott maradt az `rnrn`.
+    ['a várólista előszűrője a séma-verziót is figyeli (a kapu elérhető)',
+      sweep.includes('HUHS_TRANSLATION_FIELDS_VERSION_META')
+        && sweep.includes("'compare' => 'NOT EXISTS'")
+        && /HUHS_TRANSLATION_FIELDS_VERSION_META[\s\S]{0,200}'compare' => '<'/.test(sweep)],
+    ['a verzió-összehasonlítás numerikus (nem join-függő `!=`)',
+      /'compare' => '<',\s*'type' => 'NUMERIC'/.test(sweep)],
+    ['a kényszerített javítás (`force`) végig van kötve',
+      sweep.includes('function huhs_translation_pending_posts($post_type, $limit = 5, $force = false)')
+        && sweep.includes('huhs_run_translation($post->ID, $force)')
+        && sweep.includes("'force' => $request->get_param('force')")
+        && cron.includes('function huhs_run_translation($post_id, $force = false)')],
+    ['a kényszerített út a cím/törzs és a mező-ágat is átviszi',
+      cron.includes('huhs_run_content_translation($post, $title, $content, $force)')
+        && cron.includes('huhs_run_field_translation($post_id, $force)')
+        && fieldsCode.includes('function huhs_run_field_translation($post_id, $force = false)')],
+    ['a kényszerített út csak fordítható forrást választ ki',
+      sweep.includes('function huhs_translation_post_has_source($post)')
+        && sweep.includes('huhs_translation_post_has_source($post)')],
   ];
 }
 
@@ -186,11 +209,11 @@ export function selfTest() {
 
   const star = 'x';
   const full = {
-    'huhs-mobile-api.php': 'Version: 2.14.3 HUHS_API_VERSION\', \'2.14.3\' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php',
-    'includes/translation-sweep.php': "'compare' => 'NOT EXISTS' huhs_run_translation($post->ID) 'hourly' 'huhs_translation_sweep_event' 'limit' 'budget' huhs_translation_retry_delay '/translations/status' '/translations/sweep'",
-    'includes/translation-fields.php': "'_huhs_poll_question' '_huhs_prize_answers' '_huhs_prize_description' '_huhs_game_summary' \"'_huhs_game_questions' => 'questions'\" huhs_translation_game_question_texts($post_id) { return array(); } count($translated) === count($source) HUHS_TRANSLATION_FIELDS_FAILED_META wp_slash(wp_json_encode($stored)) HUHS_TRANSLATION_FIELDS_VERSION = 2 HUHS_TRANSLATION_FIELDS_VERSION_META function huhs_translation_fields_current($post_id) { HUHS_TRANSLATION_FIELDS_VERSION",
+    'huhs-mobile-api.php': 'Version: 2.14.4 HUHS_API_VERSION\', \'2.14.4\' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php',
+    'includes/translation-sweep.php': "'compare' => 'NOT EXISTS' huhs_run_translation($post->ID, $force) 'hourly' 'huhs_translation_sweep_event' 'limit' 'budget' huhs_translation_retry_delay '/translations/status' '/translations/sweep' HUHS_TRANSLATION_FIELDS_VERSION_META HUHS_TRANSLATION_FIELDS_VERSION_META x 'compare' => '<' \"'compare' => '<',\\n            'type' => 'NUMERIC'\" function huhs_translation_pending_posts($post_type, $limit = 5, $force = false) 'force' => $request->get_param('force') function huhs_translation_post_has_source($post) huhs_translation_post_has_source($post)",
+    'includes/translation-fields.php': "'_huhs_poll_question' '_huhs_prize_answers' '_huhs_prize_description' '_huhs_game_summary' \"'_huhs_game_questions' => 'questions'\" huhs_translation_game_question_texts($post_id) { return array(); } count($translated) === count($source) HUHS_TRANSLATION_FIELDS_FAILED_META wp_slash(wp_json_encode($stored)) HUHS_TRANSLATION_FIELDS_VERSION = 2 HUHS_TRANSLATION_FIELDS_VERSION_META function huhs_translation_fields_current($post_id) { HUHS_TRANSLATION_FIELDS_VERSION function huhs_run_field_translation($post_id, $force = false)",
     'includes/translation-places.php': "'magyarország' => 'Hungary' Velence if ($lang !== 'en')",
-    'includes/translation-cron.php': "HUHS_TRANSLATION_HASH_META huhs_translation_is_current huhs_run_field_translation( return 'translated'; wp_slash($response['title'])",
+    'includes/translation-cron.php': "HUHS_TRANSLATION_HASH_META huhs_translation_is_current huhs_run_field_translation( return 'translated'; wp_slash($response['title']) function huhs_run_translation($post_id, $force = false) huhs_run_content_translation($post, $title, $content, $force) huhs_run_field_translation($post_id, $force)",
     'includes/post-translation-meta.php': 'huhs_translation_field_post_types()',
     'includes/faq.php': "huhs_translation_meta_values( huhs_request_lang($request) 'has_en' huhs_translation_faq_category_names() 'első lépések' => 'Getting Started'",
     'includes/poll.php': 'huhs_translation_text( huhs_translation_list(',

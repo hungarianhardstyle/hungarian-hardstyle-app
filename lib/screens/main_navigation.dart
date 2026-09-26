@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'events/events_screen.dart';
 import 'community/community_screen.dart';
@@ -10,19 +11,20 @@ import 'more/more_screen.dart';
 import 'news/news_screen.dart';
 import 'releases/releases_screen.dart';
 import '../core/i18n/tr.dart';
+import '../providers/news_provider.dart';
 import '../widgets/app_text.dart';
 import '../widgets/radio_player_bar.dart';
 import '../services/app_badge_sync.dart';
 import '../services/app_update_service.dart';
 
-class MainNavigation extends StatefulWidget {
+class MainNavigation extends ConsumerStatefulWidget {
   const MainNavigation({super.key});
 
   @override
-  State<MainNavigation> createState() => _MainNavigationState();
+  ConsumerState<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation>
+class _MainNavigationState extends ConsumerState<MainNavigation>
     with WidgetsBindingObserver {
   static const _tabCount = 6;
   int _currentIndex = 0;
@@ -62,6 +64,12 @@ class _MainNavigationState extends State<MainNavigation>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkForUpdate();
+      // ⚠️ MÉRT OK (2026-09-26): a push-értesítésre megnyitott app **azonnal**
+      // kérdezze meg a szervert, ne várjon a percenkénti ütemre — a plugin a
+      // publikáláskor azonnal érvényteleníti a cache-ét, és a kondicionális HEAD
+      // 304-et ad (mért: 399 ms, 0 bájt), tehát ez egy olcsó kérés. A csendes
+      // út nem ír a képernyőre: változáskor a jelzés frissíti a listákat.
+      unawaited(ref.read(newsRevalidateProvider)());
     }
   }
 
