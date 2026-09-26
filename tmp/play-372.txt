@@ -1,0 +1,2 @@
+- Javítva: nyelvváltáskor a már megnyitott cikk-, esemény- és kiadvány-adatlap is azonnal a választott nyelven szól.
+- A hírek listája és az értesítések is azonnal átállnak — nem kell újraindítani az appot.

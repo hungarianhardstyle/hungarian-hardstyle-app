@@ -1,16 +1,16 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 371 megy fel** (versionCode **371**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> **Most a 372 megy fel** (versionCode **372**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-09-26): az **ÉLES (production) sávon a 360 fut** (`completed`, 100%), a **zárt teszten (alpha)
-> a 365**, a `beta` sávon a 354. A 371 újdonsága (a tulajdonos jelzése: *„ja a @mindenki tag nem működik,
-> nem küld notifyt"*): a Chat **@mindenki** értesítéséhez mostantól **push (banner) is jön** — az éles
-> mérés szerint a bejövő listabeli bejegyzések eddig is létrejöttek (44 címzett), csak **némán**; a
-> **személyes @említés** szándékosan csendes marad. Emellett a **küldő visszajelzést kap**: hány címzett
-> és hány készülék kapott értesítést (ő maga — mint szerző — szándékosan nem kap). A 371 a **370 minden**
-> újdonságát is tartalmazza (az értesítésbe kerülő cikk címe is a választott nyelven), az pedig a
-> korábbiakét (értesítések fordítása, kiadási jegyzet angolul, játék-eredmény fejléc, nyelvváltó, angol
-> tartalom, GYÍK → FAQ, hírlista-frissesség, Chat-ugrás). A nyilvános kiadáshoz a **361–371 összesítő**
-> (1b-2.), a bétához a **355–371 összesítő** (1b-3.) való.
+> a 365**, a `beta` sávon a 354. A 372 újdonsága (a tulajdonos kérése: *„csináld"*): **nyelvváltáskor a
+> már megnyitott cikk-, esemény- és kiadvány-adatlap is azonnal a választott nyelven szól** — eddig a
+> feliratok átfordultak, a betöltött **tartalom** (cím, szöveg, leírás) viszont a régi nyelven maradt,
+> amíg a képernyőt be nem csuktad. A 372 a **371 minden** újdonságát is tartalmazza (a Chat **@mindenki**
+> értesítéséhez **push**, a küldő visszajelzése, és a hírlista azonnali átállása nyelvváltáskor), az pedig
+> a korábbiakét (az értesítésbe kerülő cikk címe is a választott nyelven, értesítések fordítása, kiadási
+> jegyzet angolul, játék-eredmény fejléc, nyelvváltó, angol tartalom, GYÍK → FAQ, hírlista-frissesség,
+> Chat-ugrás). A nyilvános kiadáshoz a **361–372 összesítő** (1b-2.), a bétához a **355–372 összesítő**
+> (1b-3.) való.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -18,20 +18,20 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 371
+currentBuild: 372
 currentVersion: 1.0.0
 lastPublishedBuild: 360
-aab: build/HUHS-v1.0.0+371-release.aab
-sha256: C8EDC1C72A3CCE376442B05A19752C46DF50F00C62AC68ECD2E8AD07E179C663
+aab: build/HUHS-v1.0.0+372-release.aab
+sha256: 9A1D9BA75FF833DD817B4333B9D060D8CAAC9F5C6AC78EA2B1C0119C6AA23154
 -->
 
-⚠️ A **371**-et a **370** után kellett építeni (a 370-et és a 369-et **nem** kell feltölteni, ha még nem
-tetted meg: a 371 mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
+⚠️ A **372**-t a **371** után kellett építeni (a 371-et, a 370-et és a 369-et **nem** kell feltölteni, ha
+még nem tetted meg: a 372 mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
 ⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.5** — ✅ **mérve: már fent van** (`apiVersion = 2.14.5`, és a
 natív admin űrlapjai mutatják a **kézi angol mezőket**: `_huhs_poll_question_en`,
 `_huhs_poll_options_en`, `_huhs_prize_answers_en`, `_huhs_game_summary_en`). A szerveroldali függvények
 **telepítve** vannak (`firebase deploy --only functions` → *Deploy complete!*, benne a **@mindenki push**).
-Az apphoz csak az **AAB (371)** feltöltése kell.
+Az apphoz csak az **AAB (372)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -201,9 +201,8 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ: a Chat @mindenki értesítéséhez mostantól push (banner) is jön — a személyes @említés csendes marad.
-- A @mindenki küldője visszajelzést kap: hány címzett és hány készülék kapott értesítést.
-- Javítva: nyelvváltáskor a hírek listája is azonnal átáll — nem kell újraindítani az appot.
+- Javítva: nyelvváltáskor a már megnyitott cikk-, esemény- és kiadvány-adatlap is azonnal a választott nyelven szól.
+- A hírek listája és az értesítések is azonnal átállnak — nem kell újraindítani az appot.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -221,10 +220,10 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–371** összesítő (a 360 után)
+## 1b-2. Play Console — a **361–372** összesítő (a 360 után)
 
 **Ezt használd, ha a felhasználó a 360-ról jön** (ez az ÉLES sáv jelenlegi buildje) — vagyis csak azok
-az újdonságok szerepelnek benne, amelyek a **361–371** között készültek (a 359/360 `@mindenki`-je
+az újdonságok szerepelnek benne, amelyek a **361–372** között készültek (a 359/360 `@mindenki`-je
 **nincs** benne, mert azt a 360 már megkapta — a **push** viszont új, ezért az benne van). A
 karakter-számot a `tools/check-play-notes.mjs` méri.
 
@@ -237,9 +236,9 @@ karakter-számot a `tools/check-play-notes.mjs` méri.
 - Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a changelog.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–371** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–372** összesítő)
 
-**Ezt használd, ha a 371-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 372-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-09-26) szerint ott a **354** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a Chat-értesítés odaugrása, a DJ-adatlap megjelenései, a hírlista-frissesség és a mai
@@ -280,6 +279,14 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 372 — nyelvváltáskor a **megnyitott adatlapok** is átállnak
+- **A tulajdonos kérése:** *„csináld"* — az előző körben jeleztem korlátként, hogy a **már megnyitott** cikk-/esemény-/kiadvány-adatlap a nyelvváltáskor a régi nyelven marad.
+- **A mért gyökér:** a `tr(context, …)` a `Localizations` függőséget regisztrálja, ezért a **feliratok** azonnal átfordultak — a képernyő viszont a **betöltött példányt** (`_post` / `_event` / `_release`) tartotta, és a **tartalom** (cím, szöveg, leírás) csak újranyitáskor frissült. A DJ- és szervező-adatlap **már jó volt**: azok `ConsumerWidget`-ek, és a részlet-providerük figyeli a jelzést (`ref.listen(publicContentRefreshProvider, … invalidateSelf())`).
+- **Ami épült:** új, újrahasznosítható minta (`lib/core/i18n/content_language_reload.dart`): a képernyő megjegyzi, **milyen nyelven** töltötte be a tartalmat, és a WordPress-jelzésre **nyelvváltást** észlelve **egyszer** újratölti (**ugyanazon** a meglévő `_loadFull…` úton, ezért nincs második kóri út). A régi tartalom a betöltés alatt **látható marad** (nincs üres villanás), hiba esetén pedig a régi marad. **Tartalom-frissülésre nem tölt újra** (az a jelzés a háttér-frissítésnél is felhúz), és a lebontott képernyő **leiratkozik** (nincs szivárgás). Bekötve: cikk-, esemény- és kiadvány-adatlap.
+- **Mérve:** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1141/1141** (ebből új: `test/services/content_language_reload_test.dart` **5/5** — nyelvváltáskor **egyszer** tölt, tartalom-frissülésre **nem**, lebontás után **nem**, és forrás-lint a három adatlap bekötésére); **mutációs bizonyíték 4/4** (`tmp/mutation-proof-content-language-reload.mjs` — a figyelő elvétele, a nyelv-összehasonlítás elvétele, a mixin levétele a cikk-adatlapról, az esemény-út kiürítése: mind **elkapva**, bájtazonos visszaállítással); `node tmp/verify-aab.mjs build/HUHS-v1.0.0+372-release.aab 372` → **versionCode 372**, **1133 kulcsú szótár**, mind a **tizenhat** changelog-sor mindhárom ABI-ban.
+- **Amit ez a kiadás is tartalmaz:** a 371 (a Chat **@mindenki** push-ja, a küldő visszajelzése, a hírlista azonnali átállása), a 370 (az értesítésbe kerülő cikk címe is a választott nyelven), a 369, a 368, a 367, a 366, a 365, a 364 és a 363–359 minden újdonsága.
+- **⚠️ ŐSZINTE KORLÁT:** a nyitott adatlap a nyelvváltás után **hálózatot** kér az új tartalomért; ha épp nincs kapcsolat, a **régi nyelvű** tartalom marad (nem törünk el semmit), és a következő jelzésre újrapróbáljuk. A **Chat** és a felhasználók saját szövegei továbbra sem fordulnak.
 
 ### 371 — a Chat **@mindenki** értesítéséhez push is jön + a küldő visszajelzése + a hírlista nyelvváltása
 - **A tulajdonos jelzése:** *„ja a @mindenki tag nem működik, nem küld notifyt"*. **Éles mérés** (csak olvasó szondák a Firestore-on): a `live_feed_posts` dokumentumban **ott volt** a `mentions: [everyone]`, és a fan-out **lefutott** — **44 értesítés** keletkezett 2,4 másodperc alatt (43 magyar + 1 angol szöveggel), 44 különböző címzettnek. Az **egyetlen**, aki nem kapott: a **küldő maga** (a szerzőt a rendszer szándékosan kihagyja). Vagyis a funkció **működött**, csak **nem látszott**: a chat-hivatkozásoknál **nem ment push** (csak a bejövő lista kapott bejegyzést), és a küldő semmilyen visszajelzést nem kapott. **Mérve:** a 44 címzett közül **42-nél volt érvényes push-token**.

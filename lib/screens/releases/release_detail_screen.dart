@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../core/i18n/app_strings.dart';
+import '../../core/i18n/content_language_reload.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/release.dart';
 import 'releases_screen.dart';
@@ -28,7 +29,8 @@ class ReleaseDetailScreen extends StatefulWidget {
   State<ReleaseDetailScreen> createState() => _ReleaseDetailScreenState();
 }
 
-class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
+class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
+    with ContentLanguageReload<ReleaseDetailScreen> {
   final _purchases = LabelPurchaseService.shared;
   late HuhsRelease _release;
   List<ProductDetails> _products = const [];
@@ -77,6 +79,11 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen> {
     }
     if (mounted) await _loadProducts();
   }
+
+  /// Nyelvváltáskor a kiadvány újratöltése a **mostani** nyelven (a régi példány
+  /// a betöltés alatt is látható marad — lásd a mixin fejlécét).
+  @override
+  Future<void> reloadForLanguage() => _loadFullRelease();
 
   Future<void> _handleAuthChange(User? user) async {
     if (!mounted) return;

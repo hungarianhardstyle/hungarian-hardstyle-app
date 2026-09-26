@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/content/html_linkifier.dart';
 import '../../core/i18n/app_strings.dart';
+import '../../core/i18n/content_language_reload.dart';
 import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
@@ -32,7 +33,8 @@ class EventDetailScreen extends ConsumerStatefulWidget {
   ConsumerState<EventDetailScreen> createState() => _EventDetailScreenState();
 }
 
-class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
+class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
+    with ContentLanguageReload<EventDetailScreen> {
   late HuhsEvent _event;
   HuhsEvent get event => _event;
   String? _attendanceState;
@@ -63,6 +65,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       // The summary remains usable if the detail request is temporarily unavailable.
     }
   }
+
+  /// Nyelvváltáskor az esemény újratöltése a **mostani** nyelven (a régi
+  /// példány a betöltés alatt is látható marad — lásd a mixin fejlécét).
+  @override
+  Future<void> reloadForLanguage() => _loadFullEvent();
 
   Future<void> _setAttendance(String state) async {
     if (_attendanceBusy) return;

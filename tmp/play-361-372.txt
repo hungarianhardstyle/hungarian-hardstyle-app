@@ -1,0 +1,6 @@
+- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (alap: magyar).
+- Angolul a cikkek, a hírek címkéi, az Achievement-nevek és a GYÍK (FAQ) is.
+- Az értesítések is a választott nyelven jönnek, címekkel.
+- ÚJ a Chatben: @mindenki (push is), és a válasz idézetére koppintva az eredeti üzenetre ugrik.
+- ÚJ: a főoldal és a Hírek fül magától frissül, nyelvváltásra is; a DJ-adatlapon a megjelenések.
+- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a changelog.

@@ -30,6 +30,7 @@ const hungarian = JSON.parse(fs.readFileSync(HU, 'utf8'));
 const latest = await import('../tmp/changelog-en-5.mjs');
 
 const english = [
+  ...latest.release372,
   ...latest.release371,
   ...latest.release370,
   ...latest.release369,
@@ -43,7 +44,7 @@ for (const chunk of CHUNKS) {
   english.push(...values);
 }
 console.log(
-  `tmp/changelog-en-5.mjs: ${latest.release371.length + latest.release370.length + latest.release369.length + latest.release368.length} sor (a legfrissebb kiadások)`,
+  `tmp/changelog-en-5.mjs: ${latest.release372.length + latest.release371.length + latest.release370.length + latest.release369.length + latest.release368.length} sor (a legfrissebb kiadások)`,
 );
 
 /**
@@ -51,16 +52,17 @@ console.log(
  * egy elcsúszott lista ugyanolyan hosszú lehet).
  */
 const anchors = [
-  [0, 'ÚJ: a Chat @mindenki értesítéséhez mostantól push', 'NEW: an @everyone mention in the Chat now also sends a push'],
-  [3, 'Javítva: az értesítésben a cikk (és a kiadás, esemény, DJ) címe', 'Fixed: the title of the article (and of the release, event or DJ)'],
-  [5, 'Javítva: angol felületen az értesítések szövege', 'Fixed: on the English interface notification texts'],
-  [6, 'Javítva: a privát üzenet értesítésének címe', 'Fixed: the title of a private message notification'],
-  [8, 'Javítva: angol felületen a kiadási jegyzet', 'Fixed: on the English interface the release notes'],
-  [10, 'Javítva: angol felületen a játék eredményei', 'Fixed: on the English interface the Game results'],
-  [43, 'A kvíz azonnal mutatja', 'The quiz now shows immediately'],
-  [77, 'Gyorsabb betöltés', 'Faster loading'],
-  [108, 'A hír kedveléséért járó pontot', 'The points for liking a news item'],
-  [141, 'A kérdőív szavazólapja saját képernyőn', 'The poll ballot opens on its own screen'],
+  [0, 'Javítva: nyelvváltáskor a már megnyitott cikk-', 'Fixed: when you switch language an already open article'],
+  [1, 'ÚJ: a Chat @mindenki értesítéséhez mostantól push', 'NEW: an @everyone mention in the Chat now also sends a push'],
+  [4, 'Javítva: az értesítésben a cikk (és a kiadás, esemény, DJ) címe', 'Fixed: the title of the article (and of the release, event or DJ)'],
+  [6, 'Javítva: angol felületen az értesítések szövege', 'Fixed: on the English interface notification texts'],
+  [7, 'Javítva: a privát üzenet értesítésének címe', 'Fixed: the title of a private message notification'],
+  [9, 'Javítva: angol felületen a kiadási jegyzet', 'Fixed: on the English interface the release notes'],
+  [11, 'Javítva: angol felületen a játék eredményei', 'Fixed: on the English interface the Game results'],
+  [44, 'A kvíz azonnal mutatja', 'The quiz now shows immediately'],
+  [78, 'Gyorsabb betöltés', 'Faster loading'],
+  [109, 'A hír kedveléséért járó pontot', 'The points for liking a news item'],
+  [142, 'A kérdőív szavazólapja saját képernyőn', 'The poll ballot opens on its own screen'],
 ];
 
 const problems = [];

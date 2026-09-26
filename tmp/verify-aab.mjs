@@ -121,6 +121,8 @@ const changelog = [
   'a Chat @mindenki értesítéséhez mostantól push (banner) is jön',
   'A @mindenki küldője visszajelzést kap',
   'nyelvváltáskor a hírek listája is azonnal átáll',
+  // 372: a megnyitott adatlapok is átállnak nyelvváltáskor.
+  'nyelvváltáskor a már megnyitott cikk-, esemény- és kiadvány-adatlap',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });

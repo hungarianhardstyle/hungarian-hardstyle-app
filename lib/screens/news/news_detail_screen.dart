@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/content/html_linkifier.dart';
 import '../../core/i18n/app_strings.dart';
+import '../../core/i18n/content_language_reload.dart';
 import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
@@ -29,7 +30,8 @@ class NewsDetailScreen extends StatefulWidget {
   State<NewsDetailScreen> createState() => _NewsDetailScreenState();
 }
 
-class _NewsDetailScreenState extends State<NewsDetailScreen> {
+class _NewsDetailScreenState extends State<NewsDetailScreen>
+    with ContentLanguageReload<NewsDetailScreen> {
   late Post _post;
 
   Post get post => _post;
@@ -43,6 +45,11 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
       unawaited(_loadFullPost());
     }
   }
+
+  /// Nyelvváltáskor a cikk újratöltése a **mostani** nyelven (a régi példány a
+  /// betöltés alatt is látható marad — lásd a mixin fejlécét).
+  @override
+  Future<void> reloadForLanguage() => _loadFullPost();
 
   Future<void> _loadFullPost() async {
     try {

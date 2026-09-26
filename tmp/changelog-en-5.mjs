@@ -1,6 +1,10 @@
 // A Névjegy-changelog angol fordításai — 5. csomag: a **legfrissebb** kiadások
 // sorai (ezek a lista ELEJÉN állnak, ezért a fordítók is elöl mennek, a
 // legfrissebbel kezdve), valamint a Névjegy egyik sablonja.
+export const release372 = [
+  'Fixed: when you switch language an already open article, event or release page also switches to the selected language immediately.',
+];
+
 export const release371 = [
   'NEW: an @everyone mention in the Chat now also sends a push notification (banner) — personal @mentions stay silent.',
   'The sender of an @everyone message gets feedback: how many recipients and how many devices were notified.',
