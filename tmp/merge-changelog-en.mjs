@@ -24,11 +24,12 @@ const DICT = 'assets/i18n/en.json';
 
 const hungarian = JSON.parse(fs.readFileSync(HU, 'utf8'));
 
-// ⚠️ A **368** bejegyzés sorai a lista ELEJÉN állnak (2 sor), ezért a fordítók is
-// elöl mennek — így a chunkok sorrendje változatlan maradhatott.
+// ⚠️ A **legfrissebb** kiadások sorai a lista ELEJÉN állnak (369: 3 sor, 368:
+// 2 sor), ezért a fordítók is elöl mennek — így a chunkok sorrendje változatlan
+// maradhatott.
 const latest = await import('../tmp/changelog-en-5.mjs');
 
-const english = [...latest.release368];
+const english = [...latest.release369, ...latest.release368];
 for (const chunk of CHUNKS) {
   const module = await import(`../${chunk}`);
   const values = module.default;
@@ -36,20 +37,23 @@ for (const chunk of CHUNKS) {
   console.log(`${chunk}: ${values.length} sor`);
   english.push(...values);
 }
-console.log(`tmp/changelog-en-5.mjs: ${latest.release368.length} sor (a legfrissebb kiadás)`);
+console.log(
+  `tmp/changelog-en-5.mjs: ${latest.release369.length + latest.release368.length} sor (a legfrissebb kiadások)`,
+);
 
 /**
  * Horgonyok: a sorrend-egyezés ellenőrzése (a puszta hossz-egyezés nem elég —
  * egy elcsúszott lista ugyanolyan hosszú lehet).
  */
 const anchors = [
-  [0, 'Javítva: angol felületen a kiadási jegyzet', 'Fixed: on the English interface the release notes'],
-  [1, 'A kiadási jegyzet sorai mostantól', 'The release note lines are now translated'],
-  [2, 'Javítva: angol felületen a játék eredményei', 'Fixed: on the English interface the Game results'],
-  [35, 'A kvíz azonnal mutatja', 'The quiz now shows immediately'],
-  [69, 'Gyorsabb betöltés', 'Faster loading'],
-  [100, 'A hír kedveléséért járó pontot', 'The points for liking a news item'],
-  [133, 'A kérdőív szavazólapja saját képernyőn', 'The poll ballot opens on its own screen'],
+  [0, 'Javítva: angol felületen az értesítések szövege', 'Fixed: on the English interface notification texts'],
+  [1, 'Javítva: a privát üzenet értesítésének címe', 'Fixed: the title of a private message notification'],
+  [3, 'Javítva: angol felületen a kiadási jegyzet', 'Fixed: on the English interface the release notes'],
+  [5, 'Javítva: angol felületen a játék eredményei', 'Fixed: on the English interface the Game results'],
+  [38, 'A kvíz azonnal mutatja', 'The quiz now shows immediately'],
+  [72, 'Gyorsabb betöltés', 'Faster loading'],
+  [103, 'A hír kedveléséért járó pontot', 'The points for liking a news item'],
+  [136, 'A kérdőív szavazólapja saját képernyőn', 'The poll ballot opens on its own screen'],
 ];
 
 const problems = [];

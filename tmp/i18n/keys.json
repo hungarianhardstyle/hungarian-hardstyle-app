@@ -2488,6 +2488,13 @@
     ]
   },
   {
+    "value": "Archivált értesítések törlése",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
     "value": "Áthelyezés a lomtárba",
     "count": 1,
     "files": [
@@ -3255,6 +3262,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Értesítés",
+    "count": 1,
+    "files": [
+      "lib/screens/notifications/notification_center_screen.dart"
     ]
   },
   {

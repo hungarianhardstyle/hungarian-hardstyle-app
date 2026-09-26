@@ -1,15 +1,16 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 368 megy fel** (versionCode **368**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> **Most a 369 megy fel** (versionCode **369**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-09-26): az **ÉLES (production) sávon a 360 fut** (`completed`, 100%), a **zárt teszten (alpha)
-> a 365**, a `beta` sávon a 354. A 368 újdonsága (a tulajdonos jelzése: *„a changelog az appban nem
-> angol"* — angol felületen): a **kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg**, a
-> **teljes előzmény** a legkorábbi kiadásokig visszamenőleg (134 sor), és a sorok a **szótárból**
-> fordulnak, ezért nyelvváltáskor azonnal váltanak. A 368 a **367 minden** újdonságát is tartalmazza
-> (játék-eredmény fejléc, válasz-előnézet, a „szóközös" szótár-kulcsok), az pedig a korábbiakét
-> (nyelvváltó, angol tartalom, többnyelvű értesítések, hírlista-frissesség, Chat-idézet odaugrása,
-> „Partyface", GYÍK → FAQ). A nyilvános kiadáshoz a **361–368 összesítő** (1b-2.), a bétához a
-> **355–368 összesítő** (1b-3.) való.
+> a 365**, a `beta` sávon a 354. A 369 újdonsága (a tulajdonos jelzése: *„a notifyok még mindig
+> magyarul vannak az angol felületen vagy lassan áll át"* → *„nagyon lassan"*): az **értesítések
+> szövege angol felületen azonnal a választott nyelven** jelenik meg — a **régi** értesítések is
+> átfordulnak, nem kell megvárni az újakat (eddig a szerver a **létrehozáskor** renderelte a szöveget,
+> ezért a régi sorok a régi nyelven maradtak); a **privát üzenet** értesítésének címe is a választott
+> nyelven szól; és az értesítések törlése ablak „archivált" címe is angolul jelenik meg. A 369 a **368
+> minden** újdonságát is tartalmazza (a kiadási jegyzet angolul), az pedig a korábbiakét (játék-eredmény
+> fejléc, válasz-előnézet, nyelvváltó, angol tartalom, GYÍK → FAQ, hírlista-frissesség, Chat-ugrás).
+> A nyilvános kiadáshoz a **361–369 összesítő** (1b-2.), a bétához a **355–369 összesítő** (1b-3.) való.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -17,19 +18,19 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 368
+currentBuild: 369
 currentVersion: 1.0.0
 lastPublishedBuild: 360
-aab: build/HUHS-v1.0.0+368-release.aab
-sha256: 310AF28C5E759D8D96A29EB13536CF66FDC00C79DC02C7995482A6A8A88B2959
+aab: build/HUHS-v1.0.0+369-release.aab
+sha256: D256A3D2CA405222D1394ACAA73FC96EE8D3427C15DEA542C7474F31722DF25F
 -->
 
-⚠️ A **368**-at a **367** után kellett építeni (a 367-et **nem** kell feltölteni, ha még nem tetted meg:
-a 368 mindenben tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
+⚠️ A **369**-et a **368** után kellett építeni (a 368-at **nem** kell feltölteni, ha még nem tetted meg:
+a 369 mindenben tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
 ⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.5** (`build/huhs-mobile-api-2.14.5.zip`, SHA-256
 `68BE6407863D0905B3BB4A164654B354E412C731AA6323F86AF6F9FB6D90DF32`) — ebben vannak a **kézi angol
 mezők** (kérdőív, nyereményjáték, játék-összefoglaló). Az apphoz **nem** kell külön telepítés, csak az
-**AAB (368)** és a **plugin (2.14.5)** feltöltése.
+**AAB (369)** és a **plugin (2.14.5)** feltöltése.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -199,8 +200,9 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Javítva: angol felületen a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg — a teljes előzmény, a legkorábbi kiadásokig.
-- A kiadási jegyzet sorai a szótárból fordulnak, ezért nyelvváltáskor azonnal a választott nyelven szólnak.
+- Javítva: angol felületen az értesítések szövege azonnal a választott nyelven jelenik meg — a régi értesítések is átfordulnak.
+- Javítva: a privát üzenet értesítésének címe is a választott nyelven szól.
+- Javítva: az értesítések törlése ablak „archivált" címe is angolul jelenik meg.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -218,24 +220,24 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–368** összesítő (a 360 után)
+## 1b-2. Play Console — a **361–369** összesítő (a 360 után)
 
 **Ezt használd, ha a felhasználó a 360-ról jön** (ez az ÉLES sáv jelenlegi buildje) — vagyis csak azok
-az újdonságok szerepelnek benne, amelyek a **361–368** között készültek (a 359/360 `@mindenki`-je
+az újdonságok szerepelnek benne, amelyek a **361–369** között készültek (a 359/360 `@mindenki`-je
 **nincs** benne, mert azt a 360 már megkapta). A karakter-számot a `tools/check-play-notes.mjs` méri.
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó — az app angolul is elérhető, a magyar marad az alap.
 - Angolul a cikkek, a hírek címkéi, az Achievement-nevek és a GYÍK (FAQ) is.
-- Az értesítések és a push is a választott nyelven jönnek.
+- Az értesítések (lista és push) is a választott nyelven jönnek.
 - ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
 - ÚJ: a főoldal és a Hírek fül magától frissül; a DJ-adatlapon a megjelenések.
-- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet, a changelog és más feliratok.
+- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet, a changelog és a feliratok.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–368** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–369** összesítő)
 
-**Ezt használd, ha a 368-at a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 369-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-09-26) szerint ott a **354** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki`, a Chat-értesítés
 odaugrása, a DJ-adatlap megjelenései, a hírlista-frissesség és a mai felirat-javítások is.
@@ -243,7 +245,7 @@ odaugrása, a DJ-adatlap megjelenései, a hírlista-frissesség és a mai felira
 ```play-notes
 - ÚJ: HU/EN nyelvváltó — az app angolul is elérhető, a magyar marad az alap.
 - Angolul a cikkek, a hírek címkéi, az Achievement-nevek és a GYÍK (FAQ) is.
-- Az értesítések és a push is a választott nyelven jönnek.
+- Az értesítések (lista és push) is a választott nyelven jönnek.
 - ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
 - ÚJ: a főoldal és a Hírek fül magától frissül; a DJ-adatlapon a megjelenések.
 - Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a changelog.
@@ -276,6 +278,14 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 369 — az értesítések szövege is azonnal a választott nyelven
+- **Javítva (a tulajdonos jelzése: *„a notifyok még mindig magyarul vannak az angol felületen vagy lassan áll át"* → *„ja lassan áll át"* → *„nagyon lassan"*):** a szerver az értesítés szövegét a **létrehozáskor** rendereli a címzett akkori nyelvén (`createNotification` → `recipientLanguage`), és a Firestore-ba **kész szöveget** ír (`title`/`body`) — ezért nyelvváltás után a **régi** értesítések a régi nyelven maradtak, és csak az **új** értesítések jöttek az új nyelven. Mostantól az app a **megjelenítés helyén** fordítja a tárolt szöveget: a szerveroldali katalógusból (`functions/notification-texts.js` → generált `assets/i18n/notification_texts.json`, **36 típus**) kiolvassa a helyőrzőket, és a mostani nyelven újra kitölti — így a váltás **azonnal** látszik, a **régi** értesítéseken is. Az **adat** (cikk címe, küldő neve, idézet) **nem** fordul le.
+- **Javítva:** a **privát üzenet** értesítésének címe eddig **beégetve, magyarul** állt a szerveren (`{senderName} üzenetet küldött`), ezért angol felületen magyar cím jött — mostantól a katalógusból, a címzett nyelvén (a **push** címe is), és a kliens a küldő nevét **mindkét nyelvű** utótag levágásával fejti vissza.
+- **Javítva:** az értesítések törlése ablak **„archivált" címe nyers ternary-ág** volt (a másik ág fordítva) — angol felületen magyarul jelent meg; a `Értesítés` tartalék felirat is a fordítón megy át.
+- **Mérve:** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1129/1129** (ebből új: `test/services/notification_language_test.dart` **12/12** — magyarul tárolt szöveg angolul, angolul tárolt magyarul, a helyőrzők (név, idézet, szám) változatlanok, a már jó nyelvű szöveg nem fordul duplán, az adat nem fordul, ismeretlen/egyedi szöveg változatlan, a privát üzenet címe is fordul, üres szöveg üres marad, forrás-lint); **mutációs bizonyíték 5/5** (`tmp/mutation-proof-notifications.mjs`, bájtazonos visszaállítással); a **katalógus-egyezés kapuja** `node tools/generate-notification-texts.mjs --check` → **RENDBEN** (a szerveroldali forrásból generálva); `node --test` tiszta függvénykör → **282/282**; `node tmp/verify-aab.mjs build/HUHS-v1.0.0+369-release.aab 369` → **versionCode 369**, **1126 kulcsú szótár**, **az értesítés-katalógus besomagolva (36 típus)**, mind a tizenegy changelog-sor mindhárom ABI-ban. A szerveroldali függvények **telepítve** (`firebase deploy --only functions` → *Deploy complete!*).
+- **Amit ez a kiadás is tartalmaz:** a 368 (kiadási jegyzet angolul), a 367, a 366, a 365, a 364 és a 363–359 minden újdonsága.
+- **⚠️ ŐSZINTE KORLÁT:** ha egy értesítés szövege **nem** a katalógusból készült (egyedi, dinamikus szöveg), vagy 500 karakterre **levágott**, akkor a fordítás nem illeszkedik, és a **tárolt szöveg marad** — ilyenkor nem tippelünk; a ChatGPT és a felhasználók saját szövegei továbbra sem fordulnak.
 
 ### 368 — a kiadási jegyzet (changelog) is angolul, a teljes előzmény
 - **Javítva (a tulajdonos jelzése: *„a changelog az appban nem angol"*, majd *„az angol felületen"*):** a Névjegy → **Újdonságok** szakasz a kiadási jegyzet sorait **nyersen** írta ki (`Text(change)`), és a szövegek **nem voltak a szótárban** — ezért angol módban a magyar changelog ment ki. Mostantól a **magyar sor a szótári kulcs**, a kiírás a fordítón megy át, és **mind a 134 sor** (48 kiadás, a legkorábbiakig visszamenőleg) fordítása bekerült a szótárba. A „nincs ehhez a verzióhoz jegyzet" szöveg is **sablon** lett (`Ehhez a verzióhoz ({n}) …`), ezért az sem marad magyar.

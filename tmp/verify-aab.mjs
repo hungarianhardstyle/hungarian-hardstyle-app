@@ -52,7 +52,22 @@ const dictionaryEntry = entries.find((entry) => entry.endsWith('assets/i18n/en.j
 execFileSync('tar', ['-xf', AAB, '-C', OUT, dictionaryEntry], { maxBuffer: 64 * 1024 * 1024 });
 const dictionary = JSON.parse(fs.readFileSync(`${OUT}/${dictionaryEntry}`, 'utf8'));
 const keyCount = Object.keys(dictionary).length;
-check('a szótár legalább 1121 kulcsú', keyCount >= 1121, `${keyCount} kulcs`);
+check('a szótár legalább 1126 kulcsú', keyCount >= 1126, `${keyCount} kulcs`);
+
+// ⚠️ 369: az ÉRTESÍTÉS-katalógus is az appban van (a megjelenítéskori fordításhoz).
+const catalogEntry = entries.find((entry) => entry.endsWith('assets/i18n/notification_texts.json'));
+check('az értesítés-katalógus be van csomagolva', Boolean(catalogEntry), String(catalogEntry));
+if (catalogEntry) {
+  execFileSync('tar', ['-xf', AAB, '-C', OUT, catalogEntry], { maxBuffer: 64 * 1024 * 1024 });
+  const catalog = JSON.parse(fs.readFileSync(`${OUT}/${catalogEntry}`, 'utf8'));
+  const kinds = Object.keys(catalog.kinds ?? {});
+  check('az értesítés-katalógusban legalább 36 típus van', kinds.length >= 36, `${kinds.length} típus`);
+  check(
+    'a privát üzenet típusa is benne van (angolul is)',
+    catalog.kinds?.private_message?.en?.title === '{name} sent you a message',
+    JSON.stringify(catalog.kinds?.private_message?.en?.title),
+  );
+}
 
 for (const [key, expected] of [
   ['Bulizó', 'Partyface'],
@@ -98,6 +113,8 @@ const changelog = [
   // snapshotban); az ANGOL fordítás az `assets/i18n/en.json`-ban él, ezért azt a
   // fenti szótár-ellenőrzés méri (a snapshotban nem is lehetne megtalálni).
   'a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg',
+  // 369: az értesítések nyelve (a megjelenítéskori fordítás).
+  'angol felületen az értesítések szövege azonnal a választott nyelven jelenik meg',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });

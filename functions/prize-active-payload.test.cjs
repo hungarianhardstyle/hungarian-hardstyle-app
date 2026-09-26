@@ -104,8 +104,14 @@ test('a nyitott játék a válaszokat is elemenként fordítja', () => {
   );
   assert.match(
     branch,
-    /'has_en'\s*=>\s*huhs_translation_fields_current\(\$prize_id\)/,
-    'a válasz megmondja, hogy van-e kész angol fordítás',
+    // ⚠️ 2.14.5 (2026-09-26): a `has_en` jelzőt a **kézi angol mezőket is számoló**
+    // olvasó adja (`huhs_translation_fields_has_english`) — a régi
+    // `huhs_translation_fields_current` csak a gépi fordításra nézett, ezért egy
+    // kézzel beírt angol szöveg mellett hamis lett volna. A lint ezért a **új**
+    // olvasót követeli meg (ez a forrás-lint a 2.14.5 óta elavult volt — a
+    // függvényteszt-kör csak most, a következő körben futott újra).
+    /'has_en'\s*=>\s*huhs_translation_fields_has_english\(\$prize_id\)/,
+    'a válasz megmondja, hogy van-e angol változat (kézi VAGY gépi)',
   );
 });
 

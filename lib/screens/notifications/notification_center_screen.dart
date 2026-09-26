@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../core/i18n/tr.dart';
+import '../../core/i18n/notification_texts.dart';
 import '../../core/navigation/content_target.dart';
 import '../../models/app_notification.dart';
 import '../../services/notification_selection_plan.dart';
@@ -133,7 +134,14 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(
-          archived ? 'Archivált értesítések törlése' : tr(context, 'Aktív értesítések törlése'),
+          // ⚠️ A „archivált" ág eddig NYERS literál volt (a ternary másik ága
+          // fordítva) — ezért angol felületen magyarul jelent meg.
+          tr(
+            context,
+            archived
+                ? 'Archivált értesítések törlése'
+                : 'Aktív értesítések törlése',
+          ),
         ),
         content: Text(
           archived
@@ -208,8 +216,14 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       if (notification.targetType == 'private_conversation' &&
           target.isNotEmpty) {
         final senderId = notification.senderId.trim();
+        // ⚠️ A küldő neve a cím elején áll; a cím utótagja **nyelvfüggő**
+        // (magyar: „… üzenetet küldött", angol: „… sent you a message"), ezért
+        // mindkettőt levágjuk — különben angol felületen a név elveszne.
         final senderName = notification.title
-            .replaceFirst(RegExp(r' üzenetet küldött$'), '')
+            .replaceFirst(
+              RegExp(r'\s+(üzenetet küldött|sent you a message)\s*$'),
+              '',
+            )
             .trim();
         if (senderId.isNotEmpty) {
           await navigator.push(
@@ -483,6 +497,13 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                           separatorBuilder: (_, _) => const SizedBox(height: 8),
                           itemBuilder: (context, index) {
                             final item = items[index];
+                            // A tárolt szöveg a mostani nyelvre fordítva (a
+                            // katalógusból; ismeretlen típusnál változatlan).
+                            final localized = NotificationTexts.localize(
+                              type: item.type,
+                              title: item.title,
+                              body: item.body,
+                            );
                             return Material(
                               color: item.isRead
                                   ? colors.surfaceContainer
@@ -516,13 +537,19 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                                             : colors.primary,
                                       ),
                                 title: Text(
-                                  item.title.isEmpty ? 'Értesítés' : item.title,
+                                  // ⚠️ A tárolt szöveget a MEGJELENÍTÉS helyén
+                                  // fordítjuk a mostani nyelvre (a szerver a
+                                  // létrehozáskor renderelte) — ettől a váltás
+                                  // azonnal látszik, a régi sorokon is.
+                                  localized.title.trim().isEmpty
+                                      ? tr(context, 'Értesítés')
+                                      : localized.title,
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleMedium,
                                 ),
                                 subtitle: Text(
-                                  item.body,
+                                  localized.body,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                 ),

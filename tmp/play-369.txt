@@ -1,0 +1,3 @@
+- Javítva: angol felületen az értesítések szövege azonnal a választott nyelven jelenik meg — a régi értesítések is átfordulnak.
+- Javítva: a privát üzenet értesítésének címe is a választott nyelven szól.
+- Javítva: az értesítések törlése ablak „archivált" címe is angolul jelenik meg.

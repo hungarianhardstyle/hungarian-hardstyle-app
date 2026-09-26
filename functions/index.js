@@ -7830,6 +7830,11 @@ async function handlePrivateMessageNotification(event, deps = {}) {
   const created = await createNotificationBestEffort({
     recipientUid: recipientId,
     type: 'private_message',
+    // ⚠️ 2026-09-26: a cím a NYELVI KATALÓGUSBÓL jön (`kind` + `params`), ezért a
+    // címzett nyelvén szól; a beégetett magyar cím csak tartalék (ha egy régi
+    // katalógusban nem lenne meg ez a típus).
+    kind: 'private_message',
+    params: { name: senderName, snippet: notificationBody },
     title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
     body: notificationBody,
     targetType: 'private_conversation',
@@ -7849,10 +7854,14 @@ async function handlePrivateMessageNotification(event, deps = {}) {
     );
     return null;
   }
+  // A push címe is a címzett nyelvén (ugyanaz a katalógus, ugyanaz a nap).
+  const pushText = notificationText('private_message', await recipientLanguage(recipientId), {
+    name: senderName,
+  });
   const result = await sendPush(
     {
       notification: {
-        title: `${senderName || 'Egy felhasználó'} üzenetet küldött`,
+        title: pushText ? pushText.title : `${senderName || 'Egy felhasználó'} üzenetet küldött`,
         body: notificationBody.slice(0, 160),
       },
       data: {

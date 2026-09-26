@@ -182,6 +182,14 @@ const TEXTS = {
     hu: { title: 'Új chatjelentés', body: '{name}: {reason}' },
     en: { title: 'New chat report', body: '{name}: {reason}' },
   },
+  // ⚠️ 2026-09-26: a privát üzenet címe eddig **beégetve, magyarul** állt
+  // (`functions/index.js`, a privát üzenet ágán), ezért az angol felületű
+  // címzett magyar címet kapott — és a kliens ebből a címből fejtette vissza a
+  // küldő nevét (`' üzenetet küldött'` utótag levágása), ami angolul nem működött.
+  private_message: {
+    hu: { title: '{name} üzenetet küldött', body: '{snippet}' },
+    en: { title: '{name} sent you a message', body: '{snippet}' },
+  },
   achievement_points: {
     hu: {
       title: '+{delta} achievement pont',

@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 369,
+    changes: [
+      'Javítva: angol felületen az értesítések szövege azonnal a választott nyelven jelenik meg — a régi értesítések is átfordulnak, nem kell megvárni az újakat.',
+      'Javítva: a privát üzenet értesítésének címe is a választott nyelven szól (eddig magyar volt).',
+      'Javítva: az értesítések törlése ablak „archivált" címe is angolul jelenik meg.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 368,
     changes: [
       'Javítva: angol felületen a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg — a teljes előzmény, a legkorábbi kiadásokig visszamenőleg.',
