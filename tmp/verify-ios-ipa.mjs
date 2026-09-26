@@ -98,6 +98,10 @@ check(
 // A changelog a Dart AOT csomagban él (a magyar ékezetek miatt UTF-16LE-ként).
 const framework = read('Frameworks/App.framework/App');
 check(
+  'a 372 sora benne van (a megnyitott adatlapok is átállnak)',
+  contains(framework, 'nyelvváltáskor a már megnyitott cikk-, esemény- és kiadvány-adatlap'),
+);
+check(
   'a 371 sora benne van (@mindenki push)',
   contains(framework, 'a Chat @mindenki értesítéséhez mostantól push (banner) is jön'),
 );
