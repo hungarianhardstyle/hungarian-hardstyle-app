@@ -1840,5 +1840,162 @@ check(
         ))) === false
 );
 
+/* ---- 19) KÉZI angol mezők (2.14.5, a tulajdonos kérése) ---------------- */
+
+/*
+ * A tulajdonos kérése (2026-09-26): *„ha felteszek egy kérdőívet, a beírt
+ * válaszok lehetnének angolok, angol módban"* — a választásban pedig
+ * egyértelművé tette, hogy **saját angol szöveget** akar beírni, nem elég neki
+ * a gépi fordítás.
+ *
+ * A mérés a VALÓDI végponton fut. A lényeg három állítás:
+ *   (a) a kézzel beírt angol **elsőbbséget élvez** a gépi fordítással szemben,
+ *   (b) a nem kitöltött helyeken **nem törik el semmi** (gépi fordítás, majd
+ *       magyar — és az index nem csúszik el, mert a szavazat sorszám),
+ *   (c) a `has_en` jelző a **kézi** szöveget is számolja (eddig csak a gépi
+ *       fordításra nézett, ezért kézi angol mellett `false` lett volna).
+ */
+reset_state();
+$GLOBALS['STATE']['posts'][61] = new WP_Post(array(
+    'ID' => 61, 'post_type' => 'huhs_poll', 'post_title' => 'Kérdőív',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][61] = array(
+    '_huhs_poll_question' => 'Tetszik az új felület?',
+    '_huhs_poll_options' => wp_json_encode(array('Igen', 'Nem', 'Talán')),
+    // KÉZI angol: a kérdés és CSAK az első válasz.
+    '_huhs_poll_question_en' => 'Do you like the new look?',
+    '_huhs_poll_options_en' => wp_json_encode(array('Yes')),
+    // GÉPI fordítás — szándékosan MÁS szöveggel, hogy látszódjon az elsőbbség.
+    '_huhs_translation_fields_en' => wp_json_encode(array(
+        '_huhs_poll_question' => 'Machine question?',
+        '_huhs_poll_options' => array('Machine yes', 'Machine no', 'Machine maybe'),
+    )),
+);
+
+$manualQuestion = huhs_translation_text(61, 'en', '_huhs_poll_question', 'Tetszik az új felület?');
+check(
+    'a KÉZI angol kérdés elsőbbséget élvez a gépi fordítással szemben',
+    $manualQuestion === 'Do you like the new look?',
+    json_encode($manualQuestion)
+);
+
+$manualList = huhs_translation_list(61, 'en', '_huhs_poll_options', array('Igen', 'Nem', 'Talán'));
+check('a kézzel beírt angol válasz a helyén jelenik meg', $manualList[0] === 'Yes', json_encode($manualList));
+check(
+    'a ki nem töltött helyeken a GÉPI fordítás marad, és a lista HOSSZA sem változik',
+    $manualList[1] === 'Machine no' && $manualList[2] === 'Machine maybe' && count($manualList) === 3,
+    json_encode($manualList)
+);
+check(
+    'magyar kérésre a kézi angol mezők sem szólnak bele (bájtazonos magyar ág)',
+    huhs_translation_text(61, 'hu', '_huhs_poll_question', 'Tetszik az új felület?') === 'Tetszik az új felület?'
+        && huhs_translation_list(61, 'hu', '_huhs_poll_options', array('Igen', 'Nem', 'Talán')) === array('Igen', 'Nem', 'Talán')
+);
+
+// (c) A `has_en` jelző: kézi angol szöveg, gépi fordítás NÉLKÜL.
+reset_state();
+$GLOBALS['STATE']['posts'][62] = new WP_Post(array(
+    'ID' => 62, 'post_type' => 'huhs_poll', 'post_title' => 'Kézi angol',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][62] = array(
+    '_huhs_poll_question' => 'Melyik a kedvenced?',
+    '_huhs_poll_options' => wp_json_encode(array('Ez', 'Az')),
+    '_huhs_poll_question_en' => 'Which is your favourite?',
+);
+check(
+    'a `has_en` a KÉZI angol szöveget is számolja (gépi fordítás nélkül is igaz)',
+    huhs_translation_fields_has_english(62) === true
+);
+$GLOBALS['STATE']['meta'][63] = array(
+    '_huhs_poll_question' => 'Angol nélkül?',
+    '_huhs_poll_options' => wp_json_encode(array('A', 'B')),
+);
+$GLOBALS['STATE']['posts'][63] = new WP_Post(array(
+    'ID' => 63, 'post_type' => 'huhs_poll', 'post_title' => 'Angol nélkül',
+    'post_content' => '', 'post_status' => 'publish',
+));
+check(
+    'angol változat nélkül a `has_en` hamis (nincs hamis jelzés)',
+    huhs_translation_fields_has_english(63) === false
+);
+
+// A VALÓDI végpont: a kézi + gépi angol szöveg megy ki, a magyar ág változatlan.
+reset_state();
+$GLOBALS['STATE']['posts'][64] = new WP_Post(array(
+    'ID' => 64, 'post_type' => 'huhs_poll', 'post_title' => 'Kérdőív',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][64] = array(
+    '_huhs_poll_question' => 'Tetszik az Applikáció?',
+    '_huhs_poll_options' => wp_json_encode(array('Igen', 'Nem')),
+    '_huhs_poll_question_en' => 'Do you like the App?',
+    '_huhs_poll_options_en' => wp_json_encode(array('Yes', 'No')),
+);
+$enPoll = huhs_poll_api_active(new WP_REST_Request(array('lang' => 'en')))->data['poll'];
+$huPoll = huhs_poll_api_active(new WP_REST_Request(array('lang' => 'hu')))->data['poll'];
+check(
+    'a VALÓDI /poll/active a KÉZI angol kérdést és válaszokat küldi',
+    is_array($enPoll)
+        && ($enPoll['question'] ?? '') === 'Do you like the App?'
+        && ($enPoll['options'][0]['label'] ?? '') === 'Yes'
+        && ($enPoll['options'][1]['label'] ?? '') === 'No',
+    json_encode($enPoll)
+);
+check(
+    'a VALÓDI /poll/active magyar ága bájtazonos marad',
+    is_array($huPoll)
+        && ($huPoll['question'] ?? '') === 'Tetszik az Applikáció?'
+        && ($huPoll['options'][0]['label'] ?? '') === 'Igen',
+    json_encode($huPoll)
+);
+check(
+    'a válaszban a `has_en` a kézi angol szövegre is igaz',
+    ($enPoll['has_en'] ?? false) === true,
+    json_encode($enPoll['has_en'] ?? null)
+);
+
+// A kvíz: kézi angol kérdések — a HELYES VÁLASZ indexe a magyar szerkezetből jön.
+reset_state();
+$GLOBALS['STATE']['posts'][65] = new WP_Post(array(
+    'ID' => 65, 'post_type' => 'huhs_game', 'post_title' => 'Kvíz',
+    'post_content' => '', 'post_status' => 'publish',
+));
+$GLOBALS['STATE']['meta'][65] = array(
+    '_huhs_game_summary' => 'Teszteld a tudásod!',
+    '_huhs_game_summary_en' => 'Test your knowledge!',
+    '_huhs_game_questions' => wp_json_encode(array(
+        array('prompt' => 'Melyik évben?', 'options' => array('2019', '2020'), 'correct' => 1),
+    )),
+    '_huhs_game_questions_en' => wp_json_encode(array(
+        array('prompt' => 'In which year?', 'options' => array('2019'), 'correct' => 0),
+    )),
+);
+$enQuestions = huhs_translation_game_questions(65, 'en');
+check(
+    'a kézi angol kérdés-szöveg felülírja a gépi/magyar szöveget',
+    ($enQuestions[0]['prompt'] ?? '') === 'In which year?',
+    json_encode($enQuestions[0]['prompt'] ?? null)
+);
+check(
+    'a ki nem töltött angol válasz a magyar marad (nincs üres hely)',
+    ($enQuestions[0]['options'][1] ?? '') === '2020',
+    json_encode($enQuestions[0]['options'] ?? null)
+);
+check(
+    // ⚠️ Ez a legfontosabb állítás: a helyes válasz SOHA nem az angol mezőből jön.
+    'a HELYES VÁLASZ indexe a magyar szerkezetből jön (nem csúszik el)',
+    ($enQuestions[0]['correct'] ?? -1) === 1
+);
+check(
+    'a magyar ág érintetlen (nem-angol kérésre a magyar kérdés jön)',
+    (huhs_translation_game_questions(65, 'hu')[0]['prompt'] ?? '') === 'Melyik évben?'
+);
+check(
+    'a kézi angol ÖSSZEFOGLALÓ is elsőbbséget élvez',
+    huhs_translation_text(65, 'en', '_huhs_game_summary', 'Teszteld a tudásod!') === 'Test your knowledge!'
+);
+
 echo "\n{$checks} ellenőrzés, {$failures} hiba\n";
 exit($failures === 0 ? 0 : 1);

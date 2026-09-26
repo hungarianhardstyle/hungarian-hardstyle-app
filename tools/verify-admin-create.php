@@ -9,9 +9,15 @@
  * „kiiktatja", ez a harness **elhasal** — vagyis a hiba nem tud visszakúszni.
  *
  * Futtatás (a repository gyökeréből):
- *   "C:\Program Files\php\php.exe" tools/verify-admin-create.php
- * vagy a projektben használt PHP-val:
  *   & 'C:\Users\deero\Documents\Hun HS Newsroom\tools\php\php.exe' tools/verify-admin-create.php
+ *   & '…\php.exe' tools/verify-admin-create.php <plugin-könyvtár>   # kézi megadás
+ *
+ * ⚠️ **MÉRT SAJÁT HIBA (javítva, 2026-09-26):** a harness a plugin forrását
+ * **egy beégetett, elavult útvonalról** töltötte be (`.tmp-api-24115`, azaz a
+ * **2.5.9**-es példány), ezért a 41 ellenőrzés a **régi** fájlt mérte — a friss
+ * változtatásokról semmit nem mondott. Mostantól a munkapéldányt a főfájl
+ * `Version:` sora alapján, **verzió szerint** választja ki (a legfrissebbet), és
+ * a mért útvonalat + verziót **ki is írja** — így a kimenet önmagát igazolja.
  *
  * Kilépési kód: 0 = minden rendben, 1 = eltérés.
  */
@@ -39,7 +45,52 @@ define('HUHS_GAME_TYPES', array(
     'timeline' => 'Hardstyle idővonal',
 ));
 
-require_once __DIR__ . '/../.tmp-api-24115/huhs-mobile-api/includes/admin-create.php';
+require_once huhs_test_plugin_source() . '/includes/admin-create.php';
+
+/**
+ * A mérendő plugin-munkapéldány (a legfrissebb verziójú `.tmp-api-*` példány).
+ *
+ * ⚠️ MIÉRT ÍGY: a korábbi beégetett útvonal **elavult** volt (2.5.9), ezért a
+ * mérés a régi kódot nézte — pont az a hibaosztály, amit kerülünk („a mérés
+ * tárgya nem az, amit hiszünk"). Az explicit paraméter felülírja.
+ */
+function huhs_test_plugin_source()
+{
+    global $argv;
+
+    $explicit = trim((string) ($argv[1] ?? ''));
+    if ($explicit !== '') {
+        if (!is_file($explicit . '/includes/admin-create.php')) {
+            fwrite(STDERR, "HIBA  nincs ilyen plugin-könyvtár: {$explicit}\n");
+            exit(2);
+        }
+        $head = (string) @file_get_contents($explicit . '/huhs-mobile-api.php', false, null, 0, 2048);
+        preg_match('/^\s*\*\s*Version:\s*([0-9.]+)/mi', $head, $match);
+        echo 'mért forrás: ' . $explicit . ' (verzió ' . ($match[1] ?? '?') . ", kézzel megadva)\n";
+        return $explicit;
+    }
+
+    $candidates = array();
+    foreach ((array) glob(__DIR__ . '/../.tmp-api-*/huhs-mobile-api/huhs-mobile-api.php') as $main) {
+        $head = (string) @file_get_contents($main, false, null, 0, 2048);
+        if (preg_match('/^\s*\*\s*Version:\s*([0-9.]+)/mi', $head, $match)) {
+            $candidates[$match[1]] = dirname($main);
+        }
+    }
+    if (!$candidates) {
+        fwrite(STDERR, "HIBA  nincs plugin-munkapéldány (.tmp-api-*/huhs-mobile-api)\n");
+        exit(2);
+    }
+
+    $versions = array_keys($candidates);
+    usort($versions, 'version_compare');
+    $latest = (string) end($versions);
+    $root = $candidates[$latest];
+    $relative = str_replace('\\', '/', substr($root, strlen(dirname(__DIR__)) + 1));
+    echo "mért forrás: {$relative} (verzió {$latest}, a legfrissebb munkapéldány)\n";
+
+    return $root;
+}
 
 // --- A harness -------------------------------------------------------------
 $checks = 0;
@@ -170,23 +221,49 @@ check('cím: a kérdésből jön', huhs_admin_resource_title('huhs_poll', array(
 check('cím: üres bemenetre tartalék', huhs_admin_resource_title('huhs_poll', array()) === 'Új elem');
 
 // 8) A mezők kulcsa = a valódi meta-kulcs (ez védi a WordPress-oldali egyezést).
-$poll_keys = array_column(huhs_admin_interaction_fields('huhs_poll'), 'key');
+$poll_fields = huhs_admin_interaction_fields('huhs_poll');
+$poll_keys = array_column($poll_fields, 'key');
 check(
-    'mezők: a kérdőív kulcsai a valódi meta-kulcsok',
-    $poll_keys === array('_huhs_poll_question', '_huhs_poll_options', '_huhs_poll_start', '_huhs_poll_end'),
+    // ⚠️ 2.14.5: a KÉZI angol mezők (`_huhs_*_en`) a magyar párjuk MELLETT
+    // vannak — így a tulajdonos egy helyen látja mindkettőt.
+    'mezők: a kérdőív kulcsai a valódi meta-kulcsok (a kézi angol mezőkkel)',
+    $poll_keys === array(
+        '_huhs_poll_question',
+        '_huhs_poll_question_en',
+        '_huhs_poll_options',
+        '_huhs_poll_options_en',
+        '_huhs_poll_start',
+        '_huhs_poll_end'
+    ),
     implode(',', $poll_keys)
+);
+$en_options_field = null;
+foreach ($poll_fields as $field) {
+    if ($field['key'] === '_huhs_poll_options_en') {
+        $en_options_field = $field;
+    }
+}
+check(
+    // A kézi angol válaszlista OPCIONÁLIS: nem lehet kötelező kitölteni.
+    'mezők: a kézi angol válaszlista opcionális (min = 0)',
+    $en_options_field !== null && (int) $en_options_field['min'] === 0,
+    json_encode($en_options_field)
 );
 $prize_keys = array_column(huhs_admin_interaction_fields('huhs_prize'), 'key');
 check(
-    'mezők: a nyereményjáték kulcsai a valódi meta-kulcsok',
+    'mezők: a nyereményjáték kulcsai a valódi meta-kulcsok (a kézi angol mezőkkel)',
     $prize_keys === array(
         '_huhs_prize_question',
+        '_huhs_prize_question_en',
         '_huhs_prize_answers',
+        '_huhs_prize_answers_en',
         '_huhs_prize_correct',
         '_huhs_prize_start',
         '_huhs_prize_end',
         '_huhs_prize_type',
+        '_huhs_prize_type_en',
         '_huhs_prize_description',
+        '_huhs_prize_description_en',
         '_huhs_prize_display_days'
     ),
     implode(',', $prize_keys)
@@ -194,6 +271,16 @@ check(
 $game_fields = huhs_admin_interaction_fields('huhs_game');
 $game_keys = array_column($game_fields, 'key');
 check('mezők: a kvíz kulcsai közt ott a kérdés-lista', in_array('_huhs_game_questions', $game_keys, true));
+check('mezők: a kvíz rövid leírásának van kézi angol párja', in_array('_huhs_game_summary_en', $game_keys, true));
+check(
+    // ⚠️ MÉRT OK: a natív szerkesztő EGYETLEN kérdéslistát tart (`_questions`),
+    // ezért egy második `questions` típusú mező felülírná a magyar kérdéseket.
+    // Ez a check ezt a csapdát zárja be.
+    'mezők: a kvíznél PONTOSAN EGY kérdés-lista mező van (nincs felülíró angol pár)',
+    count(array_filter($game_fields, function ($field) {
+        return ($field['type'] ?? '') === 'questions';
+    })) === 1
+);
 $type_field = null;
 foreach ($game_fields as $field) {
     if ($field['key'] === '_huhs_game_type') {
@@ -205,6 +292,33 @@ check('mezők: a kvíz típusa legördülő, és CSAK a kvíz-típusokat kínál
     && count($type_field['options']) === 3
     && $type_field['options'][0]['value'] === 'hardstyle_quiz');
 check('mezők: ismeretlen típusra nincs mező', huhs_admin_interaction_fields('huhs_event') === array());
+
+// 8b) A KÉZI angol válaszok sorrend-korlátja (2.14.5).
+check(
+    'kérdőív: az angol válaszok nem lehetnek többen, mint a magyarok',
+    huhs_admin_validate_resource_values('huhs_poll', array(
+        '_huhs_poll_question' => 'K?',
+        '_huhs_poll_options' => array('A', 'B'),
+        '_huhs_poll_options_en' => array('A', 'B', 'C'),
+    )) !== ''
+);
+check(
+    'kérdőív: ugyanannyi (vagy kevesebb) angol válasz = rendben',
+    huhs_admin_validate_resource_values('huhs_poll', array(
+        '_huhs_poll_question' => 'K?',
+        '_huhs_poll_options' => array('A', 'B'),
+        '_huhs_poll_options_en' => array('A'),
+    )) === ''
+);
+check(
+    'nyereményjáték: az angol válaszok nem lehetnek többen, mint a magyarok',
+    huhs_admin_validate_resource_values('huhs_prize', array(
+        '_huhs_prize_question' => 'K?',
+        '_huhs_prize_answers' => array('A', 'B', 'C'),
+        '_huhs_prize_answers_en' => array('A', 'B', 'C', 'D'),
+        '_huhs_prize_correct' => 1,
+    )) !== ''
+);
 
 // 9) Létrehozható típusok.
 check('típus: a kérdőív létrehozható', huhs_admin_is_creatable_type('huhs_poll'));

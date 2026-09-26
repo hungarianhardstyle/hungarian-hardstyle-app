@@ -19,7 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.4.zip';
+export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.5.zip';
 export const DEFAULT_SOURCE = '.tmp-api-260/huhs-mobile-api';
 export const EXPECTED_ROOT = 'huhs-mobile-api';
 
@@ -83,11 +83,13 @@ export function packageChecks(read) {
   const poll = read('includes/poll.php');
   const prize = read('includes/prize.php');
   const games = read('includes/games.php');
+  const admin = read('includes/admin-create.php');
   const gamesCode = stripPhpComments(games);
   const fieldsCode = stripPhpComments(fields);
+  const adminCode = stripPhpComments(admin);
 
   return [
-    ['a fejléc és a konstans is 2.14.4', /Version:\s*2\.14\.4/.test(main) && main.includes("HUHS_API_VERSION', '2.14.4'")],
+    ['a fejléc és a konstans is 2.14.5', /Version:\s*2\.14\.5/.test(main) && main.includes("HUHS_API_VERSION', '2.14.5'")],
     ['a fő fájl behúzza a hely-névtárat, a pótló kört és a mező-fordítást',
       main.includes('includes/translation-places.php') && main.includes('includes/translation-sweep.php')
         && main.includes('includes/translation-fields.php')],
@@ -190,6 +192,34 @@ export function packageChecks(read) {
     ['a kényszerített út csak fordítható forrást választ ki',
       sweep.includes('function huhs_translation_post_has_source($post)')
         && sweep.includes('huhs_translation_post_has_source($post)')],
+    // ---- 2.14.5: KÉZI angol mezők (a tulajdonos kérése) --------------------
+    // A tulajdonos: *„ha felteszek egy kérdőívet, a beírt válaszok lehetnének
+    // angolok, angol módban"* — a kérdésre választva a **kézi angol mezők**
+    // mellett döntött (nem elég neki a gépi fordítás).
+    ['a kézi angol réteg megvan (utótag + szöveg- és lista-olvasó)',
+      fieldsCode.includes('HUHS_TRANSLATION_MANUAL_SUFFIX')
+        && fieldsCode.includes('function huhs_translation_manual_text($post_id, $meta_key)')
+        && fieldsCode.includes('function huhs_translation_manual_list($post_id, $meta_key)')],
+    ['a kiolvasás sorrendje: kézi angol → gépi fordítás → magyar',
+      /function huhs_translation_text\(\$post_id, \$lang, \$meta_key, \$fallback\)[\s\S]*?huhs_translation_manual_text\([\s\S]*?huhs_translation_stored_fields\(/.test(fieldsCode)
+        && /function huhs_translation_list\(\$post_id, \$lang, \$meta_key, \$fallback_list\)[\s\S]*?huhs_translation_manual_list\(/.test(fieldsCode)],
+    ['a lista ELEMENKÉNT dönt (a szavazat sorszám, nem csúszhat el)',
+      fieldsCode.includes('foreach (array($manual, $machine) as $source)')],
+    ['a kézi angol kvízkérdések is elsőbbséget élveznek',
+      fieldsCode.includes('function huhs_translation_manual_questions($post_id)')
+        && /function huhs_translation_game_questions\(\$post_id, \$lang = 'hu'\)[\s\S]*?huhs_translation_manual_questions\(/.test(fieldsCode)],
+    ['a `has_en` a KÉZI angol szöveget is számolja (nem csak a gépit)',
+      fieldsCode.includes('function huhs_translation_fields_has_english($post_id)')
+        && poll.includes('huhs_translation_fields_has_english(')
+        && prize.includes('huhs_translation_fields_has_english(')],
+    ['a natív adminban megvannak a kézi angol mezők',
+      adminCode.includes("'_huhs_poll_question_en'") && adminCode.includes("'_huhs_poll_options_en'")
+        && adminCode.includes("'_huhs_prize_question_en'") && adminCode.includes("'_huhs_prize_answers_en'")
+        && adminCode.includes("'_huhs_prize_description_en'") && adminCode.includes("'_huhs_game_summary_en'")],
+    ['a kvíznél PONTOSAN EGY `questions` mező van (a natív szerkesztő egy listát tart)',
+      (adminCode.match(/'type' => 'questions'/g) || []).length === 1],
+    ['az angol válaszok sorrend-korlátja be van kötve (nem lehet több, mint a magyar)',
+      adminCode.includes('Az angol válaszlehetőségek nem lehetnek többen, mint a magyarok.')],
   ];
 }
 
@@ -209,15 +239,23 @@ export function selfTest() {
 
   const star = 'x';
   const full = {
-    'huhs-mobile-api.php': 'Version: 2.14.4 HUHS_API_VERSION\', \'2.14.4\' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php',
-    'includes/translation-sweep.php': "'compare' => 'NOT EXISTS' huhs_run_translation($post->ID, $force) 'hourly' 'huhs_translation_sweep_event' 'limit' 'budget' huhs_translation_retry_delay '/translations/status' '/translations/sweep' HUHS_TRANSLATION_FIELDS_VERSION_META HUHS_TRANSLATION_FIELDS_VERSION_META x 'compare' => '<' \"'compare' => '<',\\n            'type' => 'NUMERIC'\" function huhs_translation_pending_posts($post_type, $limit = 5, $force = false) 'force' => $request->get_param('force') function huhs_translation_post_has_source($post) huhs_translation_post_has_source($post)",
-    'includes/translation-fields.php': "'_huhs_poll_question' '_huhs_prize_answers' '_huhs_prize_description' '_huhs_game_summary' \"'_huhs_game_questions' => 'questions'\" huhs_translation_game_question_texts($post_id) { return array(); } count($translated) === count($source) HUHS_TRANSLATION_FIELDS_FAILED_META wp_slash(wp_json_encode($stored)) HUHS_TRANSLATION_FIELDS_VERSION = 2 HUHS_TRANSLATION_FIELDS_VERSION_META function huhs_translation_fields_current($post_id) { HUHS_TRANSLATION_FIELDS_VERSION function huhs_run_field_translation($post_id, $force = false)",
+    'huhs-mobile-api.php': 'Version: 2.14.5 HUHS_API_VERSION\', \'2.14.5\' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php',
+    // ⚠️ MÉRT SAJÁT HIBA (javítva, 2026-09-26): a `\\n` a fixture-ben **szó
+    // szerinti** backslash-n volt (nem sortörés), ezért a numerikus
+    // verzió-összehasonlítás ellenőrzése a szintetikus csomagon **mindig bukott**
+    // — a self-test 6/7 volt, és a bukás oka néma maradt. Most valódi új sor.
+    'includes/translation-sweep.php': "'compare' => 'NOT EXISTS' huhs_run_translation($post->ID, $force) 'hourly' 'huhs_translation_sweep_event' 'limit' 'budget' huhs_translation_retry_delay '/translations/status' '/translations/sweep' HUHS_TRANSLATION_FIELDS_VERSION_META HUHS_TRANSLATION_FIELDS_VERSION_META x 'compare' => '<' \"'compare' => '<',\n            'type' => 'NUMERIC'\" function huhs_translation_pending_posts($post_type, $limit = 5, $force = false) 'force' => $request->get_param('force') function huhs_translation_post_has_source($post) huhs_translation_post_has_source($post)",
+    // ⚠️ A 2.14.5 kézi angol rétegének mintái is benne vannak — a szintetikus
+    // csomag így ugyanazokat az állításokat tudja kiszolgálni, mint az éles.
+    'includes/translation-fields.php': "'_huhs_poll_question' '_huhs_prize_answers' '_huhs_prize_description' '_huhs_game_summary' \"'_huhs_game_questions' => 'questions'\" HUHS_TRANSLATION_MANUAL_SUFFIX function huhs_translation_manual_text($post_id, $meta_key) function huhs_translation_manual_list($post_id, $meta_key) function huhs_translation_manual_questions($post_id) function huhs_translation_fields_has_english($post_id) huhs_translation_game_question_texts($post_id) { return array(); } count($translated) === count($source) HUHS_TRANSLATION_FIELDS_FAILED_META wp_slash(wp_json_encode($stored)) HUHS_TRANSLATION_FIELDS_VERSION = 2 HUHS_TRANSLATION_FIELDS_VERSION_META function huhs_translation_fields_current($post_id) { HUHS_TRANSLATION_FIELDS_VERSION function huhs_run_field_translation($post_id, $force = false) function huhs_translation_text($post_id, $lang, $meta_key, $fallback) huhs_translation_manual_text( huhs_translation_stored_fields( function huhs_translation_list($post_id, $lang, $meta_key, $fallback_list) huhs_translation_manual_list( foreach (array($manual, $machine) as $source) function huhs_translation_game_questions($post_id, $lang = 'hu') huhs_translation_manual_questions(",
     'includes/translation-places.php': "'magyarország' => 'Hungary' Velence if ($lang !== 'en')",
     'includes/translation-cron.php': "HUHS_TRANSLATION_HASH_META huhs_translation_is_current huhs_run_field_translation( return 'translated'; wp_slash($response['title']) function huhs_run_translation($post_id, $force = false) huhs_run_content_translation($post, $title, $content, $force) huhs_run_field_translation($post_id, $force)",
     'includes/post-translation-meta.php': 'huhs_translation_field_post_types()',
     'includes/faq.php': "huhs_translation_meta_values( huhs_request_lang($request) 'has_en' huhs_translation_faq_category_names() 'első lépések' => 'Getting Started'",
-    'includes/poll.php': 'huhs_translation_text( huhs_translation_list(',
-    'includes/prize.php': "'_huhs_prize_question' '_huhs_prize_answers' '_huhs_prize_description'",
+    'includes/poll.php': 'huhs_translation_text( huhs_translation_list( huhs_translation_fields_has_english(',
+    'includes/prize.php': "'_huhs_prize_question' '_huhs_prize_answers' '_huhs_prize_description' huhs_translation_fields_has_english(",
+    // A natív admin (a kézi angol mezők + a sorrend-korlát).
+    'includes/admin-create.php': "'_huhs_poll_question_en' '_huhs_poll_options_en' '_huhs_prize_question_en' '_huhs_prize_answers_en' '_huhs_prize_description_en' '_huhs_game_summary_en' 'type' => 'questions' Az angol válaszlehetőségek nem lehetnek többen, mint a magyarok.",
     'includes/api-events.php': 'huhs_translation_country_value(',
     'includes/api-artists.php': 'huhs_translation_country_value(',
     'includes/api-organizers.php': 'huhs_translation_country_value( use ($lang)',
@@ -229,7 +267,14 @@ export function selfTest() {
   };
   const readFull = (relative) => full[relative] ?? '';
   const okChecks = packageChecks(readFull);
-  check('a teljes (szintetikus) csomagon minden tartalmi ellenőrzés zöld', okChecks.every(([, ok]) => ok));
+  // ⚠️ A bukó ellenőrzések NEVÉT is kiírjuk: enélkül a szintetikus csomag
+  // hiányossága néma maradna (a fixture-t frissíteni kell, ha új minta jön).
+  const failedChecks = okChecks.filter(([, ok]) => !ok).map(([label]) => label);
+  check(
+    'a teljes (szintetikus) csomagon minden tartalmi ellenőrzés zöld'
+      + (failedChecks.length ? ` — BUKÓ: ${failedChecks.join(' | ')}` : ''),
+    failedChecks.length === 0,
+  );
 
   const missingSweep = packageChecks((relative) => (relative === 'includes/translation-sweep.php' ? '' : readFull(relative)));
   check(
