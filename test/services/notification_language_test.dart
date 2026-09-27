@@ -137,6 +137,82 @@ void main() {
       );
     });
 
+    // ⚠️ A TULAJDONOS JELZÉSE (2026-09-27): angol felületen a `@mindenki`
+    // értesítés törzse „Denoiser mindenkit mentioned you in the Chat: …" volt —
+    // a `chat_mention` sablon a **„mindenkit" szót is a névbe** tette.
+    group('a @mindenki értesítés (a „mindenkit" nem kerül a névbe)', () {
+      const storedBody =
+          'Denoiser mindenkit megemlített a Chatben: „Hajnal 1-kor tali S…”';
+
+      test('a `kind` dönt (type = chat_mention, kind = chat_everyone)', () {
+        AppStrings.setLanguage(AppLanguage.en);
+        final text = NotificationTexts.localize(
+          type: 'chat_mention',
+          kind: 'chat_everyone',
+          title: 'Megemlítettek a Chatben',
+          body: storedBody,
+        );
+        expect(
+          text.body,
+          'Denoiser mentioned everyone in the Chat: “Hajnal 1-kor tali S…”',
+        );
+        expect(text.body.contains('mindenkit'), isFalse);
+      });
+
+      test('`kind` nélkül is jó (a RÉGI, tárolt sorok)', () {
+        AppStrings.setLanguage(AppLanguage.en);
+        final text = NotificationTexts.localize(
+          type: 'chat_mention',
+          title: 'Megemlítettek a Chatben',
+          body: storedBody,
+        );
+        expect(
+          text.body,
+          'Denoiser mentioned everyone in the Chat: “Hajnal 1-kor tali S…”',
+          reason: 'a rokon típusok közül a legjobban illeszkedőt kell választani',
+        );
+      });
+
+      test('a sima említés változatlanul helyes marad', () {
+        AppStrings.setLanguage(AppLanguage.en);
+        final text = NotificationTexts.localize(
+          type: 'chat_mention',
+          kind: 'chat_mention',
+          title: 'Megemlítettek a Chatben',
+          body: 'Denoiser megemlített a Chatben: „Szia!”',
+        );
+        expect(text.body, 'Denoiser mentioned you in the Chat: “Szia!”');
+      });
+    });
+
+    // ⚠️ A tulajdonos jelzése (2026-09-27): a **régi** (szóismétléses) pont-sablonnal
+    // tárolt sor eddig egyetlen mai sablonra sem illeszkedett → magyarul maradt.
+    test('a LEGACY (szóismétléses) pont-szöveg is átfordul', () {
+      AppStrings.setLanguage(AppLanguage.en);
+      final legacy = NotificationTexts.localize(
+        type: 'achievement_points',
+        title: '+2 achievement pont',
+        body: '+2 pont egy hír kedveléséért. Új összösszpontszámod: 137.',
+      );
+      expect(legacy.title, '+2 achievement points');
+      expect(
+        legacy.body,
+        '+2 points for liking a news article. Your new total is 137.',
+      );
+
+      final legacyLevel = NotificationTexts.localize(
+        type: 'achievement_points_level',
+        title: '+2 achievement pont',
+        body:
+            '+2 pont egy hír kedveléséért. Új összösszpontszámod: 137. Új rangod: „Hardstyle Fan”.',
+      );
+      expect(
+        legacyLevel.body,
+        '+2 points for liking a news article. Your new total is 137. '
+        'New rank: “Hardstyle Fan”.',
+      );
+    });
+
     test('a már a mostani nyelven tárolt szöveg változatlan (nincs dupla fordítás)', () {
       AppStrings.setLanguage(AppLanguage.en);
       final text = NotificationTexts.localize(
@@ -300,6 +376,23 @@ void main() {
         reason: 'a nyers ternary-ág angol felületen magyarul maradt',
       );
       expect(screen.contains("'Archivált értesítések törlése'"), isTrue);
+      // ⚠️ 2026-09-27: a `kind` is át kell adni — a `@mindenki` fan-out sorában
+      // `type = chat_mention` + `kind = chat_everyone`, és a `type` alapján a
+      // „mindenkit" szó a névbe kerülne. **MINDEN** `localize(` hívásnál.
+      final localizeCalls = RegExp(r'NotificationTexts\.localize\(')
+          .allMatches(screen)
+          .length;
+      final withKind = RegExp(
+        r'NotificationTexts\.localize\([\s\S]{0,200}?kind: item\.kind',
+      ).allMatches(screen).length;
+      expect(localizeCalls, greaterThanOrEqualTo(1));
+      expect(
+        withKind,
+        localizeCalls,
+        reason:
+            'minden fordítás-hívás adja át a `kind`-ot (különben a „mindenkit" '
+            'szó a névbe kerül)',
+      );
       expect(
         screen.contains(r"üzenetet küldött|sent you a message"),
         isTrue,
@@ -307,8 +400,7 @@ void main() {
       );
     });
 
-    test('az értesítés-katalógus be van töltve induláskor', () {
-      final provider = File(
+    test('az értesítés-katalógus be van töltve induláskor', () {      final provider = File(
         'lib/providers/language_provider.dart',
       ).readAsStringSync();
       expect(provider.contains('NotificationTexts.setCatalogFromJson('), isTrue);

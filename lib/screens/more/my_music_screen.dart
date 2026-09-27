@@ -696,7 +696,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
     id: entry.key,
     title: entry.title.isEmpty ? entry.nowPlayingLabel : entry.title,
     artist: entry.artist.isEmpty ? 'Hungarian Hardstyle' : entry.artist,
-    album: entry.variantLabel,
+    album: AppStrings.tr(entry.variantLabel),
     artUri: entry.coverUrl.isEmpty ? null : Uri.tryParse(entry.coverUrl),
   );
 
@@ -1228,7 +1228,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
-                            item.entry.variantLabel,
+                            tr(context, item.entry.variantLabel),
                             style: theme.textTheme.bodySmall,
                           ),
                           trailing: Row(
@@ -1585,7 +1585,7 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
                   children: [
                     Flexible(
                       child: Text(
-                        entry.variantLabel,
+                        tr(context, entry.variantLabel),
                         style: const TextStyle(fontWeight: FontWeight.w600),
                         overflow: TextOverflow.ellipsis,
                       ),

@@ -79,6 +79,16 @@ void main() {
   /// A `RegExp(...)` minták nem feliratok.
   bool insideRegExp(String call) => call == 'RegExp';
 
+  /// A **magyar** szöveg felismerése: ékezet **vagy** egy szűk, egyértelműen
+  /// magyar szó (mért eset: a `WAV (ingyenes)` **ékezet nélkül** is magyar, és
+  /// emiatt maradt bent a 374-es kör zöld kapui mellett).
+  const hungarianWordsWithoutAccent = [
+    'ingyenes', 'ingyen', 'zene', 'zenek', 'kell', 'nem', 'van', 'vagy',
+    'lesz', 'marad', 'fiok', 'torles',
+  ];
+  final hungarianWord = RegExp(
+    '(^|[^a-zöüóőúéáí])(${hungarianWordsWithoutAccent.join('|')})([^a-zöüóőúéáí]|\$)',
+  );
   final hungarianAccent = RegExp(r'[áéíóöőúüűÁÉÍÓÖŐÚÜŰ]');
 
   /// Magyar felirat-e a szöveg? (A csak-interpolált alak nem az.)
@@ -91,7 +101,8 @@ void main() {
     if (!RegExp(r'[A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű]{2}').hasMatch(withoutPlaceholders)) {
       return false;
     }
-    return hungarianAccent.hasMatch(text);
+    return hungarianAccent.hasMatch(text) ||
+        hungarianWord.hasMatch(withoutPlaceholders.toLowerCase());
   }
 
   /// A literálok kigyűjtése egy sorból (a `${…}` blokkban lévő idézőjelek nem
@@ -283,8 +294,65 @@ void main() {
     );
   });
 
-  test('a megjelenítéskor fordított (tárolt) kulcsok bent vannak a szótárban', () {
-    // Ezek a szövegek **tárolt** állapotban élnek (pl. `_message`), ezért az
+  /// **A modell- és szolgáltatás-szintű üzenetek** (kivétel, validátor, `return`).
+  ///
+  /// MIÉRT KÜLÖN: a `WAV (ingyenes)` a **modellben** élt, a kivétel-üzenetek
+  /// (`StateError`, `ArgumentError`) pedig a **szolgáltatásokban** — egyik sem
+  /// volt a 374-es kör hatókörében. A szabály ugyanaz, mint a felületen: a
+  /// szövegnek **szótári kulcsnak** kell lennie (a megjelenítés/`userFacingError`
+  /// fordítja). Többsoros (összefűzött) szövegnél a **töredék** is rendben van,
+  /// ha egy kulcs **ezzel kezdődik**.
+  test('a modell/szolgáltatás üzenetei is szótári kulcsok', () {
+    final offenders = <String>[];
+    final files = [
+      ...sourceFiles('lib/models'),
+      ...sourceFiles('lib/services'),
+      File('lib/core/errors/user_facing_error.dart'),
+    ];
+    for (final file in files) {
+      final path = file.path.replaceAll(r'\', '/');
+      final lines = file.readAsLinesSync();
+      for (var index = 0; index < lines.length; index += 1) {
+        final trimmed = lines[index].trimLeft();
+        if (trimmed.startsWith('//')) continue;
+        for (final literal in literalsOf(lines[index])) {
+          if (!looksLikeLabel(literal.text)) continue;
+          final text = literal.text;
+          if (dictionary.containsKey(text)) continue;
+          // Többsoros szöveg **töredéke**: elég, ha egy kulcs ezzel kezdődik.
+          if (dictionary.keys.any((key) => key.startsWith(text))) continue;
+          if (allowedLiterals.containsKey(text)) continue;
+          // Csak a **felületre jutó** (üzenet-jellegű) szövegeket mérjük: a
+          // napló-/debug-szöveg nem felirat.
+          final before = lines[index].substring(0, literal.index);
+          final isMessage =
+              RegExp(
+                r'(StateError|ArgumentError|Exception|FormatException)\s*\(?\s*$',
+              ).hasMatch(before) ||
+              RegExp(r'return\s*$').hasMatch(before) ||
+              RegExp(
+                r'(message|error|reason|notice|label|title|subtitle|body)\s*[:=]\s*$',
+              ).hasMatch(before);
+          if (!isMessage) continue;
+          final call = enclosingCall(lines, index, literal.index);
+          if (translatingCalls.contains(call)) continue;
+          offenders.add('$path:${index + 1} [${call.isEmpty ? 'nincs hívás' : call}] '
+              '${jsonEncode(text)}');
+        }
+      }
+    }
+    expect(
+      offenders,
+      isEmpty,
+      reason:
+          'Ezek a modell-/szolgáltatás-szintű magyar üzenetek nem szerepelnek a '
+          'szótárban, ezért angol felületen magyarul jelennek meg. Vedd fel a '
+          'szótárba (kulcs = a magyar szöveg), és a megjelenítés/`userFacingError` '
+          'fordítja.',
+    );
+  });
+
+  test('a megjelenítéskor fordított (tárolt) kulcsok bent vannak a szótárban', () {    // Ezek a szövegek **tárolt** állapotban élnek (pl. `_message`), ezért az
     // extraktor nem látja őket — a szótárban viszont **kulcsként** kell lenniük,
     // különben angol módban magyarul maradnak.
     const displayTranslatedKeys = [

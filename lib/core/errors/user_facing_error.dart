@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import '../i18n/app_strings.dart';
+
 /// Angolul megfogalmazott **motor-/keretrendszer-üzenet**?
 ///
 /// A tulajdonos kérése: *„a hibaüzeneteket amúgy is magyarul kéne"*. Ezért a
@@ -45,7 +47,23 @@ bool looksLikeForeignEngineMessage(String message) {
   return false;
 }
 
-String userFacingError(Object? error) {
+/// A felhasználónak mutatható hibaüzenet — **a választott nyelven**.
+///
+/// ⚠️ **MÉRT HIBA (2026-09-27, a tulajdonos jelzése):** a kivételek üzenetei
+/// (`StateError`, `ArgumentError`) és az itteni általános szövegek **magyarul**
+/// mentek ki angol felületen is — a `WAV (ingyenes)` mellett ez a másik
+/// „ékezet nélkül is magyar" eset. A javítás **egy helyen** történik: a magyar
+/// üzenetet ez a függvény adja, a **fordítás** pedig a szótári kulcs alapján itt,
+/// a kifelé menő úton.
+///
+/// Így minden hívó (SnackBar, `_Notice`, `_message`, `Text(…)`) fordítás nélkül is
+/// helyes szöveget kap, és a magyar mód **bájtazonos** marad (a `tr()` magyar
+/// nyelven a bemenetet adja vissza).
+String userFacingError(Object? error) =>
+    AppStrings.tr(_hungarianUserFacingError(error));
+
+/// A hibaüzenet **magyar** alakja (a szótár kulcsa) — lásd a fenti burkolót.
+String _hungarianUserFacingError(Object? error) {
   if (error is StateError) {
     final message = error.message.toString().trim();
     // ⚠️ Csak a SAJÁT (magyar) üzeneteinket engedjük át — a keretrendszer angol

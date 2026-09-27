@@ -1,0 +1,14 @@
+fordítatlan felületi üzenet: 9 (sima: 9, interpolált: 0)
+
+--- SIMA (szótár-kulcs lesz) ---
+"A munkamenet lejárt vagy a művelethez bejelentkezés szükséges. Jelentkezz be újra."
+"Adj meg 2–40 karakteres, érvényes felhasználónevet."
+"A kép feltöltése sikertelen."
+"A Google Play vásárlási szolgáltatása nem érhető el ezen a "
+"A Play hibát adott a termékek lekérdezésekor — a kód a "
+"A Play egyetlen kért terméket sem adott vissza. Ez azt jelenti, "
+"A Play a termékek egy részét adta vissza, néhányat nem. A "
+"A Play **mind** a kért terméket visszaadta, árakkal együtt: a "
+"Beküldeni szerepkör szerint lehet: eseményt és "
+
+--- INTERPOLÁLT (sablon kell) ---

@@ -38,6 +38,16 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 375,
+    changes: [
+      'Javítva: angol felületen a „WAV (ingyenes)" felirat is angolul szól (a letöltött zenék listájában és a zárképernyőn is).',
+      'Javítva: a @mindenki értesítés szövege nem keveredik — eddig „… mindenkit mentioned you in the Chat" lett belőle.',
+      'Javítva: a régi (a szóismétlés javítása előtt kelt) pont-értesítések is angolul jelennek meg angol felületen.',
+      'Javítva: angol felületen a hibaüzenetek is angolul szólnak (bejelentkezés, feltöltés, vásárlás, hírlevél).',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 374,
     changes: [
       'Javítva: a „Saját zenéim" fejlécében angol felületen is angolul szól minden felirat (pl. a letöltött zenék száma).',

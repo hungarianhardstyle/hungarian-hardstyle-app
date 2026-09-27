@@ -1,0 +1,121 @@
+#!/usr/bin/env node
+/**
+ * A `lib/services` + `lib/models` **fordítatlan üzeneteinek** összefűzött alakja.
+ *
+ * MIÉRT: a Dart az egymás melletti literálokat összefűzi (a hosszú mondatok két
+ * sorban vannak), ezért a szótár kulcsa a **teljes** szöveg — a soronkénti lista
+ * félmondatokat adna (mért eset: „Elküldtük a megerősítő e-mailt — nézd meg a
+ * postaládádat " …).
+ *
+ * Kimenet: `tmp/service-messages-joined.txt` (a teljes szövegek) és
+ * `tmp/i18n/en/chunk-14.json` (a fordítások helye, ha már megvannak).
+ *
+ * Használat: node tmp/dump-service-messages-joined.mjs
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+const HUNGARIAN = /[áéíóöőúüűÁÉÍÓÖŐÚÜŰ]/;
+const WORDS = /(^|[^a-zöüóőúéáí])(ingyenes|ingyen|zene|zenek|kell|nem|van|vagy|lesz|marad|fiok|torles)([^a-zöüóőúéáí]|$)/i;
+const dictionary = JSON.parse(fs.readFileSync('assets/i18n/en.json', 'utf8'));
+
+const walk = (dir, out = []) => {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, out);
+    else if (entry.name.endsWith('.dart')) out.push(full);
+  }
+  return out;
+};
+
+/** A literálok egy sorban (a `${…}` blokkban lévő idézőjelek nem zárnak). */
+const literalsOf = (line) => {
+  const out = [];
+  let i = 0;
+  while (i < line.length) {
+    const quote = line[i];
+    if (quote !== "'" && quote !== '"') {
+      i += 1;
+      continue;
+    }
+    let j = i + 1;
+    let text = '';
+    let closed = false;
+    while (j < line.length) {
+      const ch = line[j];
+      if (ch === '\\') {
+        text += line.slice(j, j + 2);
+        j += 2;
+        continue;
+      }
+      if (ch === '$' && line[j + 1] === '{') {
+        let depth = 1;
+        let k = j + 2;
+        while (k < line.length && depth > 0) {
+          if (line[k] === '{') depth += 1;
+          else if (line[k] === '}') depth -= 1;
+          k += 1;
+        }
+        text += line.slice(j, k);
+        j = k;
+        continue;
+      }
+      if (ch === quote) {
+        closed = true;
+        break;
+      }
+      text += ch;
+      j += 1;
+    }
+    if (closed) out.push({ text, index: i, atEnd: line.slice(j + 1).trim().isEmpty, quote });
+    i = j + 1;
+  }
+  return out;
+};
+
+const joined = [];
+const seen = new Set();
+for (const file of walk('lib/services').concat(walk('lib/models'))) {
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  const continuation = new Set();
+  lines.forEach((line, index) => {
+    if (continuation.has(index)) return;
+    const trimmed = line.trim();
+    if (trimmed.startsWith('//') || trimmed.startsWith('///')) return;
+    for (const literal of literalsOf(line)) {
+      let text = literal.text;
+      let current = index;
+      let continues = literal.atEnd;
+      while (continues) {
+        current += 1;
+        if (current >= lines.length) break;
+        const next = lines[current].trimLeft();
+        if (!next.startsWith(literal.quote)) break;
+        const inner = next.slice(1);
+        const end = inner.indexOf(literal.quote);
+        if (end < 0) break;
+        text += inner.slice(0, end);
+        continuation.add(current);
+        continues = inner.slice(end + 1).trim().isEmpty;
+      }
+      if (text.length < 3) continue;
+      if (!HUNGARIAN.test(text) && !WORDS.test(text)) continue;
+      const before = line.slice(0, literal.index);
+      const isMessage =
+        /(StateError|ArgumentError|Exception|FormatException)\s*\(?\s*$/.test(before) ||
+        /return\s*$/.test(before) ||
+        /(message|_message|error|reason|notice|label|title|subtitle|body)\s*[:=]\s*$/.test(before);
+      if (!isMessage) continue;
+      if (Object.prototype.hasOwnProperty.call(dictionary, text)) continue;
+      if (seen.has(text)) continue;
+      seen.add(text);
+      joined.push({ file: file.replaceAll('\\', '/'), line: index + 1, text });
+    }
+  });
+}
+
+const report = joined.map((row) => `${row.file}:${row.line}\n${JSON.stringify(row.text)}`);
+fs.writeFileSync('tmp/service-messages-joined.txt', `${report.join('\n')}\n`, 'utf8');
+fs.writeFileSync('tmp/service-messages-joined.json', JSON.stringify(joined, null, 2), 'utf8');
+console.log(`fordítatlan üzenet (összefűzve): ${joined.length}`);
+console.log(`  ebből interpolált: ${joined.filter((row) => /\$\{?[A-Za-z_]/.test(row.text)).length}`);

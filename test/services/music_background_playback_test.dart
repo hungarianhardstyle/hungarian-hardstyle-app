@@ -323,7 +323,13 @@ void main() {
       // (a törzs-kivágó segéd a `{`-t keresné, és a következő metódus törzsét
       // találná meg).
       expect(screen, contains('MediaItem _mediaItemFor(LabelQueueEntry entry)'));
-      expect(screen, contains('album: entry.variantLabel'));
+      // ⚠️ 2026-09-27: a változat neve **fordítva** kerül a metaadatba (a
+      // tulajdonos jelzése: angol felületen „WAV (ingyenes)" maradt).
+      expect(
+        screen,
+        contains('album: AppStrings.tr(entry.variantLabel)'),
+        reason: 'a zárképernyő/értesítés metaadata is a választott nyelven szól',
+      );
       expect(
         screen,
         contains("artUri: entry.coverUrl.isEmpty ? null : Uri.tryParse(entry.coverUrl)"),

@@ -1,0 +1,6 @@
+{
+  "Javítva: angol felületen a „WAV (ingyenes)\" felirat is angolul szól (a letöltött zenék listájában és a zárképernyőn is).": "Fixed: on the English interface the “WAV (ingyenes)” label is in English too (in the downloaded tracks list and on the lock screen as well).",
+  "Javítva: a @mindenki értesítés szövege nem keveredik — eddig „… mindenkit mentioned you in the Chat\" lett belőle.": "Fixed: the text of the @everyone notification is no longer mixed — it used to read “… mindenkit mentioned you in the Chat”.",
+  "Javítva: a régi (a szóismétlés javítása előtt kelt) pont-értesítések is angolul jelennek meg angol felületen.": "Fixed: older achievement notifications (created before the duplicated word was fixed) also appear in English on the English interface.",
+  "Javítva: angol felületen a hibaüzenetek is angolul szólnak (bejelentkezés, feltöltés, vásárlás, hírlevél).": "Fixed: on the English interface the error messages are in English too (sign-in, upload, purchase, newsletter)."
+}

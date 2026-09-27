@@ -11,6 +11,8 @@
 /// ellentmondani a valódi kiadványnak, és a végpont válasza kicsi marad.
 library;
 
+import '../core/i18n/app_strings.dart';
+
 /// Egy kiadvány a felhasználó könyvtárában.
 class LabelLibraryItem {
   const LabelLibraryItem({
@@ -94,8 +96,14 @@ class LabelQueueEntry {
 
   /// Amit a lejátszóban kiírunk (a változat is, mert egy kiadványnak több
   /// változata is lehet a birtokában).
-  String get nowPlayingLabel =>
-      variantLabel.isEmpty ? title : '$title — $variantLabel';
+  ///
+  /// ⚠️ A **változat neve** a szótárból fordul (mért eset, 2026-09-27: angol
+  /// felületen „WAV (ingyenes)" maradt) — az `AppStrings.tr` itt, a
+  /// **összeállításkor** fut, mert a szöveg később médiametaadattá (zárképernyő,
+  /// értesítés) is válik, ahol nincs `BuildContext`.
+  String get nowPlayingLabel => variantLabel.isEmpty
+      ? title
+      : '$title — ${AppStrings.tr(variantLabel)}';
 }
 
 int _readInt(Object? value) {

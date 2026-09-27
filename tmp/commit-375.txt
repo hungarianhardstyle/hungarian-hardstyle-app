@@ -1,0 +1,41 @@
+fix(i18n): a WAV (ingyenes), a @mindenki keveredese es a hibauzenetek nyelve (375)
+
+A tulajdonos jelzesei (kepernyokepek): „mintha itt meg lenne Magyar szo"
+(a „Sajat zeneim" listaban a WAV (ingyenes) sor), es „ez is fura ha
+elolvasod" (az ertesitesek kozott: „Denoiser mindenkit mentioned you in the
+Chat", illetve a magyar pont-ertesites).
+
+MERT GYOKER (ketto):
+1. a valtozat neve a MODELLBEN el (`labelVariantLabel` -> `WAV (ingyenes)`),
+   es ekezet NELKUL is magyar -> a korabbi „ekezet = magyar" szabaly nem
+   latta, es a modellt a szonda sem vizsgálta;
+2. a @mindenki fan-out soraban `type = chat_mention` ES `kind =
+   chat_everyone` all, a kliens viszont a `type` alapjan forditott -> a
+   `chat_mention` sablon a „mindenkit" szot is a nevbe tette. Emellett a REGI
+   (szoismetleses) pont-sablonnal tarolt sorok egyetlen mai sablonra sem
+   illettek, ezert magyarul maradtak.
+
+AMI EPULT:
+- a `kind` bekerult a modellbe (`AppNotification.kind`) es a forditoba;
+- a forditó a ROKON tipusokat is probalja, es a legjobban illeszkedo sablont
+  valasztja (a legkisebb helyorzoo-lefedettseg) — igy a mar tarolt sorok is
+  helyesek;
+- LEGACY sablonok a szoismetleses pont-szovegekhez;
+- a valtozatnev a listaban, a lejatszasi listaban es a mediametaadatban is
+  fordul (`tr`, illetve `AppStrings.tr` a zar-kepernyohoz);
+- a `userFacingError()` EGY HELYEN fordit: a kivetel-uzenetek (StateError,
+  ArgumentError) es az altalanos hibaszovegek is angolul szolnak;
+- a hirlevel-visszajelzes sablonkulcsokkal fordul;
+- 112 uj szotar-kulcs (a szotar 1408 kulcs).
+
+UJ KAPUK: a modell-/szolgaltatas-szintu uzenetekre is fut a forras-lint, a
+`kind` atadasa MINDEN `localize(` hivasnal kotelezo, es a magyar-felismeres
+az ekezet nelkuli szavakat is figyeli.
+
+MERVE: flutter analyze lib test -> No issues found!; flutter test ->
+1169/1169 (uj: i18n_accent_free_labels_test.dart 9/9,
+notification_language_test.dart 18/18); mutacios bizonyitek 7/7
+(tmp/mutation-proof-translation-round2.mjs); i18n-kapu 1064 celzott (100%),
+0 hianyzo; node tmp/verify-aab.mjs build/HUHS-v1.0.0+375-release.aab 375 ->
+versionCode 375, 1408 kulcsu szotar, a WAV (ingyenes) es a kivetel-uzenetek
+kulcsa a csomagban is; Play-jegyzet 375-re allitva, minden ellenorzes rendben.

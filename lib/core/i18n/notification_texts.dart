@@ -38,6 +38,36 @@ class NotificationTexts {
   /// Az app-oldali katalógus (a szerveroldaliból generálva).
   static const String asset = 'assets/i18n/notification_texts.json';
 
+  /// ⚠️ **LEGACY sablonok** (2026-09-27, a tulajdonos jelzése: a pont-értesítés
+  /// angol felületen is magyarul szólt).
+  ///
+  /// MIÉRT KELL: a tárolt értesítés szövege a **létrehozáskor érvényes** sablonból
+  /// készült. A magyar pont-sablonban szóismétlés volt („Új össz**össz**pontszámod"),
+  /// amit a 373-as kör javított — a **régi** sorok viszont a hibás szöveget
+  /// tartalmazzák, és így **egyetlen mai sablonra sem illeszkednek**, ezért
+  /// fordítás nélkül maradtak. Ezekkel az alias-sablonokkal a régi sorok is
+  /// átfordulnak (a `kind` ugyanaz, csak a minta más).
+  static const Map<String, Map<String, String>> _legacyTemplates = {
+    'achievement_points': {
+      'hu': '+{delta} pont {reason}. Új összösszpontszámod: {points}.',
+    },
+    'achievement_points_level': {
+      'hu':
+          '+{delta} pont {reason}. Új összösszpontszámod: {points}. Új rangod: „{badge}”.',
+    },
+  };
+
+  /// A **rokon típusok**: ha a tárolt sor a másik típus sablonjával készült (mért
+  /// eset: a `@mindenki` fan-out sorában `type = chat_mention`, de a szöveg a
+  /// `chat_everyone` sablonból való), a fordítás csak akkor helyes, ha azt a
+  /// sablont is megpróbáljuk.
+  static const Map<String, List<String>> _relatedKinds = {
+    'chat_mention': ['chat_everyone'],
+    'chat_everyone': ['chat_mention'],
+    'achievement_points': ['achievement_points_level'],
+    'achievement_points_level': ['achievement_points'],
+  };
+
   static Map<String, dynamic> _catalog = const <String, dynamic>{};
 
   /// Be van-e töltve a katalógus? (Ha nem, minden szöveg változatlanul megy ki.)
@@ -91,22 +121,41 @@ class NotificationTexts {
   /// Ha a típus ismeretlen, vagy a szöveg egyik sablonra sem illeszkedik (például
   /// egyedi, dinamikus szöveg, vagy 500 karakterre vágott sor), akkor a **tárolt
   /// szöveg változatlanul** megy ki — sosem tippelünk és sosem hagyunk üresen.
+  ///
+  /// ⚠️ A `kind` az elsődleges (a szerver a `@mindenki` fan-outnál
+  /// `type = chat_mention` + `kind = chat_everyone` párt ír), de ha nincs, a
+  /// `type`-ból indulunk; a **rokon típusokat** is megpróbáljuk, és a **legjobban
+  /// illeszkedő** sablont választjuk (amelyik a legkevesebbet hagyja a
+  /// helyőrzőkben — így nem kerül a névbe a „mindenkit" szó).
   static NotificationText localize({
     required String type,
+    String kind = '',
     required String title,
     required String body,
   }) {
-    final entry = _kindEntry(type);
-    if (entry == null) {
-      return NotificationText(title: title, body: body);
-    }
-
     final language = AppStrings.language;
     final other = language == AppLanguage.en ? 'hu' : 'en';
+    final kinds = _candidateKinds(kind, type);
+    if (kinds.isEmpty) {
+      return NotificationText(title: title, body: body);
+    }
     return NotificationText(
-      title: _localizeField(entry, 'title', title, language, other),
-      body: _localizeField(entry, 'body', body, language, other),
+      title: _localizeFieldAcrossKinds(kinds, 'title', title, language, other),
+      body: _localizeFieldAcrossKinds(kinds, 'body', body, language, other),
     );
+  }
+
+  /// A típusok, amiket a fordításnál sorban megpróbálunk (az első a legfontosabb).
+  static List<String> _candidateKinds(String kind, String type) {
+    final result = <String>[];
+    for (final candidate in [kind.trim(), type.trim()]) {
+      if (candidate.isEmpty) continue;
+      if (!result.contains(candidate)) result.add(candidate);
+      for (final related in _relatedKinds[candidate] ?? const <String>[]) {
+        if (!result.contains(related)) result.add(related);
+      }
+    }
+    return result;
   }
 
   static Map<String, dynamic>? _kindEntry(String type) {
@@ -116,34 +165,60 @@ class NotificationTexts {
     return entry is Map<String, dynamic> ? entry : null;
   }
 
-  static String _localizeField(
-    Map<String, dynamic> entry,
+  /// A mező fordítása: végigmegy a jelölt típusokon, és a **legjobb illeszkedést**
+  /// választja (a legkisebb helyőrző-lefedettséget), majd a mostani nyelvre írja.
+  static String _localizeFieldAcrossKinds(
+    List<String> kinds,
     String field,
     String stored,
     AppLanguage language,
     String other,
   ) {
     if (stored.trim().isEmpty) return stored;
-    final current = _template(entry, appLanguageCode(language), field);
-    final foreign = _template(entry, other, field);
 
-    // 1) A MÁSIK nyelv sablonjára illeszkedik? → helyőrzők kinyerése.
-    final params = _extract(foreign, stored);
-    if (params != null) {
-      final translated = _fill(current, params, language);
-      if (translated.trim().isNotEmpty) return translated;
+    _BestMatch? best;
+    for (final kind in kinds) {
+      final entry = _kindEntry(kind);
+      if (entry == null) continue;
+      final current = _template(entry, appLanguageCode(language), field);
+      final foreignTemplates = <String>[
+        _template(entry, other, field),
+        ...?_legacyTemplates[kind]?[other] != null
+            ? [_legacyTemplates[kind]![other]!]
+            : null,
+      ];
+      for (final foreign in foreignTemplates) {
+        if (foreign.trim().isEmpty) continue;
+        final params = _extract(foreign, stored);
+        if (params == null) continue;
+        final translated = _fill(current, params, language);
+        if (translated.trim().isEmpty) continue;
+        final score = _placeholderScore(params);
+        if (best == null || score < best.score) {
+          best = _BestMatch(score: score, text: translated);
+        }
+      }
+      // A mostani nyelv sablonjára illeszkedés: ez a „már jó nyelvű" eset, ezt
+      // csak akkor vesszük, ha nincs fordítás (kisebb prioritás).
+      final own = _extract(current, stored);
+      if (own != null) {
+        final filled = _fill(current, own, language);
+        if (filled.trim().isNotEmpty) {
+          final score = _placeholderScore(own) + 1000;
+          if (best == null || score < best.score) {
+            best = _BestMatch(score: score, text: filled);
+          }
+        }
+      }
     }
-
-    // 2) A mostani nyelv sablonjára illeszkedik? → már jó (helyőrzőkkel együtt).
-    final own = _extract(current, stored);
-    if (own != null) {
-      final filled = _fill(current, own, language);
-      if (filled.trim().isNotEmpty) return filled;
-    }
-
-    // 3) Ismeretlen/egyedi szöveg: marad, ahogy tárolva van.
-    return stored;
+    // Ismeretlen/egyedi szöveg: marad, ahogy tárolva van.
+    return best?.text ?? stored;
   }
+
+  /// Minél több karakter kerül a helyőrzőkbe, annál **rosszabb** az illeszkedés
+  /// (a `chat_mention` sablon a „mindenkit" szót is a névbe tenné).
+  static int _placeholderScore(Map<String, String> params) =>
+      params.values.fold(0, (sum, value) => sum + value.trim().length);
 
   static String _template(Map<String, dynamic> entry, String languageCode, String field) {
     final byLanguage = entry[languageCode];
@@ -214,4 +289,12 @@ class NotificationTexts {
     if (entry is! Map) return '';
     return '${entry[appLanguageCode(language)] ?? entry['hu'] ?? ''}';
   }
+}
+
+/// Egy kiválasztott illeszkedés (a legjobb megőrzéséhez).
+class _BestMatch {
+  const _BestMatch({required this.score, required this.text});
+
+  final int score;
+  final String text;
 }

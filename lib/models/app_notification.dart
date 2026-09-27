@@ -11,12 +11,20 @@ class AppNotification {
     required this.createdAt,
     required this.readAt,
     required this.archivedAt,
+    this.kind = '',
     this.senderId = '',
     this.recipientUid = '',
   });
 
   final String id;
   final String type;
+
+  /// A **sablon típusa** (`data['kind']`), ha a szerver megkülönbözteti a
+  /// `type`-tól. Mért eset (2026-09-27): a `@mindenki` fan-out sorában
+  /// `type = chat_mention` **és** `kind = chat_everyone` áll — a megjelenítéskori
+  /// fordításhoz a `kind` a mérvadó, különben a „mindenkit" szó a névbe kerül.
+  final String kind;
+
   final String title;
   final String body;
   final String targetType;
@@ -45,6 +53,7 @@ class AppNotification {
     return AppNotification(
       id: snapshot.id,
       type: data['type']?.toString() ?? 'general',
+      kind: data['kind']?.toString().trim() ?? '',
       title: data['title']?.toString().trim() ?? '',
       body: data['body']?.toString().trim() ?? '',
       targetType: data['targetType']?.toString().trim() ?? '',

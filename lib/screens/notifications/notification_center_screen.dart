@@ -96,6 +96,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       }
       final localized = NotificationTexts.localize(
         type: item.type,
+        kind: item.kind,
         title: item.title,
         body: item.body,
       );
@@ -574,6 +575,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                             // katalógusból; ismeretlen típusnál változatlan).
                             final localized = NotificationTexts.localize(
                               type: item.type,
+                              kind: item.kind,
                               title: item.title,
                               body: item.body,
                             );

@@ -57,6 +57,27 @@ const DISPLAY_PARAMS = /(?:^|[\s(,])(label|tooltip|title|subtitle|hintText|helpe
 
 const looksHungarian = (text) => /[áéíóöőúüűÁÉÍÓÖŐÚÜŰ]/.test(text);
 
+/**
+ * ⚠️ MÉRT HIBA (2026-09-27, a tulajdonos jelzése: *„mintha itt még lenne magyar
+ * szöveg"* a „Saját zenéim" listában): a szöveg **`WAV (ingyenes)`** volt, azaz
+ * magyar, de **ékezet nélkül** — ezért az „ékezet = magyar" szabály **nem látta**,
+ * és a 374-es kör zöld kapui mellett is bent maradt.
+ *
+ * Ezért az ékezet mellett egy **szűk, egyértelműen magyar** szólistát is
+ * figyelünk (csak **teljes szó** egyezéssel, hogy az angol szövegek ne
+ * bukjanak meg pl. a „van"/„meg" részszövegre).
+ */
+const HUNGARIAN_WORDS_WITHOUT_ACCENT = [
+  'ingyenes', 'ingyen', 'zene', 'zenek', 'zeneszam', 'kell', 'nem', 'van',
+  'vagy', 'lesz', 'marad', 'megveve', 'letoltve', 'fiok', 'torles',
+];
+const wordPattern = new RegExp(
+  `(^|[^a-zöüóőúéáí])(${HUNGARIAN_WORDS_WITHOUT_ACCENT.join('|')})([^a-zöüóőúéáí]|$)`,
+  'i',
+);
+const isHungarianText = (text) =>
+  looksHungarian(text) || wordPattern.test(text.toLowerCase());
+
 /** Magyar funkciószavak — akkor is felismeri a magyar feliratot, ha nincs ékezet. */
 const HUNGARIAN_WORDS = [
   ' a ', ' az ', ' egy ', ' nem ', ' meg ', ' van ', ' nincs ', ' vagy ', ' hogy ', ' ez ',
@@ -74,7 +95,7 @@ const isLabelText = (text) => {
   const withoutPlaceholders = text.replace(/\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*/g, '').trim();
   if (withoutPlaceholders.length < 2) return false;          // csak interpoláció: nem felirat
   if (!/[A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű]{2}/.test(withoutPlaceholders)) return false;
-  return looksHungarian(text) || looksLikeHungarianSentence(withoutPlaceholders);
+  return isHungarianText(text) || looksLikeHungarianSentence(withoutPlaceholders);
 };
 
 const enclosingCall = (lines, lineIndex, columnIndex) => {

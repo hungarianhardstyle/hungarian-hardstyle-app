@@ -67,6 +67,21 @@ check(
     Object.prototype.hasOwnProperty.call(dictionary, key),
   ),
 );
+// ⚠️ 375: az „ékezet nélkül is magyar" címke és a kivétel-üzenetek.
+check(
+  'a „WAV (ingyenes)" kulcs a csomagolt szótárban angolul szól',
+  `${dictionary['WAV (ingyenes)'] ?? ''}`.toLowerCase().includes('free'),
+  `${dictionary['WAV (ingyenes)'] ?? 'HIÁNYZIK'}`,
+);
+check(
+  'a kivétel-üzenetek kulcsai is bent vannak (a `userFacingError` fordítja)',
+  [
+    'A beszélgetés törléséhez bejelentkezés szükséges.',
+    'Az üzenet 1–2000 karakter lehet.',
+    'A felhasználó nem található.',
+    'Nem sikerült kapcsolódni. Ellenőrizd az internetkapcsolatot.',
+  ].every((key) => Object.prototype.hasOwnProperty.call(dictionary, key)),
+);
 
 // ⚠️ 369: az ÉRTESÍTÉS-katalógus is az appban van (a megjelenítéskori fordításhoz).
 const catalogEntry = entries.find((entry) => entry.endsWith('assets/i18n/notification_texts.json'));
@@ -147,6 +162,11 @@ const changelog = [
   'a lejátszó két gombja (szünet, keverés)',
   'a feliraton látható szót kéri (DELETE)',
   'a booking- és hibajelentő e-mail tárgya',
+  // 375: a WAV (ingyenes), a @mindenki keveredése és a hibaüzenetek nyelve.
+  'a „WAV (ingyenes)" felirat is angolul szól',
+  'a @mindenki értesítés szövege nem keveredik',
+  'a régi (a szóismétlés javítása előtt kelt) pont-értesítések',
+  'angol felületen a hibaüzenetek is angolul szólnak',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });

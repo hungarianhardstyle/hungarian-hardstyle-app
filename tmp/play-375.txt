@@ -1,0 +1,4 @@
+- Javítva: angolul a „WAV (ingyenes)" felirat is (a letöltött zenék listájában és a zárképernyőn).
+- Javítva: a @mindenki értesítés szövege nem keveredik (eddig „… mindenkit mentioned you in the Chat" lett).
+- Javítva: a régi pont-értesítések is angolul jelennek meg angol felületen.
+- Javítva: angolul a hibaüzenetek is (bejelentkezés, feltöltés, vásárlás, hírlevél).

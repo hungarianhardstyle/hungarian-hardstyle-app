@@ -10,6 +10,8 @@
 /// az 1. eset — így a frissítés előtti pluginnal is helyes a szöveg.
 library;
 
+import '../core/i18n/app_strings.dart';
+
 /// A feliratkozás kimenetele a felhasználó szempontjából.
 enum NewsletterOutcome {
   /// Kiment (vagy kimegy) a megerősítő e-mail.
@@ -92,19 +94,29 @@ NewsletterResult newsletterResultFromResponse(Map<String, dynamic>? data) {
   return const NewsletterResult(outcome: NewsletterOutcome.confirmationSent);
 }
 
-/// A felhasználónak mutatott magyar szöveg.
+/// A felhasználónak mutatott szöveg — **a választott nyelven**.
+///
+/// ⚠️ A magyar szöveg a szótár kulcsa; a fordítás itt, a kifelé menő úton
+/// történik (`AppStrings.tr`/`trArgs`), a **sablonos** mondatoknál helyőrzőkkel
+/// (mért eset, 2026-09-27: angol felületen magyarul szólt a hírlevél-visszajelzés).
 String newsletterMessage(NewsletterResult result) {
   switch (result.outcome) {
     case NewsletterOutcome.confirmationSent:
-      return 'Elküldtük a megerősítő e-mailt — nézd meg a postaládádat '
-          '(a spam mappát is), és kattints a benne lévő linkre.';
+      return AppStrings.tr(
+        'Elküldtük a megerősítő e-mailt — nézd meg a postaládádat '
+        '(a spam mappát is), és kattints a benne lévő linkre.',
+      );
     case NewsletterOutcome.alreadySubscribed:
-      return 'Ez az e-mail-cím már fel van iratkozva a hírlevélre, '
-          'nem kell újra megerősíteni.';
+      return AppStrings.tr(
+        'Ez az e-mail-cím már fel van iratkozva a hírlevélre, '
+        'nem kell újra megerősíteni.',
+      );
     case NewsletterOutcome.confirmationPending:
-      return 'Erre a címre már kiment a megerősítő e-mail, ezért most nem '
-          'küldtük ki újra. Nézd meg a postaládádat (a spam mappát is); '
-          'ha nem találod, ${_retryHint(result.retryAfterSeconds)}';
+      return AppStrings.trArgs(
+        'Erre a címre már kiment a megerősítő e-mail, ezért most nem '
+        'küldtük ki újra. Nézd meg a postaládádat (a spam mappát is); {hint}',
+        {'hint': _retryHint(result.retryAfterSeconds)},
+      );
   }
 }
 
@@ -113,7 +125,10 @@ String newsletterMessage(NewsletterResult result) {
 String _retryHint(int? seconds) {
   final safe = seconds == null || seconds <= 0 ? 60 : seconds;
   final minutes = (safe / 60).ceil();
-  return 'körülbelül $minutes perc múlva próbáld újra.';
+  return AppStrings.trArgs(
+    'körülbelül {n} perc múlva próbáld újra.',
+    {'n': '$minutes'},
+  );
 }
 
 int? _positiveSeconds(Object? value) {
