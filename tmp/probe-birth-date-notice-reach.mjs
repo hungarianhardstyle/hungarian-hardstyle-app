@@ -14,7 +14,18 @@ import { firestoreList, firestoreGet } from '../tools/lib/live-firebase.mjs';
 const SETTINGS_DOC = 'app_settings/birth_date_notice';
 
 const profiles = await firestoreList('community_profiles', {
-  fields: ['birthDate', 'email', 'language', 'accessRole'],
+  // ⚠️ A MEZŐ-MASZK MINDENT felsorol, amit mérünk — különben a Firestore REST
+  // csak a kért mezőket adja vissza, és a hiányzó mező **hamis nullát** mutat
+  // (ez a saját mérőeszközöm hibája volt: a kiküldés után „0" e-mail-jelölést
+  // mértem, pedig a mező benne volt, csak nem kértem ki).
+  fields: [
+    'birthDate',
+    'email',
+    'language',
+    'accessRole',
+    'birthDateNoticeSentAt',
+    'birthDateNoticeEmailSentAt',
+  ],
 });
 const missing = profiles.filter(
   (profile) => String(profile.birthDate ?? '').trim().length === 0,
