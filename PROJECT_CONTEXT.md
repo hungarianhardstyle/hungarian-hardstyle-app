@@ -1,8 +1,15 @@
 # PROJECT_CONTEXT.md
 
+> ⚠️ **TÖRTÉNETI NAPLÓ — nem az aktuális állapot.** Az alábbi bejegyzések régi
+> buildkörök (a legfelső a `+182`-ről szól), ezért a bennük szereplő buildszámok
+> **nem** a mai kiadást jelentik. A jelenlegi állapot helye:
+> **`README.md`** (nyilvános összefoglaló) és **`AGENTS.md`** (körönkénti, mért
+> fejlesztési napló, a legfrissebb kör legfelül). A kiadásra szánt csomag és a
+> Play-szövegek: **`docs/PLAY-KIADASI-JEGYZET.md`**.
+
 # Hungarian Hardstyle App
 
-## Aktuális Play-build: +182 — zárt Alpha tesztbe felülvizsgálatra beküldve
+## [TÖRTÉNETI] Play-build: +182 — zárt Alpha tesztbe felülvizsgálatra beküldve
 
 - A `build/HUHS-v1.0.0+182-release.aab` elkészült; a Play Console a tényleges versionCode 182-t elfogadta.
 - A +182 tartalmazza az AdMob elhelyezési, kibővített káromkodásszűrési és hír-like stabilitási javításokat.
