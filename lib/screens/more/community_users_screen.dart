@@ -12,6 +12,8 @@ import '../../models/event.dart';
 import '../../models/achievement.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/artists_provider.dart';
+import '../../services/birth_date.dart';
+import '../../services/chat_report.dart';
 import '../../services/community_service.dart';
 import '../../services/wordpress_service.dart';
 import '../../widgets/app_text.dart';
@@ -389,6 +391,12 @@ class _CommunityPublicProfileScreenState
           final memberSince = memberSinceMillis != null && memberSinceMillis > 0
               ? DateTime.fromMillisecondsSinceEpoch(memberSinceMillis).toLocal()
               : null;
+          // ⚠️ A születési dátumot a **szerver vetíti** (`functions/index.js` →
+          // `publicProfileData`), és **csak akkor** kerül a nyilvános
+          // `public_profiles` dokumentumba, ha a profil tulajdonosa bekapcsolta
+          // a megjelenítést (`birthDateVisible`). Ezért itt elég a mező
+          // meglétét nézni — a döntés a felhasználóé, nem a nézőé.
+          final birthDate = BirthDate.parse(data['birthDate'] as String?);
           // ⚠️ A görgethető oldal ALJÁRA kell a rendszer alsó sávja + levegő,
           // különben az utolsó kártya takarásban marad és úgy tűnik, mintha nem
           // lehetne a végére görgetni. A tulajdonos jelzése (2026-09-22):
@@ -463,6 +471,16 @@ class _CommunityPublicProfileScreenState
                   subtitle: Text(
                     MaterialLocalizations.of(context)
                         .formatMediumDate(memberSince),
+                  ),
+                ),
+              if (birthDate != null)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.cake_outlined),
+                  title: const AppText('Születési dátum'),
+                  subtitle: Text(
+                    MaterialLocalizations.of(context)
+                        .formatMediumDate(birthDate),
                   ),
                 ),
               const SizedBox(height: 16),
@@ -1106,7 +1124,14 @@ class _ReportCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final storedText = (data['reportedText'] as String? ?? '').trim();
     final reporterId = (data['reporterId'] as String? ?? '').trim();
-    final reason = (data['reason'] as String? ?? 'other').trim();
+    // Az indok a **kódja** szerint jelenik meg (a tárolt érték nyelvfüggetlen),
+    // a címke pedig a **fordítón** megy át — különben angol felületen magyarul
+    // maradna (a `{reason}` helyőrző értékét a `trArgs` nem fordítja).
+    final reason = tr(context, chatReportReasonLabel(data['reason'] as String?));
+    // A privát beszélgetésből indított jelentésnél nincs chat-bejegyzés
+    // (`postId` üres), ezért a forrást kiírjuk — így a moderátor tudja, hol
+    // keresse a szöveget.
+    final fromPrivateChat = data['source'] == 'private_chat';
     final futures = <Future<DocumentSnapshot<Map<String, dynamic>>>>[];
     int? postIndex;
     int? reporterIndex;
@@ -1226,6 +1251,12 @@ class _ReportCard extends StatelessWidget {
                   }),
                 ),
                 Text(trArgs(context, 'Indok: {reason}', {'reason': reason})),
+                if (fromPrivateChat)
+                  Text(
+                    trArgs(context, 'Forrás: {source}', {
+                      'source': tr(context, 'Privát beszélgetés'),
+                    }),
+                  ),
                 if (postId.isNotEmpty)
                   Text(trArgs(context, 'Bejegyzés: {id}', {'id': postId})),
                 const SizedBox(height: 6),

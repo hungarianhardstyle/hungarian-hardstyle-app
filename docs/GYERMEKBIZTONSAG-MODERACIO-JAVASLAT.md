@@ -1,5 +1,11 @@
 # Gyermekbiztonság: moderációs javaslat (2026-09-27)
 
+> ## ✅ A TULAJDONOS DÖNTÉSEI (2026-09-27) — ezek a mérvadók
+> 1. **Az 1. fázis INDUL** (életkor-különbség + kulcsszó-jelek + admin-értesítés, szerveroldalon).
+> 2. **A regisztráció korhatára 16+** — 16 év alatt a regisztrációt blokkolni kell (felület + szolgáltatás).
+> 3. **A kiskorút figyelmeztetni kell a privát chatben**, ha a partnere nagykorú (alapból látható sáv).
+> 4. **Angolul is működnie kell** mindennek (a jelek és a szövegek is).
+
 > **Miről szól:** a tulajdonos az appot **Közösségi** kategóriába tette, ezért a Play
 > **Gyermekbiztonsági normák** nyilatkozatot kér. Ehhez a normák közzététele
 > (kész: `https://hungarianhardstyle.hu/gyermekbiztonsag/`) és az **alkalmazáson
@@ -18,6 +24,44 @@
 >   `handleChatReportNotification` értesíti az adminokat;
 > * a blokkolás (`community_profiles.blockedIds`), a beszélgetés- és üzenettörlés,
 >   valamint az admin-oldali törlés/kitiltás **már működik**.
+
+## ✅ MI VALÓSULT MEG az 1. fázisból (2026-09-27, mérve)
+
+| Elem | Hol él | Állapot |
+|---|---|---|
+| Életkor-különbség (kiskorú ↔ nagykorú, súlyozva) | `functions/child-safety-plan.js` | **kész** |
+| Kulcsszó-jelek **magyarul és angolul** (életkorra kérdezés, titoktartás, találkozó, kép, lakóhely, más platform, ajándék/pénz) | ugyanott (`SIGNAL_DEFINITIONS`) | **kész** |
+| Elérhetőség-csere (telefonszám, e-mail, `@`-handle) | ugyanott (`contact_share`) | **kész** |
+| Jelzés írása: `moderation_flags` (strukturált) **+** `chat_reports` rendszer-sor (a meglévő admin-listában azonnal látszik) | `functions/index.js` → `writeChildSafetyFlag` | **kész** |
+| Admin-értesítés **és push**, a címzett nyelvén, súlyosságonként külön típussal | `functions/notification-texts.js` (`child_safety_flag*`) | **kész** |
+| Trigger a privát üzenetre | `exports.moderatePrivateMessage` | **kész** |
+| Szabály: a `moderation_flags`-ot csak moderátor olvashatja, írni senki | `firestore.rules` | **kész** |
+| **Nem** tilt és **nem** töröl automatikusan (minden jelzés emberi döntésre vár) | a jelző-ág forrás-lintje | **kész** |
+| „Egy gyerekre írnak rá" — a kiskorú figyelmeztetése a privát chatben | app (`BirthDate.needsAdultPartnerWarning`, Chat-fül sáv) | **kész (app-oldal)** |
+| 16+ regisztrációs korhatár | app (`BirthDate.requireRegistrationValue`) + szerveroldali második kapu (`checkRegistrationEligibility`) | **kész** |
+| Meglévő tagok emlékeztetése (értesítés + e-mail) | `exports.sendBirthDateNotices` + `tools/birth-date-notice-flag.mjs` | **kész, ALVÓ** (lásd lent) |
+
+### A születési dátum emlékeztető — a sorrend kötött
+
+A tulajdonos kérése: *„menjen ki notifybe mér kötelező a születési dátum, mehet
+nekik mail is"* → *„a meglévő tagoknak úgyértem"* → *„természetesen majd akkor ha
+éles az új build"* → *„majd szólok ha ez kiment élesbe"*.
+
+Ezért a kiküldő **élére kerül, de alvó állapotban**: az
+`app_settings/birth_date_notice` dokumentum `enabled` mezője zárja (hiányzó
+dokumentum = kikapcsolva). A kapcsoló:
+`node tools/birth-date-notice-flag.mjs --status | --enable --confirm | --disable --confirm | --run-now --confirm`.
+
+Mérve (2026-09-27, `node tmp/probe-birth-date-notice-reach.mjs`): **45 profil**,
+mindegyikben **hiányzik** a születési dátum, ebből **44-nek van e-mail-címe**,
+**1 angol nyelvű**. A kiküldés tehát 45 listabeli értesítés + 44 e-mail (a
+naplévél körönként legfeljebb 40, ezért a maradék a következő körben megy ki).
+Idempotencia: az értesítés kulcsa `birth_date_required:{uid}`, az e-mail tényét a
+profil jelöli (`birthDateNoticeEmailSentAt`) — ismételt kör **nem** spammel.
+
+**A teendő, amikor az új build éles:** `--enable --confirm`, majd
+`--run-now --confirm` (vagy a napi 18:00-i kör).
+
 
 ## 1. Javaslat — három fázis (költség szerint növekvő)
 

@@ -30,7 +30,9 @@ import '../../services/chat_mention_plan.dart';
 import '../../services/chat_mention_source.dart';
 import '../../services/community_service.dart';
 import '../../services/chat_display_preferences.dart';
+import '../../services/birth_date.dart';
 import '../../widgets/app_text.dart';
+import '../../widgets/birth_date_field.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../services/referral_link_service.dart';
 import '../../widgets/submission_image_picker.dart';
@@ -876,6 +878,13 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
   /// Végeztünk-e az odaugrással (megtaláltuk, vagy feladtuk).
   bool _focusFinished = false;
 
+  /// A **születési dátum hiánya** a Chat fülön (a tulajdonos kérése,
+  /// 2026-09-27): a már regisztrált, dátum nélküli felhasználó figyelmeztető
+  /// sávot kap, és egyszer fel is ajánljuk a kitöltést. A sáv **addig marad**,
+  /// amíg a dátum be nem kerül; a felugró ablak bezárható.
+  bool _birthDateMissing = false;
+  bool _birthDateDialogOpened = false;
+
   Timer? _highlightTimer;
 
   /// A régebbi lap mérete. 30 üzenet laponként: ennyi olvasás, és a felhasználó
@@ -1174,6 +1183,8 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
         setState(() {
           _avatarUrl = '';
           _avatarLetter = 'H';
+          // Vendégként nincs mit kitölteni (a dátum a regisztrációhoz tartozik).
+          _birthDateMissing = false;
         });
       }
       return;
@@ -1189,12 +1200,76 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
         _avatarZoom = (data['profileZoom'] as num?)?.toDouble() ?? 1;
         _avatarPanX = (data['profilePanX'] as num?)?.toDouble() ?? 0;
         _avatarPanY = (data['profilePanY'] as num?)?.toDouble() ?? 0;
+        _birthDateMissing =
+            BirthDate.normalize(data['birthDate'] as String?) == null;
         final name = data['displayName'] as String? ?? '';
         _avatarLetter = name.trim().isEmpty
             ? 'H'
             : name.trim()[0].toUpperCase();
       });
+      if (_birthDateMissing) _scheduleBirthDateDialog();
     } catch (_) {}
+  }
+
+  /// A hiányzó dátum felajánlása — **egyszer** nyílik meg magától, az első
+  /// profilbetöltés után (a sáv viszont utána is ott marad, és koppintásra
+  /// újra megnyílik).
+  void _scheduleBirthDateDialog() {
+    if (_birthDateDialogOpened || _anonymous || !mounted) return;
+    _birthDateDialogOpened = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _birthDateMissing) unawaited(_askBirthDate());
+    });
+  }
+
+  /// A dátum bekérése és mentése (külön, egy mezőt író hívással).
+  Future<void> _askBirthDate() async {
+    final user = _service.auth.currentUser;
+    if (user == null || user.isAnonymous) return;
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (_) => const BirthDatePromptDialog(),
+    );
+    if (picked == null || !mounted) return;
+    try {
+      await _service.saveBirthDate(user.uid, picked);
+      if (!mounted) return;
+      setState(() => _birthDateMissing = false);
+      _showMessage(
+        AppStrings.tr(
+          'A születési dátumod elmentve. A nyilvános megjelenítést a profil szerkesztésében kapcsolhatod be.',
+        ),
+      );
+    } catch (error) {
+      if (mounted) _showMessage(userFacingError(error));
+    }
+  }
+
+  /// A Chat fül figyelmeztető sávja (nem elrejthető, nem blokkoló).
+  Widget _birthDateBanner() {
+    final colors = Theme.of(context).colorScheme;
+    return Material(
+      color: colors.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+        child: Row(
+          children: [
+            Icon(Icons.cake_outlined, color: colors.onErrorContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                tr(context, 'A születési dátumod még nincs megadva.'),
+                style: TextStyle(color: colors.onErrorContainer),
+              ),
+            ),
+            TextButton(
+              onPressed: () => unawaited(_askBirthDate()),
+              child: const AppText('Megadom'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _pickImage({required ImageSource source}) async {
@@ -1698,7 +1773,7 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                       ),
               ),
             );
-            return Flex(
+            final content = Flex(
               direction: landscape ? Axis.horizontal : Axis.vertical,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -1714,6 +1789,15 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
                 else
                   composer,
                 postList,
+              ],
+            );
+            // A hiányzó születési dátum figyelmeztetése a Chat fül **tetején**,
+            // minden más tartalom fölött (nem elrejthető, de nem is blokkol).
+            if (!_birthDateMissing || _anonymous) return content;
+            return Column(
+              children: [
+                _birthDateBanner(),
+                Expanded(child: content),
               ],
             );
           },
@@ -2728,6 +2812,14 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
   String? _formUid;
   String _savedProfileName = '';
   DateTime? _memberSince;
+
+  /// A **születési dátum** (`'YYYY-MM-DD'`) és a nyilvános megjelenítés jelzője.
+  ///
+  /// A dátum a regisztráció **kötelező** mezője (16 éves korhatárral), a
+  /// megjelenítés viszont alapból **ki** — a felhasználó dönt róla.
+  String? _birthDate;
+  bool _birthDateVisible = false;
+  String? _registrationBirthDateError;
   int _profileSaveAttempt = 0;
   Future<void>? _profileLoadRequest;
   int _usernameChangesUsed = 0;
@@ -2841,6 +2933,16 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       return;
     }
     if (_register) {
+      // ⚠️ A születési dátum **kötelező**, és a korhatár (16+) itt is látszik —
+      // a szolgáltatás ugyanezt külön is kikényszeríti (`register()`).
+      final birthDateError = _birthDateError(_birthDate);
+      setState(() => _registrationBirthDateError = birthDateError);
+      if (birthDateError != null) {
+        _message(birthDateError);
+        return;
+      }
+    }
+    if (_register) {
       try {
         await _service.checkDisplayNameAvailability(_name.text);
       } catch (error) {
@@ -2861,6 +2963,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           displayName: _name.text,
           role: _role,
           socialLinks: _socialValues(),
+          birthDate: _birthDate,
         );
         if (_referralCode.text.trim().isNotEmpty) {
           // A bad/expired code must never turn a successful registration into
@@ -2901,6 +3004,25 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// A regisztrációs születési dátum hibája (vagy `null`, ha minden rendben).
+  ///
+  /// Ugyanazokat az üzeneteket használja, mint a szolgáltatás (`BirthDate`),
+  /// ezért a felület és a szolgáltatás nem mondhat mást ugyanarra az esetre.
+  String? _birthDateError(String? value) {
+    final normalized = BirthDate.normalize(value);
+    if (normalized == null) {
+      return AppStrings.tr(
+        (value?.trim().isEmpty ?? true)
+            ? BirthDate.missingMessage
+            : BirthDate.invalidMessage,
+      );
+    }
+    if (!BirthDate.isAtLeast(normalized, BirthDate.minimumAge)) {
+      return AppStrings.tr(BirthDate.underageMessage);
+    }
+    return null;
   }
 
   String? _registrationNameMessage(Object error) {
@@ -3023,6 +3145,13 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
     }
     _formUid = user.uid;
     _savedProfileName = storedName;
+    // A születési dátumot csak **érintetlen** mezőre töltjük vissza: a
+    // felhasználó éppen kiválasztott dátuma nem veszhet el egy későn érkező
+    // szerver-snapshot miatt (ugyanaz a szabály, mint a névnél/bemutatkozásnál).
+    if (!_dirtyFields.contains('birthDate')) {
+      _birthDate = BirthDate.normalize(data['birthDate'] as String?);
+      _birthDateVisible = data['birthDateVisible'] == true;
+    }
     final createdAt = data['createdAt'];
     _memberSince = createdAt is Timestamp ? createdAt.toDate() : null;
     _profileImageUrl = _service.resolveProfileImage(data);
@@ -3180,6 +3309,11 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       }
       final savedProfile = await persistCommunityProfileDraft(
         displayName: displayName,
+        // A születési dátum a profil-save **kötelező** mezője: a szolgáltatás
+        // dob, ha nincs megadva (`A születési dátum megadása kötelező.`). A már
+        // regisztrált, régi fiókot ez nem zárja ki — csak a dátumot kéri be.
+        birthDate: _birthDate,
+        requireBirthDate: true,
         claimDisplayName: (value) async {
           if (kDebugMode) debugPrint('Profile save attempt=$attempt stage=claim_started');
           await _service.claimDisplayName(value);
@@ -3191,6 +3325,8 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
             .set({
               if (_roleMissing) 'role': _role,
               'bio': bio,
+              if (_birthDate != null) 'birthDate': _birthDate,
+              'birthDateVisible': _birthDateVisible,
               'socialLinks': socialLinks,
               'profileFocusX': savedFocusX,
               'profileFocusY': savedFocusY,
@@ -3229,6 +3365,12 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           _profileImageUrl = sourceImageUrl;
           _focusX = savedFocusX.toDouble();
           _focusY = savedFocusY.toDouble();
+          // A szerver által visszaigazolt dátum/nyilvánosság lesz az állapot.
+          _birthDate =
+              BirthDate.normalize(savedProfile['birthDate'] as String?) ??
+              _birthDate;
+          _birthDateVisible = savedProfile['birthDateVisible'] == true;
+          _dirtyFields.remove('birthDate');
           _profileImage = null;
         });
       }
@@ -3303,10 +3445,21 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       _registrationNameError = null;
     });
     try {
+      // Regisztrációnál a születési dátum (16+) kötelező; bejelentkezésnél nem
+      // kérjük — a meglévő fiókot semmi nem zárja ki.
+      if (_register) {
+        final birthDateError = _birthDateError(_birthDate);
+        setState(() => _registrationBirthDateError = birthDateError);
+        if (birthDateError != null) {
+          _message(birthDateError);
+          return;
+        }
+      }
       final signedIn = await _service.signInWithGoogle(
         role: _register ? _role : null,
         displayName: _register ? _name.text.trim() : null,
         socialLinks: _register ? _socialValues() : null,
+        birthDate: _register ? _birthDate : null,
       );
       if (!signedIn) return;
       if (_register && _referralCode.text.trim().isNotEmpty) {
@@ -4148,6 +4301,20 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                     ),
                                     const SizedBox(height: 12),
                                     ..._socialFields(),
+                                    const SizedBox(height: 6),
+                                    CommunityProfileBirthDateField(
+                                      value: _birthDate,
+                                      visible: _birthDateVisible,
+                                      showVisibility: true,
+                                      onChanged: (value) => setState(() {
+                                        _birthDate = value;
+                                        _markFieldEdited('birthDate');
+                                      }),
+                                      onVisibleChanged: (value) => setState(() {
+                                        _birthDateVisible = value;
+                                        _markFieldEdited('birthDate');
+                                      }),
+                                    ),
                                     const SizedBox(height: 14),
                                     FilledButton.icon(
                                       onPressed: _busy ? null : _saveProfile,
@@ -4441,6 +4608,16 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                 ),
                                 ..._socialFields(),
                                 const SizedBox(height: 6),
+                                CommunityProfileBirthDateField(
+                                  value: _birthDate,
+                                  // A regisztrációnál a 16 éves korlát él.
+                                  registration: true,
+                                  errorText: _registrationBirthDateError,
+                                  onChanged: (value) => setState(() {
+                                    _birthDate = value;
+                                    _registrationBirthDateError = null;
+                                  }),
+                                ),
                                 const AppText(
                                   'A profil védelméhez a regisztráció után opcionális kétfaktoros védelem kapcsolható be a Beállításokban.',
                                   style: TextStyle(color: Colors.white70),

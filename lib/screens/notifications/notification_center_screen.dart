@@ -364,6 +364,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         'release',
         'artist',
         'organizer',
+        // ⚠️ 2026-09-27: a születési dátum kérése — a `openContentTarget`
+        // `birth_date` ága visz a dátum beállításához (a meglévő tagoknak szóló
+        // emlékeztető értesítés koppintása).
+        'birth_date',
       }.contains(notification.targetType)) {
         await openContentTarget(
           navigator,

@@ -260,6 +260,15 @@ test('minden push-útvonal védett a dupla küldés ellen (nincs kivétel)', () 
       search: 'event-rating-request:',
       gate: /if \(!notificationCreated\) continue;/,
     },
+    {
+      // ⚠️ 2026-09-27: a születési dátum emlékeztető (a meglévő tagoknak). A
+      // kulcs a tiszta tervből jön (`birthDateNoticePayload`), a push pedig a
+      // `created` kapu mögött van — ezért egy ismételt kör NEM küld második
+      // értesítést és nem küld második push-t sem.
+      marker: 'birth_date_required',
+      search: 'birthDateNoticePayload(',
+      gate: /if \(created\) \{/,
+    },
   ];
   for (const route of routes) {
     const needle = route.search || `dedupeKey: \`${route.marker}`;

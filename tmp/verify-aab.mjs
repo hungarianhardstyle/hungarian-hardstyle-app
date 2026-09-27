@@ -90,11 +90,26 @@ if (catalogEntry) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, catalogEntry], { maxBuffer: 64 * 1024 * 1024 });
   const catalog = JSON.parse(fs.readFileSync(`${OUT}/${catalogEntry}`, 'utf8'));
   const kinds = Object.keys(catalog.kinds ?? {});
-  check('az értesítés-katalógusban legalább 36 típus van', kinds.length >= 36, `${kinds.length} típus`);
+  check('az értesítés-katalógusban legalább 41 típus van', kinds.length >= 41, `${kinds.length} típus`);
   check(
     'a privát üzenet típusa is benne van (angolul is)',
     catalog.kinds?.private_message?.en?.title === '{name} sent you a message',
     JSON.stringify(catalog.kinds?.private_message?.en?.title),
+  );
+  // ⚠️ 376: a gyermekbiztonsági jelzés (rendszer) és a születési dátum kérése —
+  // mindkettő a beépített katalógusból fordul a megjelenítéskor.
+  check(
+    'a gyermekbiztonsági jelzés típusai bent vannak (súlyosságonként, angolul is)',
+    catalog.kinds?.child_safety_flag_high?.en?.title === 'Child safety alert (high)' &&
+      catalog.kinds?.child_safety_flag_medium?.en?.title === 'Child safety alert (medium)' &&
+      catalog.kinds?.child_safety_flag_low?.en?.title === 'Child safety alert (low)' &&
+      catalog.kinds?.child_safety_flag?.en?.title === 'Child safety alert',
+    JSON.stringify(catalog.kinds?.child_safety_flag_high?.en?.title),
+  );
+  check(
+    'a születési dátum kérése is bent van (angolul is)',
+    catalog.kinds?.birth_date_required?.en?.title === 'Please add your date of birth',
+    JSON.stringify(catalog.kinds?.birth_date_required?.en?.title),
   );
 }
 
@@ -118,6 +133,29 @@ for (const [key, expected] of [
   [
     'Javítva: angol felületen a kiadási jegyzet (Névjegy → Újdonságok) is angolul jelenik meg — a teljes előzmény, a legkorábbi kiadásokig visszamenőleg.',
     'Fixed: on the English interface the release notes (About → What is new) appear in English as well — the full history, back to the earliest releases.',
+  ],
+  // 376: a gyermekbiztonsági kör szövegei (a rendszer jelzése és a dátum kérése).
+  ['Gyermekbiztonsági jelzés', 'Child safety alert'],
+  [
+    'Add meg a születési dátumodat. A közösségi funkciók 16 éves kortól használhatók, és a dátum a kiskorúak védelmét szolgálja.',
+    'Add your date of birth. The community features are available from the age of 16, and the date helps us protect minors.',
+  ],
+  [
+    'A születési dátum elmentve.',
+    'Your date of birth has been saved.',
+  ],
+  [
+    'Figyelem: a beszélgetőpartnered nagykorú. Ha kellemetlenül érzed magad, jelentsd a felhasználót és blokkold.',
+    'Warning: your chat partner is an adult. If you feel uncomfortable, report the user and block them.',
+  ],
+  // A 376 changelog-sorai is (a felhasználó a Névjegyben látja).
+  [
+    'ÚJ: a regisztrációhoz mostantól kötelező a születési dátum, és 16 éves kortól lehet regisztrálni.',
+    'NEW: a date of birth is now required for registration, and you can register from the age of 16.',
+  ],
+  [
+    'ÚJ: a privát beszélgetésben is bejelentheted a másik felet (a blokkolás és a törlés mellett).',
+    'NEW: you can now report the other person in a private conversation (next to blocking and deleting).',
   ],
 ]) {
   check(`szótár: ${JSON.stringify(key)} → ${JSON.stringify(expected)}`, dictionary[key] === expected, String(dictionary[key]));
@@ -167,6 +205,10 @@ const changelog = [
   'a @mindenki értesítés szövege nem keveredik',
   'a régi (a szóismétlés javítása előtt kelt) pont-értesítések',
   'angol felületen a hibaüzenetek is angolul szólnak',
+  // 376: a születési dátum, a 16+ korhatár, a privát jelentés és a figyelmeztető sáv.
+  'kötelező a születési dátum',
+  'a privát beszélgetésben is bejelentheted a másik felet',
+  'ha a partnered nagykorú',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });

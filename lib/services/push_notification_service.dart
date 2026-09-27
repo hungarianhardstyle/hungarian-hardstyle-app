@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/i18n/tr.dart';
 import '../core/navigation/app_navigator.dart';
+import '../core/navigation/content_target.dart';
 import '../core/navigation/in_app_browser.dart';
 import '../models/event.dart';
 import '../models/release.dart';
@@ -196,6 +197,19 @@ class PushNotificationService {
         return;
       }
 
+      // ⚠️ 2026-09-27: a **születési dátum** kérése (a meglévő tagoknak szóló
+      // emlékeztető, `sendBirthDateNotices`). A célpont-feloldás **közös**
+      // (`openContentTarget`) — ugyanaz, amit az értesítés-központ hív, ezért a
+      // két út nem tud széthúzni.
+      if (type == 'birth_date' && targetUserId.isNotEmpty) {
+        await openContentTarget(
+          Navigator.of(context),
+          targetType: 'birth_date',
+          targetId: targetUserId,
+        );
+        return;
+      }
+
       // „@mindenki" PUSH (2026-09-26): a Chat képernyőt nyitja, és **arra az
       // üzenetre** görget, amelyikről szól — ugyanaz az út, mint a bejövő
       // listabeli értesítésnél (`LiveFeedScreen(focusPostId: …)`). Az azonosító
@@ -336,6 +350,13 @@ class PushNotificationService {
             .trim() ??
         '';
     return type == 'submission' ||
+        // A születési dátum kérése (2026-09-27) ugyanígy koppintható.
+        (type == 'birth_date' &&
+            (message.data['targetId'] ?? message.data['senderId'])
+                    ?.toString()
+                    .trim()
+                    .isNotEmpty ==
+                true) ||
         ((type == 'chat_everyone' || type == 'chat_mention') &&
             chatPostId.isNotEmpty) ||
         (type == 'connection_request' && senderId.isNotEmpty) ||

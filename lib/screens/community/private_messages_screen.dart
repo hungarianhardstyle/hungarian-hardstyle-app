@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'dart:typed_data';
@@ -11,6 +12,8 @@ import '../../core/errors/user_facing_error.dart';
 import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../core/input/sentence_capitalization_formatter.dart';
+import '../../services/birth_date.dart';
+import '../../services/chat_report.dart';
 import '../../services/community_service.dart';
 import '../../widgets/app_text.dart';
 import '../more/community_users_screen.dart';
@@ -345,6 +348,34 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
   final Map<String, bool> _heartOverrides = {};
   final Set<String> _heartBusy = {};
 
+  /// **Kiskorú ↔ nagykorú** figyelmeztetés (a tulajdonos kérése, 2026-09-27).
+  ///
+  /// Ha a mostani felhasználó 16–17 éves, a partnere pedig nagykorú, a
+  /// beszélgetés tetején **alapból látszó** figyelmeztető sáv jelenik meg
+  /// (nem elrejthető, de nem is blokkol). Ha bármelyik kor nem állapítható meg
+  /// a dátumokból, a sáv **nem** jelenik meg — nem találgatunk.
+  bool _showAdultPartnerWarning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_evaluateAdultPartnerWarning());
+  }
+
+  Future<void> _evaluateAdultPartnerWarning() async {
+    try {
+      final own = (await _service.profile()).data() ?? const <String, dynamic>{};
+      final partner = await _service.getPublicProfile(widget.otherUserId);
+      final warning = BirthDate.needsAdultPartnerWarning(
+        viewerBirthDate: own['birthDate'] as String?,
+        partnerIsAdult: BirthDate.partnerReadsAsAdult(partner),
+      );
+      if (mounted) setState(() => _showAdultPartnerWarning = warning);
+    } catch (_) {
+      // Hiányzó/elérhetetlen adat = nincs sáv (nem tippelünk).
+    }
+  }
+
   String get _conversationId => _service.privateConversationId(
     _service.auth.currentUser!.uid,
     widget.otherUserId,
@@ -510,6 +541,89 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
             .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
     }
+  }
+
+  /// **Felhasználó jelentése** a privát beszélgetésből (a tulajdonos kérése,
+  /// 2026-09-27).
+  ///
+  /// A jelentés a meglévő `chat_reports` kollekcióba megy (a szerveroldali
+  /// admin-értesítés változatlanul működik), az indokot egy egyszerű választó
+  /// kéri be, a beküldés utáni visszajelzés pedig **felajánlja a blokkolást**
+  /// is — automatikusan viszont **senkit nem blokkolunk**.
+  Future<void> _reportUser() async {
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const AppText('Felhasználó jelentése'),
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
+            child: AppText('Válaszd ki a jelentés okát. A jelentést a moderátorok kapják meg.'),
+          ),
+          for (final entry in chatReportReasons)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(dialogContext).pop(entry),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: AppText(chatReportReasonLabel(entry)),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (reason == null || !mounted) return;
+    try {
+      await _service.reportUser(
+        widget.otherUserId,
+        reason: reason,
+        conversationId: _conversationId,
+        reportedUserName: widget.otherUserName,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: const AppText('Jelentés elküldve. Köszönjük, hogy jelented!'),
+            duration: const Duration(seconds: 8),
+            action: SnackBarAction(
+              label: AppStrings.tr('Felhasználó blokkolása'),
+              onPressed: _block,
+            ),
+          ),
+        );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(error))));
+      }
+    }
+  }
+
+  /// A kiskorú ↔ nagykorú figyelmeztető sáv (nem elrejthető, nem blokkoló).
+  Widget _adultPartnerWarning() {
+    final colors = Theme.of(context).colorScheme;
+    return Material(
+      color: colors.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+        child: Row(
+          children: [
+            Icon(Icons.shield_outlined, color: colors.onErrorContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                tr(
+                  context,
+                  'Figyelem: a beszélgetőpartnered nagykorú. Ha kellemetlenül érzed magad, jelentsd a felhasználót és blokkold.',
+                ),
+                style: TextStyle(color: colors.onErrorContainer),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _deleteMessage(String id) async {
@@ -950,8 +1064,13 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
             onSelected: (value) {
               if (value == 'block') _block();
               if (value == 'delete') _deleteConversation();
+              if (value == 'report') _reportUser();
             },
             itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'report',
+                child: AppText('Felhasználó jelentése'),
+              ),
               PopupMenuItem(
                 value: 'block',
                 child: AppText('Felhasználó blokkolása'),
@@ -966,6 +1085,7 @@ class _PrivateConversationScreenState extends State<PrivateConversationScreen> {
       ),
       body: Column(
         children: [
+          if (_showAdultPartnerWarning) _adultPartnerWarning(),
           Expanded(child: _messages(user)),
           SafeArea(
             top: false,

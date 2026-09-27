@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../screens/artists/artist_detail_screen.dart';
+import '../../screens/community/birth_date_setup_screen.dart';
 import '../../screens/events/event_detail_screen.dart';
 import '../../screens/more/community_users_screen.dart';
 import '../../screens/news/news_detail_screen.dart';
@@ -54,6 +55,17 @@ Future<bool> openContentTarget(
         await navigator.push(
           MaterialPageRoute<void>(
             builder: (_) => CommunityPublicProfileScreen(userId: target),
+          ),
+        );
+        return true;
+      // ⚠️ 2026-09-27: a **születési dátum** kérése (a meglévő tagoknak szóló
+      // emlékeztető értesítés és push) — ide visz, ahol a dátum **be is
+      // állítható**. Azért külön típus (`birth_date`), mert a `profile` ág a
+      // nyilvános profilra visz, ahol nincs szerkesztés.
+      case 'birth_date':
+        await navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) => const BirthDateSetupScreen(),
           ),
         );
         return true;

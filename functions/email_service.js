@@ -95,4 +95,59 @@ function emailChangeEmailTemplate() {
   };
 }
 
-module.exports = { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, getTransporter, resetTransporterForTests, sendMail, smtpConfig };
+/**
+ * **Születési dátum kérése a meglévő tagoktól** (a tulajdonos kérése,
+ * 2026-09-27: *„menjen ki notifybe mér kötelező a születési dátum, mehet nekik
+ * mail is"* — *„a meglévő tagoknak úgyértem"*).
+ *
+ * A szöveg a tag **nyelvén** szól (`community_profiles/{uid}.language`), és
+ * megmondja a **pontos helyet** is (Chat fül → Profil → Profil szerkesztése),
+ * mert a korábbi tapasztalat szerint a nem létező menüút a leggyakoribb
+ * félreértés. A levél **nem** kér jelszót és **nem** tartalmaz tranzakciós
+ * linket — csak a teendőt.
+ */
+function birthDateRequiredEmailTemplate(language) {
+  const code = String(language ?? '').trim().toLowerCase().startsWith('en') ? 'en' : 'hu';
+  if (code === 'en') {
+    return {
+      subject: 'Hungarian Hardstyle – please add your date of birth',
+      text: [
+        'We now require a date of birth for every Hungarian Hardstyle account, because the app is a community app and we must protect minors.',
+        '',
+        'Please open the app and add your date of birth: Chat tab → profile icon (top right) → “Edit profile” → “Date of birth”.',
+        '',
+        'You can hide the date from other members with the visibility switch, so only you and the moderators can see it.',
+        'Registration is only available from the age of 16.',
+        '',
+        'Thank you! — Hungarian Hardstyle',
+      ].join('\n'),
+      html: [
+        '<p>We now require a date of birth for every Hungarian Hardstyle account, because the app is a community app and we must protect minors.</p>',
+        '<p>Please open the app and add your date of birth: <strong>Chat tab → profile icon (top right) → “Edit profile” → “Date of birth”</strong>.</p>',
+        '<p>You can hide the date from other members with the visibility switch, so only you and the moderators can see it.<br>Registration is only available from the age of 16.</p>',
+        '<p>Thank you! — Hungarian Hardstyle</p>',
+      ].join(''),
+    };
+  }
+  return {
+    subject: 'Hungarian Hardstyle – kérjük, add meg a születési dátumod',
+    text: [
+      'A Hungarian Hardstyle-fiókhoz mostantól minden tagnál kötelező a születési dátum, mert az app közösségi felület, és védenünk kell a kiskorúakat.',
+      '',
+      'Kérjük, nyisd meg az appot, és add meg a dátumot: Chat fül → jobb felső profil ikon → „Profil szerkesztése" → „Születési dátum".',
+      '',
+      'A dátumot a láthatóság kapcsolóval elrejtheted a többiek elől — így csak te és a moderátorok látják.',
+      'Regisztrálni 16 éves kortól lehet.',
+      '',
+      'Köszönjük! — Hungarian Hardstyle',
+    ].join('\n'),
+    html: [
+      '<p>A Hungarian Hardstyle-fiókhoz mostantól minden tagnál kötelező a születési dátum, mert az app közösségi felület, és védenünk kell a kiskorúakat.</p>',
+      '<p>Kérjük, nyisd meg az appot, és add meg a dátumot: <strong>Chat fül → jobb felső profil ikon → „Profil szerkesztése” → „Születési dátum”</strong>.</p>',
+      '<p>A dátumot a láthatóság kapcsolóval elrejtheted a többiek elől — így csak te és a moderátorok látják.<br>Regisztrálni 16 éves kortól lehet.</p>',
+      '<p>Köszönjük! — Hungarian Hardstyle</p>',
+    ].join(''),
+  };
+}
+
+module.exports = { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, birthDateRequiredEmailTemplate, getTransporter, resetTransporterForTests, sendMail, smtpConfig };

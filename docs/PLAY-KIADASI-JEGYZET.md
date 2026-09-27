@@ -1,16 +1,17 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 375 megy fel** (versionCode **375**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> **Most a 376 megy fel** (versionCode **376**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-09-27): a **374 MÁR FENT VAN a zárt teszten** (`completed`, 100%), az **ÉLES sávon a 360**, a
-> `beta` sávon a 354. A 375 a tulajdonos két jelzését javítja: angol felületen a „Saját zenéim" listában
-> **„WAV (ingyenes)"** maradt (a szó **ékezet nélkül** is magyar, ezért a korábbi kapuk nem látták), és a
-> **@mindenki értesítés** szövege **keveredett** (*„Denoiser mindenkit mentioned you in the Chat"* — a
-> `chat_mention` sablon a „mindenkit" szót is a névbe tette). Ugyanebben a körben a **kivétel-üzenetek**
-> (bejelentkezés, feltöltés, vásárlás, hírlevél) is angolul szólnak, és a **régi** (a szóismétlés javítása
-> előtt kelt) pont-értesítések is átfordulnak.
-> A 375 a **374 minden** újdonságát is tartalmazza (a „Saját zenéim" fejléce, a lejátszó gombjai, a
-> törlés-megerősítés `DELETE` szava), az pedig a korábbiakét. A nyilvános kiadáshoz a **361–375
-> összesítő** (1b-2.), a bétához a **355–375 összesítő** (1b-3.) való.
+> `beta` sávon a 354. A 376 a **gyermekbiztonsági kört** hozza: a regisztrációnál **kötelező a
+> születési dátum** és **16+ a korhatár**, a dátumot a profilban lehet megadni (alapból **rejtve**, a
+> megjelenítés a felhasználó döntése), a **meglévő tagokat** a Chat fül sávja és felugró kérése
+> szólítja meg, a **privát beszélgetésben lehet jelenteni** a másik felet, és ha egy **16–17 éves**
+> tag **nagykorú** partnerrel beszél, **alapból figyelmeztető sáv** jelenik meg. A szerveroldalon
+> elindult az **1. fázisú gyermekbiztonsági jelzőrendszer** (életkor-különbség + magyar/angol
+> kulcsszó-jelek → jelzés a moderátoroknak; a részletek a `docs/GYERMEKBIZTONSAG-MODERACIO-JAVASLAT.md`-ben).
+> A 376 a **375 minden** újdonságát is tartalmazza (a „WAV (ingyenes)", a @mindenki keveredése, a
+> hibaüzenetek nyelve), az pedig a korábbiakét. A nyilvános kiadáshoz a **361–376 összesítő**
+> (1b-2.), a bétához a **355–376 összesítő** (1b-3.) való.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -18,22 +19,23 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 375
+currentBuild: 376
 currentVersion: 1.0.0
 lastPublishedBuild: 360
-aab: build/HUHS-v1.0.0+375-release.aab
-sha256: 77E6AC56F0735DB0EA1ECCAAA3A6B1E3797CC390B28992A9FE40F317A8BE8F42
+aab: build/HUHS-v1.0.0+376-release.aab
+sha256: C83F827F5E3BA811CEFB5069BE902A33983DB9EE00713CCCF2DAD31B01AB8832
 -->
 
-⚠️ A **375**-öt a **374** után kellett építeni (a 374-et, a 373-at, a 372-t, a 371-et, a 370-et és a
-369-et **nem** kell feltölteni, ha még nem tetted meg: a 375 mindegyiket tartalmazza, és a Play a
-használt verziókódot amúgy is elutasítaná).
+⚠️ A **376**-ot a **375** után kellett építeni (a 375-öt, a 374-et, a 373-at, a 372-t, a 371-et, a
+370-et és a 369-et **nem** kell feltölteni, ha még nem tetted meg: a 376 mindegyiket tartalmazza, és a
+Play a használt verziókódot amúgy is elutasítaná).
 ⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.5** — ✅ **mérve: már fent van** (`apiVersion = 2.14.5`, és a
 natív admin űrlapjai mutatják a **kézi angol mezőket**: `_huhs_poll_question_en`,
 `_huhs_poll_options_en`, `_huhs_prize_answers_en`, `_huhs_game_summary_en`). A szerveroldali függvények
-**telepítve** vannak (`firebase deploy --only functions` → *Deploy complete!*, benne a **@mindenki push**
-és a **javított pont-sablon**).
-Az apphoz csak az **AAB (373)** feltöltése kell.
+**telepítve** vannak (`firebase deploy --only functions` → *Deploy complete!*, benne a **gyermekbiztonsági
+jelzőrendszer**, a **születési dátum vetítése** és a **születési dátum emlékeztető** — utóbbi **alvó**
+állapotban, lásd a 0c. pontot).
+Az apphoz csak az **AAB (376)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -203,10 +205,11 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Javítva: angolul a „WAV (ingyenes)" felirat is (a letöltött zenék listájában és a zárképernyőn).
-- Javítva: a @mindenki értesítés szövege nem keveredik (eddig „… mindenkit mentioned you in the Chat" lett).
-- Javítva: a régi pont-értesítések is angolul jelennek meg angol felületen.
-- Javítva: angolul a hibaüzenetek is (bejelentkezés, feltöltés, vásárlás, hírlevél).
+- ÚJ: a regisztrációhoz mostantól kötelező a születési dátum, és 16 éves kortól lehet regisztrálni.
+- ÚJ: a születési dátumod a profilodban adhatod meg — te döntesz róla, hogy mások láthatják-e (alapból rejtve).
+- ÚJ: ha még nincs dátumod, a Chat fülön figyelmeztetünk, és egy koppintással megadhatod.
+- ÚJ: a privát beszélgetésben is bejelentheted a másik felet.
+- ÚJ: 18 év alatt figyelmeztetést látsz, ha a partnered nagykorú.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -224,37 +227,35 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–375** összesítő (a 360 után)
+## 1b-2. Play Console — a **361–376** összesítő (a 360 után)
 
 **Ezt használd, ha a felhasználó a 360-ról jön** (ez az ÉLES sáv jelenlegi buildje) — vagyis csak azok
-az újdonságok szerepelnek benne, amelyek a **361–374** között készültek (a 359/360 `@mindenki`-je
+az újdonságok szerepelnek benne, amelyek a **361–376** között készültek (a 359/360 `@mindenki`-je
 **nincs** benne, mert azt a 360 már megkapta — a **push** viszont új, ezért az benne van). A
 karakter-számot a `tools/check-play-notes.mjs` méri.
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető.
-- Angolul a cikkek, a hírek címkéi és a GYÍK (FAQ) is.
-- Az értesítések is a választott nyelven jönnek.
+- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
 - ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
-- ÚJ: a főoldal és a Hírek fül magától frissül; a DJ-adatlapon a megjelenések.
+- ÚJ: a főoldal és a Hírek fül magától frissül.
+- ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
 - Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a changelog.
 - Javítva: angolul a „Saját zenéim" és a hibaüzenetek is.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–375** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–376** összesítő)
 
-**Ezt használd, ha a 374-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 376-ot a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-09-26) szerint ott a **354** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
-**push**-jal), a Chat-értesítés odaugrása, a DJ-adatlap megjelenései, a hírlista-frissesség és a mai
-felirat-javítások is.
+**push**-jal), a Chat-értesítés odaugrása, a DJ-adatlap megjelenései, a hírlista-frissesség, a
+felirat-javítások és a mostani **gyermekbiztonsági kör** is.
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető.
-- Angolul a cikkek, a hírek címkéi és a GYÍK (FAQ) is.
-- Az értesítések is a választott nyelven jönnek.
+- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
 - ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
-- ÚJ: a főoldal és a Hírek fül magától frissül; a DJ-adatlapon a megjelenések.
+- ÚJ: a főoldal és a Hírek fül magától frissül.
+- ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
 - Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a changelog.
 - Javítva: angolul a „Saját zenéim" és a hibaüzenetek is.
 ```
@@ -285,6 +286,16 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 376 — születési dátum (16+), privát jelentés és figyelmeztetés nagykorú partnernél
+- **A tulajdonos döntései:** *„legyen 16+ a regelés korhatár"*, a **születési dátum** legyen **kötelező** a regisztrációnál (a **meglévő** tagokat semmi ne zárja ki, csak felszólítás), a privát beszélgetésben legyen **„Felhasználó jelentése"**, és ha egy **16–17 éves** tag **nagykorú** partnerrel beszél, **alapból** látszódjon figyelmeztető sáv. Később: *„indulhat az első fázis"* (szerveroldali jelzőrendszer), *„terjesszük ki angolra is"*.
+- **A 16+ kapu négy helyen (mind mérve):** (1) a regisztrációs választó utolsó napja **ma − 16 év**, és a beküldés előtt is blokkol; (2) a szolgáltatás (`CommunityService.register()`) az **első lépésben** ellenőriz, még az Auth-fiók és a névfoglalás előtt (a Google-ágon is); (3) a **szerver** (`checkRegistrationEligibility`) is elutasít 16 év alatt (a mező opcionális, ezért a 375-ös kliensek regisztrációja nem törik el); (4) a közös profil-mentő út.
+- **A figyelmeztető sáv** feltétele: a néző **16–17 éves** és a partner **nagykorú** — a partner kora a nyilvános vetítés új **`adult`** jelzőjéből jön (a **dátum** közzététele nélkül), különben a látható dátumból; ha bármelyik hiányzik, a sáv **nem** jelenik meg (nem találgatunk).
+- **A jelentés** a privát chat menüjének harmadik eleme: indok-választó → a **meglévő** `chat_reports` kollekció (ezért az admin-értesítés változatlanul működik) → a visszajelzés **felajánlja** a blokkolást, de **automatikusan nem blokkol**.
+- **Szerveroldali 1. fázis:** új jelzőrendszer (`functions/child-safety-plan.js`) — életkor-különbség, **magyar és angol** kulcsszó-jelek (életkorra kérdezés, titoktartás, találkozó, kép, lakóhely, más platform, ajándék/pénz) és elérhetőség-csere → jelzés a `moderation_flags`-ba **és** a meglévő admin-lista `chat_reports` sorába, súlyosságonként külön értesítéssel. **Nem tilt és nem töröl automatikusan.**
+- **A meglévő tagok emlékeztetése** (értesítés + e-mail) **kész, de alvó**: az `app_settings/birth_date_notice` kapcsoló zárja, ezért **csak akkor** megy ki, ha a dátumot felvevő build már éles (`node tools/birth-date-notice-flag.mjs --enable --confirm`).
+- **Mérve:** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1206/1206**; `node tools/run-function-tests.mjs` → **332/332 tiszta** + **9/9 emulátoros suite**; i18n-kapu → **1085 célzott (100%), 1445 kulcs, 0 hiányzó**; új kapu: `node tools/check-adjacent-literals.mjs` (**29** összefűzött felirat teljes szövege kulcs a szótárban); **mutációs bizonyíték 11/11** (`tmp/mutation-proof-child-safety-birthday.mjs`).
+- **⚠️ ŐSZINTE KORLÁTOK:** (1) a **születési dátum önbevallás** — a kor csak annyira pontos, amennyire a profil (a jelzés ezt jelzi is: ismeretlen korra nincs életkor-jel); (2) a jelzőrendszer **valószínűséget** jelez, ezért **minden jelzés emberi felülvizsgálatra** megy; (3) a **16+**-ot a Google-regisztrációnál a kliens + szolgáltatás adja (a callable csak az e-mailes úton fut); (4) az `adult` jelző a **régi** `public_profiles` dokumentumokban csak a következő profilíráskor jelenik meg, addig a sáv elmarad; (5) **nincs automatikus CSAM-detektálás** (ahhoz külső hash-szolgáltatás kell — 3. fázis).
 
 ### 375 — a „WAV (ingyenes)", a @mindenki keveredése és a hibaüzenetek nyelve
 - **A tulajdonos jelzései (képernyőképek):** *„mintha itt még lenne Magyar szöveg tesóóó"* (a „Saját zenéim" listában a **WAV (ingyenes)** sor) és *„ez is fura ha elolvasod"* (az értesítések között: *„Denoiser mindenkit mentioned you in the Chat"*, illetve a magyar pont-értesítés).

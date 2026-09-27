@@ -1,5 +1,6 @@
 import '../core/i18n/app_strings.dart';
 import '../core/i18n/tr.dart';
+import '../services/birth_date.dart';
 import 'package:flutter/material.dart';
 
 class CommunityProfileTextDraft {
@@ -125,7 +126,16 @@ Future<Map<String, dynamic>> persistCommunityProfileDraft({
   required Future<void> Function(String displayName) claimDisplayName,
   required Future<void> Function() writeProfile,
   required Future<Map<String, dynamic>> Function() readProfileFromServer,
+  String? birthDate,
+  bool requireBirthDate = false,
 }) async {
+  // ⚠️ A születési dátum ellenőrzése **a névfoglalás ELŐTT** fut: egy hiányos
+  // űrlap ne foglaljon nevet, és ne írjon félkész profilt. A kötelezővé tétel a
+  // hívó döntése (`requireBirthDate`), mert a **regisztrációt befejező** úton
+  // kötelező, egy régi fiók puszta mentésénél viszont a felület jelez.
+  if (requireBirthDate || (birthDate?.trim().isNotEmpty ?? false)) {
+    BirthDate.requireValue(birthDate);
+  }
   final normalizedName = displayName.trim().replaceAll(RegExp(r'\s+'), ' ');
   if (normalizedName.length < 2 ||
       normalizedName.length > 40 ||

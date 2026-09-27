@@ -196,6 +196,16 @@
         "body": "{name} replied to your comment on an article."
       }
     },
+    "birth_date_required": {
+      "hu": {
+        "title": "Kérjük, add meg a születési dátumod",
+        "body": "A közösségi szabályok miatt minden tagnál kötelező a születési dátum. Nyisd meg a profilod (Chat fül → profil ikon → Profil szerkesztése), és add meg a dátumot."
+      },
+      "en": {
+        "title": "Please add your date of birth",
+        "body": "A date of birth is now required for every member. Open your profile (Chat tab → profile icon → Edit profile) and add it."
+      }
+    },
     "chat_everyone": {
       "hu": {
         "title": "Megemlítettek a Chatben",
@@ -254,6 +264,46 @@
       "en": {
         "title": "New chat report",
         "body": "{name}: {reason}"
+      }
+    },
+    "child_safety_flag": {
+      "hu": {
+        "title": "Gyermekbiztonsági jelzés",
+        "body": "{name}: {reasons}"
+      },
+      "en": {
+        "title": "Child safety alert",
+        "body": "{name}: {reasons}"
+      }
+    },
+    "child_safety_flag_high": {
+      "hu": {
+        "title": "Gyermekbiztonsági jelzés (magas)",
+        "body": "{name}: {reasons}"
+      },
+      "en": {
+        "title": "Child safety alert (high)",
+        "body": "{name}: {reasons}"
+      }
+    },
+    "child_safety_flag_low": {
+      "hu": {
+        "title": "Gyermekbiztonsági jelzés (alacsony)",
+        "body": "{name}: {reasons}"
+      },
+      "en": {
+        "title": "Child safety alert (low)",
+        "body": "{name}: {reasons}"
+      }
+    },
+    "child_safety_flag_medium": {
+      "hu": {
+        "title": "Gyermekbiztonsági jelzés (közepes)",
+        "body": "{name}: {reasons}"
+      },
+      "en": {
+        "title": "Child safety alert (medium)",
+        "body": "{name}: {reasons}"
       }
     },
     "connection_request": {

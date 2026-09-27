@@ -51,7 +51,15 @@ function createAndroidPublisherClient(serviceAccount, google = googleApis()) {
 // surface.
 exports.__createAndroidPublisherClientForTests = createAndroidPublisherClient;
 const { selectOwnedCloudinaryAssets, destroyCloudinaryAsset, listOwnedCloudinaryAssets } = require('./cloudinary');
-const { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, sendMail } = require('./email_service');
+const { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, birthDateRequiredEmailTemplate, sendMail } = require('./email_service');
+const {
+  DEFAULT_EMAIL_LIMIT: BIRTH_DATE_NOTICE_EMAIL_LIMIT,
+  EMAIL_FIELD: BIRTH_DATE_NOTICE_EMAIL_FIELD,
+  NOTICE_FIELD: BIRTH_DATE_NOTICE_FIELD,
+  NOTICE_TYPE: BIRTH_DATE_NOTICE_TYPE,
+  noticePayload: birthDateNoticePayload,
+  selectBirthDateNoticeTargets,
+} = require('./birth-date-notice-plan');
 const { generateAuthActionLink } = require('./auth_action_link');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
@@ -98,6 +106,23 @@ const {
   MAX_EVERYONE_RECIPIENTS,
 } = require('./chat-mention-plan');
 const { pickActorName, actorNameOrGeneric } = require('./actor-name-plan');
+// A születési dátum nyilvános vetítése (a tulajdonos döntése, 2026-09-27):
+// a **dátum** csak engedélyezve kerül a `public_profiles` dokumentumba, a
+// kor-sáv (`adult`) viszont a kiskorú-védelemhez kell, dátum közzététele nélkül.
+const {
+  projectionDeletions: birthDateProjectionDeletions,
+  publicAgeBand,
+  publicBirthDate,
+} = require('./birth-date-plan');
+const {
+  FLAG_COLLECTION: CHILD_SAFETY_FLAG_COLLECTION,
+  MINIMUM_REGISTRATION_AGE,
+  ageInYears,
+  flagDocumentId: childSafetyFlagDocumentId,
+  notificationKind: childSafetyNotificationKind,
+  planChildSafetyFlag,
+  reasonSummary: childSafetyReasonSummary,
+} = require('./child-safety-plan');
 const {
   DEFAULT_NOTIFICATION_LANGUAGE,
   achievementReasonKey,
@@ -175,6 +200,24 @@ exports.checkRegistrationEligibility = functions.runWith({ enforceAppCheck: true
   const email = normalizedEmail(data?.email);
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     throw new HttpsError('invalid-argument', 'Érvénytelen e-mail-cím.');
+  }
+  // ⚠️ 2026-09-27: a tulajdonos döntése — **a regisztrációs korhatár 16+**. Az
+  // app a felületen és a szolgáltatásban is kényszeríti; ez a **szerveroldali**
+  // második kapu. A mező szándékosan **opcionális**: a korábbi (375-ös) appok
+  // nem küldik, és azok regisztrációja nem törhet el. Ha viszont megvan, akkor
+  // érvényes dátum kell, és el kell érnie a 16 évet.
+  const birthDate = String(data?.birthDate || '').trim();
+  if (birthDate) {
+    const age = ageInYears(birthDate);
+    if (age === null) {
+      throw new HttpsError('invalid-argument', 'Érvénytelen születési dátum.');
+    }
+    if (age < MINIMUM_REGISTRATION_AGE) {
+      throw new HttpsError(
+        'failed-precondition',
+        `A regisztrációhoz legalább ${MINIMUM_REGISTRATION_AGE} évesnek kell lenned.`,
+      );
+    }
   }
   const deletedIdentity = await db.collection('deleted_identity_hashes').doc(deletedIdentityKey(email)).get();
   // Legacy records only contained deletedAt and represented account cleanup,
@@ -2097,6 +2140,11 @@ function publicProfileData(profile, userId, achievement = null) {
     bio: String(profile.bio || '').trim(),
     profileImageUrl: String(profileImageUrl).trim(),
     ...(Number.isFinite(memberSince) ? { memberSince } : {}),
+    // A születési dátum csak a felhasználó engedélyével kerül a nyilvános
+    // vetítésbe; a kor-sáv (`adult`) viszont dátum nélkül is kell a
+    // kiskorú-védelemhez (lásd `functions/birth-date-plan.js`).
+    ...publicBirthDate(profile),
+    ...publicAgeBand(profile),
     profileFocusX: numberOr(profile.profileFocusX, 50),
     profileFocusY: numberOr(profile.profileFocusY, 25),
     profileZoom: numberOr(profile.profileZoom, 1),
@@ -2784,7 +2832,14 @@ exports.getPublicProfile = functions.runWith({ enforceAppCheck: true }).https.on
 
 async function persistPublicProfileProjection(userId, data) {
   if (!userId || !data || typeof data !== 'object') return;
-  await db.collection('public_profiles').doc(userId).set(data, { merge: true });
+  // ⚠️ A `merge: true` nem töröl: ha a felhasználó **visszavonta** a születési
+  // dátum nyilvánosságát, a korábban kiírt dátum a dokumentumban maradna. A
+  // vetítésből kimaradó opcionális mezőket ezért kifejezetten töröljük.
+  const projection = { ...data };
+  for (const field of birthDateProjectionDeletions(data)) {
+    projection[field] = FieldValue.delete();
+  }
+  await db.collection('public_profiles').doc(userId).set(projection, { merge: true });
 }
 
 async function commitReferenceUpdates(references, data) {
@@ -8039,15 +8094,44 @@ async function handleChatReportNotification(event, deps = {}) {
   const reporterName = String(report.reporterName || '').trim();
   const reason = String(report.reason || '').trim();
   // A szöveg a CÍMZETT nyelvén épül fel; a `reason` megléte választja a sablont.
-  const reportKind = reason ? 'chat_report_reason' : 'chat_report';
+  // ⚠️ 2026-09-27: a **rendszer** által írt gyermekbiztonsági jelzés
+  // (`systemFlag`) ugyanezen az úton megy ki, de saját szöveggel — a
+  // „felhasználó jelentett" szöveg itt félrevezetné az admint. A súlyosság a
+  // katalógusból fordul (súlyosságonként külön típus), a jelek felsorolása pedig
+  // **nyelvenként** áll össze a nyelvfüggetlen `reasonCodes`-ból.
+  const systemFlag = report.systemFlag === true;
+  const reportKind = systemFlag
+    ? childSafetyNotificationKind(report.severity)
+    : reason
+      ? 'chat_report_reason'
+      : 'chat_report';
   const reportParams = { name: reporterName, reason };
+  // A gyermekbiztonsági jelzés jelei **nyelvfüggetlen kódok** (`reasonCodes`),
+  // ezért a felsorolás a címzett nyelvén, egyszer nyelvenként áll össze (a
+  // nyelvet amúgy is kérdezzük az értesítéshez és a push-hoz).
+  const recipientLanguages = new Map();
+  const paramsByLanguage = new Map();
+  const reportParamsFor = async (uid) => {
+    if (!systemFlag) return reportParams;
+    if (!recipientLanguages.has(uid)) {
+      recipientLanguages.set(uid, await recipientLanguage(uid));
+    }
+    const language = recipientLanguages.get(uid);
+    if (!paramsByLanguage.has(language)) {
+      paramsByLanguage.set(language, {
+        name: String(report.reportedUserName || '').trim(),
+        reasons: childSafetyReasonSummary(report.reasonCodes, language),
+      });
+    }
+    return paramsByLanguage.get(language);
+  };
   const created = await Promise.all(
-    recipientIds.map((recipientUid) =>
+    recipientIds.map(async (recipientUid) =>
       createNotificationBestEffort({
         recipientUid,
         type: 'chat_report',
         kind: reportKind,
-        params: reportParams,
+        params: await reportParamsFor(recipientUid),
         targetType: 'chat_report',
         targetId: reportId,
         dedupeKey: `chat_report:${reportId}:${recipientUid}`,
@@ -8067,7 +8151,11 @@ async function handleChatReportNotification(event, deps = {}) {
   const allTokens = [];
   const responses = [];
   for (const [language, uids] of recipientsByLanguage) {
-    const text = notificationText(reportKind, language, reportParams) || { title: '', body: '' };
+    const text = notificationText(
+      reportKind,
+      language,
+      systemFlag ? paramsByLanguage.get(language) || reportParams : reportParams,
+    ) || { title: '', body: '' };
     const tokenLists = await Promise.all(uids.map((uid) => pushTokens(uid)));
     const tokens = [...new Set(tokenLists.flat().map((token) => token.trim()).filter(Boolean))];
     if (!tokens.length) continue;
@@ -8127,10 +8215,343 @@ exports.notifyChatReport = onDocumentCreated(
   (event) => handleChatReportNotification(event),
 );
 
+/**
+ * **Gyermekbiztonsági őr — 1. fázis** (a tulajdonos döntése, 2026-09-27).
+ *
+ * A tulajdonos kérése: *„indulhat az első fázis + olyan is kéne ha egy gyerekre
+ * írnak rá alapból figyelmeztesse a rendszer, hogy akivel beszél öregebb +
+ * terjesszük ki angolra is"*. A döntés a `functions/child-safety-plan.js`-ben
+ * él (tiszta, mérhető logika, magyar **és** angol mintákkal); itt csak a
+ * Firestore-írás és a naplózás van.
+ *
+ * MIÉRT A `chat_reports`-BA IS: az admin-lista (`CommunityReportsScreen`) ezt a
+ * kollekciót figyeli, és a `notifyChatReport` trigger az értesítést innen viszi
+ * ki — így a jelzés **új felület nélkül** rögtön látszik, és **egyetlen**
+ * értesítés szól róla (a `systemFlag` miatt a gyermekbiztonsági szöveggel). A
+ * strukturált rekord (`moderation_flags`) a 2. fázis saját moderációs listájához
+ * kell (súlyosság, pontszám, jelek, életkorok).
+ *
+ * IDEMPOTENCIA: mindkét dokumentum azonosítója **determinisztikus**
+ * (`{conversationId}__{messageId}`), és `create()`-tel íródik — a trigger
+ * legalább egyszer kézbesít, de jelzésből **egy** lesz, értesítésből is egy.
+ *
+ * ⚠️ **ŐSZINTE KORLÁT:** a születési dátum **önbevallás**, ezért a korkülönbség
+ * csak annyira pontos, amennyire a profilok; ha valamelyik fél nem adott meg
+ * dátumot, a jelzés **csak a szövegre** támaszkodik (és ezt a rekord jelzi is:
+ * `senderAge`/`recipientAge` null). A jelzés **nem** tilt és nem töröl
+ * automatikusan — emberi döntés kell hozzá.
+ */
+async function handlePrivateMessageModeration(event, deps = {}) {
+  const {
+    readProfile = async (uid) =>
+      (await db.collection('community_profiles').doc(uid).get()).data() || {},
+    writeFlag = writeChildSafetyFlag,
+    now = () => new Date(),
+  } = deps;
+  const message = event.data?.data() || {};
+  const senderId = String(message.senderId || '').trim();
+  const recipientId = String(message.recipientId || '').trim();
+  const conversationId = String(event.params.conversationId || '').trim();
+  const messageId = String(event.params.messageId || '').trim();
+  if (!senderId || !recipientId || !conversationId || !messageId || senderId === recipientId) {
+    return null;
+  }
+  const [senderProfile, recipientProfile] = await Promise.all([
+    readProfile(senderId),
+    readProfile(recipientId),
+  ]);
+  const plan = planChildSafetyFlag({
+    message,
+    senderProfile,
+    recipientProfile,
+    now: now(),
+  });
+  if (!plan.shouldFlag) return null;
+
+  const flagId = childSafetyFlagDocumentId(conversationId, messageId);
+  if (!flagId) return null;
+  const displayName = (profile) => String(profile?.displayName || '').trim();
+  const flag = {
+    ...plan,
+    conversationId,
+    messageId,
+    senderId,
+    recipientId,
+    senderName: displayName(senderProfile),
+    recipientName: displayName(recipientProfile),
+    status: 'open',
+  };
+  const created = await writeFlag(flagId, flag);
+  // Újrakézbesítés: a jelzés már megvan, nincs második dokumentum és értesítés.
+  if (!created) return null;
+  console.log(
+    JSON.stringify({
+      event: 'child_safety_flag',
+      flagId,
+      severity: flag.severity,
+      score: flag.score,
+      reasonCodes: flag.reasonCodes,
+      minorInvolved: flag.minorInvolved,
+      agesKnown: flag.senderAge !== null && flag.recipientAge !== null,
+    }),
+  );
+  return flag;
+}
+
+/**
+ * A jelzés kiírása: a strukturált rekord **és** a meglévő admin-listát ellátó
+ * `chat_reports` sor. A `reason` szándékosan **kód** (`child_safety`), nem
+ * kész mondat — a megjelenítés fordítja (mint a többi indoknál).
+ *
+ * @returns {Promise<boolean>} `true`, ha MOST jött létre (a hívó ez alapján dönt)
+ */
+async function writeChildSafetyFlag(flagId, flag) {
+  const docId = String(flagId || '').trim();
+  if (!docId) return false;
+  try {
+    await db
+      .collection(CHILD_SAFETY_FLAG_COLLECTION)
+      .doc(docId)
+      .create({ ...flag, createdAt: FieldValue.serverTimestamp() });
+  } catch (error) {
+    if (isAlreadyExists(error)) return false;
+    throw error;
+  }
+  try {
+    await db
+      .collection('chat_reports')
+      .doc(`child_safety_${docId}`.slice(0, 1400))
+      .create({
+        postId: '',
+        reporterId: 'system',
+        reporterName: 'Rendszer',
+        reason: 'child_safety',
+        systemFlag: true,
+        severity: flag.severity || '',
+        // ⚠️ A jelek **kódként** tárolódnak (nyelvfüggetlen): a megjelenítés és az
+        // értesítés fordítja őket. Kész mondatot szándékosan **nem** írunk ide —
+        // az a nyelvet égetné be a tárolt adatba.
+        reasonCodes: flag.reasonCodes || [],
+        reportedUserId: flag.senderId || '',
+        reportedUserName: flag.senderName || '',
+        reportedText: flag.excerpt || '',
+        source: 'child_safety_plan',
+        conversationId: flag.conversationId || '',
+        messageId: flag.messageId || '',
+        status: 'open',
+        createdAt: FieldValue.serverTimestamp(),
+      });
+  } catch (error) {
+    if (!isAlreadyExists(error)) throw error;
+  }
+  return true;
+}
+
+/** Firestore `ALREADY_EXISTS` (kód 6 vagy a szöveg) — a `create()` párja. */
+function isAlreadyExists(error) {
+  return error?.code === 6 || /ALREADY_EXISTS/i.test(String(error?.message || ''));
+}
+
+/**
+ * **Születési dátum emlékeztető a meglévő tagoknak** — a tulajdonos kérése
+ * (2026-09-27): *„menjen ki notifybe mér kötelező a születési dátum, mehet nekik
+ * mail is"*, majd *„a meglévő tagoknak úgyértem"*, végül a sorrend:
+ * *„természetesen majd akkor ha éles az új build"* és *„majd szólok ha ez kiment
+ * élesbe"*.
+ *
+ * ⚠️ **EZÉRT VAN KAPCSOLÓ:** a kiküldést az `app_settings/birth_date_notice`
+ * dokumentum `enabled` mezője zárja. A függvény **élére kerül, de alvó állapotban**
+ * (`enabled` hiányzik vagy `false`) — így semmi nem megy ki addig, amíg a
+ * születési dátumot felvevő app-verzió nincs élesben. A kapcsolót a
+ * `tools/birth-date-notice-flag.mjs` kezeli (`--status`, `--enable`, `--disable`,
+ * `--run-now`), és az ütemezett kör ugyanazt a magot hívja, amit a `--run-now`
+ * azonnal futtat (Cloud Scheduler `:run`).
+ *
+ * IDEMPOTENCIA (kétszeri kiküldés ellen):
+ *  * az **értesítés** `dedupeKey`-e determinisztikus (`birth_date_required:{uid}`),
+ *    ezért egy tag egyszer kap listabeli értesítést (és push-t is csak akkor, ha
+ *    az értesítés MOST jött létre);
+ *  * az **e-mail** tényét a profil jelöli (`birthDateNoticeEmailSentAt`), és csak
+ *    **sikeres** küldés után — így egy hibás cím nem veszik el, a következő kör
+ *    újrapróbálja.
+ *
+ * ⚠️ **ŐSZINTE KORLÁT:** a kör a `community_profiles` első **1000** dokumentumát
+ * olvassa (ma ~45 tag), és körönként legfeljebb `emailLimit` e-mailt küld
+ * (SMTP-kímélés). Aki a levelet nem kapja meg (nincs címe, vagy hibás), az a
+ * listabeli értesítést akkor is megkapja.
+ */
+async function sendBirthDateNotices({ emailLimit = BIRTH_DATE_NOTICE_EMAIL_LIMIT, dryRun = false } = {}, deps = {}) {
+  const {
+    sendPush = sendMulticastToAllTokens,
+    pushTokens = getPushTokens,
+    removeTokens = removePushTokens,
+    sendEmail = sendMail,
+    emailTemplate = birthDateRequiredEmailTemplate,
+    delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  } = deps;
+  const snapshot = await db.collection('community_profiles').limit(1000).get();
+  const { targets, skipped, emailCount } = selectBirthDateNoticeTargets(
+    snapshot.docs.map((document) => ({ uid: document.id, profile: document.data() || {} })),
+    { emailLimit },
+  );
+  const summary = {
+    profiles: snapshot.size,
+    targets: targets.length,
+    skipped,
+    emailCount,
+    notified: 0,
+    pushed: 0,
+    emailed: 0,
+    emailFailed: 0,
+    dryRun: Boolean(dryRun),
+  };
+  if (dryRun) return summary;
+
+  for (const target of targets) {
+    const created = await createNotificationBestEffort({
+      recipientUid: target.uid,
+      ...birthDateNoticePayload(target.uid),
+    });
+    if (created) {
+      summary.notified += 1;
+      // A push ugyanazt a szöveget viszi, amit a lista mutat (a katalógusból, a
+      // tag nyelvén) — és csak akkor, ha az értesítés MOST jött létre.
+      const text = notificationText(BIRTH_DATE_NOTICE_TYPE, target.language, {});
+      const tokens = await pushTokens(target.uid);
+      if (text && tokens.length) {
+        const result = await sendPush(
+          {
+            notification: { title: text.title, body: text.body.slice(0, 160) },
+            data: { type: BIRTH_DATE_NOTICE_TYPE, targetType: 'profile', targetId: target.uid },
+          },
+          tokens,
+        );
+        summary.pushed += result.successCount;
+        const invalidTokens = tokens.filter(
+          (_, index) => result.responses[index]?.error?.code === 'messaging/registration-token-not-registered',
+        );
+        if (invalidTokens.length) await removeTokens(target.uid, invalidTokens);
+      }
+    }
+    if (target.sendEmail) {
+      try {
+        await sendEmail({ to: target.email, ...emailTemplate(target.language) });
+        await db
+          .collection('community_profiles')
+          .doc(target.uid)
+          .set(
+            {
+              [BIRTH_DATE_NOTICE_FIELD]: FieldValue.serverTimestamp(),
+              [BIRTH_DATE_NOTICE_EMAIL_FIELD]: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+        summary.emailed += 1;
+      } catch (error) {
+        summary.emailFailed += 1;
+        console.warn(
+          JSON.stringify({
+            event: 'birth_date_notice_email_failed',
+            uid: target.uid.slice(0, 8),
+            message: error?.message || String(error),
+          }),
+        );
+      }
+      // SMTP-kímélés: a levelek között rövid szünet.
+      await delay(250);
+    }
+  }
+  return summary;
+}
+
+/** A kapcsoló-dokumentum (a kiküldés egyetlen zárja). */
+const BIRTH_DATE_NOTICE_SETTINGS_DOC = 'app_settings/birth_date_notice';
+
+/** Az emlékeztető állapota (a kapcsoló-dokumentumból; hiba esetén **kikapcsolva**). */
+async function readBirthDateNoticeSettings() {
+  try {
+    const snapshot = await db.doc(BIRTH_DATE_NOTICE_SETTINGS_DOC).get();
+    return snapshot.exists ? snapshot.data() || {} : {};
+  } catch (error) {
+    console.warn(
+      JSON.stringify({
+        event: 'birth_date_notice_settings_read_failed',
+        message: error?.message || String(error),
+      }),
+    );
+    return {};
+  }
+}
+
+exports.sendBirthDateNotices = onSchedule(
+  {
+    schedule: 'every day 18:00',
+    timeZone: 'Europe/Budapest',
+    region: 'europe-central2',
+    secrets: SMTP_SECRETS,
+    timeoutSeconds: 540,
+  },
+  async () => {
+    const settings = await readBirthDateNoticeSettings();
+    // ⚠️ ALAPBÓL KIKAPCSOLVA: a kapcsoló hiányzó/`false` értéke esetén a kör
+    // **nem** küld semmit — a tulajdonos kérése szerint csak akkor megy ki, ha a
+    // születési dátumot felvevő build már éles.
+    if (settings.enabled !== true) {
+      console.info(
+        JSON.stringify({
+          event: 'birth_date_notice_disabled',
+          enabled: Boolean(settings.enabled),
+        }),
+      );
+      return;
+    }
+    try {
+      const summary = await sendBirthDateNotices({
+        emailLimit: Number(settings.emailLimit) || BIRTH_DATE_NOTICE_EMAIL_LIMIT,
+      });
+      console.info(JSON.stringify({ event: 'birth_date_notice_run', ...summary }));
+      await db
+        .doc(BIRTH_DATE_NOTICE_SETTINGS_DOC)
+        .set({ lastRunAt: FieldValue.serverTimestamp(), lastRunSummary: summary }, { merge: true })
+        .catch(() => {});
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'birth_date_notice_run_failed',
+          message: error?.message || String(error),
+        }),
+      );
+    }
+  },
+);
+
+// A kiküldés mérhető változata (injektált push/e-mail): a döntés és a
+// idempotencia így **küldés nélkül** is bizonyítható.
+exports.__birthDateNoticeForTests = {
+  sendBirthDateNotices,
+  readBirthDateNoticeSettings,
+};
+
+exports.moderatePrivateMessage = onDocumentCreated(
+  {
+    document: 'private_conversations/{conversationId}/messages/{messageId}',
+    database: 'hungarian-hardstyle',
+    region: 'europe-central2',
+  },
+  (event) => handlePrivateMessageModeration(event),
+);
+
 // A push-útvonalak tesztelhető változatai (injektált küldéssel), hogy a dupla
 // küldés ne tudjon visszakúszni: `functions/push-dedupe.test.cjs`.
 exports.__pushNotifyForTests = {
   handleMeetupInterestNotification,
   handlePrivateMessageNotification,
   handleChatReportNotification,
+};
+
+// A gyermekbiztonsági őr (1. fázis) mérhető változata: a profil-olvasás és a
+// jelzés-írás injektálható, ezért a döntés **Firestore nélkül** is mérhető.
+exports.__moderationForTests = {
+  handlePrivateMessageModeration,
+  writeChildSafetyFlag,
 };

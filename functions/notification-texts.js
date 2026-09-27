@@ -182,6 +182,49 @@ const TEXTS = {
     hu: { title: 'Új chatjelentés', body: '{name}: {reason}' },
     en: { title: 'New chat report', body: '{name}: {reason}' },
   },
+  // ⚠️ 2026-09-27: a **rendszer** által írt gyermekbiztonsági jelzés
+  // (`chat_reports.systemFlag`). Ugyanaz a `chat_reports` út viszi ki, de NEM a
+  // „felhasználó jelentett" szöveg, mert az félrevezetné az admint: itt a
+  // súlyosság és a talált jelek a lényeg.
+  //
+  // ⚠️ MIÉRT SÚLYOSSÁGONKÉNT KÜLÖN TÍPUS: az értesítés a **címzett nyelvén**
+  // születik, ezért a súlyosság szava nem lehet a dokumentumba égetve — így a
+  // katalógus fordítja (`child-safety-plan.js` → `notificationKind`).
+  // A `{reasons}` a jel-kódokból, a címzett nyelvén áll össze
+  // (`reasonSummary`), a `{name}` a jelzett felhasználó.
+  child_safety_flag: {
+    hu: { title: 'Gyermekbiztonsági jelzés', body: '{name}: {reasons}' },
+    en: { title: 'Child safety alert', body: '{name}: {reasons}' },
+  },
+  child_safety_flag_high: {
+    hu: { title: 'Gyermekbiztonsági jelzés (magas)', body: '{name}: {reasons}' },
+    en: { title: 'Child safety alert (high)', body: '{name}: {reasons}' },
+  },
+  child_safety_flag_medium: {
+    hu: { title: 'Gyermekbiztonsági jelzés (közepes)', body: '{name}: {reasons}' },
+    en: { title: 'Child safety alert (medium)', body: '{name}: {reasons}' },
+  },
+  child_safety_flag_low: {
+    hu: { title: 'Gyermekbiztonsági jelzés (alacsony)', body: '{name}: {reasons}' },
+    en: { title: 'Child safety alert (low)', body: '{name}: {reasons}' },
+  },
+  // ⚠️ 2026-09-27: a **meglévő tagok** emlékeztetője (a tulajdonos kérése:
+  // *„menjen ki notifybe mér kötelező a születési dátum, mehet nekik mail is"* —
+  // *„a meglévő tagoknak úgyértem"*). A szöveg megmondja a **pontos helyet** is,
+  // mert a nem létező menüút volt a leggyakoribb félreértés a korábbi körökben.
+  // A kiküldést a `app_settings/birth_date_notice` kapcsoló zárja (lásd
+  // `tools/birth-date-notice-flag.mjs`): csak akkor megy ki, ha a dátumot
+  // felvevő app-verzió már éles.
+  birth_date_required: {
+    hu: {
+      title: 'Kérjük, add meg a születési dátumod',
+      body: 'A közösségi szabályok miatt minden tagnál kötelező a születési dátum. Nyisd meg a profilod (Chat fül → profil ikon → Profil szerkesztése), és add meg a dátumot.',
+    },
+    en: {
+      title: 'Please add your date of birth',
+      body: 'A date of birth is now required for every member. Open your profile (Chat tab → profile icon → Edit profile) and add it.',
+    },
+  },
   // ⚠️ 2026-09-26: a privát üzenet címe eddig **beégetve, magyarul** állt
   // (`functions/index.js`, a privát üzenet ágán), ezért az angol felületű
   // címzett magyar címet kapott — és a kliens ebből a címből fejtette vissza a

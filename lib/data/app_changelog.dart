@@ -38,6 +38,17 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 376,
+    changes: [
+      'ÚJ: a regisztrációhoz mostantól kötelező a születési dátum, és 16 éves kortól lehet regisztrálni.',
+      'ÚJ: a születési dátumod a profilodban adhatod meg — te döntesz róla, hogy mások láthatják-e (alapból rejtve).',
+      'ÚJ: ha még nincs dátumod, a Chat fülön figyelmeztetünk, és egy koppintással megadhatod.',
+      'ÚJ: a privát beszélgetésben is bejelentheted a másik felet (a blokkolás és a törlés mellett).',
+      'ÚJ: 18 év alatt figyelmeztetést látsz a beszélgetés tetején, ha a partnered nagykorú.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 375,
     changes: [
       'Javítva: angol felületen a „WAV (ingyenes)" felirat is angolul szól (a letöltött zenék listájában és a zárképernyőn is).',

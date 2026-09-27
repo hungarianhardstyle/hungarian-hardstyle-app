@@ -79,6 +79,13 @@ void main() {
         'article_comment',
         'article_comment_reply',
         'private_message',
+        // ⚠️ 2026-09-27: a gyermekbiztonsági jelzés (rendszer) és a meglévő
+        // tagoknak szóló születési dátum emlékeztető is a katalógusból fordul.
+        'birth_date_required',
+        'child_safety_flag',
+        'child_safety_flag_high',
+        'child_safety_flag_medium',
+        'child_safety_flag_low',
       ]) {
         expect(kinds.contains(kind), isTrue, reason: 'hiányzik: $kind');
       }
@@ -340,6 +347,107 @@ void main() {
       // A szerveroldali térkép is be van kötve (a jövőbeli sorokhoz).
       final functions = File('functions/index.js').readAsStringSync();
       expect(functions.contains('params: { name: localizedName }'), isTrue);
+    });
+  });
+
+  group('a gyermekbiztonsági jelzés és a születési dátum emlékeztető', () {
+    test('a rendszer jelzése a MOSTANI nyelven szól (a cím és a súlyosság is)', () {
+      AppStrings.setLanguage(AppLanguage.en);
+      // A szerver magyarul tárolta (a címzett akkori nyelve magyar volt). A
+      // `{reasons}` viszont **adat** (mint egy cikk címe): a küldés pillanatában
+      // a címzett nyelvén készült, ezért a már tárolt sorban nem fordul újra —
+      // ezt a korlátot itt rögzítjük, hogy senki ne higgye félre.
+      final stored = NotificationTexts.localize(
+        type: 'chat_report',
+        kind: 'child_safety_flag_high',
+        title: 'Gyermekbiztonsági jelzés (magas)',
+        body: 'Denoiser: nagy korkülönbség, titoktartást kér',
+      );
+      expect(stored.title, 'Child safety alert (high)');
+      expect(stored.body, 'Denoiser: nagy korkülönbség, titoktartást kér');
+
+      // …és ugyanaz a sor angolul tárolva, magyar felületen:
+      AppStrings.setLanguage(AppLanguage.hu);
+      final back = NotificationTexts.localize(
+        type: 'chat_report',
+        kind: 'child_safety_flag_high',
+        title: 'Child safety alert (high)',
+        body: 'Denoiser: large age gap, asks for secrecy',
+      );
+      expect(back.title, 'Gyermekbiztonsági jelzés (magas)');
+      expect(back.body, 'Denoiser: large age gap, asks for secrecy');
+    });
+
+    test('a súlyosság a címben van (a típusok nem keverednek)', () {
+      AppStrings.setLanguage(AppLanguage.en);
+      for (final entry in {
+        'child_safety_flag_high': ['Gyermekbiztonsági jelzés (magas)', 'Child safety alert (high)'],
+        'child_safety_flag_medium': [
+          'Gyermekbiztonsági jelzés (közepes)',
+          'Child safety alert (medium)',
+        ],
+        'child_safety_flag_low': ['Gyermekbiztonsági jelzés (alacsony)', 'Child safety alert (low)'],
+      }.entries) {
+        final text = NotificationTexts.localize(
+          type: 'chat_report',
+          kind: entry.key,
+          title: entry.value[0],
+          body: 'Denoiser: nagy korkülönbség',
+        );
+        expect(text.title, entry.value[1], reason: entry.key);
+      }
+    });
+
+    test('a születési dátum emlékeztető mindkét nyelven megvan', () {
+      const huBody =
+          'A közösségi szabályok miatt minden tagnál kötelező a születési dátum. '
+          'Nyisd meg a profilod (Chat fül → profil ikon → Profil szerkesztése), és add meg a dátumot.';
+      const enBody =
+          'A date of birth is now required for every member. '
+          'Open your profile (Chat tab → profile icon → Edit profile) and add it.';
+      AppStrings.setLanguage(AppLanguage.en);
+      final en = NotificationTexts.localize(
+        type: 'birth_date_required',
+        kind: 'birth_date_required',
+        title: 'Kérjük, add meg a születési dátumod',
+        body: huBody,
+      );
+      expect(en.title, 'Please add your date of birth');
+      expect(en.body, enBody);
+
+      AppStrings.setLanguage(AppLanguage.hu);
+      final hu = NotificationTexts.localize(
+        type: 'birth_date_required',
+        kind: 'birth_date_required',
+        title: 'Please add your date of birth',
+        body: enBody,
+      );
+      expect(hu.title, 'Kérjük, add meg a születési dátumod');
+      expect(hu.body, huBody);
+    });
+
+    test('FORRÁS-LINT: a katalógus a szerveroldali forrásból származik', () {
+      final functions = File('functions/notification-texts.js').readAsStringSync();
+      for (final kind in [
+        'birth_date_required',
+        'child_safety_flag',
+        'child_safety_flag_high',
+        'child_safety_flag_medium',
+        'child_safety_flag_low',
+      ]) {
+        expect(functions.contains('  $kind: {'), isTrue, reason: 'hiányzik: $kind');
+      }
+      // A jelzőrendszer és a kiküldő is a tiszta terveket használja.
+      final index = File('functions/index.js').readAsStringSync();
+      expect(index.contains("require('./child-safety-plan')"), isTrue);
+      expect(index.contains("require('./birth-date-notice-plan')"), isTrue);
+      expect(index.contains('exports.moderatePrivateMessage = onDocumentCreated('), isTrue);
+      expect(index.contains('exports.sendBirthDateNotices = onSchedule('), isTrue);
+      // A kiküldést a kapcsoló zárja (csak éles build után mehet ki).
+      expect(index.contains('settings.enabled !== true'), isTrue);
+      final tool = File('tools/birth-date-notice-flag.mjs').readAsStringSync();
+      expect(tool.contains('--enable'), isTrue);
+      expect(tool.contains('--confirm'), isTrue);
     });
   });
 

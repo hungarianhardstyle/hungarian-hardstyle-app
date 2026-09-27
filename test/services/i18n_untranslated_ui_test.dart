@@ -380,6 +380,21 @@ void main() {
       'Túl sok próbálkozás. Próbáld kicsit később.',
       'A jutalmazott reklám betöltése…',
       'A vásárláshoz előbb be kell jelentkezni.',
+      // A születési dátum és a jelentés (2026-09-27): ezek **szolgáltatás-**
+      // szintű üzenetek, illetve kódból fordított címkék, ezért az extraktor
+      // nem látja őket — itt kérjük számon a szótárban.
+      'A születési dátum megadása kötelező.',
+      'Érvénytelen születési dátum. Adj meg valós dátumot (ÉÉÉÉ-HH-NN).',
+      'A regisztrációhoz legalább 16 évesnek kell lenned.',
+      'Érvénytelen születési dátum.',
+      'A születési dátum mentéséhez bejelentkezés szükséges.',
+      'Zaklatás',
+      'Gyűlöletbeszéd',
+      'Spam',
+      'Egyéb',
+      // A **rendszer** gyermekbiztonsági jelzése (kódból fordított címke, ezért
+      // az extraktor nem látja — itt kérjük számon a szótárban).
+      'Gyermekbiztonsági jelzés',
     ];
     final missing = displayTranslatedKeys
         .where((key) => !dictionary.containsKey(key))

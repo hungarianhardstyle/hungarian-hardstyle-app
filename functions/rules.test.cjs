@@ -540,3 +540,180 @@ test('a whitelist-en kívüli mező és a rossz alakú hivatkozás továbbra is 
     ),
   );
 });
+
+/* ------------------------------------------------------------------ */
+/* Születési dátum a profilon (a tulajdonos döntése, 2026-09-27)       */
+/* ------------------------------------------------------------------ */
+
+/*
+ * A tulajdonos kérése: *„legyen 16+ a regelés korhatár"* + a születési dátum
+ * megjelenítése a nyilvános profilon, **csak ha a felhasználó engedte**.
+ *
+ * A `birthDate`/`birthDateVisible` mezők a `community_profiles` create- és
+ * update-whitelistjére kerültek. A szabály **nem** teszi kötelezővé a dátumot:
+ * a már telepített, régebbi kliens (375) nem küldi, és nem törhet el tőle a
+ * profil-létrehozás. A 16 éves korhatárt a kliens és a szolgáltatás
+ * kényszeríti ki (a szabály a nyilvánvalóan hibás alakot zárja ki).
+ */
+
+test('a profil a születési dátummal együtt létrehozható', async () => {
+  const db = firestoreFor('user-bd1', 'bd1@example.com');
+  await assertSucceeds(
+    setDoc(
+      doc(db, 'community_profiles', 'user-bd1'),
+      profilePayload(FREE_NAME, {
+        birthDate: '1990-01-31',
+        birthDateVisible: false,
+      }),
+    ),
+  );
+});
+
+test('a születési dátum nélküli profil-létrehozás továbbra is működik (régi kliens)', async () => {
+  // Ez a release-biztonság: a 375-ös, telepített kliens nem küldi a mezőt.
+  const db = firestoreFor('user-bd2', 'bd2@example.com');
+  await assertSucceeds(
+    setDoc(doc(db, 'community_profiles', 'user-bd2'), profilePayload(FREE_NAME)),
+  );
+});
+
+test('a hibás alakú születési dátumot a szabály elutasítja', async () => {
+  const db = firestoreFor('user-bd3', 'bd3@example.com');
+  await assertFails(
+    setDoc(
+      doc(db, 'community_profiles', 'user-bd3'),
+      profilePayload(FREE_NAME, { birthDate: '1990-1-1' }),
+    ),
+  );
+  await assertFails(
+    setDoc(
+      doc(db, 'community_profiles', 'user-bd3'),
+      profilePayload(FREE_NAME, { birthDate: '1990-01-31T00:00:00Z' }),
+    ),
+  );
+});
+
+test('a megjelenítés jelzője csak logikai érték lehet', async () => {
+  const db = firestoreFor('user-bd4', 'bd4@example.com');
+  await assertFails(
+    setDoc(
+      doc(db, 'community_profiles', 'user-bd4'),
+      profilePayload(FREE_NAME, { birthDateVisible: 'igen' }),
+    ),
+  );
+});
+
+test('a saját profilon a dátum és a megjelenítés is módosítható', async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(
+      doc(context.firestore(), 'community_profiles', 'user-bd5'),
+      profilePayload(FREE_NAME, { email: 'bd5@example.com' }),
+    );
+  });
+  const db = firestoreFor('user-bd5', 'bd5@example.com');
+  await assertSucceeds(
+    updateDoc(doc(db, 'community_profiles', 'user-bd5'), {
+      birthDate: '2001-05-04',
+      birthDateVisible: true,
+    }),
+  );
+  await assertSucceeds(
+    updateDoc(doc(db, 'community_profiles', 'user-bd5'), { birthDateVisible: false }),
+  );
+});
+
+test('más profiljának születési dátumát nem lehet átírni', async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(
+      doc(context.firestore(), 'community_profiles', 'user-bd6'),
+      profilePayload(FREE_NAME, { email: 'bd6@example.com' }),
+    );
+  });
+  const db = firestoreFor('user-bd7', 'bd7@example.com');
+  await assertFails(
+    updateDoc(doc(db, 'community_profiles', 'user-bd6'), {
+      birthDateVisible: true,
+    }),
+  );
+});
+
+/* ------------------------------------------------------------------ */
+/* Privát chat jelentése a `chat_reports`-ba                           */
+/* ------------------------------------------------------------------ */
+
+/*
+ * A tulajdonos kérése: a privát beszélgetés menüjében is legyen
+ * *„Felhasználó jelentése"*. A jelentés a **meglévő** `chat_reports`
+ * kollekcióba megy, ezért a szerveroldali admin-értesítés
+ * (`handleChatReportNotification`) változtatás nélkül működik.
+ *
+ * A create-szabály eddig is engedte a regisztrált (nem névtelen) felhasználót,
+ * ha a `reporterId` a saját UID és a `postId`/`reason` szöveg. A privát
+ * jelentésnél nincs chat-bejegyzés, ezért a `postId` **üres szöveg**, a
+ * forrást pedig a `source`/`conversationId` mezők jelzik. Ezek a tesztek azt
+ * mérik, hogy ez a két alak **tényleg** átmegy a szabályon.
+ */
+
+const chatReportPayload = (reporterUid, extra = {}) => ({
+  postId: '',
+  reporterId: reporterUid,
+  reporterName: 'Teszt Elek',
+  reason: 'harassment',
+  reportedUserId: 'uid-masik',
+  reportedUserName: 'Másik Fél',
+  reportedText: 'szia',
+  source: 'private_chat',
+  conversationId: 'conversation-1',
+  status: 'open',
+  createdAt: Timestamp.now(),
+  ...extra,
+});
+
+test('a privát beszélgetés jelentése bekerülhet a chat_reports-ba', async () => {
+  const db = chatWriter('report-author', 'report@example.com');
+  await assertSucceeds(
+    setDoc(
+      doc(db, 'chat_reports', 'report-private-1'),
+      chatReportPayload('report-author'),
+    ),
+  );
+});
+
+test('a chat-bejegyzés jelentése (postId-dal) változatlanul működik', async () => {
+  const db = chatWriter('report-author-2', 'report2@example.com');
+  await assertSucceeds(
+    setDoc(
+      doc(db, 'chat_reports', 'report-post-1'),
+      chatReportPayload('report-author-2', { postId: 'post-1', source: 'chat' }),
+    ),
+  );
+});
+
+test('névtelen felhasználó nem jelenthet', async () => {
+  const anonymous = env.authenticatedContext('report-anon', {
+    firebase: { sign_in_provider: 'anonymous' },
+  });
+  await assertFails(
+    setDoc(
+      doc(anonymous.firestore(), 'chat_reports', 'report-anon-1'),
+      chatReportPayload('report-anon'),
+    ),
+  );
+});
+
+test('más nevében nem lehet jelentést írni', async () => {
+  const db = chatWriter('report-author-3', 'report3@example.com');
+  await assertFails(
+    setDoc(
+      doc(db, 'chat_reports', 'report-mismatch-1'),
+      chatReportPayload('valaki-mas'),
+    ),
+  );
+  await assertFails(
+    setDoc(
+      doc(db, 'chat_reports', 'report-mismatch-2'),
+      chatReportPayload('report-author-3', { reason: 42 }),
+    ),
+  );
+});
+

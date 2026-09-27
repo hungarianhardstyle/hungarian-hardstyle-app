@@ -172,7 +172,12 @@ service cloud.firestore {
           'displayName', 'email', 'role', 'accessRole', 'socialLinks', 'bio',
           'profileImageUrl', 'profileImagePublicId', 'profileFocusX', 'profileFocusY',
           'profileSourceImageUrl', 'profileSourceImagePublicId', 'profileZoom', 'profilePanX', 'profilePanY',
-          'createdAt', 'updatedAt', 'fcmTokens', 'language'
+          'createdAt', 'updatedAt', 'fcmTokens', 'language',
+          // A születési dátum (a regisztráció kötelező mezője a kliensben) és a
+          // nyilvános megjelenítés jelzője. A szabály szándékosan **nem** teszi
+          // kötelezővé a mezőt: a már telepített, régebbi kliens (375) nem
+          // küldi, és a profil-létrehozása nem törhet el.
+          'birthDate', 'birthDateVisible'
         ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() >= 2
@@ -211,6 +216,14 @@ service cloud.firestore {
         // értesítések nyelve (`functions/notification-texts.js`).
         && (!request.resource.data.keys().hasAny(['language'])
           || request.resource.data.language in ['hu', 'en'])
+        // A születési dátum alakja: `YYYY-MM-DD` (a valódi naptári napot és a
+        // 16 éves korhatárt a kliens és a szolgáltatás ellenőrzi; a szabály a
+        // nyilvánvalóan hibás alakot zárja ki).
+        && (!request.resource.data.keys().hasAny(['birthDate'])
+          || (request.resource.data.birthDate is string
+            && request.resource.data.birthDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+        && (!request.resource.data.keys().hasAny(['birthDateVisible'])
+          || request.resource.data.birthDateVisible is bool)
         && (!request.resource.data.keys().hasAny(['role'])
           || (isAdmin()
             ? request.resource.data.role in ['dj', 'organizer', 'partygoer']
@@ -224,8 +237,17 @@ service cloud.firestore {
         && ((request.auth.uid == userId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             'email', 'socialLinks', 'bio', 'profileImageUrl', 'profileImagePublicId',
-            'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileSourceImagePublicId', 'profileZoom', 'profilePanX', 'profilePanY', 'createdAt', 'updatedAt', 'fcmTokens', 'role', 'accessRole', 'language'
+            'profileFocusX', 'profileFocusY', 'profileSourceImageUrl', 'profileSourceImagePublicId', 'profileZoom', 'profilePanX', 'profilePanY', 'createdAt', 'updatedAt', 'fcmTokens', 'role', 'accessRole', 'language',
+            // A születési dátum és a nyilvános megjelenítés a saját profilon
+            // módosítható (a „látható a nyilvános profilomon" kapcsoló).
+            'birthDate', 'birthDateVisible'
           ])
+          // A születési dátum alakja: `YYYY-MM-DD`; a megjelenítés valódi logikai.
+          && (!request.resource.data.keys().hasAny(['birthDate'])
+            || (request.resource.data.birthDate is string
+              && request.resource.data.birthDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+          && (!request.resource.data.keys().hasAny(['birthDateVisible'])
+            || request.resource.data.birthDateVisible is bool)
           // A felületi nyelv (`hu`/`en`) — ebből dől el a szerveroldali
           // értesítések nyelve (`functions/notification-texts.js`).
           && (!request.resource.data.keys().hasAny(['language'])
@@ -558,6 +580,17 @@ service cloud.firestore {
           ).data.participantIds
           && resource.data.senderId == request.auth.uid;
       }
+    }
+
+    // ⚠️ 2026-09-27: a szerveroldali **gyermekbiztonsági jelzések**
+    // (`functions/child-safety-plan.js` → `moderation_flags`). A jelzés
+    // felhasználói adatot (üzenet-részlet, életkorok) tartalmaz, ezért a kliens
+    // **soha** nem olvashatja és nem írhatja: csak moderátor/admin olvashatja
+    // (a 2. fázis moderációs listája ebből épül), írni pedig kizárólag a
+    // szerveroldali trigger tud (az Admin SDK megkerüli a szabályokat).
+    match /moderation_flags/{flagId} {
+      allow read: if isModerator();
+      allow write: if false;
     }
 
     match /community_bans/{userId} {

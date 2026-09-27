@@ -20,6 +20,8 @@ import '../models/artist_claim_status.dart';
 import '../core/firebase/firebase_callable.dart';
 import '../core/i18n/app_language.dart';
 import '../core/images/wordpress_image_url.dart';
+import 'birth_date.dart';
+import 'chat_report.dart';
 import 'wordpress_service.dart';
 
 class _AchievementCacheEntry {
@@ -522,7 +524,14 @@ class CommunityService {
     required String displayName,
     required String role,
     Map<String, String>? socialLinks,
+    String? birthDate,
   }) async {
+    // ⚠️ A születési dátum **kötelező**, és az ellenőrzés az ELSŐ lépés: a
+    // Firebase Auth fiók és a névfoglalás így nem jön létre egy hiányos
+    // űrlapból (a korábbi körökben pont az ilyen „félkész" fiókok okoztak
+    // gondot). A 16 év alatti dátumot a szolgáltatás **is** elutasítja, nem
+    // csak a felület.
+    final normalizedBirthDate = BirthDate.requireRegistrationValue(birthDate);
     final normalizedEmail = email.trim().toLowerCase();
     var createdNow = false;
     var resumedPartialAccount = false;
@@ -531,7 +540,10 @@ class CommunityService {
       _authStage('pre_auth_check');
       await callFirebaseCallable<void>(
         'checkRegistrationEligibility',
-        parameters: {'email': normalizedEmail},
+        // A dátumot a **szerver is** megkapja: a callable a 16 éves korhatárt
+        // második kapuként ellenőrzi (a mező opcionális, ezért a régi kliensek
+        // regisztrációja nem törik el tőle).
+        parameters: {'email': normalizedEmail, 'birthDate': normalizedBirthDate},
       );
       // This avoids creating Auth for a known-taken name. The atomic claim
       // below remains authoritative because the name can change meanwhile.
@@ -603,6 +615,10 @@ class CommunityService {
           'role': accountRole,
           'accessRole': _isAdmin(user.email) ? accessAdmin : accessNone,
           'email': normalizedEmail,
+          // A regisztrációnál megadott születési dátum; a nyilvános megjelenítés
+          // alapból **ki** (a felhasználó kapcsolhatja be a profilban).
+          'birthDate': normalizedBirthDate,
+          'birthDateVisible': false,
           if (socialLinks != null && profileData['socialLinks'] == null)
             'socialLinks': socialLinks,
           if (!existingProfile.exists)
@@ -939,8 +955,15 @@ class CommunityService {
     String? role,
     String? displayName,
     Map<String, String>? socialLinks,
+    String? birthDate,
   }) async {
     _googleProfileCompletionNotice = null;
+    // A Google-útvonal **bejelentkezés is lehet** (a meglévő, teljes profilú
+    // fiók választása), ezért itt csak a *megadott* dátumot ellenőrizzük; a
+    // kötelezővé tétel az új profil létrehozásánál van (lásd lentebb).
+    final providedBirthDate = (birthDate?.trim().isEmpty ?? true)
+        ? null
+        : BirthDate.requireValue(birthDate);
     try {
       _authStage('google_account_selection');
       // Request the Firebase web OAuth audience explicitly. Relying only on
@@ -1011,6 +1034,12 @@ class CommunityService {
             savedNameIsValid &&
             const {'dj', 'organizer', 'partygoer'}.contains(existingRole);
         if (!profileComplete) {
+          // Ez a **regisztráció** útja (nincs használható profil), ezért a
+          // születési dátum itt kötelező — ugyanaz a szabály, mint az e-mailes
+          // regisztrációnál (16 év alatt a szolgáltatás elutasít).
+          final requiredBirthDate = BirthDate.requireRegistrationValue(
+            providedBirthDate ?? (existingData['birthDate'] as String?),
+          );
           final requiredRole = accountRole(role);
           final bootstrap = await bootstrapGoogleProfile(
             existingProfile: existingData,
@@ -1023,6 +1052,9 @@ class CommunityService {
                 'role': savedRole,
                 'accessRole': accessNone,
                 'email': googleEmail,
+                'birthDate': requiredBirthDate,
+                if ((existingData['birthDateVisible'] as bool?) == null)
+                  'birthDateVisible': false,
                 'createdAt': FieldValue.serverTimestamp(),
                 'updatedAt': FieldValue.serverTimestamp(),
               }, SetOptions(merge: true));
@@ -1051,6 +1083,15 @@ class CommunityService {
             (existingRole == accessAdmin ? accessAdmin : accessNone);
         await profile.set({
           'email': googleEmail,
+          // Ha a felhasználó a regisztrációs űrlapon adott meg dátumot, és a
+          // profilban még nincs (régi fiók), ez az alkalom pótolja — a
+          // meglévő, beállított dátumot viszont soha nem írjuk felül.
+          if (providedBirthDate != null &&
+              (existingData['birthDate'] as String? ?? '').trim().isEmpty)
+            'birthDate': providedBirthDate,
+          if (providedBirthDate != null &&
+              (existingData['birthDate'] as String? ?? '').trim().isEmpty)
+            'birthDateVisible': false,
           if (_isAdmin(googleEmail)) 'role': 'organizer',
           if (_isAdmin(googleEmail)) 'accessRole': accessAdmin,
           if (!_isAdmin(googleEmail) && existingRole == null && role != null)
@@ -1360,6 +1401,83 @@ class CommunityService {
     });
   }
 
+  /// **Privát beszélgetés jelentése** a meglévő `chat_reports` kollekcióba.
+  ///
+  /// MIÉRT UGYANAZ A KOLLEKCIÓ: a szerveroldali admin-értesítés
+  /// (`functions/index.js` → `handleChatReportNotification`) ezt a kollekciót
+  /// figyeli, és a `reporterName` + `reason` mezőket olvassa — így a privát
+  /// jelentés **szerveroldali változtatás nélkül** ugyanúgy értesíti az
+  /// adminokat, mint a chat-bejegyzés jelentése. A mezőneveket a
+  /// `privateChatReportFields()` (tiszta függvény) adja, hogy a szerződés egy
+  /// helyen legyen.
+  ///
+  /// A `reportedText` **csak akkor** idézi a másik felet, ha tényleg ő írta a
+  /// beszélgetés utolsó üzenetét (nem tulajdonítunk neki idegen szöveget).
+  Future<void> reportUser(
+    String userId, {
+    String reason = 'other',
+    String conversationId = '',
+    String reportedUserName = '',
+  }) async {
+    final user = await ensureAnonymousUser();
+    if (user.isAnonymous) {
+      throw StateError('Jelentéshez regisztráció szükséges.');
+    }
+    final reportedId = userId.trim();
+    if (reportedId.isEmpty || reportedId == user.uid) {
+      throw StateError('Érvénytelen felhasználó.');
+    }
+    final reporter = await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .get();
+    final reporterData = reporter.data() ?? const <String, dynamic>{};
+    // A jelentett fél neve a **nyilvános** vetítésből (a másik profil közvetlen
+    // olvasása jogosultsági hiba lenne). Best-effort: ha nem érhető el, a
+    // hívótól kapott név marad.
+    var resolvedName = reportedUserName.trim();
+    try {
+      final publicProfile = await getPublicProfile(reportedId);
+      final publicName = (publicProfile['displayName'] as String? ?? '').trim();
+      if (publicName.isNotEmpty) resolvedName = publicName;
+    } catch (_) {
+      // A jelentés a név nélkül is menjen ki.
+    }
+    var lastSenderId = '';
+    var lastMessage = '';
+    final conversationKey = conversationId.trim();
+    if (conversationKey.isNotEmpty) {
+      try {
+        final conversation = await firestore
+            .collection('private_conversations')
+            .doc(conversationKey)
+            .get();
+        final data = conversation.data() ?? const <String, dynamic>{};
+        lastSenderId = data['lastSenderId'] as String? ?? '';
+        lastMessage = data['lastMessage'] as String? ?? '';
+      } catch (_) {
+        // Idézet nélkül is érvényes a jelentés.
+      }
+    }
+    await firestore.collection('chat_reports').add({
+      ...privateChatReportFields(
+        reporterId: user.uid,
+        reporterName:
+            reporterData['displayName'] as String? ??
+            user.displayName ??
+            user.email ??
+            '',
+        reportedUserId: reportedId,
+        reportedUserName: resolvedName,
+        reason: reason,
+        conversationId: conversationKey,
+        lastSenderId: lastSenderId,
+        lastMessage: lastMessage,
+      ),
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Future<void> resolveReport(String reportId) async {
     if (!isAdmin) throw StateError('Csak admin kezelhet jelentést.');
     await firestore.collection('chat_reports').doc(reportId).update({
@@ -1424,6 +1542,30 @@ class CommunityService {
       'claimDisplayName',
       parameters: {'targetUid': userId, 'displayName': displayName},
     );
+  }
+
+  /// A **születési dátum** mentése a saját profilba (a tulajdonos kérése,
+  /// 2026-09-27).
+  ///
+  /// MIÉRT KÜLÖN HÍVÁS: a már regisztrált, dátum nélküli felhasználó a Chat
+  /// fülön kap egy felszólítást (sáv + felugró dátumválasztó). Az ott mentés
+  /// **egyetlen mező**, nem a teljes profil-űrlap — így nem kell a profil
+  /// összes mezőjét újraküldeni, és nem indul el a névfoglalás/validáció sem.
+  ///
+  /// A formátumot ez a hívás is ellenőrzi (`'YYYY-MM-DD'`); a **16 év alatti**
+  /// dátumot **nem** utasítja el: a már regisztrált felhasználót a tulajdonos
+  /// döntése szerint semmi nem zárja ki automatikusan (a felület jelzi).
+  Future<void> saveBirthDate(String userId, String birthDate) async {
+    final id = userId.trim();
+    if (id.isEmpty || auth.currentUser?.uid != id) {
+      throw StateError('A születési dátum mentéséhez bejelentkezés szükséges.');
+    }
+    final normalized = BirthDate.requireValue(birthDate);
+    await firestore.collection('community_profiles').doc(id).set({
+      'birthDate': normalized,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    clearProfileCache(id);
   }
 
   /// A választott felületi nyelv mentése a profilba.
