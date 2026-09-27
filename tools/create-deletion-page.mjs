@@ -1,12 +1,22 @@
 #!/usr/bin/env node
 /**
- * A **fióktörlési weboldal** létrehozása a honlapon (WordPress).
+ * A **fióktörlési weboldal** létrehozása/frissítése a honlapon (WordPress).
  *
  * MIÉRT KELL: a Google Play a **fiókot létrehozó** appoknál a Data safety
  * szakaszban kötelezően kér egy **URL-t**, ahol a felhasználó **az app nélkül**
- * is kérheti a fiókja törlését. Az appban **van** törlés (Beállítások → fiók
- * törlése), de a webes hivatkozás **hiányzott** (`…/fiok-torles/` → 404), és ez
- * a nyilvános kiadás egyik kötelező eleme.
+ * is kérheti a fiókja törlését. Az appban **van** törlés, a webes hivatkozás
+ * pedig a `…/fiok-torles/` oldal.
+ *
+ * ⚠️ 2026-09-27: a Play **elutasította** a frissítést
+ * (*„Felhasználói adatok – Fióktörlési követelmény: Érvénytelen adattörlési link
+ * az Adatbiztonsági űrlapon"*). A mérés szerint az oldal **élt** (HTTP 200), a
+ * hiba a **Play-űrlapon** volt (a link mező üresen maradt), **és** az oldal
+ * rossz **appon belüli menüutat** írt le: „Több → Beállítások → Fiók törlése" —
+ * ilyen menüpont **nincs** az appban. A valódi út:
+ * **Chat fül → jobb felső „Profil" ikon → „Profil szerkesztése" → a lap alján
+ * „Profil törlése"**. A Google a linknél azt is megköveteli, hogy a törlési
+ * útvonal **feltűnően látható** legyen, és az oldal **hivatkozzon az appra**
+ * (ezért van most **angol szakasz** is a lapon).
  *
  * ⚠️ A SZÖVEG NEM TALÁLGATÁS: a `functions/index.js` `deleteUserReferences()`
  * és `deleteCommunityUser()` **tényleges** viselkedését írja le (mi törlődik, mi
@@ -21,7 +31,7 @@
  *   node tools/create-deletion-page.mjs --confirm       (létrehozza)
  *   node tools/create-deletion-page.mjs --confirm --update   (frissíti a szöveget)
  */
-import { secret } from './lib/live-firebase.mjs';
+import { secretAsync } from './lib/live-firebase.mjs';
 
 const BASE = 'https://hungarianhardstyle.hu';
 const SLUG = 'fiok-torles';
@@ -51,8 +61,10 @@ Ez az oldal elmondja, hogyan kérheted, mi törlődik, mi marad meg, és mennyi 
 
 <h2>1. Hogyan kérheted a törlést?</h2>
 <ul>
-  <li><strong>Az appban (ez a leggyorsabb):</strong> Több → Beállítások → <em>Fiók törlése</em>.
-      A megerősítés után a törlés azonnal elindul.</li>
+  <li><strong>Az appban (ez a leggyorsabb):</strong> nyisd meg a <strong>Chat fület</strong>,
+      koppints a jobb felső <strong>„Profil" ikonra</strong> (a profilképed), majd a
+      <em>Profil szerkesztése</em> gombra — a lap alján találod a
+      <strong>„Profil törlése"</strong> gombot. A megerősítés után a törlés azonnal elindul.</li>
   <li><strong>E-mailben:</strong> írj a <a href="mailto:${CONTACT}">${CONTACT}</a> címre a
       <em>fiókhoz tartozó e-mail címről</em>, „Fiók törlése" tárggyal. Legkésőbb
       <strong>30 napon belül</strong> elvégezzük (a gyakorlatban ennél jóval hamarabb).</li>
@@ -103,11 +115,78 @@ Ez az oldal elmondja, hogyan kérheted, mi törlődik, mi marad meg, és mennyi 
 
 <p><em>Ez a tájékoztató a Hungarian Hardstyle mobilalkalmazásra vonatkozik
 (csomagnév: hu.hungarianhardstyle.app).</em></p>
+
+<hr>
+
+<h2>Delete your account (English)</h2>
+<p><strong>In the Hungarian Hardstyle mobile app (package name:
+hu.hungarianhardstyle.app) you can delete your account at any time.</strong>
+This page explains how to request deletion, what is deleted, what is kept, and
+how long it takes.</p>
+
+<h3>1. How to request deletion</h3>
+<ul>
+  <li><strong>In the app (fastest):</strong> open the <strong>Chat tab</strong>, tap the
+      <strong>“Profile” icon</strong> in the top right corner (your profile picture), then tap
+      <em>Profil szerkesztése</em> (Edit profile) — the
+      <strong>“Profil törlése”</strong> (Delete profile) button is at the bottom of that page.
+      Deletion starts immediately after you confirm.</li>
+  <li><strong>By e-mail:</strong> write to
+      <a href="mailto:${CONTACT}">${CONTACT}</a> from the e-mail address of your account,
+      with the subject “Account deletion”. We complete the deletion within
+      <strong>30 days</strong> at the latest (in practice much sooner).</li>
+</ul>
+
+<h3>2. What is deleted</h3>
+<ul>
+  <li>your <strong>account and sign-in data</strong> (e-mail address, password),</li>
+  <li>your <strong>community profile</strong> (name, bio, profile picture),</li>
+  <li>your <strong>chat messages</strong> and private conversations,</li>
+  <li>your <strong>article comments</strong>, likes and friend requests,</li>
+  <li>your <strong>notifications</strong>,</li>
+  <li>your <strong>game and quiz results</strong>, your <strong>achievement points</strong>
+      and daily activity history,</li>
+  <li>your <strong>votes</strong> (public voting, polls),</li>
+  <li>your <strong>reports</strong> and the reports about you,</li>
+  <li>your <strong>DJ page claims</strong>,</li>
+  <li>your <strong>purchase entitlement records</strong> (which releases you bought) and the
+      related purchase identifiers,</li>
+  <li>your <strong>rewarded-ad unlocks</strong>,</li>
+  <li>the <strong>images you uploaded</strong> (profile picture, images uploaded to news and
+      conversations).</li>
+</ul>
+
+<h3>3. What is kept, and why</h3>
+<ul>
+  <li>Your <strong>Google Play purchase</strong> stays with your <strong>Google account</strong> —
+      it is not stored by us, so we cannot delete it. This is good news: if you register a new
+      account later, you can <strong>verify the purchased releases again</strong> and they become
+      available — <strong>you do not have to pay twice</strong>.</li>
+  <li><strong>Billing and purchase history</strong> remain with Google and for the retention
+      period required by law.</li>
+  <li>The content of a DJ or organizer page you <strong>submitted but that has not yet been
+      approved</strong> may be kept for as long as needed to process the submission.</li>
+</ul>
+
+<h3>4. How long does it take</h3>
+<ul>
+  <li>Deleting the <strong>account and the profile happens immediately</strong>.</li>
+  <li><strong>Uploaded images</strong> are removed in the background within
+      <strong>at most 48 hours</strong> (if a step is interrupted, the system retries).</li>
+  <li>For an e-mail request we complete the deletion within <strong>30 days</strong> at the
+      latest and confirm it.</li>
+</ul>
+
+<h3>5. Questions</h3>
+<p>Write to <a href="mailto:${CONTACT}">${CONTACT}</a> — we are happy to help.</p>
+
+<p><em>This notice applies to the Hungarian Hardstyle mobile application
+(package name: hu.hungarianhardstyle.app).</em></p>
 `.trim();
 
 async function main() {
-  const username = secret('WORDPRESS_USERNAME');
-  const password = secret('WORDPRESS_APPLICATION_PASSWORD');
+  const username = await secretAsync('WORDPRESS_USERNAME');
+  const password = await secretAsync('WORDPRESS_APPLICATION_PASSWORD');
   const auth = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
   const headers = {
     Authorization: auth,
@@ -172,6 +251,20 @@ async function main() {
     ['az ékezetek helyesek', html.includes('törlődik') && !html.includes('tÃ¶rlÅ‘dik'), ''],
     ['benne van a kapcsolat', html.includes(CONTACT), ''],
     ['benne van a Google Play magyarázat', html.includes('Google Play-vásárlás'), ''],
+    // ⚠️ 2026-09-27: a Play az „érvénytelen adattörlési linket" is jelezheti, ha az
+    // oldalon leírt **appon belüli út nem valódi** — ezért ezt külön mérjük.
+    [
+      'a helyes appon belüli út van az oldalon (Chat → Profil → Profil szerkesztése)',
+      html.includes('Chat fület') && html.includes('Profil szerkesztése') && html.includes('Profil törlése'),
+      '',
+    ],
+    [
+      'a régi, nem létező menüút NINCS az oldalon (Több → Beállítások → Fiók törlése)',
+      !html.includes('Beállítások') || !html.includes('Fiók törlése</em>'),
+      '',
+    ],
+    ['van angol szakasz (a felülvizsgáló ezt keresi)', html.includes('Delete your account'), ''],
+    ['az angol szakaszban is ott a csomagnév', html.includes('hu.hungarianhardstyle.app'), ''],
   ];
   let failed = 0;
   for (const [label, ok, detail] of checks) {

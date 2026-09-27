@@ -185,17 +185,71 @@ export async function firestoreDelete(documentPath, { token } = {}) {
   return true;
 }
 
-/** Egy titok értéke a Secret Managerből (futásidőben; a repóban soha). */export function secret(name) {
-  // A `firebase` CLI néha átmenetileg hibázik (párhuzamos hívásoknál), ezért
-  // egyszer újrapróbáljuk — a titok értéke nem változik közben.
+/** A `firebase` CLI hívása — több alakot is próbál (környezetfüggő, melyik él). */
+export function firebaseCli(args) {
+  // ⚠️ 2026-09-27: Windows-on az `npx.cmd` **csak `shell: true`-val** indítható
+  // (a Node biztonsági okból tiltja a `.cmd` shell nélküli indítását), viszont a
+  // shell-es változat a Node-ban néha `Assertion failed: !(handle->flags &
+  // UV_HANDLE_CLOSING)` hibával **nem nulla kilépési kóddal** zár akkor is, ha a
+  // munka sikerült. Ezért ahol lehet, a `secretAsync()`-et használd (REST-en
+  // keresztül olvas, egyáltalán nem indít folyamatot).
+  const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+  const candidates = [
+    [npx, ['--yes', 'firebase-tools', ...args]],
+    [npx, ['firebase', ...args]],
+    ['firebase', args],
+  ];
   let lastError;
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (const [command, commandArgs] of candidates) {
     try {
-      const output = execFileSync('npx', ['firebase', 'functions:secrets:access', name], {
+      return execFileSync(command, commandArgs, {
         encoding: 'utf8',
         shell: true,
         stdio: ['ignore', 'pipe', 'ignore'],
       });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError ?? new Error('a firebase CLI nem futtatható');
+}
+
+/**
+ * Titok olvasása a Secret Managerből **REST-en** keresztül (async).
+ *
+ * MIÉRT: a `secret()` a `firebase` CLI-t indítja, ami Windows-on shell-lel fut és
+ * néha nem nulla kóddal zár akkor is, ha sikerült. Ez a változat a CLI-ben tárolt
+ * bejelentkezéssel egy sima Google REST-hívást tesz — gyorsabb, és nincs
+ * gyermekfolyamat. Több soros (JSON) titkot is helyesen ad vissza.
+ */
+export async function secretAsync(name, { token } = {}) {
+  const auth = token || (await accessToken());
+  const response = await fetch(
+    `https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${name}/versions/latest:access`,
+    { headers: { Authorization: `Bearer ${auth}` } },
+  );
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok || !json?.payload?.data) {
+    throw new Error(
+      `A(z) ${name} titok nem olvasható a Secret Managerből (status=${response.status}, ${json?.error?.message || 'ismeretlen hiba'}).`,
+    );
+  }
+  const value = Buffer.from(json.payload.data, 'base64').toString('utf8').trim();
+  if (!value) throw new Error(`A(z) ${name} titok üres.`);
+  return value;
+}
+
+/** Egy titok értéke a Secret Managerből (futásidőben; a repóban soha). */export function secret(name) {
+  // A `firebase` CLI néha átmenetileg hibázik (párhuzamos hívásoknál), ezért
+  // egyszer újrapróbáljuk — a titok értéke nem változik közben.
+  // ⚠️ 2026-09-27: a `npx firebase …` ebben a környezetben **nem találta** a
+  // csomagot („Command failed”), miközben a `npx --yes firebase-tools …` igen —
+  // ezért a hívás több alakot próbál (`firebaseCli`). Ahol lehet, használd a
+  // `secretAsync()`-et (REST, folyamatindítás nélkül).
+  let lastError;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const output = firebaseCli(['functions:secrets:access', name]);
       // Az UTOLSÓ NEM ÜRES sor: a CLI a titok után üres sort is írhat, és a
       // korábbi „utolsó sor" logika ilyenkor üres értéket adott — ezért a
       // WordPress-jelszó olvasása **hamisan** hiúsult meg
@@ -231,11 +285,7 @@ export function secretMultiline(name) {
   let lastError;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
-      const output = execFileSync('npx', ['firebase', 'functions:secrets:access', name], {
-        encoding: 'utf8',
-        shell: true,
-        stdio: ['ignore', 'pipe', 'ignore'],
-      });
+      const output = firebaseCli(['functions:secrets:access', name]);
       const start = output.indexOf('{');
       const value = (start >= 0 ? output.slice(start) : output).trim();
       if (!value) throw new Error('üres érték');

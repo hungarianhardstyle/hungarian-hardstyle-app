@@ -1,14 +1,22 @@
 # A fióktörlési oldal szövege (Play-hez) — 2026-09-27
 
+> **ÁLLAPOT (2026-09-27 11:51):** az oldal szövege **már él** a honlapon
+> (`https://hungarianhardstyle.hu/fiok-torles/`, WordPress-oldal **#12843**,
+> `publish`, módosítva **2026-09-27 11:51**), a javítást a
+> `node tools/create-deletion-page.mjs --confirm --update` tette ki — mérve:
+> HTTP 200, a helyes appon belüli út és az **angol szakasz** is megvan.
+> **A tulajdonosnak már csak a Play Console-t kell kitöltenie** (lásd lent), és
+> újra beküldeni a kiadást.
+
 > **Miért készült ez a fájl:** a Play Console **elutasította** a frissítést
 > (*„Felhasználói adatok – Fióktörlési követelmény: Érvénytelen adattörlési link
-> az Adatbiztonsági űrlapon"*, 2026. szept. 27.). A mérés szerint **az oldal él**
+> az Adatbiztonsági űrlapon"*, 2026. szept. 27.). A mérés szerint **az oldal élt**
 > (`https://hungarianhardstyle.hu/fiok-torles/` → HTTP 200, közzétéve 2026-09-23),
 > a hiba oka a **Play-űrlap** (a link mező üresen maradt), **és** az oldalon
-> leírt **appon belüli menüút nem létezik**: az oldal azt írja, hogy
+> leírt **appon belüli menüút nem létezett**: az oldal azt írta, hogy
 > „Több → Beállítások → Fiók törlése", viszont az appban a valódi út:
 > **Chat fül → jobb felső „Profil" ikon (a profilképed) → „Profil szerkesztése"
-> → a lap alján a „Profil törlése" gomb.** Az alábbi szöveg ezt javítja, és
+> → a lap alján a „Profil törlése" gomb.** Az új szöveg ezt írja le, és
 > **angol szakaszt** is ad (a felülvizsgáló ezt keresi).
 
 ## Amit a Play Console-on be kell állítani (a tulajdonos lépése)
