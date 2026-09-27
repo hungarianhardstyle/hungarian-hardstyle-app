@@ -98,6 +98,18 @@ check(
 // A changelog a Dart AOT csomagban él (a magyar ékezetek miatt UTF-16LE-ként).
 const framework = read('Frameworks/App.framework/App');
 check(
+  'a 377 sora benne van (a Label-termékek leírása angolul)',
+  contains(framework, 'a Label-termékek leírása is angolul szól'),
+);
+check(
+  'a 377 görgetés-sora is benne van',
+  contains(framework, 'nem ugrik vissza a tetejére háttér-frissítéskor'),
+);
+check(
+  'a 377 születésnapi sora is benne van',
+  contains(framework, 'az aznap köszöntő értesítést kap'),
+);
+check(
   'a 376 sora benne van (kötelező születési dátum, 16+)',
   contains(framework, 'a regisztrációhoz mostantól kötelező a születési dátum'),
 );
