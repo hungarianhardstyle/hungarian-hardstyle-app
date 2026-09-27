@@ -13,8 +13,18 @@
 
 ## Amit a Play Console-on be kell állítani (a tulajdonos lépése)
 
-1. Play Console → a **Hungarian Hardstyle** app → **Adatbiztonság** (*Data safety*).
-2. **Adattörlés** (*Data deletion*) szakasz:
+> **Hol van?** Az Adatbiztonság űrlap **nem** külön bal oldali menüpont, hanem az
+> **Alkalmazástartalom** (*App content*) oldalon van. Közvetlen link (bejelentkezés után):
+> **https://play.google.com/console/app/app-content/summary**
+> Útvonal a felületen: **Szabályzat és programok** (*Policy and programs*) →
+> **Alkalmazástartalom** (*App content*) → **Adatbiztonság** (*Data safety*) szakasz.
+> A Google súgója is ezt az oldalt jelöli meg:
+> [A Google Play-alkalmazások fióktörlési követelményeinek ismertetése](https://support.google.com/googleplay/android-developer/answer/13327111?hl=hu).
+
+1. Play Console → a **Hungarian Hardstyle** app → **Szabályzat és programok** →
+   **Alkalmazástartalom** → **Adatbiztonság** (*Data safety*) → **Adattörlés** (*Data deletion*).
+2. Válaszok:
+   - „Lehetővé teszi az alkalmazás fiókok létrehozását?" → **igen**,
    - „Törli a felhasználói adatokat?" → **igen**,
    - „Megadja a felhasználóknak az adataik törlésének módját?" → **igen**,
    - jelöld be **mindkettőt**: **„Az alkalmazásban"** *és* **„Webes hivatkozás"**,
@@ -22,6 +32,13 @@
      `https://hungarianhardstyle.hu/fiok-torles/`
 3. **Mentés**, majd a **kiadás újraküldése** (a 374-es AAB maradhat, nem kell új
    csomag: az elutasítás nem a buildről szólt).
+
+**⚠️ Amit a Google a webes linknél ellenőriz (a súgó szerint):** a link
+**működőképes** legyen, a **törlési útvonal feltűnően látható és könnyen
+felfedezhető** legyen az oldalon, az oldal **hivatkozzon az alkalmazás vagy a
+fejlesztő nevére** (ahogy a Play-adatlapon szerepel), és a felhasználó **az
+alkalmazás újratelepítése nélkül** kérhesse a törlést. Ezért fontos, hogy az
+oldalon leírt **appon belüli menüút valódi** legyen (lásd lent).
 
 ## A WordPress-oldal szövege (ezt másold be a `/fiok-torles/` oldalra)
 
