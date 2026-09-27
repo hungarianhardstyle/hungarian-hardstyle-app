@@ -1,0 +1,42 @@
+Copyright (c) 2026 Hungarian Hardstyle. Minden jog fenntartva. / All rights reserved.
+
+Ez a repozitórium a Hungarian Hardstyle tulajdona. A benne lévő forráskód, márkanevek,
+logók, grafikák, szövegek és minden egyéb tartalom szerzői jogi védelem alatt áll.
+
+A repozitórium tartalma — egészben vagy részben — engedély nélkül nem másolható, nem
+módosítható, nem terjeszthető, nem tehető közzé, nem licencelhető tovább, nem
+értékesíthető és semmilyen más módon nem használható fel. Kereskedelmi vagy saját célú
+felhasználáshoz előzetes, írásos engedély szükséges.
+
+A „Hungarian Hardstyle”, a „Hardstyle Revolution”, a „Rave Revolution” és a „Hard Lake”
+nevek és logók a Hungarian Hardstyle megjelölései; használatuk engedélyhez kötött.
+
+Az alkalmazás a Google Play áruházban érhető el. Az áruházból letöltött alkalmazás
+használatára az áruház feltételei érvényesek — ez azonban nem jelent engedélyt a
+forráskód vagy a tartalom felhasználására.
+
+A repozitóriumban szereplő külső csomagok (Flutter/Dart/NPM függőségek) a saját
+licencük alatt állnak, rájuk ez a fájl nem vonatkozik.
+
+Engedélykérés: https://hungarianhardstyle.hu
+
+---
+
+This repository is the property of Hungarian Hardstyle. All source code, brand names,
+logos, graphics, texts and any other content are protected by copyright.
+
+No part of this repository may be copied, modified, distributed, published,
+sublicensed, sold or otherwise used, in whole or in part, without prior written
+permission. Commercial or own-purpose use requires explicit written permission.
+
+The names and logos “Hungarian Hardstyle”, “Hardstyle Revolution”, “Rave Revolution”
+and “Hard Lake” are marks of Hungarian Hardstyle and may only be used with permission.
+
+The application is distributed through Google Play. Use of the application downloaded
+from the store is governed by the store's terms, which do not grant any right to use
+the source code or the content.
+
+External packages (Flutter/Dart/NPM dependencies) bundled in this repository remain
+under their own licenses and are not covered by this file.
+
+Permission requests: https://hungarianhardstyle.hu

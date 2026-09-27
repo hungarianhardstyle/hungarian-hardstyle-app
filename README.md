@@ -185,6 +185,10 @@ Releases and Store share one WordPress-managed catalog rather than separate cont
 
 One connected platform for Android, iOS and the web, combining news, events, artists, organizers, community, radio, releases and digital music distribution.
 
+## License
+
+This repository is **proprietary**. The source code, brand names, logos, graphics and content belong to **Hungarian Hardstyle** and may not be copied, modified, redistributed, published or reused — in whole or in part — without prior written permission. Bundled third-party packages keep their own licenses. See [`LICENSE`](LICENSE) for the full notice.
+
 ## Contact
 
 Questions, feedback and partnership requests: [hungarianhardstyle.hu](https://hungarianhardstyle.hu), or the social links inside the app under More → *Social és kapcsolat* (social and contact).
