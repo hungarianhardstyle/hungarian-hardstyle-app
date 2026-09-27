@@ -98,6 +98,26 @@ check(
 // A changelog a Dart AOT csomagban él (a magyar ékezetek miatt UTF-16LE-ként).
 const framework = read('Frameworks/App.framework/App');
 check(
+  'a 376 sora benne van (kötelező születési dátum, 16+)',
+  contains(framework, 'a regisztrációhoz mostantól kötelező a születési dátum'),
+);
+check(
+  'a 376 profil-sora is benne van (a dátum a profilban)',
+  contains(framework, 'a születési dátumod a profilodban adhatod meg'),
+);
+check(
+  'a 376 Chat-fül sora is benne van (figyelmeztetünk)',
+  contains(framework, 'a Chat fülön figyelmeztetünk, és egy koppintással megadhatod'),
+);
+check(
+  'a 376 jelentés-sora is benne van',
+  contains(framework, 'a privát beszélgetésben is bejelentheted a másik felet'),
+);
+check(
+  'a 376 figyelmeztető sáv sora is benne van',
+  contains(framework, 'figyelmeztetést látsz a beszélgetés tetején, ha a partnered nagykorú'),
+);
+check(
   'a 375 sora benne van (a WAV (ingyenes) is angolul)',
   contains(framework, 'a „WAV (ingyenes)" felirat is angolul szól'),
 );
