@@ -60,11 +60,19 @@ const {
   noticePayload: birthDateNoticePayload,
   selectBirthDateNoticeTargets,
 } = require('./birth-date-notice-plan');
+const {
+  BIRTHDAY_TYPE,
+  DEFAULT_TIME_ZONE: BIRTHDAY_TIME_ZONE,
+  birthdayGreeting,
+  birthdayKey,
+  birthdayTargets,
+} = require('./birthday-plan');
 const { generateAuthActionLink } = require('./auth_action_link');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 const {
   playProductMatches,
+  labelProductListings,
   purchaseOptionStateAction,
   regionalPricingConfigs,
   mergeRegionalConfigs,
@@ -6828,10 +6836,20 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
 
   const purchaseOptionId = String(current?.purchaseOptions?.[0]?.purchaseOptionId || 'default');
   const title = `${String(release.title || 'HUHS Release')} – ${definition.label}`.slice(0, 55);
+  // ⚠️ MINDKÉT NYELVEN (a tulajdonos jelzése, 2026-09-27: *„a labelnél a
+  // termékek még magyarul vannak az angol felületen"*): a Play-listázás eddig
+  // **csak magyar** volt, ezért az angol felület is magyar szöveget kapott a
+  // termék-adatokból. A magyar szöveg **változatlan** (hogy semmi ne törjön el
+  // a megszokott felületen), az angol párja ugyanaz „download" szóval.
   const description = `Hungarian Hardstyle ${definition.label} letöltés: ${String(release.title || 'Release')}`.slice(
     0,
     200,
   );
+  const descriptionEn = `Hungarian Hardstyle ${definition.label} download: ${String(release.title || 'Release')}`.slice(
+    0,
+    200,
+  );
+  const listings = labelProductListings({ title, description, titleEn: title, descriptionEn });
   const currentOption =
     current?.purchaseOptions?.find((option) => option.purchaseOptionId === purchaseOptionId) ||
     current?.purchaseOptions?.[0] ||
@@ -6862,7 +6880,7 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
   const product = {
     packageName: GOOGLE_PLAY_PACKAGE_NAME,
     productId,
-    listings: [{ languageCode: 'hu-HU', title, description }],
+    listings,
     purchaseOptions: [purchaseOption],
   };
 
@@ -6881,6 +6899,7 @@ async function upsertPlayProduct(androidPublisher, release, definition, productI
   const unchanged = playProductMatches(current, {
     title,
     description,
+    listings,
     price,
     purchaseOptionId,
     regions: desiredRegions,
@@ -8525,12 +8544,108 @@ exports.sendBirthDateNotices = onSchedule(
   },
 );
 
-// A kiküldés mérhető változata (injektált push/e-mail): a döntés és a
+// A kiküldés mérhető változata (injektált push/e-mail): a döntés és az
 // idempotencia így **küldés nélkül** is bizonyítható.
 exports.__birthDateNoticeForTests = {
   sendBirthDateNotices,
   readBirthDateNoticeSettings,
 };
+
+/**
+ * **Születésnapi köszöntés** — a tulajdonos kérése (2026-09-27): *„akinek
+ * születésnapja van, az adott napon kapjon egy Boldog szülinapos Notifyt, szépen
+ * megfogalmazva"*.
+ *
+ * A döntés a tiszta `functions/birthday-plan.js`-ben él (ki van ma soron, milyen
+ * nyelven, milyen kulccsal), itt csak a Firestore-írás és a push van.
+ *
+ * ⚠️ **IDEMPOTENCIA:** a `dedupeKey` évet is tartalmaz (`birthday:{uid}:{year}`),
+ * ezért a napi kör — vagy egy megismételt futás — **nem** küld másodszor.
+ *
+ * ⚠️ **IDŐZÓNA:** a „ma" nap a `Europe/Budapest` időzónában számolódik (a
+ * szerver UTC-ben fut, és hajnalban **más** napot köszöntene).
+ *
+ * ⚠️ **ADATVÉDELEM:** a köszöntés **nem** tartalmaz életkort és nem teszi
+ * nyilvánossá a dátumot — csak a keresztnév (megszólítás) és a jókívánság
+ * szerepel benne. A dátum a profilban továbbra is **rejtve** marad.
+ */
+async function sendBirthdayGreetings({ now = new Date(), dryRun = false } = {}, deps = {}) {
+  const {
+    sendPush = sendMulticastToAllTokens,
+    pushTokens = getPushTokens,
+    removeTokens = removePushTokens,
+  } = deps;
+  const snapshot = await db.collection('community_profiles').limit(1000).get();
+  const { targets, today } = birthdayTargets(
+    snapshot.docs.map((document) => ({ uid: document.id, profile: document.data() || {} })),
+    { now, timeZone: BIRTHDAY_TIME_ZONE },
+  );
+  const summary = {
+    profiles: snapshot.size,
+    targets: targets.length,
+    notified: 0,
+    pushed: 0,
+    dryRun: Boolean(dryRun),
+    day: today ? `${today.year}-${String(today.month).padStart(2, '0')}-${String(today.day).padStart(2, '0')}` : '',
+  };
+  if (dryRun) return summary;
+
+  for (const target of targets) {
+    const created = await createNotificationBestEffort({
+      recipientUid: target.uid,
+      type: BIRTHDAY_TYPE,
+      kind: BIRTHDAY_TYPE,
+      params: { greeting: birthdayGreeting(target.name, target.language) },
+      dedupeKey: birthdayKey(target.uid, today?.year),
+    });
+    if (!created) continue;
+    summary.notified += 1;
+    const text = notificationText(BIRTHDAY_TYPE, target.language, {
+      greeting: birthdayGreeting(target.name, target.language),
+    });
+    const tokens = await pushTokens(target.uid);
+    if (text && tokens.length) {
+      const result = await sendPush(
+        {
+          notification: { title: text.title, body: text.body.slice(0, 160) },
+          data: { type: BIRTHDAY_TYPE },
+        },
+        tokens,
+      );
+      summary.pushed += result.successCount;
+      const invalidTokens = tokens.filter(
+        (_, index) => result.responses[index]?.error?.code === 'messaging/registration-token-not-registered',
+      );
+      if (invalidTokens.length) await removeTokens(target.uid, invalidTokens);
+    }
+  }
+  return summary;
+}
+
+exports.sendBirthdayGreetings = onSchedule(
+  {
+    schedule: 'every day 09:00',
+    timeZone: BIRTHDAY_TIME_ZONE,
+    region: 'europe-central2',
+  },
+  async () => {
+    try {
+      const summary = await sendBirthdayGreetings();
+      console.info(JSON.stringify({ event: 'birthday_greetings_run', ...summary }));
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'birthday_greetings_failed',
+          message: error?.message || String(error),
+        }),
+      );
+    }
+  },
+);
+
+// A köszöntés mérhető változata (injektált push): a döntés és az idempotencia
+// így **küldés nélkül** is bizonyítható.
+exports.__birthdayForTests = { sendBirthdayGreetings };
 
 exports.moderatePrivateMessage = onDocumentCreated(
   {

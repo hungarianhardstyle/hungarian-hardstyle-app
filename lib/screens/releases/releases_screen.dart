@@ -113,6 +113,16 @@ class ReleasesScreenState extends ConsumerState<ReleasesScreen>
       body: RefreshIndicator(
         onRefresh: refreshNow,
         child: releases.when(
+          // ⚠️ A TULAJDONOS JELZÉSE (2026-09-27): *„a label tab csinált olyat,
+          // hogy amíg nem görgettük le az aljára teljesen, folyton visszaugrott
+          // a tetejére, valszeg frissítgetett"*. A mért ok: a háttér-frissítés
+          // (`refreshNow` + a 45 másodperces kör) **újratölti** a providert
+          // (`ref.watch(publicContentRefreshProvider)`), a `when` pedig
+          // alapértelmezés szerint ilyenkor a **töltő ikonra** vált — a lista
+          // eltűnik, és a görgetési pozíció elveszik. A `skipLoadingOnReload`
+          // megtartja a **meglévő tartalmat**, amíg az új meg nem érkezik.
+          skipLoadingOnReload: true,
+          skipLoadingOnRefresh: true,
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => ListView(
             children: [

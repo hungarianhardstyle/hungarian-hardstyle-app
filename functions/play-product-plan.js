@@ -172,10 +172,39 @@ function mergeRegionalConfigs(currentConfigs, desiredConfigs) {
   return [...byRegion.values()];
 }
 
+/**
+ * A termék **listázásai** (nyelvenkénti cím + leírás).
+ *
+ * ⚠️ MIÉRT KELL AZ ANGOL IS (a tulajdonos jelzése, 2026-09-27, képernyőkép):
+ * *„a labelnél a termékek még magyarul vannak az angol felületen"* — a
+ * kiadvány-adatlapon a sor a Play-termék **leírásából** jött, amit eddig
+ * **csak magyarul** (`hu-HU`) hoztunk létre, ezért a Play a felület nyelvétől
+ * függetlenül a magyar szöveget adta vissza. Mostantól mindkét nyelvre megy
+ * listázás: a vásárlási lap (Play) az angol nyelvű fiókoknak angolul szól.
+ *
+ * A két szöveg ugyanazt mondja, csak a „letöltés"/„download" szó tér el.
+ */
+function labelProductListings({ title, description, titleEn, descriptionEn } = {}) {
+  return [
+    { languageCode: 'hu-HU', title: String(title ?? ''), description: String(description ?? '') },
+    { languageCode: 'en-US', title: String(titleEn ?? ''), description: String(descriptionEn ?? '') },
+  ];
+}
+
+/** Egy listázás normalizált alakja (a hiányzó mezők üres szövegek). */
+function normalizeListing(listing) {
+  return {
+    languageCode: String(listing?.languageCode ?? '').trim(),
+    title: String(listing?.title ?? ''),
+    description: String(listing?.description ?? ''),
+  };
+}
+
 function playProductMatches(current, desired) {
   const {
     title = '',
     description = '',
+    listings = null,
     price = 0,
     purchaseOptionId = 'default',
     regions = null,
@@ -184,12 +213,21 @@ function playProductMatches(current, desired) {
   // Ár nélkül nincs mit összehasonlítani (a hívó ilyenkor nem is hívja).
   if (!Number.isFinite(Number(price)) || Number(price) <= 0) return false;
 
-  const listings = Array.isArray(current.listings) ? current.listings : [];
-  if (listings.length !== 1) return false;
-  const listing = listings[0] || {};
-  if (String(listing.languageCode || '') !== 'hu-HU') return false;
-  if (String(listing.title || '') !== String(title)) return false;
-  if (String(listing.description || '') !== String(description)) return false;
+  // ⚠️ MINDEN kívánt listázást megkövetelünk (magyar ÉS angol): a PATCH a
+  // `listings` listát **lecseréli**, ezért ha csak az egyik egyezne, a másik
+  // elveszne — és a felület újra magyar/angol szöveget mutatna.
+  const wantedListings = (Array.isArray(listings) && listings.length
+    ? listings
+    : [{ languageCode: 'hu-HU', title, description }]
+  ).map(normalizeListing);
+  const currentListings = (Array.isArray(current.listings) ? current.listings : []).map(normalizeListing);
+  if (currentListings.length !== wantedListings.length) return false;
+  for (const wanted of wantedListings) {
+    const found = currentListings.find((listing) => listing.languageCode === wanted.languageCode);
+    if (!found) return false;
+    if (found.title !== wanted.title) return false;
+    if (found.description !== wanted.description) return false;
+  }
 
   const options = Array.isArray(current.purchaseOptions) ? current.purchaseOptions : [];
   const option =
@@ -261,6 +299,7 @@ function purchaseOptionStateAction({ releaseIsUpcoming, currentState } = {}) {
 
 module.exports = {
   playProductMatches,
+  labelProductListings,
   purchaseOptionStateAction,
   LABEL_PRODUCT_REGIONS,
   regionalPricingConfigs,

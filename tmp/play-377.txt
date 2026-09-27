@@ -1,0 +1,4 @@
+- Javítva: angol felületen a Label-termékek leírása is angolul szól.
+- Javítva: a Label fül és a többi lista görgetése nem ugrik vissza a tetejére frissítéskor.
+- ÚJ: a születésnapos tagok köszöntő értesítést kapnak.
+- Gyorsabb az app: optimalizált képek, kevesebb memóriahasználat.

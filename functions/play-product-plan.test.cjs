@@ -5,6 +5,7 @@ const path = require('node:path');
 
 const {
   playProductMatches,
+  labelProductListings,
   purchaseOptionStateAction,
   regionalPricingConfigs,
   regionalPriceFor,
@@ -149,6 +150,83 @@ test('a hiányzó purchase option vagy buyOption nem azonos', () => {
 test('a több nyelven kiírt termék nem azonos (a PATCH lecseréli a listát)', () => {
   assert.equal(playProductMatches(playProduct({ languages: ['hu-HU', 'en-US'] }), desired()), false);
   assert.equal(playProductMatches(playProduct({ languages: ['en-US'] }), desired()), false);
+});
+
+/* ------------------------------------------------------------------ */
+/* A termék listázása MINDKÉT nyelven (a tulajdonos jelzése, 2026-09-27) */
+/* ------------------------------------------------------------------ */
+
+/*
+ * A jelzés: *„a labelnél a termékek még magyarul vannak az angol felületen"*
+ * — a kiadvány-adatlap sora a Play-termék **leírásából** jött, amit eddig csak
+ * magyarul (`hu-HU`) hoztunk létre. Mostantól a magyar mellé **angol** listázás
+ * is megy, és a döntés **mindkettőt** megköveteli (különben a PATCH lecserélné
+ * a listát, és az egyik nyelv elveszne).
+ */
+
+const bothListings = () =>
+  labelProductListings({
+    title: 'Teszt kiadvány – Radio (WAV)',
+    description: 'Hungarian Hardstyle Radio (WAV) letöltés: Teszt kiadvány',
+    titleEn: 'Teszt kiadvány – Radio (WAV)',
+    descriptionEn: 'Hungarian Hardstyle Radio (WAV) download: Teszt kiadvány',
+  });
+
+test('a listázás két nyelven készül (magyar + angol)', () => {
+  const listings = bothListings();
+  assert.deepEqual(
+    listings.map((listing) => listing.languageCode),
+    ['hu-HU', 'en-US'],
+  );
+  const hu = listings.find((listing) => listing.languageCode === 'hu-HU');
+  const en = listings.find((listing) => listing.languageCode === 'en-US');
+  assert.equal(hu.description.includes('letöltés'), true);
+  assert.equal(en.description.includes('download'), true);
+  assert.equal(en.description.includes('letöltés'), false, 'az angol szövegben nincs magyar szó');
+  assert.equal(hu.title, en.title, 'a cím nyelvfüggetlen (kiadvány + változat)');
+});
+
+test('a döntés mindkét listázást megköveteli', () => {
+  const wanted = { ...desired(), listings: bothListings() };
+  const current = { ...playProduct(), listings: bothListings() };
+  assert.equal(playProductMatches(current, wanted), true, 'ha mindkettő egyezik, nincs írás');
+
+  // Az ANGOL leírás eltér (pl. kézzel átírták a Play Console-ban) → írni kell.
+  const wrongEnglish = {
+    ...playProduct(),
+    listings: bothListings().map((listing) =>
+      listing.languageCode === 'en-US' ? { ...listing, description: 'Régi angol szöveg' } : listing,
+    ),
+  };
+  assert.equal(playProductMatches(wrongEnglish, wanted), false);
+
+  // Csak magyar listázás (a MIGRÁCIÓ esete: a régi termékek ilyenek) → írni kell,
+  // különben az angol listázás soha nem jelenne meg.
+  assert.equal(playProductMatches(playProduct(), wanted), false);
+});
+
+test('a régi hívás (listázás nélkül) továbbra is működik', () => {
+  // A `desired` `listings` nélkül a magyar listázásra hasonlít — így a korábbi
+  // bekötések és a mentett tesztek nem törik el.
+  assert.equal(playProductMatches(playProduct(), desired()), true);
+  assert.equal(playProductMatches(playProduct({ languages: ['hu-HU', 'en-US'] }), desired()), false);
+});
+
+test('a szinkron MINDKÉT nyelvet felküldi (bekötés)', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8');
+  const start = source.indexOf('async function upsertPlayProduct(');
+  const end = source.indexOf('async function updateWordPressReleaseProducts(', start);
+  assert.ok(start > 0 && end > start, 'az upsertPlayProduct megtalálható');
+  const body = source.slice(start, end);
+  assert.match(body, /labelProductListings\(\{/, 'a kétnyelvű listázás a tiszta modulból jön');
+  // ⚠️ EOL-tudatos minta: a fájl CRLF-es, ezért a `\n` önmagában nem találna.
+  assert.match(body, /listings,\r?\n/, 'a termék a kétnyelvű listát küldi');
+  assert.match(body, /listings,\r?\n\s*price,/, 'a döntés is megkapja a listát');
+  assert.doesNotMatch(
+    body,
+    /listings: \[\{ languageCode: 'hu-HU'/,
+    'nincs visszaesés a csak magyar listázásra',
+  );
 });
 
 test('a hibás bemenet (ár, üres válasz) NEM azonos — nem hagyunk ki írást', () => {

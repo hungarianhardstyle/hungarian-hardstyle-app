@@ -1,0 +1,6 @@
+{
+  "Javítva: angol felületen a Label-termékek leírása is angolul szól (eddig magyarul maradt).": "Fixed: the Label product descriptions are now in English on the English interface (they used to stay Hungarian).",
+  "Javítva: a Label fül és a többi lista görgetése nem ugrik vissza a tetejére háttér-frissítéskor.": "Fixed: scrolling on the Label tab and other lists no longer jumps back to the top during a background refresh.",
+  "ÚJ: akinek születésnapja van, az aznap köszöntő értesítést kap.": "NEW: members get a birthday greeting notification on their birthday.",
+  "Gyorsabb az app: a beépített képek optimalizálva, kevesebb memóriát használnak.": "Faster app: the built-in images are optimised and use less memory."
+}

@@ -206,6 +206,16 @@
         "body": "A date of birth is now required for every member. Open your profile (Chat tab → profile icon → Edit profile) and add it."
       }
     },
+    "birthday": {
+      "hu": {
+        "title": "Boldog születésnapot! 🎂",
+        "body": "{greeting}A Hungarian Hardstyle csapata boldog születésnapot kíván! Köszönjük, hogy velünk vagy."
+      },
+      "en": {
+        "title": "Happy birthday! 🎂",
+        "body": "{greeting}The Hungarian Hardstyle team wishes you a very happy birthday! Thank you for being with us."
+      }
+    },
     "chat_everyone": {
       "hu": {
         "title": "Megemlítettek a Chatben",

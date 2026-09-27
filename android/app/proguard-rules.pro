@@ -28,3 +28,29 @@
 # buildben némán megváltoztathatja a viselkedést — vagyis a zárképernyős
 # vezérlés „csak a release-ben" nem működne. Ezért ezeket megtartjuk.
 -keep class com.ryanheise.audioservice.** { *; }
+
+# A Play Console „teljes képernyős mód" javaslata (2026-09-27, mérve).
+#
+# A `MainActivity.onCreate` **már** meghívja az `enableEdgeToEdge()`-t, a Play
+# statikus szkennere viszont a **DEX-ben keresi a nevet** — az R8 pedig a
+# `-repackageclasses ''` + `-allowaccessmodification` mellett **beinlajnolja és
+# átnevezi**, ezért a 376-os csomagban **0 találat** volt (`tmp/probe-play-suggestions.mjs`):
+#   enableEdgeToEdge: 0, EdgeToEdge: 0
+# Ezért a definíciót megtartjuk. **MÉRVE a 377-es csomagon**
+# (`tmp/probe-edge-to-edge-dex.mjs`, `tmp/probe-edge-to-edge-methods.mjs`):
+#   'androidx/activity/EdgeToEdge' előfordulás: 1 (classes.dex) + 24 (classes2.dex)
+#   hivatkozó osztály: hu/hungarianhardstyle/app/MainActivity
+#   az osztály metódusai: enable / enable$default  (ez a Kotlin-bővítmény JVM-neve)
+# Vagyis a szkenner mostantól látja, hogy az app **igényli** a teljes képernyős módot.
+#
+# ⚠️ A másik jelzés („elavult API-kat használ a teljes képernyős megjelenítéshez")
+# **nem** a saját kódunkból jön: a mért tulajdonosok a csomagolt könyvtárak
+# (`com.google.android.play.core.common.PlayCoreDialogWrapperActivity` és az
+# újracsomagolt androidx-osztályok). Az `android:windowOptOutEdgeToEdgeEnforcement`
+# zászlót **nem** használjuk, és a cél-SDK 36-on az Android amúgy is kikényszeríti
+# a teljes képernyős módot.
+-keep class androidx.activity.EdgeToEdge { *; }
+-keepclassmembers class androidx.activity.EdgeToEdge {
+    public static void enable(...);
+    public static void enable$default(...);
+}

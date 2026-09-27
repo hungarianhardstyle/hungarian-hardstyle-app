@@ -38,6 +38,16 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 377,
+    changes: [
+      'Javítva: angol felületen a Label-termékek leírása is angolul szól (eddig magyarul maradt).',
+      'Javítva: a Label fül és a többi lista görgetése nem ugrik vissza a tetejére háttér-frissítéskor.',
+      'ÚJ: akinek születésnapja van, az aznap köszöntő értesítést kap.',
+      'Gyorsabb az app: a beépített képek optimalizálva, kevesebb memóriát használnak.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 376,
     changes: [
       'ÚJ: a regisztrációhoz mostantól kötelező a születési dátum, és 16 éves kortól lehet regisztrálni.',

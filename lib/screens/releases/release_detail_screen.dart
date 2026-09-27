@@ -809,19 +809,25 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
 
   Widget _productCard(ReleaseProduct configured, ProductDetails? product) {
     final verified = _verifiedProducts.contains(configured.id);
+    final label = _productLabel(configured.id);
     return Card(
       child: ListTile(
-        title: Text(
-          _productLabel(configured.id),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        title: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        // ⚠️ A LEÍRÁST **MI** ÍRJUK, nem a Play-termék leírását használjuk.
+        //
+        // A TULAJDONOS JELZÉSE (2026-09-27, képernyőkép): *„a labelnél a
+        // termékek még magyarul vannak az angol felületen"* — a sor a Play
+        // **listázásából** jött (`product.description`), amit a szerver
+        // (`upsertPlayProduct`) **csak magyarul** (`hu-HU`) hoz létre, ezért a
+        // Play a felület nyelvétől függetlenül a magyar szöveget adta vissza.
+        // A saját, fordított sablon ezt megoldja: a felirat a MOSTANI nyelven
+        // szól (a Play-fiók nyelvétől függetlenül), a Play-listázás pedig külön
+        // kap angol változatot (a vásárlási laphoz).
         subtitle: Text(
-          product?.description.isNotEmpty == true
-              ? product!.description
-              : trArgs(context, 'Megvásárolható a Google Playen • {price} Ft', {
-                  'price': configured.price,
-                }),
+          trArgs(context, 'Hungarian Hardstyle {variant} letöltés: {title}', {
+            'variant': label,
+            'title': widget.release.title,
+          }),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
@@ -833,12 +839,6 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
               )
             : FilledButton(
                 onPressed: product == null ? null : () => _buy(product),
-                /*
-                    ? () => setState(
-                        () => _message =
-                            AppStrings.tr('A vásárlás a Google Playből telepített alkalmazásban érhető el.'),
-                      )
-                    : () => _buy(product), */
                 child: Text(product?.price ?? '${configured.price} Ft'),
               ),
       ),

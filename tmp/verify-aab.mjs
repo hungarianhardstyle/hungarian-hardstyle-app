@@ -90,7 +90,13 @@ if (catalogEntry) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, catalogEntry], { maxBuffer: 64 * 1024 * 1024 });
   const catalog = JSON.parse(fs.readFileSync(`${OUT}/${catalogEntry}`, 'utf8'));
   const kinds = Object.keys(catalog.kinds ?? {});
-  check('az értesítés-katalógusban legalább 41 típus van', kinds.length >= 41, `${kinds.length} típus`);
+  check('az értesítés-katalógusban legalább 42 típus van', kinds.length >= 42, `${kinds.length} típus`);
+  check(
+    'a születésnapi köszöntés is bent van (angolul is)',
+    catalog.kinds?.birthday?.en?.title === 'Happy birthday! 🎂' &&
+      String(catalog.kinds?.birthday?.en?.body || '').includes('{greeting}'),
+    JSON.stringify(catalog.kinds?.birthday?.en?.title),
+  );
   check(
     'a privát üzenet típusa is benne van (angolul is)',
     catalog.kinds?.private_message?.en?.title === '{name} sent you a message',
@@ -157,6 +163,23 @@ for (const [key, expected] of [
     'ÚJ: a privát beszélgetésben is bejelentheted a másik felet (a blokkolás és a törlés mellett).',
     'NEW: you can now report the other person in a private conversation (next to blocking and deleting).',
   ],
+  // 377: a Label-termékek szövege (a tulajdonos jelzése) és a születésnapi köszöntés.
+  [
+    'Hungarian Hardstyle {variant} letöltés: {title}',
+    'Hungarian Hardstyle {variant} download: {title}',
+  ],
+  [
+    'Javítva: angol felületen a Label-termékek leírása is angolul szól (eddig magyarul maradt).',
+    'Fixed: the Label product descriptions are now in English on the English interface (they used to stay Hungarian).',
+  ],
+  [
+    'Javítva: a Label fül és a többi lista görgetése nem ugrik vissza a tetejére háttér-frissítéskor.',
+    'Fixed: scrolling on the Label tab and other lists no longer jumps back to the top during a background refresh.',
+  ],
+  [
+    'ÚJ: akinek születésnapja van, az aznap köszöntő értesítést kap.',
+    'NEW: members get a birthday greeting notification on their birthday.',
+  ],
 ]) {
   check(`szótár: ${JSON.stringify(key)} → ${JSON.stringify(expected)}`, dictionary[key] === expected, String(dictionary[key]));
 }
@@ -209,6 +232,10 @@ const changelog = [
   'kötelező a születési dátum',
   'a privát beszélgetésben is bejelentheted a másik felet',
   'ha a partnered nagykorú',
+  // 377: a Label-termékek szövege, a görgetés megtartása, a születésnapi köszöntés.
+  'a Label-termékek leírása is angolul szól',
+  'nem ugrik vissza a tetejére háttér-frissítéskor',
+  'az aznap köszöntő értesítést kap',
 ];
 for (const entry of entries.filter((item) => /^base\/lib\/.*\/libapp\.so$/.test(item))) {
   execFileSync('tar', ['-xf', AAB, '-C', OUT, entry], { maxBuffer: 64 * 1024 * 1024 });

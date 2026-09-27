@@ -28,6 +28,10 @@ class _FaqScreenState extends ConsumerState<FaqScreen> {
     return Scaffold(
       appBar: AppBar(title: const AppText('GYÍK')),
       body: asyncFaq.when(
+        // A háttér-frissítés megtartja a tartalmat (nincs töltő-ikonra váltás és
+        // nincs görgetés-ugrás) — lásd `releases_screen.dart`.
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorState(
           message: tr(context, 'A segítség most nem tölthető be.'),

@@ -1,25 +1,18 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **✅ A 376 MÁR KINT VAN A ZÁRT TESZTEN (alpha) — 100%-ban** *(a tulajdonos döntése: „előbb zárt bétába
-> megy")*, ugyanezzel az 1. blokkal. **Mérve** (`node tools/check-play-track.mjs`, 2026-09-27):
-> **alpha = 376** (`completed`, 100%, a kiadási szöveg pontosan az 1. blokk), **production = 375**
-> (`completed`, 100%), **beta = 354**. Vagyis a **következő lépés a nyilvános (production) kiadás**
-> ugyanezzel a szöveggel — a 375-ön lévő felhasználók a **376** újdonságait kapják (a 375 javításait már
-> megkapták).
+> **Most a 377 megy fel** (versionCode **377**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> 2026-09-27): a **376 MÁR FENT VAN** a nyilvános (production) sávon **és** a zárt teszten (alpha) is,
+> 100%-ban; a `beta` (nyílt teszt) sávja a 354-en van. A 377 a tulajdonos három jelzését javítja és egy
+> újdonságot hoz: a **Label-termékek leírása** angolul is szól (eddig a Play magyar listázásából jött),
+> a **Label fül (és a többi lista) görgetése nem ugrik vissza a tetejére** háttér-frissítéskor,
+> **születésnapi köszöntő értesítés** érkezik a születésnaposoknak, és a **beépített képek
+> optimalizálva** lettek (kisebb csomag, kevesebb memória). Emellett a Play Console két „javasolt"
+> jelzésére is épült javítás (a teljes képernyős mód hívása **láthatóvá** vált a csomagban).
 >
-> A 376 a **gyermekbiztonsági kört** hozza: a regisztrációnál **kötelező a születési dátum** és **16+ a
-> korhatár**, a dátumot a profilban lehet megadni (alapból **rejtve**, a megjelenítés a felhasználó
-> döntése), a **meglévő tagokat** a Chat fül sávja és felugró kérése szólítja meg, a **privát
-> beszélgetésben lehet jelenteni** a másik felet, és ha egy **16–17 éves** tag **nagykorú** partnerrel
-> beszél, **alapból figyelmeztető sáv** jelenik meg. A szerveroldalon elindult az **1. fázisú
-> gyermekbiztonsági jelzőrendszer** (életkor-különbség + magyar/angol kulcsszó-jelek → jelzés a
-> moderátoroknak; a részletek a `docs/GYERMEKBIZTONSAG-MODERACIO-JAVASLAT.md`-ben).
-> A 376 a **375 minden** újdonságát is tartalmazza (a „WAV (ingyenes)", a @mindenki keveredése, a
-> hibaüzenetek nyelve), az pedig a korábbiakét.
-> **Melyik blokk hova való:** aki **375-ről** jön (a mostani production), annak az **1. blokk** való;
-> aki **360-ról** (egy régebbi nyilvános build), annak a **361–376 összesítő** (1b-2.); aki a **bétáról
-> (354)**, annak a **355–376 összesítő** (1b-3.). A **zárt teszt (alpha)** már a 376-ot futtatja, ezért
-> oda **nem** kell új szöveg.
+> A 377 a **376 minden** újdonságát is tartalmazza (születési dátum + 16+, privát jelentés,
+> figyelmeztető sáv), az pedig a korábbiakét. **Melyik blokk hova való:** aki **376-ról** jön (a
+> mostani éles), annak az **1. blokk** való; aki **360-ról**, annak a **361–377 összesítő** (1b-2.);
+> aki a **bétáról (354)**, annak a **355–377 összesítő** (1b-3.).
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -27,23 +20,21 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 376
+currentBuild: 377
 currentVersion: 1.0.0
 lastPublishedBuild: 360
-aab: build/HUHS-v1.0.0+376-release.aab
-sha256: C83F827F5E3BA811CEFB5069BE902A33983DB9EE00713CCCF2DAD31B01AB8832
+aab: build/HUHS-v1.0.0+377-release.aab
+sha256: B91D8393905DB5E2AB8D1F0EBE724AFF6655B645589F0EE8C2C8511C4E95EB46
 -->
 
-⚠️ A **376**-ot a **375** után kellett építeni (a 375-öt, a 374-et, a 373-at, a 372-t, a 371-et, a
-370-et és a 369-et **nem** kell feltölteni, ha még nem tetted meg: a 376 mindegyiket tartalmazza, és a
-Play a használt verziókódot amúgy is elutasítaná).
-⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.5** — ✅ **mérve: már fent van** (`apiVersion = 2.14.5`, és a
-natív admin űrlapjai mutatják a **kézi angol mezőket**: `_huhs_poll_question_en`,
-`_huhs_poll_options_en`, `_huhs_prize_answers_en`, `_huhs_game_summary_en`). A szerveroldali függvények
-**telepítve** vannak (`firebase deploy --only functions` → *Deploy complete!*, benne a **gyermekbiztonsági
-jelzőrendszer**, a **születési dátum vetítése** és a **születési dátum emlékeztető** — utóbbi **alvó**
-állapotban, lásd a 0c. pontot).
-Az apphoz csak az **AAB (376)** feltöltése kell.
+⚠️ A **377**-et a **376** után kellett építeni (a 376-ot, a 375-öt és a korábbiakat **nem** kell
+feltölteni, ha még nem tetted meg: a 377 mindegyiket tartalmazza, és a Play a használt verziókódot
+amúgy is elutasítaná).
+⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.5** — ✅ **mérve: már fent van** (`apiVersion = 2.14.5`).
+A szerveroldali függvények **telepítve** vannak (`firebase deploy --only functions` → *Deploy complete!*,
+benne a **születésnapi köszöntés** új ütemezett köre, a **gyermekbiztonsági jelzőrendszer**, a
+**születési dátum vetítése** és a **meglévő tagok emlékeztetője**).
+Az apphoz csak az **AAB (377)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -213,11 +204,10 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ: a regisztrációhoz mostantól kötelező a születési dátum, és 16 éves kortól lehet regisztrálni.
-- ÚJ: a születési dátumod a profilodban adhatod meg — te döntesz róla, hogy mások láthatják-e (alapból rejtve).
-- ÚJ: ha még nincs dátumod, a Chat fülön figyelmeztetünk, és egy koppintással megadhatod.
-- ÚJ: a privát beszélgetésben is bejelentheted a másik felet.
-- ÚJ: 18 év alatt figyelmeztetést látsz, ha a partnered nagykorú.
+- Javítva: angol felületen a Label-termékek leírása is angolul szól.
+- Javítva: a Label fül és a többi lista görgetése nem ugrik vissza a tetejére frissítéskor.
+- ÚJ: a születésnapos tagok köszöntő értesítést kapnak.
+- Gyorsabb az app: optimalizált képek, kevesebb memóriahasználat.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -246,28 +236,28 @@ hanem az **1. blokk** (a 376 újdonságai) való.
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
-- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
-- ÚJ: a főoldal és a Hírek fül magától frissül.
+- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva odaugrik.
 - ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
-- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a changelog.
-- Javítva: angolul a „Saját zenéim" és a hibaüzenetek is.
+- ÚJ: születésnapi köszöntés; a Label-termékek leírása is angolul szól.
+- Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
+- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a hibák.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–376** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–377** összesítő)
 
-**Ezt használd, ha a 376-ot a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
-(`node tools/check-play-track.mjs`, 2026-09-26) szerint ott a **354** fut, ezért a béta felhasználók a
+**Ezt használd, ha a 377-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+(`node tools/check-play-track.mjs`, 2026-09-27) szerint ott a **354** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
-**push**-jal), a Chat-értesítés odaugrása, a DJ-adatlap megjelenései, a hírlista-frissesség, a
-felirat-javítások és a mostani **gyermekbiztonsági kör** is.
+**push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés** és a
+mostani javítások is.
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
-- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva az eredeti üzenetre ugrik.
-- ÚJ: a főoldal és a Hírek fül magától frissül.
+- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva odaugrik.
 - ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
-- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a changelog.
-- Javítva: angolul a „Saját zenéim" és a hibaüzenetek is.
+- ÚJ: születésnapi köszöntés; a Label-termékek leírása is angolul szól.
+- Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
+- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a hibák.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -296,6 +286,14 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 377 — a Label-termékek angolul, a lista görgetése nem ugrik vissza, születésnapi köszöntés
+- **A tulajdonos jelzései (képernyőkép + kérés):** *„a labelnél a termékek még magyarul vannak az angol felületen"*; *„a label tab csinált olyat, hogy amíg nem görgettük le az aljára teljesen, folyton visszaugrott a tetejére, valszeg frissítgetett + nézd meg ez érint-e mást is"*; *„akinek születésnapja van, az adott napon kapjon egy Boldog szülinapos Notifyt, szépen megfogalmazva"*; és a Play Console három „javasolt" jelzése (teljes képernyős mód, elavult ablak-API-k, bittérkép-optimalizálás).
+- **A mért gyökerek:** (1) a terméksor a **Play-termék leírásából** jött (`product.description`), amit a szerver **csak magyarul** (`hu-HU`) hozott létre → a Play a felület nyelvétől függetlenül magyar szöveget adott; (2) a tartalom-providel `ref.watch(publicContentRefreshProvider)` miatt **újratöltődnek**, az `AsyncValue.when` alapértelmezése pedig **újratöltéskor a töltő ágra vált** → a lista eltűnik, a görgetési pozíció elveszik (ez **minden** tartalom-képernyőt érintett: Label, események, hírek, Chat, GYÍK, Saját zenék, szavazás — a DJ-/szervező-oldalakon már megvolt a védelem); (3) a csomagolt képek **1254×1254** (navigációs ikonok 34 logikai képponton!) és 1640×856 … 2460×780 felbontásban voltak = **59 MB dekódolt memória**; (4) az R8 a `-repackageclasses` mellett **beinlajnolta** az `enableEdgeToEdge()` hívást, ezért a Play szkenner **0 találatot** mért (a hívás a kódban végig ott volt).
+- **Ami épült:** a terméksor a **saját, fordított sablonunkból** épül (`Hungarian Hardstyle {variant} letöltés: {title}` → `… download: …`), és a Play-listázás **angol** változatot is kap (`en-US`), hogy a vásárlási lap is helyes legyen; minden tartalom-képernyő `.when(...)` hívása `skipLoadingOnReload: true`-t kapott (a meglévő tartalom a helyén marad); új **születésnapi köszöntés** (`functions/birthday-plan.js` + napi 09:00-i kör, időzóna-helyes nap-számítás, évente **egyszer** a determinisztikus kulcs miatt, magyar + angol szöveggel); a **beépített képek** optimalizálva (`tools/optimize-app-images.mjs`, kicsinyítés — **4.57 → 0.32 MB** fájl, **59.2 → 4.7 MB** memória); a `proguard-rules.pro` **megtartja** az `androidx.activity.EdgeToEdge` definíciót (mért hatás: **0 → 34** előfordulás a DEX-ben, a hivatkozó osztály a `MainActivity`).
+- **Új kapuk:** `test/services/content_refresh_keeps_scroll_test.dart` (valódi képernyőn méri, hogy görgetés után a frissítés **nem** ugrasztja a listát a tetejére + forrás-lint minden tartalom-képernyőre, névre szóló kivétellistával), `test/services/label_product_text_test.dart`, `test/services/image_asset_size_test.dart` (felbontás- és memória-plafon), `test/services/play_console_suggestions_test.dart`.
+- **Mérve:** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1230/1230**; `node tools/run-function-tests.mjs --pure` → **349/349**; **mutációs bizonyíték 11/11** (`tmp/mutation-proof-round377.mjs` — a görgetés-védelem elvétele, a termék-sor visszaállítása a Play-leírásra, a születésnapi kulcs éve, a szökőnap kezelése, a magyar-only listázás, a kép-memória (1000×1000 ikon visszatétele) stb. mind **elkapva**, bájtazonos visszaállítással); i18n-kapu → **100%**; a **377-es AAB** ellenőrzése **MINDEN ELLENŐRZÉS RENDBEN** (42 típusú értesítés-katalógus, mind a **35** changelog-sor mindhárom ABI-ban).
+- **⚠️ ŐSZINTE KORLÁT:** a Play „elavult ablak-API" jelzése **nem** a saját kódunkból jön (mért tulajdonosok: `com.google.android.play.core.common.PlayCoreDialogWrapperActivity` és újracsomagolt androidx-osztályok) — ezt a csomagolt könyvtárakkal együtt lehet csak megszüntetni; a születésnapi köszöntés **nem** tartalmaz életkort, és a dátum a profilban továbbra is rejtve marad.
 
 ### 376 — születési dátum (16+), privát jelentés és figyelmeztetés nagykorú partnernél
 - **A tulajdonos döntései:** *„legyen 16+ a regelés korhatár"*, a **születési dátum** legyen **kötelező** a regisztrációnál (a **meglévő** tagokat semmi ne zárja ki, csak felszólítás), a privát beszélgetésben legyen **„Felhasználó jelentése"**, és ha egy **16–17 éves** tag **nagykorú** partnerrel beszél, **alapból** látszódjon figyelmeztető sáv. Később: *„indulhat az első fázis"* (szerveroldali jelzőrendszer), *„terjesszük ki angolra is"*.

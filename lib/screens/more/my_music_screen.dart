@@ -906,6 +906,10 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
 
     return _Scaffold(
       child: library.when(
+        // A háttér-frissítés megtartja a listát — a görgetés nem ugrik vissza a
+        // tetejére (lásd `releases_screen.dart`, ugyanaz a hiba-osztály).
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _Notice(
           icon: Icons.cloud_off,
@@ -913,6 +917,8 @@ class _MyMusicScreenState extends ConsumerState<MyMusicScreen> {
           body: userFacingError(error),
         ),
         data: (items) => releases.when(
+          skipLoadingOnReload: true,
+          skipLoadingOnRefresh: true,
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => _Notice(
             icon: Icons.cloud_off,

@@ -144,6 +144,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           child: RefreshIndicator(
             onRefresh: _refreshEvents,
             child: events.when(
+              // A háttér-frissítés ne cserélje töltő ikonra a listát — a
+              // görgetési pozíció így nem ugrik vissza a tetejére
+              // (lásd `releases_screen.dart`, ugyanaz a hiba-osztály).
+              skipLoadingOnReload: true,
+              skipLoadingOnRefresh: true,
               loading: () => ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(

@@ -7,9 +7,9 @@ const blocks = [...doc.matchAll(/```play-notes\r?\n([\s\S]*?)```/g)].map((m) =>
 
 // A blokkokat kiírjuk UTF-8 fájlokba (a PowerShell-átirányítás UTF-16-ot adna).
 const targets = [
-  ['tmp/play-376.txt', 0],
-  ['tmp/play-361-376.txt', 2],
-  ['tmp/play-355-376.txt', 3],
+  ['tmp/play-377.txt', 0],
+  ['tmp/play-361-377.txt', 2],
+  ['tmp/play-355-377.txt', 3],
 ];
 for (const [file, index] of targets) {
   fs.writeFileSync(file, `${blocks[index]}\n`, 'utf8');

@@ -38,6 +38,10 @@ class ArtistDetailScreen extends ConsumerWidget {
 
     final artist = ref.watch(artistDetailProvider(artistId));
     final title = artist.when(
+      // A háttér-frissítésnél a **korábbi cím** marad (nem villan a tartalék
+      // névre) — ugyanaz a hiba-osztály, mint a listáknál.
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
       data: (value) => value.title.trim().isEmpty ? fallbackName : value.title,
       loading: () => fallbackName,
       error: (error, stack) => fallbackName,

@@ -18,6 +18,10 @@ class FreeReleasesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const AppText('Ingyenes kiadványok')),
       body: releases.when(
+        // A háttér-frissítés megtartja a listát (nincs töltő-ikonra váltás és
+        // nincs görgetés-ugrás) — lásd `releases_screen.dart`.
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(
           child: AppText('Az ingyenes kiadványok nem tölthetők be.'),

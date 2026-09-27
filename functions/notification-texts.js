@@ -225,6 +225,27 @@ const TEXTS = {
       body: 'A date of birth is now required for every member. Open your profile (Chat tab → profile icon → Edit profile) and add it.',
     },
   },
+  // ⚠️ 2026-09-27: a **születésnapi köszöntés** (a tulajdonos kérése: *„akinek
+  // születésnapja van, az adott napon kapjon egy Boldog szülinapos Notifyt,
+  // szépen megfogalmazva"*). A küldő kör naponta fut
+  // (`exports.sendBirthdayGreetings`), de a `dedupeKey` évet is tartalmaz, ezért
+  // egy tag **évente egyszer** kap köszöntést.
+  //
+  // ⚠️ A `{greeting}` helyőrző a **megszólítás** („Kedves Anna! " / „Dear Anna! "),
+  // és **üres** is lehet: aki nem adott meg megjelenített nevet, az is olvasható
+  // köszöntést kap (a mondat ilyenkor a csapattal kezdődik). A megszólítást a
+  // `functions/birthday-plan.js` állítja össze (`birthdayGreeting`), hogy a
+  // szöveg nyelvtanilag mindkét nyelven helyes legyen.
+  birthday: {
+    hu: {
+      title: 'Boldog születésnapot! 🎂',
+      body: '{greeting}A Hungarian Hardstyle csapata boldog születésnapot kíván! Köszönjük, hogy velünk vagy.',
+    },
+    en: {
+      title: 'Happy birthday! 🎂',
+      body: '{greeting}The Hungarian Hardstyle team wishes you a very happy birthday! Thank you for being with us.',
+    },
+  },
   // ⚠️ 2026-09-26: a privát üzenet címe eddig **beégetve, magyarul** állt
   // (`functions/index.js`, a privát üzenet ágán), ezért az angol felületű
   // címzett magyar címet kapott — és a kliens ebből a címből fejtette vissza a

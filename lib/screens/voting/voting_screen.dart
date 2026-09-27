@@ -208,6 +208,10 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
     return Scaffold(
       appBar: AppBar(title: const AppText('HUHS szavazás')),
       body: voting.when(
+        // A háttér-frissítés megtartja a tartalmat (nincs töltő-ikonra váltás és
+        // nincs görgetés-ugrás) — lásd `releases_screen.dart`.
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
           child: AppText(

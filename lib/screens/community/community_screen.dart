@@ -1713,6 +1713,10 @@ class _LiveFeedScreenState extends ConsumerState<LiveFeedScreen> {
             );
             final postList = Expanded(
               child: posts.when(
+                // A háttér-frissítés megtartja a Chat-listát: a görgetési
+                // pozíció nem veszik el (lásd `releases_screen.dart`).
+                skipLoadingOnReload: true,
+                skipLoadingOnRefresh: true,
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => Center(
                   child: Text(

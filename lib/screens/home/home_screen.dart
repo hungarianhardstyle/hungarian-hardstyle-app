@@ -474,6 +474,9 @@ class HomeScreen extends ConsumerWidget {
                         ref
                             .watch(votingProvider)
                             .when(
+                              // A háttér-frissítés ne villantsa el a kártyát.
+                              skipLoadingOnReload: true,
+                              skipLoadingOnRefresh: true,
                               loading: () => const SizedBox.shrink(),
                               error: (_, _) => const SizedBox.shrink(),
                               data: (season) => season.active || season.isClosed
@@ -516,6 +519,10 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     news.when(
+                      // A háttér-frissítés megtartja a híreket — a főoldal így
+                      // nem ugrik vissza a tetejére (lásd `releases_screen.dart`).
+                      skipLoadingOnReload: true,
+                      skipLoadingOnRefresh: true,
                       loading: () => const Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),
                         child: Center(child: BrandLoadingIndicator()),
@@ -578,6 +585,9 @@ class HomeScreen extends ConsumerWidget {
                               onTap: onShowMoreNews,
                             ),
                             activeGame.when(
+                              // A háttér-frissítés ne villantsa el a kártyát.
+                              skipLoadingOnReload: true,
+                              skipLoadingOnRefresh: true,
                               loading: () => const SizedBox.shrink(),
                               error: (_, _) => const SizedBox.shrink(),
                               data: (game) {
@@ -588,6 +598,8 @@ class HomeScreen extends ConsumerWidget {
                                   );
                                 }
                                 return latestGameResults.when(
+                                  skipLoadingOnReload: true,
+                                  skipLoadingOnRefresh: true,
                                   loading: () => const SizedBox.shrink(),
                                   error: (_, _) => const SizedBox.shrink(),
                                   data: (resultsGame) => resultsGame == null
@@ -615,6 +627,10 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 14),
                     events.when(
+                      // Ugyanaz: a háttér-frissítés ne cserélje töltő ikonra a
+                      // kártyákat (nincs görgetés-ugrás).
+                      skipLoadingOnReload: true,
+                      skipLoadingOnRefresh: true,
                       loading: () => const SizedBox(
                         height: 210,
                         child: Center(child: BrandLoadingIndicator()),

@@ -2845,13 +2845,6 @@
     ]
   },
   {
-    "value": "A vásárlás a Google Playből telepített alkalmazásban érhető el.",
-    "count": 1,
-    "files": [
-      "lib/screens/releases/release_detail_screen.dart"
-    ]
-  },
-  {
     "value": "A vásárlás ellenőrzése és véglegesítése sikeres.",
     "count": 1,
     "files": [
@@ -4875,6 +4868,13 @@
     ]
   },
   {
+    "value": "Hungarian Hardstyle {variant} letöltés: {title}",
+    "count": 1,
+    "files": [
+      "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
     "value": "Hungarian Hardstyle meghívó",
     "count": 1,
     "files": [
@@ -6181,13 +6181,6 @@
     "count": 1,
     "files": [
       "lib/screens/more/my_music_screen.dart"
-    ]
-  },
-  {
-    "value": "Megvásárolható a Google Playen • {price} Ft",
-    "count": 1,
-    "files": [
-      "lib/screens/releases/release_detail_screen.dart"
     ]
   },
   {
