@@ -1,17 +1,25 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 376 megy fel** (versionCode **376**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
-> 2026-09-27): a **374 MÁR FENT VAN a zárt teszten** (`completed`, 100%), az **ÉLES sávon a 360**, a
-> `beta` sávon a 354. A 376 a **gyermekbiztonsági kört** hozza: a regisztrációnál **kötelező a
-> születési dátum** és **16+ a korhatár**, a dátumot a profilban lehet megadni (alapból **rejtve**, a
-> megjelenítés a felhasználó döntése), a **meglévő tagokat** a Chat fül sávja és felugró kérése
-> szólítja meg, a **privát beszélgetésben lehet jelenteni** a másik felet, és ha egy **16–17 éves**
-> tag **nagykorú** partnerrel beszél, **alapból figyelmeztető sáv** jelenik meg. A szerveroldalon
-> elindult az **1. fázisú gyermekbiztonsági jelzőrendszer** (életkor-különbség + magyar/angol
-> kulcsszó-jelek → jelzés a moderátoroknak; a részletek a `docs/GYERMEKBIZTONSAG-MODERACIO-JAVASLAT.md`-ben).
+> **✅ A 376 MÁR KINT VAN A ZÁRT TESZTEN (alpha) — 100%-ban** *(a tulajdonos döntése: „előbb zárt bétába
+> megy")*, ugyanezzel az 1. blokkal. **Mérve** (`node tools/check-play-track.mjs`, 2026-09-27):
+> **alpha = 376** (`completed`, 100%, a kiadási szöveg pontosan az 1. blokk), **production = 375**
+> (`completed`, 100%), **beta = 354**. Vagyis a **következő lépés a nyilvános (production) kiadás**
+> ugyanezzel a szöveggel — a 375-ön lévő felhasználók a **376** újdonságait kapják (a 375 javításait már
+> megkapták).
+>
+> A 376 a **gyermekbiztonsági kört** hozza: a regisztrációnál **kötelező a születési dátum** és **16+ a
+> korhatár**, a dátumot a profilban lehet megadni (alapból **rejtve**, a megjelenítés a felhasználó
+> döntése), a **meglévő tagokat** a Chat fül sávja és felugró kérése szólítja meg, a **privát
+> beszélgetésben lehet jelenteni** a másik felet, és ha egy **16–17 éves** tag **nagykorú** partnerrel
+> beszél, **alapból figyelmeztető sáv** jelenik meg. A szerveroldalon elindult az **1. fázisú
+> gyermekbiztonsági jelzőrendszer** (életkor-különbség + magyar/angol kulcsszó-jelek → jelzés a
+> moderátoroknak; a részletek a `docs/GYERMEKBIZTONSAG-MODERACIO-JAVASLAT.md`-ben).
 > A 376 a **375 minden** újdonságát is tartalmazza (a „WAV (ingyenes)", a @mindenki keveredése, a
-> hibaüzenetek nyelve), az pedig a korábbiakét. A nyilvános kiadáshoz a **361–376 összesítő**
-> (1b-2.), a bétához a **355–376 összesítő** (1b-3.) való.
+> hibaüzenetek nyelve), az pedig a korábbiakét.
+> **Melyik blokk hova való:** aki **375-ről** jön (a mostani production), annak az **1. blokk** való;
+> aki **360-ról** (egy régebbi nyilvános build), annak a **361–376 összesítő** (1b-2.); aki a **bétáról
+> (354)**, annak a **355–376 összesítő** (1b-3.). A **zárt teszt (alpha)** már a 376-ot futtatja, ezért
+> oda **nem** kell új szöveg.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -39,21 +47,21 @@ Az apphoz csak az **AAB (376)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
-A Play Developer API-t **olvasásra** kérdezve (**2026-09-26**, a legfrissebb mérés):
+A Play Developer API-t **olvasásra** kérdezve (**2026-09-27**, a legfrissebb mérés):
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **production (nyilvános — ÉLES)** | **completed** (100%-ban kigördült) | **360** — „360 (1.0.0)" |
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **365** — „365 (1.0.0)" |
+| **production (nyilvános — ÉLES)** | **completed** (100%-ban kigördült) | **375** — „375 (1.0.0)" |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **376** — „376 (1.0.0)" ✅ |
 | beta | completed (100%) | 354 |
 | internal | completed (278) + egy **üres piszkozat** | 278 |
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
-- **Az ÉLES sávon a 360 van** (`completed`, 100%, a 360-as szöveggel: `@mindenki` + a Chat-értesítés odaugrása) — **ez a mért állapot 2026-09-26-án**, és ez az, amit a nyilvános felhasználók használnak.
-- **A zárt teszten MÁR A 365 FUT** (a tulajdonos feltöltötte, `completed` 100%), és a kiadási szövege **pontosan a 361–365 összesítő** (visszaolvasva a Playről: *„ÚJ: HU/EN nyelvváltó…"*, *„…a válasz idézetére koppintva az app az eredeti üzenetre ugrik"*, *„…a »Bulizó« szerepkör felirata »Partyface«"*).
-- A feltöltött AAB-ek a Playen (a 2026-09-26-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 352, 353, 354, 355, **357**, 358, 359, **360**, **365**.
-- **A 365 a zárt teszt csúcsa**, ezért a következő lépés a **production sávra** való kirollázás (a 361–365 szöveggel), és **nem** kell új AAB-ot feltölteni: a **365-ös csomag már fent van** a Playen, csak át kell vinni a sávot.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**360**) a legutóbb **nyilvánosan** kigördült build — ezért a **következő nyilvános** kiadáshoz a **361–365 összesítő** való (az **1b-2. blokk**): ami a 360 óta történt, az a **nyelvváltó** + angol tartalom, az angol felület teljessé tétele, a **többnyelvű értesítések**, a **hírlista-frissesség**, a **Chat-idézet odaugrása** és a „Partyface" felirat.
+- **A 376 MÁR A ZÁRT TESZTEN VAN** (`completed`, 100%) — a tulajdonos döntése szerint *„előbb zárt bétába megy"*, és a kiadási szövege **pontosan a fenti 1. blokk** (visszaolvasva a Playről: *„ÚJ: a regisztrációhoz mostantól kötelező a születési dátum…"*).
+- **Az ÉLES (production) sávon a 375 van** (`completed`, 100%) — ez az, amit a nyilvános felhasználók használnak. **A következő nyilvános kiadás a 376** (ugyanezzel az 1. blokkal), mert a 375 már kint van: nem kell új AAB-ot építeni, a **376-os csomag már fent van a Playen**, csak át kell vinni a sávot.
+- A feltöltött AAB-ek a Playen (a 2026-09-27-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 353, 354, 355, 358, 360, **372**, **373**, **374**, **375**, **376**.
+- **A bétán a 354 fut**, ezért ha a 376-ot oda is felviszed, a **355–376 összesítő** (1b-3.) való.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**360**) a legutóbb **nyilvánosan** kigördült build — ezért aki **360-ról** jön, annak a **361–376 összesítő** (1b-2.) való; aki **375-ről** (a mostani éles), annak az **1. blokk**.
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -229,10 +237,12 @@ dokumentációnak marad itt).
 
 ## 1b-2. Play Console — a **361–376** összesítő (a 360 után)
 
-**Ezt használd, ha a felhasználó a 360-ról jön** (ez az ÉLES sáv jelenlegi buildje) — vagyis csak azok
+**Ezt használd, ha a felhasználó a 360-ról jön** (egy régebbi nyilvános build) — vagyis csak azok
 az újdonságok szerepelnek benne, amelyek a **361–376** között készültek (a 359/360 `@mindenki`-je
 **nincs** benne, mert azt a 360 már megkapta — a **push** viszont új, ezért az benne van). A
 karakter-számot a `tools/check-play-notes.mjs` méri.
+⚠️ **2026-09-27-től az ÉLES sávon már a 375 van**, ezért aki **375-ről** jön, annak **nem** ez a blokk,
+hanem az **1. blokk** (a 376 újdonságai) való.
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
