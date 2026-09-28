@@ -1,5 +1,13 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🔵 LINK-FELOLDÁS + MÉLYLINK (2.14.10 + kliens, 2026-09-28)
+
+- **Kliens (381 előkészítés, kész):** `lib/services/content_link_route.dart` — a **mért** permalink-alakok értelmezése (`/events/…` → esemény, `/releases/…` → kiadvány, `/djs/…` → DJ, `/2026/09/26/…` → **hír**, `/invite/{kód}`, `/?p={id}` → azonosító), idegen domain/séma → `unknown` (főoldal). A `AndroidManifest.xml` mostantól fogja az `/invite`, `/events`, `/releases`, `/djs` útvonalakat (`autoVerify` marad). Teszt: `test/services/content_link_route_test.dart` **8/8**, teljes kör **1301/1301**; commit `42d5d60b`.
+- **Szerver (2.14.10):** új, **nyilvános, csak olvasó** végpont (`GET /wp-json/huhs/v1/resolve?p={id}` vagy `?slug={slug}`) → `{type, id, title, url}`; a típus-térkép **mért** (`huhs_event/release/artist`, a hír `post`), csak **publikált** tartalmat ad vissza, ismeretlenre **404** (`WP_Error`). Ez fordítja le a slugot/azonosítót arra, amivel az app adatlapja nyílik.
+- **BIZONYÍTÉK:** Docker-harness: **49** lintelt fájl, **117/117**, **117/117**, **72/72** (9 új: típus-térkép, HTML-feloldott cím, `page` kizárva, ismeretlen azonosító/slug → 404, slug-feloldás, forrás-lint), push-lánc **12/12**, mind az **öt** jelző → **MINDEN ELLENŐRZÉS RENDBEN**; `verify-plugin-package.mjs` → rendben.
+- **⚠️ MÉRT SAJÁT HIBA:** a stub `get_post()` minden azonosítóra adott találatot, ezért az „ismeretlen azonosító → 404" ellenőrzés **elhasalt** (a kapu jól működött); a javítás a stubban: a nem létező azonosítókról a teszt **külön jelöléssel** tud (`huhs_missing_posts`), mint a valódi WordPress `null`-ja.
+- **⚠️ HÁTRAVAN:** a feloldó bekötése az app útvonalválasztásába + az onboarding (mindkettő a **381-es build**), és a QR-kód. A plugin **2.14.10** feltöltése a tulajdonos lépése.
+
 ### 🔵 KEDVENC-ALAPÚ PUSH-CÉLZÁS — A PLUGIN OLDALA KÉSZ (2.14.9, 2026-09-28)
 
 - **MIÉRT:** a cél az, hogy a **kedvelt DJ/szervező új tartalma** elérje a ~1010 eszközt. A plugin token-rekordja eddig **nem tudott a kedvencekről** (csak nyelv + `enabled`/`news`/`events`/`releases`/`reminders`), ezért ez a rész most készült el a WordPress oldalon; a kliens a **381-es buildben** küldi majd a kedvenceket.

@@ -98,7 +98,24 @@ function get_post_meta($postId, $key, $single = false)
     return $GLOBALS['huhs_meta'][$postId][$key] ?? '';
 }
 function update_post_meta($postId, $key, $value) { $GLOBALS['huhs_meta'][$postId][$key] = $value; return true; }
-function get_post($id) { return (object) array('ID' => (int) $id, 'post_status' => 'publish'); }
+function get_post($id)
+{
+    // 2.14.10: a `post_type` is kell a link-feloldáshoz, és a **nem létező**
+    // azonosító `null`-t ad (mint a valódi WordPress) — a `huhs_missing_posts`
+    // jelöli azokat az azonosítókat, amelyekről a teszt tudja, hogy nincsenek.
+    if (!empty($GLOBALS['huhs_missing_posts'][(int) $id])) return null;
+    return (object) array(
+        'ID' => (int) $id,
+        'post_status' => 'publish',
+        'post_type' => $GLOBALS['huhs_post_types'][(int) $id] ?? 'post',
+    );
+}
+function sanitize_title($value)
+{
+    $clean = strtolower(trim((string) $value));
+    return preg_replace('/[^a-z0-9\-]/', '-', $clean);
+}
+function get_permalink($post) { return 'https://hungarianhardstyle.hu/t/' . $post->ID . '/'; }
 function get_posts($args = array()) { return $GLOBALS['huhs_posts']; }
 function wp_schedule_single_event($when, $hook, $args = array())
 {
@@ -413,6 +430,43 @@ check('a tartalom-push átadja a szereplőket',
 check('a beállítás-küldés tárolja a kedvenceket',
     strpos($pushSource, "'artists' => huhs_push_favorite_ids(\$params['artists']") !== false
     && strpos($pushSource, "'organizers' => huhs_push_favorite_ids(\$params['organizers']") !== false);
+
+// --- 10) MEGOSZTOTT LINK FELOLDÁSA (2.14.10) --------------------------------
+$GLOBALS['huhs_post_types'] = array(12505 => 'huhs_event', 12699 => 'huhs_release', 42 => 'huhs_artist', 777 => 'post', 888 => 'page');
+// A 99999 NEM létezik — a stub innen tudja (a valódi `get_post()` null-t ad rá).
+$GLOBALS['huhs_missing_posts'] = array(99999 => true);
+$GLOBALS['huhs_titles'][12699] = 'Goze &amp; Change of Pace';
+$resolve = function ($params) {
+    return huhs_resolve_content_target(new WP_REST_Request($params));
+};
+$resolved = array();
+foreach (array(12505, 12699, 42, 777) as $id) {
+    $answer = $resolve(array('p' => $id));
+    $resolved[$id] = $answer instanceof WP_REST_Response ? $answer->get_data() : array();
+}
+check('az esemény-azonosító eseményt ad',
+    ($resolved[12505]['type'] ?? '') === 'event' && $resolved[12505]['id'] === 12505, json_encode($resolved[12505] ?? array()));
+check('a kiadvány és a DJ is a saját típusát adja',
+    ($resolved[12699]['type'] ?? '') === 'release' && ($resolved[42]['type'] ?? '') === 'artist');
+check('a hír (`post`) hírként oldódik fel', ($resolved[777]['type'] ?? '') === 'news');
+check('a cím HTML-feloldással jön (nem `&amp;`)',
+    ($resolved[12699]['title'] ?? '') === 'Goze & Change of Pace', $resolved[12699]['title'] ?? '');
+check('ismeretlen típus (page) nem oldódik fel', $resolve(array('p' => 888)) instanceof WP_Error);
+check('ismeretlen azonosító 404-es hiba', (function () use ($resolve) {
+    $answer = $resolve(array('p' => 99999));
+    return $answer instanceof WP_Error && $answer->get_error_code() === 'not_found';
+})());
+
+// Slug-alapú feloldás (a szép permalinkhez): a `get_posts` stub adja a találatot.
+$GLOBALS['huhs_posts'] = array((object) array('ID' => 12505, 'post_status' => 'publish', 'post_type' => 'huhs_event'));
+$bySlug = $resolve(array('slug' => 'hard-base-classic'));
+check('a slugból is megvan a típus és az azonosító',
+    ($bySlug instanceof WP_REST_Response) && ($bySlug->get_data()['id'] ?? 0) === 12505 && ($bySlug->get_data()['type'] ?? '') === 'event');
+$GLOBALS['huhs_posts'] = array();
+check('nem létező slug → 404', $resolve(array('slug' => 'nincs-ilyen')) instanceof WP_Error);
+check('a feloldó végpont nyilvános, de CSAK OLVAS',
+    strpos($pushSource, "'/resolve'") !== false
+    && strpos($pushSource, "'methods' => 'GET',\n        'callback' => 'huhs_resolve_content_target'") !== false);
 
 // --- Összegzés -------------------------------------------------------------
 $ok = $failures === 0;
