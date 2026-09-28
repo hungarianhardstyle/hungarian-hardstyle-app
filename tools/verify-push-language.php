@@ -43,9 +43,56 @@ $GLOBALS['huhs_kinds'] = array();
 function add_action(...$args) { return true; }
 function add_filter(...$args) { return true; }
 function register_rest_route(...$args) { return true; }
-function get_option($name, $default = false) { return $default; }
-function update_option(...$args) { return true; }
-function delete_option(...$args) { return true; }
+// ⚠️ 2.14.8: a beállítások VALÓDI tárolót kapnak — a heti összefoglaló
+// idempotenciáját („erre a hétre már kiment") csak így lehet mérni; a korábbi
+// stub mindig az alapértéket adta vissza.
+$GLOBALS['huhs_options'] = array();
+function get_option($name, $default = false)
+{
+    return array_key_exists($name, $GLOBALS['huhs_options']) ? $GLOBALS['huhs_options'][$name] : $default;
+}
+function update_option($name, $value, $autoload = null) { $GLOBALS['huhs_options'][$name] = $value; return true; }
+function delete_option($name) { unset($GLOBALS['huhs_options'][$name]); return true; }
+function add_option($name, $value, $deprecated = '', $autoload = null)
+{
+    if (array_key_exists($name, $GLOBALS['huhs_options'])) return false;
+    $GLOBALS['huhs_options'][$name] = $value;
+    return true;
+}
+function current_user_can($cap) { return $cap === 'manage_options'; }
+function sanitize_text_field($value) { return trim(preg_replace('/[\r\n\t]+/', ' ', strip_tags((string) $value))); }
+function sanitize_textarea_field($value) { return trim(strip_tags((string) $value)); }
+
+class WP_Error
+{
+    public $code;
+    public $message;
+    public function __construct($code = '', $message = '', $data = array())
+    {
+        $this->code = $code;
+        $this->message = $message;
+    }
+    public function get_error_code() { return $this->code; }
+}
+class WP_REST_Response
+{
+    public $data;
+    public $status;
+    public function __construct($data = null, $status = 200)
+    {
+        $this->data = $data;
+        $this->status = $status;
+    }
+    public function get_data() { return $this->data; }
+    public function get_status() { return $this->status; }
+}
+class WP_REST_Request
+{
+    private $params;
+    public function __construct($params = array()) { $this->params = $params; }
+    public function get_json_params() { return $this->params; }
+    public function get_param($key) { return $this->params[$key] ?? null; }
+}
 function get_post_meta($postId, $key, $single = false)
 {
     return $GLOBALS['huhs_meta'][$postId][$key] ?? '';
@@ -257,6 +304,70 @@ check('a NÉGY ablak címe KÜLÖNBÖZŐ (nem ugyanaz a szöveg négy ablakon)',
     }
     return count(array_unique($titles)) === 8;
 })());
+
+// --- 8) HETI ÖSSZEFOGLALÓ minden eszközre (2.14.8) -------------------------
+$pushSource = file_get_contents($pluginDir . '/includes/push.php');
+
+$cleaned = huhs_push_digest_texts(array(
+    'hu' => array('title' => 'Heti összefoglaló', 'body' => '2 új hír · 1 esemény'),
+    'en' => array('title' => 'Weekly recap', 'body' => '2 new stories'),
+    'de' => array('title' => 'Woche', 'body' => 'x'),
+));
+check('a szövegek csak a támogatott nyelvekre szűrődnek', array_keys($cleaned) === array('hu', 'en'), implode(',', array_keys($cleaned)));
+check('hiányos pár (nincs törzs) kimarad', huhs_push_digest_texts(array('hu' => array('title' => 'Csak cím'))) === array());
+check('üres payload → nincs küldhető szöveg', huhs_push_digest_texts(array()) === array());
+$trimmed = huhs_push_digest_texts(array('hu' => array('title' => "<b>Cím</b>\n", 'body' => '<i>Törzs</i>')));
+check('a címből kikerül a tördelés és a HTML', ($trimmed['hu']['title'] ?? '') === 'Cím', $trimmed['hu']['title'] ?? '');
+
+$noWeek = huhs_push_weekly_digest(new WP_REST_Request(array('texts' => array('hu' => array('title' => 'A', 'body' => 'B')))));
+check('hiányzó hét → hiba', $noWeek instanceof WP_Error && $noWeek->get_error_code() === 'invalid_week');
+$noTexts = huhs_push_weekly_digest(new WP_REST_Request(array('week' => '2026-W40')));
+check('nincs küldhető szöveg → hiba', $noTexts instanceof WP_Error && $noTexts->get_error_code() === 'invalid_texts');
+
+// A célzás: nyelvenként, a beállítások tiszteletben tartásával.
+$GLOBALS['huhs_options'][HUHS_PUSH_TOKENS_OPTION] = array(
+    'a' => array('token' => str_repeat('a', 24), 'language' => 'hu'),
+    'b' => array('token' => str_repeat('b', 24), 'language' => 'hu', 'digest' => false),
+    'c' => array('token' => str_repeat('c', 24), 'language' => 'en'),
+    'd' => array('token' => str_repeat('d', 24), 'language' => 'en', 'enabled' => false),
+    'e' => array('token' => str_repeat('e', 24), 'language' => 'hu', 'reminders' => false),
+);
+$tokens = $GLOBALS['huhs_options'][HUHS_PUSH_TOKENS_OPTION];
+$reach = huhs_push_digest_reach();
+check('az elérés nyelvenként: hu 2, en 1', $reach['hu'] === 2 && $reach['en'] === 1 && $reach['total'] === 3, json_encode($reach));
+check('aki kikapcsolta az értesítéseket, kimarad', count(huhs_push_recipients($tokens, array('type' => 'digest'), 'en')) === 1);
+check('a `digest = false` kimarad a heti összefoglalóból', count(huhs_push_recipients($tokens, array('type' => 'digest'), 'hu')) === 2);
+// ⚠️ A 2.14.8-ban javított hiba: a `reminders` kapu eddig MINDEN `kind`-os
+// küldést szűrt — aki az emlékeztetőt kikapcsolta, a heti összefoglalót is
+// elvesztette volna. Mostantól csak a `kind = reminder` esetén szűr.
+check('a `reminders = false` NEM zárja ki a heti összefoglalót', count(huhs_push_recipients($tokens, array('type' => 'digest', 'kind' => 'digest'), '')) === 3);
+check('a `reminders = false` KIZÁR az esemény-emlékeztetőből', count(huhs_push_recipients($tokens, array('type' => 'event', 'kind' => 'reminder'), '')) === 3);
+
+$dryTexts = array(
+    'hu' => array('title' => 'Heti összefoglaló', 'body' => '2 új hír · 1 esemény'),
+    'en' => array('title' => 'Weekly recap', 'body' => '2 new stories · 1 upcoming event'),
+);
+$dry = huhs_push_weekly_digest(new WP_REST_Request(array('week' => '2026-W40', 'dry_run' => true, 'texts' => $dryTexts)));
+$dryData = $dry instanceof WP_REST_Response ? $dry->get_data() : array();
+check('száraz kör: nem küld, de megméri az elérést',
+    ($dryData['dryRun'] ?? false) === true && ($dryData['sent'] ?? -1) === 0 && ($dryData['reach']['total'] ?? 0) === 3,
+    json_encode($dryData));
+
+$GLOBALS['huhs_options'][HUHS_PUSH_DIGEST_WEEK_OPTION] = '2026-W40';
+$dup = huhs_push_weekly_digest(new WP_REST_Request(array('week' => '2026-W40', 'texts' => $dryTexts)));
+$dupData = $dup instanceof WP_REST_Response ? $dup->get_data() : array();
+check('ugyanarra a hétre nem megy ki kétszer', ($dupData['duplicate'] ?? false) === true && ($dupData['sent'] ?? -1) === 0, json_encode($dupData));
+
+check('a végpont CSAK adminnak nyílik (nem nyilvános)',
+    strpos($pushSource, "'/push/digest'") !== false
+    && strpos($pushSource, "current_user_can('manage_options')") !== false,
+    'a /push/digest route védelme');
+check('a küldés a helyi, nyelvenkénti láncon megy ki',
+    strpos($pushSource, 'huhs_push_send_localized($texts, array(') !== false);
+check('a hét jelölése a küldés UTÁN íródik',
+    strpos($pushSource, 'update_option(HUHS_PUSH_DIGEST_WEEK_OPTION') > strpos($pushSource, 'huhs_push_send_localized($texts'));
+check('a beállítás-küldés ismeri a `digest` kapcsolót',
+    strpos($pushSource, "'digest' => filter_var(\$params['digest'] ?? true") !== false);
 
 // --- Összegzés -------------------------------------------------------------
 $ok = $failures === 0;

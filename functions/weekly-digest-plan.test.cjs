@@ -171,8 +171,40 @@ test('forrás-lint: az ütemezett kör létezik és a tiszta döntést használj
   // Az üres összefoglaló nem megy ki.
   assert.match(source, /weeklyDigestPlan\(/);
   assert.match(source, /skipped: 'empty'/);
-  // Push csak akkor, ha az értesítés TÉNYLEG létrejött (nincs dupla küldés).
-  assert.match(source, /if \(!notificationCreated\) continue;/);
-  // A katalógus-típus és a hangnem a szerveroldali katalógusból jön.
-  assert.match(source, /notificationTextFor\(uid, WEEKLY_DIGEST_KIND, params\)/);
+  // A bejövő értesítés csak egyszer jön létre tagonként (a `created` a kapu).
+  assert.match(source, /if \(notificationCreated\) created \+= 1;/);
+});
+
+test('forrás-lint: a heti összefoglaló PUSH-a a WordPress-pluginon megy ki (2.14.8)', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8');
+  const start = source.indexOf('async function sendWeeklyDigestPush');
+  assert.ok(start > 0, 'van külön fan-out segéd');
+  const block = source.slice(start, source.indexOf('async function sendWeeklyDigest({', start));
+  // A token-tár a WordPressen él (~1010 eszköz) — oda kell küldeni a szöveget.
+  assert.match(block, /huhs\/v1\/push\/digest/, 'a plugin végpontjára küld');
+  assert.match(block, /JSON\.stringify\(\{ week, texts \}\)/, 'hetet és nyelvenkénti szöveget küld');
+  assert.match(block, /notificationText\(WEEKLY_DIGEST_KIND, language, params\)/, 'a szöveg a katalógusból jön');
+  assert.match(block, /Authorization: `Basic \$\{Buffer\.from\(credentials\)/, 'admin alkalmazás-jelszóval hitelesít');
+  assert.match(block, /logWarning\('weekly_digest_push_failed'/, 'a hiba best-effort, nem töri el a kört');
+  // ⚠️ A régi, Firestore-tokenes push NEM maradhat bent: az csak a ~45 profilhoz
+  // ért el, és a plugin-push mellé küldve DUPLA értesítést adott volna.
+  const run = source.slice(
+    source.indexOf('async function sendWeeklyDigest({'),
+    source.indexOf('exports.sendWeeklyDigest'),
+  );
+  assert.doesNotMatch(run, /sendMulticastToAllTokens\(/, 'nincs dupla push a regisztráltaknak');
+  assert.match(run, /await sendWeeklyDigestPush\(\{ week: weekKey, params \}\)/);
+  assert.match(run, /weekly_digest_fanout/, 'a kiküldés naplózva van (mérhető)');
+  // ⚠️ Tartalék-út: amíg a plugin 2.14.8 nincs fent, a regisztráltak a régi úton
+  // kapják meg — de CSAK hiba esetén (különben dupla push lenne).
+  assert.match(
+    run,
+    /if \(fanout\.failed\) \{[\s\S]{0,240}?pushWeeklyDigestToRegisteredUsers\(allowed, params\)/,
+    'a tartalék-út a hibaágban van',
+  );
+  const fallbackStart = source.indexOf('async function pushWeeklyDigestToRegisteredUsers');
+  assert.ok(fallbackStart > 0, 'van tartalék-út');
+  const fallback = source.slice(fallbackStart, source.indexOf('async function sendWeeklyDigest({', fallbackStart));
+  assert.match(fallback, /getPushTokens\(uid\)/);
+  assert.match(fallback, /sendMulticastToAllTokens\(/);
 });

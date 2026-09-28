@@ -8741,6 +8741,77 @@ exports.__birthdayForTests = { sendBirthdayGreetings };
  * ⚠️ **ÜRES ÖSSZEFOGLALÓ NINCS:** ha a héten nem volt hír és nincs közelgő
  * esemény, a kör kilép — nem zavarunk üres értesítéssel.
  */
+/**
+ * A heti összefoglaló PUSH-a a WordPress-pluginon keresztül (2.14.8).
+ *
+ * MIÉRT így: a Firestore csak a **regisztrált profilok** tokenjeit ismeri (~45),
+ * a plugin token-tára viszont ~1010 eszközt — nyelvenként és beállításonként.
+ * A **szöveg itt készül** (itt van a hírek/események összesítése és a
+ * nyelvtan), a **küldést** a helyi lánc végzi (`/push/digest`), így minden
+ * eszköz elérhető, és nem megy ki kétszer ugyanaz.
+ */
+async function sendWeeklyDigestPush({ week, params }) {
+  const texts = {};
+  for (const language of ['hu', 'en']) {
+    const text = notificationText(WEEKLY_DIGEST_KIND, language, params);
+    if (text?.title && text?.body) texts[language] = { title: text.title, body: text.body };
+  }
+  if (!Object.keys(texts).length) return { sent: 0, skipped: 'no-texts' };
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  try {
+    const response = await fetch(`${WORDPRESS_BASE_URL.replace('/huhs/v1', '')}/huhs/v1/push/digest`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ week, texts }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      logWarning('weekly_digest_push_failed', `${response.status} — ${body?.message || ''}`, { week });
+      return { sent: 0, failed: true, status: response.status };
+    }
+    return {
+      sent: Number(body?.sent) || 0,
+      duplicate: Boolean(body?.duplicate),
+      reach: body?.reach || null,
+      languages: Array.isArray(body?.texts) ? body.texts : [],
+    };
+  } catch (error) {
+    // Best-effort: a bejövő lista (értesítés) ilyenkor is létrejött.
+    logWarning('weekly_digest_push_failed', error?.message || String(error), { week });
+    return { sent: 0, failed: true };
+  }
+}
+
+/**
+ * TARTALÉK-ÚT: a regisztrált tagok push-ja a régi módon (Firestore-tokenekkel).
+ *
+ * MIÉRT kell: a széles körű push a plugin **2.14.8** végpontján megy ki, az
+ * viszont csak a WordPress-oldali feltöltés után él. Amíg az nincs fent, a
+ * regisztráltak ne veszítsék el a heti összefoglalót — ezért hiba esetén ez az
+ * út fut le (~45 profil; a feltöltés után már csak vészhelyzetben).
+ */
+async function pushWeeklyDigestToRegisteredUsers(uids, params) {
+  let pushed = 0;
+  for (const uid of uids) {
+    const tokens = await getPushTokens(uid);
+    if (!tokens.length) continue;
+    const text = await notificationTextFor(uid, WEEKLY_DIGEST_KIND, params);
+    const result = await sendMulticastToAllTokens(
+      {
+        notification: { title: text.title, body: text.body },
+        data: { type: WEEKLY_DIGEST_KIND },
+      },
+      tokens,
+    );
+    pushed += result.successCount;
+  }
+  return pushed;
+}
+
 async function sendWeeklyDigest({ now = Date.now() } = {}) {
   const fetchList = async (path, lang) => {
     const separator = path.includes('?') ? '&' : '?';
@@ -8783,7 +8854,6 @@ async function sendWeeklyDigest({ now = Date.now() } = {}) {
   }
 
   let created = 0;
-  let pushed = 0;
   for (const uid of allowed) {
     const dedupeKey = weeklyDigestDedupeKey(weekKey, uid);
     if (!dedupeKey) continue;
@@ -8799,21 +8869,38 @@ async function sendWeeklyDigest({ now = Date.now() } = {}) {
       targetId: '',
       dedupeKey,
     });
-    if (!notificationCreated) continue;
-    created += 1;
-    const tokens = await getPushTokens(uid);
-    if (!tokens.length) continue;
-    const text = await notificationTextFor(uid, WEEKLY_DIGEST_KIND, params);
-    const result = await sendMulticastToAllTokens(
-      {
-        notification: { title: text.title, body: text.body },
-        data: { type: WEEKLY_DIGEST_KIND },
-      },
-      tokens,
-    );
-    pushed += result.successCount;
+    if (notificationCreated) created += 1;
   }
-  return { week: weekKey, news: plan.news.length, events: plan.events.length, created, pushed };
+  // ⚠️ A PUSH szándékosan a WordPress-pluginon megy ki (2.14.8): az éri el MIND
+  // a regisztrált eszközt (~1010), nem csak a profilokat (~45). A bejövő
+  // értesítést továbbra is ez a kör hozza létre — így senki nem kap kétszer.
+  const fanout = await sendWeeklyDigestPush({ week: weekKey, params });
+  let pushed = fanout.sent;
+  if (fanout.failed) {
+    // ⚠️ Amíg a plugin 2.14.8 nincs a WordPressen, a széles körű push nem megy
+    // ki — a regisztráltak viszont ne veszítsék el: ilyenkor a régi úton küldjük.
+    pushed = await pushWeeklyDigestToRegisteredUsers(allowed, params);
+  }
+  console.info(
+    JSON.stringify({
+      event: 'weekly_digest_fanout',
+      week: weekKey,
+      created,
+      pushed,
+      duplicate: Boolean(fanout.duplicate),
+      reach: fanout.reach,
+      failed: Boolean(fanout.failed),
+      fallback: Boolean(fanout.failed),
+    }),
+  );
+  return {
+    week: weekKey,
+    news: plan.news.length,
+    events: plan.events.length,
+    created,
+    pushed,
+    reach: fanout.reach || null,
+  };
 }
 
 exports.sendWeeklyDigest = onSchedule(
