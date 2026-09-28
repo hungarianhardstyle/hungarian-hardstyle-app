@@ -22,17 +22,17 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 <!-- play-notes-meta
 currentBuild: 380
 currentVersion: 1.0.0
-lastPublishedBuild: 379
+lastPublishedBuild: 377
 aab: build/HUHS-v1.0.0+380-release.aab
 sha256: 5333764A5C80957564A988842AF54D0E5F715C46A7973C4922425522F92EC2B4
 -->
 
 ⚠️ A **380**-at a **379** után kellett építeni (a 379-et és a korábbiakat **nem** kell feltölteni: a 380
 mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
-⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.6** — ⏳ **még nincs fent** (élesben 2.14.5): a
-`build/huhs-mobile-api-2.14.6.zip` feltöltése a tulajdonos lépése. Ez hozza az **angol nyelvű**
+⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.7** — ⏳ **még nincs fent** (élesben 2.14.5): a
+`build/huhs-mobile-api-2.14.7.zip` feltöltése a tulajdonos lépése (ez **felváltja** a 2.14.6-ot). Ez hozza az **angol nyelvű**
 esemény-emlékeztetőt (a 378-as óta minden app küldi a nyelvet), a **dátumot és helyszínt** a törzsben,
-és a **javított időzítést**. A feltöltés előtt is minden működik — csak magyarul szól az emlékeztető.
+és a **javított időzítést**, valamint a **2 órával előtte** szóló emlékeztetőt (2.14.7). A feltöltés előtt is minden működik — csak magyarul szól az emlékeztető.
 A szerveroldali függvények **telepítve** vannak (`firebase deploy`): a **heti összefoglaló**
 (`sendWeeklyDigest`, vasárnap 18:00) és a **követés a kedvencek alapján** (új kiadvány/esemény a
 kedvelt DJ-től, illetve szervezőtől) — mindkettő **AAB nélkül is él**.
@@ -40,21 +40,20 @@ Az apphoz csak az **AAB (380)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
-A Play Developer API-t **olvasásra** kérdezve (**2026-09-27**, a legfrissebb mérés):
+A Play Developer API-t **olvasásra** kérdezve (**2026-09-28**, a legfrissebb mérés):
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **production (nyilvános — ÉLES)** | **completed** (100%-ban kigördült) | **375** — „375 (1.0.0)" |
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **376** — „376 (1.0.0)" ✅ |
-| beta | completed (100%) | 354 |
+| **production (nyilvános — ÉLES)** | **completed** (100%-ban kigördült) | **377** — „377 (1.0.0)" ✅ |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) + egy **üres piszkozat** | **377** — „377 (1.0.0)" ✅ |
+| beta (NYÍLT teszt) | **completed** (100%) | **377** — „377 (1.0.0)" ✅ |
 | internal | completed (278) + egy **üres piszkozat** | 278 |
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
-- **A 376 MÁR A ZÁRT TESZTEN VAN** (`completed`, 100%) — a tulajdonos döntése szerint *„előbb zárt bétába megy"*, és a kiadási szövege **pontosan a fenti 1. blokk** (visszaolvasva a Playről: *„ÚJ: a regisztrációhoz mostantól kötelező a születési dátum…"*).
-- **Az ÉLES (production) sávon a 375 van** (`completed`, 100%) — ez az, amit a nyilvános felhasználók használnak. **A következő nyilvános kiadás a 376** (ugyanezzel az 1. blokkal), mert a 375 már kint van: nem kell új AAB-ot építeni, a **376-os csomag már fent van a Playen**, csak át kell vinni a sávot.
-- A feltöltött AAB-ek a Playen (a 2026-09-27-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 353, 354, 355, 358, 360, **372**, **373**, **374**, **375**, **376**.
-- **A bétán a 354 fut**, ezért ha a 376-ot oda is felviszed, a **355–376 összesítő** (1b-3.) való.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**360**) a legutóbb **nyilvánosan** kigördült build — ezért aki **360-ról** jön, annak a **361–376 összesítő** (1b-2.) való; aki **375-ről** (a mostani éles), annak az **1. blokk**.
+- **MINDEN SÁV A 377-EN VAN** (production, zárt teszt és nyílt teszt is, `completed`, 100%) — a kiadási szövegük a **377-es**. **A következő nyilvános kiadás a 380**: a `build/HUHS-v1.0.0+380-release.aab` feltöltése után az **1. blokk** (lásd lent) való a kiadási jegyzetbe.
+- A feltöltött AAB-ek a Playen (a 2026-09-28-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 353, 354, 358, 360, 373, 374, 375, 376, **377** — ⚠️ **a 380 még nincs fent**.
+- **A nyílt teszt (beta) sávja is a 377-en van** — ha oda is felviszed a 380-at, a **355–380 összesítő** (1b-3.) való.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**377**) a legutóbb **nyilvánosan** kigördült build — ezért aki **377-ről** jön, annak az **1. blokk** való; aki **ennél régebbről**, annak a **361–380 összesítő** (1b-2.).
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
