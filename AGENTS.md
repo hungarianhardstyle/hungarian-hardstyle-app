@@ -1,5 +1,16 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🔵 KEDVENC-ALAPÚ PUSH-CÉLZÁS — A PLUGIN OLDALA KÉSZ (2.14.9, 2026-09-28)
+
+- **MIÉRT:** a cél az, hogy a **kedvelt DJ/szervező új tartalma** elérje a ~1010 eszközt. A plugin token-rekordja eddig **nem tudott a kedvencekről** (csak nyelv + `enabled`/`news`/`events`/`releases`/`reminders`), ezért ez a rész most készült el a WordPress oldalon; a kliens a **381-es buildben** küldi majd a kedvenceket.
+- **AMI ÉPÜLT (plugin 2.14.9, `tmp/plugin-2149/huhs-mobile-api`):**
+  1. a `/push/preferences` fogadja és **tárolja** a követett DJ-k/szervezők azonosítóit (`artists` / `organizers`, tisztítva: int/szöveg/`{id}` alak, ismétlődés nélkül, max **60**); ha a kliens nem küldi, a korábbi érték marad;
+  2. a **tartalom-push** (esemény/kiadvány) átadja a tartalom szereplőit — **mért meta-kulcsokból**: `artists` (JSON-tömb) és `organizer_id`;
+  3. a küldési szűrő **csak akkor szűkít, ha a rekordban VAN kedvenc**: aki követi a tartalom valamelyik szereplőjét, megkapja; aki kedvel, de **mást**, az kimarad; aki **még nem küldött kedvenceket** (minden 381 előtti kliens), az **változatlanul mindent megkap** — visszafelé kompatibilis.
+- **BIZONYÍTÉK (mind mérve):** Docker-harness a szállítandó csomagon: **49** lintelt fájl, **117/117**, **117/117**, **63/63** (a bővített nyelvi+ablak+digest+kedvenc kör), push-lánc **12/12**, mind az **öt** jelző → **MINDEN ELLENŐRZÉS RENDBEN**, kilépés **0**; `verify-plugin-package.mjs` → rendben; **ZIP:** `build/huhs-mobile-api-2.14.9.zip`, **192 227 bájt**, SHA-256 **`3CDC8BB3DB2F217898FD7FF87C2A607C15B784AE28E673559CCE504DC433BB41`**; változás-jegyzőkönyv: `docs/plugin-2.14.9-favorite-targeting.patch`.
+- **⚠️ MÉRT SAJÁT HIBA A KÖRBEN:** az új forrás-lint elsőre elhasalt (`HIBA a tartalom-push átadja a szereplőket`) — a minta `} + $followers);` volt, a valódi kód viszont `) + $followers);` (a `+` egy záró zárójel után áll). **A kapu tehát jól működött**, a mintát javítottam; utána **63/63**.
+- **⚠️ ŐSZINTE KORLÁTOK:** (1) a célzás **addig hatástalan, amíg a 381-es kliens nem küldi a kedvenceket** — aki nem küld, azt nem érinti semmi; (2) a **kedvenceléshez profil kell** (a `FavoritesNotifier` csak bejelentkezve enged), ezért a személyes célzás a **regisztrált** eszközökre terjed ki, nem mind az 1010-re — ezt a 381-es onboarding hivatott növelni; (3) a 2.14.9 **felváltja** a 2.14.8-at (egy feltöltés: digest-fan-out + kedvenc-célzás együtt).
+
 ### 🔵 HETI ÖSSZEFOGLALÓ **MINDEN ESZKÖZRE** — A SZÉLES KÖRŰ PUSH (2.14.8 + szerver, 2026-09-28)
 
 - **A MÉRT KIINDULÁS (ez a lényeg):** a push-ra regisztrált **eszköz ~1010** (WordPress-plugin token-tára), a **közösségi profil 45** (Firestore) — a heti összefoglaló eddig **csak a 45 profilhoz** ért el, mert a Cloud Function a `private_user_data.fcmTokens`-ból dolgozik. A token-tár a WordPressen él, ezért **a küldést ott kell megtenni**.

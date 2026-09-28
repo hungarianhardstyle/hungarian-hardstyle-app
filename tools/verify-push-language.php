@@ -369,6 +369,51 @@ check('a hét jelölése a küldés UTÁN íródik',
 check('a beállítás-küldés ismeri a `digest` kapcsolót',
     strpos($pushSource, "'digest' => filter_var(\$params['digest'] ?? true") !== false);
 
+// --- 9) KEDVENC-ALAPÚ CÉLZÁS (2.14.9) ---------------------------------------
+$ids = huhs_push_favorite_ids(array(7, '12', 0, -3, 'abc', array('id' => 21), array('name' => 'x'), 7));
+check('a kedvenc-azonosítók tisztítása (int, szöveg, objektum, ismétlődés nélkül)',
+    $ids === array(7, 12, 21), json_encode($ids));
+check('a plafon érvényes', count(huhs_push_favorite_ids(range(1, 200))) === 60);
+check('a nem tömb bemenet üres listát ad', huhs_push_favorite_ids('nem-tomb') === array());
+
+$GLOBALS['huhs_meta'][7001]['artists'] = json_encode(array(7, array('id' => 12)));
+$GLOBALS['huhs_meta'][7001]['organizer_id'] = '3';
+$targetsForContent = huhs_push_content_follow_targets((object) array('ID' => 7001));
+check('a tartalom szereplői a MÉRT meta-kulcsokból jönnek',
+    $targetsForContent['artists'] === array(7, 12) && $targetsForContent['organizers'] === array(3),
+    json_encode($targetsForContent));
+check('üres/meta nélküli tartalom: nincs célzás', huhs_push_content_follow_targets((object) array('ID' => 9999)) === array('artists' => array(), 'organizers' => array()));
+
+// A szűrő: aki KÖVETI a tartalmat, bent marad; aki kedvel (mást), az kimarad;
+// aki még nem küldött kedvenceket, az VÁLTOZATLANUL mindent megkap.
+$GLOBALS['huhs_options'][HUHS_PUSH_TOKENS_OPTION] = array(
+    'follows' => array('token' => str_repeat('f', 24), 'language' => 'hu', 'artists' => array(7)),
+    'followsOrg' => array('token' => str_repeat('o', 24), 'language' => 'hu', 'organizers' => array(3)),
+    'other' => array('token' => str_repeat('x', 24), 'language' => 'hu', 'artists' => array(99)),
+    'legacy' => array('token' => str_repeat('l', 24), 'language' => 'hu'),
+);
+$favoriteTokens = $GLOBALS['huhs_options'][HUHS_PUSH_TOKENS_OPTION];
+$releaseData = array('type' => 'release', 'id' => '7001') + $targetsForContent;
+$targeted = array_keys(huhs_push_recipients($favoriteTokens, $releaseData, ''));
+sort($targeted);
+check('a követő DJ ÉS a követő szervező is megkapja a tartalmat',
+    in_array('follows', $targeted, true) && in_array('followsOrg', $targeted, true), implode(',', $targeted));
+check('aki MÁST kedvel, az kimarad (ez a személyes célzás lényege)',
+    !in_array('other', $targeted, true), implode(',', $targeted));
+check('aki még nem küldött kedvenceket, az továbbra is mindent megkap (visszafelé kompatibilis)',
+    in_array('legacy', $targeted, true), implode(',', $targeted));
+check('célzás nélküli küldés (nincs szereplő a payloadban) → mindenki',
+    count(huhs_push_recipients($favoriteTokens, array('type' => 'release'), '')) === 4);
+check('a heti összefoglalót a kedvencek NEM szűkítik',
+    count(huhs_push_recipients($favoriteTokens, array('type' => 'digest', 'kind' => 'digest'), '')) === 4);
+
+check('a tartalom-push átadja a szereplőket',
+    strpos($pushSource, '$followers = huhs_push_content_follow_targets($post);') !== false
+    && strpos($pushSource, ') + $followers);') !== false);
+check('a beállítás-küldés tárolja a kedvenceket',
+    strpos($pushSource, "'artists' => huhs_push_favorite_ids(\$params['artists']") !== false
+    && strpos($pushSource, "'organizers' => huhs_push_favorite_ids(\$params['organizers']") !== false);
+
 // --- Összegzés -------------------------------------------------------------
 $ok = $failures === 0;
 echo "\n{$checks} ellenőrzés, {$failures} hiba\n";

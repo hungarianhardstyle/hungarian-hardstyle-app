@@ -29,8 +29,8 @@ sha256: 5333764A5C80957564A988842AF54D0E5F715C46A7973C4922425522F92EC2B4
 
 ⚠️ A **380**-at a **379** után kellett építeni (a 379-et és a korábbiakat **nem** kell feltölteni: a 380
 mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
-⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.8** — ⏳ **még nincs fent** (élesben 2.14.5): a
-`build/huhs-mobile-api-2.14.8.zip` feltöltése a tulajdonos lépése (ez **felváltja** a 2.14.6-ot és a 2.14.7-et). Ez hozza az **angol nyelvű**
+⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.9** — ⏳ **még nincs fent** (élesben 2.14.5): a
+`build/huhs-mobile-api-2.14.9.zip` feltöltése a tulajdonos lépése (ez **felváltja** a 2.14.6-ot, a 2.14.7-et és a 2.14.8-at). Ez hozza az **angol nyelvű**
 esemény-emlékeztetőt (a 378-as óta minden app küldi a nyelvet), a **dátumot és helyszínt** a törzsben,
 a **javított időzítést**, a **2 órával előtte** szóló emlékeztetőt (2.14.7), és a **heti összefoglaló kiküldését mind a ~1010 eszközre** (2.14.8). A feltöltés előtt is minden működik — a heti összefoglaló addig csak a regisztrált tagokhoz jut el.
 A szerveroldali függvények **telepítve** vannak (`firebase deploy`): a **heti összefoglaló**
