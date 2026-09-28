@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 379,
+    changes: [
+      'ÚJ: a hír, az esemény, a kiadvány és a DJ-adatlap is megosztható — a cím és a link mellett az app-letöltés is megy.',
+      'A megosztott link böngészőben is megnyílik, ezért az is elolvassa, aki még nem használja az appot.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 378,
     changes: [
       'ÚJ: az értesítési engedélyt már nem indításkor kérjük, hanem az első műveleted után (kedvencelés, „Ott leszek", regisztráció).',

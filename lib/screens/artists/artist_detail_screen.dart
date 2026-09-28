@@ -18,6 +18,7 @@ import '../../widgets/artist_releases_section.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/genre_chip.dart';
 import '../../providers/community_provider.dart';
+import '../../widgets/share_action.dart';
 import 'artist_edit_screen.dart';
 
 class ArtistDetailScreen extends ConsumerWidget {
@@ -54,6 +55,15 @@ class ArtistDetailScreen extends ConsumerWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        actions: [
+          ContentShareButton(
+            title: title,
+            id: artistId,
+            // A DJ-végpont **ad kanonikus linket** (`link` → `webUrl`), ezért itt
+            // nem a rövidlinkre esünk vissza — mérve: `…/djs/adam-bass/`.
+            canonicalLink: artist.valueOrNull?.webUrl,
+          ),
+        ],
       ),
       body: artist.when(
         // ⚠️ Háttér-frissítésnél a korábbi adatlap marad (nem villan spinner).

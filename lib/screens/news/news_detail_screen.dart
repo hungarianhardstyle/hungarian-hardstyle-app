@@ -20,6 +20,7 @@ import '../../widgets/post_embed_card.dart';
 import '../../widgets/post_shortcode_card.dart';
 import '../../widgets/news_reaction_button.dart';
 import '../../widgets/article_comments.dart';
+import '../../widgets/share_action.dart';
 import '../gallery/gallery_screen.dart';
 import 'tagged_news_screen.dart';
 
@@ -116,6 +117,9 @@ class _NewsDetailScreenState extends State<NewsDetailScreen>
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        actions: [
+          ContentShareButton(title: post.title, id: post.id, canonicalLink: post.link),
+        ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {

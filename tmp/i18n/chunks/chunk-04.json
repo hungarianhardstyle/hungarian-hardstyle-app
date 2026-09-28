@@ -1,4 +1,5 @@
 [
+  "yyyy. MM. dd.",
   "yyyy. MMMM d.",
   " (eddig: {d})",
   " hozzászólására: ",
@@ -57,6 +58,5 @@
   "A diagnosztika a vágólapra került.",
   "A felhasználó mentése nem sikerült: {error}",
   "A felhasználó törlése nem sikerült: {error}",
-  "A felhasználó törlése sikerült.",
-  "A felhasználó törölve; a képek háttértakarítása folyamatban van."
+  "A felhasználó törlése sikerült."
 ]

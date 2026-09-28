@@ -20,6 +20,8 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../widgets/share_action.dart';
+
 class ReleaseDetailScreen extends StatefulWidget {
   final HuhsRelease release;
 
@@ -435,7 +437,10 @@ class _ReleaseDetailScreenState extends State<ReleaseDetailScreen>
             .round()
             .clamp(1080, 1600);
     return Scaffold(
-      appBar: AppBar(title: Text(release.title)),
+      appBar: AppBar(
+        title: Text(release.title),
+        actions: [ContentShareButton(title: release.title, id: release.id)],
+      ),
       // ⚠️ FEKVŐ NÉZET (tablet): a többi adatlaphoz hasonlóan **legfeljebb
       // 1100 px** széles sávban jelenünk meg. Enélkül a teljes szélességű
       // tartalom (és a négyzetes borító) a képernyőnél is nagyobb lett — a

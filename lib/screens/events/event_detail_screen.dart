@@ -25,6 +25,7 @@ import '../../services/app_review_prompt.dart';
 import '../../services/wordpress_service.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../widgets/notification_permission_prompt.dart';
+import '../../widgets/share_action.dart';
 import 'event_meetup_screen.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
@@ -379,6 +380,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        actions: [ContentShareButton(title: event.title, id: event.id)],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {

@@ -1,4 +1,5 @@
 [
+  "A szavazatod sikeresen rögzítettük. Ebben az éves szavazásban erről a készülékről már nem adhatsz le újabb szavazatot.",
   "A szavazatot most nem sikerült rögzíteni. Próbáld újra.",
   "A szerkesztés nem sikerült: {error}",
   "A szervezői adatlap csak ellenőrzés és jóváhagyás után jelenhet meg.",
@@ -57,6 +58,5 @@
   "Android-kódos feloldás",
   "API-cím",
   "API-verzió",
-  "App verzió: {version}\n\nHiba leírása:\n",
-  "Apple Music"
+  "App verzió: {version}\n\nHiba leírása:\n"
 ]

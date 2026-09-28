@@ -1256,6 +1256,14 @@
     ]
   },
   {
+    "value": "Megosztás…",
+    "count": 2,
+    "files": [
+      "lib/screens/more/referral_screen.dart",
+      "lib/widgets/share_action.dart"
+    ]
+  },
+  {
     "value": "Mentés…",
     "count": 2,
     "files": [
@@ -6175,13 +6183,6 @@
     "count": 1,
     "files": [
       "lib/core/navigation/in_app_browser.dart"
-    ]
-  },
-  {
-    "value": "Megosztás…",
-    "count": 1,
-    "files": [
-      "lib/screens/more/referral_screen.dart"
     ]
   },
   {

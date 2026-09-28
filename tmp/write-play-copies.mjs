@@ -10,9 +10,9 @@ const blocks = [...doc.matchAll(/```play-notes\r?\n([\s\S]*?)```/g)].map((m) =>
 // buildhez), 2 = 1b-2 összesítő, 3 = 1b-3 (béta) összesítő. A fájlnevet minden
 // körben a **build számához** kell igazítani (378).
 const targets = [
-  ['tmp/play-378.txt', 0],
-  ['tmp/play-361-378.txt', 2],
-  ['tmp/play-355-378.txt', 3],
+  ['tmp/play-379.txt', 0],
+  ['tmp/play-361-379.txt', 2],
+  ['tmp/play-355-379.txt', 3],
 ];
 for (const [file, index] of targets) {
   fs.writeFileSync(file, `${blocks[index]}\n`, 'utf8');

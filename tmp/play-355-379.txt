@@ -1,0 +1,6 @@
+- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
+- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva odaugrik.
+- ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
+- ÚJ: születésnapi köszöntés; a Label-termékek leírása is angolul szól.
+- Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
+- ÚJ: heti összefoglaló vasárnap; megosztható hírek, események és DJ-adatlapok.

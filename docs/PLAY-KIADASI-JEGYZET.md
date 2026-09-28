@@ -20,22 +20,22 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 378
+currentBuild: 379
 currentVersion: 1.0.0
-lastPublishedBuild: 377
-aab: build/HUHS-v1.0.0+378-release.aab
-sha256: E0350326E889B15858791FAEDC131E12A1447AF0C1540D6201A24D7E7F2380BA
+lastPublishedBuild: 378
+aab: build/HUHS-v1.0.0+379-release.aab
+sha256: 83EA23726EDC294ED0FA49109B1592602E6CC8499DEB4044984CAA7B304BD534
 -->
 
-⚠️ A **378**-at a **377** után kellett építeni (a 377-et és a korábbiakat **nem** kell feltölteni: a 378
+⚠️ A **379**-et a **378** után kellett építeni (a 378-at és a korábbiakat **nem** kell feltölteni: a 379
 mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
 ⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.6** — ⏳ **még nincs fent** (élesben 2.14.5): a
 `build/huhs-mobile-api-2.14.6.zip` feltöltése a tulajdonos lépése. Ez hozza az **angol nyelvű**
-esemény-emlékeztetőt (a 378-as app küldi a nyelvet), a **dátumot és helyszínt** a törzsben, és a
-**javított időzítést**. A feltöltés előtt is minden működik — csak magyarul szól az emlékeztető.
+esemény-emlékeztetőt (a 378-as és 379-es app küldi a nyelvet), a **dátumot és helyszínt** a törzsben,
+és a **javított időzítést**. A feltöltés előtt is minden működik — csak magyarul szól az emlékeztető.
 A szerveroldali függvények **telepítve** vannak (`firebase deploy`), benne a **heti összefoglaló**
 (`sendWeeklyDigest`, vasárnap 18:00) — az **AAB nélkül is él**.
-Az apphoz csak az **AAB (378)** feltöltése kell.
+Az apphoz csak az **AAB (379)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -205,10 +205,8 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ: az értesítési engedélyt már nem indításkor kérjük, hanem az első műveleted után.
-- ÚJ: vasárnap esténként heti összefoglalót kapsz — a hét hírei és a közelgő események.
-- ÚJ: az app egyszer megkérdezi a Play Áruházban, hogy elégedett vagy-e.
-- Stabilabb app: a hibákat névtelenül naplózzuk, így gyorsabban javíthatók.
+- ÚJ: a hír, az esemény, a kiadvány és a DJ-adatlap is megosztható — az app-letöltéssel együtt.
+- A megosztott link böngészőben is megnyílik, ezért az is elolvassa, aki még nem használja az appot.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -226,13 +224,13 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–378** összesítő (a 377 után)
+## 1b-2. Play Console — a **361–379** összesítő (a 378 után)
 
 **Ezt használd, ha a felhasználó a 360-ról jön** (egy régebbi nyilvános build) — vagyis csak azok
-az újdonságok szerepelnek benne, amelyek a **361–378** között készültek. A karakter-számot a
+az újdonságok szerepelnek benne, amelyek a **361–379** között készültek. A karakter-számot a
 `tools/check-play-notes.mjs` méri.
-⚠️ **2026-09-27-től az ÉLES sávon már a 377 van**, ezért aki **377-ről** jön, annak **nem** ez a blokk,
-hanem az **1. blokk** (a 378 újdonságai) való.
+⚠️ **Az ÉLES sávon a 377 van** (a 378/379 feltöltése a tulajdonos lépése), ezért aki **378-ról** jön,
+annak **nem** ez a blokk, hanem az **1. blokk** (a 379 újdonságai) való.
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
@@ -240,16 +238,16 @@ hanem az **1. blokk** (a 378 újdonságai) való.
 - ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
 - ÚJ: születésnapi köszöntés; a Label-termékek leírása is angolul szól.
 - Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
-- ÚJ: heti összefoglaló vasárnap; az értesítési engedély a jó pillanatban.
+- ÚJ: heti összefoglaló vasárnap; megosztható hírek, események és DJ-adatlapok.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–378** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–379** összesítő)
 
-**Ezt használd, ha a 378-at a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 379-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-09-27) szerint ott a **354** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
-**heti összefoglaló** és a mostani javítások is.
+**heti összefoglaló**, a **megosztható adatlapok** és a mostani javítások is.
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
@@ -257,7 +255,7 @@ hanem az **1. blokk** (a 378 újdonságai) való.
 - ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
 - ÚJ: születésnapi köszöntés; a Label-termékek leírása is angolul szól.
 - Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
-- ÚJ: heti összefoglaló vasárnap; az értesítési engedély a jó pillanatban.
+- ÚJ: heti összefoglaló vasárnap; megosztható hírek, események és DJ-adatlapok.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -286,6 +284,14 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 379 — megosztható hírek, események, kiadványok és DJ-adatlapok
+- **A tulajdonos választása:** a használat-növelő csomag *„megosztható kártyák"* pontja. A cél a **szerves növekedés**: a tagok maguk viszik a tartalmat a Messengerbe/Facebookra, a megosztott üzenet pedig az appot is hirdeti.
+- **A mért kiindulás:** az **App Links be van állítva** (`https://hungarianhardstyle.hu/.well-known/assetlinks.json` → **HTTP 200**, `handle_all_urls`, a `hu.hungarianhardstyle.app` csomagra és a Play-aláíró kulcs lenyomatára), de az app a manifestben **csak a `/invite` útvonalat** fogja el — ezért a megosztott tartalom-link egyelőre a **böngészőt** nyitja (a tartalom ott is olvasható). A végpontok linkjei **mérve**: a hír (`/posts`) és a DJ (`/artists`) ad **`link` mezőt**, az esemény és a kiadvány **nem** — ezekre a WordPress kanonikus rövidlinkje (`?p={id}`) a helyes út, amit a WordPress a szép permalinkre irányít (**mérve**: `?p=12505` → `200 …/events/hard-base-classic…`, `?p=12699` → `200 …/releases/goze-change-of-pace/`).
+- **Ami épült:** `lib/services/share_links.dart` (tiszta szöveg- és link-összeállítás: cím → link → egy sor az appról a Play-linkkel, nyelvi térképpel a szótárból) + `lib/widgets/share_action.dart` (`ContentShareButton`, egy helyen a `Share.share` hívás és a néma hibakezelés) + a **négy adatlap** fejlécében a megosztás gomb (hír, esemény, kiadvány, DJ).
+- **Új kapu:** `test/services/share_links_test.dart` (**12 teszt**: kanonikus link vs. rövidlink, üres cím és azonosító, soronkénti szerkezet, angol felület a szótárból, szótár-kulcs megléte, és forrás-lint mind a négy adatlapra + a `Share.share` hívásra).
+- **Mérve:** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1288/1288**; i18n-kapu → **MINDEN ELLENŐRZÉS RENDBEN** (1454+ kulcs); a csomag és a Play-jegyzet kapuja a feltöltés előtt fut.
+- **⚠️ ŐSZINTE KORLÁT:** az **appon belüli** megnyitás (a megosztott link az appban nyíljon meg, a megfelelő adatlapra navigálva) **még nincs** benne: ehhez az `AndroidManifest.xml` útvonal-fogása **és** belső útvonalválasztás kell — ez a következő kör.
 
 ### 378 — az értesítési engedély a jó pillanatban, heti összefoglaló, Play-értékelés, hibanaplózás
 - **A tulajdonos választása:** a használat-növelő csomagból a **megosztható kártyák**, az **analitika + Crashlytics**, a **push-engedély a jó pillanatban + Play-értékelés**, valamint a **követés/heti összefoglaló** pontok; a kör ezek közül az utóbbi hármat hozta el (a megosztható kártyák és a „Követem" gomb a következő kör).

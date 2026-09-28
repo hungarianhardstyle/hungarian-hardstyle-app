@@ -1,4 +1,5 @@
 [
+  "Megerősítő e-mailt küldtünk. A profil használatához erősítsd meg a címedet.",
   "Megerősítő linket küldtünk az új e-mail-címre. 24 órád van a megerősítésre.",
   "Meghívott regisztrációja",
   "Megjelenés",
@@ -8,7 +9,6 @@
   "Megnyitás a YouTube-on",
   "Megnyitás az alkalmazásban",
   "Megnyitás külső böngészőben",
-  "Megosztás…",
   "Megőrzés és törlés: a fiókhoz és közösségi szolgáltatáshoz kapcsolódó adatokat addig őrizzük, amíg a szolgáltatás biztosításához szükséges, illetve amíg jogi igény, biztonsági vagy jogszabályi megőrzési ok indokolja. A hirdetési és hírlevél-hozzájárulás visszavonása után az erre épülő kezelést megszüntetjük. A saját profil törlése az alkalmazásból indítható; ez a Firebase Auth-fiók és a hozzá kapcsolt közösségi adatok törlését kezdeményezi. Egyes, jogszabály alapján megőrzendő vagy jogi igényhez szükséges adatok a szükséges időre korlátozottan megmaradhatnak.",
   "Mégsem",
   "Megvásárolva",

@@ -1,4 +1,5 @@
 [
+  "A közösségi funkciók használatához add meg a születési dátumodat. Ez nem jelenik meg nyilvánosan, amíg nem engedélyezed.",
   "A közösségi funkciókhoz regisztráció szükséges.",
   "A lájkpont végleges: ha kiveszed a lájkot, a pont megmarad, de az újralájk sem ad újat.",
   "A legtöbb achievement pontot gyűjtő tagok",
@@ -57,6 +58,5 @@
   "A szavazás véget ért",
   "A szavazás véget ért. Az összesítő az adminisztrátori engedély után lesz elérhető.",
   "A szavazáshoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána szavazhatsz.",
-  "A szavazat mentése nem sikerült. Próbáld újra később.",
-  "A szavazatod sikeresen rögzítettük. Ebben az éves szavazásban erről a készülékről már nem adhatsz le újabb szavazatot."
+  "A szavazat mentése nem sikerült. Próbáld újra később."
 ]
