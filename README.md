@@ -31,6 +31,7 @@ WordPress stays the editorial source of truth. The Flutter app reads the public 
 - online radio (Real Hardstyle FM) with a native Android foreground service, an iOS stream player and a persistent player bar in the navigation shell
 - Mailchimp newsletter signup (through the WordPress API) and consent-gated AdMob monetization of free downloads
 - Firebase Cloud Messaging push for news, events, chat, achievements, moderation and birthdays, with per-user notification preferences
+- event reminders **1 week, 1 day and 6 hours before** every published event, broadcast to every registered device and honouring each device's notification/reminder settings
 - child-safety layer: 16+ registration gate, birth date (required at registration, hidden by default), warning banner when a minor talks to an adult, private-chat reporting and a server-side private-message flagging system
 
 ### How changes are verified
@@ -43,6 +44,7 @@ Every round ships with measured evidence rather than assumptions:
 - `node tools/check-i18n.mjs --strict` → every extracted Hungarian UI string has an English entry
 - `node tools/check-adjacent-literals.mjs` → multi-line concatenated literals must exist as dictionary keys
 - `node tools/check-play-notes.mjs` → release notes fit the Play character limits
+- `node tools/check-event-reminders.mjs` → the WordPress push chain is alive and shows when the next event reminder is due
 - `node tmp/verify-aab.mjs <aab> <versionCode>` → dictionary keys, notification catalog and every changelog line present in all three ABIs
 - mutation proofs (`tmp/mutation-proof-*.mjs`) → each new gate is shown to actually catch the defect it exists for, and the restored tree has to go green again
 
@@ -137,6 +139,7 @@ Every released build gets a **new versionCode**; an already published build is n
 - [x] connection ("ismerős") requests with an `Ismerősök` section, accepted or declined in the app
 - [x] event attendance (`Ott leszek` / `Nem leszek ott`), friend attendance visibility, meetup chat and post-event rating requests
 - [x] global publication pushes for new events to every device with an FCM token
+- [x] event reminders to **every** registered device (1 week / 1 day / 6 hours before, per-event and per-window de-duplication)
 - [ ] per-user event targeting: pushes only to users who favorited an event or marked `Ott leszek`, plus notifications for an organizer's new events
 - [ ] show planned events on the profile (currently a placeholder pointing at the attendance feature)
 - [x] reporting, blocking, privacy controls and account deletion (in-app and a signed-out web path)
