@@ -22,9 +22,23 @@
 
 define('ABSPATH', __DIR__);
 
+// ⚠️ MÉRT HIBA (2026-09-28): az ütemezés mérése először elhasalt, mert a
+// WordPress idő-konstansai (`WEEK_IN_SECONDS` stb.) a stub-környezetben nem
+// léteznek — a valódi WordPressben ezek a core-ban vannak. Ez a kapu fogta meg,
+// ezért itt definiáljuk őket (a plugin forrását NEM írjuk át miattuk).
+if (!defined('MINUTE_IN_SECONDS')) define('MINUTE_IN_SECONDS', 60);
+if (!defined('HOUR_IN_SECONDS')) define('HOUR_IN_SECONDS', 3600);
+if (!defined('DAY_IN_SECONDS')) define('DAY_IN_SECONDS', 86400);
+if (!defined('WEEK_IN_SECONDS')) define('WEEK_IN_SECONDS', 604800);
+
 // --- WordPress-stubok (csak ami ehhez a méréshez kell) ---------------------
 $GLOBALS['huhs_meta'] = array();
 $GLOBALS['huhs_titles'] = array();
+// 2.14.7: az ÜTEMEZÉS és a biztonsági kör méréséhez — a `get_posts` a
+// meta_query-t szándékosan NEM szűri (azt a lenti megjegyzés magyarázza).
+$GLOBALS['huhs_scheduled'] = array();
+$GLOBALS['huhs_posts'] = array();
+$GLOBALS['huhs_kinds'] = array();
 
 function add_action(...$args) { return true; }
 function add_filter(...$args) { return true; }
@@ -36,6 +50,15 @@ function get_post_meta($postId, $key, $single = false)
 {
     return $GLOBALS['huhs_meta'][$postId][$key] ?? '';
 }
+function update_post_meta($postId, $key, $value) { $GLOBALS['huhs_meta'][$postId][$key] = $value; return true; }
+function get_post($id) { return (object) array('ID' => (int) $id, 'post_status' => 'publish'); }
+function get_posts($args = array()) { return $GLOBALS['huhs_posts']; }
+function wp_schedule_single_event($when, $hook, $args = array())
+{
+    $GLOBALS['huhs_scheduled'][] = array('when' => $when, 'hook' => $hook, 'args' => $args);
+    return true;
+}
+function wp_next_scheduled(...$args) { return false; }
 function get_the_title($post) { return $GLOBALS['huhs_titles'][$post->ID] ?? ''; }
 function wp_timezone() { return new DateTimeZone('Europe/Budapest'); }
 function wp_date($format, $timestamp = null, $timezone = null)
@@ -48,7 +71,14 @@ function wp_date($format, $timestamp = null, $timezone = null)
     return $moment->format($format);
 }
 function wp_strip_all_tags($value) { return strip_tags((string) $value); }
-function sanitize_key($value) { return strtolower(preg_replace('/[^A-Za-z0-9_\-]/', '', (string) $value)); }
+function sanitize_key($value)
+{
+    // ⚠️ A `huhs_push_event_reminder()` az ELSŐ lépésben a küldés fajtáját
+    // sanitizálja, ezért ez a stub pontosan megmutatja, MELYIK ablak indult el —
+    // a küldési lánc lefutása nélkül (a jelölőket a mérés előre beállítja).
+    $GLOBALS['huhs_kinds'][] = (string) $value;
+    return strtolower(preg_replace('/[^A-Za-z0-9_\-]/', '', (string) $value));
+}
 function current_time($type = 'mysql', $gmt = 0) { return date('Y-m-d H:i:s'); }
 
 $pluginDir = rtrim($argv[1] ?? '', '/');
@@ -140,8 +170,8 @@ check('az angol törzs ugyanazokat a tényeket adja, angol dátumformával',
     strpos($texts['en']['body'], 'Oct 17, 23:00') !== false
     && strpos($texts['en']['body'], 'Stenk, Budapest') !== false,
     $texts['en']['body']);
-check('mindhárom ablaknak megvan a magyar és az angol címe', (function () use ($post) {
-    foreach (array('week', 'day_before', 'hours_before') as $kind) {
+check('mind a négy ablaknak megvan a magyar és az angol címe', (function () use ($post) {
+    foreach (array('week', 'day_before', 'hours_before', 'two_hours') as $kind) {
         $text = huhs_push_event_reminder_texts($post, $kind);
         if (($text['hu']['title'] ?? '') === '' || ($text['en']['title'] ?? '') === '') return false;
     }
@@ -154,6 +184,79 @@ $GLOBALS['huhs_meta'][12505]['venue_city'] = '';
 $noPlace = huhs_push_event_reminder_texts($post, 'hours_before');
 check('helyszín nélkül csak a dátum marad (nincs lógó „·")',
     $noPlace['hu']['body'] === 'Hard Base Classic — 2026.10.17. 23:00', $noPlace['hu']['body']);
+
+// --- 5) A NÉGY emlékeztető-ablak ütemezése (2.14.7) -----------------------
+$GLOBALS['huhs_meta'][12505]['event_start_date'] = '2026-10-17';
+$GLOBALS['huhs_meta'][12505]['event_start_time'] = '23:00';
+$start = huhs_push_event_start_timestamp($post);
+$GLOBALS['huhs_scheduled'] = array();
+huhs_push_schedule_event_reminders($post);
+$offsets = array();
+foreach ($GLOBALS['huhs_scheduled'] as $entry) {
+    if (($entry['hook'] ?? '') !== 'huhs_push_event_reminder') continue;
+    $offsets[(string) ($entry['args'][1] ?? '')] = $start - (int) $entry['when'];
+}
+check('négy emlékeztetőt ütemez (week / day_before / hours_before / two_hours)',
+    count($offsets) === 4
+    && !array_diff(array('week', 'day_before', 'hours_before', 'two_hours'), array_keys($offsets)),
+    implode(', ', array_keys($offsets)));
+check('a 2 órás ablak PONTOSAN 2 órával előtte van', ($offsets['two_hours'] ?? 0) === 7200,
+    (string) ($offsets['two_hours'] ?? 'nincs ilyen ablak'));
+check('a 6 órás ablak pontosan 6 órával előtte van', ($offsets['hours_before'] ?? 0) === 21600,
+    (string) ($offsets['hours_before'] ?? 'nincs'));
+check('az 1 napos és az 1 hetes ablak változatlan',
+    ($offsets['day_before'] ?? 0) === 86400 && ($offsets['week'] ?? 0) === 604800,
+    ($offsets['day_before'] ?? '-') . ' / ' . ($offsets['week'] ?? '-'));
+
+// --- 6) A biztonsági kör ugyanezt a négy ablakot nézi ---------------------
+//
+// ⚠️ A `get_posts` stub szándékosan NEM szűr a meta_query dátumára (az a szűrő a
+// valódi WordPressben él), ezért itt az ABLAK-számítás a mért dolog: az esemény
+// kezdetét állítjuk be, és azt mérjük, melyik ablak indul el.
+function scanKinds($postId, $offsetSeconds)
+{
+    $target = time() + $offsetSeconds;
+    $GLOBALS['huhs_meta'][$postId]['event_start_date'] = wp_date('Y-m-d', $target);
+    $GLOBALS['huhs_meta'][$postId]['event_start_time'] = wp_date('H:i', $target);
+    // A jelölők előre beállítva: a küldés nem indul el, de a `sanitize_key`
+    // rögzíti az ablak nevét — pontosan ezt mérjük.
+    foreach (array('week', 'day_before', 'hours_before', 'two_hours') as $kind) {
+        $GLOBALS['huhs_meta'][$postId]['_huhs_push_reminder_sent_' . $kind] = '2026-01-01 00:00:00';
+    }
+    $GLOBALS['huhs_posts'] = array((object) array('ID' => $postId, 'post_status' => 'publish'));
+    $GLOBALS['huhs_kinds'] = array();
+    huhs_push_scan_event_reminders();
+    return $GLOBALS['huhs_kinds'];
+}
+
+$inTwoHours = scanKinds(12505, 5400); // 1,5 óra múlva kezdődik
+check('1,5 órával előtte a 2 ÓRÁS ablak indul (és semmi más)',
+    $inTwoHours === array('two_hours'), implode(', ', $inTwoHours));
+$inSixHours = scanKinds(12505, 5 * 3600 + 1800); // 5,5 óra múlva
+check('5,5 órával előtte a 6 órás ablak indul (és semmi más)',
+    $inSixHours === array('hours_before'), implode(', ', $inSixHours));
+$betweenWindows = scanKinds(12505, 9000); // 2,5 óra múlva: a két ablak KÖZÖTT
+check('a két ablak között (2,5 óra) EGYIK sem indul el',
+    $betweenWindows === array(), implode(', ', $betweenWindows));
+$lateWindow = scanKinds(12505, 2700); // 45 perc múlva: a 2 órás ablaka már lezárult
+check('45 perccel előtte már egyik ablak sem indul (nincs késői küldés)',
+    $lateWindow === array(), implode(', ', $lateWindow));
+
+// --- 7) A 2 órás ablak szövege --------------------------------------------
+$twoHours = huhs_push_event_reminder_texts($post, 'two_hours');
+check('a 2 órás ablak magyar címe: „Esemény 2 óra múlva"',
+    ($twoHours['hu']['title'] ?? '') === 'Esemény 2 óra múlva', $twoHours['hu']['title'] ?? '');
+check('a 2 órás ablak angol címe: „Event in 2 hours"',
+    ($twoHours['en']['title'] ?? '') === 'Event in 2 hours', $twoHours['en']['title'] ?? '');
+check('a NÉGY ablak címe KÜLÖNBÖZŐ (nem ugyanaz a szöveg négy ablakon)', (function () use ($post) {
+    $titles = array();
+    foreach (array('week', 'day_before', 'hours_before', 'two_hours') as $kind) {
+        $text = huhs_push_event_reminder_texts($post, $kind);
+        $titles[] = $text['hu']['title'];
+        $titles[] = $text['en']['title'];
+    }
+    return count(array_unique($titles)) === 8;
+})());
 
 // --- Összegzés -------------------------------------------------------------
 $ok = $failures === 0;

@@ -23,11 +23,15 @@ const BASE = 'https://hungarianhardstyle.hu';
 const MARKER = 'huhs-boot-probe-2026';
 const TIME_ZONE = 'Europe/Budapest';
 
-/** A plugin emlékeztető-ablakai (`huhs_push_schedule_event_reminders`). */
+/** A plugin emlékeztető-ablakai (`huhs_push_schedule_event_reminders`, 2.14.7). */
 const REMINDER_WINDOWS = [
   { kind: 'week', label: '1 hét előtte', ms: 7 * 24 * 60 * 60 * 1000 },
   { kind: 'day_before', label: '1 nap előtte', ms: 24 * 60 * 60 * 1000 },
   { kind: 'hours_before', label: '6 óra előtte', ms: 6 * 60 * 60 * 1000 },
+  // 2.14.7: a 2 órás ablak — a buli előtti utolsó órákban a legvalószínűbb a
+  // tervezés. ⚠️ Ha ez a lista elavul, ez az eszköz HAMIS képet ad a
+  // kiküldésekről, ezért a `--self-test` a négy ablakra mér.
+  { kind: 'two_hours', label: '2 óra előtte', ms: 2 * 60 * 60 * 1000 },
 ];
 
 function parseHealthHeader(header) {
@@ -116,10 +120,24 @@ function selfTest() {
   check('rossz dátum → NaN', Number.isNaN(eventStartMs({ start_date: '2026/12/05' })));
 
   const start = Date.UTC(2026, 9, 17, 21, 0, 0);
+  // A felsorolás maga is mért dolog: ha a plugin ablaka megváltozik és ez a lista
+  // nem követi, az eszköz HAMIS képet adna a kiküldésekről.
+  check(
+    'a négy ablak felsorolása pontos (2.14.7: hét / nap / 6 óra / 2 óra)',
+    REMINDER_WINDOWS.map((window) => window.kind).join(',') === 'week,day_before,hours_before,two_hours'
+      && REMINDER_WINDOWS.map((window) => window.ms / 3600e3).join(',') === '168,24,6,2',
+  );
   const schedule = reminderSchedule(start, start - 10 * 24 * 3600e3);
-  check('10 nappal előtte mindhárom ablak hátravan', schedule.every((item) => item.pending));
+  check('10 nappal előtte mind a négy ablak hátravan', schedule.every((item) => item.pending));
   const later = reminderSchedule(start, start - 3 * 24 * 3600e3);
   check('3 nappal előtte a heti ablak már lejárt', later[0].pending === false && later[1].pending === true);
+  const withinThreeHours = reminderSchedule(start, start - 3 * 3600e3);
+  check(
+    '3 órával előtte a 6 órás ablak lejárt, a 2 órás még hátravan',
+    withinThreeHours[2].pending === false && withinThreeHours[3].pending === true,
+  );
+  const withinOneHour = reminderSchedule(start, start - 3600e3);
+  check('1 órával előtte a 2 órás ablak is lejárt', withinOneHour[3].pending === false);
   const near = reminderSchedule(start, start - 2 * 3600e3);
   check('2 órával előtte már minden ablak lejárt', near.every((item) => !item.pending));
 

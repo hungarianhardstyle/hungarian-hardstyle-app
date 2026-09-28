@@ -1,5 +1,21 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🔵 PLUGIN **2.14.7**: A **2 ÓRÁS** ESEMÉNY-EMLÉKEZTETŐ IS (2026-09-28)
+
+- **MIÉRT:** a cél-kitűzés az volt, hogy az esemény-emlékeztető **1 nappal ÉS 2 órával** előtte menjen ki **mindenkinek** — a pluginban a „mindenki" rész **már élt** (1 hét / 1 nap / 6 óra, minden regisztrált eszközre, a beállítások tiszteletben tartásával), de a **2 órás ablak nem**.
+- **AMI ÉPÜLT (a 2.14.6 fájából kiindulva, hogy a kiadott csomag legyen az alap — `tmp/plugin-2147/huhs-mobile-api`):**
+  1. **Ütemezés:** a `huhs_push_schedule_event_reminders()` **négy** ablakot ütemez (`week` / `day_before` / `hours_before` = 6 óra / **`two_hours`** = 2 óra);
+  2. **Biztonsági kör:** a `huhs_push_scan_event_reminders()` is a **négy** ablakot nézi (`[T−2h, T−1h)`), ezért a **már meghirdetett** események is megkapják a 2 órás emlékeztetőt (a scan a következő 8 napot fedi le — a 2 órás ablak beleesik), nem kell újramenteni a bejegyzést;
+  3. **Szöveg:** a cím az ablakot mondja — *„Esemény 2 óra múlva"* / *„Event in 2 hours"*; a törzs változatlanul `{cím} — {dátum} · {helyszín}, {város}`;
+  4. **Verzió:** `2.14.7` (fejléc + `HUHS_API_VERSION`), és a **2.14.6-ot ez felváltja** — a tulajdonos **egy** ZIP-et tölt fel.
+- **BIZONYÍTÉK (mind mérve):**
+  - **Docker-harness a szállítandó csomagon** (`node tools/run-php-plugin-tests.mjs --zip=build/huhs-mobile-api-2.14.7.zip`, `php:8.2-cli`): **49** PHP fájl lintelve, viselkedés **117/117**, **117/117**, **34/34** (a bővített nyelvi+ablak-teszt), push-lánc **12/12**, mind az **öt** jelző megvan → **MINDEN ELLENŐRZÉS RENDBEN**, kilépési kód **0**;
+  - **`tools/verify-push-language.php` bővítve** (13 új ellenőrzés): a **négy** ütemezett ablak és **pontos** eltolásaik (604800 / 86400 / 21600 / **7200** mp); a **biztonsági kör** viselkedése (**1,5 óra** → csak a 2 órás ablak indul; **5,5 óra** → csak a 6 órás; **2,5 óra** → egyik sem, mert a két ablak KÖZÖTT van; **45 perc** → egyik sem, nincs késői küldés); a **négy** cím **mind különböző** (8 szöveg, nincs átfedés); a 2 órás szöveg magyarul/angolul;
+  - `node tools/build-plugin-zip.mjs tmp/plugin-2147/huhs-mobile-api build/huhs-mobile-api-2.14.7.zip huhs-mobile-api` → **`build/huhs-mobile-api-2.14.7.zip`**, **189 627 bájt**, SHA-256 **`2146EEA70DB8C315E1DBE5A10323AA4D65D209EF55C0CC5A18336783B668E7BC`** (50 bejegyzés, gyökér `huhs-mobile-api/`); `node tools/verify-plugin-package.mjs build/huhs-mobile-api-2.14.7.zip` → **MINDEN ELLENŐRZÉS RENDBEN**; a változás jegyzőkönyve: `docs/plugin-2.14.7-two-hour-reminder.patch` (2 fájl, +15/−3);
+  - **`tools/check-event-reminders.mjs` frissítve** (a 2 órás ablak a felsorolásban) — `--self-test` **13/13**, és **éles mérés**: a következő 2 órás emlékeztetők **2026-10-17 21:00** (#12505, 23:00-s kezdés) és **2026-10-22 20:00** (#12342, 22:00-s kezdés), 1010 eszközre, ép WP-Cron-nal.
+- **⚠️ MÉRT SAJÁT HIBA (a kapu fogta meg):** a bővített PHP-teszt **első futása elhasalt** (`Fatal error: Undefined constant "WEEK_IN_SECONDS"`) — a stub-környezetben a WordPress idő-konstansai nem léteznek. **A javítás a TESZTBEN** történt (a konstansok definiálása), **nem** a pluginban; a hiba oka az volt, hogy az ütemező függvényt addig **egyetlen teszt sem hívta** — ez a kapu tehát valódi lefedettséget adott.
+- **⚠️ ŐSZINTE KORLÁTOK:** (1) a 2 órás emlékeztető **csak a 2.14.7 WordPress-oldali feltöltése után** él; (2) a stub `get_posts` **nem** szűr a meta_query dátumára (az a valódi WordPressben él) — a mért dolog az **ablak-számítás**, a dátum-szűrőt a lánc-ellenőrző eszköz méri; (3) a 2 órás ablak a **beállításokat** ugyanúgy tiszteli (`enabled` / `events` / `reminders`), mert ugyanazon a küldési úton megy; (4) aki az emlékeztetőket kikapcsolta, annak továbbra sem megy ki — ez szándékos.
+
 ### 🔵 A „HIBA", AMI NEM HIBA VOLT: A KEZELT ÁG A STDERR-RE ÍRT (2026-09-28)
 
 - **A KIINDULÁS:** a `tools/check-function-errors.mjs` (a logging-kvóta végre újra engedett) **24 órában 10 ERROR**-t mért, mindet ugyanabból: `achievement_catalog_fallback — This operation was aborted` (9× `awardAchievementFromProfile`, 1× `awardAchievementFromNewsReaction`).
