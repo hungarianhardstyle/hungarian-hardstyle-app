@@ -17,6 +17,7 @@ import 'providers/ads_provider.dart';
 import 'providers/content_language_provider.dart';
 import 'providers/profile_language_provider.dart';
 import 'providers/language_provider.dart';
+import 'services/app_analytics.dart';
 import 'services/push_notification_service.dart';
 import 'services/referral_link_service.dart';
 import 'services/vote_memory.dart';
@@ -48,6 +49,12 @@ Future<void> main() async {
   await initializeDateFormatting('en_US');
   await preloadAppLanguage();
   await initializeFirebaseRuntime();
+  // ⚠️ A mérés és a Crashlytics **a `Firebase.initializeApp()` UTÁN** indul (a
+  // `initializeFirebaseRuntime()` fenti hívása az). A hívás védett: ha a
+  // Firebase nem indult el, vagy a mérés nem elérhető, csendben visszatér és az
+  // app ugyanúgy működik — a mérés soha nem viheti el az indulást.
+  await AppAnalytics.initialize();
+  unawaited(AppAnalytics.logAppOpen());
   await _initializeAppCheck();
   // A „már játszottál / már szavaztál" emlékezet **a `runApp` előtt** betöltődik
   // a memóriába, ezért a kvíz kártyája és a képernyő már az első képkockán a

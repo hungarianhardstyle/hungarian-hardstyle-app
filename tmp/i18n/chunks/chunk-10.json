@@ -1,4 +1,5 @@
 [
+  "Eredménylista megnyitása",
   "Érintetti jogok: kérheted a hozzáférést, helyesbítést, törlést, az adatkezelés korlátozását, az adathordozhatóságot, valamint tiltakozhatsz a jogos érdeken alapuló adatkezelés ellen. Kérelmedet az info@hungarianhardstyle.hu címen lehet benyújtani; az üzemeltető a személyazonosság ellenőrzéséhez szükséges adatot kérhet. A kérelmeket indokolatlan késedelem nélkül, főszabály szerint egy hónapon belül kell megválaszolni. Jogod van panaszt tenni a lakóhelyed, tartózkodási helyed vagy a jogsértés feltételezett helye szerinti adatvédelmi hatóságnál; Magyarországon ez a NAIH (https://www.naih.hu).",
   "Erős jelszó ajánlása",
   "Erősítsd meg az e-mail-címedet 24 órán belül.",
@@ -10,6 +11,7 @@
   "Értesítés új hír közzétételekor",
   "Értesítés új rang vagy jelvény elérésekor",
   "Értesítés új release közzétételekor",
+  "Értesítések engedélyezése",
   "Értesítések és gyorsítótár",
   "Értesülj az új hírekről és fontos eseményekről e-mailben.",
   "Érvényes HTTPS-linket adj meg.",
@@ -56,7 +58,5 @@
   "Feljebb",
   "Fellépés kérése – {artist}",
   "Fellépés lekötése e-mailben",
-  "Fellépésszervezés a Hungarian Hardstyle-on keresztül",
-  "Feloldva, a letöltés elindult.",
-  "Feloldva, de a letöltést nem sikerült elindítani."
+  "Fellépésszervezés a Hungarian Hardstyle-on keresztül"
 ]

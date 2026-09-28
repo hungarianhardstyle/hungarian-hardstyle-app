@@ -20,8 +20,11 @@ import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
 import '../../widgets/genre_chip.dart';
 import '../../providers/community_provider.dart';
+import '../../services/app_analytics.dart';
+import '../../services/app_review_prompt.dart';
 import '../../services/wordpress_service.dart';
 import '../../core/errors/user_facing_error.dart';
+import '../../widgets/notification_permission_prompt.dart';
 import 'event_meetup_screen.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
@@ -47,6 +50,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   void initState() {
     super.initState();
     _event = widget.event;
+    // Mérés: az esemény-adatlap megnyitása (`event_open`) — paraméter nélkül.
+    unawaited(AppAnalytics.logEventOpen());
     unawaited(_loadFullEvent());
     _attendanceFuture = ref
         .read(communityServiceProvider)
@@ -99,6 +104,15 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         await ref
             .read(communityServiceProvider)
             .setMeetup(event.id, title: event.title, enabled: false);
+      }
+      // Mérés: a részvétel **sikeres** mentése (a hibás ág nem naplóz).
+      unawaited(AppAnalytics.logAttendanceSet());
+      // ⚠️ ÉRTESÍTÉSI ENGEDÉLY — az első értelmes műveletek EGYIKE (2026-09-28).
+      // Csak **sikeres** mentés után, és csak akkor kérdezünk, ha az engedély még
+      // nincs meg; a döntés a `notification_permission_gate.dart`-ban él.
+      // `unawaited`: a felugró lap nem késleltetheti a részvétel megjelenítését.
+      if (mounted) {
+        unawaited(NotificationPermissionPrompt.requestAfterAction(context));
       }
     } catch (error) {
       if (mounted) {
@@ -195,6 +209,13 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             content: AppText('Köszönjük az értékelést! +10 achipont.'),
           ),
         );
+        // ⚠️ PLAY-ÉRTÉKELÉS — pontosan EGYSZER, telepítésenként (2026-09-28).
+        // MIÉRT ITT: ez a legbiztonságosabb „pozitív pillanat" — a felhasználó
+        // épp csillagokat adott, a hívás szinkron és sikeres, és a felület már
+        // mutatja a köszönő üzenetet. A pont-események ezzel szemben aszinkronok
+        // (szerveroldali jóváírás), ezért ott a kérés rossz pillanatban is
+        // elindulhatna. Részletes indoklás: `services/app_review_prompt.dart`.
+        unawaited(AppReviewPrompt.requestAfterPositiveMoment());
       }
     } catch (error) {
       if (mounted) {

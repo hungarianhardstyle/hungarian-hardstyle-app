@@ -1,4 +1,5 @@
 [
+  "Biztosan ki szeretnél lépni az alkalmazásból?",
   "Biztosan törlöd az összes AKTÍV értesítést? Az archivált értesítések megmaradnak.",
   "Biztosan törlöd az összes ARCHIVÁLT értesítést? Az aktív fül értesítései megmaradnak.",
   "Biztosan törlöd ezt a Chat-üzenetet?",
@@ -57,6 +58,5 @@
   "Elutasítás",
   "Elutasítva",
   "Én is",
-  "Eredménylista",
-  "Eredménylista megnyitása"
+  "Eredménylista"
 ]

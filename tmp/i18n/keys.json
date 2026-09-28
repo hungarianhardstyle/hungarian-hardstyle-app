@@ -677,6 +677,15 @@
     ]
   },
   {
+    "value": "Most nem",
+    "count": 3,
+    "files": [
+      "lib/screens/main_navigation.dart",
+      "lib/widgets/birth_date_field.dart",
+      "lib/widgets/notification_permission_prompt.dart"
+    ]
+  },
+  {
     "value": "Műfajok *",
     "count": 3,
     "files": [
@@ -1252,14 +1261,6 @@
     "files": [
       "lib/screens/artists/artist_edit_screen.dart",
       "lib/screens/community/admin_resource_editor_screen.dart"
-    ]
-  },
-  {
-    "value": "Most nem",
-    "count": 2,
-    "files": [
-      "lib/screens/main_navigation.dart",
-      "lib/widgets/birth_date_field.dart"
     ]
   },
   {
@@ -3377,6 +3378,13 @@
     ]
   },
   {
+    "value": "Az értesítésekkel szólunk az új hírekről, a közelgő eseményekről és a közösségi üzenetekről. A telefonod most engedélyt kér ehhez — bármikor kikapcsolhatod a Beállításokban.",
+    "count": 1,
+    "files": [
+      "lib/widgets/notification_permission_prompt.dart"
+    ]
+  },
+  {
     "value": "Az esemény nem tölthető be.",
     "count": 1,
     "files": [
@@ -4088,6 +4096,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Értesítések engedélyezése",
+    "count": 1,
+    "files": [
+      "lib/widgets/notification_permission_prompt.dart"
     ]
   },
   {
@@ -6279,6 +6294,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Ne maradj le semmiről",
+    "count": 1,
+    "files": [
+      "lib/widgets/notification_permission_prompt.dart"
     ]
   },
   {

@@ -38,6 +38,16 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 378,
+    changes: [
+      'ÚJ: az értesítési engedélyt már nem indításkor kérjük, hanem az első műveleted után (kedvencelés, „Ott leszek", regisztráció).',
+      'ÚJ: vasárnap esténként heti összefoglalót kapsz — a hét legfontosabb hírei és a közelgő események.',
+      'ÚJ: az app egyszer megkérdezi a Play Áruházban, hogy elégedett vagy-e — csak egy jó pillanatban.',
+      'Stabilabb app: a hibákat névtelenül naplózzuk, így gyorsabban javíthatók.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 377,
     changes: [
       'Javítva: angol felületen a Label-termékek leírása is angolul szól (eddig magyarul maradt).',

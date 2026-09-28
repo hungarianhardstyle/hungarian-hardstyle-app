@@ -24,6 +24,7 @@ import '../../core/input/sentence_capitalization_formatter.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/favorites_provider.dart';
+import '../../services/app_analytics.dart';
 import '../../services/chat_paging.dart';
 import '../../services/chat_focus_plan.dart';
 import '../../services/chat_mention_plan.dart';
@@ -42,6 +43,7 @@ import '../../widgets/chat_message_text.dart';
 import '../../widgets/community_profile_form_fields.dart';
 import '../../widgets/chat_emoji_button.dart';
 import '../../widgets/keyboard_dismiss_button.dart';
+import '../../widgets/notification_permission_prompt.dart';
 import '../../widgets/profile_content_card.dart';
 import '../more/favorites_screen.dart';
 import '../more/community_users_screen.dart';
@@ -2959,6 +2961,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       }
     }
     setState(() => _busy = true);
+    var registered = false;
     try {
       if (_register) {
         await _service.register(
@@ -2969,6 +2972,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
           socialLinks: _socialValues(),
           birthDate: _birthDate,
         );
+        registered = true;
         if (_referralCode.text.trim().isNotEmpty) {
           // A bad/expired code must never turn a successful registration into
           // a false registration error.
@@ -2998,6 +3002,16 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
       _loadedUid = null;
       await _loadProfile(force: true);
       if (mounted) setState(() {});
+      if (registered && mounted) {
+        // Mérés: **sikeres** regisztráció (`register_done`) — paraméter nélkül.
+        unawaited(AppAnalytics.logRegisterDone());
+        // ⚠️ ÉRTESÍTÉSI ENGEDÉLY — az első értelmes felhasználói műveletek
+        // EGYIKE (2026-09-28): **sikeres regisztráció**. A profil betöltése UTÁN
+        // hívjuk, hogy a felugró lap ne takarja el a friss profil állapotát; a
+        // döntés (kérdezünk-e egyáltalán) a `notification_permission_gate.dart`-ban
+        // él, és az engedéllyel már rendelkezőknél semmi nem jelenik meg.
+        unawaited(NotificationPermissionPrompt.requestAfterAction(context));
+      }
     } catch (error) {
       if (_register && _registrationNameMessage(error) != null && mounted) {
         setState(

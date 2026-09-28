@@ -3,7 +3,7 @@ description: "Hungarian Hardstyle mobile application"
 
 publish_to: 'none'
 
-version: 1.0.0+377
+version: 1.0.0+378
 
 environment:
   sdk: ^3.13.2
@@ -60,6 +60,14 @@ dependencies:
   # A megvĂˇsĂˇrolt zenĂ©k helyi tĂˇrolĂłjĂˇhoz (app-sajĂˇt mappa, nem a kĂ¶zĂ¶s
   # LetĂ¶ltĂ©sek): a â€žSajĂˇt zenĂ©im" lejĂˇtszĂł innen jĂˇtssza le a fĂˇjlokat.
   path_provider: ^2.1.5
+  # Mérés és összeomlás-jelentés (2026-09-28). Az `app_analytics.dart` vékony
+  # burkoló mögött élnek, hogy a naplózott események **zárt, adatvédelem-barát**
+  # halmaza egy helyen legyen számon kérhető (nincs bennük személyes adat).
+  firebase_analytics: ^12.6.0
+  firebase_crashlytics: ^5.4.0
+  # Play-értékelés kérése EGYSZER, egy pozitív pillanatban (lásd
+  # `lib/services/app_review_prompt.dart`).
+  in_app_review: ^2.0.12
 
 dev_dependencies:
   flutter_test:

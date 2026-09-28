@@ -13,6 +13,7 @@ import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/post.dart';
+import '../../services/app_analytics.dart';
 import '../../services/wordpress_service.dart';
 import '../../widgets/app_text.dart';
 import '../../widgets/post_embed_card.dart';
@@ -41,6 +42,9 @@ class _NewsDetailScreenState extends State<NewsDetailScreen>
   void initState() {
     super.initState();
     _post = widget.post;
+    // Mérés: a cikk megnyitása (`news_open`) — **paraméter nélkül**, ezért nem
+    // kerülhet bele személyes adat (lásd `services/app_analytics.dart`).
+    unawaited(AppAnalytics.logNewsOpen());
     unawaited(WordpressService().recordPostView(post.id));
     if (post.contentForDisplay.trim().isEmpty) {
       unawaited(_loadFullPost());

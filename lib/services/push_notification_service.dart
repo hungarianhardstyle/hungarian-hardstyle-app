@@ -23,6 +23,8 @@ import '../screens/community/wordpress_admin_screen.dart';
 import '../screens/community/private_messages_screen.dart';
 import '../screens/community/community_screen.dart';
 import '../widgets/app_text.dart';
+import 'notification_permission_gate.dart';
+import 'push_language.dart';
 import 'wordpress_service.dart';
 
 class PushNotificationService {
@@ -31,7 +33,8 @@ class PushNotificationService {
   // Verzióváltáskor egyszer kötelezően új token készül, így nem marad bent
   // olyan token, amelyre a Cloud Function már nem tud kézbesíteni.
   static const _tokenRefreshKey = 'fcm_token_refresh_v3';
-  static bool _initialized = false;
+  static bool _initializeStarted = false;
+  static bool _registrationDone = false;
   static OverlayEntry? _foregroundEntry;
   static StreamSubscription<User?>? _authSubscription;
   static final Dio _api = Dio(
@@ -79,17 +82,64 @@ class PushNotificationService {
   }
 
   static Future<void> initialize() async {
-    if (_initialized) return;
+    if (_initializeStarted) return;
+    _initializeStarted = true;
 
-    final messaging = FirebaseMessaging.instance;
-    final settings = await messaging.requestPermission(
+    // ⚠️ 2026-09-28 — AZ OS-ABLAK **NEM ITT** JELENIK MEG (mért probléma: eddig
+    // induláskor, minden felhasználói művelet előtt kértük az engedélyt, ezért
+    // sokan elutasították, és Android 13+ utánna már nem is kérdez).
+    // Induláskor csak **lekérdezzük** az állapotot (`getNotificationSettings()`
+    // nem vált ki ablakot). Ha az engedély megvan, pontosan a **régi** útvonal
+    // fut le (token + figyelők) — a meglévő felhasználók értesítései
+    // változatlanok. Ha nincs, a kérés az első értelmes műveletre vár
+    // (`notification_permission_gate.dart`).
+    if (!await isPermissionGranted()) return;
+    await _completeRegistration();
+  }
+
+  /// Az OS-engedély állapota **kérés nélkül**.
+  ///
+  /// A `getNotificationSettings()` nem mutat semmit, ezért ez biztonságosan
+  /// hívható induláskor és a kapuból is.
+  static Future<bool> isPermissionGranted() async {
+    final settings = await FirebaseMessaging.instance.getNotificationSettings();
+    return notificationPermissionIsGranted(settings.authorizationStatus);
+  }
+
+  /// Az OS-ablak **megjelenítése**, majd siker esetén a token-útvonal.
+  ///
+  /// Ezt **csak** a kapu hívja (`NotificationPermissionGate`), az első értelmes
+  /// felhasználói művelet után. Visszaadja, hogy megkaptuk-e az engedélyt.
+  static Future<bool> requestPermissionNow() async {
+    final settings = await FirebaseMessaging.instance.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
+    if (!notificationPermissionIsGranted(settings.authorizationStatus)) {
+      return false;
+    }
+    await _completeRegistration();
+    return true;
+  }
 
-    if (settings.authorizationStatus == AuthorizationStatus.denied) return;
+  /// Az engedéllyel járó útvonal lefuttatása, ha még nem futott (**idempotens**).
+  ///
+  /// Erre azért kell külön belépés, hogy egy később megadott engedélynél se
+  /// vesszen el a token (a `requestPermissionNow()` ugyanezt hívja).
+  static Future<void> ensureRegistered() async {
+    if (_registrationDone) return;
+    if (!await isPermissionGranted()) return;
+    await _completeRegistration();
+  }
 
+  /// A token- és figyelő-útvonal (a régi `initialize()` törzse, változatlan
+  /// sorrendben) — egyszer fut, és csak **meglévő** engedéllyel.
+  static Future<void> _completeRegistration() async {
+    if (_registrationDone) return;
+    _registrationDone = true;
+
+    final messaging = FirebaseMessaging.instance;
     final preferences = await SharedPreferences.getInstance();
     if (preferences.getBool(_tokenRefreshKey) != true) {
       try {
@@ -110,7 +160,6 @@ class PushNotificationService {
     if (initialMessage != null) {
       await _handleOpenedMessage(initialMessage);
     }
-    _initialized = true;
   }
 
   static Future<void> _handleOpenedMessage(RemoteMessage message) async {
@@ -408,7 +457,17 @@ class PushNotificationService {
     try {
       await _api.post(
         '/push/register',
-        data: {'token': token, 'platform': defaultTargetPlatform.name},
+        data: {
+          'token': token,
+          'platform': defaultTargetPlatform.name,
+          // ⚠️ A plugin 2.14.6 a token-rekordban tárolt nyelven küldi az
+          // **esemény-emlékeztetőt** — enélkül az angol felületű tag is magyar
+          // emlékeztetőt kapna. Hiányzó/ismeretlen értékre a szerver magyar,
+          // ezért más kliensek viselkedése nem változik (`push_language.dart`).
+          pushLanguageField: await resolvePushLanguage(
+            preferences: preferences,
+          ),
+        },
       );
     } catch (_) {
       // Push registration must never block app startup or content loading.
@@ -470,6 +529,11 @@ class PushNotificationService {
           'releases': releases,
           'reminders': reminders,
           'achievements': achievements,
+          // A nyelv itt is megy: a token-rekord akkor is helyes nyelvet kapjon,
+          // ha a felhasználó a beállítások mentése előtt váltott nyelvet.
+          pushLanguageField: await resolvePushLanguage(
+            preferences: preferences,
+          ),
         },
       );
     } catch (_) {

@@ -1,0 +1,4 @@
+- ÚJ: az értesítési engedélyt már nem indításkor kérjük, hanem az első műveleted után.
+- ÚJ: vasárnap esténként heti összefoglalót kapsz — a hét hírei és a közelgő események.
+- ÚJ: az app egyszer megkérdezi a Play Áruházban, hogy elégedett vagy-e.
+- Stabilabb app: a hibákat névtelenül naplózzuk, így gyorsabban javíthatók.

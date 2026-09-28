@@ -1,4 +1,7 @@
 [
+  "Reklámmal feloldva",
+  "Release keresése",
+  "Rendezd időrendbe",
   "Rendszeresen jelen van a közösségben.",
   "Résztvevők ({n})",
   "Résztvevők (admin)",
@@ -55,8 +58,5 @@
   "Ugyanazért a tevékenységért egyszer jár pont — a rendszer mindig a szerveren ellenőrzi.",
   "Új {label}",
   "Új DJ-adatlap jóváhagyásra",
-  "Új e-mail-cím",
-  "Új elem",
-  "Új események",
-  "Új fiók létrehozása"
+  "Új e-mail-cím"
 ]

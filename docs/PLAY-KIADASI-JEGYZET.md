@@ -20,21 +20,22 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 377
+currentBuild: 378
 currentVersion: 1.0.0
-lastPublishedBuild: 360
-aab: build/HUHS-v1.0.0+377-release.aab
-sha256: B91D8393905DB5E2AB8D1F0EBE724AFF6655B645589F0EE8C2C8511C4E95EB46
+lastPublishedBuild: 377
+aab: build/HUHS-v1.0.0+378-release.aab
+sha256: E0350326E889B15858791FAEDC131E12A1447AF0C1540D6201A24D7E7F2380BA
 -->
 
-⚠️ A **377**-et a **376** után kellett építeni (a 376-ot, a 375-öt és a korábbiakat **nem** kell
-feltölteni, ha még nem tetted meg: a 377 mindegyiket tartalmazza, és a Play a használt verziókódot
-amúgy is elutasítaná).
-⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.5** — ✅ **mérve: már fent van** (`apiVersion = 2.14.5`).
-A szerveroldali függvények **telepítve** vannak (`firebase deploy --only functions` → *Deploy complete!*,
-benne a **születésnapi köszöntés** új ütemezett köre, a **gyermekbiztonsági jelzőrendszer**, a
-**születési dátum vetítése** és a **meglévő tagok emlékeztetője**).
-Az apphoz csak az **AAB (377)** feltöltése kell.
+⚠️ A **378**-at a **377** után kellett építeni (a 377-et és a korábbiakat **nem** kell feltölteni: a 378
+mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
+⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.6** — ⏳ **még nincs fent** (élesben 2.14.5): a
+`build/huhs-mobile-api-2.14.6.zip` feltöltése a tulajdonos lépése. Ez hozza az **angol nyelvű**
+esemény-emlékeztetőt (a 378-as app küldi a nyelvet), a **dátumot és helyszínt** a törzsben, és a
+**javított időzítést**. A feltöltés előtt is minden működik — csak magyarul szól az emlékeztető.
+A szerveroldali függvények **telepítve** vannak (`firebase deploy`), benne a **heti összefoglaló**
+(`sendWeeklyDigest`, vasárnap 18:00) — az **AAB nélkül is él**.
+Az apphoz csak az **AAB (378)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -204,10 +205,10 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- Javítva: angol felületen a Label-termékek leírása is angolul szól.
-- Javítva: a Label fül és a többi lista görgetése nem ugrik vissza a tetejére frissítéskor.
-- ÚJ: a születésnapos tagok köszöntő értesítést kapnak.
-- Gyorsabb az app: optimalizált képek, kevesebb memóriahasználat.
+- ÚJ: az értesítési engedélyt már nem indításkor kérjük, hanem az első műveleted után.
+- ÚJ: vasárnap esténként heti összefoglalót kapsz — a hét hírei és a közelgő események.
+- ÚJ: az app egyszer megkérdezi a Play Áruházban, hogy elégedett vagy-e.
+- Stabilabb app: a hibákat névtelenül naplózzuk, így gyorsabban javíthatók.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -225,14 +226,13 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–376** összesítő (a 360 után)
+## 1b-2. Play Console — a **361–378** összesítő (a 377 után)
 
 **Ezt használd, ha a felhasználó a 360-ról jön** (egy régebbi nyilvános build) — vagyis csak azok
-az újdonságok szerepelnek benne, amelyek a **361–376** között készültek (a 359/360 `@mindenki`-je
-**nincs** benne, mert azt a 360 már megkapta — a **push** viszont új, ezért az benne van). A
-karakter-számot a `tools/check-play-notes.mjs` méri.
-⚠️ **2026-09-27-től az ÉLES sávon már a 375 van**, ezért aki **375-ről** jön, annak **nem** ez a blokk,
-hanem az **1. blokk** (a 376 újdonságai) való.
+az újdonságok szerepelnek benne, amelyek a **361–378** között készültek. A karakter-számot a
+`tools/check-play-notes.mjs` méri.
+⚠️ **2026-09-27-től az ÉLES sávon már a 377 van**, ezért aki **377-ről** jön, annak **nem** ez a blokk,
+hanem az **1. blokk** (a 378 újdonságai) való.
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
@@ -240,16 +240,16 @@ hanem az **1. blokk** (a 376 újdonságai) való.
 - ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
 - ÚJ: születésnapi köszöntés; a Label-termékek leírása is angolul szól.
 - Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
-- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a hibák.
+- ÚJ: heti összefoglaló vasárnap; az értesítési engedély a jó pillanatban.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–377** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–378** összesítő)
 
-**Ezt használd, ha a 377-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 378-at a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-09-27) szerint ott a **354** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
-**push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés** és a
-mostani javítások is.
+**push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
+**heti összefoglaló** és a mostani javítások is.
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
@@ -257,7 +257,7 @@ mostani javítások is.
 - ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
 - ÚJ: születésnapi köszöntés; a Label-termékek leírása is angolul szól.
 - Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
-- Javítva: angolul a játék-eredmény fejléc, a válasz-előnézet és a hibák.
+- ÚJ: heti összefoglaló vasárnap; az értesítési engedély a jó pillanatban.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -286,6 +286,14 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 378 — az értesítési engedély a jó pillanatban, heti összefoglaló, Play-értékelés, hibanaplózás
+- **A tulajdonos választása:** a használat-növelő csomagból a **megosztható kártyák**, az **analitika + Crashlytics**, a **push-engedély a jó pillanatban + Play-értékelés**, valamint a **követés/heti összefoglaló** pontok; a kör ezek közül az utóbbi hármat hozta el (a megosztható kártyák és a „Követem" gomb a következő kör).
+- **A mért gyökerek:** (1) a rendszer **értesítési engedélyét eddig induláskor** kérte az app — a legrosszabb pillanatban, amikor a felhasználó még semmit nem látott az appból; (2) a `reminders` beállítás és az **esemény-emlékeztetők** a WordPress-pluginban élnek, de a token-rekord **nem tárolt nyelvet**, ezért az angol felületű tag is **magyar** emlékeztetőt kapott (plugin 2.14.6); (3) nem volt heti visszatérési ok azoknak, akik nem nyitják naponta az appot; (4) nem láttuk, melyik fül mennyi embert tart meg, és a hibák néma `catch`-ekben tűntek el.
+- **Ami épült:** az **engedélykérés a jó pillanatban** (`lib/services/notification_permission_gate.dart` + `lib/widgets/notification_permission_prompt.dart` — az első kedvencelés / „Ott leszek" / sikeres regisztráció után kérdez, magyarázattal, „most nem" lehetőséggel, és megjegyzi a döntést); a **push nyelve** (`lib/services/push_language.dart` → a `/push/register` és a `/push/preferences` `language` mezője, ismeretlen/hiányzó érték magyar, pontosan mint a szerveren); **heti összefoglaló** (`functions/weekly-digest-plan.js` + `sendWeeklyDigest`, vasárnap 18:00, ISO-heti dedupe-pal, beállítás-kapukkal); **Play-értékelés** (`lib/services/app_review_prompt.dart`, egyszer, egy pozitív pillanatban); **analitika + Crashlytics** (`lib/services/app_analytics.dart`: öt adatvédelem-barát esemény — `app_open`, `news_open`, `event_open`, `attendance_set`, `register_done` —, hibák névtelen naplózása, debug módban kikapcsolva).
+- **Új kapuk:** `test/services/push_language_test.dart`, `test/services/notification_permission_gate_test.dart`, `test/services/app_review_prompt_test.dart`, `test/services/app_analytics_test.dart`, valamint `functions/weekly-digest-plan.test.cjs` (13 teszt: ISO-hét, nyári/téli idő, üres hét, kapuk, heti kulcs, forrás-lint).
+- **Mérve:** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1276/1276**; `node tools/run-function-tests.mjs --pure` → **362/362**; i18n-kapu → **MINDEN ELLENŐRZÉS RENDBEN**; a **378-as AAB** ellenőrzése és a Play-jegyzet kapuja a feltöltés előtt fut.
+- **⚠️ ŐSZINTE KORLÁTOK:** (1) az **angol emlékeztető** csak a **plugin 2.14.6** feltöltése után él (addig mindenki magyarul kapja — ez a mainapi viselkedés); (2) a **heti összefoglaló** a **regisztrált** tagoknak megy (a WordPress push-lánc nem tud ütemezett saját szöveget küldeni), és a Beállításokban **még nincs** hozzá külön kapcsoló; (3) az **analitika** bekapcsolása miatt a Play **Adatbiztonsági** űrlapján érdemes átnézni a „Hibanaplózás/Statisztika" pontot; (4) a **megosztható kártyák** és a **„Követem"** gomb még **nincs** ebben a buildben.
 
 ### 377 — a Label-termékek angolul, a lista görgetése nem ugrik vissza, születésnapi köszöntés
 - **A tulajdonos jelzései (képernyőkép + kérés):** *„a labelnél a termékek még magyarul vannak az angol felületen"*; *„a label tab csinált olyat, hogy amíg nem görgettük le az aljára teljesen, folyton visszaugrott a tetejére, valszeg frissítgetett + nézd meg ez érint-e mást is"*; *„akinek születésnapja van, az adott napon kapjon egy Boldog szülinapos Notifyt, szépen megfogalmazva"*; és a Play Console három „javasolt" jelzése (teljes képernyős mód, elavult ablak-API-k, bittérkép-optimalizálás).

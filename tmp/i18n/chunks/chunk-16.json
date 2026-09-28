@@ -1,4 +1,7 @@
 [
+  "Nincs még játék az adatbázisban.",
+  "Nincs megjeleníthető elem.",
+  "Nincs megjeleníthető release.",
   "Nincs megjelölt esemény.",
   "Nincs nyitott jelentés.",
   "Nincs új értesítés.",
@@ -55,8 +58,5 @@
   "Regisztrált eszközök",
   "Regisztrált felhasználók ({n})",
   "Regisztrált felhasználók és jogosultságok",
-  "reklám",
-  "Reklámmal feloldva",
-  "Release keresése",
-  "Rendezd időrendbe"
+  "reklám"
 ]

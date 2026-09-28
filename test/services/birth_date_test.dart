@@ -71,8 +71,19 @@ void main() {
       expect(BirthDate.isAtLeast('', 16, now: now), isFalse);
       // A regisztráció a 16 év alattit **elutasítja** (a már regisztráltakat
       // semmi nem zárja ki — az a `requireValue`, lásd a szolgáltatást).
+      //
+      // ⚠️ MÉRT HIBA JAVÍTVA (2026-09-28): a `requireRegistrationValue()` a
+      // **valódi** mai naphoz méri a kort (nincs `now` paramétere, ezért a fenti
+      // `now` fixture nem érvényesül benne). A korábbi, beégetett `'2010-09-28'`
+      // így **2026-09-28-tól magától elbukott** — a teszt időzített bomba volt,
+      // nem a kód romlott el. A dátum most a valódi mai napból számol (15 évvel
+      // ezelőtt), ezért a mérés bármelyik napon ugyanazt jelenti.
+      final today = BirthDate.today();
+      final underage = BirthDate.format(
+        DateTime(today.year - 15, today.month, today.day),
+      );
       expect(
-        () => BirthDate.requireRegistrationValue('2010-09-28'),
+        () => BirthDate.requireRegistrationValue(underage),
         throwsA(
           isA<StateError>().having(
             (error) => error.message,

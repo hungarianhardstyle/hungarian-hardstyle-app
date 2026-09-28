@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -11,6 +13,7 @@ import '../../core/navigation/in_app_browser.dart';
 import '../../models/organizer.dart';
 import '../../widgets/app_text.dart';
 import '../../widgets/genre_chip.dart';
+import '../../widgets/notification_permission_prompt.dart';
 import '../../providers/organizers_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../widgets/event_card.dart';
@@ -182,13 +185,27 @@ class _OrganizerContent extends StatelessWidget {
                           alignment: Alignment.centerLeft,
                           child: OutlinedButton.icon(
                             onPressed: enabled
-                                ? () => ref
-                                      .read(favoritesProvider)
-                                      .toggle(
-                                        FavoriteKind.organizer,
-                                        organizer.id,
-                                        organizer.title,
-                                      )
+                                ? () async {
+                                    final wasFavorite = isFavorite;
+                                    await ref
+                                        .read(favoritesProvider)
+                                        .toggle(
+                                          FavoriteKind.organizer,
+                                          organizer.id,
+                                          organizer.title,
+                                        );
+                                    // ⚠️ ÉRTESÍTÉSI ENGEDÉLY — az első értelmes
+                                    // műveletek EGYIKE: **kedvenc mentése**. Csak
+                                    // hozzáadásnál és csak siker után kérdezünk
+                                    // (lásd `widgets/notification_permission_prompt.dart`).
+                                    if (!wasFavorite && context.mounted) {
+                                      unawaited(
+                                        NotificationPermissionPrompt.requestAfterAction(
+                                          context,
+                                        ),
+                                      );
+                                    }
+                                  }
                                 : null,
                             icon: Icon(
                               isFavorite

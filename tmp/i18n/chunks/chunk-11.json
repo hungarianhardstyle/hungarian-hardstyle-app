@@ -1,4 +1,6 @@
 [
+  "Feloldva, a letöltés elindult.",
+  "Feloldva, de a letöltést nem sikerült elindítani.",
   "Figyelem: a beszélgetőpartnered nagykorú. Ha kellemetlenül érzed magad, jelentsd a felhasználót és blokkold.",
   "Figyelem: a megadott dátum szerint 16 évesnél fiatalabb vagy.",
   "Fiók-szerepkör",
@@ -56,7 +58,5 @@
   "Hozzászólok",
   "HTTPS-link megadása",
   "HUHS {year} szavazás",
-  "HUHS hírlevél",
-  "HUHS játékok",
-  "HUHS Radio"
+  "HUHS hírlevél"
 ]
