@@ -23,12 +23,15 @@ const {
   NOTICE_TYPE,
   NOTICE_FIELD,
   EMAIL_FIELD,
+  EMAIL_ROUND_FIELD,
   DEFAULT_EMAIL_LIMIT,
   MAX_EMAIL_LIMIT,
   normalizeLanguage,
+  normalizeRound,
   hasBirthDate,
   needsBirthDateNotice,
   noticeDedupeKey,
+  noticeRoundOf,
   noticePayload,
   isValidEmail,
   selectBirthDateNoticeTargets,
@@ -181,7 +184,7 @@ test('a dupla kiküldés elleni védelem a helyén van', () => {
   const start = source.indexOf('async function sendBirthDateNotices(');
   assert.ok(start > 0, 'a mag létezik');
   const block = source.slice(start, source.indexOf('const BIRTH_DATE_NOTICE_SETTINGS_DOC', start));
-  assert.match(block, /birthDateNoticePayload\(target\.uid\)/, 'determinisztikus értesítés-kulcs');
+  assert.match(block, /birthDateNoticePayload\(target\.uid, noticeRound\)/, 'determinisztikus értesítés-kulcs');
   assert.match(block, /const created = await createNotificationBestEffort\(/);
   // A push CSAK akkor megy, ha az értesítés most jött létre.
   const pushIndex = block.indexOf('await sendPush(');
@@ -207,4 +210,88 @@ test('a kapcsolóhoz eszköz van, és írás csak --confirm-mal', () => {
   const confirmIndex = toolSource.indexOf('if (!confirmed && !dryRun)');
   assert.ok(confirmIndex > 0 && writeIndex > confirmIndex, 'a --confirm kapu megelőzi az írást');
   assert.match(toolSource, /firebase-schedule-sendBirthDateNotices-europe-central2/);
+});
+
+// --- ISMÉTELT KÖR (2. kör, 2026-09-28) -------------------------------------
+//
+// A tulajdonos kérése: *„menjen ki megint a születési dátum értesítés azoknak,
+// akik még nem írták be"*. Az első kör szándékosan EGYSZER szól, ezért ismételt
+// körben a kör-szám dönt: a kulcs `…:r2`, az e-mail kapuja pedig `emailRound`.
+
+test('az ELSŐ kör kulcsa bájtazonos maradt (nincs dupla értesítés)', () => {
+  assert.equal(noticeDedupeKey('abc123'), 'birth_date_required:abc123');
+  assert.equal(noticeDedupeKey('abc123', 1), 'birth_date_required:abc123');
+  assert.equal(noticeDedupeKey('abc123', 0), 'birth_date_required:abc123', 'a hibás kör = 1');
+  assert.equal(noticeDedupeKey('abc123', 'x'), 'birth_date_required:abc123');
+  assert.equal(noticePayload('abc123').dedupeKey, 'birth_date_required:abc123');
+});
+
+test('a MÁSODIK kör kulcsa külön dokumentum (ezért új értesítés és push)', () => {
+  assert.equal(noticeDedupeKey('abc123', 2), 'birth_date_required:abc123:r2');
+  assert.equal(noticeDedupeKey('abc123', 3), 'birth_date_required:abc123:r3');
+  assert.notEqual(noticeDedupeKey('abc123', 2), noticeDedupeKey('abc123', 1));
+  assert.equal(noticePayload('abc123', 2).dedupeKey, 'birth_date_required:abc123:r2');
+  // A cél ugyanaz marad: a dátum beállítása (nem a nyilvános profil).
+  assert.equal(noticePayload('abc123', 2).targetType, 'birth_date');
+});
+
+test('a kör-szám a profil jelöléséből olvasható (hiányzó mező = 1)', () => {
+  assert.equal(noticeRoundOf({}), 0, 'aki sosem kapott e-mailt');
+  assert.equal(noticeRoundOf({ [EMAIL_FIELD]: '2026-09-27' }), 1, 'a régi jelölés az 1. kör');
+  assert.equal(noticeRoundOf({ [EMAIL_FIELD]: '2026-09-27', [EMAIL_ROUND_FIELD]: 2 }), 2);
+  assert.equal(noticeRoundOf({ [EMAIL_FIELD]: '2026-09-27', [EMAIL_ROUND_FIELD]: '2' }), 2);
+  assert.equal(noticeRoundOf({ [EMAIL_FIELD]: '2026-09-27', [EMAIL_ROUND_FIELD]: 0 }), 1, 'a 0 értelmetlen');
+  assert.equal(normalizeRound(undefined), 1);
+  assert.equal(normalizeRound('3'), 3);
+  assert.equal(normalizeRound(-2), 1);
+});
+
+test('a 2. kör azokat szólítja meg, akik az 1.-ben kaptak, de még nincs dátumuk', () => {
+  const entries = [
+    // Az 1. körben kapott e-mailt, a dátumot azóta SEM adta meg -> ÚJRA szól.
+    { uid: 'a', profile: { email: 'a@example.com', [EMAIL_FIELD]: '2026-09-27' } },
+    // Az 1. körben kapott, és meg is adta a dátumot -> kimarad.
+    { uid: 'b', profile: { email: 'b@example.com', birthDate: '2000-01-01', [EMAIL_FIELD]: '2026-09-27' } },
+    // A 2. körben már kapott e-mailt -> nem kap harmadszor.
+    { uid: 'c', profile: { email: 'c@example.com', [EMAIL_FIELD]: '2026-09-28', [EMAIL_ROUND_FIELD]: 2 } },
+    // Sosem kapott -> most kap.
+    { uid: 'd', profile: { email: 'd@example.com' } },
+    // Nincs címe -> értesítést kap, e-mailt nem.
+    { uid: 'e', profile: {} },
+  ];
+  const first = selectBirthDateNoticeTargets(entries, { round: 1, emailLimit: 10 });
+  assert.deepEqual(
+    first.targets.filter((target) => target.sendEmail).map((target) => target.uid),
+    ['d'],
+    'az 1. körben csak a d kap e-mailt (a és c már kapott, e-nek nincs címe)',
+  );
+  assert.equal(first.round, 1);
+
+  const second = selectBirthDateNoticeTargets(entries, { round: 2, emailLimit: 10 });
+  assert.deepEqual(second.targets.map((target) => target.uid), ['a', 'c', 'd', 'e'], 'mind a négy dátum nélküli célpont');
+  assert.deepEqual(
+    second.targets.filter((target) => target.sendEmail).map((target) => target.uid),
+    ['a', 'd'],
+    'a 2. körben az a is kap e-mailt (1. körből jelölt), a c nem (már a 2.-ban kapott)',
+  );
+  assert.equal(second.round, 2);
+  assert.equal(second.skipped, 1, 'a b kimarad, mert már van dátuma');
+});
+
+test('a 2. kör e-mail kerete is érvényes (SMTP-kímélés)', () => {
+  const entries = Array.from({ length: 6 }, (_, index) => ({
+    uid: `u${index}`,
+    profile: { email: `u${index}@example.com`, [EMAIL_FIELD]: '2026-09-27' },
+  }));
+  const limited = selectBirthDateNoticeTargets(entries, { round: 2, emailLimit: 2 });
+  assert.equal(limited.emailCount, 2);
+  assert.equal(limited.targets.length, 6, 'az értesítés mindenkinek megy, csak az e-mail korlátozott');
+});
+
+test('a kör a kapcsoló-dokumentumból jön, és a jelölés rögzíti', () => {
+  assert.match(source, /round: normalizeBirthDateNoticeRound\(settings\.round\)/);
+  assert.match(source, /\[BIRTH_DATE_NOTICE_EMAIL_ROUND_FIELD\]: noticeRound/);
+  assert.match(planSource, /EMAIL_ROUND_FIELD = 'birthDateNoticeEmailRound'/);
+  assert.equal(EMAIL_ROUND_FIELD, 'birthDateNoticeEmailRound');
+  assert.match(toolSource, /--round=/, 'a kapcsoló-eszköz tudja állítani a kört');
 });

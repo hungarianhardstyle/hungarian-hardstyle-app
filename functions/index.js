@@ -55,8 +55,10 @@ const { authEmailTemplate, deletionEmailTemplate, emailChangeEmailTemplate, birt
 const {
   DEFAULT_EMAIL_LIMIT: BIRTH_DATE_NOTICE_EMAIL_LIMIT,
   EMAIL_FIELD: BIRTH_DATE_NOTICE_EMAIL_FIELD,
+  EMAIL_ROUND_FIELD: BIRTH_DATE_NOTICE_EMAIL_ROUND_FIELD,
   NOTICE_FIELD: BIRTH_DATE_NOTICE_FIELD,
   NOTICE_TYPE: BIRTH_DATE_NOTICE_TYPE,
+  normalizeRound: normalizeBirthDateNoticeRound,
   noticePayload: birthDateNoticePayload,
   selectBirthDateNoticeTargets,
 } = require('./birth-date-notice-plan');
@@ -8463,7 +8465,10 @@ function isAlreadyExists(error) {
  * (SMTP-kímélés). Aki a levelet nem kapja meg (nincs címe, vagy hibás), az a
  * listabeli értesítést akkor is megkapja.
  */
-async function sendBirthDateNotices({ emailLimit = BIRTH_DATE_NOTICE_EMAIL_LIMIT, dryRun = false } = {}, deps = {}) {
+async function sendBirthDateNotices(
+  { emailLimit = BIRTH_DATE_NOTICE_EMAIL_LIMIT, dryRun = false, round = 1 } = {},
+  deps = {},
+) {
   const {
     sendPush = sendMulticastToAllTokens,
     pushTokens = getPushTokens,
@@ -8472,16 +8477,18 @@ async function sendBirthDateNotices({ emailLimit = BIRTH_DATE_NOTICE_EMAIL_LIMIT
     emailTemplate = birthDateRequiredEmailTemplate,
     delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   } = deps;
+  const noticeRound = normalizeBirthDateNoticeRound(round);
   const snapshot = await db.collection('community_profiles').limit(1000).get();
   const { targets, skipped, emailCount } = selectBirthDateNoticeTargets(
     snapshot.docs.map((document) => ({ uid: document.id, profile: document.data() || {} })),
-    { emailLimit },
+    { emailLimit, round: noticeRound },
   );
   const summary = {
     profiles: snapshot.size,
     targets: targets.length,
     skipped,
     emailCount,
+    round: noticeRound,
     notified: 0,
     pushed: 0,
     emailed: 0,
@@ -8493,7 +8500,7 @@ async function sendBirthDateNotices({ emailLimit = BIRTH_DATE_NOTICE_EMAIL_LIMIT
   for (const target of targets) {
     const created = await createNotificationBestEffort({
       recipientUid: target.uid,
-      ...birthDateNoticePayload(target.uid),
+      ...birthDateNoticePayload(target.uid, noticeRound),
     });
     if (created) {
       summary.notified += 1;
@@ -8526,6 +8533,7 @@ async function sendBirthDateNotices({ emailLimit = BIRTH_DATE_NOTICE_EMAIL_LIMIT
             {
               [BIRTH_DATE_NOTICE_FIELD]: FieldValue.serverTimestamp(),
               [BIRTH_DATE_NOTICE_EMAIL_FIELD]: FieldValue.serverTimestamp(),
+              [BIRTH_DATE_NOTICE_EMAIL_ROUND_FIELD]: noticeRound,
             },
             { merge: true },
           );
@@ -8591,6 +8599,10 @@ exports.sendBirthDateNotices = onSchedule(
     try {
       const summary = await sendBirthDateNotices({
         emailLimit: Number(settings.emailLimit) || BIRTH_DATE_NOTICE_EMAIL_LIMIT,
+        // ⚠️ A KÖR a kapcsoló-dokumentumból jön (alap: 1). A 2. kör új értesítést
+        // hoz létre (más dedupe-kulcs), ezért az ismételt kiküldés **nem** néma:
+        // aki az első körben kapott, de a dátumot azóta sem adta meg, az újra szól.
+        round: normalizeBirthDateNoticeRound(settings.round),
       });
       console.info(JSON.stringify({ event: 'birth_date_notice_run', ...summary }));
       await db

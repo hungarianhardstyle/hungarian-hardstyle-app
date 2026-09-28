@@ -15,11 +15,17 @@
  *   node tools/birth-date-notice-flag.mjs --enable  --confirm
  *   node tools/birth-date-notice-flag.mjs --disable --confirm
  *   node tools/birth-date-notice-flag.mjs --run-now --confirm   # azonnali kör
+ *   node tools/birth-date-notice-flag.mjs --enable --round=2 --email-limit=60 --confirm
+ *     # ISMÉTELT kör (2.): azok is szólnak, akik az első körben kaptak, de a
+ *     # születési dátumot azóta sem adták meg (a kör a döntés része, lásd lent).
  *
  * ⚠️ A `--run-now` a Cloud Scheduler `:run` hívásával indítja a telepített
  * ütemezett függvényt — ugyanazt a magot futtatja, amit a napi kör, tehát a
  * dupla kiküldés elleni védelem (determinisztikus értesítés-kulcs + a profilban
- * jelölt e-mail) itt is érvényes.
+ * jelölt e-mail) itt is érvényes. A **kör** (`round`) a kapcsoló-dokumentumban
+ * él: az 1. kör kulcsa `birth_date_required:{uid}`, a 2. köré `…:r2` — ezért a
+ * 2. kör **új** értesítést hoz létre, és e-mailt is küld azoknak, akiknél a
+ * jelölés még az 1. körből való.
  */
 import { createChecker, firestoreGet, firestoreSet, runScheduledJob } from './lib/live-firebase.mjs';
 
@@ -41,6 +47,7 @@ async function status() {
   console.log(`Kapcsoló: ${SETTINGS_DOC}`);
   console.log(`  enabled: ${settings.enabled === true ? 'IGEN (kiküldés él)' : 'nem (alvó)'}`);
   console.log(`  emailLimit: ${settings.emailLimit ?? '(alapérték)'}`);
+  console.log(`  round: ${settings.round ?? 1} (1 = az első kör; 2 = ismételt kör azoknak, akik még nem adták meg)`);
   console.log(`  lastRunAt: ${settings.lastRunAt ?? '(még nem futott)'}`);
   if (settings.lastRunSummary) {
     console.log(`  lastRunSummary: ${JSON.stringify(settings.lastRunSummary)}`);
@@ -64,8 +71,14 @@ async function main() {
     if (!dryRun) {
       const emailLimitArg = (args.find((arg) => arg.startsWith('--email-limit=')) || '').split('=')[1];
       const emailLimit = Number(emailLimitArg);
+      // ⚠️ A KÖR: 2-től azok is kapnak értesítést és e-mailt, akik az első körben
+      // már kaptak, de a születési dátumot azóta sem adták meg (a dedupe-kulcs
+      // körönként más, ezért az értesítés tényleg új).
+      const roundArg = (args.find((arg) => arg.startsWith('--round=')) || '').split('=')[1];
+      const round = Number(roundArg);
       const fields = { enabled, updatedAt: new Date() };
       if (Number.isFinite(emailLimit) && emailLimit > 0) fields.emailLimit = emailLimit;
+      if (Number.isFinite(round) && round >= 1) fields.round = Math.floor(round);
       await firestoreSet(SETTINGS_DOC, fields);
     }
     checker.check(`a kapcsoló ${enabled ? 'BE' : 'KI'} állítva`, true, dryRun ? '(száraz futás)' : '');
