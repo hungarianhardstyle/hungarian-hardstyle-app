@@ -425,6 +425,16 @@
         "title": "🏆 You won the giveaway!",
         "body": "You won the giveaway!"
       }
+    },
+    "weekly_digest": {
+      "hu": {
+        "title": "Heti összefoglaló",
+        "body": "{summary} — nézd meg az appban."
+      },
+      "en": {
+        "title": "Weekly recap",
+        "body": "{summary} — open the app to catch up."
+      }
     }
   }
 }

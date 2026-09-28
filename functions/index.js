@@ -67,6 +67,15 @@ const {
   birthdayKey,
   birthdayTargets,
 } = require('./birthday-plan');
+const {
+  DIGEST_KIND: WEEKLY_DIGEST_KIND,
+  DEFAULT_TIME_ZONE: WEEKLY_DIGEST_TIME_ZONE,
+  digestAllowed: weeklyDigestAllowed,
+  digestDedupeKey: weeklyDigestDedupeKey,
+  digestParamsByLanguage: weeklyDigestParams,
+  digestPlan: weeklyDigestPlan,
+  isoWeekKey: weeklyDigestWeekKey,
+} = require('./weekly-digest-plan');
 const { generateAuthActionLink } = require('./auth_action_link');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
@@ -8646,6 +8655,124 @@ exports.sendBirthdayGreetings = onSchedule(
 // A köszöntés mérhető változata (injektált push): a döntés és az idempotencia
 // így **küldés nélkül** is bizonyítható.
 exports.__birthdayForTests = { sendBirthdayGreetings };
+
+/**
+ * **Heti összefoglaló** — vasárnap este, egyszer hetente, minden olyan tagnak,
+ * aki nem kapcsolta ki az értesítéseket.
+ *
+ * MIÉRT: a tulajdonos választotta a használat-növelő csomagból (2026-09-27) —
+ * azok, akik nem nyitják naponta az appot, egy rövid „mi történt a héten"
+ * üzenettel térjenek vissza. A döntés a tiszta `functions/weekly-digest-plan.js`-ben
+ * él (mi kerüljön bele, kit zár ki a beállítás, mi a heti kulcs), itt csak az
+ * adatolvasás és a küldés van.
+ *
+ * ⚠️ **EGYSZER HETENTE:** a bejövő értesítés determinisztikus kulcsa a hét
+ * sorszámát tartalmazza (`weekly_digest:2026-W41:{uid}`), ezért egy ismételt kör
+ * (vagy egy elszállt futás utáni újrapróbálkozás) **nem** küldi ki kétszer, és a
+ * push csak akkor megy, ha az értesítés **tényleg létrejött** (`created`).
+ *
+ * ⚠️ **ÜRES ÖSSZEFOGLALÓ NINCS:** ha a héten nem volt hír és nincs közelgő
+ * esemény, a kör kilép — nem zavarunk üres értesítéssel.
+ */
+async function sendWeeklyDigest({ now = Date.now() } = {}) {
+  const fetchList = async (path, lang) => {
+    const separator = path.includes('?') ? '&' : '?';
+    const response = await fetch(`${WORDPRESS_BASE_URL}${path}${separator}lang=${lang}`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) return null;
+    const body = await response.json();
+    return Array.isArray(body) ? body : Array.isArray(body?.items) ? body.items : [];
+  };
+
+  const news = await fetchList('/posts', 'hu');
+  if (!news) throw new Error('WordPress hírlista: HTTP hiba');
+  // Az angol lista **opcionális**: ha nem jön le, marad a magyar cím — az
+  // összefoglaló soha nem törik el a fordítás miatt (mint a tartalom-fan-outnál).
+  const newsEn = (await fetchList('/posts', 'en')) || [];
+  const events = (await fetchList('/events', 'hu')) || [];
+  const eventsEn = (await fetchList('/events', 'en')) || [];
+
+  const plan = weeklyDigestPlan({ news, newsEn, events, eventsEn }, now, WEEKLY_DIGEST_TIME_ZONE);
+  if (!plan.news.length && !plan.events.length) {
+    return { skipped: 'empty', news: 0, events: 0, created: 0, pushed: 0 };
+  }
+
+  const weekKey = weeklyDigestWeekKey(WEEKLY_DIGEST_TIME_ZONE, new Date(now));
+  const params = weeklyDigestParams(plan);
+
+  // A beállítások a privát dokumentumban élnek; csak a két szükséges mezőt
+  // olvassuk, hogy ne kerüljön több személyes adat a memóriába.
+  const privateDocs = await db
+    .collection('private_user_data')
+    .select('notificationPreferences')
+    .get();
+  const allowed = new Set();
+  for (const doc of privateDocs.docs) {
+    if (weeklyDigestAllowed(doc.get('notificationPreferences'))) allowed.add(doc.id);
+  }
+  if (!allowed.size) {
+    return { skipped: 'no-recipients', news: plan.news.length, events: plan.events.length, created: 0, pushed: 0 };
+  }
+
+  let created = 0;
+  let pushed = 0;
+  for (const uid of allowed) {
+    const dedupeKey = weeklyDigestDedupeKey(weekKey, uid);
+    if (!dedupeKey) continue;
+    const notificationCreated = await createNotificationBestEffort({
+      recipientUid: uid,
+      type: WEEKLY_DIGEST_KIND,
+      kind: WEEKLY_DIGEST_KIND,
+      params,
+      // Nincs konkrét célpont: az összefoglaló több tartalomra hivatkozik, ezért
+      // a koppintás az appot nyitja (nem ugrik félre egy találomra kiválasztott
+      // cikkre).
+      targetType: '',
+      targetId: '',
+      dedupeKey,
+    });
+    if (!notificationCreated) continue;
+    created += 1;
+    const tokens = await getPushTokens(uid);
+    if (!tokens.length) continue;
+    const text = await notificationTextFor(uid, WEEKLY_DIGEST_KIND, params);
+    const result = await sendMulticastToAllTokens(
+      {
+        notification: { title: text.title, body: text.body },
+        data: { type: WEEKLY_DIGEST_KIND },
+      },
+      tokens,
+    );
+    pushed += result.successCount;
+  }
+  return { week: weekKey, news: plan.news.length, events: plan.events.length, created, pushed };
+}
+
+exports.sendWeeklyDigest = onSchedule(
+  {
+    schedule: 'every sunday 18:00',
+    timeZone: WEEKLY_DIGEST_TIME_ZONE,
+    region: 'europe-central2',
+    timeoutSeconds: 300,
+  },
+  async () => {
+    try {
+      const summary = await sendWeeklyDigest();
+      console.info(JSON.stringify({ event: 'weekly_digest_run', ...summary }));
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'weekly_digest_failed',
+          message: error?.message || String(error),
+        }),
+      );
+    }
+  },
+);
+
+// A heti összefoglaló mérhető változata (küldés nélkül is hívható).
+exports.__weeklyDigestForTests = { sendWeeklyDigest };
 
 exports.moderatePrivateMessage = onDocumentCreated(
   {

@@ -130,6 +130,13 @@ const TEXTS = {
     hu: { title: 'Új hír érkezett', body: '{name}' },
     en: { title: 'New article', body: '{name}' },
   },
+  // Heti összefoglaló (2026-09-27): vasárnap esti, egyszeri emlékeztető azoknak,
+  // akik nem nyitják naponta az appot. A `{summary}` helyőrzőt a szerver állítja
+  // össze nyelvenként (`digestParamsByLanguage`), ezért itt csak a keret van.
+  weekly_digest: {
+    hu: { title: 'Heti összefoglaló', body: '{summary} — nézd meg az appban.' },
+    en: { title: 'Weekly recap', body: '{summary} — open the app to catch up.' },
+  },
   new_release: {
     hu: { title: 'Új release érkezett', body: '{name}' },
     en: { title: 'New release', body: '{name}' },
