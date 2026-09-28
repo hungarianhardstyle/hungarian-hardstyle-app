@@ -40,7 +40,7 @@ export const CONTAINER_IMAGE = 'php:8.2-cli';
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** A kimenetből kiolvasott, kötelező jelzők. */
-export const REQUIRED_MARKERS = ['PHP LINT OK', 'VISELKEDES OK', 'KONSTANS-AG OK', 'PUSH-DEDUPE OK'];
+export const REQUIRED_MARKERS = ['PHP LINT OK', 'VISELKEDES OK', 'KONSTANS-AG OK', 'PUSH-DEDUPE OK', 'PUSH-NYELV OK'];
 
 /** A kimenet összegzése (tesztelhető, hálózat nélkül). */
 export function summarize(output) {
@@ -82,11 +82,13 @@ export function selfTest() {
     'KONSTANS-AG OK',
     '12/12 ellenorzes rendben',
     'PUSH-DEDUPE OK',
+    '19 ellenőrzés, 0 hiba',
+    'PUSH-NYELV OK',
   ].join('\n');
   const goodSummary = summarize(good);
   check('a jó kimenet nem jelez hibát', goodSummary.failed === false);
   check('a lintelt fájlok száma kiolvasható', goodSummary.linted === 46);
-  check('a két viselkedés-kör kiolvasható', goodSummary.behaviorChecks.length === 2);
+  check('a viselkedés-körök kiolvashatók', goodSummary.behaviorChecks.length === 3);
   check('minden kötelező jelző megvan', goodSummary.missingMarkers.length === 0);
   check(
     'a hiányzó push-lánc jelzőt is észreveszi',

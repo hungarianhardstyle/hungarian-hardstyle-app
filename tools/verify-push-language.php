@@ -1,0 +1,162 @@
+<?php
+/**
+ * A NYELVENKÉNTI ESEMÉNY-EMLÉKEZTETŐ bizonyítása (plugin 2.14.6) — valódi PHP,
+ * WordPress nélkül, saját stubokkal.
+ *
+ * MIT MÉR:
+ *   1. `huhs_push_normalize_language` — ismeretlen/hiányzó érték magyar marad
+ *      (a régi kliensek nem némulnak el), az `en*` angol;
+ *   2. `huhs_push_recipients(..., $language)` — a nyelvi szűrő a beállítás-szűrők
+ *      (`enabled`, `reminders`) MELLETT működik, nem helyettük;
+ *   3. `huhs_push_event_start_timestamp` — a helyi falióra **valódi** epochot ad
+ *      (nyáron +2 óra): a régi `strtotime`-alapú számítás 01:00-nak hitte a
+ *      23:00-s eseményt;
+ *   4. `huhs_push_event_reminder_texts` — magyar ÉS angol szöveg, a törzsben a
+ *      **dátummal és a helyszínnel**.
+ *
+ * Futtatás (a konténerben, a kibontott csomagon):
+ *   php tools/verify-push-language.php /work/tmp/php-plugin/huhs-mobile-api
+ *
+ * Kilépési kód: 0 = minden rendben, 1 = eltérés.
+ */
+
+define('ABSPATH', __DIR__);
+
+// --- WordPress-stubok (csak ami ehhez a méréshez kell) ---------------------
+$GLOBALS['huhs_meta'] = array();
+$GLOBALS['huhs_titles'] = array();
+
+function add_action(...$args) { return true; }
+function add_filter(...$args) { return true; }
+function register_rest_route(...$args) { return true; }
+function get_option($name, $default = false) { return $default; }
+function update_option(...$args) { return true; }
+function delete_option(...$args) { return true; }
+function get_post_meta($postId, $key, $single = false)
+{
+    return $GLOBALS['huhs_meta'][$postId][$key] ?? '';
+}
+function get_the_title($post) { return $GLOBALS['huhs_titles'][$post->ID] ?? ''; }
+function wp_timezone() { return new DateTimeZone('Europe/Budapest'); }
+function wp_date($format, $timestamp = null, $timezone = null)
+{
+    // ⚠️ A VALÓDI `wp_date()` a **site időzónáját** használja, ha nincs megadva —
+    // a stubnak is így kell viselkednie, különben a mérés hamis eltérést ad.
+    $zone = $timezone instanceof DateTimeZone ? $timezone : wp_timezone();
+    $moment = new DateTime('@' . (int) ($timestamp ?? time()));
+    $moment->setTimezone($zone);
+    return $moment->format($format);
+}
+function wp_strip_all_tags($value) { return strip_tags((string) $value); }
+function sanitize_key($value) { return strtolower(preg_replace('/[^A-Za-z0-9_\-]/', '', (string) $value)); }
+function current_time($type = 'mysql', $gmt = 0) { return date('Y-m-d H:i:s'); }
+
+$pluginDir = rtrim($argv[1] ?? '', '/');
+if ($pluginDir === '' || !is_file($pluginDir . '/includes/push.php')) {
+    fwrite(STDERR, "HIBA: nincs ilyen plugin-könyvtár: {$pluginDir}\n");
+    exit(1);
+}
+require_once $pluginDir . '/includes/push.php';
+
+$checks = 0;
+$failures = 0;
+function check($label, $condition, $detail = '')
+{
+    global $checks, $failures;
+    $checks++;
+    if ($condition) {
+        echo "OK   {$label}\n";
+        return;
+    }
+    $failures++;
+    echo "HIBA {$label}" . ($detail !== '' ? " — {$detail}" : '') . "\n";
+}
+
+// --- 1) Nyelv-normalizálás -------------------------------------------------
+check('en → en', huhs_push_normalize_language('en') === 'en');
+check('EN → en (kis/nagybetű mindegy)', huhs_push_normalize_language('EN') === 'en');
+check('en-GB → en', huhs_push_normalize_language('en-GB') === 'en');
+check('en_US → en', huhs_push_normalize_language('en_US') === 'en');
+check('hu → hu', huhs_push_normalize_language('hu') === 'hu');
+check('üres → hu (régi kliens nem némul el)', huhs_push_normalize_language('') === 'hu');
+check('ismeretlen (de) → hu', huhs_push_normalize_language('de') === 'hu');
+
+// --- 2) Nyelvi szűrő a beállítások mellett --------------------------------
+$tokens = array(
+    'a' => array('token' => 'token-aaaaaaaaaaaaaaaaaaaa', 'language' => 'hu'),
+    'b' => array('token' => 'token-bbbbbbbbbbbbbbbbbbbb', 'language' => 'en'),
+    'c' => array('token' => 'token-cccccccccccccccccccc', 'language' => 'hu', 'enabled' => false),
+    'd' => array('token' => 'token-dddddddddddddddddddd', 'language' => 'hu', 'reminders' => false),
+    'e' => array('token' => 'token-eeeeeeeeeeeeeeeeeeee'),
+);
+$data = array('type' => 'event', 'kind' => 'reminder', 'id' => '12505');
+$hu = huhs_push_recipients($tokens, $data, 'hu');
+$en = huhs_push_recipients($tokens, $data, 'en');
+$all = huhs_push_recipients($tokens, $data, '');
+check('magyar kör: a magyar ÉS a nyelv nélküli (régi kliens) engedélyezett eszközök', array_keys($hu) === array('a', 'e'), implode(',', array_keys($hu)));
+check('angol kör: csak az angol eszköz', array_keys($en) === array('b'), implode(',', array_keys($en)));
+check('nyelv nélküli rekord magyarnak számít', isset($hu['e']) && !isset($en['e']));
+check('nyelvi szűrő nélkül minden engedélyezett (kivéve reminders=false)', array_keys($all) === array('a', 'b', 'e'), implode(',', array_keys($all)));
+check('a kikapcsolt értesítés a nyelvi körből is kimarad', !isset($hu['c']));
+
+// --- 3) Az esemény kezdetének valódi időpontja ----------------------------
+$post = (object) array('ID' => 12505);
+$GLOBALS['huhs_meta'][12505] = array(
+    'event_start_date' => '2026-10-17',
+    'event_start_time' => '23:00',
+    'venue_name' => 'Stenk',
+    'venue_city' => 'Budapest',
+);
+$GLOBALS['huhs_titles'][12505] = 'Hard Base Classic';
+
+$timestamp = huhs_push_event_start_timestamp($post);
+check('a falióra a site időzónájában értelmeződik (CEST: 23:00 = 21:00 UTC)',
+    gmdate('c', $timestamp) === '2026-10-17T21:00:00+00:00', gmdate('c', $timestamp));
+check('a megjelenített helyi idő helyes', wp_date('Y.m.d. H:i', $timestamp, wp_timezone()) === '2026.10.17. 23:00',
+    wp_date('Y.m.d. H:i', $timestamp, wp_timezone()));
+check('a régi (strtotime) számítás MÁST adott — a javítás nem kozmetika',
+    (int) strtotime('2026-10-17 23:00') !== $timestamp,
+    (string) strtotime('2026-10-17 23:00') . ' vs ' . $timestamp);
+
+// Téli időszámítás: 2026-12-05 23:00 = 22:00 UTC (CET).
+$GLOBALS['huhs_meta'][12505]['event_start_date'] = '2026-12-05';
+$winter = huhs_push_event_start_timestamp($post);
+check('téli (CET) falióra is helyes (23:00 = 22:00 UTC)',
+    gmdate('c', $winter) === '2026-12-05T22:00:00+00:00', gmdate('c', $winter));
+$GLOBALS['huhs_meta'][12505]['event_start_date'] = '2026-10-17';
+
+check('hiányzó dátum → 0', huhs_push_event_start_timestamp((object) array('ID' => 999)) === 0);
+
+// --- 4) Az emlékeztető szövegei -------------------------------------------
+$texts = huhs_push_event_reminder_texts($post, 'day_before');
+check('magyar cím: „Esemény holnap"', ($texts['hu']['title'] ?? '') === 'Esemény holnap', $texts['hu']['title'] ?? '');
+check('angol cím: „Event tomorrow"', ($texts['en']['title'] ?? '') === 'Event tomorrow', $texts['en']['title'] ?? '');
+check('a magyar törzs tartalmazza a címet, a dátumot és a helyszínt',
+    strpos($texts['hu']['body'], 'Hard Base Classic') === 0
+    && strpos($texts['hu']['body'], '2026.10.17. 23:00') !== false
+    && strpos($texts['hu']['body'], 'Stenk, Budapest') !== false,
+    $texts['hu']['body']);
+check('az angol törzs ugyanazokat a tényeket adja, angol dátumformával',
+    strpos($texts['en']['body'], 'Oct 17, 23:00') !== false
+    && strpos($texts['en']['body'], 'Stenk, Budapest') !== false,
+    $texts['en']['body']);
+check('mindhárom ablaknak megvan a magyar és az angol címe', (function () use ($post) {
+    foreach (array('week', 'day_before', 'hours_before') as $kind) {
+        $text = huhs_push_event_reminder_texts($post, $kind);
+        if (($text['hu']['title'] ?? '') === '' || ($text['en']['title'] ?? '') === '') return false;
+    }
+    return true;
+})());
+
+// Helyszín nélkül ne maradjon lógó elválasztó.
+$GLOBALS['huhs_meta'][12505]['venue_name'] = '';
+$GLOBALS['huhs_meta'][12505]['venue_city'] = '';
+$noPlace = huhs_push_event_reminder_texts($post, 'hours_before');
+check('helyszín nélkül csak a dátum marad (nincs lógó „·")',
+    $noPlace['hu']['body'] === 'Hard Base Classic — 2026.10.17. 23:00', $noPlace['hu']['body']);
+
+// --- Összegzés -------------------------------------------------------------
+$ok = $failures === 0;
+echo "\n{$checks} ellenőrzés, {$failures} hiba\n";
+if ($ok) echo "PUSH-NYELV OK\n";
+exit($ok ? 0 : 1);

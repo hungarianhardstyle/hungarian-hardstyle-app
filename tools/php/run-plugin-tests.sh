@@ -49,10 +49,19 @@ fi
 # eddig azért nem futott, mert nem volt PHP ezen a gépen. Most a konténerben fut.
 echo ""
 echo "=== 4) A push-lánc újrapróbálkozása (meglévő PHP-ellenőrző)"
-if php /work/tools/verify-push-dedupe.php | tail -3; then
+if php /work/tools/verify-push-dedupe.php "$PLUGIN" | tail -4; then
   echo "PUSH-DEDUPE OK"
 else
   echo "PUSH-DEDUPE HIBA"
+  fail=1
+fi
+
+echo ""
+echo "=== 5) Nyelvenkénti emlékeztető (2.14.6)"
+if php /work/tools/verify-push-language.php "$PLUGIN"; then
+  echo "PUSH-NYELV OK"
+else
+  echo "PUSH-NYELV HIBA"
   fail=1
 fi
 

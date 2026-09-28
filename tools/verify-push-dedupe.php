@@ -145,7 +145,30 @@ define('MINUTE_IN_SECONDS', 60);
 define('HOUR_IN_SECONDS', 3600);
 define('DAY_IN_SECONDS', 86400);
 
-require_once __DIR__ . '/../.tmp-api-24115/huhs-mobile-api/includes/push.php';
+// ⚠️ MÉRT HIBA (2026-09-27): ez a sor eddig **egy régi munkapéldányra** mutatott
+// (`.tmp-api-24115`, plugin 2.5.9), ezért a „12/12" a **kiszállított csomagról
+// nem mondott semmit**. A helyes forrás a **kibontott, szállítandó ZIP**
+// (`tmp/php-plugin/huhs-mobile-api`), amit a hívó (a Docker-harness) készít el;
+// ha az nincs meg, essünk vissza a régi útvonalra — de **írjuk ki, mit mértünk**.
+$huhsPluginCandidates = array(
+    $argv[1] ?? '',
+    __DIR__ . '/../tmp/php-plugin/huhs-mobile-api',
+    __DIR__ . '/../.tmp-api-24115/huhs-mobile-api',
+);
+$huhsPluginDir = '';
+foreach ($huhsPluginCandidates as $candidate) {
+    $candidate = rtrim((string) $candidate, "/\\");
+    if ($candidate !== '' && is_file($candidate . '/includes/push.php')) {
+        $huhsPluginDir = $candidate;
+        break;
+    }
+}
+if ($huhsPluginDir === '') {
+    fwrite(STDERR, "HIBA: nem található a plugin (includes/push.php) — add meg útvonalat argumentumban.\n");
+    exit(1);
+}
+echo "mért plugin: {$huhsPluginDir}/includes/push.php\n";
+require_once $huhsPluginDir . '/includes/push.php';
 
 // --- A harness -------------------------------------------------------------
 $checks = 0;

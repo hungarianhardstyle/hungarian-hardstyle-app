@@ -1,0 +1,288 @@
+diff --git a/huhs-mobile-api/huhs-mobile-api.php b/huhs-mobile-api/huhs-mobile-api.php
+index 5adcb50b..5d483125 100644
+--- a/huhs-mobile-api/huhs-mobile-api.php
++++ b/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.14.5
++ * Version: 2.14.6
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.14.5');
++define('HUHS_API_VERSION', '2.14.6');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/huhs-mobile-api/includes/push.php b/huhs-mobile-api/includes/push.php
+index 2145554d..628409c3 100644
+--- a/huhs-mobile-api/includes/push.php
++++ b/huhs-mobile-api/includes/push.php
+@@ -7,6 +7,31 @@ if (!defined('ABSPATH')) {
+ define('HUHS_PUSH_TOKENS_OPTION', 'huhs_push_tokens');
+ define('HUHS_PUSH_SERVICE_ACCOUNT_OPTION', 'huhs_firebase_service_account');
+ 
++/**
++ * A támogatott értesítés-nyelvek. A küldés **nyelvenként külön** megy ki, mert
++ * a push szövegét a rendszer rajzolja ki — azt az app már nem tudja lefordítani.
++ */
++function huhs_push_languages()
++{
++    return array('hu', 'en');
++}
++
++/**
++ * A token rekord nyelvének normalizálása (`hu`/`en`).
++ *
++ * ⚠️ Ismeretlen vagy **hiányzó** érték → magyar: a régi kliensek (amelyek még
++ * nem küldenek nyelvet) a megszokott magyar szöveget kapják, nem némul el a
++ * push. Ez a 2.14.6 előtti állapot pontos viselkedése.
++ */
++function huhs_push_normalize_language($value)
++{
++    $code = strtolower(trim((string) $value));
++    if ($code === 'en' || strpos($code, 'en-') === 0 || strpos($code, 'en_') === 0) {
++        return 'en';
++    }
++    return 'hu';
++}
++
+ add_action('rest_api_init', function () {
+     register_rest_route('huhs/v1', '/push/register', array(
+         'methods' => 'POST',
+@@ -25,6 +50,9 @@ function huhs_push_register_token(WP_REST_Request $request)
+     $params = $request->get_json_params();
+     $token = sanitize_text_field((string) ($params['token'] ?? $request->get_param('token')));
+     $platform = sanitize_key((string) ($params['platform'] ?? 'android'));
++    // Nyelv (2.14.6): a kliens küldi (`hu`/`en`) — ebből lesz nyelvenkénti
++    // emlékeztető. Hiányzó érték esetén magyar (a régi kliensek viselkedése).
++    $language = huhs_push_normalize_language($params['language'] ?? '');
+ 
+     if (strlen($token) < 20 || strlen($token) > 4096) {
+         return new WP_Error('invalid_push_token', 'Érvénytelen FCM token.', array('status' => 400));
+@@ -38,6 +66,7 @@ function huhs_push_register_token(WP_REST_Request $request)
+     $tokens[$key] = array_merge($existing, array(
+         'token' => $token,
+         'platform' => $platform,
++        'language' => $language,
+         'updated_at' => current_time('mysql', true),
+     ));
+ 
+@@ -59,6 +88,10 @@ function huhs_push_update_preferences(WP_REST_Request $request)
+     $record = is_array($tokens[$key] ?? null) ? $tokens[$key] : array();
+     $tokens[$key] = array_merge($record, array(
+         'token' => $token,
++        // Nyelv (2.14.6): a beállítás-küldés is frissíti, mert a felhasználó a
++        // nyelvet az appban váltja — a következő mentés így átállítja a
++        // nyelvenkénti emlékeztetőt is.
++        'language' => huhs_push_normalize_language($params['language'] ?? ($record['language'] ?? '')),
+         'enabled' => filter_var($params['enabled'] ?? true, FILTER_VALIDATE_BOOLEAN),
+         'news' => filter_var($params['news'] ?? true, FILTER_VALIDATE_BOOLEAN),
+         'events' => filter_var($params['events'] ?? true, FILTER_VALIDATE_BOOLEAN),
+@@ -386,14 +419,17 @@ function huhs_push_diag_active_job($now)
+  * does not fit into one request: the recipient list has to be reproducible when
+  * the delivery is resumed later.
+  */
+-function huhs_push_recipients($tokens, $data)
++function huhs_push_recipients($tokens, $data, $language = '')
+ {
+     $type = (string) ($data['type'] ?? 'custom');
++    // Nyelvi szűrő (2.14.6): üres érték = mindenki (a régi viselkedés).
++    $only = $language === '' ? '' : huhs_push_normalize_language($language);
+     $recipients = array();
+     foreach ((array) $tokens as $key => $record) {
+         if (!is_array($record)) continue;
+         $token = (string) ($record['token'] ?? '');
+         if ($token === '') continue;
++        if ($only !== '' && huhs_push_normalize_language($record['language'] ?? '') !== $only) continue;
+         if (array_key_exists('enabled', $record) && !$record['enabled']) continue;
+         if ($type === 'news' && array_key_exists('news', $record) && !$record['news']) continue;
+         if ($type === 'event' && array_key_exists('events', $record) && !$record['events']) continue;
+@@ -932,7 +968,7 @@ function huhs_push_resume_pending_job()
+  * Each run now handles what fits into HUHS_PUSH_TIME_BUDGET seconds and the
+  * remainder is delivered by scheduled follow-up runs until the list is done.
+  */
+-function huhs_push_send($title, $body, $data = array())
++function huhs_push_send($title, $body, $data = array(), $language = '')
+ {
+     $title = html_entity_decode(wp_strip_all_tags((string) $title), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+     $body = html_entity_decode(wp_strip_all_tags((string) $body), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+@@ -976,7 +1012,7 @@ function huhs_push_send($title, $body, $data = array())
+         return 0;
+     }
+ 
+-    $recipients = huhs_push_recipients($tokens, $data);
++    $recipients = huhs_push_recipients($tokens, $data, $language);
+     if (!$recipients) {
+         error_log('HUHS push: nothing to do (' . $type . '), no recipient matches the preferences.');
+         huhs_push_record_result(array(
+@@ -1035,6 +1071,36 @@ function huhs_push_send($title, $body, $data = array())
+     return $result['sent'];
+ }
+ 
++/**
++ * Nyelvenkénti küldés (2.14.6).
++ *
++ * MIÉRT: a push szövegét a **rendszer** rajzolja ki, ezért az app már nem tudja
++ * lefordítani — eddig minden eszköz a magyar szöveget kapta (az angol felületű
++ * felhasználó is). Itt minden nyelvre külön kör indul, a címzettek nyelv szerint
++ * szűrve; ha egy nyelvre nincs egyetlen eszköz sem, arra **nem** indul kör.
++ *
++ * ⚠️ A beállítás-szűrők (`enabled` / `events` / `reminders`) változatlanul
++ * érvényesek, mert a szűrést a `huhs_push_send` → `huhs_push_recipients` végzi.
++ *
++ * @param array $texts `array('hu' => array('title' => …, 'body' => …), 'en' => …)`
++ * @param array $data  a push adat-csomagja (típus, célpont)
++ * @return int a ténylegesen elküldött értesítések száma
++ */
++function huhs_push_send_localized($texts, $data = array())
++{
++    $total = 0;
++    foreach (huhs_push_languages() as $language) {
++        $text = is_array($texts[$language] ?? null) ? $texts[$language] : array();
++        $title = (string) ($text['title'] ?? '');
++        $body = (string) ($text['body'] ?? '');
++        if ($title === '' && $body === '') continue;
++        // A token-lista itt dől el: ha az adott nyelvre nincs címzett, a hívás
++        // nulla lesz és nem hagy maga után felesleges feladatot.
++        $total += (int) huhs_push_send($title, $body, $data, $language);
++    }
++    return $total;
++}
++
+ /**
+  * Queue a custom push instead of keeping the authenticated REST request open
+  * while FCM is contacted once for every registered device. The option lock
+@@ -1298,12 +1364,36 @@ add_action('save_post_huhs_release', function ($post_id, $post, $update) {
+     }
+ }, 20, 3);
+ 
++/**
++ * Az esemény kezdetének **valódi** időpontja (epoch másodperc), 0 ha nincs dátum.
++ *
++ * ⚠️ MIÉRT KELL (mért hiba, 2.14.6): a `strtotime($date . ' ' . $time)` a szerver
++ * **UTC** időzónáját használja (a WordPress `date_default_timezone_set('UTC')`-t
++ * hív), ezért egy `2026-10-17 23:00` helyi faliórát **UTC-ként** értelmezett: a
++ * kapott időpont valójában **01:00 helyi idő** (nyáron +2 óra, télen +1). A
++ * `wp_date('U', …)` ezen nem változtat. Az emlékeztetők ezért **később** mentek
++ * ki a kelleténél (a „6 óra előtte" valójában ~4 óra előtte volt), a
++ * megjelenített idő pedig rossz napot/órát mutatott volna.
++ *
++ * A helyes út: a faliórát a **site időzónájában** értelmezzük
++ * (`date_create_immutable`), így az epoch valódi, és a `wp_date()` ugyanezt az
++ * időzónát használva a helyes helyi időt írja ki.
++ */
++function huhs_push_event_start_timestamp($post)
++{
++    $date = (string) get_post_meta($post->ID, 'event_start_date', true);
++    if ($date === '') return 0;
++    $time = (string) (get_post_meta($post->ID, 'event_start_time', true) ?: '12:00');
++    $parsed = date_create_immutable($date . ' ' . $time, wp_timezone());
++    if (!$parsed) return 0;
++    return (int) $parsed->getTimestamp();
++}
++
+ function huhs_push_schedule_event_reminders($post)
+ {
+     $date = get_post_meta($post->ID, 'event_start_date', true);
+-    $time = get_post_meta($post->ID, 'event_start_time', true) ?: '12:00';
+     if (!$date) return;
+-    $timestamp = wp_date('U', strtotime($date . ' ' . $time), wp_timezone());
++    $timestamp = huhs_push_event_start_timestamp($post);
+     if (!$timestamp || $timestamp <= time()) return;
+ 
+     foreach (array(
+@@ -1339,7 +1429,10 @@ add_action('init', function () {
+ add_action('huhs_push_event_reminder_scan', 'huhs_push_scan_event_reminders');
+ function huhs_push_scan_event_reminders()
+ {
+-    $now = current_time('timestamp');
++    // ⚠️ VALÓDI idő (2.14.6): eddig `current_time('timestamp')` volt — az a helyi
++    // faliórát adja vissza „epochként", amihez a régi, szintén eltolt
++    // `$timestamp` illett. Most mindkettő valódi epoch, ezért a `time()` a helyes.
++    $now = time();
+ 
+     // This scan runs every five minutes, forever, and WP-Cron does its work
+     // inside an ordinary request: whichever visitor or app call triggers cron
+@@ -1372,12 +1465,8 @@ function huhs_push_scan_event_reminders()
+     ));
+ 
+     foreach ($events as $post) {
+-        $date = get_post_meta($post->ID, 'event_start_date', true);
+-        $time = get_post_meta($post->ID, 'event_start_time', true) ?: '12:00';
+-        if (!$date) continue;
+-        $timestamp = wp_date('U', strtotime($date . ' ' . $time), wp_timezone());
++        $timestamp = huhs_push_event_start_timestamp($post);
+         if (!$timestamp) continue;
+-        $timestamp = (int) $timestamp;
+         $kinds = array();
+         if ($now >= $timestamp - 6 * HOUR_IN_SECONDS && $now < $timestamp - 5 * HOUR_IN_SECONDS) {
+             $kinds[] = 'hours_before';
+@@ -1406,16 +1495,56 @@ function huhs_push_event_reminder($post_id, $kind)
+     if (!$post || $post->post_status !== 'publish') return;
+     $marker = '_huhs_push_reminder_sent_' . sanitize_key($kind);
+     if (get_post_meta($post_id, $marker, true)) return;
+-    $sent = huhs_push_send(
+-        $kind === 'week'
+-            ? 'Esemény egy hét múlva'
+-            : ($kind === 'day_before' ? 'Esemény holnap' : 'Esemény ma'),
+-        get_the_title($post),
++    $sent = huhs_push_send_localized(
++        huhs_push_event_reminder_texts($post, $kind),
+         array('type' => 'event', 'kind' => 'reminder', 'id' => (string) $post_id)
+     );
+     if ($sent > 0) update_post_meta($post_id, $marker, current_time('mysql', true));
+ }
+ 
++/**
++ * Az emlékeztető szövege **nyelvenként**, a **dátummal és a helyszínnel**
++ * (2.14.6).
++ *
++ * MIÉRT: eddig a törzs csak az esemény címe volt („Esemény holnap" + cím), így
++ * a felhasználó nem látta, **mikor** és **hol** van — pont az a két adat, ami
++ * miatt egy emlékeztető hasznos. A cím az ablak nevét mondja meg, a törzs pedig
++ * a tényeket: `{cím} — {dátum} · {helyszín}, {város}`.
++ *
++ * ⚠️ A dátum a **helyi (site) időzónában** készül (`wp_date`), ugyanúgy, ahogy az
++ * ütemezés számol — különben nyáron/télen elcsúszna egy órával.
++ */
++function huhs_push_event_reminder_texts($post, $kind)
++{
++    $timestamp = huhs_push_event_start_timestamp($post);
++    $venue = trim((string) get_post_meta($post->ID, 'venue_name', true));
++    $city = trim((string) get_post_meta($post->ID, 'venue_city', true));
++    $place = $venue !== '' && $city !== '' ? $venue . ', ' . $city : ($venue !== '' ? $venue : $city);
++    $title = html_entity_decode(wp_strip_all_tags((string) get_the_title($post)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
++
++    $headlines = array(
++        'week' => array('hu' => 'Esemény egy hét múlva', 'en' => 'Event in a week'),
++        'day_before' => array('hu' => 'Esemény holnap', 'en' => 'Event tomorrow'),
++        'hours_before' => array('hu' => 'Esemény ma', 'en' => 'Event today'),
++    );
++    $headline = $headlines[$kind] ?? $headlines['day_before'];
++
++    $texts = array();
++    foreach (huhs_push_languages() as $language) {
++        $when = $timestamp > 0
++            ? wp_date($language === 'en' ? 'M j, H:i' : 'Y.m.d. H:i', $timestamp)
++            : '';
++        $facts = array_values(array_filter(array($when, $place), function ($part) {
++            return (string) $part !== '';
++        }));
++        $texts[$language] = array(
++            'title' => (string) ($headline[$language] ?? $headline['hu']),
++            'body' => $facts ? $title . ' — ' . implode(' · ', $facts) : $title,
++        );
++    }
++    return $texts;
++}
++
+ add_action('admin_menu', function () {
+     add_submenu_page('huhs-mobile', 'Push értesítések', 'Push értesítések', 'manage_options', 'huhs-push', 'huhs_push_admin_page');
+ });
