@@ -49,6 +49,12 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https" android:host="hungarianhardstyle.hu" android:pathPrefix="/invite"/>
+                <!-- Megosztott TARTALOM (381): a mért permalink-alakok. A link
+                     ettől az appban nyílik meg; a böngésző változatlanul működik,
+                     ha az app nincs telepítve. -->
+                <data android:scheme="https" android:host="hungarianhardstyle.hu" android:pathPrefix="/events"/>
+                <data android:scheme="https" android:host="hungarianhardstyle.hu" android:pathPrefix="/releases"/>
+                <data android:scheme="https" android:host="hungarianhardstyle.hu" android:pathPrefix="/djs"/>
             </intent-filter>
 
         </activity>
