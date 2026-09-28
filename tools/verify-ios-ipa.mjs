@@ -9,6 +9,8 @@
 //   * az AdMob **app** ID-t  — az `Info.plist`-ben (ASCII vagy UTF-16BE),
 //   * a ket egyseg-azonositot — a beforditott Dart-konstansokban (ASCII),
 //   * es ELLENORIZZUK, hogy a Google **teszt** app ID-ja NE legyen benne.
+// A `--contains=<szoveg>` bizonyitek a negyfele tarolas mindegyiket nezi
+// (onebyte / utf8 / utf16le / utf16be) — lasd a `needlesFor` magyarazatat.
 //
 // Hasznalat (a .ipa valojaban egy zip):
 //   Copy-Item build/ios-ipa/Runner-unsigned.ipa build/ipa.zip
@@ -38,16 +40,35 @@ export const FORBIDDEN_TEST_APP_ID = 'ca-app-pub-3940256099942544~1458002511';
 export const TEST_BANNER = 'ca-app-pub-3940256099942544/6300978111';
 export const TEST_REWARDED = 'ca-app-pub-3940256099942544/5224354917';
 
-/** ASCII és UTF-16BE alak (a binaris plist UTF-16BE-t is hasznal). */
+/**
+ * A szoveg negyfele alakja, mert NEGY kulonbozo tarolas letezik a csomagban:
+ *   * `onebyte` — a Dart `OneByteString`-je (minden karakter <= U+00FF, egy bajt);
+ *     a binaris plist ASCII stringjei is ide esnek;
+ *   * `utf8`    — a csomagolt JSON/asset fajlok (pl. `assets/i18n/en.json`);
+ *   * `utf16le` — a Dart `TwoByteString`-je a beforditott AOT-snapshotban
+ *     (a memoriabeli bajtsorrend little-endian);
+ *   * `utf16be` — a binaris plist UTF-16 stringjei (a plist big-endian).
+ *
+ * ⚠️ MERET HIBA VOLT (2026-09-28): korabban csak `latin1` es `utf16be` keszult,
+ * ezert a **nem Latin-1** szovegeket (pl. `szervezod` a `H` helyett `ő`-vel, vagy
+ * a `—` em-dash) NEM talalta meg a csomagban, holott azok BENT VOLTAK (UTF-16LE).
+ * Ez hamis „nincs a buildben" jelentes lett volna. A `latin1` alakot ezert CSAK
+ * akkor adjuk hozza, ha minden karakter belefer (kulonben a `Buffer.from` NEMAN
+ * levagja a karaktert — pl. `ő` -> `Q` —, azaz HAMIS mintat generalna).
+ */
 export function needlesFor(text) {
-  const ascii = Buffer.from(text, 'latin1');
-  const utf16be = Buffer.alloc(text.length * 2);
-  for (let i = 0; i < text.length; i += 1) {
-    utf16be[i * 2] = 0;
-    utf16be[i * 2 + 1] = text.charCodeAt(i) & 0xff;
+  const oneByteSafe = [...text].every((ch) => ch.charCodeAt(0) <= 0xff);
+  const utf16le = Buffer.from(text, 'utf16le');
+  const utf16be = Buffer.from(utf16le);
+  for (let i = 0; i + 1 < utf16be.length; i += 2) {
+    const swap = utf16be[i];
+    utf16be[i] = utf16be[i + 1];
+    utf16be[i + 1] = swap;
   }
   return [
-    { encoding: 'ascii', bytes: ascii },
+    ...(oneByteSafe ? [{ encoding: 'onebyte', bytes: Buffer.from(text, 'latin1') }] : []),
+    { encoding: 'utf8', bytes: Buffer.from(text, 'utf8') },
+    { encoding: 'utf16le', bytes: utf16le },
     { encoding: 'utf16be', bytes: utf16be },
   ];
 }
@@ -226,7 +247,17 @@ function selfTest() {
     console.log('  onteszt 6 (--contains=):', containsOk ? 'OK' : 'HIBA');
     if (!containsOk) throw new Error('a --contains= nem a valos tartalmat merte');
 
-    console.log('  ONTESZT: 6/6 OK');
+    // 7) NEM Latin-1 szoveg UTF-16LE-kent (a Dart TwoByteString alakja) — pontosan
+    //    az a hibaosztaly, ami a 380-as IPA-meresnel hamis „nincs bent" jelzest adott.
+    const twoByte = 'ÚJ: a szerveződ új eseményt hirdet — eddig csak a listában.';
+    writeFileSync(join(dir, 'App'), Buffer.from(`...${twoByte}...`, 'utf16le'));
+    const twoByteHit = findInTree(dir, twoByte).hits.length > 0;
+    const oneByteLeaked = needlesFor(twoByte).some((n) => n.encoding === 'onebyte');
+    const utf16Ok = twoByteHit && !oneByteLeaked;
+    console.log('  onteszt 7 (nem Latin-1 szoveg UTF-16LE-kent):', utf16Ok ? 'OK' : 'HIBA');
+    if (!utf16Ok) throw new Error('a nem Latin-1 szoveget nem talalta meg UTF-16LE-kent');
+
+    console.log('  ONTESZT: 7/7 OK');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

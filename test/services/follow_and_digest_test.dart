@@ -24,14 +24,18 @@ void main() {
   test('a beállítás a szerverre is eljut (Firestore notificationPreferences.digest)', () {
     final source = File('lib/services/push_notification_service.dart').readAsStringSync();
     expect(source.contains('required bool digest'), isTrue, reason: 'hiányzik a paraméter');
+    // ⚠️ SZÁMOLUNK, NEM „SZEREPEL-E” — a mutációs bizonyíték mérte ki, hogy a
+    // puszta `contains` **nem** fogta el azt, amikor a Firestore-írásból kivettem
+    // a kulcsot: a plugin-payloadban ugyanaz a szöveg ott maradt. Ezért:
+    //   (1) a `notificationPreferences` blokkban KÜLÖN meg kell lennie,
+    //   (2) összesen pontosan **kettő** előfordulás van (Firestore + plugin).
     expect(
-      source.contains("'digest': digest"),
+      RegExp(r"'notificationPreferences': \{[\s\S]{0,500}?'digest': digest,").hasMatch(source),
       isTrue,
-      reason: 'a Firestore írásból hiányzik a digest kulcs',
+      reason: 'a Firestore notificationPreferences blokkból hiányzik a digest',
     );
-    // A plugin-kérés is vigye (az ismeretlen kulcsot a régi plugin eldobja).
-    final pluginPayload = source.contains("'digest': digest,\n");
-    expect(pluginPayload, isTrue, reason: 'a /push/preferences payloadból hiányzik');
+    final occurrences = RegExp(r"'digest': digest,").allMatches(source).length;
+    expect(occurrences, 2, reason: 'Firestore + plugin payload = 2 előfordulás (mért: $occurrences)');
   });
 
   test('a DJ-adatlap fejlécében van kedvenc (követés) gomb', () {

@@ -99,6 +99,18 @@ test('forrás-lint: a fan-out a kedvencekhez is küld, és nem dupláz', () => {
   assert.match(source, /followTargetsFor\(/);
   assert.match(source, /favoriteFollowKey\(/);
   assert.match(source, /collectionGroup\(FAVORITES_COLLECTION\)/);
-  // A `createNotificationBestEffort` `created` kapuja nélkül duplázna a bejegyzés.
-  assert.match(source, /const created = await createNotificationBestEffort\(/);
+  // ⚠️ HORGONY A **KÖVETŐ** HÍVÁSRA, nem a fájlban bárhol előforduló szövegre: a
+  // mutációs bizonyíték mérte ki, hogy a puszta `createNotificationBestEffort(`
+  // keresés nem fogta el, amikor a követés-ágban `createNotification(`-re
+  // cseréltem (a fájlban máshol is van `createNotificationBestEffort(`).
+  // A minta ezért a **konkrét hívást** köti össze a követés dedupe-kulcsával.
+  assert.match(
+    source,
+    /for \(const uid of recipientUids\) \{[\s\S]{0,200}?const created = await createNotificationBestEffort\(\{[\s\S]{0,400}?dedupeKey: favoriteFollowKey\(/,
+  );
+  // A push szándékos kihagyása is rögzített döntés: ezen az úton nem lehet
+  // `sendMulticastToAllTokens(` a kedvelői ciklusban.
+  const followerBlock = /for \(const uid of recipientUids\) \{[\s\S]{0,800}?\n  \}/.exec(source)?.[0] || '';
+  assert.ok(followerBlock.length > 0, 'a kedvelői ciklus nem található');
+  assert.doesNotMatch(followerBlock, /sendMulticastToAllTokens\(/);
 });
