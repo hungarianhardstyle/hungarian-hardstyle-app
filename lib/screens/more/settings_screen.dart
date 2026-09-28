@@ -27,6 +27,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static const _reminderNotificationsKey = 'event_reminders_enabled';
   static const _achievementNotificationsKey =
       'achievement_notifications_enabled';
+  // Heti összefoglaló (2026-09-28): a szerver a `notificationPreferences.digest`
+  // mezőt olvassa (`sendWeeklyDigest`) — ez a kapcsoló eddig hiányzott a
+  // felületről, ezért a beállítás csak a szerveren élt.
+  static const _digestNotificationsKey = 'weekly_digest_enabled';
 
   bool _notificationsEnabled = true;
   bool _newsNotificationsEnabled = true;
@@ -34,6 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _releaseNotificationsEnabled = true;
   bool _reminderNotificationsEnabled = true;
   bool _achievementNotificationsEnabled = true;
+  bool _digestNotificationsEnabled = true;
   bool _loading = true;
   bool _clearingCache = false;
   bool _biometricEnabled = false;
@@ -70,6 +75,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           preferences.getBool(_reminderNotificationsKey) ?? true;
       _achievementNotificationsEnabled =
           preferences.getBool(_achievementNotificationsKey) ?? true;
+      _digestNotificationsEnabled =
+          preferences.getBool(_digestNotificationsKey) ?? true;
       _biometricEnabled = biometricEnabled;
       _deviceCodeEnabled = deviceCodeEnabled;
       _authenticatorEnabled =
@@ -216,6 +223,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         releases: _releaseNotificationsEnabled,
         reminders: _reminderNotificationsEnabled,
         achievements: _achievementNotificationsEnabled,
+        digest: _digestNotificationsEnabled,
       );
 
   Future<void> _clearCache() async {
@@ -428,6 +436,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     );
                                     _setNotificationPreference(
                                       _achievementNotificationsKey,
+                                      value,
+                                    );
+                                  },
+                          ),
+                          SwitchListTile(
+                            secondary: const Icon(Icons.summarize_outlined),
+                            title: const AppText('Heti összefoglaló'),
+                            subtitle: const AppText(
+                              'Vasárnap esti összegzés a hét híreiről és eseményeiről',
+                            ),
+                            value: _digestNotificationsEnabled,
+                            onChanged: _loading || !_notificationsEnabled
+                                ? null
+                                : (value) {
+                                    setState(
+                                      () => _digestNotificationsEnabled = value,
+                                    );
+                                    _setNotificationPreference(
+                                      _digestNotificationsKey,
                                       value,
                                     );
                                   },

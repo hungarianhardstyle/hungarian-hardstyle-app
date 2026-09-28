@@ -497,6 +497,7 @@ class PushNotificationService {
     required bool releases,
     required bool reminders,
     required bool achievements,
+    required bool digest,
   }) async {
     final preferences = await SharedPreferences.getInstance();
     final token = preferences.getString(_tokenKey);
@@ -511,6 +512,11 @@ class PushNotificationService {
           'notificationPreferences': {
             'enabled': enabled,
             'achievements': achievements,
+            // ⚠️ A `digest` a **szerveroldali** heti összefoglaló kapuja
+            // (`sendWeeklyDigest` → `digestAllowed`). A `merge: true` miatt a
+            // hiányzó kulcs nem töröl semmit, csak nem írja felül — ezért kell
+            // minden mentésnél küldeni.
+            'digest': digest,
           },
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
@@ -529,6 +535,9 @@ class PushNotificationService {
           'releases': releases,
           'reminders': reminders,
           'achievements': achievements,
+          // A plugin a saját token-rekordjában is eltárolja (az ismeretlen kulcsot
+          // figyelmen kívül hagyja, ezért régi plugin-verzión sem törik el).
+          'digest': digest,
           // A nyelv itt is megy: a token-rekord akkor is helyes nyelvet kapjon,
           // ha a felhasználó a beállítások mentése előtt váltott nyelvet.
           pushLanguageField: await resolvePushLanguage(

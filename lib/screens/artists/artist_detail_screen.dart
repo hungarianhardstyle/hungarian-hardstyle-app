@@ -16,8 +16,10 @@ import '../../providers/artists_provider.dart';
 import '../../widgets/app_text.dart';
 import '../../widgets/artist_releases_section.dart';
 import '../../widgets/event_card.dart';
+import '../../widgets/favorite_button.dart';
 import '../../widgets/genre_chip.dart';
 import '../../providers/community_provider.dart';
+import '../../providers/favorites_provider.dart';
 import '../../widgets/share_action.dart';
 import 'artist_edit_screen.dart';
 
@@ -56,6 +58,15 @@ class ArtistDetailScreen extends ConsumerWidget {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          // Kedvencelés a **profilról** is: ez a „követés" jele — aki kedvenceli a
+          // DJ-t, az értesítést kap az új kiadványairól (`favorite-follow-plan.js`).
+          // Eddig csak a DJ-listában volt ilyen gomb, ezért a profilról nem lehetett
+          // követni.
+          FavoriteButton(
+            kind: FavoriteKind.artist,
+            id: artistId,
+            title: title,
+          ),
           ContentShareButton(
             title: title,
             id: artistId,

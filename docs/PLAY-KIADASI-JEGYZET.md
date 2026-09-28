@@ -20,22 +20,23 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 379
+currentBuild: 380
 currentVersion: 1.0.0
-lastPublishedBuild: 378
-aab: build/HUHS-v1.0.0+379-release.aab
-sha256: 83EA23726EDC294ED0FA49109B1592602E6CC8499DEB4044984CAA7B304BD534
+lastPublishedBuild: 379
+aab: build/HUHS-v1.0.0+380-release.aab
+sha256: 5333764A5C80957564A988842AF54D0E5F715C46A7973C4922425522F92EC2B4
 -->
 
-⚠️ A **379**-et a **378** után kellett építeni (a 378-at és a korábbiakat **nem** kell feltölteni: a 379
+⚠️ A **380**-at a **379** után kellett építeni (a 379-et és a korábbiakat **nem** kell feltölteni: a 380
 mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
 ⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.6** — ⏳ **még nincs fent** (élesben 2.14.5): a
 `build/huhs-mobile-api-2.14.6.zip` feltöltése a tulajdonos lépése. Ez hozza az **angol nyelvű**
-esemény-emlékeztetőt (a 378-as és 379-es app küldi a nyelvet), a **dátumot és helyszínt** a törzsben,
+esemény-emlékeztetőt (a 378-as óta minden app küldi a nyelvet), a **dátumot és helyszínt** a törzsben,
 és a **javított időzítést**. A feltöltés előtt is minden működik — csak magyarul szól az emlékeztető.
-A szerveroldali függvények **telepítve** vannak (`firebase deploy`), benne a **heti összefoglaló**
-(`sendWeeklyDigest`, vasárnap 18:00) — az **AAB nélkül is él**.
-Az apphoz csak az **AAB (379)** feltöltése kell.
+A szerveroldali függvények **telepítve** vannak (`firebase deploy`): a **heti összefoglaló**
+(`sendWeeklyDigest`, vasárnap 18:00) és a **követés a kedvencek alapján** (új kiadvány/esemény a
+kedvelt DJ-től, illetve szervezőtől) — mindkettő **AAB nélkül is él**.
+Az apphoz csak az **AAB (380)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -205,8 +206,9 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ: a hír, az esemény, a kiadvány és a DJ-adatlap is megosztható — az app-letöltéssel együtt.
-- A megosztott link böngészőben is megnyílik, ezért az is elolvassa, aki még nem használja az appot.
+- ÚJ: értesítést kapsz, ha a kedvelt DJ-d új kiadványt tesz közzé, vagy a kedvelt szerveződ új eseményt hirdet.
+- ÚJ: a DJ adatlapján is kedvencelheted (követheted) a DJ-t.
+- ÚJ: a Beállításokban ki-be kapcsolhatod a vasárnapi heti összefoglalót.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -224,38 +226,36 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–379** összesítő (a 378 után)
+## 1b-2. Play Console — a **361–380** összesítő (a 379 után)
 
 **Ezt használd, ha a felhasználó a 360-ról jön** (egy régebbi nyilvános build) — vagyis csak azok
-az újdonságok szerepelnek benne, amelyek a **361–379** között készültek. A karakter-számot a
+az újdonságok szerepelnek benne, amelyek a **361–380** között készültek. A karakter-számot a
 `tools/check-play-notes.mjs` méri.
-⚠️ **Az ÉLES sávon a 377 van** (a 378/379 feltöltése a tulajdonos lépése), ezért aki **378-ról** jön,
-annak **nem** ez a blokk, hanem az **1. blokk** (a 379 újdonságai) való.
+⚠️ **Az ÉLES sávon a 377 van** (a 378–380 feltöltése a tulajdonos lépése), ezért aki **379-ről** jön,
+annak **nem** ez a blokk, hanem az **1. blokk** (a 380 újdonságai) való.
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
-- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva odaugrik.
-- ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
-- ÚJ: születésnapi köszöntés; a Label-termékek leírása is angolul szól.
-- Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
+- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés és gyermekbiztonsági figyelmeztetés.
 - ÚJ: heti összefoglaló vasárnap; megosztható hírek, események és DJ-adatlapok.
+- ÚJ: értesítés, ha a kedvelt DJ-d vagy szerveződ új tartalmat tesz közzé.
+- ÚJ: @mindenki a Chatben push-jal, és a válasz idézetére koppintva odaugrik.
+- Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–379** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–380** összesítő)
 
-**Ezt használd, ha a 379-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 380-at a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-09-27) szerint ott a **354** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
-**heti összefoglaló**, a **megosztható adatlapok** és a mostani javítások is.
+**heti összefoglaló**, a **megosztható adatlapok**, a **követés** és a mostani javítások is.
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó — az app angolul is elérhető (cikkek, címkék, GYÍK, értesítések).
-- ÚJ a Chatben: @mindenki, és a válasz idézetére koppintva odaugrik.
-- ÚJ: kötelező születési dátum (16+), privát jelentés, figyelmeztetés nagykorú partnernél.
-- ÚJ: születésnapi köszöntés; a Label-termékek leírása is angolul szól.
-- Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
+- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés és gyermekbiztonsági figyelmeztetés.
 - ÚJ: heti összefoglaló vasárnap; megosztható hírek, események és DJ-adatlapok.
+- ÚJ: értesítés, ha a kedvelt DJ-d vagy szerveződ új tartalmat tesz közzé.
+- ÚJ: @mindenki a Chatben push-jal, és a válasz idézetére koppintva odaugrik.
+- Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -284,6 +284,14 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 380 — követés (kedvenc DJ/szervező), DJ-kedvenc a profilról és heti összefoglaló kapcsoló
+- **A tulajdonos választása:** a használat-növelő csomag *„követés (DJ/szervező)"* pontja.
+- **A mért kiindulás:** a **követés jele már létezett** (DJ-k és szervezők kedvencelhetők, a kedvencek a Firestore-ba szinkronizálódnak), ezért a **szerveroldali** rész **build nélkül** készült el: új kiadványnál a kiadvány DJ-it, új eseménynél a szervezőt **és** a fellépő DJ-ket kedvelők kapnak bejövő értesítést (`functions/favorite-follow-plan.js` + a poll köre), tartalmonként egyszer. Éles száraz mérés: 45 profil, 70 kedvenc; egy új Nu-Clear-kiadvány **10**, egy Hard Base Classic-jellegű esemény **11** tagot érintene.
+- **Ami épült (kliens):** a **DJ-adatlap** fejlécében megjelent a **kedvenc (követés) gomb** (eddig csak a listában volt), és a **Beállításokban** külön kapcsoló a **vasárnapi heti összefoglalóhoz** (`weekly_digest_enabled` → `notificationPreferences.digest`, amit a szerver `digestAllowed` kapuja olvas).
+- **Új kapu:** `test/services/follow_and_digest_test.dart` (5 teszt: a kapcsoló léte és a mentés útja, a Firestore- és plugin-payload `digest` kulcsa, a DJ-adatlap kedvenc-gombja, a szótár-kulcsok, és hogy a szerver a `digest` kaput tényleg olvassa).
+- **Mérve:** `flutter analyze lib test` → **No issues found!**; `flutter test` → **1293/1293**; i18n-kapu → **MINDEN ELLENŐRZÉS RENDBEN**; `node tools/run-function-tests.mjs --pure` → **372/372**; a csomag ellenőrzése **MINDEN ELLENŐRZÉS RENDBEN**.
+- **⚠️ ŐSZINTE KORLÁTOK:** (1) az **első éles követés-értesítés** a következő új kiadvány/esemény publikálásakor megy ki; (2) az **appon belüli** link-megnyitás (a megosztott link az appban nyíljon meg) **még nincs** benne — ehhez a manifest útvonal-fogása és belső útvonalválasztás kell; (3) az iOS-oldali ellenőrzés (CI + sideload) ettől a buildtől még **hátravan**.
 
 ### 379 — megosztható hírek, események, kiadványok és DJ-adatlapok
 - **A tulajdonos választása:** a használat-növelő csomag *„megosztható kártyák"* pontja. A cél a **szerves növekedés**: a tagok maguk viszik a tartalmat a Messengerbe/Facebookra, a megosztott üzenet pedig az appot is hirdeti.

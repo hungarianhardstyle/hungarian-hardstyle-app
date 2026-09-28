@@ -4723,6 +4723,13 @@
     ]
   },
   {
+    "value": "Heti összefoglaló",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
     "value": "Hiányzik a születési dátum",
     "count": 1,
     "files": [
@@ -7709,6 +7716,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "Vasárnap esti összegzés a hét híreiről és eseményeiről",
+    "count": 1,
+    "files": [
+      "lib/screens/more/settings_screen.dart"
     ]
   },
   {

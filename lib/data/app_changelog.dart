@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 380,
+    changes: [
+      'ÚJ: értesítést kapsz, ha a kedvelt DJ-d új kiadványt tesz közzé, vagy a kedvelt szerveződ új eseményt hirdet.',
+      'ÚJ: a DJ adatlapján is kedvencelheted (követheted) a DJ-t — eddig csak a listában lehetett.',
+      'ÚJ: a Beállításokban külön ki-be kapcsolhatod a vasárnapi heti összefoglalót.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 379,
     changes: [
       'ÚJ: a hír, az esemény, a kiadvány és a DJ-adatlap is megosztható — a cím és a link mellett az app-letöltés is megy.',
