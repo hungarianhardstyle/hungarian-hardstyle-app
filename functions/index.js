@@ -83,6 +83,7 @@ const {
   favoriteFollowKey,
 } = require('./favorite-follow-plan');
 const { generateAuthActionLink } = require('./auth_action_link');
+const { logWarning } = require('./log-warning');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 const {
@@ -1384,12 +1385,9 @@ async function getAchievementBadges() {
       return achievementBadgesCache;
     }
   } catch (error) {
-    console.warn(
-      JSON.stringify({
-        event: 'achievement_catalog_fallback',
-        message: error?.message || String(error),
-      }),
-    );
+    // Kezelt ág: a hívó a mentett (vagy alap) katalógust kapja, ezért ez
+    // figyelmeztetés — lásd a `log-warning.js` fejlécét (stderr = ERROR).
+    logWarning('achievement_catalog_fallback', error?.message || String(error));
   } finally {
     clearTimeout(timeout);
   }
