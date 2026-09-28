@@ -498,6 +498,15 @@ class PushNotificationService {
     required bool reminders,
     required bool achievements,
     required bool digest,
+    // ⚠️ KÖVETETT TARTALOM (381): a kedvelt DJ-k/szervezők azonosítói. Ezekből
+    // lesz a **személyes** célzás a pluginban (2.14.9) — aki követi a tartalom
+    // szereplőjét, az biztos megkapja az értesítést.
+    //
+    // ⚠️ FONTOS: üres lista esetén a kulcsot **NEM küldjük el**, mert a plugin a
+    // hiányzó kulcsnál a KORÁBBI értéket tartja meg — egy üres lista viszont
+    // felülírná (és elvesznének a kedvencek egy sima beállítás-mentésnél).
+    List<int> artists = const <int>[],
+    List<int> organizers = const <int>[],
   }) async {
     final preferences = await SharedPreferences.getInstance();
     final token = preferences.getString(_tokenKey);
@@ -538,8 +547,9 @@ class PushNotificationService {
           // A plugin a saját token-rekordjában is eltárolja (az ismeretlen kulcsot
           // figyelmen kívül hagyja, ezért régi plugin-verzión sem törik el).
           'digest': digest,
-          // A nyelv itt is megy: a token-rekord akkor is helyes nyelvet kapjon,
-          // ha a felhasználó a beállítások mentése előtt váltott nyelvet.
+          // A követett tartalom (381): csak akkor megy, ha van mit küldeni.
+          if (artists.isNotEmpty) 'artists': artists,
+          if (organizers.isNotEmpty) 'organizers': organizers,
           pushLanguageField: await resolvePushLanguage(
             preferences: preferences,
           ),
