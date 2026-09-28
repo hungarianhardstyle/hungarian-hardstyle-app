@@ -490,6 +490,37 @@ class PushNotificationService {
     }
   }
 
+  /// **Csak a követett tartalom** szinkronja a plugin felé (381).
+  ///
+  /// MIÉRT külön: a kedvencelés a `FavoritesNotifier`-ben történik, ahol a
+  /// beállítás-kapcsolók (news/events/…) **nem** ismertek — a teljes
+  /// `updatePreferences` hívása ezért felülírná azokat. A plugin viszont a
+  /// **hiányzó** kulcsnál a korábbi értéket tartja meg, ezért elég csak ezt a
+  /// kettőt elküldeni; így a kedvencelés azonnal érvényesül a push-célzásban.
+  ///
+  /// ⚠️ Üres listát **nem** küldünk (az felülírná a tárolt kedvenceket).
+  static Future<void> syncFollowedTargets({
+    required List<int> artists,
+    required List<int> organizers,
+  }) async {
+    if (artists.isEmpty && organizers.isEmpty) return;
+    final preferences = await SharedPreferences.getInstance();
+    final token = preferences.getString(_tokenKey);
+    if (token == null || token.isEmpty) return;
+    try {
+      await _api.post(
+        '/push/preferences',
+        data: {
+          'token': token,
+          if (artists.isNotEmpty) 'artists': artists,
+          if (organizers.isNotEmpty) 'organizers': organizers,
+        },
+      );
+    } catch (_) {
+      // A kedvencelés helyben érvényes marad; a következő mentés újrapróbálja.
+    }
+  }
+
   static Future<void> updatePreferences({
     required bool enabled,
     required bool news,

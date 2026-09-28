@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/push_notification_service.dart';
 import '../services/wordpress_service.dart';
 
 enum FavoriteKind { news, event, artist, organizer }
@@ -72,6 +73,21 @@ class FavoritesNotifier extends ChangeNotifier {
       _items[key] = FavoriteEntry(kind: kind, id: id, title: title);
     }
     notifyListeners();
+
+    // A követett DJ-k/szervezők azonnal menjenek a plugin felé (381): ebből lesz
+    // a személyes push-célzás. Best-effort — a kedvencelés helyben így is érvényes.
+    unawaited(
+      PushNotificationService.syncFollowedTargets(
+        artists: _items.values
+            .where((entry) => entry.kind == FavoriteKind.artist)
+            .map((entry) => entry.id)
+            .toList(),
+        organizers: _items.values
+            .where((entry) => entry.kind == FavoriteKind.organizer)
+            .map((entry) => entry.id)
+            .toList(),
+      ),
+    );
 
     final preferences = await SharedPreferences.getInstance();
     await preferences.setStringList(
