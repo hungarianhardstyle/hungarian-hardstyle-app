@@ -76,6 +76,12 @@ const {
   digestPlan: weeklyDigestPlan,
   isoWeekKey: weeklyDigestWeekKey,
 } = require('./weekly-digest-plan');
+const {
+  FAVORITES_COLLECTION,
+  followCatalogKindFor,
+  followTargetsFor,
+  favoriteFollowKey,
+} = require('./favorite-follow-plan');
 const { generateAuthActionLink } = require('./auth_action_link');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
@@ -4423,7 +4429,58 @@ async function pollWordPressContentNotifications() {
       }),
     );
   }
-  return { baseline: false, created };
+  // ── KÖVETÉS A KEDVENCEK ALAPJÁN (2026-09-28) ──────────────────────────────
+  //
+  // A tulajdonos választotta a használat-növelő csomagból a „követés
+  // (DJ/szervező)" pontot. A jel **már létezik**: a DJ-k és a szervezők
+  // kedvencelhetők, és a kedvencek a Firestore-ba szinkronizálódnak
+  // (`community_profiles/{uid}/favorites/{kind}_{id}`) — ezért ehhez **nem kell
+  // új gomb és új build**: aki kedvencel, az értesítést kap az új tartalomról.
+  //
+  // ⚠️ PUSH SZÁNDÉKOSAN NINCS: az új tartalom push-ját a WordPress-plugin viszi
+  // mindenkinek; egy második push itt csak duplázna. Ez az út a **bejövő listát**
+  // bővíti (a globális fan-out mintájára).
+  let favoriteCreated = 0;
+  for (const item of newlyPublished) {
+    const catalogKind = followCatalogKindFor(item.key);
+    if (!catalogKind) continue;
+    const targets = followTargetsFor(item.key, item.item);
+    if (!targets.length) continue;
+    const followName = String(item.item?.title?.rendered || item.item?.title || item.item?.name || '').trim();
+    const followNameEn = String(item.englishTitles?.get?.(item.id) || '').trim();
+    const localizedFollowName =
+      followNameEn && followNameEn !== followName ? { hu: followName, en: followNameEn } : followName;
+
+    const recipientUids = new Set();
+    for (const target of targets) {
+      // ⚠️ A kliens a kedvenc `id` mezőjét **számként** írja (`entry.id`), ezért a
+      // szűrő is szám — szöveggel a lekérdezés csendben üres lenne.
+      const numericId = Number(target.id);
+      if (!Number.isInteger(numericId)) continue;
+      const snapshot = await db
+        .collectionGroup(FAVORITES_COLLECTION)
+        .where('kind', '==', target.kind)
+        .where('id', '==', numericId)
+        .get();
+      for (const doc of snapshot.docs) {
+        const uid = doc.ref.parent?.parent?.id || '';
+        if (uid) recipientUids.add(uid);
+      }
+    }
+    for (const uid of recipientUids) {
+      const created = await createNotificationBestEffort({
+        recipientUid: uid,
+        type: catalogKind,
+        kind: catalogKind,
+        params: { name: localizedFollowName },
+        targetType: item.targetType,
+        targetId: item.id,
+        dedupeKey: favoriteFollowKey(item.key, item.id, uid),
+      });
+      if (created) favoriteCreated += 1;
+    }
+  }
+  return { baseline: false, created, favoriteCreated };
 }
 
 exports.pollWordPressContentNotifications = onSchedule(

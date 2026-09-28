@@ -336,6 +336,26 @@
         "body": "{event} has ended. Rate the event in the app."
       }
     },
+    "favorite_event": {
+      "hu": {
+        "title": "Új esemény a kedvelt szervezőtől vagy DJ-től",
+        "body": "{name}"
+      },
+      "en": {
+        "title": "New event from an organizer or DJ you follow",
+        "body": "{name}"
+      }
+    },
+    "favorite_release": {
+      "hu": {
+        "title": "Új kiadvány a kedvelt DJ-től",
+        "body": "{name}"
+      },
+      "en": {
+        "title": "New release from a DJ you follow",
+        "body": "{name}"
+      }
+    },
     "meetup_interest": {
       "hu": {
         "title": "Új Meetup érdeklődés",

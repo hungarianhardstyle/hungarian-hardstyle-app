@@ -137,6 +137,17 @@ const TEXTS = {
     hu: { title: 'Heti összefoglaló', body: '{summary} — nézd meg az appban.' },
     en: { title: 'Weekly recap', body: '{summary} — open the app to catch up.' },
   },
+  // Követés a kedvencek alapján (2026-09-28): aki egy DJ-t vagy szervezőt
+  // kedvencel, az értesítést kap az új tartalmáról. A push-t továbbra is a
+  // WordPress-plugin küldi mindenkinek, ezért itt csak a bejövő lista bővül.
+  favorite_release: {
+    hu: { title: 'Új kiadvány a kedvelt DJ-től', body: '{name}' },
+    en: { title: 'New release from a DJ you follow', body: '{name}' },
+  },
+  favorite_event: {
+    hu: { title: 'Új esemény a kedvelt szervezőtől vagy DJ-től', body: '{name}' },
+    en: { title: 'New event from an organizer or DJ you follow', body: '{name}' },
+  },
   new_release: {
     hu: { title: 'Új release érkezett', body: '{name}' },
     en: { title: 'New release', body: '{name}' },
