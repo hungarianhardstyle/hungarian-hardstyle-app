@@ -30,14 +30,26 @@ class ContentShareButton extends StatelessWidget {
   /// A kanonikus webes link, ha a végpont ad ilyet (hír, DJ); egyébként `null`.
   final String? canonicalLink;
 
-  Future<void> _share() async {
+  Future<void> _share(BuildContext context) async {
     final message = buildContentShareMessage(
       title: title,
       id: id,
       canonicalLink: canonicalLink,
     );
+    // ⚠️ MÉRT HIBA (2026-09-29, a tulajdonos jelzése: „nem működik a share" a
+    // sideloadolt iPhone-builden): iOS-en a `share_plus` **megköveteli** a
+    // `sharePositionOrigin`-t — enélkül a rendszer megosztó lapja **némán nem
+    // jelenik meg**. Ezért a gomb helyét átadjuk neki.
+    final box = context.findRenderObject() as RenderBox?;
+    final origin = box != null && box.hasSize
+        ? box.localToGlobal(Offset.zero) & box.size
+        : null;
     try {
-      await Share.share(message, subject: shareSubject(title));
+      await Share.share(
+        message,
+        subject: shareSubject(title),
+        sharePositionOrigin: origin,
+      );
     } catch (_) {
       // Szándékos: a megosztás hibája nem hibaüzenet a felhasználónak.
     }
@@ -48,7 +60,7 @@ class ContentShareButton extends StatelessWidget {
     return IconButton(
       icon: const Icon(Icons.share_outlined),
       tooltip: tr(context, 'Megosztás…'),
-      onPressed: _share,
+      onPressed: () => _share(context),
     );
   }
 }
