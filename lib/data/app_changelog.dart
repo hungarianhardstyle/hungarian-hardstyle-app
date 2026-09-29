@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 381,
+    changes: [
+      'ÚJ: az első indításnál három rövid lépésben beállíthatod a kedvenc DJ-jeidet és az értesítéseket.',
+      'ÚJ: a megosztott hír, esemény, kiadvány és DJ-link mostantól az appban nyílik meg.',
+      'ÚJ: a helyszínen a QR-kóddal rögzítheted a jelenlétedet — a buli előtt és után pár óráig.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 380,
     changes: [
       'ÚJ: értesítést kapsz, ha a kedvelt DJ-d új kiadványt tesz közzé, vagy a kedvelt szerveződ új eseményt hirdet.',

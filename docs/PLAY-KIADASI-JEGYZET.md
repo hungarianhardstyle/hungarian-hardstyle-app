@@ -20,14 +20,14 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 380
+currentBuild: 381
 currentVersion: 1.0.0
-lastPublishedBuild: 377
-aab: build/HUHS-v1.0.0+380-release.aab
-sha256: 5333764A5C80957564A988842AF54D0E5F715C46A7973C4922425522F92EC2B4
+lastPublishedBuild: 380
+aab: build/HUHS-v1.0.0+381-release.aab
+sha256: E0107BECB1FF490726C4C45FAB286E7D373D23C9BDD539ABDFE8D24683EA8F7A
 -->
 
-⚠️ A **380**-at a **379** után kellett építeni (a 379-et és a korábbiakat **nem** kell feltölteni: a 380
+⚠️ A **381**-et a **380** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 381
 mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
 ⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.9** — ⏳ **még nincs fent** (élesben 2.14.5): a
 `build/huhs-mobile-api-2.14.9.zip` feltöltése a tulajdonos lépése (ez **felváltja** a 2.14.6-ot, a 2.14.7-et és a 2.14.8-at). Ez hozza az **angol nyelvű**
@@ -205,9 +205,9 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ: értesítést kapsz, ha a kedvelt DJ-d új kiadványt tesz közzé, vagy a kedvelt szerveződ új eseményt hirdet.
-- ÚJ: a DJ adatlapján is kedvencelheted (követheted) a DJ-t.
-- ÚJ: a Beállításokban ki-be kapcsolhatod a vasárnapi heti összefoglalót.
+- ÚJ: az első indításnál három rövid lépésben beállíthatod a kedvenc DJ-jeidet és az értesítéseket.
+- ÚJ: a megosztott hír, esemény, kiadvány és DJ-link mostantól az appban nyílik meg.
+- ÚJ: a helyszínen a QR-kóddal rögzítheted a jelenlétedet — a buli előtt és után pár óráig.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -283,6 +283,12 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 381 — onboarding, appon belüli link-megnyitás és helyszíni jelenlét (QR)
+- **A tulajdonos választása:** a használat-növelő csomag három hátralévő pontja egy buildben. A mért szakadék: **1016 push-ra regisztrált eszköz** ↔ **45 közösségi profil** — a legtöbben olvassák az appot, de nem jelölik meg, kit szeretnek.
+- **Ami épült:** (1) **onboarding 3 lépésben** (bemutató → kedvenc DJ-k, ahol a szív ikon van → értesítési engedély a jó pillanatban), egyszer fut, átugorható, és mélylinkről nyitva **nem** indul; (2) a **megosztott hír/esemény/kiadvány/DJ link az appban nyílik meg** (manifest-útvonalak + tiszta link-értelmező + a WordPress új feloldó végpontja); (3) **helyszíni jelenlét QR-ról**: a plakáton lévő kód a telefon kamerájával olvasható, az app az esemény adatlapján felajánlja a „Jelenlét rögzítése" gombot **az időablakban** (4 órával előtte … 12 órával utána) és **tagonként egyszer** — így a lefotózott kód nem halmozható ponttá; (4) a **kedvencek azonnal a plugin felé** szinkronizálnak, amiből a **személyes push-célzás** lesz (a plugin 2.14.9 kész rá).
+- **Új kapuk:** `test/services/onboarding_state_test.dart` (7), `test/services/content_link_route_test.dart` (8), `test/services/content_link_resolver_test.dart` (6), `test/services/event_checkin_test.dart` (8) — összesen **29 új teszt** a viselkedésre és a forrás-lintre.
+- **⚠️ ŐSZINTE KORLÁTOK:** (1) a **jelenlét rögzítése bejelentkezést kér** (a jelenlét a profilhoz kötődik); (2) a **kedvenc-alapú push** csak akkor szűkít, ha a token-rekordban van kedvenc — aki nem jelöl semmit, az változatlanul mindent megkap; (3) az **iOS-oldali** ellenőrzés (CI + sideload) ettől a buildtől hátravan; (4) az onboarding a **friss telepítéseknél** fut le, a meglévő felhasználóknál egyszer, frissítés után jelenhet meg.
 
 ### 380 — követés (kedvenc DJ/szervező), DJ-kedvenc a profilról és heti összefoglaló kapcsoló
 - **A tulajdonos választása:** a használat-növelő csomag *„követés (DJ/szervező)"* pontja.

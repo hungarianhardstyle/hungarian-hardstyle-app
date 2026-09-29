@@ -1,4 +1,5 @@
 [
+  "Törlés a készülékről (a vásárlás megmarad)",
   "Törlés megerősítése",
   "Törlöd a hozzászólást?",
   "Törlöd az összes mentett kedvencet?",
@@ -57,6 +58,5 @@
   "Város *",
   "Vásárlás és letöltés esetén a Google Play termékazonosítója, a vásárlási token ellenőrzéséhez szükséges adatok és a felhasználói azonosító kapcsolódhatnak egymáshoz. A vásárlási jogosultságot a szerver ellenőrzi; a letöltési jogosultság csak ellenőrzött vásárlás vagy az adott változathoz tartozó jutalmazott feloldás után adható ki. A vásárlási token nyers értékét az alkalmazás adatbázisa nem tárolja, csak ellenőrzéshez szükséges, vissza nem fejthető azonosító kerülhet megőrzésre.",
   "Vásárlási diagnosztika",
-  "Vasárnap esti összegzés a hét híreiről és eseményeiről",
-  "Vége törlése"
+  "Vasárnap esti összegzés a hét híreiről és eseményeiről"
 ]
