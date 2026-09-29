@@ -5,12 +5,14 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../core/navigation/content_target.dart';
 import '../core/i18n/tr.dart';
 import '../screens/main_navigation.dart';
 import '../services/community_service.dart';
 import '../services/startup_announcement_cooldown.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../services/onboarding_state.dart';
+import '../services/referral_link_service.dart';
 import '../core/navigation/in_app_browser.dart';
 import 'app_text.dart';
 
@@ -160,6 +162,28 @@ class _StartupGateState extends State<StartupGate>
     super.dispose();
   }
 
+  /// A **megosztott linkről** érkező célpont megnyitása (381).
+  ///
+  /// A link feloldása a szolgáltatásban történt (`ReferralLinkService`), itt csak
+  /// **elvisszük és megnyitjuk** — ugyanazzal az útvonalválasztóval, amit az
+  /// értesítés-koppintás is használ. Ha nincs függő célpont (a leggyakoribb eset),
+  /// ez a hívás nem csinál semmit.
+  Future<void> _openPendingContentLink() async {
+    final pending = await ReferralLinkService.pendingContentTarget();
+    if (pending == null || !pending.contains(':')) return;
+    await ReferralLinkService.clearPendingContentTarget();
+    if (!mounted) return;
+    final parts = pending.split(':');
+    final type = parts.first.trim();
+    final id = parts.sublist(1).join(':').trim();
+    if (type.isEmpty || id.isEmpty) return;
+    await openContentTarget(
+      Navigator.of(context),
+      targetType: type,
+      targetId: id,
+    );
+  }
+
   /// Onboarding (381): egyszer fut, friss telepítésnél.
   bool _onboardingChecked = false;
 
@@ -183,9 +207,10 @@ class _StartupGateState extends State<StartupGate>
       // rendelkezésre áll.
       if (!_onboardingChecked) {
         _onboardingChecked = true;
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _maybeShowOnboarding(),
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _maybeShowOnboarding();
+          _openPendingContentLink();
+        });
       }
       if (_announcementUrl == null) return home;
       final announcement = _announcementUrl;
