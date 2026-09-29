@@ -70,6 +70,20 @@ Future<void> markOnboardingCompleted(SharedPreferences? preferences) async {
   }
 }
 
+/// Megmutassuk-e MOST? (a tárolót maga nyitja meg; hiba esetén **nem** mutatja,
+/// mert egy induláskori hiba nem nyithat folyamatot a felhasználó elé)
+Future<bool> shouldShowOnboardingNow({bool openedFromLink = false}) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return shouldShowOnboarding(
+      completed: onboardingCompletedFromPreferences(prefs),
+      openedFromLink: openedFromLink,
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
 /// A következő lépés (a „Tovább" gombhoz); az utolsónál `null`.
 OnboardingStep? nextOnboardingStep(OnboardingStep current) {
   final index = OnboardingStep.values.indexOf(current);

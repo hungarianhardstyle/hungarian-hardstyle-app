@@ -9,6 +9,8 @@ import '../core/i18n/tr.dart';
 import '../screens/main_navigation.dart';
 import '../services/community_service.dart';
 import '../services/startup_announcement_cooldown.dart';
+import '../screens/onboarding/onboarding_screen.dart';
+import '../services/onboarding_state.dart';
 import '../core/navigation/in_app_browser.dart';
 import 'app_text.dart';
 
@@ -158,10 +160,33 @@ class _StartupGateState extends State<StartupGate>
     super.dispose();
   }
 
+  /// Onboarding (381): egyszer fut, friss telepítésnél.
+  bool _onboardingChecked = false;
+
+  /// A folyamat a kezdő adatok betöltése **után** indul (nem villan fel félkész
+  /// állapotban); a döntés a tiszta `onboarding_state.dart`-ben van.
+  Future<void> _maybeShowOnboarding() async {
+    if (!mounted) return;
+    if (!await shouldShowOnboardingNow()) return;
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const OnboardingScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_ready) {
       final home = const MainNavigation();
+      // ⚠️ A `_ready` után EGYSZER ellenőrizzük (nem minden újraépítésnél), és a
+      // képernyő megjelenítése a következő képkockára kerül — így a Navigator már
+      // rendelkezésre áll.
+      if (!_onboardingChecked) {
+        _onboardingChecked = true;
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _maybeShowOnboarding(),
+        );
+      }
       if (_announcementUrl == null) return home;
       final announcement = _announcementUrl;
       return Stack(
