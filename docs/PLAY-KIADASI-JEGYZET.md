@@ -22,7 +22,7 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 <!-- play-notes-meta
 currentBuild: 382
 currentVersion: 1.0.0
-lastPublishedBuild: 381
+lastPublishedBuild: 380
 aab: build/HUHS-v1.0.0+382-release.aab
 sha256: 908B4195043E992B0A155CD21441E627290C92152942D4267A1596CAAF483D97
 -->
@@ -205,6 +205,9 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
+- ÚJ: az első indításnál három rövid lépésben beállíthatod a kedvenc DJ-jeidet és az értesítéseket.
+- ÚJ: a megosztott hír, esemény, kiadvány és DJ-link mostantól az appban nyílik meg.
+- ÚJ: a helyszínen a QR-kóddal rögzítheted a jelenlétedet — a buli előtt és után pár óráig.
 - Javítva: a megosztás gomb iPhone-on is megnyitja a rendszer megosztó lapját.
 ```
 

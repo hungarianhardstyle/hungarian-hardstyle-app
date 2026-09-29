@@ -1,1 +1,4 @@
+- ÚJ: az első indításnál három rövid lépésben beállíthatod a kedvenc DJ-jeidet és az értesítéseket.
+- ÚJ: a megosztott hír, esemény, kiadvány és DJ-link mostantól az appban nyílik meg.
+- ÚJ: a helyszínen a QR-kóddal rögzítheted a jelenlétedet — a buli előtt és után pár óráig.
 - Javítva: a megosztás gomb iPhone-on is megnyitja a rendszer megosztó lapját.
