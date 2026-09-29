@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 382,
+    changes: [
+      'Javítva: a megosztás gomb iPhone-on is megnyitja a rendszer megosztó lapját.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 381,
     changes: [
       'ÚJ: az első indításnál három rövid lépésben beállíthatod a kedvenc DJ-jeidet és az értesítéseket.',

@@ -1,0 +1,1 @@
+- Javítva: a megosztás gomb iPhone-on is megnyitja a rendszer megosztó lapját.

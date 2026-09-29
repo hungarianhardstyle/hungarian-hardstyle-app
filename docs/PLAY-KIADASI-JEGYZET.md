@@ -20,14 +20,14 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 381
+currentBuild: 382
 currentVersion: 1.0.0
-lastPublishedBuild: 380
-aab: build/HUHS-v1.0.0+381-release.aab
-sha256: E0107BECB1FF490726C4C45FAB286E7D373D23C9BDD539ABDFE8D24683EA8F7A
+lastPublishedBuild: 381
+aab: build/HUHS-v1.0.0+382-release.aab
+sha256: 908B4195043E992B0A155CD21441E627290C92152942D4267A1596CAAF483D97
 -->
 
-⚠️ A **381**-et a **380** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 381
+⚠️ A **382**-t a **381** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 382
 mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
 ⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.9** — ⏳ **még nincs fent** (élesben 2.14.5): a
 `build/huhs-mobile-api-2.14.9.zip` feltöltése a tulajdonos lépése (ez **felváltja** a 2.14.6-ot, a 2.14.7-et és a 2.14.8-at). Ez hozza az **angol nyelvű**
@@ -205,9 +205,7 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 ```play-notes
-- ÚJ: az első indításnál három rövid lépésben beállíthatod a kedvenc DJ-jeidet és az értesítéseket.
-- ÚJ: a megosztott hír, esemény, kiadvány és DJ-link mostantól az appban nyílik meg.
-- ÚJ: a helyszínen a QR-kóddal rögzítheted a jelenlétedet — a buli előtt és után pár óráig.
+- Javítva: a megosztás gomb iPhone-on is megnyitja a rendszer megosztó lapját.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -283,6 +281,12 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 382 — a megosztás javítása iPhone-on
+- **A tulajdonos jelzése:** *„felment az iphone sideload, de nem működik a share"* — vagyis a 381-es buildben az iPhone-on a megosztás gomb nem nyitotta meg a rendszer megosztó lapját.
+- **A mért gyökér:** a `lib/widgets/share_action.dart` `Share.share(message, subject: …)`-t hívott **`sharePositionOrigin` nélkül** — az iOS-oldali `share_plus` ezt **megköveteli**, és nélküle a lap **némán nem jelenik meg** (nem hibaüzenet, csak „nem történik semmi").
+- **A javítás:** a gomb átadja a saját helyét (`sharePositionOrigin`), így iOS-en megjelenik a megosztó lap; Androidon a viselkedés változatlan.
+- **⚠️ ŐSZINTE KORLÁT:** a javítás a **382-es buildben** érkezik meg; a telefonon lévő 381-ben még a régi hívás van.
 
 ### 381 — onboarding, appon belüli link-megnyitás és helyszíni jelenlét (QR)
 - **A tulajdonos választása:** a használat-növelő csomag három hátralévő pontja egy buildben. A mért szakadék: **1016 push-ra regisztrált eszköz** ↔ **45 közösségi profil** — a legtöbben olvassák az appot, de nem jelölik meg, kit szeretnek.

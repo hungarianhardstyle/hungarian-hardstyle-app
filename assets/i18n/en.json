@@ -864,6 +864,7 @@
   "Javítva: a kiadványok dátum-címkéje („Megjelenés: …\") és a DJ-adatlap „Megjelenései\" rovata angol felületen is angolul jelenik meg.": "Fixed: the release date label (\"Release: …\") and the \"Appearances\" section of the DJ profile now appear in English on the English interface too.",
   "Javítva: a Label fül és a többi lista görgetése nem ugrik vissza a tetejére háttér-frissítéskor.": "Fixed: scrolling on the Label tab and other lists no longer jumps back to the top during a background refresh.",
   "Javítva: a lejátszási lista és a lapozás mindig az összes letöltött zenét mutatja (előfordult, hogy csak egy tételt látott).": "Fixed: the playlist and paging always show all downloaded tracks (it happened that only one item was visible).",
+  "Javítva: a megosztás gomb iPhone-on is megnyitja a rendszer megosztó lapját.": "Fixed: the share button now opens the system share sheet on iPhone too.",
   "Javítva: a pont-értesítés magyar szövegéből eltűnt a szóismétlés („Új összpontszámod\").": "Fixed: a duplicated word was removed from the Hungarian points notification text.",
   "Javítva: a privát üzenet értesítésének címe is a választott nyelven szól (eddig magyar volt).": "Fixed: the title of a private message notification also speaks the selected language (it used to be Hungarian).",
   "Javítva: a profil törlésének megerősítése angol felületen is a feliraton látható szót kéri (DELETE).": "Fixed: on the English interface the profile deletion confirmation now asks for the word shown on the label (DELETE).",
