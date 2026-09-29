@@ -30,16 +30,19 @@ funkció (kedvencek, pontok, követés) ezen a szűk rétegen keresztül ér el.
 - **Hátra:** a kliens a **381-es buildben** küldi majd a kedvenceket — addig a
   személyes célzás „fegyverben van", de nem sül el.
 
-## 2. Onboarding 3 lépésben — 🔵 DÖNTÉS KÉSZ, felület hátra
+## 2. Onboarding 3 lépésben — ✅ KÉSZ (a 381-es buildben)
 
 - `lib/services/onboarding_state.dart`: (1) bemutatás → (2) kedvenc DJ(k) →
   (3) értesítési engedély; **egyszer** fut, **átugorható**, **mélylinkről nyitva
-  nem jelenik meg** (a tartalom az első), és nem írja felül a meglévő
-  döntéseket. Teszt: `test/services/onboarding_state_test.dart` **6/6**.
-- **Hátra:** a 3 lépés **felülete** (a `FavoriteButton`/DJ-lista és a
-  `NotificationPermissionGate` már megvan hozzá), és a bekötés az indulásba.
+  nem jelenik meg**, és nem írja felül a meglévő döntéseket.
+- `lib/screens/onboarding/onboarding_screen.dart`: a három lépés felülete
+  (folyamatjelző, „Kihagyás"/„Tovább"/„Kész", az engedély a meglévő, kíméletes
+  kapun át) — **bekötve** a `StartupGate`-be: a kezdő adatok betöltése után,
+  egyszer (`_onboardingChecked`).
+- Tesztek: `test/services/onboarding_state_test.dart` **7/7** (a bekötés
+  forrás-lintjével együtt).
 
-## 3. Appon belüli link-megnyitás — 🔵 3/4 KÉSZ
+## 3. Appon belüli link-megnyitás — ✅ KÉSZ (a 381-es buildben)
 
 1. **Manifest:** az app fogja az `/invite`, `/events`, `/releases`, `/djs`
    útvonalakat (`autoVerify` marad) — `AndroidManifest.xml`.
@@ -50,35 +53,44 @@ funkció (kedvencek, pontok, követés) ezen a szűk rétegen keresztül ér el.
    **2.14.10** `GET /huhs/v1/resolve` végpontja (slug **vagy** azonosító →
    típus + azonosító; csak publikált tartalom; hibára 404). Teszt **6/6**,
    Docker-harness **72/72**.
-- **Hátra:** a feloldó **bekötése** a navigációba (a meglévő `AppLinks`
-  figyelő már kezeli az `/invite`-ot — ezt kell kiterjeszteni).
+- **Hátra:** nincs — a feloldó be van kötve (`ReferralLinkService` → `pendingContentTarget()` → `openContentTarget` a `StartupGate`-ben).
 
-## 4. Esemény-oldali QR — 🔵 TELEPÍTÉSI ÚT KÉSZ
+## 4. Esemény-oldali QR — ✅ KÉSZ (a 381-es buildben)
 
 - `tools/make-qr-links.mjs`: kiírja a QR-be másolandó címeket (Play-link
   `referrer=qr` kampány-paraméterrel, weboldal, konkrét esemény `?p={id}`), és
   **minden címet ellenőriz** — mérve **3/3 él** (HTTP 200).
-- **Hátra:** a QR **beolvasása az appban** → jelenlét + pont a meglévő
-  `event_attendance`/pontrendszerrel (381-es kör).
+- **A jelenlét:** a QR-t a **telefon kamerája** olvassa (nincs külön beolvasó az
+  appban), a link az appot nyitja meg az eseményen, ahol az adatlap felajánlja a
+  „Jelenlét rögzítése" gombot. A szabály egy helyen él
+  (`lib/services/event_checkin.dart`): **4 órával előtte … 12 órával utána**, és
+  **tagonként egyszer** — a lefotózott kód így nem halmozható ponttá. Teszt **8/8**.
+- **Hátra:** nincs (a jelenlét bejelentkezést kér, mert a jelenlét a profilhoz kötődik).
 
 ## Kapuk (utolsó mért értékek)
 
 | Kapu | Érték |
 |---|---|
 | `flutter analyze lib test` | No issues found! |
-| `flutter test` | **1313/1313** |
+| `flutter test` | **1321/1321** |
 | `node tools/run-function-tests.mjs --pure` | **382/382** |
 | Docker plugin-harness (2.14.10) | 49 lintelt fájl, **117/117**, **117/117**, **72/72**, push-lánc **12/12**, mind az 5 jelző |
-| Mutációs bizonyítékok | 6/6 (379–380), 3/3 (log-szint), 3/3 (digest fan-out), 2/2 (IPA-merő) |
+| Play-jegyzet kapu (381) | MINDEN ELLENŐRZÉS RENDBEN (1. blokk **276/480**) |
+| Mutációs bizonyítékok | **5/5 (381)**, 6/6 (379–380), 3/3 (log-szint), 3/3 (digest fan-out), 2/2 (IPA-merő) |
+
+## A csomag
+
+**`build/HUHS-v1.0.0+381-release.aab`** — **83 171 400 bájt**, SHA-256
+`E0107BECB1FF490726C4C45FAB286E7D373D23C9BDD539ABDFE8D24683EA8F7A`,
+`tmp/verify-aab.mjs … 381` → **MINDEN ELLENŐRZÉS RENDBEN**.
 
 ## A tulajdonos lépései
 
-1. **`build/huhs-mobile-api-2.14.10.zip`** feltöltése (minden eddigi plugin-javítás egyben).
-2. A **380** kivitele a zárt tesztből a **nyílt/éles** sávra (mért állapot: production 377, zárt teszt 380).
+1. **A `build/HUHS-v1.0.0+381-release.aab` feltöltése** (a 380 már éles; a 381 hozza az onboardingot, az appon belüli link-megnyitást és a QR-es jelenlétet).
+2. A **`build/huhs-mobile-api-2.14.10.zip`** feltöltése, ha még nem ment fel (minden plugin-javítás egyben, a link-feloldóval).
 3. Az áruházi szövegek bemásolása (`docs/PLAY-ARUHAZ-LISTA-SZOVEGEK.md`).
 
-## Ami még hátra van (egy buildben: 381)
+## Ami még hátra van
 
-Onboarding felület + a link-feloldó bekötése + a kedvencek átküldése a
-`/push/preferences`-be + a QR-beolvasás az appban → utána AAB, ellenőrzés,
-Play-jegyzet és iOS-ellenőrzés.
+**iOS-ellenőrzés a 381-re** (CI-futás → IPA → sideload a telefonra), és utána a
+cél lezárása. Ezen kívül nincs nyitott fejlesztési szál.
