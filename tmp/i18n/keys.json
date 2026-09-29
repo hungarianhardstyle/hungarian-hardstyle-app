@@ -5180,6 +5180,13 @@
     ]
   },
   {
+    "value": "Jelenlét rögzítése",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
     "value": "Jelented a hozzászólást?",
     "count": 1,
     "files": [

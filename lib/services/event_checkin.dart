@@ -30,6 +30,21 @@ enum CheckInStatus {
   alreadyCheckedIn,
 }
 
+/// Az esemény kezdete a nyers mezőkből (`start_date`, `start_time`).
+///
+/// ⚠️ A nap a **helyi** értelmezés szerint (`2026-10-17` + `23:00`), ugyanúgy,
+/// ahogy a felület is mutatja — a szerveroldali ütemezés a site időzónáját
+/// használja, és a kettő a magyar felhasználóknál ugyanaz.
+/// Hiányzó/hibás értékre `null` (ilyenkor **nincs** jelenlét-gomb).
+DateTime? eventStartFrom({required String startDate, required String startTime}) {
+  final day = DateTime.tryParse(startDate.trim());
+  if (day == null) return null;
+  final parts = startTime.trim().split(':');
+  final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
+  final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+  return DateTime(day.year, day.month, day.day, hour.clamp(0, 23), minute.clamp(0, 59));
+}
+
 /// Az ablak az esemény kezdete előtt (a helyszínen mindig van csúszás).
 const Duration checkInOpenBefore = Duration(hours: 4);
 

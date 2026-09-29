@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/content/html_linkifier.dart';
 import '../../core/i18n/app_strings.dart';
+import '../../services/event_checkin.dart';
 import '../../core/i18n/content_language_reload.dart';
 import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
@@ -612,6 +613,39 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                                               ),
                                               label: const AppText('Ott leszek'),
                                             ),
+                                            // HELYSZÍNI JELENLÉT (QR, 381): a
+                                            // gomb csak az esemény időablakában
+                                            // látszik (4 órával előtte … 12 órával
+                                            // utána), és ha még nincs jelenlét —
+                                            // így a lefotózott kód sem használható
+                                            // hetekkel később.
+                                            if (selected != 'attending' &&
+                                                checkInWindowOpen(
+                                                  eventStart: eventStartFrom(
+                                                        startDate: event.startDate,
+                                                        startTime: event.startTime,
+                                                      ) ??
+                                                      DateTime(1970),
+                                                  now: DateTime.now(),
+                                                ))
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  bottom: 8,
+                                                ),
+                                                child: OutlinedButton.icon(
+                                                  onPressed: _attendanceBusy
+                                                      ? null
+                                                      : () => _setAttendance(
+                                                          'attending',
+                                                        ),
+                                                  icon: const Icon(
+                                                    Icons.qr_code_2,
+                                                  ),
+                                                  label: const AppText(
+                                                    'Jelenlét rögzítése',
+                                                  ),
+                                                ),
+                                              ),
                                             OutlinedButton(
                                               style: selected == 'not_attending'
                                                   ? OutlinedButton.styleFrom(
