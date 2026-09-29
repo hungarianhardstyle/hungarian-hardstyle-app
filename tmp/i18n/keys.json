@@ -1212,13 +1212,6 @@
     ]
   },
   {
-    "value": "Kövesd a kedvenc DJ-jeidet",
-    "count": 2,
-    "files": [
-      "lib/screens/onboarding/onboarding_screen.dart"
-    ]
-  },
-  {
     "value": "Label",
     "count": 2,
     "files": [
@@ -5744,6 +5737,13 @@
     "count": 1,
     "files": [
       "lib/screens/poll/poll_screen.dart"
+    ]
+  },
+  {
+    "value": "Kövesd a kedvenc DJ-jeidet",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {

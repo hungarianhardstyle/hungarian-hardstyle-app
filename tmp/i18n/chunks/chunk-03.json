@@ -22,7 +22,6 @@
   "Kijelentkezés",
   "Kikapcsolva – koppints a bekapcsoláshoz",
   "Kilépés",
-  "Kövesd a kedvenc DJ-jeidet",
   "Label",
   "Lomtár ürítése",
   "Magyarország",
@@ -58,5 +57,6 @@
   "Törlöd ezt a privát beszélgetést?",
   "Új privát üzenet",
   "Újra",
-  "Válasz erre: {text}"
+  "Válasz erre: {text}",
+  "Válassz legalább egy műfajt."
 ]
