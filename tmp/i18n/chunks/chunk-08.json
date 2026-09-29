@@ -1,4 +1,7 @@
 [
+  "API-cím",
+  "API-verzió",
+  "App verzió: {version}\n\nHiba leírása:\n",
   "Apple Music",
   "Archiválás",
   "Archivált",
@@ -55,8 +58,5 @@
   "Bekapcsolva csak kép URL-lel menthető.",
   "Beküldés #{id}",
   "Beküldések",
-  "Beküldések moderálása",
-  "Betöltési hiba – újrapróbálás",
-  "Billentyűzet elrejtése",
-  "Biometrikus feloldás"
+  "Beküldések moderálása"
 ]

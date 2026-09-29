@@ -1,4 +1,7 @@
 [
+  "Válassz legalább egy műfajt.",
+  "Város",
+  "Webes adatlap",
   "yyyy. MM. dd.",
   "yyyy. MMMM d.",
   " (eddig: {d})",
@@ -55,8 +58,5 @@
   "A Chat névvel és képfeltöltéssel használható.",
   "A címke hírei nem tölthetők be.\n{error}",
   "A dátum alapból rejtve marad: a profil-szerkesztőben te dönthetsz a megjelenítéséről.",
-  "A diagnosztika a vágólapra került.",
-  "A felhasználó mentése nem sikerült: {error}",
-  "A felhasználó törlése nem sikerült: {error}",
-  "A felhasználó törlése sikerült."
+  "A diagnosztika a vágólapra került."
 ]

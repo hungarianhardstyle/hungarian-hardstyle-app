@@ -1,4 +1,7 @@
 [
+  "JPG, PNG vagy WebP képet válassz.",
+  "Kamera",
+  "Kapcsolattartó e-mail *",
   "Kategória *",
   "Kedvelt tartalmak",
   "Kedvenc",
@@ -27,6 +30,7 @@
   "Keresés név szerint",
   "Keresés szervezők között…",
   "Keresés törlése",
+  "Kész",
   "Keverés",
   "Keverés kikapcsolása",
   "Keverés közben a sorrend nem szerkeszthető — kapcsold ki a keverést a lejátszósávban.",
@@ -40,6 +44,7 @@
   "KIEMELT ESEMÉNY",
   "KIEMELT HÍR",
   "Kiemelt hírek",
+  "Kihagyás",
   "Kijelölés kikapcsolása",
   "Kijelölés törléshez",
   "Kijelöltek törlése",
@@ -53,10 +58,5 @@
   "Koppints a megnyitáshoz",
   "Korábbi események",
   "Korábbi hozzászólások",
-  "Korábbi kiadások",
-  "Kölcsönös kapcsolat meetupolóval",
-  "körülbelül {n} perc múlva próbáld újra.",
-  "Köszönjük a játékodat!",
-  "Köszönjük a szavazatod!",
-  "Köszönjük az értékelést! +10 achipont."
+  "Korábbi kiadások"
 ]

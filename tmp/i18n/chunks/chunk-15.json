@@ -1,4 +1,9 @@
 [
+  "Még nincs privát beszélgetés.",
+  "Még nincs regisztrált profil.",
+  "Még senki nem játszott ebben a játékban.",
+  "Megadom",
+  "Megerősítés",
   "Megerősítő e-mail újraküldése",
   "Megerősítő e-mailt küldtünk. A profil használatához erősítsd meg a címedet.",
   "Megerősítő linket küldtünk az új e-mail-címre. 24 órád van a megerősítésre.",
@@ -20,13 +25,13 @@
   "Minden kérdésre válaszolj a beküldés előtt.",
   "Minden letöltött fájl törlődik a készülékről. A vásárlásaid megmaradnak, bármikor újra letölthetők.",
   "Minden megvásárolt változatért (MP3/WAV) jár. A vásárlást a Google Play ellenőrzi, ezért nem lehet hamisítani.",
+  "Minden, ami a színtéren történik",
   "Mindenki értesítést kap",
   "Mindenki értesítést kapott: {n} címzett, ebből {p} push.",
   "MP3 320 kbps",
   "Napi aktivitási pont",
   "Naponta legfeljebb 3 elküldött cikkkommentért jár pont.",
   "Naponta legfeljebb 3 hír kedveléséért jár pont. A pont végleges: ha kiveszed a lájkot, megmarad, de újralájk sem ad újat.",
-  "Ne maradj le semmiről",
   "Néhány hivatkozás nem kattintható (csak adminnak/moderátornak jár).",
   "Nem",
   "Nem leszek ott",
@@ -53,10 +58,5 @@
   "Nincs cél",
   "Nincs cikk ehhez a címkéhez.",
   "Nincs elérhető kérdőív.",
-  "Nincs elérhető nyereményjáték.",
-  "Nincs elérhető szavazási szezon.",
-  "Nincs hír.",
-  "Nincs ingyenes kiadvány.",
-  "Nincs ismerős.",
-  "Nincs jogosultság"
+  "Nincs elérhető nyereményjáték."
 ]

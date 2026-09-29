@@ -1,4 +1,5 @@
 [
+  "GYÍK",
   "Hír",
   "HUHS Legenda toplista",
   "HUHS tag",
@@ -21,6 +22,7 @@
   "Kijelentkezés",
   "Kikapcsolva – koppints a bekapcsoláshoz",
   "Kilépés",
+  "Kövesd a kedvenc DJ-jeidet",
   "Label",
   "Lomtár ürítése",
   "Magyarország",
@@ -30,6 +32,7 @@
   "Megnyitandó tartalom",
   "Megosztás…",
   "Mentés…",
+  "Ne maradj le semmiről",
   "Nem sikerült betölteni az eseményeket.",
   "Nincs függőben lévő felkérés.",
   "Nincs közelgő esemény.",
@@ -55,8 +58,5 @@
   "Törlöd ezt a privát beszélgetést?",
   "Új privát üzenet",
   "Újra",
-  "Válasz erre: {text}",
-  "Válassz legalább egy műfajt.",
-  "Város",
-  "Webes adatlap"
+  "Válasz erre: {text}"
 ]

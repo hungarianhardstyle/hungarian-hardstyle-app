@@ -1,4 +1,7 @@
 [
+  "A kód nem érvényes. Az authenticator nem lett bekapcsolva.",
+  "A korábbi Google Play-vásárlások visszaállítása nem sikerült.",
+  "A közösségi funkciók 16 éves kortól használhatók.",
   "A közösségi funkciók használatához add meg a születési dátumodat. Ez nem jelenik meg nyilvánosan, amíg nem engedélyezed.",
   "A közösségi funkciókhoz regisztráció szükséges.",
   "A lájkpont végleges: ha kiveszed a lájkot, a pont megmarad, de az újralájk sem ad újat.",
@@ -55,8 +58,5 @@
   "A szavazás állapotát most nem sikerült lekérdezni. Ellenőrizd a kapcsolatot, és próbáld újra a jobb felső frissítés ikonnal.",
   "A szavazás elküldéséhez minden kötelező kategóriát ki kell tölteni.\n\n{list}",
   "A szavazás jelenleg nem tölthető be. Próbáld újra később.",
-  "A szavazás véget ért",
-  "A szavazás véget ért. Az összesítő az adminisztrátori engedély után lesz elérhető.",
-  "A szavazáshoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána szavazhatsz.",
-  "A szavazat mentése nem sikerült. Próbáld újra később."
+  "A szavazás véget ért"
 ]

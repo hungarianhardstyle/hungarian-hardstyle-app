@@ -1,4 +1,6 @@
 [
+  "Fellépés kérése – {artist}",
+  "Fellépés lekötése e-mailben",
   "Fellépésszervezés a Hungarian Hardstyle-on keresztül",
   "Feloldva, a letöltés elindult.",
   "Feloldva, de a letöltést nem sikerült elindítani.",
@@ -47,6 +49,7 @@
   "Hibajelzés – Hungarian Hardstyle {version}",
   "Hír kedvelése",
   "HÍREK",
+  "Hírek, bulik, kiadványok, DJ-k és a rádió — egy helyen. A következő két lépésben személyessé tesszük.",
   "Hívd meg az ismerőseidet a HUHS appba!",
   "Hívd meg ismerőseidet és szerezz 50 pontot",
   "Hol érhető el?",
@@ -55,8 +58,5 @@
   "Hozzáférési jog",
   "Hozzájárulok a hírlevél küldéséhez.",
   "Hozzászólás szerkesztése",
-  "Hozzászólások",
-  "Hozzászólások frissítése",
-  "Hozzászólok",
-  "HTTPS-link megadása"
+  "Hozzászólások"
 ]

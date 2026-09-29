@@ -970,6 +970,14 @@
     ]
   },
   {
+    "value": "Értesítések engedélyezése",
+    "count": 2,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart",
+      "lib/widgets/notification_permission_prompt.dart"
+    ]
+  },
+  {
     "value": "Érvénytelen e-mail-cím.",
     "count": 2,
     "files": [
@@ -1204,6 +1212,13 @@
     ]
   },
   {
+    "value": "Kövesd a kedvenc DJ-jeidet",
+    "count": 2,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "Label",
     "count": 2,
     "files": [
@@ -1269,6 +1284,14 @@
     "files": [
       "lib/screens/artists/artist_edit_screen.dart",
       "lib/screens/community/admin_resource_editor_screen.dart"
+    ]
+  },
+  {
+    "value": "Ne maradj le semmiről",
+    "count": 2,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart",
+      "lib/widgets/notification_permission_prompt.dart"
     ]
   },
   {
@@ -4107,13 +4130,6 @@
     ]
   },
   {
-    "value": "Értesítések engedélyezése",
-    "count": 1,
-    "files": [
-      "lib/widgets/notification_permission_prompt.dart"
-    ]
-  },
-  {
     "value": "Értesítések és gyorsítótár",
     "count": 1,
     "files": [
@@ -4769,6 +4785,13 @@
     "count": 1,
     "files": [
       "lib/screens/home/home_screen.dart"
+    ]
+  },
+  {
+    "value": "Hírek, bulik, kiadványok, DJ-k és a rádió — egy helyen. A következő két lépésben személyessé tesszük.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -5472,6 +5495,13 @@
     ]
   },
   {
+    "value": "Kész",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "Keverés",
     "count": 1,
     "files": [
@@ -5560,6 +5590,13 @@
     "count": 1,
     "files": [
       "lib/screens/news/news_screen.dart"
+    ]
+  },
+  {
+    "value": "Kihagyás",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -6263,6 +6300,13 @@
     ]
   },
   {
+    "value": "Minden, ami a színtéren történik",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "Mindenki értesítést kap",
     "count": 1,
     "files": [
@@ -6302,13 +6346,6 @@
     "count": 1,
     "files": [
       "lib/screens/more/achievement_guide_screen.dart"
-    ]
-  },
-  {
-    "value": "Ne maradj le semmiről",
-    "count": 1,
-    "files": [
-      "lib/widgets/notification_permission_prompt.dart"
     ]
   },
   {
@@ -6624,6 +6661,13 @@
     "count": 1,
     "files": [
       "lib/screens/voting/voting_summary_screen.dart"
+    ]
+  },
+  {
+    "value": "Nyisd meg a DJ-k listáját, és a szív ikonnal követheted őket.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -7194,6 +7238,13 @@
     ]
   },
   {
+    "value": "Szólunk, ha a kedvelt DJ-d új kiadványt tesz közzé, ha közelgő buli van, és vasárnap a hét összefoglalójával.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "Találkoznék ezen az eseményen",
     "count": 1,
     "files": [
@@ -7275,6 +7326,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/community_users_screen.dart"
+    ]
+  },
+  {
+    "value": "Tovább",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -7534,6 +7592,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Üdv a Hungarian Hardstyle appban",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {

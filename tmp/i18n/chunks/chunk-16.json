@@ -1,4 +1,9 @@
 [
+  "Nincs elérhető szavazási szezon.",
+  "Nincs hír.",
+  "Nincs ingyenes kiadvány.",
+  "Nincs ismerős.",
+  "Nincs jogosultság",
   "Nincs letöltve",
   "Nincs még játék az adatbázisban.",
   "Nincs megjeleníthető elem.",
@@ -12,6 +17,7 @@
   "Nyertes: {name}",
   "Nyilvános booking e-mail",
   "Nyilvános eredmények megnyitása",
+  "Nyisd meg a DJ-k listáját, és a szív ikonnal követheted őket.",
   "Ok: {reason}",
   "Olvasottnak jelölés",
   "Opcionális – válassz időpontot",
@@ -52,11 +58,5 @@
   "REAL HARDSTYLE FM",
   "realhardstyle.nl megnyitása",
   "Records",
-  "Régebbi üzenetek betöltése",
-  "Regisztráció",
-  "Regisztráció és bejelentkezés",
-  "Regisztráció nélkül is szavazhatsz. Egy készülékről ebben az évadban csak egyszer lehet leadni a szavazatot.",
-  "Regisztrált eszközök",
-  "Regisztrált felhasználók ({n})",
-  "Regisztrált felhasználók és jogosultságok"
+  "Régebbi üzenetek betöltése"
 ]

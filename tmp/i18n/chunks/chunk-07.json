@@ -1,4 +1,7 @@
 [
+  "A szavazás véget ért. Az összesítő az adminisztrátori engedély után lesz elérhető.",
+  "A szavazáshoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána szavazhatsz.",
+  "A szavazat mentése nem sikerült. Próbáld újra később.",
   "A szavazatod sikeresen rögzítettük. Ebben az éves szavazásban erről a készülékről már nem adhatsz le újabb szavazatot.",
   "A szavazatot most nem sikerült rögzíteni. Próbáld újra.",
   "A szerkesztés nem sikerült: {error}",
@@ -55,8 +58,5 @@
   "Alapból rejtve marad; csak te dönthetsz a megjelenítéséről.",
   "Állapot: {state}\nJátékosok: {players} · helyes válasz: {correct}\nNyertes megjelenítése: {display}",
   "Állapot: {state} · összes szavazat: {n}",
-  "Android-kódos feloldás",
-  "API-cím",
-  "API-verzió",
-  "App verzió: {version}\n\nHiba leírása:\n"
+  "Android-kódos feloldás"
 ]
