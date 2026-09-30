@@ -86,6 +86,7 @@ export function selfTest() {
     'PUSH-NYELV OK',
     '41 ellenőrzés, 0 hiba',
     'PUSH-OPEN OK',
+    'PUSH-NEWS OK',
   ].join('\n');
   const goodSummary = summarize(good);
   check('a jó kimenet nem jelez hibát', goodSummary.failed === false);
@@ -99,6 +100,12 @@ export function selfTest() {
   check(
     'a hiányzó szavazás/játék jelzőt is észreveszi',
     summarize(good.replace('PUSH-OPEN OK', '')).missingMarkers.includes('PUSH-OPEN OK'),
+  );
+  // ⚠️ A 2.14.12 új köre: a minta először NEM tartalmazta a jelzőt, és az önteszt
+  // elkapta (`9/10`) — pontosan ez a dolga. A hiányt itt is mérjük.
+  check(
+    'a hiányzó hír-push őr jelzőt is észreveszi',
+    summarize(good.replace('PUSH-NEWS OK', '')).missingMarkers.includes('PUSH-NEWS OK'),
   );
 
   const bad = good.replace('VISELKEDES OK', 'VISELKEDES HIBA');
