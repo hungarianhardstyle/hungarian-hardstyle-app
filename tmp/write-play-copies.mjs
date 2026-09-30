@@ -2,7 +2,8 @@ import fs from 'node:fs';
 
 // A Play-jegyzet blokkjait kiírjuk UTF-8 fájlokba (a PowerShell-átirányítás UTF-16-ot adna).
 // ⚠️ A blokk-sorszámok a dokumentum sorrendjét követik: 0 = 1. blokk (a mostani
-// buildhez), 2 = 1b-2 összesítő, 3 = 1b-3 (béta) összesítő.
+// buildhez), 2 = 1b-2 összesítő, 3 = 1b-3 (béta) összesítő, 5 = 1d (a ZÁRT TESZTRE,
+// 383 → 384 — ez a dokumentumban az 1c UTÁN van, ezért az indexe 5).
 //
 // 🔵 A FÁJLNEVEK A DOKUMENTUM `currentBuild`-JÉBŐL SZÁRMAZNAK (2026-09-28).
 // Előtte a nevek kézzel voltak beírva, és ez MÉRT HIBÁT okozott: a 378-as és a
@@ -14,12 +15,14 @@ import fs from 'node:fs';
 
 const CURRENT_BUILD_RE = /^currentBuild:\s*(\d+)\s*$/m;
 
-/** A jelenlegi buildhez tartozó másolat-nevek (a sorrend a dokumentumé: 0, 2, 3). */
+/** A jelenlegi buildhez tartozó másolat-nevek (a sorrend a dokumentumé: 0, 2, 3, 5). */
 function expectedTargets(build) {
   return [
     [`tmp/play-${build}.txt`, 0],
     [`tmp/play-361-${build}.txt`, 2],
     [`tmp/play-355-${build}.txt`, 3],
+    // A zárt teszt blokkja (383 → 384): a dokumentumban az 1c UTÁN áll, ezért 5.
+    [`tmp/play-${build}-zart.txt`, 5],
   ];
 }
 

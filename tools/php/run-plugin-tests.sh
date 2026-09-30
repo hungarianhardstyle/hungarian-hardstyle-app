@@ -77,4 +77,17 @@ else
   fail=1
 fi
 
+# ⚠️ A 2.14.12 újdonsága: a HÍR-PUSH ŐRE. Éles mérés szerint (2026-09-30) a nap
+# két cikke után egyetlen push sem indult, mert a közzététel-hook nem futott le
+# (a küldési lánc viszont jó: kézzel 1024 eszköz, 0 hiba). A mérés a teljes
+# láncot futtatja stubolt FCM-mel, és a frissességi kaput is.
+echo ""
+echo "=== 7) A hír-push őre (2.14.12)"
+if php /work/tools/verify-push-news-watchdog.php "$PLUGIN"; then
+  echo "PUSH-NEWS OK"
+else
+  echo "PUSH-NEWS HIBA"
+  fail=1
+fi
+
 exit $fail

@@ -1,0 +1,457 @@
+csomag: build/huhs-mobile-api-2.14.12.zip → tmp/php-plugin/huhs-mobile-api
+=== 1) PHP szintaxis (php -l, minden fájl)
+lintelt PHP fajl: 49
+PHP LINT OK
+
+=== 2) Viselkedés-teszt (WordPress-stubokkal, valódi PHP)
+OK    a típuslista mind az öt típust tartalmazza
+OK    hu kérésre a magyar payload megy vissza
+OK    en kérésre a teljes angol payload megy vissza
+OK    csak cím esetén NEM vált angolra (fallback-kapu)
+OK    csak törzs esetén sem vált angolra
+OK    kivonat nélkül is angolra vált (a kapu a cím ÉS a törzs)
+OK    kulcs nélkül a fordítás NEM indul
+OK    kulcs nélkül nincs hálózati hívás és nincs meta-írás
+OK    örökölt opció-kulccsal a fordítás bekapcsol
+OK    örökölt kulccsal az OpenAI végpontja a szolgáltató
+OK    ha mindkét kulcs megvan, az ELSŐDLEGES nyer (DeepSeek)
+OK    érvényes válaszból a három helyes meta lesz (a címből a tag kimegy, a HTML marad)
+OK    a kérés a Bearer kulccsal, JSON-kimenettel és a magyar szöveggel megy
+OK    HTTP 500 esetén NINCS fordítás-meta (csak a hibajelző), és a státusz `failed`
+OK    értelmezhetetlen válaszból NINCS fordítás-meta (nincs félkész fordítás)
+OK    részleges válaszból csak a meglevő mező íródik ki
+OK    más post-típusra nem indul fordítás
+OK    üres címnél nem indul fordítás
+OK    a cron a `save_post`-ra és a saját eseményére is feliratkozik
+OK    mind az öt fordítási típus megkapja a custom-fields támogatást
+OK    a támogatás a KÉSŐI init-en kapcsolódik (99)
+OK    a magyar ág BÁJTRA ugyanaz (a névtár nem nyúl a magyar értékhez)
+OK    angol kérésre az ország angol neve megy ki
+OK    angol kérésre a város angol neve megy ki (Bécs → Vienna)
+OK    ismeretlen névre NEM tippel (marad az eredeti)
+OK    a "Velence" csapda: a magyar város nem lesz Venice
+OK    üres értékre nem hív hibát és üres marad
+OK    az első fordítás `translated`, és beírja az ujjlenyomatot
+OK    ugyanarra a magyar szövegre a második hívás `uptodate` — NINCS új API-hívás
+OK    megváltozott magyar szövegre ÚJRA fordít (a szerkesztés nem marad angol nélkül)
+OK    fél válasz (nincs törzs) `partial`, és NEM jelöli késznek (a pótlás kijavítja)
+OK    a várólistán csak a publikált, szöveges, angol NÉLKÜLI elem van
+OK    az üres törzsű, a piszkozat és a már lefordított elem nem várólistás
+OK    a "nincs kulcs" esetben a pótlás semmit nem tesz
+OK    a költségvetés (0 másodperc) leállítja a kört, mielőtt bármit fordítana
+OK    a pótlás mindkét típus hiányzó fordítását lefuttatja
+OK    a pótlás után a várólista ürül (nincs több hiányzó angol)
+OK    a pótlás nem hoz létre felhasználói értesítést (nincs `save_post` hívás a körben)
+OK    a második pótlás már nem fordít semmit (nincs felesleges API-költés)
+OK    egy típus kérhető, és az érvénytelen érték mindet jelenti
+OK    a `translations/status` (GET) és a `translations/sweep` (POST) végpont bejegyződik
+OK    a pótlás végpontja `manage_options` jogosultságot kér
+OK    a pótló kör saját cron-eseményre és az init-re is feliratkozik
+OK    a pótlás ÓRÁNKÉNT is ütemeződik (nem csak a mentésre vár)
+OK    a status végpont mind a kilenc típust és a várólistát megadja (kulcs nélkül is)
+OK    a MINDEN típus listája tartalmazza a GYÍK-ot és a meta-szöveges típusokat
+OK    a mező-térkép a valódi meta-kulcsokat és alakjukat adja
+OK    a forrás-mezők beolvasása: szöveg + JSON lista (a dátum NEM szöveg)
+OK    a lista-beolvasó a JSON listát kezeli, a nem-JSON-t üresen adja vissza
+OK    a mező-fordítás lefut és a három válaszlehetőséget is lefordítja
+OK    a mező-fordítás naprakészsége igaz (a pótló kör nem viszi újra a várólistára)
+OK    a második futás `uptodate` — nincs új API-hívás
+OK    a kiolvasó angolul a fordítást adja, magyarul a forrást
+OK    a lista kiolvasása elemenként esik vissza a magyarra
+OK    hibás válasznál a mező-fordítás `failed`, és nem ír félig kész térképet
+OK    a hibás mező-fordítás nem blokkolja a cím/törzs ágat (külön jelölő)
+OK    a rövidebb válaszlistát elutasítja (nincs félkész fordítás)
+OK    a GYÍK kategória-névtár a mért 8 kategóriát tartalmazza
+OK    a kategória angolul fordítva, magyarul változatlanul megy ki
+OK    a kézzel beírt terminus-név nyer a névtárral szemben
+OK    a meta-szöveges elem (üres törzzsel is) a várólistára kerül
+OK    a pótló kör a meta-szöveges elemet is lefordítja (és utána lekerül a listáról)
+OK    a meta-szöveges típus a `status` várólistában is szerepel
+OK    a nyitott játék a VALÓDI nyereményt küldi (nem üres stringet)
+OK    angol kérésre a nyitott játék fordítva megy ki (kérdés, válaszok, nyeremény)
+OK    a magyar kérés bájtazonos (nincs beszóló angol szöveg)
+OK    a HELYES válasz egyik ágban sem szivárog ki (nincs `correct` a payloadban)
+OK    fordítás nélkül angol kérésre is a magyar érték megy ki, és `has_en` hamis
+OK    a játék-végpontok regisztrálva vannak (a callback elérhető a méréshez)
+OK    a játék összefoglalója angolul a fordítást adja, magyarul a forrást
+OK    a játéktípus neve angolul a névtárból jön, magyarul a HUHS_GAME_TYPES-ból
+OK    a játék-típus névtár minden típust lefed (és ismeretlen típusra nem tippel)
+OK    a játék-végpont a helyes választ nem adja ki (a `correct` kulcs nem megy ki)
+OK    az AKTÍV játék végpontja is a kért nyelven adja a típust (fordítás nélkül a magyar összefoglalót)
+OK    a kvíz forrása LAPOS kulcsokra bomlik (kérdés + válaszlehetőségek)
+OK    a `correct` index NINCS a fordítási kérésben (nem tud elcsúszni)
+OK    a kvíz fordítása lefut és a kérdések/válaszok angolul jönnek
+OK    a `correct` index VÁLTOZATLAN marad a fordított szerkezetben
+OK    a magyar ág bájtazonos (nem-angol kérésre a magyar kérdések)
+OK    a NYILVÁNOS játék-végpont angolul a lefordított kérdéseket adja (magyarul a magyarokat)
+OK    a nyilvános válasz a `correct` indexet NEM adja ki (a játék nem skennelhető)
+OK    a privát (proxy) útvonal callbackje elérhető
+OK    a PRIVÁT útvonalon a lefordított kérdések a `correct` indexszel együtt mennek (a proxynak kell)
+OK    a meta-írás MEGŐRZI a JSON-escape-eket (valódi új sor, nem „rn")
+OK    az ékezetes válasz is helyesen íródik vissza (nincs „u00e9" szemét)
+OK    a kiolvasó a valódi új sort adja vissza (a megjelenítés sort törhet)
+OK    a beíró kiírja a séma-verziót, és az elem naprakész
+OK    a régi (verziójelölő nélküli) fordítás NEM naprakész → a pótló kör újraviszi
+OK    az újrafuttatott fordítás újra naprakész (és megint helyes az escape)
+OK    a cím/törzs fordfítás is megőrzi a backslasht (nincs „unslash" roncsolás)
+OK    a roncsolt tárolt fordítás ELŐÁLL (a mért éles hiba reprodukálva)
+OK    a verziójelölő nélküli (régi sémás) elem NEM naprakész
+OK    a régi sémás elem BEMATEMATIKA a várólistába (a verzió-kapu elérhető)
+OK    a KORÁBBI verziószámmal írt elem is bekerül (a kapu később is működik)
+OK    a naprakész elem NEM kerül a várólistába (nincs felesleges API-hívás)
+OK    a roncsolt szöveg naprakésznek LÁTSZIK (ez volt az éles helyzet)
+OK    kényszerítés NÉLKÜL nem indul felesleges hívás (a naprakész elem marad)
+OK    a kényszerített út a naprakésznek látszó elemet is kiválasztja
+OK    a kényszerített futás lecseréli a roncsolt szöveget (valódi sortörés, ékezet)
+OK    a pótló kör `force` útja is lecseréli a roncsolt szöveget
+OK    a naprakész cím/törzs fordfítás a kényszerített úton mégis kiválasztódik
+OK    a kényszerített futás a cím/törzs ágat is újraírja (a `rn` eltűnik)
+OK    a „van fordítható forrás" döntés helyes (üres elemre hamis)
+OK    a KÉZI angol kérdés elsőbbséget élvez a gépi fordítással szemben
+OK    a kézzel beírt angol válasz a helyén jelenik meg
+OK    a ki nem töltött helyeken a GÉPI fordítás marad, és a lista HOSSZA sem változik
+OK    magyar kérésre a kézi angol mezők sem szólnak bele (bájtazonos magyar ág)
+OK    a `has_en` a KÉZI angol szöveget is számolja (gépi fordítás nélkül is igaz)
+OK    angol változat nélkül a `has_en` hamis (nincs hamis jelzés)
+OK    a VALÓDI /poll/active a KÉZI angol kérdést és válaszokat küldi
+OK    a VALÓDI /poll/active magyar ága bájtazonos marad
+OK    a válaszban a `has_en` a kézi angol szövegre is igaz
+OK    a kézi angol kérdés-szöveg felülírja a gépi/magyar szöveget
+OK    a ki nem töltött angol válasz a magyar marad (nincs üres hely)
+OK    a HELYES VÁLASZ indexe a magyar szerkezetből jön (nem csúszik el)
+OK    a magyar ág érintetlen (nem-angol kérésre a magyar kérdés jön)
+OK    a kézi angol ÖSSZEFOGLALÓ is elsőbbséget élvez
+
+117 ellenőrzés, 0 hiba
+VISELKEDES OK
+
+=== 3) Viselkedés-teszt az ÖRÖKÖLT KONSTANS kulccsal (külön futás)
+OK    a típuslista mind az öt típust tartalmazza
+OK    hu kérésre a magyar payload megy vissza
+OK    en kérésre a teljes angol payload megy vissza
+OK    csak cím esetén NEM vált angolra (fallback-kapu)
+OK    csak törzs esetén sem vált angolra
+OK    kivonat nélkül is angolra vált (a kapu a cím ÉS a törzs)
+  (a kulcs nélküli ág ebben a futásban szándékosan kimarad — a konstans kulcsot ad)
+OK    örökölt opció-kulccsal a fordítás bekapcsol
+OK    örökölt kulccsal az OpenAI végpontja a szolgáltató
+OK    ha mindkét kulcs megvan, az ELSŐDLEGES nyer (DeepSeek)
+OK    HUHS_OPENAI_API_KEY konstansból is bekapcsol
+OK    konstans-kulccsal is az OpenAI végpontja megy
+OK    érvényes válaszból a három helyes meta lesz (a címből a tag kimegy, a HTML marad)
+OK    a kérés a Bearer kulccsal, JSON-kimenettel és a magyar szöveggel megy
+OK    HTTP 500 esetén NINCS fordítás-meta (csak a hibajelző), és a státusz `failed`
+OK    értelmezhetetlen válaszból NINCS fordítás-meta (nincs félkész fordítás)
+OK    részleges válaszból csak a meglevő mező íródik ki
+OK    más post-típusra nem indul fordítás
+OK    üres címnél nem indul fordítás
+OK    a cron a `save_post`-ra és a saját eseményére is feliratkozik
+OK    mind az öt fordítási típus megkapja a custom-fields támogatást
+OK    a támogatás a KÉSŐI init-en kapcsolódik (99)
+OK    a magyar ág BÁJTRA ugyanaz (a névtár nem nyúl a magyar értékhez)
+OK    angol kérésre az ország angol neve megy ki
+OK    angol kérésre a város angol neve megy ki (Bécs → Vienna)
+OK    ismeretlen névre NEM tippel (marad az eredeti)
+OK    a "Velence" csapda: a magyar város nem lesz Venice
+OK    üres értékre nem hív hibát és üres marad
+OK    az első fordítás `translated`, és beírja az ujjlenyomatot
+OK    ugyanarra a magyar szövegre a második hívás `uptodate` — NINCS új API-hívás
+OK    megváltozott magyar szövegre ÚJRA fordít (a szerkesztés nem marad angol nélkül)
+OK    fél válasz (nincs törzs) `partial`, és NEM jelöli késznek (a pótlás kijavítja)
+OK    a várólistán csak a publikált, szöveges, angol NÉLKÜLI elem van
+OK    az üres törzsű, a piszkozat és a már lefordított elem nem várólistás
+OK    a "nincs kulcs" esetben a pótlás semmit nem tesz
+  (a kulcs nélküli pótlás ebben a futásban szándékosan kimarad — a konstans kulcsot ad)
+OK    a költségvetés (0 másodperc) leállítja a kört, mielőtt bármit fordítana
+OK    a pótlás mindkét típus hiányzó fordítását lefuttatja
+OK    a pótlás után a várólista ürül (nincs több hiányzó angol)
+OK    a pótlás nem hoz létre felhasználói értesítést (nincs `save_post` hívás a körben)
+OK    a második pótlás már nem fordít semmit (nincs felesleges API-költés)
+OK    egy típus kérhető, és az érvénytelen érték mindet jelenti
+OK    a `translations/status` (GET) és a `translations/sweep` (POST) végpont bejegyződik
+OK    a pótlás végpontja `manage_options` jogosultságot kér
+OK    a pótló kör saját cron-eseményre és az init-re is feliratkozik
+OK    a pótlás ÓRÁNKÉNT is ütemeződik (nem csak a mentésre vár)
+OK    a status végpont mind a kilenc típust és a várólistát megadja (kulcs nélkül is)
+OK    a MINDEN típus listája tartalmazza a GYÍK-ot és a meta-szöveges típusokat
+OK    a mező-térkép a valódi meta-kulcsokat és alakjukat adja
+OK    a forrás-mezők beolvasása: szöveg + JSON lista (a dátum NEM szöveg)
+OK    a lista-beolvasó a JSON listát kezeli, a nem-JSON-t üresen adja vissza
+OK    a mező-fordítás lefut és a három válaszlehetőséget is lefordítja
+OK    a mező-fordítás naprakészsége igaz (a pótló kör nem viszi újra a várólistára)
+OK    a második futás `uptodate` — nincs új API-hívás
+OK    a kiolvasó angolul a fordítást adja, magyarul a forrást
+OK    a lista kiolvasása elemenként esik vissza a magyarra
+OK    hibás válasznál a mező-fordítás `failed`, és nem ír félig kész térképet
+OK    a hibás mező-fordítás nem blokkolja a cím/törzs ágat (külön jelölő)
+OK    a rövidebb válaszlistát elutasítja (nincs félkész fordítás)
+OK    a GYÍK kategória-névtár a mért 8 kategóriát tartalmazza
+OK    a kategória angolul fordítva, magyarul változatlanul megy ki
+OK    a kézzel beírt terminus-név nyer a névtárral szemben
+OK    a meta-szöveges elem (üres törzzsel is) a várólistára kerül
+OK    a pótló kör a meta-szöveges elemet is lefordítja (és utána lekerül a listáról)
+OK    a meta-szöveges típus a `status` várólistában is szerepel
+OK    a nyitott játék a VALÓDI nyereményt küldi (nem üres stringet)
+OK    angol kérésre a nyitott játék fordítva megy ki (kérdés, válaszok, nyeremény)
+OK    a magyar kérés bájtazonos (nincs beszóló angol szöveg)
+OK    a HELYES válasz egyik ágban sem szivárog ki (nincs `correct` a payloadban)
+OK    fordítás nélkül angol kérésre is a magyar érték megy ki, és `has_en` hamis
+OK    a játék-végpontok regisztrálva vannak (a callback elérhető a méréshez)
+OK    a játék összefoglalója angolul a fordítást adja, magyarul a forrást
+OK    a játéktípus neve angolul a névtárból jön, magyarul a HUHS_GAME_TYPES-ból
+OK    a játék-típus névtár minden típust lefed (és ismeretlen típusra nem tippel)
+OK    a játék-végpont a helyes választ nem adja ki (a `correct` kulcs nem megy ki)
+OK    az AKTÍV játék végpontja is a kért nyelven adja a típust (fordítás nélkül a magyar összefoglalót)
+OK    a kvíz forrása LAPOS kulcsokra bomlik (kérdés + válaszlehetőségek)
+OK    a `correct` index NINCS a fordítási kérésben (nem tud elcsúszni)
+OK    a kvíz fordítása lefut és a kérdések/válaszok angolul jönnek
+OK    a `correct` index VÁLTOZATLAN marad a fordított szerkezetben
+OK    a magyar ág bájtazonos (nem-angol kérésre a magyar kérdések)
+OK    a NYILVÁNOS játék-végpont angolul a lefordított kérdéseket adja (magyarul a magyarokat)
+OK    a nyilvános válasz a `correct` indexet NEM adja ki (a játék nem skennelhető)
+OK    a privát (proxy) útvonal callbackje elérhető
+OK    a PRIVÁT útvonalon a lefordított kérdések a `correct` indexszel együtt mennek (a proxynak kell)
+OK    a meta-írás MEGŐRZI a JSON-escape-eket (valódi új sor, nem „rn")
+OK    az ékezetes válasz is helyesen íródik vissza (nincs „u00e9" szemét)
+OK    a kiolvasó a valódi új sort adja vissza (a megjelenítés sort törhet)
+OK    a beíró kiírja a séma-verziót, és az elem naprakész
+OK    a régi (verziójelölő nélküli) fordítás NEM naprakész → a pótló kör újraviszi
+OK    az újrafuttatott fordítás újra naprakész (és megint helyes az escape)
+OK    a cím/törzs fordfítás is megőrzi a backslasht (nincs „unslash" roncsolás)
+OK    a roncsolt tárolt fordítás ELŐÁLL (a mért éles hiba reprodukálva)
+OK    a verziójelölő nélküli (régi sémás) elem NEM naprakész
+OK    a régi sémás elem BEMATEMATIKA a várólistába (a verzió-kapu elérhető)
+OK    a KORÁBBI verziószámmal írt elem is bekerül (a kapu később is működik)
+OK    a naprakész elem NEM kerül a várólistába (nincs felesleges API-hívás)
+OK    a roncsolt szöveg naprakésznek LÁTSZIK (ez volt az éles helyzet)
+OK    kényszerítés NÉLKÜL nem indul felesleges hívás (a naprakész elem marad)
+OK    a kényszerített út a naprakésznek látszó elemet is kiválasztja
+OK    a kényszerített futás lecseréli a roncsolt szöveget (valódi sortörés, ékezet)
+OK    a pótló kör `force` útja is lecseréli a roncsolt szöveget
+OK    a naprakész cím/törzs fordfítás a kényszerített úton mégis kiválasztódik
+OK    a kényszerített futás a cím/törzs ágat is újraírja (a `rn` eltűnik)
+OK    a „van fordítható forrás" döntés helyes (üres elemre hamis)
+OK    a KÉZI angol kérdés elsőbbséget élvez a gépi fordítással szemben
+OK    a kézzel beírt angol válasz a helyén jelenik meg
+OK    a ki nem töltött helyeken a GÉPI fordítás marad, és a lista HOSSZA sem változik
+OK    magyar kérésre a kézi angol mezők sem szólnak bele (bájtazonos magyar ág)
+OK    a `has_en` a KÉZI angol szöveget is számolja (gépi fordítás nélkül is igaz)
+OK    angol változat nélkül a `has_en` hamis (nincs hamis jelzés)
+OK    a VALÓDI /poll/active a KÉZI angol kérdést és válaszokat küldi
+OK    a VALÓDI /poll/active magyar ága bájtazonos marad
+OK    a válaszban a `has_en` a kézi angol szövegre is igaz
+OK    a kézi angol kérdés-szöveg felülírja a gépi/magyar szöveget
+OK    a ki nem töltött angol válasz a magyar marad (nincs üres hely)
+OK    a HELYES VÁLASZ indexe a magyar szerkezetből jön (nem csúszik el)
+OK    a magyar ág érintetlen (nem-angol kérésre a magyar kérdés jön)
+OK    a kézi angol ÖSSZEFOGLALÓ is elsőbbséget élvez
+
+117 ellenőrzés, 0 hiba
+KONSTANS-AG OK
+
+=== 4) A push-lánc újrapróbálkozása (meglévő PHP-ellenőrző)
+OK    élő lánc nélkül a hiba után ÚJRApróbálkozik (nincs néma elvesztés)
+OK    sikertelen küldést nem jelöl késznek
+
+12/12 ellenorzes rendben
+PUSH-DEDUPE OK
+
+=== 5) Nyelvenkénti emlékeztető (2.14.6)
+OK   en → en
+OK   EN → en (kis/nagybetű mindegy)
+OK   en-GB → en
+OK   en_US → en
+OK   hu → hu
+OK   üres → hu (régi kliens nem némul el)
+OK   ismeretlen (de) → hu
+OK   magyar kör: a magyar ÉS a nyelv nélküli (régi kliens) engedélyezett eszközök
+OK   angol kör: csak az angol eszköz
+OK   nyelv nélküli rekord magyarnak számít
+OK   nyelvi szűrő nélkül minden engedélyezett (kivéve reminders=false)
+OK   a kikapcsolt értesítés a nyelvi körből is kimarad
+OK   a falióra a site időzónájában értelmeződik (CEST: 23:00 = 21:00 UTC)
+OK   a megjelenített helyi idő helyes
+OK   a régi (strtotime) számítás MÁST adott — a javítás nem kozmetika
+OK   téli (CET) falióra is helyes (23:00 = 22:00 UTC)
+OK   hiányzó dátum → 0
+OK   magyar cím: „Esemény holnap"
+OK   angol cím: „Event tomorrow"
+OK   a magyar törzs tartalmazza a címet, a dátumot és a helyszínt
+OK   az angol törzs ugyanazokat a tényeket adja, angol dátumformával
+OK   mind a négy ablaknak megvan a magyar és az angol címe
+OK   helyszín nélkül csak a dátum marad (nincs lógó „·")
+OK   négy emlékeztetőt ütemez (week / day_before / hours_before / two_hours)
+OK   a 2 órás ablak PONTOSAN 2 órával előtte van
+OK   a 6 órás ablak pontosan 6 órával előtte van
+OK   az 1 napos és az 1 hetes ablak változatlan
+OK   1,5 órával előtte a 2 ÓRÁS ablak indul (és semmi más)
+OK   5,5 órával előtte a 6 órás ablak indul (és semmi más)
+OK   a két ablak között (2,5 óra) EGYIK sem indul el
+OK   45 perccel előtte már egyik ablak sem indul (nincs késői küldés)
+OK   a 2 órás ablak magyar címe: „Esemény 2 óra múlva"
+OK   a 2 órás ablak angol címe: „Event in 2 hours"
+OK   a NÉGY ablak címe KÜLÖNBÖZŐ (nem ugyanaz a szöveg négy ablakon)
+OK   a szövegek csak a támogatott nyelvekre szűrődnek
+OK   hiányos pár (nincs törzs) kimarad
+OK   üres payload → nincs küldhető szöveg
+OK   a címből kikerül a tördelés és a HTML
+OK   hiányzó hét → hiba
+OK   nincs küldhető szöveg → hiba
+OK   az elérés nyelvenként: hu 2, en 1
+OK   aki kikapcsolta az értesítéseket, kimarad
+OK   a `digest = false` kimarad a heti összefoglalóból
+OK   a `reminders = false` NEM zárja ki a heti összefoglalót
+OK   a `reminders = false` KIZÁR az esemény-emlékeztetőből
+OK   száraz kör: nem küld, de megméri az elérést
+OK   ugyanarra a hétre nem megy ki kétszer
+OK   a végpont CSAK adminnak nyílik (nem nyilvános)
+OK   a küldés a helyi, nyelvenkénti láncon megy ki
+OK   a hét jelölése a küldés UTÁN íródik
+OK   a beállítás-küldés ismeri a `digest` kapcsolót
+OK   a kedvenc-azonosítók tisztítása (int, szöveg, objektum, ismétlődés nélkül)
+OK   a plafon érvényes
+OK   a nem tömb bemenet üres listát ad
+OK   a tartalom szereplői a MÉRT meta-kulcsokból jönnek
+OK   üres/meta nélküli tartalom: nincs célzás
+OK   a követő DJ ÉS a követő szervező is megkapja a tartalmat
+OK   aki MÁST kedvel, az kimarad (ez a személyes célzás lényege)
+OK   aki még nem küldött kedvenceket, az továbbra is mindent megkap (visszafelé kompatibilis)
+OK   célzás nélküli küldés (nincs szereplő a payloadban) → mindenki
+OK   a heti összefoglalót a kedvencek NEM szűkítik
+OK   a tartalom-push átadja a szereplőket
+OK   a beállítás-küldés tárolja a kedvenceket
+OK   az esemény-azonosító eseményt ad
+OK   a kiadvány és a DJ is a saját típusát adja
+OK   a hír (`post`) hírként oldódik fel
+OK   a cím HTML-feloldással jön (nem `&amp;`)
+OK   ismeretlen típus (page) nem oldódik fel
+OK   ismeretlen azonosító 404-es hiba
+OK   a slugból is megvan a típus és az azonosító
+OK   nem létező slug → 404
+OK   a feloldó végpont nyilvános, de CSAK OLVAS
+
+72 ellenőrzés, 0 hiba
+PUSH-NYELV OK
+PUSH-NYELV OK
+
+=== 6) Szavazás/játék megnyílása (2.14.11)
+OK   négy időablakos típus van (kérdőív, nyereményjáték, szavazás, játék)
+OK   mind a négy várt post_type szerepel
+OK   a payload-típusok pontosan poll/game/vote/quiz
+OK   minden típushoz tartozik payload, kezdés, zárás, beállítás és KÉT nyelvű cím
+OK   a GYÍK-játék dátum nélkül nem hirdethető (a `huhs_game_status` így `draft`)
+OK   a szavazás a szezon kapcsolóját nézi
+OK   nyári idő: 2026-10-17 23:00 helyi = 21:00Z
+OK   téli idő: 2026-12-05 23:00 helyi = 22:00Z
+OK   üres dátum → 0 (nyitott határ)
+OK   értelmezhetetlen dátum → 0 (nem tippelünk)
+OK   kezdés nélkül a KÖZZÉTÉTEL a nyitás pillanata
+OK   dátum nélküli játéknál nincs nyitás (nem is aktív)
+OK   dátummal a kezdés a nyitás
+OK   bekapcsolt szezon → engedett
+OK   kikapcsolt szezon → NEM engedett
+OK   kapcsoló nélküli típus mindig engedett
+OK   ugyanaz az időablak ugyanaz az ujjlenyomat
+OK   a szövegjavítás NEM ad új hirdetést
+OK   az ÚJ időablak új hirdetést ad
+OK   frissen kinyílt kérdőív → kimegy az értesítés
+OK   a magyar eszköz magyar címet kap
+OK   az angol eszköz ANGOL címet kap
+OK   a törzs a kérdés
+OK   a törzsben ott a ZÁRÁS ideje (helyi időzónában)
+OK   az angol törzs az `until` szót használja
+OK   az adatcsomag típusa `poll` és `kind=open`
+OK   a jelölő beíródott (idempotencia alapja)
+OK   MÁSODSZOR ugyanarra az ablakra nem megy ki (nincs új FCM-hívás)
+OK   7 órával ezelőtt kinyílt (már lezárt) játék → NEM megy ki (frissességi kapu)
+OK   a frissességi kapu a küldés előtt dönt (nincs jelölő sem)
+OK   jövőbeli nyitás → most NEM megy ki
+OK   nem publikált tartalom → nem megy ki
+OK   kikapcsolt szezon → nem megy ki
+OK   bekapcsolt szezon → kimegy, `vote` típussal
+OK   frissen kinyílt játék → kimegy, `quiz` típussal
+OK   kikapcsolt `polls` eszköz kimarad a kérdőív-pushból
+OK   kikapcsolt `games` eszköz kimarad a játék-pushból
+OK   kikapcsolt `votes` eszköz kimarad a szavazás-pushból
+OK   aki még nem küldött ilyen kapcsolót (minden mai kliens), az VÁLTOZATLANUL megkapja
+OK   a fő kapcsoló (`enabled = false`) továbbra is kizár
+OK   jövőbeli nyitás → ütemezve a NYITÁS pillanatára
+OK   a jövőbeli nyitás NEM indít azonnali cron-kört
+OK   ismételt mentés nem ütemez kétszer
+OK   már nyitott tartalom → azonnali (1 másodperc) ütemezés
+OK   és el is indul a cron-kör (a szerkesztő nem várja meg az FCM-köröket)
+OK   régen kinyílt tartalomra nem ütemezünk (nincs utólagos hirdetés)
+OK   vázlatra nem ütemezünk
+OK   a biztonsági kör kiküldi a frissen kinyílt, még nem hirdetett tartalmat
+OK   a kör küldése is a kérdőív típusát viszi
+OK   a biztonsági kör sem tud duplázni (a jelölő véd)
+OK   mind a négy típus mentés-hookja be van kötve (a térképből)
+OK   a mentés-hook a plugin saját mentése UTÁN fut (20 > 10), hogy a meta már a helyén legyen
+OK   a biztonsági kör az `init`-ben regisztrálódik az ötperces ütemezésre
+OK   a küldés a KÖZÖS nyelvenkénti láncot használja
+OK   a jelölő a sikeres küldés (vagy élő folytatás) után íródik
+OK   a `save_post_*` kezelő nem hirdet vázlatot/autosave-ot
+
+56 ellenőrzés, 0 hiba
+PUSH-OPEN OK
+PUSH-OPEN OK
+
+=== 7) A hír-push őre (2.14.12)
+OK   friss, még nem hirdetett cikk → az ör elindítja az értesítést
+OK   a függő jelölő beíródott (innen tudja a lánc, hogy fut)
+OK   a küldés a bizonyított útra került (`huhs_push_publish_news`)
+OK   a küldés AZONNAL (1 másodperc) ütemezve, nem vár a következő ötpercre
+OK   a cikk értesítése MINDEN eszközre kimegy (stubolt FCM)
+OK   a cím a szokásos „Új hír"
+OK   a törzs a cikk címe
+OK   az adatcsomag `news` típusú és a cikket nyitja meg
+OK   a sikeres küldés jelölője beíródott (nincs ismétlés)
+OK   a jelölő után az ör sem indít új kört
+OK   és nincs új FCM-hívás sem
+OK   az első kör elindítja
+OK   a függő kör alatt az ör NEM indít másodikat
+OK   (a függő jelölő a régi, tehát a lánc viszi ki)
+OK   az első kör elindítja (futó lánc)
+OK   lejárt hézag MELLETT is véd a függő kör (nincs dupla küldés)
+OK   a már értesített cikkre akkor sem megy ki újra, ha a hézag lejárt
+OK   és nem is ír függő jelölőt
+OK   a 6 óránál régebbi cikkre NEM indul kör (nincs utólagos hirdetés)
+OK   és nem is ír jelölőt
+OK   5 órás cikk → még hirdethető (a kapu 6 óra)
+OK   vázlatra nem indul kör
+OK   és nem is ír jelölőt
+OK   a keret elfogyása után nem próbálkozik tovább
+OK   órán belüli próbálkozás után sem indít újat
+OK   egy óránál régebbi próbálkozás után viszont újra (a lánc pótlása)
+OK   a `save_post_post` hook be van kötve
+OK   a mentés-hook a plugin saját mentése UTÁN fut (20 > 10)
+OK   az ötperces ör be van kötve (`huhs_push_news_scan`)
+OK   az ör az `init`-ben regisztrálódik az ötperces ütemezésre
+OK   a mentés-hook friss cikkre elindítja az értesítést
+OK   a mentés-hook ismételt futása nem indít másodikat
+OK   a mentés-hook vázlatra nem indít kört
+OK   kör nélkül a diagnosztika ezt kimondja
+OK   a kör után a diagnosztikában látszik az idő és a szám
+OK   a diagnosztikai sor a fejlécbe is bekerül (a `diagnostics.php` hívja)
+
+36 ellenőrzés, 0 hiba
+PUSH-NEWS OK
+PUSH-NEWS OK
+HUHS push: poll recipients=1 processed=1 sent=1 failed=0 dead=0 http=0/
+HUHS push: poll recipients=1 processed=1 sent=1 failed=0 dead=0 http=0/
+HUHS push: vote recipients=1 processed=1 sent=1 failed=0 dead=0 http=0/
+HUHS push: vote recipients=1 processed=1 sent=1 failed=0 dead=0 http=0/
+HUHS push: quiz recipients=1 processed=1 sent=1 failed=0 dead=0 http=0/
+HUHS push: quiz recipients=1 processed=1 sent=1 failed=0 dead=0 http=0/
+HUHS push: poll recipients=1 processed=1 sent=1 failed=0 dead=0 http=0/
+HUHS push: poll recipients=1 processed=1 sent=1 failed=0 dead=0 http=0/
+HUHS push: the news watchdog queued the missing notification for post 9001.
+HUHS push: news recipients=2 processed=2 sent=2 failed=0 dead=0 http=0/
+HUHS push: the news watchdog queued the missing notification for post 9002.
+HUHS push: the news watchdog queued the missing notification for post 9012.
+HUHS push: the news watchdog queued the missing notification for post 9004.
+HUHS push: the news watchdog queued the missing notification for post 9008.
+HUHS push: the news watchdog queued the missing notification for post 9009.
+HUHS push: the news watchdog queued the missing notification for post 9011.
+
+MINDEN ELLENŐRZÉS RENDBEN — lintelt fájl: 49, viselkedés-körök: 117/117, 117/117, 72/72, 56/56, 36/36, push-lánc: 12/12

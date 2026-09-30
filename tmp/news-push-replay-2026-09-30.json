@@ -1,0 +1,193 @@
+{
+  "startedAt": "2026-09-30T10:19:45.966Z",
+  "articles": [
+    {
+      "id": 12884,
+      "status": 200,
+      "title": "Raveolution: The Prophet exkluzív Early Hardcore szettel érkezik",
+      "date": "2026-09-30T10:41:14+02:00"
+    },
+    {
+      "id": 12893,
+      "status": 200,
+      "title": "Zany egy különleges, 8 órás szóló szettel érkezik a Memorylane-re.",
+      "date": "2026-09-30T12:14:33+02:00"
+    }
+  ],
+  "sends": [
+    {
+      "id": 12884,
+      "status": 200,
+      "body": {
+        "queued": true,
+        "duplicate": false,
+        "sent": 0
+      }
+    },
+    {
+      "id": 12893,
+      "status": 200,
+      "body": {
+        "queued": true,
+        "duplicate": false,
+        "sent": 0
+      }
+    }
+  ],
+  "polls": [
+    {
+      "id": 12884,
+      "round": 1,
+      "at": "2026-09-30T10:20:11.546Z",
+      "pushLast": "news/ok",
+      "recipients": "972",
+      "processed": "47",
+      "sent": "47",
+      "failed": "0",
+      "pushJob": "none",
+      "pushActive": "none",
+      "cronOverdue": "0"
+    },
+    {
+      "id": 12884,
+      "round": 2,
+      "at": "2026-09-30T10:20:32.976Z",
+      "pushLast": "news/ok",
+      "recipients": "1024",
+      "processed": "200",
+      "sent": "200",
+      "failed": "0",
+      "pushJob": "none",
+      "pushActive": "runs=1/offset=200/age=1s",
+      "cronOverdue": "0"
+    },
+    {
+      "id": 12884,
+      "round": 3,
+      "at": "2026-09-30T10:20:54.390Z",
+      "pushLast": "news/ok",
+      "recipients": "1024",
+      "processed": "175",
+      "sent": "175",
+      "failed": "0",
+      "pushJob": "DUE/runs=2/offset=375",
+      "pushActive": "runs=2/offset=375/age=1s",
+      "cronOverdue": "3"
+    },
+    {
+      "id": 12884,
+      "round": 4,
+      "at": "2026-09-30T10:21:15.896Z",
+      "pushLast": "news/ok",
+      "recipients": "1024",
+      "processed": "275",
+      "sent": "275",
+      "failed": "0",
+      "pushJob": "none",
+      "pushActive": "runs=3/offset=650/age=1s",
+      "cronOverdue": "2"
+    },
+    {
+      "id": 12884,
+      "round": 5,
+      "at": "2026-09-30T10:21:37.417Z",
+      "pushLast": "news/ok",
+      "recipients": "1024",
+      "processed": "250",
+      "sent": "250",
+      "failed": "0",
+      "pushJob": "DUE/runs=4/offset=900",
+      "pushActive": "runs=4/offset=900/age=7s",
+      "cronOverdue": "3"
+    },
+    {
+      "id": 12884,
+      "round": 6,
+      "at": "2026-09-30T10:21:58.597Z",
+      "pushLast": "news/ok",
+      "recipients": "1024",
+      "processed": "124",
+      "sent": "118",
+      "failed": "0",
+      "pushJob": "none",
+      "pushActive": "none",
+      "cronOverdue": "0"
+    },
+    {
+      "id": 12893,
+      "round": 1,
+      "at": "2026-09-30T10:22:22.643Z",
+      "pushLast": "news/ok",
+      "recipients": "1024",
+      "processed": "124",
+      "sent": "118",
+      "failed": "0",
+      "pushJob": "none",
+      "pushActive": "none",
+      "cronOverdue": "2"
+    },
+    {
+      "id": 12893,
+      "round": 2,
+      "at": "2026-09-30T10:22:44.219Z",
+      "pushLast": "news/ok",
+      "recipients": "1018",
+      "processed": "225",
+      "sent": "224",
+      "failed": "1",
+      "pushJob": "none",
+      "pushActive": "runs=1/offset=225/age=16s",
+      "cronOverdue": "0"
+    },
+    {
+      "id": 12893,
+      "round": 3,
+      "at": "2026-09-30T10:23:05.301Z",
+      "pushLast": "news/ok",
+      "recipients": "1018",
+      "processed": "225",
+      "sent": "225",
+      "failed": "0",
+      "pushJob": "none",
+      "pushActive": "runs=2/offset=450/age=14s",
+      "cronOverdue": "2"
+    },
+    {
+      "id": 12893,
+      "round": 4,
+      "at": "2026-09-30T10:23:26.499Z",
+      "pushLast": "news/ok",
+      "recipients": "1018",
+      "processed": "275",
+      "sent": "275",
+      "failed": "0",
+      "pushJob": "none",
+      "pushActive": "runs=4/offset=925/age=1s",
+      "cronOverdue": "1"
+    },
+    {
+      "id": 12893,
+      "round": 5,
+      "at": "2026-09-30T10:23:47.903Z",
+      "pushLast": "news/ok",
+      "recipients": "1018",
+      "processed": "93",
+      "sent": "93",
+      "failed": "0",
+      "pushJob": "none",
+      "pushActive": "none",
+      "cronOverdue": "0"
+    }
+  ],
+  "before": {
+    "at": "2026-09-30T10:19:47.315Z",
+    "pushLast": "news/ok",
+    "recipients": "972",
+    "processed": "47",
+    "sent": "47",
+    "failed": "0",
+    "pushJob": "none",
+    "pushActive": "none",
+    "cronOverdue": "1"
+  }
+}

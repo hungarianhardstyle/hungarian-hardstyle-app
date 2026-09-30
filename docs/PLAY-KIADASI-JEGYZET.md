@@ -9,13 +9,15 @@
 > pontot** (és a meghívód is); valamint **értesítést kapsz, amikor elindul egy szavazás vagy játék**.
 >
 > A 384 a **382 minden** újdonságát is tartalmazza (iPhone-megosztás javítása), az pedig a korábbiakét.
-> **Melyik blokk hova való:** aki **382-ről** jön (a mostani éles), annak az **1. blokk** való; aki
-> **361–380 közötti** buildről, annak a **361–384 összesítő** (1b-2.); aki a **bétáról (377)**,
-> annak a **355–384 összesítő** (1b-3.).
-> ⚠️ **A 383-at NE tárd fel:** abban a szekció még a **logó (Hero) kártya fölött** volt, és a felirata
-> „Követettjeid" volt (a tulajdonos jelzése: *„ez a »követettjeid« elég magyartalan"*, illetve
-> *„a Hero FÖLÉ került, ami baj"*). A **384** javítja mindkettőt — a zárt teszten ezt a buildet
-> érdemes kiadni (a 383-as piszkozat törölhető).
+> **Melyik blokk hova való (mérve, 2026-09-30):** az **éles** sávon a **382** van → **1. blokk**;
+> a **zárt teszten már a 383** van 100%-ban kigördülve → ott a **383 → 384** lépéshez az **1d. blokk**
+> (egyetlen sor, mert a többi újdonságot a 383 jegyzete már megmutatta); aki **361–380 közötti**
+> buildről jön, annak a **361–384 összesítő** (1b-2.); aki a **bétáról (377)**, annak a **355–384**
+> összesítő (1b-3.).
+> ⚠️ **A 383-at NE tárd fel újra:** abban a szekció még a **logó (Hero) kártya fölött** volt, és a
+> felirata „Követettjeid" volt (a tulajdonos jelzése: *„ez a »követettjeid« elég magyartalan"*,
+> illetve *„a Hero FÖLÉ került, ami baj"*). A **384** javítja mindkettőt — a zárt teszten ezt a
+> buildet kell kiadni.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -31,14 +33,16 @@ sha256: 9EEC4B84D8D87A46EE9EA1E93B69EF791C85B0F111D134C4500985466F635B57
 -->
 
 ⚠️ A **384**-et a **383** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 384
-mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná). A 383-as AAB már
-fel van töltve, de **nem kell kiadni** — a 384 váltja.
-⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.11** — ⏳ **még nincs fent** (élesben 2.14.10): a
-`build/huhs-mobile-api-2.14.11.zip` feltöltése a tulajdonos lépése (ez **felváltja** a 2.14.10-et).
-Ez hozza a **szavazás/játék „kinyílt" értesítést**: amikor megnyílik egy kérdőív, nyereményjáték,
+mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná). A 383-at a **zárt
+teszt** már megkapta (100%-ban kigördülve), de **ne tárd fel újra** — a 384 váltja.
+✅ **A WordPress-plugin 2.14.11 FENT VAN** (élesben mérve, 2026-09-30: `api=2.14.11`, 1026 token) —
+ez hozta a **szavazás/játék „kinyílt" értesítést**: amikor megnyílik egy kérdőív, nyereményjáték,
 éves szavazás vagy GYÍK-játék, **minden regisztrált eszköz** értesítést kap (nyelvenként, a
 beállítások tiszteletben tartásával) — a frissességi kapu miatt a **régi** tartalom feltöltéskor
 nem hirdetődik meg.
+⏳ **A következő plugin-feltöltés: `build/huhs-mobile-api-2.14.12.zip`** — ez a **hír-push őre**
+(lásd a 4. pontot). Éles mérés szerint 2026-09-30-án a nap két cikke után **egyetlen push sem
+indult** (a közzététel-hook nem futott le); a 2.14.12 ezt az osztályt zárja be.
 A szerveroldali függvények **telepítve** vannak (`firebase deploy`): a **heti összefoglaló**
 (`sendWeeklyDigest`, vasárnap 18:00), a **követés a kedvencek alapján**, valamint a **kétoldali
 meghívó-jutalom** (50 pont a meghívónak, 25 pont a meghívottnak) — mindegyik **AAB nélkül is él**.
@@ -51,16 +55,17 @@ A Play Developer API-t **olvasásra** kérdezve (**2026-09-30**, a legfrissebb m
 | Sáv | Állapot | Build |
 |---|---|---|
 | **production (nyilvános — ÉLES)** | **completed** (100%-ban kigördült) | **382** — „382 (1.0.0)" ✅ |
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) + egy **üres piszkozat** | **382** — „382 (1.0.0)" ✅ |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) — **nincs piszkozat** | **383** — „383 (1.0.0)" ✅ |
 | beta (NYÍLT teszt) | **completed** (100%) | **377** — „377 (1.0.0)" ✅ |
 | internal | completed (278) + egy **üres piszkozat** | 278 |
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
 - **AZ ÉLES (production) SÁVON A 382 VAN** (100%-ban kigördülve) — a kiadási szövege a 381-es blokk.
-  **A következő nyilvános kiadás a 383**: a `build/HUHS-v1.0.0+383-release.aab` feltöltése után az **1. blokk** (lásd lent) való a kiadási jegyzetbe.
-- A feltöltött AAB-ek a Playen (a 2026-09-30-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 353, 354, 375, 376, 377, **380**, **382**, **383** — ✅ **a 383 már fel van töltve**, a zárt teszt (alpha) **üres piszkozata** várja a kiadást és a kiadási megjegyzést (lásd az **1. blokkot**).
-- **A nyílt teszt (beta) sávja a 377-en van** — ha oda is felviszed a 383-at, a **355–383 összesítő** (1b-3.) való.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**382**) a legutóbb **nyilvánosan** kigördült build — ezért aki **382-ről** jön, annak az **1. blokk** való; aki **ennél régebbről**, annak a **361–383 összesítő** (1b-2.).
+  **A következő nyilvános kiadás a 384**: a `build/HUHS-v1.0.0+384-release.aab` feltöltése után az **1. blokk** (lásd lent) való a kiadási jegyzetbe.
+- **A ZÁRT TESZT (alpha) SÁVJÁN MÁR A 383 VAN** (100%-ban kigördülve, a 383 négy soros kiadási jegyzetével) — **ezen a csatornán tesztelte a tulajdonos a 383-at**, és innen jött a két jelzés (a felirat és a hely). A **384** feltöltésekor tehát a **383 → 384** lépéshez **egyetlen sor** való (**1d. blokk**): a másik három újdonságot a 383 jegyzete már megmutatta. A **383-at ne** tárd fel újra (a 384 javítja).
+- A feltöltött AAB-ek a Playen (a 2026-09-30-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 353, 354, 375, 376, 377, **380**, **382**, **383** — ✅ **a 383 már fel van töltve**, a **384 viszont még nincs** (ezt kell feltölteni).
+- **A nyílt teszt (beta) sávja a 377-en van** — ha oda is felviszed a 384-et, a **355–384 összesítő** (1b-3.) való.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**382**) a legutóbb **nyilvánosan** kigördült build — ezért aki **382-ről** jön (az éles felhasználók), annak az **1. blokk** való; aki **ennél régebbről**, annak a **361–384 összesítő** (1b-2.).
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -215,14 +220,16 @@ az **az app Névjegyében** van (3. pont), és a felhasználó ott bármikor meg
 A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com/googleplay/android-developer/answer/9859348?hl=en));
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
-> **⚠️ EZ A BLOKK VALÓ A ZÁRT TESZTRE (alpha) IS.** A **mért** állapot (2026-09-30,
-> `node tools/check-play-track.mjs`): a **383-as AAB már fel van töltve** a Playre (de **ne tárd fel**,
-> mert a szekció ott még a logó fölött volt), a **zárt teszt (alpha)** sávján a **382 van 100%-ban
-> kigördülve**, és van egy **üres piszkozat** (nincs build, nincs kiadási megjegyzés). Aki a zárt
-> teszten a 382-ről jön, az **pontosan ezt a négy sort** kapja — ide kell bemásolni a „Kiadási
-> megjegyzések" mezőbe (nyelv: **hu-HU**, ez az egyetlen beállított nyelv).
-> Ha viszont a **nyílt teszt (beta)** sávra kerül (ott mért állapot: **377**), akkor a **355–384**
-> összesítő való (**1b-3.**).
+> **⚠️ MELYIK BLOKK HOVA VALÓ (mért állapot, 2026-09-30, `node tools/check-play-track.mjs`):**
+> **ÉLES (production) = 382** → ide (382 → 384) **ez a négy sor** való.
+> **ZÁRT TESZT (alpha) = 383** (100%-ban kigördülve, a 383 négy soros jegyzetével) → a **383 → 384**
+> lépéshez **csak a javítás sora** kell: **1d. blokk** (`tmp/play-384-zart.txt`) — a másik három
+> újdonságot a 383 jegyzete már megmutatta a tesztelőknek.
+> **NYÍLT TESZT (beta) = 377** → a **355–384** összesítő való (**1b-3.**).
+> A „Kiadási megjegyzések" mezőbe másolásnál a nyelv **hu-HU** (ez az egyetlen beállított nyelv).
+> A 383-as AAB **már fent van**, de **ne tárd fel újra**: abban a szekció még a logó (Hero) kártya
+> **fölött** volt, a felirata pedig „Követettjeid" — a tulajdonos jelzése szerint magyartalan
+> (*„ez a »követettjeid« elég magyartalan"*, *„a Hero FÖLÉ került, ami baj"*).
 > A **kész, másolható** változat: `tmp/play-384.txt` (bájtazonos ezzel a blokkal).
 
 ```play-notes
@@ -292,6 +299,20 @@ megjeleníteni. **Ez a 351 javítását és a 350 újdonságait is leírja.**
 - A „Claim" helyett mindenhol magyar szó áll: „Adatlap átvétele", „Átvétel visszavonása".
 - Javítva: az adatlapok (saját profil, hír, esemény, DJ, szervező) aljára rendesen le lehet görgetni.
 ```
+
+## 1d. Play Console — a **ZÁRT TESZTRE**, ha ott már a **383** van (383 → 384: egyetlen sor)
+
+A zárt teszten (**alpha**) a **mért** állapot szerint (2026-09-30) a **383** van 100%-ban kigördülve,
+ezért a tesztelők a **383 négy soros** kiadási jegyzetét **már látták** (a naptárba tevés, a
+meghívó-jutalom és a szavazás/játék értesítés is benne volt). Ezért ide **csak az a sor** való,
+amit a jelzésük javított — így a kártyán pontosan az látszik, ami **változott**:
+
+```play-notes
+- Javítva: a „Kedvenceid" szekció a hírek alatt van (eddig a logó fölött), és a felirata is magyaros.
+```
+
+⚠️ Ha a **384**-et az **éles** vagy a **béta** sávra teszed, **nem** ez a blokk való: ott az
+**1.** (382 → 384), illetve az **1b-3.** (355 → 384) a helyes.
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
 

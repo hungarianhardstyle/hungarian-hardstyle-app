@@ -18,3 +18,8 @@
 *.js text eol=lf
 *.cjs text eol=lf
 *.mjs text eol=lf
+# Shell-szkriptek (2026-09-30, mért hiba): a `tools/php/run-plugin-tests.sh` a
+# Docker-konténerben `sh`-val (dash) fut, és a **CRLF** sorvégtől a `set -u`
+# sora elhasal (`set: Illegal option -`), ezért a teljes PHP-harness hamis
+# „nincs mérés" állapotba került. A `sh` sorvégre érzékeny — ezért mindig LF.
+*.sh text eol=lf

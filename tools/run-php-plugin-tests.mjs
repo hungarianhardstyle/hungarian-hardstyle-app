@@ -27,7 +27,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.11.zip';
+export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.12.zip';
 export const WORK_DIR = 'tmp/php-plugin';
 export const CONTAINER_IMAGE = 'php:8.2-cli';
 
@@ -40,7 +40,7 @@ export const CONTAINER_IMAGE = 'php:8.2-cli';
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** A kimenetből kiolvasott, kötelező jelzők. */
-export const REQUIRED_MARKERS = ['PHP LINT OK', 'VISELKEDES OK', 'KONSTANS-AG OK', 'PUSH-DEDUPE OK', 'PUSH-NYELV OK', 'PUSH-OPEN OK'];
+export const REQUIRED_MARKERS = ['PHP LINT OK', 'VISELKEDES OK', 'KONSTANS-AG OK', 'PUSH-DEDUPE OK', 'PUSH-NYELV OK', 'PUSH-OPEN OK', 'PUSH-NEWS OK'];
 
 /** A kimenet összegzése (tesztelhető, hálózat nélkül). */
 export function summarize(output) {

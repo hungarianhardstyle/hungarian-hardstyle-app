@@ -1,0 +1,198 @@
+diff --git a/tmp/plugin-2151/huhs-mobile-api/huhs-mobile-api.php b/tmp/plugin-2152/huhs-mobile-api/huhs-mobile-api.php
+index 53d02273..745c8b21 100644
+--- a/tmp/plugin-2151/huhs-mobile-api/huhs-mobile-api.php
++++ b/tmp/plugin-2152/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.14.11
++ * Version: 2.14.12
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.14.11');
++define('HUHS_API_VERSION', '2.14.12');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/tmp/plugin-2151/huhs-mobile-api/includes/diagnostics.php b/tmp/plugin-2152/huhs-mobile-api/includes/diagnostics.php
+index b46ec2c7..815bac87 100644
+--- a/tmp/plugin-2151/huhs-mobile-api/includes/diagnostics.php
++++ b/tmp/plugin-2152/huhs-mobile-api/includes/diagnostics.php
+@@ -142,6 +142,12 @@ function huhs_diag_health_header()
+     if (function_exists('huhs_push_diag_jobs')) {
+         $parts[] = huhs_push_diag_jobs();
+     }
++    // A hír-push őre (2.14.12): látszik, hogy a kör lefutott-e, és hány cikkre
++    // indított értesítést — a „nem ment ki semmi" így megkülönböztethető attól,
++    // hogy „az ör le sem futott".
++    if (function_exists('huhs_push_diag_news_scan')) {
++        $parts[] = huhs_push_diag_news_scan();
++    }
+ 
+     $parts[] = 'memory_limit=' . ini_get('memory_limit');
+     $parts[] = 'php=' . PHP_VERSION;
+diff --git a/tmp/plugin-2151/huhs-mobile-api/includes/push.php b/tmp/plugin-2152/huhs-mobile-api/includes/push.php
+index a1b1e868..552fdc79 100644
+--- a/tmp/plugin-2151/huhs-mobile-api/includes/push.php
++++ b/tmp/plugin-2152/huhs-mobile-api/includes/push.php
+@@ -2110,6 +2110,154 @@ function huhs_push_scan_open_notices($limit = 20)
+     }
+ }
+ 
++/*
++|--------------------------------------------------------------------------
++| A HÍR-PUSH ŐRE (2.14.12) — a cikk értesítése nem függ a közzététel útjától
++|--------------------------------------------------------------------------
++*/
++
++/**
++ * 🔴 A MÉRT HIBA (éles, 2026-09-30): a nap KÉT cikke után egyetlen push sem indult.
++ *
++ * A bizonyíték a titkos diagnosztikai fejlécből (`?huhs_diag=huhs-boot-probe-2026`):
++ * a `push_last` rekord a mérés pillanatában (helyi idő **12:20**) még mindig
++ * `news/ok … at=19:30` volt — vagyis a **korábbi nap** állapota —, függő
++ * `huhs_push_publish_news` cron-esemény pedig nem létezett, miközben a WP-Cron ép
++ * (`cron_disabled=no`, `cron_overdue` csak a visszatérő köröket mutatta), a
++ * token-tár 1026 eszköz, és az FCM-fiók beállítva. **Ugyanarra a két cikkre**
++ * kézzel indított kör viszont **1024 eszközt ért el, 0 hibával** — a küldési lánc
++ * tehát bizonyítottan jó, a **közzététel-hook nem futott le**.
++ *
++ * ⚠️ MIÉRT NEM ELÉG A `transition_post_status` ÖNMAGÁBAN: ha a cikk nem a
++ * szokásos szerkesztői úton jelenik meg (import, REST-hívás, közvetlen
++ * adatbázis-írás), a hook nem hívódik meg — és a cikk értesítés nélkül marad.
++ * Ezért az értesítést két réteg védi:
++ *
++ *   1. `save_post_post` — a szokásos **mentési** úton is elindul (a meglévő
++ *      `transition_post_status` MELLETT; a jelölők miatt nem tud duplázni);
++ *   2. az **ötpercenkénti ör**, amely a frissen publikált cikkeket nézi meg, és
++ *      amelyikről még nem indult értesítés, arra elindítja — ugyanazon a
++ *      bizonyított úton (`huhs_schedule_news_push`).
++ *
++ * ⚠️ FRISSESSÉGI KAPU (6 óra): a feltöltés pillanatában a RÉGI cikkekre nem megy
++ * ki semmi — különben egy hete publikált cikkre is elmenne a hír-push. Ez a kapu
++ * a DÖNTÉSBEN él (`huhs_push_news_watch_one`), nem csak a lekérdezésben.
++ * ⚠️ KORLÁTOS PRÓBÁLKOZÁS: az ör egy cikkre legfeljebb kétszer, óránként egyszer
++ * próbálkozik — egy tartósan hibás küldés így nem pörög a végtelenségig.
++ */
++if (!defined('HUHS_PUSH_NEWS_FRESH_WINDOW')) define('HUHS_PUSH_NEWS_FRESH_WINDOW', 21600); // 6 óra
++if (!defined('HUHS_PUSH_NEWS_WATCHDOG_GAP')) define('HUHS_PUSH_NEWS_WATCHDOG_GAP', 3600); // 1 óra
++if (!defined('HUHS_PUSH_NEWS_WATCHDOG_MAX_TRIES')) define('HUHS_PUSH_NEWS_WATCHDOG_MAX_TRIES', 2);
++
++// 1) A szokásos MENTÉSI út (a `transition_post_status` mellett) — a 20-as
++// prioritás a plugin saját mentése UTÁN fut, hogy a mezők már a helyükön legyenek.
++add_action('save_post_post', function ($post_id, $post = null, $update = null) {
++    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
++    if (!$post || wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) return;
++    if ((string) ($post->post_type ?? '') !== 'post') return;
++    if ((string) $post->post_status !== 'publish') return;
++    huhs_push_news_watch_one($post);
++}, 20, 3);
++
++// 2) Az ötpercenkénti ör (a WP-Cron a látogatók kéréseivel fut).
++add_action('init', function () {
++    if (!wp_next_scheduled('huhs_push_news_scan')) {
++        wp_schedule_event(time() + 180, 'huhs_five_minutes', 'huhs_push_news_scan');
++    }
++});
++
++add_action('huhs_push_news_scan', 'huhs_push_scan_missing_news');
++
++/**
++ * Egy cikk értesítésének elindítása, ha még nem indult rá kör.
++ *
++ * Ez a **közös döntés** a két rétegnek (mentés-hook + ör), ezért a frissességi
++ * kapu is itt él: régi cikkre egyik út sem hirdet.
++ *
++ * @return bool igaz, ha ütemezés történt
++ */
++function huhs_push_news_watch_one($post)
++{
++    $post_id = is_object($post) ? (int) $post->ID : (int) $post;
++    if ($post_id <= 0) return false;
++
++    // Már elment róla értesítés → nincs teendő.
++    if ((string) get_post_meta($post_id, '_huhs_push_news_sent', true) !== '') return false;
++
++    $now = time();
++
++    // ⚠️ FRISSESSÉGI KAPU: csak a frissen publikált cikk hirdethető meg.
++    $published = (int) get_post_time('U', true, $post_id);
++    if ($published <= 0 || $published < $now - HUHS_PUSH_NEWS_FRESH_WINDOW) return false;
++
++    // Éppen függőben van (a normál úton indult) → nem nyúlunk bele, nem duplázunk.
++    $pending = (int) get_post_meta($post_id, '_huhs_push_news_pending_at', true);
++    if ($pending > 0 && $pending > $now - HOUR_IN_SECONDS) return false;
++
++    // Korlátos próbálkozás: cikkenként legfeljebb ennyi, és óránként egyszer.
++    $tries = (int) get_post_meta($post_id, '_huhs_push_news_watchdog_tries', true);
++    if ($tries >= HUHS_PUSH_NEWS_WATCHDOG_MAX_TRIES) return false;
++    $last = (int) get_post_meta($post_id, '_huhs_push_news_watchdog_at', true);
++    if ($last > 0 && $last > $now - HUHS_PUSH_NEWS_WATCHDOG_GAP) return false;
++
++    update_post_meta($post_id, '_huhs_push_news_watchdog_tries', $tries + 1);
++    update_post_meta($post_id, '_huhs_push_news_watchdog_at', $now);
++
++    $queued = huhs_schedule_news_push(get_post($post_id));
++    if ($queued) {
++        error_log('HUHS push: the news watchdog queued the missing notification for post ' . $post_id . '.');
++    }
++    return (bool) $queued;
++}
++
++/**
++ * Az ör köre: a frissen publikált cikkek, amelyekről még nem indult értesítés.
++ *
++ * A lekérdezés csak **szűkít** (a régi cikkeket el sem hozza); a döntés a
++ * `huhs_push_news_watch_one`-ban van, ezért egy gyorsítótár vagy egy stub által
++ * visszaadott régi cikk sem hirdetődik meg.
++ *
++ * @return int az elindított értesítések száma
++ */
++function huhs_push_scan_missing_news($limit = 10)
++{
++    $now = time();
++    $posts = get_posts(array(
++        'post_type' => 'post',
++        'post_status' => 'publish',
++        'posts_per_page' => (int) $limit,
++        'orderby' => 'date',
++        'order' => 'DESC',
++        'date_query' => array(array(
++            'after' => '-' . (int) (HUHS_PUSH_NEWS_FRESH_WINDOW / HOUR_IN_SECONDS) . ' hours',
++        )),
++    ));
++
++    $scanned = 0;
++    $queued = 0;
++    foreach ((array) $posts as $post) {
++        if (!is_object($post) || empty($post->ID)) continue;
++        $scanned++;
++        if (huhs_push_news_watch_one($post)) $queued++;
++    }
++
++    update_option('huhs_push_news_scan', array('time' => $now, 'scanned' => $scanned, 'queued' => $queued), false);
++    return $queued;
++}
++
++/**
++ * Az ör állapota a titkos diagnosztikai fejlécbe — hogy a „nem ment ki semmi"
++ * megkülönböztethető legyen attól, hogy „az ör le sem futott".
++ */
++function huhs_push_diag_news_scan()
++{
++    $scan = get_option('huhs_push_news_scan', array());
++    if (!is_array($scan) || empty($scan['time'])) return 'news_scan=none';
++    return 'news_scan=' . wp_date('H:i', (int) $scan['time'])
++        . '/s' . (int) ($scan['scanned'] ?? 0)
++        . '/q' . (int) ($scan['queued'] ?? 0);
++}
++
+ add_action('admin_menu', function () {
+     add_submenu_page('huhs-mobile', 'Push értesítések', 'Push értesítések', 'manage_options', 'huhs-push', 'huhs_push_admin_page');
+ });

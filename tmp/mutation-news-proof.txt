@@ -1,0 +1,10 @@
+OK     a FRISSESSÉGI KAPU elvétele (a 6 óránál régebbi cikk is kimegy) → a kapu elcsípte («a 6 óránál régebbi cikkre NEM indul kör»)
+OK     a FÜGGŐ KÖR védelmének elvétele (dupla ütemezés) → a kapu elcsípte («lejárt hézag MELLETT is véd a függő kör»)
+OK     a JELÖLŐ ellenőrzésének elvétele (a már értesített cikk újra kimegy) → a kapu elcsípte («a már értesített cikkre akkor sem megy ki újra»)
+OK     a KERET és a HÉZAG elvétele (végtelen próbálkozás) → a kapu elcsípte («a keret elfogyása után nem próbálkozik tovább»)
+OK     az ÖT PERCES ütemezés elvétele (az ör nem fut rendszeresen) → a kapu elcsípte («az ör az `init`-ben regisztrálódik az ötperces ütemezésre»)
+OK     a MENTÉS-HOOK elvétele (csak a törékeny közzététel-hook marad) → a kapu elcsípte («a `save_post_post` hook be van kötve»)
+OK     a KÜLDÉS nem a bizonyított útra kerül (nincs függő jelölő) → a kapu elcsípte («a küldés a bizonyított útra került»)
+
+7/7 mutáció ELKAPVA
+a szállítandó forrás BÁJTAZONOS (érintetlen)
