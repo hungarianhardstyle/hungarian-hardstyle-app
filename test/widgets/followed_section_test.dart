@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hungarian_hardstyle_app/providers/favorites_provider.dart';
 import 'package:hungarian_hardstyle_app/widgets/followed_section.dart';
 
-/// A főoldali **„Követettjeid"** szekció kapuja.
+/// A főoldali **„Kedvenceid"** szekció kapuja.
 ///
 /// **MIÉRT (mért ok):** a kedvencek eddig **csak** a „Több" → „Kedvencek"
 /// képernyőn látszottak (89 kedvenc a Firestore-ban), a főoldalon semmi. A
@@ -52,7 +52,7 @@ void main() {
     );
 
     expect(find.byKey(const Key('followed-section')), findsOneWidget);
-    expect(find.text('Követettjeid'), findsOneWidget);
+    expect(find.text('Kedvenceid'), findsOneWidget);
     expect(find.text('Nu-Clear'), findsOneWidget);
     expect(find.text('Hard Base'), findsOneWidget);
     // A típus-címke a szótárból fordítva (angol felületen DJ / Organizer).
@@ -102,7 +102,7 @@ void main() {
     );
 
     expect(find.byKey(const Key('followed-section')), findsNothing);
-    expect(find.text('Követettjeid'), findsNothing);
+    expect(find.text('Kedvenceid'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -140,7 +140,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('followed-section')), findsNothing);
-    expect(find.text('Követettjeid'), findsNothing);
+    expect(find.text('Kedvenceid'), findsNothing);
   });
 
   test('a főoldal beszúrja a szekciót, és a megnyitás a közös úton megy', () {
@@ -178,7 +178,83 @@ void main() {
     final dictionary =
         jsonDecode(File('assets/i18n/en.json').readAsStringSync())
             as Map<String, dynamic>;
-    expect(dictionary['Követettjeid'], 'Following');
+    expect(dictionary['Kedvenceid'], 'Your favorites');
     expect(dictionary['DJ'], 'DJ');
+  });
+
+  /// **A HELYE** — a tulajdonos jelzése (2026-09-30): *„a Hero FÖLÉ került, ami baj"*.
+  ///
+  /// A sorrendet a **forrás pozícióival** mérjük, mert pontosan ez volt a hiba:
+  /// a szekció a logó-kártya ELÉ került. A mérés így nem attól függ, hogy egy
+  /// `ListView` éppen mit rajzol ki a teszt-felületen.
+  test('a szekció a Hero UTÁN, a hírek sora után és az események ELŐTT áll', () {
+    final home = File('lib/screens/home/home_screen.dart').readAsStringSync();
+    final section = home.indexOf('const FollowedSection(),');
+    final hero = home.indexOf('HUNGARIAN HARDSTYLE');
+    final moreNews = home.indexOf("key: const Key('more-news')");
+    final events = home.indexOf("'Közelgő események'");
+
+    expect(section, greaterThan(-1), reason: 'a szekció benne van a főoldalon');
+    expect(
+      hero,
+      greaterThan(-1),
+      reason: 'a Hero (logó) kártya megvan a forrásban',
+    );
+    expect(
+      section,
+      greaterThan(hero),
+      reason: 'a szekció NEM kerülhet a Hero (logó) kártya fölé',
+    );
+    expect(
+      section,
+      greaterThan(moreNews),
+      reason: 'a szekció a „További hírek" kártya UTÁN jön',
+    );
+    expect(
+      section,
+      lessThan(events),
+      reason: 'a szekció a „Közelgő események" szakasz ELŐTT van',
+    );
+  });
+
+  /// **MENNYIT MUTAT** — a tulajdonos kérése: *„max 3 legyen kiemelve, a többire
+  /// ott az »összes«"*. Ezért öt kedvencből **három** kártya és az „Összes" gomb
+  /// látszik.
+  testWidgets('legfeljebb HÁROM kedvenc látszik, a többi az „Összes" mögött', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'favorite_items': [
+        for (var id = 1; id <= 5; id += 1)
+          jsonEncode({'kind': 'artist', 'id': id, 'title': 'DJ $id'}),
+      ],
+    });
+
+    await tester.pumpWidget(wrap(const FollowedSection()));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('followed-section')), findsOneWidget);
+    expect(
+      find.byKey(const Key('followed-artist-1')),
+      findsOneWidget,
+      reason: 'az első kedvenc látszik',
+    );
+    expect(find.byKey(const Key('followed-artist-3')), findsOneWidget);
+    expect(
+      find.byKey(const Key('followed-artist-4')),
+      findsNothing,
+      reason: 'a negyedik kedvenc már nem fér bele a három kiemelt helyre',
+    );
+    expect(find.byKey(const Key('followed-artist-5')), findsNothing);
+    expect(
+      find.text('Összes'),
+      findsOneWidget,
+      reason: 'a többi kedvenc az „Összes" gombbal érhető el',
+    );
+    expect(
+      FollowedSection.maxItems,
+      3,
+      reason: 'a kiemelés felső határa a konstansban él (egy helyen)',
+    );
   });
 }

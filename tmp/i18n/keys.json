@@ -1171,6 +1171,13 @@
     ]
   },
   {
+    "value": "Kedvenceid",
+    "count": 2,
+    "files": [
+      "lib/widgets/followed_section.dart"
+    ]
+  },
+  {
     "value": "Kép kiválasztása",
     "count": 2,
     "files": [
@@ -1219,13 +1226,6 @@
     "count": 2,
     "files": [
       "lib/screens/main_navigation.dart"
-    ]
-  },
-  {
-    "value": "Követettjeid",
-    "count": 2,
-    "files": [
-      "lib/widgets/followed_section.dart"
     ]
   },
   {

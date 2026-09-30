@@ -1,16 +1,21 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 383 megy fel** (versionCode **383**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> **Most a 384 megy fel** (versionCode **384**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-09-30): az **ÉLES (production) sávon már a 382 van**, 100%-ban kigördülve — a zárt teszt (alpha)
-> is a 382-en, a nyílt teszt (beta) a 377-en. A 383 négy újdonságot hoz: a főoldalon a
-> **„Követettjeid" szakasz** mutatja a kedvenc DJ-idet és szervezőidet; az eseményt **egy koppintással
+> is a 382-en, a nyílt teszt (beta) a 377-en. A 384 négy újdonságot hoz: a főoldalon a
+> **„Kedvenceid" szekció** a **hírek alatt** mutatja a kedvenc DJ-idet és szervezőidet
+> (**legfeljebb hármat**, a többit az „Összes" gombbal éred el); az eseményt **egy koppintással
 > a naptáradba** teheted (Google Naptár vagy `.ics` fájl); **meghívóval regisztrálva te is kapsz
 > pontot** (és a meghívód is); valamint **értesítést kapsz, amikor elindul egy szavazás vagy játék**.
 >
-> A 383 a **382 minden** újdonságát is tartalmazza (iPhone-megosztás javítása), az pedig a korábbiakét.
+> A 384 a **382 minden** újdonságát is tartalmazza (iPhone-megosztás javítása), az pedig a korábbiakét.
 > **Melyik blokk hova való:** aki **382-ről** jön (a mostani éles), annak az **1. blokk** való; aki
-> **361–380 közötti** buildről, annak a **361–383 összesítő** (1b-2.); aki a **bétáról (377)**,
-> annak a **355–383 összesítő** (1b-3.).
+> **361–380 közötti** buildről, annak a **361–384 összesítő** (1b-2.); aki a **bétáról (377)**,
+> annak a **355–384 összesítő** (1b-3.).
+> ⚠️ **A 383-at NE tárd fel:** abban a szekció még a **logó (Hero) kártya fölött** volt, és a felirata
+> „Követettjeid" volt (a tulajdonos jelzése: *„ez a »követettjeid« elég magyartalan"*, illetve
+> *„a Hero FÖLÉ került, ami baj"*). A **384** javítja mindkettőt — a zárt teszten ezt a buildet
+> érdemes kiadni (a 383-as piszkozat törölhető).
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -18,15 +23,16 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 383
+currentBuild: 384
 currentVersion: 1.0.0
 lastPublishedBuild: 382
-aab: build/HUHS-v1.0.0+383-release.aab
-sha256: EB54ABFED5C7882C6C0D7D05C8822AD836AEC2DAD5304FE52F34908DF49CDF1F
+aab: build/HUHS-v1.0.0+384-release.aab
+sha256: 9EEC4B84D8D87A46EE9EA1E93B69EF791C85B0F111D134C4500985466F635B57
 -->
 
-⚠️ A **383**-at a **382** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 383
-mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná).
+⚠️ A **384**-et a **383** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 384
+mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná). A 383-as AAB már
+fel van töltve, de **nem kell kiadni** — a 384 váltja.
 ⚠️ **A WordPress-plugin ehhez a körhöz: 2.14.11** — ⏳ **még nincs fent** (élesben 2.14.10): a
 `build/huhs-mobile-api-2.14.11.zip` feltöltése a tulajdonos lépése (ez **felváltja** a 2.14.10-et).
 Ez hozza a **szavazás/játék „kinyílt" értesítést**: amikor megnyílik egy kérdőív, nyereményjáték,
@@ -36,7 +42,7 @@ nem hirdetődik meg.
 A szerveroldali függvények **telepítve** vannak (`firebase deploy`): a **heti összefoglaló**
 (`sendWeeklyDigest`, vasárnap 18:00), a **követés a kedvencek alapján**, valamint a **kétoldali
 meghívó-jutalom** (50 pont a meghívónak, 25 pont a meghívottnak) — mindegyik **AAB nélkül is él**.
-Az apphoz csak az **AAB (383)** feltöltése kell.
+Az apphoz csak az **AAB (384)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -210,16 +216,17 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 > **⚠️ EZ A BLOKK VALÓ A ZÁRT TESZTRE (alpha) IS.** A **mért** állapot (2026-09-30,
-> `node tools/check-play-track.mjs`): a **383-as AAB már fel van töltve** a Playre, a **zárt teszt
-> (alpha)** sávján a **382 van 100%-ban kigördülve**, és van egy **üres piszkozat** (nincs build, nincs
-> kiadási megjegyzés). Aki a zárt teszten a 382-ről jön, az **pontosan ezt a négy sort** kapja — ide
-> kell bemásolni a „Kiadási megjegyzések" mezőbe (nyelv: **hu-HU**, ez az egyetlen beállított nyelv).
-> Ha viszont a **nyílt teszt (beta)** sávra kerül (ott mért állapot: **377**), akkor a **355–383**
+> `node tools/check-play-track.mjs`): a **383-as AAB már fel van töltve** a Playre (de **ne tárd fel**,
+> mert a szekció ott még a logó fölött volt), a **zárt teszt (alpha)** sávján a **382 van 100%-ban
+> kigördülve**, és van egy **üres piszkozat** (nincs build, nincs kiadási megjegyzés). Aki a zárt
+> teszten a 382-ről jön, az **pontosan ezt a négy sort** kapja — ide kell bemásolni a „Kiadási
+> megjegyzések" mezőbe (nyelv: **hu-HU**, ez az egyetlen beállított nyelv).
+> Ha viszont a **nyílt teszt (beta)** sávra kerül (ott mért állapot: **377**), akkor a **355–384**
 > összesítő való (**1b-3.**).
-> A **kész, másolható** változat: `tmp/play-383.txt` (bájtazonos ezzel a blokkal).
+> A **kész, másolható** változat: `tmp/play-384.txt` (bájtazonos ezzel a blokkal).
 
 ```play-notes
-- ÚJ: a főoldalon a „Követettjeid" szakasz mutatja a kedvenc DJ-idet és szervezőidet.
+- ÚJ: a főoldalon a „Kedvenceid" szekció a hírek alatt mutatja a kedvenc DJ-idet és szervezőidet — legfeljebb hármat, a többit az „Összes" gombbal éred el.
 - ÚJ: az eseményt egy koppintással a naptáradba teheted (Google Naptár vagy .ics fájl).
 - ÚJ: meghívóval regisztrálva te is kapsz pontot — a meghívód pedig szintén.
 - ÚJ: értesítést kapsz, amikor elindul egy szavazás vagy játék.
@@ -240,26 +247,26 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–383** összesítő (a 380 után)
+## 1b-2. Play Console — a **361–384** összesítő (a 382 után)
 
 **Ezt használd, ha a felhasználó a 361–380 közötti valamelyik buildről jön** (régebbi nyilvános
-build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–383** között készültek.
+build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–384** között készültek.
 A karakter-számot a `tools/check-play-notes.mjs` méri.
 ⚠️ **Az ÉLES sávon a 382 van** (mérve, 2026-09-30), ezért aki **382-ről** jön, annak **nem** ez a
-blokk, hanem az **1. blokk** (a 383 újdonságai) való.
+blokk, hanem az **1. blokk** (a 384 újdonságai) való.
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonsági figyelmeztetés.
+- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság.
 - ÚJ: heti összefoglaló vasárnap; megosztható hírek és DJ-adatlapok.
 - ÚJ: értesítés, ha a kedvelt DJ-d vagy szerveződ új tartalmat tesz közzé.
 - ÚJ: @mindenki a Chatben push-jal, és a válasz idézetére koppintva odaugrik.
-- ÚJ: követett DJ-id a főoldalon; naptárba tevés; kétoldali meghívó-jutalom.
-- Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
+- ÚJ: kedvencek a főoldalon (max. 3); naptárba tevés; meghívó-jutalom; szavazás/játék push.
+- Javítva: a listák görgetése nem ugrik vissza a tetejére.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–383** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–384** összesítő)
 
-**Ezt használd, ha a 383-at a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 384-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-09-30) szerint ott a **377** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
@@ -267,12 +274,12 @@ blokk, hanem az **1. blokk** (a 383 újdonságai) való.
 linknyitás + QR-jelenlét** és a mostani újdonságok is.
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonsági figyelmeztetés.
+- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság.
 - ÚJ: heti összefoglaló vasárnap; megosztható hírek és DJ-adatlapok.
 - ÚJ: értesítés, ha a kedvelt DJ-d vagy szerveződ új tartalmat tesz közzé.
 - ÚJ: @mindenki a Chatben push-jal, és a válasz idézetére koppintva odaugrik.
-- ÚJ: követett DJ-id a főoldalon; naptárba tevés; kétoldali meghívó-jutalom.
-- Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
+- ÚJ: kedvencek a főoldalon (max. 3); naptárba tevés; meghívó-jutalom; szavazás/játék push.
+- Javítva: a listák görgetése nem ugrik vissza a tetejére.
 ```
 
 ## 1c. Play Console — CSAK a 351-hez, bővebben (tartalék)
@@ -301,6 +308,21 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 384 — a „Kedvenceid" szekció a helyére került (és a felirata is magyaros lett)
+- **A tulajdonos jelzése a 383-as zárt teszten:** *„ez a »követettjeid« elég magyartalan"*, illetve
+  *„a Hero FÖLÉ került, ami baj"*.
+- **A javítás:** (1) a felirat **„Kedvenceid"** (a szöveg a szótár kulcsa, angolul „Your favorites");
+  (2) a szekció a **hírek blokkja UTÁN** áll (a „További hírek" kártya és az esetleges játékkártya
+  alatt), a **„Közelgő események" előtt** — a Hero (logó) kártya és a hero-sorok (nyereményjáték,
+  kérdőív, szavazás) **érintetlenül** maradnak legfelül; (3) **legfeljebb 3 kedvenc** látszik, a
+  többit az **„Összes"** gomb nyitja (a Kedvencek képernyő, ahol a kedvelt események is ott vannak).
+- **A kapuk:** a pozíciót és a darabszámot **teszt** méri
+  (`test/widgets/followed_section_test.dart`): a szekció a forrásban a Hero **után**, a
+  „További hírek" kártya **után** és a „Köszelgő események" **előtt** áll; öt mentett kedvencből
+  pontosan **három** kártya és az „Összes" gomb jelenik meg.
+- **A többi (naptár-export, kétoldali meghívó-jutalom, szavazás/játék push) változatlan** — a 383-ból.
+- **⚠️ A 383-at ne tárd fel** (abban még a régi felirat és a rossz hely van).
 
 ### 383 — a „Követettjeid" szakasz, naptár-export, kétoldali meghívó-jutalom és szavazás/játék push
 - **A tulajdonos választotta hat irányból négy ebben a buildben** (a kliens-oldali részek) — a mérés

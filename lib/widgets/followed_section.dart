@@ -6,7 +6,7 @@ import '../providers/favorites_provider.dart';
 import '../screens/more/favorites_screen.dart';
 import 'app_text.dart';
 
-/// A főoldali **„Követettjeid"** szekció.
+/// A főoldali **„Kedvenceid"** szekció.
 ///
 /// **MIÉRT (mért ok, 2026-09-28):** a kedvencek (követett DJ-k/szervezők) eddig
 /// **csak** a „Több" → „Kedvencek" képernyőn és a push-célzásban éltek: a
@@ -15,10 +15,19 @@ import 'app_text.dart';
 /// kit követ — ez a visszajelzés tartja életben a követést (és ebből lesz a
 /// személyes push is, lásd `favorite-follow-plan.js`).
 ///
-/// **Amit tartalmaz:** kizárólag a **követés**-jellegű kedvenceket (DJ és
-/// szervező) — a kedvelt **események** a „Kedvencek" képernyőn vannak, és a
-/// főoldalon külön esemény-sáv is mutatja őket. A szekció **magától eltűnik**,
-/// ha nincs követett tartalom (nem hagy üres helyet a főoldalon).
+/// **A HELYE (a tulajdonos jelzése, 2026-09-30):** az első változat a **Hero
+/// (logó) kártya FÖLÉ** került — ez hiba volt. Mostantól a **hírek blokkja
+/// után** áll (a „További hírek" kártya és az esetleges játékkártya alatt), a
+/// „Közelgő események" szakasz előtt.
+///
+/// **MENNYIT MUTAT (szintén a tulajdonos kérése):** legfeljebb **3** kedvencet
+/// emel ki — a többi az **„Összes"** gombbal érhető el (a Kedvencek képernyőn,
+/// ahol a kedvelt események is ott vannak).
+///
+/// **Amit tartalmaz:** a **követés**-jellegű kedvenceket (DJ és szervező) — a
+/// kedvelt **események** a „Kedvencek" képernyőn vannak, és a főoldalon külön
+/// esemény-sáv is mutatja őket. A szekció **magától eltűnik**, ha nincs követett
+/// tartalom (nem hagy üres helyet).
 ///
 /// **A koppintás ugyanoda visz, mint a Kedvencek képernyőn** — ugyanaz a
 /// `FavoritesScreen.openEntry` dönt (egy helyen él a célképernyő-térkép, ezért
@@ -33,6 +42,13 @@ class FollowedSection extends ConsumerWidget {
   /// A kártya szélessége (a magasságot a [listHeight] adja).
   static const double cardWidth = 136;
 
+  /// **Legfeljebb ennyi** kedvenc látszik a főoldalon (a többi az „Összes" mögött).
+  static const int maxItems = 3;
+
+  /// A szekció felső hézagja — a widget **magával hozza**, ezért a rejtett
+  /// állapot (nincs kedvenc) nem hagy maga után üres helyet.
+  static const double topGap = 16;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final followed = ref
@@ -43,14 +59,18 @@ class FollowedSection extends ConsumerWidget {
               entry.kind == FavoriteKind.artist ||
               entry.kind == FavoriteKind.organizer,
         )
+        .take(maxItems)
         .toList(growable: false);
     if (followed.isEmpty) return const SizedBox.shrink();
 
-    return FollowedSectionBody(
-      entries: followed,
-      onOpen: (entry) => FavoritesScreen.openEntry(context, ref, entry),
-      onOpenAll: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const FavoritesScreen()),
+    return Padding(
+      padding: const EdgeInsets.only(top: topGap),
+      child: FollowedSectionBody(
+        entries: followed,
+        onOpen: (entry) => FavoritesScreen.openEntry(context, ref, entry),
+        onOpenAll: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const FavoritesScreen()),
+        ),
       ),
     );
   }
@@ -59,7 +79,8 @@ class FollowedSection extends ConsumerWidget {
 /// A szekció **megjelenítése** — szándékosan provider nélkül, hogy a teszt
 /// pontosan azt mérhesse, ami kirajzolódik, és hogy a koppintás célja
 /// (`onOpen`) mérhető legyen (a `FavoritesScreen.openEntry` valódi hívása
-/// nélkül, ami teljes képernyőt nyitna).
+/// nélkül, ami teljes képernyőt nyitna). A **darabszámot** a hívó szabja meg
+/// (a főoldal legfeljebb `FollowedSection.maxItems`-et ad át).
 class FollowedSectionBody extends StatelessWidget {
   const FollowedSectionBody({
     super.key,
@@ -107,7 +128,7 @@ class FollowedSectionBody extends StatelessWidget {
     final scheme = theme.colorScheme;
     return Semantics(
       container: true,
-      label: tr(context, 'Követettjeid'),
+      label: tr(context, 'Kedvenceid'),
       child: Column(
         key: const Key('followed-section'),
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +139,7 @@ class FollowedSectionBody extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  tr(context, 'Követettjeid'),
+                  tr(context, 'Kedvenceid'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleMedium?.copyWith(

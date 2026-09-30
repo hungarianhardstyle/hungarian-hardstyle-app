@@ -359,11 +359,6 @@ class HomeScreen extends ConsumerWidget {
                       },
                     ),
                     const SizedBox(height: 18),
-                    // KÖVETETTJEID (381 utáni kör): a kedvencek eddig csak push-ban
-                    // éltek — itt naponta látszanak. A szakasz magától eltűnik, ha
-                    // nincs követett tartalom (nem hagy üres helyet).
-                    const FollowedSection(),
-                    const SizedBox(height: 18),
                     Container(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
                       decoration: BoxDecoration(
@@ -626,6 +621,14 @@ class HomeScreen extends ConsumerWidget {
                         );
                       },
                     ),
+                    // KEDVENCEID (384): a tulajdonos jelzése szerint a szekció
+                    // eddig a **Hero (logó) kártya FÖLÉ** került, ami nem jó — most
+                    // a hírek blokkja (a „További hírek" kártya és a játékkártya)
+                    // UTÁN áll, a „Közelgő események" előtt. A widget magától
+                    // eltűnik, ha nincs kedvenc (nem hagy üres helyet), és a saját
+                    // felső hézagát is magával hozza, ezért a rejtett állapot nem
+                    // változtat a főoldal ritmusán.
+                    const FollowedSection(),
                     const SizedBox(height: 35),
                     AppText(
                       'Közelgő események',

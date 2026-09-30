@@ -38,6 +38,16 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 384,
+    changes: [
+      'ÚJ: a főoldalon a „Kedvenceid" szekció a hírek alatt mutatja a kedvenc DJ-idet és szervezőidet — legfeljebb hármat, a többit az „Összes" gombbal éred el.',
+      'ÚJ: az eseményt egy koppintással a naptáradba teheted (Google Naptár vagy .ics fájl).',
+      'ÚJ: meghívóval regisztrálva te is kapsz pontot — a meghívód pedig szintén.',
+      'ÚJ: értesítést kapsz, amikor elindul egy szavazás vagy játék.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 383,
     changes: [
       'ÚJ: a főoldalon a „Követettjeid" szakasz mutatja a kedvenc DJ-idet és szervezőidet.',
