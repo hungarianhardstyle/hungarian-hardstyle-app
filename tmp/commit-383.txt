@@ -1,0 +1,34 @@
+feat(383): AAB — "Kovetettjeid", naptar-export, ketoldali meghivo-jutalom feliratai
+
+A hat irany kliens-oldala egy csomagban:
+- a fooldali "Kovetettjeid" szakasz (kovetett DJ-k es szervezok; uresen eltunik);
+- naptar-export (fejlec-gomb -> Google Naptar vagy .ics; sikeres "Ott leszek" utan
+  felajanlas);
+- a ketoldali meghivo-jutalom feliratai (Ajanlas kepernyo + az ajanlokod mezo
+  melletti sugo).
+A szavazas/jatek push (plugin 2.14.11) es a meghivo-jutalom (szerver) build nelkul
+is el, de a felhasznalo tapasztalja oket, ezert a changelogban is szerepelnek.
+
+Changelog: lib/data/app_changelog.dart build 383 (4 sor) + angol forditasok
+(tmp/i18n/en/chunk-33.json). pubspec: 1.0.0+383.
+
+CSOMAG: build/HUHS-v1.0.0+383-release.aab — 83 265 322 bajt,
+SHA-256 EB54ABFED5C7882C6C0D7D05C8822AD836AEC2DAD5304FE52F34908DF49CDF1F;
+a merge-elt manifestbol versionCode 383, versionName 1.0.0;
+tmp/verify-aab.mjs ... 383 -> MINDEN ELLENORZES RENDBEN (39 changelog-sor mindharom
+ABI-ban, production AdMob App ID bent, teszt app ID nincs).
+
+Play-jegyzet (docs/PLAY-KIADASI-JEGYZET.md), a MERESBOL:
+- currentBuild 383, lastPublishedBuild 382 (az ELES savon mar a 382 van, 100%-ban
+  kigordulve; a zart teszt is 382, a nyilt teszt 377 — node tools/check-play-track.mjs);
+- az 1. blokk a 383 ujdonsagai (317/480 karakter), az osszesitok 361-383 es 355-383
+  (468/480); uj "### 383" szakasz a 3. pontban; a feltoltendo AAB tablaja frissitve.
+- Az elso osszesito 502 karakter lett -> a kapu elutasította, roviditeni kellett.
+
+Kapuk: flutter analyze lib test -> No issues found!; flutter test -> 1350/1350;
+i18n --strict -> MINDEN ELLENORZES RENDBEN; node tools/check-play-notes.mjs ->
+MINDEN ELLENORZES RENDBEN; a harom Play-masolat bajtazonos a dokumentummal
+(tmp/play-383.txt, tmp/play-361-383.txt, tmp/play-355-383.txt).
+
+A tulajdonos lepese: a 383-as AAB feltoltese (nyilvanos sav: 1. blokk; beta:
+355-383 osszesito) ES a plugin 2.14.11 feltoltese a WordPress-be.

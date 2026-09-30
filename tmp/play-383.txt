@@ -1,0 +1,4 @@
+- ÚJ: a főoldalon a „Követettjeid" szakasz mutatja a kedvenc DJ-idet és szervezőidet.
+- ÚJ: az eseményt egy koppintással a naptáradba teheted (Google Naptár vagy .ics fájl).
+- ÚJ: meghívóval regisztrálva te is kapsz pontot — a meghívód pedig szintén.
+- ÚJ: értesítést kapsz, amikor elindul egy szavazás vagy játék.

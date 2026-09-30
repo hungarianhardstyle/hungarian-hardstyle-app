@@ -1,0 +1,6 @@
+- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonsági figyelmeztetés.
+- ÚJ: heti összefoglaló vasárnap; megosztható hírek és DJ-adatlapok.
+- ÚJ: értesítés, ha a kedvelt DJ-d vagy szerveződ új tartalmat tesz közzé.
+- ÚJ: @mindenki a Chatben push-jal, és a válasz idézetére koppintva odaugrik.
+- ÚJ: követett DJ-id a főoldalon; naptárba tevés; kétoldali meghívó-jutalom.
+- Javítva: a listák görgetése nem ugrik vissza a tetejére frissítéskor.
