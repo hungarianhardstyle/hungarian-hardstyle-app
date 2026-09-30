@@ -27,7 +27,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.5.zip';
+export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.11.zip';
 export const WORK_DIR = 'tmp/php-plugin';
 export const CONTAINER_IMAGE = 'php:8.2-cli';
 
@@ -40,7 +40,7 @@ export const CONTAINER_IMAGE = 'php:8.2-cli';
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** A kimenetből kiolvasott, kötelező jelzők. */
-export const REQUIRED_MARKERS = ['PHP LINT OK', 'VISELKEDES OK', 'KONSTANS-AG OK', 'PUSH-DEDUPE OK', 'PUSH-NYELV OK'];
+export const REQUIRED_MARKERS = ['PHP LINT OK', 'VISELKEDES OK', 'KONSTANS-AG OK', 'PUSH-DEDUPE OK', 'PUSH-NYELV OK', 'PUSH-OPEN OK'];
 
 /** A kimenet összegzése (tesztelhető, hálózat nélkül). */
 export function summarize(output) {
@@ -84,15 +84,21 @@ export function selfTest() {
     'PUSH-DEDUPE OK',
     '19 ellenőrzés, 0 hiba',
     'PUSH-NYELV OK',
+    '41 ellenőrzés, 0 hiba',
+    'PUSH-OPEN OK',
   ].join('\n');
   const goodSummary = summarize(good);
   check('a jó kimenet nem jelez hibát', goodSummary.failed === false);
   check('a lintelt fájlok száma kiolvasható', goodSummary.linted === 46);
-  check('a viselkedés-körök kiolvashatók', goodSummary.behaviorChecks.length === 3);
+  check('a viselkedés-körök kiolvashatók', goodSummary.behaviorChecks.length === 4);
   check('minden kötelező jelző megvan', goodSummary.missingMarkers.length === 0);
   check(
     'a hiányzó push-lánc jelzőt is észreveszi',
     summarize(good.replace('PUSH-DEDUPE OK', '')).missingMarkers.includes('PUSH-DEDUPE OK'),
+  );
+  check(
+    'a hiányzó szavazás/játék jelzőt is észreveszi',
+    summarize(good.replace('PUSH-OPEN OK', '')).missingMarkers.includes('PUSH-OPEN OK'),
   );
 
   const bad = good.replace('VISELKEDES OK', 'VISELKEDES HIBA');

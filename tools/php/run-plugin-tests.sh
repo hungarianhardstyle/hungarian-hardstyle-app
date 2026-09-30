@@ -65,4 +65,16 @@ else
   fail=1
 fi
 
+# ⚠️ A 2.14.11 újdonsága: a szavazás/játék megnyílása. A mérés a TELJES küldési
+# láncot futtatja stubolt FCM-mel (nyelvenkénti szöveg, frissességi kapu,
+# idempotencia, ütemezés) — nem csak azt nézi, hogy „szerepel-e a szövegben".
+echo ""
+echo "=== 6) Szavazás/játék megnyílása (2.14.11)"
+if php /work/tools/verify-push-open-notice.php "$PLUGIN"; then
+  echo "PUSH-OPEN OK"
+else
+  echo "PUSH-OPEN HIBA"
+  fail=1
+fi
+
 exit $fail

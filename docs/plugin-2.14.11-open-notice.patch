@@ -1,0 +1,347 @@
+diff --git a/tmp/plugin-2150/huhs-mobile-api/huhs-mobile-api.php b/tmp/plugin-2151/huhs-mobile-api/huhs-mobile-api.php
+index 04dc3f8f..53d02273 100644
+--- a/tmp/plugin-2150/huhs-mobile-api/huhs-mobile-api.php
++++ b/tmp/plugin-2151/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.14.10
++ * Version: 2.14.11
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.14.10');
++define('HUHS_API_VERSION', '2.14.11');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/tmp/plugin-2150/huhs-mobile-api/includes/push.php b/tmp/plugin-2151/huhs-mobile-api/includes/push.php
+index e5b57ca7..a1b1e868 100644
+--- a/tmp/plugin-2150/huhs-mobile-api/includes/push.php
++++ b/tmp/plugin-2151/huhs-mobile-api/includes/push.php
+@@ -15,6 +15,16 @@ define('HUHS_PUSH_SERVICE_ACCOUNT_OPTION', 'huhs_firebase_service_account');
+  */
+ define('HUHS_PUSH_DIGEST_WEEK_OPTION', 'huhs_push_digest_week');
+ 
++/**
++ * Meddig számít „frissen kinyíltnak" egy szavazás/játék (2.14.11).
++ *
++ * ⚠️ MIÉRT KELL (mért kockázat): a 2.14.11 **feltöltésekor** a már meglévő,
++ * régen megnyílt kérdőívekre/játékokra a biztonsági kör különben kiküldené az
++ * értesítést — vagyis egy fél éve lezárt szavazásról szólna egy push. Ez a kapu
++ * ezt zárja ki: csak a **frissen** (6 órán belül) kinyílt tartalom ér.
++ */
++define('HUHS_PUSH_OPEN_FRESH_WINDOW', 6 * HOUR_IN_SECONDS);
++
+ /**
+  * A támogatott értesítés-nyelvek. A küldés **nyelvenként külön** megy ki, mert
+  * a push szövegét a rendszer rajzolja ki — azt az app már nem tudja lefordítani.
+@@ -672,6 +682,14 @@ function huhs_push_recipients($tokens, $data, $language = '')
+         // akik az emlékeztetőt kikapcsolták.
+         if (($data['kind'] ?? '') === 'reminder' && array_key_exists('reminders', $record) && !$record['reminders']) continue;
+         if ($type === 'digest' && array_key_exists('digest', $record) && !$record['digest']) continue;
++        // Szavazás/játék (2.14.11). A mai kliensek ezeket a kulcsokat NEM
++        // küldik, ezért a szűrő csak akkor hat, ha egy jövőbeli kliens bevezeti
++        // (pontosan a `digest` mintájára) — addig mindenki megkapja, aki az
++        // értesítéseket egyáltalán nem kapcsolta ki. A nyereményjáték és a
++        // GYÍK-játék ugyanazt a kapcsolót használja (`games`).
++        if ($type === 'poll' && array_key_exists('polls', $record) && !$record['polls']) continue;
++        if ($type === 'vote' && array_key_exists('votes', $record) && !$record['votes']) continue;
++        if (($type === 'game' || $type === 'quiz') && array_key_exists('games', $record) && !$record['games']) continue;
+         // Kedvenc-alapú célzás (2.14.9): CSAK akkor szűkít, ha a küldés megmondja
+         // a tartalom szereplőit ÉS a rekordban van kedvenc. Aki még nem küldött
+         // kedvenceket (minden 381 előtti kliens), az változatlanul mindent kap.
+@@ -1810,6 +1828,288 @@ function huhs_push_event_reminder_texts($post, $kind)
+     return $texts;
+ }
+ 
++/**
++ * A SZAVAZÁS/JÁTÉK „kinyílt" értesítés (2.14.11) — a döntés EGY helyen.
++ *
++ * MIÉRT: a kérdőív, a nyereményjáték, az éves szavazás és a GYÍK-játék
++ * megnyílása eddig **némán** történt: aki éppen nem nyitotta ki az appot, el sem
++ * tudta, hogy elindult. A meglévő tartalom-push csak a `post` / `huhs_event` /
++ * `huhs_release` típusokra szól, ezért ezek kimaradtak — pedig pont ezekhez kell
++ * a **napokon belüli** visszatérés (a szavazás és a játék időablakos).
++ *
++ * A négy típus egyetlen térképen él, hogy ne tudjanak széttartani, és hogy a
++ * mérés pontosan ezt a térképet nézze:
++ *   * `payload`     — a push adat-csomagjának típusa (ezt kapja a kliens);
++ *   * `start`/`end` — a nyitást/zárást tároló meta-kulcs (`Y-m-d\TH:i`, helyi);
++ *   * `question`    — a törzs forrása (a kérdés), ha van ilyen mező;
++ *   * `enabled`     — kapcsoló-meta, ha a tartalom kikapcsolható (szavazás);
++ *   * `needs_dates` — igaz, ha dátum nélkül a tartalom nem is lehet aktív;
++ *   * `setting`     — a token-rekord beállítás-kulcsa (lásd `huhs_push_recipients`);
++ *   * `texts`       — a CÍM nyelvenként (a törzs a tartalom címe/kérdése).
++ */
++function huhs_push_open_notice_types()
++{
++    return array(
++        'huhs_poll' => array(
++            'payload' => 'poll',
++            'start' => '_huhs_poll_start',
++            'end' => '_huhs_poll_end',
++            'question' => '_huhs_poll_question',
++            'setting' => 'polls',
++            'texts' => array('hu' => 'Elindult a kérdőív', 'en' => 'The new poll is open'),
++        ),
++        'huhs_prize' => array(
++            'payload' => 'game',
++            'start' => '_huhs_prize_start',
++            'end' => '_huhs_prize_end',
++            'question' => '_huhs_prize_question',
++            'setting' => 'games',
++            'texts' => array('hu' => 'Elindult a nyereményjáték', 'en' => 'The prize game has started'),
++        ),
++        'huhs_vote_season' => array(
++            'payload' => 'vote',
++            'start' => '_huhs_vote_start',
++            'end' => '_huhs_vote_end',
++            'question' => '',
++            'setting' => 'votes',
++            // A kikapcsolt szezonra nem küldünk (a szerver `huhs_vote_active`
++            // pontosan ugyanezt a kapcsolót nézi).
++            'enabled' => '_huhs_vote_enabled',
++            'texts' => array('hu' => 'Elindult az éves szavazás', 'en' => 'The annual voting is open'),
++        ),
++        'huhs_game' => array(
++            'payload' => 'quiz',
++            'start' => '_huhs_game_start',
++            'end' => '_huhs_game_end',
++            'question' => '',
++            'setting' => 'games',
++            // A GYÍK-játék dátum nélkül `draft` (`huhs_game_status`), tehát nem
++            // is aktív — ilyenkor nincs mit hirdetni.
++            'needs_dates' => true,
++            'texts' => array('hu' => 'Elindult a játék', 'en' => 'The quiz game has started'),
++        ),
++    );
++}
++
++/**
++ * Egy meta-mező **valódi** időpontja (epoch másodperc), 0 ha nincs/értelmezhetetlen.
++ *
++ * ⚠️ Ugyanaz a buktató, mint az esemény-emlékeztetőnél (2.14.6): a tárolt érték
++ * **helyi falióra** (`Y-m-d\TH:i`), a szerver viszont UTC-n fut, ezért a
++ * `strtotime()` rossz epochot adna (nyáron 2 órával, télen 1-gyel). A
++ * `date_create_immutable(…, wp_timezone())` a site időzónájában értelmezi — így
++ * az ütemezés és a megjelenített zárás is helyes.
++ */
++function huhs_push_meta_timestamp($post_id, $meta_key)
++{
++    $meta_key = trim((string) $meta_key);
++    if ($meta_key === '') return 0;
++    $raw = trim((string) get_post_meta($post_id, $meta_key, true));
++    if ($raw === '') return 0;
++    $parsed = date_create_immutable($raw, wp_timezone());
++    if (!$parsed) return 0;
++    return (int) $parsed->getTimestamp();
++}
++
++/** A tartalom megnyílásának pillanata: a beállított kezdés, vagy a közzététel. */
++function huhs_push_open_moment($post, $config)
++{
++    $start = huhs_push_meta_timestamp($post->ID, (string) ($config['start'] ?? ''));
++    if ($start > 0) return $start;
++    if (!empty($config['needs_dates'])) return 0;
++    // Nincs kezdés → a közzététel a nyitás (a naptár-dátum valódi epochja).
++    $published = get_post_time('U', true, $post);
++    return $published ? (int) $published : 0;
++}
++
++/** A tartalom kapcsolója (pl. a szezon `_huhs_vote_enabled` mezője). */
++function huhs_push_open_enabled($post, $config)
++{
++    $key = (string) ($config['enabled'] ?? '');
++    if ($key === '') return true;
++    return (string) get_post_meta($post->ID, $key, true) === '1';
++}
++
++/**
++ * A küldés ujjlenyomata: **tartalom + típus + kezdés**.
++ *
++ * Egy (tartalom, időablak) páros **egyszer** hirdethető. Ha a szerkesztő egy
++ * ÚJ időablakot állít be (más kezdés), az új ujjlenyomat — és ezzel egy új,
++ * szándékos hirdetés. A puszta szövegjavítás nem ad új értesítést.
++ */
++function huhs_push_open_fingerprint($post, $config)
++{
++    return md5(implode('|', array(
++        (string) $post->post_type,
++        (int) $post->ID,
++        trim((string) get_post_meta($post->ID, (string) ($config['start'] ?? ''), true)),
++    )));
++}
++
++/**
++ * A hirdetés szövege nyelvenként: a cím mondja, MI nyílt ki, a törzs a tartalom
++ * (kérdés vagy cím), a zárás idejével — ez a hiányzó „meddig szól" információ.
++ */
++function huhs_push_open_notice_texts($post, $config)
++{
++    $title = html_entity_decode(wp_strip_all_tags((string) get_the_title($post)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
++    $question_key = (string) ($config['question'] ?? '');
++    $question = '';
++    if ($question_key !== '') {
++        $question = html_entity_decode(
++            wp_strip_all_tags((string) get_post_meta($post->ID, $question_key, true)),
++            ENT_QUOTES | ENT_HTML5,
++            'UTF-8'
++        );
++    }
++    $headline = is_array($config['texts'] ?? null) ? $config['texts'] : array();
++    $end = huhs_push_meta_timestamp($post->ID, (string) ($config['end'] ?? ''));
++
++    $texts = array();
++    foreach (huhs_push_languages() as $language) {
++        $body = $question !== '' ? $question : $title;
++        // A kérdés angol változata a szerver oldali fordítás-tárból jön, ha van
++        // (a fordítás nem része ennek a körnek, ezért hiány esetén a magyar
++        // szöveg marad — sosem lesz üres a törzs).
++        if ($language === 'en' && $question !== '' && function_exists('huhs_translation_text')) {
++            $translated = trim((string) huhs_translation_text($post->ID, $language, $question_key, $question));
++            if ($translated !== '') $body = $translated;
++        }
++        if ($body === '') $body = $title;
++        if ($end > 0) {
++            $formatted = wp_date($language === 'en' ? 'M j, H:i' : 'Y.m.d. H:i', $end);
++            $body .= ' · ' . ($language === 'en' ? 'until ' : 'eddig: ') . $formatted;
++        }
++        $texts[$language] = array(
++            'title' => (string) ($headline[$language] ?? $headline['hu'] ?? $title),
++            'body' => $body,
++        );
++    }
++    return $texts;
++}
++
++/**
++ * A hirdetés ütemezése egy mentett tartalomra.
++ *
++ * A `time()`-hoz közeli nyitás **azonnali** (1 másodperc), a jövőbeli nyitás a
++ * nyitás pillanatára kerül. A `spawn_cron()` csak akkor indul, ha a tartalom már
++ * nyitva van — így a közzététel utáni másodpercekben megy ki az értesítés, a
++ * szerkesztő viszont nem várja meg az FCM-köröket (a küldés a háttérben fut).
++ */
++function huhs_push_schedule_open_notice($post)
++{
++    if (!$post || ($post->post_status ?? '') !== 'publish') return false;
++    $types = huhs_push_open_notice_types();
++    $config = $types[(string) $post->post_type] ?? null;
++    if (!$config) return false;
++    if (!huhs_push_open_enabled($post, $config)) return false;
++
++    $moment = huhs_push_open_moment($post, $config);
++    if ($moment <= 0) return false;
++    // Régen kinyílt tartalom: az értesítés elmarad (a frissességi kapu a küldés
++    // oldalán is él, itt csak felesleges munkát spórolunk meg vele).
++    if ($moment < time() - HUHS_PUSH_OPEN_FRESH_WINDOW) return false;
++
++    $args = array((int) $post->ID, (string) $post->post_type);
++    if (wp_next_scheduled('huhs_push_open_notice', $args)) return true;
++
++    $when = max(time() + 1, $moment);
++    if (false === wp_schedule_single_event($when, 'huhs_push_open_notice', $args)) return false;
++    if ($moment <= time() && function_exists('spawn_cron')) spawn_cron();
++    return true;
++}
++
++/**
++ * A mentés utáni ütemezés — a meta MÁR a helyén van (a plugin saját
++ * `save_post_{típus}` kezelője 10-es prioritáson írja, ez 20-on fut).
++ */
++function huhs_push_schedule_open_notice_from_save($post_id, $post = null, $update = null)
++{
++    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
++    if (function_exists('wp_is_post_revision') && (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id))) return;
++    if (!$post || !is_object($post)) $post = get_post($post_id);
++    if (!$post) return;
++    huhs_push_schedule_open_notice($post);
++}
++
++/**
++ * A négy típus bekötése — a térképből, ezért új típus egy helyen vehető fel.
++ */
++function huhs_push_register_open_notice_hooks()
++{
++    foreach (array_keys(huhs_push_open_notice_types()) as $post_type) {
++        add_action('save_post_' . $post_type, 'huhs_push_schedule_open_notice_from_save', 20, 3);
++    }
++}
++huhs_push_register_open_notice_hooks();
++
++/**
++ * A hirdetés kiküldése.
++ *
++ * Idempotens: a `_huhs_push_open_sent` jelölő az ujjlenyomatot tárolja, ezért
++ * ugyanarra az időablakra **egyszer** megy ki. A jelölő csak **sikeres** küldés
++ * (vagy élő folytatás) után íródik — így egy átmeneti FCM-hiba nem veszíti el az
++ * értesítést, viszont egy lezárt/elavult tartalom sem hirdethető meg utólag.
++ */
++add_action('huhs_push_open_notice', 'huhs_push_open_notice', 10, 2);
++function huhs_push_open_notice($post_id, $post_type)
++{
++    $post_type = (string) $post_type;
++    $post = get_post((int) $post_id);
++    if (!$post || ($post->post_status ?? '') !== 'publish' || (string) $post->post_type !== $post_type) return;
++
++    $types = huhs_push_open_notice_types();
++    $config = $types[$post_type] ?? null;
++    if (!$config) return;
++    if (!huhs_push_open_enabled($post, $config)) return;
++
++    $now = time();
++    $moment = huhs_push_open_moment($post, $config);
++    if ($moment <= 0 || $moment > $now) return;
++    if ($now - $moment > HUHS_PUSH_OPEN_FRESH_WINDOW) return;
++
++    $fingerprint = huhs_push_open_fingerprint($post, $config);
++    if (get_post_meta($post->ID, '_huhs_push_open_sent', true) === $fingerprint) return;
++
++    $data = array(
++        'type' => (string) $config['payload'],
++        'kind' => 'open',
++        'id' => (string) $post->ID,
++    );
++    $sent = huhs_push_send_localized(huhs_push_open_notice_texts($post, $config), $data);
++    if ($sent > 0 || huhs_push_has_pending_job($data)) {
++        update_post_meta($post->ID, '_huhs_push_open_sent', $fingerprint);
++    }
++}
++
++/**
++ * Biztonsági kör: a WP-Cron nem biztos, hogy a nyitás pillanatában fut (a
++ * látogatók hozzák), ezért ötpercenként megnézzük a frissen kinyílt tartalmakat.
++ * A küldés maga idempotens, ezért ez nem tud duplázni.
++ */
++add_action('init', function () {
++    if (!wp_next_scheduled('huhs_push_open_notice_scan')) {
++        wp_schedule_event(time() + 120, 'huhs_five_minutes', 'huhs_push_open_notice_scan');
++    }
++});
++
++add_action('huhs_push_open_notice_scan', 'huhs_push_scan_open_notices');
++function huhs_push_scan_open_notices($limit = 20)
++{
++    foreach (huhs_push_open_notice_types() as $post_type => $config) {
++        $posts = get_posts(array(
++            'post_type' => $post_type,
++            'post_status' => 'publish',
++            'posts_per_page' => (int) $limit,
++            'orderby' => 'date',
++            'order' => 'DESC',
++        ));
++        foreach ((array) $posts as $post) {
++            huhs_push_open_notice($post->ID, $post_type);
++        }
++    }
++}
++
+ add_action('admin_menu', function () {
+     add_submenu_page('huhs-mobile', 'Push értesítések', 'Push értesítések', 'manage_options', 'huhs-push', 'huhs_push_admin_page');
+ });
