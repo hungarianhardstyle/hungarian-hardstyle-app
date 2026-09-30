@@ -1,4 +1,6 @@
 [
+  "Korábbi hozzászólások",
+  "Korábbi kiadások",
   "Kölcsönös kapcsolat meetupolóval",
   "körülbelül {n} perc múlva próbáld újra.",
   "Köszönjük a játékodat!",
@@ -56,7 +58,5 @@
   "Meetuponként egyszer jár. Ha lemondod a jelzést, ez a pont is elvész, visszajelzésnél újra jár.",
   "Még hiányzik:\n{list}",
   "Még nincs bejegyzés.",
-  "Még nincs hozzászólás. Mondd el elsőként a véleményed!",
-  "Még nincs megjeleníthető toplista.",
-  "Még nincs megvásárolt zenéd"
+  "Még nincs hozzászólás. Mondd el elsőként a véleményed!"
 ]

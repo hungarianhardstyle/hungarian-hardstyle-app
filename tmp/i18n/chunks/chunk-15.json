@@ -1,4 +1,6 @@
 [
+  "Még nincs megjeleníthető toplista.",
+  "Még nincs megvásárolt zenéd",
   "Még nincs mentett kedvenced.",
   "Még nincs privát beszélgetés.",
   "Még nincs regisztrált profil.",
@@ -56,7 +58,5 @@
   "Nincs adat.",
   "Nincs archivált értesítés.",
   "Nincs blokkolt felhasználó.",
-  "Nincs cél",
-  "Nincs cikk ehhez a címkéhez.",
-  "Nincs elérhető kérdőív."
+  "Nincs cél"
 ]

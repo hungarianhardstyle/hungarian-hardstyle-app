@@ -1,4 +1,6 @@
 [
+  "A diagnosztika a vágólapra került.",
+  "A felhasználó mentése nem sikerült: {error}",
   "A felhasználó törlése nem sikerült: {error}",
   "A felhasználó törlése sikerült.",
   "A felhasználó törölve; a képek háttértakarítása folyamatban van.",
@@ -56,7 +58,5 @@
   "A kiadó zenéi egy helyen",
   "A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.",
   "A Kiadványok fülön megvásárolt (vagy reklámmal feloldott) zenék itt jelennek meg, és innen játszhatók le.",
-  "A kiadványok most nem érhetők el",
-  "A kijelöltek törlése nem sikerült.",
-  "A kód nem érvényes. Az authenticator nem lett bekapcsolva."
+  "A kiadványok most nem érhetők el"
 ]

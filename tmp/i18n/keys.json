@@ -51,11 +51,12 @@
   },
   {
     "value": "Szervező",
-    "count": 12,
+    "count": 13,
     "files": [
       "lib/screens/community/community_screen.dart",
       "lib/screens/events/event_submission_screen.dart",
-      "lib/screens/more/community_users_screen.dart"
+      "lib/screens/more/community_users_screen.dart",
+      "lib/widgets/followed_section.dart"
     ]
   },
   {
@@ -360,6 +361,16 @@
     "count": 4,
     "files": [
       "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Összes",
+    "count": 4,
+    "files": [
+      "lib/screens/artists/artists_screen.dart",
+      "lib/screens/more/faq_screen.dart",
+      "lib/screens/news/news_screen.dart",
+      "lib/widgets/followed_section.dart"
     ]
   },
   {
@@ -725,15 +736,6 @@
     "files": [
       "lib/screens/community/prize_admin_screen.dart",
       "lib/screens/poll/poll_results_screen.dart"
-    ]
-  },
-  {
-    "value": "Összes",
-    "count": 3,
-    "files": [
-      "lib/screens/artists/artists_screen.dart",
-      "lib/screens/more/faq_screen.dart",
-      "lib/screens/news/news_screen.dart"
     ]
   },
   {
@@ -1154,6 +1156,14 @@
     ]
   },
   {
+    "value": "Kedvenc",
+    "count": 2,
+    "files": [
+      "lib/screens/organizers/organizer_detail_screen.dart",
+      "lib/widgets/followed_section.dart"
+    ]
+  },
+  {
     "value": "Kedvenc DJ-k és szervezők",
     "count": 2,
     "files": [
@@ -1209,6 +1219,13 @@
     "count": 2,
     "files": [
       "lib/screens/main_navigation.dart"
+    ]
+  },
+  {
+    "value": "Követettjeid",
+    "count": 2,
+    "files": [
+      "lib/widgets/followed_section.dart"
     ]
   },
   {
@@ -3759,6 +3776,13 @@
     ]
   },
   {
+    "value": "DJ",
+    "count": 1,
+    "files": [
+      "lib/widgets/followed_section.dart"
+    ]
+  },
+  {
     "value": "DJ / előadó beküldése",
     "count": 1,
     "files": [
@@ -5310,13 +5334,6 @@
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
-    ]
-  },
-  {
-    "value": "Kedvenc",
-    "count": 1,
-    "files": [
-      "lib/screens/organizers/organizer_detail_screen.dart"
     ]
   },
   {

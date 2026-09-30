@@ -1,10 +1,12 @@
 [
+  "Jogi információ",
+  "Jóváhagyás és piszkozat",
+  "Jóváhagyott beküldés",
   "JPG, PNG vagy WebP képet válassz.",
   "Kamera",
   "Kapcsolattartó e-mail *",
   "Kategória *",
   "Kedvelt tartalmak",
-  "Kedvenc",
   "Kedvenc DJ",
   "Kedvenc szervező",
   "Kedvencek törlése",
@@ -56,7 +58,5 @@
   "Kivétel a lejátszási listából (a fájl megmarad)",
   "Kivéve a lejátszási listából — a fájl a készüléken marad.",
   "Koppints a megnyitáshoz",
-  "Korábbi események",
-  "Korábbi hozzászólások",
-  "Korábbi kiadások"
+  "Korábbi események"
 ]

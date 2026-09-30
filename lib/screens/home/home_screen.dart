@@ -20,6 +20,7 @@ import '../../models/game.dart';
 import '../../widgets/app_text.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
+import '../../widgets/followed_section.dart';
 import '../../widgets/language_switch_button.dart';
 import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
@@ -357,6 +358,11 @@ class HomeScreen extends ConsumerWidget {
                         );
                       },
                     ),
+                    const SizedBox(height: 18),
+                    // KÖVETETTJEID (381 utáni kör): a kedvencek eddig csak push-ban
+                    // éltek — itt naponta látszanak. A szakasz magától eltűnik, ha
+                    // nincs követett tartalom (nem hagy üres helyet).
+                    const FollowedSection(),
                     const SizedBox(height: 18),
                     Container(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
