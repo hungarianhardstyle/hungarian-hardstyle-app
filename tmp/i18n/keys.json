@@ -4709,7 +4709,7 @@
     ]
   },
   {
-    "value": "Ha kaptál kódot egy HUHS-felhasználótól.",
+    "value": "Ha kaptál kódot egy HUHS-felhasználótól — vele {invitee} pontot kapsz a kezdéshez.",
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
@@ -6372,6 +6372,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Minden meghívott barátod után {inviter} pontot kapsz, ő pedig {invitee} pontot a kezdéshez.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/referral_screen.dart"
     ]
   },
   {

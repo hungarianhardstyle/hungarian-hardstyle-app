@@ -11,3 +11,10 @@
 # (A többi fájl — .bat, .gradle, XML — szándékosan érintetlen: azokat nem mérik
 # sorvég-mintával, a Windows-os eszközök pedig elvárhatják a CRLF-et.)
 *.dart text eol=lf
+# Ugyanez a függvény- és eszköz-forrásokra: a `functions/*.js` sorvégét a node
+# tesztek és a mutációs bizonyítékok `\n`-es horgonyai mérik (mért eset:
+# 2026-09-28, a `functions/index.js` CRLF-re fordult, ezért a mutációs minta
+# „nem illett" — a kapu jól jelzett, a munkapéldány volt rossz).
+*.js text eol=lf
+*.cjs text eol=lf
+*.mjs text eol=lf

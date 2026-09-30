@@ -7,6 +7,7 @@ import '../../core/errors/user_facing_error.dart';
 import '../../core/i18n/app_strings.dart';
 import '../../core/i18n/tr.dart';
 import '../../services/community_service.dart';
+import '../../services/referral_reward.dart';
 import '../../widgets/app_text.dart';
 
 class ReferralScreen extends StatefulWidget {
@@ -107,6 +108,23 @@ class _ReferralScreenState extends State<ReferralScreen> {
               const AppText(
                 'Másold ki az alábbi szöveget, küldd el az ismerősödnek, és ő a regisztrációnál megadhatja az ajánlókódot. Ha az új felhasználó regisztrál, 50 achievement pontot kapsz.',
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              // KÉTOLDALI JUTALOM (2026-09-28): eddig CSAK a meghívó kapott pontot.
+              // A számok egy helyen élnek (`referral_reward.dart`), és a
+              // kliens-teszt a szerveroldali tervhez méri őket — a felület nem
+              // ígérhet mást, mint amit a szerver jóváír.
+              AppText(
+                trArgs(
+                  context,
+                  'Minden meghívott barátod után {inviter} pontot kapsz, ő pedig {invitee} pontot a kezdéshez.',
+                  {
+                    'inviter': '$referralInviterRewardPoints',
+                    'invitee': '$referralInviteeRewardPoints',
+                  },
+                ),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 24),
               Card(

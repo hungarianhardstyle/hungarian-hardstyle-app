@@ -85,6 +85,7 @@ const {
   favoriteFollowKey,
 } = require('./favorite-follow-plan');
 const { generateAuthActionLink } = require('./auth_action_link');
+const { referralRewardPlan } = require('./referral-reward-plan');
 const { logWarning } = require('./log-warning');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
@@ -1897,18 +1898,36 @@ exports.awardAchievementFromReferral = onDocumentWritten(
     region: 'europe-central2',
   },
   async (event) => {
-    const before = event.data?.before?.data() || {};
     const after = event.data?.after?.data() || {};
-    const invitedBy = String(after.referredBy || '').trim();
-    if (!invitedBy || before.referredBy || after.referralRewardGranted === true) return null;
     const userId = String(event.params.userId || '').trim();
-    const result = await awardAchievementPoints(invitedBy, 50, `referral:${userId}`);
-    await event.data.after.ref.update({
-      referralRewardGranted: true,
-      referralRewardGrantedAt: FieldValue.serverTimestamp(),
-    });
-    console.log(JSON.stringify({ event: 'achievement_referral', result }));
-    return result;
+    // A döntés a tiszta modulban él (`referral-reward-plan.js`): MOSTANTÓL
+    // MINDKÉT fél kap pontot — a meghívó a meghívásért, a meghívott a
+    // regisztrációért. A két jóváírás KÜLÖN forráskulccsal és KÜLÖN jelölővel
+    // megy, ezért egyik oldal hibája nem viszi el a másikét, és egy korábban
+    // kimaradt jutalom a következő írásnál PÓTLÓDIK (a `before` állapot ezért
+    // szándékosan nem dönt).
+    const plan = referralRewardPlan({ userId, after });
+    if (plan.skipped) return null;
+
+    const granted = {};
+    for (const side of ['inviter', 'invitee']) {
+      const reward = plan[side];
+      if (!reward) continue;
+      try {
+        const result = await awardAchievementPoints(reward.userId, reward.points, reward.reason);
+        // A jelölő csak SIKERES jóváírás után íródik — így egy átmeneti hiba
+        // nem veszíti el a pontot, viszont egy ismételt futás sem dupláz.
+        await event.data.after.ref.update({
+          [reward.flag]: true,
+          [`${reward.flag}At`]: FieldValue.serverTimestamp(),
+        });
+        granted[side] = { userId: reward.userId, points: reward.points, result };
+      } catch (error) {
+        granted[side] = { userId: reward.userId, points: reward.points, error: String(error?.message || error) };
+      }
+    }
+    console.log(JSON.stringify({ event: 'achievement_referral', userId, plan: plan.skipped || 'granted', granted }));
+    return granted;
   },
 );
 

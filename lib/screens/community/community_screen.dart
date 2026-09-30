@@ -36,6 +36,7 @@ import '../../widgets/app_text.dart';
 import '../../widgets/birth_date_field.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../services/referral_link_service.dart';
+import '../../services/referral_reward.dart';
 import '../../widgets/submission_image_picker.dart';
 import '../../widgets/achievement_badge_card.dart';
 import '../../widgets/chat_mention_overlay.dart';
@@ -4665,7 +4666,15 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                   ],
                                   decoration: InputDecoration(
                                     labelText: tr(context, 'Ajánlókód (opcionális)'),
-                                    helperText: tr(context, 'Ha kaptál kódot egy HUHS-felhasználótól.'),
+                                    // A meghívott jutalma (2026-09-28): eddig a
+                                    // felület csak a meghívó oldalát említette.
+                                    helperText: trArgs(
+                                      context,
+                                      'Ha kaptál kódot egy HUHS-felhasználótól — vele {invitee} pontot kapsz a kezdéshez.',
+                                      {
+                                        'invitee': '$referralInviteeRewardPoints',
+                                      },
+                                    ),
                                   ),
                                 ),
                               ],

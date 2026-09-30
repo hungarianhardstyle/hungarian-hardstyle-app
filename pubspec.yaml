@@ -74,6 +74,11 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  # A KÜLSŐ MEGNYITÁS helyettesítője a tesztben (2026-09-28): a naptár-export
+  # „Google Naptár" ága csak így mérhető meghatározottan (a valódi plugin a
+  # teszt-környezetben nem hívható, a válasza pedig platformonként más lenne —
+  # az „esetleg" nem bizonyíték).
+  url_launcher_platform_interface: ^2.3.2
 
 flutter:
   uses-material-design: true

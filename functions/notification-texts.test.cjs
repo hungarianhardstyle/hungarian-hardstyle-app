@@ -145,7 +145,7 @@ test('ismeretlen kind → null (nem tippelünk szöveget)', () => {
   assert.equal(notificationText(undefined, 'en', {}), null);
 });
 
-test('a pontforrás mind a 14 ágat lefedi', () => {
+test('a pontforrás mind a 15 ágat lefedi', () => {
   const cases = {
     'news-like:abc': 'achievement_reason_news_like',
     'article-comment:abc': 'achievement_reason_article_comment',
@@ -157,12 +157,15 @@ test('a pontforrás mind a 14 ágat lefedi', () => {
     'game:abc': 'achievement_reason_game',
     'profile-complete': 'achievement_reason_profile_complete',
     'referral:abc': 'achievement_reason_referral',
+    // A meghívott jutalma (2026-09-28): KÜLÖN ág, külön szöveggel — a meghívóé
+    // és a meghívotté nem keveredhet (más a mondat jelentése).
+    'referral_welcome:abc': 'achievement_reason_referral_welcome',
     'news-like-restore:abc': 'achievement_reason_news_like_restore',
     'submission:abc': 'achievement_reason_submission',
     'release-purchase:abc': 'achievement_reason_release_purchase',
     'daily-activity:abc': 'achievement_reason_daily_activity',
   };
-  assert.equal(Object.keys(cases).length, 14, 'a mért 14 ág');
+  assert.equal(Object.keys(cases).length, 15, 'a mért 15 ág');
   for (const [sourceKey, kind] of Object.entries(cases)) {
     assert.equal(achievementReasonKey(sourceKey), kind, sourceKey);
     assert.ok(TEXTS[kind], `${kind} hiányzik a katalógusból`);
@@ -170,6 +173,12 @@ test('a pontforrás mind a 14 ágat lefedi', () => {
   }
   assert.equal(achievementReasonKey('ismeretlen:abc'), 'achievement_reason_generic');
   assert.equal(achievementReasonKey(undefined), 'achievement_reason_generic');
+  // A két referral-ág szövege NEM ugyanaz (a meghívó és a meghívott más okot lát).
+  assert.notEqual(
+    achievementReasonText('referral_welcome:abc', 'hu'),
+    achievementReasonText('referral:abc', 'hu'),
+  );
+  assert.equal(achievementReasonText('referral_welcome:abc', 'en'), 'for signing up with an invite');
 });
 
 test('a pont-értesítés a címzett nyelvén épül fel (rangváltással is)', () => {

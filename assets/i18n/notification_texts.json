@@ -146,6 +146,16 @@
         "body": "for a friend you invited signing up"
       }
     },
+    "achievement_reason_referral_welcome": {
+      "hu": {
+        "title": "",
+        "body": "mert meghívóval regisztráltál"
+      },
+      "en": {
+        "title": "",
+        "body": "for signing up with an invite"
+      }
+    },
     "achievement_reason_release_purchase": {
       "hu": {
         "title": "",

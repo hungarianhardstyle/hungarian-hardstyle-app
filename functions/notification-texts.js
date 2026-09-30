@@ -46,6 +46,10 @@ function achievementReasonKey(sourceKey) {
   if (key.startsWith('voting:')) return 'achievement_reason_voting';
   if (key.startsWith('game:')) return 'achievement_reason_game';
   if (key === 'profile-complete') return 'achievement_reason_profile_complete';
+  // ⚠️ A `referral_welcome:` a `referral:` ELŐTT áll: a kettő nem ütközik
+  // (`referral_welcome:…` nem kezdődik `referral:`-tal), de a szándék így
+  // olvasható, és egy jövőbeli átnevezés sem fordíthatja meg a sorrendet.
+  if (key.startsWith('referral_welcome:')) return 'achievement_reason_referral_welcome';
   if (key.startsWith('referral:')) return 'achievement_reason_referral';
   if (key.startsWith('news-like-restore:')) return 'achievement_reason_news_like_restore';
   if (key.startsWith('submission:')) return 'achievement_reason_submission';
@@ -334,6 +338,10 @@ const TEXTS = {
   achievement_reason_referral: {
     hu: { title: '', body: 'egy meghívott barátod regisztrációjáért' },
     en: { title: '', body: 'for a friend you invited signing up' },
+  },
+  achievement_reason_referral_welcome: {
+    hu: { title: '', body: 'mert meghívóval regisztráltál' },
+    en: { title: '', body: 'for signing up with an invite' },
   },
   achievement_reason_news_like_restore: {
     hu: { title: '', body: 'egy korábban elveszett lájkpont visszaállításáért' },
