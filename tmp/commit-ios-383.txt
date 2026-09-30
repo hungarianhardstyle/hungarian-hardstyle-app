@@ -1,0 +1,19 @@
+docs(ios): a 383-as iOS csomag MERVE is zold (CI success + tartalmi bizonyitek)
+
+A 383 push-jara indult iOS CI futas (36692598023) -> completed/success 12m36s alatt
+(elemzes + iOS-forditas alairas nelkul + teljes tesztkor).
+
+Az artefakt: build/ios-ipa-383/Runner-unsigned.ipa — 23 053 706 bajt,
+SHA-256 752E3D49BFDFF063054ECF177197D0AABF42373C13F58F500319622A8B8F45B4.
+
+Tartalmi bizonyitek (node tmp/verify-ipa-380.mjs .../Runner.app 383):
+- a 383 mind a negy changelog-sora benne van a beforditott Dart-reszben;
+- az angol forditasok a flutter_assets/assets/i18n/en.json-ban;
+- a szotar ketnyelvu (Heti osszefoglalo -> Weekly recap);
+- a reklam-identitas helyes: production app ID bent, TESZT egysegek (a sideloadolt
+  build szandekosan), Google teszt app ID nincs;
+- Info.plist: CFBundleVersion = 383, CFBundleShortVersionString = 1.0.0.
+-> MINDEN ELLENORZES RENDBEN.
+
+AGENTS.md: a 383-as bejegyzes iOS sorai a mert eredmennyel (CI-futas, IPA-hash,
+tartalmi ellenorzes).
