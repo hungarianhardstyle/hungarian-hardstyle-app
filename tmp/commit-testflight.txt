@@ -1,0 +1,23 @@
+docs(ios): TestFlight — "hol tartunk most" szakasz a 383-as buildhez
+
+A docs/IOS-CI-TESTFLIGHT.md elejere uj 0. szakasz kerult: egy helyen mondja meg,
+mi kesz (bundle ID, deployment target, SPM, Info.plist kulcsok, ikon, Firebase iOS
+app, reklam-azonosítok, iOS CI, codemagic.yaml), es mi az, ami KIZAROLAG a
+tulajdonos kezeben van — sorrendben:
+  1. Apple Developer Program tagsag ($99/ev);
+  2. bundle ID regisztralasa;
+  3. App rekord az App Store Connectben;
+  4. App Store Connect API-kulcs (Issuer ID, Key ID, .p8);
+  5. Firebase App Attest/DeviceCheck regisztracio (KOTELEZO a produccios build
+     elott: enelkul a kozossegi profilok/ranglista 401-et adnanak);
+  6. Codemagic: HUHS_APPLE integracio + appstore_credentials env-csoport;
+  7. ios-testflight inditas, majd TestFlight telepites.
+
+Oszinten kimondva: alairni es feltolteni az agent nem tud (Apple-fiok kell), a
+buildet es a bizonyitekokat kesziti el; az ingyenes sideload-ut (7 napos alairas)
+tovabbra is mukodik.
+
+AGENTS.md: a 383-as bejegyzes kiegeszult az iOS CI allapotaval es a CI altal
+elkapatott hivatarozassal (url_launcher_platform_interface nem volt a
+pubspec.yaml-ban -> a naptar-export commitjanak iOS futasa 2m54s alatt elhasalt a
+Statikus elemzes lepesben; a javitas a kovetkezo commitban van).

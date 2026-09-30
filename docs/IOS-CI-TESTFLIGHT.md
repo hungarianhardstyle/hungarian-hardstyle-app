@@ -12,6 +12,73 @@ venni ahhoz, hogy **TestFlight-buildet** kapj: a CI végzi el, és a kész build
 
 ---
 
+## 0. HOL TARTUNK MOST — a **383**-as build (2026-09-30)
+
+Ez a szakasz **egy helyen** mondja meg, mi kész van, és mi az, ami **kizárólag
+a te kezedben** van. A mély magyarázat lentebb, az 1–7. szakaszban.
+
+### ✅ Ami KÉSZ (kód, CI, Firebase — nem kell hozzá tenned semmit)
+
+| Terület | Állapot |
+|---|---|
+| Bundle ID, deployment target 15.0, Swift Package Manager | ✅ `hu.hungarianhardstyle.app` (egyezik az Android `applicationId`-jával) |
+| `Info.plist`: háttér-hang, ATT-szöveg, `ITSAppUsesNonExemptEncryption=false` | ✅ benne (a zárképernyős zene és a reklám-engedély miatt) |
+| 1024-es ikon alfa-csatorna nélkül | ✅ (az App Store ezt **elutasítaná**, ha bent marad) |
+| Firebase iOS app + `GoogleService-Info.plist` | ✅ bekötve (a Google-bejelentkezés és az App Check is ebből megy) |
+| iOS reklám-identitások (app + banner + jutalmazott) | ✅ az `Info.plist`-ben, illetve GitHub-változóban/Codemagicben |
+| **iOS-fordítás ellenőrzése ingyen** (GitHub Actions) | ✅ minden `lib/**` vagy `pubspec.*` változásra **magától elindul**, és aláírás nélküli `.ipa`-t ad (14 napig letölthető) |
+| **Aláírt TestFlight-build** (`codemagic.yaml`, 2 workflow) | ✅ a konfiguráció kész — ⏳ **még soha nem futott**, mert Apple-tagság kell hozzá |
+| App Check a **sideloadolt** buildhez (debug token) | ✅ megoldva és mérve (a 7 napos teszt-úthoz ez kell) |
+| **App Check a produkciós buildhez** (App Attest/DeviceCheck) | ❌ **nincs regisztrálva** — ezt az Apple-tagság **után azonnal** pótolni kell (lásd az 5. lépést) |
+
+### 📌 Amit NEKED kell megtenned — ebben a sorrendben
+
+1. **Apple Developer Program tagság** — <https://developer.apple.com/programs/enroll/>
+   **$99/év** (kb. 35–40 e Ft). **Enélkül nincs TestFlight**: ez a kapu, nem kód.
+   Egyéni regisztrációnál 1–2 nap, cégesnél D-U-N-S szám miatt akár egy hét.
+2. **Bundle ID regisztrálása** — <https://developer.apple.com/account/resources/identifiers/add/bundleId>
+   Típus **App**, azonosító **pontosan**: `hu.hungarianhardstyle.app`.
+3. **App rekord az App Store Connectben** — <https://appstoreconnect.apple.com> →
+   *My Apps → + → New App*. Név: `Hungarian Hardstyle`, elsődleges nyelv: magyar,
+   bundle ID: a fenti, SKU: pl. `huhs-ios-001`. **Rekord nélkül a CI nem tud feltölteni.**
+4. **App Store Connect API-kulcs** — *Users and Access → Integrations → App Store
+   Connect API* → **+**. Név: `HUHS Codemagic`, jogosultság: **App Manager**.
+   Jegyezd fel az **Issuer ID**-t és a **Key ID**-t, és töltsd le a **`.p8`**-at
+   (**csak egyszer** tölthető le).
+5. **Firebase: az iOS App Attest/DeviceCheck szolgáltató regisztrálása** —
+   *Firebase Console → App Check → Apps → az iOS sor `⋮` → Manage attestation
+   providers*. **Ez kötelező a produkciós build előtt:** aközösségi profilok, a
+   ranglista és az átvett DJ-adatlapok `enforceAppCheck: true` callable-okból
+   jönnek, és regisztrált szolgáltató nélkül **HTTP 401**-et adnának (ezt a hibát
+   a sideloadolt körben már feltártuk és megmértük).
+6. **Codemagic** — jelentkezés GitHubbal → *Add application* →
+   `hungarianhardstyle/hungarian-hardstyle-app`; *Team settings → Integrations →
+   Developer Portal*: a kulcs neve **pontosan `HUHS_APPLE`**; *Code signing
+   identities*: a disztribúciós tanúsítvány + App Store profil (a „Fetch from
+   Developer Portal" gombbal); *Environment variables* → `appstore_credentials`
+   csoport: `APP_STORE_CONNECT_PRIVATE_KEY`, `APP_STORE_CONNECT_KEY_IDENTIFIER`,
+   `APP_STORE_CONNECT_ISSUER_ID` (az utóbbi **Secret**).
+7. **Indítás:** Codemagic → **Start new build → `ios-testflight`**. Utána
+   a feldolgozás **10–60 perc**, és a build megjelenik a TestFlightban
+   (magadnak azonnal, külső tesztelőnek rövid Apple-ellenőrzés után).
+
+### ⚠️ Amit ebben a körben ÉN nem tudok megtenni (őszintén)
+
+- **Aláírni és feltölteni nem tudok:** ahhoz a te Apple-fiókod kell (a `.p8` kulcs
+  és a tanúsítvány). Az agent a **buildet és a bizonyítékokat** készíti el, a
+  feltöltés a **te** lépésed — ugyanúgy, ahogy a Playen az AAB-nál.
+- Az **ingyenes út** (GitHub Actions `.ipa` + Sideloadly) továbbra is működik, de
+  **7 naponta újra kell húzni**, és a **push értesítés nem megy** vele — ezért a
+  TestFlight az igazi cél.
+- A **nyilvános** App Store megjelenéshez ezen kívül kell: **StoreKit-vásárlás**
+  (üzleti döntés — az Apple a digitális zenére a saját fizetését írja elő),
+  **App Privacy kérdőív**, **iPad-képernyőképek** (a projekt iPhone + iPad), és az
+  **AdMob store-link jóváhagyása** a valódi hirdetésekhez. Ezek **nem** blokkolják
+  a TestFlightot.
+
+---
+
+
 ## 1. Mi készült el ebben a körben (kódszinten, verziózva)
 
 | Fájl | Mi változott | Miért |
