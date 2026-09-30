@@ -1,4 +1,11 @@
 [
+  "Facebook- vagy eseménylink",
+  "Fejlesztő",
+  "Felhasználó szerkesztése",
+  "Felhasználó tiltása",
+  "Felhasználók keresése",
+  "Felhasználónév módosítása",
+  "Feliratkozol a Hungarian Hardstyle hírlevelére? A szavazás ettől függetlenül is folytatható.",
   "Feliratkozom",
   "Feljebb",
   "Fellépés kérése – {artist}",
@@ -24,6 +31,7 @@
   "Gomb felirata (például: Jegyek)",
   "Gomb linkje (HTTPS)",
   "Google Authenticator",
+  "Google Naptár",
   "Google-bejelentkezés nem sikerült: {error}",
   "Gratulálunk a nyertesnek! A részleteket e-mailben is elküldtük.",
   "Gyorsítótár",
@@ -50,13 +58,5 @@
   "Hibajelzés",
   "Hibajelzés – Hungarian Hardstyle {version}",
   "Hír kedvelése",
-  "HÍREK",
-  "Hírek, bulik, kiadványok, DJ-k és a rádió — egy helyen. A következő két lépésben személyessé tesszük.",
-  "Hívd meg az ismerőseidet a HUHS appba!",
-  "Hívd meg ismerőseidet és szerezz 50 pontot",
-  "Hol érhető el?",
-  "Hosszú távon aktív színtértag.",
-  "Hozzáadás a kedvencekhez",
-  "Hozzáférési jog",
-  "Hozzájárulok a hírlevél küldéséhez."
+  "HÍREK"
 ]

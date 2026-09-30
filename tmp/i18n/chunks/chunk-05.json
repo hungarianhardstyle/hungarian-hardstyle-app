@@ -1,4 +1,6 @@
 [
+  "A címke hírei nem tölthetők be.\n{error}",
+  "A dátum alapból rejtve marad: a profil-szerkesztőben te dönthetsz a megjelenítéséről.",
   "A diagnosztika a vágólapra került.",
   "A felhasználó mentése nem sikerült: {error}",
   "A felhasználó törlése nem sikerült: {error}",
@@ -56,7 +58,5 @@
   "A két jelszó nem egyezik.",
   "A kiadási jegyzet betöltése…",
   "A kiadó zenéi egy helyen",
-  "A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.",
-  "A Kiadványok fülön megvásárolt (vagy reklámmal feloldott) zenék itt jelennek meg, és innen játszhatók le.",
-  "A kiadványok most nem érhetők el"
+  "A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé."
 ]

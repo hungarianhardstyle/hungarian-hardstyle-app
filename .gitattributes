@@ -1,0 +1,13 @@
+# Sorvég-szerződés (2026-09-28, mért hiba után).
+#
+# MIÉRT: a gépen a `core.autocrlf=true` él, ezért egy ág-váltás (`git checkout`)
+# a munkapéldányt **CRLF-re** írja. A tesztek egy része viszont a **tárolt**
+# (LF) alakot méri — a `test/services/app_analytics_test.dart` adatvédelmi
+# forrás-lintje például `'setCrashlyticsCollectionEnabled(\n        kReleaseMode,'`
+# mintát keres, ami CRLF-fel **nem található meg**, így a zöld kör elbukott.
+#
+# A `eol=lf` felülírja a `core.autocrlf`-et: a Dart-forrás **mindig** LF-fel
+# kerül a munkapéldányba, ezért ez a hibaosztály nem tud visszatérni.
+# (A többi fájl — .bat, .gradle, XML — szándékosan érintetlen: azokat nem mérik
+# sorvég-mintával, a Windows-os eszközök pedig elvárhatják a CRLF-et.)
+*.dart text eol=lf

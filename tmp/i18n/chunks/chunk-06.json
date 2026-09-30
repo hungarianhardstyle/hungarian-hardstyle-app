@@ -1,4 +1,6 @@
 [
+  "A Kiadványok fülön megvásárolt (vagy reklámmal feloldott) zenék itt jelennek meg, és innen játszhatók le.",
+  "A kiadványok most nem érhetők el",
   "A kijelöltek törlése nem sikerült.",
   "A kód nem érvényes. Az authenticator nem lett bekapcsolva.",
   "A korábbi Google Play-vásárlások visszaállítása nem sikerült.",
@@ -30,6 +32,7 @@
   "A művelet nem sikerült: {error}",
   "A művelet véglegesen törli a lomtár tartalmát. Folytatod?",
   "A napi aktivitási pont (1–5) a lezárt nap után, naponta egyszer jár: a szerver a cikkhez írt hozzászólásaidból és a chat-üzeneteidből számolja.",
+  "A naptárfájl elkészítése nem sikerült.",
   "A neked küldött és általad küldött privát beszélgetések",
   "A nem letöltött tételek nincsenek a listában — azokat a kiadvány kártyáján tudod letölteni.",
   "A nyereményjáték adatait most nem sikerült betölteni.\n{error}",
@@ -55,8 +58,5 @@
   "A részvétel jelöléséhez regisztráció szükséges.",
   "A részvétel mentése nem sikerült. Próbáld újra később.",
   "A segítség most nem tölthető be.",
-  "A sorsolás megtörtént.",
-  "A szavazás állapotát most nem sikerült lekérdezni. Ellenőrizd a kapcsolatot, és próbáld újra a jobb felső frissítés ikonnal.",
-  "A szavazás elküldéséhez minden kötelező kategóriát ki kell tölteni.\n\n{list}",
-  "A szavazás jelenleg nem tölthető be. Próbáld újra később."
+  "A sorsolás megtörtént."
 ]

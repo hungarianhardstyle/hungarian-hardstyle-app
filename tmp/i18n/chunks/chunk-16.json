@@ -1,4 +1,12 @@
 [
+  "Némítás",
+  "Némítás feloldása",
+  "Név",
+  "Névjegy",
+  "Nincs adat.",
+  "Nincs archivált értesítés.",
+  "Nincs blokkolt felhasználó.",
+  "Nincs cél",
   "Nincs cikk ehhez a címkéhez.",
   "Nincs elérhető kérdőív.",
   "Nincs elérhető nyereményjáték.",
@@ -29,6 +37,7 @@
   "Opcionális · négyzetes, átlátszó PNG ajánlott · legfeljebb 5 MB",
   "Opcionális kép; monogram jelenik meg, ha nincs feltöltve.",
   "Ott leszek",
+  "Ott leszek — tedd be a naptáradba is!",
   "Ott leszek: {n} résztvevő",
   "Összes aktív törlése",
   "Összes archivált törlése",
@@ -49,14 +58,5 @@
   "Privát üzenetekhez regisztráció szükséges.",
   "Próbáld ki magad!",
   "Profil kitöltése",
-  "Profil mentése",
-  "Profil mentve.",
-  "Profilkép feltöltése",
-  "Projekt",
-  "Publikus profilok és ismerősnek jelölés",
-  "Push",
-  "Radio",
-  "Radio verzió",
-  "Rawstyle zenékkel",
-  "REAL HARDSTYLE FM"
+  "Profil mentése"
 ]

@@ -1297,11 +1297,27 @@
     ]
   },
   {
+    "value": "Naptárba",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart",
+      "lib/widgets/calendar_export_button.dart"
+    ]
+  },
+  {
     "value": "Ne maradj le semmiről",
     "count": 2,
     "files": [
       "lib/screens/onboarding/onboarding_screen.dart",
       "lib/widgets/notification_permission_prompt.dart"
+    ]
+  },
+  {
+    "value": "Nem sikerult megnyitni a linket.",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart",
+      "lib/widgets/calendar_export_button.dart"
     ]
   },
   {
@@ -2558,6 +2574,13 @@
     ]
   },
   {
+    "value": "A naptárfájl elkészítése nem sikerült.",
+    "count": 1,
+    "files": [
+      "lib/widgets/calendar_export_button.dart"
+    ]
+  },
+  {
     "value": "A neked küldött és általad küldött privát beszélgetések",
     "count": 1,
     "files": [
@@ -3524,10 +3547,24 @@
     ]
   },
   {
+    "value": "Azonnal megnyílik a mentés lap",
+    "count": 1,
+    "files": [
+      "lib/widgets/calendar_export_button.dart"
+    ]
+  },
+  {
     "value": "Azonosító: {id}",
     "count": 1,
     "files": [
       "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Bármelyik naptáralkalmazásba importálható",
+    "count": 1,
+    "files": [
+      "lib/widgets/calendar_export_button.dart"
     ]
   },
   {
@@ -3944,6 +3981,13 @@
     ]
   },
   {
+    "value": "Ehhez az eseményhez nincs érvényes dátum.",
+    "count": 1,
+    "files": [
+      "lib/widgets/calendar_export_button.dart"
+    ]
+  },
+  {
     "value": "Ehhez az évadhoz nem érkezett kategóriaadat.",
     "count": 1,
     "files": [
@@ -4165,6 +4209,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Esemény a naptárba",
+    "count": 1,
+    "files": [
+      "lib/widgets/calendar_export_button.dart"
     ]
   },
   {
@@ -4613,6 +4664,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/settings_screen.dart"
+    ]
+  },
+  {
+    "value": "Google Naptár",
+    "count": 1,
+    "files": [
+      "lib/widgets/calendar_export_button.dart"
     ]
   },
   {
@@ -6373,6 +6431,13 @@
     ]
   },
   {
+    "value": "Naptárfájl (.ics)",
+    "count": 1,
+    "files": [
+      "lib/widgets/calendar_export_button.dart"
+    ]
+  },
+  {
     "value": "Néhány hivatkozás nem kattintható (csak adminnak/moderátornak jár).",
     "count": 1,
     "files": [
@@ -6388,13 +6453,6 @@
   },
   {
     "value": "Nem leszek ott",
-    "count": 1,
-    "files": [
-      "lib/screens/events/event_detail_screen.dart"
-    ]
-  },
-  {
-    "value": "Nem sikerult megnyitni a linket.",
     "count": 1,
     "files": [
       "lib/screens/events/event_detail_screen.dart"
@@ -6745,6 +6803,13 @@
   },
   {
     "value": "Ott leszek",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Ott leszek — tedd be a naptáradba is!",
     "count": 1,
     "files": [
       "lib/screens/events/event_detail_screen.dart"
@@ -7721,6 +7786,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Válaszd ki, hova kerüljön a bejegyzés — a naptár emlékeztetni fog a bulira.",
+    "count": 1,
+    "files": [
+      "lib/widgets/calendar_export_button.dart"
     ]
   },
   {

@@ -1,4 +1,7 @@
 [
+  "A szavazás állapotát most nem sikerült lekérdezni. Ellenőrizd a kapcsolatot, és próbáld újra a jobb felső frissítés ikonnal.",
+  "A szavazás elküldéséhez minden kötelező kategóriát ki kell tölteni.\n\n{list}",
+  "A szavazás jelenleg nem tölthető be. Próbáld újra később.",
   "A szavazás véget ért",
   "A szavazás véget ért. Az összesítő az adminisztrátori engedély után lesz elérhető.",
   "A szavazáshoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána szavazhatsz.",
@@ -55,8 +58,5 @@
   "Ajánlókód (opcionális)",
   "Akár egy karakterrel",
   "Aktív",
-  "Aktív értesítések törlése",
-  "Alapból rejtve marad; csak te dönthetsz a megjelenítéséről.",
-  "Állapot: {state}\nJátékosok: {players} · helyes válasz: {correct}\nNyertes megjelenítése: {display}",
-  "Állapot: {state} · összes szavazat: {n}"
+  "Aktív értesítések törlése"
 ]

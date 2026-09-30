@@ -1,4 +1,12 @@
 [
+  "Kiválasztás",
+  "Kiválasztott jelöltek:",
+  "Kiválasztva: {n}/5",
+  "Kivétel a lejátszási listából",
+  "Kivétel a lejátszási listából (a fájl megmarad)",
+  "Kivéve a lejátszási listából — a fájl a készüléken marad.",
+  "Koppints a megnyitáshoz",
+  "Korábbi események",
   "Korábbi hozzászólások",
   "Korábbi kiadások",
   "Kölcsönös kapcsolat meetupolóval",
@@ -50,13 +58,5 @@
   "Már játszottál — eredmény megtekintése",
   "Már van fiókom",
   "Maradj képben",
-  "Másolás",
-  "Másold ki az alábbi szöveget, küldd el az ismerősödnek, és ő a regisztrációnál megadhatja az ajánlókódot. Ha az új felhasználó regisztrál, 50 achievement pontot kapsz.",
-  "Média",
-  "Meetup az eseményen",
-  "Meetup jelzés",
-  "Meetuponként egyszer jár. Ha lemondod a jelzést, ez a pont is elvész, visszajelzésnél újra jár.",
-  "Még hiányzik:\n{list}",
-  "Még nincs bejegyzés.",
-  "Még nincs hozzászólás. Mondd el elsőként a véleményed!"
+  "Másolás"
 ]

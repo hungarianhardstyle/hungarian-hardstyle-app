@@ -17,6 +17,7 @@ import '../../core/layout/scroll_bottom_inset.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../models/event.dart';
 import '../../widgets/app_text.dart';
+import '../../widgets/calendar_export_button.dart';
 import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
 import '../../widgets/genre_chip.dart';
@@ -109,6 +110,22 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       }
       // Mérés: a részvétel **sikeres** mentése (a hibás ág nem naplóz).
       unawaited(AppAnalytics.logAttendanceSet());
+      // NAPTÁR-FELAJÁNLAT (2026-09-28): aki „Ott leszek"-et nyomott, az
+      // elköteleződött — a naptárbejegyzés emlékezteti majd a bulira. Az akció
+      // ugyanazt a lapot nyitja, mint a fejléc naptár-gombja (egy viselkedés).
+      if (mounted && state == 'attending') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const AppText('Ott leszek — tedd be a naptáradba is!'),
+            action: SnackBarAction(
+              label: tr(context, 'Naptárba'),
+              onPressed: () {
+                if (mounted) openEventCalendarSheet(context, event);
+              },
+            ),
+          ),
+        );
+      }
       // ⚠️ ÉRTESÍTÉSI ENGEDÉLY — az első értelmes műveletek EGYIKE (2026-09-28).
       // Csak **sikeres** mentés után, és csak akkor kérdezünk, ha az engedély még
       // nincs meg; a döntés a `notification_permission_gate.dart`-ban él.
@@ -381,7 +398,13 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        actions: [ContentShareButton(title: event.title, id: event.id)],
+        actions: [
+          // NAPTÁR (2026-09-28): az esemény beírása a felhasználó naptárába
+          // (Google Naptár vagy .ics fájl). Bejelentkezés nélkül is működik —
+          // a naptár-emlékeztető ugyanis pont a visszatérést hozza.
+          EventCalendarButton(event: event),
+          ContentShareButton(title: event.title, id: event.id),
+        ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {

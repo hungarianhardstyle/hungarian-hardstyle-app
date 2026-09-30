@@ -1,4 +1,7 @@
 [
+  "Alapból rejtve marad; csak te dönthetsz a megjelenítéséről.",
+  "Állapot: {state}\nJátékosok: {players} · helyes válasz: {correct}\nNyertes megjelenítése: {display}",
+  "Állapot: {state} · összes szavazat: {n}",
   "Android-kódos feloldás",
   "API-cím",
   "API-verzió",
@@ -48,15 +51,12 @@
   "Az ismerősnek jelölés nem sikerült.\n{error}",
   "Az új jelszó legalább 6 karakter legyen, és a két mező egyezzen.",
   "Azok láthatók itt, akik erre az eseményre Meetupot jeleztek.",
+  "Azonnal megnyílik a mentés lap",
   "Azonosító: {id}",
+  "Bármelyik naptáralkalmazásba importálható",
   "Beágyazott tartalom",
   "Beállítás állapota",
   "Beállítás betöltése…",
   "Beatport",
-  "Bejelentkezés",
-  "Bejelentkezés szükséges.",
-  "Bejelentő: {name}",
-  "Bekapcsolva csak kép URL-lel menthető.",
-  "Beküldés #{id}",
-  "Beküldések"
+  "Bejelentkezés"
 ]

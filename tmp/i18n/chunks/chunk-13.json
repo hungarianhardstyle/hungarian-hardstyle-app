@@ -1,4 +1,12 @@
 [
+  "Jelentés elküldve. Köszönjük, hogy jelented!",
+  "Jelentések ({n})",
+  "Jelentett felhasználó: {name}{id}",
+  "Jelentkezz be a közösségi profilodhoz.",
+  "Jelszó",
+  "Jelszó megerősítése",
+  "Jelszó visszaállítása",
+  "Jelvénygrafikák",
   "Jogi információ",
   "Jóváhagyás és piszkozat",
   "Jóváhagyott beküldés",
@@ -50,13 +58,5 @@
   "Kijelölés kikapcsolása",
   "Kijelölés törléshez",
   "Kijelöltek törlése",
-  "Kinek szeretnél írni?",
-  "Kiválasztás",
-  "Kiválasztott jelöltek:",
-  "Kiválasztva: {n}/5",
-  "Kivétel a lejátszási listából",
-  "Kivétel a lejátszási listából (a fájl megmarad)",
-  "Kivéve a lejátszási listából — a fájl a készüléken marad.",
-  "Koppints a megnyitáshoz",
-  "Korábbi események"
+  "Kinek szeretnél írni?"
 ]

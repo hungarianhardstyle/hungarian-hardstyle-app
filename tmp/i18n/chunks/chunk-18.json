@@ -1,4 +1,13 @@
 [
+  "Teljes címet adj meg (https://…). Ha kiüríted, a link eltűnik.",
+  "Térkép",
+  "Termékek betöltése…",
+  "Tervezett események az Ott leszek funkcióval jelennek majd meg.",
+  "Tiltások megtekintése és feloldása",
+  "Tovább",
+  "További események",
+  "További hírek",
+  "Töltsd ki a mezőket; a jelszó legalább 6 karakter legyen.",
   "TÖRLÉS",
   "Törlés a készülékről",
   "Törlés a készülékről (a vásárlás megmarad)",
@@ -48,15 +57,6 @@
   "Válaszd ki a jelentés okát. A jelentést a moderátorok kapják meg.",
   "Válaszd ki az esemény dátumát.",
   "Válaszd ki, hogyan használod az appot.",
-  "Válaszlehetőségek",
-  "Válaszok beküldése",
-  "Válassz dátumot",
-  "Válassz egy zenét",
-  "Válassz időpontot",
-  "Válassz legalább egy kategóriát és egy műfajt.",
-  "Válassz pontosan {min} jelöltet ({selected}/{min})",
-  "Valódi név",
-  "Válogatások a keményebb stílusokból",
-  "Város *",
-  "Vásárlás és letöltés esetén a Google Play termékazonosítója, a vásárlási token ellenőrzéséhez szükséges adatok és a felhasználói azonosító kapcsolódhatnak egymáshoz. A vásárlási jogosultságot a szerver ellenőrzi; a letöltési jogosultság csak ellenőrzött vásárlás vagy az adott változathoz tartozó jutalmazott feloldás után adható ki. A vásárlási token nyers értékét az alkalmazás adatbázisa nem tárolja, csak ellenőrzéshez szükséges, vissza nem fejthető azonosító kerülhet megőrzésre."
+  "Válaszd ki, hova kerüljön a bejegyzés — a naptár emlékeztetni fog a bulira.",
+  "Válaszlehetőségek"
 ]
