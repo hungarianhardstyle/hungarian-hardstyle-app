@@ -1,0 +1,19 @@
+docs(play+sideload): a 383 a telefonon van, a 383 fel van toltve a Playre — a zart teszthez az 1. blokk valo
+
+SIDELOAD (merve): Sideloadly installations id 44 — hh383.ipa (23 053 706 bajt, a
+CI-artefakt merete), device 00008030-001475413ED2402E, apple_id djdeeroy@gmail.com,
+failures_count 0, last_error ures, 7 napos alairas; a keszuleken
+(node tmp/read-ios-version.cjs tmp/apps-383.json, pymobiledevice3 11.17.0 a
+.tmp-pmd3 venv-bol) CFBundleVersion = 383, CFBundleShortVersionString = 1.0.0.
+
+MERT ESZKOZ-HIBA: az elso inditasnal a Sideloadly a parancssori argumentumot `-r`
+neven kereste ("Ipa file -r does not exist"); ujrainditas ugyanazzal az argumentummal
+megoldotta. Mellek-tanulsag: a PowerShell 5.1 a BOM nelkuli UTF-8 .ps1-et ANSI-kent
+olvassa, es a magyar ekezetek egy resze idezojelkent viselkedik -> a tmp\sideloadly-*.ps1
+szkriptek szandekosan csak ASCII-t hasznalnak.
+
+PLAY (merve): a 383-as AAB mar fel van toltve; a zart teszt (alpha) 382-en van
+100%-ban kigordulve, es egy URES piszkozat varja a kiadast -> a zart teszthez az
+1. blokk valo (tmp/play-383.txt, 314 karakter). A nyilt teszthez (beta, 377) a
+355-383 osszesito. A docs/PLAY-KIADASI-JEGYZET.md 1. szakasza ezt kimondja;
+check-play-notes -> zold, a harom masolat bajtazonos (3/3).

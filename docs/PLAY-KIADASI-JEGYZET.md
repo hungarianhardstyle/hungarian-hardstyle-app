@@ -52,7 +52,7 @@ A Play Developer API-t **olvasásra** kérdezve (**2026-09-30**, a legfrissebb m
 
 - **AZ ÉLES (production) SÁVON A 382 VAN** (100%-ban kigördülve) — a kiadási szövege a 381-es blokk.
   **A következő nyilvános kiadás a 383**: a `build/HUHS-v1.0.0+383-release.aab` feltöltése után az **1. blokk** (lásd lent) való a kiadási jegyzetbe.
-- A feltöltött AAB-ek a Playen (a 2026-09-30-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 353, 354, 375, 376, 377, **380**, **382** — ⚠️ **a 383 még nincs fent**.
+- A feltöltött AAB-ek a Playen (a 2026-09-30-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 353, 354, 375, 376, 377, **380**, **382**, **383** — ✅ **a 383 már fel van töltve**, a zárt teszt (alpha) **üres piszkozata** várja a kiadást és a kiadási megjegyzést (lásd az **1. blokkot**).
 - **A nyílt teszt (beta) sávja a 377-en van** — ha oda is felviszed a 383-at, a **355–383 összesítő** (1b-3.) való.
 - A `play-notes-meta` `lastPublishedBuild` értéke (**382**) a legutóbb **nyilvánosan** kigördült build — ezért aki **382-ről** jön, annak az **1. blokk** való; aki **ennél régebbről**, annak a **361–383 összesítő** (1b-2.).
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
@@ -208,6 +208,15 @@ az **az app Névjegyében** van (3. pont), és a felhasználó ott bármikor meg
 
 A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com/googleplay/android-developer/answer/9859348?hl=en));
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
+
+> **⚠️ EZ A BLOKK VALÓ A ZÁRT TESZTRE (alpha) IS.** A **mért** állapot (2026-09-30,
+> `node tools/check-play-track.mjs`): a **383-as AAB már fel van töltve** a Playre, a **zárt teszt
+> (alpha)** sávján a **382 van 100%-ban kigördülve**, és van egy **üres piszkozat** (nincs build, nincs
+> kiadási megjegyzés). Aki a zárt teszten a 382-ről jön, az **pontosan ezt a négy sort** kapja — ide
+> kell bemásolni a „Kiadási megjegyzések" mezőbe (nyelv: **hu-HU**, ez az egyetlen beállított nyelv).
+> Ha viszont a **nyílt teszt (beta)** sávra kerül (ott mért állapot: **377**), akkor a **355–383**
+> összesítő való (**1b-3.**).
+> A **kész, másolható** változat: `tmp/play-383.txt` (bájtazonos ezzel a blokkal).
 
 ```play-notes
 - ÚJ: a főoldalon a „Követettjeid" szakasz mutatja a kedvenc DJ-idet és szervezőidet.
