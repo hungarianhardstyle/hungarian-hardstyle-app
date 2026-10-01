@@ -90,4 +90,16 @@ else
   fail=1
 fi
 
+# ⚠️ A 2.14.13 újdonsága: a kifutás sebessége (a tulajdonos jelzése: „csak lassan
+# jött"). A mérés a kereteket ÉS a lánc pontosságát nézi: a folytatás 1 másodperc,
+# a körök nem ismételnek, a feladat a végén megszűnik.
+echo ""
+echo "=== 8) A push-kifutás sebessége (2.14.13)"
+if php /work/tools/verify-push-speed.php "$PLUGIN"; then
+  echo "PUSH-SPEED OK"
+else
+  echo "PUSH-SPEED HIBA"
+  fail=1
+fi
+
 exit $fail

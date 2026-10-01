@@ -1,0 +1,108 @@
+diff --git a/tmp/plugin-2152/huhs-mobile-api/huhs-mobile-api.php b/tmp/plugin-2153/huhs-mobile-api/huhs-mobile-api.php
+index 745c8b21..e398560c 100644
+--- a/tmp/plugin-2152/huhs-mobile-api/huhs-mobile-api.php
++++ b/tmp/plugin-2153/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.14.12
++ * Version: 2.14.13
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.14.12');
++define('HUHS_API_VERSION', '2.14.13');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/tmp/plugin-2152/huhs-mobile-api/includes/diagnostics.php b/tmp/plugin-2153/huhs-mobile-api/includes/diagnostics.php
+index 815bac87..9920cc34 100644
+--- a/tmp/plugin-2152/huhs-mobile-api/includes/diagnostics.php
++++ b/tmp/plugin-2153/huhs-mobile-api/includes/diagnostics.php
+@@ -148,6 +148,11 @@ function huhs_diag_health_header()
+     if (function_exists('huhs_push_diag_news_scan')) {
+         $parts[] = huhs_push_diag_news_scan();
+     }
++    // A küldés keretei (2.14.13): párhuzamosság, kör-keret és a PHP időkorlátja —
++    // a kifutás sebességét ez a három szám együtt adja (mérés, nem tipp).
++    if (function_exists('huhs_push_diag_limits')) {
++        $parts[] = huhs_push_diag_limits();
++    }
+ 
+     $parts[] = 'memory_limit=' . ini_get('memory_limit');
+     $parts[] = 'php=' . PHP_VERSION;
+diff --git a/tmp/plugin-2152/huhs-mobile-api/includes/push.php b/tmp/plugin-2153/huhs-mobile-api/includes/push.php
+index 552fdc79..aa425e13 100644
+--- a/tmp/plugin-2152/huhs-mobile-api/includes/push.php
++++ b/tmp/plugin-2153/huhs-mobile-api/includes/push.php
+@@ -530,7 +530,14 @@ if (!defined('HUHS_PUSH_NEWS_MAX_ATTEMPTS')) define('HUHS_PUSH_NEWS_MAX_ATTEMPTS
+ // Egyszerre ennyi FCM hivas fut (curl_multi). Eles meres: 15-tel egy 15
+ // masodperces kor ~240 eszkozt vitt el, es a Firebase egyetlen hibat sem adott
+ // vissza, ezert 25-re emeltuk (meg mindig boven a kvotain belul).
+-if (!defined('HUHS_PUSH_CONCURRENCY')) define('HUHS_PUSH_CONCURRENCY', 25);
++//
++// ⚠️ 2.14.13 — MIÉRT 50 (éles mérés, 2026-10-01): a hír-push 1028 eszközt
++// **~2 perc** alatt ért el (6 kör), mert egy 15 másodperces kör 25 párhuzamos
++// hívással csak ~200-225 eszközt vitt el — a mért batch-idő ~1,7 s, tehát nem a
++// sávszélesség, hanem az FCM oda-vissza út a szűk keresztmetszet. A kétszeres
++// párhuzamosság feleannyi körbe viszi ugyanazt a listát (a kérés HOSSZÁT nem
++// növeli, csak egyszerre több hívás fut), ezért a kifutás rövidebb lesz.
++if (!defined('HUHS_PUSH_CONCURRENCY')) define('HUHS_PUSH_CONCURRENCY', 50);
+ // Egy FCM hivas felso idokorlatja a parhuzamos uton (a soros ut 15-ot hasznal).
+ if (!defined('HUHS_PUSH_HTTP_TIMEOUT')) define('HUHS_PUSH_HTTP_TIMEOUT', 10);
+ // A biztonsagi háló (lasd huhs_push_resume_pending_job): ha a cron-lanc elakad,
+@@ -959,7 +966,11 @@ function huhs_push_schedule_job($job)
+     // Ezt a kulcsot keresi a biztonsagi haló (huhs_push_resume_pending_job).
+     update_option('huhs_push_active_job', $key, false);
+ 
+-    if (false === wp_schedule_single_event(time() + 2, 'huhs_push_continue', array($key))) {
++    // ⚠️ 2.14.13: a folytatás **1 másodpercre** (korábban 2) — éles mérés szerint
++    // a hír-push kifutása ~2 perc volt 6 körrel, és ebből körönként ~3-5 másodperc
++    // a várakozás volt. A küldést ez nem teszi sűrűbbé (egy kör 15 másodpercig
++    // dolgozik), csak a körök közötti holtidőt rövidíti.
++    if (false === wp_schedule_single_event(time() + 1, 'huhs_push_continue', array($key))) {
+         // Nem toroljuk a feladatot: a biztonsagi haló így is folytatni tudja.
+         error_log('HUHS push: could not schedule the follow-up run, the resume hook will take over.');
+         return false;
+@@ -1081,11 +1092,11 @@ function huhs_push_continue($job_key, $budget = HUHS_PUSH_TIME_BUDGET)
+             'runs' => $runs + 1,
+             'last_run' => time(),
+         ), false);
+-        // A foglalast ELENGEDJUK: a kovetkezo kor kulon hivas lesz (2 masodperc
+-        // mulva), es neki is be kell tudnia lepni.
++        // A foglalast ELENGEDJUK: a kovetkezo kor kulon hivas lesz (1 masodperc
++        // mulva — 2.14.13), es neki is be kell tudnia lepni.
+         delete_option($lock_option);
+         if (!wp_next_scheduled('huhs_push_continue', array($job_key))) {
+-            if (false === wp_schedule_single_event(time() + 2, 'huhs_push_continue', array($job_key))) {
++            if (false === wp_schedule_single_event(time() + 1, 'huhs_push_continue', array($job_key))) {
+                 // Nem allunk meg: a biztonsagi haló a kovetkezo keresnel folytatja.
+                 error_log('HUHS push: could not schedule the next run, the resume hook will take over.');
+             }
+@@ -2258,6 +2269,21 @@ function huhs_push_diag_news_scan()
+         . '/q' . (int) ($scan['queued'] ?? 0);
+ }
+ 
++/**
++ * A küldés keretei a diagnosztikai fejlécbe (2.14.13).
++ *
++ * MIÉRT: a kifutás sebességét három szám együtt adja — a párhuzamosság, az
++ * egy körre szánt idő és a **PHP időkorlátja**. Az utóbbi eddig nem volt
++ * látható, ezért a keret emelése találgatás lett volna; most mérhető.
++ */
++function huhs_push_diag_limits()
++{
++    $max_exec = (string) ini_get('max_execution_time');
++    return 'push_limits=conc' . (int) HUHS_PUSH_CONCURRENCY
++        . '/budget' . (int) HUHS_PUSH_TIME_BUDGET
++        . '/max_exec' . ($max_exec === '' ? '?' : $max_exec);
++}
++
+ add_action('admin_menu', function () {
+     add_submenu_page('huhs-mobile', 'Push értesítések', 'Push értesítések', 'manage_options', 'huhs-push', 'huhs_push_admin_page');
+ });

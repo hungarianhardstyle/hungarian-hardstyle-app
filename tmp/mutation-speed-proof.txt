@@ -1,0 +1,8 @@
+OK     a PÁRHUZAMOSSÁG visszaállítása 25-re (a mért lassú kifutás) → a kapu elcsípte («a párhuzamosság 50»)
+OK     a FELADAT-létrehozás utáni folytatás visszaállítása 2 másodpercre → a kapu elcsípte («a folytatás MINDKÉT helyen 1 másodpercre van ütemezve»)
+OK     a KÖR VÉGI folytatás visszaállítása 2 másodpercre → a kapu elcsípte («a folytatás MINDKÉT helyen 1 másodpercre van ütemezve»)
+OK     a KERETEK elrejtése a diagnosztikából (nem lenne mérhető a PHP időkorlátja) → a kapu elcsípte («a diagnosztikai sor a fejlécbe is bekerül»)
+OK     a FOGLALÁS (lock) elengedésének elvétele a kör végén → a kapu elcsípte («a foglalás (lock) elengedve»)
+
+5/5 mutáció ELKAPVA
+a szállítandó forrás BÁJTAZONOS (érintetlen)
