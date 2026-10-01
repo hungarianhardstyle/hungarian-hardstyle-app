@@ -1,0 +1,71 @@
+HASZNÁLAT (Firestore-jelek, mért)
+
+push-eszköz (plugin):      1030
+közösségi profil:          47  (4.6% az eszközöknek)
+kedvelés (DJ/szervező):    90
+értesítés összesen:        1000  (olvasatlan: 556)
+élő plugin:               2.14.12
+
+MELYIK FUNKCIÓT HASZNÁLJÁK (dokumentum = cselekvés):
+  hír-reakció (lájk)                350   különböző felhasználó: 180
+  éves szavazat                       5   különböző felhasználó: 1
+  kvíz/játék kitöltés                23   különböző felhasználó: 19
+  közösségi fal bejegyzés           128   különböző felhasználó: 24
+  ismerőskérés                       39   különböző felhasználó: 15
+  privát beszélgetés                  5   különböző felhasználó: 6
+  privát üzenet                     115   különböző felhasználó: 5
+  DJ-adatlap átvétel                  2   különböző felhasználó: 2
+  zene-vásárlás (claim)               6   különböző felhasználó: 2
+  zene-jogosultság                    8   különböző felhasználó: 2
+  reklám-feloldás                    31   különböző felhasználó: 5
+  pont-esemény (achievement)        639   különböző felhasználó: 30
+  kedvelés (DJ/szervező/stb.)        90   különböző felhasználó: —
+  értesítés (létrejött)           1000+   különböző felhasználó: 50 (legalább)
+  jelenlét („Ott leszek") · 7 esemény     40   különböző felhasználó: 19
+  esemény-értékelés (szavazat) · 5 esemény      7   különböző felhasználó: 2
+  ⚠️ A „különböző felhasználó" a Firebase-fiókot számolja, ami az **anonim**
+     (vendég) felhasználókat is tartalmazza — a regisztrált tagok száma a
+     „közösségi profil" sor (fent).
+
+ÉRTESÍTÉS-ÁRAMLÁS NAPONTA (az utolsó napok aktivitása):
+  2026-09-30: 83
+  2026-09-28: 62
+  2026-09-27: 38
+  2026-09-26: 136
+  2026-09-25: 20
+  2026-09-24: 52
+  2026-09-23: 44
+
+NAPI AKTIVITÁS (daily_activity — hány felhasználónak volt jele aznap):
+  2026-09-30: 1
+  2026-09-29: 1
+  2026-09-28: 1
+  2026-09-26: 4
+  2026-09-25: 7
+  2026-09-24: 2
+  2026-09-23: 1
+
+ÉRTESÍTÉSEK TÍPUS SZERINT (olvasott / összes):
+  new_news                   189 / 554  (34.1%)
+  achievement_points         94 / 124  (75.8%)
+  chat_mention               26 / 98  (26.5%)
+  private_message            61 / 67  (91%)
+  birth_date_required        21 / 51  (41.2%)
+  new_artist                 14 / 37  (37.8%)
+  connection_request         9 / 15  (60%)
+  new_release                3 / 12  (25%)
+  event_rating_request       6 / 12  (50%)
+  chat_reaction              10 / 11  (90.9%)
+  new_event                  5 / 8  (62.5%)
+  meetup_interest            3 / 5  (60%)
+
+WORDPRESS-OLDALI HASZNÁLAT (admin API):
+  kérdőív #12851 (closed): 10 szavazat — Tetszik az Applikáció?
+  kérdőív #12694 (closed): 13 szavazat — Tetszik az Applikáció?
+  nyereményjáték #12852 (open): 19 játékos, 18 jó válasz — Mi Noisecontrollers igazi neve?
+  nyereményjáték #12797 (closed): 10 játékos, 8 jó válasz — Ez csak egy teszt
+  nyereményjáték #12709 (closed): 4 játékos, 3 jó válasz — Nem nyersz semmit ez csak teszt
+
+⚠️ Az analitika (GA4) kiolvasása külön jogosultságot kér (most 403) — addig ez a
+   Firestore-alapú mérés a valódi használat képe: a jelenlét, a szavazat, a játék,
+   a reakció és a pont mind a felhasználó cselekvése.

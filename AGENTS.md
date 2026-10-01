@@ -1,5 +1,15 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🔵 MIT HASZNÁLNAK A FELHASZNÁLÓK? — MÉRVE (2026-10-01)
+
+- **A tulajdonos kérdése:** *„van már infó mit használnak az userek?"* — a **GA4 (analitika) továbbra is 403**: a meglévő CLI-token nem elég, külön **szolgáltatói fiók** kell `analytics.readonly` joggal (a tulajdonos oldala). Ezért a választ a **Firestore-ban már meglevő, valódi cselekvésekből** mértem (`tools/check-usage.mjs`, most **funkció-szintű bontással**).
+- **A mért kép (2026-10-01):** **1030 push-eszköz**, **47 regisztrált profil** (4,6% — a vendég/anonim fiókok nélkül), 90 kedvelés. Funkciók (dokumentum = cselekvés; a „fiók" a Firebase-fiókot jelenti): **hír-lájk 350 (180 fiók)**, pont-esemény 639 (30), fal-bejegyzés 128 (24), privát üzenet 115 (5 küldő), ismerőskérés 39 (15), **jelenlét 40 (19 felhasználó, 7 esemény)**, reklám-feloldás 31 (5), kvíz/játék 23 (19), zene-jogosultság 8 (2), esemény-értékelés 7 (2), zene-vásárlás 6 (2), éves szavazat 5 (1). **WordPress:** kérdőív 10 + 13 szavazat; a **nyitott nyereményjáték 19 játékos** (18 jó válasz).
+- **AZ OLVASOTTSÁG (mi érdekli őket igazán):** privát üzenet **91%**, chat-reakció **91%**, pont-értesítés **76%**, ismerőskérés 60%, esemény-értékelés-kérés 50% — ezzel szemben **hír 34%**, chat-@említés **27%**, új kiadvány **25%**. (Az értesítés-áramlás naponta: 09-26: 136, 09-30: 83, 09-28: 62, 09-27: 38.)
+- **⚠️ KÉT MÉRÉSI HIBÁT TALÁLTAM ÉS JAVÍTOTTAM (a mérés pontossága a tét):** (1) a **jelenlétet először 0-nak** mértem, pedig az az `event_attendance/{esemény}/users/{uid}` **alkollekcióban** él (a szülő-dokumentum nem is létezik) — a javítás kollekció-csoport lekérdezés + útvonal szerinti válogatás (`groupByParent`), így **40 jelenlét / 19 felhasználó**; (2) a `likedBy` nem tömb, hanem **térkép** (`{uid: true}`) — a tömb-segéd **0-t** adott rá, a `distinctMapKeys` viszont **180 fiókot**.
+- **Amit ez a mérés NEM mond meg (őszintén):** (1) nincs benne képernyőnézet, munkamenet-hossz és megtartás — **az csak a GA4-ből** lenne (ehhez `analytics.readonly` szolgáltatói fiók kell); (2) a „fiók" szám az **anonim** felhasználókat is tartalmazza (a Firebase a vendégnek is ad uid-et), a regisztrált tagok száma a „közösségi profil" sor; (3) az `event_ratings` **szülő**-gyűjtemény üres (0) — a valódi szavazatok az alkollekcióban vannak, ezért mérünk 7-et.
+- **BIZONYÍTÉK:** `node tools/check-usage.mjs` → önteszt **17/17**, a mért jelentés: `tmp/usage-2026-10-01.txt`.
+- **✅ MELLESLEG MÉRVE: a plugin 2.14.12 FENT VAN** (`api=2.14.12`), és az új hír-push ör **fut** (`news_scan=10:45/s0/q0` — friss cikk nem volt, ezért 0 kört indított; ez a helyes eredmény).
+
 ### 🔴 A HÍR-PUSH NEM MENT KI — A NAP KÉT CIKKÉRŐL (2026-09-30)
 
 - **A TULAJDONOS JELZÉSE:** *„az új hírekről nem megy ki push…"*, majd *„a mai két cikkről is menjen ki az elmaradt push"*. **A jelzés valós volt**, és a mérés pontosan megmondta, hol a hiba.
