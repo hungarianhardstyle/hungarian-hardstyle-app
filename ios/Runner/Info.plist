@@ -65,6 +65,14 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<!--
+			TÁVOLI PUSH (2026-10-01): a Firebase Cloud Messaging az iOS-en a
+			`remote-notification` háttérmódot kéri a háttérben érkező adat-
+			üzenetekhez (a LÁTHATÓ értesítéshez nem kell, de a koppintás utáni
+			háttér-feldolgozás ehhez kötődik). A jogosultságot (`aps-environment`)
+			a `Runner.entitlements` adja — enélkül APNs token sincs.
+		-->
+		<string>remote-notification</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

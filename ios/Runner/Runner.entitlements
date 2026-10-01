@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+		TÁVOLI PUSH (APNs) — MIÉRT KELL (mért hiány, 2026-10-01):
+
+		A projektben **soha nem volt** ez a fájl, ezért az iOS-alkalmazás nem
+		kérte az `aps-environment` jogosultságot: az Apple TOKEN NÉLKÜL hagyja
+		az appot, a `FirebaseMessaging.getToken()` pedig nem ad értéket — így az
+		eszköz be sem kerül a push-tárba (a WordPress-plugin 1030 tokent tart
+		nyilván, de az iPhone egyikben sem szerepel).
+
+		A tünet pontosan ez volt: a küldés MÉRVE rendben van (a hír-push 1024
+		eszközt ért el, 0 hibával), a telefonon viszont semmi nem jelenik meg.
+
+		⚠️ A `development` érték a FEJLESZTŐI aláírásra való; kiadáskor (TestFlight,
+		App Store) az aláíró profil `production`-re cseréli. Az ingyenes Apple ID-val
+		aláírt sideloadolt builden a push **továbbra sem működik** (ehhez fizetős
+		Apple Developer tagság kell), és a Firebase-projektben fel kell tölteni az
+		**APNs hitelesítő kulcsot** (Apple-fiók → Keys → APNs → Firebase Console →
+		Project settings → Cloud Messaging).
+	-->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>
