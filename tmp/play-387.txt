@@ -1,0 +1,5 @@
+- ÚJ: rádió — az értesítésben és a zárképernyőn látszik, melyik szám szól, a Real Hardstyle FM logójával.
+- ÚJ: élő Twitch-adás a főoldalon és külön oldalon: nézhető az appban, chatelve és támogatva.
+- ÚJ: az élő adás kicsinyíthető (Androidon és iPhone-on); a kártya előre is behirdethető saját képpel.
+- Javítva: iPhone-on az adás a helyén játszik, és koppintás nélkül elindul.
+- Javítva: a „Kedvenceid" szekció a hírek alatt van, magyaros felirattal.

@@ -18,6 +18,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 
 const TEST = 'test/services/webview_picture_in_picture_test.dart';
+const TWITCH_TEST = 'test/services/twitch_live_test.dart';
 // ⚠️ MÉRT ESZKÖZ-HIBA (2026-10-02): a `flutter` a gépen `flutter.bat`.
 //  1. `execFileSync('flutter', …)` → **ENOENT** (a `.bat` nem futtatható így);
 //  2. `execFileSync('flutter.bat', …)` → **EINVAL** (a Node biztonsági okból
@@ -29,9 +30,11 @@ const FLUTTER_ARGS = (test) => ['/c', 'flutter', 'test', test];
 const SCREEN = 'lib/screens/twitch/twitch_screen.dart';
 const SERVICE = 'lib/services/webview_picture_in_picture.dart';
 const ACTIVITY = 'android/app/src/main/kotlin/hu/hungarianhardstyle/app/MainActivity.kt';
+const TWITCH_LIVE = 'lib/services/twitch_live.dart';
+const TWITCH_CARD = 'lib/widgets/twitch_live_card.dart';
 
 const digest = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
-const targets = [TEST, SCREEN, SERVICE, ACTIVITY];
+const targets = [TEST, TWITCH_TEST, SCREEN, SERVICE, ACTIVITY, TWITCH_LIVE, TWITCH_CARD];
 const before = Object.fromEntries(targets.map((file) => [file, digest(file)]));
 
 /** [cím, fájl, mit cserélünk, mire, melyik tesztnek kell buknia] */
@@ -127,6 +130,47 @@ const mutations = [
     '        // (mutáció: nincs verzió-kapu)',
     'a natív oldal „enter" művelete',
   ],
+  // --- A Twitch-kártya láthatósága (2026-10-02) ------------------------------
+  [
+    'a kártya élő adás nélkül is megjelenne (a tulajdonos beállítása nélkül)',
+    TWITCH_LIVE,
+    '  if (isLive) return true;\n  return showWhenOffline && hasImage;',
+    '  return true;',
+    'élő adás nélkül alapból NEM látszik',
+    TWITCH_TEST,
+  ],
+  [
+    'a kártya kérésre KÉP NÉLKÜL is megjelenne (üres kártya)',
+    TWITCH_LIVE,
+    '  return showWhenOffline && hasImage;',
+    '  return showWhenOffline;',
+    'kérésre, de kép nélkül nem látszik',
+    TWITCH_TEST,
+  ],
+  [
+    'a kikapcsolt kapcsoló nem rejtené el a kártyát',
+    TWITCH_LIVE,
+    '  if (!enabled) return false;',
+    '  // (mutáció: nincs kapcsoló-kapu)',
+    'a kikapcsolt kapcsoló MINDIG elrejti',
+    TWITCH_TEST,
+  ],
+  [
+    'az „ÉLŐ" jelvény offline kártyára is felkerülne (hamis élő adás)',
+    TWITCH_CARD,
+    'if (live.isLive) const Positioned(top: 10, left: 10, child: _LiveBadge()),',
+    'const Positioned(top: 10, left: 10, child: _LiveBadge()),',
+    'a kártya a tiszta döntést használja',
+    TWITCH_TEST,
+  ],
+  [
+    'a felülírás nem olvasná a showWhenOffline mezőt (a kérés hatástalan lenne)',
+    'lib/providers/twitch_live_provider.dart',
+    "      showWhenOffline: data['showWhenOffline'] as bool? ?? false,",
+    '      // (mutáció: a mező elvéve)',
+    'a felülírás olvassa a showWhenOffline mezőt',
+    TWITCH_TEST,
+  ],
 ];
 
 const failures = [];
@@ -137,7 +181,7 @@ const say = (line) => {
 };
 
 let caught = 0;
-for (const [index, [title, file, from, to, expectedFailure]] of mutations.entries()) {
+for (const [index, [title, file, from, to, expectedFailure, testFile = TEST]] of mutations.entries()) {
   const source = fs.readFileSync(file, 'utf8');
   if (!source.includes(from)) {
     say(`ELTER  ${title} — a minta nem illik a forrásra (a bizonyíték érvénytelen)`);
@@ -148,7 +192,7 @@ for (const [index, [title, file, from, to, expectedFailure]] of mutations.entrie
   let output = '';
   let failed = false;
   try {
-    output = execFileSync(FLUTTER, FLUTTER_ARGS(TEST), { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    output = execFileSync(FLUTTER, FLUTTER_ARGS(testFile), { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   } catch (error) {
     failed = true;
     output = `${error.stdout ?? ''}${error.stderr ?? ''}`;

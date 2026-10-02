@@ -1,22 +1,23 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 386 megy fel** (versionCode **386**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> **Most a 387 megy fel** (versionCode **387**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-10-01): az **ÉLES (production) sávon a 382 van**, 100%-ban kigördülve; a **zárt teszt (alpha) a
-> 383-on**, a nyílt teszt (beta) a 377-en. A **386** újdonságai: az élő **Twitch-adás kicsinyíthető**
-> (fejléc-gomb, illetve az app elhagyásakor magától), és **iPhone-on a stream a helyén játszik**
-> (nem ugrik teljes képernyőre, és koppintás nélkül indul). Emellett a 386 a **385** minden
-> újdonságát is tartalmazza: a **rádió értesítésében és a zárképernyőn látszik, melyik szám szól**
-> (a Real Hardstyle FM logójával); az **élő Twitch-adás** a főoldali kártyán és külön oldalon
-> nézhető, **az app saját chatjével és támogatás gombbal**; és **értesítést kapsz, amikor elindul
-> az élő adás**.
+> 383-on**, a nyílt teszt (beta) a 377-en. A **387** újdonságai: a főoldali **Twitch-kártya előre is
+> behirdethető** (a csatorna saját képével és feliratával akkor is látszik, ha éppen nem megy adás).
+> Emellett a 387 a **386** és **385** minden újdonságát is tartalmazza: az élő **Twitch-adás
+> kicsinyíthető** (fejléc-gomb, illetve az app elhagyásakor magától — **Androidon és iPhone-on**),
+> iPhone-on a stream **a helyén játszik**, a **rádió értesítésében és a zárképernyőn látszik, melyik
+> szám szól** (a Real Hardstyle FM logójával), az **élő Twitch-adás** a főoldali kártyán és külön
+> oldalon nézhető **az app saját chatjével és támogatás gombbal**, és **értesítést kapsz, amikor
+> elindul az élő adás**.
 >
-> ⚠️ **A 385-öt NEM kell feltölteni** — a 386 felváltja (ugyanaz a kód + a kis képernyő javítása).
-> A 386 a **382 minden** újdonságát is tartalmazza, az pedig a korábbiakét (a 384-et **nem** kell
-> feltölteni — ezt a buildet tartalmazza).
+> ⚠️ **A 385-öt és a 386-ot NEM kell feltölteni** — a 387 felváltja mindkettőt (ugyanaz a kód + a
+> kártya-behirdetés). A 387 a **382 minden** újdonságát is tartalmazza, az pedig a korábbiakét
+> (a 384-et **nem** kell feltölteni — ezt a buildet tartalmazza).
 > **Melyik blokk hova való (mérve, 2026-10-01):** az **éles** sávon a **382** van → **1. blokk**;
-> a **zárt teszten a 383** van 100%-ban kigördülve → ott a **383 → 386** lépéshez **ugyanaz az
+> a **zárt teszten a 383** van 100%-ban kigördülve → ott a **383 → 387** lépéshez **ugyanaz az
 > 1. blokk** való (ez a néhány sor mind új a tesztelőknek); aki **361–380 közötti** buildről jön,
-> annak a **361–386 összesítő** (1b-2.); aki a **bétáról (377)**, annak a **355–386** összesítő (1b-3.).
+> annak a **361–387 összesítő** (1b-2.); aki a **bétáról (377)**, annak a **355–387** összesítő (1b-3.).
 > ⚠️ **A 383-at NE tárd fel újra:** abban a szekció még a **logó (Hero) kártya fölött** volt, és a
 > felirata „Követettjeid" volt (a tulajdonos jelzése: *„ez a »követettjeid« elég magyartalan"*,
 > illetve *„a Hero FÖLÉ került, ami baj"*). A **385** javítja mindkettőt — a zárt teszten ezt a
@@ -28,11 +29,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 386
+currentBuild: 387
 currentVersion: 1.0.0
 lastPublishedBuild: 382
-aab: build/HUHS-v1.0.0+386-release.aab
-sha256: D128F7DD38822F9C4297DDEB207DDC32F0EA68F9D4305CD4DB4A6B5471CF43D4
+aab: build/HUHS-v1.0.0+387-release.aab
+sha256: 8FF303D82BDFD10263725372CCA3A4DE8181CB4D355357A9EF725900583FAE02
 -->
 
 ⚠️ A **386**-ot a **385** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 385
@@ -140,8 +141,8 @@ A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a hí
 |---|---|
 | Fájl | `build/HUHS-v1.0.0+386-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **386** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 83 410 558 bájt (79,5 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
+| Verziókód | **387** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 83 413 848 bájt (79,5 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
 | SHA-256 | `D128F7DD38822F9C4297DDEB207DDC32F0EA68F9D4305CD4DB4A6B5471CF43D4` |
 
 > **⚠️ A 386 a feltöltendő csomag** (versionCode **386**, `1.0.0`), és **2026-10-02-án épült**: benne van
@@ -151,7 +152,7 @@ A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a hí
 > szóló push**, valamint a 384-es **„Kedvenceid” javítás** és minden korábbi.
 > A **382 az éles sáv csúcsa** (feltöltve, `completed`, 100%), ezért a 386-nál kisebb kódú csomagot a Play
 > **nem** fogadná el; a 386 a 382 minden javítását is tartalmazza. **A 385-öt nem kell feltölteni.**
-> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 386 azokat is tartalmazza) — a 386 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
+> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 387 azokat is tartalmazza) — a 387 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
 
 **Miért a 360-at kell feltenni (és miért nem a 358-at):** a 360 **magában foglalja a 358-at, a 357-et, a 356-ot, a 355-öt és a 354-et is**, ezért egy csomagot kell feltenni:
 
@@ -234,7 +235,7 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 > **ÉLES (production) = 382** → ide (382 → 386) **ez a néhány sor** való.
 > **ZÁRT TESZT (alpha) = 383** (100%-ban kigördülve) → ide is **ez a néhány sor** való (383 → 386):
 > a rádió-, Twitch- és kis képernyő-újdonságok mind újak a tesztelőknek.
-> **NYÍLT TESZT (beta) = 377** → a **355–386** összesítő való (**1b-3.**).
+> **NYÍLT TESZT (beta) = 377** → a **355–387** összesítő való (**1b-3.**).
 > A „Kiadási megjegyzések" mezőbe másolásnál a nyelv **hu-HU** (ez az egyetlen beállított nyelv).
 > A 383-as AAB **már fent van**, de **ne tárd fel újra**: abban a szekció még a logó (Hero) kártya
 > **fölött** volt, a felirata pedig „Követettjeid" — a tulajdonos jelzése szerint magyartalan
@@ -244,7 +245,7 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 ```play-notes
 - ÚJ: rádió — az értesítésben és a zárképernyőn látszik, melyik szám szól, a Real Hardstyle FM logójával.
 - ÚJ: élő Twitch-adás a főoldalon és külön oldalon: nézhető az appban, chatelve és támogatva.
-- ÚJ: az élő adás kicsinyíthető — a fejléc kis képernyő gombjával, és az app elhagyásakor magától is.
+- ÚJ: az élő adás kicsinyíthető (Androidon és iPhone-on); a kártya előre is behirdethető saját képpel.
 - Javítva: iPhone-on az adás a helyén játszik, és koppintás nélkül elindul.
 - Javítva: a „Kedvenceid" szekció a hírek alatt van, magyaros felirattal.
 ```
@@ -264,26 +265,25 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–386** összesítő (a 382 után)
+## 1b-2. Play Console — a **361–387** összesítő (a 382 után)
 
 **Ezt használd, ha a felhasználó a 361–380 közötti valamelyik buildről jön** (régebbi nyilvános
-build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–386** között készültek.
+build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–387** között készültek.
 A karakter-számot a `tools/check-play-notes.mjs` méri.
 ⚠️ **Az ÉLES sávon a 382 van** (mérve, 2026-10-01), ezért aki **382-ről** jön, annak **nem** ez a
 blokk, hanem az **1. blokk** (a 386 újdonságai) való.
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság.
-- ÚJ: heti összefoglaló vasárnap; megosztható hírek és DJ-adatlapok.
-- ÚJ: értesítés a kedvelt DJ-d új tartalmáról; @mindenki push-jal a Chatben.
+- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság; heti összefoglaló.
+- ÚJ: megosztható hírek és DJ-adatlapok; értesítés a kedvelt DJ-d új tartalmáról; @mindenki push-jal.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
-- ÚJ: Twitch-adás az appban, rádió „most szól” a zárképernyőn, kis képernyő.
+- ÚJ: Twitch-adás az appban (kis képernyővel), rádió „most szól” a zárképernyőn, behirdethető kártya.
 - Javítva: a listák görgetése nem ugrik vissza a tetejére.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–386** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–387** összesítő)
 
-**Ezt használd, ha a 386-ot a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 387-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-10-01) szerint ott a **377** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
@@ -291,11 +291,10 @@ blokk, hanem az **1. blokk** (a 386 újdonságai) való.
 linknyitás + QR-jelenlét** és a mostani újdonságok is.
 
 ```play-notes
-- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság.
-- ÚJ: heti összefoglaló vasárnap; megosztható hírek és DJ-adatlapok.
-- ÚJ: értesítés a kedvelt DJ-d új tartalmáról; @mindenki push-jal a Chatben.
+- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság; heti összefoglaló.
+- ÚJ: megosztható hírek és DJ-adatlapok; értesítés a kedvelt DJ-d új tartalmáról; @mindenki push-jal.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
-- ÚJ: Twitch-adás az appban, rádió „most szól” a zárképernyőn, kis képernyő.
+- ÚJ: Twitch-adás az appban (kis képernyővel), rádió „most szól” a zárképernyőn, behirdethető kártya.
 - Javítva: a listák görgetése nem ugrik vissza a tetejére.
 ```
 
@@ -339,6 +338,21 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 387 — a Twitch-kártya előre is behirdethető
+- **A mért hiány:** a tulajdonos felülírása (`app_settings/twitch`) azt ígérte, hogy `enabled: true`
+  esetén a kártya **megjelenik** — a valóság viszont az volt, hogy **élő adás nélkül nem**, ezért aki
+  előre beállította a saját képét (egy következő adás plakátját), **semmit nem látott**.
+- **A javítás:** új mező a felülírásban — **`"showWhenOffline": true`** —, amivel a kártya a
+  **csatorna saját képével** akkor is látszik, ha éppen nem megy adás (kép nélkül nem, mert akkor nem
+  lenne mit mutatni). A döntés **egy helyen, tisztán** él (`twitchCardVisible`), és a kártya ilyenkor
+  **nem hazudik élő adást**: nincs „ÉLŐ" jelvény, és a gomb felirata „Twitch-csatorna".
+- **A kapuk:** `test/services/twitch_live_test.dart` (+7: a láthatóság minden ága és a forrás-lint),
+  **mutációs bizonyíték 18/18** (bennük a kapcsoló elvétele, a kép-követelmény elvétele és az „ÉLŐ"
+  jelvény offline megjelenítése) — bájtazonos visszaállítással.
+- **A tulajdonos beállítása (build nélkül):** `app_settings/twitch` → `{"enabled": true,
+  "showWhenOffline": true, "imageUrl": "https://…/plakat.jpg", "headerText": "Következő adás: …"}`;
+  a `tmp/setup-twitch-card-settings.mjs` ki is írja a jelenlegi állapotot.
 
 ### 386 — a Twitch-adás kicsinyíthető (és iPhone-on a helyén játszik)
 - **A tulajdonos kérése:** *„ha leteszi az appot hatterben menjen a stream kiskepernyon”* — és a kis

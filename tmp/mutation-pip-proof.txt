@@ -12,6 +12,11 @@ OK     a koppintás-kényszer visszaállítása iOS-en (az autoplay nem érvény
 OK     a platform-csomag kivétele a függőségek közül (nem fordulna le) → a kapu elcsípte («a platform-csomag közvetlen függőség»)
 OK     a natív „enter" művelet elvétele (a felület gombja nem érne célt Androidon) → a kapu elcsípte («a natív oldal „enter" művelete»)
 OK     az Android-verzió kapuja elvéve a natív belépésből (API 26 alatt összeomlana) → a kapu elcsípte («a natív oldal „enter" művelete»)
+OK     a kártya élő adás nélkül is megjelenne (a tulajdonos beállítása nélkül) → a kapu elcsípte («élő adás nélkül alapból NEM látszik»)
+OK     a kártya kérésre KÉP NÉLKÜL is megjelenne (üres kártya) → a kapu elcsípte («kérésre, de kép nélkül nem látszik»)
+OK     a kikapcsolt kapcsoló nem rejtené el a kártyát → a kapu elcsípte («a kikapcsolt kapcsoló MINDIG elrejti»)
+OK     az „ÉLŐ" jelvény offline kártyára is felkerülne (hamis élő adás) → a kapu elcsípte («a kártya a tiszta döntést használja»)
+OK     a felülírás nem olvasná a showWhenOffline mezőt (a kérés hatástalan lenne) → a kapu elcsípte («a felülírás olvassa a showWhenOffline mezőt»)
 
-13/13 mutáció ELKAPVA
+18/18 mutáció ELKAPVA
 a források BÁJTAZONOSAK (érintetlenek)

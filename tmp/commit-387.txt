@@ -1,0 +1,32 @@
+feat(387): a Twitch-kartya elore is behirdetheto (a feluliras igerete es a valosag egyezik)
+
+MERT HIANY: az app_settings/twitch dokumentum sugója azt mondja, hogy
+enabled: true eseten a kartya megjelenik - a valosag viszont az volt, hogy
+ELO ADAS NELKUL NEM (a kartya live.isLive-re szurt). Aki tehat elore beallitotta
+a sajat kepet (egy kovetkezo adas plakatjat), semmit nem latott.
+
+AMI EPULT:
+- uj mezo a felulirasban: showWhenOffline (alap: false);
+- a lathatosag dontese EGY helyen, tisztan: twitchCardVisible({isLive, enabled,
+  showWhenOffline, hasImage}) a services/twitch_live.dart-ban (elo adasnal latszik;
+  elo nelkul CSAK keresre ES sajat keppel; a kikapcsolt kapcsolo mindig elrejt);
+- a kartya nem hazudik elo adast: az "ELO" jelveny csak valodi elo adasnal kerul
+  fel, es a gomb felirata ilyenkor "Twitch-csatorna";
+- tmp/setup-twitch-card-settings.mjs: --offline/--image/--header/--hide/--live-only,
+  es kiirja a jelenlegi allapotot; elesben merve: enabled=true,
+  showWhenOffline=false, kep=a Twitch elo elonezete;
+- docs/TWITCH.md + a beallitas sugoja a uj mezot is leirja.
+
+KAPUK (mind merve): flutter test 1424/1424 (7 uj); analyze tiszta; i18n strict
+zold (chunk-39); function-tesztek 404/404; check-play-notes zold (1. blokk
+452/480, osszesitok 446/480, masolatok 4/4).
+
+MUTACIOS BIZONYITEK 18/18 ELKAPVA (a PiP bizonyitek bovitve): ot uj mutacio a
+kartyara mer - elo adas nelkuli megjelenes, kep nelkuli megjelenes, a kapcsolo
+elvetele, az "ELO" jelveny offline kirakasa, a showWhenOffline olvasasanak
+elvetele; mind elkapva, bajtazonos visszaallitassal.
+
+CSOMAG: build/HUHS-v1.0.0+387-release.aab, 83 413 848 bajt,
+SHA-256 8FF303D82BDFD10263725372CCA3A4DE8181CB4D355357A9EF725900583FAE02
+verify-aab: MINDEN ELLENORZES RENDBEN + a changelog sora mindharom ABI-ban.
+A Play-jegyzet a 387-re allt: a 385-ot es a 386-ot NEM kell feltolteni.

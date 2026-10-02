@@ -1,0 +1,1 @@
+- Javítva: a „Kedvenceid" szekció a hírek alatt van (eddig a logó fölött), és a felirata is magyaros.

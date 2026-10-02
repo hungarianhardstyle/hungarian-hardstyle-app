@@ -6,9 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/i18n/tr.dart';
 import '../providers/twitch_live_provider.dart';
 import '../screens/twitch/twitch_screen.dart';
+import '../services/twitch_live.dart';
 import 'app_text.dart';
 
-/// **Élő Twitch-kártya a főoldalon** — csak akkor látszik, ha megy a stream.
+/// **Twitch-kártya a főoldalon** — élő adásnál mindig, azon kívül csak kérésre.
 ///
 /// A tulajdonos kérése (2026-10-01): *„főoldalon jelenjen meg ha megy a stream +
 /// legyen hozza cserelhető kép, képes kártya jelenjen meg a fooldalon”*.
@@ -18,6 +19,11 @@ import 'app_text.dart';
 /// főoldal is „él”. Ha a tulajdonos saját képet állít be
 /// (`app_settings/twitch.imageUrl`), az kerül a kártyára, és **nem** töltődik
 /// újra (az egy pillanatkép).
+///
+/// ⚠️ **ÉLŐ ADÁS NÉLKÜL** (2026-10-02): a láthatóság döntése **egy helyen**,
+/// tisztán van (`twitchCardVisible`) — a tulajdonos a
+/// `"showWhenOffline": true` + saját kép beállításával a következő adást
+/// **előre behirdetheti** anélkül, hogy új build kellene.
 class TwitchLiveCard extends ConsumerStatefulWidget {
   const TwitchLiveCard({super.key});
 
@@ -47,8 +53,18 @@ class _TwitchLiveCardState extends ConsumerState<TwitchLiveCard> {
   Widget build(BuildContext context) {
     final live = ref.watch(twitchLiveProvider).valueOrNull;
     final override = ref.watch(twitchCardOverrideProvider).valueOrNull;
-    if (live == null || !live.isLive || !(override?.enabled ?? true)) {
-      // Nem élő (vagy kikapcsolt): a kártya **nem hagy üres helyet**.
+    // A döntés a tiszta függvényben él (mérve a `twitch_live_test.dart`-ban).
+    // ⚠️ Amíg a Twitch-állapot **nem érkezett meg** (`live == null`), nem
+    // döntünk: a kártya ilyenkor nem ugrik be (nincs villanás).
+    final visible = live != null &&
+        twitchCardVisible(
+          isLive: live.isLive,
+          enabled: override?.enabled ?? true,
+          showWhenOffline: override?.showWhenOffline ?? false,
+          hasImage: override?.hasImage ?? false,
+        );
+    if (!visible) {
+      // Nem látszik: a kártya **nem hagy üres helyet**.
       return const SizedBox.shrink();
     }
 
@@ -94,7 +110,10 @@ class _TwitchLiveCardState extends ConsumerState<TwitchLiveCard> {
                             child: const Center(child: Icon(Icons.live_tv, size: 42)),
                           ),
                         ),
-                        const Positioned(top: 10, left: 10, child: _LiveBadge()),
+                        // ⚠️ Az „ÉLŐ" jelvény csak akkor igaz, ha tényleg megy az
+                        // adás: a tulajdonos által előre kitett (offline) kártyán
+                        // **nem** hazudunk élő adást.
+                        if (live.isLive) const Positioned(top: 10, left: 10, child: _LiveBadge()),
                         if (live.viewers > 0)
                           Positioned(
                             top: 10,
@@ -131,7 +150,9 @@ class _TwitchLiveCardState extends ConsumerState<TwitchLiveCard> {
                               MaterialPageRoute<void>(builder: (_) => const TwitchScreen()),
                             ),
                             icon: const Icon(Icons.play_arrow_rounded),
-                            label: const AppText('Nézd élőben'),
+                            // Offline (előre behirdetett) kártyán nem ígérünk élő
+                            // adást — ilyenkor a gomb a csatorna oldalára visz.
+                            label: AppText(live.isLive ? 'Nézd élőben' : 'Twitch-csatorna'),
                           ),
                         ],
                       ),

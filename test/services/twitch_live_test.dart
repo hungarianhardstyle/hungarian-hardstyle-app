@@ -79,7 +79,67 @@ void main() {
     });
   });
 
+  group('a kártya láthatósága (tiszta döntés)', () {
+    // ⚠️ MIÉRT EZ A KÖR (mért hiány, 2026-10-02): a tulajdonos felülírása azt
+    // ígéri, hogy `enabled: true` esetén a kártya megjelenik — élő adás nélkül
+    // viszont nem jelent meg, ezért aki előre beállítja a saját képét, semmit
+    // nem látott. A döntés ezért egy helyen, mérhetően él.
+    test('élő adásnál látszik (ez a lényeg)', () {
+      expect(
+        twitchCardVisible(isLive: true, enabled: true, showWhenOffline: false, hasImage: false),
+        isTrue,
+      );
+    });
+
+    test('élő adás nélkül alapból NEM látszik', () {
+      expect(
+        twitchCardVisible(isLive: false, enabled: true, showWhenOffline: false, hasImage: true),
+        isFalse,
+      );
+    });
+
+    test('élő adás nélkül kérésre + saját képpel látszik (előre behirdetés)', () {
+      expect(
+        twitchCardVisible(isLive: false, enabled: true, showWhenOffline: true, hasImage: true),
+        isTrue,
+      );
+    });
+
+    test('kérésre, de kép nélkül nem látszik (nem lenne mit mutatni)', () {
+      expect(
+        twitchCardVisible(isLive: false, enabled: true, showWhenOffline: true, hasImage: false),
+        isFalse,
+      );
+    });
+
+    test('a kikapcsolt kapcsoló MINDIG elrejti (élő adásnál is)', () {
+      expect(
+        twitchCardVisible(isLive: true, enabled: false, showWhenOffline: true, hasImage: true),
+        isFalse,
+      );
+      expect(
+        twitchCardVisible(isLive: false, enabled: false, showWhenOffline: true, hasImage: true),
+        isFalse,
+      );
+    });
+  });
+
   group('a bekötés (forrás-lint)', () {
+    test('a kártya a tiszta döntést használja, és nem hazudik élő adást', () {
+      final card = File('lib/widgets/twitch_live_card.dart').readAsStringSync();
+      expect(card, contains('twitchCardVisible('), reason: 'a láthatóság nem a közös döntésből jön');
+      expect(card, contains('showWhenOffline: override?.showWhenOffline ?? false'));
+      // Az „ÉLŐ" jelvény és a „Nézd élőben" gomb csak valódi élő adásnál jelenik meg.
+      expect(card, contains('if (live.isLive) const Positioned('));
+      expect(card, contains("live.isLive ? 'Nézd élőben' : 'Twitch-csatorna'"));
+    });
+
+    test('a felülírás olvassa a showWhenOffline mezőt', () {
+      final provider = File('lib/providers/twitch_live_provider.dart').readAsStringSync();
+      expect(provider, contains("data['showWhenOffline'] as bool? ?? false"));
+      expect(provider, contains('this.showWhenOffline = false'));
+    });
+
     test('a főoldal az élő kártyát a hírek blokkja után mutatja', () {
       final source = File('lib/screens/home/home_screen.dart').readAsStringSync();
       expect(source, contains('const TwitchLiveCard(),'));

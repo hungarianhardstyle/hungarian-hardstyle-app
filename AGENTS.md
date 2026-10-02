@@ -1,5 +1,44 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🔵 A **387**-ES BUILD — A TWITCH-KÁRTYA ELŐRE IS BEHIRDHETŐ (a felülírás ígérete és a valóság egyezik) (2026-10-02)
+
+- **A MÉRT HIÁNY (a saját felülírásunk ígérete nem teljesült):** az `app_settings/twitch`
+  dokumentum súgója azt mondja, hogy `enabled: true` esetén a kártya **megjelenik** — a valóság
+  viszont az volt, hogy **élő adás nélkül nem** (a kártya `live.isLive`-re szűrt). Aki tehát **előre**
+  beállította a saját képét (egy következő adás plakátját), **semmit nem látott**, és azt hihette,
+  elromlott. Ez pontosan az a fajta néma eltérés, amit a tulajdonos úgy jelezne: *„beállítottam és
+  nem látszik"*.
+- **AMI ÉPÜLT:** (1) új mező a felülírásban — **`showWhenOffline`** (alap: `false`); (2) a láthatóság
+  döntése **egy helyen, tisztán**: `twitchCardVisible({isLive, enabled, showWhenOffline, hasImage})`
+  a `services/twitch_live.dart`-ban (élő adásnál látszik; élő nélkül **csak** kérésre **és** saját
+  képpel; a kikapcsolt kapcsoló **mindig** elrejt); (3) a kártya **nem hazudik élő adást**: az „ÉLŐ"
+  jelvény csak valódi élő adásnál kerül fel, és a gomb felirata ilyenkor „Twitch-csatorna";
+  (4) a `tmp/setup-twitch-card-settings.mjs` átvette az új mezőt (`--offline --image=… --header=…`,
+  `--hide`, `--live-only`), és **kiírja a jelenlegi állapotot** — élesben mérve:
+  `enabled=true, showWhenOffline=false, kép=a Twitch élő előnézete`.
+- **KAPUK (mind mérve):** `flutter test` → **1424/1424** (7 új: a láthatóság minden ága + 2 forrás-lint);
+  `flutter analyze lib test` → **No issues found!**; i18n `--strict` → **MINDEN ELLENŐRZÉS RENDBEN**
+  (`chunk-39`); `node tools/run-function-tests.mjs --pure` → **404/404**; `check-play-notes` →
+  **MINDEN ELLENŐRZÉS RENDBEN** (1. blokk **452/480**, összesítők **446/480**, másolatok **4/4**).
+- **⚠️ MUTÁCIÓS BIZONYÍTÉK 18/18 ELKAPVA** (a PiP bizonyíték bővítve, `tmp/mutation-proof-picture-in-picture.mjs`):
+  az új öt mutáció a kártyára mér — élő adás nélküli megjelenés, kép nélküli megjelenés, a kapcsoló
+  elvétele, az „ÉLŐ" jelvény offline kirakása és a `showWhenOffline` olvasásának elvétele; mind
+  **elkapva**, bájtazonos visszaállítással (a bizonyíték több teszt-fájlt futtat, ezért a
+  `twitch_live_test.dart` is a célzott kör része).
+- **CSOMAG:** `build/HUHS-v1.0.0+387-release.aab` — **83 413 848 bájt**, SHA-256
+  **`8FF303D82BDFD10263725372CCA3A4DE8181CB4D355357A9EF725900583FAE02`**; `tmp/verify-aab.mjs … 387` →
+  **MINDEN ELLENŐRZÉS RENDBEN**, a changelog sora mindhárom ABI-ban bent van.
+- **📌 A TULAJDONOS LÉPÉSE:** a **387** feltöltése a Play Console-ra — **a 385-öt és a 386-ot NEM kell**
+  (a 387 mindkettőt felváltja). A zárt teszten **ugyanaz az 1. blokk** való (`tmp/play-387.txt`), a
+  bétára a **355–387** összesítő.
+- **⚠️ ŐSZINTE KORLÁTOK:** (1) az előre behirdetett kártya **kép nélkül nem jelenik meg** (szándékos:
+  a Twitch mozgó előnézete offline nem mond semmit) — ezt a beállító szkript **ki is mondja**;
+  (2) a kártya a Twitch-állapot megérkezése előtt **nem dönt** (nincs villanás), ezért a
+  `showWhenOffline` kártya a hálózat után jelenik meg; (3) az élő adásról szóló **széles push** élesben
+  továbbra is **adásra vár** (a csatorna a mérés idején nem él) — a döntés tiszta tesztekkel, a küldés
+  lánca korábbi éles küldésekkel bizonyított; (4) a **385/386** Play-feltöltése így **feleslegessé
+  vált** — egy csomag megy fel.
+
 ### 🔵 A **386**-OS BUILD — A TWITCH-ADÁS KICSINYÍTHETŐ (iOS-en IS) + A PIAC-KAPU VERZIÓ-TUDATOS (2026-10-02)
 
 - **A KIINDULÁS (mért hiány, nem tipp):** a 385-ben a kis képernyő **Androidon** már működött

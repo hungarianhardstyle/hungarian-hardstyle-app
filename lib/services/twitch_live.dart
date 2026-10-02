@@ -57,6 +57,32 @@ class TwitchLiveStatus {
 /// A csatorna, amit figyelünk (a tulajdonos adta: twitch.tv/hungarianhardstyle).
 const String twitchChannel = 'hungarianhardstyle';
 
+/// **Látszik-e a főoldali Twitch-kártya?** — tiszta döntés, ezért mérhető.
+///
+/// MIÉRT KÜLÖN (mért hiány, 2026-10-02): a tulajdonos felülírása
+/// (`app_settings/twitch`) azt ígéri, hogy `enabled: true` esetén a kártya
+/// **megjelenik** — a valóság viszont az volt, hogy **élő adás nélkül nem**,
+/// ezért aki előre beállítja a saját képét (pl. egy következő adás plakátját),
+/// **semmit nem lát**, és azt hiheti, elromlott.
+///
+/// A szabály ezért:
+///  * **élő adásnál** a kártya látszik (ha a kapcsoló nem tiltja) — ez a lényeg;
+///  * **élő adás nélkül** csak akkor, ha a tulajdonos **kifejezetten kéri**
+///    (`showWhenOffline`) **és** van saját képe (a Twitch mozgó előnézete
+///    ilyenkor nincs mit mutasson);
+///  * a kikapcsolt kapcsoló (`enabled: false`) **mindig** elrejti.
+bool twitchCardVisible({
+  required bool isLive,
+  required bool enabled,
+  required bool showWhenOffline,
+  required bool hasImage,
+}) {
+  if (!enabled) return false;
+  if (isLive) return true;
+  return showWhenOffline && hasImage;
+}
+
+
 /// A nyilvános Twitch web-kliens azonosítója (ugyanaz, amit a twitch.tv oldal használ).
 const String twitchWebClientId = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
 

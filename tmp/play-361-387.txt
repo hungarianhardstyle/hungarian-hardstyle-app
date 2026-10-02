@@ -1,0 +1,5 @@
+- ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság; heti összefoglaló.
+- ÚJ: megosztható hírek és DJ-adatlapok; értesítés a kedvelt DJ-d új tartalmáról; @mindenki push-jal.
+- ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
+- ÚJ: Twitch-adás az appban (kis képernyővel), rádió „most szól” a zárképernyőn, behirdethető kártya.
+- Javítva: a listák görgetése nem ugrik vissza a tetejére.

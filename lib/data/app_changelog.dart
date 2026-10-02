@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 387,
+    changes: [
+      'ÚJ: a főoldali Twitch-kártya mostantól előre is behirdethető — a csatorna saját képével és feliratával akkor is látszik, ha éppen nem megy adás.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 386,
     changes: [
       'ÚJ: az élő Twitch-adás kicsinyíthető — a fejléc kis képernyő gombjával, illetve az app elhagyásakor magától is.',

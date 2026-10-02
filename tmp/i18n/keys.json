@@ -6631,13 +6631,6 @@
     ]
   },
   {
-    "value": "Nézd élőben",
-    "count": 1,
-    "files": [
-      "lib/widgets/twitch_live_card.dart"
-    ]
-  },
-  {
     "value": "Nincs adat.",
     "count": 1,
     "files": [

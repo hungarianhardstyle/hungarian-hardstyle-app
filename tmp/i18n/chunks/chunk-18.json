@@ -1,5 +1,4 @@
 [
-  "Szívecske",
   "Szólunk, ha a kedvelt DJ-d új kiadványt tesz közzé, ha közelgő buli van, és vasárnap a hét összefoglalójával.",
   "Találkoznék ezen az eseményen",
   "Támogatás / Donate",
@@ -58,5 +57,6 @@
   "Üzenet…",
   "Üzenetműveletek",
   "Válasz {name} hozzászólására: {text}",
-  "Válasz {name} üzenetére: {text}"
+  "Válasz {name} üzenetére: {text}",
+  "Válasz törlése"
 ]

@@ -34,16 +34,27 @@ final twitchLiveProvider = FutureProvider.autoDispose<TwitchLiveStatus>((ref) as
 /// Ha nincs ilyen dokumentum (vagy üres), a kártya a Twitch **mozgó**
 /// előnézetét használja — így mindig van kép, és a tulajdonos bármikor
 /// kicserélheti anélkül, hogy új build kellene.
+///
+/// ⚠️ **ÉLŐ ADÁS NÉLKÜL** (2026-10-02): a kártya alapból csak akkor látszik, ha
+/// megy a stream — de a tulajdonos **kifejezetten kérheti**, hogy a saját képével
+/// akkor is ott legyen (`"showWhenOffline": true`), például hogy egy következő
+/// adást előre behirdessen. Ehhez **kép is kell** (`imageUrl`), különben nem
+/// lenne mit mutatni. A döntés egy helyen, tisztán él:
+/// `twitchCardVisible(...)` a `services/twitch_live.dart`-ban.
 class TwitchCardOverride {
   const TwitchCardOverride({
     this.enabled = true,
     this.imageUrl = '',
     this.headerText = '',
+    this.showWhenOffline = false,
   });
 
   final bool enabled;
   final String imageUrl;
   final String headerText;
+
+  /// Élő adás nélkül is látszódjon (saját képpel) — a tulajdonos kérése.
+  final bool showWhenOffline;
 
   bool get hasImage => imageUrl.trim().isNotEmpty;
 }
@@ -62,6 +73,7 @@ final twitchCardOverrideProvider =
       enabled: data['enabled'] as bool? ?? true,
       imageUrl: (data['imageUrl'] as String? ?? '').trim(),
       headerText: (data['headerText'] as String? ?? '').trim(),
+      showWhenOffline: data['showWhenOffline'] as bool? ?? false,
     );
   } catch (_) {
     // Firebase nélkül (teszt, telepítés előtt) a kártya alap-viselkedése marad.
