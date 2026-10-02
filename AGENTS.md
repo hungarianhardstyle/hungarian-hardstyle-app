@@ -16,10 +16,13 @@
   (4) a `tmp/setup-twitch-card-settings.mjs` átvette az új mezőt (`--offline --image=… --header=…`,
   `--hide`, `--live-only`), és **kiírja a jelenlegi állapotot** — élesben mérve:
   `enabled=true, showWhenOffline=false, kép=a Twitch élő előnézete`.
-- **KAPUK (mind mérve):** `flutter test` → **1424/1424** (7 új: a láthatóság minden ága + 2 forrás-lint);
-  `flutter analyze lib test` → **No issues found!**; i18n `--strict` → **MINDEN ELLENŐRZÉS RENDBEN**
-  (`chunk-39`); `node tools/run-function-tests.mjs --pure` → **404/404**; `check-play-notes` →
-  **MINDEN ELLENŐRZÉS RENDBEN** (1. blokk **452/480**, összesítők **446/480**, másolatok **4/4**).
+- **KAPUK (mind mérve):** `flutter test` → **1431/1431** (7 új **widget**-teszt: a kártya valódi kirajzolása override-olt providerekkel); `flutter analyze lib test` → **No issues found!**; i18n `--strict` → **MINDEN ELLENŐRZÉS RENDBEN** (`chunk-39`); `node tools/run-function-tests.mjs --pure` → **404/404**; `check-play-notes` → **MINDEN ELLENŐRZÉS RENDBEN** (1. blokk **452/480**, összesítők **446/480**, másolatok **4/4**).
+- **🧪 A KÁRTYA VISELKEDÉSE KIRAJZOLVA IS MÉRVE (`test/widgets/twitch_live_card_test.dart`, 2026-10-02):** a tiszta döntés + forrás-lint **nem** bizonyítja, hogy a widget is így viselkedik — ezért 7 teszt **tényleg kirajzolja** a kártyát (`ProviderScope` felülírással): élő adásnál jelvény + nézőszám + „Nézd élőben”; élő nélkül **semmi**; offline behirdetésnél a tulajdonos képével/feliratával kártya, de **„ÉLŐ" jelvény nélkül** és „Twitch-csatorna" gombbal; kép nélkül semmi; kikapcsolt kapcsoló élő adásnál is elrejt; a saját kép URL-je a kép-widgetbe kerül, kép nélkül pedig a Twitch előnézet **frissítő paraméterrel** (`tick=`).
+- **🔎 EGY PARANCSOS ÉLŐ-ADÁS MÉRÉS (`tmp/verify-twitch-live-e2e.mjs`, csak olvas):** az élő adás igazolásához négy lépést mér egy menetben — Twitch élő állapot; a **szerveroldali figyelő jelölője** (`app_settings/twitch_live` → `announcedStreamId`); a **széles push sora** a plugin fejlécében; és az **admin push-végpont vezetéke**. ⚠️ A végpont-mérés **szándékosan nem küld senkinek**: hitelesítés nélkül **401**-et vár (él és védett), admin jelszóval pedig a figyelő **valós payload-alakját** küldi **szándékosan érvénytelen céllal** → **HTTP 400 `invalid_push_target`** (a kérés átjutott a hitelesítésen és a tartalom-ellenőrzésen, és a cél-feloldásnál állt meg). **ÉLESBEN MÉRVE (2026-10-02): 401, majd 400 `invalid_push_target`** — vagyis a figyelő útja (végpont, hitelesítés, payload) **most is él**, és a küldés nem indult el.
+- **📌 A TULAJDONOS LÉPÉSE:** a **387** feltöltése a Play Console-ra — **a 385-öt és a 386-ot NEM kell**
+  (a 387 mindkettőt felváltja). A zárt teszten **ugyanaz az 1. blokk** való (`tmp/play-387.txt`), a
+  bétára a **355–387** összesítő. **Amikor élő adást indítasz**, a fenti egy paranccsal mérhető:
+  `node tmp/verify-twitch-live-e2e.mjs` (és `--emulator` a képernyőképekhez).
 - **⚠️ MUTÁCIÓS BIZONYÍTÉK 18/18 ELKAPVA** (a PiP bizonyíték bővítve, `tmp/mutation-proof-picture-in-picture.mjs`):
   az új öt mutáció a kártyára mér — élő adás nélküli megjelenés, kép nélküli megjelenés, a kapcsoló
   elvétele, az „ÉLŐ" jelvény offline kirakása és a `showWhenOffline` olvasásának elvétele; mind
@@ -28,9 +31,6 @@
 - **CSOMAG:** `build/HUHS-v1.0.0+387-release.aab` — **83 413 848 bájt**, SHA-256
   **`8FF303D82BDFD10263725372CCA3A4DE8181CB4D355357A9EF725900583FAE02`**; `tmp/verify-aab.mjs … 387` →
   **MINDEN ELLENŐRZÉS RENDBEN**, a changelog sora mindhárom ABI-ban bent van.
-- **📌 A TULAJDONOS LÉPÉSE:** a **387** feltöltése a Play Console-ra — **a 385-öt és a 386-ot NEM kell**
-  (a 387 mindkettőt felváltja). A zárt teszten **ugyanaz az 1. blokk** való (`tmp/play-387.txt`), a
-  bétára a **355–387** összesítő.
 - **⚠️ ŐSZINTE KORLÁTOK:** (1) az előre behirdetett kártya **kép nélkül nem jelenik meg** (szándékos:
   a Twitch mozgó előnézete offline nem mond semmit) — ezt a beállító szkript **ki is mondja**;
   (2) a kártya a Twitch-állapot megérkezése előtt **nem dönt** (nincs villanás), ezért a
