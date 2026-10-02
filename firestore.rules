@@ -162,6 +162,43 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // A TWITCH-STREAM CHAT (391) — KULON szal.
+    //
+    // MIERT (a tulajdonos jelzese, 2026-10-02): *„a twitch oldal alatti chatr ha
+    // irok, valamiert a fo chatre is kikerul..."*. A mertek szerint a Twitch-oldal
+    // a FO chat widgetjet hasznalta, ezert ugyanabba a `live_feed_posts`
+    // gyujtemenybe irt. Mostantol a stream alatti chat sajat gyujtemenybe megy,
+    // ezert a fo chat tiszta marad.
+    //
+    // Szandekosan SZUK a jog (nincs reakcio, emlekes, hivatkozas, kep, rogzites):
+    // ez egy stream alatti beszelgetes, nem a kozossegi fal. Ezert a kulcshalmaz
+    // is rovid, es a hossz 500 karakter (a kliens ugyanezt meri).
+    //
+    // MERVE (2026-10-02, eles proba): a `size()` KARAKTERT szamol, nem bajtot —
+    // a 300 ekezetes betus uzenet (UTF-8-ban 600 bajt) ATMEGY ezen a szabalyon.
+    match /twitch_chat/{messageId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && !exists(/databases/$(database)/documents/deleted_user_ids/$(request.auth.uid))
+        && !exists(/databases/$(database)/documents/community_bans/$(request.auth.uid))
+        && request.resource.data.keys().hasOnly([
+          'authorId', 'authorName', 'authorImageUrl', 'text', 'createdAt'
+        ])
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.authorName is string
+        && request.resource.data.authorName.size() <= 60
+        && isAllowedUploadedImage(request.resource.data.authorImageUrl)
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.createdAt == request.time;
+      // Szerkeszteni nem lehet (nincs „szerkesztve" allapot egy stream alatt).
+      allow update: if false;
+      // A szerzo a SAJAT uzenetet torolheti (elgepeles), az admin barmit.
+      allow delete: if isAdmin()
+        || (request.auth != null && request.auth.uid == resource.data.authorId);
+    }
+
     match /community_profiles/{userId} {
       allow read: if request.auth != null
         && (request.auth.uid == userId || isAdmin());

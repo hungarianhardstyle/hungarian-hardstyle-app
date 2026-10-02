@@ -1,4 +1,6 @@
 [
+  "Adminisztrátorként korlátlan névmódosítás",
+  "Ajánlás másolása",
   "Ajánlókód (opcionális)",
   "Akár egy karakterrel",
   "Aktív",
@@ -54,9 +56,7 @@
   "Az ismerőslista regisztrált felhasználóknak érhető el.",
   "Az ismerősnek jelölés nem sikerült.\n{error}",
   "Az új jelszó legalább 6 karakter legyen, és a két mező egyezzen.",
+  "Az üzenet nem ment el. Próbáld újra.",
   "Azok láthatók itt, akik erre az eseményre Meetupot jeleztek.",
-  "Azonnal megnyílik a mentés lap",
-  "Azonosító: {id}",
-  "Bármelyik naptáralkalmazásba importálható",
-  "Beágyazott tartalom"
+  "Azonnal megnyílik a mentés lap"
 ]

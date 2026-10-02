@@ -326,9 +326,14 @@ void main() {
           reason: 'a Twitch-kártya a „Közelgő események" előtt van');
     });
 
-    test('a Twitch-oldal az APP chatjét, a támogatást és a kis képernyőt használja', () {
+    test('a Twitch-oldal a stream-chatjét, a támogatást és a kis képernyőt használja', () {
       final source = File('lib/screens/twitch/twitch_screen.dart').readAsStringSync();
-      expect(source, contains('LiveFeedScreen()'), reason: 'nincs app-chat a stream alatt');
+      // ⚠️ A MÉRT HIBA (2026-10-02, a tulajdonos jelzése): *„a twitch oldal alatti
+      // chatr ha írok, valamiért a fő chatre is kikerül...”* — itt eddig a fő chat
+      // widgetje (`LiveFeedScreen`) állt, ezért ugyanabba a gyűjteménybe írt.
+      expect(source, contains('TwitchStreamChat()'), reason: 'nincs stream-chat a videó alatt');
+      expect(source.contains('LiveFeedScreen'), isFalse,
+          reason: 'a Twitch-oldal a FŐ chatet használná (ez volt a hiba)');
       expect(source, contains('DonateScreen.openDonate()'), reason: 'nincs támogatás gomb');
       expect(source, contains('pictureInPicture.setEnabled(true)'), reason: 'nincs kis képernyő');
       expect(source, contains('stopRadioPlayback()'), reason: 'a rádió nem áll le a streamhez');
@@ -365,7 +370,7 @@ void main() {
 
       final videoIndex = source.indexOf('AspectRatio(');
       final donateIndex = source.indexOf("label: const AppText('Támogatás PayPallal')");
-      final chatIndex = source.indexOf('const Expanded(child: LiveFeedScreen())');
+      final chatIndex = source.indexOf('const Expanded(child: TwitchStreamChat())');
 
       expect(videoIndex, greaterThan(0), reason: 'nincs videó a képernyőn');
       expect(donateIndex, greaterThan(0), reason: 'nincs támogatás gomb a képernyőn');

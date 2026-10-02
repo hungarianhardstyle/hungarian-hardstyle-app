@@ -1,0 +1,65 @@
+feat(391): a Twitch-oldal alatti chat KULON szalon fut + eles Firestore-szabaly
+
+A TULAJDONOS JELZESE (2026-10-02): "+ a twitch oldal alatti chatr ha irok, valamiert
+a fo chatre is kikerul...". VALOS VOLT, es a gyoker a sajat kodunkban: a Twitch-oldal a
+FO chat widgetjet hasznalta (`const Expanded(child: LiveFeedScreen())`), ezert ugyanabba
+a `live_feed_posts` gyujtemenybe irt — a 385-os dontes ("az app sajat chatje")
+kovetkezmenye. A tulajdonos dontese (kerdesre): KULON stream-chat kell.
+
+AMI EPULT:
+- lib/services/twitch_chat.dart (UJ): twitchChatCollection='twitch_chat',
+  TwitchChatMessage (tolerans fromDocument), twitchChatOutgoingText (tiszta),
+  twitchChatMessagePayload (pontosan a szabalyban engedett kulcsok),
+  TwitchChatGateway (absztrakcio a widget-teszthez) + TwitchChatService
+  (elo stream, orderBy createdAt desc, nev/avatar a community_profiles-bol,
+  anonim bejelentkezes, sajat uzenet torlese);
+- lib/providers/twitch_chat_provider.dart (UJ): service + messages provider;
+- lib/screens/twitch/twitch_chat.dart (UJ): TwitchStreamChat — fejlec ("kulon szal —
+  a fo chat nem kapja meg"), uzenetlista (avatar, nev, idopont), iro sav, ures allapot;
+- twitch_screen.dart: a fo chat widgetje helyere ez kerult (a community import kikerult);
+- firestore.rules: uj `match /twitch_chat/{messageId}` (olvasas nyilvanos; iras
+  bejelentkezve, tiltott/kitiltott nelkul, pontos kulcshalmaz, authorId==auth.uid,
+  createdAt==request.time, szoveg 1..500; update: false; torles: admin VAGY a szerzo)
+  — ELESBEN TELEPITVE (`firebase deploy --only firestore:rules`).
+
+A KOR LEGFONTOSABB MERESE — a rules `size()` KARAKTER, NEM BAJT: az eles proba egy
+300 ekezetes betus uzenetet (UTF-8-ban 600 bajt) kuldott, es a szabaly ATENGEDTE, ezert
+a kliens is karaktert mer (twitchChatMaxLength=500; a bajt-alapu korlat megszuntetve,
+mert az a hosszu magyar uzeneteket ok nelkul utasitotta volna el). ELES ELLENORZES 9/9
+(tmp/verify-twitch-chat-rules.mjs, valodi anonim felhasznaloval a hungarian-hardstyle
+neves adatbazison): iras bejelentkezve 200, olvasas token nelkul 200, iras token nelkul
+403, 501 karakter 403, 300 ekezetes betu 200, idegen authorId 403, varatlan mezo
+(pinned) 403, szerzoi torles 200, a proba eltunt 404 — a szkript magat takaritja.
+
+MERT SAJAT HIBA — a ROSSZ ADATBAZIS szabalyai: a tmp/probe-firestore-rules-live.mjs
+elso valtozata a `cloud.firestore` kiadast nezte, ami a (default) adatbazise — az egy
+2095 karakteres, osi szabalykeszlet, ezert a szkript hamis riasztast adott ("ne
+telepits!"). A valosag: a NEVES adatbazisnak kulon kiadasa van
+(releases/cloud.firestore/hungarian-hardstyle, 34796 karakter), es az a repó
+RESZHALMAZA volt (csak a repoban: 19 sor) -> a telepites biztonsagos. Telepites utan:
+"a repó és az élő szabály AZONOS" (36625 karakter).
+
+MUTACIOS BIZONYITEK 7/7 ELKAPVA (tmp/mutation-proof-twitch-chat.mjs, bajtazonos
+visszaallitassal): a Twitch-oldal visszaallitasa a fo chatre, a szolgaltatas a fo
+gyujtemenybe ir, fordited sorrendu olvasas, a hossz-korlat elvetele, a szabaly elvetele,
+a szabaly korlatjanak fellazitasa (500 -> 5000) es a bekotes kapuja. A bizonyitek egy
+GYENGE KAPUT talalt: a contains('... <= 500') a fellazitott <= 5000-re is illeszkedett
+(a rovidebb szoveg a hosszabb eleje) — javitva RegExp '... <= 500(?![0-9])' + a <= 5000
+tiltasa.
+
+MAS MERT SAJAT HIBA (PowerShell + BOM): a pubspec.yaml verziojat Set-Content -Encoding
+utf8-cal irtam -> BOM + sorveg-csere (a diff 28 sorra ugrott); javitva git checkout +
+edit tool (a diff 1 sor) + tmp/strip-bom.mjs. PowerShell-en SOHA nem irunk projektfajlt.
+
+KAPUK (mind merve): flutter test 1462/1462 (17 uj); flutter analyze lib test tiszta;
+i18n --strict zold (chunk-43); check-play-notes zold (1. blokk 217/480, masolatok 4/4
+bajtazonos). A teljes kor egy valodi hibat is fogott: a twitch_chat.dart ArgumentError-ja
+magyar volt -> az i18n_untranslated_ui_test elutasitotta, ezert angol lett.
+
+CSOMAG: build/HUHS-v1.0.0+391-release.aab — 83 451 806 bajt, SHA-256
+C7A5886C135A92E62747E057E6DE45CF42D813EA57190273A924DD5E220447D5; verify-aab 391 ->
+MINDEN ELLENORZES RENDBEN, a 391 changelog-sora mindharom ABI-ban bent van.
+
+A TULAJDONOS LEPESE: (1) a 391 feltoltese a Play Console-ra es kiadasa a ZART TESZTEN
+(tmp/play-391-zart.txt = 2 sor); a 390-et NEM kell feltolteni (a 391 felvaltja);
+(2) a 391 felkerul a telefonra (sideload).

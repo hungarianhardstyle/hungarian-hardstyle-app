@@ -1,4 +1,7 @@
 [
+  "KIEMELT ESEMÉNY",
+  "KIEMELT HÍR",
+  "Kiemelt hírek",
   "Kihagyás",
   "Kijelölés kikapcsolása",
   "Kijelölés törléshez",
@@ -34,6 +37,7 @@
   "Küldés és rögzítés",
   "Külföldi DJ-k kiválasztása",
   "Külföldi hardstyle DJ-k",
+  "külön szál — a fő chat nem kapja meg",
   "Külső szolgáltatók és adatáramlás: Firebase/Firestore és Firebase Authentication (fiók, közösség, üzenetek, jogosultságok és biztonsági működés), Firebase Cloud Messaging (push értesítések), Cloudinary (feltöltött profil- és közösségi képek), WordPress (publikus hírek, események, DJ-k, szervezők, beküldések és a védett letöltési végpont), Google Play Billing (vásárlás és tranzakció-ellenőrzés), Google AdMob és annak hozzájárulás-kezelése (banner- és jutalmazott hirdetések), valamint Mailchimp (külön feliratkozással kért hírlevél). Az egyes szolgáltatók saját adatkezelési tájékoztatója is irányadó; szerepük az adott folyamatban adatfeldolgozó vagy önálló adatkezelő lehet. Az adatokat csak a szolgáltatás, biztonság, visszaélés-megelőzés, jogosultság-ellenőrzés és jogi kötelezettség teljesítéséhez szükséges mértékben továbbítjuk.",
   "Kvíz",
   "Kvíz és játékok",
@@ -54,9 +58,5 @@
   "Létrehozás",
   "Lezárás",
   "Lista",
-  "Ma {count}/{limit} lájkpont jár.",
-  "Magyar DJ-k",
-  "Magyar hardstyle és hardcore előadók",
-  "Magyar hardstyle és hardcore közösségi app",
-  "Már egy betűre is keres"
+  "Ma {count}/{limit} lájkpont jár."
 ]

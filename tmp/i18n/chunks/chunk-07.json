@@ -1,7 +1,9 @@
 [
+  "A részvétel jelöléséhez regisztráció szükséges.",
   "A részvétel mentése nem sikerült. Próbáld újra később.",
   "A segítség most nem tölthető be.",
   "A sorsolás megtörtént.",
+  "A stream-chat most nem érhető el.",
   "A szavazás állapotát most nem sikerült lekérdezni. Ellenőrizd a kapcsolatot, és próbáld újra a jobb felső frissítés ikonnal.",
   "A szavazás elküldéséhez minden kötelező kategóriát ki kell tölteni.\n\n{list}",
   "A szavazás jelenleg nem tölthető be. Próbáld újra később.",
@@ -56,7 +58,5 @@
   "Adj meg e-mail-címet és erősítsd meg 24 órán belül.",
   "Adj meg egy érvényes e-mail-címet.",
   "Adj meg egy megjelenési nevet.",
-  "Adj meg érvényes e-mail-címet.",
-  "Adminisztrátorként korlátlan névmódosítás",
-  "Ajánlás másolása"
+  "Adj meg érvényes e-mail-címet."
 ]

@@ -11,9 +11,9 @@ import '../../services/picture_in_picture.dart';
 import '../../services/twitch_live.dart';
 import '../../services/webview_picture_in_picture.dart';
 import '../../widgets/app_text.dart';
-import '../community/community_screen.dart';
 import '../more/donate_screen.dart';
 import '../../widgets/radio_player_bar.dart';
+import 'twitch_chat.dart';
 
 /// **Twitch-élő adás az appban** — a tulajdonos kérése (2026-10-01):
 /// *„lehessen nézni az appban… nyisson meg egy külön oldalt… legessen chatelni
@@ -244,8 +244,12 @@ class _TwitchScreenState extends ConsumerState<TwitchScreen> with WidgetsBinding
             ),
           ),
           const Divider(height: 12),
-          // Az app SAJÁT chatje — ugyanaz a közösségi felület, ami a Chat fülön.
-          const Expanded(child: LiveFeedScreen()),
+          // A STREAM-CHAT (391) — a tulajdonos jelzése: *„a twitch oldal alatti
+          // chatr ha írok, valamiért a fő chatre is kikerül...”*. Eddig itt a fő
+          // chat widgetje állt, ezért ugyanabba a `live_feed_posts` gyűjteménybe
+          // írt. Mostantól külön szál (`twitch_chat`), ezért a fő chat
+          // érintetlen marad.
+          const Expanded(child: TwitchStreamChat()),
         ],
       ),
     );

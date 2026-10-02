@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 391,
+    changes: [
+      'ÚJ: a Twitch-oldal alatti chat külön szálon fut — amit a stream alatt írsz, nem kerül ki a fő chatbe.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 390,
     changes: [
       'Javítva: a Twitch-oldalon a támogatás gomb a videó alá került — eddig a chat „Küldés” gombja mellett lebegett, ezért könnyen össze lehetett téveszteni.',

@@ -341,6 +341,15 @@
     ]
   },
   {
+    "value": "Küldés",
+    "count": 4,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/community/wordpress_admin_screen.dart",
+      "lib/screens/twitch/twitch_chat.dart"
+    ]
+  },
+  {
     "value": "Letöltés",
     "count": 4,
     "files": [
@@ -631,14 +640,6 @@
     "count": 3,
     "files": [
       "lib/screens/community/community_screen.dart"
-    ]
-  },
-  {
-    "value": "Küldés",
-    "count": 3,
-    "files": [
-      "lib/screens/community/community_screen.dart",
-      "lib/screens/community/wordpress_admin_screen.dart"
     ]
   },
   {
@@ -1116,6 +1117,14 @@
     "count": 2,
     "files": [
       "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Írj valamit a közösségnek…",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/twitch/twitch_chat.dart"
     ]
   },
   {
@@ -2787,6 +2796,13 @@
     ]
   },
   {
+    "value": "A stream-chat most nem érhető el.",
+    "count": 1,
+    "files": [
+      "lib/screens/twitch/twitch_chat.dart"
+    ]
+  },
+  {
     "value": "A szavazás állapotát most nem sikerült lekérdezni. Ellenőrizd a kapcsolatot, és próbáld újra a jobb felső frissítés ikonnal.",
     "count": 1,
     "files": [
@@ -3568,6 +3584,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Az üzenet nem ment el. Próbáld újra.",
+    "count": 1,
+    "files": [
+      "lib/screens/twitch/twitch_chat.dart"
     ]
   },
   {
@@ -5146,14 +5169,14 @@
     ]
   },
   {
-    "value": "Írj egy üzenetet vagy válassz képet.",
+    "value": "Írj egy rövid üzenetet (legfeljebb 500 karakter).",
     "count": 1,
     "files": [
-      "lib/screens/community/community_screen.dart"
+      "lib/screens/twitch/twitch_chat.dart"
     ]
   },
   {
-    "value": "Írj valamit a közösségnek…",
+    "value": "Írj egy üzenetet vagy válassz képet.",
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
@@ -5951,6 +5974,13 @@
     ]
   },
   {
+    "value": "külön szál — a fő chat nem kapja meg",
+    "count": 1,
+    "files": [
+      "lib/screens/twitch/twitch_chat.dart"
+    ]
+  },
+  {
     "value": "Külső szolgáltatók és adatáramlás: Firebase/Firestore és Firebase Authentication (fiók, közösség, üzenetek, jogosultságok és biztonsági működés), Firebase Cloud Messaging (push értesítések), Cloudinary (feltöltött profil- és közösségi képek), WordPress (publikus hírek, események, DJ-k, szervezők, beküldések és a védett letöltési végpont), Google Play Billing (vásárlás és tranzakció-ellenőrzés), Google AdMob és annak hozzájárulás-kezelése (banner- és jutalmazott hirdetések), valamint Mailchimp (külön feliratkozással kért hírlevél). Az egyes szolgáltatók saját adatkezelési tájékoztatója is irányadó; szerepük az adott folyamatban adatfeldolgozó vagy önálló adatkezelő lehet. Az adatokat csak a szolgáltatás, biztonság, visszaélés-megelőzés, jogosultság-ellenőrzés és jogi kötelezettség teljesítéséhez szükséges mértékben továbbítjuk.",
     "count": 1,
     "files": [
@@ -6256,6 +6286,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Még nincs üzenet a stream alatt — írj te először!",
+    "count": 1,
+    "files": [
+      "lib/screens/twitch/twitch_chat.dart"
     ]
   },
   {

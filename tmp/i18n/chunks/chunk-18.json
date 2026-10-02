@@ -1,4 +1,9 @@
 [
+  "Szervezői logó feltöltése",
+  "Szervezők száma",
+  "Szintek és jelvények",
+  "Szívecske",
+  "Szólunk, ha a kedvelt DJ-d új kiadványt tesz közzé, ha közelgő buli van, és vasárnap a hét összefoglalójával.",
   "Találkoznék ezen az eseményen",
   "Támogatás",
   "Támogatás / Donate",
@@ -53,10 +58,5 @@
   "Üzenet",
   "Üzenet jelentése",
   "Üzenet nem érhető el.",
-  "Üzenet rögzítése",
-  "Üzenet…",
-  "Üzenetműveletek",
-  "Válasz {name} hozzászólására: {text}",
-  "Válasz {name} üzenetére: {text}",
-  "Válasz törlése"
+  "Üzenet rögzítése"
 ]

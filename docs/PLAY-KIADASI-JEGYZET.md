@@ -1,21 +1,23 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> 🟡 **A 390 A FELTÖLTENDŐ** (versionCode **390**, `1.0.0`) — egyetlen javítás a 389-hez képest:
-> a **támogatás gomb a Twitch-oldalon a videó alá került**. A tulajdonos jelzése (2026-10-02, képpel a
-> telefonról): *„az a támogatás gomb nagyon rossz helyen van”* — a gomb eddig **lebegő gomb** volt,
-> ezért a chat „**Küldés**” gombja mellett lebegett, mintha a chathez tartozna (és véletlen koppintásra
-> **fizetési oldalt** nyitott).
+> 🟡 **A 391 A FELTÖLTENDŐ** (versionCode **391**, `1.0.0`) — két változás a 389-hez képest:
+> **(1) ÚJ: a Twitch-oldal alatti chat külön szálon fut** — a tulajdonos jelzése (2026-10-02):
+> *„a twitch oldal alatti chatr ha írok, valamiért a fő chatre is kikerül...”*. A mért gyökér: a
+> Twitch-oldal a **fő chat** widgetjét használta, ezért ugyanabba a gyűjteménybe írt. Mostantól a
+> stream alatti chat **saját szál** (a fő chat tiszta marad), a fejléc ki is mondja.
+> **(2) Javítva: a támogatás gomb a videó alá került** — eddig lebegő gombként a chat „Küldés”
+> gombja mellett lebegett (*„az a támogatás gomb nagyon rossz helyen van”*).
 >
 > ✅ **A 389 FENT VAN, KIADVA a zárt teszten.** **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-10-02): az **alpha (zárt teszt) sávon a 389 van kiadva 100%-ban kigördülve**, az **ÉLES
 > (production) sáv a 384-en** áll (szintén 100%), a **nyílt teszt (beta) a 377-en**. A feltöltött
 > AAB-ek között ott van a **387, 388, 389** is.
 >
-> **Melyik blokk hova való (mérve, 2026-10-02):** a **zárt tesztre** (389 → 390) az **1. blokk**
-> (és a `tmp/play-390-zart.txt`); ha az **éles** sávra viszed (384 → 390), akkor is az **1. blokk**, de
-> mellé érdemes a **361–390 összesítőt** (1b-2.) is bevenni, mert a 384 óta sok újdonság jött; a
-> **bétára** (377) a **355–390** összesítő (1b-3.) való.
-> ⚠️ **A 385–389-at NE tárd fel újra** — a 390 mindegyiket tartalmazza.
+> **Melyik blokk hova való (mérve, 2026-10-02):** a **zárt tesztre** (389 → 391) az **1. blokk** (és a
+> `tmp/play-391-zart.txt`); ha az **éles** sávra viszed (384 → 391), akkor is az **1. blokk**, de mellé
+> érdemes a **361–391 összesítőt** (1b-2.) is bevenni, mert a 384 óta sok újdonság jött; a **bétára**
+> (377) a **355–391** összesítő (1b-3.) való.
+> ⚠️ **A 385–390-et NE tárd fel újra** — a 391 mindegyiket tartalmazza (a 390-et sem kell feltölteni).
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -23,11 +25,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 390
+currentBuild: 391
 currentVersion: 1.0.0
 lastPublishedBuild: 384
-aab: build/HUHS-v1.0.0+390-release.aab
-sha256: D2F4AD6F66039D96D11FF05F97D657FCC210BC1B638FED431E44537E26B9425C
+aab: build/HUHS-v1.0.0+391-release.aab
+sha256: C7A5886C135A92E62747E057E6DE45CF42D813EA57190273A924DD5E220447D5
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -138,22 +140,22 @@ A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a hí
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+390-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+391-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **390** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 83 422 551 bájt (79,6 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
-| SHA-256 | `D2F4AD6F66039D96D11FF05F97D657FCC210BC1B638FED431E44537E26B9425C` |
+| Verziókód | **391** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 83 451 806 bájt (79,6 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
+| SHA-256 | `C7A5886C135A92E62747E057E6DE45CF42D813EA57190273A924DD5E220447D5` |
 
-> **⚠️ A 390 a feltöltendő csomag** (versionCode **390**, `1.0.0`), és **2026-10-02-án épült**: benne van
-> a **támogatás gomb helyre tétele** a Twitch-oldalon (a tulajdonos jelzése: *„az a támogatás gomb
-> nagyon rossz helyen van”* — eddig a chat „Küldés” gombja mellett lebegett), valamint a **389 minden**
-> újdonsága: a rádió **„Leállítás” gombja** (zárképernyő + értesítés), a **rádió „most szól”**
-> (Real Hardstyle FM logóval), az **élő Twitch-adás** (főoldali kártya + külön oldal az app chatjével),
-> a **kis képernyő (PiP)** Androidon és iPhone-on, az **előre behirdethető Twitch-kártya** és az
-> **élő indulásról szóló push**.
-> A **389 a zárt teszten van kiadva** (100%), az **éles sávon a 384** — a 390-nél kisebb kódú csomagot a
-> Play **nem** fogadná el. **A 385–389-et nem kell feltölteni** (a 390 mindegyiket tartalmazza).
-> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 390 azokat is tartalmazza) — a 390 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
+> **⚠️ A 391 a feltöltendő csomag** (versionCode **391**, `1.0.0`), és **2026-10-02-án épült**: benne van
+> a **külön stream-chat** a Twitch-oldalon (a tulajdonos jelzése: *„a twitch oldal alatti chatr ha írok,
+> valamiért a fő chatre is kikerül...”* — mostantól külön szálon fut, a fő chat tiszta marad), a
+> **támogatás gomb helyre tétele** (*„az a támogatás gomb nagyon rossz helyen van”*), valamint a **389
+> minden** újdonsága: a rádió **„Leállítás” gombja** (zárképernyő + értesítés), a **rádió „most szól”**
+> (Real Hardstyle FM logóval), az **élő Twitch-adás** (főoldali kártya + külön oldal), a **kis képernyő
+> (PiP)** Androidon és iPhone-on, az **előre behirdethető Twitch-kártya** és az **élő indulásról szóló push**.
+> A **389 a zárt teszten van kiadva** (100%), az **éles sávon a 384** — a 391-nél kisebb kódú csomagot a
+> Play **nem** fogadná el. **A 385–390-et nem kell feltölteni** (a 391 mindegyiket tartalmazza).
+> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 391 azokat is tartalmazza) — a 391 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
 
 **Miért a 360-at kell feltenni (és miért nem a 358-at):** a 360 **magában foglalja a 358-at, a 357-et, a 356-ot, a 355-öt és a 354-et is**, ezért egy csomagot kell feltenni:
 
@@ -242,6 +244,7 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 > tárd fel újra. A **kész, másolható** változat: `tmp/play-390.txt` (bájtazonos ezzel a blokkal).
 
 ```play-notes
+- ÚJ: a Twitch-oldal alatti chat külön szálon fut — amit a stream alatt írsz, nem kerül ki a fő chatbe.
 - Javítva: a Twitch-oldalon a támogatás gomb a videó alá került (eddig a chat „Küldés” gombja mellett lebegett).
 ```
 
@@ -260,25 +263,25 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–390** összesítő (a 384 után)
+## 1b-2. Play Console — a **361–391** összesítő (a 384 után)
 
 **Ezt használd, ha a felhasználó a 361–380 közötti valamelyik buildről jön** (régebbi nyilvános
-build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–390** között készültek.
+build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–391** között készültek.
 A karakter-számot a `tools/check-play-notes.mjs` méri.
-⚠️ **Az ÉLES sávon a 384 van** (mérve, 2026-10-02), ezért aki **384-ről** jön, annak a **385–390**
-közötti sorok az újak — erre a legjobb ez az összesítő, kiegészítve az **1. blokkal** (a támogatás gomb).
+⚠️ **Az ÉLES sávon a 384 van** (mérve, 2026-10-02), ezért aki **384-ről** jön, annak a **385–391**
+közötti sorok az újak — erre a legjobb ez az összesítő, kiegészítve az **1. blokkal**.
 
 ```play-notes
-- ÚJ: Twitch-adás az appban (kis képernyővel), rádió „most szól” a zárképernyőn, behirdethető kártya.
+- ÚJ: Twitch-adás az appban (kis képernyővel, külön stream-chattel), rádió „most szól” a zárképernyőn.
 - ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság; heti összefoglaló.
 - ÚJ: megosztható hírek és DJ-adatlapok; értesítés a kedvelt DJ új tartalmáról; @mindenki push.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
 - Javítva: rádió Leállítás gomb a zárképernyőn; a listák görgetése nem ugrik vissza.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–390** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–391** összesítő)
 
-**Ezt használd, ha a 390-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 391-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-10-02) szerint ott a **377** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
@@ -286,7 +289,7 @@ közötti sorok az újak — erre a legjobb ez az összesítő, kiegészítve az
 linknyitás + QR-jelenlét** és a mostani újdonságok is.
 
 ```play-notes
-- ÚJ: Twitch-adás az appban (kis képernyővel), rádió „most szól” a zárképernyőn, behirdethető kártya.
+- ÚJ: Twitch-adás az appban (kis képernyővel, külön stream-chattel), rádió „most szól” a zárképernyőn.
 - ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság; heti összefoglaló.
 - ÚJ: megosztható hírek és DJ-adatlapok; értesítés a kedvelt DJ új tartalmáról; @mindenki push.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
@@ -311,6 +314,7 @@ kigördülve, ezért a tesztelők a 389 öt soros jegyzetét **már látták**. 
 való, amit a tulajdonos jelzése javított — így a kártyán pontosan az látszik, ami **változott**:
 
 ```play-notes
+- ÚJ: a Twitch-oldal alatti chat külön szálon fut — amit a stream alatt írsz, nem kerül ki a fő chatbe.
 - Javítva: a Twitch-oldalon a támogatás gomb a videó alá került (eddig a chat „Küldés” gombja mellett lebegett).
 ```
 
@@ -332,6 +336,12 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 391 — a Twitch-oldal alatti chat KÜLÖN szálon fut
+- **A tulajdonos jelzése (2026-10-02):** *„+ a twitch oldal alatti chatr ha írok, valamiért a fő chatre is kikerül...”*.
+- **A mért gyökér:** a Twitch-oldal a **fő chat** widgetjét használta, ezért ugyanabba a `live_feed_posts` gyűjteménybe írt — a stream alatt írt üzenet **törvényszerűen** megjelent a Chat fülön is.
+- **A javítás:** a stream alatti chat **saját gyűjtemény** (`twitch_chat`), saját szabállyal; a fejléc ki is mondja, hogy *„külön szál — a fő chat nem kapja meg”*. A stream-chat szándékosan egyszerű (szöveg, név, avatár, időpont), **nincs push**, ezért a stream alatti beszélgetés nem hív fel 1000 embert.
+- **A kapu mérése:** 7/7 mutáció elkapva (`tmp/mutation-proof-twitch-chat.mjs`), és az **éles szabály** 9/9 ellenőrzése zöld (`tmp/verify-twitch-chat-rules.mjs`: írás bejelentkezve megy, bejelentkezés nélkül 403, 501 karakter 403, idegen szerző 403, váratlan mező 403, a szerző törölhet).
 
 ### 390 — a Twitch-oldalon a támogatás gomb a helyére került
 - **A tulajdonos jelzése (2026-10-02, képpel a telefonról):** *„az a támogatás gomb nagyon rossz helyen van”* — a képen a **Támogatás** gomb a chat „**Küldés**” gombja mellett ült, mintha a chathez tartozna.

@@ -1,4 +1,7 @@
 [
+  "Azonosító: {id}",
+  "Bármelyik naptáralkalmazásba importálható",
+  "Beágyazott tartalom",
   "Beállítás állapota",
   "Beállítás betöltése…",
   "Beatport",
@@ -55,8 +58,5 @@
   "Ehhez a játékhoz még nincs megjeleníthető eredmény.",
   "Ehhez a játékhoz nincs megjeleníthető adat.",
   "Ehhez a kérdőívhez nem érkezett adat.",
-  "Ehhez a szervezőhöz még nincs összekapcsolt adatlap.",
-  "Ehhez a verzióhoz ({n}) még nincs kiadási jegyzet.",
-  "Ehhez az eseményhez nincs érvényes dátum.",
-  "Ehhez az évadhoz nem érkezett kategóriaadat."
+  "Ehhez a szervezőhöz még nincs összekapcsolt adatlap."
 ]

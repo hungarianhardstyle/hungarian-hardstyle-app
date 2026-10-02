@@ -1,0 +1,11 @@
+OK     a Twitch-oldal visszaállítása a FŐ chatre (a tulajdonos által látott hiba) → a kapu elcsípte («a Twitch-oldal a stream-chatet használja, nem a fő chatet»)
+       (az első futás felmelegíti a fordítót, ezért lassabb)
+OK     a szolgáltatás a FŐ chat gyűjteményébe ír (nem külön szál) → a kapu elcsípte («a szolgáltatás nem ír a fő chatbe, és élőben, fordítva olvas»)
+OK     a szolgáltatás fordítva (legrégebbivel kezdve) olvas → a kapu elcsípte («a szolgáltatás nem ír a fő chatbe, és élőben, fordítva olvas»)
+OK     a hossz-korlát elvétele a kliensen (bármilyen hosszú üzenet elmenne) → a kapu elcsípte («500 karakternél hosszabb nem küldhető»)
+OK     a Firestore-szabály elvétele a külön gyűjteményről → a kapu elcsípte («a Firestore-szabály tartalmazza a külön gyűjteményt»)
+OK     a szabály hossz-korlátjának fellazítása 500 → 5000 → a kapu elcsípte («a Firestore-szabály tartalmazza a külön gyűjteményt»)
+OK     a Twitch-oldal a stream-chat helyett a fő chatet használná (a bekötés kapuja) → a kapu elcsípte («a Twitch-oldal a stream-chatjét, a támogatást és a kis képernyőt használja»)
+
+7/7 mutáció ELKAPVA
+a források BÁJTAZONOSAK (érintetlenek)

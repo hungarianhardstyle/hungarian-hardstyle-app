@@ -1,0 +1,10 @@
+{
+  "Stream-chat": "Stream chat",
+  "külön szál — a fő chat nem kapja meg": "separate thread — the main chat does not receive it",
+  "Még nincs üzenet a stream alatt — írj te először!": "No messages under the stream yet — be the first to write!",
+  "A stream-chat most nem érhető el.": "The stream chat is unavailable right now.",
+  "Az üzenet nem ment el. Próbáld újra.": "The message could not be sent. Try again.",
+  "Írj egy rövid üzenetet (legfeljebb 500 karakter).": "Write a short message (at most 500 characters).",
+  "ÚJ: a Twitch-oldal alatti chat külön szálon fut — amit a stream alatt írsz, nem kerül ki a fő chatbe.": "NEW: the chat under the Twitch page runs on a separate thread — what you write during the stream no longer appears in the main chat.",
+  "Javítva: a Twitch-oldalon a támogatás gomb a videó alá került — eddig a chat „Küldés” gombja mellett lebegett, ezért könnyen össze lehetett téveszteni.": "Fixed: on the Twitch screen the support button moved below the video — until now it floated next to the chat's Send button and was easy to mix up."
+}

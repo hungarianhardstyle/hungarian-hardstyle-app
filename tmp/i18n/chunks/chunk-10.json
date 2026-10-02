@@ -1,4 +1,7 @@
 [
+  "Ehhez a verzióhoz ({n}) még nincs kiadási jegyzet.",
+  "Ehhez az eseményhez nincs érvényes dátum.",
+  "Ehhez az évadhoz nem érkezett kategóriaadat.",
   "Elérhető változatok",
   "Elfogadás",
   "Elküldtük a megerősítő e-mailt — nézd meg a postaládádat (a spam mappát is), és kattints a benne lévő linkre.",
@@ -55,8 +58,5 @@
   "Ez a beszélgetés eleje.",
   "Ez a felhasználónév már foglalt. Válassz másikat.",
   "Ez a kép jelenik meg a DJ-adatlapod tetején.",
-  "Ez a sor nem törölhető innen (nincs WordPress-felhasználó-azonosítója). Az app-fiókokat a Közösségi adminisztrációban lehet törölni.",
-  "Ez a te DJ-adatlapod.",
-  "Ez a verzió",
-  "Ez az átvett adatlapod. A fényképet, a bemutatkozást és a linkeket szerkesztheted — a foglalási e-mail cím és a mûfajok a Hungarian Hardstyle kezében maradnak."
+  "Ez a sor nem törölhető innen (nincs WordPress-felhasználó-azonosítója). Az app-fiókokat a Közösségi adminisztrációban lehet törölni."
 ]

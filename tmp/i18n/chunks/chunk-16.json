@@ -1,4 +1,9 @@
 [
+  "Nem sikerült betölteni a DJ-adatlapot.",
+  "Nem sikerült betölteni a DJ-ket.",
+  "Nem sikerült betölteni a híreket.",
+  "Nem sikerült betölteni a kategóriákat.",
+  "Nem sikerült betölteni a műfajokat.",
   "Nem sikerült betölteni a szervezői adatlapot.",
   "Nem sikerült betölteni a szervezőket.",
   "Nem sikerült kiválasztani a képet.",
@@ -53,10 +58,5 @@
   "Összes leadott szavazat: {n}",
   "Összes megjelenése ({n})",
   "Összes olvasottra jelölése",
-  "Összes törlése",
-  "Piszkozat",
-  "Pontok, szintek és jelvények részletesen",
-  "Pontosan 5 jelölt választható.",
-  "Preview leállítása",
-  "Preview lejátszása"
+  "Összes törlése"
 ]
