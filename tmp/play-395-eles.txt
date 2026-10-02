@@ -1,0 +1,4 @@
+- ÚJ: Twitch-adás az appban (külön stream-chattal, emotikonokkal); az élő értesítés az app Twitch-oldalát nyitja.
+- Javítva: a Twitch-chat üzenetküldése (eddig mindig hibára futott), a rádiósáv lekerül az oldalról, gépeléskor nagyobb a chat.
+- ÚJ: a rádió „most szól” a zárképernyőn a logóval; a főoldali Twitch-kártya azonnal betölt.
+- Javítva: a Twitch-chat fekvő módban és tableten is látszik; kis képernyőn csak a videó látszik.

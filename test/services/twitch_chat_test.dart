@@ -109,6 +109,59 @@ void main() {
   });
 
   group('a gyűjtemény KÜLÖN szál (ez a lényegi ígéret)', () {
+    test('a szolgáltatás a NÉVES adatbázist használja (ez volt a „nem küldhető” hiba)', () {
+      // ⚠️ MÉRT HIBA (2026-10-02, a tulajdonos jelzése): *„üzenet azért nem
+      // küldhető a twitch chates részre mert a stream nem live?”* — nem a stream
+      // állapota volt az ok: a szolgáltatás `FirebaseFirestore.instance`-t
+      // használt, ami a `(default)` adatbázisra mutat, ahol **nincs**
+      // `twitch_chat` szabály → az írás `permission-denied`-del elhalt.
+      final source = File('lib/services/twitch_chat.dart').readAsStringSync();
+      expect(source.contains('FirebaseFirestore.instanceFor('), isTrue,
+          reason: 'a szolgáltatás a (default) adatbázisba írna');
+      expect(source.contains('databaseId: CommunityService.firestoreDatabaseId'), isTrue,
+          reason: 'az adatbázis-azonosító nem a közös konstansból jön');
+      // ⚠️ A HELY, ahol a szolgáltatás tényleg eldönti az adatbázist — a
+      // konstruktor. (A fájl-szintű „benne van” minta önmagában gyenge: a
+      // segédfüggvény akkor is `instanceFor`-t tartalmaz, ha a konstruktor a
+      // (default) példányt használja — ezt a mutációs bizonyíték fogta el.)
+      final ctor = RegExp(r'TwitchChatService\(\{([\s\S]*?);')
+          .firstMatch(source)
+          ?.group(1);
+      expect(ctor, isNotNull, reason: 'nincs konstruktor');
+      expect(ctor, contains('firestore ?? huHsFirestore()'),
+          reason: 'a konstruktor a (default) adatbázist használná');
+      expect(ctor, isNot(contains('FirebaseFirestore.instance')));
+    });
+
+    test('FORRÁS-LINT: az egész app a néves adatbázist használja', () {
+      // Az `article_comments.dart` kivétele dokumentált: ott a `FirebaseFirestore
+      // .instance` csak egy **helyi** dokumentum-azonosítóhoz kell (nem hálózat).
+      const allowed = {'lib/widgets/article_comments.dart'};
+      // ⚠️ A minta **számít**: a `contains('FirebaseFirestore.instance')` a
+      // `FirebaseFirestore.instanceFor(…)`-ra is illeszkedik (a rövidebb szöveg a
+      // hosszabb eleje) — ezért negatív lookahead-tel zárunk. A **komment-sorokat**
+      // pedig kihagyjuk: a magyarázó sor maga is említi a hibát (mért eset: a
+      // `twitch_chat.dart` fejében), és az nem használat.
+      final plainInstance = RegExp(r'FirebaseFirestore\.instance(?!For)');
+      final offenders = <String>[];
+      for (final entity in Directory('lib').listSync(recursive: true)) {
+        if (entity is! File || !entity.path.endsWith('.dart')) continue;
+        final code = entity
+            .readAsStringSync()
+            .split('\n')
+            .where((line) {
+              final trimmed = line.trimLeft();
+              return !trimmed.startsWith('//') && !trimmed.startsWith('*');
+            })
+            .join('\n');
+        if (!plainInstance.hasMatch(code)) continue;
+        if (allowed.contains(entity.path.replaceAll('\\', '/'))) continue;
+        offenders.add(entity.path.replaceAll('\\', '/'));
+      }
+      expect(offenders, isEmpty,
+          reason: 'ezek a fájlok a (default) adatbázist használnák: ${offenders.join(', ')}');
+    });
+
     test('a stream-chat gyűjteménye nem a fő chat gyűjteménye', () {
       expect(twitchChatCollection, 'twitch_chat');
       expect(twitchChatCollection, isNot(twitchChatForbiddenCollection));

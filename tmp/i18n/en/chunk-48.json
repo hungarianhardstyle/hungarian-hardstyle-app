@@ -1,0 +1,3 @@
+{
+  "Javítva: a főoldali Twitch-kártya azonnal megjelenik, és a képet gyorsítótárból, kicsinyítve tölti (eddig nagyon lassan jött be).": "Fixed: the Twitch card on the home screen now appears instantly and loads its image from cache, downscaled (it used to take very long)."
+}

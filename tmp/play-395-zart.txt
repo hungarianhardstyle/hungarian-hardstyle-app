@@ -1,0 +1,5 @@
+- Javítva: a Twitch-chat üzenetküldése (eddig mindig hibára futott) — a rádiósáv is lekerül az oldalról.
+- Javítva: a főoldali Twitch-kártya azonnal megjelenik, a képet gyorsítótárból tölti.
+- Javítva: az élő értesítésre koppintva az app Twitch-oldala nyílik meg; kis képernyőn csak a videó látszik.
+- Javítva: a Twitch-chat fekvő módban és tableten is látszik, emotikonokkal.
+- ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.

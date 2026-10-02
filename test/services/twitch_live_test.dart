@@ -296,8 +296,28 @@ void main() {
       expect(card, contains('twitchCardVisible('), reason: 'a láthatóság nem a közös döntésből jön');
       expect(card, contains('showWhenOffline: override?.showWhenOffline ?? false'));
       // Az „ÉLŐ" jelvény és a „Nézd élőben" gomb csak valódi élő adásnál jelenik meg.
-      expect(card, contains('if (live.isLive) const Positioned('));
-      expect(card, contains("live.isLive ? 'Nézd élőben' : 'Twitch-csatorna'"));
+      // ⚠️ 2026-10-02: a kártya a **behirdetett** esetben nem vár a Twitch-állapotra
+      // (a tulajdonos jelzése: *„100 év mire betölt”*), ezért a `live` már
+      // nullable — az „élő" tény továbbra is a valódi állapotból jön.
+      expect(card, contains('if (isLive) const Positioned('));
+      expect(card, contains("isLive ? 'Nézd élőben' : 'Twitch-csatorna'"));
+      expect(card, contains('final isLive = live?.isLive ?? false;'),
+          reason: 'az élő tény a valódi állapotból jön');
+    });
+
+    test('a kártya AZONNAL megjelenik, ha be van hirdetve (nem vár a Twitchre)', () {
+      // A tulajdonos jelzése: *„meg ez a twitch kártya a főoldalon 100 év mire
+      // betölt”* — a mért gyökér: a kártya a Twitch-állapotra várt, pedig a
+      // behirdetett kártyához nem kell.
+      final card = File('lib/widgets/twitch_live_card.dart').readAsStringSync();
+      expect(card, contains('final announcement ='), reason: 'nincs azonnali döntés');
+      expect(card, contains('(override?.showWhenOffline ?? false)'));
+      expect(card, contains('final visible = announcement ||'));
+      // A kép gyorsítótárazva, kicsinyítve töltődik.
+      expect(card, contains('CachedNetworkImage('), reason: 'a kép gyorsítótár nélkül töltődik');
+      expect(card, contains('memCacheWidth: 900'));
+      expect(card.contains('Image.network('), isFalse,
+          reason: 'a gyorsítótár nélküli betöltés maradt');
     });
 
     test('a felülírás olvassa a showWhenOffline mezőt', () {
@@ -305,7 +325,7 @@ void main() {
       // (`parseTwitchCardConfig`), ezért azt mérjük — és azt is, hogy a provider
       // ezt használja (nem a saját, széttartó másolatát).
       final service = File('lib/services/twitch_live.dart').readAsStringSync();
-      expect(service, contains("data['showWhenOffline'] == true && imageUrl.isNotEmpty"));
+      expect(service, contains("data['showWhenOffline'] == true && (imageUrl.isNotEmpty || imageUrlSmall.isNotEmpty)"));
       expect(service, contains('TwitchCardConfig parseTwitchCardConfig'));
       final provider = File('lib/providers/twitch_live_provider.dart').readAsStringSync();
       expect(provider, contains('parseTwitchCardConfig('), reason: 'a provider nem a közös értelmezőt használja');
@@ -314,6 +334,36 @@ void main() {
       // A plugin az első forrás, a Firestore a tartalék.
       expect(provider, contains('fetchTwitchCardConfig('));
       expect(provider, contains('loadTwitchCardFromFirestore'));
+    });
+
+    test('a kicsinyített kép kerül a kártyára, ha a plugin megadja (2.14.17)', () {
+      // A tulajdonos jelzése: *„meg ez a twitch kártya a főoldalon 100 év mire
+      // betölt”* — a mért kép 1179 KB, a WordPress kicsinyítése 200 KB.
+      final withSmall = parseTwitchCardConfig({
+        'imageUrl': 'https://example.test/plakat.png',
+        'imageUrlSmall': 'https://example.test/plakat-768x432.png',
+        'enabled': true,
+        'showWhenOffline': true,
+      });
+      expect(withSmall.hasImage, isTrue);
+      expect(withSmall.displayImageUrl, 'https://example.test/plakat-768x432.png',
+          reason: 'a nagy képet töltené le a kicsinyített helyett');
+
+      // Ha nincs kicsinyített változat, a beállított kép megy.
+      final withoutSmall = parseTwitchCardConfig({
+        'imageUrl': 'https://example.test/plakat.png',
+        'enabled': true,
+      });
+      expect(withoutSmall.displayImageUrl, 'https://example.test/plakat.png');
+
+      // Csak kicsinyített van: az is elég a kártyához (nem tűnik el).
+      final onlySmall = parseTwitchCardConfig({
+        'imageUrlSmall': 'https://example.test/plakat-768x432.png',
+        'showWhenOffline': true,
+      });
+      expect(onlySmall.hasImage, isTrue);
+      expect(onlySmall.showWhenOffline, isTrue);
+      expect(onlySmall.displayImageUrl, 'https://example.test/plakat-768x432.png');
     });
 
     test('a főoldal az élő kártyát a hírek blokkja után mutatja', () {

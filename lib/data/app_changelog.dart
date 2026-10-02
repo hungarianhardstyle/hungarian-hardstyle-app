@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 395,
+    changes: [
+      'Javítva: a Twitch-chat üzenetküldése — a szolgáltatás rossz adatbázisba írt, ezért a küldés mindig hibára futott.',
+      'Javítva: a főoldali Twitch-kártya azonnal megjelenik, és a képet gyorsítótárból, kicsinyítve tölti (eddig nagyon lassan jött be).',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 394,
     changes: [
       'Javítva: a Twitch-chat nagyobb helyet kap — a rádiósáv eltűnik az oldalról, és gépelés közben a videó összehúzódik.',

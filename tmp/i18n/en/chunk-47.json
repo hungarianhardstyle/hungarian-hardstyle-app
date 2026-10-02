@@ -1,0 +1,3 @@
+{
+  "Javítva: a Twitch-chat üzenetküldése — a szolgáltatás rossz adatbázisba írt, ezért a küldés mindig hibára futott.": "Fixed: sending messages in the Twitch chat — the service wrote to the wrong database, so sending always failed."
+}

@@ -9064,13 +9064,18 @@ async function fetchWordPressTwitchCard() {
     const body = await response.json().catch(() => null);
     if (!body || typeof body !== 'object') return null;
     const imageUrl = String(body.imageUrl ?? '').trim();
+    // ⚠️ 2.14.17: a plugin a **kicsinyített** változatot is megadja (WordPress
+    // `medium_large`) — a mért kép 1179 KB volt, a kicsinyített 200 KB. A
+    // tartalék-úton (Firestore) is ezt visszük tovább, hogy a kártya gyors legyen.
+    const imageUrlSmall = String(body.imageUrlSmall ?? '').trim();
     return {
       enabled: body.enabled !== false,
       imageUrl,
+      imageUrlSmall,
       headerText: String(body.headerText ?? '').trim(),
       // ⚠️ Kép nélkül az „élő adás nélkül is" értelmetlen (nincs mit mutatni) —
       // ugyanaz a szabály, mint a plugin adminjában.
-      showWhenOffline: body.showWhenOffline === true && imageUrl !== '',
+      showWhenOffline: body.showWhenOffline === true && (imageUrl !== '' || imageUrlSmall !== ''),
     };
   } catch (error) {
     logWarning('twitch_card_fetch_failed', error?.message || String(error));
@@ -9094,6 +9099,7 @@ async function syncTwitchCardFromWordPress() {
   const same =
     Boolean(current.enabled) === card.enabled &&
     String(current.imageUrl ?? '') === card.imageUrl &&
+    String(current.imageUrlSmall ?? '') === card.imageUrlSmall &&
     String(current.headerText ?? '') === card.headerText &&
     Boolean(current.showWhenOffline) === card.showWhenOffline;
   if (same) return { skipped: 'unchanged' };
@@ -9102,6 +9108,7 @@ async function syncTwitchCardFromWordPress() {
     {
       enabled: card.enabled,
       imageUrl: card.imageUrl,
+      imageUrlSmall: card.imageUrlSmall,
       headerText: card.headerText,
       showWhenOffline: card.showWhenOffline,
       source: 'wordpress-admin',

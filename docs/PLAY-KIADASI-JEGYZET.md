@@ -1,28 +1,25 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> 🟡 **A 394 A FELTÖLTENDŐ** (versionCode **394**, `1.0.0`) — a 389-hez képest:
-> **(1) a Twitch-chat nagyobb helyet kap** — a **rádiósáv eltűnik** az oldalról, **gépelés közben a videó
-> összehúzódik**, és van **emotikon-választó** + **billentyűzet-elrejtő** gomb (*„az a chat rész NAGYON
-> kicsi, az olvasható rész”*, *„sztem a rádió lekerülhet a twitch chat részről”*, *„eltűnt a billenytűzet
-> eltűntető gomb is”*, *„+ nincsenek emotok”*);
-> **(2) az élő értesítés az app Twitch-oldalát nyitja** (*„ha kimegy a push a twitch chatről, hogy live …
-> akkor nyissa meg a twitches oldalt a pushra nyomva”*);
-> **(3) kis képernyőn (PiP) csak a videó látszik**, és a gomb megmondja, ha a rendszer nem engedi
-> (*„ez a kis ablak a PIP is elég FOSCSI, a rádió gomb dominál”*);
-> **(4) a Twitch-chat fekvő módban és tableten is látszik** (*„fekvő módban nincs chat”*, *„figyelj a
-> tabletre is”*);
-> **(5) a Twitch-oldal alatti chat külön szálon fut** (*„a twitch oldal alatti chatr ha írok, valamiért a
-> fő chatre is kikerül...”*), és a támogatás gomb a videó alá került.
+> 🟡 **A 395 A FELTÖLTENDŐ** (versionCode **395**, `1.0.0`) — a 389-hez képest:
+> **(1) a Twitch-chat üzenetküldése működik** (a szolgáltatás rossz adatbázisba írt — *„üzenet azért nem
+> küldhető a twitch chates részre mert a stream nem live?”*, nem a stream volt az ok);
+> **(2) a főoldali Twitch-kártya azonnal megjelenik** és a képet gyorsítótárból, kicsinyítve tölti
+> (*„meg ez a twitch kártya a főoldalon 100 év mire betölt”*);
+> **(3) a Twitch-chat nagyobb helyet kap** — a rádiósáv eltűnik az oldalról, gépelés közben a videó
+> összehúzódik, van emotikon-választó és billentyűzet-elrejtő (*„az a chat rész NAGYON kicsi, az
+> olvasható rész”*, *„eltűnt a billenytűzet eltűntető gomb is”*, *„+ nincsenek emotok”*);
+> **(4) az élő értesítés az app Twitch-oldalát nyitja**, kis képernyőn (PiP) csak a videó látszik;
+> **(5) a Twitch-chat fekvő módban és tableten is látszik**, a stream alatti chat **külön szálon** fut, és
+> a támogatás gomb a videó alá került.
 >
 > ✅ **A 389 FENT VAN, KIADVA a zárt teszten.** **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-10-02): az **alpha (zárt teszt) sávon a 389 van kiadva 100%-ban kigördülve**, az **ÉLES
 > (production) sáv a 384-en** áll (szintén 100%), a **nyílt teszt (beta) a 377-en**.
 >
-> **Melyik blokk hova való (mérve, 2026-10-02):** a **zárt tesztre** (389 → 394) az **1. blokk** (és a
-> `tmp/play-394-zart.txt`); az **ÉLES** sávra (384 → 394) a **2b. blokk** (egyetlen, összevont szöveg,
-> mert az 1. blokk + összesítő nem férne bele az 500-as limitbe); a **bétára** (377) a **355–394**
-> összesítő (1b-3.) való.
-> ⚠️ **A 385–393-at NE tárd fel újra** — a 394 mindegyiket tartalmazza.
+> **Melyik blokk hova való (mérve, 2026-10-02):** a **zárt tesztre** (389 → 395) az **1. blokk** (és a
+> `tmp/play-395-zart.txt`); az **ÉLES** sávra (384 → 395) a **2b. blokk** (`tmp/play-395-eles.txt`);
+> a **bétára** (377) a **355–395** összesítő (1b-3.) való.
+> ⚠️ **A 385–394-et NE tárd fel újra** — a 395 mindegyiket tartalmazza.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -30,11 +27,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 394
+currentBuild: 395
 currentVersion: 1.0.0
 lastPublishedBuild: 384
-aab: build/HUHS-v1.0.0+394-release.aab
-sha256: 36DAB86C2C2551BF9589CFB46E3CF259C8A04D72AF4D97098BE7BC7FE80DED1B
+aab: build/HUHS-v1.0.0+395-release.aab
+sha256: E882B97C37BCA3D525D9A0AD671D1D570308F84602CE057B9A0346A55B9CEF7A
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -145,22 +142,24 @@ A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a hí
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+394-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+395-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **394** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 83 477 895 bájt (79,6 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
-| SHA-256 | `36DAB86C2C2551BF9589CFB46E3CF259C8A04D72AF4D97098BE7BC7FE80DED1B` |
+| Verziókód | **395** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 83 480 971 bájt (79,6 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
+| SHA-256 | `E882B97C37BCA3D525D9A0AD671D1D570308F84602CE057B9A0346A55B9CEF7A` |
 
-> **⚠️ A 394 a feltöltendő csomag** (versionCode **394**, `1.0.0`), és **2026-10-02-án épült**: a
-> **Twitch-chat** most **nagyobb helyet kap** (a **rádiósáv eltűnik** az oldalról, **gépelés közben a videó
-> összehúzódik**), van benne **emotikon-választó** és **billentyűzet-elrejtő** gomb (a tulajdonos jelzései:
-> *„az a chat rész NAGYON kicsi, az olvasható rész”*, *„a rádió lekerülhet a twitch chat részről”*,
-> *„eltűnt a billenytűzet eltűntető gomb is”*, *„+ nincsenek emotok”*), valamint a **393** (élő értesítés →
-> app Twitch-oldal, PiP csak a videó), a **392** (a chat fekvő módban és tableten is látszik) és a **389
+> **⚠️ A 395 a feltöltendő csomag** (versionCode **395**, `1.0.0`), és **2026-10-02-án épült**: **(1)** a
+> **Twitch-chat üzenetküldése** végre működik — a szolgáltatás a **rossz adatbázisba** írt (a
+> `(default)`-ba a néves helyett), ezért a küldés `permission-denied`-del mindig elhalt (a tulajdonos
+> kérdése: *„üzenet azért nem küldhető a twitch chates részre mert a stream nem live?”* — **nem** a stream
+> állapota volt az ok); **(2)** a **főoldali Twitch-kártya azonnal megjelenik** és a képet
+> **gyorsítótárból, kicsinyítve** tölti (*„meg ez a twitch kártya a főoldalon 100 év mire betölt”*);
+> valamint a **394** (nagyobb chat, rádiósáv le, gépeléskor videó össze, emotikonok), a **393** (élő
+> értesítés → app Twitch-oldal, PiP csak a videó), a **392** (chat fekvő módban és tableten) és a **389
 > minden** újdonsága.
-> A **389 a zárt teszten van kiadva** (100%), az **éles sávon a 384** — a 394-nél kisebb kódú csomagot a
-> Play **nem** fogadná el. **A 390–393-at nem kell feltölteni** (a 394 mindegyiket tartalmazza).
-> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 394 azokat is tartalmazza) — a 394 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
+> A **389 a zárt teszten van kiadva** (100%), az **éles sávon a 384** — a 395-nél kisebb kódú csomagot a
+> Play **nem** fogadná el. **A 390–394-et nem kell feltölteni** (a 395 mindegyiket tartalmazza).
+> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 395 azokat is tartalmazza) — a 395 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
 
 **Miért a 360-at kell feltenni (és miért nem a 358-at):** a 360 **magában foglalja a 358-at, a 357-et, a 356-ot, a 355-öt és a 354-et is**, ezért egy csomagot kell feltenni:
 
@@ -249,12 +248,11 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 > tárd fel újra. A **kész, másolható** változat: `tmp/play-390.txt` (bájtazonos ezzel a blokkal).
 
 ```play-notes
-- Javítva: a Twitch-chat nagyobb helyet kap (a rádiósáv eltűnik, gépeléskor a videó összehúzódik).
-- Javítva: az élő értesítésre koppintva az app Twitch-oldala nyílik meg.
-- Javítva: kis képernyőn (PiP) csak a videó látszik; a gomb jelzi, ha a rendszer nem engedi.
+- Javítva: a Twitch-chat üzenetküldése (eddig mindig hibára futott) — a rádiósáv is lekerül az oldalról.
+- Javítva: a főoldali Twitch-kártya azonnal megjelenik, a képet gyorsítótárból tölti.
+- Javítva: az élő értesítésre koppintva az app Twitch-oldala nyílik meg; kis képernyőn csak a videó látszik.
 - Javítva: a Twitch-chat fekvő módban és tableten is látszik, emotikonokkal.
 - ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.
-- Javítva: a támogatás gomb a videó alá került.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -323,12 +321,11 @@ kigördülve, ezért a tesztelők a 389 öt soros jegyzetét **már látták**. 
 való, amit a tulajdonos jelzése javított — így a kártyán pontosan az látszik, ami **változott**:
 
 ```play-notes
-- Javítva: a Twitch-chat nagyobb helyet kap (a rádiósáv eltűnik, gépeléskor a videó összehúzódik).
-- Javítva: az élő értesítésre koppintva az app Twitch-oldala nyílik meg.
-- Javítva: kis képernyőn (PiP) csak a videó látszik; a gomb jelzi, ha a rendszer nem engedi.
+- Javítva: a Twitch-chat üzenetküldése (eddig mindig hibára futott) — a rádiósáv is lekerül az oldalról.
+- Javítva: a főoldali Twitch-kártya azonnal megjelenik, a képet gyorsítótárból tölti.
+- Javítva: az élő értesítésre koppintva az app Twitch-oldala nyílik meg; kis képernyőn csak a videó látszik.
 - Javítva: a Twitch-chat fekvő módban és tableten is látszik, emotikonokkal.
 - ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.
-- Javítva: a támogatás gomb a videó alá került.
 ```
 
 ⚠️ A **390**-et az **éles** sávra téve nem ez a blokk való: ott az **1.** (384 → 390) és a
@@ -354,17 +351,21 @@ bemásolni (mert a 329 nem ment ki).
 A zárt teszthez **nem** ez való, hanem az **1. blokk** (`tmp/play-393-zart.txt`).
 
 ```play-notes
-- ÚJ: Twitch-adás az appban (külön stream-chattal, emotikonokkal, kis képernyővel); az élő értesítés az app Twitch-oldalát nyitja.
-- ÚJ: a rádió „most szól” a zárképernyőn a Real Hardstyle FM logójával, és Leállítás gomb.
-- Javítva: a Twitch-chat fekvő módban és tableten is látszik; gépeléskor nagyobb helyet kap.
-- Javítva: kis képernyőn (PiP) csak a videó látszik, a rádiósáv nem nyomja el.
-- ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.
+- ÚJ: Twitch-adás az appban (külön stream-chattal, emotikonokkal); az élő értesítés az app Twitch-oldalát nyitja.
+- Javítva: a Twitch-chat üzenetküldése (eddig mindig hibára futott), a rádiósáv lekerül az oldalról, gépeléskor nagyobb a chat.
+- ÚJ: a rádió „most szól” a zárképernyőn a logóval; a főoldali Twitch-kártya azonnal betölt.
+- Javítva: a Twitch-chat fekvő módban és tableten is látszik; kis képernyőn csak a videó látszik.
 ```
 
 ## 3. App (Több → Névjegy) — tételes, build szerint
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 395 — a Twitch-chat küldése (rossz adatbázis) + a főoldali kártya azonnal betölt
+- **A tulajdonos kérdése (2026-10-02):** *„üzenet azért nem küldhető a twitch chates részre mert a stream nem live?”* — **nem** a stream állapota volt az ok. **A mért gyökér:** a stream-chat szolgáltatás a `FirebaseFirestore.instance`-t használta, ami a **`(default)`** adatbázisra mutat, ahol **nincs** `twitch_chat` szabály; az éles mérés ezt meg is mutatta: ugyanaz az írás a **néves** adatbázisban **200**, a `(default)`-ban **403** (`tmp/probe-twitch-chat-write.mjs`). Az app minden más szolgáltatása a néves adatbázist használja — mostantól ez egy helyen dől el, és a teszt az egész `lib/`-re megköveteli.
+- **A második jelzés:** *„meg ez a twitch kártya a főoldalon 100 év mire betölt”*. **Két mért gyökér:** (1) a kártya a **Twitch-állapotra várt**, pedig a behirdetett kártyához nem kell; (2) a kép **1179 KB** volt, gyorsítótár és kicsinyítés nélkül (`tmp/probe-twitch-card-image-sizes.mjs`: `-1024x576` = 327 KB, `-768x432` = 200 KB, `-300x169` = 38 KB). **A javítás:** a kártya a beállításból **azonnal** dönt, a kép `CachedNetworkImage`-mel (lemezes gyorsítótár, 900 px-re dekódolva) töltődik, és a plugin (**2.14.17**) megadja a WordPress **`medium_large`** változatát (`imageUrlSmall`), amit az app és a Firestore-szinkron is visz tovább.
+- **A kapu mérése:** **4/4 mutáció elkapva** (`tmp/mutation-proof-twitch-card-speed.mjs`) és **3/3** az adatbázis-hibára (`tmp/mutation-proof-twitch-chat-db.mjs`); a plugin-harness a 2.14.17-en **`TWITCH-CARD OK`** (benne 4 új ellenőrzés a kicsinyített képre); a functions kör **12/12** a `twitch-live` suite-ban.
 
 ### 394 — a Twitch-chat nagyobb helyet kap (rádiósáv le, gépeléskor videó össze) + emotikonok
 - **A tulajdonos jelzései (2026-10-02):** *„az a chat rész NAGYON kicsi, az olvasható rész”*, *„sztem a rádió lekerülhet a twitch chat részről”*, *„eltűnt a billenytűzet eltűntető gomb is”*, *„+ nincsenek emotok”*, *„amúgy fekve egész jó”*.

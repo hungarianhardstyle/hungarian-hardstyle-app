@@ -274,6 +274,7 @@ test('a plugin-admin beállítása bekerül a Firestore-ba (az app ezt olvassa)'
   stub.calls.card = {
     enabled: true,
     imageUrl: 'https://example.test/plakat.jpg',
+    imageUrlSmall: 'https://example.test/plakat-768x432.jpg',
     headerText: 'Következő adás: péntek 20:00',
     showWhenOffline: true,
   };
@@ -282,9 +283,28 @@ test('a plugin-admin beállítása bekerül a Firestore-ba (az app ezt olvassa)'
   assert.equal(result.synced, true);
   const card = (await db.doc(CARD_DOC).get()).data();
   assert.equal(card.imageUrl, 'https://example.test/plakat.jpg');
+  // ⚠️ 2.14.17: a kicsinyített változat is átjön (a kártya ezt tölti le — a mért
+  // kép 1179 KB volt, a kicsinyített 200 KB).
+  assert.equal(card.imageUrlSmall, 'https://example.test/plakat-768x432.jpg');
   assert.equal(card.headerText, 'Következő adás: péntek 20:00');
   assert.equal(card.showWhenOffline, true);
   assert.equal(card.source, 'wordpress-admin');
+});
+
+test('csak a kicsinyített képpel is látszódhat az offline kártya', async () => {
+  // A plugin a nagy képet és a kicsinyítettet is adja; ha a nagy üres, a
+  // kicsinyített akkor is elég (nem hagyjuk el a kártyát feleslegesen).
+  stub.calls.card = {
+    enabled: true,
+    imageUrl: '',
+    imageUrlSmall: 'https://example.test/plakat-768x432.jpg',
+    headerText: '',
+    showWhenOffline: true,
+  };
+  await syncTwitchCardFromWordPress();
+  const card = (await db.doc(CARD_DOC).get()).data();
+  assert.equal(card.showWhenOffline, true, 'a kicsinyített kép is kép');
+  assert.equal(card.imageUrlSmall, 'https://example.test/plakat-768x432.jpg');
 });
 
 test('változatlan beállításnál NEM ír újra (5 percenként nem terhel)', async () => {

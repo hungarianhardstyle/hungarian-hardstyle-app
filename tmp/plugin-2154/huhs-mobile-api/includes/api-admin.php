@@ -111,7 +111,41 @@ function huhs_twitch_card_normalize($value)
     $value['showWhenOffline'] = !empty($value['showWhenOffline']) && $value['imageUrl'] !== '';
     // A mentés után már ismert a szándék: a következő mentésnél a pipa dönt.
     $value['configured'] = true;
+    // ⚠️ KICSINYÍTETT VÁLTOZAT (2.14.17, a tulajdonos jelzése: *„meg ez a twitch
+    // kártya a főoldalon 100 év mire betölt”*). A mért kép **1179 KB** volt, míg a
+    // WordPress saját kicsinyítései: `-1024x576` = **327 KB**, `-768x432` =
+    // **200 KB**, `-300x169` = **38 KB** (`tmp/probe-twitch-card-image-sizes.mjs`).
+    // Ezért megkeressük a média-elem kicsinyített változatát, és azt adjuk ki az
+    // appnak (`imageUrlSmall`) — a kártya ezt tölti le.
+    $value['imageUrlSmall'] = huhs_twitch_card_small_image($value['imageUrl']);
     return $value;
+}
+
+/**
+ * A beállított kép **kicsinyített** változata (WordPress `medium_large`, majd
+ * `large`), ha a kép a médiatárból való. Ha nem található, üres string.
+ */
+function huhs_twitch_card_small_image($url)
+{
+    $url = trim((string) $url);
+    if ($url === '' || !function_exists('attachment_url_to_postid')) {
+        return '';
+    }
+    $attachment_id = attachment_url_to_postid($url);
+    if (!$attachment_id) {
+        return '';
+    }
+    foreach (array('medium_large', 'large') as $size) {
+        $src = wp_get_attachment_image_src($attachment_id, $size);
+        if (is_array($src) && !empty($src[0]) && $src[0] !== $url) {
+            $small = esc_url_raw((string) $src[0]);
+            $scheme = strtolower((string) wp_parse_url($small, PHP_URL_SCHEME));
+            if (in_array($scheme, array('http', 'https'), true)) {
+                return $small;
+            }
+        }
+    }
+    return '';
 }
 
 function huhs_twitch_card_value()
@@ -123,6 +157,7 @@ function huhs_twitch_card_value()
     if ($stored === null) {
         return array(
             'imageUrl' => '',
+            'imageUrlSmall' => '',
             'headerText' => '',
             'enabled' => true,
             'showWhenOffline' => false,

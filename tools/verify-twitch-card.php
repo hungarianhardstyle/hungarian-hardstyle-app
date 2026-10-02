@@ -69,6 +69,15 @@ function sanitize_key($key) { return preg_replace('/[^a-z0-9_\-]/', '', strtolow
 function wp_unslash($value) { return is_string($value) ? stripslashes($value) : $value; }
 function wp_parse_url($url, $component = -1) { return parse_url($url, $component); }
 function wp_http_validate_url($url) { return (bool) filter_var($url, FILTER_VALIDATE_URL); }
+// ⚠️ 2.14.17: a kártya kicsinyített képéhez kell a médiatár-feloldás.
+function attachment_url_to_postid($url) {
+    return (int) ($GLOBALS['huhs_attachment_map'][$url] ?? 0);
+}
+function wp_get_attachment_image_src($id, $size = 'thumbnail') {
+    $sizes = $GLOBALS['huhs_attachment_sizes'][$id] ?? array();
+    if (!isset($sizes[$size])) return false;
+    return array($sizes[$size], 768, 432, false);
+}
 function absint($value) { return abs((int) $value); }
 function __return_true() { return true; }
 function admin_url($path = '') { return 'https://example.test/wp-admin/' . ltrim($path, '/'); }
@@ -185,6 +194,58 @@ $badUrl = huhs_twitch_card_normalize(array(
 check('a nem URL képérték nem megy át (és az offline kapcsoló sem)',
     $badUrl['imageUrl'] === '' && $badUrl['showWhenOffline'] === false,
     $badUrl['imageUrl'] . ' / ' . var_export($badUrl['showWhenOffline'], true));
+
+echo "\n=== 2b) A kicsinyített kép (2.14.17 — „100 év mire betölt”) ===\n";
+// A médiatárban lévő kép: a WordPress `medium_large` változatát adjuk ki.
+$GLOBALS['huhs_attachment_map'] = array('https://example.test/plakat.jpg' => 42);
+$GLOBALS['huhs_attachment_sizes'] = array(
+    42 => array('medium_large' => 'https://example.test/plakat-768x432.jpg'),
+);
+$withSmall = huhs_twitch_card_normalize(array(
+    'imageUrl' => 'https://example.test/plakat.jpg',
+    'enabled' => true,
+    'showWhenOffline' => true,
+));
+check('a médiatárban lévő képhez megvan a kicsinyített változat',
+    ($withSmall['imageUrlSmall'] ?? '') === 'https://example.test/plakat-768x432.jpg',
+    var_export($withSmall['imageUrlSmall'] ?? null, true));
+
+// Nem a médiatárból való kép: nincs kicsinyített változat (nem tippelünk).
+$GLOBALS['huhs_attachment_map'] = array();
+$foreign = huhs_twitch_card_normalize(array(
+    'imageUrl' => 'https://mas.example.test/kulso.jpg',
+    'enabled' => true,
+    'showWhenOffline' => true,
+));
+check('külső képnél nincs kicsinyített változat (nem tippelünk)',
+    ($foreign['imageUrlSmall'] ?? 'x') === '', var_export($foreign['imageUrlSmall'] ?? null, true));
+
+// Csak `large` van: azt adjuk (a `medium_large` hiányzik).
+$GLOBALS['huhs_attachment_map'] = array('https://example.test/plakat.jpg' => 42);
+$GLOBALS['huhs_attachment_sizes'] = array(
+    42 => array('large' => 'https://example.test/plakat-1024x576.jpg'),
+);
+$onlyLarge = huhs_twitch_card_normalize(array(
+    'imageUrl' => 'https://example.test/plakat.jpg',
+    'enabled' => true,
+    'showWhenOffline' => true,
+));
+check('ha csak a „large” van meg, azt adja ki',
+    ($onlyLarge['imageUrlSmall'] ?? '') === 'https://example.test/plakat-1024x576.jpg',
+    var_export($onlyLarge['imageUrlSmall'] ?? null, true));
+
+// A kicsinyített cím is http(s) kell legyen (az appba kép-URL-ként megy ki).
+$GLOBALS['huhs_attachment_sizes'] = array(
+    42 => array('medium_large' => 'javascript:alert(2)'),
+);
+$badSmall = huhs_twitch_card_normalize(array(
+    'imageUrl' => 'https://example.test/plakat.jpg',
+    'enabled' => true,
+    'showWhenOffline' => true,
+));
+check('a nem http(s) kicsinyített cím nem megy át',
+    ($badSmall['imageUrlSmall'] ?? 'x') === '', var_export($badSmall['imageUrlSmall'] ?? null, true));
+$GLOBALS['huhs_attachment_sizes'] = array();
 
 // ⚠️ MÉRT HIBA NYOMÁN (2026-10-02): a tulajdonos feltöltött egy képet, az
 // „Engedélyezve” pipa viszont üresen maradt — a kártya némán elrejtve maradt.

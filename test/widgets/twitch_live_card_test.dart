@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -116,20 +119,56 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Élőben a stúdióból'), findsOneWidget);
-    // A saját kép URL-je kerül a kép-widgetbe (a kártya nem a Twitch előnézetét tölti).
-    final images = tester.widgetList<Image>(find.byType(Image)).toList();
-    expect(images, isNotEmpty);
-    expect(images.first.image.toString(), contains('example.com/sajat.jpg'));
+    // A saját kép URL-je kerül a kép-widgetbe (a kártya nem a Twitch előnézetét
+    // tölti) — 2026-10-02 óta **gyorsítótárazva** (`CachedNetworkImage`), ezért
+    // nem `Image.network`-öt keresünk.
+    final image = tester.widget<CachedNetworkImage>(find.byType(CachedNetworkImage));
+    expect(image.imageUrl, contains('example.com/sajat.jpg'));
+    expect(image.memCacheWidth, 900, reason: 'a kép teljes méretben dekódolódna');
   });
 
   testWidgets('élő adásnál kép nélkül a Twitch mozgó előnézete megy (frissítő paraméterrel)', (tester) async {
     await tester.pumpWidget(wrap(status: liveStatus));
     await tester.pumpAndSettle();
 
-    final images = tester.widgetList<Image>(find.byType(Image)).toList();
-    expect(images, isNotEmpty);
-    expect(images.first.image.toString(), contains('previews-ttv'));
+    final image = tester.widget<CachedNetworkImage>(find.byType(CachedNetworkImage));
+    expect(image.imageUrl, contains('previews-ttv'));
     // A 30 másodperces kör a gyorsítótár-kerülő paramétert írja a linkre.
-    expect(images.first.image.toString(), contains('tick='));
+    expect(image.imageUrl, contains('tick='));
+  });
+
+  testWidgets('a behirdetett kártya AZONNAL megjelenik (a Twitch-állapot nem kell hozzá)', (tester) async {
+    // ⚠️ A tulajdonos jelzése: *„meg ez a twitch kártya a főoldalon 100 év mire
+    // betölt”*. A mért gyökér: a kártya a Twitch-állapotra várt. Ez a teszt a
+    // provider **soha be nem fejeződő** jövőjével méri, hogy a kártya így is ott
+    // van-e (az „ÉLŐ" jelvény nélkül).
+    final pending = Completer<TwitchLiveStatus>();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          twitchLiveProvider.overrideWith((ref) => pending.future),
+          twitchCardOverrideProvider.overrideWith(
+            (ref) async => const TwitchCardConfig(
+              imageUrl: 'https://example.com/plakat.jpg',
+              showWhenOffline: true,
+              headerText: 'Következő adás: péntek 20:00',
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: ThemeData.dark(),
+          home: const Scaffold(body: SingleChildScrollView(child: TwitchLiveCard())),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.byKey(const Key('twitch-live-card')), findsOneWidget,
+        reason: 'a behirdetett kártya a Twitch-állapot nélkül is látszik');
+    expect(find.text('Következő adás: péntek 20:00'), findsOneWidget);
+    expect(find.text('ÉLŐ'), findsNothing, reason: 'nem hazudunk élő adást');
+    expect(find.text('Twitch-csatorna'), findsOneWidget);
+    pending.complete(offlineStatus);
   });
 }

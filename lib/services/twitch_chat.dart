@@ -24,6 +24,9 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import 'community_service.dart';
 
 
 /// A stream-chat gyűjteménye — **egy helyen** (a szabály, a teszt és a mérés is
@@ -129,10 +132,28 @@ abstract class TwitchChatGateway {
   Future<void> send(String text);
 }
 
+/// A projekt **néves** Firestore-adatbázisa.
+///
+/// ⚠️ **MÉRT HIBA (2026-10-02, a tulajdonos jelzése):** *„üzenet azért nem
+/// küldhető a twitch chates részre mert a stream nem live?”* — **nem** a stream
+/// állapota volt az ok: a stream-chat szolgáltatás a **`FirebaseFirestore.instance`**-t
+/// használta, ami a **`(default)`** adatbázisra mutat, miközben az app minden más
+/// szolgáltatása (és a szerveroldali függvények is) a **`hungarian-hardstyle`**
+/// néves adatbázist használja. A `(default)`-ban **nincs** `twitch_chat` szabály,
+/// ezért az írás `permission-denied`-del elhalt, az olvasás pedig üres listát adott.
+///
+/// Ezért itt **egy helyen** dől el az adatbázis, és a teszt megköveteli, hogy
+/// minden Firestore-t használó szolgáltatás ezt (vagy a `CommunityService`
+/// ugyanilyen konstansát) használja.
+FirebaseFirestore huHsFirestore() => FirebaseFirestore.instanceFor(
+      app: Firebase.app(),
+      databaseId: CommunityService.firestoreDatabaseId,
+    );
+
 /// A valódi (Firestore-alapú) megvalósítás.
 class TwitchChatService implements TwitchChatGateway {
   TwitchChatService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
+      : _firestore = firestore ?? huHsFirestore(),
         _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;

@@ -74,18 +74,34 @@ class TwitchCardConfig {
   const TwitchCardConfig({
     this.enabled = true,
     this.imageUrl = '',
+    this.imageUrlSmall = '',
     this.headerText = '',
     this.showWhenOffline = false,
   });
 
   final bool enabled;
   final String imageUrl;
+
+  /// A **kicsinyített** változat (a WordPress `medium_large` mérete), ha van.
+  ///
+  /// ⚠️ MIÉRT (a tulajdonos jelzése, 2026-10-02): *„meg ez a twitch kártya a
+  /// főoldalon 100 év mire betölt”*. A mért kép **1179 KB** volt (eredeti
+  /// `denioser-stream.png`), míg ugyanannak a WordPress-változatai:
+  /// `-1024x576` = **327 KB**, `-768x432` = **200 KB**, `-300x169` = **38 KB**
+  /// (`tmp/probe-twitch-card-image-sizes.mjs`). A kártya a kicsinyített
+  /// változatot tölti, ha a plugin megadja.
+  final String imageUrlSmall;
+
   final String headerText;
 
   /// Élő adás nélkül is látszódjon (saját képpel) — a tulajdonos kérése.
   final bool showWhenOffline;
 
-  bool get hasImage => imageUrl.trim().isNotEmpty;
+  bool get hasImage => imageUrl.trim().isNotEmpty || imageUrlSmall.trim().isNotEmpty;
+
+  /// A kártyán **tényleg** betöltendő kép: a kicsinyített változat, ha van.
+  String get displayImageUrl =>
+      imageUrlSmall.trim().isNotEmpty ? imageUrlSmall.trim() : imageUrl.trim();
 
   @override
   String toString() =>
@@ -101,11 +117,13 @@ class TwitchCardConfig {
 TwitchCardConfig parseTwitchCardConfig(Map<String, dynamic>? data) {
   if (data == null) return const TwitchCardConfig();
   final imageUrl = (data['imageUrl'] as String? ?? '').trim();
+  final imageUrlSmall = (data['imageUrlSmall'] as String? ?? '').trim();
   return TwitchCardConfig(
     enabled: data['enabled'] != false,
     imageUrl: imageUrl,
+    imageUrlSmall: imageUrlSmall,
     headerText: (data['headerText'] as String? ?? '').trim(),
-    showWhenOffline: data['showWhenOffline'] == true && imageUrl.isNotEmpty,
+    showWhenOffline: data['showWhenOffline'] == true && (imageUrl.isNotEmpty || imageUrlSmall.isNotEmpty),
   );
 }
 

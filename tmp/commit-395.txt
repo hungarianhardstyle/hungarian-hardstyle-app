@@ -1,0 +1,56 @@
+fix(395): a Twitch-chat kuldes (rossz adatbazis) + a fooldali kartya azonnal betolt
+
+A TULAJDONOS KERDESE: "uzenet azert nem kuldheto a twitch chates reszre mert a stream
+nem live?" — NEM a stream allapota volt az ok (a stream-chat a sajat Firestore-
+gyujtemenyunk, a Twitch elo allapotatol fuggetlen).
+
+A MERT GYOKER (a sajat kodom hibaja): a TwitchChatService a FirebaseFirestore.instance-t
+hasznalta, ami a (default) adatbazisra mutat — az app MINDEN mas szolgaltatasa (es a
+szerveroldali fuggvenyek is) a hungarian-hardstyle NEVES adatbazist hasznalja
+(FirebaseFirestore.instanceFor(databaseId: ...)). A (default)-ban nincs twitch_chat
+szabaly -> az iras permission-denied, az olvasas ures lista. ELES MERES
+(tmp/probe-twitch-chat-write.mjs, anonim felhasznaloval): ugyanaz az iras a NEVES
+adatbazisban 200, a (default)-ban 403 — pontosan ez volt a hiba utja.
+TANULSAG: a sajat szabaly-ellenorzesem (9/9) a NEVES adatbazist merte REST-en, ezert
+zold volt — az app viszont mashova irt. A szabaly helyessege nem bizonyitja, hogy az
+app a JO adatbazisba ir.
+
+A JAVITAS: huHsFirestore() (instanceFor + CommunityService.firestoreDatabaseId) egy
+helyen; a teljes lib/-re mero forras-lint megkoveteli, hogy senki ne hasznalja a csupasz
+FirebaseFirestore.instance-t (dokumentalt kivetel: article_comments.dart, ott csak helyi
+dokumentum-azonosithoz kell); a konstruktor HELYET is meri a kapu (a fajl-szintu minta itt
+gyenge volt). MUTACIOS BIZONYITEK 3/3.
+
+A MASODIK JELZES: "meg ez a twitch kartya a fooldalon 100 ev mire betolt". KET MERT GYOKER:
+(1) a kartya a Twitch-allapotra vart (live != null), pedig a behirdetett kartyahoz nem kell
+-> mostantol a beallitasbol AZONNAL dont; (2) a kep 1179 KB volt
+(tmp/probe-twitch-card-image-sizes.mjs: -1024x576 = 327 KB, -768x432 = 200 KB,
+-300x169 = 38 KB) es gyorsitotar nelkul toltodott -> mostantol CachedNetworkImage (lemezes
+gyorsitotar, memCacheWidth: 900), es a plugin (2.14.17) megadja a WordPress medium_large
+valtozatat (imageUrlSmall), amit az app es a Firestore-szinkron is visz tovabb (a
+sendTwitchLiveNotice ujradeployolva). MUTACIOS BIZONYITEK 4/4.
+
+PLUGIN 2.14.17: huhs_twitch_card_small_image() (media-elem feloldas:
+attachment_url_to_postid + wp_get_attachment_image_src('medium_large'|'large'), csak
+http(s), kulonben ures); harness: 49 fajl, 117/117, 117/117, 72/72, 56/56, 36/36, 24/24,
+push 12/12 + TWITCH-CARD OK (benne 4 uj ellenorzes a kicsinyitett kepre). CSOMAG:
+build/huhs-mobile-api-2.14.17.zip — 203 324 bajt, SHA-256
+D1EC599D054A7950BAF3154845901E1D814545101626CCD1D7B77F9F4097A82F.
+
+KAPUK (mind merve): flutter test 1495/1495; flutter analyze lib test tiszta; i18n --strict
+zold (chunk-47, chunk-48); functions 12/12 a twitch-live suite-ban; check-play-notes zold
+(1. blokk 452/480, eles-blokk 435/480, masolatok 5/5 bajtazonos).
+
+MERT SAJAT HIBAK A KORBEN: (1) a contains('FirebaseFirestore.instance') minta a
+...instanceFor(-ra is illeszkedett (a rovidebb szoveg a hosszabb eleje) -> negativ lookahead
++ komment-sorok kihagyasa; (2) a konstruktor-regexem "mindig buko" kaput csinalt (minden
+mutacional bukott -> hamis 3/3), ezert elobb a TISZTA ALAPVONALAT mertem; (3) a node -e
+PowerShell-idézojelekkel elhasalt -> kulon .mjs (tmp/bump-plugin-version.mjs).
+
+CSOMAG: build/HUHS-v1.0.0+395-release.aab — 83 480 971 bajt, SHA-256
+E882B97C37BCA3D525D9A0AD671D1D570308F84602CE057B9A0346A55B9CEF7A; verify-aab 395 ->
+MINDEN ELLENORZES RENDBEN, a 395 changelog-sorai mindharom ABI-ban bent vannak.
+
+A TULAJDONOS LEPESE: (1) a 395 feltoltese a Play Console-ra es kiadasa a ZART TESZTEN
+(tmp/play-395-zart.txt); az ELES savra a 2b. blokk (tmp/play-395-eles.txt);
+(2) a build/huhs-mobile-api-2.14.17.zip feltoltese a WordPress-be; (3) a telefonra a 395.

@@ -1,0 +1,7 @@
+OK     a szolgáltatás visszaállítása a (default) adatbázisra (a valódi hiba) → a kapu elcsípte («a szolgáltatás a NÉVES adatbázist használja»)
+       (az első futás felmelegíti a fordítót, ezért lassabb)
+OK     az adatbázis-azonosító kivétele a közös konstansból (kézzel beírt szöveg) → a kapu elcsípte («a szolgáltatás a NÉVES adatbázist használja»)
+OK     az `instanceFor` elvétele a segédfüggvényből (a (default) adatbázis) → a kapu elcsípte («a szolgáltatás a NÉVES adatbázist használja»)
+
+3/3 mutáció ELKAPVA
+a források BÁJTAZONOSAK (érintetlenek)
