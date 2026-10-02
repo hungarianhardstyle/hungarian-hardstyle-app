@@ -46,6 +46,25 @@
   **`D128F7DD38822F9C4297DDEB207DDC32F0EA68F9D4305CD4DB4A6B5471CF43D4`**; `tmp/verify-aab.mjs … 386` →
   **MINDEN ELLENŐRZÉS RENDBEN**, és a changelog **mind a két** sora **mindhárom ABI-ban** bent van
   (`tmp/verify-aab-385-changelog.mjs … 386`).
+- **📱 AZ iOS-OLDAL MÉRVE (CI + IPA + TELEFON, 2026-10-02):** a 386 push-ja elindította az iOS CI-t
+  (**`37012032224`**, `completed / success`, **12m31s** — a **teljes** iOS-fordítás lefutott az új
+  `webview_flutter_wkwebview` közvetlen függőséggel, ezért ez a valódi fordítási bizonyíték). Az artefakt:
+  **`build/ios-ipa-386/Runner-unsigned.ipa`**, **23 089 593 bájt**, SHA-256
+  **`8958C6745D82C46E11495464ABDEA44DB583B0E5C9E1A5E717024B55308CA327`**. A **tartalmi** mérés
+  (`tmp/verify-ipa-380.mjs … 386` + `tools/verify-ios-ipa.mjs`): `CFBundleVersion = 386`,
+  `CFBundleShortVersionString = 1.0.0`, a **386 mindkét changelog-sora** bent van, a reklám-identitás
+  helyes (teszt egységek a sideloadolthoz) — **és a kis képernyő kódja is a csomagban van**: a hivatalos
+  ellenőrző megtalálta a **`hu_hs/pip`**, **`webkitSetPresentationMode`**, **`requestPictureInPicture`**,
+  **`Kis képernyő`** és **`WebKitWebViewControllerCreationParams`** szövegeket az AOT-snapshotban.
+  **A telefonon is fent van:** Sideloadly `installations` id **51**, `stored_files` id **42** =
+  `hh386.ipa`, **23 089 593 bájt**, `failures_count` 0, és a készülékről visszaolvasva
+  (`tmp/read-ios-version.cjs tmp/apps-386.json`): **`CFBundleVersion = 386`**.
+- **⚠️ MÉRT MÉRÉSI HIBA (a sajátom, tanulságos):** az IPA-ban először **UTF-8-ban** kerestem a magyar
+  feliratokat, és a `Kis képernyő`-re **hamis „HIÁNYZIK"**-et kaptam — a Dart AOT-snapshot a **nem Latin-1**
+  szövegeket **UTF-16LE**-ként tárolja (a `Kedvenceid` azért találatott, mert minden betűje ≤ U+00FF).
+  **A hivatalos `tools/verify-ios-ipa.mjs` mind a négy kódolást keresi** (öntesztje is van rá) — a hibás
+  mérés az én egysoros keresésem volt, nem a csomag. **TANULSÁG: a saját gyorskeresés nem pótolja a
+  hiteles eszközt.**
 - **📌 A TULAJDONOS LÉPÉSE:** a **386** feltöltése a Play Console-ra (**a 385-öt NEM kell** — a 386
   felváltja, ugyanaz a kód + a kis képernyő javítása); a zárt teszten **ugyanaz az 1. blokk** való
   (`tmp/play-386.txt`), a bétára a **355–386** összesítő.

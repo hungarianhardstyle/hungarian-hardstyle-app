@@ -12,10 +12,19 @@ venni ahhoz, hogy **TestFlight-buildet** kapj: a CI végzi el, és a kész build
 
 ---
 
-## 0. HOL TARTUNK MOST — a **383**-as build (2026-09-30)
+## 0. HOL TARTUNK MOST — a **386**-os build (2026-10-02)
 
 Ez a szakasz **egy helyen** mondja meg, mi kész van, és mi az, ami **kizárólag
 a te kezedben** van. A mély magyarázat lentebb, az 1–7. szakaszban.
+
+> **A 386 fő újdonsága az iOS-oldalon:** a Twitch-adás WebView-ja mostantól
+> **inline lejátszással** és **koppintás-kényszer nélkül** jön létre (a
+> `webview_flutter` iOS-alapértéke ezt nem így adja), ezért a stream **a helyén
+> játszik**, és a **kis képernyő (PiP)** is elérhető: az app elhagyásakor a
+> képernyő magától bekéri (WebKit `webkitSetPresentationMode`), illetve a fejléc
+> **„Kis képernyő”** gombjával bármikor. **A telefonos mérés ehhez aláírt buildet
+> kér** (TestFlight) — a kód és a kapuk készen vannak, a bizonyíték a te körödben
+> születik meg.
 
 ### ✅ Ami KÉSZ (kód, CI, Firebase — nem kell hozzá tenned semmit)
 

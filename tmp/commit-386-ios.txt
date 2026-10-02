@@ -1,0 +1,27 @@
+docs(386): az iOS CI zold, az IPA tartalma merve, a 386 a telefonon + a sideload-igazolas altalanositva
+
+Az iOS-oldal lezarasa a 386-hoz (mind merve, nem feltetelezve):
+
+- iOS CI: run 37012032224, completed / success, 12m31s - a TELJES iOS-fordulas
+  lefutott az uj webview_flutter_wkwebview kozvetlen fuggoseggel.
+- Artefakt: build/ios-ipa-386/Runner-unsigned.ipa, 23 089 593 bajt,
+  SHA-256 8958C6745D82C46E11495464ABDEA44DB583B0E5C9E1A5E717024B55308CA327.
+- Tartalom (tmp/verify-ipa-380.mjs + tools/verify-ios-ipa.mjs):
+  CFBundleVersion = 386, CFBundleShortVersionString = 1.0.0, a 386 ket
+  changelog-sora bent, a reklam-identitas helyes, ES a kis kepernyo kodja is
+  a csomagban van: hu_hs/pip, webkitSetPresentationMode,
+  requestPictureInPicture, "Kis kepernyo", WebKitWebViewControllerCreationParams.
+- Telefon: Sideloadly installations id 51, stored_files id 42 = hh386.ipa,
+  23 089 593 bajt, failures_count 0; a keszulekrol visszaolvasva
+  CFBundleVersion = 386.
+
+UJ ESZKOZ: tmp/verify-sideload.mjs (altalanositva a 385-os verziobol) - a vart
+bajtszamot a HELYI IPA-fajlbol olvassa, ezert a bizonyitek nem tud elcsuszni.
+
+MERT MERESI HIBA (a sajatunk): az IPA-ban UTF-8-ban kerestuk a magyar
+feliratokat, es a "Kis kepernyo"-re hamis HIANYZIK-et kaptunk - a Dart AOT a
+nem Latin-1 szovegeket UTF-16LE-kent tarolja. A hivatalos tools/verify-ios-ipa.mjs
+mind a negy kodolast keresi (onteszttel), ezert a hibas meres a mi egysoros
+keresesunk volt, nem a csomag.
+
+docs/IOS-CI-TESTFLIGHT.md 0. szakasz: 383 -> 386, az iOS PiP leirasa.
