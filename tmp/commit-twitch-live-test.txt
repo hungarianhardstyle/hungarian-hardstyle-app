@@ -1,0 +1,39 @@
+test(functions): a Twitch-elo figyelo TELJES utja emulatoron merve
+
+A tiszta dontes (twitch-live-plan.test.cjs) eddig egyedul volt: a hivo
+(runTwitchLiveNotice) csak forras-linttel. Az uj integracios suite a VALODI
+fuggvenyt futtatja a Firestore-emulatoron, es CSAK a halozatot helyettesiti
+(Twitch GraphQL + a WordPress push-vegpont) - igy merheto a tulajdonos igerete:
+push mindenkinek, adasonkent EGYSZER.
+
+Hat teszt, mind zold:
+- adas nelkul nincs push es nincs jeloles;
+- elo adasnal minden profilnak bejovo ertesites (created=3) + szeles push, a
+  WordPress-hivas PONTOS payload-alakjaval (action=send_push, targetType=custom,
+  url=.../hungarianhardstyle);
+- ugyanarrol az adasrol MASODSZOR nem szol;
+- az adas vegen a jeloles torlodik, ezert a kovetkezo adas ujra szol;
+- a tulajdonosi kapcsolo kikapcsolva nem kuld;
+- ha a Twitch nem erheto el, nem tippelunk.
+
+MERT RESZLET, amit a teszt tart fel: a push CIME a katalogusbol jon (minden
+adasnal "Eloben vagyunk Twitchen"), a JELOLESBE viszont az ADAS cime kerul - a
+ketto szandekosan nem ugyanaz; a teszt mindkettot a valos katalogusbol meri.
+
+A suite bekerult a szokasos kapuba (tools/run-function-tests.mjs -> 10
+emulatoros fajl): tiszta 404/404, emulatoros 129 teszt 0 bukoval.
+MUTACIOS BIZONYITEK 6/6 ELKAPVA (tmp/mutation-proof-twitch-live.mjs):
+ismetles-kapu, adas vegi jeloles-torles, tulajdonosi kapcsolo, push celpont,
+jeloles-iras es Twitch-hibaag elvetelere - mind elkapva, bajtazonos
+visszaallitassal, a BUKO TESZT NEVEVEL egyutt.
+
+MERT ESZKOZ-HIBA: a bizonyitek elso futasa 0/6 lett, mert a Node-bol inditott
+emulator a shell:true miatt szokonel elvagta a belso parancsot ("Too many
+arguments"). A javitas a projektben bevalt hivas: execSync egy sorban, a belso
+parancs idezojelben. Tanulsag: a "minden elhasalt" es a "minden elkapva"
+ugyanugy nez ki - a bukas OKAT is merni kell.
+
+MERT SAJAT HIBA (ugyanebben a korben): a commit-uzenetet `node -e`-vel probaltam
+osszerakni PowerShell-bol, ami az idezojelek miatt parse hibara futott - pont az
+a szabaly, ami a projektben le van irva: ekezetes szoveget `node -e`-vel NEM
+irunk, hanem fajlba (write eszkoz).

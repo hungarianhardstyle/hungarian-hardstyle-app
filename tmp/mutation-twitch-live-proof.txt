@@ -1,0 +1,9 @@
+OK     a „már bejelentett adás" kapu elvétele (másodszor is kimenne a push) → a kapu elcsípte («ugyanarról az adásról MÁSODSZOR nem szól»)
+OK     az adás végi jelölés-törlés elvétele (a következő adás néma maradna) → a kapu elcsípte («az adás végén a jelölés törlődik»)
+OK     a tulajdonosi kapcsoló elvétele (kikapcsolva is küldene) → a kapu elcsípte («a tulajdonosi kapcsoló kikapcsolva nem küld»)
+OK     a push célpontjának elrontása (a koppintás nem a streamhez vinne) → a kapu elcsípte («élő adásnál MINDENKINEK szól»)
+OK     a jelölés írásának elvétele (minden kör újra szólna) → a kapu elcsípte («ugyanarról az adásról MÁSODSZOR nem szól»)
+OK     a Twitch-hibaág elvétele (hálózati hiba esetén is küldene) → a kapu elcsípte («ha a Twitch nem érhető el»)
+
+6/6 mutáció ELKAPVA
+a források BÁJTAZONOSAK (érintetlenek)

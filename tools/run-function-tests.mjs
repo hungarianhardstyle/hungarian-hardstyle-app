@@ -48,6 +48,13 @@ export const EMULATOR_SUITES = [
     // zöldet: az érintett 6 teszt kihagyva fut, indoklással.
     env: { FIREBASE_DEBUG_MODE: 'true', FIREBASE_DEBUG_FEATURES: '{"skipTokenVerification":true}' } },
   { file: 'functions/rules.test.cjs', services: 'firestore' },
+  // A Twitch-élő figyelő TELJES útja (2026-10-02): a döntés tiszta tesztekkel
+  // már mérve volt, a hívó viszont eddig csak forrás-linttel. Ez a suite a
+  // valódi `runTwitchLiveNotice`-t futtatja az emulátoron, és csak a HÁLÓZATOT
+  // helyettesíti (Twitch GraphQL + a WordPress push-végpont) — így mérhető az
+  // „adásonként EGYSZER szól mindenkinek" ígéret, a push payload-alakja, a
+  // bejövő értesítések és a jelölés törlése az adás végén.
+  { file: 'functions/twitch-live.test.cjs', services: 'firestore' },
 ];
 
 /** A `node --test` összegsorainak kiolvasása (tiszta függvény). */
