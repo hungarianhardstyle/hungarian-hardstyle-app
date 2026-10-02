@@ -1,0 +1,34 @@
+feat(389): a Twitch-kartya lanca app-oldalrol is merve + a 389 a telefonon es a zart teszten
+
+A TULAJDONOS KERESE (2026-10-02): "389 mehet iphoneora", elotte pedig a jelzes:
+"feldobtam egy kepet a twitch beharangozohoz, de egyaltalan nem latom az iPhone appban".
+
+A MERES (csak olvasas, minden szem kulon):
+- plugin: api=2.14.16 (X-HUHS-Health), push_tokens=1035,
+  push_limits=conc50/budget60/max_exec600, cron_overdue=0;
+- vegpont: enabled=true, showWhenOffline=true, imageUrl=.../denioser-stream.png;
+- kep: HTTP 200, image/png, 1207511 bajt, 1672x941, Dart User-Agenttel is 200;
+- Firestore: enabled=true, showWhenOffline=true, source=wordpress-admin (17:45:03Z);
+- az APP SAJAT KODJA a valodi vegpont ellen (3/3): enabled=true showWhenOffline=true
+  hasImage=true, lathatosag (nem elo adas)=true, kep HTTP 200 image/png 1207511 bajt;
+- iOS: CI 37039337684 success, Runner-unsigned.ipa 23091781 bajt, a telefonon
+  CFBundleVersion=389 (Sideloadly id 55, failures 0, ttl 7);
+- Play: alpha=389 (kiadva, 100%), production=384, beta=377; feltoltve 387/388/389 is.
+
+AMI EPULT:
+- test/live/twitch_card_live_check.dart — ELES lancmeres a termelesi koddal; a neve
+  szandekosan nem _test.dart, ezert a szokasos kor (es a CI) nem futtatja (halozatfuggo);
+- tmp/probe-twitch-card-image.mjs — a kep URL valodi elerhetosege (HEAD/GET, formatum,
+  meret, hotlink-vedelem): a "feldobtam a kepet es nem latom" panasz leggyakoribb oka
+  egy nem elerheto kep lenne, ezert ez kulon merest kapott;
+- docs: PLAY-KIADASI-JEGYZET (alpha=389, a feltoltesek, a kovetkezo lepes: eloleptetes
+  az eles savra — uj AAB nelkul), TWITCH.md (a 389 a pluginbol olvas 3 percenkent, a
+  Firestore a tartalek a 385-388-nak), AGENTS.md (a kor teljes jegyzosege).
+
+KAPUK: flutter test 1443/1443, flutter analyze lib test tiszta, i18n --strict zold,
+check-play-notes zold. Mellek: a tmp/play-387.txt tartalma es a neve ujra egyutt
+(a HEAD-bol visszaallitva — a fajl a 389 blokkjat tartalmazta).
+
+OSZINTE KORLATOK: a kartya telefonos kirajzolasat kepen nem tudtam rogziteni (alairt
+iOS build, illetve nem futo emulator kell hozza) — a lanc adatban vegigmerve, a
+rajzolast 7 widget-teszt fedi; a kep 1,2 MB / 1672x941, mobilon lassabb betoltes.

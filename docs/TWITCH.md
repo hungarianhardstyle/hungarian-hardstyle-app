@@ -39,10 +39,17 @@ Ez a lap a **387-es build** Twitch-integrációját írja le röviden (2026-10-0
 és bekapcsolva az „Élő adás nélkül is látszódjon”. Ilyenkor a kártyán **nincs** „ÉLŐ” jelvény, a
 gomb felirata pedig „Twitch-csatorna”, vagyis a felhasználó nem kap hamis élő jelzést.
 
-⚠️ **Mennyi idő alatt ér oda?** A beállítást a **Twitch-figyelő kör** viszi át az appokhoz
-(**5 percenként** fut), ezért legfeljebb ~5 perc, és **új app-verzió nem kell hozzá** — a már kint
-lévő appok is látják. (A kártya a Firestore `app_settings/twitch` dokumentumból dolgozik, ezt
-tölti a plugin beállítása.)
+⚠️ **Mennyi idő alatt ér oda?** A **389-es (és újabb) app** a beállítást **közvetlenül a WordPress
+végpontjáról** olvassa (`GET /wp-json/huhs/v1/twitch-card`), és **3 percenként** frissíti — ehhez **új
+app-verzió nem kell hozzá**. A **régebbi (385–388) appok** a Firestore `app_settings/twitch` másolatot
+használják, amit a **Twitch-figyelő kör 5 percenként** ír át a plugin beállításából — ott legfeljebb
+~5 perc a késés. A két út **ugyanazt** a beállítást tükrözi, ezért a kártya mindenkinél egyszerre vált.
+
+**Élesben mérve (2026-10-02):** a végpont `enabled=true`, `showWhenOffline=true`, a kép
+`denioser-stream.png` (PNG, **1672×941**, HTTP 200), a Firestore-másolat 19:45-kor frissült
+(`source: wordpress-admin`), és az **app saját kódjával** futtatott mérés
+(`flutter test test/live/twitch_card_live_check.dart`) **3/3 zöld**: a kártya élő adás nélkül is
+látszana, és a kép letölthető.
 
 Az agent is be tudja állítani helyetted egy paranccsal (a Firestore-t írja):
 `node tmp/setup-twitch-card-settings.mjs --offline --image=https://…/plakat.jpg --header="Következő adás: péntek 20:00"`
