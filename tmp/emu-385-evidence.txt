@@ -1,0 +1,28 @@
+=== 385-ös Android-bizonyíték (emulátor, Android 14 / API 34) ===
+méret időpontja: 2026-10-02T13:05:05.130Z
+
+--- verzió a telepített csomagból ---
+  versionCode=385 minSdk=24 targetSdk=36
+  versionName=1.0.0
+
+--- a rádió médiamentje (channel=huhs_radio) ---
+  NotificationRecord(0x0f74ae38: pkg=hu.hungarianhardstyle.app user=UserHandle{0} id=421 tag=null importance=2 key=0|hu.hungarianhardstyle.app|421|null|10190: Notification(channel=huhs_radio shortcut=null contentView=null vibrate=null sound=null defaults=0x0 flags=0x2062 color=0xfff2383d category=transport vis=PRIVATE))
+
+--- a ment tartalma (ez a lényeg: a szóló szám + a rádió neve) ---
+  android.title=String (Alphaverb & Intractable One - Destination Nowhere)
+  android.text=String (Real Hardstyle FM)
+
+--- a ment nagy ikonja (a Real Hardstyle logó kell legyen) ---
+  NotificationRecord(0x0f74ae38: pkg=hu.hungarianhardstyle.app user=UserHandle{0} id=421 tag=null importance=2 key=0|hu.hungarianhardstyle.app|421|null|10190: Notification(channel=huhs_radio shortcut=null contentView=null vibrate=null sound=null defaults=0x0 flags=0x2062 color=0xfff2383d category=transport vis=PRIVATE))
+  icon=Icon(typ=RESOURCE pkg=hu.hungarianhardstyle.app id=0x7f08008c)
+  android.largeIcon=Icon (Icon(typ=BITMAP size=126x126))
+
+--- MediaSession (a lejátszó állapota) ---
+  Last MediaButtonReceiver: MBR {pi=PendingIntent{907b7b4: PendingIntentRecord{b7a3fdd hu.hungarianhardstyle.app broadcastIntent}}, componentName=ComponentInfo{hu.hungarianhardstyle.app/com.ryanheise.audioservice.MediaButtonReceiver}, type=1, pkg=hu.hungarianhardstyle.app}
+  Media button session is hu.hungarianhardstyle.app/media-session (userId=0)
+  media-session hu.hungarianhardstyle.app/media-session (userId=0)
+  package=hu.hungarianhardstyle.app
+  mediaButtonReceiver=MBR {pi=PendingIntent{907b7b4: PendingIntentRecord{b7a3fdd hu.hungarianhardstyle.app broadcastIntent}}, componentName=ComponentInfo{hu.hungarianhardstyle.app/com.ryanheise.audioservice.MediaButtonReceiver}, type=1, pkg=hu.hungarianhardstyle.app}
+  huhs-radio hu.hungarianhardstyle.app/huhs-radio (userId=0)
+  package=hu.hungarianhardstyle.app
+  uid=10190 packages=hu.hungarianhardstyle.app

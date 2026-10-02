@@ -1,0 +1,47 @@
+docs(385): a sideload megtortent (iOS 385 a telefonon) + az Android mediamenet es zarkepernyo bizonyitva
+
+Ket meressel zarom a 385-os kort, mindketto a tulajdonos keresere:
+
+1) iOS SIDELOAD (a 385 a telefonon)
+A masodik probalkozas lefutott (Done. / 100%, 14:58). Az elso valodi oka a
+zAROLT TELEFON volt (LOCKDOWN_E_PASSWORD_PROTECTED), nem a build hiba.
+Bizonyitek ket fuggetlen forrasbol:
+- Sideloadly adatbazis (tmp/verify-sideload-385.mjs -> 7/7 OK):
+  installations id 49, stored_files id 41 = hh385.ipa, 23 078 043 bajt
+  (pontosan a CI-artefakt merete), eszkoz Imre iPhone-ja
+  (00008030-001475413ED2402E), final_bundle_id
+  hu.hungarianhardstyle.app.JQPJ793V65, last_error ures, failures_count 0,
+  known_ttl 7 nap.
+- Magarol a keszulekrol (pymobiledevice3 apps list ->
+  node tmp/read-ios-version.cjs tmp/apps-385.json):
+  CFBundleVersion = 385, CFBundleShortVersionString = 1.0.0.
+
+2) ANDROID MEDIAMENET + ZARKEPERNYO (kepek + meroszamok)
+A 385-bol release APK epult (ugyanazokkal az AdMob-kulcsokkal), es Android 14
+(API 34) emulatoron futott: versionCode=385. A dumpsys merve mutatta:
+- NotificationRecord(pkg=hu.hungarianhardstyle.app ... channel=huhs_radio ...
+  category=transport)
+- android.title = "Alphaverb & Intractable One - Destination Nowhere"
+  (a szolo szam az ICY-metadatabol)
+- android.text = "Real Hardstyle FM"
+- android.largeIcon = BITMAP 126x126 (a beepitett RHS logo)
+- MediaSession: huhs-radio hu.hungarianhardstyle.app/huhs-radio
+Kepek: tmp/emu-385-notification.png (mediamenet) es
+tmp/emu-385-lockscreen.png (zarkepernyo ugyanezzel). Jegyzokonyv:
+tmp/emu-385-evidence.txt.
+
+MERT ESZKOZ-HIBA (a binaris-atiramyitas osztalya, ujra): az
+`adb exec-out screencap -p > fajl` PowerShell-atiramyitassal olvashatatlan
+PNG-t adott; a helyes ut a keszulekre iras + adb pull. PowerShell-en at
+binaris adatot `>`-sal irni tilos (ugyanaz, mint a patch-fajlnal).
+
+OsZINTE KORLATOK: a mediamenet kepe emulatorrol keszult (gyari Android 14
+felulet) - a gyartoi feluletek kicsit maskent rendezhetik a mediakartyat, a
+TARTALOM viszont a ment adatabol jon, ezert minden keszuleken ugyanaz. Az
+iOS-oldali "most szol" a zarkepernyon (MPNowPlayingInfoCenter) kodszinten kesz
+es a 385-ben a telefonon van, de kepei igazolasa meg hatravan.
+
+Kapuk: a kliens forrasa nem valtozott ebben a korben (a 385-os zold szamok
+eruenek): flutter test 1390/1390, analyze tiszta, i18n strict zold,
+function-tesztek 404/404. Az eszkozoldalon a verify-plugin-package onteszt
+15/15.
