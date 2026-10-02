@@ -27,12 +27,12 @@ void main() {
 
   Widget wrap({
     required TwitchLiveStatus status,
-    TwitchCardOverride? override,
+    TwitchCardConfig? override,
   }) => ProviderScope(
     overrides: [
       twitchLiveProvider.overrideWith((ref) async => status),
       twitchCardOverrideProvider.overrideWith(
-        (ref) async => override ?? const TwitchCardOverride(),
+        (ref) async => override ?? const TwitchCardConfig(),
       ),
     ],
     child: MaterialApp(
@@ -65,7 +65,7 @@ void main() {
     await tester.pumpWidget(
       wrap(
         status: offlineStatus,
-        override: const TwitchCardOverride(
+        override: const TwitchCardConfig(
           showWhenOffline: true,
           imageUrl: 'https://example.com/plakat.jpg',
           headerText: 'Következő adás: péntek 20:00',
@@ -86,7 +86,7 @@ void main() {
     await tester.pumpWidget(
       wrap(
         status: offlineStatus,
-        override: const TwitchCardOverride(showWhenOffline: true, headerText: 'Következő adás'),
+        override: const TwitchCardConfig(showWhenOffline: true, headerText: 'Következő adás'),
       ),
     );
     await tester.pumpAndSettle();
@@ -96,7 +96,7 @@ void main() {
 
   testWidgets('a kikapcsolt kapcsoló élő adásnál is elrejti a kártyát', (tester) async {
     await tester.pumpWidget(
-      wrap(status: liveStatus, override: const TwitchCardOverride(enabled: false)),
+      wrap(status: liveStatus, override: const TwitchCardConfig(enabled: false)),
     );
     await tester.pumpAndSettle();
 
@@ -107,7 +107,7 @@ void main() {
     await tester.pumpWidget(
       wrap(
         status: liveStatus,
-        override: const TwitchCardOverride(
+        override: const TwitchCardConfig(
           imageUrl: 'https://example.com/sajat.jpg',
           headerText: 'Élőben a stúdióból',
         ),

@@ -1,0 +1,40 @@
+fix(389): a Twitch-beharangozo kartya magatol frissul + a pluginbol jon (a tulajdonos nem latta az appban)
+
+A TULAJDONOS JELZESE (2026-10-02): „feldobtam egy kepet a twitch beharangozohoz,
+de egyaltalan nem latom az iPhone appban”.
+
+A MERES (node tmp/probe-twitch-card-live.mjs) — a lanc HAROM szeme rendben volt:
+- a plugin vegpontja adja: imageUrl=.../denioser-stream.png, showWhenOffline=true;
+- a Firestore-ba be is irt a szinkron (source=wordpress-admin, syncedAt 17:00:04Z);
+- tehat a hiba AZ APP OLDALAN volt: a beallitast csak EGYSZER, a kepernyo
+  betoltesekor olvasta, frissites nelkul, es ha az olvasas elhasalt, NEMAN az
+  alapertekre esett vissza (ilyenkor a kartya ugyanugy eltunik, mint ha nem is
+  lenne beallitas).
+
+A JAVITAS (kliens):
+- a beallitas 3 percenkent ujraolvasodik (mint az elo allapot) — egy nyitva levo
+  app is eszreveszi a valtozast;
+- ket forras: ELSO a plugin nyilvanos vegpontja (/wp-json/huhs/v1/twitch-card),
+  TARTALEK a Firestore-masolat; ha egyik sem el, alapertek (nem tippelunk);
+- kozos, tiszta ertelemezo (parseTwitchCardConfig) — ugyanaz a szabaly, mint a
+  plugin adminjaban es a szerveroldali szinkronban;
+- a naplo megmondja, melyik forrasbol jott (vagy hogy egyik sem).
+
+A JAVITAS (plugin 2.14.16): az ELSO mentesnel a kep jelenlete maga a szandek —
+ha a tulajdonos nem pipalta be az „Engedelyezve” mezot (ez tortent), a kartya
+akkor is bekapcsol; utana a pipa a mervado. Az admin-oldal figyelmeztet, ha kep
+van, de a kartya ki van kapcsolva.
+
+KAPUK: test/services/twitch_live_test.dart 28/28 (9 uj: az ertelemezes szabalyai
++ a forras-sorrend injektalt HTTP-klienssel es Firestore-betoltovel); forras-lint
+a 3 perces frissitesre; plugin-harness a szallitando ZIP-en: 49 lintelt fajl,
+117/117, 117/117, 72/72, 56/56, 36/36, 24/24, push-lanc 12/12 + TWITCH-CARD OK
+(kilepes 0); verify-plugin-package rendben; flutter test 1443/1443; analyze tiszta;
+i18n strict zold; check-play-notes zold (1. blokk 411/480).
+
+CSOMAGOK:
+- build/HUHS-v1.0.0+389-release.aab — 83 430 168 bajt,
+  SHA-256 28D9D5D053512E6CEBACF7BFBC622B5C2A215C4D16475B9B5C18A3FCFABDF482
+  (verify-aab: MINDEN ELLENORZES RENDBEN; a changelog sora mindharom ABI-ban)
+- build/huhs-mobile-api-2.14.16.zip — 202 785 bajt,
+  SHA-256 02C3C02D22866B11D1E8FE9F8B527E536E7325A41837868D00E2AFA20A9A7D39

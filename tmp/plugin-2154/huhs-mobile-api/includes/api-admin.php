@@ -69,11 +69,14 @@ add_action('admin_post_huhs_save_twitch_card', function () {
         wp_die('Nincs jogosultság.');
     }
     check_admin_referer('huhs_save_twitch_card');
+    $stored = get_option(HUHS_TWITCH_CARD_OPTION, null);
     $value = huhs_twitch_card_normalize(array(
         'imageUrl' => esc_url_raw(wp_unslash($_POST['imageUrl'] ?? '')),
         'headerText' => sanitize_text_field(wp_unslash($_POST['headerText'] ?? '')),
         'enabled' => !empty($_POST['enabled']),
         'showWhenOffline' => !empty($_POST['showWhenOffline']),
+        // Az első mentés jelölése: ilyenkor a kép jelenléte bekapcsolja a kártyát.
+        'configured' => $stored !== null,
     ));
     update_option(HUHS_TWITCH_CARD_OPTION, $value, false);
     wp_safe_redirect(admin_url('admin.php?page=huhs-twitch-card&saved=1'));
@@ -98,8 +101,16 @@ function huhs_twitch_card_normalize($value)
     $scheme = strtolower((string) wp_parse_url($url, PHP_URL_SCHEME));
     $value['imageUrl'] = in_array($scheme, array('http', 'https'), true) ? $url : '';
     $value['headerText'] = mb_substr(trim((string) ($value['headerText'] ?? '')), 0, 80);
-    $value['enabled'] = !empty($value['enabled']);
+    // ⚠️ MÉRT HIBA NYOMÁN (2026-10-02): a tulajdonos feltöltött egy képet, de az
+    // „Engedélyezve” pipa üresen maradt — így a kártya **némán elrejtve** maradt,
+    // és azt hitte, elromlott. Az ELSŐ mentésnél ezért a **kép jelenléte maga a
+    // szándék**: ilyenkor a kártya bekapcsol. Utána a pipa a mérvadó (ha később
+    // kikapcsolja, az tiszteletben marad).
+    $configured = !empty($value['configured']);
+    $value['enabled'] = !empty($value['enabled']) || (!$configured && $value['imageUrl'] !== '');
     $value['showWhenOffline'] = !empty($value['showWhenOffline']) && $value['imageUrl'] !== '';
+    // A mentés után már ismert a szándék: a következő mentésnél a pipa dönt.
+    $value['configured'] = true;
     return $value;
 }
 
@@ -123,6 +134,11 @@ function huhs_twitch_card_value()
         'headerText' => (string) ($value['headerText'] ?? ''),
         'enabled' => !empty($value['enabled']),
         'showWhenOffline' => !empty($value['showWhenOffline']),
+        // ⚠️ A 2.14.16 ELŐTT mentett beállításban ez a jelölő **nincs benne** —
+        // ilyenkor a kép jelenléte maga a szándék (lásd a normalize-t), ezért a
+        // tulajdonos meglévő beállítása **azonnal** látszódni kezd, újramentés
+        // nélkül.
+        'configured' => !empty($value['configured']),
     ));
 }
 
@@ -146,6 +162,15 @@ function huhs_twitch_card_page()
             (a Twitch-figyelő kör szinkronizálja), új app-verzió nem kell hozzá.
         </p>
         <?php if (!empty($_GET['saved'])) : ?><div class="notice notice-success"><p>Beállítás mentve.</p></div><?php endif; ?>
+        <?php if (!$value['enabled'] && $value['imageUrl'] !== '') : ?>
+            <div class="notice notice-warning">
+                <p>
+                    <strong>A kártya most KI van kapcsolva.</strong> Van feltöltött kép, de az „Engedélyezve” nincs bepipálva —
+                    így a kártya <em>sem élő adásnál, sem előre</em> nem jelenik meg.
+                    Pipáld be az „Engedélyezve” mezőt, és mentsd el újra.
+                </p>
+            </div>
+        <?php endif; ?>
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
             <input type="hidden" name="action" value="huhs_save_twitch_card">
             <?php wp_nonce_field('huhs_save_twitch_card'); ?>

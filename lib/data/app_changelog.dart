@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 389,
+    changes: [
+      'Javítva: a Twitch-beharangozó kártya beállítása mostantól magától frissül (legfeljebb 3 percen belül), és közvetlenül a WordPress-adminból érkezik.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 388,
     changes: [
       'Javítva: a rádiónál a zárképernyőn és az értesítésben is van Leállítás gomb — eddig csak szüneteltetni lehetett.',

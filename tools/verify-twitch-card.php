@@ -186,6 +186,30 @@ check('a nem URL képérték nem megy át (és az offline kapcsoló sem)',
     $badUrl['imageUrl'] === '' && $badUrl['showWhenOffline'] === false,
     $badUrl['imageUrl'] . ' / ' . var_export($badUrl['showWhenOffline'], true));
 
+// ⚠️ MÉRT HIBA NYOMÁN (2026-10-02): a tulajdonos feltöltött egy képet, az
+// „Engedélyezve” pipa viszont üresen maradt — a kártya némán elrejtve maradt.
+// Az első mentésnél ezért a kép jelenléte maga a szándék.
+$firstSave = huhs_twitch_card_normalize(array(
+    'imageUrl' => 'https://example.test/plakat.jpg',
+    'headerText' => 'Következő adás',
+    'enabled' => false,
+    'showWhenOffline' => true,
+    'configured' => false,
+));
+check('ELSŐ mentésnél a kép bekapcsolja a kártyát (a hiányzó pipa nem rejti el)',
+    $firstSave['enabled'] === true, var_export($firstSave['enabled'], true));
+
+$laterSave = huhs_twitch_card_normalize(array(
+    'imageUrl' => 'https://example.test/plakat.jpg',
+    'enabled' => false,
+    'showWhenOffline' => true,
+    'configured' => true,
+));
+check('KÉSŐBBI mentésnél a pipa a mérvadó (a kikapcsolás tiszteletben marad)',
+    $laterSave['enabled'] === false, var_export($laterSave['enabled'], true));
+check('a mentés megjegyzi, hogy a szándék már ismert',
+    $firstSave['configured'] === true && $laterSave['configured'] === true);
+
 echo "\n=== 3) A beolvasás alapértéke ===\n";
 $default = huhs_twitch_card_value();
 check('a még be nem állított kártya BE van kapcsolva (nem rontja el az élő kártyát)',

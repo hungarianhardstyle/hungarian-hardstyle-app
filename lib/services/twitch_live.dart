@@ -57,6 +57,58 @@ class TwitchLiveStatus {
 /// A csatorna, amit figyelünk (a tulajdonos adta: twitch.tv/hungarianhardstyle).
 const String twitchChannel = 'hungarianhardstyle';
 
+/// A **Twitch-kártya beállításának nyilvános végpontja** (a plugin adminjából).
+///
+/// ⚠️ MIÉRT A PLUGIN AZ ELSŐDLEGES FORRÁS (mért hiba, 2026-10-02): a tulajdonos
+/// *„feldobtam egy képet a twitch beharangozóhoz, de egyáltalán nem látom az
+/// iPhone appban”*. A lánc három szeme rendben volt (a kép a szerveren, a
+/// végpont adja, a Firestore-ba beíródott) — az **app** akadt el: a felülírást
+/// csak a Firestore-ból olvasta, **frissítés nélkül**, és ha az olvasás
+/// elhasalt, **némán** az alapértékre esett vissza. Mostantól a plugin
+/// végpontja az első út (ugyanaz az adat, amit a tulajdonos beállít), a
+/// Firestore pedig a tartalék — és mindkettő **3 percenként** frissül.
+const String twitchCardEndpoint = 'https://hungarianhardstyle.hu/wp-json/huhs/v1/twitch-card';
+
+/// A kártya beállítása (egy helyen, hogy a két forrás ne tudjon széttartani).
+class TwitchCardConfig {
+  const TwitchCardConfig({
+    this.enabled = true,
+    this.imageUrl = '',
+    this.headerText = '',
+    this.showWhenOffline = false,
+  });
+
+  final bool enabled;
+  final String imageUrl;
+  final String headerText;
+
+  /// Élő adás nélkül is látszódjon (saját képpel) — a tulajdonos kérése.
+  final bool showWhenOffline;
+
+  bool get hasImage => imageUrl.trim().isNotEmpty;
+
+  @override
+  String toString() =>
+      'TwitchCardConfig(enabled: $enabled, showWhenOffline: $showWhenOffline, '
+      'hasImage: $hasImage, header: "$headerText")';
+}
+
+/// A beállítás értelmezése — **tiszta**, ezért hálózat nélkül mérhető.
+///
+/// Ugyanazt a szabályt használja, mint a plugin adminja és a szerveroldali
+/// szinkron: **kép nélkül** az „élő adás nélkül is” nem kapcsol be (nem lenne
+/// mit mutatni), a hiányzó `enabled` jelentése pedig **BE**.
+TwitchCardConfig parseTwitchCardConfig(Map<String, dynamic>? data) {
+  if (data == null) return const TwitchCardConfig();
+  final imageUrl = (data['imageUrl'] as String? ?? '').trim();
+  return TwitchCardConfig(
+    enabled: data['enabled'] != false,
+    imageUrl: imageUrl,
+    headerText: (data['headerText'] as String? ?? '').trim(),
+    showWhenOffline: data['showWhenOffline'] == true && imageUrl.isNotEmpty,
+  );
+}
+
 /// **Látszik-e a főoldali Twitch-kártya?** — tiszta döntés, ezért mérhető.
 ///
 /// MIÉRT KÜLÖN (mért hiány, 2026-10-02): a tulajdonos felülírása
@@ -160,4 +212,57 @@ Future<TwitchLiveStatus> fetchTwitchLive({
   } finally {
     if (client == null) own.close(force: true);
   }
+}
+
+/// A kártya beállításának lekérdezése a **plugin végpontjáról** (elsődleges út).
+///
+/// `null`, ha nem érhető el vagy nem értelmezhető — ilyenkor a hívó a
+/// Firestore-ból próbálkozik (a szerveroldali szinkron másolata).
+Future<TwitchCardConfig?> fetchTwitchCardFromWordPress({HttpClient? client}) async {
+  final own = client ?? HttpClient();
+  own.connectionTimeout = const Duration(seconds: 8);
+  try {
+    final uri = Uri.parse('$twitchCardEndpoint?_=${DateTime.now().millisecondsSinceEpoch}');
+    final request = await own.getUrl(uri);
+    request.headers.set('Accept', 'application/json');
+    request.headers.set('Cache-Control', 'no-cache');
+    request.headers.set('User-Agent', 'HUHS-App/1.0 (twitch-card)');
+    final response = await request.close();
+    if (response.statusCode != 200) {
+      debugPrint('twitch: a kártya-beállítás végpontja HTTP ${response.statusCode}');
+      return null;
+    }
+    final body = await response.transform(utf8.decoder).join();
+    final decoded = jsonDecode(body);
+    if (decoded is! Map) return null;
+    return parseTwitchCardConfig(Map<String, dynamic>.from(decoded));
+  } catch (error) {
+    debugPrint('twitch: a kártya-beállítás nem kérdezhető le a plugintól: $error');
+    return null;
+  } finally {
+    if (client == null) own.close(force: true);
+  }
+}
+
+/// A kártya beállítása: **plugin → Firestore → alapérték**.
+///
+/// A `firestoreLoader` injektálható, ezért a sorrend hálózat nélkül mérhető.
+Future<TwitchCardConfig> fetchTwitchCardConfig({
+  HttpClient? client,
+  Future<TwitchCardConfig?> Function()? firestoreLoader,
+}) async {
+  final fromWordPress = await fetchTwitchCardFromWordPress(client: client);
+  if (fromWordPress != null) return fromWordPress;
+  if (firestoreLoader != null) {
+    final fromFirestore = await firestoreLoader();
+    if (fromFirestore != null) return fromFirestore;
+  }
+  debugPrint('twitch: a kártya beállítása egyik forrásból sem jött (alapérték)');
+  return const TwitchCardConfig();
+}
+
+/// A Firestore-tartalék naplózása (a providerból, hogy a `dart:io` import itt
+/// maradjon — a napló szövege **angol**, mert nem felületi szöveg).
+void debugPrintTwitchCardFallbackFailed(Object error) {
+  debugPrint('twitch: the Firestore fallback for the card settings failed: $error');
 }

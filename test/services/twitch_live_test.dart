@@ -1,7 +1,90 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hungarian_hardstyle_app/services/twitch_live.dart';
+
+/// Egy `HttpClient` helyettesítő, ami a megadott szöveget adja vissza.
+///
+/// ⚠️ Így a **forrás-sorrend** (plugin → Firestore → alapérték) hálózat nélkül
+/// mérhető: a `fetchTwitchCardFromWordPress` ezen a kliensen keresztül kapja a
+/// választ, a Firestore-oldal pedig injektált `firestoreLoader`.
+HttpClient _stubClient(String body, {int status = 200}) {
+  final client = _FakeHttpClient();
+  client.body = body;
+  client.status = status;
+  return client;
+}
+
+class _FakeHttpClient implements HttpClient {
+  String body = '';
+  int status = 200;
+
+  @override
+  Duration? connectionTimeout;
+
+  @override
+  Future<HttpClientRequest> getUrl(Uri url) async => _FakeHttpClientRequest(body, status);
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeHttpClientRequest implements HttpClientRequest {
+  _FakeHttpClientRequest(this.body, this.status);
+
+  final String body;
+  final int status;
+
+  @override
+  final HttpHeaders headers = _FakeHttpHeaders();
+
+  @override
+  Future<HttpClientResponse> close() async => _FakeHttpClientResponse(body, status);
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeHttpClientResponse extends Stream<List<int>> implements HttpClientResponse {
+  _FakeHttpClientResponse(this.body, this.statusCode);
+
+  final String body;
+
+  @override
+  final int statusCode;
+
+  @override
+  StreamSubscription<List<int>> listen(
+    void Function(List<int>)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) =>
+      Stream<List<int>>.value(utf8Bytes(body)).listen(
+        onData,
+        onError: onError,
+        onDone: onDone,
+        cancelOnError: cancelOnError,
+      );
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+List<int> utf8Bytes(String text) => const Utf8Encoder().convert(text);
+
+class _FakeHttpHeaders implements HttpHeaders {
+  @override
+  void set(String name, Object value, {bool preserveHeaderCase = false}) {}
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 /// A Twitch-élő állapot mérése — **hálózat nélkül**.
 ///
@@ -124,6 +207,89 @@ void main() {
     });
   });
 
+  group('a beállítás értelmezése (tiszta)', () {
+    // ⚠️ MIÉRT EZ A KÖR (mért hiba, 2026-10-02): a tulajdonos beállította a
+    // képet a plugin adminjában, és nem látta az appban. Az app-oldali olvasást
+    // ezért két forrásból tápláljuk (plugin → Firestore), és a szabályoknak
+    // UGYANAZOKNAK kell lenniük, mint a pluginban és a szerveroldali szinkronban.
+    test('a teljes beállítást kiolvassa', () {
+      final config = parseTwitchCardConfig(const {
+        'enabled': true,
+        'imageUrl': 'https://hungarianhardstyle.hu/wp-content/uploads/2026/10/denioser-stream.png',
+        'headerText': 'Következő adás: péntek 20:00',
+        'showWhenOffline': true,
+      });
+      expect(config.enabled, isTrue);
+      expect(config.hasImage, isTrue);
+      expect(config.showWhenOffline, isTrue);
+      expect(config.headerText, 'Következő adás: péntek 20:00');
+    });
+
+    test('a hiányzó enabled jelentése BE (nem rejti el a működő kártyát)', () {
+      expect(parseTwitchCardConfig(const {}).enabled, isTrue);
+      expect(parseTwitchCardConfig(null).enabled, isTrue);
+    });
+
+    test('KÉP NÉLKÜL az „élő adás nélkül is” nem kapcsol be', () {
+      final config = parseTwitchCardConfig(const {'showWhenOffline': true});
+      expect(config.showWhenOffline, isFalse);
+      expect(config.hasImage, isFalse);
+    });
+
+    test('a kikapcsolt kártya jelzése átjön', () {
+      expect(parseTwitchCardConfig(const {'enabled': false}).enabled, isFalse);
+    });
+
+    test('a mezők körüli szóközöket levágja', () {
+      final config = parseTwitchCardConfig(const {
+        'imageUrl': '  https://example.test/a.jpg  ',
+        'headerText': '  Felirat  ',
+      });
+      expect(config.imageUrl, 'https://example.test/a.jpg');
+      expect(config.headerText, 'Felirat');
+    });
+  });
+
+  group('a beállítás forrásai (plugin → Firestore → alapérték)', () {
+    test('ha a plugin válaszol, az nyer (a tulajdonos ott állítja)', () async {
+      final config = await fetchTwitchCardConfig(
+        client: _stubClient(
+          '{"imageUrl":"https://example.test/plugin.jpg","headerText":"Plugin","showWhenOffline":true}',
+        ),
+        firestoreLoader: () async => const TwitchCardConfig(imageUrl: 'https://example.test/firestore.jpg'),
+      );
+      expect(config.imageUrl, 'https://example.test/plugin.jpg');
+      expect(config.showWhenOffline, isTrue);
+    });
+
+    test('ha a plugin nem él, a Firestore-másolat jön', () async {
+      final config = await fetchTwitchCardConfig(
+        client: _stubClient('', status: 500),
+        firestoreLoader: () async => const TwitchCardConfig(
+          imageUrl: 'https://example.test/firestore.jpg',
+          showWhenOffline: true,
+        ),
+      );
+      expect(config.imageUrl, 'https://example.test/firestore.jpg');
+      expect(config.showWhenOffline, isTrue);
+    });
+
+    test('ha egyik forrás sem él, az alapérték jön (nem tippelünk)', () async {
+      final config = await fetchTwitchCardConfig(
+        client: _stubClient('nem json'),
+        firestoreLoader: () async => null,
+      );
+      expect(config.imageUrl, '');
+      expect(config.hasImage, isFalse);
+      expect(config.enabled, isTrue);
+    });
+
+    test('a hibás JSON nem dönti el az appot', () async {
+      final config = await fetchTwitchCardConfig(client: _stubClient('<html>hiba</html>'));
+      expect(config.hasImage, isFalse);
+    });
+  });
+
   group('a bekötés (forrás-lint)', () {
     test('a kártya a tiszta döntést használja, és nem hazudik élő adást', () {
       final card = File('lib/widgets/twitch_live_card.dart').readAsStringSync();
@@ -135,9 +301,19 @@ void main() {
     });
 
     test('a felülírás olvassa a showWhenOffline mezőt', () {
+      // ⚠️ A mező olvasása 2026-10-02 óta a **tiszta értelmezőben** él
+      // (`parseTwitchCardConfig`), ezért azt mérjük — és azt is, hogy a provider
+      // ezt használja (nem a saját, széttartó másolatát).
+      final service = File('lib/services/twitch_live.dart').readAsStringSync();
+      expect(service, contains("data['showWhenOffline'] == true && imageUrl.isNotEmpty"));
+      expect(service, contains('TwitchCardConfig parseTwitchCardConfig'));
       final provider = File('lib/providers/twitch_live_provider.dart').readAsStringSync();
-      expect(provider, contains("data['showWhenOffline'] as bool? ?? false"));
-      expect(provider, contains('this.showWhenOffline = false'));
+      expect(provider, contains('parseTwitchCardConfig('), reason: 'a provider nem a közös értelmezőt használja');
+      // A frissítés (a mért hiba oka): 3 percenként újraolvassuk.
+      expect(provider, contains('Timer.periodic(const Duration(minutes: 3)'));
+      // A plugin az első forrás, a Firestore a tartalék.
+      expect(provider, contains('fetchTwitchCardConfig('));
+      expect(provider, contains('loadTwitchCardFromFirestore'));
     });
 
     test('a főoldal az élő kártyát a hírek blokkja után mutatja', () {
