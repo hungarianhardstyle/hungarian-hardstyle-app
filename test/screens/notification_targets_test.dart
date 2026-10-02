@@ -43,7 +43,14 @@ void main() {
     // Ismert, dokumentált hiány: a nyeremény-értesítéshez a kliensnek nincs
     // „nyeremény azonosító alapján" lekérdezése (csak az **aktív** játéké), ezért
     // az külön kör. A lista szándékosan **rövid** — ne nőjön csendben.
-    const knownGaps = {'prize'};
+    //
+    // ⚠️ A `custom` (2026-10-02): ez a **WordPress-admin „custom push”** célpontja,
+    // amit a Twitch-élő értesítés küld a plugin admin végpontjának — az a push
+    // MAGÁT az appot nyitja meg, és **nem** hoz létre appon belüli értesítést,
+    // ezért az értesítés-központ soha nem kap ilyen célpontot. (A minta a
+    // `functions/index.js` minden `targetType: '…'` előfordulását látja, ezért
+    // itt kell kimondani.)
+    const knownGaps = {'prize', 'custom'};
     for (final target in targets) {
       if (knownGaps.contains(target)) continue;
       expect(
