@@ -9066,7 +9066,11 @@ async function runTwitchLiveNotice() {
     );
   }
   if (!plan.notify) {
-    return { skipped: plan.reason, isLive: live.isLive, viewers: live.viewers };
+    // ⚠️ A kihagyás OKA is naplózva van: a „nem történt semmi" és a „le sem
+    // futott" különben ugyanúgy nézne ki (a projekt visszatérő tanulsága).
+    const skipped = { skipped: plan.reason, isLive: live.isLive, viewers: live.viewers };
+    console.info(JSON.stringify({ event: 'twitch_live_skip', ...skipped }));
+    return skipped;
   }
 
   const params = twitchLiveNoticeParams(live);
