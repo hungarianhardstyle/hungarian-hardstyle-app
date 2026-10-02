@@ -36,7 +36,10 @@ void main() {
 
       expect(
         nativeFiles,
-        {'MainActivity.kt', 'RadioPlaybackService.kt'},
+        // ⚠️ A `RadioMetadataReader.kt` (2026-10-01, „most szól”) az iOS-en a
+        // Dart-oldali ICY-olvasóval ÉS az `MPNowPlayingInfoCenter` bekötéssel
+        // egyenértékű (lásd docs/IOS-CI-TESTFLIGHT.md, „Most szól” szakasz).
+        {'MainActivity.kt', 'RadioPlaybackService.kt', 'RadioMetadataReader.kt'},
         reason: 'Új Android-natív fájl = az iOS-nek nincs megfelelője. Ha ez '
             'szándékos, írd le a docs/IOS-CI-TESTFLIGHT.md-ben, mit tesz az '
             'iOS (pl. `audio_service` + AVAudioSession), és frissítsd ezt a listát.',

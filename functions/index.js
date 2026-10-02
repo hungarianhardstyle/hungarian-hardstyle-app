@@ -87,6 +87,14 @@ const {
 const { generateAuthActionLink } = require('./auth_action_link');
 const { referralRewardPlan } = require('./referral-reward-plan');
 const { logWarning } = require('./log-warning');
+const {
+  TWITCH_CHANNEL,
+  TWITCH_WEB_CLIENT_ID,
+  twitchLiveQuery,
+  parseTwitchLive,
+  twitchLiveNoticePlan,
+  twitchLiveNoticeParams,
+} = require('./twitch-live-plan');
 const { buildGameLeaderboard } = require('./game_results');
 const { gameRewardPoints, buildRankedGameEntries } = require('./game_rewards');
 const {
@@ -8946,6 +8954,192 @@ exports.sendWeeklyDigest = onSchedule(
 
 // A heti összefoglaló mérhető változata (küldés nélkül is hívható).
 exports.__weeklyDigestForTests = { sendWeeklyDigest };
+
+/*
+|--------------------------------------------------------------------------
+| TWITCH-ÉLŐ FIGYELŐ (2026-10-01) — „szóljon push mindenkinek”
+|--------------------------------------------------------------------------
+*/
+
+/** A Twitch-állapot és a bejelentett adás dokumentuma. */
+const TWITCH_LIVE_DOC = 'app_settings/twitch_live';
+const TWITCH_LIVE_KIND = 'twitch_live';
+
+/**
+ * A **nyilvános** Twitch-állapot lekérdezése (kulcs nélkül).
+ *
+ * A hivatalos Helix API OAuth tokent kér (mért `401`), a web-kliens GraphQL
+ * viszont ugyanezt megválaszolja — lásd `functions/twitch-live-plan.js`.
+ */
+async function fetchTwitchLiveState(channel = TWITCH_CHANNEL) {
+  try {
+    const response = await fetch('https://gql.twitch.tv/gql', {
+      method: 'POST',
+      headers: {
+        'Client-ID': TWITCH_WEB_CLIENT_ID,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ query: twitchLiveQuery(channel) }),
+    });
+    if (!response.ok) {
+      logWarning('twitch_live_fetch_failed', `HTTP ${response.status}`, { channel });
+      return null;
+    }
+    return parseTwitchLive(await response.text(), channel);
+  } catch (error) {
+    logWarning('twitch_live_fetch_failed', error?.message || String(error), { channel });
+    return null;
+  }
+}
+
+/**
+ * Széles körű push: a WordPress-admin **custom push** végpontja (minden token).
+ *
+ * Ugyanaz az elv, mint a heti összefoglalónál: a token-tár a WordPressen él
+ * (~1030 eszköz), ezért a széles eléréshez ott kell küldeni. A végpont a
+ * meglévő, bizonyított küldési láncot használja (nyelvenként, a beállítások
+ * tiszteletben tartásával).
+ */
+async function sendTwitchLivePush(params) {
+  const text = notificationText(TWITCH_LIVE_KIND, 'hu', params);
+  if (!text?.title || !text?.body) return { sent: 0, failed: true };
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  try {
+    const response = await fetch(`${WORDPRESS_BASE_URL.replace('/huhs/v1', '')}/huhs/v1/admin`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'send_push',
+        title: text.title,
+        body: text.body,
+        // Nincs konkrét app-tartalom: a koppintás az appot nyitja (a főoldali
+        // kártyáról indul a stream) — ezért célpont nélküli, „custom” push.
+        targetType: 'custom',
+        url: `https://www.twitch.tv/${TWITCH_CHANNEL}`,
+      }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      logWarning('twitch_live_push_failed', `${response.status} — ${body?.message || ''}`);
+      return { sent: 0, failed: true, status: response.status };
+    }
+    return {
+      sent: Number(body?.sent) || 0,
+      queued: Boolean(body?.queued),
+      duplicate: Boolean(body?.duplicate),
+    };
+  } catch (error) {
+    logWarning('twitch_live_push_failed', error?.message || String(error));
+    return { sent: 0, failed: true };
+  }
+}
+
+/**
+ * Egy kör: megnézi, él-e a csatorna, és **adásonként egyszer** szól mindenkinek.
+ *
+ * A döntés tiszta (`twitchLiveNoticePlan`): új adás → értesítés; ugyanaz az adás
+ * → semmi; az adás vége → a jelölés törlése, hogy a következő adás újra szóljon.
+ */
+async function runTwitchLiveNotice() {
+  const ref = db.doc(TWITCH_LIVE_DOC);
+  const snapshot = await ref.get();
+  const state = snapshot.exists ? snapshot.data() || {} : {};
+
+  const live = await fetchTwitchLiveState();
+  if (!live) return { skipped: 'unreachable' };
+
+  const plan = twitchLiveNoticePlan({
+    live,
+    announcedStreamId: state.announcedStreamId,
+    enabled: state.enabled !== false,
+  });
+
+  if (plan.reset) {
+    await ref.set(
+      { announcedStreamId: '', lastStateAt: FieldValue.serverTimestamp() },
+      { merge: true },
+    );
+  }
+  if (!plan.notify) {
+    return { skipped: plan.reason, isLive: live.isLive, viewers: live.viewers };
+  }
+
+  const params = twitchLiveNoticeParams(live);
+
+  // 1) Bejövő értesítés a regisztrált profiloknak (a heti összefoglaló mintájára).
+  let created = 0;
+  const privateDocs = await db
+    .collection('private_user_data')
+    .select('notificationPreferences')
+    .get();
+  for (const doc of privateDocs.docs) {
+    const notificationCreated = await createNotificationBestEffort({
+      recipientUid: doc.id,
+      type: TWITCH_LIVE_KIND,
+      kind: TWITCH_LIVE_KIND,
+      params,
+      targetType: '',
+      targetId: '',
+      dedupeKey: `twitch_live:${plan.streamId}:${doc.id}`,
+    });
+    if (notificationCreated) created += 1;
+  }
+
+  // 2) A széles körű push (minden regisztrált eszköz).
+  const push = await sendTwitchLivePush(params);
+
+  // 3) A jelölés: erről az adásról többé nem szólunk.
+  await ref.set(
+    {
+      announcedStreamId: plan.streamId,
+      announcedAt: FieldValue.serverTimestamp(),
+      title: params.title,
+      viewers: live.viewers,
+      thumbnailUrl: live.thumbnailUrl,
+      lastStateAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+
+  const summary = {
+    notified: true,
+    streamId: plan.streamId,
+    created,
+    pushed: push.sent,
+    queued: Boolean(push.queued),
+    failed: Boolean(push.failed),
+  };
+  console.info(JSON.stringify({ event: 'twitch_live_notice', ...summary }));
+  return summary;
+}
+
+exports.sendTwitchLiveNotice = onSchedule(
+  {
+    schedule: 'every 5 minutes',
+    region: 'europe-central2',
+    timeoutSeconds: 120,
+  },
+  async () => {
+    try {
+      await runTwitchLiveNotice();
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          event: 'twitch_live_failed',
+          message: error?.message || String(error),
+        }),
+      );
+    }
+  },
+);
+
+// A Twitch-figyelő mérhető változata (hálózat nélkül is hívható).
+exports.__twitchLiveForTests = { runTwitchLiveNotice, fetchTwitchLiveState, sendTwitchLivePush };
 
 exports.moderatePrivateMessage = onDocumentCreated(
   {

@@ -6,12 +6,16 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioPlaybackConfiguration
+import android.media.MediaMetadata
 import android.media.MediaPlayer
+import android.media.session.MediaSession
+import android.media.session.PlaybackState
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
@@ -55,6 +59,51 @@ class RadioPlaybackService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
     private var focusRequest: AudioFocusRequest? = null
+
+    /**
+     * A **zárképernyő** és az értesítés médiakártyája — 2026-10-01 (a tulajdonos
+     * kérése: *„kiírhatná itt is a zenét ami szól + zárképernyőn is lehessen
+     * látni a radio a real hardstyle fm logóval"*).
+     *
+     * ⚠️ MIÉRT KELL A `MediaSession`: a zárképernyő (és az Android 13+
+     * médialejátszó-kártyája) a **MediaSession** metaadatából rajzol, NEM az
+     * értesítés szövegéből. Enélkül a zárképernyőn csak az app neve látszik.
+     */
+    private var mediaSession: MediaSession? = null
+
+    /** A most szóló szám és a következő (üres, ha a rádió nem küld címet). */
+    private var trackTitle: String = ""
+    private var trackNext: String = ""
+    private val metadataHandler = Handler(Looper.getMainLooper())
+
+    /**
+     * A metaadat-frissítő kör: 20 másodpercenként újraolvassa a stream fejlécét.
+     *
+     * ⚠️ Azért NATÍV (nem a Dart-oldalról jön), mert a rádió **háttérben** is szól
+     * — ilyenkor a Flutter-motor állhat, a szolgáltatás viszont fut. A Dart-oldal
+     * csak akkor küld címet (`ACTION_METADATA`), ha az app épp nyitva van.
+     *
+     * ⚠️ A kör **lambda**, nem külön `Runnable`-alosztály: a rádió forrás-lintje
+     * (`test/core/android_radio_service_test.dart`) a fókusz-őrkutya törzsét a
+     * `run` függvény szövegéből keresi — egy második ilyen függvény elfedné azt
+     * (ezt a kapu azonnal jelezte).
+     */
+    private val metadataRefresh: Runnable = Runnable { refreshMetadata() }
+
+    private fun refreshMetadata() {
+        if (!isPlaybackRequested()) return
+        Thread {
+            val track = runCatching { RadioMetadataReader.fetch() }.getOrNull()
+            if (track != null && !track.isEmpty && track.title != trackTitle) {
+                trackTitle = track.title
+                trackNext = track.next
+                metadataHandler.post { applyMetadata() }
+            }
+            if (isPlaybackRequested()) {
+                metadataHandler.postDelayed(metadataRefresh, METADATA_REFRESH_MS)
+            }
+        }.start()
+    }
 
     /**
      * Elhallgattunk-e azért, mert egy MÁSIK app (Spotify/YouTube) **véglegesen**
@@ -186,12 +235,89 @@ class RadioPlaybackService : Service() {
                 NotificationChannel(CHANNEL_ID, "Real Hardstyle FM", NotificationManager.IMPORTANCE_LOW),
             )
         }
+        createMediaSession()
         streamUrl = preferences().getString(KEY_URL, null)
         // A fókusz visszaszerzéséhez figyelni kell, mikor hagyja abba a MÁSIK
         // app a lejátszást (lásd [registerPlaybackWatcher]). API 26-tól elérhető.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerPlaybackWatcher()
         }
+    }
+
+    /**
+     * A médiamunkamenet létrehozása: ebből lesz a zárképernyő kártyája, és innen
+     * vezérelhető a lejátszás (fejhallgató-gomb, autó, óra).
+     */
+    private fun createMediaSession() {
+        if (mediaSession != null) return
+        mediaSession = MediaSession(this, "huhs-radio").apply {
+            setCallback(object : MediaSession.Callback() {
+                override fun onPlay() {
+                    val url = streamUrl ?: RadioMetadataReader.STREAM_URL
+                    if (!isPlaybackRequested()) play(url) else startPlayer(url)
+                }
+
+                override fun onPause() {
+                    stopPlayer()
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                }
+
+                override fun onStop() {
+                    stopPlayer()
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                }
+            })
+            isActive = true
+        }
+        applyMetadata()
+    }
+
+    /**
+     * A metaadat kiírása a **médiamunkamenetbe** (zárképernyő) ÉS az
+     * **értesítésbe** — egy helyen, hogy a kettő ne tudjon széttartani.
+     */
+    private fun applyMetadata() {
+        val session = mediaSession ?: return
+        val title = trackTitle.ifBlank { "Real Hardstyle FM" }
+        runCatching {
+            session.setMetadata(
+                MediaMetadata.Builder()
+                    .putString(MediaMetadata.METADATA_KEY_TITLE, title)
+                    .putString(MediaMetadata.METADATA_KEY_ARTIST, "Real Hardstyle FM")
+                    .putString(MediaMetadata.METADATA_KEY_ALBUM, "Real Hardstyle Radio")
+                    .putBitmap(
+                        MediaMetadata.METADATA_KEY_ALBUM_ART,
+                        BitmapFactory.decodeResource(resources, R.drawable.realhardstyle_logo),
+                    )
+                    .build(),
+            )
+            session.setPlaybackState(
+                PlaybackState.Builder()
+                    .setActions(
+                        PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or
+                            PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_STOP,
+                    )
+                    .setState(
+                        if (player?.isPlaying == true) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED,
+                        PlaybackState.PLAYBACK_POSITION_UNKNOWN,
+                        1f,
+                    )
+                    .build(),
+            )
+        }
+        if (isPlaybackRequested()) {
+            runCatching { startForeground(NOTIFICATION_ID, notification()) }
+        }
+    }
+
+    private fun startMetadataRefresh() {
+        metadataHandler.removeCallbacks(metadataRefresh)
+        metadataHandler.post(metadataRefresh)
+    }
+
+    private fun stopMetadataRefresh() {
+        metadataHandler.removeCallbacks(metadataRefresh)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -205,6 +331,17 @@ class RadioPlaybackService : Service() {
             ACTION_VOLUME -> {
                 volume = intent.getFloatExtra(EXTRA_VOLUME, 1f)
                 player?.setVolume(volume, volume)
+            }
+            // A Dart-oldal (a felület) küldi a címet, amikor az app nyitva van —
+            // ilyenkor nincs okunk külön hálózati kört indítani.
+            ACTION_METADATA -> {
+                val title = intent.getStringExtra(EXTRA_TITLE).orEmpty()
+                val next = intent.getStringExtra(EXTRA_NEXT).orEmpty()
+                if (title.isNotBlank() && title != trackTitle) {
+                    trackTitle = title
+                    trackNext = next
+                    applyMetadata()
+                }
             }
             else -> {
                 // A rendszer indította újra a szolgáltatást (nincs intent): ha a
@@ -229,6 +366,7 @@ class RadioPlaybackService : Service() {
         preferences().edit().putBoolean(KEY_PLAYING, true).putString(KEY_URL, url).apply()
         reconnectHandler.removeCallbacks(reconnect)
         startForeground(NOTIFICATION_ID, notification())
+        startMetadataRefresh()
         if (!requestAudioFocus()) {
             // Ha egy másik app éppen hangot játszik, és nem kapjuk meg a fókuszt,
             // nem játszunk rá a másikra — a felhasználó koppintott, ezért
@@ -436,6 +574,7 @@ class RadioPlaybackService : Service() {
         preferences().edit().putBoolean(KEY_PLAYING, false).remove(KEY_URL).apply()
         reconnectHandler.removeCallbacks(reconnect)
         reconnectHandler.removeCallbacks(focusWatchdog)
+        stopMetadataRefresh()
         streamUrl = null
         pausedByFocus = false
         releasePlayer()
@@ -451,17 +590,36 @@ class RadioPlaybackService : Service() {
         } else {
             Notification.Builder(this)
         }
-        return builder
-            .setContentTitle("Real Hardstyle FM")
+        // ⚠️ A CÍM a most szóló szám (a tulajdonos kérése); amíg nincs metaadat,
+        // a rádió neve áll ott — így a kártya sosem üres.
+        builder
+            .setContentTitle(trackTitle.ifBlank { "Real Hardstyle FM" })
             .setContentText("Real Hardstyle FM")
             .setSmallIcon(R.drawable.ic_stat_huhs)
+            .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.realhardstyle_logo))
             .setColor(Color.rgb(242, 56, 61))
             .setOngoing(true)
-            .build()
+            .setShowWhen(false)
+        if (trackNext.isNotBlank()) {
+            builder.setSubText("Következő: $trackNext")
+        }
+        // A médiakártya-stílus köti össze az értesítést a zárképernyőn megjelenő
+        // munkamenettel (és a fejhallgató-gombbal).
+        mediaSession?.let { session ->
+            builder.setStyle(
+                Notification.MediaStyle()
+                    .setMediaSession(session.sessionToken)
+                    .setShowActionsInCompactView(),
+            )
+        }
+        return builder.build()
     }
 
     override fun onDestroy() {
         stopPlayer()
+        stopMetadataRefresh()
+        runCatching { mediaSession?.release() }
+        mediaSession = null
         unregisterPlaybackWatcher()
         super.onDestroy()
     }
@@ -479,8 +637,13 @@ class RadioPlaybackService : Service() {
         const val ACTION_PLAY = "hu.hungarianhardstyle.app.radio.PLAY"
         const val ACTION_STOP = "hu.hungarianhardstyle.app.radio.STOP"
         const val ACTION_VOLUME = "hu.hungarianhardstyle.app.radio.VOLUME"
+
+        /** A felület által küldött „most szól" cím (lásd [applyMetadata]). */
+        const val ACTION_METADATA = "hu.hungarianhardstyle.app.radio.METADATA"
         const val EXTRA_URL = "url"
         const val EXTRA_VOLUME = "volume"
+        const val EXTRA_TITLE = "title"
+        const val EXTRA_NEXT = "next"
         private const val PREFS = "huhs_radio"
         private const val KEY_PLAYING = "playing"
         private const val KEY_URL = "url"
@@ -491,5 +654,8 @@ class RadioPlaybackService : Service() {
         private const val RECONNECT_DELAY_MS = 3_000L
         private const val FOCUS_RETRY_DELAY_MS = 2_000L
         private const val FOCUS_WATCH_WAKE_LOCK_MS = 20 * 60 * 1_000L
+
+        /** A „most szól" frissítés üteme — a rádió blokkonként ~4 másodpercnyi hangot küld. */
+        private const val METADATA_REFRESH_MS = 20_000L
     }
 }

@@ -141,6 +141,13 @@ const TEXTS = {
     hu: { title: 'Heti összefoglaló', body: '{summary} — nézd meg az appban.' },
     en: { title: 'Weekly recap', body: '{summary} — open the app to catch up.' },
   },
+  // Twitch-élő adás (2026-10-01): a tulajdonos kérése — *„érzekelje ha indul a
+  // twitch stream”* és *„szóljon push mindenkinek, amikor elindítod”*. A figyelő
+  // 5 percenként kérdezi a nyilvános Twitch-állapotot, és **adásonként egyszer** szól.
+  twitch_live: {
+    hu: { title: 'Élőben vagyunk Twitchen', body: '{title} — nézd meg az appban!' },
+    en: { title: 'We are live on Twitch', body: '{title} — watch it in the app!' },
+  },
   // Követés a kedvencek alapján (2026-09-28): aki egy DJ-t vagy szervezőt
   // kedvencel, az értesítést kap az új tartalmáról. A push-t továbbra is a
   // WordPress-plugin küldi mindenkinek, ezért itt csak a bejövő lista bővül.

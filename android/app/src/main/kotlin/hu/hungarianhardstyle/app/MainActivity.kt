@@ -1,5 +1,6 @@
 package hu.hungarianhardstyle.app
 
+import android.app.PictureInPictureParams
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Rational
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.enableEdgeToEdge
@@ -28,6 +30,37 @@ import com.ryanheise.audioservice.AudioServiceFragmentActivity
 // belépés (BiometricPrompt) és a többi Metódus-csatorna változatlanul működik.
 class MainActivity : AudioServiceFragmentActivity() {
     private var systemBackCallback: OnBackInvokedCallback? = null
+
+    /**
+     * Kis képernyő (PiP) — a tulajdonos kérése: *„ha leteszi az appot hatterben
+     * menjen a stream kiskepernyon”*.
+     *
+     * A Twitch-oldal kapcsolja be (`hu_hs/pip` → `setEnabled`); amikor a
+     * felhasználó elhagyja az appot, a [onUserLeaveHint] ilyenkor lép be a kis
+     * képernyőre. Rádióhallgatás vagy böngészés közben **nem** ugrik be, mert ott
+     * a kapcsoló kikapcsolt.
+     */
+    private var pictureInPictureEnabled = false
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (!pictureInPictureEnabled) return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        runCatching {
+            enterPictureInPictureMode(
+                PictureInPictureParams.Builder()
+                    .setAspectRatio(Rational(16, 9))
+                    .build(),
+            )
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: android.content.res.Configuration,
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // A Play Console „teljes képernyős mód" javaslata: Android 15+ (targetSdk 35
@@ -61,6 +94,16 @@ class MainActivity : AudioServiceFragmentActivity() {
                 callback,
             )
         }
+        // Kis képernyő (PiP): a Twitch-oldal kapcsolja be/ki (lásd a mezőt).
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/pip")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "setEnabled") {
+                    pictureInPictureEnabled = call.arguments as? Boolean ?: false
+                    result.success(null)
+                } else {
+                    result.notImplemented()
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/radio")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -97,6 +140,23 @@ class MainActivity : AudioServiceFragmentActivity() {
                             Intent(this, RadioPlaybackService::class.java)
                                 .setAction(RadioPlaybackService.ACTION_VOLUME)
                                 .putExtra(RadioPlaybackService.EXTRA_VOLUME, volume),
+                        )
+                        result.success(null)
+                    }
+                    // A „most szól" cím a felületről (2026-10-01): az app nyitva
+                    // van, tehát a Dart-oldal már kiolvasta a stream fejlécét —
+                    // ezt adjuk tovább a szolgáltatásnak, hogy az értesítés és a
+                    // zárképernyő azonnal a szóló számot mutassa. Háttérben a
+                    // szolgáltatás maga olvassa (lásd RadioMetadataReader).
+                    "metadata" -> {
+                        val args = call.arguments as? Map<*, *>
+                        val title = (args?.get("title") as? String).orEmpty()
+                        val next = (args?.get("next") as? String).orEmpty()
+                        startService(
+                            Intent(this, RadioPlaybackService::class.java)
+                                .setAction(RadioPlaybackService.ACTION_METADATA)
+                                .putExtra(RadioPlaybackService.EXTRA_TITLE, title)
+                                .putExtra(RadioPlaybackService.EXTRA_NEXT, next),
                         )
                         result.success(null)
                     }

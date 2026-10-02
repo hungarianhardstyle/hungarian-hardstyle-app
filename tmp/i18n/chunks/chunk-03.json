@@ -1,4 +1,5 @@
 [
+  "Felhasználók",
   "GYÍK",
   "Hír",
   "HUHS Legenda toplista",
@@ -37,6 +38,7 @@
   "Ne maradj le semmiről",
   "Nem sikerult megnyitni a linket.",
   "Nem sikerült betölteni az eseményeket.",
+  "néző",
   "Nincs függőben lévő felkérés.",
   "Nincs közelgő esemény.",
   "Nyeremény",
@@ -56,7 +58,5 @@
   "Szavazási összesítő",
   "Szavazok",
   "Szerepkör szűrése",
-  "Szerkesztés: {n}",
-  "Szünet",
-  "Törlöd ezt a privát beszélgetést?"
+  "Szerkesztés: {n}"
 ]

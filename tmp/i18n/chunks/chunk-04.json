@@ -1,4 +1,8 @@
 [
+  "Szünet",
+  "Támogatás",
+  "Támogatás PayPallal",
+  "Törlöd ezt a privát beszélgetést?",
   "Új privát üzenet",
   "Újra",
   "Válasz erre: {text}",
@@ -54,9 +58,5 @@
   "A bekapcsoláshoz előbb jelöld be: Ott leszek.",
   "A beküldés csak regisztrált felhasználóknak érhető el.",
   "A beküldés ellenőrzés után kerülhet fel az oldalra és az alkalmazásba.",
-  "A beszélgetések nem tölthetők be.",
-  "A biometrikus feloldás nem érhető el. Engedélyezd a telefon beállításaiban.",
-  "A borítókép a profil mögött látszik.",
-  "A Chat nem érhető el.\n{error}",
-  "A Chat névvel és képfeltöltéssel használható."
+  "A beszélgetések nem tölthetők be."
 ]

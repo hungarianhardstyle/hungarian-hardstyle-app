@@ -1,4 +1,9 @@
 [
+  "Kihagyás",
+  "Kijelölés kikapcsolása",
+  "Kijelölés törléshez",
+  "Kijelöltek törlése",
+  "Kinek szeretnél írni?",
   "Kiválasztás",
   "Kiválasztott jelöltek:",
   "Kiválasztva: {n}/5",
@@ -53,10 +58,5 @@
   "Magyar hardstyle és hardcore előadók",
   "Magyar hardstyle és hardcore közösségi app",
   "Már egy betűre is keres",
-  "Már értékelted: {stars}",
-  "Már játszottál",
-  "Már játszottál — eredmény megtekintése",
-  "Már van fiókom",
-  "Maradj képben",
-  "Másolás"
+  "Már értékelted: {stars}"
 ]

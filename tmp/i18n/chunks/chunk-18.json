@@ -1,4 +1,8 @@
 [
+  "Találkoznék ezen az eseményen",
+  "Támogatás / Donate",
+  "Tárhely ürítése",
+  "Tartsd hosszan az elemet, majd húzd a helyére.",
   "Te reagáltál erre",
   "Teljes címet adj meg (https://…). Ha kiüríted, a link eltűnik.",
   "Térkép",
@@ -16,6 +20,7 @@
   "Törlöd a hozzászólást?",
   "Törlöd az összes mentett kedvencet?",
   "Törlöd ezt az üzenetet?",
+  "Twitch élő adás",
   "Ugrás a legfrissebb üzenethez",
   "Ugyanazért a tevékenységért egyszer jár pont — a rendszer mindig a szerveren ellenőrzi.",
   "Új {label}",
@@ -53,10 +58,5 @@
   "Válasz {name} hozzászólására: {text}",
   "Válasz {name} üzenetére: {text}",
   "Válasz törlése",
-  "Válasz: ",
-  "Válasz: {text}",
-  "Válaszd ki a jelentés okát. A jelentést a moderátorok kapják meg.",
-  "Válaszd ki az esemény dátumát.",
-  "Válaszd ki, hogyan használod az appot.",
-  "Válaszd ki, hova kerüljön a bejegyzés — a naptár emlékeztetni fog a bulira."
+  "Válasz: "
 ]

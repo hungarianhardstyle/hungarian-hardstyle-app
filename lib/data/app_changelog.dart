@@ -38,6 +38,17 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 385,
+    changes: [
+      'ÚJ: a rádió értesítésében és a zárképernyőn mostantól látszik, éppen melyik szám szól — a Real Hardstyle FM logójával.',
+      'ÚJ: ha élőben vagyunk Twitchen, a főoldalon kártya jelzi — egy koppintással az appban nézheted az adást.',
+      'ÚJ: a Twitch-adás alatt az app saját chatjében beszélgethetsz, és egy gombbal támogathatod is a csatornát.',
+      'ÚJ: ha az adás közben másik appba lépsz, a stream kis képernyőn megy tovább (Android).',
+      'ÚJ: értesítést kapsz, amikor elindul az élő Twitch-adás.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 384,
     changes: [
       'ÚJ: a főoldalon a „Kedvenceid" szekció a hírek alatt mutatja a kedvenc DJ-idet és szervezőidet — legfeljebb hármat, a többit az „Összes" gombbal éred el.',

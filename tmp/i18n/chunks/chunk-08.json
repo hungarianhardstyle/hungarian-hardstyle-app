@@ -1,4 +1,8 @@
 [
+  "Ajánlókód (opcionális)",
+  "Akár egy karakterrel",
+  "Aktív",
+  "Aktív értesítések törlése",
   "Alapból rejtve marad; csak te dönthetsz a megjelenítéséről.",
   "Állapot: {state}\nJátékosok: {players} · helyes válasz: {correct}\nNyertes megjelenítése: {display}",
   "Állapot: {state} · összes szavazat: {n}",
@@ -54,9 +58,5 @@
   "Azonnal megnyílik a mentés lap",
   "Azonosító: {id}",
   "Bármelyik naptáralkalmazásba importálható",
-  "Beágyazott tartalom",
-  "Beállítás állapota",
-  "Beállítás betöltése…",
-  "Beatport",
-  "Bejelentkezés"
+  "Beágyazott tartalom"
 ]

@@ -1,22 +1,22 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> **Most a 384 megy fel** (versionCode **384**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
-> 2026-09-30): az **ÉLES (production) sávon már a 382 van**, 100%-ban kigördülve — a zárt teszt (alpha)
-> is a 382-en, a nyílt teszt (beta) a 377-en. A 384 négy újdonságot hoz: a főoldalon a
-> **„Kedvenceid" szekció** a **hírek alatt** mutatja a kedvenc DJ-idet és szervezőidet
-> (**legfeljebb hármat**, a többit az „Összes" gombbal éred el); az eseményt **egy koppintással
-> a naptáradba** teheted (Google Naptár vagy `.ics` fájl); **meghívóval regisztrálva te is kapsz
-> pontot** (és a meghívód is); valamint **értesítést kapsz, amikor elindul egy szavazás vagy játék**.
+> **Most a 385 megy fel** (versionCode **385**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
+> 2026-10-01): az **ÉLES (production) sávon a 382 van**, 100%-ban kigördülve; a **zárt teszt (alpha) a
+> 383-on**, a nyílt teszt (beta) a 377-en. A 385 újdonságai: a **rádió értesítésében és a
+> zárképernyőn látszik, melyik szám szól** (a Real Hardstyle FM logójával); az **élő Twitch-adás**
+> a főoldali kártyán és külön oldalon nézhető, **az app saját chatjével és támogatás gombbal**;
+> adás közben másik appba lépve a stream **kis képernyőn** megy tovább; és **értesítést kapsz,
+> amikor elindul az élő adás**. Emellett javítva a „Kedvenceid" szekció helye és felirata.
 >
-> A 384 a **382 minden** újdonságát is tartalmazza (iPhone-megosztás javítása), az pedig a korábbiakét.
-> **Melyik blokk hova való (mérve, 2026-09-30):** az **éles** sávon a **382** van → **1. blokk**;
-> a **zárt teszten már a 383** van 100%-ban kigördülve → ott a **383 → 384** lépéshez az **1d. blokk**
-> (egyetlen sor, mert a többi újdonságot a 383 jegyzete már megmutatta); aki **361–380 közötti**
-> buildről jön, annak a **361–384 összesítő** (1b-2.); aki a **bétáról (377)**, annak a **355–384**
-> összesítő (1b-3.).
+> A 385 a **382 minden** újdonságát is tartalmazza, az pedig a korábbiakét (a 384-et **nem** kell
+> feltölteni — ezt a buildet tartalmazza).
+> **Melyik blokk hova való (mérve, 2026-10-01):** az **éles** sávon a **382** van → **1. blokk**;
+> a **zárt teszten a 383** van 100%-ban kigördülve → ott a **383 → 385** lépéshez **ugyanaz az
+> 1. blokk** való (ez a négy-öt sor mind új a tesztelőknek); aki **361–380 közötti** buildről jön,
+> annak a **361–385 összesítő** (1b-2.); aki a **bétáról (377)**, annak a **355–385** összesítő (1b-3.).
 > ⚠️ **A 383-at NE tárd fel újra:** abban a szekció még a **logó (Hero) kártya fölött** volt, és a
 > felirata „Követettjeid" volt (a tulajdonos jelzése: *„ez a »követettjeid« elég magyartalan"*,
-> illetve *„a Hero FÖLÉ került, ami baj"*). A **384** javítja mindkettőt — a zárt teszten ezt a
+> illetve *„a Hero FÖLÉ került, ami baj"*). A **385** javítja mindkettőt — a zárt teszten ezt a
 > buildet kell kiadni.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
@@ -25,16 +25,16 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 384
+currentBuild: 385
 currentVersion: 1.0.0
 lastPublishedBuild: 382
-aab: build/HUHS-v1.0.0+384-release.aab
-sha256: 9EEC4B84D8D87A46EE9EA1E93B69EF791C85B0F111D134C4500985466F635B57
+aab: build/HUHS-v1.0.0+385-release.aab
+sha256: D41963D7F94E8E74FB8F470D60934356207A0850F768F8758A37D6530A807550
 -->
 
-⚠️ A **384**-et a **383** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 384
+⚠️ A **385**-öt a **384** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 384
 mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná). A 383-at a **zárt
-teszt** már megkapta (100%-ban kigördülve), de **ne tárd fel újra** — a 384 váltja.
+teszt** már megkapta (100%-ban kigördülve), de **ne tárd fel újra** — a 385 váltja.
 ✅ **A WordPress-plugin 2.14.11 FENT VAN** (élesben mérve, 2026-09-30: `api=2.14.11`, 1026 token) —
 ez hozta a **szavazás/játék „kinyílt" értesítést**: amikor megnyílik egy kérdőív, nyereményjáték,
 éves szavazás vagy GYÍK-játék, **minden regisztrált eszköz** értesítést kap (nyelvenként, a
@@ -46,7 +46,7 @@ indult** (a közzététel-hook nem futott le); a 2.14.12 ezt az osztályt zárja
 A szerveroldali függvények **telepítve** vannak (`firebase deploy`): a **heti összefoglaló**
 (`sendWeeklyDigest`, vasárnap 18:00), a **követés a kedvencek alapján**, valamint a **kétoldali
 meghívó-jutalom** (50 pont a meghívónak, 25 pont a meghívottnak) — mindegyik **AAB nélkül is él**.
-Az apphoz csak az **AAB (384)** feltöltése kell.
+Az apphoz csak az **AAB (385)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -61,11 +61,11 @@ A Play Developer API-t **olvasásra** kérdezve (**2026-09-30**, a legfrissebb m
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
 - **AZ ÉLES (production) SÁVON A 382 VAN** (100%-ban kigördülve) — a kiadási szövege a 381-es blokk.
-  **A következő nyilvános kiadás a 384**: a `build/HUHS-v1.0.0+384-release.aab` feltöltése után az **1. blokk** (lásd lent) való a kiadási jegyzetbe.
-- **A ZÁRT TESZT (alpha) SÁVJÁN MÁR A 383 VAN** (100%-ban kigördülve, a 383 négy soros kiadási jegyzetével) — **ezen a csatornán tesztelte a tulajdonos a 383-at**, és innen jött a két jelzés (a felirat és a hely). A **384** feltöltésekor tehát a **383 → 384** lépéshez **egyetlen sor** való (**1d. blokk**): a másik három újdonságot a 383 jegyzete már megmutatta. A **383-at ne** tárd fel újra (a 384 javítja).
-- A feltöltött AAB-ek a Playen (a 2026-09-30-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 353, 354, 375, 376, 377, **380**, **382**, **383** — ✅ **a 383 már fel van töltve**, a **384 viszont még nincs** (ezt kell feltölteni).
-- **A nyílt teszt (beta) sávja a 377-en van** — ha oda is felviszed a 384-et, a **355–384 összesítő** (1b-3.) való.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**382**) a legutóbb **nyilvánosan** kigördült build — ezért aki **382-ről** jön (az éles felhasználók), annak az **1. blokk** való; aki **ennél régebbről**, annak a **361–384 összesítő** (1b-2.).
+  **A következő nyilvános kiadás a 385**: a `build/HUHS-v1.0.0+385-release.aab` feltöltése után az **1. blokk** (lásd lent) való a kiadási jegyzetbe.
+- **A ZÁRT TESZT (alpha) SÁVJÁN MÁR A 383 VAN** (100%-ban kigördülve, a 383 négy soros kiadási jegyzetével) — **ezen a csatornán tesztelte a tulajdonos a 383-at**, és innen jött a két jelzés (a felirat és a hely). A **385** feltöltésekor a **383 → 385** lépéshez az **1. blokk** való (a rádió- és Twitch-újdonságok mind újak a tesztelőknek). A **383-at ne** tárd fel újra (a 385 javítja).
+- A feltöltött AAB-ek a Playen (a 2026-09-30-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 353, 354, 375, 376, 377, **380**, **382**, **383** — ✅ **a 383 már fel van töltve**, a **385 viszont még nincs** (ezt kell feltölteni).
+- **A nyílt teszt (beta) sávja a 377-en van** — ha oda is felviszed a 385-öt, a **355–385 összesítő** (1b-3.) való.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**382**) a legutóbb **nyilvánosan** kigördült build — ezért aki **382-ről** jön (az éles felhasználók), annak az **1. blokk** való; aki **ennél régebbről**, annak a **361–385 összesítő** (1b-2.).
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -221,22 +221,22 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 > **⚠️ MELYIK BLOKK HOVA VALÓ (mért állapot, 2026-09-30, `node tools/check-play-track.mjs`):**
-> **ÉLES (production) = 382** → ide (382 → 384) **ez a négy sor** való.
-> **ZÁRT TESZT (alpha) = 383** (100%-ban kigördülve, a 383 négy soros jegyzetével) → a **383 → 384**
-> lépéshez **csak a javítás sora** kell: **1d. blokk** (`tmp/play-384-zart.txt`) — a másik három
-> újdonságot a 383 jegyzete már megmutatta a tesztelőknek.
-> **NYÍLT TESZT (beta) = 377** → a **355–384** összesítő való (**1b-3.**).
+> **ÉLES (production) = 382** → ide (382 → 385) **ez az öt sor** való.
+> **ZÁRT TESZT (alpha) = 383** (100%-ban kigördülve) → ide is **ez az öt sor** való (383 → 385):
+> a rádió- és Twitch-újdonságok mind újak a tesztelőknek.
+> **NYÍLT TESZT (beta) = 377** → a **355–385** összesítő való (**1b-3.**).
 > A „Kiadási megjegyzések" mezőbe másolásnál a nyelv **hu-HU** (ez az egyetlen beállított nyelv).
 > A 383-as AAB **már fent van**, de **ne tárd fel újra**: abban a szekció még a logó (Hero) kártya
 > **fölött** volt, a felirata pedig „Követettjeid" — a tulajdonos jelzése szerint magyartalan
 > (*„ez a »követettjeid« elég magyartalan"*, *„a Hero FÖLÉ került, ami baj"*).
-> A **kész, másolható** változat: `tmp/play-384.txt` (bájtazonos ezzel a blokkal).
+> A **kész, másolható** változat: `tmp/play-385.txt` (bájtazonos ezzel a blokkal).
 
 ```play-notes
-- ÚJ: a főoldalon a „Kedvenceid" szekció a hírek alatt mutatja a kedvenc DJ-idet és szervezőidet — legfeljebb hármat, a többit az „Összes" gombbal éred el.
-- ÚJ: az eseményt egy koppintással a naptáradba teheted (Google Naptár vagy .ics fájl).
-- ÚJ: meghívóval regisztrálva te is kapsz pontot — a meghívód pedig szintén.
-- ÚJ: értesítést kapsz, amikor elindul egy szavazás vagy játék.
+- ÚJ: rádió — az értesítésben és a zárképernyőn látszik, melyik szám szól, a Real Hardstyle FM logójával.
+- ÚJ: élő Twitch-adás a főoldalon és külön oldalon: nézhető az appban, chatelve és támogatva.
+- ÚJ: az adás közben másik appba lépve a stream kis képernyőn megy tovább (Android).
+- Javítva: a „Kedvenceid" szekció a hírek alatt van, magyaros felirattal.
+- ÚJ: értesítést kapsz, amikor elindul az élő Twitch-adás.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -254,13 +254,13 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–384** összesítő (a 382 után)
+## 1b-2. Play Console — a **361–385** összesítő (a 382 után)
 
 **Ezt használd, ha a felhasználó a 361–380 közötti valamelyik buildről jön** (régebbi nyilvános
-build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–384** között készültek.
+build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–385** között készültek.
 A karakter-számot a `tools/check-play-notes.mjs` méri.
 ⚠️ **Az ÉLES sávon a 382 van** (mérve, 2026-09-30), ezért aki **382-ről** jön, annak **nem** ez a
-blokk, hanem az **1. blokk** (a 384 újdonságai) való.
+blokk, hanem az **1. blokk** (a 385 újdonságai) való.
 
 ```play-notes
 - ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság.
@@ -271,9 +271,9 @@ blokk, hanem az **1. blokk** (a 384 újdonságai) való.
 - Javítva: a listák görgetése nem ugrik vissza a tetejére.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–384** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–385** összesítő)
 
-**Ezt használd, ha a 384-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 385-öt a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-09-30) szerint ott a **377** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
@@ -300,7 +300,7 @@ megjeleníteni. **Ez a 351 javítását és a 350 újdonságait is leírja.**
 - Javítva: az adatlapok (saját profil, hír, esemény, DJ, szervező) aljára rendesen le lehet görgetni.
 ```
 
-## 1d. Play Console — a **ZÁRT TESZTRE**, ha ott már a **383** van (383 → 384: egyetlen sor)
+## 1d. Play Console — a **ZÁRT TESZTRE** (383 → 385: ugyanaz, mint az 1. blokk)
 
 A zárt teszten (**alpha**) a **mért** állapot szerint (2026-09-30) a **383** van 100%-ban kigördülve,
 ezért a tesztelők a **383 négy soros** kiadási jegyzetét **már látták** (a naptárba tevés, a
@@ -311,8 +311,8 @@ amit a jelzésük javított — így a kártyán pontosan az látszik, ami **vá
 - Javítva: a „Kedvenceid" szekció a hírek alatt van (eddig a logó fölött), és a felirata is magyaros.
 ```
 
-⚠️ Ha a **384**-et az **éles** vagy a **béta** sávra teszed, **nem** ez a blokk való: ott az
-**1.** (382 → 384), illetve az **1b-3.** (355 → 384) a helyes.
+⚠️ A **385**-öt az **éles** vagy a **béta** sávra téve nem ez a blokk való: ott az
+**1.** (382 → 385), illetve az **1b-3.** (355 → 385) a helyes.
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
 
@@ -329,6 +329,20 @@ bemásolni (mert a 329 nem ment ki).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 385 — rádió „most szól” a zárképernyőn + élő Twitch-adás az appban
+- **Rádió:** az értesítés és a **zárképernyő** a **szóló számot** mutatja (ICY-metaadat a streamből,
+  mérve: `StreamTitle='LNY TNZ & Nyanda - Light Up Your Life'`), a **Real Hardstyle FM logójával**;
+  Androidon a médiakártya a `MediaSession`-ból rajzol, iOS-en az `MPNowPlayingInfoCenter` kapja a címet.
+- **Twitch:** a főoldalon **élő kártya** (csak ha megy az adás; a kép a Twitch mozgó előnézete, vagy a
+  tulajdonos által beállított kép az `app_settings/twitch` dokumentumban — **build nélkül** cserélhető);
+  külön oldalon a **beágyazott lejátszó**, alatta **az app saját chatje** (emotokkal, reakciókkal),
+  **PayPal támogatás** gombbal; belépéskor a **rádió és az előzetes leáll**, kilépéskor a rádió visszatér.
+- **Kis képernyő (PiP):** Androidon az app elhagyásakor a stream kicsiben megy tovább
+  (`supportsPictureInPicture` + `onUserLeaveHint`); iOS-en a WebView saját PiP-je él.
+- **Élő indulás → push:** a `sendTwitchLiveNotice` ütemezett függvény (5 percenként, **kulcs nélkül**
+  a Twitch nyilvános állapotából) **adásonként egyszer** szól mindenkinek (bejövő értesítés + széles push);
+  az adás végén a jelölés törlődik, ezért a **következő adás újra szól**.
 
 ### 384 — a „Kedvenceid" szekció a helyére került (és a felirata is magyaros lett)
 - **A tulajdonos jelzése a 383-as zárt teszten:** *„ez a »követettjeid« elég magyartalan"*, illetve

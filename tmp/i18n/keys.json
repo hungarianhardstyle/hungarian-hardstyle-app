@@ -964,6 +964,14 @@
     ]
   },
   {
+    "value": "ÉLŐ",
+    "count": 2,
+    "files": [
+      "lib/screens/twitch/twitch_screen.dart",
+      "lib/widgets/twitch_live_card.dart"
+    ]
+  },
+  {
     "value": "Emotikon",
     "count": 2,
     "files": [
@@ -1329,6 +1337,14 @@
     ]
   },
   {
+    "value": "néző",
+    "count": 2,
+    "files": [
+      "lib/screens/twitch/twitch_screen.dart",
+      "lib/widgets/twitch_live_card.dart"
+    ]
+  },
+  {
     "value": "Nincs függőben lévő felkérés.",
     "count": 2,
     "files": [
@@ -1487,6 +1503,22 @@
     "count": 2,
     "files": [
       "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Támogatás",
+    "count": 2,
+    "files": [
+      "lib/screens/more/donate_screen.dart",
+      "lib/screens/twitch/twitch_screen.dart"
+    ]
+  },
+  {
+    "value": "Támogatás PayPallal",
+    "count": 2,
+    "files": [
+      "lib/screens/more/donate_screen.dart",
+      "lib/screens/twitch/twitch_screen.dart"
     ]
   },
   {
@@ -4037,6 +4069,13 @@
     ]
   },
   {
+    "value": "Élőben a Twitch-csatornán",
+    "count": 1,
+    "files": [
+      "lib/widgets/twitch_live_card.dart"
+    ]
+  },
+  {
     "value": "Elölről",
     "count": 1,
     "files": [
@@ -6578,6 +6617,13 @@
     ]
   },
   {
+    "value": "Nézd élőben",
+    "count": 1,
+    "files": [
+      "lib/widgets/twitch_live_card.dart"
+    ]
+  },
+  {
     "value": "Nincs adat.",
     "count": 1,
     "files": [
@@ -7348,24 +7394,10 @@
     ]
   },
   {
-    "value": "Támogatás",
-    "count": 1,
-    "files": [
-      "lib/screens/more/donate_screen.dart"
-    ]
-  },
-  {
     "value": "Támogatás / Donate",
     "count": 1,
     "files": [
       "lib/screens/more/more_screen.dart"
-    ]
-  },
-  {
-    "value": "Támogatás PayPallal",
-    "count": 1,
-    "files": [
-      "lib/screens/more/donate_screen.dart"
     ]
   },
   {
@@ -7499,6 +7531,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Twitch élő adás",
+    "count": 1,
+    "files": [
+      "lib/screens/twitch/twitch_screen.dart"
     ]
   },
   {

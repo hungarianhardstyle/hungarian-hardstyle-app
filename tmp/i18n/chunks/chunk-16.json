@@ -1,9 +1,15 @@
 [
+  "Nem sikerült betölteni a szervezőket.",
+  "Nem sikerült kiválasztani a képet.",
+  "Nem sikerült megnyitni a levelezőt.",
+  "Nem sikerült megnyitni a linket.",
+  "Nem tudtok majd egymásnak privát üzenetet küldeni.",
   "Nem tudtok majd egymásnak privát üzenetet küldeni. A blokkolás később a blokkolt felhasználók listájából visszavonható.",
   "Némítás",
   "Némítás feloldása",
   "Név",
   "Névjegy",
+  "Nézd élőben",
   "Nincs adat.",
   "Nincs archivált értesítés.",
   "Nincs blokkolt felhasználó.",
@@ -52,11 +58,5 @@
   "Pontok, szintek és jelvények részletesen",
   "Pontosan 5 jelölt választható.",
   "Preview leállítása",
-  "Preview lejátszása",
-  "Preview még nem érhető el.",
-  "Privát beszélgetés",
-  "Privát üzenet",
-  "Privát üzenetekhez regisztráció szükséges.",
-  "Próbáld ki magad!",
-  "Profil kitöltése"
+  "Preview lejátszása"
 ]

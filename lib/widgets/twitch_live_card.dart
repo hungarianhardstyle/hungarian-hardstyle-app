@@ -1,0 +1,188 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/i18n/tr.dart';
+import '../providers/twitch_live_provider.dart';
+import '../screens/twitch/twitch_screen.dart';
+import 'app_text.dart';
+
+/// **Élő Twitch-kártya a főoldalon** — csak akkor látszik, ha megy a stream.
+///
+/// A tulajdonos kérése (2026-10-01): *„főoldalon jelenjen meg ha megy a stream +
+/// legyen hozza cserelhető kép, képes kártya jelenjen meg a fooldalon”*.
+///
+/// ⚠️ A kép a Twitch **mozgó** előnézete (`previews-ttv/live_user_…`), ezért a
+/// kártya 30 másodpercenként újratölti (gyorsítótár-kerülő paraméterrel) — így a
+/// főoldal is „él”. Ha a tulajdonos saját képet állít be
+/// (`app_settings/twitch.imageUrl`), az kerül a kártyára, és **nem** töltődik
+/// újra (az egy pillanatkép).
+class TwitchLiveCard extends ConsumerStatefulWidget {
+  const TwitchLiveCard({super.key});
+
+  @override
+  ConsumerState<TwitchLiveCard> createState() => _TwitchLiveCardState();
+}
+
+class _TwitchLiveCardState extends ConsumerState<TwitchLiveCard> {
+  Timer? _imageTimer;
+  int _imageTick = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _imageTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() => _imageTick++);
+    });
+  }
+
+  @override
+  void dispose() {
+    _imageTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final live = ref.watch(twitchLiveProvider).valueOrNull;
+    final override = ref.watch(twitchCardOverrideProvider).valueOrNull;
+    if (live == null || !live.isLive || !(override?.enabled ?? true)) {
+      // Nem élő (vagy kikapcsolt): a kártya **nem hagy üres helyet**.
+      return const SizedBox.shrink();
+    }
+
+    final scheme = Theme.of(context).colorScheme;
+    final imageUrl = (override?.hasImage ?? false)
+        ? override!.imageUrl
+        : '${live.thumbnailUrl}${live.thumbnailUrl.contains('?') ? '&' : '?'}tick=$_imageTick';
+    final header = (override?.headerText.isNotEmpty ?? false)
+        ? override!.headerText
+        : tr(context, 'Élőben a Twitch-csatornán');
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: const Key('twitch-live-card'),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const TwitchScreen()),
+          ),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
+              border: Border.all(color: scheme.outlineVariant),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => ColoredBox(
+                            color: scheme.surfaceContainerHighest,
+                            child: const Center(child: Icon(Icons.live_tv, size: 42)),
+                          ),
+                        ),
+                        const Positioned(top: 10, left: 10, child: _LiveBadge()),
+                        if (live.viewers > 0)
+                          Positioned(
+                            top: 10,
+                            right: 10,
+                            child: _Chip(text: '${live.viewers} ${tr(context, 'néző')}'),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText(
+                        header,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      if (live.title.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        AppText(
+                          live.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          FilledButton.icon(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(builder: (_) => const TwitchScreen()),
+                            ),
+                            icon: const Icon(Icons.play_arrow_rounded),
+                            label: const AppText('Nézd élőben'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LiveBadge extends StatelessWidget {
+  const _LiveBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE91916),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: const AppText(
+        'ÉLŐ',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12),
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: AppText(
+        text,
+        style: const TextStyle(color: Colors.white, fontSize: 12),
+      ),
+    );
+  }
+}

@@ -21,6 +21,7 @@ import '../../widgets/app_text.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/featured_news_card.dart';
 import '../../widgets/followed_section.dart';
+import '../../widgets/twitch_live_card.dart';
 import '../../widgets/language_switch_button.dart';
 import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
@@ -621,6 +622,12 @@ class HomeScreen extends ConsumerWidget {
                         );
                       },
                     ),
+                    // ÉLŐ TWITCH-KÁRTYA (385): a tulajdonos kérése — *„főoldalon
+                    // jelenjen meg ha megy a stream”*. A kártya a hírek blokkja
+                    // UTÁN áll (a „Kedvenceid” előtt, hogy az élő adás legyen a
+                    // hangsúlyos), és **magától eltűnik**, ha nem él a csatorna
+                    // (nem hagy üres helyet).
+                    const TwitchLiveCard(),
                     // KEDVENCEID (384): a tulajdonos jelzése szerint a szekció
                     // eddig a **Hero (logó) kártya FÖLÉ** került, ami nem jó — most
                     // a hírek blokkja (a „További hírek" kártya és a játékkártya)

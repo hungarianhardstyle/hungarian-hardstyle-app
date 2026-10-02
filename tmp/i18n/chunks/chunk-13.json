@@ -1,4 +1,9 @@
 [
+  "Jegyvásárlás",
+  "Jelenleg nincs aktív szavazás.",
+  "Jelenlét rögzítése",
+  "Jelented a hozzászólást?",
+  "Jelentés elküldve.",
   "Jelentés elküldve. Köszönjük, hogy jelented!",
   "Jelentések ({n})",
   "Jelentett felhasználó: {name}{id}",
@@ -53,10 +58,5 @@
   "Kiemelkedő, tartós közösségi aktivitás.",
   "KIEMELT ESEMÉNY",
   "KIEMELT HÍR",
-  "Kiemelt hírek",
-  "Kihagyás",
-  "Kijelölés kikapcsolása",
-  "Kijelölés törléshez",
-  "Kijelöltek törlése",
-  "Kinek szeretnél írni?"
+  "Kiemelt hírek"
 ]

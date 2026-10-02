@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/i18n/tr.dart';
+import '../services/now_playing.dart';
 import '../services/radio_metadata.dart';
 import '../services/radio_playback.dart';
 import 'app_text.dart';
@@ -23,12 +24,15 @@ Future<void> stopRadioPlayback() async {
     await radioPlayback.stop();
   } catch (_) {}
   radioPlayingState.value = false;
+  // A rendszer felületéről (értesítés + zárképernyő) is eltűnik a cím.
+  await nowPlayingReporter.stop();
 }
 
 Future<void> resumeRadioPlayback() async {
   try {
     await radioPlayback.play(_radioStreamUrl);
     radioPlayingState.value = true;
+    nowPlayingReporter.start();
   } catch (_) {}
 }
 
@@ -104,11 +108,14 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
       const Duration(seconds: 5),
       (_) => unawaited(_readMetadata()),
     );
+    // A rendszer felületére (értesítés + zárképernyő) is kimegy a cím.
+    nowPlayingReporter.start();
   }
 
   void _stopMetadataRefresh() {
     _metadataTimer?.cancel();
     _metadataTimer = null;
+    unawaited(nowPlayingReporter.stop());
   }
 
   Future<void> _togglePlay() async {

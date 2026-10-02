@@ -1,4 +1,8 @@
 [
+  "Beállítás állapota",
+  "Beállítás betöltése…",
+  "Beatport",
+  "Bejelentkezés",
   "Bejelentkezés szükséges.",
   "Bejelentő: {name}",
   "Bekapcsolva csak kép URL-lel menthető.",
@@ -54,9 +58,5 @@
   "Ehhez a szervezőhöz még nincs összekapcsolt adatlap.",
   "Ehhez a verzióhoz ({n}) még nincs kiadási jegyzet.",
   "Ehhez az eseményhez nincs érvényes dátum.",
-  "Ehhez az évadhoz nem érkezett kategóriaadat.",
-  "Elérhető változatok",
-  "Elfogadás",
-  "Elküldtük a megerősítő e-mailt — nézd meg a postaládádat (a spam mappát is), és kattints a benne lévő linkre.",
-  "Ellenőrző e-mail újraküldése"
+  "Ehhez az évadhoz nem érkezett kategóriaadat."
 ]

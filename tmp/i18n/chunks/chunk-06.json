@@ -1,4 +1,8 @@
 [
+  "A két jelszó nem egyezik.",
+  "A kiadási jegyzet betöltése…",
+  "A kiadó zenéi egy helyen",
+  "A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.",
   "A Kiadványok fülön megvásárolt (vagy reklámmal feloldott) zenék itt jelennek meg, és innen játszhatók le.",
   "A kiadványok most nem érhetők el",
   "A kijelöltek törlése nem sikerült.",
@@ -54,9 +58,5 @@
   "A reklám jóváírásának ellenőrzése…",
   "A reklám lefutott, de a feloldás nem érkezett meg. Próbáld újra később.",
   "A reklám megtekintése nem fejeződött be.",
-  "A reklámos feloldáshoz be kell jelentkezni.",
-  "A részvétel jelöléséhez regisztráció szükséges.",
-  "A részvétel mentése nem sikerült. Próbáld újra később.",
-  "A segítség most nem tölthető be.",
-  "A sorsolás megtörtént."
+  "A reklámos feloldáshoz be kell jelentkezni."
 ]

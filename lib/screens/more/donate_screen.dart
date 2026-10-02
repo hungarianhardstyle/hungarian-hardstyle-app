@@ -5,9 +5,17 @@ import 'package:url_launcher/url_launcher.dart';
 class DonateScreen extends StatelessWidget {
   const DonateScreen({super.key});
 
-  static final _donateUri = Uri.parse(
+  /// A támogatás linkje — **egy helyen** (a Twitch-oldal is ezt használja).
+  ///
+  /// A tulajdonos válasza (2026-10-01): *„ott van az appban a támogatásnál”* —
+  /// ezért nem kérünk külön linket a stream alá, hanem ugyanezt a PayPal-célt.
+  static final Uri donateUri = Uri.parse(
     'https://www.paypal.com/donate/?business=djdeeroy%40gmail.com&currency_code=EUR',
   );
+
+  /// A támogatás indítása (a Twitch-oldal gombja is ezt hívja).
+  static Future<void> openDonate() =>
+      launchUrl(donateUri, mode: LaunchMode.externalApplication);
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +38,7 @@ class DonateScreen extends StatelessWidget {
           ),
           const SizedBox(height: 26),
           FilledButton.icon(
-            onPressed: () =>
-                launchUrl(_donateUri, mode: LaunchMode.externalApplication),
+            onPressed: openDonate,
             icon: const Icon(Icons.payment),
             label: const AppText('Támogatás PayPallal'),
           ),

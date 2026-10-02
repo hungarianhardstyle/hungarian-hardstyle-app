@@ -456,6 +456,16 @@
         "body": "You won the giveaway!"
       }
     },
+    "twitch_live": {
+      "hu": {
+        "title": "Élőben vagyunk Twitchen",
+        "body": "{title} — nézd meg az appban!"
+      },
+      "en": {
+        "title": "We are live on Twitch",
+        "body": "{title} — watch it in the app!"
+      }
+    },
     "weekly_digest": {
       "hu": {
         "title": "Heti összefoglaló",
