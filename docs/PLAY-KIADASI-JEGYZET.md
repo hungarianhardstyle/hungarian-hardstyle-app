@@ -340,6 +340,22 @@ bemásolni (mert a 329 nem ment ki).
 - A Vezérlőközpontban a Hírlevél, a Shortcode-ok és a Beállítások is megnyitható.
 ```
 
+## 2b. Play Console — az **ÉLES** sávra (384 → 393, egyetlen blokk)
+
+⚠️ **Miért külön blokk:** az éles felhasználók a **384**-en vannak, ezért nekik a **385–393** közötti
+újdonságok az újak. Az **1. blokk** (402 karakter) **és** a **361–393** összesítő (467) együtt
+**869 karakter** lenne — a Play **500-as** korlátja miatt ez **nem fér be**, ezért itt van egy
+**egyetlen, összevont** szöveg (a limit töredéke; a `tools/check-play-notes.mjs` méri).
+A zárt teszthez **nem** ez való, hanem az **1. blokk** (`tmp/play-393-zart.txt`).
+
+```play-notes
+- ÚJ: Twitch-adás az appban (külön stream-chattel, kis képernyővel), és az élő értesítés az app Twitch-oldalát nyitja.
+- ÚJ: a rádió „most szól” a zárképernyőn a Real Hardstyle FM logójával, és Leállítás gomb.
+- Javítva: a Twitch-chat fekvő módban és tableten is látszik; a támogatás gomb a videó alá került.
+- Javítva: kis képernyőn (PiP) csak a videó látszik, a rádiósáv nem nyomja el.
+- ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.
+```
+
 ## 3. App (Több → Névjegy) — tételes, build szerint
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
