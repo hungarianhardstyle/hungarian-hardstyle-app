@@ -130,18 +130,19 @@ A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a hí
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+383-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+385-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **383** (a merge-elt release manifestből visszaolvasva: `android:versionCode="383"`, `versionName="1.0.0"`) |
-| Méret | 83 265 322 bájt (79,4 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
-| SHA-256 | `EB54ABFED5C7882C6C0D7D05C8822AD836AEC2DAD5304FE52F34908DF49CDF1F` |
+| Verziókód | **385** (a merge-elt release manifestből visszaolvasva: `android:versionCode="385"`, `versionName="1.0.0"`) |
+| Méret | 83 395 384 bájt (79,5 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
+| SHA-256 | `D41963D7F94E8E74FB8F470D60934356207A0850F768F8758A37D6530A807550` |
 
-> **⚠️ A 383 a feltöltendő csomag** (versionCode **383**, `1.0.0`), és **2026-09-30-án épült**: benne van a
-> **„Követettjeid" szakasz** a főoldalon, a **naptár-export** (Google Naptár / `.ics`), a **kétoldali
-> meghívó-jutalom** feliratai, és a **szavazás/játék „kinyílt" értesítés** (utóbbi a plugin 2.14.11-gyel él).
-> A **382 az éles sáv csúcsa** (feltöltve, `completed`, 100%), ezért a 383-nál kisebb kódú csomagot a Play
-> **nem** fogadná el; a 383 a 382 minden javítását is tartalmazza.
-> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 383 azokat is tartalmazza) — a 383 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
+> **⚠️ A 385 a feltöltendő csomag** (versionCode **385**, `1.0.0`), és **2026-10-02-án épült**: benne van
+> a **rádió „most szól”** (értesítés + zárképernyő, Real Hardstyle FM logóval), az **élő Twitch-adás**
+> (főoldali kártya + külön oldal az app chatjével és támogatás gombbal), a **kis képernyő (PiP)**,
+> az **élő indulásról szóló push**, valamint a 384-es **„Kedvenceid” javítás** és minden korábbi.
+> A **382 az éles sáv csúcsa** (feltöltve, `completed`, 100%), ezért a 385-nél kisebb kódú csomagot a Play
+> **nem** fogadná el; a 385 a 382 minden javítását is tartalmazza.
+> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 385 azokat is tartalmazza) — a 385 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
 
 **Miért a 360-at kell feltenni (és miért nem a 358-at):** a 360 **magában foglalja a 358-at, a 357-et, a 356-ot, a 355-öt és a 354-et is**, ezért egy csomagot kell feltenni:
 
