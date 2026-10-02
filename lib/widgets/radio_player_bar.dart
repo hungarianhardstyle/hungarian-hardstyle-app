@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
 import '../core/i18n/tr.dart';
+import '../services/radio_metadata.dart';
 import '../services/radio_playback.dart';
 import 'app_text.dart';
 
@@ -163,37 +163,16 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
   Future<void> _readMetadata() async {
     if (_readingMetadata || !_playing) return;
     _readingMetadata = true;
-    HttpClient? client;
     try {
-      client = HttpClient();
-      client.connectionTimeout = const Duration(seconds: 5);
-      final request = await client.getUrl(_streamUri);
-      request.headers.set('Icy-MetaData', '1');
-      final response = await request.close();
-      final interval = int.tryParse(
-        response.headers.value('icy-metaint') ?? '',
-      );
-      if (interval == null) return;
-      final bytes = <int>[];
-      await for (final chunk in response) {
-        bytes.addAll(chunk);
-        if (bytes.length >= interval + 1) break;
-      }
-      if (bytes.length <= interval) return;
-      final length = bytes[interval] * 16;
-      final metadata = String.fromCharCodes(
-        bytes.skip(interval + 1).take(length),
-      ).replaceAll('\u0000', '');
-      final title = RegExp(r"StreamTitle='([^']*)'")
-          .firstMatch(metadata)
-          ?.group(1)
-          ?.trim();
-      if (mounted && title != null && title.isNotEmpty) {
+      // ⚠️ A kiolvasás a **közös** szolgáltatásban él (`radio_metadata.dart`),
+      // mert ugyanezt használja majd az értesítés/zárképernyő is — a mérésnek
+      // egy helyen kell lennie, nem két másolatban.
+      final metadata = await fetchIcyMetadata(_streamUri);
+      final title = metadata?.title ?? '';
+      if (mounted && title.isNotEmpty) {
         setState(() => _title = title);
       }
-    } catch (_) {
     } finally {
-      client?.close(force: true);
       _readingMetadata = false;
     }
   }
