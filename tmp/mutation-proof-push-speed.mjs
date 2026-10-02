@@ -1,4 +1,4 @@
-// MUTÁCIÓS BIZONYÍTÉK a push-kifutás gyorsításához (plugin 2.14.13).
+// MUTÁCIÓS BIZONYÍTÉK a push-kifutás gyorsításához (plugin 2.14.13 + 2.14.14).
 //
 // MIÉRT: a zöld kapu önmagában nem bizonyíték — a mutáció azt méri, hogy a kapu
 // TÉNYLEG elkapja-e a visszaállított lassú viselkedést. Minden mutáció a
@@ -9,7 +9,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const SOURCE = 'tmp/plugin-2153/huhs-mobile-api';
+const SOURCE = 'tmp/plugin-2154/huhs-mobile-api';
 const WORK = 'tmp/mutation-speed';
 const TEST = '/work/tools/verify-push-speed.php';
 
@@ -21,6 +21,13 @@ const before = {
 
 /** [cím, fájl, mit cserélünk, mire, melyik ellenőrzésnek kell elhasalnia] */
 const mutations = [
+  [
+    'a KÖR-KERET visszaállítása 15 másodpercre (a 2.14.13 mért értéke)',
+    'includes/push.php',
+    "define('HUHS_PUSH_TIME_BUDGET', 60)",
+    "define('HUHS_PUSH_TIME_BUDGET', 15)",
+    'az egy körre szánt idő 60 másodperc',
+  ],
   [
     'a PÁRHUZAMOSSÁG visszaállítása 25-re (a mért lassú kifutás)',
     'includes/push.php',

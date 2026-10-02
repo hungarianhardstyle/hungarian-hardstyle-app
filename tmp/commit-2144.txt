@@ -1,0 +1,42 @@
+feat(plugin): a 2.14.14 push-kor-keret 15 -> 60 masodperc + a csomag-kapu verziotudatos lett
+
+A 2.14.13 diagnosztikaja kimutatta a szerver valodi PHP-korlatjat
+(push_limits=conc50/budget15/max_exec600), ezert a kor-keret mar nem tipp:
+15 -> 60 masodperc (a max_exec tizszeres margoja). A 2026-10-02-i meres
+szerint egy 15 masodperces kor 75 eszkozt vitt el az 1025-bol, tehat a
+teljes fan-out tobb láncszemben ment ki; a 60 masodperces kerettel egy
+futasba fer. Semmi mas nem valtozott a kuldos logikajaban.
+
+Bizonyitek (mind merve):
+- Docker-harness a szallitando csomagon (--zip=build/huhs-mobile-api-2.14.14.zip):
+  49 lintelt fajl, 117/117, 117/117, 72/72, 56/56, 36/36, 24/24,
+  push-lanc 12/12, mind a nyolc jelzo -> MINDEN ELLENORZES RENDBEN (exit 0).
+  A naplo elso sora igazolja, hogy errol a csomagrol van szo, es a ZIP
+  idobelyege (14:51:42) megelozi a korét (14:52:13).
+- verify-plugin-package.mjs --zip=... -> MINDEN ELLENORZES RENDBEN
+  (50 fajl, bajtazonos, verzio 2.14.14).
+- A ZIP tartalma kozvetlenul is merve (tmp/check-2144-artifacts.mjs):
+  verzio 2.14.14, HUHS_API_VERSION 2.14.14, budget 60, conc 50.
+- Mutacios bizonyitek 6/6 ELKAPVA (uj: a kor-keret visszaallitasa 15-re),
+  a forras bajtazonos, a bizonyitek kilepesi kodja 0.
+- CSOMAG: build/huhs-mobile-api-2.14.14.zip, 199 961 bajt,
+  SHA-256 52F1DBD1FA9A34400230D74DEAFCCF0E925AA3597BF7A4971E72596D9A49FB34
+  Valtozas-jegyzokonyv: docs/plugin-2.14.14-push-budget.patch (+15/-3, 2 fajl)
+
+MERT SAJAT HIBA, JAVITVA (a kor legfontosabb tanulsaga): a csomag-ellenorzest
+eloszor pozicio szerinti utvonalal futtattam, amit a tool neman eldobott, es
+a DEFAULT_ZIP-et (2.14.5) merte -> "MINDEN ELLENORZES RENDBEN" a ROSSZ
+csomagra. Raadasul a verzio-ellenorzes 2.14.5 volt kobe vesve. A javitas a
+toolban van: verziotudatos ellenorzes (fejlec == konstans == a ZIP nevebol
+szarmaztatott verzio, es nem regebbi a tartalmi ellenorzesek koranal), friss
+alapertekek, es a pozicio szerinti utvonal mostantol HIBA (kilepes 2).
+Az onteszt 15/15 (5 uj ellenorzes).
+
+A masodik mert eszkoz-hiba: a valtozas-jegyzokonyv PowerShell-atiramyitassal
+olvashatatlan (binaris) lett, a git apply elutasította; most a bajtok
+kozvetlenul irodnak (tmp/make-patch-2144.mjs), a git apply --stat rendben
+olvassa.
+
+Kapuk: a 385-os klienskor zold marad (flutter test 1390/1390, analyze tiszta,
+i18n strict zold, function-tesztek 404/404) - ez a kor csak a WordPress-plugin
+es az ellenorzo eszkozok oldalat erinti.

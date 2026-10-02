@@ -1,0 +1,48 @@
+diff --git a/tmp/plugin-2153/huhs-mobile-api/huhs-mobile-api.php b/tmp/plugin-2154/huhs-mobile-api/huhs-mobile-api.php
+index e398560c..5f34227b 100644
+--- a/tmp/plugin-2153/huhs-mobile-api/huhs-mobile-api.php
++++ b/tmp/plugin-2154/huhs-mobile-api/huhs-mobile-api.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: HUHS Mobile API
+  * Plugin URI: https://hungarianhardstyle.hu
+  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
+- * Version: 2.14.13
++ * Version: 2.14.14
+  * Author: Denoiser
+  */
+ 
+@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
+     exit;
+ }
+ 
+-define('HUHS_API_VERSION', '2.14.13');
++define('HUHS_API_VERSION', '2.14.14');
+ define('HUHS_API_PATH', plugin_dir_path(__FILE__));
+ define('HUHS_API_URL', plugin_dir_url(__FILE__));
+ 
+diff --git a/tmp/plugin-2153/huhs-mobile-api/includes/push.php b/tmp/plugin-2154/huhs-mobile-api/includes/push.php
+index aa425e13..6d4c7eff 100644
+--- a/tmp/plugin-2153/huhs-mobile-api/includes/push.php
++++ b/tmp/plugin-2154/huhs-mobile-api/includes/push.php
+@@ -521,8 +521,20 @@ add_action('huhs_release_push_retry', function ($release_id, $attempt) {
+ /**
+  * How long one request may spend talking to FCM, and how many follow-up runs
+  * the chain may take. Both are safety rails, not tuning knobs.
++ *
++ * ⚠️ 2.14.14 — MIÉRT 15 → **60 másodperc** (éles mérés, 2026-10-02): a
++ * 2.14.13-ban felvett diagnosztika (`push_limits=…`) kimutatta, hogy a szerver
++ * **`max_exec=600`** — vagyis a 15 másodperces keret nem a hoszting korlátja
++ * miatt volt ilyen rövid, hanem a régi (a szerkesztőt várakoztató) örökség
++ * miatt. A hír-push szövege **cron-körben** készül (a szerkesztő csak ütemez),
++ * ezért a hosszabb kör senkit nem blokkol:
++ *   - 50 párhuzamos hívással a mért batch-idő ~1,7 s → ~1030 eszköz ≈ 36 s;
++ *   - így a lista **egyetlen körben** kimegy (~2 perc helyett ~40 másodperc),
++ *     és nem kell 5-6 láncszemre várni.
++ * A **látogatót** terhelő biztonsági háló kerete változatlanul rövid
++ * (`HUHS_PUSH_RESUME_BUDGET` = 5 s), tehát ez a döntés őt nem érinti.
+  */
+-if (!defined('HUHS_PUSH_TIME_BUDGET')) define('HUHS_PUSH_TIME_BUDGET', 15);
++if (!defined('HUHS_PUSH_TIME_BUDGET')) define('HUHS_PUSH_TIME_BUDGET', 60);
+ if (!defined('HUHS_PUSH_MAX_RUNS')) define('HUHS_PUSH_MAX_RUNS', 40);
+ // A hir-ertesitesnek nem volt sem jelzese, sem ujraprobaja: ha az elso kuldes
+ // nem ment at, a hir neman elveszett. Ezert korlatozott ujraprobalkozas van.

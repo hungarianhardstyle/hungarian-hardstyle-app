@@ -193,7 +193,13 @@ $GLOBALS['huhs_transients']['huhs_firebase_access_token'] = 'stub-access-token';
 
 // --- 1) A keretek (mért értékek) --------------------------------------------
 check('a párhuzamosság 50 (a mért 25-ről emelve)', HUHS_PUSH_CONCURRENCY === 50, (string) HUHS_PUSH_CONCURRENCY);
-check('az egy körre szánt idő 15 másodperc', HUHS_PUSH_TIME_BUDGET === 15, (string) HUHS_PUSH_TIME_BUDGET);
+// ⚠️ 2.14.14: a keret 15 → **60 másodperc**, mert a 2.14.13 diagnosztikája
+// kimutatta a szerver valódi korlátját (`push_limits=…/max_exec600`). Így a
+// ~1030 eszköz egyetlen körben kimegy (~36 s), nem 5-6 láncszemben.
+check('az egy körre szánt idő 60 másodperc (a mért max_exec=600 alatt)',
+    HUHS_PUSH_TIME_BUDGET === 60, (string) HUHS_PUSH_TIME_BUDGET);
+check('a keret négyszeres margóval a szerver korlátja alatt van',
+    HUHS_PUSH_TIME_BUDGET * 4 <= 600, (string) (HUHS_PUSH_TIME_BUDGET * 4));
 check('a folytató kör kerete rövid (5 másodperc, hogy a látogató ne várjon)',
     HUHS_PUSH_RESUME_BUDGET === 5, (string) HUHS_PUSH_RESUME_BUDGET);
 check('a párhuzamos út a konstans szerinti kötegekben dolgozik',
@@ -262,7 +268,7 @@ check('a záró kör nem ütemez felesleges folytatást', count($GLOBALS['huhs_s
 // --- 5) A diagnosztika kiírja a kereteket -----------------------------------
 $limits = huhs_push_diag_limits();
 check('a diagnosztika tartalmazza a párhuzamosságot', strpos($limits, 'conc50') !== false, $limits);
-check('a diagnosztika tartalmazza a kör-keretet', strpos($limits, 'budget15') !== false, $limits);
+check('a diagnosztika tartalmazza a kör-keretet', strpos($limits, 'budget60') !== false, $limits);
 check('a diagnosztika tartalmazza a PHP időkorlátját (mérés, nem tipp)',
     strpos($limits, 'max_exec') !== false, $limits);
 // ⚠️ A kapu a KONKRÉT hívást méri, nem azt, hogy a név szerepel-e a fájlban —

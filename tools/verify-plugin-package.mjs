@@ -9,9 +9,12 @@
  * hogy a release kritikus sorai tényleg bekerültek-e a csomagba. Ez a hiányzó láncszem.
  *
  * Használat:
- *   node tools/verify-plugin-package.mjs                    # 2.13.0 (alap)
- *   node tools/verify-plugin-package.mjs --zip=build/x.zip --source=.tmp-api-260/huhs-mobile-api
+ *   node tools/verify-plugin-package.mjs --zip=build/huhs-mobile-api-2.14.14.zip
+ *   node tools/verify-plugin-package.mjs --zip=build/x.zip --source=tmp/plugin-2154/huhs-mobile-api
  *   node tools/verify-plugin-package.mjs --self-test
+ *
+ * ⚠️ A csomagot **mindig `--zip=` jelöléssel** add meg: a pozíció szerinti
+ * útvonalat a tool nem veszi át, és HIBÁVal áll meg (lásd `parseArgs`).
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -19,9 +22,61 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.5.zip';
-export const DEFAULT_SOURCE = '.tmp-api-260/huhs-mobile-api';
+export const DEFAULT_ZIP = 'build/huhs-mobile-api-2.14.14.zip';
+export const DEFAULT_SOURCE = 'tmp/plugin-2154/huhs-mobile-api';
 export const EXPECTED_ROOT = 'huhs-mobile-api';
+
+/** A tartalmi ellenőrzések kora: ennél régebbi csomagra nem értelmezhetők. */
+export const MINIMUM_VERSION = '2.14.5';
+
+/** `a` legalább akkora-e, mint `b` (szám szerint, nem szövegként). */
+export function versionAtLeast(a, b) {
+  const parse = (value) => String(value).split('.').map((part) => Number.parseInt(part, 10) || 0);
+  const left = parse(a);
+  const right = parse(b);
+  for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+    const diff = (left[index] ?? 0) - (right[index] ?? 0);
+    if (diff !== 0) return diff > 0;
+  }
+  return true;
+}
+
+/** A fejléc-verzió és a konstans kiolvasása a fő plugin-fájlból. */
+export function versionsInPackage(main) {
+  return {
+    header: /Version:\s*([0-9.]+)/.exec(main)?.[1] ?? '',
+    constant: /HUHS_API_VERSION',\s*'([0-9.]+)'/.exec(main)?.[1] ?? '',
+  };
+}
+
+/**
+ * A parancssor értelmezése — **a pozíció szerinti útvonal HIBÁT ad**.
+ *
+ * ⚠️ MIÉRT (mért saját hiba, 2026-10-02): a 2.14.14 csomagot
+ * `node tools/verify-plugin-package.mjs build/huhs-mobile-api-2.14.14.zip`
+ * alakban ellenőriztem. A tool a pozicionális útvonalat **némán figyelmen kívül
+ * hagyta**, és a `DEFAULT_ZIP`-et (2.14.5) mérte — így „MINDEN ELLENŐRZÉS
+ * RENDBEN" jött ki **a rossz csomagra**. A néma alapérték a hamis zöld
+ * legveszélyesebb fajtája, ezért mostantól a felesleges út néven nevezve bukik.
+ */
+export function parseArgs(argv) {
+  const args = argv.filter((value) => !value.endsWith('.mjs'));
+  const arg = (name, fallback) => {
+    const found = args.find((value) => value.startsWith(`--${name}=`));
+    return found ? found.slice(name.length + 3) : fallback;
+  };
+  // Minden, ami nem `--jelölés=érték`: vagy elgépelés, vagy pozíció szerinti
+  // útvonal — mindkettő NÉMA alapértéket adna, ezért inkább megállunk.
+  const stray = args.filter((value) => !value.startsWith('--'));
+  const zip = arg('zip', DEFAULT_ZIP);
+  const fromName = /huhs-mobile-api-([0-9.]+)\.zip$/.exec(zip)?.[1] ?? null;
+  return {
+    zip,
+    source: arg('source', DEFAULT_SOURCE),
+    expectedVersion: arg('expected-version', fromName ?? MINIMUM_VERSION),
+    stray,
+  };
+}
 
 /** Rekurzív fájllista (relatív, `/` elválasztóval), rendezve. */
 export function listFiles(dir) {
@@ -68,8 +123,9 @@ export function stripPhpComments(source) {
  * Minden sor egy állítás; a `read` szándékosan injektálható, hogy önteszttel
  * mérhető legyen (nem csak a valódi ZIP-en).
  */
-export function packageChecks(read) {
+export function packageChecks(read, expectedVersion = null) {
   const main = read('huhs-mobile-api.php');
+  const versions = versionsInPackage(main);
   const sweep = read('includes/translation-sweep.php');
   const sweepCode = stripPhpComments(sweep);
   const places = read('includes/translation-places.php');
@@ -89,7 +145,16 @@ export function packageChecks(read) {
   const adminCode = stripPhpComments(admin);
 
   return [
-    ['a fejléc és a konstans is 2.14.5', /Version:\s*2\.14\.5/.test(main) && main.includes("HUHS_API_VERSION', '2.14.5'")],
+    // ⚠️ MIÉRT VERZIÓ-TUDATOS (mért saját hiba, 2026-10-02): ez az ellenőrzés
+    // korábban a **2.14.5-öt** követelte meg kőbe vésve, ezért minden újabb
+    // csomagra bukott volna — a javítás nem a verzió átírása, hanem hogy a
+    // **fejléc és a konstans EGYEZZEN**, és a verzió ne legyen régebbi a
+    // tartalmi ellenőrzések koránál. Az elvárt verziót a ZIP **neve** adja.
+    [`a fejléc és a konstans egyezik${expectedVersion ? ` (${expectedVersion})` : ''}`,
+      versions.header !== '' && versions.header === versions.constant
+        && (!expectedVersion || versions.header === expectedVersion)],
+    [`a verzió nem régebbi a ${MINIMUM_VERSION}-nél (a benne lévő ellenőrzések kora)`,
+      versionAtLeast(versions.header, MINIMUM_VERSION)],
     ['a fő fájl behúzza a hely-névtárat, a pótló kört és a mező-fordítást',
       main.includes('includes/translation-places.php') && main.includes('includes/translation-sweep.php')
         && main.includes('includes/translation-fields.php')],
@@ -266,7 +331,7 @@ export function selfTest() {
       + "huhs_request_lang($request) huhs_request_lang($request) huhs_request_lang($request) huhs_request_lang($request) if ($lang !== 'en') questions",
   };
   const readFull = (relative) => full[relative] ?? '';
-  const okChecks = packageChecks(readFull);
+  const okChecks = packageChecks(readFull, '2.14.5');
   // ⚠️ A bukó ellenőrzések NEVÉT is kiírjuk: enélkül a szintetikus csomag
   // hiányossága néma maradna (a fixture-t frissíteni kell, ha új minta jön).
   const failedChecks = okChecks.filter(([, ok]) => !ok).map(([label]) => label);
@@ -298,6 +363,56 @@ export function selfTest() {
     'a valódi wp_update_post hívást viszont elkapja',
     notifyCheck(`${full['includes/translation-sweep.php']}\nwp_update_post(array('ID' => 1));`) === false,
   );
+
+  // ⚠️ A VERZIÓ-TUDATOS kapu öntesztje — ez a 2026-10-02-i hamis zöld ellen van.
+  const versionChecks = (mainSource, expected) =>
+    packageChecks((relative) => (relative === 'huhs-mobile-api.php' ? mainSource : readFull(relative)), expected);
+  const versionCheck = (mainSource, expected) =>
+    versionChecks(mainSource, expected).find(([label]) => label.includes('fejléc és a konstans'))[1];
+  const floorCheck = (mainSource, expected) =>
+    versionChecks(mainSource, expected).find(([label]) => label.includes('nem régebbi'))[1];
+  const newerMain = "Version: 2.14.14 HUHS_API_VERSION', '2.14.14' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php";
+  check(
+    'az újabb (2.14.14) csomag a saját verziójával zöld — nem követel 2.14.5-öt',
+    versionCheck(newerMain, '2.14.14') === true && floorCheck(newerMain, '2.14.14') === true,
+  );
+  check(
+    'a verzió-eltérést (2.14.14 csomag, 2.14.5 elvárás) elkapja',
+    versionCheck(newerMain, '2.14.5') === false,
+  );
+  check(
+    'a fejléc és a konstans szétcsúszását elkapja',
+    versionCheck("Version: 2.14.14 HUHS_API_VERSION', '2.14.13' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php", '2.14.14') === false,
+  );
+  check(
+    'a régi verziót (a tartalmi ellenőrzések kora alatt) elkapja',
+    floorCheck("Version: 2.13.0 HUHS_API_VERSION', '2.13.0' includes/translation-places.php includes/translation-sweep.php includes/translation-fields.php", '2.13.0') === false,
+  );
+  check(
+    'a verzió-összehasonlítás szám szerint megy (2.14.10 > 2.14.9, nem szövegként)',
+    versionAtLeast('2.14.10', '2.14.9') === true && versionAtLeast('2.14.9', '2.14.10') === false,
+  );
+
+  // ⚠️ A PARANCSVON-ŐR: a pozíció szerinti útvonal néma figyelmen kívül hagyása
+  // adta a hamis zöldet (a DEFAULT_ZIP-et mérte a 2.14.14 helyett).
+  const strayArgs = parseArgs(['build/huhs-mobile-api-2.14.14.zip']);
+  check(
+    'a pozíció szerinti útvonalat HIBÁnak veszi (nem esik vissza a néma alapértékre)',
+    strayArgs.stray.length === 1 && strayArgs.stray[0] === 'build/huhs-mobile-api-2.14.14.zip',
+  );
+  const okArgs = parseArgs(['--zip=build/huhs-mobile-api-2.14.14.zip']);
+  check(
+    'a --zip= jelölést elfogadja, és az elvárt verziót a ZIP nevéből veszi',
+    okArgs.stray.length === 0 && okArgs.expectedVersion === '2.14.14'
+      && okArgs.zip === 'build/huhs-mobile-api-2.14.14.zip',
+  );
+  const defaultArgs = parseArgs([]);
+  check(
+    'jelölés nélkül a friss alapértéket használja (nem a 2.14.5-öt)',
+    defaultArgs.stray.length === 0 && defaultArgs.zip === DEFAULT_ZIP
+      && DEFAULT_ZIP.includes('2.14.14') && defaultArgs.expectedVersion === '2.14.14'
+      && DEFAULT_SOURCE.includes('plugin-2154'),
+  );
   return checks;
 }
 
@@ -310,12 +425,15 @@ function main() {
     return failed ? 1 : 0;
   }
 
-  const arg = (name, fallback) => {
-    const found = process.argv.find((value) => value.startsWith(`--${name}=`));
-    return found ? found.slice(name.length + 3) : fallback;
-  };
-  const zipPath = path.resolve(REPO_ROOT, arg('zip', DEFAULT_ZIP));
-  const sourcePath = path.resolve(REPO_ROOT, arg('source', DEFAULT_SOURCE));
+  const parsed = parseArgs(process.argv.slice(2));
+  if (parsed.stray.length) {
+    console.log(`HIBA  ismeretlen argumentum: ${parsed.stray.join(', ')}`);
+    console.log('      a csomagot --zip=build/huhs-mobile-api-<verzió>.zip alakban add meg');
+    console.log('      (a pozíció szerinti útvonalat a tool NEM venné át — ez korábban hamis zöldet adott)');
+    return 2;
+  }
+  const zipPath = path.resolve(REPO_ROOT, parsed.zip);
+  const sourcePath = path.resolve(REPO_ROOT, parsed.source);
 
   if (!fs.existsSync(zipPath)) {
     console.log(`HIBA  nincs ilyen csomag: ${zipPath}`);
@@ -363,7 +481,7 @@ function main() {
     const full = path.join(pluginRoot, relative);
     return fs.existsSync(full) ? fs.readFileSync(full, 'utf8') : '';
   };
-  for (const [label, ok] of packageChecks(read)) report(label, ok);
+  for (const [label, ok] of packageChecks(read, parsed.expectedVersion)) report(label, ok);
 
   console.log(failed ? `\nHIBA — ${failed} ellenőrzés bukott` : '\nMINDEN ELLENŐRZÉS RENDBEN');
   return failed ? 1 : 0;
