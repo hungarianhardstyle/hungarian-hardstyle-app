@@ -1,0 +1,11 @@
+OK     az appon belüli élő értesítés ágának elvétele (a koppintás némán elveszne) → a kapu elcsípte («a Twitch-élő értesítés az app Twitch-oldalát nyitja»)
+       (az első futás felmelegíti a fordítót, ezért lassabb)
+OK     a Twitch PUSH-ág elvétele (a böngésző nyílna meg) → a kapu elcsípte («a Twitch-élő PUSH is az app Twitch-oldalát nyitja»)
+OK     a Twitch-ág a böngésző-nyitás UTÁN (sosem érne oda) → a kapu elcsípte («a Twitch-élő PUSH is az app Twitch-oldalát nyitja»)
+OK     a PiP-ág elvétele a Twitch-oldalról (a kis ablakban az egész felület látszana) → a kapu elcsípte («a Twitch-oldal PiP-ben CSAK a videót rajzolja»)
+OK     a rádiósáv elrejtésének elvétele a burokból → a kapu elcsípte («a burok (rádiósáv, menü) el van rejtve PiP-ben»)
+OK     a natív „changed” jelzés elvétele (a felület nem tudná, hogy PiP-ben van) → a kapu elcsípte («a natív oldal jelzi az állapotot»)
+OK     a PiP-burok mindig kirajzolja a gyereket (nem rejt semmit) → a kapu elcsípte («a rádiósáv (és minden, ami a burokban van) eltűnik PiP-ben»)
+
+7/7 mutáció ELKAPVA
+a források BÁJTAZONOSAK (érintetlenek)

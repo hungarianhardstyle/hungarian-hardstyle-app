@@ -16,6 +16,7 @@ import '../widgets/app_text.dart';
 import '../widgets/radio_player_bar.dart';
 import '../services/app_badge_sync.dart';
 import '../services/app_update_service.dart';
+import '../services/picture_in_picture.dart';
 
 class MainNavigation extends ConsumerStatefulWidget {
   const MainNavigation({super.key});
@@ -358,22 +359,30 @@ class _MainNavigationState extends ConsumerState<MainNavigation>
                     bottom: true,
                     child: Row(
                       children: [
-                        _landscapeNavigationRail(),
+                        // PiP-ben a bal oldali sávot is elrejtjük (csak a videó
+                        // látszódjon a kis ablakban).
+                        HiddenInPictureInPicture(child: _landscapeNavigationRail()),
                         const SizedBox(width: 1, height: 1),
                         Expanded(child: _contentStack()),
                       ],
                     ),
                   )
                 : _contentStack(),
-            bottomNavigationBar: landscape
-                ? const SafeArea(top: false, child: RadioPlayerBar())
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const RadioPlayerBar(),
-                      _portraitNavigationBar(),
-                    ],
-                  ),
+            // A keret alsó sávja (rádió + menü) EGY burokban van, és PiP-ben ez a
+            // burok tűnik el — így a kis ablakban nem dominál a rádió gomb (a
+            // tulajdonos jelzése: *„ez a kis ablak a PIP is elég FOSCSI, a rádió
+            // gomb dominál”*).
+            bottomNavigationBar: HiddenInPictureInPicture(
+              child: landscape
+                  ? const SafeArea(top: false, child: RadioPlayerBar())
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const RadioPlayerBar(),
+                        _portraitNavigationBar(),
+                      ],
+                    ),
+            ),
           );
         },
       ),

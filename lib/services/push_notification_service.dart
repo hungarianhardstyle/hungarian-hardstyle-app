@@ -22,9 +22,11 @@ import '../screens/releases/release_detail_screen.dart';
 import '../screens/community/wordpress_admin_screen.dart';
 import '../screens/community/private_messages_screen.dart';
 import '../screens/community/community_screen.dart';
+import '../screens/twitch/twitch_screen.dart';
 import '../widgets/app_text.dart';
 import 'notification_permission_gate.dart';
 import 'push_language.dart';
+import 'twitch_live.dart';
 import 'wordpress_service.dart';
 
 class PushNotificationService {
@@ -324,6 +326,16 @@ class PushNotificationService {
     }
 
     if (context.mounted && url.isNotEmpty) {
+      // TWITCH-ÉLŐ (393): a tulajdonos kérése — *„ha kimegy a push a twitch
+      // chatről, hogy live … akkor nyissa meg a twitches oldalt a pushra
+      // nyomva”*. A széles push a Twitch-csatorna URL-jét hozza, ezért itt
+      // **nem** a böngészőt nyitjuk, hanem az app saját Twitch-oldalát.
+      if (type == 'twitch_live' || type == 'twitch' || isTwitchChannelUrl(url)) {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const TwitchScreen()),
+        );
+        return;
+      }
       await openInAppBrowser(context, url, title: message.notification?.title);
     }
   }

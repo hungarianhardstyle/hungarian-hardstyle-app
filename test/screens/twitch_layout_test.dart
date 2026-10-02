@@ -188,9 +188,18 @@ void main() {
       expect(screen.contains('video:'), isTrue);
       expect(screen.contains('info: _infoColumn(context, status)'), isTrue);
       expect(screen.contains('chat: const TwitchStreamChat()'), isTrue);
-      // A régi hiba: a videó `AspectRatio`-ja a `Column`-ban, cap nélkül.
-      expect(screen.contains("aspectRatio: 16 / 9"), isFalse,
-          reason: 'a videó méretét a váza adja, nem a képernyő');
+      // A régi hiba: a videó `AspectRatio`-ja a `Column`-ban, cap nélkül. Az
+      // egyetlen megengedett 16:9 a **PiP-ágban** van (ott nincs váza, a kis
+      // ablakban a videó tölti ki a helyet) — a normál nézetet a váza méretezi.
+      final aspectCount = 'aspectRatio: 16 / 9'.allMatches(screen).length;
+      expect(aspectCount, 1,
+          reason: 'a 16:9 csak a PiP-ágban lehet, a normál nézetet a váza adja');
+      final pipBranch = RegExp(r'if \(inPictureInPicture\) \{([\s\S]*?)\n        \}')
+          .firstMatch(screen)
+          ?.group(1);
+      expect(pipBranch, isNotNull);
+      expect(pipBranch!.contains('aspectRatio: 16 / 9'), isTrue,
+          reason: 'a PiP-ágban a videó 16:9-ben legyen');
     });
 
     test('a váza a tiszta döntést használja (nem saját küszöböt)', () {

@@ -42,30 +42,58 @@ class MainActivity : AudioServiceFragmentActivity() {
      */
     private var pictureInPictureEnabled = false
 
+    /** A `hu_hs/pip` csatorna — a PiP-állapot visszajelzéséhez is ez kell. */
+    private var pipChannel: MethodChannel? = null
+
+    /**
+     * A kis képernyő ÁLLAPOTA — ezt kérdezi/figyeli a felület.
+     *
+     * MIÉRT (a tulajdonos jelzése, 2026-10-02): *„ez a kis ablak a PIP is elég
+     * FOSCSI, a rádió gomb dominál”* — a PiP-ablak az egész felületet mutatta.
+     * A Flutter-oldal ebből tud **csak videót** rajzolni (`changed` üzenet), és
+     * a `state` kéréssel induláskor is megkérdezheti.
+     */
+    private var pictureInPictureActive = false
+
     /**
      * Azonnali belépés a kis képernyőre (a felület gombja kéri).
      *
      * Ugyanazokat a kapukat használja, mint a [onUserLeaveHint]: csak akkor lép
      * be, ha a Twitch-oldal kérte, az Android támogatja (API 26+) és a készülék
      * tudja a szolgáltatást. Visszatérés: sikerült-e (a felület ebből dönt a
-     * tartalék útról).
+     * tartalék útról, illetve arról, hogy megmondja-e a felhasználónak).
+     *
+     * ⚠️ Android 12+ (API 31+): a `setAutoEnterEnabled(true)` a **rendszerre**
+     * bízza a belépést, amikor a felhasználó elhagyja az appot — ez a megbízható
+     * út; a gomb továbbra is a közvetlen `enterPictureInPictureMode` hívást
+     * használja.
      */
     private fun enterPictureInPictureNow(): Boolean {
         if (!pictureInPictureEnabled) return false
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
         if (!packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return false
         return runCatching {
-            enterPictureInPictureMode(
-                PictureInPictureParams.Builder()
-                    .setAspectRatio(Rational(16, 9))
-                    .build(),
-            )
+            enterPictureInPictureMode(pictureInPictureParams())
         }.getOrDefault(false)
+    }
+
+    /** A PiP-paraméterek (16:9, és Android 12+-on automatikus belépés). */
+    private fun pictureInPictureParams(): PictureInPictureParams {
+        val builder = PictureInPictureParams.Builder()
+            .setAspectRatio(Rational(16, 9))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setAutoEnterEnabled(pictureInPictureEnabled)
+        }
+        return builder.build()
     }
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        enterPictureInPictureNow()
+        // Android 12+-on a rendszer magától belép (auto-enter), ezért ott nem
+        // hívjuk kétszer; a régebbi verziókon ez az út visz be.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            enterPictureInPictureNow()
+        }
     }
 
     override fun onPictureInPictureModeChanged(
@@ -73,6 +101,11 @@ class MainActivity : AudioServiceFragmentActivity() {
         newConfig: android.content.res.Configuration,
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        pictureInPictureActive = isInPictureInPictureMode
+        // A felület ebből tudja, hogy csak a videót rajzolja-e ki.
+        runCatching {
+            pipChannel?.invokeMethod("changed", isInPictureInPictureMode)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,17 +142,27 @@ class MainActivity : AudioServiceFragmentActivity() {
         }
         // Kis képernyő (PiP): a Twitch-oldal kapcsolja be/ki (lásd a mezőt),
         // és ugyanaz az oldal kérheti azonnali belépést is (a felület gombja).
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/pip")
-            .setMethodCallHandler { call, result ->
-                when (call.method) {
-                    "setEnabled" -> {
-                        pictureInPictureEnabled = call.arguments as? Boolean ?: false
-                        result.success(null)
+        // A `state` kéréssel a felület induláskor megkérdezheti, hogy éppen
+        // PiP-ben van-e (a `changed` üzenet csak váltáskor jön).
+        pipChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/pip")
+        pipChannel?.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "setEnabled" -> {
+                    pictureInPictureEnabled = call.arguments as? Boolean ?: false
+                    // Android 12+-on a rendszer-vezérelt belépést is átállítjuk,
+                    // különben a régi beállítás maradna érvényben.
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                        packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+                    ) {
+                        runCatching { setPictureInPictureParams(pictureInPictureParams()) }
                     }
-                    "enter" -> result.success(enterPictureInPictureNow())
-                    else -> result.notImplemented()
+                    result.success(null)
                 }
+                "enter" -> result.success(enterPictureInPictureNow())
+                "state" -> result.success(pictureInPictureActive)
+                else -> result.notImplemented()
             }
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/radio")
             .setMethodCallHandler { call, result ->
                 when (call.method) {

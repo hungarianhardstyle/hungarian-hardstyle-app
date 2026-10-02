@@ -16,6 +16,7 @@ import '../../widgets/app_text.dart';
 import '../more/community_users_screen.dart';
 import '../community/community_screen.dart';
 import '../community/private_messages_screen.dart';
+import '../twitch/twitch_screen.dart';
 
 class NotificationCenterScreen extends StatefulWidget {
   const NotificationCenterScreen({super.key});
@@ -348,6 +349,16 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           MaterialPageRoute<void>(
             builder: (_) => CommunityPublicProfileScreen(userId: target),
           ),
+        );
+        return;
+      }
+      if (notification.type == 'twitch_live' || notification.kind == 'twitch_live') {
+        // TWITCH-ÉLŐ (393): a tulajdonos kérése — *„ha kimegy a push a twitch
+        // chatről, hogy live … akkor nyissa meg a twitches oldalt a pushra
+        // nyomva”*. Az appon belüli értesítésnek nincs célpontja (`targetType`
+        // üres), ezért eddig a koppintás **némán elveszett**.
+        await navigator.push(
+          MaterialPageRoute<void>(builder: (_) => const TwitchScreen()),
         );
         return;
       }

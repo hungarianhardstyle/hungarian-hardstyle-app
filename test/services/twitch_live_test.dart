@@ -397,6 +397,28 @@ void main() {
           reason: 'a lebegő gomb ikonja maradt a képernyőn');
     });
 
+    test('a Twitch-csatorna URL-je felismerhető (a push erre visz)', () {
+      // A tulajdonos kérése (2026-10-02): *„ha kimegy a push a twitch chatről,
+      // hogy live … akkor nyissa meg a twitches oldalt a pushra nyomva”* — a
+      // széles push a Twitch URL-jét hozza, ezt kell az app-oldalra fordítani.
+      expect(isTwitchChannelUrl('https://www.twitch.tv/hungarianhardstyle'), isTrue);
+      expect(isTwitchChannelUrl('https://twitch.tv/hungarianhardstyle'), isTrue);
+      expect(isTwitchChannelUrl('https://player.twitch.tv/?channel=hungarianhardstyle'), isTrue);
+      expect(isTwitchChannelUrl('  https://www.twitch.tv/hungarianhardstyle  '), isTrue);
+      expect(isTwitchChannelUrl('https://clips.twitch.tv/abc'), isTrue);
+    });
+
+    test('minden MÁS URL marad a böngészőben', () {
+      expect(isTwitchChannelUrl(''), isFalse);
+      expect(isTwitchChannelUrl('   '), isFalse);
+      expect(isTwitchChannelUrl('https://hungarianhardstyle.hu/hirek'), isFalse);
+      expect(isTwitchChannelUrl('https://www.youtube.com/watch?v=1'), isFalse);
+      // A „twitch.tv” a saját domainben nem Twitch (nincs séma/host).
+      expect(isTwitchChannelUrl('twitch.tv/hungarianhardstyle'), isFalse);
+      expect(isTwitchChannelUrl('https://nottwitch.tv/x'), isFalse);
+      expect(isTwitchChannelUrl('https://twitch.tv.evil.example/x'), isFalse);
+    });
+
     test('az Android-oldal engedi a kis képernyőt, és a kapcsolót figyeli', () {
       final manifest = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
       expect(manifest, contains('android:supportsPictureInPicture="true"'));

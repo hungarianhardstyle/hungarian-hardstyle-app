@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Kis képernyő (PiP) — a stream akkor is látszik, ha az app a háttérbe kerül.
@@ -19,9 +19,33 @@ import 'package:flutter/services.dart';
 /// `webkitSetPresentationMode('picture-in-picture')` hívása) — ezért itt a
 /// csatorna iOS-en csak **engedélyez**, a belépést a képernyő kéri.
 class PictureInPicture {
-  const PictureInPicture();
+  PictureInPicture();
 
   static const MethodChannel channel = MethodChannel('hu_hs/pip');
+
+  /// A kis képernyő **állapota** — a natív oldal jelenti (`changed`), amikor a
+  /// felhasználó be- vagy kilép.
+  ///
+  /// MIÉRT KELL (a tulajdonos jelzése, 2026-10-02): *„ez a kis ablak a PIP is
+  /// elég FOSCSI, a rádió gomb dominál”*. A PiP-ablak az **egész felületet**
+  /// mutatta (chat, támogatás gomb, rádiósáv) — így a kis ablak használhatatlan
+  /// volt. Ebből az állapotból tudja a felület **csak a videót** kirajzolni.
+  final ValueNotifier<bool> active = ValueNotifier<bool>(false);
+
+  /// A natív jelzések bekötése (egyszer, az app indulásakor hívjuk).
+  void bind() {
+    channel.setMethodCallHandler((call) async {
+      switch (call.method) {
+        case 'changed':
+          active.value = call.arguments == true;
+        case 'state':
+          active.value = call.arguments == true;
+        default:
+          return null;
+      }
+      return null;
+    });
+  }
 
   /// Kis képernyő engedélyezése/tiltása (a Twitch-oldal lép be és ki ezzel).
   Future<void> setEnabled(bool enabled) async {
@@ -36,7 +60,9 @@ class PictureInPicture {
   ///
   /// Androidon ez a **natív** út (`enterPictureInPictureMode`), ezért akkor is
   /// működik, ha a WebView-ban nem él a JavaScript-PiP. A visszatérési érték a
-  /// siker: `false` esetén a hívó a tartalék utat választhatja.
+  /// siker: `false` esetén a hívó **megmondja a felhasználónak**, hogy a
+  /// rendszer nem engedte (ez fontos — a tulajdonos jelzése szerint a gomb
+  /// „nem megy”, és eddig nem derült ki, miért).
   Future<bool> enter() async {
     try {
       return await channel.invokeMethod<bool>('enter') ?? false;
@@ -47,4 +73,23 @@ class PictureInPicture {
   }
 }
 
-const PictureInPicture pictureInPicture = PictureInPicture();
+final PictureInPicture pictureInPicture = PictureInPicture();
+
+/// PiP-ben **elrejti** a gyereket — a kis ablakban csak a videó látszódjon.
+///
+/// A tulajdonos jelzése: *„ez a kis ablak a PIP is elég FOSCSI, a rádió gomb
+/// dominál”*. Ez a burok az app keretére (rádiósáv, alsó menü) kerül, ezért a
+/// kis ablakban nem marad ott a többi felület.
+class HiddenInPictureInPicture extends StatelessWidget {
+  const HiddenInPictureInPicture({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: pictureInPicture.active,
+      builder: (context, active, _) => active ? const SizedBox.shrink() : child,
+    );
+  }
+}

@@ -140,14 +140,28 @@ class _TwitchScreenState extends ConsumerState<TwitchScreen> with WidgetsBinding
   }
 
   /// A **gomb** nyomása: először a videó-PiP (szebb, csak a kép), és ha az nem
-  /// megy, Androidon a **natív** aktivitás-PiP (a teljes app kicsiben) — így a
-  /// kis képernyő mindkét platformon elérhető, nem csak app-elhagyáskor.
+  /// megy, Androidon a **natív** aktivitás-PiP — így a kis képernyő mindkét
+  /// platformon elérhető, nem csak app-elhagyáskor.
+  ///
+  /// ⚠️ Ha **egyik út sem él**, azt KI KELL MONDANI (a tulajdonos jelzése:
+  /// *„a pip gomb se megy amúgy a twitch oldalon”*) — eddig csak annyi látszott,
+  /// hogy „a videó saját gombjával is kicsinyíthető”, amiből nem derült ki, hogy
+  /// a rendszer utasította el a kérést.
   Future<void> _requestPictureInPicture() async {
     final result = await enterStreamPictureInPicture(_controller);
     if (webviewPipResultSucceeded(result)) return;
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       final entered = await pictureInPicture.enter();
       if (entered) return;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: AppText(
+            tr(context, 'A rendszer most nem engedte a kis képernyőt — nézd meg a telefon beállításaiban (Alkalmazások → HUHS → Kép a képben).'),
+          ),
+        ),
+      );
+      return;
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -168,46 +182,67 @@ class _TwitchScreenState extends ConsumerState<TwitchScreen> with WidgetsBinding
   @override
   Widget build(BuildContext context) {
     final status = _status;
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            if (status?.isLive ?? false) ...[
-              const _LiveBadge(),
-              const SizedBox(width: 8),
-            ],
-            const Expanded(
-              child: AppText('Twitch élő adás', maxLines: 1, overflow: TextOverflow.ellipsis),
+    // A KIS KÉPERNYŐ (393) — a tulajdonos jelzése: *„ez a kis ablak a PIP is elég
+    // FOSCSI, a rádió gomb dominál”*. PiP-ben ezért **csak a videó** rajzolódik
+    // ki: se fejléc, se adatsáv (támogatás), se chat — a kis ablak így egy
+    // valódi lejátszó. A keret többi része (rádiósáv, alsó menü) a
+    // `HiddenInPictureInPicture` burkon keresztül tűnik el.
+    return ValueListenableBuilder<bool>(
+      valueListenable: pictureInPicture.active,
+      builder: (context, inPictureInPicture, _) {
+        if (inPictureInPicture) {
+          return Scaffold(
+            backgroundColor: Colors.black,
+            body: Center(
+              child: AspectRatio(aspectRatio: 16 / 9, child: _player()),
             ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            tooltip: tr(context, 'Kis képernyő'),
-            onPressed: () => unawaited(_requestPictureInPicture()),
-            icon: const Icon(Icons.picture_in_picture_alt),
+          );
+        }
+        return Scaffold(
+          appBar: AppBar(
+            title: Row(
+              children: [
+                if (status?.isLive ?? false) ...[
+                  const _LiveBadge(),
+                  const SizedBox(width: 8),
+                ],
+                const Expanded(
+                  child: AppText('Twitch élő adás', maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                tooltip: tr(context, 'Kis képernyő'),
+                onPressed: () => unawaited(_requestPictureInPicture()),
+                icon: const Icon(Icons.picture_in_picture_alt),
+              ),
+              IconButton(
+                tooltip: tr(context, 'Támogatás PayPallal'),
+                onPressed: () => unawaited(DonateScreen.openDonate()),
+                icon: const Icon(Icons.volunteer_activism),
+              ),
+            ],
           ),
-          IconButton(
-            tooltip: tr(context, 'Támogatás PayPallal'),
-            onPressed: () => unawaited(DonateScreen.openDonate()),
-            icon: const Icon(Icons.volunteer_activism),
+          // AZ ELRENDEZÉS (392) — a tulajdonos jelzései: *„az a chat rész elég pici”*,
+          // *„fekvő módban nincs chat”*, *„figyelj a tabletre is”*. A váz
+          // (`TwitchLayoutFrame`) dönt: keskenyen egymás alatt (a videó legfeljebb a
+          // magasság harmada), szélesen/tableten egymás MELLETT, ezért a chat mindig
+          // látszik. A mérés a `test/screens/twitch_layout_test.dart`-ban van.
+          body: TwitchLayoutFrame(
+            video: _player(),
+            info: _infoColumn(context, status),
+            chat: const TwitchStreamChat(),
           ),
-        ],
-      ),
-      // AZ ELRENDEZÉS (392) — a tulajdonos jelzései: *„az a chat rész elég pici”*,
-      // *„fekvő módban nincs chat”*, *„figyelj a tabletre is”*. A váz
-      // (`TwitchLayoutFrame`) dönt: keskenyen egymás alatt (a videó legfeljebb a
-      // magasság harmada), szélesen/tableten egymás MELLETT, ezért a chat mindig
-      // látszik. A mérés a `test/screens/twitch_layout_test.dart`-ban van.
-      body: TwitchLayoutFrame(
-        video: _controller == null
-            ? const Center(child: CircularProgressIndicator())
-            : WebViewWidget(controller: _controller!),
-        info: _infoColumn(context, status),
-        chat: const TwitchStreamChat(),
-      ),
+        );
+      },
     );
   }
+
+  /// A beágyazott lejátszó (vagy amíg nincs vezérlő, töltésjelző).
+  Widget _player() => _controller == null
+      ? const Center(child: CircularProgressIndicator())
+      : WebViewWidget(controller: _controller!);
 
   /// A videó alatti adatsáv: cím, nézőszám és a **támogatás** gomb.
   ///

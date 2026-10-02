@@ -96,4 +96,40 @@ void main() {
           'kezelni, különben a koppintás némán elveszne',
     );
   });
+
+  test('a Twitch-élő értesítés az app Twitch-oldalát nyitja (393)', () {
+    // ⚠️ A MÉRT HIÁNY: az élő értesítésnek **nincs célpontja** (`targetType` üres,
+    // `type: twitch_live`), ezért a koppintás a szám-feldolgozásnál **némán
+    // elveszett** — a tulajdonos kérése: *„ha kimegy a push a twitch chatről,
+    // hogy live … akkor nyissa meg a twitches oldalt a pushra nyomva”*.
+    expect(router, contains("notification.type == 'twitch_live'"));
+    expect(router, contains('TwitchScreen()'));
+    final branchIndex = router.indexOf("notification.type == 'twitch_live'");
+    final parseIndex = router.indexOf('final id = int.tryParse(target);');
+    expect(branchIndex, isNonNegative);
+    expect(parseIndex, isNonNegative);
+    expect(
+      branchIndex < parseIndex,
+      isTrue,
+      reason: 'a célpont nélküli típus a szám-feldolgozás ELŐTT kell kezelni',
+    );
+  });
+
+  test('a Twitch-élő PUSH is az app Twitch-oldalát nyitja (nem a böngészőt)', () {
+    final push = File('lib/services/push_notification_service.dart')
+        .readAsStringSync()
+        .replaceAll('\r\n', '\n');
+    final twitchIndex = push.indexOf("type == 'twitch_live'");
+    final browserIndex = push.indexOf('await openInAppBrowser(context, url');
+    expect(twitchIndex, isNonNegative, reason: 'nincs Twitch-ág a push-kezelőben');
+    expect(push.contains('isTwitchChannelUrl(url)'), isTrue,
+        reason: 'a széles push a Twitch-csatorna URL-jét hozza — azt is fel kell ismerni');
+    expect(push.contains('TwitchScreen()'), isTrue);
+    expect(browserIndex, isNonNegative);
+    expect(
+      twitchIndex < browserIndex,
+      isTrue,
+      reason: 'a Twitch-ág a böngésző-nyitás ELŐTT kell, különben a web nyílik meg',
+    );
+  });
 }

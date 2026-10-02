@@ -1,0 +1,5 @@
+{
+  "A rendszer most nem engedte a kis képernyőt — nézd meg a telefon beállításaiban (Alkalmazások → HUHS → Kép a képben).": "The system did not allow picture-in-picture right now — check your phone settings (Apps → HUHS → Picture-in-picture).",
+  "Javítva: az élő adásról szóló értesítésre koppintva az app Twitch-oldala nyílik meg (eddig a böngésző).": "Fixed: tapping the live-stream notification now opens the app's Twitch page (it used to open the browser).",
+  "Javítva: kis képernyőn (PiP) csak a videó látszik — a rádiósáv és a többi felület nem nyomja el, és a gomb megmondja, ha a rendszer nem engedi.": "Fixed: in picture-in-picture only the video is shown — the radio bar and the rest of the UI no longer crowd it out, and the button tells you when the system refuses."
+}

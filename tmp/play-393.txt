@@ -1,0 +1,5 @@
+- Javítva: az élő adás értesítésére koppintva az app Twitch-oldala nyílik meg.
+- Javítva: kis képernyőn (PiP) csak a videó látszik; a gomb jelzi, ha a rendszer nem engedi.
+- Javítva: a Twitch-chat fekvő módban és tableten is látszik, álló módban nagyobb helyet kap.
+- ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.
+- Javítva: a Twitch-oldalon a támogatás gomb a videó alá került.

@@ -1,0 +1,53 @@
+feat(393): az elo ertesites az app Twitch-oldalat nyitja + a kis kepernyo csak a videot
+
+A TULAJDONOS JELZESEI (2026-10-02): "ha kimegy a push a twitch chatrol, hogy live ...
+akkor nyissa meg a twitches oldalt a pushra nyomva", "ez a kis ablak a PIP is eleg
+FOSCSI, a radio gomb dominal", "a pip gomb se megy amugy a twitch oldalon".
+
+A MERT GYOKEREK:
+- a szeles (WordPress-)push a Twitch URL-jet hozza (targetType custom, url
+  https://www.twitch.tv/hungarianhardstyle), ezert a _handleOpenedMessage a BONGESZOT
+  nyitotta (openInAppBrowser); az appon BELULI elo ertesitesnek pedig nincs celpontja
+  (targetType '', type 'twitch_live'), ezert ott a koppintas a int.tryParse(target)
+  utan NEMAN elveszett;
+- a PiP-ablak az EGESZ feluletet mutatta (chat, tamogatas, radiosav) — a
+  onPictureInPictureModeChanged nem jelzett a Flutternek;
+- a PiP-gomb kudarcat a felulet nem mondta meg.
+
+AMI EPULT (kliens):
+- services/twitch_live.dart: isTwitchChannelUrl(url) (tiszta: csak twitch.tv /
+  www.twitch.tv / *.twitch.tv);
+- services/push_notification_service.dart: a Twitch-ag a bongeszo-nyitas ELOTT
+  (type == 'twitch_live' || isTwitchChannelUrl(url) -> TwitchScreen);
+- screens/notifications/notification_center_screen.dart: twitch_live ag a
+  szam-feldolgozas elott;
+- services/picture_in_picture.dart: active ValueNotifier + bind() (a nativ changed/state
+  uzenetek) + HiddenInPictureInPicture burok;
+- screens/main_navigation.dart: az also sav (radio + menu) EGY PiP-burokban, a fekvo bal
+  oldali sav szinten;
+- screens/twitch/twitch_screen.dart: PiP-ben CSAK a video (16:9, se fejlec, se adatsav,
+  se chat), es a gomb kudarcanal kimondja, hogy a rendszer nem engedte.
+
+AMI EPULT (nativ): MainActivity.kt — onPictureInPictureModeChanged jelzi a Flutternek
+(pipChannel.invokeMethod("changed", ...)), uj "state" keres, pictureInPictureParams()
+(16:9 + setAutoEnterEnabled Android 12+-on), es a setEnabled atallitja a rendszer-vezerelt
+ belepeset is.
+
+KAPUK (mind merve): flutter test 1484/1484; flutter analyze lib test tiszta;
+i18n --strict zold (chunk-45); check-play-notes zold (1. blokk 406/480, masolatok 4/4
+bajtazonos).
+
+MUTACIOS BIZONYITEK 7/7 ELKAPVA — ES MEGINT EGY GYENGE KAPUT TALALT
+(tmp/mutation-proof-twitch-live-pip.mjs, bajtazonos visszaallitassal): az elso futas 6/7
+lett, mert a burok-lint mintaja (HiddenInPictureInPicture( + child: RadioPlayerBar()) a
+mutacio utan IS illeszkedett (a child: a SafeArea-ban maradt). Javitas: a furkot EGY
+burokba vontam, es a minta a szerkezetre mer. TANULSAG: a "benne van" minta a burkolas
+elvetet nem latja.
+
+CSOMAG: build/HUHS-v1.0.0+393-release.aab — 83 461 910 bajt, SHA-256
+7F933075BCC66F4A4CE02E166643732F5A33EEB7937A1330B9CFE8837BC05C08; verify-aab 393 ->
+MINDEN ELLENORZES RENDBEN, a 393 changelog-sorai mindharom ABI-ban bent vannak.
+
+A TULAJDONOS LEPESE: a 393 feltoltese a Play Console-ra es kiadasa a ZART TESZTEN
+(tmp/play-393-zart.txt = 5 sor); a 390/391/392 NEM kell (a 393 felvaltja mindet); a
+telefonra a 393 kerul (sideload).

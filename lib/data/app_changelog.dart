@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 393,
+    changes: [
+      'Javítva: az élő adásról szóló értesítésre koppintva az app Twitch-oldala nyílik meg (eddig a böngésző).',
+      'Javítva: kis képernyőn (PiP) csak a videó látszik — a rádiósáv és a többi felület nem nyomja el, és a gomb megmondja, ha a rendszer nem engedi.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 392,
     changes: [
       'Javítva: a Twitch-oldalon a chat fekvő módban és tableten is látszik (a videó mellett), álló módban pedig nagyobb helyet kap.',

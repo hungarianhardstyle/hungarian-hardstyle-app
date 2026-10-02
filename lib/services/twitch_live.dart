@@ -147,6 +147,26 @@ String twitchLiveQuery(String channel) =>
 String twitchThumbnailUrl(String channel, {int width = 640, int height = 360}) =>
     'https://static-cdn.jtvnw.net/previews-ttv/live_user_${channel.toLowerCase()}-${width}x$height.jpg';
 
+/// Igaz, ha az URL a **Twitch-csatornára** mutat.
+///
+/// MIÉRT (a tulajdonos kérése, 2026-10-02): *„ha kimegy a push a twitch
+/// chatről, hogy live … akkor nyissa meg a twitches oldalt a pushra nyomva”*.
+/// A széles (WordPress-)push a Twitch-csatorna **URL-jét** hozza
+/// (`https://www.twitch.tv/hungarianhardstyle`), az app viszont eddig a
+/// **böngészőt** nyitotta vele. Ez a tiszta felismerés teszi lehetővé, hogy a
+/// koppintás az app **saját Twitch-oldalára** vigyen.
+///
+/// Szándékosan **csak a Twitch domain** számít (a `player.twitch.tv` és a
+/// `clips.twitch.tv` is); minden más URL marad a böngészőben.
+bool isTwitchChannelUrl(String url) {
+  final trimmed = url.trim();
+  if (trimmed.isEmpty) return false;
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null) return false;
+  final host = uri.host.toLowerCase();
+  return host == 'twitch.tv' || host == 'www.twitch.tv' || host.endsWith('.twitch.tv');
+}
+
 /// A beágyazott lejátszó URL-je (`player.twitch.tv`), a chat nélkül.
 ///
 /// ⚠️ A `parent` paramétert a Twitch megköveteli; natív appban a `localhost`

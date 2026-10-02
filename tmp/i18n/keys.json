@@ -2768,6 +2768,13 @@
     ]
   },
   {
+    "value": "A rendszer most nem engedte a kis képernyőt — nézd meg a telefon beállításaiban (Alkalmazások → HUHS → Kép a képben).",
+    "count": 1,
+    "files": [
+      "lib/screens/twitch/twitch_screen.dart"
+    ]
+  },
+  {
     "value": "A részvétel jelöléséhez regisztráció szükséges.",
     "count": 1,
     "files": [

@@ -34,6 +34,7 @@ import 'screens/community/community_screen.dart';
 import 'services/community_service.dart';
 import 'screens/main_navigation.dart';
 import 'core/firebase/firebase_callable.dart';
+import 'services/picture_in_picture.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,6 +65,11 @@ Future<void> main() async {
   // A háttér-lejátszó **a `runApp` előtt** indul, mert a lejátszó példány csak
   // utána jön létre (enélkül a megvásárolt zene nem szólna háttérben).
   await _initializeBackgroundAudio();
+  // A kis képernyő (PiP) ÁLLAPOTÁNAK bekötése — a natív oldal jelzi, amikor a
+  // felhasználó be-/kilép, és ebből tudja a felület **csak a videót** rajzolni
+  // (a tulajdonos jelzése: *„ez a kis ablak a PIP is elég FOSCSI, a rádió gomb
+  // dominál”*).
+  pictureInPicture.bind();
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
   // The home screen needs the news and event lists first. Starting that request
   // here runs it behind the startup gate, so the content is already cached when
