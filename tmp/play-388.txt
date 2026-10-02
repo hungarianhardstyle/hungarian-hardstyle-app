@@ -1,0 +1,5 @@
+- Javítva: a rádiónál a zárképernyőn és az értesítésben is van Leállítás gomb.
+- ÚJ: rádió — az értesítésben látszik, melyik szám szól, a Real Hardstyle FM logójával.
+- ÚJ: élő Twitch-adás az appban (kicsinyíthető, iPhone-on is), saját chattel és támogatással.
+- ÚJ: a Twitch-kártya beharangozója a WordPress-adminban állítható (kép, felirat).
+- Javítva: a „Kedvenceid" szekció a hírek alatt van, magyaros felirattal.

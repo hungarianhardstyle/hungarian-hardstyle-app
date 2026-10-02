@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 388,
+    changes: [
+      'Javítva: a rádiónál a zárképernyőn és az értesítésben is van Leállítás gomb — eddig csak szüneteltetni lehetett.',
+      'ÚJ: a főoldali Twitch-kártya beharangozója (kép és felirat) mostantól a WordPress-adminban állítható.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 387,
     changes: [
       'ÚJ: a főoldali Twitch-kártya mostantól előre is behirdethető — a csatorna saját képével és feliratával akkor is látszik, ha éppen nem megy adás.',

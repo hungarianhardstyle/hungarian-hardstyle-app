@@ -1,0 +1,16 @@
+feat(388): a stop gomb es a Twitch-beharangozo — build a Playre + plugin a WordPressre
+
+A tulajdonos ket jelzesere a teljes lanc: csomagok, doksik es a Play-jegyzet.
+
+- build/HUHS-v1.0.0+388-release.aab: 83 416 226 bajt, SHA-256
+  31C5CA3F17190D253788E8178D8923A841FD1EDDB036CA859887EFF6C5081E90
+  (verify-aab: MINDEN ELLENORZES RENDBEN; a changelog ket sora mindharom ABI-ban)
+- build/huhs-mobile-api-2.14.15.zip: 202 231 bajt, SHA-256
+  ABED5F8036CBEF3EF429CE9C296609F4D6C062DA21D875A707BED44746BAB990
+- Play-jegyzet a 388-ra allt: 1. blokk 417/480 karakter, uj ### 388 szakasz,
+  lastPublishedBuild 384, AAB-tabla es meta a 388-cal, masolatok 4/4 bajtazonosak
+  (tmp/play-388.txt, play-361-388.txt, play-355-388.txt, play-388-zart.txt)
+- changelog: 2 uj sor a 388-hoz + angol forditas (chunk-40), pubspec 1.0.0+388
+
+Kapuk: check-play-notes zold, i18n strict zold, flutter test 1434/1434,
+analyze tiszta, plugin-harness 9 kor zold, functions 404 + 10 suite zold.
