@@ -1,0 +1,21 @@
+feat(ios): a 388-as build a telefonon (sideload) — merve
+
+A tulajdonos keresere a 388 kerult fel az iPhone-ra.
+
+- iOS CI: run 37032789652 (commit a0e7a3b0), completed / success — vagyis a
+  teljes iOS-fordulas es a tesztkor is lefutott erre a commitra.
+- IPA: build/ios-ipa-388/Runner-unsigned.ipa, 23 089 503 bajt,
+  SHA-256 5979CE8B801766E38C35686C062F2F28289B2BD770CEF93BE818572F7E616596
+- Tartalmi meres (tmp/verify-ipa-380.mjs + tools/verify-ios-ipa.mjs):
+  CFBundleVersion = 388, CFBundleShortVersionString = 1.0.0, a 388 ket
+  changelog-sora bent van (a "Leallitas gomb" es a "Twitch-kartya beharangozoja"
+  sor is), a reklam-identitas helyes (teszt egysegek a sideloadolthoz).
+- Telepites: Sideloadly installations id 53, stored_files id 44 = hh388.ipa,
+  23 089 503 bajt, failures_count 0; a keszulekrol visszaolvasva
+  CFBundleVersion = 388 (tmp/apps-388.json).
+
+MERt MERESI HIBA (a sajatom): a `gh run list --commit <sha>` rovid SHA-val URES
+listat ad (teljes 40 karakteres SHA kell), es a `gh run list --branch` alap
+sorrendje nem idobelyeg szerinti — ezert eloszor ugy tunt, hogy a 388-hoz nem is
+indult CI. A helyes meres: --limit + createdAt szerinti rendezes. Tanulsag: a
+"nincs futas" es a "rosszul kerdeztem le" ugyanugy nez ki.
