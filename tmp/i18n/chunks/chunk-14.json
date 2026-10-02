@@ -1,9 +1,11 @@
 [
+  "Kiemelt hírek",
   "Kihagyás",
   "Kijelölés kikapcsolása",
   "Kijelölés törléshez",
   "Kijelöltek törlése",
   "Kinek szeretnél írni?",
+  "Kis képernyő",
   "Kiválasztás",
   "Kiválasztott jelöltek:",
   "Kiválasztva: {n}/5",
@@ -56,7 +58,5 @@
   "Ma {count}/{limit} lájkpont jár.",
   "Magyar DJ-k",
   "Magyar hardstyle és hardcore előadók",
-  "Magyar hardstyle és hardcore közösségi app",
-  "Már egy betűre is keres",
-  "Már értékelted: {stars}"
+  "Magyar hardstyle és hardcore közösségi app"
 ]

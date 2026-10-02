@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 386,
+    changes: [
+      'ÚJ: az élő Twitch-adás kicsinyíthető — a fejléc kis képernyő gombjával, illetve az app elhagyásakor magától is.',
+      'Javítva: iPhone-on a Twitch-adás a helyén játszik (nem ugrik teljes képernyőre), és koppintás nélkül elindul.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 385,
     changes: [
       'ÚJ: a rádió értesítésében és a zárképernyőn mostantól látszik, éppen melyik szám szól — a Real Hardstyle FM logójával.',

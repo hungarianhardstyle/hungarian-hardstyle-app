@@ -2977,6 +2977,13 @@
     ]
   },
   {
+    "value": "A videó saját gombjával is kicsinyíthető.",
+    "count": 1,
+    "files": [
+      "lib/screens/twitch/twitch_screen.dart"
+    ]
+  },
+  {
     "value": "A visszaállítás nem sikerült: {error}",
     "count": 1,
     "files": [
@@ -5739,6 +5746,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Kis képernyő",
+    "count": 1,
+    "files": [
+      "lib/screens/twitch/twitch_screen.dart"
     ]
   },
   {

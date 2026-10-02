@@ -12,10 +12,12 @@ import 'package:flutter/services.dart';
 /// (`setEnabled(true)`). Így a rádió vagy a böngészés közben nem ugrik be.
 ///
 /// ⚠️ **iOS:** a beágyazott lejátszó a WebView saját PiP-jét használja
-/// (`allowsPictureInPictureMediaPlayback`), ezért itt csak **engedélyezzük** —
-/// a kis képernyő gombja a videó vezérlőjében jelenik meg. Az automatikus,
-/// app-elhagyásra induló PiP (mint Androidon) külön natív munka
-/// (`AVPictureInPictureController`), és aláírt buildet kér.
+/// (`allowsPictureInPictureMediaPlayback`, amit a `webview_flutter_wkwebview`
+/// alapból **be** kapcsol, ha a vezérlő inline lejátszással jön létre). Az
+/// automatikus, app-elhagyásra induló belépést a
+/// `webview_picture_in_picture.dart` JavaScript-hídja viszi (a WebKit saját
+/// `webkitSetPresentationMode('picture-in-picture')` hívása) — ezért itt a
+/// csatorna iOS-en csak **engedélyez**, a belépést a képernyő kéri.
 class PictureInPicture {
   const PictureInPicture();
 
@@ -26,7 +28,21 @@ class PictureInPicture {
     try {
       await channel.invokeMethod<void>('setEnabled', enabled);
     } catch (error) {
-      debugPrint('kis képernyő: a kapcsoló nem állítható: $error');
+      debugPrint('picture-in-picture: the switch is not available: $error');
+    }
+  }
+
+  /// **Azonnali** belépés kis képernyőre (a felület gombja hívja).
+  ///
+  /// Androidon ez a **natív** út (`enterPictureInPictureMode`), ezért akkor is
+  /// működik, ha a WebView-ban nem él a JavaScript-PiP. A visszatérési érték a
+  /// siker: `false` esetén a hívó a tartalék utat választhatja.
+  Future<bool> enter() async {
+    try {
+      return await channel.invokeMethod<bool>('enter') ?? false;
+    } catch (error) {
+      debugPrint('picture-in-picture: entering failed: $error');
+      return false;
     }
   }
 }

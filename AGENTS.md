@@ -1,5 +1,63 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🔵 A **386**-OS BUILD — A TWITCH-ADÁS KICSINYÍTHETŐ (iOS-en IS) + A PIAC-KAPU VERZIÓ-TUDATOS (2026-10-02)
+
+- **A KIINDULÁS (mért hiány, nem tipp):** a 385-ben a kis képernyő **Androidon** már működött
+  (`supportsPictureInPicture` + `onUserLeaveHint`), **iOS-en viszont nem** — és az ok a **platform-csomag
+  alapértéke**: a `webview_flutter_wkwebview` a `WebKitWebViewControllerCreationParams`-ot
+  `allowsInlineMediaPlayback = false` + `mediaTypesRequiringUserAction = {audio, video}` értékkel indítja.
+  Ilyen WebView-ban a Twitch videó **teljes képernyőre vált**, és a WebKit **nem ad PiP-et** — vagyis a
+  tulajdonos kérése (*„kis képernyő iOS-en is”*) **kód-szinten nem is volt teljesíthető** a 385-ben.
+- **AMI ÉPÜLT (kliens, `lib/`):** `services/webview_picture_in_picture.dart` (ÚJ, tiszta): a
+  `webviewPictureInPictureScript` (a WebView **saját dokumentumában** keresi a **játszó** videót — a Twitch
+  lejátszó `player.twitch.tv`-ről **közvetlenül** tölt, ezért nincs cross-origin iframe akadály —, és a
+  WebKit `webkitSetPresentationMode('picture-in-picture')`, illetve a szabványos
+  `requestPictureInPicture()` sorrendben), `parseWebviewPictureInPictureResult` (a platform idézőjeles
+  válaszát is kezeli), `shouldEnterPictureInPicture` (**tiszta döntés**: `paused`/`hidden` igen,
+  `inactive` **nem** — iOS rendszer-párbeszédnél zavarna) és `PictureInPictureRequestGate` (egy
+  háttérbe-kerülés = **egy** kérés; előtérbe visszatérve újra nyílik). A `twitch_screen.dart` mostantól
+  `WidgetsBindingObserver`: háttérbe kerüléskor **magától** bekéri a kis képernyőt, a fejlécben **ÚJ gomb**
+  („Kis képernyő”) bármikor kiteszi a videót, és ha a videó-PiP nem megy, **Androidon a natív** út lép be.
+- **AMI ÉPÜLT (natív + iOS):** `MainActivity.kt`: a PiP-döntés **egy helyen** van
+  (`enterPictureInPictureNow()`: mező + `Build.VERSION_CODES.O` + `hasSystemFeature(FEATURE_PICTURE_IN_PICTURE)`),
+  ezt hívja az `onUserLeaveHint` **és** az új `hu_hs/pip` → `"enter"` művelet. **iOS:** a Twitch-oldal
+  WebView-ja iOS-en kézzel kapja a helyes beállításokat (**inline lejátszás be**, koppintás-kényszer **ki**),
+  ezért a stream a helyén játszik és **koppintás nélkül elindul**; a `webview_flutter_wkwebview` ezért
+  **közvetlen függőség** lett (a feloldott verzió változatlan, 3.26.1).
+- **KAPUK (mind mérve):** `flutter test` → **1417/1417** (27 új: a híd, az értelmezés, a döntés, a kapu és a
+  forrás-lintek); `flutter analyze lib test` → **No issues found!**; i18n `--strict` → **MINDEN ELLENŐRZÉS
+  RENDBEN** (2 új kulcs, `chunk-37`); `node tools/run-function-tests.mjs --pure` → **404/404**;
+  `check-play-notes` → **MINDEN ELLENŐRZÉS RENDBEN** (1. blokk **451/480**, összesítők **446/480**,
+  másolatok **4/4**).
+- **⚠️ MUTÁCIÓS BIZONYÍTÉK 13/13 ELKAPVA — ÉS KÉT GYENGE KAPUT TALÁLT (javítva):**
+  `tmp/mutation-proof-picture-in-picture.mjs` (bájtazonos visszaállítással). Az első futás **11/13** lett, és
+  a két kimaradt mutáció **valódi gyengeséget** jelzett: (1) a „szerepel-e a hívás a fájlban” minta a
+  **gomb-ágban** is megtalálta az `enterStreamPictureInPicture(_controller)` hívást, ezért a háttérbe-kerülés
+  ágának elvétele **nem bukott meg**; (2) a natív kapuknál ugyanez: a `Build.VERSION.SDK_INT` sor a fájlban
+  máshol is szerepelhetett volna. **A javítás:** a forrás-lint immár a **metódus TESTÉRE** mér
+  (`didChangeAppLifecycleState` és `enterPictureInPictureNow` regex-csoportja). **TANULSÁG (a projekt
+  visszatérő osztálya): a fájl-szintű „benne van” minta gyenge — a **használat helyét** kell mérni.**
+- **🔴 MÉRT ESZKÖZ-HIBA A KÖRBEN (a hamis piros új köntösben):** a mutációs bizonyíték első futása **0/13**
+  volt, miközben minden mutáció „elhasalt”. Az ok **nem a kód**: a Node `execFileSync('flutter', …)`
+  **ENOENT**, a `execFileSync('flutter.bat', …)` pedig **EINVAL** (a Node biztonsági okból nem indít
+  `.bat`-ot `shell` nélkül) — a helyes út a **`cmd /c flutter test …`**. **A bizonyítékot az mentette meg a
+  hamis zöldtől, hogy nem elégedtem meg a „bukott” jelzéssel, hanem a BUKÓ TESZT NEVÉT is megköveteltem.**
+- **CSOMAG:** `build/HUHS-v1.0.0+386-release.aab` — **83 410 558 bájt**, SHA-256
+  **`D128F7DD38822F9C4297DDEB207DDC32F0EA68F9D4305CD4DB4A6B5471CF43D4`**; `tmp/verify-aab.mjs … 386` →
+  **MINDEN ELLENŐRZÉS RENDBEN**, és a changelog **mind a két** sora **mindhárom ABI-ban** bent van
+  (`tmp/verify-aab-385-changelog.mjs … 386`).
+- **📌 A TULAJDONOS LÉPÉSE:** a **386** feltöltése a Play Console-ra (**a 385-öt NEM kell** — a 386
+  felváltja, ugyanaz a kód + a kis képernyő javítása); a zárt teszten **ugyanaz az 1. blokk** való
+  (`tmp/play-386.txt`), a bétára a **355–386** összesítő.
+- **⚠️ ŐSZINTE KORLÁTOK:** (1) az **iOS-oldali** PiP (inline beállítás + `webkitSetPresentationMode`)
+  **kód-szinten** kész és a 386-ban a telefonon is ott lesz, de a **működését iPhone-on nem tudtam mérni**
+  — ahhoz aláírt build (TestFlight) kell; (2) a **`inactive`** állapotra szándékosan **nem** lépünk be kis
+  képernyőre (iOS rendszer-párbeszédnél zavaró lenne) — ezért a belépés a `paused`/`hidden` pillanatban
+  történik; (3) a WebView-PiP a **Twitch lejátszó** videóját teszi ki, nem az egész appot (Androidon ez a
+  szebb út; ha nem él, a natív aktivitás-PiP a tartalék); (4) az **Android WebView** JS-PiP támogatása
+  verziófüggő — ezért van a natív tartalék és a gomb; (5) a **386** kiadása a tulajdonos lépése, és a
+  Play-jegyzet is a 386-ra állt.
+
 ### 🔵 PLUGIN **2.14.14** — A KÖR-KERET 15 → 60 MÁSODPERC (a hír-push egy körben fut ki) + EGY HAMIS ZÖLD KAPU JAVÍTVA (2026-10-02)
 
 - **A KIINDULÁS (mért, éles):** a 2.14.13 diagnosztikája pontosan azt adta, amiért bekerült: **`push_limits=conc50/budget15/max_exec600`**. A párhuzamosság tehát már 50, a **kör-keret viszont 15 másodperc** maradt — a szerver PHP-korlátja (**600 s**) bőven fölötte van, ezért a keret volt az utolsó szűk keresztmetszet: a ~1025 eszköz **több körben** ment ki. A mai (2026-10-02 14:28) hír-push sora (`tmp/probe-news-push-live.mjs`): **`recipients=1025 processed=75 sent=75 failed=0 dead=0`** — egy kör a keretbe ennyit vitt bele.

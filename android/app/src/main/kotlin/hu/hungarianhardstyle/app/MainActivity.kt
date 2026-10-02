@@ -42,17 +42,30 @@ class MainActivity : AudioServiceFragmentActivity() {
      */
     private var pictureInPictureEnabled = false
 
-    override fun onUserLeaveHint() {
-        super.onUserLeaveHint()
-        if (!pictureInPictureEnabled) return
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        runCatching {
+    /**
+     * Azonnali belépés a kis képernyőre (a felület gombja kéri).
+     *
+     * Ugyanazokat a kapukat használja, mint a [onUserLeaveHint]: csak akkor lép
+     * be, ha a Twitch-oldal kérte, az Android támogatja (API 26+) és a készülék
+     * tudja a szolgáltatást. Visszatérés: sikerült-e (a felület ebből dönt a
+     * tartalék útról).
+     */
+    private fun enterPictureInPictureNow(): Boolean {
+        if (!pictureInPictureEnabled) return false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return false
+        return runCatching {
             enterPictureInPictureMode(
                 PictureInPictureParams.Builder()
                     .setAspectRatio(Rational(16, 9))
                     .build(),
             )
-        }
+        }.getOrDefault(false)
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        enterPictureInPictureNow()
     }
 
     override fun onPictureInPictureModeChanged(
@@ -94,14 +107,17 @@ class MainActivity : AudioServiceFragmentActivity() {
                 callback,
             )
         }
-        // Kis képernyő (PiP): a Twitch-oldal kapcsolja be/ki (lásd a mezőt).
+        // Kis képernyő (PiP): a Twitch-oldal kapcsolja be/ki (lásd a mezőt),
+        // és ugyanaz az oldal kérheti azonnali belépést is (a felület gombja).
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/pip")
             .setMethodCallHandler { call, result ->
-                if (call.method == "setEnabled") {
-                    pictureInPictureEnabled = call.arguments as? Boolean ?: false
-                    result.success(null)
-                } else {
-                    result.notImplemented()
+                when (call.method) {
+                    "setEnabled" -> {
+                        pictureInPictureEnabled = call.arguments as? Boolean ?: false
+                        result.success(null)
+                    }
+                    "enter" -> result.success(enterPictureInPictureNow())
+                    else -> result.notImplemented()
                 }
             }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "hu_hs/radio")

@@ -1,4 +1,6 @@
 [
+  "Nem sikerült betölteni a műfajokat.",
+  "Nem sikerült betölteni a szervezői adatlapot.",
   "Nem sikerült betölteni a szervezőket.",
   "Nem sikerült kiválasztani a képet.",
   "Nem sikerült megnyitni a levelezőt.",
@@ -56,7 +58,5 @@
   "Összes törlése",
   "Piszkozat",
   "Pontok, szintek és jelvények részletesen",
-  "Pontosan 5 jelölt választható.",
-  "Preview leállítása",
-  "Preview lejátszása"
+  "Pontosan 5 jelölt választható."
 ]

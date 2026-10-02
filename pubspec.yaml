@@ -3,7 +3,7 @@ description: "Hungarian Hardstyle mobile application"
 
 publish_to: 'none'
 
-version: 1.0.0+385
+version: 1.0.0+386
 
 environment:
   sdk: ^3.13.2
@@ -27,6 +27,14 @@ dependencies:
 
   # Spotify Player
   webview_flutter: ^4.13.0
+  # ⚠️ AZ iOS-OLDAL MIATT KÖZVETLEN FÜGGŐSÉG (mért hiány, 2026-10-02): a
+  # `webview_flutter` alapértéke iOS-en `allowsInlineMediaPlayback = false` és
+  # `mediaTypesRequiringUserAction = {audio, video}` — ilyen WebView-ban a Twitch
+  # videó **nem** a helyén játszik (teljes képernyőre vált), és **kis képernyő
+  # (PiP) sem érhető el**. A helyes beállítás csak a platform-csomagon át adható
+  # meg (`WebKitWebViewControllerCreationParams`), ezért ez itt közvetlen
+  # függőség — a feloldott verzió változatlan (3.26.1), csak láthatóvá tesszük.
+  webview_flutter_wkwebview: ^3.26.1
   just_audio: ^0.10.5
   # A háttér-lejátszáshoz (zárképernyő + értesítés-vezérlés): az `audio_service`
   # adja a rendszer médiamunkamenetét, az `audio_session` a hangfókuszt

@@ -1,0 +1,41 @@
+feat(386): a Twitch-stream kicsinyitheto (iOS-en is) + uj build a Playre
+
+A tulajdonos keresere a kis kepernyo (PiP) mostantol NEM csak Androidon mukodik:
+
+MERt HIaNY (nem tipp): a webview_flutter_wkwebview a WebKit-vezerlot
+allowsInlineMediaPlayback = false + mediaTypesRequiringUserAction = {audio,video}
+ertekekkel inditja. Ilyen WebView-ban a Twitch video teljes kepernyore valt, es a
+WebKit nem ad PiP-et - vagyis a keres iOS-en kodszinten nem is volt teljesitheto.
+
+AMI EPULT:
+- lib/services/webview_picture_in_picture.dart (UJ, tiszta): a JS hid
+  (a WebView sajat dokumentumaban keresi a JATSZO videot; webkitSetPresentationMode
+  iOS-en, requestPictureInPicture tartalek), az eredmeny ertelmezese (idezojeles
+  platform-valasz is), a belépés tiszta dontese (paused/hidden igen, inactive NEM),
+  es a keres-kapu (egy hatterbe-kerules = egy keres).
+- twitch_screen.dart: WidgetsBindingObserver (hatterbe keruleskor magatol bekeri),
+  UJ fejlec-gomb "Kis kepernyo" (barmikor kicsinyit), tartalek ut Androidra
+  (natív aktivitas-PiP), es iOS-en a helyes WebView-beallitasok.
+- MainActivity.kt: a PiP-dontes EGY helyen (enterPictureInPictureNow), ezt hivja
+  az onUserLeaveHint ES az uj hu_hs/pip "enter" muvelet.
+- picture_in_picture.dart: enter() az azonnali belepeshez.
+- pubspec: webview_flutter_wkwebview kozvetlen fuggoseg (a feloldott verzio
+  valtozatlan, 3.26.1).
+
+KAPUK (mind merve): flutter test 1417/1417 (27 uj); analyze tiszta;
+i18n strict zold (2 uj kulcs); function-tesztek 404/404; check-play-notes zold
+(1. blokk 451/480, osszesitok 446/480, masolatok 4/4).
+
+MUTACIOS BIZONYITEK 13/13 ELKAPVA - es KET GYENGE KAPUT talalt (javítva):
+a "szerepel-e a hivas a fajlban" minta a gomb-agban is megtalalalta a hivast,
+ezert a hatterbe-kerules aganak elvetele nem bukott meg; ugyanigy a natív
+kapuknal. A forras-lint mostantol a METODUS TESTERE mer.
+
+MERT ESZKOZ-HIBA: a Node execFileSync('flutter') ENOENT, a 'flutter.bat' EINVAL
+(a Node nem indit .bat-ot shell nelkul) - a helyes ut a cmd /c flutter test.
+A bizonyitek a BUKO TESZT NEVET is megkoveteli, ezert nem lett belole hamis zold.
+
+CSOMAG: build/HUHS-v1.0.0+386-release.aab, 83 410 558 bajt,
+SHA-256 D128F7DD38822F9C4297DDEB207DDC32F0EA68F9D4305CD4DB4A6B5471CF43D4
+verify-aab: MINDEN ELLENORZES RENDBEN + a changelog ket sora mindharom ABI-ban.
+A Play-jegyzet a 386-ra allt (a 385-ot NEM kell feltolteni).

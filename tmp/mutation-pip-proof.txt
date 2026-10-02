@@ -1,0 +1,17 @@
+OK     az életciklus-figyelő felvétele elvéve (nem lenne, aki háttérbe kerüléskor kérjen) → a kapu elcsípte («a Twitch-oldal figyeli az életciklust»)
+       (az első futás felmelegíti a fordítót, ezért lassabb)
+OK     a háttérbe kerülésre adott reakció elvéve (a kapu nem hívja a hidat) → a kapu elcsípte («a Twitch-oldal figyeli az életciklust»)
+OK     a kapu minden állapotra enged (inactive-ra is belépne — iOS párbeszédnél zavarna) → a kapu elcsípte («inactive-ra NEM lép be»)
+OK     a kapu a lecsatolt/előtér állapotra is belépne → a kapu elcsípte («előtérben és lecsatolva sem lép be»)
+OK     a WebKit-ág kivétele a hidat nem sikeressé teszi (iOS-en nem indulna PiP) → a kapu elcsípte («iOS-en a WebKit saját módját hívja»)
+OK     a szabványos út kerül előre (a WebKit-ág már nem érvényesülne) → a kapu elcsípte («a szabványos API a tartalék út»)
+OK     a „nincs videó" válasz sikernek számítana (nem lenne tartalék út) → a kapu elcsípte («a „nincs videó" nem siker»)
+OK     a kérés-kapu nem nyílik újra előtérbe kerüléskor (másodszor nem lenne PiP) → a kapu elcsípte («visszatérés előtérbe újra engedi»)
+OK     az iOS inline beállítás elvéve (a videó teljes képernyőre váltana, PiP nem lenne) → a kapu elcsípte («az iOS WebView inline lejátszással»)
+OK     a koppintás-kényszer visszaállítása iOS-en (az autoplay nem érvényesülne) → a kapu elcsípte («az iOS WebView inline lejátszással»)
+OK     a platform-csomag kivétele a függőségek közül (nem fordulna le) → a kapu elcsípte («a platform-csomag közvetlen függőség»)
+OK     a natív „enter" művelet elvétele (a felület gombja nem érne célt Androidon) → a kapu elcsípte («a natív oldal „enter" művelete»)
+OK     az Android-verzió kapuja elvéve a natív belépésből (API 26 alatt összeomlana) → a kapu elcsípte («a natív oldal „enter" művelete»)
+
+13/13 mutáció ELKAPVA
+a források BÁJTAZONOSAK (érintetlenek)
