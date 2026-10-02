@@ -1,0 +1,39 @@
+test(387): a Twitch-kartya VALODI kirajzolasa (widget-tesztek) + egy parancsos elo-adas meres
+
+Ket uj MERESI retege, mert a meglevo bizonyitek nem fedte le oket:
+
+1) test/widgets/twitch_live_card_test.dart (7 uj teszt)
+   A lathatosag dontese eddig tiszta fuggvenyben + forras-lintben volt merve -
+   az viszont nem bizonyitja, hogy a WIDGET is igy viselkedik. Az uj tesztek
+   override-olt providerekkel TENYLEG kirajzoljak a kartyat:
+   - elo adasnal: kartya + "ELO" jelveny + nezoszam + "Nezd eloben" gomb;
+   - elo adas nelkul alapbol: semmi (nem hagy ures helyet);
+   - offline behirdetes a tulajdonos k repevel/felirataival: kartya, de NINCS
+     "ELO" jelveny es a gomb "Twitch-csatorna" (nem hazudik elo adast);
+   - offline behirdetes kep NELKUL: semmi;
+   - kikapcsolt kapcsolo elo adasnal is elrejt;
+   - a sajat kep URL-je kerul a kep-widgetbe; kep nelkul a Twitch elo elonezete
+     megy a 30 masodperces frissito parametterrel.
+
+2) tmp/verify-twitch-live-e2e.mjs (egy paranccsal, csak OLVAS)
+   Az elo adas igazolasahoz tobb lepest mer egy menetben: Twitch elo allapot,
+   a szerveroldali figyelo jeloloje (app_settings/twitch_live), a szeles push
+   sora a plugin fejlecben, es az admin push-vegpont VEZETEKE.
+   A vegpont-meres SZANDEKOSAN nem kuld senkinek: hitelesites nelkul 401-et var
+   (el a vegpont es vedett), admin jelszoval pedig a figyelo payload-alakjat
+   kuldjuk SZANDEKOSAN ervenytelen cellal -> HTTP 400 invalid_push_target, azaz
+   a keres atjutott a hitelesitesen es a tartalom-ellenorzesen, es a
+   cel-feloldasnal allt meg. MERVE (2026-10-02): 401, majd 400
+   invalid_push_target - minden merheto lepes rendben.
+
+MERESI TANULSAG (a sajat meresem hibaja): az iOS IPA-ban a "twitchCardVisible"
+Dart-fuggvenynevet kerestem - az AOT-snapshot nem tartja meg a neveket, ezert
+"HIANYZIK" lett. A hasznalhato needle a STRING LITERAL (pl. showWhenOffline),
+nem az azonosito.
+
+MERT SAJAT HIBA (javítva, ugyanebben a korben): a commit-uzenetet eloszor
+PowerShell Set-Content-tel irtam, ami BOM-ot tett a fajl ele, ezert a commit
+subject BOM-mal kezdodott. A projekt szabalya pont ezert mondja, hogy fajlt a
+write/edit eszkoz irjon. Javitas: tiszta uzenet + git commit --amend.
+
+Kapuk: flutter test 1431/1431, analyze tiszta, i18n strict zold.
