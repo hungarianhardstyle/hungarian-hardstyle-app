@@ -4983,6 +4983,60 @@ async function removeUserReactions(uid) {
   }
 }
 
+/**
+ * A **nyereményjátékból való törlés** (2026-10-02).
+ *
+ * A tulajdonos kérése: *„ha valaki törli a regisztrációját az appban, kerüljön ki
+ * a neve a nyereményjátékból is, ne nyerhessen jegyet”*.
+ *
+ * A játék a **WordPressen** él: a játékos bejegyzése a játék posztján egy
+ * **sózott hash** alatt van (`_huhs_prize_entry_<sha256(prizeId|uid|salt)>`), a só
+ * pedig csak ott — ezért a törlést a plugin végzi (`action: prize_forget`), innen
+ * csak a kérés megy ki. A hiba **nem** állítja meg a fiók törlését (az eredmény a
+ * törlési rekordba kerül, hogy látszódjon).
+ */
+async function forgetPrizePlayer(uid, deps = {}) {
+  const cleanUid = String(uid || '').trim();
+  if (!cleanUid) return { skipped: 'no-uid' };
+  const credentials =
+    deps.credentials ||
+    `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  try {
+    const response = await fetch(`${WORDPRESS_BASE_URL.replace('/huhs/v1', '')}/huhs/v1/admin`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ action: 'prize_forget', uid: cleanUid }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      logWarning('prize_forget_failed', `HTTP ${response.status} — ${body?.message || ''}`);
+      return { failed: true, status: response.status };
+    }
+    const summary = {
+      forgotten: Number(body?.forgotten) || 0,
+      winnersCleared: Number(body?.winnersCleared) || 0,
+    };
+    console.info(
+      JSON.stringify({
+        event: 'prize_forget',
+        uid: crypto.createHash('sha256').update(cleanUid).digest('hex').slice(0, 12),
+        ...summary,
+      }),
+    );
+    return summary;
+  } catch (error) {
+    logWarning('prize_forget_failed', error?.message || String(error));
+    return { failed: true };
+  }
+}
+
+exports.__forgetPrizePlayerForTests = forgetPrizePlayer;
+exports.__dropDeletedPrizePlayersForTests = dropDeletedPrizePlayers;
+
 async function deleteUserReferences(uid, profileData = {}) {
   const [
     relatedUserDocs,
@@ -5315,6 +5369,11 @@ exports.deleteCommunityUser = functions
     await db.collection('deleted_user_ids').doc(uid).set({
       deletedAt: FieldValue.serverTimestamp(),
     });
+    // A NYEREMÉNYJÁTÉKBÓL is kikerül (a tulajdonos kérése) — a WordPress végpontja
+    // intézi a sózott hash miatt. A hiba nem állítja meg a törlést, de a rekordban
+    // látszik (`prizeForget`).
+    const prizeForget = await forgetPrizePlayer(uid);
+    await deletionRef.set({ prizeForget }, { merge: true });
     let cleanup;
     try {
       cleanup = await deleteUserReferences(uid, profileData);
@@ -5597,6 +5656,9 @@ exports.cleanupIncompleteAccounts = onSchedule(
           if (error?.code !== 'auth/user-not-found') throw error;
         }
         await db.collection('deleted_user_ids').doc(authUser.uid).set({ deletedAt: FieldValue.serverTimestamp() });
+        // A nyereményjátékból is kikerül (a tulajdonos kérése) — ugyanaz az út,
+        // mint a felhasználó által indított törlésnél.
+        await forgetPrizePlayer(authUser.uid);
         await deleteUserReferences(authUser.uid, profile);
       }
       pageToken = page.pageToken;
@@ -6512,6 +6574,44 @@ function prizeWinnerEmailTemplate({ name, question, prizeType, prizeDescription 
  * A nyertes e-mail-cime a Firebase Auth-bol jon (`auth.getUser`), nem a
  * WordPressbol — a WordPress szandekosan nem tarol e-mail-cimet.
  */
+/**
+ * A **törölt fiókok** kihagyása a sorsolásból (2026-10-02).
+ *
+ * A tulajdonos kérése: *„ha valaki törli a regisztrációját az appban, kerüljön ki
+ * a nyereményjátékból is, ne nyerhessen jegyet”*. A játékosok egy **sózott hash**
+ * alatt vannak a WordPressen, ezért a törlést a plugin végzi — ez a szűrő viszont
+ * **azonnal** véd (a plugin feltöltése előtt is): a Firestore
+ * `deleted_user_ids` gyűjteményében lévő uid-okat kihagyjuk a kalapból.
+ *
+ * @return {{players: object[], skipped: string[]}} a szűrt jelöltek és a kihagyott uid-ok
+ */
+async function dropDeletedPrizePlayers(players, firestore = db) {
+  const list = Array.isArray(players) ? players : [];
+  if (!list.length) return { players: [], skipped: [] };
+  const deleted = new Set();
+  try {
+    const snapshot = await firestore.collection('deleted_user_ids').select().get();
+    for (const doc of snapshot.docs) deleted.add(doc.id);
+  } catch (error) {
+    // Ha nem sikerül olvasni, NEM tippelünk: marad a teljes lista (a plugin-oldali
+    // törlés és a sorsolás többi kapuja továbbra is véd).
+    logWarning('prize_deleted_players_lookup_failed', error?.message || String(error));
+    return { players: list, skipped: [] };
+  }
+  if (!deleted.size) return { players: list, skipped: [] };
+  const kept = [];
+  const skipped = [];
+  for (const player of list) {
+    const uid = String(player?.uid || '').trim();
+    if (uid && deleted.has(uid)) {
+      skipped.push(uid);
+      continue;
+    }
+    kept.push(player);
+  }
+  return { players: kept, skipped };
+}
+
 async function drawPrizeWinnerForPrizes(prizes, deps = {}) {
   const firestore = deps.db || db;
   const authApi = deps.auth || auth;
@@ -6554,6 +6654,19 @@ async function drawPrizeWinnerForPrizes(prizes, deps = {}) {
         }),
       );
       continue;
+    }
+    // ⚠️ A TÖRÖLT REGISZTRÁCIÓJÚ játékosok kimaradnak a kalapból (a tulajdonos
+    // kérése) — a szűrő a Firestore `deleted_user_ids`-ból dolgozik.
+    const filtered = await dropDeletedPrizePlayers(participants.players, firestore);
+    if (filtered.skipped.length) {
+      console.info(
+        JSON.stringify({
+          event: 'prize_draw_deleted_players_skipped',
+          prizeId,
+          skipped: filtered.skipped.length,
+        }),
+      );
+      participants = { ...participants, players: filtered.players };
     }
     if (!participants.players.length) {
       // Lezart jatek helyes valasz NELKUL: nincs kit sorsolni. Ez nem hiba, de

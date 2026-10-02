@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 396,
+    changes: [
+      'ÚJ: ha törlöd a regisztrációdat, a neved a nyereményjátékból is kikerül — így nem nyerhetsz jegyet.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 395,
     changes: [
       'Javítva: a Twitch-chat üzenetküldése — a szolgáltatás rossz adatbázisba írt, ezért a küldés mindig hibára futott.',

@@ -1,0 +1,4 @@
+- ÚJ: Twitch-adás az appban (külön stream-chattal, emotikonokkal); az élő értesítés az app Twitch-oldalát nyitja.
+- Javítva: a Twitch-chat üzenetküldése, fekvő/tablet nézete; a rádiósáv lekerül az oldalról.
+- ÚJ: a rádió „most szól” a zárképernyőn; a főoldali Twitch-kártya azonnal betölt.
+- ÚJ: ha törlöd a regisztrációdat, a neved a nyereményjátékból is kikerül (nem nyerhetsz jegyet).

@@ -4413,7 +4413,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
                                                             'Profil törlése',
                                                           ),
                                                           content: const AppText(
-                                                            'A profilod, a Chat-üzeneteid és a bejelentkezésed is törlődik. Folytatod?',
+                                                            'A profilod, a Chat-üzeneteid és a bejelentkezésed is törlődik. A nyereményjátékból is kikerülsz, így nem nyerhetsz jegyet. Folytatod?',
                                                           ),
                                                           actions: [
                                                             TextButton(

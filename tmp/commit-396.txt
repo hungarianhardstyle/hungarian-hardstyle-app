@@ -1,0 +1,45 @@
+feat(396): a torolt regisztracioju jatekosok kikerulnek a nyeremenyjatekbol
+
+A TULAJDONOS KERESE (2026-10-02): "ha valaki torli a regisztraciojat az appban,
+keruljon ki a neve a nyeremenyjatekbol is, ne nyerhessen jegyet", majd: "most is
+vannak olyanok a nyeremenyjatekban akik toroltek a reget, vessd ossze".
+
+A MERT OSSZEVETES (node tmp/compare-prize-deleted.mjs, eles): a #12852 "Mi
+Noisecontrollers igazi neve?" jateknak 18 jatekosa van, ebbol 2 TOROLT
+regisztracioju (T800, Qrta); a Firestore-ban osszesen 1101 torolt fiok van.
+A mérés a WordPress /prize/participants vegpontjat (uid-dal egyutt) veti ossze a
+Firestore deleted_user_ids gyujtemennyel.
+
+A JAVITAS HAROM RETEGE:
+1) a sorsolo fuggveny (drawPrizeWinner) a deleted_user_ids alapjan KIHAGYJA a
+   torolteket a kalapbol (dropDeletedPrizePlayers) — ez azonnal ved, plugin
+   feltoltes nelkul is; ha a lista nem olvashato, NEM tippel (marad a teljes
+   lista, es a naplo mutatja a hibat). ELESRE TELEPITVE.
+2) fioktorleskor a WordPress megkapja a prize_forget kerest (forgetPrizePlayer →
+   action: prize_forget), es a jatekos MINDEN jatekbol kikerul; ha ő volt a
+   nyertes, a nyertes-jeloles is torlodik. A hiba nem allitja meg a torlest, de a
+   torlesi rekordban latszik (prizeForget). A cleanupIncompleteAccounts ut is
+   ezt hivja.
+3) a plugin 2.14.18: huhs_prize_forget_player() (a sozott hash miatt csak ott
+   lehet feloldani) + a prize_forget muvelet az admin vegponton; uj 10. harness
+   kor: PRIZE-FORGET OK.
+
+KAPUK (mind merve): functions — tiszta 404/404, emulatoros: prize-draw 31/31
+(uj: a torolt jatekos nem nyerhet, mindenki torolt -> nincs sorsolas, a szuro a
+Firestore-bol dolgozik, olvashatatlan lista -> nem tippel, a prize_forget keres
+alakja es hibakezelese), osszesen MINDEN TESZT RENDBEN; plugin-harness a 2.14.18
+ZIP-en: 49 fajl, 117/117, 117/117, 72/72, 56/56, 36/36, 24/24, push 12/12,
+TWITCH-CARD OK, PRIZE-FORGET OK; flutter test 1496/1496; flutter analyze lib test
+tiszta; i18n --strict zold (chunk-49); check-play-notes zold (1. blokk 450/480,
+eles 387/480, masolatok 5/5 bajtazonos).
+
+CSOMAGOK: build/HUHS-v1.0.0+396-release.aab — 83 481 425 bajt, SHA-256
+127F9C4540FC41A34201B24C1498C40E5DB333559260A2A7F047C7D75C4BFDF6; verify-aab 396
+-> MINDEN ELLENORZES RENDBEN. build/huhs-mobile-api-2.14.18.zip — 204 176 bajt,
+SHA-256 508A3459B071BDD88521CF4F328A571B03A64EC1FABB5E06124CC5B4438FA423.
+
+A TULAJDONOS LEPESE: (1) a 396 feltoltese a Play Console-ra es kiadasa a ZART
+TESZTEN (tmp/play-396-zart.txt); az ELES savra a 2b. blokk
+(tmp/play-396-eles.txt); (2) a build/huhs-mobile-api-2.14.18.zip feltoltese a
+WordPress-be — utana a meglévő ket stale jatekos egy paranccsal kivehető:
+node tmp/compare-prize-deleted.mjs --remove; (3) a telefonra a 396 kerul.

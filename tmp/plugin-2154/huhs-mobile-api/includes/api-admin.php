@@ -687,8 +687,20 @@ function huhs_admin_api_write(WP_REST_Request $request)
         if (is_wp_error($target)) return $target;
         return huhs_push_queue_custom($title, $body, $target);
     }
-    if ($action === 'empty_trash') {
-        $deleted = 0;
+    // NYEREMÉNYJÁTÉK — a törölt fiók kivétele (2.14.18).
+    //
+    // A tulajdonos kérése: *„ha valaki törli a regisztrációját az appban,
+    // kerüljön ki a neve a nyereményjátékból is, ne nyerhessen jegyet”*. A
+    // törlést a Cloud Function kéri (a fiók törlésekor), a játékos azonosítója
+    // pedig a Firebase UID — a sózott hash miatt csak itt lehet feloldani.
+    if ($action === 'prize_forget') {
+        $uid = sanitize_text_field((string) ($params['uid'] ?? ''));
+        if ($uid === '') {
+            return new WP_Error('missing_uid', 'Hiányzó felhasználó-azonosító.', array('status' => 400));
+        }
+        return huhs_prize_forget_player($uid);
+    }
+    if ($action === 'empty_trash') {        $deleted = 0;
         foreach (huhs_trash_post_types() as $post_type) {
             $ids = get_posts(array(
                 'post_type' => $post_type,

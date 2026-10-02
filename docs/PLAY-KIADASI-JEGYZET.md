@@ -1,6 +1,6 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> 🟡 **A 395 A FELTÖLTENDŐ** (versionCode **395**, `1.0.0`) — a 389-hez képest:
+> 🟡 **A 396 A FELTÖLTENDŐ** (versionCode **396**, `1.0.0`) — a 389-hez képest:
 > **(1) a Twitch-chat üzenetküldése működik** (a szolgáltatás rossz adatbázisba írt — *„üzenet azért nem
 > küldhető a twitch chates részre mert a stream nem live?”*, nem a stream volt az ok);
 > **(2) a főoldali Twitch-kártya azonnal megjelenik** és a képet gyorsítótárból, kicsinyítve tölti
@@ -16,9 +16,9 @@
 > 2026-10-02): az **alpha (zárt teszt) sávon a 389 van kiadva 100%-ban kigördülve**, az **ÉLES
 > (production) sáv a 384-en** áll (szintén 100%), a **nyílt teszt (beta) a 377-en**.
 >
-> **Melyik blokk hova való (mérve, 2026-10-02):** a **zárt tesztre** (389 → 395) az **1. blokk** (és a
-> `tmp/play-395-zart.txt`); az **ÉLES** sávra (384 → 395) a **2b. blokk** (`tmp/play-395-eles.txt`);
-> a **bétára** (377) a **355–395** összesítő (1b-3.) való.
+> **Melyik blokk hova való (mérve, 2026-10-02):** a **zárt tesztre** (389 → 396) az **1. blokk** (és a
+> `tmp/play-396-zart.txt`); az **ÉLES** sávra (384 → 396) a **2b. blokk** (`tmp/play-396-eles.txt`);
+> a **bétára** (377) a **355–396** összesítő (1b-3.) való.
 > ⚠️ **A 385–394-et NE tárd fel újra** — a 395 mindegyiket tartalmazza.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
@@ -27,11 +27,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 395
+currentBuild: 396
 currentVersion: 1.0.0
 lastPublishedBuild: 384
-aab: build/HUHS-v1.0.0+395-release.aab
-sha256: E882B97C37BCA3D525D9A0AD671D1D570308F84602CE057B9A0346A55B9CEF7A
+aab: build/HUHS-v1.0.0+396-release.aab
+sha256: 127F9C4540FC41A34201B24C1498C40E5DB333559260A2A7F047C7D75C4BFDF6
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -142,13 +142,13 @@ A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a hí
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+395-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+396-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **395** (a merge-elt release manifestből visszaolvasva) |
+| Verziókód | **396** (a merge-elt release manifestből visszaolvasva) |
 | Méret | 83 480 971 bájt (79,6 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
 | SHA-256 | `E882B97C37BCA3D525D9A0AD671D1D570308F84602CE057B9A0346A55B9CEF7A` |
 
-> **⚠️ A 395 a feltöltendő csomag** (versionCode **395**, `1.0.0`), és **2026-10-02-án épült**: **(1)** a
+> **⚠️ A 396 a feltöltendő csomag** (versionCode **396**, `1.0.0`), és **2026-10-02-án épült**: **(1)** a
 > **Twitch-chat üzenetküldése** végre működik — a szolgáltatás a **rossz adatbázisba** írt (a
 > `(default)`-ba a néves helyett), ezért a küldés `permission-denied`-del mindig elhalt (a tulajdonos
 > kérdése: *„üzenet azért nem küldhető a twitch chates részre mert a stream nem live?”* — **nem** a stream
@@ -157,9 +157,9 @@ A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a hí
 > valamint a **394** (nagyobb chat, rádiósáv le, gépeléskor videó össze, emotikonok), a **393** (élő
 > értesítés → app Twitch-oldal, PiP csak a videó), a **392** (chat fekvő módban és tableten) és a **389
 > minden** újdonsága.
-> A **389 a zárt teszten van kiadva** (100%), az **éles sávon a 384** — a 395-nél kisebb kódú csomagot a
-> Play **nem** fogadná el. **A 390–394-et nem kell feltölteni** (a 395 mindegyiket tartalmazza).
-> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 395 azokat is tartalmazza) — a 395 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
+> A **389 a zárt teszten van kiadva** (100%), az **éles sávon a 384** — a 396-nál kisebb kódú csomagot a
+> Play **nem** fogadná el. **A 390–395-öt nem kell feltölteni** (a 396 mindegyiket tartalmazza).
+> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 396 azokat is tartalmazza) — a 396 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
 
 **Miért a 360-at kell feltenni (és miért nem a 358-at):** a 360 **magában foglalja a 358-at, a 357-et, a 356-ot, a 355-öt és a 354-et is**, ezért egy csomagot kell feltenni:
 
@@ -248,10 +248,10 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 > tárd fel újra. A **kész, másolható** változat: `tmp/play-390.txt` (bájtazonos ezzel a blokkal).
 
 ```play-notes
-- Javítva: a Twitch-chat üzenetküldése (eddig mindig hibára futott) — a rádiósáv is lekerül az oldalról.
-- Javítva: a főoldali Twitch-kártya azonnal megjelenik, a képet gyorsítótárból tölti.
-- Javítva: az élő értesítésre koppintva az app Twitch-oldala nyílik meg; kis képernyőn csak a videó látszik.
-- Javítva: a Twitch-chat fekvő módban és tableten is látszik, emotikonokkal.
+- ÚJ: ha törlöd a regisztrációdat, a neved a nyereményjátékból is kikerül (nem nyerhetsz jegyet).
+- Javítva: a Twitch-chat üzenetküldése, fekvő/tablet nézete — a rádiósáv is lekerül az oldalról.
+- Javítva: a főoldali Twitch-kártya azonnal betölt; az élő értesítés az app Twitch-oldalát nyitja.
+- Javítva: kis képernyőn (PiP) csak a videó látszik; a chatben emotikonok is vannak.
 - ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.
 ```
 
@@ -270,10 +270,10 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–395** összesítő (a 384 után)
+## 1b-2. Play Console — a **361–396** összesítő (a 384 után)
 
 **Ezt használd, ha a felhasználó a 361–380 közötti valamelyik buildről jön** (régebbi nyilvános
-build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–395** között készültek.
+build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–396** között készültek.
 A karakter-számot a `tools/check-play-notes.mjs` méri.
 ⚠️ **Az ÉLES sávon a 384 van** (mérve, 2026-10-02) — arra a sávra a **2b. blokk** való (egyetlen,
 összevont szöveg), mert az 1. blokk + ez az összesítő együtt nem férne bele az 500-as limitbe.
@@ -286,9 +286,9 @@ A karakter-számot a `tools/check-play-notes.mjs` méri.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–395** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–396** összesítő)
 
-**Ezt használd, ha a 395-öt a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 396-ot a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-10-02) szerint ott a **377** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
@@ -321,10 +321,10 @@ kigördülve, ezért a tesztelők a 389 öt soros jegyzetét **már látták**. 
 való, amit a tulajdonos jelzése javított — így a kártyán pontosan az látszik, ami **változott**:
 
 ```play-notes
-- Javítva: a Twitch-chat üzenetküldése (eddig mindig hibára futott) — a rádiósáv is lekerül az oldalról.
-- Javítva: a főoldali Twitch-kártya azonnal megjelenik, a képet gyorsítótárból tölti.
-- Javítva: az élő értesítésre koppintva az app Twitch-oldala nyílik meg; kis képernyőn csak a videó látszik.
-- Javítva: a Twitch-chat fekvő módban és tableten is látszik, emotikonokkal.
+- ÚJ: ha törlöd a regisztrációdat, a neved a nyereményjátékból is kikerül (nem nyerhetsz jegyet).
+- Javítva: a Twitch-chat üzenetküldése, fekvő/tablet nézete — a rádiósáv is lekerül az oldalról.
+- Javítva: a főoldali Twitch-kártya azonnal betölt; az élő értesítés az app Twitch-oldalát nyitja.
+- Javítva: kis képernyőn (PiP) csak a videó látszik; a chatben emotikonok is vannak.
 - ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.
 ```
 
@@ -352,15 +352,21 @@ A zárt teszthez **nem** ez való, hanem az **1. blokk** (`tmp/play-393-zart.txt
 
 ```play-notes
 - ÚJ: Twitch-adás az appban (külön stream-chattal, emotikonokkal); az élő értesítés az app Twitch-oldalát nyitja.
-- Javítva: a Twitch-chat üzenetküldése (eddig mindig hibára futott), a rádiósáv lekerül az oldalról, gépeléskor nagyobb a chat.
-- ÚJ: a rádió „most szól” a zárképernyőn a logóval; a főoldali Twitch-kártya azonnal betölt.
-- Javítva: a Twitch-chat fekvő módban és tableten is látszik; kis képernyőn csak a videó látszik.
+- Javítva: a Twitch-chat üzenetküldése, fekvő/tablet nézete; a rádiósáv lekerül az oldalról.
+- ÚJ: a rádió „most szól” a zárképernyőn; a főoldali Twitch-kártya azonnal betölt.
+- ÚJ: ha törlöd a regisztrációdat, a neved a nyereményjátékból is kikerül (nem nyerhetsz jegyet).
 ```
 
 ## 3. App (Több → Névjegy) — tételes, build szerint
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 396 — a törölt regisztrációjú játékosok kikerülnek a nyereményjátékból
+- **A tulajdonos kérése (2026-10-02):** *„ha valaki törli a regisztrációját az appban, kerüljön ki a neve a nyereményjátékból is, ne nyerhessen jegyet”*, majd: *„most is vannak olyanok a nyereményjátékban akik törölték a reget, vessd össze”*.
+- **A MÉRT ÖSSZEVETÉS** (`node tmp/compare-prize-deleted.mjs`, éles): a **#12852** „Mi Noisecontrollers igazi neve?” játéknak **18 játékosa** van, ebből **2 törölt regisztrációjú** (`T800`, `Qrta`); a Firestore-ban összesen **1101** törölt fiók van.
+- **A javítás három rétege:** (1) **a sorsoló függvény** (`drawPrizeWinner`) a `deleted_user_ids` alapján **kihagyja** a törölteket a kalapból (ez **azonnal** véd, plugin-feltöltés nélkül is) — **élesre telepítve**; (2) **fióktörléskor** a WordPress megkapja a `prize_forget` kérést (plugin **2.14.18**), és a játékos **minden játékból** kikerül, a nyertes-jelölés is törlődik; (3) a törlés megerősítő szövege kimondja, hogy a nyereményjátékból is kikerülsz.
+- **A kapu mérése:** functions **31/31** a `prize-draw` suite-ban (a törölt játékos nem nyerhet, ha mindenki törölt nincs sorsolás, a szűrő a Firestore-ból dolgozik, olvashatatlan lista esetén nem tippel, a `prize_forget` kérés alakja és hibakezelése); a plugin-harness új **10. köre: `PRIZE-FORGET OK`** (csak a törölt játékos sora tűnik el minden játékból, a nyertes jelölése is, a többi játékos érintetlen, idempotens).
 
 ### 395 — a Twitch-chat küldése (rossz adatbázis) + a főoldali kártya azonnal betölt
 - **A tulajdonos kérdése (2026-10-02):** *„üzenet azért nem küldhető a twitch chates részre mert a stream nem live?”* — **nem** a stream állapota volt az ok. **A mért gyökér:** a stream-chat szolgáltatás a `FirebaseFirestore.instance`-t használta, ami a **`(default)`** adatbázisra mutat, ahol **nincs** `twitch_chat` szabály; az éles mérés ezt meg is mutatta: ugyanaz az írás a **néves** adatbázisban **200**, a `(default)`-ban **403** (`tmp/probe-twitch-chat-write.mjs`). Az app minden más szolgáltatása a néves adatbázist használja — mostantól ez egy helyen dől el, és a teszt az egész `lib/`-re megköveteli.

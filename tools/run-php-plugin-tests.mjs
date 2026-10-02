@@ -40,7 +40,7 @@ export const CONTAINER_IMAGE = 'php:8.2-cli';
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** A kimenetből kiolvasott, kötelező jelzők. */
-export const REQUIRED_MARKERS = ['PHP LINT OK', 'VISELKEDES OK', 'KONSTANS-AG OK', 'PUSH-DEDUPE OK', 'PUSH-NYELV OK', 'PUSH-OPEN OK', 'PUSH-NEWS OK', 'PUSH-SPEED OK'];
+export const REQUIRED_MARKERS = ['PHP LINT OK', 'VISELKEDES OK', 'KONSTANS-AG OK', 'PUSH-DEDUPE OK', 'PUSH-NYELV OK', 'PUSH-OPEN OK', 'PUSH-NEWS OK', 'PUSH-SPEED OK', 'TWITCH-CARD OK', 'PRIZE-FORGET OK'];
 
 /** A kimenet összegzése (tesztelhető, hálózat nélkül). */
 export function summarize(output) {
@@ -88,6 +88,8 @@ export function selfTest() {
     'PUSH-OPEN OK',
     'PUSH-NEWS OK',
     'PUSH-SPEED OK',
+    'TWITCH-CARD OK',
+    'PRIZE-FORGET OK',
   ].join('\n');
   const goodSummary = summarize(good);
   check('a jó kimenet nem jelez hibát', goodSummary.failed === false);
@@ -111,6 +113,14 @@ export function selfTest() {
   check(
     'a hiányzó kifutás-sebesség jelzőt is észreveszi',
     summarize(good.replace('PUSH-SPEED OK', '')).missingMarkers.includes('PUSH-SPEED OK'),
+  );
+  check(
+    'a hiányzó Twitch-kártya jelzőt is észreveszi',
+    summarize(good.replace('TWITCH-CARD OK', '')).missingMarkers.includes('TWITCH-CARD OK'),
+  );
+  check(
+    'a hiányzó nyereményjáték-törlés jelzőt is észreveszi',
+    summarize(good.replace('PRIZE-FORGET OK', '')).missingMarkers.includes('PRIZE-FORGET OK'),
   );
 
   const bad = good.replace('VISELKEDES OK', 'VISELKEDES HIBA');

@@ -2692,7 +2692,7 @@
     ]
   },
   {
-    "value": "A profilod, a Chat-üzeneteid és a bejelentkezésed is törlődik. Folytatod?",
+    "value": "A profilod, a Chat-üzeneteid és a bejelentkezésed is törlődik. A nyereményjátékból is kikerülsz, így nem nyerhetsz jegyet. Folytatod?",
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"

@@ -1,20 +1,20 @@
 #!/bin/sh
-# A KIADOTT plugin-csomag PHP-jának ellenőrzése — a konténeren belül fut.
+# A KIADOTT plugin-csomag PHP-jĂˇnak ellenĹ‘rzĂ©se â€” a kontĂ©neren belĂĽl fut.
 #
-#   * 1) szintaxis: `php -l` minden PHP fájlra;
-#   * 2) viselkedés: `tools/php/plugin-translation-test.php` WordPress-stubokkal,
-#        először kulcs nélkül/örökölt kulccsal, majd a `HUHS_OPENAI_API_KEY`
-#        konstans ágban (külön futás, mert a konstans nem definiálható kétszer).
+#   * 1) szintaxis: `php -l` minden PHP fĂˇjlra;
+#   * 2) viselkedĂ©s: `tools/php/plugin-translation-test.php` WordPress-stubokkal,
+#        elĹ‘szĂ¶r kulcs nĂ©lkĂĽl/Ă¶rĂ¶kĂ¶lt kulccsal, majd a `HUHS_OPENAI_API_KEY`
+#        konstans Ăˇgban (kĂĽlĂ¶n futĂˇs, mert a konstans nem definiĂˇlhatĂł kĂ©tszer).
 #
-# A plugin a **kibontott ZIP-ből** jön (`/work/tmp/php-plugin/huhs-mobile-api`),
-# vagyis a mérés a szállítandó csomagot nézi, nem a forráskönyvtárat.
+# A plugin a **kibontott ZIP-bĹ‘l** jĂ¶n (`/work/tmp/php-plugin/huhs-mobile-api`),
+# vagyis a mĂ©rĂ©s a szĂˇllĂ­tandĂł csomagot nĂ©zi, nem a forrĂˇskĂ¶nyvtĂˇrat.
 set -u
 
 PLUGIN="/work/tmp/php-plugin/huhs-mobile-api"
 TEST="/work/tools/php/plugin-translation-test.php"
 fail=0
 
-echo "=== 1) PHP szintaxis (php -l, minden fájl)"
+echo "=== 1) PHP szintaxis (php -l, minden fĂˇjl)"
 count=0
 for f in $(find "$PLUGIN" -name '*.php' | sort); do
   count=$((count + 1))
@@ -28,7 +28,7 @@ echo "lintelt PHP fajl: $count"
 [ "$fail" -eq 0 ] && echo "PHP LINT OK"
 
 echo ""
-echo "=== 2) Viselkedés-teszt (WordPress-stubokkal, valódi PHP)"
+echo "=== 2) ViselkedĂ©s-teszt (WordPress-stubokkal, valĂłdi PHP)"
 if php "$TEST" "$PLUGIN"; then
   echo "VISELKEDES OK"
 else
@@ -37,7 +37,7 @@ else
 fi
 
 echo ""
-echo "=== 3) Viselkedés-teszt az ÖRÖKÖLT KONSTANS kulccsal (külön futás)"
+echo "=== 3) ViselkedĂ©s-teszt az Ă–RĂ–KĂ–LT KONSTANS kulccsal (kĂĽlĂ¶n futĂˇs)"
 if php "$TEST" "$PLUGIN" legacy-constant; then
   echo "KONSTANS-AG OK"
 else
@@ -45,10 +45,10 @@ else
   fail=1
 fi
 
-# ⚠️ EZ A MEGLÉVŐ, PHP-ban írt ellenőrző eszköz (a push-lánc újrapróbálkozása) —
-# eddig azért nem futott, mert nem volt PHP ezen a gépen. Most a konténerben fut.
+# âš ď¸Ź EZ A MEGLĂ‰VĹ, PHP-ban Ă­rt ellenĹ‘rzĹ‘ eszkĂ¶z (a push-lĂˇnc ĂşjraprĂłbĂˇlkozĂˇsa) â€”
+# eddig azĂ©rt nem futott, mert nem volt PHP ezen a gĂ©pen. Most a kontĂ©nerben fut.
 echo ""
-echo "=== 4) A push-lánc újrapróbálkozása (meglévő PHP-ellenőrző)"
+echo "=== 4) A push-lĂˇnc ĂşjraprĂłbĂˇlkozĂˇsa (meglĂ©vĹ‘ PHP-ellenĹ‘rzĹ‘)"
 if php /work/tools/verify-push-dedupe.php "$PLUGIN" | tail -4; then
   echo "PUSH-DEDUPE OK"
 else
@@ -57,7 +57,7 @@ else
 fi
 
 echo ""
-echo "=== 5) Nyelvenkénti emlékeztető (2.14.6)"
+echo "=== 5) NyelvenkĂ©nti emlĂ©keztetĹ‘ (2.14.6)"
 if php /work/tools/verify-push-language.php "$PLUGIN"; then
   echo "PUSH-NYELV OK"
 else
@@ -65,11 +65,11 @@ else
   fail=1
 fi
 
-# ⚠️ A 2.14.11 újdonsága: a szavazás/játék megnyílása. A mérés a TELJES küldési
-# láncot futtatja stubolt FCM-mel (nyelvenkénti szöveg, frissességi kapu,
-# idempotencia, ütemezés) — nem csak azt nézi, hogy „szerepel-e a szövegben".
+# âš ď¸Ź A 2.14.11 ĂşjdonsĂˇga: a szavazĂˇs/jĂˇtĂ©k megnyĂ­lĂˇsa. A mĂ©rĂ©s a TELJES kĂĽldĂ©si
+# lĂˇncot futtatja stubolt FCM-mel (nyelvenkĂ©nti szĂ¶veg, frissessĂ©gi kapu,
+# idempotencia, ĂĽtemezĂ©s) â€” nem csak azt nĂ©zi, hogy â€žszerepel-e a szĂ¶vegben".
 echo ""
-echo "=== 6) Szavazás/játék megnyílása (2.14.11)"
+echo "=== 6) SzavazĂˇs/jĂˇtĂ©k megnyĂ­lĂˇsa (2.14.11)"
 if php /work/tools/verify-push-open-notice.php "$PLUGIN"; then
   echo "PUSH-OPEN OK"
 else
@@ -77,12 +77,12 @@ else
   fail=1
 fi
 
-# ⚠️ A 2.14.12 újdonsága: a HÍR-PUSH ŐRE. Éles mérés szerint (2026-09-30) a nap
-# két cikke után egyetlen push sem indult, mert a közzététel-hook nem futott le
-# (a küldési lánc viszont jó: kézzel 1024 eszköz, 0 hiba). A mérés a teljes
-# láncot futtatja stubolt FCM-mel, és a frissességi kaput is.
+# âš ď¸Ź A 2.14.12 ĂşjdonsĂˇga: a HĂŤR-PUSH ĹRE. Ă‰les mĂ©rĂ©s szerint (2026-09-30) a nap
+# kĂ©t cikke utĂˇn egyetlen push sem indult, mert a kĂ¶zzĂ©tĂ©tel-hook nem futott le
+# (a kĂĽldĂ©si lĂˇnc viszont jĂł: kĂ©zzel 1024 eszkĂ¶z, 0 hiba). A mĂ©rĂ©s a teljes
+# lĂˇncot futtatja stubolt FCM-mel, Ă©s a frissessĂ©gi kaput is.
 echo ""
-echo "=== 7) A hír-push őre (2.14.12)"
+echo "=== 7) A hĂ­r-push Ĺ‘re (2.14.12)"
 if php /work/tools/verify-push-news-watchdog.php "$PLUGIN"; then
   echo "PUSH-NEWS OK"
 else
@@ -90,11 +90,11 @@ else
   fail=1
 fi
 
-# ⚠️ A 2.14.13 újdonsága: a kifutás sebessége (a tulajdonos jelzése: „csak lassan
-# jött"). A mérés a kereteket ÉS a lánc pontosságát nézi: a folytatás 1 másodperc,
-# a körök nem ismételnek, a feladat a végén megszűnik.
+# âš ď¸Ź A 2.14.13 ĂşjdonsĂˇga: a kifutĂˇs sebessĂ©ge (a tulajdonos jelzĂ©se: â€žcsak lassan
+# jĂ¶tt"). A mĂ©rĂ©s a kereteket Ă‰S a lĂˇnc pontossĂˇgĂˇt nĂ©zi: a folytatĂˇs 1 mĂˇsodperc,
+# a kĂ¶rĂ¶k nem ismĂ©telnek, a feladat a vĂ©gĂ©n megszĹ±nik.
 echo ""
-echo "=== 8) A push-kifutás sebessége (2.14.13)"
+echo "=== 8) A push-kifutĂˇs sebessĂ©ge (2.14.13)"
 if php /work/tools/verify-push-speed.php "$PLUGIN"; then
   echo "PUSH-SPEED OK"
 else
@@ -102,16 +102,31 @@ else
   fail=1
 fi
 
-# ⚠️ A 2.14.15 újdonsága: a TWITCH-BEHARANGOZÓ a plugin adminjában (a tulajdonos
-# jelzése: „nem látok sehol olyan opciót, ahol meg tudok adni twitch stream
-# beharangozót"). A mérés a valódi PHP-t futtatja: a végpont, az admin-oldal, a
-# tisztítás szabályai és az alapérték (nem kapcsolja ki a működő élő kártyát).
+# âš ď¸Ź A 2.14.15 ĂşjdonsĂˇga: a TWITCH-BEHARANGOZĂ“ a plugin adminjĂˇban (a tulajdonos
+# jelzĂ©se: â€žnem lĂˇtok sehol olyan opciĂłt, ahol meg tudok adni twitch stream
+# beharangozĂłt"). A mĂ©rĂ©s a valĂłdi PHP-t futtatja: a vĂ©gpont, az admin-oldal, a
+# tisztĂ­tĂˇs szabĂˇlyai Ă©s az alapĂ©rtĂ©k (nem kapcsolja ki a mĹ±kĂ¶dĹ‘ Ă©lĹ‘ kĂˇrtyĂˇt).
 echo ""
-echo "=== 9) Twitch beharangozó a plugin adminjában (2.14.15)"
+echo "=== 9) Twitch beharangozĂł a plugin adminjĂˇban (2.14.15)"
 if php /work/tools/verify-twitch-card.php "$PLUGIN"; then
   echo "TWITCH-CARD OK"
 else
   echo "TWITCH-CARD HIBA"
+  fail=1
+fi
+
+
+# ⚠️ A 2.14.18 újdonsága: a NYEREMÉNYJÁTÉKBÓL való törlés (a tulajdonos kérése:
+# „ha valaki törli a regisztrációját az appban, kerüljön ki a neve a
+# nyereményjátékból is, ne nyerhessen jegyet”). A mérés a valódi PHP-t futtatja:
+# csak a törölt játékos sora tűnik el (minden játékból), a nyertes jelölése is
+# törlődik, a többi játékos érintetlen, és a művelet idempotens.
+echo ""
+echo "=== 10) A nyereményjátékból való törlés (2.14.18)"
+if php /work/tools/verify-prize-forget.php "$PLUGIN"; then
+  echo "PRIZE-FORGET OK"
+else
+  echo "PRIZE-FORGET HIBA"
   fail=1
 fi
 

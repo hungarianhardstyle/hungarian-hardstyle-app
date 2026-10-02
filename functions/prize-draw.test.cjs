@@ -84,6 +84,9 @@ let participantsStatus = 200;
 let winnerStatus = 200;
 let participantsError = null;
 let winnerError = null;
+let adminStatus = 200;
+let adminPayload = { forgotten: 1, winnersCleared: 0 };
+let adminError = null;
 let emails = [];
 let emailFailure = null;
 let authEmails = { 'uid-alpha': 'alpha@example.com', 'uid-beta': 'beta@example.com' };
@@ -113,6 +116,15 @@ function installFetchStub() {
         ok: winnerStatus >= 200 && winnerStatus < 300,
         status: winnerStatus,
         json: async () => winnerPayload,
+      };
+    }
+    // A nyereményjátékból való TÖRLÉS (fióktörléskor) — ugyanaz az admin végpont.
+    if (record.url.includes('/huhs/v1/admin')) {
+      if (adminError) throw new Error(adminError);
+      return {
+        ok: adminStatus >= 200 && adminStatus < 300,
+        status: adminStatus,
+        json: async () => adminPayload,
       };
     }
     throw new Error(`Váratlan URL a tesztben: ${record.url}`);
@@ -471,4 +483,96 @@ test('a nyertes e-mail-cime kizarolag az Auth-bol jon', () => {
 
 test('az idempotencia a WordPress oldalon is vedett (alreadyDrawn)', () => {
   assert.ok(codeOnly.includes("result?.alreadyDrawn === true"));
+});
+
+// ---------------------------------------------------------------------------
+// A TÖRÖLT REGISZTRÁCIÓJÚ játékosok (a tulajdonos kérése, 2026-10-02):
+// *„ha valaki törli a regisztrációját az appban, kerüljön ki a neve a
+// nyereményjátékból is, ne nyerhessen jegyet”*.
+// ---------------------------------------------------------------------------
+
+test('a törölt regisztrációjú játékos NEM kerülhet a kalapba', async () => {
+  // Az első játékos törölte a fiókját — ő nem nyerhet.
+  await db.collection('deleted_user_ids').doc('uid-alpha').set({ deletedAt: FieldValue.serverTimestamp() });
+  let winnerUid = null;
+  for (let attempt = 0; attempt < 12; attempt++) {
+    await resetDatabase();
+    fetchCalls = [];
+    const drawn = await draw([PENDING], deps());
+    const winnerCall = fetchCalls.find((call) => call.url.includes('/prize/winner'));
+    if (winnerCall) winnerUid = winnerCall.body.uid;
+    if (drawn.length) break;
+  }
+  assert.equal(winnerUid, 'uid-beta', 'a törölt fiók nem nyerhetett volna');
+  await db.collection('deleted_user_ids').doc('uid-alpha').delete();
+});
+
+test('ha MINDEN játékos törölte a fiókját, nem sorsolunk (nincs nyertes)', async () => {
+  for (const uid of ['uid-alpha', 'uid-beta']) {
+    await db.collection('deleted_user_ids').doc(uid).set({ deletedAt: FieldValue.serverTimestamp() });
+  }
+  const drawn = await draw([PENDING], deps());
+  assert.equal(drawn.length, 0, 'nem lehetett volna nyertest hirdetni');
+  assert.equal(
+    fetchCalls.some((call) => call.url.includes('/prize/winner')),
+    false,
+    'a nyertes-bejegyzés nem mehetett volna ki',
+  );
+  for (const uid of ['uid-alpha', 'uid-beta']) {
+    await db.collection('deleted_user_ids').doc(uid).delete();
+  }
+});
+
+test('a törölt-játékos szűrő a Firestore-ból dolgozik (a lista és a kihagyottak)', async () => {
+  const drop = require('./index.js').__dropDeletedPrizePlayersForTests;
+  await db.collection('deleted_user_ids').doc('uid-beta').set({ deletedAt: FieldValue.serverTimestamp() });
+  const result = await drop(PLAYERS, db);
+  assert.deepEqual(result.players.map((player) => player.uid), ['uid-alpha']);
+  assert.deepEqual(result.skipped, ['uid-beta']);
+  await db.collection('deleted_user_ids').doc('uid-beta').delete();
+});
+
+test('ha a törölt-lista nem olvasható, NEM tippelünk (marad a teljes lista)', async () => {
+  const drop = require('./index.js').__dropDeletedPrizePlayersForTests;
+  const broken = {
+    collection: () => ({
+      select: () => ({ get: async () => { throw new Error('firestore-unavailable'); } }),
+    }),
+  };
+  const result = await drop(PLAYERS, broken);
+  assert.equal(result.players.length, PLAYERS.length);
+  assert.deepEqual(result.skipped, []);
+});
+
+test('a fióktörlés a WordPressre küldi a nyereményjáték-törlést (prize_forget)', async () => {
+  const forget = require('./index.js').__forgetPrizePlayerForTests;
+  const summary = await forget('uid-alpha', { credentials: 'test-user:test-pass' });
+
+  const call = fetchCalls.find((entry) => entry.url.includes('/huhs/v1/admin'));
+  assert.ok(call, 'nem ment ki a kérés a WordPressre');
+  assert.equal(call.method, 'POST');
+  assert.deepEqual(call.body, { action: 'prize_forget', uid: 'uid-alpha' });
+  assert.match(call.authorization, /^Basic /);
+  assert.deepEqual(summary, { forgotten: 1, winnersCleared: 0 });
+});
+
+test('a nyertes is törlődik, ha ő törölte a fiókját (a WordPress jelzi)', async () => {
+  const forget = require('./index.js').__forgetPrizePlayerForTests;
+  adminPayload = { forgotten: 1, winnersCleared: 1 };
+  const summary = await forget('uid-beta', { credentials: 'test-user:test-pass' });
+  assert.equal(summary.winnersCleared, 1, 'a nyertes jelölése nem törlődött');
+  adminPayload = { forgotten: 1, winnersCleared: 0 };
+});
+
+test('ha a WordPress nem válaszol, a törlés akkor is lefut (a hiba látszik)', async () => {
+  const forget = require('./index.js').__forgetPrizePlayerForTests;
+  adminStatus = 500;
+  const failed = await forget('uid-alpha', { credentials: 'test-user:test-pass' });
+  assert.deepEqual(failed, { failed: true, status: 500 });
+
+  adminStatus = 200;
+  adminError = 'network-down';
+  const offline = await forget('uid-alpha', { credentials: 'test-user:test-pass' });
+  assert.deepEqual(offline, { failed: true });
+  adminError = null;
 });

@@ -227,6 +227,66 @@ function huhs_prize_summary($prize_id)
 }
 
 /**
+ * Egy jatekos TORLESE minden nyeremenyjatekbol (2.14.18).
+ *
+ * MIERT (a tulajdonos keresе, 2026-10-02): *„ha valaki törli a regisztrációját az
+ * appban, kerüljön ki a neve a nyereményjátékból is, ne nyerhessen jegyet”*.
+ *
+ * A jatekos az app-fiokjahoz tartozik (Firebase UID), a bejegyzes pedig a jatek
+ * bejegyzesen egy **sózott hash** alatt van (`_huhs_prize_entry_<hash>`) — ezert a
+ * torles CSAK itt, a WordPress oldalan vegezhető el (a só itt él).
+ *
+ * A fuggveny **idempotens**: ha a jatekos nem is jatszott, nem hibazik, csak 0-t ad.
+ * A **nyertest is torli**, ha ő volt (a kérése: „ne nyerhessen jegyet”) — így a
+ * sorsolás újat választhat.
+ *
+ * @return array{forgotten:int,winnersCleared:int,prizes:int[]}
+ */
+function huhs_prize_forget_player($uid)
+{
+    $uid = trim((string) $uid);
+    if ($uid === '') {
+        return array('forgotten' => 0, 'winnersCleared' => 0, 'prizes' => array());
+    }
+    $prize_ids = get_posts(array(
+        'post_type' => 'huhs_prize',
+        'post_status' => array('publish', 'draft', 'pending', 'private', 'future'),
+        'posts_per_page' => -1,
+        'fields' => 'ids',
+    ));
+    $forgotten = 0;
+    $winners_cleared = 0;
+    $touched = array();
+    foreach ((array) $prize_ids as $prize_id) {
+        $prize_id = absint($prize_id);
+        if (!$prize_id) continue;
+        $hash = huhs_prize_player_hash($prize_id, $uid);
+        if ($hash !== '' && metadata_exists('post', $prize_id, '_huhs_prize_entry_' . $hash)) {
+            delete_post_meta($prize_id, '_huhs_prize_entry_' . $hash);
+            $forgotten++;
+            $touched[] = $prize_id;
+        }
+        if ((string) get_post_meta($prize_id, '_huhs_prize_winner_uid', true) === $uid) {
+            foreach (array(
+                '_huhs_prize_winner_hash',
+                '_huhs_prize_winner_name',
+                '_huhs_prize_winner_uid',
+                '_huhs_prize_winner_at',
+            ) as $winner_key) {
+                delete_post_meta($prize_id, $winner_key);
+            }
+            $winners_cleared++;
+            $touched[] = $prize_id;
+        }
+    }
+    return array(
+        'forgotten' => $forgotten,
+        'winnersCleared' => $winners_cleared,
+        'prizes' => array_values(array_unique($touched)),
+    );
+}
+
+/**
  * Egy valasz rogzitese. Visszaadja az eredmenyt.
  *
  * A helyességet ITT, a szerveren dontjuk el: a kliens csak a valasztott indexet
