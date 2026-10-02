@@ -17,6 +17,7 @@ class TwitchLayoutFrame extends StatelessWidget {
     required this.video,
     required this.info,
     required this.chat,
+    this.keyboardVisible = false,
   });
 
   /// A lejátszó (WebView) — a **méretet a váza adja**.
@@ -27,6 +28,11 @@ class TwitchLayoutFrame extends StatelessWidget {
 
   /// A stream-chat.
   final Widget chat;
+
+  /// Gépelés közben (billentyűzet nyitva) a **függőleges** elrendezésben a videó
+  /// és az adatsáv is eltűnik — így a chat olvasható része a lehető legnagyobb
+  /// (a tulajdonos jelzése: *„az a chat rész NAGYON kicsi, az olvasható rész”*).
+  final bool keyboardVisible;
 
   /// A videó sávja: fekete alapon, 16:9 arányban középre igazítva.
   Widget _videoArea(double height) => SizedBox(
@@ -74,8 +80,13 @@ class TwitchLayoutFrame extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _videoArea(twitchStackedVideoHeight(size)),
-        info,
+        // Gépelés közben a videó és az adatsáv eltűnik: a chat olvasható része
+        // ilyenkor a teljes magasság (a tulajdonos jelzése: *„az a chat rész
+        // NAGYON kicsi, az olvasható rész”*).
+        if (!keyboardVisible) ...[
+          _videoArea(twitchStackedVideoHeight(size)),
+          info,
+        ],
         Expanded(
           key: const Key('twitch-stacked-chat'),
           child: chat,

@@ -542,6 +542,15 @@
     ]
   },
   {
+    "value": "Emotikon",
+    "count": 3,
+    "files": [
+      "lib/screens/community/private_messages_screen.dart",
+      "lib/screens/twitch/twitch_chat.dart",
+      "lib/widgets/chat_emoji_button.dart"
+    ]
+  },
+  {
     "value": "Eredmények megtekintése",
     "count": 3,
     "files": [
@@ -978,14 +987,6 @@
     "files": [
       "lib/screens/twitch/twitch_screen.dart",
       "lib/widgets/twitch_live_card.dart"
-    ]
-  },
-  {
-    "value": "Emotikon",
-    "count": 2,
-    "files": [
-      "lib/screens/community/private_messages_screen.dart",
-      "lib/widgets/chat_emoji_button.dart"
     ]
   },
   {

@@ -7,6 +7,8 @@ import '../../core/i18n/tr.dart';
 import '../../providers/twitch_chat_provider.dart';
 import '../../services/twitch_chat.dart';
 import '../../widgets/app_text.dart';
+import '../../widgets/chat_emoji_button.dart';
+import '../../widgets/keyboard_dismiss_button.dart';
 
 /// **A Twitch-oldal alatti chat** — külön szálon (391).
 ///
@@ -27,12 +29,22 @@ class TwitchStreamChat extends ConsumerStatefulWidget {
 
 class _TwitchStreamChatState extends ConsumerState<TwitchStreamChat> {
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   bool _sending = false;
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  /// A kiválasztott emotikon beszúrása a kurzor helyére (a meglévő, bizonyított
+  /// segédfüggvénnyel — a fő chat is ezt használja).
+  Future<void> _pickEmoji() async {
+    final emoji = await showChatEmojiPicker(context);
+    if (emoji == null) return;
+    insertChatEmoji(_controller, emoji, focusNode: _focusNode);
   }
 
   void _say(String message) {
@@ -97,6 +109,7 @@ class _TwitchStreamChatState extends ConsumerState<TwitchStreamChat> {
               Expanded(
                 child: TextField(
                   controller: _controller,
+                  focusNode: _focusNode,
                   minLines: 1,
                   maxLines: 3,
                   textInputAction: TextInputAction.send,
@@ -108,7 +121,20 @@ class _TwitchStreamChatState extends ConsumerState<TwitchStreamChat> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              // EMOTIKON (394) — a tulajdonos jelzése: *„+ nincsenek emotok”*. A
+              // fő chatnél ez a gomb szándékosan csak iOS-en látszik (Androidon a
+              // rendszerbillentyűzeten van emoji-kulcs), itt viszont **mindkét
+              // platformon** kérjük, ezért itt mindig megjelenik.
+              IconButton(
+                tooltip: tr(context, 'Emotikon'),
+                onPressed: () => unawaited(_pickEmoji()),
+                icon: const Icon(Icons.emoji_emotions_outlined),
+              ),
+              // BILLENTYŰZET-ELREJTŐ (394) — a tulajdonos jelzése: *„eltűnt a
+              // billenytűzet eltűntető gomb is”*. Ugyanaz a bizonyított widget,
+              // mint a fő chatnél (csak nyitott billentyűzetnél látszik).
+              const KeyboardDismissButton(),
+              const SizedBox(width: 4),
               FilledButton.icon(
                 onPressed: _sending ? null : () => unawaited(_send()),
                 icon: const Icon(Icons.send, size: 18),

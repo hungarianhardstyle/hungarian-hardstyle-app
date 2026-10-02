@@ -1,6 +1,57 @@
 import '../core/i18n/tr.dart';
 import 'package:flutter/material.dart';
 
+/// A billentyűzet **láthatóságát** figyelő burok — ugyanazzal a bizonyított
+/// mechanizmussal, mint a [KeyboardDismissButton] (nyers platform-érték +
+/// `didChangeMetrics`), mert a beágyazott Scaffold `MediaQuery`-je **lenullázza**
+/// a `viewInsets`-t.
+///
+/// MIÉRT KELL (a tulajdonos jelzése, 2026-10-02): *„az a chat rész NAGYON kicsi,
+/// az olvasható rész”* — a Twitch-oldal ebből tudja, hogy **gépelés közben**
+/// össze kell húznia a videót, hogy a chat olvasható maradjon.
+class KeyboardVisibilityBuilder extends StatefulWidget {
+  const KeyboardVisibilityBuilder({
+    super.key,
+    required this.builder,
+    this.keyboardVisible,
+  });
+
+  final Widget Function(BuildContext context, bool keyboardVisible) builder;
+
+  /// ⚠️ Csak **teszteléshez**: ha `null`, a nyers platform-érték dönt.
+  final bool? keyboardVisible;
+
+  @override
+  State<KeyboardVisibilityBuilder> createState() => _KeyboardVisibilityBuilderState();
+}
+
+class _KeyboardVisibilityBuilderState extends State<KeyboardVisibilityBuilder>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final visible =
+        widget.keyboardVisible ?? View.of(context).viewInsets.bottom > 0;
+    return widget.builder(context, visible);
+  }
+}
+
 /// **Billentyűzet-elrejtő gomb a fejlécben és a beviteli sávban.**
 ///
 /// MIÉRT KELL (a tulajdonos jelzése, 2026-09-22, iPhone):

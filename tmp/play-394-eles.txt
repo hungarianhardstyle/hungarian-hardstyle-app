@@ -1,0 +1,5 @@
+- ÚJ: Twitch-adás az appban (külön stream-chattal, emotikonokkal, kis képernyővel); az élő értesítés az app Twitch-oldalát nyitja.
+- ÚJ: a rádió „most szól” a zárképernyőn a Real Hardstyle FM logójával, és Leállítás gomb.
+- Javítva: a Twitch-chat fekvő módban és tableten is látszik; gépeléskor nagyobb helyet kap.
+- Javítva: kis képernyőn (PiP) csak a videó látszik, a rádiósáv nem nyomja el.
+- ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.

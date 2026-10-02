@@ -19,16 +19,17 @@ const copy = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n').trimEnd();
 const index = blocks.findIndex((block) => block === copy);
 if (index >= 0) {
   console.log(`OK   ${file} = a dokumentum ${index + 1}. blokkja (${copy.length} karakter)`);
-  // Hány másolat egyezik összesen?
+  // Hány másolat egyezik összesen? (mindig a dokumentum `currentBuild`-jére)
+  const build = (doc.match(/^currentBuild:\s*(\d+)/m) ?? [])[1] ?? '';
   const copies = fs
     .readdirSync('tmp')
-    .filter((name) => /^play-.*\.txt$/.test(name) && name.includes('393'));
+    .filter((name) => /^play-.*\.txt$/.test(name) && build !== '' && name.includes(build));
   let same = 0;
   for (const name of copies) {
     const text = fs.readFileSync(`tmp/${name}`, 'utf8').replace(/\r\n/g, '\n').trimEnd();
     if (blocks.includes(text)) same += 1;
   }
-  console.log(`a 393-as másolatokból ${same}/${copies.length} egyezik a dokumentummal`);
+  console.log(`a ${build}-es másolatokból ${same}/${copies.length} egyezik a dokumentummal`);
   process.exit(0);
 }
 

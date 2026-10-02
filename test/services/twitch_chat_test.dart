@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hungarian_hardstyle_app/providers/twitch_chat_provider.dart';
 import 'package:hungarian_hardstyle_app/screens/twitch/twitch_chat.dart';
 import 'package:hungarian_hardstyle_app/services/twitch_chat.dart';
+import 'package:hungarian_hardstyle_app/widgets/chat_emoji_button.dart';
+import 'package:hungarian_hardstyle_app/widgets/keyboard_dismiss_button.dart';
 
 /// A **stream-chat** (a Twitch-oldal alatti chat) tiszta része és a valódi
 /// kirajzolása.
@@ -187,6 +189,35 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Még nincs üzenet a stream alatt — írj te először!'), findsOneWidget);
+    });
+
+    testWidgets('a beviteli sávban ott az emotikon-gomb és a billentyűzet-elrejtő', (tester) async {
+      // A tulajdonos jelzései (2026-10-02): *„eltűnt a billenytűzet eltűntető gomb
+      // is”*, *„+ nincsenek emotok”*.
+      await tester.pumpWidget(_wrap(_FakeGateway(const [])));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.emoji_emotions_outlined), findsOneWidget,
+          reason: 'nincs emotikon-gomb a stream-chatben');
+      expect(find.byType(KeyboardDismissButton), findsOneWidget,
+          reason: 'nincs billentyűzet-elrejtő gomb');
+    });
+
+    testWidgets('az emotikon-választó a mezőbe szúrja a kiválasztott emojit', (tester) async {
+      await tester.pumpWidget(_wrap(_FakeGateway(const [])));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.emoji_emotions_outlined));
+      await tester.pumpAndSettle();
+      // A választó (alsó lap) megjelenik, és az első emoji kiválasztható.
+      final first = find.text(chatEmojiChoices.first);
+      expect(first, findsWidgets);
+      await tester.tap(first.first);
+      await tester.pumpAndSettle();
+
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, chatEmojiChoices.first,
+          reason: 'a kiválasztott emoji nem került a mezőbe');
     });
 
     testWidgets('a „Küldés” átadja a szöveget az átjárónak, és üríti a mezőt', (tester) async {

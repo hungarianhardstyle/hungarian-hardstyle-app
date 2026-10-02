@@ -11,8 +11,10 @@ import '../../services/picture_in_picture.dart';
 import '../../services/twitch_live.dart';
 import '../../services/webview_picture_in_picture.dart';
 import '../../widgets/app_text.dart';
+import '../../widgets/keyboard_dismiss_button.dart';
 import '../more/donate_screen.dart';
 import '../../widgets/radio_player_bar.dart';
+import '../../services/radio_bar_visibility.dart';
 import 'twitch_chat.dart';
 import 'twitch_layout.dart';
 
@@ -54,6 +56,10 @@ class _TwitchScreenState extends ConsumerState<TwitchScreen> with WidgetsBinding
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // A Twitch-oldal alatt a keret rádiósávja eltűnik (a tulajdonos jelzése:
+    // *„sztem a rádió lekerülhet a twitch chat részről”*) — így a chat is több
+    // helyet kap.
+    radioBarVisibility.hide();
     unawaited(_enter());
   }
 
@@ -174,6 +180,8 @@ class _TwitchScreenState extends ConsumerState<TwitchScreen> with WidgetsBinding
     WidgetsBinding.instance.removeObserver(this);
     _pictureInPictureGate.reset();
     unawaited(pictureInPicture.setEnabled(false));
+    // A keret rádiósávja visszatér, amikor az oldalt elhagyjuk.
+    radioBarVisibility.show();
     // Ha a rádió szólt, mielőtt a streamhez jöttünk, visszakapja a hangot.
     if (_radioWasPlaying) unawaited(resumeRadioPlayback());
     super.dispose();
@@ -229,10 +237,17 @@ class _TwitchScreenState extends ConsumerState<TwitchScreen> with WidgetsBinding
           // (`TwitchLayoutFrame`) dönt: keskenyen egymás alatt (a videó legfeljebb a
           // magasság harmada), szélesen/tableten egymás MELLETT, ezért a chat mindig
           // látszik. A mérés a `test/screens/twitch_layout_test.dart`-ban van.
-          body: TwitchLayoutFrame(
-            video: _player(),
-            info: _infoColumn(context, status),
-            chat: const TwitchStreamChat(),
+          //
+          // GÉPELÉS KÖZBEN (394) a videó és az adatsáv összehúzódik, hogy a chat
+          // olvasható része a lehető legnagyobb legyen (a tulajdonos jelzése: *„az a
+          // chat rész NAGYON kicsi, az olvasható rész”*).
+          body: KeyboardVisibilityBuilder(
+            builder: (context, keyboardVisible) => TwitchLayoutFrame(
+              keyboardVisible: keyboardVisible,
+              video: _player(),
+              info: _infoColumn(context, status),
+              chat: const TwitchStreamChat(),
+            ),
           ),
         );
       },

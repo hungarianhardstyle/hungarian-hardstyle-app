@@ -17,6 +17,7 @@ import '../widgets/radio_player_bar.dart';
 import '../services/app_badge_sync.dart';
 import '../services/app_update_service.dart';
 import '../services/picture_in_picture.dart';
+import '../services/radio_bar_visibility.dart';
 
 class MainNavigation extends ConsumerStatefulWidget {
   const MainNavigation({super.key});
@@ -372,13 +373,21 @@ class _MainNavigationState extends ConsumerState<MainNavigation>
             // burok tűnik el — így a kis ablakban nem dominál a rádió gomb (a
             // tulajdonos jelzése: *„ez a kis ablak a PIP is elég FOSCSI, a rádió
             // gomb dominál”*).
+            //
+            // A RÁDIÓSÁV a Twitch-oldalon is eltűnik (`HideRadioBar`), mert az
+            // oldal beágyazott navigátoron nyílik, ezért a keret sávja alatta
+            // maradna (a tulajdonos jelzése: *„sztem a rádió lekerülhet a twitch
+            // chat részről”*) — a chat így több helyet kap.
             bottomNavigationBar: HiddenInPictureInPicture(
               child: landscape
-                  ? const SafeArea(top: false, child: RadioPlayerBar())
+                  ? const SafeArea(
+                      top: false,
+                      child: HideRadioBar(child: RadioPlayerBar()),
+                    )
                   : Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const RadioPlayerBar(),
+                        const HideRadioBar(child: RadioPlayerBar()),
                         _portraitNavigationBar(),
                       ],
                     ),

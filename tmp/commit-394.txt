@@ -1,0 +1,44 @@
+feat(394): a Twitch-chat nagyobb helyet kap (radiosav le, gepeleskor video ossze) + emotikonok
+
+A TULAJDONOS JELZESEI (2026-10-02, a 393-at tesztelve): "az a chat resz NAGYON kicsi,
+az olvashato resz", "sztem a radio lekerulhet a twitch chat reszrol", "amugy eltunt a
+billenytuzet eltunteto gomb is", "+ nincsenek emotok", "amugy fekve egesz jo" (a 392
+fekvo elrendezese bevalt).
+
+A MERT GYOKEREK:
+- a radiosav az app KERETEBEN el (main_navigation.dart also savja), a Twitch-oldal viszont
+  BEAGYAZOTT navigatoron nyilik (_tabNavigator), ezert a keret savja ALATTA marad es
+  helyet vesz el a chattol;
+- a sajat stream-chat beviteli savjabol hianyzott a KeyboardDismissButton (a fo chatnel
+  regota van) es az emotikon-gomb;
+- gepeles kozben a video ugyanugy vitte a helyet, ezert az "olvashato resz" osszeesett.
+
+AMI EPULT:
+- lib/services/radio_bar_visibility.dart (UJ): radioBarVisibility (hide/show +
+  ValueNotifier) es HideRadioBar burok; a main_navigation MINDKET elrendezesben ezzel
+  rejti a radiosavot; a twitch_screen initState-ben elrejti, dispose-ban visszaadja;
+- keyboard_dismiss_button.dart: uj KeyboardVisibilityBuilder (ugyanaz a bizonyitott
+  mechanizmus: View.of + didChangeMetrics, mert a beagyazott Scaffold MediaQuery-je
+  lenullazza a viewInsets-t);
+- a TwitchLayoutFrame uj keyboardVisible kapcsoloja gepeles kozben elhagyja a videot es
+  az adatsavot, igy a chat a teljes magassagot kapja;
+- a stream-chat beviteli savja megkapta a billentyuzet-elrejto gombot es az
+  emotikon-valasztot (showChatEmojiPicker + insertChatEmoji, MINDKET platformon — a fo
+  chatnel ez szandekosan iOS-only, itt a tulajdonos keresere nem).
+
+KAPUK (mind merve): flutter test 1491/1491 (7 uj); flutter analyze lib test tiszta;
+i18n --strict zold (chunk-46); check-play-notes zold (1. blokk 461/480, eles-blokk
+465/480, masolatok 5/5 bajtazonos).
+
+MUTACIOS BIZONYITEK 7/7 ELKAPVA (tmp/mutation-proof-twitch-chat-room.mjs, bajtazonos
+visszaallitassal): a video-osszehuzas elvetele, a radiosav elrejtesenek elvetele, a
+visszaadas elvetele, a burkolas elvetele (fekvo), az emotikon-gomb elvetele, a
+billentyuzet-gomb elvetele es az emoji-beszuras elvetele — mind a buko teszt nevevel.
+
+CSOMAG: build/HUHS-v1.0.0+394-release.aab — 83 477 895 bajt, SHA-256
+36DAB86C2C2551BF9589CFB46E3CF259C8A04D72AF4D97098BE7BC7FE80DED1B; verify-aab 394 ->
+MINDEN ELLENORZES RENDBEN, a 394 changelog-sorai mindharom ABI-ban bent vannak.
+
+A TULAJDONOS LEPESE: a 394 feltoltese a Play Console-ra es kiadasa a ZART TESZTEN
+(tmp/play-394-zart.txt); az ELES savra a 2b. blokk (tmp/play-394-eles.txt); a 390-393-at
+NEM kell feltolteni (a 394 felvaltja mindet).

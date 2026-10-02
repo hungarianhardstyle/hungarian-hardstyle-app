@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 394,
+    changes: [
+      'Javítva: a Twitch-chat nagyobb helyet kap — a rádiósáv eltűnik az oldalról, és gépelés közben a videó összehúzódik.',
+      'ÚJ: a stream-chatben is van emotikon-választó és billentyűzet-elrejtő gomb.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 393,
     changes: [
       'Javítva: az élő adásról szóló értesítésre koppintva az app Twitch-oldala nyílik meg (eddig a böngésző).',

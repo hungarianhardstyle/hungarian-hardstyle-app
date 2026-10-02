@@ -1,25 +1,28 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> 🟡 **A 393 A FELTÖLTENDŐ** (versionCode **393**, `1.0.0`) — négy változás a 389-hez képest:
-> **(1) Javítva: az élő adásról szóló értesítésre koppintva az app Twitch-oldala nyílik meg** (eddig a
-> böngésző) — a tulajdonos kérése: *„ha kimegy a push a twitch chatről, hogy live … akkor nyissa meg a
-> twitches oldalt a pushra nyomva”*.
-> **(2) Javítva: kis képernyőn (PiP) csak a videó látszik** — a rádiósáv és a többi felület nem nyomja
-> el (*„ez a kis ablak a PIP is elég FOSCSI, a rádió gomb dominál”*), és a gomb **megmondja**, ha a
-> rendszer nem engedi a kis képernyőt (*„a pip gomb se megy amúgy a twitch oldalon”*).
-> **(3) Javítva: a Twitch-chat fekvő módban és tableten is látszik** (a videó mellett), álló módban
-> nagyobb helyet kap (*„az a chat rész elég pici”*, *„fekvő módban nincs chat”*, *„figyelj a tabletre is”*).
-> **(4) ÚJ: a Twitch-oldal alatti chat külön szálon fut** (*„a twitch oldal alatti chatr ha írok,
-> valamiért a fő chatre is kikerül...”*), és a támogatás gomb a videó alá került.
+> 🟡 **A 394 A FELTÖLTENDŐ** (versionCode **394**, `1.0.0`) — a 389-hez képest:
+> **(1) a Twitch-chat nagyobb helyet kap** — a **rádiósáv eltűnik** az oldalról, **gépelés közben a videó
+> összehúzódik**, és van **emotikon-választó** + **billentyűzet-elrejtő** gomb (*„az a chat rész NAGYON
+> kicsi, az olvasható rész”*, *„sztem a rádió lekerülhet a twitch chat részről”*, *„eltűnt a billenytűzet
+> eltűntető gomb is”*, *„+ nincsenek emotok”*);
+> **(2) az élő értesítés az app Twitch-oldalát nyitja** (*„ha kimegy a push a twitch chatről, hogy live …
+> akkor nyissa meg a twitches oldalt a pushra nyomva”*);
+> **(3) kis képernyőn (PiP) csak a videó látszik**, és a gomb megmondja, ha a rendszer nem engedi
+> (*„ez a kis ablak a PIP is elég FOSCSI, a rádió gomb dominál”*);
+> **(4) a Twitch-chat fekvő módban és tableten is látszik** (*„fekvő módban nincs chat”*, *„figyelj a
+> tabletre is”*);
+> **(5) a Twitch-oldal alatti chat külön szálon fut** (*„a twitch oldal alatti chatr ha írok, valamiért a
+> fő chatre is kikerül...”*), és a támogatás gomb a videó alá került.
 >
 > ✅ **A 389 FENT VAN, KIADVA a zárt teszten.** **Mérve** (`node tools/check-play-track.mjs`,
 > 2026-10-02): az **alpha (zárt teszt) sávon a 389 van kiadva 100%-ban kigördülve**, az **ÉLES
 > (production) sáv a 384-en** áll (szintén 100%), a **nyílt teszt (beta) a 377-en**.
 >
-> **Melyik blokk hova való (mérve, 2026-10-02):** a **zárt tesztre** (389 → 393) az **1. blokk** (és a
-> `tmp/play-393-zart.txt`); ha az **éles** sávra viszed (384 → 393), akkor is az **1. blokk**, de mellé
-> érdemes a **361–393 összesítőt** (1b-2.) is bevenni; a **bétára** (377) a **355–393** összesítő (1b-3.).
-> ⚠️ **A 385–392-et NE tárd fel újra** — a 393 mindegyiket tartalmazza.
+> **Melyik blokk hova való (mérve, 2026-10-02):** a **zárt tesztre** (389 → 394) az **1. blokk** (és a
+> `tmp/play-394-zart.txt`); az **ÉLES** sávra (384 → 394) a **2b. blokk** (egyetlen, összevont szöveg,
+> mert az 1. blokk + összesítő nem férne bele az 500-as limitbe); a **bétára** (377) a **355–394**
+> összesítő (1b-3.) való.
+> ⚠️ **A 385–393-at NE tárd fel újra** — a 394 mindegyiket tartalmazza.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -27,11 +30,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 393
+currentBuild: 394
 currentVersion: 1.0.0
 lastPublishedBuild: 384
-aab: build/HUHS-v1.0.0+393-release.aab
-sha256: 7F933075BCC66F4A4CE02E166643732F5A33EEB7937A1330B9CFE8837BC05C08
+aab: build/HUHS-v1.0.0+394-release.aab
+sha256: 36DAB86C2C2551BF9589CFB46E3CF259C8A04D72AF4D97098BE7BC7FE80DED1B
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -142,22 +145,22 @@ A gyökér **mérve** (a 360-as AAB `base/dex/classes*.dex`-e, `dexdump` + a hí
 
 | | |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+393-release.aab` |
+| Fájl | `build/HUHS-v1.0.0+394-release.aab` |
 | Verzió | `1.0.0` (versionName) |
-| Verziókód | **393** (a merge-elt release manifestből visszaolvasva) |
-| Méret | 83 461 910 bájt (79,6 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
-| SHA-256 | `7F933075BCC66F4A4CE02E166643732F5A33EEB7937A1330B9CFE8837BC05C08` |
+| Verziókód | **394** (a merge-elt release manifestből visszaolvasva) |
+| Méret | 83 477 895 bájt (79,6 MiB) — a fájl nagy része a Play-oldali `proguard.map`, ami **nem** megy le a felhasználóhoz |
+| SHA-256 | `36DAB86C2C2551BF9589CFB46E3CF259C8A04D72AF4D97098BE7BC7FE80DED1B` |
 
-> **⚠️ A 393 a feltöltendő csomag** (versionCode **393**, `1.0.0`), és **2026-10-02-án épült**: benne van
-> az **élő értesítés → app Twitch-oldal** útvonal, a **kis képernyő (PiP) csak a videót** mutatja (a
-> rádiósáv nem dominál), a **Twitch-chat láthatósága** fekvő módban és tableten, a **külön stream-chat**,
-> a **támogatás gomb** helyre tétele, valamint a **389 minden** újdonsága: a rádió **„Leállítás” gombja**,
-> a **rádió „most szól”** (Real Hardstyle FM logóval), az **élő Twitch-adás** (főoldali kártya + külön
-> oldal), a **kis képernyő** Androidon és iPhone-on, az **előre behirdethető Twitch-kártya** és az **élő
-> indulásról szóló push**.
-> A **389 a zárt teszten van kiadva** (100%), az **éles sávon a 384** — a 393-nál kisebb kódú csomagot a
-> Play **nem** fogadná el. **A 385–392-et nem kell feltölteni** (a 393 mindegyiket tartalmazza).
-> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 393 azokat is tartalmazza) — a 393 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
+> **⚠️ A 394 a feltöltendő csomag** (versionCode **394**, `1.0.0`), és **2026-10-02-án épült**: a
+> **Twitch-chat** most **nagyobb helyet kap** (a **rádiósáv eltűnik** az oldalról, **gépelés közben a videó
+> összehúzódik**), van benne **emotikon-választó** és **billentyűzet-elrejtő** gomb (a tulajdonos jelzései:
+> *„az a chat rész NAGYON kicsi, az olvasható rész”*, *„a rádió lekerülhet a twitch chat részről”*,
+> *„eltűnt a billenytűzet eltűntető gomb is”*, *„+ nincsenek emotok”*), valamint a **393** (élő értesítés →
+> app Twitch-oldal, PiP csak a videó), a **392** (a chat fekvő módban és tableten is látszik) és a **389
+> minden** újdonsága.
+> A **389 a zárt teszten van kiadva** (100%), az **éles sávon a 384** — a 394-nél kisebb kódú csomagot a
+> Play **nem** fogadná el. **A 390–393-at nem kell feltölteni** (a 394 mindegyiket tartalmazza).
+> ⚠️ **Az alábbi, 360-ról szóló bekezdések TÖRTÉNETIEK** (a 394 azokat is tartalmazza) — a 394 újdonságai a **„3. App (Több → Névjegy)"** szakaszban vannak.
 
 **Miért a 360-at kell feltenni (és miért nem a 358-at):** a 360 **magában foglalja a 358-at, a 357-et, a 356-ot, a 355-öt és a 354-et is**, ezért egy csomagot kell feltenni:
 
@@ -246,11 +249,12 @@ az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-
 > tárd fel újra. A **kész, másolható** változat: `tmp/play-390.txt` (bájtazonos ezzel a blokkal).
 
 ```play-notes
-- Javítva: az élő adás értesítésére koppintva az app Twitch-oldala nyílik meg.
+- Javítva: a Twitch-chat nagyobb helyet kap (a rádiósáv eltűnik, gépeléskor a videó összehúzódik).
+- Javítva: az élő értesítésre koppintva az app Twitch-oldala nyílik meg.
 - Javítva: kis képernyőn (PiP) csak a videó látszik; a gomb jelzi, ha a rendszer nem engedi.
-- Javítva: a Twitch-chat fekvő módban és tableten is látszik, álló módban nagyobb helyet kap.
+- Javítva: a Twitch-chat fekvő módban és tableten is látszik, emotikonokkal.
 - ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.
-- Javítva: a Twitch-oldalon a támogatás gomb a videó alá került.
+- Javítva: a támogatás gomb a videó alá került.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -319,11 +323,12 @@ kigördülve, ezért a tesztelők a 389 öt soros jegyzetét **már látták**. 
 való, amit a tulajdonos jelzése javított — így a kártyán pontosan az látszik, ami **változott**:
 
 ```play-notes
-- Javítva: az élő adás értesítésére koppintva az app Twitch-oldala nyílik meg.
+- Javítva: a Twitch-chat nagyobb helyet kap (a rádiósáv eltűnik, gépeléskor a videó összehúzódik).
+- Javítva: az élő értesítésre koppintva az app Twitch-oldala nyílik meg.
 - Javítva: kis képernyőn (PiP) csak a videó látszik; a gomb jelzi, ha a rendszer nem engedi.
-- Javítva: a Twitch-chat fekvő módban és tableten is látszik, álló módban nagyobb helyet kap.
+- Javítva: a Twitch-chat fekvő módban és tableten is látszik, emotikonokkal.
 - ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.
-- Javítva: a Twitch-oldalon a támogatás gomb a videó alá került.
+- Javítva: a támogatás gomb a videó alá került.
 ```
 
 ⚠️ A **390**-et az **éles** sávra téve nem ez a blokk való: ott az **1.** (384 → 390) és a
@@ -349,9 +354,9 @@ bemásolni (mert a 329 nem ment ki).
 A zárt teszthez **nem** ez való, hanem az **1. blokk** (`tmp/play-393-zart.txt`).
 
 ```play-notes
-- ÚJ: Twitch-adás az appban (külön stream-chattel, kis képernyővel), és az élő értesítés az app Twitch-oldalát nyitja.
+- ÚJ: Twitch-adás az appban (külön stream-chattal, emotikonokkal, kis képernyővel); az élő értesítés az app Twitch-oldalát nyitja.
 - ÚJ: a rádió „most szól” a zárképernyőn a Real Hardstyle FM logójával, és Leállítás gomb.
-- Javítva: a Twitch-chat fekvő módban és tableten is látszik; a támogatás gomb a videó alá került.
+- Javítva: a Twitch-chat fekvő módban és tableten is látszik; gépeléskor nagyobb helyet kap.
 - Javítva: kis képernyőn (PiP) csak a videó látszik, a rádiósáv nem nyomja el.
 - ÚJ: a stream alatti chat külön szálon fut — nem kerül ki a fő chatbe.
 ```
@@ -360,6 +365,12 @@ A zárt teszthez **nem** ez való, hanem az **1. blokk** (`tmp/play-393-zart.txt
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 394 — a Twitch-chat nagyobb helyet kap (rádiósáv le, gépeléskor videó össze) + emotikonok
+- **A tulajdonos jelzései (2026-10-02):** *„az a chat rész NAGYON kicsi, az olvasható rész”*, *„sztem a rádió lekerülhet a twitch chat részről”*, *„eltűnt a billenytűzet eltűntető gomb is”*, *„+ nincsenek emotok”*, *„amúgy fekve egész jó”*.
+- **A mért gyökér:** a rádiósáv az **app keretében** él, a Twitch-oldal pedig **beágyazott** navigátoron nyílik, ezért a sáv **alatta marad** és helyet vesz el; a beviteli sávból hiányzott a **billentyűzet-elrejtő** és az **emotikon**-gomb; gépelés közben a videó ugyanúgy vitte a helyet.
+- **A javítás:** a Twitch-oldal megnyíláskor **elrejti** a keret rádiósávját (`radioBarVisibility` + `HideRadioBar`), bezáráskor visszaadja; **gépelés közben a videó és az adatsáv összehúzódik** (`KeyboardVisibilityBuilder` + a váza `keyboardVisible` kapcsolója), így a chat olvasható része a teljes magasság; a beviteli sáv megkapta a **billentyűzet-elrejtő** gombot (ugyanaz a bizonyított widget, mint a fő chatnél) és az **emotikon-választót** (mindkét platformon).
+- **A kapu mérése:** **7/7 mutáció elkapva** (`tmp/mutation-proof-twitch-chat-room.mjs`) — a videó-összehúzás elvétele, a rádiósáv elrejtésének/visszaadásának elvétele, a burkolás elvétele, az emotikon-gomb, a billentyűzet-gomb és a beszúrás elvétele.
 
 ### 393 — az élő értesítés az app Twitch-oldalát nyitja + a kis képernyő csak a videót mutatja
 - **A tulajdonos jelzései (2026-10-02, képpel a telefonról):** *„ha kimegy a push a twitch chatről, hogy live … akkor nyissa meg a twitches oldalt a pushra nyomva”*, *„ez a kis ablak a PIP is elég FOSCSI, a rádió gomb dominál”*, *„a pip gomb se megy amúgy a twitch oldalon”*.

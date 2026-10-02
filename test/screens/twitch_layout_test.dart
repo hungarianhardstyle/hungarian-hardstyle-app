@@ -75,6 +75,49 @@ void main() {
   });
 
   group('kirajzolva: a chat MINDIG látszik és elég nagy', () {
+    testWidgets('gépelés közben (billentyűzet) a videó eltűnik — a chat a teljes helyet kapja', (tester) async {
+      // A tulajdonos jelzése (2026-10-02): *„az a chat rész NAGYON kicsi, az
+      // olvasható rész”* — gépelés közben a videó és az adatsáv összehúzódik.
+      const size = phonePortrait;
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      Widget frameWithKeyboard(bool keyboard) => MaterialApp(
+            home: MediaQuery(
+              data: const MediaQueryData(size: size),
+              child: Scaffold(
+                body: SizedBox(
+                  width: size.width,
+                  height: size.height,
+                  child: TwitchLayoutFrame(
+                    keyboardVisible: keyboard,
+                    video: const ColoredBox(color: Colors.black, child: SizedBox.expand()),
+                    info: const SizedBox(key: Key('teszt-info'), height: 80),
+                    chat: const SizedBox(key: Key('teszt-chat')),
+                  ),
+                ),
+              ),
+            ),
+          );
+
+      await tester.pumpWidget(frameWithKeyboard(false));
+      await tester.pumpAndSettle();
+      final withoutKeyboard = tester.getRect(find.byKey(const Key('twitch-stacked-chat')));
+
+      await tester.pumpWidget(frameWithKeyboard(true));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('twitch-video-area')), findsNothing,
+          reason: 'gépelés közben a videó nem viheti el a helyet');
+      expect(find.byKey(const Key('teszt-info')), findsNothing,
+          reason: 'gépelés közben az adatsáv is eltűnik');
+      final withKeyboard = tester.getRect(find.byKey(const Key('twitch-stacked-chat')));
+
+      expect(withKeyboard.height, greaterThan(withoutKeyboard.height),
+          reason: 'gépelés közben a chat nagyobb, mint a videóval');
+      expect(withKeyboard.top, lessThan(withoutKeyboard.top));
+    });
+
     testWidgets('álló telefonon a chat a videó ALATT van, és nagy a helye', (tester) async {
       const size = phonePortrait;
       tester.view.physicalSize = size;

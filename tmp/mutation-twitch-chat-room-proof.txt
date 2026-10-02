@@ -1,0 +1,11 @@
+OK     gépelés közben NEM húzódik össze a videó (a chat olvasható része kicsi marad) → a kapu elcsípte («gépelés közben (billentyűzet) a videó eltűnik»)
+       (az első futás felmelegíti a fordítót, ezért lassabb)
+OK     a rádiósáv elrejtésének elvétele a Twitch-oldal megnyílásakor → a kapu elcsípte («a Twitch-oldal megnyíláskor elrejti, bezáráskor visszaadja»)
+OK     a rádiósáv visszaadásának elvétele (az oldal elhagyása után is rejtve maradna) → a kapu elcsípte («a Twitch-oldal megnyíláskor elrejti, bezáráskor visszaadja»)
+OK     a rádiósáv burkolásának elvétele a keretben (fekvő elrendezés) → a kapu elcsípte («a keret a rádiósávot a burokban rejti el»)
+OK     az emotikon-gomb elvétele a beviteli sávból → a kapu elcsípte («a beviteli sávban ott az emotikon-gomb és a billentyűzet-elrejtő»)
+OK     a billentyűzet-elrejtő gomb elvétele a beviteli sávból → a kapu elcsípte («a beviteli sávban ott az emotikon-gomb és a billentyűzet-elrejtő»)
+OK     az emotikon beszúrásának elvétele (a választó nem ír a mezőbe) → a kapu elcsípte («az emotikon-választó a mezőbe szúrja a kiválasztott emojit»)
+
+7/7 mutáció ELKAPVA
+a források BÁJTAZONOSAK (érintetlenek)
