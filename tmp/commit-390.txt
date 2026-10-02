@@ -1,0 +1,44 @@
+fix(390): a tamogatas gomb a Twitch-oldalon a video ala kerult (a chat Kuldes gombja melleol)
+
+A TULAJDONOS JELZESE (2026-10-02, keppel a telefonrol): "az a tamogatas gomb nagyon
+rossz helyen van" — a kepen a piros Tamogatas gomb a chat "Kuldes" gombja mellett ult.
+
+A MERT GYOKER (a kodbol): a tamogatas a Twitch-oldalon `floatingActionButton` volt
+(FloatingActionButton.extended, Icons.payment), ezert a Scaffold a chat also savja FOLE
+rajzolta — pont a "Kuldes" melle. Ez nem csak esztetika: a gomb fizetesi oldalt nyit,
+tehat egy veletlen koppintas is penz-ut.
+
+A JAVITAS (lib/screens/twitch/twitch_screen.dart):
+- a lebego gomb helyere a video alatti adatsavba kerult egy teljes szelessegu
+  OutlinedButton.icon ("Tamogatas PayPallal", Icons.volunteer_activism), a chattol
+  elkulonitve;
+- az app savjaban a sziv ikon (Icons.favorite) helyett ugyanaz a tamogatas-ikon jeloli
+  ugyanazt a muveletet (a sziv a kedvencelest jelenti);
+- a chathoz es a DonateScreen linkjehez nem nyultam (a PayPal-link tovabbra is EGY helyen el).
+
+A KAPU A HELYET MERI (2 uj teszt a test/services/twitch_live_test.dart-ban): nincs
+floatingActionButton:/FloatingActionButton.extended( a fajlban, es a gomb indexe a video
+UTAN, a chat ELOTT van; az ikon volunteer_activism, nem favorite/payment.
+MERt SAJAT HIBA: az elso valtozat a source.contains('floatingActionButton') mintat
+hasznalta, es elbukott a SAJAT KOMMENTEMEN (a magyarazo sorban ott volt a szo) — a minta
+mostantol a kod alakra mer (kettosponttal), es a kommentbol kikerult az azonosito.
+
+MUTACIOS BIZONYITEK 4/4 ELKAPVA (tmp/mutation-proof-donate-placement.mjs, bajtazonos
+visszaallitassal): a lebego gomb visszaallitasa, a gomb a chat ALA helyezese, a gomb
+kivetele es az ikon visszaallitasa szivre — mind elkapva, a buko teszt nevevel.
+MERT SAJAT HIBA: az elso futas 3/4 lett, mert a "chat ala kerul" mutaciom csak a Divider
+sort vette ki (a gomb a helyen maradt) — a mutacio volt pontatlan, nem a kapu; a javitott
+mutacio a gombot tenyleg athelyezi.
+
+KAPUK (mind merve): flutter test 1445/1445 (2 uj); flutter analyze lib test tiszta;
+i18n --strict zold (100% lefedettseg, chunk-42 a changelog-sor forditasa, a kulcslista
+frissitve); check-play-notes zold (1. blokk 112/480, a ket osszesito 470/480, masolatok
+4/4 bajtazonos).
+
+CSOMAG: build/HUHS-v1.0.0+390-release.aab — 83 422 551 bajt, SHA-256
+D2F4AD6F66039D96D11FF05F97D657FCC210BC1B638FED431E44537E26B9425C; verify-aab 390 →
+MINDEN ELLENORZES RENDBEN, a 390 changelog-sora mindharom ABI-ban bent van.
+
+A TULAJDONOS LEPESE: a 390 feltoltese a Play Console-ra es kiadasa a ZART TESZTEN
+(tmp/play-390-zart.txt = 1 sor); a telefonra is felkerul (sideload) — igy a javitas az
+iPhone-on is latszik.

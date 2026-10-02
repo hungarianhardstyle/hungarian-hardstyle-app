@@ -25,7 +25,10 @@ import '../../widgets/radio_player_bar.dart';
 ///  2. **az app SAJÁT chatje** alatta (a tulajdonos választása: *„appban lehessen
 ///     chatelni, nem twitch chat”*) — ugyanaz a közösségi chat, emotokkal,
 ///     reakciókkal, `@`hivatkozásokkal, push-sal;
-///  3. **PayPal támogatás** — a meglévő `DonateScreen` linkjével;
+///  3. **PayPal támogatás** — a meglévő `DonateScreen` linkjével, a **videó alatti
+///     sávban** (a tulajdonos jelzése, 2026-10-02: *„az a támogatás gomb nagyon
+///     rossz helyen van"* — a lebegő gomb a chat „Küldés" gombja mellé esett,
+///     ezért könnyen összetéveszthető volt);
 ///  4. **hangfókusz**: belépéskor a rádió és az előzetes **leáll** (nem szól két
 ///     hang egyszerre), kilépéskor a rádió **visszatér**, ha előtte szólt;
 ///  5. **kis képernyő (PiP)**: amíg ez az oldal van nyitva, az app elhagyásakor
@@ -186,7 +189,7 @@ class _TwitchScreenState extends ConsumerState<TwitchScreen> with WidgetsBinding
           IconButton(
             tooltip: tr(context, 'Támogatás PayPallal'),
             onPressed: () => unawaited(DonateScreen.openDonate()),
-            icon: const Icon(Icons.favorite),
+            icon: const Icon(Icons.volunteer_activism),
           ),
         ],
       ),
@@ -222,15 +225,28 @@ class _TwitchScreenState extends ConsumerState<TwitchScreen> with WidgetsBinding
                 ],
               ),
             ),
+          // TÁMOGATÁS (390): a tulajdonos jelzése — *„az a támogatás gomb nagyon
+          // rossz helyen van"*. Eddig lebegő gomb (FAB) volt, ezért a chat alsó
+          // sávjában, pont a „Küldés" gomb mellett lebegett: úgy nézett ki,
+          // mintha a chathez tartozna, és véletlenül is el lehetett találni (az
+          // pedig fizetési oldalt nyit). Most a videó alatti adatsávban van, a
+          // chattől **elkülönítve**, saját ikonnal — az app sávjában pedig
+          // ugyanez az ikon (`volunteer_activism`) jelöli ugyanazt a műveletet.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => unawaited(DonateScreen.openDonate()),
+                icon: const Icon(Icons.volunteer_activism, size: 18),
+                label: const AppText('Támogatás PayPallal'),
+              ),
+            ),
+          ),
           const Divider(height: 12),
           // Az app SAJÁT chatje — ugyanaz a közösségi felület, ami a Chat fülön.
           const Expanded(child: LiveFeedScreen()),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => unawaited(DonateScreen.openDonate()),
-        icon: const Icon(Icons.payment),
-        label: const AppText('Támogatás'),
       ),
     );
   }

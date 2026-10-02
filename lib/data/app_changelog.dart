@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 390,
+    changes: [
+      'Javítva: a Twitch-oldalon a támogatás gomb a videó alá került — eddig a chat „Küldés” gombja mellett lebegett, ezért könnyen össze lehetett téveszteni.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 389,
     changes: [
       'Javítva: a Twitch-beharangozó kártya beállítása mostantól magától frissül (legfeljebb 3 percen belül), és közvetlenül a WordPress-adminból érkezik.',

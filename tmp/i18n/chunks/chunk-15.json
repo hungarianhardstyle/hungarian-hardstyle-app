@@ -1,5 +1,4 @@
 [
-  "Már egy betűre is keres",
   "Már értékelted: {stars}",
   "Már játszottál",
   "Már játszottál — eredmény megtekintése",
@@ -58,5 +57,6 @@
   "Nem sikerült betölteni a DJ-adatlapot.",
   "Nem sikerült betölteni a DJ-ket.",
   "Nem sikerült betölteni a híreket.",
-  "Nem sikerült betölteni a kategóriákat."
+  "Nem sikerült betölteni a kategóriákat.",
+  "Nem sikerült betölteni a műfajokat."
 ]

@@ -1,0 +1,8 @@
+OK     a LEBEGŐ GOMB visszaállítása (a tulajdonos által látott hiba) → a kapu elcsípte («a támogatás gomb a videó alatt van, a chattől elkülönítve»)
+       (az első futás felmelegíti a fordítót, ezért lassabb)
+OK     a támogatás gomb a CHAT ALÁ kerül (nem a videó alá) → a kapu elcsípte («a támogatás gomb a videó alatt van, a chattől elkülönítve»)
+OK     a támogatás gomb kivétele a képernyőről (nem lenne támogatás) → a kapu elcsípte («a támogatás gomb a videó alatt van, a chattől elkülönítve»)
+OK     a támogatás ikonjának visszaállítása SZÍVRE (az a kedvencelést jelenti) → a kapu elcsípte («a támogatás ikonja mindkét helyen ugyanaz»)
+
+4/4 mutáció ELKAPVA
+a források BÁJTAZONOSAK (érintetlenek)

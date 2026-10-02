@@ -345,6 +345,47 @@ void main() {
           reason: 'a Twitch-oldal nem tartalmazhat külön PayPal-linket');
     });
 
+    test('a támogatás gomb a videó alatt van, a chattől elkülönítve', () {
+      // ⚠️ A MÉRT HIBA (2026-10-02, a tulajdonos képe): *„az a támogatás gomb
+      // nagyon rossz helyen van”* — a támogatás `floatingActionButton` volt,
+      // ezért a chat alsó sávjában, pont a „Küldés” gomb mellett lebegett.
+      // Ez a teszt a HELYÉT méri (nem azt, hogy „benne van a fájlban”).
+      final source = File('lib/screens/twitch/twitch_screen.dart').readAsStringSync();
+
+      expect(
+        source.contains('floatingActionButton:'),
+        isFalse,
+        reason: 'a támogatás újra lebegő gombként a chat küldés gombja mellé került',
+      );
+      expect(
+        source.contains('FloatingActionButton.extended('),
+        isFalse,
+        reason: 'a támogatás újra lebegő gombként a chat küldés gombja mellé került',
+      );
+
+      final videoIndex = source.indexOf('AspectRatio(');
+      final donateIndex = source.indexOf("label: const AppText('Támogatás PayPallal')");
+      final chatIndex = source.indexOf('const Expanded(child: LiveFeedScreen())');
+
+      expect(videoIndex, greaterThan(0), reason: 'nincs videó a képernyőn');
+      expect(donateIndex, greaterThan(0), reason: 'nincs támogatás gomb a képernyőn');
+      expect(chatIndex, greaterThan(0), reason: 'nincs chat a képernyőn');
+      expect(donateIndex, greaterThan(videoIndex),
+          reason: 'a támogatás gomb a videó ALATT van');
+      expect(donateIndex, lessThan(chatIndex),
+          reason: 'a támogatás gomb a chat FÖLÖTT van (nem a küldés gomb mellett)');
+    });
+
+    test('a támogatás ikonja mindkét helyen ugyanaz (nem szív — az a kedvencelés)', () {
+      final source = File('lib/screens/twitch/twitch_screen.dart').readAsStringSync();
+      expect(source.contains('Icons.volunteer_activism'), isTrue,
+          reason: 'a támogatás ikonja hiányzik');
+      expect(source.contains('Icons.favorite'), isFalse,
+          reason: 'a szív ikon a kedvencelést jelenti, nem a támogatást');
+      expect(source.contains('Icons.payment'), isFalse,
+          reason: 'a lebegő gomb ikonja maradt a képernyőn');
+    });
+
     test('az Android-oldal engedi a kis képernyőt, és a kapcsolót figyeli', () {
       final manifest = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
       expect(manifest, contains('android:supportsPictureInPicture="true"'));

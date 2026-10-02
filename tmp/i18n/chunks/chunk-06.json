@@ -1,5 +1,4 @@
 [
-  "A két jelszó nem egyezik.",
   "A kiadási jegyzet betöltése…",
   "A kiadó zenéi egy helyen",
   "A kiadvány a megjelenés napján válik megvásárolhatóvá és letölthetővé.",
@@ -58,5 +57,6 @@
   "A reklám jóváírásának ellenőrzése…",
   "A reklám lefutott, de a feloldás nem érkezett meg. Próbáld újra később.",
   "A reklám megtekintése nem fejeződött be.",
-  "A reklámos feloldáshoz be kell jelentkezni."
+  "A reklámos feloldáshoz be kell jelentkezni.",
+  "A részvétel jelöléséhez regisztráció szükséges."
 ]

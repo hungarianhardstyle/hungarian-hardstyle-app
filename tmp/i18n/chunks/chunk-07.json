@@ -1,5 +1,4 @@
 [
-  "A részvétel jelöléséhez regisztráció szükséges.",
   "A részvétel mentése nem sikerült. Próbáld újra később.",
   "A segítség most nem tölthető be.",
   "A sorsolás megtörtént.",
@@ -58,5 +57,6 @@
   "Adj meg egy érvényes e-mail-címet.",
   "Adj meg egy megjelenési nevet.",
   "Adj meg érvényes e-mail-címet.",
-  "Adminisztrátorként korlátlan névmódosítás"
+  "Adminisztrátorként korlátlan névmódosítás",
+  "Ajánlás másolása"
 ]

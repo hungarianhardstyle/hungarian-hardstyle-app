@@ -754,6 +754,14 @@
     ]
   },
   {
+    "value": "Támogatás PayPallal",
+    "count": 3,
+    "files": [
+      "lib/screens/more/donate_screen.dart",
+      "lib/screens/twitch/twitch_screen.dart"
+    ]
+  },
+  {
     "value": "Több",
     "count": 3,
     "files": [
@@ -1503,22 +1511,6 @@
     "count": 2,
     "files": [
       "lib/screens/more/my_music_screen.dart"
-    ]
-  },
-  {
-    "value": "Támogatás",
-    "count": 2,
-    "files": [
-      "lib/screens/more/donate_screen.dart",
-      "lib/screens/twitch/twitch_screen.dart"
-    ]
-  },
-  {
-    "value": "Támogatás PayPallal",
-    "count": 2,
-    "files": [
-      "lib/screens/more/donate_screen.dart",
-      "lib/screens/twitch/twitch_screen.dart"
     ]
   },
   {
@@ -7398,6 +7390,13 @@
     "count": 1,
     "files": [
       "lib/screens/events/event_meetup_screen.dart"
+    ]
+  },
+  {
+    "value": "Támogatás",
+    "count": 1,
+    "files": [
+      "lib/screens/more/donate_screen.dart"
     ]
   },
   {
