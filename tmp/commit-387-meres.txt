@@ -1,0 +1,29 @@
+docs(387): a mertek szerinti Play-allapot (production/alpha = 384), a 2.14.14 plugin fent van, a 387 az iPhone-on
+
+Harom MERES frissult a kor vegen, mind a tulajdonos lepesei utan:
+
+1) PLAY (node tools/check-play-track.mjs, 2026-10-02):
+   - production = 384 (100%, a 384 kiadasi szovegevel) -> eddig 382 volt
+   - alpha (zart teszt) = 384 (100%) -> eddig 383
+   - beta = 377
+   - feltoltott AAB-ek: ... 380, 382, 383, 384 -> a 387 meg nincs fent
+   A jegyzet metaja lastPublishedBuild: 382 -> 384, es minden "melyik blokk hova
+   valo" sor a mertek szerint all (1. blokk 384 -> 387; betara 355-387).
+
+2) PLUGIN: api=2.14.14 (a tulajdonos feltoltotte), es a fejlec mar az uj keretet
+   mutatja: push_limits=conc50/budget60/max_exec600, 1027 token, news_scan fut,
+   cron_overdue=0. A gyorsulas MERteke a kovetkezo valodi kuldésnel latszik (a
+   legutobbi, 14:28-as kor meg a regi kerettel futott: recipients=1025
+   processed=75) - ez a jegyzetben is igy szerepel.
+
+3) iOS 387: CI run 37014226436 success; az IPA
+   build/ios-ipa-387/Runner-unsigned.ipa, 23 089 139 bajt, SHA-256
+   5D808FFE6E27754292E3BF0CEADB353936EC64B5F2C4C03D14F6B9629CBA6213;
+   CFBundleVersion = 387, a changelog sora bent, a reklam-identitas helyes, es a
+   "showWhenOffline" literal is a csomagban van. A telefonon is fent van:
+   Sideloadly installations id 52, stored_files id 43 = hh387.ipa, 23 089 139
+   bajt, failures_count 0; a keszulekrol visszaolvasva CFBundleVersion = 387.
+
+MERESI TANULSAG: a "twitchCardVisible" Dart-fuggvenynevet kerestem az AOT-ban -
+az nincs benne (a nevek nem maradnak meg), a Firestore-mezo String literalja
+viszont igen. A needle legyen STRING LITERAL, ne azonosito.

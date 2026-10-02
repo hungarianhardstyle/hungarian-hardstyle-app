@@ -1,9 +1,10 @@
 # Play Console — kiadási jegyzet (másolható)
 
 > **Most a 387 megy fel** (versionCode **387**, `1.0.0`). **Mérve** (`node tools/check-play-track.mjs`,
-> 2026-10-01): az **ÉLES (production) sávon a 382 van**, 100%-ban kigördülve; a **zárt teszt (alpha) a
-> 383-on**, a nyílt teszt (beta) a 377-en. A **387** újdonságai: a főoldali **Twitch-kártya előre is
-> behirdethető** (a csatorna saját képével és feliratával akkor is látszik, ha éppen nem megy adás).
+> 2026-10-02): az **ÉLES (production) sávon már a 384 van**, 100%-ban kigördülve (a 384 kiadási
+> szövegével); a **zárt teszt (alpha) is a 384-en**, a nyílt teszt (beta) a 377-en. A **387**
+> újdonságai: a főoldali **Twitch-kártya előre is behirdethető** (a csatorna saját képével és
+> feliratával akkor is látszik, ha éppen nem megy adás).
 > Emellett a 387 a **386** és **385** minden újdonságát is tartalmazza: az élő **Twitch-adás
 > kicsinyíthető** (fejléc-gomb, illetve az app elhagyásakor magától — **Androidon és iPhone-on**),
 > iPhone-on a stream **a helyén játszik**, a **rádió értesítésében és a zárképernyőn látszik, melyik
@@ -12,12 +13,12 @@
 > elindul az élő adás**.
 >
 > ⚠️ **A 385-öt és a 386-ot NEM kell feltölteni** — a 387 felváltja mindkettőt (ugyanaz a kód + a
-> kártya-behirdetés). A 387 a **382 minden** újdonságát is tartalmazza, az pedig a korábbiakét
-> (a 384-et **nem** kell feltölteni — ezt a buildet tartalmazza).
-> **Melyik blokk hova való (mérve, 2026-10-01):** az **éles** sávon a **382** van → **1. blokk**;
-> a **zárt teszten a 383** van 100%-ban kigördülve → ott a **383 → 387** lépéshez **ugyanaz az
-> 1. blokk** való (ez a néhány sor mind új a tesztelőknek); aki **361–380 közötti** buildről jön,
-> annak a **361–387 összesítő** (1b-2.); aki a **bétáról (377)**, annak a **355–387** összesítő (1b-3.).
+> kártya-behirdetés). A 387 a **384 minden** újdonságát is tartalmazza, az pedig a korábbiakét.
+> **Melyik blokk hova való (mérve, 2026-10-02):** az **éles** sávon a **384** van → **1. blokk**
+> (384 → 387); a **zárt teszten is a 384** van 100%-ban kigördülve → **ugyanaz az 1. blokk** való
+> (a rádió-, Twitch-, kis képernyő- és kártya-újdonságok mind újak a tesztelőknek); aki **361–383
+> közötti** buildről jön, annak a **361–387 összesítő** (1b-2.); aki a **bétáról (377)**, annak a
+> **355–387** összesítő (1b-3.).
 > ⚠️ **A 383-at NE tárd fel újra:** abban a szekció még a **logó (Hero) kártya fölött** volt, és a
 > felirata „Követettjeid" volt (a tulajdonos jelzése: *„ez a »követettjeid« elég magyartalan"*,
 > illetve *„a Hero FÖLÉ került, ami baj"*). A **385** javítja mindkettőt — a zárt teszten ezt a
@@ -36,26 +37,21 @@ aab: build/HUHS-v1.0.0+387-release.aab
 sha256: 8FF303D82BDFD10263725372CCA3A4DE8181CB4D355357A9EF725900583FAE02
 -->
 
-⚠️ A **386**-ot a **385** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 385
-mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná). A 383-at a **zárt
-teszt** már megkapta (100%-ban kigördülve), de **ne tárd fel újra** — a 386 váltja.
-✅ **A WordPress-plugin 2.14.11 FENT VAN** (élesben mérve, 2026-09-30: `api=2.14.11`, 1026 token) —
-ez hozta a **szavazás/játék „kinyílt" értesítést**: amikor megnyílik egy kérdőív, nyereményjáték,
-éves szavazás vagy GYÍK-játék, **minden regisztrált eszköz** értesítést kap (nyelvenként, a
-beállítások tiszteletben tartásával) — a frissességi kapu miatt a **régi** tartalom feltöltéskor
-nem hirdetődik meg.
-⏳ **A következő plugin-feltöltés: `build/huhs-mobile-api-2.14.12.zip`** — ez a **hír-push őre**
-(lásd a 4. pontot). Éles mérés szerint 2026-09-30-án a nap két cikke után **egyetlen push sem
-indult** (a közzététel-hook nem futott le); a 2.14.12 ezt az osztályt zárja be.
+⚠️ A **387**-et a **386** után kellett építeni (a korábbiakat **nem** kell feltölteni: a 387
+mindegyiket tartalmazza, és a Play a használt verziókódot amúgy is elutasítaná). A 384-et a
+**nyilvános sáv és a zárt teszt is megkapta** (100%-ban kigördülve, mérve 2026-10-02).
+✅ **A WordPress-plugin 2.14.14 FENT VAN** (élesben mérve, 2026-10-02: **`api=2.14.14`**, 1027 token),
+és a diagnosztikai fejléc már az új keretet mutatja: **`push_limits=conc50/budget60/max_exec600`**.
+Ez a hír-küldés kör-keretét **15 → 60 másodpercre** emelte (a mért PHP-korlát tizedére), ezért a
+~1025 eszköz **egyetlen körben** megy ki a több láncszem helyett; a gyorsulás mértéke a következő
+valódi küldésnél látszik (a legutóbbi, 14:28-as kör még a régi kerettel futott:
+`recipients=1025 processed=75`). A korábbi plugin-lépcsők (2.14.11 szavazás/játék-értesítés,
+2.14.12 hír-push őr) **mind benne vannak** ebben a csomagban.
 A szerveroldali függvények **telepítve** vannak (`firebase deploy`): a **heti összefoglaló**
 (`sendWeeklyDigest`, vasárnap 18:00), a **követés a kedvencek alapján**, a **kétoldali
 meghívó-jutalom** (50 pont a meghívónak, 25 pont a meghívottnak) és az **élő Twitch-adás figyelője**
 (`sendTwitchLiveNotice`, 5 percenként) — mindegyik **AAB nélkül is él**.
-⏳ **A következő plugin-feltöltés: `build/huhs-mobile-api-2.14.14.zip`** — a 2.14.13-hoz képest
-**egyetlen érték** változott: a push kör-kerete **15 → 60 másodperc** (a mért `max_exec=600` alatt),
-ezért a ~1025 eszköz egyetlen körben megy ki a több láncszem helyett. A 2.14.13 már fent van
-(`api=2.14.13`), a 2.14.14 **feltöltésre vár**.
-Az apphoz csak az **AAB (386)** feltöltése kell.
+Az apphoz csak az **AAB (387)** feltöltése kell.
 
 ## 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mjs`)
 
@@ -63,18 +59,23 @@ A Play Developer API-t **olvasásra** kérdezve (**2026-09-30**, a legfrissebb m
 
 | Sáv | Állapot | Build |
 |---|---|---|
-| **production (nyilvános — ÉLES)** | **completed** (100%-ban kigördült) | **382** — „382 (1.0.0)" ✅ |
-| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) — **nincs piszkozat** | **383** — „383 (1.0.0)" ✅ |
+| **production (nyilvános — ÉLES)** | **completed** (100%-ban kigördült) | **384** — „384 (1.0.0)" ✅ |
+| **alpha (zárt teszt)** | **completed** (100%-ban kigördült) | **384** — „384 (1.0.0)" ✅ |
 | beta (NYÍLT teszt) | **completed** (100%) | **377** — „377 (1.0.0)" ✅ |
 | internal | completed (278) + egy **üres piszkozat** | 278 |
 | **nyilvános bolt-lap** | **HTTP 200 — él** | — |
 
-- **AZ ÉLES (production) SÁVON A 382 VAN** (100%-ban kigördülve) — a kiadási szövege a 381-es blokk.
-  **A következő nyilvános kiadás a 385**: a `build/HUHS-v1.0.0+385-release.aab` feltöltése után az **1. blokk** (lásd lent) való a kiadási jegyzetbe.
-- **A ZÁRT TESZT (alpha) SÁVJÁN MÁR A 383 VAN** (100%-ban kigördülve, a 383 négy soros kiadási jegyzetével) — **ezen a csatornán tesztelte a tulajdonos a 383-at**, és innen jött a két jelzés (a felirat és a hely). A **385** feltöltésekor a **383 → 385** lépéshez az **1. blokk** való (a rádió- és Twitch-újdonságok mind újak a tesztelőknek). A **383-at ne** tárd fel újra (a 385 javítja).
-- A feltöltött AAB-ek a Playen (a 2026-09-30-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190, 204, 277, 278, 297, 319, 333, 353, 354, 375, 376, 377, **380**, **382**, **383** — ✅ **a 383 már fel van töltve**, a **385 viszont még nincs** (ezt kell feltölteni).
-- **A nyílt teszt (beta) sávja a 377-en van** — ha oda is felviszed a 385-öt, a **355–385 összesítő** (1b-3.) való.
-- A `play-notes-meta` `lastPublishedBuild` értéke (**382**) a legutóbb **nyilvánosan** kigördült build — ezért aki **382-ről** jön (az éles felhasználók), annak az **1. blokk** való; aki **ennél régebbről**, annak a **361–385 összesítő** (1b-2.).
+- **AZ ÉLES (production) SÁVON MÁR A 384 VAN** (100%-ban kigördülve, a 384 kiadási szövegével, mérve
+  2026-10-02). **A következő nyilvános kiadás a 387**: a `build/HUHS-v1.0.0+387-release.aab` feltöltése
+  után az **1. blokk** (lásd lent) való a kiadási jegyzetbe.
+- **A ZÁRT TESZT (alpha) SÁVJÁN IS A 384 VAN** (100%-ban kigördülve, ugyanazzal a szöveggel) — a
+  **384 → 387** lépéshez szintén az **1. blokk** való (a rádió-, Twitch-, kis képernyő- és
+  kártya-újdonságok mind újak a tesztelőknek).
+- A feltöltött AAB-ek a Playen (a 2026-10-02-i mérés szerint): 1, 155, 159, 171, 175, 178, 181, 190,
+  204, 277, 278, 297, 319, 333, 353, 354, 376, 377, 380, 382, 383, **384** — a **387 viszont még
+  nincs** (ezt kell feltölteni).
+- **A nyílt teszt (beta) sávja a 377-en van** — ha oda is felviszed a 387-et, a **355–387 összesítő** (1b-3.) való.
+- A `play-notes-meta` `lastPublishedBuild` értéke (**384**) a legutóbb **nyilvánosan** kigördült build — ezért aki **384-ről** jön (az éles felhasználók), annak az **1. blokk** való; aki **ennél régebbről**, annak a **361–387 összesítő** (1b-2.).
 - **⚠️ A Play-termékek ország-listája (2026-09-22, javítva):** a termékek **kilenc országban** érhetők el (HU, AT, HR, SI, SK, NL, CZ, RS, UA) — korábban **csak Magyarországon** voltak, miközben az app 8 országban elérhető volt. Ez **szerveroldali + Play-adat** javítás volt, ezért **nem** igényelt új AAB-ot. Ellenőrzés: `node tools/check-play-products.mjs`.
 
 ## 0b. Play-követelmény: alkalmazásregisztráció (határidő: **2026. szeptember 30.**)
@@ -231,10 +232,10 @@ az **az app Névjegyében** van (3. pont), és a felhasználó ott bármikor meg
 A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com/googleplay/android-developer/answer/9859348?hl=en));
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
-> **⚠️ MELYIK BLOKK HOVA VALÓ (mért állapot, 2026-10-01, `node tools/check-play-track.mjs`):**
-> **ÉLES (production) = 382** → ide (382 → 386) **ez a néhány sor** való.
-> **ZÁRT TESZT (alpha) = 383** (100%-ban kigördülve) → ide is **ez a néhány sor** való (383 → 386):
-> a rádió-, Twitch- és kis képernyő-újdonságok mind újak a tesztelőknek.
+> **⚠️ MELYIK BLOKK HOVA VALÓ (mért állapot, 2026-10-02, `node tools/check-play-track.mjs`):**
+> **ÉLES (production) = 384** → ide (384 → 387) **ez a néhány sor** való.
+> **ZÁRT TESZT (alpha) = 384** (100%-ban kigördülve) → ide is **ez a néhány sor** való (384 → 387):
+> a rádió-, Twitch-, kis képernyő- és kártya-újdonságok mind újak a tesztelőknek.
 > **NYÍLT TESZT (beta) = 377** → a **355–387** összesítő való (**1b-3.**).
 > A „Kiadási megjegyzések" mezőbe másolásnál a nyelv **hu-HU** (ez az egyetlen beállított nyelv).
 > A 383-as AAB **már fent van**, de **ne tárd fel újra**: abban a szekció még a logó (Hero) kártya
