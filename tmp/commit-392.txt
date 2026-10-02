@@ -1,0 +1,46 @@
+feat(392): a Twitch-chat minden kepernyon latszik (feko mod, tablet) + nagyobb hely
+
+A TULAJDONOS JELZESEI (2026-10-02, videoval az Android-telefonrol): "gond van androidon
+is, az a chat resz eleg pici", "+ hiba, feko modban nincs chat", "+ figyelj a tabletre
+is". A videot kikockaztam (ffmpeg -> tmp/video-391/frame-*.jpg): a fuggoleges
+elrendezesben a 16:9 video + a fo chat nagy irosavja utan ~40 px maradt a listara.
+
+A MERT GYOKER: feko modban (es tableten) a szelesseg nagy -> az AspectRatio(16/9)
+magassaga majdnem a teljes kepernyo, ezert a chat Expanded-je NULLA magassagot kapott
+-> eltunt.
+
+AMI EPULT:
+- lib/services/twitch_layout.dart (UJ, tiszta): TwitchLayoutMode{stacked,sideBySide},
+  twitchLayoutModeFor(Size) (szeles, ha width >= 700 VAGY width > height),
+  twitchStackedVideoHeight (16:9, de legfeljebb a magassag 34%-a), twitchSideVideoHeight,
+  twitchSideChatWidth (38%, 320..460 koze zarva);
+- lib/screens/twitch/twitch_layout.dart (UJ): TwitchLayoutFrame(video, info, chat) —
+  keskenyen Column (video-korlattal, adatsav, chat Expanded-ben), szelesen Row (balra
+  video + adatsav, jobbra a chat TELJES magassagban);
+- twitch_screen.dart: a vazat hasznalja, az adatsav (cim, nezok, tamogatas) kulon
+  _infoColumn metodban.
+
+A KAPU GEOMETRIAT MER (test/screens/twitch_layout_test.dart, 12 teszt): a vaza valodi
+méretekben kirajzolva (tester.getRect) — allo telefon: a chat a video ALATT, a kepernyo
+40%-anal nagyobb helyen; feko telefon: a chat a video MELLETT, teljes magassagban,
+320 px-nel szelesebben; tablet (800x1280 es 1280x800): egymas mellett; nyitott
+keparany (600x800): a video-korlat tenyleg dolgozik.
+
+MUTACIOS BIZONYITEK 5/5 ELKAPVA — ES A BIZONYITEK EGY VALODI REST TALALT
+(tmp/mutation-proof-twitch-layout.mjs, bajtazonos visszaallitassal): az elso futas 4/5
+lett, mert a "video magassag-korlatjanak elvetele" NEM bukott meg — a magas telefonon
+(412x892) a 16:9 video (231 px) eleve kisebb volt a korlatnal (303 px), tehat a teszt
+nem a korlatot merte. Javitas: uj eset nyitott keparanyu kepernyore (600x800), ahol
+byWidth (337) > cap (272); utana 5/5.
+
+KAPUK (mind merve): flutter test 1474/1474 (12 uj); flutter analyze lib test tiszta;
+i18n --strict zold (chunk-44); check-play-notes zold (1. blokk 340/480, masolatok 4/4
+bajtazonos).
+
+CSOMAG: build/HUHS-v1.0.0+392-release.aab — 83 464 417 bajt, SHA-256
+FB6019AD4347FD1E3679CA6ED128ADCA89906EE8AD4D798AA898598B563388AC; verify-aab 392 ->
+MINDEN ELLENORZES RENDBEN, a 392 changelog-sora mindharom ABI-ban bent van.
+
+A TULAJDONOS LEPESE: a 392 feltoltese a Play Console-ra es kiadasa a ZART TESZTEN
+(tmp/play-392-zart.txt = 3 sor); a 390-et es a 391-et NEM kell feltolteni (a 392
+felvaltja mindkettot); a telefonra a 392 kerul (sideload).

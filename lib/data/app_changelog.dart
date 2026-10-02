@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 392,
+    changes: [
+      'Javítva: a Twitch-oldalon a chat fekvő módban és tableten is látszik (a videó mellett), álló módban pedig nagyobb helyet kap.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 391,
     changes: [
       'ÚJ: a Twitch-oldal alatti chat külön szálon fut — amit a stream alatt írsz, nem kerül ki a fő chatbe.',

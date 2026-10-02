@@ -14,6 +14,7 @@ import '../../widgets/app_text.dart';
 import '../more/donate_screen.dart';
 import '../../widgets/radio_player_bar.dart';
 import 'twitch_chat.dart';
+import 'twitch_layout.dart';
 
 /// **Twitch-élő adás az appban** — a tulajdonos kérése (2026-10-01):
 /// *„lehessen nézni az appban… nyisson meg egy külön oldalt… legessen chatelni
@@ -193,65 +194,67 @@ class _TwitchScreenState extends ConsumerState<TwitchScreen> with WidgetsBinding
           ),
         ],
       ),
-      body: Column(
-        children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: ColoredBox(
-              color: Colors.black,
-              child: _controller == null
-                  ? const Center(child: CircularProgressIndicator())
-                  : WebViewWidget(controller: _controller!),
-            ),
-          ),
-          if (status != null && status.title.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: AppText(
-                      status.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  if (status.isLive)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: AppText('${status.viewers} ${tr(context, 'néző')}'),
-                    ),
-                ],
-              ),
-            ),
-          // TÁMOGATÁS (390): a tulajdonos jelzése — *„az a támogatás gomb nagyon
-          // rossz helyen van"*. Eddig lebegő gomb (FAB) volt, ezért a chat alsó
-          // sávjában, pont a „Küldés" gomb mellett lebegett: úgy nézett ki,
-          // mintha a chathez tartozna, és véletlenül is el lehetett találni (az
-          // pedig fizetési oldalt nyit). Most a videó alatti adatsávban van, a
-          // chattől **elkülönítve**, saját ikonnal — az app sávjában pedig
-          // ugyanez az ikon (`volunteer_activism`) jelöli ugyanazt a műveletet.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => unawaited(DonateScreen.openDonate()),
-                icon: const Icon(Icons.volunteer_activism, size: 18),
-                label: const AppText('Támogatás PayPallal'),
-              ),
-            ),
-          ),
-          const Divider(height: 12),
-          // A STREAM-CHAT (391) — a tulajdonos jelzése: *„a twitch oldal alatti
-          // chatr ha írok, valamiért a fő chatre is kikerül...”*. Eddig itt a fő
-          // chat widgetje állt, ezért ugyanabba a `live_feed_posts` gyűjteménybe
-          // írt. Mostantól külön szál (`twitch_chat`), ezért a fő chat
-          // érintetlen marad.
-          const Expanded(child: TwitchStreamChat()),
-        ],
+      // AZ ELRENDEZÉS (392) — a tulajdonos jelzései: *„az a chat rész elég pici”*,
+      // *„fekvő módban nincs chat”*, *„figyelj a tabletre is”*. A váz
+      // (`TwitchLayoutFrame`) dönt: keskenyen egymás alatt (a videó legfeljebb a
+      // magasság harmada), szélesen/tableten egymás MELLETT, ezért a chat mindig
+      // látszik. A mérés a `test/screens/twitch_layout_test.dart`-ban van.
+      body: TwitchLayoutFrame(
+        video: _controller == null
+            ? const Center(child: CircularProgressIndicator())
+            : WebViewWidget(controller: _controller!),
+        info: _infoColumn(context, status),
+        chat: const TwitchStreamChat(),
       ),
+    );
+  }
+
+  /// A videó alatti adatsáv: cím, nézőszám és a **támogatás** gomb.
+  ///
+  /// TÁMOGATÁS (390): a tulajdonos jelzése — *„az a támogatás gomb nagyon rossz
+  /// helyen van”*. Eddig lebegő gomb (FAB) volt, ezért a chat alsó sávjában, pont
+  /// a „Küldés” gomb mellett lebegett: úgy nézett ki, mintha a chathez tartozna,
+  /// és véletlenül is el lehetett találni (az pedig fizetési oldalt nyit). Most a
+  /// videó alatti adatsávban van, a chattől **elkülönítve** — az app sávjában
+  /// pedig ugyanez az ikon (`volunteer_activism`) jelöli ugyanazt a műveletet.
+  Widget _infoColumn(BuildContext context, TwitchLiveStatus? status) {
+    return Column(
+      key: const Key('twitch-info-column'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (status != null && status.title.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: AppText(
+                    status.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (status.isLive)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: AppText('${status.viewers} ${tr(context, 'néző')}'),
+                  ),
+              ],
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          child: SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => unawaited(DonateScreen.openDonate()),
+              icon: const Icon(Icons.volunteer_activism, size: 18),
+              label: const AppText('Támogatás PayPallal'),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

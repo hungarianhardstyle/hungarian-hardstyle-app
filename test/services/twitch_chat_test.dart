@@ -128,7 +128,7 @@ void main() {
 
     test('FORRÁS-LINT: a Twitch-oldal a stream-chatet használja, nem a fő chatet', () {
       final screen = File('lib/screens/twitch/twitch_screen.dart').readAsStringSync();
-      expect(screen.contains('const Expanded(child: TwitchStreamChat())'), isTrue);
+      expect(screen.contains('chat: const TwitchStreamChat()'), isTrue);
       expect(screen.contains('LiveFeedScreen'), isFalse,
           reason: 'ez volt a hiba: a Twitch-oldal a fő chat widgetjét használta');
       expect(screen.contains("import '../community/community_screen.dart';"), isFalse,

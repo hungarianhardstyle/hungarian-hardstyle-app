@@ -1,0 +1,9 @@
+OK     az elrendezés MINDIG függőleges (a régi viselkedés: fekvő módban nincs chat) → a kapu elcsípte («fekvő telefonon a chat a videó MELLETT van»)
+       (az első futás felmelegíti a fordítót, ezért lassabb)
+OK     a videó MAGASSÁG-KORLÁTJA elvéve (a videó elviszi a helyet — „elég pici” chat) → a kapu elcsípte («nyitott képarányú (kis tablet / összecsukható) képernyőn is a chat kapja a helyet»)
+OK     a chat oszlop szélessége NULLA (fekvő módban nem látszana a chat) → a kapu elcsípte («fekvő telefonon a chat a videó MELLETT van»)
+OK     a függőleges módban a chat FIX 40 px (a bejelentett „pici chat”) → a kapu elcsípte («álló telefonon a chat a videó ALATT van»)
+OK     a képernyő SAJÁT 16:9 videót épít a váza helyett (a régi hiba visszahozása) → a kapu elcsípte («a Twitch-oldal nem épít saját függőleges elrendezést»)
+
+5/5 mutáció ELKAPVA
+a források BÁJTAZONOSAK (érintetlenek)

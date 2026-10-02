@@ -1,0 +1,5 @@
+{
+  "Javítva: a Twitch-oldalon a chat fekvő módban és tableten is látszik (a videó mellett), álló módban pedig nagyobb helyet kap.": "Fixed: on the Twitch screen the chat is now visible in landscape and on tablets too (next to the video), and it gets more room in portrait.",
+  "ÚJ: a Twitch-oldal alatti chat külön szálon fut — amit a stream alatt írsz, nem kerül ki a fő chatbe.": "NEW: the chat under the Twitch page runs on a separate thread — what you write during the stream no longer appears in the main chat.",
+  "Javítva: a Twitch-oldalon a támogatás gomb a videó alá került (eddig a chat „Küldés” gombja mellett lebegett).": "Fixed: on the Twitch screen the support button moved below the video (it used to float next to the chat's Send button)."
+}

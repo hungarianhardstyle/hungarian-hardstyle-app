@@ -368,17 +368,23 @@ void main() {
         reason: 'a támogatás újra lebegő gombként a chat küldés gombja mellé került',
       );
 
-      final videoIndex = source.indexOf('AspectRatio(');
-      final donateIndex = source.indexOf("label: const AppText('Támogatás PayPallal')");
-      final chatIndex = source.indexOf('const Expanded(child: TwitchStreamChat())');
+      // ⚠️ A HELYET a metódus TESTÉBEN mérjük (a fájl-szintű „benne van” minta
+      // gyenge — a 386/390 tanulsága). A tényleges geometriát (a gomb a videó
+      // alatt, a chat fölött, minden képernyőn) a
+      // `test/screens/twitch_layout_test.dart` méri kirajzolva.
+      final infoBody = source.substring(source.indexOf('Widget _infoColumn('));
+      expect(infoBody.contains("label: const AppText('Támogatás PayPallal')"), isTrue,
+          reason: 'a támogatás gomb az adatsávban van');
+      expect(infoBody.contains('TwitchStreamChat'), isFalse,
+          reason: 'a támogatás gomb nem a chatben van');
 
-      expect(videoIndex, greaterThan(0), reason: 'nincs videó a képernyőn');
-      expect(donateIndex, greaterThan(0), reason: 'nincs támogatás gomb a képernyőn');
-      expect(chatIndex, greaterThan(0), reason: 'nincs chat a képernyőn');
-      expect(donateIndex, greaterThan(videoIndex),
-          reason: 'a támogatás gomb a videó ALATT van');
-      expect(donateIndex, lessThan(chatIndex),
-          reason: 'a támogatás gomb a chat FÖLÖTT van (nem a küldés gomb mellett)');
+      final frameIndex = source.indexOf('TwitchLayoutFrame(');
+      final infoArgIndex = source.indexOf('info: _infoColumn(', frameIndex);
+      final chatArgIndex = source.indexOf('chat: const TwitchStreamChat()', frameIndex);
+      expect(frameIndex, greaterThan(0), reason: 'nincs alkalmazkodó váza');
+      expect(infoArgIndex, greaterThan(frameIndex), reason: 'az adatsáv nincs megadva');
+      expect(chatArgIndex, greaterThan(infoArgIndex),
+          reason: 'az adatsáv (támogatás) a chat ELŐTT van a vázban');
     });
 
     test('a támogatás ikonja mindkét helyen ugyanaz (nem szív — az a kedvencelés)', () {

@@ -1,0 +1,3 @@
+- ÚJ: a Twitch-oldal alatti chat külön szálon fut — amit a stream alatt írsz, nem kerül ki a fő chatbe.
+- Javítva: a Twitch-oldalon a chat fekvő módban és tableten is látszik (a videó mellett), álló módban nagyobb helyet kap.
+- Javítva: a Twitch-oldalon a támogatás gomb a videó alá került (eddig a chat „Küldés” gombja mellett lebegett).
