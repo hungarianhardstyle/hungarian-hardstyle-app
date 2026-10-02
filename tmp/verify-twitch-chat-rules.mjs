@@ -86,6 +86,24 @@ const withUid = (fields) =>
     ]),
   );
 
+/**
+ * A próba-dokumentum **törlése, ellenőrizve**.
+ *
+ * ⚠️ MÉRT HIBA (2026-10-02, a tulajdonos jelzése): *„meg ezt a szabály próbált
+ * töröld már a chatről :D”* — a 300 ékezetes betűs próba-üzenet **benne maradt**
+ * az éles stream-chatben, mert a törlés sikerét **nem ellenőriztem**. Mostantól
+ * minden próba után külön ellenőrizzük, hogy a dokumentum tényleg eltűnt.
+ */
+const deleteProbe = async (token, documentId, label) => {
+  const response = await fetch(`${BASE}/twitch_chat/${documentId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const check404 = await fetch(`${BASE}/twitch_chat/${documentId}`);
+  check(`${label}: a próba törlése és ellenőrzése`, response.status === 200 && check404.status === 404,
+    `DELETE ${response.status} / utána GET ${check404.status}`);
+};
+
 // 1) A HELYES írás átmegy.
 const ok = await commit(idToken, `probe-${stamp}`, withUid({
   authorId: { stringValue: '{UID}' },
@@ -118,10 +136,7 @@ const accented = await commit(idToken, `probe-accent-${stamp}`, withUid({
 }));
 check('a 300 ékezetes betű (600 bájt) ÁTMEGY — a korlát karakter', accented.status === 200, `HTTP ${accented.status}`);
 if (accented.status === 200) {
-  await fetch(`${BASE}/twitch_chat/probe-accent-${stamp}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${idToken}` },
-  });
+  await deleteProbe(idToken, `probe-accent-${stamp}`, 'ékezetes próba');
 }
 
 // 5) Idegen szerző nevű írás TILOS (authorId nem a bejelentkezett felhasználó).
@@ -149,6 +164,19 @@ check('a szerző törölheti a saját üzenetét', cleanup.status === 200, `HTTP
 // 8) A törölt próba valóban eltűnt.
 const gone = await fetch(`${BASE}/twitch_chat/probe-${stamp}`);
 check('a próba-dokumentum eltűnt', gone.status === 404, `HTTP ${gone.status}`);
+
+// 9) ⚠️ A TELJES gyűjtemény: nem maradt `probe-` kezdetű dokumentum.
+// (A tulajdonos jelezte, hogy egy próba-üzenet benne maradt a chatben — ez a
+// záró ellenőrzés ezt fogja meg, nem a remény.)
+const listResponse = await fetch(`${BASE}/twitch_chat?pageSize=200`, {
+  headers: { Authorization: `Bearer ${idToken}` },
+});
+const listed = await listResponse.json().catch(() => ({}));
+const leftovers = (listed.documents || [])
+  .map((doc) => String(doc.name || '').split('/').pop())
+  .filter((id) => id.startsWith('probe-'));
+check('a gyűjteményben nem maradt próba-dokumentum', leftovers.length === 0,
+  leftovers.length === 0 ? 'tiszta' : leftovers.join(', '));
 
 const failed = results.filter((entry) => !entry.ok);
 console.log(`\n${results.length - failed.length}/${results.length} ellenőrzés rendben`);
