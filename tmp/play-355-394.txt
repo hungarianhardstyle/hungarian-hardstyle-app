@@ -1,4 +1,4 @@
-- ÚJ: Twitch-adás az appban (külön stream-chattel, fekvő módban is látszó chattel), rádió „most szól”.
+- ÚJ: Twitch-adás az appban (külön stream-chattal, emotikonokkal, nagyobb chattel), rádió „most szól”.
 - ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság; heti összefoglaló.
 - ÚJ: megosztható hírek és DJ-adatlapok; értesítés a kedvelt DJ új tartalmáról; @mindenki push.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.

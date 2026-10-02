@@ -272,25 +272,25 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–392** összesítő (a 384 után)
+## 1b-2. Play Console — a **361–394** összesítő (a 384 után)
 
 **Ezt használd, ha a felhasználó a 361–380 közötti valamelyik buildről jön** (régebbi nyilvános
-build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–392** között készültek.
+build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–394** között készültek.
 A karakter-számot a `tools/check-play-notes.mjs` méri.
-⚠️ **Az ÉLES sávon a 384 van** (mérve, 2026-10-02), ezért aki **384-ről** jön, annak a **385–392**
-közötti sorok az újak — erre a legjobb ez az összesítő, kiegészítve az **1. blokkal**.
+⚠️ **Az ÉLES sávon a 384 van** (mérve, 2026-10-02) — arra a sávra a **2b. blokk** való (egyetlen,
+összevont szöveg), mert az 1. blokk + ez az összesítő együtt nem férne bele az 500-as limitbe.
 
 ```play-notes
-- ÚJ: Twitch-adás az appban (külön stream-chattel, fekvő módban is látszó chattel), rádió „most szól”.
+- ÚJ: Twitch-adás az appban (külön stream-chattal, emotikonokkal, nagyobb chattel), rádió „most szól”.
 - ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság; heti összefoglaló.
 - ÚJ: megosztható hírek és DJ-adatlapok; értesítés a kedvelt DJ új tartalmáról; @mindenki push.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
 - Javítva: rádió Leállítás gomb a zárképernyőn; a listák görgetése nem ugrik vissza.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–392** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–394** összesítő)
 
-**Ezt használd, ha a 392-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 394-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-10-02) szerint ott a **377** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
@@ -298,7 +298,7 @@ közötti sorok az újak — erre a legjobb ez az összesítő, kiegészítve az
 linknyitás + QR-jelenlét** és a mostani újdonságok is.
 
 ```play-notes
-- ÚJ: Twitch-adás az appban (külön stream-chattel, fekvő módban is látszó chattel), rádió „most szól”.
+- ÚJ: Twitch-adás az appban (külön stream-chattal, emotikonokkal, nagyobb chattel), rádió „most szól”.
 - ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság; heti összefoglaló.
 - ÚJ: megosztható hírek és DJ-adatlapok; értesítés a kedvelt DJ új tartalmáról; @mindenki push.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
