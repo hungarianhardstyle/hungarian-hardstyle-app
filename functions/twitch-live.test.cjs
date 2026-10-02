@@ -56,9 +56,10 @@ const app = initializeApp({ projectId });
 const db = getFirestore(app, databaseId);
 
 const { __twitchLiveForTests } = require('./index.js');
-const { runTwitchLiveNotice } = __twitchLiveForTests;
+const { runTwitchLiveNotice, syncTwitchCardFromWordPress } = __twitchLiveForTests;
 
 const STATE_DOC = 'app_settings/twitch_live';
+const CARD_DOC = 'app_settings/twitch';
 const PROFILE_UIDS = ['uid-alpha', 'uid-beta', 'uid-gamma'];
 
 /** A Twitch GraphQL válasza — a mért éles alak szerint (2026-10-01). */
@@ -79,7 +80,17 @@ const LIVE_TWO = { ...LIVE_ONE, id: '44123456790', title: 'HUHS Live #43 — est
 
 /** Hálózat-helyettesítő: a Twitch-válasz és a WordPress-hívások rögzítése. */
 function installFetchStub() {
-  const calls = { twitch: 0, wordpress: [], mode: 'offline', stream: LIVE_ONE, fail: false };
+  const calls = {
+    twitch: 0,
+    wordpress: [],
+    mode: 'offline',
+    stream: LIVE_ONE,
+    fail: false,
+    // A plugin-adminban beállított kártya (a tulajdonos jelzése nyomán, 2.14.15).
+    card: { enabled: true, imageUrl: '', headerText: '', showWhenOffline: false },
+    cardReads: 0,
+    cardFail: false,
+  };
   const realFetch = globalThis.fetch;
   globalThis.fetch = async (url, options = {}) => {
     const target = String(url);
@@ -96,6 +107,18 @@ function installFetchStub() {
         status: 200,
         json: async () => ({ ok: true, sent: 1027, queued: true }),
         text: async () => '{"ok":true}',
+      };
+    }
+    // A WordPress-adminban beállított Twitch-kártya (2.14.15) — a figyelő kör
+    // ezt olvassa, és a Firestore-ba szinkronizálja.
+    if (target.includes('/huhs/v1/twitch-card')) {
+      calls.cardReads += 1;
+      if (calls.cardFail) throw new Error('hálózati hiba (szimulált)');
+      return {
+        ok: true,
+        status: 200,
+        json: async () => calls.card,
+        text: async () => JSON.stringify(calls.card),
       };
     }
     throw new Error(`nem várt hívás a tesztben: ${target}`);
@@ -115,6 +138,7 @@ before(async () => {
 beforeEach(async () => {
   stub = installFetchStub();
   await db.doc(STATE_DOC).delete();
+  await db.doc(CARD_DOC).delete();
   const existing = await db.collection('notifications').get();
   await Promise.all(existing.docs.map((doc) => doc.ref.delete()));
 });
@@ -239,4 +263,78 @@ test('ha a Twitch nem érhető el, nem tippelünk (nincs push, a jelölés marad
   assert.equal(stub.calls.wordpress.length, 1, 'hálózati hiba esetén nem küldünk');
   const after = (await db.doc(STATE_DOC).get()).data();
   assert.equal(after.announcedStreamId, before.announcedStreamId, 'a jelölést nem rontjuk el');
+});
+
+/* --- A plugin-adminban beállított Twitch-kártya szinkronja (2.14.15) -------- */
+/* A tulajdonos jelzése: *„nem látok sehol olyan opciót, ahol meg tudok adni
+   twitch stream beharangozót"* — a beállítás ezért a plugin adminjába került, és
+   ezek a tesztek mérik, hogy onnan **tényleg eljut** az apphoz (Firestore). */
+
+test('a plugin-admin beállítása bekerül a Firestore-ba (az app ezt olvassa)', async () => {
+  stub.calls.card = {
+    enabled: true,
+    imageUrl: 'https://example.test/plakat.jpg',
+    headerText: 'Következő adás: péntek 20:00',
+    showWhenOffline: true,
+  };
+  const result = await syncTwitchCardFromWordPress();
+
+  assert.equal(result.synced, true);
+  const card = (await db.doc(CARD_DOC).get()).data();
+  assert.equal(card.imageUrl, 'https://example.test/plakat.jpg');
+  assert.equal(card.headerText, 'Következő adás: péntek 20:00');
+  assert.equal(card.showWhenOffline, true);
+  assert.equal(card.source, 'wordpress-admin');
+});
+
+test('változatlan beállításnál NEM ír újra (5 percenként nem terhel)', async () => {
+  stub.calls.card = { enabled: true, imageUrl: '', headerText: '', showWhenOffline: false };
+  const first = await runTwitchLiveNotice();
+  assert.equal(first.card.skipped, undefined, 'az első kör szinkronizál (mert még nincs egyezés)');
+
+  const second = await runTwitchLiveNotice();
+  assert.equal(second.card.skipped, 'unchanged');
+});
+
+test('KÉP NÉLKÜL az „élő adás nélkül is" nem kapcsol be (nincs mit mutatni)', async () => {
+  stub.calls.card = { enabled: true, imageUrl: '', headerText: 'Beharangozó', showWhenOffline: true };
+  await syncTwitchCardFromWordPress();
+
+  const card = (await db.doc(CARD_DOC).get()).data();
+  assert.equal(card.showWhenOffline, false, 'kép nélkül nem lehet offline kártya');
+  assert.equal(card.headerText, 'Beharangozó', 'a felirat viszont átjön');
+});
+
+test('ha a plugin nem érhető el, a meglévő beállítás MARAD (nem törlünk)', async () => {
+  stub.calls.card = {
+    enabled: true,
+    imageUrl: 'https://example.test/regi.jpg',
+    headerText: 'Régi',
+    showWhenOffline: true,
+  };
+  await syncTwitchCardFromWordPress();
+
+  stub.calls.cardFail = true;
+  const result = await syncTwitchCardFromWordPress();
+
+  assert.equal(result.skipped, 'unreachable');
+  const card = (await db.doc(CARD_DOC).get()).data();
+  assert.equal(card.imageUrl, 'https://example.test/regi.jpg', 'hálózati hiba nem törölheti a beállítást');
+});
+
+test('a kártya-szinkron a figyelő kör része (egy kör, egy írás)', async () => {
+  stub.calls.card = {
+    enabled: true,
+    imageUrl: 'https://example.test/uj.jpg',
+    headerText: 'Új adás',
+    showWhenOffline: true,
+  };
+  stub.calls.mode = 'offline';
+  const result = await runTwitchLiveNotice();
+
+  assert.ok(result.card, 'a kör eredményében látszik a kártya sorsa');
+  assert.equal(result.card.synced, true);
+  assert.equal(stub.calls.cardReads, 1, 'körönként egyszer olvassuk a plugin beállítását');
+  const card = (await db.doc(CARD_DOC).get()).data();
+  assert.equal(card.imageUrl, 'https://example.test/uj.jpg');
 });

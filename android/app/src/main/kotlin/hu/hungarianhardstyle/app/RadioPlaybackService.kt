@@ -3,11 +3,13 @@ package hu.hungarianhardstyle.app
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.drawable.Icon
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -18,6 +20,7 @@ import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -263,14 +266,50 @@ class RadioPlaybackService : Service() {
                 }
 
                 override fun onStop() {
-                    stopPlayer()
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
+                    stopEverything()
+                }
+
+                /**
+                 * ⚠️ A „Leállítás" gomb a **médiakártyán** (zárképernyő, gyors
+                 * beállítások) ezen az úton jön: a kártya a PlaybackState
+                 * **egyedi akcióit** is kirajzolja, és a rendszer ezt a
+                 * visszahívást hívja meg. A tulajdonos jelzése: *„nincs stop
+                 * gomb, a zárképernyőn sincs"*.
+                 */
+                override fun onCustomAction(action: String, extras: Bundle?) {
+                    if (action == CUSTOM_ACTION_STOP) stopEverything()
                 }
             })
             isActive = true
         }
         applyMetadata()
+    }
+
+    /**
+     * Teljes leállítás EGY helyen: a lejátszó, a hangfókusz, az értesítés és a
+     * szolgáltatás is lezárul. Ezt hívja a médiakártya stop-gombja, a
+     * fejhallgató-gomb (`onStop`), a `ACTION_STOP` intent és a „Lomtárba húzás”.
+     */
+    private fun stopEverything() {
+        stopPlayer()
+        runCatching { stopForeground(STOP_FOREGROUND_REMOVE) }
+        stopSelf()
+    }
+
+    /**
+     * A „Leállítás" művelet, amit a **médiakártya** és az **értesítés** is kap.
+     *
+     * Két csatornán adjuk át, mert a rendszerek máshonnan rajzolnak:
+     *  * az **értesítés** akció-sora (`Notification.Action`) — az árnyékolt
+     *    értesítésben és a kompakt sorban látszik;
+     *  * a **PlaybackState egyedi akciója** — a médiakártya (zárképernyő,
+     *    gyors beállítások) ebből rajzol.
+     */
+    private fun stopPendingIntent(): PendingIntent {
+        val intent = Intent(this, RadioPlaybackService::class.java).setAction(ACTION_STOP)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+            (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
+        return PendingIntent.getService(this, 2, intent, flags)
     }
 
     /**
@@ -297,6 +336,16 @@ class RadioPlaybackService : Service() {
                     .setActions(
                         PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or
                             PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_STOP,
+                    )
+                    // A „Leállítás" a médiakártyán (zárképernyő, gyors beállítások).
+                    // ⚠️ A `CustomAction.Builder` ikonja **erőforrás-azonosító**
+                    // (nem `Icon`) — ez a framework API-ja.
+                    .addCustomAction(
+                        PlaybackState.CustomAction.Builder(
+                            CUSTOM_ACTION_STOP,
+                            "Leállítás",
+                            R.drawable.ic_radio_stop,
+                        ).build(),
                     )
                     .setState(
                         if (player?.isPlaying == true) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED,
@@ -605,11 +654,22 @@ class RadioPlaybackService : Service() {
         }
         // A médiakártya-stílus köti össze az értesítést a zárképernyőn megjelenő
         // munkamenettel (és a fejhallgató-gombbal).
+        //
+        // ⚠️ A „Leállítás" gomb (a tulajdonos jelzése: *„nincs stop gomb, a
+        // zárképernyőn sincs"*): az akció-sorba kerül, és a kompakt nézetben is
+        // látszik (a play/pause-t a rendszer a munkamenetből rajzolja mellé).
+        builder.addAction(
+            Notification.Action.Builder(
+                Icon.createWithResource(this, R.drawable.ic_radio_stop),
+                "Leállítás",
+                stopPendingIntent(),
+            ).build(),
+        )
         mediaSession?.let { session ->
             builder.setStyle(
                 Notification.MediaStyle()
                     .setMediaSession(session.sessionToken)
-                    .setShowActionsInCompactView(),
+                    .setShowActionsInCompactView(0),
             )
         }
         return builder.build()
@@ -637,6 +697,12 @@ class RadioPlaybackService : Service() {
         const val ACTION_PLAY = "hu.hungarianhardstyle.app.radio.PLAY"
         const val ACTION_STOP = "hu.hungarianhardstyle.app.radio.STOP"
         const val ACTION_VOLUME = "hu.hungarianhardstyle.app.radio.VOLUME"
+
+        /**
+         * A médiakártya „Leállítás" gombjának azonosítója (a PlaybackState
+         * egyedi akciója) — a rendszer ezt küldi vissza az `onCustomAction`-ben.
+         */
+        const val CUSTOM_ACTION_STOP = "hu.hungarianhardstyle.app.radio.CUSTOM_STOP"
 
         /** A felület által küldött „most szól" cím (lásd [applyMetadata]). */
         const val ACTION_METADATA = "hu.hungarianhardstyle.app.radio.METADATA"

@@ -1,0 +1,49 @@
+feat(388-elokeszites): stop gomb a radio ertesitesen + Twitch beharangozo a plugin adminjaban
+
+A tulajdonos ket jelzese (2026-10-02), mindketto javitva:
+
+1) „nincs stop gomb, a zarkepernyon sincs"
+   A mediakartya eddig csak a play/pause-t adta (a MediaSession allapotabol),
+   kulon leallitas nem volt. Most:
+   - az ERTESITES akcio-soraba bekerul a „Leallitas" gomb (sajat ikon:
+     res/drawable/ic_radio_stop.xml), a kompakt sorban is (setShowActionsInCompactView(0));
+   - a MEDIAKARTYA (zarkepernyo + gyors beallitasok) a PlaybackState EGYEDI
+     akciojabol kapja ugyanazt (addCustomAction + onCustomAction);
+   - mindket ut a KOZOS stopEverything()-be fut (lejatszo + ertesites + szolgaltatas).
+   MERVE (emulator, Android 14): az ertesites akcio-sora
+   `actions={ [0] "Leallitas" -> PendingIntent{... startService ...} }`, a session
+   `custom actions=[Action:mName='Leallitas...]`, `actions=519` (STOP|PLAY|PAUSE|PLAY_PAUSE);
+   kepek: tmp/emu-stop-lock.png (zarkepernyo, a gomb rajta van) es tmp/emu-stop-shade.png.
+
+2) „a 2.14.14-ben nem latok sehol olyan opciot, ahol meg tudok adni twitch stream
+   beharangozot, holott azt irtad van"
+   Igaza volt: a kartya felulirasa csak a Firestore-ban volt. Mostantol a
+   WordPress-adminban: HUHS Mobile -> Twitch beharangozo (kep + felirat +
+   engedelyezes + „elo adas nelkul is latszodjon"). A Twitch-figvelo kor
+   (5 percenkent) atszinkronizalja a Firestore app_settings/twitch dokumentumba,
+   ezert a MAR KINT LEVO appok is latjak, uj build nelkul.
+   - plugin 2.14.15: uj admin oldal + huhs_twitch_card opcio + nyilvanos
+     GET /wp-json/huhs/v1/twitch-card + tisztitas (csak http(s) kep, max 80
+     karakteres felirat, kep nelkul nincs offline mod) + alap ertek BE
+     (nem kapcsolja ki a mukodo elo kartyat);
+   - functions: syncTwitchCardFromWordPress() a figyelo korben (csak valtozaskor ir,
+     halozati hibanal nem nyul a meglevo beallitashoz) — DEPLOYOLVA.
+
+BIZONYITEK:
+- plugin harness (Docker, a szallitando ZIP-en): uj 9. kor TWITCH-CARD OK,
+  osszesen 49 lintelt fajl, 117/117, 117/117, 72/72, 56/56, 36/36, 24/24,
+  push-lanc 12/12 -> MINDEN ELLENORZES RENDBEN (kilepes 0; tmp/php-2155-run.txt);
+  ZIP: build/huhs-mobile-api-2.14.15.zip, 202 231 bajt,
+  SHA-256 ABED5F8036CBEF3EF429CE9C296609F4D6C062DA21D875A707BED44746BAB990
+- functions: tiszta 404/404, emulatoros 10 suite 129 -> 134 teszt, 0 bukó; a
+  twitch-live suite 11 teszt (5 uj a kartya-szinkronra: bekerul a Firestore-ba,
+  valtozatlannal nem ir, kep nelkul nem kapcsol be az offline mod, halozati
+  hibanal marad a regi beallitas, koronkent egyszer olvas).
+- Dart: analyze tiszta; android_radio_service_test 23/23 (3 uj a stop gombra).
+- MERt SAJAT HIBA: a szinkron eredmenye eloszor `card.skipped || card` volt, ami
+  sztringgé olvadt (a teszt `unchanged`-et vart, `undefined` jott) — javitva:
+  mindig objektum megy vissza. A meresi hiba a sajat tesztemben bukott meg, nem
+  a funkcioban.
+
+MERt ESZKOZ-HIBA: az uj PHP-ellenorzo elso futasa „Class WP_REST_Server not
+found"-dal allt le (hianyzo stub) — a kapu ezt jelezte, nem a plugin volt rossz.

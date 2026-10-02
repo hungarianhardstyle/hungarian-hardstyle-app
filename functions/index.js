@@ -8965,6 +8965,9 @@ exports.__weeklyDigestForTests = { sendWeeklyDigest };
 const TWITCH_LIVE_DOC = 'app_settings/twitch_live';
 const TWITCH_LIVE_KIND = 'twitch_live';
 
+/** A főoldali Twitch-kártya felülírása (ezt olvassa az app, ezt tölti a plugin). */
+const TWITCH_CARD_DOC = 'app_settings/twitch';
+
 /**
  * A **nyilvános** Twitch-állapot lekérdezése (kulcs nélkül).
  *
@@ -9040,18 +9043,101 @@ async function sendTwitchLivePush(params) {
 }
 
 /**
+ * A **Twitch-kártya beállítása a WordPress-adminból** (2.14.15, 2026-10-02).
+ *
+ * MIÉRT: a tulajdonos a plugin adminjában kereste ezt a beállítást
+ * (*„nem látok sehol olyan opciót, ahol meg tudok adni twitch stream
+ * beharangozót"*) — a kártya felülírása viszont a Firestore-ban él, amit az app
+ * olvas. Ezért a pluginban beállított értéket **átszinkronizáljuk** a Firestore
+ * `app_settings/twitch` dokumentumba: így a már kint lévő appok is azonnal
+ * látják, új build nélkül.
+ */
+async function fetchWordPressTwitchCard() {
+  try {
+    const response = await fetch(`${WORDPRESS_BASE_URL.replace('/huhs/v1', '')}/huhs/v1/twitch-card`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      logWarning('twitch_card_fetch_failed', `HTTP ${response.status}`);
+      return null;
+    }
+    const body = await response.json().catch(() => null);
+    if (!body || typeof body !== 'object') return null;
+    const imageUrl = String(body.imageUrl ?? '').trim();
+    return {
+      enabled: body.enabled !== false,
+      imageUrl,
+      headerText: String(body.headerText ?? '').trim(),
+      // ⚠️ Kép nélkül az „élő adás nélkül is" értelmetlen (nincs mit mutatni) —
+      // ugyanaz a szabály, mint a plugin adminjában.
+      showWhenOffline: body.showWhenOffline === true && imageUrl !== '',
+    };
+  } catch (error) {
+    logWarning('twitch_card_fetch_failed', error?.message || String(error));
+    return null;
+  }
+}
+
+/**
+ * Egy kör: a WordPress-adminban beállított kártya átszinkronizálása.
+ *
+ * Csak **változáskor** ír (különben 5 percenként felesleges írás lenne), és
+ * hálózati hiba esetén **nem nyúl** a meglévő beállításhoz.
+ */
+async function syncTwitchCardFromWordPress() {
+  const card = await fetchWordPressTwitchCard();
+  if (!card) return { skipped: 'unreachable' };
+
+  const ref = db.doc(TWITCH_CARD_DOC);
+  const snapshot = await ref.get();
+  const current = snapshot.exists ? snapshot.data() || {} : {};
+  const same =
+    Boolean(current.enabled) === card.enabled &&
+    String(current.imageUrl ?? '') === card.imageUrl &&
+    String(current.headerText ?? '') === card.headerText &&
+    Boolean(current.showWhenOffline) === card.showWhenOffline;
+  if (same) return { skipped: 'unchanged' };
+
+  await ref.set(
+    {
+      enabled: card.enabled,
+      imageUrl: card.imageUrl,
+      headerText: card.headerText,
+      showWhenOffline: card.showWhenOffline,
+      source: 'wordpress-admin',
+      syncedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+  const summary = {
+    synced: true,
+    enabled: card.enabled,
+    showWhenOffline: card.showWhenOffline,
+    hasImage: card.imageUrl !== '',
+  };
+  console.info(JSON.stringify({ event: 'twitch_card_sync', ...summary }));
+  return summary;
+}
+
+/**
  * Egy kör: megnézi, él-e a csatorna, és **adásonként egyszer** szól mindenkinek.
  *
  * A döntés tiszta (`twitchLiveNoticePlan`): új adás → értesítés; ugyanaz az adás
  * → semmi; az adás vége → a jelölés törlése, hogy a következő adás újra szóljon.
+ *
+ * ⚠️ Ugyanez a kör viszi át a **Twitch-kártya** WordPress-adminban beállított
+ * értékét a Firestore-ba (lásd `syncTwitchCardFromWordPress`) — így a tulajdonos
+ * beállítása build nélkül jut el az appokhoz.
  */
 async function runTwitchLiveNotice() {
+  const card = await syncTwitchCardFromWordPress();
+
   const ref = db.doc(TWITCH_LIVE_DOC);
   const snapshot = await ref.get();
   const state = snapshot.exists ? snapshot.data() || {} : {};
 
   const live = await fetchTwitchLiveState();
-  if (!live) return { skipped: 'unreachable' };
+  if (!live) return { skipped: 'unreachable', card };
 
   const plan = twitchLiveNoticePlan({
     live,
@@ -9068,7 +9154,12 @@ async function runTwitchLiveNotice() {
   if (!plan.notify) {
     // ⚠️ A kihagyás OKA is naplózva van: a „nem történt semmi" és a „le sem
     // futott" különben ugyanúgy nézne ki (a projekt visszatérő tanulsága).
-    const skipped = { skipped: plan.reason, isLive: live.isLive, viewers: live.viewers };
+    const skipped = {
+      skipped: plan.reason,
+      isLive: live.isLive,
+      viewers: live.viewers,
+      card,
+    };
     console.info(JSON.stringify({ event: 'twitch_live_skip', ...skipped }));
     return skipped;
   }
@@ -9143,7 +9234,13 @@ exports.sendTwitchLiveNotice = onSchedule(
 );
 
 // A Twitch-figyelő mérhető változata (hálózat nélkül is hívható).
-exports.__twitchLiveForTests = { runTwitchLiveNotice, fetchTwitchLiveState, sendTwitchLivePush };
+exports.__twitchLiveForTests = {
+  runTwitchLiveNotice,
+  fetchTwitchLiveState,
+  sendTwitchLivePush,
+  syncTwitchCardFromWordPress,
+  fetchWordPressTwitchCard,
+};
 
 exports.moderatePrivateMessage = onDocumentCreated(
   {

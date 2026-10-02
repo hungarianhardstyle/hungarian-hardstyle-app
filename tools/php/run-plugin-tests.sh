@@ -102,4 +102,17 @@ else
   fail=1
 fi
 
+# ⚠️ A 2.14.15 újdonsága: a TWITCH-BEHARANGOZÓ a plugin adminjában (a tulajdonos
+# jelzése: „nem látok sehol olyan opciót, ahol meg tudok adni twitch stream
+# beharangozót"). A mérés a valódi PHP-t futtatja: a végpont, az admin-oldal, a
+# tisztítás szabályai és az alapérték (nem kapcsolja ki a működő élő kártyát).
+echo ""
+echo "=== 9) Twitch beharangozó a plugin adminjában (2.14.15)"
+if php /work/tools/verify-twitch-card.php "$PLUGIN"; then
+  echo "TWITCH-CARD OK"
+else
+  echo "TWITCH-CARD HIBA"
+  fail=1
+fi
+
 exit $fail

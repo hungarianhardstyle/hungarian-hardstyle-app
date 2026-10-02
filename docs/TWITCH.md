@@ -26,23 +26,25 @@ Ez a lap a **387-es build** Twitch-integrációját írja le röviden (2026-10-0
 
 ## Amit Te tudsz állítani (build nélkül)
 
-A főoldali kártya külseje a Firestore-ban él, a **`app_settings/twitch`** dokumentumban:
+**A beállítás a WordPress-adminban van:** *HUHS Mobile → **Twitch beharangozó***.
 
 | mező | mit csinál |
 |---|---|
-| `imageUrl` | **saját kép URL-je** a kártyára. Üresen hagyva a Twitch **mozgó** előnézete megy. |
-| `headerText` | a kártya felirata (alapból: „Élőben a Twitch-csatornán”). |
-| `enabled` | `false` → a kártya **teljesen elrejtve** (a Twitch-oldal persze nyitható marad). |
-| `showWhenOffline` | `true` **+ saját kép** → a kártya **élő adás nélkül is látszik** (előre behirdetés). |
+| **Kép** | **saját kép URL-je** a kártyára (Feltöltés/kiválasztás gombbal a médiatárból). Üresen hagyva a Twitch **mozgó** előnézete megy — az viszont csak adás közben mutat valamit. |
+| **Felirat** | a kártya felirata (legfeljebb 80 karakter; alapból: „Élőben a Twitch-csatornán”). |
+| **Engedélyezve** | kikapcsolva a kártya **teljesen elrejtve** (a Twitch-oldal persze nyitható marad). |
+| **Élő adás nélkül is látszódjon** | **+ kép** → a kártya **élő adás nélkül is látszik** (előre behirdetés). Kép nélkül mentéskor **kikapcsol**, mert nem lenne mit mutatni. |
 
-**Előre behirdetés (példa):** `{"enabled": true, "showWhenOffline": true,
-"imageUrl": "https://…/plakat.jpg", "headerText": "Következő adás: péntek 20:00"}` —
-ilyenkor a kártyán **nincs** „ÉLŐ” jelvény, a gomb felirata pedig „Twitch-csatorna”,
-vagyis a felhasználó nem kap hamis élő jelzést.
+**Előre behirdetés (példa):** kép: `https://…/plakat.jpg`, felirat: „Következő adás: péntek 20:00”,
+és bekapcsolva az „Élő adás nélkül is látszódjon”. Ilyenkor a kártyán **nincs** „ÉLŐ” jelvény, a
+gomb felirata pedig „Twitch-csatorna”, vagyis a felhasználó nem kap hamis élő jelzést.
 
-A dokumentum már létrejött (üres képpel, `showWhenOffline: false`-szal), tehát csak át kell
-írnod a Firebase-konzolon (Firestore → `app_settings` → `twitch`). Az agent is be tudja
-állítani helyetted egy paranccsal:
+⚠️ **Mennyi idő alatt ér oda?** A beállítást a **Twitch-figyelő kör** viszi át az appokhoz
+(**5 percenként** fut), ezért legfeljebb ~5 perc, és **új app-verzió nem kell hozzá** — a már kint
+lévő appok is látják. (A kártya a Firestore `app_settings/twitch` dokumentumból dolgozik, ezt
+tölti a plugin beállítása.)
+
+Az agent is be tudja állítani helyetted egy paranccsal (a Firestore-t írja):
 `node tmp/setup-twitch-card-settings.mjs --offline --image=https://…/plakat.jpg --header="Következő adás: péntek 20:00"`
 (kiíráshoz nem kell semmit átírni — a szkript a jelenlegi állapotot is megmutatja).
 

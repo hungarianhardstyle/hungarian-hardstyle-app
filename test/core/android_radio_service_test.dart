@@ -326,6 +326,44 @@ void main() {
       expect(activity, contains('hu_hs/radio'));
     });
   });
+
+  /// A tulajdonos jelzése (2026-10-02): *„nincs stop gomb, a zárképernyőn sincs"*.
+  ///
+  /// A médiakártya (zárképernyő + gyors beállítások) a **MediaSession** állapotából
+  /// rajzol, az értesítés pedig a saját akció-sorából — ezért MINDKETTŐt mérjük:
+  /// ha bármelyik eltűnik, a gomb újra elveszne.
+  group('a „Leállítás" gomb a médiakártyán és az értesítésben', () {
+    test('az értesítés akció-sorába kerül a stop gomb (saját ikonnal)', () {
+      final body = _functionBody(service, 'notification');
+      expect(body, contains('addAction('), reason: 'nincs akció az értesítésen');
+      expect(body, contains('R.drawable.ic_radio_stop'), reason: 'nincs stop ikon');
+      expect(body, contains('"Leállítás"'), reason: 'nincs magyar felirat a gombon');
+      expect(body, contains('stopPendingIntent()'), reason: 'a gomb nem a leállítást hívja');
+      expect(body, contains('setShowActionsInCompactView(0)'),
+          reason: 'a gomb a kompakt (összecsukott) sorban is látszódjon');
+    });
+
+    test('a médiakártya a PlaybackState EGYEDI akciójából kapja a stop gombot', () {
+      final body = _functionBody(service, 'applyMetadata');
+      expect(body, contains('addCustomAction('), reason: 'a kártya nem kap stop akciót');
+      expect(body, contains('CUSTOM_ACTION_STOP'));
+      expect(body, contains('R.drawable.ic_radio_stop'));
+    });
+
+    test('a kártya gombja ugyanarra a leállításra fut, mint a többi út', () {
+      final callback = _bodyAfter(service, 'override fun onCustomAction(');
+      expect(callback, contains('CUSTOM_ACTION_STOP'), reason: 'nem a mi akciónkat figyeli');
+      expect(callback, contains('stopEverything()'), reason: 'nem a közös leállítást hívja');
+      // A közös út: lejátszó + értesítés + szolgáltatás EGY helyen.
+      final stop = _functionBody(service, 'stopEverything');
+      expect(stop, contains('stopPlayer()'));
+      expect(stop, contains('stopForeground(STOP_FOREGROUND_REMOVE)'));
+      expect(stop, contains('stopSelf()'));
+      // A fejhallgató-gomb (onStop) is ide fut be.
+      final onStop = _bodyAfter(service, 'override fun onStop()');
+      expect(onStop, contains('stopEverything()'));
+    });
+  });
 }
 
 /// Kiveszi egy Kotlin-függvény törzsét a nyitó kapcsos zárójel bezárásáig.
