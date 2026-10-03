@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 398,
+    changes: [
+      'Javítva: fekvő módban a főoldali kiemelt hír sokkal kisebb — eddig a teljes képernyőmagasságot elvitte.',
+      'Javítva: fekvő módban a Twitch-kártya a kép balra, a szöveg jobbra elrendezést kapja — eddig magasabb volt a képernyőnél.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 397,
     changes: [
       'ÚJ: a rádió értesítésén és zárképernyőjén is van Szüneteltetés/Folytatás gomb — a hang megáll, de a vezérlő a helyén marad.',

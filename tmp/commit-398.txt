@@ -1,0 +1,33 @@
+Build 398: home cards much smaller in landscape (featured news + Twitch)
+
+Owner report (2026-10-03): "ajfonon a kiemelt hir es a twitch kartya a fooldalon
+ugyanakkora mint eddig, fekvo nezetben", then "pedig elugattam, hogy tul nagy,
+bar tul kicsi se legyen".
+
+Measured root cause (iPhone SE landscape, 667x375) - the 397 width cap (760 px)
+could not bite, because the phone is narrower than the cap:
+- the featured-news carousel computed its own size (clamp(0, 820) width,
+  250..460 height): 354.9 px tall on a 375 px tall screen;
+- the Twitch card kept the portrait (stacked) layout: 455.8 px tall, i.e.
+  TALLER than the screen.
+
+Fix, all from the shared rule:
+- adaptive_card_layout.dart: wideCardMaxHeightFor (55% of the viewport height in
+  wide layout, unlimited in portrait) and a pure heroCardSizeFor (portrait is
+  bit-identical to the old rule: 820 width cap, 250..460 height);
+- home_screen.dart carousel uses heroCardSizeFor, and passes dense: wide to the
+  featured card (2 title lines and tighter padding in short/wide viewports);
+- featured_news_card.dart: dense flag (maxLines 2, smaller padding/gaps);
+- twitch_live_card.dart: wide layout builds a row (image left at 5/12, info and
+  button right, vertically centred), portrait keeps the stacked card unchanged.
+
+Measured after the fix: landscape iPhone 206.3 / 149.4 px (was 354.9 / 455.8);
+portrait unchanged (250.0 / 311.6); landscape tablet 422.4 / 179.7 px
+(was 460 / 528.4). Cards still fill the width (no narrow strip), and the gates
+assert a lower bound too, so they cannot shrink into unusable size.
+
+Gates: flutter test 1548/1548; flutter analyze lib test 0 issues; i18n 100%
+(1124/1124, chunk-51); check-play-notes green with the new AAB (1. blokk 328/480,
+eles 464/480, copies 5/5 byte-identical); mutation proof 14/14 caught
+(tmp/mutation-proof-adaptive-cards.mjs, sources byte-identical); AAB verified
+(tmp/verify-aab.mjs and the changelog checker in all three ABIs).

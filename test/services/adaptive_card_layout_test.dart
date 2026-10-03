@@ -49,6 +49,64 @@ void main() {
       expect(isWideCardLayout(Size(wideLayoutMinWidth - 1, 2000)), isFalse);
       expect(isWideCardLayout(Size(wideLayoutMinWidth, 2000)), isTrue);
     });
+
+    test('a MAGASSÁG-korlát a képernyő magasságából jön (állóban korlátlan)', () {
+      // A tulajdonos jelzése: *„ájfónon a kiemelt hír és a twitch kártya a
+      // főoldalon ugyanakkora mint eddig, fekvő nézetben”* — a **szélesség**
+      // korlátja ezt nem fogja meg (667 < 760), ezért a magasságot is kötni kell.
+      expect(wideCardMaxHeightFor(phoneLandscape), closeTo(412 * 0.55, 0.01));
+      expect(wideCardMaxHeightFor(phonePortrait), double.infinity);
+      expect(wideCardMaxHeightFor(tabletLandscape), closeTo(800 * 0.55, 0.01));
+      // A tablet ÁLLÓ nézete is „széles” (a szélesség dönt), de ott a képernyő
+      // magas, ezért a korlát nem szól bele a kártya méretébe.
+      expect(wideCardMaxHeightFor(tabletPortrait), greaterThan(600));
+    });
+  });
+
+  group('tiszta döntés: a főoldali KIEMELT HÍR mérete', () {
+    test('fekvő iPhone (667×375): fele akkora, de nem apró', () {
+      // Mért kiindulás (a javítás előtt): 354,9 px magas kártya egy 375 px magas
+      // képernyőn — vagyis a teljes képernyő. Utána **mért** érték: 206,25.
+      final card = heroCardSizeFor(
+        viewport: const Size(667, 375),
+        availableWidth: 631,
+      );
+      expect(card.height, closeTo(375 * 0.55, 0.01));
+      expect(card.height, lessThan(375 * 0.60));
+      expect(card.height, greaterThan(150), reason: 'ne legyen túl kicsi');
+      expect(card.width, 631, reason: 'a szélességet ki kell használni');
+    });
+
+    test('fekvő telefon (892×412): a magasság-korlát dönt, nem a szélesség', () {
+      final card = heroCardSizeFor(viewport: phoneLandscape, availableWidth: 856);
+      expect(card.width, wideCardMaxWidth);
+      expect(card.height, closeTo(412 * 0.55, 0.01));
+      expect(card.height, lessThan(856 * 9 / 16),
+          reason: 'a természetes 16:9 magasság elviszi a fél képernyőt');
+    });
+
+    test('álló iPhone: bitre a régi méret', () {
+      final card = heroCardSizeFor(viewport: phonePortrait, availableWidth: 339);
+      // A régi szabály: `width * 9 / 16` 250…460 között, 820-as szélesség-korláttal.
+      expect(card.width, 339);
+      expect(card.height, 250, reason: 'a közös legkisebb magasság (régi érték)');
+      final old = (339 * 9 / 16).clamp(250.0, 460.0);
+      expect(card.height, old);
+    });
+
+    test('tablet fekvő (1280×800): 760 széles, a természetes magasság a korlát alatt', () {
+      final card = heroCardSizeFor(viewport: tabletLandscape, availableWidth: 1000);
+      expect(card.width, wideCardMaxWidth);
+      expect(card.height, closeTo(760 * 9 / 16, 0.01));
+      expect(card.height, lessThan(800 * 0.55),
+          reason: 'a 422 px-es korlát itt nem szól bele (a régi 460 helyett 427,5)');
+    });
+
+    test('tablet álló: a szélesség korlátozott, a magasság a természetes', () {
+      final card = heroCardSizeFor(viewport: tabletPortrait, availableWidth: 764);
+      expect(card.width, wideCardMaxWidth);
+      expect(card.height, closeTo(760 * 9 / 16, 0.01));
+    });
   });
 
   group('tiszta döntés: melyik kép megy a Twitch-kártyára', () {
@@ -192,9 +250,33 @@ void main() {
     });
 
     test('a Twitch-kártya is a közös szabályt és a tiszta képi döntést használja', () {
-      expect(twitch, contains('cardMaxWidthFor(MediaQuery.sizeOf(context))'));
+      expect(twitch, contains('final viewport = MediaQuery.sizeOf(context);'));
+      expect(twitch, contains('cardMaxWidthFor(viewport)'));
+      expect(twitch, contains('isWideCardLayout(viewport)'),
+          reason: 'széles nézetben fekvő (kép balra) elrendezés kell');
       expect(twitch, contains('twitchCardImageUrl('),
           reason: 'a kép kiválasztása nem a tiszta döntésből jönne');
+    });
+
+    test('a főoldali kiemelt hír a közös méret-szabályból dolgozik', () {
+      // ⚠️ Ez volt a mért hiba: a keringő a SAJÁT méretét adta (820 / 250…460),
+      // ezért fekvő iPhone-on a kártya a teljes képernyőmagasságot elvitte.
+      final home = File('lib/screens/home/home_screen.dart')
+          .readAsStringSync()
+          .replaceAll('\r\n', '\n');
+      expect(home, contains('heroCardSizeFor('));
+      expect(home, contains('viewport: viewport'),
+          reason: 'a méret a képernyő méretéből döntsön');
+      expect(home.contains('clamp(0.0, 820.0)'), isFalse,
+          reason: 'a régi, saját szélesség-korlát visszahozná a hibát');
+      expect(home.contains('clamp(250.0, 460.0)'), isFalse,
+          reason: 'a régi, saját magasság-korlát visszahozná a hibát');
+      // A széles (alacsony) nézetben kevesebb cím-sor kell, különben kifut.
+      expect(home, contains('dense: wide'));
+      final featured = File('lib/widgets/featured_news_card.dart')
+          .readAsStringSync()
+          .replaceAll('\r\n', '\n');
+      expect(featured, contains('maxLines: dense ? 2 : 4'));
     });
   });
 }

@@ -1,0 +1,4 @@
+{
+  "Javítva: fekvő módban a főoldali kiemelt hír sokkal kisebb — eddig a teljes képernyőmagasságot elvitte.": "Fixed: in landscape mode the featured news card on the home screen is much smaller — it used to take up the whole screen height.",
+  "Javítva: fekvő módban a Twitch-kártya a kép balra, a szöveg jobbra elrendezést kapja — eddig magasabb volt a képernyőnél.": "Fixed: in landscape mode the Twitch card now puts the image on the left and the text on the right — it used to be taller than the screen."
+}

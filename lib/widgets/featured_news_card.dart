@@ -13,7 +13,16 @@ import 'resized_network_image.dart';
 class FeaturedNewsCard extends StatelessWidget {
   final Post post;
 
-  const FeaturedNewsCard({super.key, required this.post});
+  /// Széles (alacsony) nézet: kevesebb cím-sor, kisebb belső hézag.
+  ///
+  /// ⚠️ MIÉRT (mért hiba, 2026-10-03): fekvő iPhone-on a kártya magassága
+  /// **206 px**-re csökken (a tulajdonos kérése: *„túl nagy, bár túl kicsi se
+  /// legyen”*), és a 4 soros cím + a nagy belső hézag **kifutott** volna belőle
+  /// (a `Column` `Spacer`-e nulla alá nem megy). Álló nézetben (`dense: false`)
+  /// minden bitre a régi.
+  final bool dense;
+
+  const FeaturedNewsCard({super.key, required this.post, this.dense = false});
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +83,9 @@ class FeaturedNewsCard extends StatelessWidget {
             Expanded(
               flex: 7,
               child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 18, 14, 14),
+                padding: dense
+                    ? const EdgeInsets.fromLTRB(14, 10, 12, 10)
+                    : const EdgeInsets.fromLTRB(16, 18, 14, 14),
                 decoration: BoxDecoration(
                   color: colors.surfaceContainer,
                   border: Border(
@@ -108,7 +119,7 @@ class FeaturedNewsCard extends StatelessWidget {
                     const Spacer(),
                     Text(
                       post.title,
-                      maxLines: 4,
+                      maxLines: dense ? 2 : 4,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: colors.onSurface,
@@ -124,7 +135,7 @@ class FeaturedNewsCard extends StatelessWidget {
                       ),
                     ),
                     if (post.articleCategories.isNotEmpty) ...[
-                      const SizedBox(height: 8),
+                      SizedBox(height: dense ? 5 : 8),
                       Text(
                         articleCategoriesLabel(
                           context,
@@ -139,7 +150,7 @@ class FeaturedNewsCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 12),
+                    SizedBox(height: dense ? 7 : 12),
                     Row(
                       children: [
                         Expanded(

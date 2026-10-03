@@ -90,16 +90,35 @@ class _TwitchLiveCardState extends ConsumerState<TwitchLiveCard> {
       overrideImageUrl: override?.displayImageUrl ?? '',
       tick: _imageTick,
     );
-    final header = (override?.headerText.isNotEmpty ?? false)
-        ? override!.headerText
-        : tr(context, 'Élőben a Twitch-csatornán');
-
-    // ⚠️ SZÉLESSÉG-KORLÁT (2026-10-03, a tulajdonos jelzése): *„fekvő módban és
-    // tableten fekvő módban a friss hírek kártya és a twitch beharangozó túl
-    // nagy. Álló módban jó!”* — a 16:9-es kép a teljes szélességhez igazodott,
-    // ezért széles nézetben óriási lett. A korlát a **közös** szabályból jön
-    // (`services/adaptive_card_layout.dart`), ugyanaz, mint a hírkártyáknál.
-    final maxWidth = cardMaxWidthFor(MediaQuery.sizeOf(context));
+    // ⚠️ SZÉLESSÉG- ÉS MAGASSÁG-KORLÁT (2026-10-03, a tulajdonos jelzései):
+    // *„fekvő módban és tableten fekvő módban a friss hírek kártya és a twitch
+    // beharangozó túl nagy. Álló módban jó!”*, majd *„ájfónon … ugyanakkora mint
+    // eddig, fekvő nézetben”* + *„túl kicsi se legyen”*.
+    //
+    // A **mért** gyökér fekvő iPhone-on (667×375): a kártya **455,8 px** magas
+    // volt — **magasabb a képernyőnél** —, mert a 16:9-es kép az **álló**
+    // elrendezésben a teljes szélességet kapta. A szélesség-korlát (760 px) ezt
+    // nem fogja meg (a telefon 667 px széles). Ezért széles nézetben a kártya
+    // **fekvő**: a kép balra (a kártya 5/12-e → 667-en ~278×156, tableten
+    // ~317×178), a szöveg és a gomb jobbra — így a kártya magassága a felére
+    // csökken, a szélesség pedig ki van használva. Álló nézetben minden bitre a
+    // régi (nagy, képes) változat.
+    final viewport = MediaQuery.sizeOf(context);
+    final wide = isWideCardLayout(viewport);
+    final maxWidth = cardMaxWidthFor(viewport);
+    final imageBlock = _imageBlock(
+      scheme: scheme,
+      imageUrl: imageUrl,
+      isLive: isLive,
+      live: live,
+    );
+    final infoBlock = _infoBlock(
+      scheme: scheme,
+      override: override,
+      live: live,
+      isLive: isLive,
+      wide: wide,
+    );
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
@@ -120,90 +139,121 @@ class _TwitchLiveCardState extends ConsumerState<TwitchLiveCard> {
                   borderRadius: const BorderRadius.all(Radius.circular(14)),
                   border: Border.all(color: scheme.outlineVariant),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
-                      child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // ⚠️ GYORSÍTÁS (2026-10-02): a képet a `cached_network_image`
-                        // tölti le **lemezes gyorsítótárral**, és legfeljebb 900 px
-                        // szélességben dekódolja — a tulajdonos képe eredetileg
-                        // 1672×941 (1,2 MB) volt, amit a telefon minden indulásnál
-                        // újratöltött és teljes méretben dekódolt.
-                        CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          memCacheWidth: 900,
-                          maxWidthDiskCache: 900,
-                          fadeInDuration: const Duration(milliseconds: 150),
-                          placeholder: (_, _) =>
-                              ColoredBox(color: scheme.surfaceContainerHighest),
-                          errorWidget: (_, _, _) => ColoredBox(
-                            color: scheme.surfaceContainerHighest,
-                            child: const Center(child: Icon(Icons.live_tv, size: 42)),
-                          ),
-                        ),
-                        // ⚠️ Az „ÉLŐ" jelvény csak akkor igaz, ha tényleg megy az
-                        // adás: a tulajdonos által előre kitett (offline) kártyán
-                        // **nem** hazudunk élő adást.
-                        if (isLive) const Positioned(top: 10, left: 10, child: _LiveBadge()),
-                        if ((live?.viewers ?? 0) > 0)
-                          Positioned(
-                            top: 10,
-                            right: 10,
-                            child: _Chip(text: '${live!.viewers} ${tr(context, 'néző')}'),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppText(
-                        header,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      if ((live?.title.isNotEmpty ?? false)) ...[
-                        const SizedBox(height: 4),
-                        AppText(
-                          live!.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: scheme.onSurfaceVariant),
-                        ),
-                      ],
-                      const SizedBox(height: 10),
-                      Row(
+                child: wide
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          FilledButton.icon(
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(builder: (_) => const TwitchScreen()),
-                            ),
-                            icon: const Icon(Icons.play_arrow_rounded),
-                            // Offline (előre behirdetett) kártyán nem ígérünk élő
-                            // adást — ilyenkor a gomb a csatorna oldalára visz.
-                            label: AppText(isLive ? 'Nézd élőben' : 'Twitch-csatorna'),
-                          ),
+                          Flexible(flex: 5, child: imageBlock),
+                          Flexible(flex: 7, child: infoBlock),
                         ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [imageBlock, infoBlock],
                       ),
-                    ],
-                  ),
-                ),
-                  ],
-                ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  /// A **kép** blokk (az „ÉLŐ” jelvénnyel és a nézőszámmal) — mindkét nézetben.
+  Widget _imageBlock({
+    required ColorScheme scheme,
+    required String imageUrl,
+    required bool isLive,
+    required TwitchLiveStatus? live,
+  }) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // ⚠️ GYORSÍTÁS (2026-10-02): a képet a `cached_network_image`
+            // tölti le **lemezes gyorsítótárral**, és legfeljebb 900 px
+            // szélességben dekódolja — a tulajdonos képe eredetileg
+            // 1672×941 (1,2 MB) volt, amit a telefon minden indulásnál
+            // újratöltött és teljes méretben dekódolt.
+            CachedNetworkImage(
+              imageUrl: imageUrl,
+              fit: BoxFit.cover,
+              memCacheWidth: 900,
+              maxWidthDiskCache: 900,
+              fadeInDuration: const Duration(milliseconds: 150),
+              placeholder: (_, _) =>
+                  ColoredBox(color: scheme.surfaceContainerHighest),
+              errorWidget: (_, _, _) => ColoredBox(
+                color: scheme.surfaceContainerHighest,
+                child: const Center(child: Icon(Icons.live_tv, size: 42)),
+              ),
+            ),
+            // ⚠️ Az „ÉLŐ" jelvény csak akkor igaz, ha tényleg megy az adás: a
+            // tulajdonos által előre kitett (offline) kártyán **nem** hazudunk
+            // élő adást.
+            if (isLive) const Positioned(top: 10, left: 10, child: _LiveBadge()),
+            if ((live?.viewers ?? 0) > 0)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: _Chip(text: '${live!.viewers} ${tr(context, 'néző')}'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// A **szöveg + gomb** blokk — széles nézetben a kép mellett, középen.
+  Widget _infoBlock({
+    required ColorScheme scheme,
+    required TwitchCardConfig? override,
+    required TwitchLiveStatus? live,
+    required bool isLive,
+    required bool wide,
+  }) {
+    final header = (override?.headerText.isNotEmpty ?? false)
+        ? override!.headerText
+        : tr(context, 'Élőben a Twitch-csatornán');
+    final column = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AppText(
+          header,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        if ((live?.title.isNotEmpty ?? false)) ...[
+          const SizedBox(height: 4),
+          AppText(
+            live!.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
+        ],
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            FilledButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const TwitchScreen()),
+              ),
+              icon: const Icon(Icons.play_arrow_rounded),
+              // Offline (előre behirdetett) kártyán nem ígérünk élő adást —
+              // ilyenkor a gomb a csatorna oldalára visz.
+              label: AppText(isLive ? 'Nézd élőben' : 'Twitch-csatorna'),
+            ),
+          ],
+        ),
+      ],
+    );
+    return Padding(
+      padding: EdgeInsets.fromLTRB(wide ? 14 : 12, wide ? 12 : 10, 12, 12),
+      child: wide ? Center(child: column) : column,
     );
   }
 }

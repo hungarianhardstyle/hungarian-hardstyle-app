@@ -30,6 +30,7 @@ import '../../widgets/home_action_card.dart';
 import '../../widgets/poll_entry_button.dart';
 import '../../widgets/prize_entry_card.dart';
 import '../../services/notification_service.dart';
+import '../../services/adaptive_card_layout.dart';
 import '../../services/vote_memory.dart';
 import '../notifications/notification_center_screen.dart';
 import '../community/community_screen.dart';
@@ -897,26 +898,42 @@ class _NewsSliderState extends State<_NewsSlider> {
 
   @override
   Widget build(BuildContext context) {
+    // ⚠️ A MÉRET A KÖZÖS SZABÁLYBÓL JÖN (2026-10-03). A tulajdonos jelzése:
+    // *„ájfónon a kiemelt hír és a twitch kártya a főoldalon ugyanakkora mint
+    // eddig, fekvő nézetben”*. **Mérve** (667×375): a kártya **354,9 px** magas
+    // volt egy **375 px** magas képernyőn, mert ez a keringő a saját méretét
+    // adta (`clamp(0, 820)` + `width * 9 / 16`) — a szélesség-korlát pedig nem
+    // fogja meg, mert a telefon eleve keskenyebb 760 px-nél. A döntés ezért a
+    // `heroCardSizeFor`-ban él (álló nézetben bitre a régi), a széles nézetben
+    // pedig a magasság is korlátozott.
+    final viewport = MediaQuery.sizeOf(context);
+    final wide = isWideCardLayout(viewport);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth.clamp(0.0, 820.0);
-        final cardHeight = (cardWidth * 9 / 16).clamp(250.0, 460.0);
+        final card = heroCardSizeFor(
+          viewport: viewport,
+          availableWidth: constraints.maxWidth,
+        );
 
         return Column(
           children: [
             SizedBox(
-              height: cardHeight,
+              height: card.height,
               child: Center(
                 child: SizedBox(
-                  width: cardWidth,
+                  width: card.width,
                   child: PageView.builder(
                     controller: _controller,
                     itemCount: widget.posts.length,
                     onPageChanged: (page) {
                       if (mounted) setState(() => _page = page);
                     },
-                    itemBuilder: (_, index) =>
-                        FeaturedNewsCard(post: widget.posts[index]),
+                    itemBuilder: (_, index) => FeaturedNewsCard(
+                      post: widget.posts[index],
+                      // Széles (alacsony) nézetben kevesebb cím-sor és kisebb
+                      // belső hézag kell, különben a szöveg kifutna a kártyából.
+                      dense: wide,
+                    ),
                   ),
                 ),
               ),

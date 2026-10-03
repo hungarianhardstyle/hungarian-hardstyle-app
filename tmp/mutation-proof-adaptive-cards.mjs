@@ -25,9 +25,12 @@ const NEWS = 'lib/widgets/news_card.dart';
 const TWITCH_CARD = 'lib/widgets/twitch_live_card.dart';
 const TWITCH_LIVE = 'lib/services/twitch_live.dart';
 const LAYOUT = 'lib/services/adaptive_card_layout.dart';
+const HOME = 'lib/screens/home/home_screen.dart';
+const FEATURED = 'lib/widgets/featured_news_card.dart';
 
 const SERVICE_TEST = 'test/services/adaptive_card_layout_test.dart';
 const CARD_TEST = 'test/widgets/twitch_live_card_test.dart';
+const HOME_TEST = 'test/widgets/home_landscape_cards_test.dart';
 
 const WIDE_NEWS_TEST = 'tablet állóban (800 px) legfeljebb 760 px széles';
 const PHONE_NEWS_TEST = 'álló telefonon teljes szélességű marad (ez volt jó)';
@@ -35,9 +38,13 @@ const PURE_TABLET_TEST = 'tablet ÁLLÓBAN is széles — ez maradt ki a régi s
 const TWITCH_WIDTH_TEST = 'széles (fekvő/tablet) nézetben a kártya legfeljebb 760 px széles';
 const MOVING_IMAGE_TEST = 'élő adásnál a MOZGÓ streamkép megy a beharangozó kép HELYETT';
 const NEWS_LINT = 'a hírkártya a szélesség alapján dönt (nem a tájolás szerint)';
+const HERO_LANDSCAPE_TEST = 'FEKVŐ iPhone: a kiemelt hír nem lehet a teljes képernyőmagasság';
+const HERO_DENSE_TEST = 'fekvő (alacsony) nézetben kevesebb cím-sor jut a kiemelt hírre';
+const TABLET_TEST = 'FEKVŐ tablet: a kártyák középre igazítva, korlátozottan';
+const PORTRAIT_TEST = 'ÁLLÓ iPhone: változatlan (a tulajdonos szerint ez jó)';
 
 const digest = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
-const targets = [NEWS, TWITCH_CARD, TWITCH_LIVE, LAYOUT, SERVICE_TEST, CARD_TEST];
+const targets = [NEWS, TWITCH_CARD, TWITCH_LIVE, LAYOUT, HOME, FEATURED, SERVICE_TEST, CARD_TEST, HOME_TEST];
 const before = Object.fromEntries(targets.map((file) => [file, digest(file)]));
 
 /** [cím, fájl, lépések ([mit cserélünk, mire]), melyik teszt bukjon] */
@@ -111,6 +118,69 @@ const mutations = [
     [['    isWideCardLayout(size) ? wideCardMaxWidth : double.infinity;', '    wideCardMaxWidth;']],
     PHONE_NEWS_TEST,
   ],
+  // ——— 2026-10-03: a főoldali kiemelt hír és a Twitch-kártya fekvő nézetben -——
+  [
+    'a kiemelt hír MEGINT a saját (régi) méretét használja — a teljes képernyőmagasság',
+    HOME,
+    [[
+      `        final card = heroCardSizeFor(
+          viewport: viewport,
+          availableWidth: constraints.maxWidth,
+        );`,
+      `        final cardWidth = constraints.maxWidth.clamp(0.0, 820.0);
+        final cardHeight = (cardWidth * 9 / 16).clamp(250.0, 460.0);
+        final card = (width: cardWidth, height: cardHeight);`,
+    ]],
+    HERO_LANDSCAPE_TEST,
+  ],
+  [
+    'a MAGASSÁG-korlát elvéve (a kártya újra a képernyő magasságát veszi fel)',
+    LAYOUT,
+    [['const double wideCardHeightFraction = 0.55;', 'const double wideCardHeightFraction = 1.0;']],
+    HERO_LANDSCAPE_TEST,
+  ],
+  [
+    'a Twitch-kártya fekvő nézetben is az ÁLLÓ (nagy) elrendezést kapja',
+    TWITCH_CARD,
+    [['    final wide = isWideCardLayout(viewport);', '    const wide = false;']],
+    HERO_LANDSCAPE_TEST,
+  ],
+  [
+    'a kiemelt hír címére széles nézetben is 4 sor jut (kifutna a kártyából)',
+    FEATURED,
+    [['                      maxLines: dense ? 2 : 4,', '                      maxLines: 4,']],
+    HERO_DENSE_TEST,
+  ],
+  [
+    'a tablet kártyáit is a képernyő magassága korlátozza (a méret nem lehet kicsi)',
+    HOME,
+    [[
+      `        final card = heroCardSizeFor(
+          viewport: viewport,
+          availableWidth: constraints.maxWidth,
+        );`,
+      `        final natural = heroCardSizeFor(
+          viewport: viewport,
+          availableWidth: constraints.maxWidth,
+        );
+        final card = (
+          width: natural.width,
+          height: wide ? natural.height * 0.4 : natural.height,
+        );`,
+    ]],
+    TABLET_TEST,
+  ],
+  [
+    'a MAGASSÁG-korlát az ÁLLÓ nézetre is bekapcsol (a tulajdonos szerint az jó volt)',
+    LAYOUT,
+    [[
+      `double wideCardMaxHeightFor(Size size) => isWideCardLayout(size)
+    ? size.height * wideCardHeightFraction
+    : double.infinity;`,
+      'double wideCardMaxHeightFor(Size size) => size.height * wideCardHeightFraction;',
+    ]],
+    PORTRAIT_TEST,
+  ],
 ];
 
 const failures = [];
@@ -141,7 +211,7 @@ for (const [index, [title, file, steps, expectedFailure]] of mutations.entries()
   let output = '';
   let failed = false;
   try {
-    output = execFileSync(FLUTTER, ['/c', 'flutter', 'test', SERVICE_TEST, CARD_TEST], {
+    output = execFileSync(FLUTTER, ['/c', 'flutter', 'test', SERVICE_TEST, CARD_TEST, HOME_TEST], {
       encoding: 'utf8',
       maxBuffer: 64 * 1024 * 1024,
     });

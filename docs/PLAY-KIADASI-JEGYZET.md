@@ -1,15 +1,18 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> 🟡 **A 397 A FELTÖLTENDŐ** (versionCode **397**, `1.0.0`) — a 396-hoz képest:
+> 🟡 **A 398 A FELTÖLTENDŐ** (versionCode **398**, `1.0.0`) — a **396**-hoz képest:
 > **(1) a rádió értesítésén és zárképernyőjén is van Szüneteltetés/Folytatás gomb** (*„kéne egy pause
 > gomb is az értesítési és a zártképernyős rádió vezérlőre”*);
 > **(2) a rádió vezérlője nem tűnik el az értesítési mezőből** — a szünet és az app bezárása sem viszi
 > le a kártyát (*„néha eltűnik az értesítési mezőből a rádió vezérlője”*);
 > **(3) iPhone-on a zárképernyő Szünet/Leállítás gombja eddig hatástalan volt** — a `just_audio`
 > egyetlen `MPRemoteCommandCenter` kezelőt sem köt be, mostantól az app köti be;
-> **(4) fekvő módban és tableten a friss hírek kártya és a Twitch-beharangozó sem lesz óriási**
-> (*„Fekvő módban és tableten fekvő módban a friss hírek kártya és a twitch beharangozó túl nagy.
-> Álló módban jó!”*);
+> **(4) fekvő módban a kártyák nem óriásiak** — *„Fekvő módban és tableten fekvő módban a friss hírek
+> kártya és a twitch beharangozó túl nagy. Álló módban jó!”*, majd *„ájfónon a kiemelt hír és a twitch
+> kártya a főoldalon ugyanakkora mint eddig, fekvő nézetben”*: **mérve** (667×375) a kiemelt hír
+> **354,9 → 206,3 px**, a Twitch-kártya **455,8 → 149,4 px** (utóbbi **magasabb volt a képernyőnél**),
+> a tablet fekvő nézetében pedig 460 → 422 px; **álló nézetben minden bitre változatlan** (*„túl kicsi
+> se legyen”* — a kártyák a szélességet továbbra is kitöltik);
 > **(5) élő adásnál a főoldali Twitch-kártyán a beharangozó kép helyett a stream mozgóképe látszik**
 > (*„ha elindul egy twitch stream, akkor a beharangozó kép helyett mehetne a stream mozgóképe a
 > főoldalon”*).
@@ -18,10 +21,10 @@
 > 2026-10-03): az **alpha (zárt teszt) sávon a 396 van kiadva 100%-ban kigördülve**, az **ÉLES
 > (production) sáv a 384-en** áll (szintén 100%), a **nyílt teszt (beta) a 377-en**.
 >
-> **Melyik blokk hova való (mérve, 2026-10-03):** a **zárt tesztre** (396 → 397) az **1. blokk** (és a
-> `tmp/play-397-zart.txt`); az **ÉLES** sávra (384 → 397) a **2b. blokk** (`tmp/play-397-eles.txt`);
-> a **bétára** (377) a **355–397** összesítő (1b-3.) való.
-> ⚠️ **A 385–396-ot NE tárd fel újra** — a 397 mindegyiket tartalmazza.
+> **Melyik blokk hova való (mérve, 2026-10-03):** a **zárt tesztre** (396 → 398) az **1. blokk** (és a
+> `tmp/play-398-zart.txt`); az **ÉLES** sávra (384 → 398) a **2b. blokk** (`tmp/play-398-eles.txt`);
+> a **bétára** (377) a **355–398** összesítő (1b-3.) való.
+> ⚠️ **A 385–397-et NE tárd fel újra** — a 398 mindegyiket tartalmazza.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -29,11 +32,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 397
+currentBuild: 398
 currentVersion: 1.0.0
 lastPublishedBuild: 384
-aab: build/HUHS-v1.0.0+397-release.aab
-sha256: 6D2AAC04668165DA11FED8B44090E4CCCAEDC63E1AA0AD17E3AFC97259F24939
+aab: build/HUHS-v1.0.0+398-release.aab
+sha256: 841C3BE9E7EACC6E7F3B238F024EE2FDEA44DF6E49E782F4656451930B22C5B5
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -241,21 +244,20 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 > **⚠️ MELYIK BLOKK HOVA VALÓ (mért állapot, 2026-10-03, `node tools/check-play-track.mjs`):**
-> **ZÁRT TESZT (alpha) = 396** (kiadva, 100%-ban kigördülve) → ide (396 → 397) **ez a néhány sor** való.
+> **ZÁRT TESZT (alpha) = 396** (kiadva, 100%-ban kigördülve) → ide (396 → 398) **ez a néhány sor** való.
 > **ÉLES (production) = 384** → a nyilvános sávra a **2b. blokk** való (egyetlen, összevont szöveg),
-> mert az 1. blokk + a **361–397** összesítő (**1b-2.**) együtt nem férne bele az 500-as limitbe.
-> **NYÍLT TESZT (beta) = 377** → a **355–397** összesítő való (**1b-3.**).
+> mert az 1. blokk + a **361–398** összesítő (**1b-2.**) együtt nem férne bele az 500-as limitbe.
+> **NYÍLT TESZT (beta) = 377** → a **355–398** összesítő való (**1b-3.**).
 > A „Kiadási megjegyzések" mezőbe másolásnál a nyelv **hu-HU** (ez az egyetlen beállított nyelv).
-> A **396-os AAB már fent van** a Playen (kiadva a zárt teszten), a **397 az új** — a **385–396-ot ne**
-> tárd fel újra. A **kész, másolható** változatok: `tmp/play-397-zart.txt` (zárt teszt, bájtazonos ezzel
-> a blokkal) és `tmp/play-397-eles.txt` (éles sáv).
+> A **396-os AAB már fent van** a Playen (kiadva a zárt teszten), a **398 az új** — a **385–397-et ne**
+> tárd fel újra. A **kész, másolható** változatok: `tmp/play-398-zart.txt` (zárt teszt, bájtazonos ezzel
+> a blokkal) és `tmp/play-398-eles.txt` (éles sáv).
 
 ```play-notes
 - ÚJ: a rádió értesítésén és zárképernyőjén is van Szüneteltetés/Folytatás gomb.
-- Javítva: a rádió vezérlője nem tűnik el az értesítési mezőből — szünetnél és kilépéskor is megmarad.
-- Javítva: iPhone-on a zárképernyő Szünet/Leállítás gombja eddig hatástalan volt.
-- Javítva: fekvő módban és tableten a friss hírek és a Twitch-kártya sem lesz óriási.
-- ÚJ: ha megy a Twitch-adás, a főoldali kártyán a stream mozgóképe látszik a beharangozó kép helyett.
+- Javítva: a rádió vezérlője nem tűnik el; iPhone-on a zárképernyő gombjai is működnek.
+- Javítva: fekvő módban a friss hírek, a kiemelt hír és a Twitch-kártya sem óriási.
+- ÚJ: ha megy a Twitch-adás, a főoldali kártyán a stream mozgóképe látszik.
 ```
 
 ## 1b. Play Console — a 359–365 összesítő (TÖRTÉNETI — a 359/360 már élesben van)
@@ -273,25 +275,25 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–397** összesítő (a 384 után)
+## 1b-2. Play Console — a **361–398** összesítő (a 384 után)
 
 **Ezt használd, ha a felhasználó a 361–380 közötti valamelyik buildről jön** (régebbi nyilvános
-build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–397** között készültek.
+build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–398** között készültek.
 A karakter-számot a `tools/check-play-notes.mjs` méri.
 ⚠️ **Az ÉLES sávon a 384 van** (mérve, 2026-10-03) — arra a sávra a **2b. blokk** való (egyetlen,
 összevont szöveg), mert az 1. blokk + ez az összesítő együtt nem férne bele az 500-as limitbe.
 
 ```play-notes
 - ÚJ: Twitch-adás az appban, külön stream-chattal; rádió „most szól” szünet gombbal a zárképernyőn.
-- Javítva: a Twitch-chat küldése; a főoldali Twitch-kártya azonnal betölt, élő adásnál mozgóképpel.
+- Javítva: a Twitch-chat és -kártya; fekvő módban a hírek és a kiemelt hír sem óriási.
 - ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság; heti összefoglaló.
 - ÚJ: megosztható hírek és DJ-adatlapok; értesítés a kedvelt DJ új tartalmáról; @mindenki push.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–397** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–398** összesítő)
 
-**Ezt használd, ha a 397-ot a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 398-at a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-10-03) szerint ott a **377** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
@@ -300,7 +302,7 @@ linknyitás + QR-jelenlét** és a mostani újdonságok is.
 
 ```play-notes
 - ÚJ: Twitch-adás az appban, külön stream-chattal; rádió „most szól” szünet gombbal a zárképernyőn.
-- Javítva: a Twitch-chat küldése; a főoldali Twitch-kártya azonnal betölt, élő adásnál mozgóképpel.
+- Javítva: a Twitch-chat és -kártya; fekvő módban a hírek és a kiemelt hír sem óriási.
 - ÚJ: HU/EN nyelvváltó, születési dátum (16+), privát jelentés, gyermekbiztonság; heti összefoglaló.
 - ÚJ: megosztható hírek és DJ-adatlapok; értesítés a kedvelt DJ új tartalmáról; @mindenki push.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
@@ -317,7 +319,7 @@ megjeleníteni. **Ez a 351 javítását és a 350 újdonságait is leírja.**
 - Javítva: az adatlapok (saját profil, hír, esemény, DJ, szervező) aljára rendesen le lehet görgetni.
 ```
 
-## 1d. Play Console — a **ZÁRT TESZTRE** (396 → 397: ugyanaz, mint az 1. blokk)
+## 1d. Play Console — a **ZÁRT TESZTRE** (396 → 398: ugyanaz, mint az 1. blokk)
 
 A zárt teszten (**alpha**) a **mért** állapot szerint (2026-10-03) a **396** van kiadva, 100%-ban
 kigördülve, ezért a tesztelők a 396 öt soros jegyzetét **már látták**. Ezért ide **csak az a néhány sor**
@@ -325,14 +327,13 @@ való, amit a tulajdonos jelzése javított — így a kártyán pontosan az lá
 
 ```play-notes
 - ÚJ: a rádió értesítésén és zárképernyőjén is van Szüneteltetés/Folytatás gomb.
-- Javítva: a rádió vezérlője nem tűnik el az értesítési mezőből — szünetnél és kilépéskor is megmarad.
-- Javítva: iPhone-on a zárképernyő Szünet/Leállítás gombja eddig hatástalan volt.
-- Javítva: fekvő módban és tableten a friss hírek és a Twitch-kártya sem lesz óriási.
-- ÚJ: ha megy a Twitch-adás, a főoldali kártyán a stream mozgóképe látszik a beharangozó kép helyett.
+- Javítva: a rádió vezérlője nem tűnik el; iPhone-on a zárképernyő gombjai is működnek.
+- Javítva: fekvő módban a friss hírek, a kiemelt hír és a Twitch-kártya sem óriási.
+- ÚJ: ha megy a Twitch-adás, a főoldali kártyán a stream mozgóképe látszik.
 ```
 
-⚠️ A **397**-et az **éles** sávra téve nem ez a blokk való: ott a **2b.** blokk a helyes; a **bétára** a
-**355–397** összesítő (**1b-3.**).
+⚠️ A **398**-at az **éles** sávra téve nem ez a blokk való: ott a **2b.** blokk a helyes; a **bétára** a
+**355–398** összesítő (**1b-3.**).
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
 
@@ -345,20 +346,20 @@ bemásolni (mert a 329 nem ment ki).
 - A Vezérlőközpontban a Hírlevél, a Shortcode-ok és a Beállítások is megnyitható.
 ```
 
-## 2b. Play Console — az **ÉLES** sávra (384 → 397, egyetlen blokk)
+## 2b. Play Console — az **ÉLES** sávra (384 → 398, egyetlen blokk)
 
 ⚠️ **Miért külön blokk:** az éles felhasználók a **384**-en vannak (mérve, 2026-10-03), ezért nekik a
-**385–397** közötti újdonságok az újak. Az **1. blokk** és a **361–397** összesítő együtt **nem férne
+**385–398** közötti újdonságok az újak. Az **1. blokk** és a **361–398** összesítő együtt **nem férne
 bele** a Play **500-as** korlátjába, ezért itt van egy **egyetlen, összevont** szöveg (a limit
 töredéke; a `tools/check-play-notes.mjs` méri).
-A zárt teszthez **nem** ez való, hanem az **1. blokk** (`tmp/play-397-zart.txt`).
-A kész, másolható változat: `tmp/play-397-eles.txt` (bájtazonos ezzel a blokkal).
+A zárt teszthez **nem** ez való, hanem az **1. blokk** (`tmp/play-398-zart.txt`).
+A kész, másolható változat: `tmp/play-398-eles.txt` (bájtazonos ezzel a blokkal).
 
 ```play-notes
-- ÚJ: Twitch-adás az appban; élő adásnál a stream mozgóképe megy a főoldali kártyán.
+- ÚJ: Twitch-adás az appban, külön stream-chattal; élő adásnál a stream mozgóképe a főoldali kártyán.
 - Javítva: a Twitch-chat küldése, fekvő/tablet nézete; a Twitch-kártya azonnal betölt.
-- Javítva: a rádió vezérlője nem tűnik el; van szünet gomb, iPhone-on is működnek a zárképernyő gombjai.
-- Javítva: fekvő módban és tableten a hírek és a Twitch-kártya sem óriási.
+- ÚJ: a rádió „most szól” a zárképernyőn, szünet gombbal; iPhone-on is működnek a zárképernyő gombjai.
+- Javítva: fekvő módban a hírek, a kiemelt hír és a Twitch-kártya sem lesz óriási.
 - ÚJ: a regisztrációd törlésével a nyereményjátékból is kikerülsz (nem nyerhetsz jegyet).
 ```
 
@@ -366,6 +367,13 @@ A kész, másolható változat: `tmp/play-397-eles.txt` (bájtazonos ezzel a blo
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 398 — fekvő nézetben kisebb kártyák a főoldalon (kiemelt hír + Twitch)
+- **A tulajdonos jelzése (2026-10-03):** *„ájfónon a kiemelt hír és a twitch kártya a főoldalon ugyanakkora mint eddig, fekvő nézetben”*, majd *„pedig elugattam, hogy túl nagy, bár túl kicsi se legyen”*.
+- **A MÉRT GYÖKÉR (a 397 javítása nem érte el a főoldalt):** a **kiemelt hír keringő** a saját méretét adta (`constraints.maxWidth.clamp(0, 820)` + `width * 9 / 16` 250…460 között) — ez a kód a 397-ben **nem** a közös szabályt használta; a **Twitch-kártya** pedig 16:9-es képpel **álló** elrendezésben maradt. **Mérve** (667×375, a javítás előtt): kiemelt hír **354,9 px** (a képernyő 375 px magas → a teljes képernyő), Twitch-kártya **455,8 px** (**magasabb a képernyőnél**). A 397-es **szélesség-korlát** (760 px) ezt azért nem fogta meg, mert a telefon **667 px** széles — eleve keskenyebb a korlátnál, tehát a **magasságot** kell kötni.
+- **A JAVÍTÁS (mind a közös szabályból):** új `wideCardMaxHeightFor` (széles nézetben a képernyő **55%-a**) és tiszta `heroCardSizeFor` (álló nézetben **bitre** a régi: 820-as szélesség, 250…460 magasság); a főoldali keringő ezt használja, a széles (alacsony) nézetben a kiemelt hír címe **2 sor** (`dense`), a Twitch-kártya pedig **fekvő** elrendezést kap (kép balra a kártya 5/12-én, szöveg+gomb jobbra).
+- **A javítás UTÁNI mérés:** fekvő iPhone **206,3 px** (kiemelt) és **149,4 px** (Twitch) — a képernyő 55%, illetve 40%-a; **álló iPhone bitre változatlan** (250,0 / 311,6); **fekvő tablet** 460 → **422,4 px** (kiemelt, 760 széles) és 528,4 → **179,7 px** (Twitch). A kártyák a szélességet továbbra is kitöltik (nem lettek keskeny csíkok).
+- **A kapu mérése:** új geometria-kör (`test/widgets/home_landscape_cards_test.dart`, 4 eset: fekvő iPhone, álló iPhone, fekvő tablet, hosszú cím) + tiszta esetek a `test/services/adaptive_card_layout_test.dart`-ban; a **mutációs bizonyíték 14/14** (`tmp/mutation-proof-adaptive-cards.mjs`) — a források **bájtazonosak** maradtak.
 
 ### 397 — szünet gomb a rádióhoz, megmaradó vezérlő, széles nézetű kártyák, mozgó streamkép
 - **A tulajdonos négy jelzése (2026-10-03):** *„1. Kéne egy pause gomb is az értesítési és a zártképernyős rádió vezérlőre / 2. Néha eltűnik az értesítési mezőből a rádió vezérlője / 3. Fekvő módban és tableten fekvő módban a friss hírek kártya és a twitch beharangozó túl nagy. Álló módban jó! / 4. Ha elindul egy twitch stream, akkor a beharangozó kép helyett mehetne a stream mozgóképe a főoldalon.”*
