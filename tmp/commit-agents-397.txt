@@ -1,0 +1,14 @@
+AGENTS.md: build 397 round summary (radio pause, iOS remote commands, card width caps, moving preview)
+
+Measured notes for the round, including the two own mistakes worth reusing:
+- pymobiledevice3 is not on PATH here (broken python 3.14 build); the working
+  binary is .tmp-pmd3\venv\Scripts\pymobiledevice3.exe
+- tmp/read-ios-version.cjs defaults to tmp/apps-358.json, so it printed a stale
+  358 first; the installed version must be read from a fresh, named list
+
+Honest limits: Android pause tap test on an emulator not completed, live Twitch
+preview not observable (channel was offline, measured with tmp/probe-twitch.mjs),
+and the app launch from this machine failed again (owner tap is the last proof;
+no crash report for the app on the device).
+
+Also extends the live Twitch card check with the live/offline image rule.

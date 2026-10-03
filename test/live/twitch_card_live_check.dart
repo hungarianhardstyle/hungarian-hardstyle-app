@@ -54,4 +54,36 @@ void main() {
       client.close(force: true);
     }
   }, timeout: const Timeout(Duration(seconds: 120)));
+
+  test('élő adásnál a MOZGÓ streamkép menne a kártyára (a beharangozó helyett)', () async {
+    // A tulajdonos kérése (2026-10-03): *„ha elindul egy twitch stream, akkor a
+    // beharangozó kép helyett mehetne a stream mozgóképe a főoldalon”*. Ez a kör
+    // az **éles** Twitch-állapotot kérdezi le az app saját kódjával, és a
+    // kártyára kerülő URL-t is kiírja — így akkor is mérhető, ha épp nem megy
+    // adás (ilyenkor a beharangozó kép a helyes válasz).
+    final cfg = await fetchTwitchCardFromWordPress();
+    final live = await fetchTwitchLive();
+    final url = twitchCardImageUrl(
+      isLive: live.isLive,
+      liveThumbnailUrl: live.thumbnailUrl,
+      overrideImageUrl: cfg?.displayImageUrl ?? '',
+      tick: 7,
+    );
+    // ignore: avoid_print
+    print('ÉLŐ: isLive=${live.isLive} viewers=${live.viewers} title="${live.title}"');
+    // ignore: avoid_print
+    print('KÁRTYA-KÉP: $url');
+    if (live.isLive) {
+      expect(url, contains('previews-ttv'),
+          reason: 'élő adásnál a mozgó előnézet kell');
+      expect(url, contains('tick=7'), reason: 'frissítő paraméter nélkül befagyna');
+    } else {
+      // Adás nélkül a beállított beharangozó kép (vagy üres, ha nincs kép) — a
+      // Twitch mozgó előnézete ilyenkor **nem** kerülhet a kártyára.
+      expect(url.contains('previews-ttv'), isFalse,
+          reason: 'adás nélkül nem a mozgó előnézet megy a kártyára');
+      expect(url, cfg?.displayImageUrl ?? '',
+          reason: 'adás nélkül pont a beállított kép kell');
+    }
+  }, timeout: const Timeout(Duration(seconds: 60)));
 }
