@@ -183,7 +183,15 @@ class MainActivity : AudioServiceFragmentActivity() {
                         }
                     }
                     "isPlaying" -> {
-                        result.success(getSharedPreferences("huhs_radio", MODE_PRIVATE).getBoolean("playing", false))
+                        // ⚠️ A SZÜNET is számít (2026-10-03): a `playing` jelző a
+                        // szünet alatt is igaz marad (ettől él az értesítés), ezért
+                        // a felületnek **nem** szabad „szól”-t látnia egy
+                        // szüneteltetett rádiónál — különben a rádiósáv gombja
+                        // leállítaná a rádiót a folytatás helyett.
+                        val prefs = getSharedPreferences("huhs_radio", MODE_PRIVATE)
+                        result.success(
+                            prefs.getBoolean("playing", false) && !prefs.getBoolean("paused", false),
+                        )
                     }
                     "stop" -> {
                         getSharedPreferences("huhs_radio", MODE_PRIVATE).edit()

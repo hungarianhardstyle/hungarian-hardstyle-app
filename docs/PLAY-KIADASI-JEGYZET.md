@@ -33,7 +33,7 @@ currentBuild: 397
 currentVersion: 1.0.0
 lastPublishedBuild: 384
 aab: build/HUHS-v1.0.0+397-release.aab
-sha256: 3DC6F89F3E32F4B974B7ADA42DBEC911C0EF019B1EC27C2302CB58F68072F31A
+sha256: 6D2AAC04668165DA11FED8B44090E4CCCAEDC63E1AA0AD17E3AFC97259F24939
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at

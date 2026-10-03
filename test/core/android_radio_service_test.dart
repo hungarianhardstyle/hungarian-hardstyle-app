@@ -328,6 +328,14 @@ void main() {
       // `pause` a csatornán) — ugyanaz az út, mint az értesítés gombjáé.
       expect(activity, contains('"pause" ->'));
       expect(activity, contains('RadioPlaybackService.ACTION_PAUSE'));
+      // ⚠️ A `playing` jelző a szünet alatt is igaz (ettől él az értesítés),
+      // ezért az `isPlaying` válasznak a SZÜNETET is figyelembe kell vennie —
+      // különben a rádiósáv „szól”-t látna egy szüneteltetett rádiónál, és a
+      // gombja leállítaná a rádiót a folytatás helyett.
+      final isPlayingBlock = _bodyAfter(activity, '"isPlaying" ->');
+      expect(isPlayingBlock, contains('"paused"'),
+          reason: 'az isPlaying nem veszi figyelembe a szünetet');
+      expect(isPlayingBlock, contains('&&'));
     });
   });
 
