@@ -1,0 +1,5 @@
+- ÚJ: Twitch-adás az appban; élő adásnál a stream mozgóképe megy a főoldali kártyán.
+- Javítva: a Twitch-chat küldése, fekvő/tablet nézete; a Twitch-kártya azonnal betölt.
+- Javítva: a rádió vezérlője nem tűnik el; van szünet gomb, iPhone-on is működnek a zárképernyő gombjai.
+- Javítva: fekvő módban és tableten a hírek és a Twitch-kártya sem óriási.
+- ÚJ: a regisztrációd törlésével a nyereményjátékból is kikerülsz (nem nyerhetsz jegyet).

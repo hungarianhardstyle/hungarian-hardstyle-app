@@ -1,0 +1,44 @@
+Build 397: radio pause button and persistent control, iOS lock-screen commands, width-based card caps, moving Twitch preview
+
+Owner reports (2026-10-03):
+1. "kene egy pause gomb is az ertesitesi es a zartkepernyos radio vezerlore"
+2. "neha eltunik az ertesitesi mezobol a radio vezerloje"
+3. "fekszo modban es tableten fekvo modban a friss hirek kartya es a twitch
+   beharangozo tul nagy. Allo modban jo!"
+4. "ha elindul egy twitch stream, akkor a beharangozo kep helyett mehetne a
+   stream mozgokepe a fooldalon"
+
+Radio (1-2), measured root causes:
+- pause did not exist as its own action: the media session onPause() called
+  stopForeground(STOP_FOREGROUND_REMOVE), so the notification card disappeared;
+- setShowActionsInCompactView(0) showed only the stop action in the compact row;
+- onTaskRemoved() killed playback (and the notification) on swipe-away.
+
+Fixes: notification action row now has two actions visible in the compact view
+(0 = pause/resume with state-dependent icon and label, 1 = stop); pauseRadio()
+keeps the notification alive (startForeground, no stopForeground) and stores
+KEY_PAUSED so the radio never resumes by itself; onTaskRemoved() only stops when
+playback was not requested; new ACTION_PAUSE for the Dart pause() call.
+
+iOS lock screen (1): measured - just_audio 0.10.6 darwin sources contain no
+MPRemoteCommandCenter/MPNowPlayingInfoCenter reference at all, and AppDelegate
+only wrote the now-playing content. The four system commands (play/pause/toggle/
+stop) are now bound and forwarded to Dart (lib/services/radio_remote.dart,
+lib/widgets/radio_player_bar.dart), preserving playbackRate across metadata
+updates.
+
+Cards (3): the decision used to look at orientation only, so tablet portrait was
+missed and the 16:9 image grew to the full width. The rule is now width-based in
+one place (lib/services/adaptive_card_layout.dart: 700 px threshold, 760 px card
+cap) and both the news card and the Twitch teaser use it; portrait phones keep
+the full-width card.
+
+Twitch preview (4): while live, the home card loads the moving Twitch preview
+(with a 30 s cache-busting tick) instead of the owner's teaser image
+(twitchCardImageUrl, pure and measured).
+
+Gates: flutter test 1537/1537; flutter analyze lib test 0 issues; i18n 100%
+(1124/1124); check-play-notes OK (8/8 blocks within the 500/480 limits);
+8/8 mutation proof caught (tmp/mutation-proof-adaptive-cards.mjs, sources left
+byte-identical); AAB verified with tmp/verify-aab.mjs and the changelog checker
+in all three ABIs.

@@ -20,7 +20,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// és a „Friss hírek" lista nem tud széthúzni — ez volt a hiba lényege: a friss
 /// lista már kezelte a fekvő nézetet, a kiemelt sor nem.
 void main() {
-  group('a hírkártya fekvő nézetben (news_card.dart)', () {
+  group('a hírkártya széles nézetben (news_card.dart)', () {
     late String card;
 
     setUpAll(() {
@@ -29,22 +29,31 @@ void main() {
       card = _read('lib/widgets/news_card.dart');
     });
 
-    test('van EGY közös elhelyezés, ami a fekvő nézetet kezeli', () {
+    test('van EGY közös elhelyezés, ami a széles nézetet kezeli', () {
       expect(card, contains('class AdaptiveNewsCard'));
+      // ⚠️ 2026-10-03: a döntés a **szélesség**, nem a tájolás (a tulajdonos
+      // jelzése: *„fekvő módban és tableten fekvő módban a friss hírek kártya …
+      // túl nagy; álló módban jó”*). A korábbi `Orientation.landscape` szabály a
+      // **tablet álló** nézetét kihagyta, ezért ott is óriási maradt a kártya.
       expect(
         card,
-        contains('Orientation.landscape'),
-        reason: 'álló nézetben szándékosan nem változtatunk',
+        contains('cardMaxWidthFor(MediaQuery.sizeOf(context))'),
+        reason: 'a szélesség dönt, hogy a tablet álló nézete se maradjon ki',
       );
       expect(
         card,
         contains('maxLandscapeWidth'),
-        reason: 'fekvő nézetben a kártya legfeljebb 760 px széles',
+        reason: 'széles nézetben a kártya legfeljebb 760 px széles',
       );
       expect(
         card,
-        contains('compact: landscape'),
-        reason: 'fekvő nézetben a sávos (kép balra, szöveg jobbra) kártya kell',
+        contains('maxWidth != double.infinity'),
+        reason: 'széles nézetben a sávos (kép balra, szöveg jobbra) kártya kell',
+      );
+      expect(
+        card.contains('Orientation.landscape'),
+        isFalse,
+        reason: 'pont a tájolás-alapú döntés hagyta ki a tablet álló nézetét',
       );
     });
   });

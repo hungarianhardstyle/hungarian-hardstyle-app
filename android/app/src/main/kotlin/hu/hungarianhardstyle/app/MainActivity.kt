@@ -193,6 +193,17 @@ class MainActivity : AudioServiceFragmentActivity() {
                         startService(stopIntent)
                         result.success(null)
                     }
+                    // Szünet (a tulajdonos jelzése: *„kéne egy pause gomb is az
+                    // értesítési és a zártképernyős rádió vezérlőre”*): a hang
+                    // elhallgat, de az értesítés és a zárképernyő vezérlője MARAD
+                    // („Folytatás” gombbal) — ezért NEM a `stop` útja.
+                    "pause" -> {
+                        startService(
+                            Intent(this, RadioPlaybackService::class.java)
+                                .setAction(RadioPlaybackService.ACTION_PAUSE),
+                        )
+                        result.success(null)
+                    }
                     "volume" -> {
                         val volume = (call.arguments as? Number)?.toFloat() ?: 1f
                         startService(

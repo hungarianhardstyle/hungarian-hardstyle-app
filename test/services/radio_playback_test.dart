@@ -59,8 +59,36 @@ void main() {
         expect(service, contains(method),
             reason: '$method nélkül az Android rádió elhallgat');
       }
+      // ⚠️ 2026-10-03: EGY új név (`pause`) — a tulajdonos kérése: *„kéne egy
+      // pause gomb is az értesítési és a zártképernyős rádió vezérlőre”*. A
+      // többit nem érintjük.
+      expect(service, contains("invokeMethod<void>('pause')"),
+          reason: 'a szünet az Androidon is a natív szolgáltatást hívja');
       // ⚠️ A `play` a stream URL-t is átadja — a natív oldal ezt várja.
       expect(service, contains("invokeMethod<void>('play', url)"));
+    });
+
+    test('a szünet megMARAD (nem `stop`) — mindkét platformon', () {
+      // A tiszta szerződés: alapból a leállítás (egy új platform ne maradjon
+      // néma), a valódi megvalósítások viszont felülírják.
+      final abstractStart = service.indexOf('abstract class RadioPlayback');
+      final abstractEnd = service.indexOf('/// Android: a meglévő natív előtér-szolgáltatás');
+      final contract = service.substring(abstractStart, abstractEnd);
+      expect(contract, contains('Future<void> pause() => stop();'));
+
+      // iOS: `pause()` (a forrás és a lejátszó megmarad) — nem `stop()`.
+      final streamStart = service.indexOf('class StreamRadioPlayback');
+      final iosPause = service.substring(
+        service.indexOf('Future<void> pause() async', streamStart),
+        service.indexOf('Future<bool?> isPlaying()', streamStart),
+      );
+      expect(iosPause, contains('_player.pause()'));
+      expect(iosPause.contains('_player.stop()'), isFalse,
+          reason: 'a szünet nem állíthatja le a lejátszót (elveszne a forrás)');
+      expect(iosPause, contains('_wantPlaying = false;'),
+          reason: 'a szünet szándék: megszakítás után ne kapcsoljon vissza magától');
+      expect(iosPause.contains('_url = null'), isFalse,
+          reason: 'a forrás maradjon meg a folytatáshoz');
     });
 
     test('az iOS-út valódi lejátszó, és kezeli a stop utáni újraindítást', () {
@@ -153,11 +181,24 @@ void main() {
       for (final call in const [
         'radioPlayback.stop()',
         'radioPlayback.play(',
+        'radioPlayback.pause()',
         'radioPlayback.isPlaying()',
         'radioPlayback.setVolume(',
       ]) {
         expect(bar, contains(call), reason: '$call hiányzik');
       }
+    });
+
+    test('a távvezérlő a valódi életciklusra van kötve (zárképernyő gombjai)', () {
+      // A tulajdonos jelzése: *„kéne egy pause gomb is az értesítési és a
+      // zárképernyős rádió vezérlőre”* — az iOS-oldalon eddig SENKI nem
+      // hallgatta a rendszer parancsait.
+      expect(bar, contains('bindRadioRemoteCommands()'));
+      expect(bar, contains('bindRadioRemoteChannel('));
+      expect(bar, contains('NowPlayingReporter.appleChannel'));
+      final main = _read('lib/main.dart');
+      expect(main, contains('bindRadioRemoteCommands();'),
+          reason: 'bekötés nélkül a zárképernyő gombja hatástalan marad');
     });
 
     test('a hívók (előzetes lejátszó) szerződése változatlan', () {

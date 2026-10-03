@@ -153,6 +153,31 @@ bool twitchCardVisible({
 }
 
 
+/// **Melyik kép kerüljön a főoldali Twitch-kártyára?** — tiszta döntés.
+///
+/// MIÉRT (a tulajdonos kérése, 2026-10-03): *„ha elindul egy twitch stream, akkor
+/// a beharangozó kép helyett mehetne a stream mozgóképe a főoldalon”*.
+///
+/// A szabály:
+///  * **élő adásnál** a Twitch **mozgó előnézete** megy (frissítő paraméterrel,
+///    hogy a kártya tényleg „éljen”) — akkor is, ha a tulajdonos beállított saját
+///    beharangozó képet, mert az a **következő** adásra szól;
+///  * **adás nélkül** a beállított (beharangozó) kép;
+///  * ha nincs élő előnézet, a saját kép marad (nem hagyunk üres kártyát).
+String twitchCardImageUrl({
+  required bool isLive,
+  required String liveThumbnailUrl,
+  required String overrideImageUrl,
+  int tick = 0,
+}) {
+  final live = liveThumbnailUrl.trim();
+  if (isLive && live.isNotEmpty) {
+    final separator = live.contains('?') ? '&' : '?';
+    return '$live${separator}tick=$tick';
+  }
+  return overrideImageUrl.trim();
+}
+
 /// A nyilvános Twitch web-kliens azonosítója (ugyanaz, amit a twitch.tv oldal használ).
 const String twitchWebClientId = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
 

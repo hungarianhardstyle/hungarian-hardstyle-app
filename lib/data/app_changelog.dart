@@ -38,6 +38,17 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 397,
+    changes: [
+      'ÚJ: a rádió értesítésén és zárképernyőjén is van Szüneteltetés/Folytatás gomb — a hang megáll, de a vezérlő a helyén marad.',
+      'Javítva: a rádió vezérlője nem tűnik el az értesítési mezőből — szünetnél és kilépéskor is megmarad.',
+      'Javítva: iPhone-on a zárképernyő Szünet/Leállítás gombja eddig hatástalan volt, mostantól működik.',
+      'Javítva: fekvő módban és tableten a friss hírek kártya és a Twitch-beharangozó sem lesz óriási.',
+      'ÚJ: ha megy a Twitch-adás, a főoldali kártyán a beharangozó kép helyett a stream mozgóképe látszik.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 396,
     changes: [
       'ÚJ: ha törlöd a regisztrációdat, a neved a nyereményjátékból is kikerül — így nem nyerhetsz jegyet.',

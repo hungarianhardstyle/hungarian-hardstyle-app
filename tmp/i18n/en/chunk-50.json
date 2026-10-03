@@ -1,0 +1,7 @@
+{
+  "ÚJ: a rádió értesítésén és zárképernyőjén is van Szüneteltetés/Folytatás gomb — a hang megáll, de a vezérlő a helyén marad.": "NEW: the radio notification and lock screen now have a Pause/Resume button — the sound stops but the control stays in place.",
+  "Javítva: a rádió vezérlője nem tűnik el az értesítési mezőből — szünetnél és kilépéskor is megmarad.": "Fixed: the radio control no longer disappears from the notification area — it stays there when paused and after leaving the app.",
+  "Javítva: iPhone-on a zárképernyő Szünet/Leállítás gombja eddig hatástalan volt, mostantól működik.": "Fixed: on iPhone the lock screen Pause/Stop button did nothing — it now works.",
+  "Javítva: fekvő módban és tableten a friss hírek kártya és a Twitch-beharangozó sem lesz óriási.": "Fixed: in landscape mode and on tablets the latest news card and the Twitch teaser are no longer oversized.",
+  "ÚJ: ha megy a Twitch-adás, a főoldali kártyán a beharangozó kép helyett a stream mozgóképe látszik.": "NEW: while the Twitch stream is live, the home card shows the moving stream preview instead of the teaser image."
+}

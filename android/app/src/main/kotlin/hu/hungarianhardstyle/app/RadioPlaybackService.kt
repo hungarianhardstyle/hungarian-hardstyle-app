@@ -261,8 +261,10 @@ class RadioPlaybackService : Service() {
                 }
 
                 override fun onPause() {
-                    stopPlayer()
-                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    // ⚠️ A szünet NEM viszi el a vezérlőt (lásd `pauseRadio`) — a
+                    // tulajdonos jelzése: *„néha eltűnik az értesítési mezőből a
+                    // rádió vezérlője”*.
+                    pauseRadio()
                 }
 
                 override fun onStop() {
@@ -310,6 +312,39 @@ class RadioPlaybackService : Service() {
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or
             (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
         return PendingIntent.getService(this, 2, intent, flags)
+    }
+
+    /**
+     * A **szünet/folytatás** gomb (az értesítés akció-sora) — a tulajdonos
+     * jelzése: *„kéne egy pause gomb is az értesítési és a zárképernyős rádió
+     * vezérlőre”*.
+     */
+    private fun togglePausePendingIntent(): PendingIntent {
+        val intent = Intent(this, RadioPlaybackService::class.java).setAction(ACTION_TOGGLE_PAUSE)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+            (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
+        return PendingIntent.getService(this, 3, intent, flags)
+    }
+
+    /**
+     * Szünet: a hang elhallgat, de a **vezérlő megmarad**.
+     *
+     * ⚠️ MIÉRT (a tulajdonos jelzése, 2026-10-03): *„néha eltűnik az értesítési
+     * mezőből a rádió vezérlője”*. A szünet eddig `stopForeground(STOP_FOREGROUND_REMOVE)`
+     * volt (a munkamenet `onPause`-ában), ezért a kártya **eltűnt** — utána csak az
+     * appból lehetett újraindítani. Mostantól a szünet **megtartja** az értesítést
+     * („Folytatás” gombbal), így a vezérlő mindig ott marad.
+     */
+    private fun pauseRadio() {
+        preferences().edit().putBoolean(KEY_PAUSED, true).apply()
+        reconnectHandler.removeCallbacks(reconnect)
+        reconnectHandler.removeCallbacks(focusWatchdog)
+        stopMetadataRefresh()
+        releasePlayer()
+        releaseLocks()
+        abandonAudioFocus()
+        applyMetadata()
+        runCatching { startForeground(NOTIFICATION_ID, notification()) }
     }
 
     /**
@@ -377,9 +412,23 @@ class RadioPlaybackService : Service() {
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
+            // Szünet a felületről (`pause` a `hu_hs/radio` csatornán): ugyanaz,
+            // mint az értesítés szünet gombja — a vezérlő megmarad.
+            ACTION_PAUSE -> pauseRadio()
             ACTION_VOLUME -> {
                 volume = intent.getFloatExtra(EXTRA_VOLUME, 1f)
                 player?.setVolume(volume, volume)
+            }
+            // A szünet/folytatás gomb (az értesítés akció-sora).
+            ACTION_TOGGLE_PAUSE -> {
+                if (player?.isPlaying == true) {
+                    pauseRadio()
+                } else {
+                    val url = streamUrl
+                        ?: preferences().getString(KEY_URL, null)
+                        ?: RadioMetadataReader.STREAM_URL
+                    play(url)
+                }
             }
             // A Dart-oldal (a felület) küldi a címet, amikor az app nyitva van —
             // ilyenkor nincs okunk külön hálózati kört indítani.
@@ -412,7 +461,7 @@ class RadioPlaybackService : Service() {
     private fun play(url: String?) {
         if (url.isNullOrBlank()) return
         streamUrl = url
-        preferences().edit().putBoolean(KEY_PLAYING, true).putString(KEY_URL, url).apply()
+        preferences().edit().putBoolean(KEY_PLAYING, true).putBoolean(KEY_PAUSED, false).putString(KEY_URL, url).apply()
         reconnectHandler.removeCallbacks(reconnect)
         startForeground(NOTIFICATION_ID, notification())
         startMetadataRefresh()
@@ -549,7 +598,12 @@ class RadioPlaybackService : Service() {
         }
     }
 
-    private fun isPlaybackRequested() = preferences().getBoolean(KEY_PLAYING, false)
+    // ⚠️ A SZÜNET (2026-10-03) külön állapot: a `KEY_PLAYING` marad (ettől marad
+    // életben az értesítés és a szolgáltatás), de a `KEY_PAUSED` jelzi, hogy a
+    // felhasználó **szándékosan** állította meg — ilyenkor nem folytatjuk magunktól
+    // (fókusz-visszaszerzés, újraindítás), és nem frissítjük a metaadatot sem.
+    private fun isPlaybackRequested() =
+        preferences().getBoolean(KEY_PLAYING, false) && !preferences().getBoolean(KEY_PAUSED, false)
 
     /**
      * Streameléshez: a CPU **korlátlanul** ébren marad, és a Wi-Fi is nagy
@@ -620,7 +674,7 @@ class RadioPlaybackService : Service() {
     }
 
     private fun stopPlayer() {
-        preferences().edit().putBoolean(KEY_PLAYING, false).remove(KEY_URL).apply()
+        preferences().edit().putBoolean(KEY_PLAYING, false).putBoolean(KEY_PAUSED, false).remove(KEY_URL).apply()
         reconnectHandler.removeCallbacks(reconnect)
         reconnectHandler.removeCallbacks(focusWatchdog)
         stopMetadataRefresh()
@@ -655,9 +709,26 @@ class RadioPlaybackService : Service() {
         // A médiakártya-stílus köti össze az értesítést a zárképernyőn megjelenő
         // munkamenettel (és a fejhallgató-gombbal).
         //
-        // ⚠️ A „Leállítás" gomb (a tulajdonos jelzése: *„nincs stop gomb, a
-        // zárképernyőn sincs"*): az akció-sorba kerül, és a kompakt nézetben is
-        // látszik (a play/pause-t a rendszer a munkamenetből rajzolja mellé).
+        // ⚠️ A GOMBOK (a tulajdonos jelzése, 2026-10-03): *„kéne egy pause gomb is
+        // az értesítési és a zárképernyős rádió vezérlőre”*. Eddig **csak** a
+        // „Leállítás” volt az akció-sorban, és a `setShowActionsInCompactView(0)`
+        // miatt a kompakt nézetben (árnyékolt sor, zárképernyő) is csak az
+        // látszott — a play/pause **eltűnt** onnan.
+        //
+        // Mostantól két akció van, és MINDKETTŐ látszik a kompakt nézetben:
+        //   0 = szünet/folytatás (állapotfüggő felirattal és ikonnal),
+        //   1 = leállítás.
+        val playing = player?.isPlaying == true
+        builder.addAction(
+            Notification.Action.Builder(
+                Icon.createWithResource(
+                    this,
+                    if (playing) R.drawable.ic_radio_pause else R.drawable.ic_radio_play,
+                ),
+                if (playing) "Szüneteltetés" else "Folytatás",
+                togglePausePendingIntent(),
+            ).build(),
+        )
         builder.addAction(
             Notification.Action.Builder(
                 Icon.createWithResource(this, R.drawable.ic_radio_stop),
@@ -669,7 +740,7 @@ class RadioPlaybackService : Service() {
             builder.setStyle(
                 Notification.MediaStyle()
                     .setMediaSession(session.sessionToken)
-                    .setShowActionsInCompactView(0),
+                    .setShowActionsInCompactView(0, 1),
             )
         }
         return builder.build()
@@ -685,9 +756,16 @@ class RadioPlaybackService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        stopPlayer()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+        // ⚠️ A „Lomtárba húzás” eddig **leállította** a rádiót (és az értesítést is
+        // eltüntette) — a tulajdonos jelzése szerint viszont *„néha eltűnik az
+        // értesítési mezőből a rádió vezérlője”*. A rádió mostantól **fut
+        // tovább** (mint egy zenelejátszó), és a vezérlő is megmarad; csak akkor
+        // zárul le, ha a felhasználó tényleg leállította.
+        if (!isPlaybackRequested()) {
+            stopPlayer()
+            runCatching { stopForeground(STOP_FOREGROUND_REMOVE) }
+            stopSelf()
+        }
         super.onTaskRemoved(rootIntent)
     }
 
@@ -696,7 +774,18 @@ class RadioPlaybackService : Service() {
     companion object {
         const val ACTION_PLAY = "hu.hungarianhardstyle.app.radio.PLAY"
         const val ACTION_STOP = "hu.hungarianhardstyle.app.radio.STOP"
+
+        /**
+         * A **felületről** kért szünet (`pause` a `hu_hs/radio` csatornán) — a
+         * tulajdonos jelzése: *„kéne egy pause gomb is az értesítési és a
+         * zárképernyős rádió vezérlőre”*. Ugyanazt teszi, mint az értesítés
+         * szünet gombja: a hang elhallgat, a vezérlő **megmarad**.
+         */
+        const val ACTION_PAUSE = "hu.hungarianhardstyle.app.radio.PAUSE"
         const val ACTION_VOLUME = "hu.hungarianhardstyle.app.radio.VOLUME"
+
+        /** A szünet/folytatás gomb az értesítés akció-sorából. */
+        const val ACTION_TOGGLE_PAUSE = "hu.hungarianhardstyle.app.radio.TOGGLE_PAUSE"
 
         /**
          * A médiakártya „Leállítás" gombjának azonosítója (a PlaybackState
@@ -713,6 +802,15 @@ class RadioPlaybackService : Service() {
         private const val PREFS = "huhs_radio"
         private const val KEY_PLAYING = "playing"
         private const val KEY_URL = "url"
+
+        /**
+         * A **szünet** jelzője (2026-10-03) — a tulajdonos kérése: *„kéne egy pause
+         * gomb is az értesítési és a zárképernyős rádió vezérlőre”*. A `KEY_PLAYING`
+         * marad (ettől él az értesítés), de ez a jelző mondja meg, hogy a
+         * felhasználó **szándékosan** állította meg — ilyenkor nem folytatjuk
+         * magunktól (fókusz-visszaszerzés, rendszer-újraindítás).
+         */
+        private const val KEY_PAUSED = "paused"
         private const val WAKE_LOCK_TAG = "huhs:radio"
         private const val WIFI_LOCK_TAG = "huhs:radio-wifi"
         private const val CHANNEL_ID = "huhs_radio"

@@ -316,7 +316,7 @@ void main() {
       expect(body, contains('stopSelf()'));
     });
 
-    test('a kliens csatornája változatlan (play/stop/isPlaying/volume)', () {
+    test('a kliens csatornája: play/stop/isPlaying/volume + a szünet (pause)', () {
       final activity = File(
         'android/app/src/main/kotlin/hu/hungarianhardstyle/app/MainActivity.kt',
       ).readAsStringSync();
@@ -324,6 +324,10 @@ void main() {
         expect(activity, contains(method));
       }
       expect(activity, contains('hu_hs/radio'));
+      // ⚠️ 2026-10-03: a felület is tud szüneteltetni (`radioPlayback.pause()` →
+      // `pause` a csatornán) — ugyanaz az út, mint az értesítés gombjáé.
+      expect(activity, contains('"pause" ->'));
+      expect(activity, contains('RadioPlaybackService.ACTION_PAUSE'));
     });
   });
 
@@ -339,8 +343,69 @@ void main() {
       expect(body, contains('R.drawable.ic_radio_stop'), reason: 'nincs stop ikon');
       expect(body, contains('"Leállítás"'), reason: 'nincs magyar felirat a gombon');
       expect(body, contains('stopPendingIntent()'), reason: 'a gomb nem a leállítást hívja');
-      expect(body, contains('setShowActionsInCompactView(0)'),
-          reason: 'a gomb a kompakt (összecsukott) sorban is látszódjon');
+      // ⚠️ 2026-10-03: MINDKÉT gomb látszik a kompakt sorban (szünet ÉS leállítás) —
+      // eddig csak a 0. indexű (a stop), ezért tűnt el a play/pause.
+      expect(body, contains('setShowActionsInCompactView(0, 1)'),
+          reason: 'a két gomb a kompakt (összecsukott) sorban is látszódjon');
+    });
+
+    test('a SZÜNET gomb is ott van az értesítésen (állapotfüggő ikonnal és felirattal)', () {
+      // A tulajdonos jelzése: *„kéne egy pause gomb is az értesítési és a
+      // zárképernyős rádió vezérlőre”*.
+      final body = _functionBody(service, 'notification');
+      expect(body, contains('R.drawable.ic_radio_pause'), reason: 'nincs szünet ikon');
+      expect(body, contains('R.drawable.ic_radio_play'), reason: 'nincs folytatás ikon');
+      expect(body, contains('"Szüneteltetés"'), reason: 'nincs magyar felirat');
+      expect(body, contains('"Folytatás"'), reason: 'nincs magyar felirat a folytatáshoz');
+      expect(body, contains('togglePausePendingIntent()'), reason: 'a gomb nem a szünetet hívja');
+      expect(body, contains('player?.isPlaying == true'), reason: 'az ikon nem az állapotból jön');
+    });
+
+    test('a szünet/folytatás gomb be van kötve (ACTION_TOGGLE_PAUSE)', () {
+      final command = _bodyAfter(service, 'override fun onStartCommand(');
+      expect(command, contains('ACTION_TOGGLE_PAUSE'));
+      expect(command, contains('pauseRadio()'), reason: 'szünetnél nem a szünet-utat hívja');
+      expect(command, contains('play(url)'), reason: 'folytatásnál nem indítja újra');
+      expect(service, contains('ACTION_TOGGLE_PAUSE = "hu.hungarianhardstyle.app.radio.TOGGLE_PAUSE"'));
+    });
+
+    test('a felületről kért szünet is be van kötve (ACTION_PAUSE)', () {
+      // ⚠️ 2026-10-03: a `radioPlayback.pause()` (Dart) → `pause` a csatornán →
+      // `ACTION_PAUSE` a szolgáltatásnak. Ugyanaz a szünet-út, mint az értesítés
+      // gombjáé — ezért NEM a leállítást hívja.
+      final command = _bodyAfter(service, 'override fun onStartCommand(');
+      expect(command, contains('ACTION_PAUSE -> pauseRadio()'));
+      expect(service, contains('ACTION_PAUSE = "hu.hungarianhardstyle.app.radio.PAUSE"'));
+      final pause = _functionBody(service, 'pauseRadio');
+      expect(pause.contains('stopForeground'), isFalse,
+          reason: 'a felületről kért szünet sem veheti le az értesítést');
+    });
+
+    test('a SZÜNET nem viszi el a vezérlőt (ez volt a „eltűnik a vezérlő” hiba)', () {
+      // A tulajdonos jelzése: *„néha eltűnik az értesítési mezőből a rádió
+      // vezérlője”* — a munkamenet `onPause`-a eddig `stopForeground(REMOVE)` volt.
+      final pause = _functionBody(service, 'pauseRadio');
+      expect(pause, contains('KEY_PAUSED'), reason: 'nincs külön szünet-állapot');
+      expect(pause, contains('startForeground(NOTIFICATION_ID, notification())'),
+          reason: 'a szünet eltünteti az értesítést');
+      expect(pause.contains('stopForeground'), isFalse,
+          reason: 'a szünet nem veheti le az értesítést');
+      final sessionPause = _bodyAfter(service, 'override fun onPause()');
+      expect(sessionPause, contains('pauseRadio()'),
+          reason: 'a munkamenet szünete még mindig leveszi a vezérlőt');
+    });
+
+    test('az app „lomtárba húzása” nem állítja le a rádiót (a vezérlő megmarad)', () {
+      final body = _functionBody(service, 'onTaskRemoved');
+      expect(body, contains('if (!isPlaybackRequested())'),
+          reason: 'a lomtárba húzás feltétel nélkül leállítaná a rádiót');
+      expect(body, contains('stopPlayer()'), reason: 'leállított rádiónál le kell zárni');
+      expect(body, contains('stopForeground(STOP_FOREGROUND_REMOVE)'));
+    });
+
+    test('a szünet-ikonok (pause/play) léteznek', () {
+      expect(File('android/app/src/main/res/drawable/ic_radio_pause.xml').existsSync(), isTrue);
+      expect(File('android/app/src/main/res/drawable/ic_radio_play.xml').existsSync(), isTrue);
     });
 
     test('a médiakártya a PlaybackState EGYEDI akciójából kapja a stop gombot', () {

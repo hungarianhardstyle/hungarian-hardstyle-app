@@ -6,6 +6,7 @@ import '../core/i18n/tr.dart';
 import '../services/now_playing.dart';
 import '../services/radio_metadata.dart';
 import '../services/radio_playback.dart';
+import '../services/radio_remote.dart';
 import 'app_text.dart';
 
 class RadioPlayerBar extends StatefulWidget {
@@ -26,6 +27,39 @@ Future<void> stopRadioPlayback() async {
   radioPlayingState.value = false;
   // A rendszer felületéről (értesítés + zárképernyő) is eltűnik a cím.
   await nowPlayingReporter.stop();
+}
+
+/// **Szünet**: a hang elhallgat, de a vezérlő **ott marad**.
+///
+/// ⚠️ MIÉRT NEM `stop` (a tulajdonos jelzései, 2026-10-03): *„kéne egy pause gomb
+/// is az értesítési és a zártképernyős rádió vezérlőre”* és *„néha eltűnik az
+/// értesítési mezőből a rádió vezérlője”*. A rendszer felületét ezért **nem**
+/// töröljük (`nowPlayingReporter.stop()` = a cím eltűnése, Androidon az
+/// értesítés megszűnése): a „Folytatás” gombnak és a címnek a helyén kell
+/// maradnia, hogy a felhasználó vissza tudjon jönni.
+Future<void> pauseRadioPlayback() async {
+  try {
+    await radioPlayback.pause();
+  } catch (_) {}
+  radioPlayingState.value = false;
+}
+
+/// A **távvezérlő** (zárképernyő, fejhallgató-gombok, értesítés) bekötése.
+///
+/// MIÉRT (mért hiány, 2026-10-03): az iOS-oldalon a `just_audio` **nem** köti be
+/// a `MPRemoteCommandCenter`-t (a csomag `darwin` forrásaiban nincs rá hivatkozás),
+/// az `AppDelegate.swift` pedig eddig csak a „Most szól” panel tartalmát írta —
+/// ezért a zárképernyő gombjai hatástalanok voltak. A parancs értelmezése és a
+/// műveletek itt, a valódi rádió-életcikluson mennek át (ugyanaz, amit a felület
+/// használ), ezért nem tud széthúzni a kettő.
+void bindRadioRemoteCommands() {
+  bindRadioRemoteChannel(
+    NowPlayingReporter.appleChannel,
+    play: resumeRadioPlayback,
+    pause: pauseRadioPlayback,
+    stop: stopRadioPlayback,
+    isPlaying: isRadioPlaybackActive,
+  );
 }
 
 Future<void> resumeRadioPlayback() async {

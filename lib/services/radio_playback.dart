@@ -17,11 +17,25 @@ import 'package:just_audio/just_audio.dart';
 ///
 /// ⚠️ **Az Android útja bitre változatlan:** ugyanaz a csatorna, ugyanazok a
 /// metódusnevek (`play` / `stop` / `isPlaying` / `volume`), ugyanabban a
-/// sorrendben. Az iOS a streamet **közvetlenül** játssza le `just_audio`-val
-/// (a stream `audio/mpeg`, 192 kbps — ezt az iOS `AVPlayer` eljátssza).
+/// sorrendben — 2026-10-03 óta **egy** új névvel (`pause`), mert a tulajdonos
+/// kérése szerint kell egy szünet gomb, ami **nem viszi el** a vezérlőt. Az iOS a
+/// streamet **közvetlenül** játssza le `just_audio`-val (a stream `audio/mpeg`,
+/// 192 kbps — ezt az iOS `AVPlayer` eljátssza).
 abstract class RadioPlayback {
   Future<void> play(String url);
   Future<void> stop();
+
+  /// **Szünet**: a hang elhallgat, de a vezérlő (értesítés, zárképernyő) MARAD.
+  ///
+  /// MIÉRT (a tulajdonos jelzései, 2026-10-03): *„kéne egy pause gomb is az
+  /// értesítési és a zártképernyős rádió vezérlőre”*, illetve *„néha eltűnik az
+  /// értesítési mezőből a rádió vezérlője”*. Eddig **nem volt** önálló szünet: a
+  /// zárképernyő/értesítés szünet gombja leállította a lejátszást, és a vezérlő
+  /// is eltűnt.
+  ///
+  /// ⚠️ Alapból a **leállítást** jelenti, hogy egy új platform ne maradjon
+  /// néma; a két valódi megvalósítás felülírja.
+  Future<void> pause() => stop();
 
   /// ⚠️ **Nullázható**, hogy az Android út bitre ugyanaz maradjon: a csatorna
   /// `null`-t is adhat (nincs válasz), és a hívók ilyenkor a
@@ -42,6 +56,11 @@ class AndroidRadioPlayback implements RadioPlayback {
 
   @override
   Future<void> stop() => methodChannel.invokeMethod<void>('stop');
+
+  /// Szünet az Android előtér-szolgáltatáson: a hang elhallgat, az értesítés és
+  /// a zárképernyő vezérlője **ott marad** („Folytatás” gombbal).
+  @override
+  Future<void> pause() => methodChannel.invokeMethod<void>('pause');
 
   @override
   Future<bool?> isPlaying() =>
@@ -201,6 +220,22 @@ class StreamRadioPlayback implements RadioPlayback {
     _wantPlaying = false;
     _resumeAfterInterruption = false;
     await _player.stop();
+  }
+
+  /// Szünet iOS-en — a **vezérlő megmarad** (a tulajdonos kérése).
+  ///
+  /// ⚠️ `pause()` és nem `stop()`: a forrás (`_url`) és a lejátszó is megmarad,
+  /// ezért a folytatás ugyanarra az élő adásra csatlakozik vissza (nem kell új
+  /// forrást kérni), a „Most szól” panel pedig a helyén marad.
+  ///
+  /// A **szándékot** itt is töröljük: a felhasználó szándékosan állította meg,
+  /// ezért egy megszakítás után (hívás, másik zene-app) **nem** kapcsolunk vissza
+  /// magunktól — ez ugyanaz a szabály, mint a `stop()`-nál.
+  @override
+  Future<void> pause() async {
+    _wantPlaying = false;
+    _resumeAfterInterruption = false;
+    await _player.pause();
   }
 
   @override

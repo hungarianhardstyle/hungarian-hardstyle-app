@@ -4,6 +4,7 @@ import '../core/content/date_formatters.dart';
 import '../core/i18n/content_labels.dart';
 import '../models/post.dart';
 import '../screens/news/news_detail_screen.dart';
+import '../services/adaptive_card_layout.dart';
 import '../services/wordpress_service.dart';
 import 'detail_prefetch.dart';
 import 'news_reaction_button.dart';
@@ -262,26 +263,28 @@ class _CompactNewsCardContent extends StatelessWidget {
 /// másképp, és lett „nagyon nagy" (a tulajdonos jelzése: *„tableten a kiemelt
 /// hírek a hírek tabon nagyon nagyok, olyannak kéne lennie mint a többi hír
 /// kártyának"*). A szabály **egy helyen** van, ezért a kettő nem tud széthúzni.
+///
+/// ⚠️ 2026-10-03: a döntés **nem a tájolás**, hanem a **szélesség** (a tulajdonos
+/// jelzése: *„fekvő módban és tableten fekvő módban a friss hírek kártya … túl
+/// nagy; álló módban jó”*) — a tablet **álló** nézete eddig kimaradt, mert a régi
+/// szabály csak a fekvő tájolást nézte. A küszöb és a szélesség egy helyen él
+/// (`services/adaptive_card_layout.dart`).
 class AdaptiveNewsCard extends StatelessWidget {
   const AdaptiveNewsCard({super.key, required this.post});
 
   final Post post;
 
-  /// Fekvő nézetben ekkora a legnagyobb kártyaszélesség: ennél szélesebb
-  /// tabletben a teljes szélességű kártya képe már túl nagy lenne.
-  static const double maxLandscapeWidth = 760;
+  /// A kártya legnagyobb szélessége széles elrendezésben (a közös szabályból).
+  static const double maxLandscapeWidth = wideCardMaxWidth;
 
   @override
   Widget build(BuildContext context) {
-    final landscape =
-        MediaQuery.orientationOf(context) == Orientation.landscape;
+    final maxWidth = cardMaxWidthFor(MediaQuery.sizeOf(context));
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: landscape ? maxLandscapeWidth : double.infinity,
-        ),
-        child: NewsCard(post: post, compact: landscape),
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: NewsCard(post: post, compact: maxWidth != double.infinity),
       ),
     );
   }

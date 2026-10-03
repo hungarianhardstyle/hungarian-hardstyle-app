@@ -1,0 +1,5 @@
+- ÚJ: a rádió értesítésén és zárképernyőjén is van Szüneteltetés/Folytatás gomb.
+- Javítva: a rádió vezérlője nem tűnik el az értesítési mezőből — szünetnél és kilépéskor is megmarad.
+- Javítva: iPhone-on a zárképernyő Szünet/Leállítás gombja eddig hatástalan volt.
+- Javítva: fekvő módban és tableten a friss hírek és a Twitch-kártya sem lesz óriási.
+- ÚJ: ha megy a Twitch-adás, a főoldali kártyán a stream mozgóképe látszik a beharangozó kép helyett.

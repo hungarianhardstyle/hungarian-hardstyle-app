@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hungarian_hardstyle_app/providers/twitch_live_provider.dart';
+import 'package:hungarian_hardstyle_app/services/adaptive_card_layout.dart';
 import 'package:hungarian_hardstyle_app/services/twitch_live.dart';
 import 'package:hungarian_hardstyle_app/widgets/twitch_live_card.dart';
 
@@ -106,7 +107,11 @@ void main() {
     expect(find.byKey(const Key('twitch-live-card')), findsNothing);
   });
 
-  testWidgets('élő adásnál a saját kép és felirat kerül a kártyára', (tester) async {
+  testWidgets('élő adásnál a MOZGÓ streamkép megy a beharangozó kép HELYETT', (tester) async {
+    // ⚠️ A tulajdonos kérése (2026-10-03): *„ha elindul egy twitch stream, akkor
+    // a beharangozó kép helyett mehetne a stream mozgóképe a főoldalon.”* Ez
+    // **szándékosan megváltoztatta** a korábbi viselkedést (a saját kép ment élő
+    // adásnál is): a saját kép a **következő** adás beharangozója.
     await tester.pumpWidget(
       wrap(
         status: liveStatus,
@@ -118,13 +123,72 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Élőben a stúdióból'), findsOneWidget);
-    // A saját kép URL-je kerül a kép-widgetbe (a kártya nem a Twitch előnézetét
-    // tölti) — 2026-10-02 óta **gyorsítótárazva** (`CachedNetworkImage`), ezért
-    // nem `Image.network`-öt keresünk.
+    expect(find.text('Élőben a stúdióból'), findsOneWidget,
+        reason: 'a felirat a tulajdonosé marad');
+    // A kép **gyorsítótárazva** töltődik (`CachedNetworkImage`), ezért nem
+    // `Image.network`-öt keresünk.
+    final image = tester.widget<CachedNetworkImage>(find.byType(CachedNetworkImage));
+    expect(image.imageUrl, contains('previews-ttv'),
+        reason: 'élő adásnál a mozgó streamkép kell');
+    expect(image.imageUrl, contains('tick='),
+        reason: 'a mozgó előnézet frissítő paramétere nélkül befagyna a kép');
+    expect(image.imageUrl.contains('sajat.jpg'), isFalse,
+        reason: 'a beharangozó kép élő adásnál elrejtené a streamet');
+    expect(image.memCacheWidth, 900, reason: 'a kép teljes méretben dekódolódna');
+  });
+
+  testWidgets('adás nélkül a tulajdonos beharangozó képe marad', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        status: offlineStatus,
+        override: const TwitchCardConfig(
+          showWhenOffline: true,
+          imageUrl: 'https://example.com/sajat.jpg',
+          headerText: 'Élőben a stúdióból',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
     final image = tester.widget<CachedNetworkImage>(find.byType(CachedNetworkImage));
     expect(image.imageUrl, contains('example.com/sajat.jpg'));
-    expect(image.memCacheWidth, 900, reason: 'a kép teljes méretben dekódolódna');
+    expect(image.imageUrl.contains('tick='), isFalse,
+        reason: 'a beharangozó kép egy pillanatkép, nem kell újratölteni');
+  });
+
+  testWidgets('széles (fekvő/tablet) nézetben a kártya legfeljebb 760 px széles', (tester) async {
+    // ⚠️ A tulajdonos jelzése (2026-10-03): *„fekvő módban és tableten fekvő
+    // módban a friss hírek kártya és a twitch beharangozó túl nagy.”* A 16:9-es
+    // kép a teljes szélességhez igazodott. A korlát a **közös** szabályból jön
+    // (`services/adaptive_card_layout.dart`), ugyanaz, mint a hírkártyáknál.
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(wrap(status: liveStatus));
+    await tester.pumpAndSettle();
+
+    final card = tester.getRect(find.byKey(const Key('twitch-live-card')));
+    expect(card.width, lessThanOrEqualTo(wideCardMaxWidth + 0.01),
+        reason: 'a kártya a fél tabletet elvinné');
+    expect(card.width, greaterThan(wideCardMaxWidth - 40),
+        reason: 'a korlát ne legyen indokolatlanul szűk');
+    expect(card.center.dx, closeTo(1280 / 2, 1),
+        reason: 'a kártya középre igazítva maradjon');
+  });
+
+  testWidgets('álló telefonon teljes szélességű marad (a tulajdonos szerint ez jó)', (tester) async {
+    tester.view.physicalSize = const Size(412, 892);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(wrap(status: liveStatus));
+    await tester.pumpAndSettle();
+
+    final card = tester.getRect(find.byKey(const Key('twitch-live-card')));
+    expect(card.width, greaterThan(370),
+        reason: 'álló telefonon ne szűküljön be a kártya');
+    expect(card.width, lessThanOrEqualTo(412));
   });
 
   testWidgets('élő adásnál kép nélkül a Twitch mozgó előnézete megy (frissítő paraméterrel)', (tester) async {

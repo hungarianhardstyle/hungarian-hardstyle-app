@@ -70,6 +70,12 @@ Future<void> main() async {
   // (a tulajdonos jelzése: *„ez a kis ablak a PIP is elég FOSCSI, a rádió gomb
   // dominál”*).
   pictureInPicture.bind();
+  // A zárképernyő/fejhallgató **távvezérlőjének** a bekötése: az iOS-oldal
+  // (`MPRemoteCommandCenter`) eddig senkit nem talált, ezért a zárképernyő
+  // szünet gombja hatástalan volt (a tulajdonos jelzése: *„kéne egy pause gomb is
+  // az értesítési és a zártképernyős rádió vezérlőre”*). Ugyanazt a rádió-
+  // életciklust használja, amit a felület — ezért nem tud széthúzni.
+  bindRadioRemoteCommands();
   runApp(const ProviderScope(child: HungarianHardstyleApp()));
   // The home screen needs the news and event lists first. Starting that request
   // here runs it behind the startup gate, so the content is already cached when

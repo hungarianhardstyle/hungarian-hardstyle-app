@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/i18n/tr.dart';
 import '../providers/twitch_live_provider.dart';
 import '../screens/twitch/twitch_screen.dart';
+import '../services/adaptive_card_layout.dart';
 import '../services/twitch_live.dart';
 import 'app_text.dart';
 
@@ -80,37 +81,51 @@ class _TwitchLiveCardState extends ConsumerState<TwitchLiveCard> {
 
     final isLive = live?.isLive ?? false;
     final scheme = Theme.of(context).colorScheme;
-    // A kép: a behirdetett kártyán a tulajdonosé (kicsinyített változatban, ha
-    // van), élő adásnál a Twitch mozgó előnézete.
-    final imageUrl = (override?.hasImage ?? false)
-        ? override!.displayImageUrl
-        : '${live?.thumbnailUrl ?? ''}${(live?.thumbnailUrl ?? '').contains('?') ? '&' : '?'}tick=$_imageTick';
+    // A kép: **élő adásnál a stream mozgó előnézete** (a tulajdonos kérése:
+    // *„ha elindul egy twitch stream, akkor a beharangozó kép helyett mehetne a
+    // stream mozgóképe a főoldalon”*), adás nélkül a beállított beharangozó kép.
+    final imageUrl = twitchCardImageUrl(
+      isLive: isLive,
+      liveThumbnailUrl: live?.thumbnailUrl ?? '',
+      overrideImageUrl: override?.displayImageUrl ?? '',
+      tick: _imageTick,
+    );
     final header = (override?.headerText.isNotEmpty ?? false)
         ? override!.headerText
         : tr(context, 'Élőben a Twitch-csatornán');
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 16),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          key: const Key('twitch-live-card'),
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const TwitchScreen()),
-          ),
-          child: Ink(
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHigh,
+    // ⚠️ SZÉLESSÉG-KORLÁT (2026-10-03, a tulajdonos jelzése): *„fekvő módban és
+    // tableten fekvő módban a friss hírek kártya és a twitch beharangozó túl
+    // nagy. Álló módban jó!”* — a 16:9-es kép a teljes szélességhez igazodott,
+    // ezért széles nézetben óriási lett. A korlát a **közös** szabályból jön
+    // (`services/adaptive_card_layout.dart`), ugyanaz, mint a hírkártyáknál.
+    final maxWidth = cardMaxWidthFor(MediaQuery.sizeOf(context));
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              key: const Key('twitch-live-card'),
               borderRadius: const BorderRadius.all(Radius.circular(14)),
-              border: Border.all(color: scheme.outlineVariant),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
-                  child: AspectRatio(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const TwitchScreen()),
+              ),
+              child: Ink(
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHigh,
+                  borderRadius: const BorderRadius.all(Radius.circular(14)),
+                  border: Border.all(color: scheme.outlineVariant),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
+                      child: AspectRatio(
                     aspectRatio: 16 / 9,
                     child: Stack(
                       fit: StackFit.expand,
@@ -182,7 +197,9 @@ class _TwitchLiveCardState extends ConsumerState<TwitchLiveCard> {
                     ],
                   ),
                 ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),
