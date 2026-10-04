@@ -1,6 +1,11 @@
 # Play Console — kiadási jegyzet (másolható)
 
 > 🟡 **A 401 A FELTÖLTENDŐ** (versionCode **401**, `1.0.0`) — a **400**-hoz képest:
+> ✅ **A TULAJDONOS IGAZOLTA (2026-10-04):** *„most fasza ájfónon”* (a zárképernyő pause gombja működik),
+> Androidon pedig *„Androidon működik”* (a 400 óta). ⚠️ **Androidra a 401 nem kötelező:** a 401 egyetlen
+> érdemi változása az **iOS-oldali** `AppDelegate.swift`, ami az AAB-ban **nincs benne** — Androidon a 400
+> és a 401 ugyanúgy viselkedik, csak a Névjegy changelog-sora más. A zárt teszten ezért nyugodtan
+> maradhat a **400**; a 401 feltöltése csak a changelog-sor miatt opcionális.
 > **(1) a rádió Szüneteltetés gombja megjelenik az iPhone zárképernyőjén** (a mért gyökér: az iOS az „élő adás” gombkészletét rajzolta, amiben nincs pause; Androidon ez már a 400-ban működik) — a
 > tulajdonos jelzése: *„azt mondtad van pause gomb a zárképernyőn és az értesítési sávban a rádió
 > vezérlőn, de nem, nincs”* (**mindkét platformon**), majd iPhone-on: *„play van meg stop és ha rányomok
