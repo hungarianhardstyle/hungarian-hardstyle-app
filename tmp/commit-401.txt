@@ -1,0 +1,27 @@
+Build 401: iPhone lock screen shows the radio pause button (the live-stream flag removed the pause control)
+
+Measured on the device with pymobiledevice3 syslog live (the owner's own taps at
+13:32:42 Stop / 13:32:43 Play):
+- the Play/Stop commands arrive (Request/Response: playerCommand:Play|Stop),
+- the title and artwork are written (NPIC: setNowPlayingInfo),
+- the AVAudioSession activates and the AVPlayer starts (timeControlStatus=2),
+- the 5 s heartbeat runs (Setting identical nowPlayingInfo every 5 s).
+The decisive line:
+  [MRNowPlaying] Ignoring setPlaybackState because application does not contain
+  entitlement com.apple.mediaremote.set-playback-state
+iOS drops playbackState because it is a private entitlement, so the 399/400 fix
+built on it could not have worked - my mistake, and the source lints could not
+catch it.
+
+The lock screen button is decided by MPNowPlayingInfoPropertyPlaybackRate and the
+live-stream flag:
+- MPNowPlayingInfoPropertyIsLiveStream is removed, because the live control set
+  is play + stop with no pause (exactly what the owner saw),
+- MPNowPlayingInfoPropertyDefaultPlaybackRate is written as 1.0 as well,
+- diagnostics moved from NSLog (never appeared in the device syslog) to os_log,
+  which also prints the rate value.
+
+Gates: flutter test 1561/1561; flutter analyze lib test 0 issues; i18n 100%
+(chunk-54); check-play-notes OK (1. blokk 358/480, eles 447/480, copies 5/5
+byte-identical); AAB verified with tmp/verify-aab.mjs and the changelog checker
+in all three ABIs.

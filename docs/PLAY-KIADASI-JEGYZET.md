@@ -1,7 +1,7 @@
 # Play Console — kiadási jegyzet (másolható)
 
-> 🟡 **A 400 A FELTÖLTENDŐ** (versionCode **400**, `1.0.0`) — a **398**-hoz képest:
-> **(1) a rádió Szüneteltetés gombja tényleg megjelenik** a zárképernyőn és az értesítési sávban — a
+> 🟡 **A 401 A FELTÖLTENDŐ** (versionCode **401**, `1.0.0`) — a **400**-hoz képest:
+> **(1) a rádió Szüneteltetés gombja megjelenik az iPhone zárképernyőjén** (a mért gyökér: az iOS az „élő adás” gombkészletét rajzolta, amiben nincs pause; Androidon ez már a 400-ban működik) — a
 > tulajdonos jelzése: *„azt mondtad van pause gomb a zárképernyőn és az értesítési sávban a rádió
 > vezérlőn, de nem, nincs”* (**mindkét platformon**), majd iPhone-on: *„play van meg stop és ha rányomok
 > a playre, egy pillre pause lesz belőle aztán visszaáll … és szól a rádió”*.
@@ -24,10 +24,10 @@
 > (production) sáv a 384-en** áll (szintén 100%), a **nyílt teszt (beta) a 377-en**.
 > ⚠️ **A 399 nem ment fel** (a tulajdonos Androidon nem tesztelte) — a **400** mindent tartalmaz.
 >
-> **Melyik blokk hova való (mérve, 2026-10-03):** a **zárt tesztre** (398 → 400) az **1. blokk** (és a
-> `tmp/play-400-zart.txt`); az **ÉLES** sávra (384 → 400) a **2b. blokk** (`tmp/play-400-eles.txt`);
-> a **bétára** (377) a **355–400** összesítő (1b-3.) való.
-> ⚠️ **A 385–399-et NE tárd fel újra** — a 400 mindegyiket tartalmazza.
+> **Melyik blokk hova való (mérve, 2026-10-03):** a **zárt tesztre** (400 → 401) az **1. blokk** (és a
+> `tmp/play-401-zart.txt`); az **ÉLES** sávra (384 → 401) a **2b. blokk** (`tmp/play-401-eles.txt`);
+> a **bétára** (377) a **355–401** összesítő (1b-3.) való.
+> ⚠️ **A 385–400-at NE tárd fel újra** — a 401 mindegyiket tartalmazza.
 
 Ez a fájl a **következő feltöltéshez** tartozó, **kész, másolható** changelog-szövegeket
 tartalmazza. A szabály ugyanaz, mint a `docs/RELEASE_CHANGELOG_CHECKLIST.md`-ben:
@@ -35,11 +35,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 400
+currentBuild: 401
 currentVersion: 1.0.0
 lastPublishedBuild: 384
-aab: build/HUHS-v1.0.0+400-release.aab
-sha256: 6978F267D2C33EC91D6DE2643A5E988749262D70DB674A21624078B116957611
+aab: build/HUHS-v1.0.0+401-release.aab
+sha256: F46E95797BEF27E894770D97F38CDD0F720B0888D3E24C7DFD5F6B6E5A699AC1
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -247,18 +247,18 @@ A Play **nyelvenként 500 karaktert** enged ([súgó](https://support.google.com
 az alábbi blokk **mérve a limit töredéke** (a pontos számot a `tools/check-play-notes.mjs` írja ki).
 
 > **⚠️ MELYIK BLOKK HOVA VALÓ (mért állapot, 2026-10-03, `node tools/check-play-track.mjs`):**
-> **ZÁRT TESZT (alpha) = 398** (kiadva, 100%-ban kigördülve) → ide (398 → 400) **ez a néhány sor** való.
+> **ZÁRT TESZT (alpha) = 400** (kiadva, 100%-ban kigördülve) → ide (400 → 401) **ez a néhány sor** való.
 > **ÉLES (production) = 384** → a nyilvános sávra a **2b. blokk** való (egyetlen, összevont szöveg),
-> mert az 1. blokk + a **361–400** összesítő (**1b-2.**) együtt nem férne bele az 500-as limitbe.
-> **NYÍLT TESZT (beta) = 377** → a **355–400** összesítő való (**1b-3.**).
+> mert az 1. blokk + a **361–401** összesítő (**1b-2.**) együtt nem férne bele az 500-as limitbe.
+> **NYÍLT TESZT (beta) = 377** → a **355–401** összesítő való (**1b-3.**).
 > A „Kiadási megjegyzések" mezőbe másolásnál a nyelv **hu-HU** (ez az egyetlen beállított nyelv).
-> A **398-as AAB már fent van** a Playen (kiadva a zárt teszten), a **400 az új** — a **385–399-et ne**
-> tárd fel újra. A **kész, másolható** változatok: `tmp/play-400-zart.txt` (zárt teszt, bájtazonos ezzel
-> a blokkal) és `tmp/play-400-eles.txt` (éles sáv).
+> A **400-as AAB már fent van** a Playen (kiadva a zárt teszten), a **401 az új** — a **385–400-at ne**
+> tárd fel újra. A **kész, másolható** változatok: `tmp/play-401-zart.txt` (zárt teszt, bájtazonos ezzel
+> a blokkal) és `tmp/play-401-eles.txt` (éles sáv).
 
 ```play-notes
-- Javítva: a rádió Szüneteltetés gombja megjelenik a zárképernyőn és az értesítési sávban (Android, iPhone).
-- Javítva: a gomb a rádió valódi állapotát követi (indulás után is), és szünetnél sem tűnik el.
+- Javítva: iPhone-on a zárképernyőn megjelenik a rádió Szüneteltetés gombja (eddig csak play és stop volt).
+- Javítva: a „Most szól” panel a rádió valódi állapotát követi, és szünetnél sem tűnik el.
 - Javítva: fekvő módban a friss hírek, a kiemelt hír és a Twitch-kártya sem óriási.
 - ÚJ: ha megy a Twitch-adás, a főoldali kártyán a stream mozgóképe látszik.
 ```
@@ -278,10 +278,10 @@ dokumentációnak marad itt).
 - ÚJ a Chatben: @mindenki, és a Chat-értesítés a megjelölt üzenetre ugrik.
 ```
 
-## 1b-2. Play Console — a **361–400** összesítő (a 384 után)
+## 1b-2. Play Console — a **361–401** összesítő (a 384 után)
 
 **Ezt használd, ha a felhasználó a 361–380 közötti valamelyik buildről jön** (régebbi nyilvános
-build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–400** között készültek.
+build) — vagyis csak azok az újdonságok szerepelnek benne, amelyek a **361–401** között készültek.
 A karakter-számot a `tools/check-play-notes.mjs` méri.
 ⚠️ **Az ÉLES sávon a 384 van** (mérve, 2026-10-03) — arra a sávra a **2b. blokk** való (egyetlen,
 összevont szöveg), mert az 1. blokk + ez az összesítő együtt nem férne bele az 500-as limitbe.
@@ -294,9 +294,9 @@ A karakter-számot a `tools/check-play-notes.mjs` méri.
 - ÚJ: kedvencek a főoldalon; naptárba tevés; meghívó-jutalom; szavazás/játék push.
 ```
 
-## 1b-3. Play Console — a **BÉTA** sávhoz (**355–400** összesítő)
+## 1b-3. Play Console — a **BÉTA** sávhoz (**355–401** összesítő)
 
-**Ezt használd, ha a 400-at a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
+**Ezt használd, ha a 401-et a béta (nyílt teszt) sávra teszed fel:** a bétán mért állapot
 (`node tools/check-play-track.mjs`, 2026-10-03) szerint ott a **377** fut, ezért a béta felhasználók a
 **355 óta** történteket kapják — a nyelvváltó és az angol felület mellett a `@mindenki` (a mostani
 **push**-jal), a hírlista-frissesség, a **gyermekbiztonsági kör**, a **születésnapi köszöntés**, a
@@ -322,20 +322,20 @@ megjeleníteni. **Ez a 351 javítását és a 350 újdonságait is leírja.**
 - Javítva: az adatlapok (saját profil, hír, esemény, DJ, szervező) aljára rendesen le lehet görgetni.
 ```
 
-## 1d. Play Console — a **ZÁRT TESZTRE** (398 → 400: ugyanaz, mint az 1. blokk)
+## 1d. Play Console — a **ZÁRT TESZTRE** (400 → 401: ugyanaz, mint az 1. blokk)
 
 A zárt teszten (**alpha**) a **mért** állapot szerint (2026-10-03) a **398** van kiadva, 100%-ban
 kigördülve, ezért a tesztelők a 398 négy soros jegyzetét **már látták**. Ezért ide **csak az a néhány
 sor** való, amit a tulajdonos jelzése javított — így a kártyán pontosan az látszik, ami **változott**:
 
 ```play-notes
-- Javítva: a rádió Szüneteltetés gombja megjelenik a zárképernyőn és az értesítési sávban (Android, iPhone).
-- Javítva: a gomb a rádió valódi állapotát követi (indulás után is), és szünetnél sem tűnik el.
+- Javítva: iPhone-on a zárképernyőn megjelenik a rádió Szüneteltetés gombja (eddig csak play és stop volt).
+- Javítva: a „Most szól” panel a rádió valódi állapotát követi, és szünetnél sem tűnik el.
 - Javítva: fekvő módban a friss hírek, a kiemelt hír és a Twitch-kártya sem óriási.
 - ÚJ: ha megy a Twitch-adás, a főoldali kártyán a stream mozgóképe látszik.
 ```
 
-⚠️ A **400**-at az **éles** sávra téve nem ez a blokk való: ott a **2b.** blokk a helyes; a **bétára** a
+⚠️ A **401**-et az **éles** sávra téve nem ez a blokk való: ott a **2b.** blokk a helyes; a **bétára** a
 **355–399** összesítő (**1b-3.**).
 
 ## 2. Play Console — CSAK akkor, ha a 329 is kiment volna
@@ -349,18 +349,18 @@ bemásolni (mert a 329 nem ment ki).
 - A Vezérlőközpontban a Hírlevél, a Shortcode-ok és a Beállítások is megnyitható.
 ```
 
-## 2b. Play Console — az **ÉLES** sávra (384 → 400, egyetlen blokk)
+## 2b. Play Console — az **ÉLES** sávra (384 → 401, egyetlen blokk)
 
 ⚠️ **Miért külön blokk:** az éles felhasználók a **384**-en vannak (mérve, 2026-10-03), ezért nekik a
-**385–400** közötti újdonságok az újak. Az **1. blokk** és a **361–400** összesítő együtt **nem férne
+**385–401** közötti újdonságok az újak. Az **1. blokk** és a **361–401** összesítő együtt **nem férne
 bele** a Play **500-as** korlátjába, ezért itt van egy **egyetlen, összevont** szöveg (a limit
 töredéke; a `tools/check-play-notes.mjs` méri).
-A zárt teszthez **nem** ez való, hanem az **1. blokk** (`tmp/play-400-zart.txt`).
-A kész, másolható változat: `tmp/play-400-eles.txt` (bájtazonos ezzel a blokkal).
+A zárt teszthez **nem** ez való, hanem az **1. blokk** (`tmp/play-401-zart.txt`).
+A kész, másolható változat: `tmp/play-401-eles.txt` (bájtazonos ezzel a blokkal).
 
 ```play-notes
 - ÚJ: Twitch-adás az appban, külön stream-chattal; élő adásnál a stream mozgóképe a főoldali kártyán.
-- Javítva: a rádió Szüneteltetés gombja megjelenik a zárképernyőn és az értesítési sávban (Android, iPhone).
+- Javítva: a rádió Szüneteltetés gombja megjelenik a zárképernyőn (Android és iPhone is).
 - ÚJ: a rádió „most szól” a zárképernyőn; a főoldali Twitch-kártya azonnal betölt.
 - Javítva: fekvő módban a hírek, a kiemelt hír és a Twitch-kártya sem lesz óriási.
 - ÚJ: a regisztrációd törlésével a nyereményjátékból is kikerülsz (nem nyerhetsz jegyet).
@@ -370,6 +370,12 @@ A kész, másolható változat: `tmp/play-400-eles.txt` (bájtazonos ezzel a blo
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 401 — a rádió Szüneteltetés gombja az iPhone zárképernyőjén (mért gyökér a telefonról)
+- **A tulajdonos jelzése (2026-10-04, iPhone):** *„play van meg stop és ha rányomok a playre, egy pillre pause lesz belőle aztán visszaáll … és szól a rádió”*, illetve *„Androidon működik”*.
+- **A MÉRÉS (a telefonról, \`pymobiledevice3 syslog live\`):** a napló megmutatta, hogy a Stop/Play gombnyomások **megérkeznek** (\`Request: playerCommand:Play/Stop\`), a cím és a borító **kiíródik** (\`NPIC: setNowPlayingInfo\`), az \`AVAudioSession\` aktiválódik, az \`AVPlayer\` elindul (\`timeControlStatus=2\`), és a szívverés is fut (5 másodpercenként \`Setting identical nowPlayingInfo\`). A döntő sor viszont ez: **\`[MRNowPlaying] Ignoring setPlaybackState because application does not contain entitlement com.apple.mediaremote.set-playback-state\`** — az iOS a \`playbackState\`-et **eldobja** (Apple-privát jogosultság), ezért a 399/400 erre épülő javítása **nem is hathatott**. A zárképernyő gombját a \`playbackRate\` és a **live-stream jelző** dönti el.
+- **A JAVÍTÁS:** (1) a \`MPNowPlayingInfoPropertyIsLiveStream\` jelző **lekerült** — az „élő adás” gombkészletben (play + stop) **nincs pause**, ezért nem is jelenhetett meg; sima elemként az iOS a megszokott play/pause gombot rajzolja; (2) \`MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0\` is kiíródik; (3) a diagnosztika **\`os_log\`** (az \`NSLog\` sorai **nem jelentek meg** a naplóban, ezért a 400 diagnosztikája használhatatlan volt).
+- **A kapu mérése:** a Swift-oldal forrás-lintjei (nincs élő jelző, van alapértelmezett rate, \`os_log\` és nincs \`NSLog\`), \`flutter test\` **1561/1561**, \`flutter analyze lib test\` **0 hiba**.
 
 ### 400 — a rádió Szüneteltetés gombja tényleg megjelenik a zárképernyőn (iPhone)
 - **A tulajdonos jelzése (2026-10-04, iPhone):** *„nem nincs pause gomb, play van meg stop és ha rányomok a playre, egy pillre pause lesz belőle aztán visszaáll stop gombra és szól a rádió”*.

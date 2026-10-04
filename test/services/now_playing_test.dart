@@ -230,6 +230,25 @@ void main() {
       expect(source.contains('guard lastPlaybackState != .stopped else { return }'), isTrue);
     });
 
+    test('az iOS NEM jelöli élő adásnak (az élő gombkészletben nincs pause)', () {
+      // ⚠️ MÉRT GYÖKÉR (2026-10-04, a telefonról olvasott napló): a
+      // `MPNowPlayingInfoPropertyIsLiveStream: true` mellett az iOS az **élő adás
+      // gombkészletét** rajzolja (play + stop, pause nélkül) — ezért nem is
+      // jelenhetett meg pause gomb; ráadásul az iOS a `playbackState`-et eldobja
+      // (`Ignoring setPlaybackState because application does not contain
+      // entitlement com.apple.mediaremote.set-playback-state`), tehát a
+      // zárképernyő gombját a `playbackRate` és ez a jelző dönti el.
+      final source = File('ios/Runner/AppDelegate.swift').readAsStringSync();
+      expect(source.contains('MPNowPlayingInfoPropertyIsLiveStream: true'), isFalse,
+          reason: 'az élő jelzővel az iOS nem rajzol pause gombot');
+      expect(source.contains('MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0'), isTrue);
+      // A diagnosztika `os_log` (az `NSLog` sorai nem jelentek meg a naplóban).
+      expect(source.contains('import os'), isTrue);
+      expect(source.contains('os_log("HUHS mostszol'), isTrue);
+      expect(source.contains('NSLog('), isFalse,
+          reason: 'az NSLog sorait nem hozza a syslog — használhatatlan diagnosztika');
+    });
+
     test('a logó tényleg a csomagban van (Android + iOS)', () {
       expect(File('android/app/src/main/res/drawable/realhardstyle_logo.jpg').existsSync(), isTrue);
       expect(

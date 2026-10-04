@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import MediaPlayer
+import os
 
 /// A HUHS app iOS-belépési pontja.
 ///
@@ -117,7 +118,12 @@ import MediaPlayer
     lastPlaybackState = state
     MPNowPlayingInfoCenter.default().playbackState = state
     writePlaybackRate()
-    NSLog("HUHS mostszol: state=\(state.rawValue) rate=\(rate(for: state))")
+    // ⚠️ `os_log` és nem `NSLog` (mérve, 2026-10-04): az `NSLog` sorai **nem
+    // jelentek meg** a `pymobiledevice3 syslog live` kimenetében, ezért a
+    // diagnosztika használhatatlan volt. Az `os_log` az egységes naplóba megy,
+    // és a `rate` értékét is kiírja — így a zárképernyő viselkedése mérhető.
+    os_log("HUHS mostszol: state=%{public}d rate=%{public}.1f",
+           log: .default, type: .default, state.rawValue, rate(for: state))
     refreshHeartbeat()
   }
 
@@ -158,13 +164,25 @@ import MediaPlayer
         MPMediaItemPropertyTitle: title,
         MPMediaItemPropertyArtist: artist,
         MPMediaItemPropertyAlbumTitle: "Real Hardstyle Radio",
-        // Élő adás: a rendszer ne számoljon eltelt időt.
-        MPNowPlayingInfoPropertyIsLiveStream: true,
         // ⚠️ A `playbackRate` MINDIG az utoljára jelentett állapotból jön
         // (2026-10-04): a régi érték megőrzése volt az a hiba, amitől a
         // zárképernyő play gombja „beragadt” egy szóló rádió mellett.
         MPNowPlayingInfoPropertyPlaybackRate: rate(for: lastPlaybackState),
+        // A „szünet utáni folytatás” alapértéke is 1 — ezt kéri az Apple azoknál
+        // az appoknál, amelyek maguk jelentik az állapotot.
+        MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
       ]
+      // ⚠️ **NINCS `MPNowPlayingInfoPropertyIsLiveStream`** (2026-10-04, mérve a
+      // telefonról): a jelzővel az iOS a **élő adás gombkészletét** rajzolja —
+      // play + stop, **pause nélkül** —, ezért nem is lehetett pause gombunk.
+      // A mérés (`pymobiledevice3 syslog live`): a Stop/Play parancsok
+      // megérkeznek, a cím+kép kiíródik, a szívverés fut, de az iOS a
+      // `playbackState`-et **eldobja** (`Ignoring setPlaybackState because
+      // application does not contain entitlement
+      // com.apple.mediaremote.set-playback-state`) — vagyis a zárképernyő gombját
+      // a **`playbackRate`** és ez a jelző dönti el, nem a `playbackState`.
+      // Sima (nem élő) elemként viszont az iOS a megszokott play/pause gombot
+      // rajzolja, és a „Most szól” panel is mutatja az eltelt időt.
       if !next.isEmpty {
         info[MPMediaItemPropertyAlbumTitle] = "Következő: \(next)"
       }

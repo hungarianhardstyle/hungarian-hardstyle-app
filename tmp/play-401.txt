@@ -1,0 +1,4 @@
+- Javítva: iPhone-on a zárképernyőn megjelenik a rádió Szüneteltetés gombja (eddig csak play és stop volt).
+- Javítva: a „Most szól” panel a rádió valódi állapotát követi, és szünetnél sem tűnik el.
+- Javítva: fekvő módban a friss hírek, a kiemelt hír és a Twitch-kártya sem óriási.
+- ÚJ: ha megy a Twitch-adás, a főoldali kártyán a stream mozgóképe látszik.

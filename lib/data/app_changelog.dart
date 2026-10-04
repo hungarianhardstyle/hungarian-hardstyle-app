@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 401,
+    changes: [
+      'Javítva: iPhone-on a zárképernyőn megjelenik a rádió Szüneteltetés gombja — eddig az iOS az „élő adás” gombkészletét rajzolta, amiben nincs pause.',
+      'Javítva: a „Most szól” panel a rádió valódi állapotát követi, és szüneteltetéskor sem tűnik el a vezérlő.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 400,
     changes: [
       'Javítva: iPhone-on a zárképernyőn megjelenik a rádió Szüneteltetés gombja — eddig az állapot el sem jutott a rendszerhez, ezért csak play és stop gomb látszott.',
