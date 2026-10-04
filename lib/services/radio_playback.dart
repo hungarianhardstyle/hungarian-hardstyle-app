@@ -71,12 +71,30 @@ class AndroidRadioPlayback implements RadioPlayback {
       methodChannel.invokeMethod<void>('volume', volume);
 }
 
+/// A **tényleges** hangállapot (nem a szándék).
+///
+/// ⚠️ MIÉRT KÜLÖN (mért hiba, 2026-10-04, a tulajdonos jelzése: *„play van meg
+/// stop és ha rányomok a playre, egy pillre pause lesz belőle aztán visszaáll …
+/// és szól a rádió”*): a `just_audio` `playing` jelzője a `play()` hívás után
+/// **azonnal** igaz, a hang viszont csak a stream betöltése után (másodpercek)
+/// indul el. Az iOS zárképernyője a gombot a **valódi** állapotból rajzolja,
+/// ezért a hang indulását külön jelezni kell (`playerStateStream` +
+/// `ProcessingState.ready`) — ebből lesz a „pause gomb” a zárképernyőn.
+final ValueNotifier<bool> radioAudioPlayingState = ValueNotifier<bool>(false);
+
 /// iOS (és minden nem-Android): `just_audio` a streamre.
 ///
 /// ⚠️ A stream **végtelen**, ezért a `play()` future-je soha nem fejeződik be —
 /// ugyanaz a minta, mint az előzetes lejátszónál (`unawaited(_player.play())`).
 class StreamRadioPlayback implements RadioPlayback {
-  StreamRadioPlayback({AudioPlayer? player}) : _player = player ?? AudioPlayer();
+  StreamRadioPlayback({AudioPlayer? player}) : _player = player ?? AudioPlayer() {
+    // A **valódi** hangállapot követése: `ready` + `playing` együtt jelenti,
+    // hogy tényleg szól (pufferelés/újratöltés közben nem).
+    _player.playerStateStream.listen((state) {
+      radioAudioPlayingState.value =
+          state.playing && state.processingState == ProcessingState.ready;
+    });
+  }
 
   final AudioPlayer _player;
   String? _url;

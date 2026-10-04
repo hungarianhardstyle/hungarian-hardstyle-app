@@ -75,39 +75,70 @@ import MediaPlayer
   }
 
   /// A parancs átadása a Dart-oldalnak, és a gomb állapotának azonnali váltása.
-  ///
-  /// ⚠️ A `playbackRate` azért kell, mert a zárképernyő ebből rajzolja, hogy
-  /// éppen szól-e a stream — enélkül a gomb a szünet után is „szüneteltetés”
-  /// maradna, amíg a Dart-oldal nem küld új metaadatot.
   private func sendRemoteCommand(_ name: String) {
-    if var info = MPNowPlayingInfoCenter.default().nowPlayingInfo {
-      let rate: Double
-      switch name {
-      case "play":
-        rate = 1
-      case "pause", "stop":
-        rate = 0
-      default:
-        let current = (info[MPNowPlayingInfoPropertyPlaybackRate] as? Double) ?? 1
-        rate = current > 0 ? 0 : 1
-      }
-      info[MPNowPlayingInfoPropertyPlaybackRate] = rate
-      MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-      setPlaybackState(rate > 0 ? .playing : .paused)
+    switch name {
+    case "play":
+      applyPlaybackState(.playing)
+    case "pause":
+      applyPlaybackState(.paused)
+    case "stop":
+      applyPlaybackState(.stopped)
+    default:
+      applyPlaybackState(lastPlaybackState == .playing ? .paused : .playing)
     }
     nowPlayingChannel?.invokeMethod("remoteCommand", arguments: name)
   }
 
+  /// Az utoljára jelentett állapot — a `playbackRate` **ebből** számol.
+  private var lastPlaybackState: MPNowPlayingPlaybackState = .stopped
+
+  /// A „szívverés”: amíg a rádió nem áll le, néhány másodpercenként újra kiírjuk
+  /// ugyanazt az állapotot.
+  private var heartbeat: Timer?
+
+  private func rate(for state: MPNowPlayingPlaybackState) -> Double {
+    state == .playing ? 1.0 : 0.0
+  }
+
   /// A zárképernyő **állapota** — ebből rajzolja az iOS a gombokat.
   ///
-  /// ⚠️ MÉRT HIÁNY (2026-10-03, a tulajdonos jelzése: *„azt mondtad van pause
-  /// gomb a zárképernyőn és az értesítési sávban a rádió vezérlőn, de nem,
-  /// nincs”*): a `nowPlayingInfo` beállítása önmagában **nem** elég — iOS 13 óta
-  /// a „Most szól” panel a `MPNowPlayingInfoCenter.playbackState`-ből dönti el,
-  /// hogy **pause** vagy **play** gombot rajzol-e; ha ez nincs beállítva, a panel
-  /// nem vált „szól” állapotba (a `playbackRate` önmagában nem elég).
-  private func setPlaybackState(_ state: MPNowPlayingPlaybackState) {
+  /// ⚠️ MÉRT GYÖKÉR (2026-10-04, a tulajdonos jelzése: *„play van meg stop és ha
+  /// rányomok a playre, egy pillre pause lesz belőle aztán visszaáll … és szól a
+  /// rádió”*): a zárképernyő a **`playbackRate`-ből** rajzol (1 = szól → pause
+  /// gomb, 0 = áll → play gomb), és a `playbackRate` **beleragadt 0-ba**: a
+  /// `metadata` (15 másodpercenként) szándékosan **megőrizte** a szótárban lévő
+  /// régi értéket, a „szól” állapotot pedig csak **egyszer**, a kattintás
+  /// pillanatában írtuk ki — a hang viszont csak a stream betöltése **után**
+  /// indul el, ezért az iOS visszaállította a play gombot.
+  ///
+  /// Mostantól **egy helyen** dől el (`applyPlaybackState`): az állapot, a
+  /// `playbackRate` és a szívverés is innen indul.
+  private func applyPlaybackState(_ state: MPNowPlayingPlaybackState) {
+    lastPlaybackState = state
     MPNowPlayingInfoCenter.default().playbackState = state
+    writePlaybackRate()
+    NSLog("HUHS mostszol: state=\(state.rawValue) rate=\(rate(for: state))")
+    refreshHeartbeat()
+  }
+
+  /// A `playbackRate` kiírása a „Most szól” szótárba — **mindig az állapotból**.
+  private func writePlaybackRate() {
+    guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
+    info[MPNowPlayingInfoPropertyPlaybackRate] = rate(for: lastPlaybackState)
+    MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+  }
+
+  /// A szívverés beállítása: álló rádiónál nincs, szólónál/szüneteltnél 5
+  /// másodpercenként ismétel.
+  private func refreshHeartbeat() {
+    heartbeat?.invalidate()
+    heartbeat = nil
+    guard lastPlaybackState != .stopped else { return }
+    heartbeat = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+      guard let self = self else { return }
+      MPNowPlayingInfoCenter.default().playbackState = self.lastPlaybackState
+      self.writePlaybackRate()
+    }
   }
 
   /// A „Most szól” panel frissítése / törlése.
@@ -129,17 +160,11 @@ import MediaPlayer
         MPMediaItemPropertyAlbumTitle: "Real Hardstyle Radio",
         // Élő adás: a rendszer ne számoljon eltelt időt.
         MPNowPlayingInfoPropertyIsLiveStream: true,
+        // ⚠️ A `playbackRate` MINDIG az utoljára jelentett állapotból jön
+        // (2026-10-04): a régi érték megőrzése volt az a hiba, amitől a
+        // zárképernyő play gombja „beragadt” egy szóló rádió mellett.
+        MPNowPlayingInfoPropertyPlaybackRate: rate(for: lastPlaybackState),
       ]
-      // ⚠️ A szünet ÁLLAPOTA megmarad a címfrissítéskor is (2026-10-03): a Dart
-      // oldal 15 másodpercenként küld címet, és ha ilyenkor felülírnánk a
-      // `playbackRate`-et, a zárképernyő gombja visszaváltana „szüneteltetés”-re
-      // egy szünetelő rádiónál.
-      if let existing = MPNowPlayingInfoCenter.default().nowPlayingInfo,
-         let rate = existing[MPNowPlayingInfoPropertyPlaybackRate] as? Double {
-        info[MPNowPlayingInfoPropertyPlaybackRate] = rate
-      } else {
-        info[MPNowPlayingInfoPropertyPlaybackRate] = 1
-      }
       if !next.isEmpty {
         info[MPMediaItemPropertyAlbumTitle] = "Következő: \(next)"
       }
@@ -151,18 +176,19 @@ import MediaPlayer
       MPNowPlayingInfoCenter.default().nowPlayingInfo = info
       result(nil)
 
-    // ⚠️ A zárképernyő gombjainak az ÁLLAPOTA (2026-10-03): a Dart-oldal a rádió
-    // minden állapotváltásakor küldi — enélkül a panel „play” gombot mutat egy
-    // szóló rádión (a tulajdonos jelzése: *„nincs pause gomb”*).
+    // ⚠️ A zárképernyő gombjainak az ÁLLAPOTA (2026-10-03/04): a Dart-oldal a
+    // rádió minden állapotváltásakor, a hang tényleges indulásakor és 5
+    // másodpercenként küldi — enélkül a panel „play” gombot mutat egy szóló
+    // rádión (a tulajdonos jelzése: *„nincs pause gomb”*).
     case "state":
       let args = call.arguments as? [String: Any] ?? [:]
       switch (args["state"] as? String) ?? "" {
       case "playing":
-        setPlaybackState(.playing)
+        applyPlaybackState(.playing)
       case "paused":
-        setPlaybackState(.paused)
+        applyPlaybackState(.paused)
       case "stopped":
-        setPlaybackState(.stopped)
+        applyPlaybackState(.stopped)
       default:
         break
       }
@@ -170,7 +196,7 @@ import MediaPlayer
 
     case "clear":
       MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-      setPlaybackState(.stopped)
+      applyPlaybackState(.stopped)
       result(nil)
 
     default:

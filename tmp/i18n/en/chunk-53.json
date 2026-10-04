@@ -1,0 +1,4 @@
+{
+  "Javítva: iPhone-on a zárképernyőn megjelenik a rádió Szüneteltetés gombja — eddig az állapot el sem jutott a rendszerhez, ezért csak play és stop gomb látszott.": "Fixed: on iPhone the radio's Pause button now appears on the lock screen — the playback state never reached the system, so only play and stop were shown.",
+  "Javítva: a zárképernyő gombja a rádió valódi állapotát követi (a hang indulása után is), és szüneteltetéskor sem tűnik el a vezérlő.": "Fixed: the lock screen button follows the radio's real state (including after the audio actually starts), and the control no longer disappears when paused."
+}

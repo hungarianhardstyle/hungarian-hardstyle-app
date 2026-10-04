@@ -106,20 +106,26 @@ class NowPlayingReporter {
 
   /// Az **állapot** kiírása a rendszer felületére.
   ///
-  /// ⚠️ Csak az iOS-nek van rá szüksége (`playbackState`), de **szándékosan** a
-  /// közös helyen él: a hívók (rádió-sáv, távvezérlő) így nem tudnak platformot
-  /// téveszteni. Androidon a csatornán nincs kezelő → a hívás csendben elakad,
-  /// amit ez a `try` fog el (a lejátszás ettől független).
+  /// ⚠️ Csak az iOS-nek van rá szüksége (`playbackState`), ezért **alapból az
+  /// iOS-csatornára** megy. Az Android előtér-szolgáltatás a saját állapotát
+  /// maga kezeli (a `MediaSession`-ből), oda csak kérésre küldünk.
+  ///
+  /// ⚠️ MÉRT SAJÁT HIBA (2026-10-04): az első változat a **megadott**
+  /// paraméterekből épített listát (`?appleChannel`), ezért a valódi hívás
+  /// (`reportState(state)`) **egyetlen csatornára sem** küldött — a 399-ben az
+  /// állapot-üzenetek el sem indultak, és a zárképernyő ezért maradt „play”
+  /// állapotban. A hívó mostantól **nem tud** csatorna nélkül hívni.
   static Future<void> reportState(
     NowPlayingPlaybackState state, {
     MethodChannel? appleChannel,
     MethodChannel? androidChannel,
   }) async {
     final payload = <String, String>{'state': state.wireName};
-    for (final channel in <MethodChannel>[
+    final channels = <MethodChannel>[
       ?androidChannel,
-      ?appleChannel,
-    ]) {
+      appleChannel ?? NowPlayingReporter.appleChannel,
+    ];
+    for (final channel in channels) {
       try {
         await channel.invokeMethod<void>('state', payload);
       } catch (_) {

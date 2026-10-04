@@ -1,0 +1,4 @@
+- Javítva: a rádió Szüneteltetés gombja megjelenik a zárképernyőn és az értesítési sávban (Android, iPhone).
+- Javítva: a gomb a rádió valódi állapotát követi (indulás után is), és szünetnél sem tűnik el.
+- Javítva: fekvő módban a friss hírek, a kiemelt hír és a Twitch-kártya sem óriási.
+- ÚJ: ha megy a Twitch-adás, a főoldali kártyán a stream mozgóképe látszik.

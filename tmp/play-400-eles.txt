@@ -1,0 +1,5 @@
+- ÚJ: Twitch-adás az appban, külön stream-chattal; élő adásnál a stream mozgóképe a főoldali kártyán.
+- Javítva: a rádió Szüneteltetés gombja megjelenik a zárképernyőn és az értesítési sávban (Android, iPhone).
+- ÚJ: a rádió „most szól” a zárképernyőn; a főoldali Twitch-kártya azonnal betölt.
+- Javítva: fekvő módban a hírek, a kiemelt hír és a Twitch-kártya sem lesz óriási.
+- ÚJ: a regisztrációd törlésével a nyereményjátékból is kikerülsz (nem nyerhetsz jegyet).

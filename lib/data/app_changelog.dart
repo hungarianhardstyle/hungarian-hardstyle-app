@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 400,
+    changes: [
+      'Javítva: iPhone-on a zárképernyőn megjelenik a rádió Szüneteltetés gombja — eddig az állapot el sem jutott a rendszerhez, ezért csak play és stop gomb látszott.',
+      'Javítva: a zárképernyő gombja a rádió valódi állapotát követi (a hang indulása után is), és szüneteltetéskor sem tűnik el a vezérlő.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 399,
     changes: [
       'Javítva: a rádió zárképernyőjén és értesítési sávjában is megjelenik a Szüneteltetés gomb (Android és iPhone) — eddig a rendszer „lejátszás” állapotban rajzolta a kártyát, ezért pause gomb nem is látszott.',

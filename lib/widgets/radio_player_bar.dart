@@ -27,6 +27,9 @@ Future<void> stopRadioPlayback() async {
   radioPlayingState.value = false;
   // A rendszer felületéről (értesítés + zárképernyő) is eltűnik a cím.
   await nowPlayingReporter.stop();
+  // ⚠️ Az állapotot is „leállt”-ra tesszük: enélkül a szívverés tovább
+  // ismételné a „szól” állapotot egy leállított rádióhoz.
+  await reportRadioNowPlayingState(NowPlayingPlaybackState.stopped);
 }
 
 /// **Szünet**: a hang elhallgat, de a vezérlő **ott marad**.
@@ -46,7 +49,60 @@ Future<void> pauseRadioPlayback() async {
     await radioPlayback.pause();
   } catch (_) {}
   radioPlayingState.value = false;
-  await NowPlayingReporter.reportState(NowPlayingPlaybackState.paused);
+  await reportRadioNowPlayingState(NowPlayingPlaybackState.paused);
+}
+
+/// A **rendszer felületének az állapota** (iOS: `playbackState` + `playbackRate`).
+///
+/// ⚠️ MIÉRT KELL SZINKRON (mért hiba, 2026-10-04, a tulajdonos jelzése: *„play
+/// van meg stop és ha rányomok a playre, egy pillre pause lesz belőle aztán
+/// visszaáll … és szól a rádió”*): az állapotot **egyszer**, a szándék
+/// pillanatában küldtük — a hang viszont csak a stream betöltése után indul, az
+/// iOS pedig közben visszaállította a play gombot, és a `playbackRate` is
+/// beleragadt a 0-ba.
+///
+/// Ezért három ponton írjuk ki: (1) minden állapotváltáskor, (2) amikor a hang
+/// **tényleg** elindul (`radioAudioPlayingState`), (3) 5 másodpercenként
+/// (szívverés) — így egyetlen kimaradt pillanat sem hagyja „play” állapotban a
+/// zárképernyőt.
+NowPlayingPlaybackState _nowPlayingState = NowPlayingPlaybackState.stopped;
+Timer? _nowPlayingHeartbeat;
+
+/// Az állapot kiírása **és** megjegyzése (a szívverés ezt ismétli).
+Future<void> reportRadioNowPlayingState(NowPlayingPlaybackState state) async {
+  _nowPlayingState = state;
+  _refreshNowPlayingHeartbeat();
+  await NowPlayingReporter.reportState(state);
+}
+
+/// A szívverés beállítása: **álló** rádiónál nincs (nem pörög feleslegesen),
+/// szólónál/szüneteltnél 5 másodpercenként megismétli ugyanazt az állapotot.
+void _refreshNowPlayingHeartbeat() {
+  _nowPlayingHeartbeat?.cancel();
+  _nowPlayingHeartbeat = null;
+  if (_nowPlayingState == NowPlayingPlaybackState.stopped) return;
+  _nowPlayingHeartbeat = Timer.periodic(const Duration(seconds: 5), (_) {
+    if (_nowPlayingState == NowPlayingPlaybackState.stopped) return;
+    unawaited(NowPlayingReporter.reportState(_nowPlayingState));
+  });
+}
+
+void _onRadioAudioStateChanged() {
+  if (_nowPlayingState == NowPlayingPlaybackState.stopped) return;
+  // A hang tényleg elindult (vagy elhallgatott): azonnal újra kiírjuk.
+  unawaited(
+    NowPlayingReporter.reportState(
+      radioPlayingState.value
+          ? NowPlayingPlaybackState.playing
+          : NowPlayingPlaybackState.paused,
+    ),
+  );
+}
+
+/// A szinkron bekötése (az induláskor, egyszer).
+void startRadioNowPlayingSync() {
+  radioAudioPlayingState.removeListener(_onRadioAudioStateChanged);
+  radioAudioPlayingState.addListener(_onRadioAudioStateChanged);
 }
 
 /// A **távvezérlő** (zárképernyő, fejhallgató-gombok, értesítés) bekötése.
@@ -65,6 +121,8 @@ void bindRadioRemoteCommands() {
     stop: stopRadioPlayback,
     isPlaying: isRadioPlaybackActive,
   );
+  // Az állapot-szinkron (szívverés) is itt indul — az app indításakor egyszer.
+  startRadioNowPlayingSync();
 }
 
 Future<void> resumeRadioPlayback() async {
@@ -74,7 +132,7 @@ Future<void> resumeRadioPlayback() async {
     nowPlayingReporter.start();
     // Az ÁLLAPOT is kimegy (iOS: `playbackState = .playing`) — ettől jelenik meg
     // a zárképernyőn a pause gomb.
-    await NowPlayingReporter.reportState(NowPlayingPlaybackState.playing);
+    await reportRadioNowPlayingState(NowPlayingPlaybackState.playing);
   } catch (_) {}
 }
 
@@ -154,7 +212,7 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
     nowPlayingReporter.start();
     // …és az ÁLLAPOT is (iOS `playbackState`): ettől lesz pause gomb a
     // zárképernyőn (a tulajdonos jelzése: *„nincs pause gomb”*).
-    unawaited(NowPlayingReporter.reportState(NowPlayingPlaybackState.playing));
+    unawaited(reportRadioNowPlayingState(NowPlayingPlaybackState.playing));
   }
 
   /// ⚠️ A `clear` **szándékosan** külön kapcsoló (2026-10-03): a rádió
@@ -162,13 +220,26 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
   /// a rendszer felületének **meg kell maradnia** — különben pont a „Folytatás”
   /// gomb tűnne el. Csak a tényleges leállítás töröl (`stopRadioPlayback`).
   void _stopMetadataRefresh({bool clear = false}) {
-    _metadataTimer?.cancel();
-    _metadataTimer = null;
+    _cancelMetadataTimer();
     if (clear) {
       unawaited(nowPlayingReporter.stop());
+      unawaited(reportRadioNowPlayingState(NowPlayingPlaybackState.stopped));
     } else {
-      unawaited(NowPlayingReporter.reportState(NowPlayingPlaybackState.paused));
+      unawaited(reportRadioNowPlayingState(NowPlayingPlaybackState.paused));
     }
+  }
+
+  /// A címfrissítő időzítő leállítása **állapot-kiírás nélkül**.
+  ///
+  /// ⚠️ MIÉRT KÜLÖN (mért hiba, 2026-10-04): a `dispose()` innen hívott, és a
+  /// `_stopMetadataRefresh()` ilyenkor **szünetet** jelentett — miközben a rádió a
+  /// háttérben **tovább szól**. Ez két hibát okozott: (1) a zárképernyő „play”
+  /// gombra váltott egy szóló rádió mellett, (2) a jelentés **új időzítőt** hozott
+  /// létre a kilépés pillanatában (a `widget_test.dart` „A Timer is still pending”
+  /// hibája). A kilépés nem állapotváltozás: csak az időzítőt állítjuk le.
+  void _cancelMetadataTimer() {
+    _metadataTimer?.cancel();
+    _metadataTimer = null;
   }
 
   Future<void> _togglePlay() async {
@@ -241,7 +312,9 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
 
   @override
   void dispose() {
-    _stopMetadataRefresh();
+    // ⚠️ Kilépéskor **nem** jelentünk állapotot: a rádió a háttérben tovább szól,
+    // és a jelentés új időzítőt is hozna létre (lásd `_cancelMetadataTimer`).
+    _cancelMetadataTimer();
     if (_previewListener != null) {
       releasePreviewPlayingState.removeListener(_previewListener!);
     }

@@ -127,14 +127,16 @@ void main() {
     test('az állapot-üzenet a helyes nevet és csatornát használja', () async {
       // Az iOS `playbackState`-et ez az üzenet állítja — a névnek egyeznie kell a
       // Swift-oldallal (`case "playing":` stb.).
-      await NowPlayingReporter.reportState(
-        NowPlayingPlaybackState.paused,
-        appleChannel: NowPlayingReporter.appleChannel,
-      );
+      //
+      // ⚠️ SZÁNDÉKOSAN csatorna nélkül hívjuk (a valódi út!): a 399-ben a
+      // `reportState` a **megadott** paraméterekből épített listát, ezért a
+      // valódi hívás egyetlen csatornára sem küldött — a teszt viszont explicit
+      // csatornával hívott, így **zölden átengedte** a hibát. Most a hívó nem
+      // tud csatorna nélkül hívni.
+      await NowPlayingReporter.reportState(NowPlayingPlaybackState.paused);
       expect(appleCalls.last.method, 'state');
       expect((appleCalls.last.arguments as Map)['state'], 'paused');
-      // Androidon a csatornán nincs `state` kezelő: ott a hívás elakad, de ez
-      // **nem** hiba és nem is szól bele a lejátszásba — ezért ide nem küldünk.
+      // Androidon a csatornán nincs `state` kezelő: oda nem küldünk.
       expect(androidCalls.where((call) => call.method == 'state'), isEmpty);
     });
 
@@ -193,13 +195,39 @@ void main() {
       final source = File('ios/Runner/AppDelegate.swift').readAsStringSync();
       expect(source.contains('MPNowPlayingInfoCenter.default().playbackState'), isTrue,
           reason: 'a zárképernyő gombja az állapotból rajzolódik');
-      expect(source.contains('setPlaybackState(.playing)'), isTrue);
-      expect(source.contains('setPlaybackState(.paused)'), isTrue);
-      expect(source.contains('setPlaybackState(.stopped)'), isTrue);
+      expect(source.contains('applyPlaybackState(.playing)'), isTrue);
+      expect(source.contains('applyPlaybackState(.paused)'), isTrue);
+      expect(source.contains('applyPlaybackState(.stopped)'), isTrue);
       // A Dart-oldal ezen a metóduson küldi az állapotot.
       expect(source.contains('case "state":'), isTrue,
           reason: 'a Dart-oldal állapot-üzenete nem érkezik meg');
       expect(source.contains("case \"playing\":"), isTrue);
+    });
+
+    test('a zárképernyő „beragadt play gombja” ellen: rate + szívverés', () {
+      // ⚠️ MÉRT GYÖKÉR (2026-10-04, a tulajdonos jelzése: *„play van meg stop és
+      // ha rányomok a playre, egy pillre pause lesz belőle aztán visszaáll … és
+      // szól a rádió”*): a zárképernyő a `playbackRate`-ből rajzol, és az
+      // **beleragadt 0-ba**, mert a `metadata` megőrizte a szótár régi értékét;
+      // a „szól” állapot pedig csak egyszer, a kattintáskor ment ki — a hang
+      // viszont a stream betöltése után indul.
+      final source = File('ios/Runner/AppDelegate.swift').readAsStringSync();
+      expect(
+        source.contains('MPNowPlayingInfoPropertyPlaybackRate: rate(for: lastPlaybackState)'),
+        isTrue,
+        reason: 'a rate a régi értéket őrzi meg → a play gomb beragad',
+      );
+      expect(
+        source.contains('info[MPNowPlayingInfoPropertyPlaybackRate] = rate(for: lastPlaybackState)'),
+        isTrue,
+      );
+      expect(source.contains('private func rate(for state: MPNowPlayingPlaybackState) -> Double'), isTrue);
+      // …a régi „megőrzés” ág pedig eltűnt.
+      expect(source.contains('existing[MPNowPlayingInfoPropertyPlaybackRate]'), isFalse,
+          reason: 'a megőrző ág hozta vissza a beragadt 0-t');
+      // Szívverés: álló rádiónál nincs, szólónál/szüneteltnél 5 másodpercenként ismétel.
+      expect(source.contains('Timer.scheduledTimer(withTimeInterval: 5, repeats: true)'), isTrue);
+      expect(source.contains('guard lastPlaybackState != .stopped else { return }'), isTrue);
     });
 
     test('a logó tényleg a csomagban van (Android + iOS)', () {
@@ -230,10 +258,26 @@ void main() {
           reason: 'indításkor nem megy ki a „szól” állapot');
       expect(bar, contains('NowPlayingPlaybackState.paused'),
           reason: 'szünetnél nem megy ki a „szünetel” állapot');
+      expect(bar, contains('NowPlayingPlaybackState.stopped'),
+          reason: 'leállításnál nem megy ki a „leállt” állapot');
       // A tényleges leállítás törli a felületet (a `stop()` maga küld `clear`-t).
       expect(bar, contains('_stopMetadataRefresh(clear: true)'));
       // …a szünet viszont NEM törli (különben eltűnne a „Folytatás” gomb).
       expect(bar, contains('_stopMetadataRefresh({bool clear = false})'));
+      // ⚠️ A szívverés (2026-10-04): a hang tényleges indulására ÉS 5
+      // másodpercenként ismét — enélkül az iOS visszaállítja a play gombot.
+      expect(bar, contains('radioAudioPlayingState.addListener(_onRadioAudioStateChanged)'));
+      expect(bar, contains('Timer.periodic(const Duration(seconds: 5)'));
+      expect(bar, contains('startRadioNowPlayingSync()'));
+    });
+
+    test('a lejátszó a VALÓDI hangállapotot is jelzi (nem csak a szándékot)', () {
+      final playback =
+          File('lib/services/radio_playback.dart').readAsStringSync().replaceAll('\r\n', '\n');
+      expect(playback, contains('final ValueNotifier<bool> radioAudioPlayingState'));
+      expect(playback, contains('_player.playerStateStream.listen'));
+      expect(playback, contains('ProcessingState.ready'),
+          reason: 'a pufferelés nem számít „szólásnak”');
     });
 
     test('a Swift-oldal az enum huzal-neveit olvassa', () {
