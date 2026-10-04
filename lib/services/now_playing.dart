@@ -5,6 +5,25 @@ import 'package:flutter/services.dart';
 
 import 'radio_metadata.dart';
 
+/// A rádió **lejátszási állapota** a rendszer felületének.
+///
+/// ⚠️ MIÉRT KELL (mért hiány, 2026-10-03, a tulajdonos jelzése: *„azt mondtad van
+/// pause gomb a zárképernyőn és az értesítési sávban a rádió vezérlőn, de nem,
+/// nincs”*): iOS 13 óta a „Most szól” panel a
+/// `MPNowPlayingInfoCenter.playbackState` értékéből dönti el, hogy **pause** vagy
+/// **play** gombot rajzol-e. A `nowPlayingInfo` (cím + `playbackRate`) önmagában
+/// **nem** elég: ettől a panel nem vált „szól” állapotba, ezért a pause gomb nem
+/// jelenik meg. Ez az enum a huzal-neveket **egy helyen** tartja, ezért a
+/// Swift-oldallal nem tud széthúzni.
+enum NowPlayingPlaybackState {
+  playing,
+  paused,
+  stopped;
+
+  /// A platformnak küldött név (a Swift `handleNowPlaying` ezt olvassa).
+  String get wireName => name;
+}
+
 /// A **„most szól"** kiírása a rendszer felületére: Android-értesítés és
 /// zárképernyő, illetve iOS „Most szól” panel.
 ///
@@ -81,6 +100,30 @@ class NowPlayingReporter {
         await channel.invokeMethod<void>('clear');
       } catch (_) {
         // A csatorna hiányozhat (pl. régebbi build) — ez nem hiba.
+      }
+    }
+  }
+
+  /// Az **állapot** kiírása a rendszer felületére.
+  ///
+  /// ⚠️ Csak az iOS-nek van rá szüksége (`playbackState`), de **szándékosan** a
+  /// közös helyen él: a hívók (rádió-sáv, távvezérlő) így nem tudnak platformot
+  /// téveszteni. Androidon a csatornán nincs kezelő → a hívás csendben elakad,
+  /// amit ez a `try` fog el (a lejátszás ettől független).
+  static Future<void> reportState(
+    NowPlayingPlaybackState state, {
+    MethodChannel? appleChannel,
+    MethodChannel? androidChannel,
+  }) async {
+    final payload = <String, String>{'state': state.wireName};
+    for (final channel in <MethodChannel>[
+      ?androidChannel,
+      ?appleChannel,
+    ]) {
+      try {
+        await channel.invokeMethod<void>('state', payload);
+      } catch (_) {
+        // Néma hiba: a lejátszás ettől függetlenül megy tovább.
       }
     }
   }

@@ -222,13 +222,17 @@ class RadioPlaybackService : Service() {
                 if (isPlaybackRequested() && !url.isNullOrBlank()) {
                     startForeground(NOTIFICATION_ID, notification())
                     startPlayer(url)
+                    applyMetadata()
                 }
             }
         }
     }
     private val reconnectHandler = Handler(Looper.getMainLooper())
     private val reconnect = Runnable {
-        streamUrl?.takeIf { isPlaybackRequested() }?.let(::startPlayer)
+        streamUrl?.takeIf { isPlaybackRequested() }?.let {
+            startPlayer(it)
+            applyMetadata()
+        }
     }
 
     override fun onCreate() {
@@ -383,7 +387,22 @@ class RadioPlaybackService : Service() {
                         ).build(),
                     )
                     .setState(
-                        if (player?.isPlaying == true) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED,
+                        // ⚠️ A „szól" állapot a SZÁNDÉKBÓL jön (2026-10-03, a
+                        // tulajdonos jelzése: *„azt mondtad van pause gomb a
+                        // zárképernyőn és az értesítési sávban a rádió vezérlőn,
+                        // de nem, nincs”*).
+                        //
+                        // A mért gyökér: a kártyát a rendszer a **MediaSession**
+                        // állapotából rajzolja, a `player?.isPlaying` viszont a
+                        // csatlakozás/pufferelés alatt (és a `prepareAsync`
+                        // előtt) **hamis** — ezért a kártya **play** gombot
+                        // mutatott, miközben a rádió szólt. A szándék
+                        // (`isPlaybackRequested`) a helyes forrás: amíg a
+                        // felhasználó nem állította le/szüneteltette, addig
+                        // „szól”, és a kártyán **pause** gomb látszik
+                        // (`ACTION_PLAY_PAUSE`).
+                        if (isPlaybackRequested() && player != null) PlaybackState.STATE_PLAYING
+                        else PlaybackState.STATE_PAUSED,
                         PlaybackState.PLAYBACK_POSITION_UNKNOWN,
                         1f,
                     )
@@ -473,6 +492,9 @@ class RadioPlaybackService : Service() {
         }
         pausedByFocus = false
         startPlayer(url)
+        // A szándék rögzítése UTÁN azonnal frissül a munkamenet állapota is —
+        // ettől lesz a kártyán pause gomb (lásd `applyMetadata`).
+        applyMetadata()
     }
 
     /**
@@ -551,6 +573,10 @@ class RadioPlaybackService : Service() {
         // jelző bekapcsolva maradna, az őrkutya hívás közben visszavenné a
         // fókuszt a hívástól.
         pausedByFocus = permanent
+        // A lejátszó elengedve: a munkamenet állapotát is frissítjük, hogy az
+        // értesítés/zárképernyő kártyája ne maradjon „szól” állapotban egy
+        // elhallgatott rádión.
+        applyMetadata()
         if (!permanent) return
         // Csak a végleges elvesztésnél figyelünk — lásd a fenti indoklást.
         reconnectHandler.removeCallbacks(focusWatchdog)
@@ -567,7 +593,15 @@ class RadioPlaybackService : Service() {
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build(),
             )
-            setOnPreparedListener { start() }
+            setOnPreparedListener {
+                start()
+                // ⚠️ A MÉDIakártya (zárképernyő + értesítési sáv) a
+                // **MediaSession** állapotából rajzolja a play/pause gombot —
+                // ezért amikor tényleg elindul a hang, AZONNAL frissítjük az
+                // állapotot (a tulajdonos jelzése: *„nincs pause gomb a
+                // zárképernyőn és az értesítési sávban”*).
+                applyMetadata()
+            }
             setOnCompletionListener { scheduleReconnect() }
             setOnErrorListener { _, _, _ ->
                 scheduleReconnect()
@@ -718,7 +752,10 @@ class RadioPlaybackService : Service() {
         // Mostantól két akció van, és MINDKETTŐ látszik a kompakt nézetben:
         //   0 = szünet/folytatás (állapotfüggő felirattal és ikonnal),
         //   1 = leállítás.
-        val playing = player?.isPlaying == true
+        // ⚠️ UGYANAZ a forrás, mint a munkamenet állapotánál (`applyMetadata`): a
+        // **szándék**, nem a pillanatnyi `isPlaying` — különben a csatlakozás
+        // alatt „Folytatás” gombot mutatna egy szóló rádió.
+        val playing = isPlaybackRequested() && player != null
         builder.addAction(
             Notification.Action.Builder(
                 Icon.createWithResource(

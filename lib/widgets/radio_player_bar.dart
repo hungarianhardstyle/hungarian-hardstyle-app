@@ -37,11 +37,16 @@ Future<void> stopRadioPlayback() async {
 /// töröljük (`nowPlayingReporter.stop()` = a cím eltűnése, Androidon az
 /// értesítés megszűnése): a „Folytatás” gombnak és a címnek a helyén kell
 /// maradnia, hogy a felhasználó vissza tudjon jönni.
+///
+/// ⚠️ 2026-10-03: az **állapotot** viszont ki kell írni (`paused`) — az iOS
+/// zárképernyője a `playbackState`-ből rajzolja a gombot, és enélkül „szól”
+/// állapotban maradna (a tulajdonos jelzése: *„nincs pause gomb”*).
 Future<void> pauseRadioPlayback() async {
   try {
     await radioPlayback.pause();
   } catch (_) {}
   radioPlayingState.value = false;
+  await NowPlayingReporter.reportState(NowPlayingPlaybackState.paused);
 }
 
 /// A **távvezérlő** (zárképernyő, fejhallgató-gombok, értesítés) bekötése.
@@ -67,6 +72,9 @@ Future<void> resumeRadioPlayback() async {
     await radioPlayback.play(_radioStreamUrl);
     radioPlayingState.value = true;
     nowPlayingReporter.start();
+    // Az ÁLLAPOT is kimegy (iOS: `playbackState = .playing`) — ettől jelenik meg
+    // a zárképernyőn a pause gomb.
+    await NowPlayingReporter.reportState(NowPlayingPlaybackState.playing);
   } catch (_) {}
 }
 
@@ -144,12 +152,23 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
     );
     // A rendszer felületére (értesítés + zárképernyő) is kimegy a cím.
     nowPlayingReporter.start();
+    // …és az ÁLLAPOT is (iOS `playbackState`): ettől lesz pause gomb a
+    // zárképernyőn (a tulajdonos jelzése: *„nincs pause gomb”*).
+    unawaited(NowPlayingReporter.reportState(NowPlayingPlaybackState.playing));
   }
 
-  void _stopMetadataRefresh() {
+  /// ⚠️ A `clear` **szándékosan** külön kapcsoló (2026-10-03): a rádió
+  /// **szüneteltetése** is ide fut be (`radioPlayingState` hamis lesz), és ilyenkor
+  /// a rendszer felületének **meg kell maradnia** — különben pont a „Folytatás”
+  /// gomb tűnne el. Csak a tényleges leállítás töröl (`stopRadioPlayback`).
+  void _stopMetadataRefresh({bool clear = false}) {
     _metadataTimer?.cancel();
     _metadataTimer = null;
-    unawaited(nowPlayingReporter.stop());
+    if (clear) {
+      unawaited(nowPlayingReporter.stop());
+    } else {
+      unawaited(NowPlayingReporter.reportState(NowPlayingPlaybackState.paused));
+    }
   }
 
   Future<void> _togglePlay() async {
@@ -174,7 +193,9 @@ class _RadioPlayerBarState extends State<RadioPlayerBar> {
           return;
         }
         await radioPlayback.stop();
-        _stopMetadataRefresh();
+        // Ez **tényleges** leállítás (a felhasználó a Leállítás gombot nyomta):
+        // ilyenkor a rendszer felülete is törlődik.
+        _stopMetadataRefresh(clear: true);
         if (mounted) {
           setState(() {
             _playing = false;

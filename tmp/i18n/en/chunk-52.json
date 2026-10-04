@@ -1,0 +1,4 @@
+{
+  "Javítva: a rádió zárképernyőjén és értesítési sávjában is megjelenik a Szüneteltetés gomb (Android és iPhone) — eddig a rendszer „lejátszás” állapotban rajzolta a kártyát, ezért pause gomb nem is látszott.": "Fixed: the Pause button now appears on the radio's lock screen and notification controls (Android and iPhone) — the system used to draw the card in a \"playing\" state, so no pause button was visible.",
+  "Javítva: szüneteltetéskor a vezérlő a helyén marad (nem tűnik el a cím és a gomb), és a rendszer a helyes állapotot mutatja.": "Fixed: when paused, the control stays in place (the title and the button do not disappear) and the system shows the correct state."
+}

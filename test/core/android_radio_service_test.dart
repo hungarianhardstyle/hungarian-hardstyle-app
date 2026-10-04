@@ -366,7 +366,44 @@ void main() {
       expect(body, contains('"Szüneteltetés"'), reason: 'nincs magyar felirat');
       expect(body, contains('"Folytatás"'), reason: 'nincs magyar felirat a folytatáshoz');
       expect(body, contains('togglePausePendingIntent()'), reason: 'a gomb nem a szünetet hívja');
-      expect(body, contains('player?.isPlaying == true'), reason: 'az ikon nem az állapotból jön');
+      // ⚠️ 2026-10-03: az ikon/felirat a SZÁNDÉKBÓL jön (nem a pillanatnyi
+      // `isPlaying`-ből) — csatlakozás/pufferelés közben is pause gomb kell.
+      expect(body, contains('isPlaybackRequested() && player != null'),
+          reason: 'az ikon nem a szándékból jön');
+    });
+
+    /// A **zárképernyő + értesítési sáv** kártyáját a rendszer a **MediaSession**
+    /// állapotából rajzolja — a 397-ben tett „két értesítés-akció” önmagában
+    /// **nem** elég (a tulajdonos jelzése: *„azt mondtad van pause gomb a
+    /// zárképernyőn és az értesítési sávban a rádió vezérlőn, de nem, nincs”*).
+    test('a munkamenet állapota a SZÁNDÉKBÓL jön (ettől lesz pause gomb)', () {
+      final body = _functionBody(service, 'applyMetadata');
+      expect(body, contains('isPlaybackRequested() && player != null'),
+          reason: 'a kártya a pillanatnyi isPlaying-ből „play” gombot rajzol');
+      expect(body, contains('PlaybackState.STATE_PLAYING'));
+      expect(body, contains('PlaybackState.STATE_PAUSED'));
+      // A szünet/folytatás váltó gombot a rendszer ebből az akcióból rajzolja.
+      expect(body, contains('PlaybackState.ACTION_PLAY_PAUSE'),
+          reason: 'a rendszer nem tud play/pause gombot rajzolni');
+    });
+
+    test('a lejátszás INDULÁSAKOR frissül a munkamenet (nem marad „szünetel”)', () {
+      final start = _functionBody(service, 'startPlayer');
+      expect(start, contains('applyMetadata()'),
+          reason: 'a `prepareAsync` után nem frissül az állapot → play gomb marad');
+      final play = _functionBody(service, 'play');
+      expect(play, contains('applyMetadata()'));
+      final gain = service.substring(
+        service.indexOf('AudioManager.AUDIOFOCUS_GAIN ->'),
+        service.indexOf('private val reconnectHandler'),
+      );
+      expect(gain, contains('applyMetadata()'),
+          reason: 'fókusz visszaszerzésekor sem frissül az állapot');
+      final reconnect = service.substring(
+        service.indexOf('private val reconnect = Runnable'),
+        service.indexOf('override fun onCreate()'),
+      );
+      expect(reconnect, contains('applyMetadata()'));
     });
 
     test('a szünet/folytatás gomb be van kötve (ACTION_TOGGLE_PAUSE)', () {

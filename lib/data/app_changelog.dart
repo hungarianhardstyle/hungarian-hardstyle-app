@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 399,
+    changes: [
+      'Javítva: a rádió zárképernyőjén és értesítési sávjában is megjelenik a Szüneteltetés gomb (Android és iPhone) — eddig a rendszer „lejátszás” állapotban rajzolta a kártyát, ezért pause gomb nem is látszott.',
+      'Javítva: szüneteltetéskor a vezérlő a helyén marad (nem tűnik el a cím és a gomb), és a rendszer a helyes állapotot mutatja.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 398,
     changes: [
       'Javítva: fekvő módban a főoldali kiemelt hír sokkal kisebb — eddig a teljes képernyőmagasságot elvitte.',

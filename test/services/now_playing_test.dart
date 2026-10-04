@@ -123,6 +123,26 @@ void main() {
     test('a frissítési ütem 15 másodperc (a rádió ~4 másodperces blokkjaihoz)', () {
       expect(NowPlayingReporter.refreshInterval, const Duration(seconds: 15));
     });
+
+    test('az állapot-üzenet a helyes nevet és csatornát használja', () async {
+      // Az iOS `playbackState`-et ez az üzenet állítja — a névnek egyeznie kell a
+      // Swift-oldallal (`case "playing":` stb.).
+      await NowPlayingReporter.reportState(
+        NowPlayingPlaybackState.paused,
+        appleChannel: NowPlayingReporter.appleChannel,
+      );
+      expect(appleCalls.last.method, 'state');
+      expect((appleCalls.last.arguments as Map)['state'], 'paused');
+      // Androidon a csatornán nincs `state` kezelő: ott a hívás elakad, de ez
+      // **nem** hiba és nem is szól bele a lejátszásba — ezért ide nem küldünk.
+      expect(androidCalls.where((call) => call.method == 'state'), isEmpty);
+    });
+
+    test('a huzal-nevek stabilak (a Swift ezeket olvassa)', () {
+      expect(NowPlayingPlaybackState.playing.wireName, 'playing');
+      expect(NowPlayingPlaybackState.paused.wireName, 'paused');
+      expect(NowPlayingPlaybackState.stopped.wireName, 'stopped');
+    });
   });
 
   group('a platform-oldali bekötés (forrás-lint)', () {
@@ -164,6 +184,24 @@ void main() {
       expect(source.contains('hu_hs/now_playing'), isTrue);
     });
 
+    test('az iOS a zárképernyő GOMBJÁHOZ az állapotot is beállítja (playbackState)', () {
+      // ⚠️ MÉRT HIÁNY (2026-10-03, a tulajdonos jelzése: *„azt mondtad van pause
+      // gomb a zárképernyőn és az értesítési sávban a rádió vezérlőn, de nem,
+      // nincs”*): a `nowPlayingInfo` (cím + `playbackRate`) önmagában **nem**
+      // elég — iOS 13 óta a panel a `playbackState`-ből dönti el, melyik gombot
+      // rajzolja. Enélkül a zárképernyőn nem jelenik meg a pause gomb.
+      final source = File('ios/Runner/AppDelegate.swift').readAsStringSync();
+      expect(source.contains('MPNowPlayingInfoCenter.default().playbackState'), isTrue,
+          reason: 'a zárképernyő gombja az állapotból rajzolódik');
+      expect(source.contains('setPlaybackState(.playing)'), isTrue);
+      expect(source.contains('setPlaybackState(.paused)'), isTrue);
+      expect(source.contains('setPlaybackState(.stopped)'), isTrue);
+      // A Dart-oldal ezen a metóduson küldi az állapotot.
+      expect(source.contains('case "state":'), isTrue,
+          reason: 'a Dart-oldal állapot-üzenete nem érkezik meg');
+      expect(source.contains("case \"playing\":"), isTrue);
+    });
+
     test('a logó tényleg a csomagban van (Android + iOS)', () {
       expect(File('android/app/src/main/res/drawable/realhardstyle_logo.jpg').existsSync(), isTrue);
       expect(
@@ -174,6 +212,36 @@ void main() {
         File('ios/Runner/Assets.xcassets/RealHardstyleLogo.imageset/Contents.json').existsSync(),
         isTrue,
       );
+    });
+  });
+
+  /// A **zárképernyő / értesítési sáv** play/pause gombja — 2026-10-03.
+  ///
+  /// A tulajdonos jelzése: *„azt mondtad van pause gomb a zárképernyőn és az
+  /// értesítési sávban a rádió vezérlőn, de nem, nincs”* — **mindkét platformon**.
+  /// A gyökér mindkettőn ugyanaz az osztály: a rendszer a **saját** állapotából
+  /// rajzol (Android: `MediaSession` `PlaybackState`; iOS: `playbackState`), nem
+  /// az értesítés akció-sorából.
+  group('a rendszer állapota ki van írva (Android + iOS)', () {
+    test('a Dart-oldal minden állapotváltást kiír', () {
+      final bar =
+          File('lib/widgets/radio_player_bar.dart').readAsStringSync().replaceAll('\r\n', '\n');
+      expect(bar, contains('NowPlayingPlaybackState.playing'),
+          reason: 'indításkor nem megy ki a „szól” állapot');
+      expect(bar, contains('NowPlayingPlaybackState.paused'),
+          reason: 'szünetnél nem megy ki a „szünetel” állapot');
+      // A tényleges leállítás törli a felületet (a `stop()` maga küld `clear`-t).
+      expect(bar, contains('_stopMetadataRefresh(clear: true)'));
+      // …a szünet viszont NEM törli (különben eltűnne a „Folytatás” gomb).
+      expect(bar, contains('_stopMetadataRefresh({bool clear = false})'));
+    });
+
+    test('a Swift-oldal az enum huzal-neveit olvassa', () {
+      final swift = File('ios/Runner/AppDelegate.swift').readAsStringSync();
+      for (final name in NowPlayingPlaybackState.values) {
+        expect(swift, contains('"${name.wireName}"'),
+            reason: 'a(z) ${name.wireName} állapot neve nem egyezik a Dart-oldallal');
+      }
     });
   });
 }

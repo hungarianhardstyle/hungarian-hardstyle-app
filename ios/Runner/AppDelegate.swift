@@ -93,8 +93,21 @@ import MediaPlayer
       }
       info[MPNowPlayingInfoPropertyPlaybackRate] = rate
       MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+      setPlaybackState(rate > 0 ? .playing : .paused)
     }
     nowPlayingChannel?.invokeMethod("remoteCommand", arguments: name)
+  }
+
+  /// A zárképernyő **állapota** — ebből rajzolja az iOS a gombokat.
+  ///
+  /// ⚠️ MÉRT HIÁNY (2026-10-03, a tulajdonos jelzése: *„azt mondtad van pause
+  /// gomb a zárképernyőn és az értesítési sávban a rádió vezérlőn, de nem,
+  /// nincs”*): a `nowPlayingInfo` beállítása önmagában **nem** elég — iOS 13 óta
+  /// a „Most szól” panel a `MPNowPlayingInfoCenter.playbackState`-ből dönti el,
+  /// hogy **pause** vagy **play** gombot rajzol-e; ha ez nincs beállítva, a panel
+  /// nem vált „szól” állapotba (a `playbackRate` önmagában nem elég).
+  private func setPlaybackState(_ state: MPNowPlayingPlaybackState) {
+    MPNowPlayingInfoCenter.default().playbackState = state
   }
 
   /// A „Most szól” panel frissítése / törlése.
@@ -138,8 +151,26 @@ import MediaPlayer
       MPNowPlayingInfoCenter.default().nowPlayingInfo = info
       result(nil)
 
+    // ⚠️ A zárképernyő gombjainak az ÁLLAPOTA (2026-10-03): a Dart-oldal a rádió
+    // minden állapotváltásakor küldi — enélkül a panel „play” gombot mutat egy
+    // szóló rádión (a tulajdonos jelzése: *„nincs pause gomb”*).
+    case "state":
+      let args = call.arguments as? [String: Any] ?? [:]
+      switch (args["state"] as? String) ?? "" {
+      case "playing":
+        setPlaybackState(.playing)
+      case "paused":
+        setPlaybackState(.paused)
+      case "stopped":
+        setPlaybackState(.stopped)
+      default:
+        break
+      }
+      result(nil)
+
     case "clear":
       MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+      setPlaybackState(.stopped)
       result(nil)
 
     default:
