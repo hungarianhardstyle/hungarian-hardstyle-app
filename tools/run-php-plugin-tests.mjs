@@ -40,7 +40,7 @@ export const CONTAINER_IMAGE = 'php:8.2-cli';
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** A kimenetből kiolvasott, kötelező jelzők. */
-export const REQUIRED_MARKERS = ['PHP LINT OK', 'VISELKEDES OK', 'KONSTANS-AG OK', 'PUSH-DEDUPE OK', 'PUSH-NYELV OK', 'PUSH-OPEN OK', 'PUSH-NEWS OK', 'PUSH-SPEED OK', 'TWITCH-CARD OK', 'PRIZE-FORGET OK'];
+export const REQUIRED_MARKERS = ['PHP LINT OK', 'VISELKEDES OK', 'KONSTANS-AG OK', 'PUSH-DEDUPE OK', 'PUSH-NYELV OK', 'PUSH-OPEN OK', 'PUSH-NEWS OK', 'PUSH-SPEED OK', 'TWITCH-CARD OK', 'PRIZE-FORGET OK', 'CHAT-EVERYONE OK'];
 
 /** A kimenet összegzése (tesztelhető, hálózat nélkül). */
 export function summarize(output) {

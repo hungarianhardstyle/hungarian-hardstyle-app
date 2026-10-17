@@ -2485,7 +2485,12 @@ exports.toggleChatReaction = functions.runWith({ enforceAppCheck: false }).https
   return { selected };
 });
 
-exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+// ⚠️ A `secrets` a 2.14.19-es széles chat-pushhoz kell (`sendChatEveryonePush` →
+// a WordPress admin végpontja). Enélkül a `WORDPRESS_USERNAME.value()` futásidőben
+// elszállna, és a `@mindenki` push némán kimaradna.
+exports.publishChatPost = functions
+  .runWith({ enforceAppCheck: false, secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD] })
+  .https.onCall(async (data, context) => {
   const uid = String(context.auth?.uid || '').trim();
   if (!uid) throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
   if (!(await allowCall(uid, 'chat_post', 20))) {
@@ -2643,77 +2648,100 @@ exports.publishChatPost = functions.runWith({ enforceAppCheck: false }).https.on
       // `@említés` szándékosan csendes marad). A döntés (új értesítés,
       // bekapcsolt értesítés, van token) a tiszta `everyonePushTargets`-ben van.
       try {
-        const candidates = [];
-        for (let index = 0; index < writeResults.length; index += 20) {
-          const chunk = writeResults.slice(index, index + 20);
-          const loaded = await Promise.all(
-            chunk.map(async (entry) => {
-              if (!entry.created) return { uid: entry.uid, created: false, tokens: [], preferences: {} };
-              const privateData =
-                (await db.collection('private_user_data').doc(entry.uid).get()).data() || {};
-              return {
-                uid: entry.uid,
-                created: true,
-                preferences: privateData.notificationPreferences || {},
-                tokens: await getPushTokens(entry.uid),
-              };
-            }),
-          );
-          candidates.push(...loaded);
-        }
-        const targets = everyonePushTargets(candidates);
         const message = chatEveryonePushMessage({ postId: ref.id, authorId: uid, text });
-        for (let index = 0; index < targets.length; index += 10) {
-          const chunk = targets.slice(index, index + 10);
-          const counts = await Promise.all(
-            chunk.map(async (target) => {
-              // A cím a címzett nyelvén (ugyanaz a katalógus, mint a listában) —
-              // a `recipientLanguage` gyorsítótáraz, ezért nem olvas újra.
-              const language = await recipientLanguage(target.uid);
-              const pushText = notificationText('chat_everyone', language, {
-                name: displayName,
-                snippet: message ? message.body : '',
-              });
-              try {
-                const result = await sendMulticastToAllTokens(
-                  {
-                    notification: {
-                      title: pushText ? pushText.title : 'Megemlítettek a Chatben',
-                      body: pushText ? pushText.body : message ? message.body : '',
-                    },
-                    data: message ? message.data : { type: 'chat_everyone' },
-                  },
-                  target.tokens,
-                );
-                const invalidTokens = target.tokens.filter(
-                  (_, position) =>
-                    result.responses[position]?.error?.code ===
-                    'messaging/registration-token-not-registered',
-                );
-                if (invalidTokens.length) await removePushTokens(target.uid, invalidTokens);
-                return result.successCount || 0;
-              } catch (error) {
-                console.warn(
-                  JSON.stringify({
-                    event: 'chat_everyone_push_failed_one',
-                    uid: target.uid.slice(0, 8),
-                    message: error?.message || String(error),
-                  }),
-                );
-                return 0;
-              }
+        // ⚠️ 2.14.19: ELŐBB a **széles** út (a WordPress token-tára: MINDEN
+        // eszköz, a nem regisztráltak is) — ez a tulajdonos kérése. Siker esetén
+        // a Firestore-kör **kimarad**, különben a regisztráltak dupla push-t
+        // kapnának. Ha a széles út nem megy, marad a régi tartalék (regisztráltak).
+        const wide = await sendChatEveryonePush({
+          name: displayName,
+          snippet: message ? message.body : '',
+          postId: ref.id,
+        });
+        if (!wide.failed) {
+          everyonePushed = Number(wide.sent) || 0;
+          console.log(
+            JSON.stringify({
+              event: 'chat_everyone_push_wide',
+              postId: ref.id,
+              queued: Boolean(wide.queued),
+              duplicate: Boolean(wide.duplicate),
+              sent: everyonePushed,
             }),
           );
-          everyonePushed += counts.reduce((sum, value) => sum + value, 0);
+        } else {
+          const candidates = [];
+          for (let index = 0; index < writeResults.length; index += 20) {
+            const chunk = writeResults.slice(index, index + 20);
+            const loaded = await Promise.all(
+              chunk.map(async (entry) => {
+                if (!entry.created) return { uid: entry.uid, created: false, tokens: [], preferences: {} };
+                const privateData =
+                  (await db.collection('private_user_data').doc(entry.uid).get()).data() || {};
+                return {
+                  uid: entry.uid,
+                  created: true,
+                  preferences: privateData.notificationPreferences || {},
+                  tokens: await getPushTokens(entry.uid),
+                };
+              }),
+            );
+            candidates.push(...loaded);
+          }
+          const targets = everyonePushTargets(candidates);
+          for (let index = 0; index < targets.length; index += 10) {
+            const chunk = targets.slice(index, index + 10);
+            const counts = await Promise.all(
+              chunk.map(async (target) => {
+                // A cím a címzett nyelvén (ugyanaz a katalógus, mint a listában) —
+                // a `recipientLanguage` gyorsítótáraz, ezért nem olvas újra.
+                const language = await recipientLanguage(target.uid);
+                const pushText = notificationText('chat_everyone', language, {
+                  name: displayName,
+                  snippet: message ? message.body : '',
+                });
+                try {
+                  const result = await sendMulticastToAllTokens(
+                    {
+                      notification: {
+                        title: pushText ? pushText.title : 'Megemlítettek a Chatben',
+                        body: pushText ? pushText.body : message ? message.body : '',
+                      },
+                      data: message ? message.data : { type: 'chat_everyone' },
+                    },
+                    target.tokens,
+                  );
+                  const invalidTokens = target.tokens.filter(
+                    (_, position) =>
+                      result.responses[position]?.error?.code ===
+                      'messaging/registration-token-not-registered',
+                  );
+                  if (invalidTokens.length) await removePushTokens(target.uid, invalidTokens);
+                  return result.successCount || 0;
+                } catch (error) {
+                  console.warn(
+                    JSON.stringify({
+                      event: 'chat_everyone_push_failed_one',
+                      uid: target.uid.slice(0, 8),
+                      message: error?.message || String(error),
+                    }),
+                  );
+                  return 0;
+                }
+              }),
+            );
+            everyonePushed += counts.reduce((sum, value) => sum + value, 0);
+          }
+          console.log(
+            JSON.stringify({
+              event: 'chat_everyone_push_result',
+              postId: ref.id,
+              targets: targets.length,
+              successCount: everyonePushed,
+              wideFailed: true,
+            }),
+          );
         }
-        console.log(
-          JSON.stringify({
-            event: 'chat_everyone_push_result',
-            postId: ref.id,
-            targets: targets.length,
-            successCount: everyonePushed,
-          }),
-        );
       } catch (error) {
         console.warn(
           JSON.stringify({
@@ -9110,6 +9138,78 @@ async function fetchTwitchLiveState(channel = TWITCH_CHANNEL) {
 }
 
 /**
+ * **Széles chat-push** (`@mindenki`) a WordPress token-tárából — 2.14.19.
+ *
+ * MIÉRT (a tulajdonos kérése, 2026-10-04): *„hír push, esemény push, chaten
+ * @mindenki push üzenetet megkaphatnák azok is, akik nem regisztráltak az
+ * appba”*. MÉRVE: a hír- és esemény-push **már** eljut a vendégekhez (a plugin
+ * token-tára 1070 eszköz, a regisztrált profilok száma 47), a `@mindenki` viszont
+ * eddig **csak** a Firestore-profilokon ment — ezért a nem regisztráltak
+ * kimaradtak. A plugin végpontja nyelvenként küldi a szöveget (a token rekordjában
+ * tárolt nyelven), és tiszteletben tartja a `chat` beállítás-kapcsolót.
+ *
+ * @returns {Promise<{sent: number, queued: boolean, failed: boolean}>}
+ */
+/**
+ * A **széles chat-push kérése** — tiszta (nincs hálózat), ezért tesztelhető.
+ *
+ * @param {{name?: string, snippet?: string, postId?: string}} params
+ * @returns {{payload: object, texts: object}|null} `null`, ha nincs szöveg.
+ */
+function chatEveryonePushRequest(params) {
+  const hu = notificationText('chat_everyone', 'hu', params);
+  const en = notificationText('chat_everyone', 'en', params);
+  const texts = {};
+  if (hu?.title) texts.hu = { title: hu.title, body: hu.body };
+  if (en?.title) texts.en = { title: en.title, body: en.body };
+  if (!texts.hu && !texts.en) return null;
+  return {
+    texts,
+    payload: {
+      action: 'send_push',
+      title: texts.hu?.title || texts.en?.title || '',
+      body: texts.hu?.body || texts.en?.body || '',
+      texts,
+      // A chat-célpont NEM WordPress-poszt, ezért közvetlen típust adunk: a
+      // koppintás a Chat üzenetére visz (a plugin `postId`-t tesz a payloadba).
+      type: 'chat_everyone',
+      postId: String(params?.postId || ''),
+    },
+  };
+}
+
+async function sendChatEveryonePush(params) {
+  const request = chatEveryonePushRequest(params);
+  if (!request) return { sent: 0, queued: false, failed: true };
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  try {
+    const response = await fetch(`${WORDPRESS_BASE_URL.replace('/huhs/v1', '')}/huhs/v1/admin`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(request.payload),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      logWarning('chat_everyone_push_failed', `${response.status} — ${body?.message || ''}`);
+      return { sent: 0, queued: false, failed: true, status: response.status };
+    }
+    return {
+      sent: Number(body?.sent) || 0,
+      queued: Boolean(body?.queued),
+      duplicate: Boolean(body?.duplicate),
+      failed: false,
+    };
+  } catch (error) {
+    logWarning('chat_everyone_push_failed', error?.message || String(error));
+    return { sent: 0, queued: false, failed: true };
+  }
+}
+
+/**
  * Széles körű push: a WordPress-admin **custom push** végpontja (minden token).
  *
  * Ugyanaz az elv, mint a heti összefoglalónál: a token-tár a WordPressen él
@@ -9377,6 +9477,9 @@ exports.__pushNotifyForTests = {
   handleMeetupInterestNotification,
   handlePrivateMessageNotification,
   handleChatReportNotification,
+  // A „@mindenki” **széles** (vendégeket is elérő) push-kérése — tiszta, ezért
+  // hálózat nélkül mérhető (2.14.19).
+  chatEveryonePushRequest,
 };
 
 // A gyermekbiztonsági őr (1. fázis) mérhető változata: a profil-olvasás és a

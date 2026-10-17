@@ -709,6 +709,11 @@ function huhs_push_recipients($tokens, $data, $language = '')
         if ($type === 'poll' && array_key_exists('polls', $record) && !$record['polls']) continue;
         if ($type === 'vote' && array_key_exists('votes', $record) && !$record['votes']) continue;
         if (($type === 'game' || $type === 'quiz') && array_key_exists('games', $record) && !$record['games']) continue;
+        // Chat-értesítés (2.14.19): a „@mindenki" széles push a `chat`
+        // kapcsolót tiszteletben tartja. Aki még nem küldött beállítást (a mai
+        // kliensek nem küldenek `chat` kulcsot), az változatlanul megkapja —
+        // pontosan a `digest`/`games` mintájára.
+        if (($type === 'chat' || $type === 'chat_everyone') && array_key_exists('chat', $record) && !$record['chat']) continue;
         // Kedvenc-alapú célzás (2.14.9): CSAK akkor szűkít, ha a küldés megmondja
         // a tartalom szereplőit ÉS a rekordban van kedvenc. Aki még nem küldött
         // kedvenceket (minden 381 előtti kliens), az változatlanul mindent kap.
@@ -1394,12 +1399,22 @@ function huhs_push_send_localized($texts, $data = array())
  * Queue a custom push instead of keeping the authenticated REST request open
  * while FCM is contacted once for every registered device. The option lock
  * is created with add_option(), which is atomic for concurrent PHP requests.
+ *
+ * @param string $title  egynyelvű cím (ha nincs `$texts`)
+ * @param string $body   egynyelvű szöveg (ha nincs `$texts`)
+ * @param array  $data   a push adat-csomagja (típus, célpont)
+ * @param array  $texts  nyelvenkénti szövegek (2.14.19):
+ *                       `array('hu' => array('title' => …, 'body' => …), 'en' => …)`.
+ *                       Ha meg van adva, a küldés **nyelvenként** megy
+ *                       (`huhs_push_send_localized`), a `$title`/`$body` pedig
+ *                       csak tartalék.
  */
-function huhs_push_queue_custom($title, $body, $data = array())
+function huhs_push_queue_custom($title, $body, $data = array(), $texts = array())
 {
     $title = html_entity_decode(wp_strip_all_tags((string) $title), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $body = html_entity_decode(wp_strip_all_tags((string) $body), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    $fingerprint = md5($title . "\n" . $body . "\n" . wp_json_encode($data));
+    $clean_texts = huhs_push_clean_texts($texts);
+    $fingerprint = md5($title . "\n" . $body . "\n" . wp_json_encode($data) . "\n" . wp_json_encode($clean_texts));
     $lock_key = 'huhs_custom_push_lock_' . $fingerprint;
     $existing = get_option($lock_key, null);
     if (is_array($existing) && (time() - (int) ($existing['created_at'] ?? 0)) < 600) {
@@ -1411,6 +1426,7 @@ function huhs_push_queue_custom($title, $body, $data = array())
         'title' => $title,
         'body' => $body,
         'data' => $data,
+        'texts' => $clean_texts,
     ), '', false)) {
         return array('queued' => false, 'duplicate' => true, 'sent' => 0);
     }
@@ -1421,6 +1437,29 @@ function huhs_push_queue_custom($title, $body, $data = array())
     // WP-Cron runs the slow FCM loop outside the authenticated REST request.
     spawn_cron();
     return array('queued' => true, 'duplicate' => false, 'sent' => 0);
+}
+
+/**
+ * A nyelvenkénti szövegek tisztítása (2.14.19) — ismeretlen nyelv és üres
+ * szöveg kimarad, hogy a küldés ne hozzon létre üres feladatot.
+ *
+ * @param mixed $texts
+ * @return array `array('hu' => array('title', 'body'), …)`
+ */
+function huhs_push_clean_texts($texts)
+{
+    $clean = array();
+    if (!is_array($texts)) return $clean;
+    $languages = huhs_push_languages();
+    foreach ($languages as $language) {
+        $entry = $texts[$language] ?? null;
+        if (!is_array($entry)) continue;
+        $title = trim(html_entity_decode(wp_strip_all_tags((string) ($entry['title'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $body = trim(html_entity_decode(wp_strip_all_tags((string) ($entry['body'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        if ($title === '' && $body === '') continue;
+        $clean[$language] = array('title' => $title, 'body' => $body);
+    }
+    return $clean;
 }
 
 /**
@@ -1485,7 +1524,14 @@ add_action('huhs_custom_push_dispatch', function ($fingerprint) {
     $lock_key = 'huhs_custom_push_lock_' . $fingerprint;
     $job = get_option($lock_key, null);
     if (!is_array($job)) return;
-    $sent = huhs_push_send($job['title'] ?? '', $job['body'] ?? '', is_array($job['data'] ?? null) ? $job['data'] : array());
+    $texts = is_array($job['texts'] ?? null) ? $job['texts'] : array();
+    $data = is_array($job['data'] ?? null) ? $job['data'] : array();
+    // ⚠️ 2.14.19: ha nyelvenkénti szövegek vannak, **nyelvenként** küldünk
+    // (`huhs_push_send_localized`), különben marad a régi, egynyelvű út — így a
+    // meglévő (Twitch/heti összefoglaló) hívások viselkedése nem változik.
+    $sent = $texts
+        ? huhs_push_send_localized($texts, $data)
+        : huhs_push_send($job['title'] ?? '', $job['body'] ?? '', $data);
     update_option($lock_key, array_merge($job, array('sent' => (int) $sent, 'completed_at' => time())), false);
 }, 10, 1);
 

@@ -130,4 +130,18 @@ else
   fail=1
 fi
 
+# A 2.14.19 ujdonsaga: a "@mindenki" chat-push SZELES kuldese (a tulajdonos
+# kerese: "hír push, esemény push, chaten @mindenki push üzenetet megkaphatnák
+# azok is, akik nem regisztraltak az appba"). A meres a valodi PHP-t futtatja:
+# nyelvenkenti szoveg, chat-adatok, a `chat` kapcsolo tiszteletben tartasa, es a
+# regi egynyelvu ut valtozatlansaga.
+echo ""
+echo "=== 11) A @mindenki chat-push szeles kuldese (2.14.19)"
+if php /work/tools/verify-chat-everyone.php "$PLUGIN"; then
+  echo "CHAT-EVERYONE OK"
+else
+  echo "CHAT-EVERYONE HIBA"
+  fail=1
+fi
+
 exit $fail

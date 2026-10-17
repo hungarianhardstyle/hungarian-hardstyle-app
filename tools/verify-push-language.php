@@ -250,7 +250,17 @@ check('helyszín nélkül csak a dátum marad (nincs lógó „·")',
     $noPlace['hu']['body'] === 'Hard Base Classic — 2026.10.17. 23:00', $noPlace['hu']['body']);
 
 // --- 5) A NÉGY emlékeztető-ablak ütemezése (2.14.7) -----------------------
-$GLOBALS['huhs_meta'][12505]['event_start_date'] = '2026-10-17';
+//
+// ⚠️ IDŐFÜGGETLEN FIXTÚRA (2026-10-17, mért hiba): a kör eddig a **fix**
+// `2026-10-17 23:00` eseményre ütemezett, és a futás napján (2026-10-17) a hét-,
+// nap- és 6 órás ablak már a **múltban** volt, ezért a plugin helyesen kihagyta
+// őket — a teszt viszont **hamisan bukott** (3 hiba). Ugyanez a 2.14.18-on is
+// reprodukálódott, tehát nem a plugin hibája volt. A jelenhez képest +60 napos
+// eseményt használunk, így mind a négy ablak jövőbeli; a fix dátumú (időzóna-)
+// ellenőrzések az 4) szakaszban maradnak.
+$fixtureDate = $GLOBALS['huhs_meta'][12505]['event_start_date'];
+$fixtureTime = $GLOBALS['huhs_meta'][12505]['event_start_time'];
+$GLOBALS['huhs_meta'][12505]['event_start_date'] = wp_date('Y-m-d', time() + 60 * DAY_IN_SECONDS);
 $GLOBALS['huhs_meta'][12505]['event_start_time'] = '23:00';
 $start = huhs_push_event_start_timestamp($post);
 $GLOBALS['huhs_scheduled'] = array();
@@ -271,6 +281,10 @@ check('a 6 órás ablak pontosan 6 órával előtte van', ($offsets['hours_befor
 check('az 1 napos és az 1 hetes ablak változatlan',
     ($offsets['day_before'] ?? 0) === 86400 && ($offsets['week'] ?? 0) === 604800,
     ($offsets['day_before'] ?? '-') . ' / ' . ($offsets['week'] ?? '-'));
+
+// A fix dátumú (időzóna-) fixtúra visszaállítása a következő szakaszokhoz.
+$GLOBALS['huhs_meta'][12505]['event_start_date'] = $fixtureDate;
+$GLOBALS['huhs_meta'][12505]['event_start_time'] = $fixtureTime;
 
 // --- 6) A biztonsági kör ugyanezt a négy ablakot nézi ---------------------
 //

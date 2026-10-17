@@ -1,0 +1,43 @@
+Push: the @mindenki chat notification now reaches non-registered devices too
+
+Owner request (2026-10-04): "hir push, esemeny push, chaten @mindenki push
+uzenetet megkaphatnak azok is, akik nem regisztraltak az appba".
+
+Measured first, on the live site and Firestore:
+- plugin token store (huhs_push_tokens): 1070 devices, push_last=event/ok,
+  recipients=1069; Firestore private_user_data with fcmTokens: 47.
+So the news and event pushes already reach guests: the app registers its FCM
+token with the plugin (/push/register) even without registration, and those
+pushes are sent by the plugin from that store. The gap was the @mindenki chat
+push, which was sent from the functions only to Firestore profiles.
+
+Changes:
+- plugin 2.14.19 (includes/push.php, includes/api-admin.php): the admin
+  send_push action accepts per-language texts (hu/en) and an explicit chat
+  target type; huhs_push_queue_custom stores the texts and the dispatcher sends
+  them language by language (huhs_push_send_localized), while the legacy single
+  text path stays unchanged; huhs_push_recipients honours a chat opt-out key;
+  the chat target carries postId as well as id so the tap opens the chat message
+  with already shipped app builds (no new app build needed).
+- functions: publishChatPost now tries the wide WordPress push first (every
+  device, guests included, per-device language and opt-out respected) and only
+  falls back to the Firestore profile loop when that fails, so registered users
+  do not receive the notification twice. The WordPress secrets are now bound to
+  the function (without them the call would fail at runtime).
+- deploy: functions:publishChatPost updated in us-central1.
+
+Gates: plugin PHP harness 11/11 rounds green (new round: 32 checks, marker
+CHAT-EVERYONE OK); functions 408 pure tests plus all emulator suites green
+(new test file: functions/tests/chat-everyone-wide.test.cjs, 4 checks).
+
+Also fixed a pre-existing time-dependent test bug found on the way: the
+push-language harness pinned the schedule fixture to 2026-10-17, and on that day
+three reminder windows were already in the past, so the test failed on the live
+2.14.18 ZIP as well. The scheduling section now uses a fixture 60 days in the
+future (72/72 checks green again).
+
+Honest limits: delivery runs through WP-Cron, so the first round may take about
+a minute; a guest sees the notification only if notifications were enabled on
+that device; older app builds open the app but may not jump to the chat message;
+the in-app notification list (bell) is still for registered users only, since it
+is a Firestore document per profile.

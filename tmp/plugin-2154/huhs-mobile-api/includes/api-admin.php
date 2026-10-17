@@ -676,16 +676,49 @@ function huhs_admin_api_write(WP_REST_Request $request)
     if ($action === 'send_push') {
         $title = sanitize_text_field((string) ($params['title'] ?? ''));
         $body = sanitize_textarea_field((string) ($params['body'] ?? ''));
+        // ⚠️ NYELVENKÉNTI szöveg (2.14.19): a „@mindenki" chat-push a
+        // **minden eszközre** megy (a nem regisztráltakra is), ezért a címzett
+        // nyelvén kell szólnia. A `texts` megadásakor a `title`/`body` csak
+        // tartalék; a `huhs_push_queue_custom` nyelvenként küld.
+        $texts = huhs_push_clean_texts($params['texts'] ?? array());
         if ($title === '' || $body === '') {
-            return new WP_Error('missing_push_content', 'A cím és az üzenet kötelező.', array('status' => 400));
+            if (!$texts) {
+                return new WP_Error('missing_push_content', 'A cím és az üzenet kötelező.', array('status' => 400));
+            }
+            $first = reset($texts);
+            $title = (string) ($first['title'] ?? '');
+            $body = (string) ($first['body'] ?? '');
         }
-        $target = huhs_push_resolve_custom_target(
-            $params['targetType'] ?? 'none',
-            $params['targetId'] ?? 0,
-            $params['url'] ?? ''
-        );
-        if (is_wp_error($target)) return $target;
-        return huhs_push_queue_custom($title, $body, $target);
+        // ⚠️ KÖZVETLEN adat-csomag (2.14.19): a chat-push célpontja egy
+        // **Chat-üzenet** (`type: chat_everyone`, `postId`), amit a WordPress
+        // nem tud kitalálni a poszt-típusból (a chat a Firestore-ban él).
+        // Csak a `targetType`/`postId`/`type` mezőkből építjük, és csak akkor,
+        // ha a hívó kifejezetten kéri (`type` megadva) — a régi viselkedés
+        // (Twitch, heti összefoglaló) változatlan.
+        $explicitType = sanitize_key((string) ($params['type'] ?? ''));
+        if ($explicitType !== '') {
+            $target = array(
+                'type' => $explicitType,
+                'id' => sanitize_text_field((string) ($params['postId'] ?? $params['targetId'] ?? '')),
+                'url' => esc_url_raw((string) ($params['url'] ?? '')),
+            );
+            // ⚠️ A CHAT-push célpontja az appban a `postId` kulcsról olvasódik
+            // (`_canOpenTarget`: `data['postId'] ?? data['targetId']`), a
+            // WordPress-posztok viszont `id`-t kapnak. Ezért a chat-típusnál
+            // **mindkettőt** kiküldjük — így a koppintás a Chat üzenetére visz
+            // (app-build nélkül, a már kint lévő appokban is).
+            if ($explicitType === 'chat_everyone') {
+                $target['postId'] = $target['id'];
+            }
+        } else {
+            $target = huhs_push_resolve_custom_target(
+                $params['targetType'] ?? 'none',
+                $params['targetId'] ?? 0,
+                $params['url'] ?? ''
+            );
+            if (is_wp_error($target)) return $target;
+        }
+        return huhs_push_queue_custom($title, $body, $target, $texts);
     }
     // NYEREMÉNYJÁTÉK — a törölt fiók kivétele (2.14.18).
     //
