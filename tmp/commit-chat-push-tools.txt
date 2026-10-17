@@ -1,0 +1,26 @@
+Chat: wide @mindenki push tooling (pick the newest message, send to all devices)
+
+Owner asked to send the last @mindenki chat message as a push to everyone, not
+only to registered users. The plugin (2.14.19) and the functions change from the
+previous commit provide the wide path; this adds the operational tooling and two
+measured fixes.
+
+- tmp/send-chat-everyone-push.mjs: picks the newest @mindenki message from
+  live_feed_posts, builds the hu/en texts from the notification catalog and posts
+  to the WordPress admin send_push endpoint (type chat_everyone, postId).
+- tmp/list-everyone-messages.mjs: lists the newest chat messages with timestamps
+  and marks the @mindenki ones.
+- tmp/probe-push-state.mjs: prints every push field of the plugin health header.
+
+Measured mistakes fixed here:
+- live_feed_posts stores createdAt as an ISO string, not a Firestore timestamp, so
+  reading createdAt.seconds returned 0, the sort silently fell back to list order
+  and the first send used an older message. The selection now parses ISO strings,
+  numbers and {seconds} alike, and the script prints the chosen message before
+  sending.
+- chat messages may contain newlines ("Mai timetable\n\n@mindenki"); the snippet is
+  normalised to one line for the notification body.
+
+Real sends after the fix (measured): queued=true, hu slice sent=900, en slice
+sent=3, failed=0, dead=0; the token store holds 1070 devices while Firestore has
+47 registered profiles, so non-registered devices are included by construction.
