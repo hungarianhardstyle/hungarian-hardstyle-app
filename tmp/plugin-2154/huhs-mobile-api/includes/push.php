@@ -1603,6 +1603,7 @@ function huhs_push_publish_news($post_id, $token = '', $attempt = 1)
     if (!$post || $post->post_type !== 'post' || $post->post_status !== 'publish' || wp_is_post_revision($post)) return;
 
     $token = (string) $token;
+    $data = array('type' => 'news', 'id' => (string) $post->ID);
 
     // Erre a kozzetetelre mar elment az ertesites.
     if ($token !== '' && get_post_meta($post->ID, '_huhs_push_news_sent', true) === $token) {
@@ -1610,14 +1611,45 @@ function huhs_push_publish_news($post_id, $token = '', $attempt = 1)
         return;
     }
 
-    $sent = huhs_push_send('Új hír', get_the_title($post), array('type' => 'news', 'id' => (string) $post->ID));
+    // ⚠️ **IGÉNYLÉS A KÜLDÉS ELŐTT** (2.14.20 — a tulajdonos jelzése: *„a mai hír
+    // push valamiért négyszer ment ki”*).
+    //
+    // MÉRT GYÖKÉR: a jelölő (`_huhs_push_news_sent`) eddig csak a küldés **UTÁN**
+    // íródott be, és csak akkor, ha az első szelet `$sent > 0`-t adott. Ha a szelet
+    // 0-t adott (kimerült időkeret, minden token átmenetileg elutasítva), VAGY a
+    // cron-esemény elveszett (`push_job=none`, `cron_overdue`), akkor **bármi**, ami
+    // újra meghívta ezt a függvényt (újrapróba, ör, kétszer lefutó cron-esemény),
+    // a nulláról indított egy új kört — ezért ment ki ugyanaz az értesítés
+    // többször. Mostantól a jelölő a **legelső hívásnál** beíródik, és csak akkor
+    // vonjuk vissza, ha **bizonyítottan semmi** nem ment ki és lánc sem indult.
+    if ($token !== '') {
+        update_post_meta($post->ID, '_huhs_push_news_sent', $token);
+        update_post_meta($post->ID, '_huhs_push_news_sent_at', (string) time());
+        delete_post_meta($post->ID, '_huhs_push_news_claimed_failed');
+    }
+
+    $sent = huhs_push_send('Új hír', get_the_title($post), $data);
     // Ha a küldés folytatása ütemezve van (több eszköz, mint amennyi egy körbe
     // belefér), akkor a LÁNC viszi ki a többit: egy újrapróbálkozás a nulláról
     // még egyszer elküldené azoknak is, akik már megkapták.
-    if ($sent > 0 || huhs_push_has_pending_job(array('type' => 'news', 'id' => (string) $post->ID))) {
+    if ($sent > 0 || huhs_push_has_pending_job($data)) {
         update_post_meta($post->ID, '_huhs_push_news_sent', $token);
         delete_post_meta($post->ID, '_huhs_push_news_pending_at');
+        // A folytatás állapota (a lánc elakadását az ör ebből tudja meg folytatni).
+        update_post_meta(
+            $post->ID,
+            '_huhs_push_news_progress',
+            wp_json_encode(array('sent' => (int) $sent, 'at' => time()))
+        );
         return;
+    }
+
+    // ⚠️ Semmi nem ment ki ÉS lánc sem indult: a jelölést visszavonjuk, hogy a
+    // következő próbálkozás (max. HUHS_PUSH_NEWS_MAX_ATTEMPTS) még kiadhassa.
+    if ($token !== '') {
+        delete_post_meta($post->ID, '_huhs_push_news_sent');
+        delete_post_meta($post->ID, '_huhs_push_news_sent_at');
+        update_post_meta($post->ID, '_huhs_push_news_claimed_failed', (string) $attempt);
     }
 
     // Semmi nem ment at. A hir-ertesitesnek eddig SE jelzese, SE ujraprobaja nem

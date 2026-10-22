@@ -396,6 +396,46 @@ check('a kör után a diagnosztikában látszik az idő és a szám',
 check('a diagnosztikai sor a fejlécbe is bekerül (a `diagnostics.php` hívja)',
     strpos((string) file_get_contents($pluginDir . '/includes/diagnostics.php'), 'huhs_push_diag_news_scan') !== false);
 
+// --- 8) UGYANAZ a küldés NEM mehet ki kétszer (2.14.20) ----------------------
+//
+// ⚠️ A tulajdonos jelzése (2026-10-17): *„a mai hír push valamiért négyszer ment
+// ki”*. A mért gyökér: a jelölő (`_huhs_push_news_sent`) csak a küldés UTÁN íródott
+// be, és csak akkor, ha az első szelet `sent > 0`-t adott — ha a szelet 0-t adott
+// (kimerült időkeret) vagy a cron-esemény elveszett, akkor egy újabb hívás
+// (újrapróba/ör/megismételt cron-esemény) a nulláról indított egy új kört.
+// Mostantól a jelölő a **legelső hívásnál** beíródik.
+$GLOBALS['huhs_posts'] = array();
+reset_send_state();
+seed_post(9021, 'post', 'Dupla küldés elleni cikk', array(), 'publish', time() - 60);
+huhs_push_publish_news(9021, 'token-claim-a', 1);
+$afterFirst = count(sent_messages());
+check('az első küldés kimegy (két nyelv)', $afterFirst === 2, (string) $afterFirst);
+huhs_push_publish_news(9021, 'token-claim-a', 1);
+$afterSecond = count(sent_messages());
+check('UGYANARRA a közzétételre a második hívás NEM küld újra', $afterSecond === $afterFirst,
+    $afterFirst . ' → ' . $afterSecond);
+check('a jelölő az ELSŐ hívásnál beíródott (nem a küldés után)',
+    get_post_meta(9021, '_huhs_push_news_sent', true) === 'token-claim-a');
+check('a közzététel ideje is rögzítve van (diagnosztika)',
+    (int) get_post_meta(9021, '_huhs_push_news_sent_at', true) > 0);
+
+// Az ör sem indíthat újabb kört a már értesített cikkre.
+$beforeScan = count(sent_messages());
+huhs_push_news_watch_one(get_post(9021));
+check('az ör sem indít második kört', count(sent_messages()) === $beforeScan,
+    (string) count(sent_messages()));
+
+// Ha viszont SEMMI nem ment ki és lánc sem indult, a jelölés visszavonódik,
+// hogy az újrapróbálkozás (max. 3 kísérlet) még kiadhassa az értesítést.
+$GLOBALS['huhs_posts'] = array();
+reset_send_state();
+$GLOBALS['huhs_options'][HUHS_PUSH_TOKENS_OPTION] = array();
+seed_post(9022, 'post', 'Néma hiba cikk', array(), 'publish', time() - 60);
+huhs_push_publish_news(9022, 'token-fail-b', 1);
+check('sikertelen küldésnél a jelölés VISSZAVONÓDIK (lesz újrapróba)',
+    get_post_meta(9022, '_huhs_push_news_sent', true) === '',
+    (string) get_post_meta(9022, '_huhs_push_news_sent', true));
+
 // --- Összegzés -------------------------------------------------------------
 $ok = $failures === 0;
 echo "\n{$checks} ellenőrzés, {$failures} hiba\n";
