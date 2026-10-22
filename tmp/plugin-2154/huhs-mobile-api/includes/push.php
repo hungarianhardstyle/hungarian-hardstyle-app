@@ -1641,6 +1641,20 @@ function huhs_push_publish_news($post_id, $token = '', $attempt = 1)
             '_huhs_push_news_progress',
             wp_json_encode(array('sent' => (int) $sent, 'at' => time()))
         );
+        // ⚠️ 2.14.21 — AUTOMATIKUS FOLYTATÁS: ha a szelet után maradt még
+        // címzett, feljegyezzük a lánc AZONOSÍTÓJÁT és a HALADÁST. Ha a
+        // cron-esemény elveszik (mért eset: `push_job=none`, `cron_ordered`,
+        // `processed=19` a 1069-ből), az ör ebből **folytatja** a küldést —
+        // a nulláról indítás dupla értesítést okozna azoknak, akik már kaptak.
+        $job_key = (string) get_option('huhs_push_active_job', '');
+        $job = $job_key !== '' ? get_option('huhs_push_job_' . $job_key, null) : null;
+        if (is_array($job)) {
+            update_post_meta($post->ID, '_huhs_push_news_job', $job_key);
+            update_post_meta($post->ID, '_huhs_push_news_offset', (string) max(0, (int) ($job['offset'] ?? 0)));
+        } else {
+            delete_post_meta($post->ID, '_huhs_push_news_job');
+            delete_post_meta($post->ID, '_huhs_push_news_offset');
+        }
         return;
     }
 
@@ -2270,6 +2284,53 @@ add_action('init', function () {
 add_action('huhs_push_news_scan', 'huhs_push_scan_missing_news');
 
 /**
+ * A félbeszakadt hír-küldés **folytatása** a feljegyzett ponttól (2.14.21).
+ *
+ * Két eset:
+ *  1. a feladat megvan (`_huhs_push_news_job`) → újra beállítjuk aktívnak és
+ *     újraütemezzük a folytatást (a lánc ugyanonnan megy tovább);
+ *  2. a feladat ELVESZETT, de a haladás megvan (`_huhs_push_news_offset`) →
+ *     **új** folytatás-feladatot készítünk ugyanabból a sorból, a feljegyzett
+ *     offsettól — így senki nem kap duplán, és a maradék megkapja.
+ *
+ * @return bool igaz, ha sikerült folytatást indítani
+ */
+function huhs_push_resume_news_chain($post_id)
+{
+    $post_id = (int) $post_id;
+    if ($post_id <= 0) return false;
+    $offset = max(0, (int) get_post_meta($post_id, '_huhs_push_news_offset', true));
+    if ($offset <= 0) return false;
+    $post = get_post($post_id);
+    if (!$post || $post->post_status !== 'publish') return false;
+
+    $data = array('type' => 'news', 'id' => (string) $post_id);
+    $job_key = (string) get_post_meta($post_id, '_huhs_push_news_job', true);
+    $job = $job_key !== '' ? get_option('huhs_push_job_' . $job_key, null) : null;
+
+    if (is_array($job)) {
+        // 1) A feladat megvan: újra aktívvá tesszük és ütemezzük a folytatást.
+        update_option('huhs_push_active_job', $job_key, false);
+        delete_option('huhs_push_job_lock_' . $job_key);
+        if (false === wp_schedule_single_event(time() + 1, 'huhs_push_continue', array($job_key))) {
+            return false;
+        }
+        if (function_exists('spawn_cron')) spawn_cron();
+        return true;
+    }
+
+    // 2) A feladat elveszett: ugyanabból a sorból, a feljegyzett offsettól.
+    return (bool) huhs_push_schedule_job(array(
+        'title' => 'Új hír',
+        'body' => get_the_title($post),
+        'data' => $data,
+        'offset' => $offset,
+        'dead' => array(),
+        'runs' => 0,
+    ));
+}
+
+/**
  * Egy cikk értesítésének elindítása, ha még nem indult rá kör.
  *
  * Ez a **közös döntés** a két rétegnek (mentés-hook + ör), ezért a frissességi
@@ -2282,8 +2343,27 @@ function huhs_push_news_watch_one($post)
     $post_id = is_object($post) ? (int) $post->ID : (int) $post;
     if ($post_id <= 0) return false;
 
+    // ⚠️ 2.14.21 — AUTOMATIKUS FOLYTATÁS (a tulajdonos választása: *„a kör a
+    // feljegyzett haladástól folytatja a küldést — senki nem kap duplán, és
+    // mindenki megkapja”*). Ha a küldés **elindult** (van jelölő) és van
+    // feljegyzett haladás, de a lánc már nem él (nincs aktív feladat), akkor
+    // FOLYTATJUK a feljegyzett ponttól — nem indítunk új kört a nulláról.
+    $claimed = (string) get_post_meta($post_id, '_huhs_push_news_sent', true);
+    $offset = (int) get_post_meta($post_id, '_huhs_push_news_offset', true);
+    if ($claimed !== '' && $offset > 0) {
+        $news_data = array('type' => 'news', 'id' => (string) $post_id);
+        if (!huhs_push_has_pending_job($news_data)) {
+            $resumed = huhs_push_resume_news_chain($post_id);
+            if ($resumed) {
+                error_log('HUHS push: resumed the interrupted news broadcast for post ' . $post_id
+                    . ' from offset ' . $offset . '.');
+                return true;
+            }
+        }
+    }
+
     // Már elment róla értesítés → nincs teendő.
-    if ((string) get_post_meta($post_id, '_huhs_push_news_sent', true) !== '') return false;
+    if ($claimed !== '') return false;
 
     $now = time();
 

@@ -204,8 +204,8 @@ check('a folytató kör kerete rövid (5 másodperc, hogy a látogató ne várjo
     HUHS_PUSH_RESUME_BUDGET === 5, (string) HUHS_PUSH_RESUME_BUDGET);
 check('a párhuzamos út a konstans szerinti kötegekben dolgozik',
     strpos($pushSource, 'array_chunk($recipients, HUHS_PUSH_CONCURRENCY, true)') !== false);
-check('a folytatás MINDKÉT helyen 1 másodpercre van ütemezve (2.14.13 — korábban 2)',
-    substr_count($pushSource, "wp_schedule_single_event(time() + 1, 'huhs_push_continue'") === 2,
+check('a folytatás MINDEN helyen 1 másodpercre van ütemezve (2.14.21 — lánc, háló, folytatás)',
+    substr_count($pushSource, "wp_schedule_single_event(time() + 1, 'huhs_push_continue'") === 3,
     (string) substr_count($pushSource, "wp_schedule_single_event(time() + 1, 'huhs_push_continue'"));
 
 // --- 2) A feladat létrehozása: a folytatás 1 másodperc ----------------------
