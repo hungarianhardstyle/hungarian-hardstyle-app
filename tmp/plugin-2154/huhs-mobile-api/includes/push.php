@@ -1139,24 +1139,43 @@ function huhs_push_continue($job_key, $budget = HUHS_PUSH_TIME_BUDGET)
  */
 function huhs_push_has_pending_job($expected = array())
 {
-    $key = (string) get_option('huhs_push_active_job', '');
-    if ($key === '') return false;
-    $job = get_option('huhs_push_job_' . $key, null);
-    if (!is_array($job)) {
-        delete_option('huhs_push_active_job');
-        return false;
-    }
-    $last_run = (int) ($job['last_run'] ?? 0);
-    if ($last_run > 0 && $last_run < time() - DAY_IN_SECONDS) return false;
-    // Csak a MAGÁÉT a küldését tekintjük folytatásnak: egy másik, éppen futó
-    // kör nem jogosít fel arra, hogy ezt a küldést „elküldöttnek" könyveljük.
-    if ($expected) {
+    // ⚠️ 2.14.22 — EGYIDEJŰ KÖRÖK (mért hiba, 2026-10-17): a `huhs_push_active_job`
+    // **egyetlen** hely, ezért két széles kör (pl. hír-maradék + új esemény)
+    // egymást kitolhatta: az egyik feladata a DB-ben maradt, de semmi nem
+    // mutatott rá, az újabb kör jelölője pedig felülírta az aktív helyet — így az
+    // esemény-push **némán elmaradt**. Mostantól a „van-e folyamatban lévő
+    // küldés" kérdésre a **feladat-tár** a válasz (az aktív hely csak gyors út).
+    $fresh = function ($job) {
+        $last_run = (int) ($job['last_run'] ?? 0);
+        return !($last_run > 0 && $last_run < time() - DAY_IN_SECONDS);
+    };
+    $matches = function ($job) use ($expected) {
+        if (!$expected) return true;
         $data = is_array($job['data'] ?? null) ? $job['data'] : array();
         foreach ($expected as $field => $value) {
             if ((string) ($data[$field] ?? '') !== (string) $value) return false;
         }
+        return true;
+    };
+
+    $key = (string) get_option('huhs_push_active_job', '');
+    if ($key !== '') {
+        $job = get_option('huhs_push_job_' . $key, null);
+        if (is_array($job) && $fresh($job) && $matches($job)) return true;
     }
-    return true;
+
+    // Feladat-tár: bármely friss, a kért küldéshez tartozó feladat számít.
+    global $wpdb;
+    if (is_object($wpdb) && !empty($wpdb->options)) {
+        $names = $wpdb->get_col(
+            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'huhs_push_job_%' ORDER BY option_id DESC LIMIT 20"
+        );
+        foreach ((array) $names as $name) {
+            $job = get_option((string) $name, null);
+            if (is_array($job) && $fresh($job) && $matches($job)) return true;
+        }
+    }
+    return false;
 }
 
 /**
