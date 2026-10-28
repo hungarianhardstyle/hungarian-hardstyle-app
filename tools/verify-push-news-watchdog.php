@@ -19,7 +19,11 @@
  *   5. vázlat (nem publikált) cikkre nem indul kör;
  *   6. korlátos próbálkozás: a keret elfogyása és az órás hézag is véd;
  *   7. a mentés-hook (`save_post_post`) ugyanezt a döntést használja;
- *   8. a diagnosztikai sor (`news_scan=…`) mérhetővé teszi, hogy a kör lefutott-e.
+ *   8. a diagnosztikai sor (`news_scan=…`) mérhetővé teszi, hogy a kör lefutott-e;
+ *   9. 2.14.24: a lánc MINDEN széles körre (esemény, kézi, @mindenki chat) és
+ *      elveszett cron-esemény mellett is végigmegy — a feljegyzett offsettől,
+ *      dupla küldés nélkül; két egyidejű kör is befejeződik; az átmeneti
+ *      tokenhiba nem dobja el a feladatot (korlátos halasztás, látható okkal).
  *
  * Futtatás (a konténerben, a kibontott csomagon):
  *   php tools/verify-push-news-watchdog.php /work/tmp/php-plugin/huhs-mobile-api
@@ -435,6 +439,221 @@ huhs_push_publish_news(9022, 'token-fail-b', 1);
 check('sikertelen küldésnél a jelölés VISSZAVONÓDIK (lesz újrapróba)',
     get_post_meta(9022, '_huhs_push_news_sent', true) === '',
     (string) get_post_meta(9022, '_huhs_push_news_sent', true));
+
+// --- 9) A LÁNC MINDEN SZÉLES KÖRRE VÉGIGMEGY (2.14.24) ----------------------
+//
+// ⚠️ Éles mérés (2026-10-17): a legfrissebb cikk köre 66/1066 eszköznél megállt,
+// a feladat pedig eltűnt (`push_job=none`). Két bizonyított gyökér:
+//  (a) a folytatás csak a HÍR utat ismerte; az esemény/kézi/@mindenki széles
+//      körök lánca egyetlen mutatón (`huhs_push_active_job`) múlott, ezért két
+//      kör egymást kitolhatta, és ami kiszorult, az némán megállt;
+//  (b) ha az access token lekérése átmenetileg elhasalt, a folytató kör
+//      TÖRÖLTE a feladatot → a maradék címzettek örökre kimaradtak.
+// Az alábbi mérések ezt a két utat hajtják végig valódi kódon, stubolt FCM-mel.
+
+function seed_wide_tokens($count)
+{
+    $tokens = array();
+    for ($index = 1; $index <= $count; $index++) {
+        $tokens['w' . $index] = array(
+            'token' => 'token-wide-' . $index . '-aaaaaaaaaaaa',
+            'language' => 'hu',
+        );
+    }
+    $GLOBALS['huhs_options'][HUHS_PUSH_TOKENS_OPTION] = $tokens;
+    return $tokens;
+}
+
+/** Egy széles kör feladata (esemény/kézi/chat típus), adott offsetről. */
+function seed_wide_job($key, $type, $id, $offset = 0, $age = 0)
+{
+    $GLOBALS['huhs_options']['huhs_push_job_' . $key] = array(
+        'title' => 'Hardstyle Revolution',
+        'body' => 'Új esemény a naptárban',
+        'data' => array('type' => $type, 'id' => (string) $id),
+        'offset' => $offset,
+        'dead' => array(),
+        'runs' => 0,
+        'last_run' => time() - (int) $age,
+    );
+    return 'huhs_push_job_' . $key;
+}
+
+function wide_tokens_sent()
+{
+    $out = array();
+    foreach (sent_messages() as $message) $out[] = $message['token'];
+    return $out;
+}
+
+function job_option_exists($key)
+{
+    return array_key_exists('huhs_push_job_' . $key, $GLOBALS['huhs_options']);
+}
+
+// A) A feladat MINDEN típusnál bekerül a lánc-jegyzékbe (nem csak a hír).
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+seed_wide_tokens(4);
+reset_send_state();
+$scheduledWide = huhs_push_schedule_job(array(
+    'title' => 'Hardstyle Revolution',
+    'body' => 'Új esemény a naptárban',
+    'data' => array('type' => 'event', 'id' => '5150'),
+    'offset' => 0,
+    'dead' => array(),
+    'runs' => 1,
+));
+$wideKey = (string) ($GLOBALS['huhs_scheduled'][0]['args'][0] ?? '');
+check('a széles kör (esemény) felajánlja magát a folytatásra', $scheduledWide === true && $wideKey !== '');
+check('a széles kör bekerül a lánc-jegyzékbe (nem csak a hír út)',
+    in_array($wideKey, huhs_push_chain_index(), true), json_encode(huhs_push_chain_index()));
+
+// B) ELVESZETT cron-esemény: a hálónak a széles kört is végig kell vinnie.
+$GLOBALS['huhs_remote'] = array();
+$GLOBALS['huhs_scheduled'] = array();
+$GLOBALS['huhs_cron_events'] = array(); // ← a mért hiba: a folytatás eseménye nincs
+$wideJob = get_option('huhs_push_job_' . $wideKey, array());
+$wideJob['last_run'] = time() - 120;    // a kör elakadt (a szívverés is régi)
+update_option('huhs_push_job_' . $wideKey, $wideJob, false);
+huhs_push_resume_pending_job();
+$wideSent = wide_tokens_sent();
+check('elveszett cron-esemény: a biztonsági háló a SZÉLES kört is befejezi',
+    count($wideSent) === 4, (string) count($wideSent));
+check('a széles kör sem ismétel (minden eszköz egyszer)',
+    count(array_unique($wideSent)) === count($wideSent), implode(',', $wideSent));
+check('a széles kör befejezése után a feladat megszűnik', job_option_exists($wideKey) === false);
+check('és a jegyzék is kiürül', huhs_push_chain_index() === array(), json_encode(huhs_push_chain_index()));
+
+// B2) A legfontosabb új szabály: ha NINCS ütemezett folytatás, a kör akkor is
+//     elakadt, ha a szívverés friss. Élesben pontosan ez volt a mérés:
+//     `push_job=none`, miközben a feladat a tárban maradt.
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+seed_wide_tokens(2);
+reset_send_state();
+seed_wide_job('NOEVT', 'event', 4242, 0, 5); // age 5 < HUHS_PUSH_RESUME_GAP (10)
+huhs_push_chain_register('NOEVT');
+$GLOBALS['huhs_cron_events'] = array();    // nincs folytatás ütemezve
+$GLOBALS['huhs_scheduled'] = array();
+huhs_push_resume_pending_job();
+check('hiányzó cron-esemény + friss szívverés: a háló akkor is folytat (ezt mértük élesben)',
+    count(wide_tokens_sent()) === 2, (string) count(wide_tokens_sent()));
+check('és a kört be is fejezi', job_option_exists('NOEVT') === false);
+
+// C) TÖBB KÖRBEN, folyamatosan elvesző cron-eseménnyel (@mindenki chat kör):
+//    a körönként pontosan egy címzett megy ki, a végén mindenki pontosan egyszer.
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+seed_wide_tokens(4);
+reset_send_state();
+seed_wide_job('CHAT1', 'chat_everyone', 777);
+huhs_push_chain_register('CHAT1');
+$rounds = 0;
+while (job_option_exists('CHAT1') && $rounds < 12) {
+    $GLOBALS['huhs_cron_events'] = array(); // minden kör elején újra elveszik
+    $GLOBALS['huhs_scheduled'] = array();
+    huhs_push_continue('CHAT1', -1);
+    $rounds++;
+}
+$chatSent = wide_tokens_sent();
+check('elveszett cron-esemény mellett a kör NEM áll meg: minden eszköz megkapja',
+    count($chatSent) === 4, (string) count($chatSent));
+check('egy eszköz sem kapja kétszer (nincs dupla push)', count(array_unique($chatSent)) === count($chatSent),
+    implode(',', $chatSent));
+check('körönként pontosan egy címzett (4 eszköz → 4 kör)', $rounds === 4, 'körök=' . $rounds);
+check('a befejezett feladat a jegyzékből is kikerül',
+    !in_array('CHAT1', huhs_push_chain_index(), true) && job_option_exists('CHAT1') === false);
+
+// D) ÁTMENETI TOKENHIBA: a feladat NEM tűnhet el a feljegyzett haladással.
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+seed_wide_tokens(3);
+reset_send_state();
+seed_wide_job('TOK1', 'event', 6060, 1);
+huhs_push_chain_register('TOK1');
+$GLOBALS['huhs_transients'] = array(); // nincs access token (átmeneti hiba)
+$GLOBALS['huhs_scheduled'] = array();
+$GLOBALS['huhs_cron_events'] = array();
+huhs_push_continue('TOK1', -1);
+check('átmeneti tokenhiba: a feladat MEGMARAD (nem tűnik el némán)',
+    job_option_exists('TOK1') === true);
+check('a feljegyzett haladás is megmarad (offset=1)',
+    (int) ($GLOBALS['huhs_options']['huhs_push_job_TOK1']['offset'] ?? -1) === 1,
+    json_encode($GLOBALS['huhs_options']['huhs_push_job_TOK1'] ?? null));
+$rearmed = array_values(array_filter($GLOBALS['huhs_scheduled'], function ($event) {
+    return $event['hook'] === 'huhs_push_continue';
+}));
+check('és 60 másodperc múlva újrapróbálja (ütemezett folytatás)',
+    count($rearmed) === 1 && (int) $rearmed[0]['when'] > time() + 30,
+    json_encode($GLOBALS['huhs_scheduled']));
+check('a tokenhiba miatt NEM ment ki félkész értesítés', count(sent_messages()) === 0,
+    (string) count(sent_messages()));
+
+// D2) A végtelen újrapróbálkozásnak is van korlátja — de nem néma eltűnés.
+$GLOBALS['huhs_options']['huhs_push_job_TOK1']['postponed'] = HUHS_PUSH_MAX_POSTPONES;
+$GLOBALS['huhs_scheduled'] = array();
+delete_option('huhs_push_job_lock_TOK1');
+huhs_push_continue('TOK1', -1);
+check('a 20. halasztás után a feladat lezárul (nem függ örökre a tárban)',
+    job_option_exists('TOK1') === false);
+check('és a diagnosztika kimondja az okot (nincs néma eltűnés)',
+    (string) (huhs_push_last_result()['reason'] ?? '') === 'no-credentials',
+    json_encode(huhs_push_last_result()));
+check('lezárás után nem ütemez újabb kört',
+    count(array_filter($GLOBALS['huhs_scheduled'], function ($event) {
+        return $event['hook'] === 'huhs_push_continue';
+    })) === 0, json_encode($GLOBALS['huhs_scheduled']));
+$GLOBALS['huhs_transients']['huhs_firebase_access_token'] = 'stub-access-token';
+
+// E) KÉT EGYIDEJŰ széles kör (esemény + hír-maradék): mindkettő befejeződik.
+//    (Élesben pont ez esett el: az esemény-push némán kimaradt.)
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+seed_wide_tokens(3);
+reset_send_state();
+seed_wide_job('AAA111', 'event', 1111, 0, 120);
+seed_wide_job('BBB222', 'event', 2222, 0, 120);
+huhs_push_chain_register('AAA111');
+huhs_push_chain_register('BBB222');
+$GLOBALS['huhs_options']['huhs_push_active_job'] = 'BBB222'; // a régi, EGYHELYES mutató
+$GLOBALS['huhs_cron_events'] = array();
+$GLOBALS['huhs_scheduled'] = array();
+huhs_push_resume_pending_job();
+$perTarget = array();
+foreach (sent_messages() as $message) {
+    $target = (string) ($message['data']['id'] ?? '?');
+    $perTarget[$target][] = $message['token'];
+}
+check('két egyidejű széles kör: az ELSŐ is befejeződik (nem csak a legutóbbi)',
+    count($perTarget['1111'] ?? array()) === 3, json_encode(array_keys($perTarget)));
+check('két egyidejű széles kör: a MÁSODIK is befejeződik',
+    count($perTarget['2222'] ?? array()) === 3, json_encode(array_keys($perTarget)));
+check('egyik kör sem ismétel egyetlen eszközre sem',
+    count(array_unique($perTarget['1111'] ?? array())) === 3
+    && count(array_unique($perTarget['2222'] ?? array())) === 3);
+check('mindkét feladat megszűnt', job_option_exists('AAA111') === false && job_option_exists('BBB222') === false);
+check('a jegyzék kiürült (nincs örökre nyitva maradt lánc)', huhs_push_chain_index() === array());
+
+// F) FUTÓ KÖR: a háló nem indít másodikat ugyanarra a feladatra (nincs dupla push).
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+seed_wide_tokens(3);
+reset_send_state();
+seed_wide_job('LOCK1', 'event', 3333, 0, 120);
+huhs_push_chain_register('LOCK1');
+$GLOBALS['huhs_options']['huhs_push_job_lock_LOCK1'] = time(); // éppen fut
+$GLOBALS['huhs_cron_events'] = array();
+huhs_push_resume_pending_job();
+check('a futó kört a háló NEM indítja újra (nincs dupla push)',
+    count(sent_messages()) === 0, (string) count(sent_messages()));
+delete_option('huhs_push_job_lock_LOCK1');
+
+// G) A diagnosztika megmutatja, HÁNY kör van folyamatban (méréshez).
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+huhs_push_chain_register('LOCK1');
+$diagJobs = huhs_push_diag_jobs();
+check('a diagnosztika kimondja a folyamatban lévő körök számát (`push_jobs=`)',
+    strpos($diagJobs, 'push_jobs=1') !== false, $diagJobs);
+
+// Takarítás: a következő mérés tiszta állapotból induljon.
+delete_option('huhs_push_job_LOCK1');
+delete_option('huhs_push_job_TOK1');
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
 
 // --- Összegzés -------------------------------------------------------------
 $ok = $failures === 0;

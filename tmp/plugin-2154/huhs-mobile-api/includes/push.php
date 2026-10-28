@@ -561,7 +561,11 @@ if (!defined('HUHS_PUSH_RESUME_GAP')) define('HUHS_PUSH_RESUME_GAP', 10);
 // Egy feladaton EGYSZERRE csak egy kör dolgozhat. Ez a foglalas addig el, es ha
 // a folyamat elhal, magatol lejar (nem blokkolja orokre a kuldést).
 if (!defined('HUHS_PUSH_JOB_LOCK_TIMEOUT')) define('HUHS_PUSH_JOB_LOCK_TIMEOUT', 60);
-
+// 2.14.24: ha a szolgáltatásfiók/access token átmenetileg nem szerezhető meg, a
+// folytató kör 60 másodperc múlva újrapróbálja — de legfeljebb ennyiszer
+// (20 × 60 s = 20 perc). Utána lezárul, VISZONT a diagnosztikában látszik az ok
+// (`push_last=…/no-credentials`), tehát nem tűnik el némán.
+if (!defined('HUHS_PUSH_MAX_POSTPONES')) define('HUHS_PUSH_MAX_POSTPONES', 20);
 /**
  * Az utolso kuldes eredmenye.
  *
@@ -648,6 +652,7 @@ function huhs_push_diag_jobs()
 
     return 'cron_overdue=' . $overdue
         . ' push_job=' . ($jobs ? implode(',', $jobs) : 'none')
+        . ' push_jobs=' . count(huhs_push_live_jobs())
         . ' push_active=' . huhs_push_diag_active_job($now);
 }
 
@@ -965,6 +970,94 @@ function huhs_push_prune_tokens($keys)
 }
 
 /**
+ * A futó széles körök jegyzéke (2.14.24) — `huhs_push_chain_index`.
+ *
+ * MIÉRT (éles mérés, 2026-10-17): a hír-push lánca 66/1066 eszköznél megállt, a
+ * feladat pedig **eltűnt** (`push_job=none`). A mért ok: a folytatást egyetlen
+ * mutató (`huhs_push_active_job`) tartotta nyilván, ezért
+ *   – két széles kör (hír-maradék + új esemény) egymást kitolhatta a helyről;
+ *   – a folytatás/resume logika csak a **hír** utat ismerte;
+ *   – ha a cron-esemény elveszett, a biztonsági háló a "másik" feladatot nézte.
+ * Mostantól a jegyzék a valódi nyilvántartás: minden feladat bekerül, és a háló
+ * mindegyiket folytatni tudja — a `huhs_push_active_job` csak megjelenítés.
+ *
+ * ⚠️ A név szándékosan NEM `huhs_push_job_…`: a `huhs_push_job_%` SQL-minta (a
+ * `_` helyettesítő karakter!) ezt is beszippantaná, és a feladat-kereső egy
+ * stringlistát feladatnak nézne.
+ */
+function huhs_push_clean_job_key($key)
+{
+    return (string) preg_replace('/[^A-Za-z0-9]/', '', (string) $key);
+}
+
+function huhs_push_chain_index()
+{
+    $keys = get_option('huhs_push_chain_index', array());
+    if (!is_array($keys)) return array();
+    $live = array();
+    foreach ($keys as $key) {
+        $key = huhs_push_clean_job_key($key);
+        if ($key === '' || in_array($key, $live, true)) continue;
+        if (is_array(get_option('huhs_push_job_' . $key, null))) $live[] = $key;
+    }
+    return $live;
+}
+
+function huhs_push_chain_register($key)
+{
+    $key = huhs_push_clean_job_key($key);
+    if ($key === '') return false;
+    $keys = huhs_push_chain_index();
+    if (!in_array($key, $keys, true)) $keys[] = $key;
+    update_option('huhs_push_chain_index', array_values(array_slice($keys, -20)), false);
+    return true;
+}
+
+function huhs_push_chain_forget($key)
+{
+    $key = huhs_push_clean_job_key($key);
+    if ($key === '') return false;
+    $keys = huhs_push_chain_index();
+    $keys = array_values(array_filter($keys, function ($entry) use ($key) {
+        return (string) $entry !== $key;
+    }));
+    if ($keys) {
+        update_option('huhs_push_chain_index', $keys, false);
+    } else {
+        delete_option('huhs_push_chain_index');
+    }
+    if ((string) get_option('huhs_push_active_job', '') === $key) {
+        delete_option('huhs_push_active_job');
+    }
+    return true;
+}
+
+/**
+ * A tárban lévő összes feladat kulcsa: a jegyzék + a feladat-opciók (a 2.14.24
+ * előtt indult feladatok jegyzék nélkül is folytatódnak).
+ *
+ * A szűrő szigorú (`^huhs_push_job_[A-Za-z0-9]+$`), hogy a zárolás-opciókat
+ * (`huhs_push_job_lock_…`) és a jegyzéket biztosan ne nézze feladatnak.
+ */
+function huhs_push_live_jobs()
+{
+    $keys = huhs_push_chain_index();
+
+    global $wpdb;
+    if (is_object($wpdb) && !empty($wpdb->options)) {
+        $names = $wpdb->get_col(
+            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'huhs_push_job_%' ORDER BY option_id DESC LIMIT 20"
+        );
+        foreach ((array) $names as $name) {
+            $name = (string) $name;
+            if (!preg_match('/^huhs_push_job_([A-Za-z0-9]+)$/', $name, $match)) continue;
+            if (!in_array($match[1], $keys, true)) $keys[] = $match[1];
+        }
+    }
+    return $keys;
+}
+
+/**
  * Hand the rest of a broadcast to a scheduled follow-up and return immediately.
  */
 function huhs_push_schedule_job($job)
@@ -980,7 +1073,10 @@ function huhs_push_schedule_job($job)
     $key = wp_generate_password(12, false, false);
     $job['last_run'] = time();
     update_option('huhs_push_job_' . $key, $job, false);
-    // Ezt a kulcsot keresi a biztonsagi haló (huhs_push_resume_pending_job).
+    // A jegyzék a valódi nyilvántartás (2.14.24): minden kör ide kerül, és a
+    // biztonsági háló innen folytatja — nem csak a legutóbbit.
+    huhs_push_chain_register($key);
+    // Ezt a kulcsot keresi a diagnosztika és a régi háló (kompatibilitás).
     update_option('huhs_push_active_job', $key, false);
 
     // ⚠️ 2.14.13: a folytatás **1 másodpercre** (korábban 2) — éles mérés szerint
@@ -1005,7 +1101,7 @@ function huhs_push_schedule_job($job)
 add_action('huhs_push_continue', 'huhs_push_continue', 10, 2);
 function huhs_push_continue($job_key, $budget = HUHS_PUSH_TIME_BUDGET)
 {
-    $job_key = preg_replace('/[^A-Za-z0-9]/', '', (string) $job_key);
+    $job_key = huhs_push_clean_job_key($job_key);
     if ($job_key === '') return;
 
     $option = 'huhs_push_job_' . $job_key;
@@ -1014,9 +1110,7 @@ function huhs_push_continue($job_key, $budget = HUHS_PUSH_TIME_BUDGET)
         // NEMA VEG: pontosan ez a hiba allitotta le elesben a kuldesi lancot
         // ugy, hogy kozben semmi nem jelzett rola.
         error_log('HUHS push: the follow-up run found no job data (' . $job_key . '), stopping.');
-        if ((string) get_option('huhs_push_active_job', '') === $job_key) {
-            delete_option('huhs_push_active_job');
-        }
+        huhs_push_chain_forget($job_key);
         return;
     }
 
@@ -1053,13 +1147,46 @@ function huhs_push_continue($job_key, $budget = HUHS_PUSH_TIME_BUDGET)
     $project = sanitize_key((string) ($account['project_id'] ?? ''));
     $access_token = huhs_push_access_token();
     if (!$project || !$access_token) {
-        error_log('HUHS push: the follow-up run stopped, the service account or access token is missing.');
-        delete_option($option);
+        // ⚠️ 2.14.24 — ITT VESZETT EL A KÖR (éles mérés, 2026-10-17): ez az ág
+        // eddig **törölte** a feladatot. Egy átmeneti hiba (lejárt vagy nem
+        // lekérdezhető access token) így a hátralévő címzetteket örökre eldobta,
+        // a tárban pedig semmi nem maradt, amiből folytatni lehetett volna
+        // (`push_job=none`, `processed=66` a 1066-ból). Mostantól a feladat a
+        // feljegyzett offsettel **megmarad**, és 60 másodperc múlva újrapróbáljuk.
+        //
+        // A halasztásnak is van korlátja (20 × 60 s = húsz perc): azután a kör
+        // lezárul, de NEM némán — a diagnosztika `push_last=custom/no-credentials`
+        // rekordot ír, tehát látszik, hogy miért nem ment ki.
         delete_option($lock_option);
-        if ((string) get_option('huhs_push_active_job', '') === $job_key) {
-            delete_option('huhs_push_active_job');
+        $postponed = (int) ($job['postponed'] ?? 0) + 1;
+        if ($postponed > HUHS_PUSH_MAX_POSTPONES) {
+            error_log('HUHS push: giving up the follow-up run after ' . HUHS_PUSH_MAX_POSTPONES
+                . ' postponements (service account or access token missing).');
+            delete_option($option);
+            huhs_push_chain_forget($job_key);
+            $tokensForCount = get_option(HUHS_PUSH_TOKENS_OPTION, array());
+            huhs_push_record_result(array(
+                'type' => (string) ($data['type'] ?? 'custom'),
+                'reason' => 'no-credentials',
+                'recipients' => count(huhs_push_recipients(is_array($tokensForCount) ? $tokensForCount : array(), $data)),
+                'processed' => $offset,
+                'sent' => 0,
+                'failed' => 0,
+                'dead' => count($dead),
+                'code' => 0,
+                'status' => '',
+                'runs' => $runs + 1,
+            ));
+            return;
         }
-        huhs_push_prune_tokens($dead);
+        error_log('HUHS push: the follow-up run is postponed (' . $postponed . '/' . HUHS_PUSH_MAX_POSTPONES
+            . ', service account or access token missing).');
+        $job['postponed'] = $postponed;
+        $job['last_run'] = time();
+        update_option($option, $job, false);
+        if (false !== wp_schedule_single_event(time() + 60, 'huhs_push_continue', array($job_key))) {
+            if (function_exists('spawn_cron')) spawn_cron();
+        }
         return;
     }
 
@@ -1129,9 +1256,8 @@ function huhs_push_continue($job_key, $budget = HUHS_PUSH_TIME_BUDGET)
 
     delete_option($option);
     delete_option($lock_option);
-    if ((string) get_option('huhs_push_active_job', '') === $job_key) {
-        delete_option('huhs_push_active_job');
-    }
+    // A jegyzékből is kikerül (ez törli az aktív mutatót, ha erre mutatott).
+    huhs_push_chain_forget($job_key);
     huhs_push_prune_tokens($dead);
 }
 
@@ -1213,37 +1339,56 @@ function huhs_push_has_pending_job($expected = array())
  */
 function huhs_push_adopt_orphan_job()
 {
-    if ((string) get_option('huhs_push_active_job', '') !== '') return false;
+    $adopted = 0;
 
+    // 1) A régi mutató: ha él, be kell kerülnie a jegyzékbe (2.14.24 előtti
+    //    feladatok így is folytatódnak).
+    $active = huhs_push_clean_job_key(get_option('huhs_push_active_job', ''));
+    if ($active !== '' && is_array(get_option('huhs_push_job_' . $active, null))
+        && !in_array($active, huhs_push_chain_index(), true)) {
+        huhs_push_chain_register($active);
+        $adopted++;
+    }
+
+    // 2) A feladat-tár átvizsgálása — szándékosan ritka (legfeljebb 5 percenként
+    //    egyszer), hogy egy lassú site-on ne adjon állandó lekérdezést.
     $scanned = (int) get_option('huhs_push_orphan_scan', 0);
-    if ($scanned > time() - 5 * MINUTE_IN_SECONDS) return false;
-    update_option('huhs_push_orphan_scan', time(), false);
+    if ($scanned > time() - 5 * MINUTE_IN_SECONDS) return $adopted > 0;
 
     global $wpdb;
-    $name = $wpdb->get_var(
-        "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'huhs_push_job_%' ORDER BY option_id DESC LIMIT 1"
+    if (!is_object($wpdb) || empty($wpdb->options)) return $adopted > 0;
+    update_option('huhs_push_orphan_scan', time(), false);
+
+    $names = $wpdb->get_col(
+        "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'huhs_push_job_%' ORDER BY option_id DESC LIMIT 20"
     );
-    if (!is_string($name) || $name === '') return false;
+    $index = huhs_push_chain_index();
+    foreach ((array) $names as $name) {
+        // Csak valódi feladat-kulcs (`huhs_push_job_lock_…` nem az).
+        if (!preg_match('/^huhs_push_job_([A-Za-z0-9]+)$/', (string) $name, $match)) continue;
+        $key = $match[1];
+        $job = get_option('huhs_push_job_' . $key, null);
+        if (!is_array($job)) continue;
 
-    $job = get_option($name, null);
-    if (!is_array($job)) {
-        delete_option($name);
-        return false;
+        // Egy nappal később már ne toljon a semmiből egy „új hír" értesítést.
+        // A `> 0` azért kell: a 2.4.118 előtt készült feladatoknak nincs last_run
+        // mezője (0), azokat frissnek tekintjük, nem dobjuk el.
+        $last_run = (int) ($job['last_run'] ?? 0);
+        if ($last_run > 0 && $last_run < time() - DAY_IN_SECONDS) {
+            delete_option('huhs_push_job_' . $key);
+            huhs_push_chain_forget($key);
+            continue;
+        }
+
+        if (!in_array($key, $index, true)) {
+            huhs_push_chain_register($key);
+            $index[] = $key;
+            $adopted++;
+        }
     }
 
-    // Egy nappal kesobb mar ne toljon a semmibol egy "uj hir" ertesitest.
-    // A `> 0` azert kell: a 2.4.118 elott keszult feladatoknak nincs last_run
-    // mezoje (0), azokat frissnek tekintjuk, nem toroljuk — kulonben pont az
-    // elakadt kuldest dobnank el, amit vissza akarunk hozni.
-    $last_run = (int) ($job['last_run'] ?? 0);
-    if ($last_run > 0 && $last_run < time() - DAY_IN_SECONDS) {
-        delete_option($name);
-        return false;
-    }
-
-    update_option('huhs_push_active_job', substr($name, strlen('huhs_push_job_')), false);
-    error_log('HUHS push: adopted an orphaned broadcast job (' . $name . ').');
-    return true;
+    if ($adopted > 0) error_log('HUHS push: adopted ' . $adopted . ' broadcast job(s) into the chain index.');
+    return $adopted > 0;
 }
 
 add_action('shutdown', 'huhs_push_resume_pending_job', 99);
@@ -1253,26 +1398,46 @@ function huhs_push_resume_pending_job()
 
     huhs_push_adopt_orphan_job();
 
-    $key = (string) get_option('huhs_push_active_job', '');
-    if ($key === '') return;
+    $keys = huhs_push_live_jobs();
+    if (!$keys) return;
 
-    $job = get_option('huhs_push_job_' . $key, null);
-    if (!is_array($job)) {
-        delete_option('huhs_push_active_job');
-        return;
+    // Melyik kör akadt el? 2.14.24: elakadás az is, ha a feladathoz NINCS
+    // ütemezett folytatás (`wp_next_scheduled` hamis). Az éles hoston mért hiba
+    // pontosan ez volt: a cron-esemény eltűnt, a feladat viszont a tárban maradt
+    // — a háló pedig csak az egyetlen „aktív" feladatot nézte.
+    $stalled = array();
+    foreach ($keys as $key) {
+        $job = get_option('huhs_push_job_' . $key, null);
+        if (!is_array($job)) {
+            huhs_push_chain_forget($key);
+            continue;
+        }
+        $age = time() - (int) ($job['last_run'] ?? 0);
+        $scheduled = (bool) wp_next_scheduled('huhs_push_continue', array($key));
+        // A cron-láncnak kellene folytatnia; csak akkor lépünk be, ha elakadt.
+        if ($scheduled && $age <= HUHS_PUSH_RESUME_GAP) continue;
+        // Frissen ütemezett (esemény még nem látszik, mert most készült) kör.
+        if (!$scheduled && $age <= 3) continue;
+        $stalled[$key] = $age;
     }
+    if (!$stalled) return;
+    arsort($stalled); // a legrégebben elakadt kör halad először
 
-    // A cron-lancnak kellene folytatnia; csak akkor lepunk be, ha elakadt.
-    if ((int) ($job['last_run'] ?? 0) > time() - HUHS_PUSH_RESUME_GAP) return;
-
-    // Atomikus zar: az add_option csak az elso kerest engedi be.
+    // Atomikus zár: az add_option csak az első kérést engedi be.
     if (!add_option('huhs_push_resume_lock', time(), '', false)) {
         $lock = (int) get_option('huhs_push_resume_lock');
         if ($lock > time() - 120) return;
         update_option('huhs_push_resume_lock', time(), false);
     }
 
-    huhs_push_continue($key, HUHS_PUSH_RESUME_BUDGET);
+    // Egyszerre legfeljebb két feladat halad egy kérésben: ha éppen egy látogató
+    // kérése fizeti meg a kört, ne várjon sokáig.
+    $done = 0;
+    foreach (array_keys($stalled) as $key) {
+        huhs_push_continue($key, HUHS_PUSH_RESUME_BUDGET);
+        $done++;
+        if ($done >= 2) break;
+    }
     delete_option('huhs_push_resume_lock');
 }
 
@@ -2340,6 +2505,9 @@ function huhs_push_resume_news_chain($post_id)
     if (is_array($job)) {
         // 1) A feladat megvan: újra aktívvá tesszük és ütemezzük a folytatást.
         update_option('huhs_push_active_job', $job_key, false);
+        // 2.14.24: a jegyzékbe is visszakerül, különben a biztonsági háló nem
+        // látná, ha a most ütemezett esemény megint elveszne.
+        huhs_push_chain_register($job_key);
         delete_option('huhs_push_job_lock_' . $job_key);
         if (false === wp_schedule_single_event(time() + 1, 'huhs_push_continue', array($job_key))) {
             return false;
