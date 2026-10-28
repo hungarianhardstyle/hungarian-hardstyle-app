@@ -389,7 +389,10 @@ check('a mentés-hook vázlatra nem indít kört',
 
 // --- 7) A diagnosztika mérhetővé teszi a kört ------------------------------
 $GLOBALS['huhs_options']['huhs_push_news_scan'] = array();
-check('kör nélkül a diagnosztika ezt kimondja', huhs_push_diag_news_scan() === 'news_scan=none');
+check('kör nélkül a diagnosztika ezt kimondja',
+    strpos(huhs_push_diag_news_scan(), 'news_scan=none') === 0
+    && strpos(huhs_push_diag_news_scan(), 'news_resume=0/60m') !== false,
+    huhs_push_diag_news_scan());
 $GLOBALS['huhs_posts'] = array();
 reset_send_state();
 seed_post(9011, 'post', 'Diagnosztika cikk', array(), 'publish', time() - 30);
@@ -653,6 +656,103 @@ check('a diagnosztika kimondja a folyamatban lévő körök számát (`push_jobs
 // Takarítás: a következő mérés tiszta állapotból induljon.
 delete_option('huhs_push_job_LOCK1');
 delete_option('huhs_push_job_TOK1');
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+
+// --- 10) A HÍR A SAJÁT FELADATÁT JEGYZI FEL, NEM A MÁSIK KÖRÉT (2.14.25) ----
+//
+// ⚠️ Mért hibaosztály: a hír-út a küldés után a **globális**
+// `huhs_push_active_job` mutatóból olvasta ki a feladatot. Két egyidejű körnél
+// (hír-maradék + esemény) ez a MÁSIK feladatra mutatott, ezért a hír a másik
+// offsetjét jegyezte fel → a folytatás rossz helyről indult (kétszer kapó és
+// kimaradó eszközök). Ezt méri az alábbi négy ellenőrzés.
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+seed_wide_tokens(2);
+seed_wide_job('OTHER2', 'event', 8080, 25); // egy MÁSIK kör, nagyobb offsettel
+huhs_push_chain_register('OTHER2');
+seed_wide_job('NEWS2', 'news', '9040', 7);   // a saját kör (offset 7)
+huhs_push_chain_register('NEWS2');
+$GLOBALS['huhs_options']['huhs_push_active_job'] = 'OTHER2'; // a csapda: ide mutat
+$found = huhs_push_find_job(array('type' => 'news', 'id' => '9040'));
+check('a feladat-kereső a SAJÁT kört találja meg, nem a globális aktív mutatót',
+    is_array($found) && (string) ($found['key'] ?? '') === 'NEWS2',
+    json_encode(is_array($found) ? $found['key'] : null));
+check('és a SAJÁT haladását adja vissza (7, nem 25)',
+    (int) ($found['job']['offset'] ?? -1) === 7, (string) ($found['job']['offset'] ?? '?'));
+check('ismeretlen küldésre nem tippel (nincs találat)',
+    huhs_push_find_job(array('type' => 'news', 'id' => '9999')) === null);
+// ⚠️ A forrás-kapu a HÍVÁS HELYÉT méri (a `huhs_push_publish_news` törzsében),
+// mert a mutációs bizonyíték első futása pont ezt a gyengeséget jelezte: egy
+// „a nev szerepel a fájlban” kapu a visszaállított hibát is átengedte.
+$publishStart = strpos($pushSource, 'function huhs_push_publish_news');
+$publishEnd = $publishStart === false ? false : strpos($pushSource, "\nfunction ", $publishStart + 10);
+$publishBody = ($publishStart === false || $publishEnd === false)
+    ? ''
+    : substr($pushSource, (int) $publishStart, (int) $publishEnd - (int) $publishStart);
+check('a hír könyvelése a SAJÁT feladatát használja — a hívás helyén mérve (forrás-kapu)',
+    $publishBody !== ''
+    && strpos($publishBody, '$found = huhs_push_find_job($data);') !== false
+    && strpos($publishBody, "(string) \$found['key']") !== false
+    && strpos($publishBody, "get_option('huhs_push_active_job'") === false,
+    $publishBody === '' ? 'a függvény nem található' : 'a hívás helye nem a saját feladatot használja');
+
+// Takarítás a tiszta állapothoz.
+delete_option('huhs_push_job_OTHER2');
+delete_option('huhs_push_job_NEWS2');
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+delete_option('huhs_push_active_job');
+
+// --- 11) A BEFEJEZETT HÍR-KÖR NEM INDUL ÚJRA (2.14.25) ----------------------
+//
+// ⚠️ ÉLES MÉRÉS (2026-10-28 18:49 és 18:54, `news_scan=…/q2` mindkétszer): a
+// befejezett hír-kör után a cikk meta-jában ott maradt a feljegyzett haladás,
+// ezért az ötperces ör ötpercenként ÚJRA elindította a maradékot → ismétlődő
+// push. Ez a mérés a dupla-push motorját fogja.
+$GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
+seed_wide_tokens(3);
+$GLOBALS['huhs_posts'] = array();
+reset_send_state();
+seed_post(9050, 'post', 'Befejeződő hír', array(
+    '_huhs_push_news_sent' => 'token-complete',
+    '_huhs_push_news_offset' => '2',
+), 'publish', time() - 60);
+seed_wide_job('CMPL1', 'news', '9050', 2);
+huhs_push_chain_register('CMPL1');
+$GLOBALS['huhs_scheduled'] = array();
+$GLOBALS['huhs_cron_events'] = array();
+huhs_push_continue('CMPL1', 99);
+check('a záró kör elküldi a maradékot (1 eszköz)', count(sent_messages()) === 1, (string) count(sent_messages()));
+check('a befejezés LEZÁRJA a hír-könyvelést (nincs elavult offset)',
+    (string) get_post_meta(9050, '_huhs_push_news_offset', true) === ''
+    && (string) get_post_meta(9050, '_huhs_push_news_job', true) === '');
+check('és KÉSZNEK jelöli a cikket', (int) get_post_meta(9050, '_huhs_push_news_complete', true) > 0);
+reset_send_state();
+$GLOBALS['huhs_scheduled'] = array();
+check('a kész cikkre az ör NEM indít újabb kört (ez volt a dupla-push motor)',
+    huhs_push_news_watch_one(get_post(9050)) === false);
+
+// Ellenőrző pár: a befejezés-jelölő nélkül a folytatás TOVÁBBRA IS működik.
+seed_post(9051, 'post', 'Félbeszakadt hír', array(
+    '_huhs_push_news_sent' => 'token-half',
+    '_huhs_push_news_offset' => '2',
+), 'publish', time() - 60);
+$GLOBALS['huhs_scheduled'] = array();
+check('befejezés-jelölő nélkül az ör FOLYTATJA a félbeszakadt kört (nem kapcsoltuk ki)',
+    huhs_push_news_watch_one(get_post(9051)) === true);
+// És a KÉSZ jelölő akkor is véd, ha az offset elavultan ott maradt.
+seed_post(9052, 'post', 'Kész hír, elavult offsettel', array(
+    '_huhs_push_news_sent' => 'token-done',
+    '_huhs_push_news_offset' => '2',
+    '_huhs_push_news_complete' => (string) time(),
+), 'publish', time() - 60);
+$GLOBALS['huhs_scheduled'] = array();
+check('a KÉSZ jelölés az elavult offset mellett is blokkol (nincs újabb kör)',
+    huhs_push_news_watch_one(get_post(9052)) === false && count($GLOBALS['huhs_scheduled']) === 0,
+    json_encode($GLOBALS['huhs_scheduled']));
+check('a folytatás-számláló a diagnosztikában mérhető (`news_resume=`)',
+    strpos(huhs_push_diag_news_scan(), 'news_resume=') !== false, huhs_push_diag_news_scan());
+
+// Takarítás.
+delete_option('huhs_push_job_CMPL1');
 $GLOBALS['huhs_options']['huhs_push_chain_index'] = array();
 
 // --- Összegzés -------------------------------------------------------------

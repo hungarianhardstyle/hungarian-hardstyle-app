@@ -55,6 +55,22 @@ const MUTATIONS = [
         if ($age <= HUHS_PUSH_RESUME_GAP) continue;`,
     expect: 'akkor is folytat',
   },
+  {
+    name: 'hir-a-globalis-mutator-jegyzi-fel',
+    title: 'a mért hiba: a hír a GLOBÁLIS aktív mutatót jegyzi fel (2.14.25 javítás nélkül)',
+    anchor: `        $found = huhs_push_find_job($data);`,
+    replacement: `        $globalKey = (string) get_option('huhs_push_active_job', '');
+        $globalJob = $globalKey !== '' ? get_option('huhs_push_job_' . $globalKey, null) : null;
+        $found = is_array($globalJob) ? array('key' => $globalKey, 'job' => $globalJob) : null;`,
+    expect: 'a hívás helyén mérve',
+  },
+  {
+    name: 'befejezes-nem-zarja-le-a-konyvelest',
+    title: 'a mért dupla-push motor: a záró kör NEM takarítja a hír-könyvelést (2.14.25 nélkül)',
+    anchor: `    huhs_push_news_chain_complete($data);`,
+    replacement: `    // (a 2.14.25 előtti viselkedés: nincs lezárás)`,
+    expect: 'LEZÁRJA a hír-könyvelést',
+  },
 ];
 
 function runVerifier(pluginDir) {

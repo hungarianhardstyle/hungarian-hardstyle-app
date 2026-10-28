@@ -1,5 +1,14 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🔴 A **2.14.25**-ÖS PLUGIN — A DUPLA-PUSH MOTORJA LEÁLL (ÉLESBEN MÉRVE, 2026-10-28) — **FELTÖLTENDŐ**
+
+- **AZ ÉLES MÉRÉS (2.14.24-gyel, a tulajdonos feltöltése után):** `api=2.14.24` él; a figyelő (`tmp/watch-push-live.mjs`, 15 s-onként) ezt látta: `news_scan=18:49/s2/q2` → 18:50-kor egy küldés lefutott (`processed=164/1064`); `news_scan=18:54/s2/q2` → 18:55:16-kor **`push_jobs=2`, `push_job=DUE/runs=0/offset=1000,DUE/runs=0/offset=900`**; 18:55:36-kor `at=18:55` (tehát **újabb 164 eszköz kapta meg ugyanazt**); `news_scan=18:59/s2/q2` → **harmadik hullám**. Ötpercenként ismétlődik.
+- **A GYÖKÉR (kód, mérve):** a záró kör után a cikk meta-jában **ott maradt** `_huhs_push_news_offset` (900/1000) és `_huhs_push_news_job`; az ötperces ör ezt „félbeszakadt küldésnek" látta, és **minden scan-nál újraindította a maradékot** (a `_huhs_push_news_watchdog_at`/tries kapu a folytatás-ág ELŐTT nincs, ezért nem fogta meg). Ez a tulajdonos „kiment az ezerszer" jelzésének motorja.
+- **A JAVÍTÁS (`includes/push.php`, 2.14.25):** (a) `huhs_push_news_chain_complete()` — a záró kör **késznek jelöli** a cikket (`_huhs_push_news_complete`) és törli az elavult offsetet/feladat-kulcsot; (b) az ör és a folytatás **nem** indul KÉSZ cikkre (a félbeszakadt kör folytatása változatlanul működik — ellenőrző pár méri); (c) a hír a **saját** feladatát jegyzi fel (`huhs_push_find_job`) a globális „aktív" mutató helyett — két egyidejű körnél ez korábban a MÁSIK offsetjét írta be (kétszer kapó / kimaradó eszközök); (d) diagnosztika: `news_resume=N/60m` (hány folytatás indult az elmúlt órában) — ebből a hurok kívülről mérhető.
+- **A MÉRÉS:** harness 11 kör zöld (`PUSH-NEWS OK` **79/79**, +7 új ellenőrzés), `PHP LINT OK` 49 fájl, `VISELKEDES`/`KONSTANS` 117/117, `PUSH-DEDUPE` 12/12, `PUSH-NYELV` 72/72, `PUSH-OPEN` 56/56, `PUSH-SPEED` 24/24 → `MINDEN ELLENŐRZÉS RENDBEN`; **mutáció 5/5 elkapva** (`tmp/mutation-proof-chain-2424.mjs`), köztük a dupla-push motorját visszaállító mutáció.
+- **📌 A TULAJDONOS LÉPÉSE:** a `build/huhs-mobile-api-2.14.25.zip` **mielőbbi** feltöltése — utána a mai két cikknél **még egy** hullám jöhet (a régi offset miatt), azután a hurok leáll; ellenőrzőpont: `news_resume=`, `push_jobs=`, `news_scan=…/q0`.
+- **⚠️ ŐSZINTE KORLÁT:** a 2.14.25 előtt lezajlott hullámok már kimentek (a 18:49/18:54/18:59-es maradék-küldések), ezeket visszavonni nem lehet; a mostani telepítés a **további** ismétléseket állítja le.
+
 ### 🟢 A **2.14.24**-ES PLUGIN — A PUSH-LÁNC MINDEN SZÉLES KÖRRE VÉGIGMEGY (MÉRVE, 2026-10-17)
 
 - **A TULAJDONOS JELZÉSEI:** *„a mai hír push valamiért négyszer ment ki”*, majd *„még mindig 4 push jön a hírekről”*, *„az új esemény push viszont nem ment ki”*, végül *„na csináld”* (a mért hiba javítása).

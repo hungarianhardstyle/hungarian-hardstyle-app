@@ -1058,6 +1058,37 @@ function huhs_push_live_jobs()
 }
 
 /**
+ * A megadott küldéshez tartozó futó feladat megkeresése (2.14.25).
+ *
+ * MIÉRT: a hír-út a küldés után a **globális** `huhs_push_active_job` mutatóból
+ * olvasta ki a feladatot és annak offsetjét. Két egyidejű körnél (hír-maradék +
+ * esemény) ez a mutató a MÁSIK körre mutat, ezért a hír a másik feladat
+ * offsetjét jegyezte fel — a folytatás így rossz helyről indult: egyes eszközök
+ * **kétszer** kapták meg, mások **kimaradtak**. A feladatot mostantól a saját
+ * adatcsomagja (`type` + `id`) azonosítja.
+ *
+ * @return array|null `array('key' => …, 'job' => …)` vagy null
+ */
+function huhs_push_find_job($data)
+{
+    $wanted = is_array($data) ? $data : array();
+    foreach (huhs_push_live_jobs() as $key) {
+        $job = get_option('huhs_push_job_' . $key, null);
+        if (!is_array($job)) continue;
+        $jobData = is_array($job['data'] ?? null) ? $job['data'] : array();
+        $match = true;
+        foreach ($wanted as $field => $value) {
+            if ((string) ($jobData[$field] ?? '') !== (string) $value) {
+                $match = false;
+                break;
+            }
+        }
+        if ($match) return array('key' => (string) $key, 'job' => $job);
+    }
+    return null;
+}
+
+/**
  * Hand the rest of a broadcast to a scheduled follow-up and return immediately.
  */
 function huhs_push_schedule_job($job)
@@ -1258,6 +1289,9 @@ function huhs_push_continue($job_key, $budget = HUHS_PUSH_TIME_BUDGET)
     delete_option($lock_option);
     // A jegyzékből is kikerül (ez törli az aktív mutatót, ha erre mutatott).
     huhs_push_chain_forget($job_key);
+    // 2.14.25: a hír-kör zárásakor a cikk könyvelése is lezárul — különben az ör
+    // ötpercenként újraindítaná a maradékot (mért dupla-push).
+    huhs_push_news_chain_complete($data);
     huhs_push_prune_tokens($dead);
 }
 
@@ -1840,11 +1874,16 @@ function huhs_push_publish_news($post_id, $token = '', $attempt = 1)
         // cron-esemény elveszik (mért eset: `push_job=none`, `cron_ordered`,
         // `processed=19` a 1069-ből), az ör ebből **folytatja** a küldést —
         // a nulláról indítás dupla értesítést okozna azoknak, akik már kaptak.
-        $job_key = (string) get_option('huhs_push_active_job', '');
-        $job = $job_key !== '' ? get_option('huhs_push_job_' . $job_key, null) : null;
-        if (is_array($job)) {
-            update_post_meta($post->ID, '_huhs_push_news_job', $job_key);
-            update_post_meta($post->ID, '_huhs_push_news_offset', (string) max(0, (int) ($job['offset'] ?? 0)));
+        //
+        // ⚠️ 2.14.25 — A FELADATOT A SAJÁT ADATAI AZONOSÍTJÁK. Korábban a
+        // globális `huhs_push_active_job` mutatóból olvastuk ki; két egyidejű
+        // körnél (hír-maradék + esemény) ez a MÁSIK feladatra mutatott, ezért a
+        // hír a másik offsetjét jegyezte fel → a folytatás rossz helyről indult
+        // (egyes eszközök kétszer kapták, mások kimaradtak).
+        $found = huhs_push_find_job($data);
+        if (is_array($found)) {
+            update_post_meta($post->ID, '_huhs_push_news_job', (string) $found['key']);
+            update_post_meta($post->ID, '_huhs_push_news_offset', (string) max(0, (int) ($found['job']['offset'] ?? 0)));
         } else {
             delete_post_meta($post->ID, '_huhs_push_news_job');
             delete_post_meta($post->ID, '_huhs_push_news_offset');
@@ -2478,6 +2517,28 @@ add_action('init', function () {
 add_action('huhs_push_news_scan', 'huhs_push_scan_missing_news');
 
 /**
+ * A hír-kör LEZÁRÁSA (2.14.25).
+ *
+ * ⚠️ ÉLES MÉRÉS (2026-10-28 18:49 és 18:54): a befejezett hír-kör után a cikk
+ * meta-jában **ott maradt** a feljegyzett haladás (`_huhs_push_news_offset`) és a
+ * feladat kulcsa. Az ötperces ör ezt „félbeszakadt küldésnek" látta, és
+ * ötpercenként ÚJRA elindította a maradékot → **ismétlődő push** (a tulajdonos
+ * „kiment az ezerszer" jelzése pontosan ez a motor). Mostantól a záró kör
+ * késznek jelöli a cikket, és törli az elavult haladást.
+ */
+function huhs_push_news_chain_complete($data)
+{
+    if (!is_array($data) || (string) ($data['type'] ?? '') !== 'news') return false;
+    $post_id = (int) ($data['id'] ?? 0);
+    if ($post_id <= 0) return false;
+    update_post_meta($post_id, '_huhs_push_news_complete', (string) time());
+    delete_post_meta($post_id, '_huhs_push_news_job');
+    delete_post_meta($post_id, '_huhs_push_news_offset');
+    error_log('HUHS push: the news broadcast for post ' . $post_id . ' is complete (no resume on the next scan).');
+    return true;
+}
+
+/**
  * A félbeszakadt hír-küldés **folytatása** a feljegyzett ponttól (2.14.21).
  *
  * Két eset:
@@ -2493,8 +2554,16 @@ function huhs_push_resume_news_chain($post_id)
 {
     $post_id = (int) $post_id;
     if ($post_id <= 0) return false;
+    // 2.14.25: a KÉSZ kör nem folytatható (ez volt a dupla-push motorja).
+    if ((string) get_post_meta($post_id, '_huhs_push_news_complete', true) !== '') return false;
     $offset = max(0, (int) get_post_meta($post_id, '_huhs_push_news_offset', true));
     if ($offset <= 0) return false;
+    // MÉRÉS (2.14.25): hányszor indult folytatás az elmúlt órában. Enélkül a
+    // „miért jönnek a dupla push-ok" kívülről nem volt megkülönböztethető.
+    $log = get_option('huhs_push_news_resume_log', array());
+    $log = is_array($log) ? $log : array();
+    $log[] = time();
+    update_option('huhs_push_news_resume_log', array_slice($log, -20), false);
     $post = get_post($post_id);
     if (!$post || $post->post_status !== 'publish') return false;
 
@@ -2547,7 +2616,8 @@ function huhs_push_news_watch_one($post)
     // FOLYTATJUK a feljegyzett ponttól — nem indítunk új kört a nulláról.
     $claimed = (string) get_post_meta($post_id, '_huhs_push_news_sent', true);
     $offset = (int) get_post_meta($post_id, '_huhs_push_news_offset', true);
-    if ($claimed !== '' && $offset > 0) {
+    $complete = (string) get_post_meta($post_id, '_huhs_push_news_complete', true);
+    if ($claimed !== '' && $offset > 0 && $complete === '') {
         $news_data = array('type' => 'news', 'id' => (string) $post_id);
         if (!huhs_push_has_pending_job($news_data)) {
             $resumed = huhs_push_resume_news_chain($post_id);
@@ -2630,10 +2700,17 @@ function huhs_push_scan_missing_news($limit = 10)
 function huhs_push_diag_news_scan()
 {
     $scan = get_option('huhs_push_news_scan', array());
-    if (!is_array($scan) || empty($scan['time'])) return 'news_scan=none';
+    $resumes = 0;
+    $log = get_option('huhs_push_news_resume_log', array());
+    foreach ((array) $log as $at) {
+        if ((int) $at > time() - HOUR_IN_SECONDS) $resumes++;
+    }
+    $tail = ' news_resume=' . $resumes . '/60m';
+    if (!is_array($scan) || empty($scan['time'])) return 'news_scan=none' . $tail;
     return 'news_scan=' . wp_date('H:i', (int) $scan['time'])
         . '/s' . (int) ($scan['scanned'] ?? 0)
-        . '/q' . (int) ($scan['queued'] ?? 0);
+        . '/q' . (int) ($scan['queued'] ?? 0)
+        . $tail;
 }
 
 /**

@@ -12,7 +12,7 @@ for (let round = 1; round <= rounds; round += 1) {
     { headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' } },
   );
   const header = response.headers.get('x-huhs-health') || '';
-  const keys = ['api', 'push_tokens', 'push_last', 'push_job', 'push_active', 'recipients', 'processed', 'sent', 'failed', 'dead'];
+  const keys = ['api', 'push_tokens', 'push_last', 'push_job', 'push_jobs', 'push_active', 'recipients', 'processed', 'sent', 'failed', 'dead', 'news_scan', 'cron_overdue', 'push_limits'];
   const line = keys.map((key) => `${key}=${pick(header, key) || '-'}`).join(' ');
   console.log(`[${round}] ${line}`);
   const active = pick(header, 'push_active');
