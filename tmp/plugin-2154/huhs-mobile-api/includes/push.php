@@ -1065,6 +1065,11 @@ function huhs_push_continue($job_key, $budget = HUHS_PUSH_TIME_BUDGET)
 
     $tokens = get_option(HUHS_PUSH_TOKENS_OPTION, array());
     $recipients = huhs_push_recipients(is_array($tokens) ? $tokens : array(), $data);
+    // 2.14.23: determinisztikus sorrend. A token-tar (WordPress option) sorrendje
+    // valtozhat (ujraregisztralas, token-csere), es akkor ugyanaz a token KET
+    // szeletbe esett -> egy korbol tobb ertesites ment ki ugyanarra az eszkozre.
+    // A kulcs szerinti rendezes stabil, ezert az offset jelentese allando.
+    ksort($recipients);
     $remaining = array_slice($recipients, $offset, null, true);
 
     $result = huhs_push_deliver_slice($remaining, $title, $body, $data, $project, $access_token, $budget);
@@ -1326,6 +1331,11 @@ function huhs_push_send($title, $body, $data = array(), $language = '')
     }
 
     $recipients = huhs_push_recipients($tokens, $data, $language);
+    // 2.14.23: determinisztikus sorrend. A token-tar (WordPress option) sorrendje
+    // valtozhat (ujraregisztralas, token-csere), es akkor ugyanaz a token KET
+    // szeletbe esett -> egy korbol tobb ertesites ment ki ugyanarra az eszkozre.
+    // A kulcs szerinti rendezes stabil, ezert az offset jelentese allando.
+    ksort($recipients);
     if (!$recipients) {
         error_log('HUHS push: nothing to do (' . $type . '), no recipient matches the preferences.');
         huhs_push_record_result(array(
