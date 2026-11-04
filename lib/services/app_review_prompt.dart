@@ -1,112 +1,125 @@
-/// **Egyetlen Play-értékelés-kérés**, egy pozitív pillanatban.
-///
-/// MIÉRT EZ A PILLANAT (a döntés indoklása): a tulajdonos két helyet kínált — a
-/// sikeres achipont-eseményt vagy a sikeres esemény-értékelést. Az
-/// **esemény-értékelést** választottam, mert az a legbiztonságosabb és
-/// leginkább „pozitív" horgony:
-///   * **szinkron és egyértelmű siker**: a `rateEvent()` hívás visszatér, és a
-///     felület már ma is egy „Köszönjük az értékelést!" üzenetet mutat — a
-///     kérés pontosan ugyanabba a pillanatba kerül, nem kell stream-figyelés;
-///   * **a pont-események aszinkronok** (szerveroldali jóváírás, több
-///     értesítés-típus, hálózati újrapróbák), ezért ott a kérés vagy elmaradna,
-///     vagy rossz pillanatban (pl. hibás körben) indulna el;
-///   * **a felhasználó épp pozitívumot fejezett ki** (csillagokat adott), ez a
-///     Google irányelvei szerinti „jó pillanat" a rétegzett kérésre.
-///
-/// ⚠️ A KÉRÉS **SOHA** NEM BLOKKOL ÉS **SOHA** NEM DOB: a hívó `unawaited`-tel
-/// indítja, a hibát pedig a szolgáltatás némán elnyeli. Egy értékelés-kérés nem
-/// viheti el a felhasználó műveletét.
-///
-/// ⚠️ **LEGFELJEBB EGYSZER** telepítésenként: a jelölés a `SharedPreferences`-be
-/// kerül, és **a hívás ELŐTT** íródik ki — így két egymásba futó hívás sem
-/// tud kétszer kérni.
-library;
-
 import 'package:flutter/foundation.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-/// A `SharedPreferences` kulcsa: már megkérdeztük-e az értékelést.
-///
-/// Verziózott (`_v1`), hogy egy későbbi, más alkalomhoz kötött kérésnél ne
-/// kelljen a régi döntést felülírni.
-const String appReviewRequestedKey = 'app_review_requested_v1';
+import 'share_links.dart';
 
-/// **A döntés** — tiszta függvény, ezért teszttel mérhető: telepítésenként
-/// legfeljebb egyszer kérünk értékelést.
-bool shouldRequestAppReview({required bool alreadyRequested}) =>
-    !alreadyRequested;
+enum AppReviewChoice { rate, later, never }
 
-/// Az értékelés-kérés egyszeri lefuttatása.
 class AppReviewPrompt {
-  AppReviewPrompt._();
+  AppReviewPrompt(this.preferences);
 
-  /// Az értékelés kérése, ha még nem kértük.
-  ///
-  /// @return `true`, ha ebben a hívásban **el is indult** a Play-értékelés.
-  ///
-  /// Minden külső hívás injektálható (`isAvailable`, `requestReview`,
-  /// `preferences`), ezért a folyamat plugin és `Firebase` nélkül,
-  /// egységteszttel végigjárható.
-  static Future<bool> requestOnce({
-    SharedPreferences? preferences,
-    Future<bool> Function()? isAvailable,
-    Future<void> Function()? requestReview,
-  }) async {
-    SharedPreferences? prefs = preferences;
-    try {
-      prefs ??= await SharedPreferences.getInstance();
-    } catch (_) {
-      // Tároló nélkül is működik: legfeljebb nem jegyezzük meg a jelölést.
-    }
+  final SharedPreferences preferences;
+  static Future<AppReviewPrompt?>? _session;
+  static bool _nativeInFlight = false;
+  static const firstLaunchKey = 'app_review_first_launch_v2';
+  static const launchesKey = 'app_review_launches_v2';
+  static const lastPromptKey = 'app_review_last_prompt_v2';
+  static const disabledKey = 'app_review_disabled_v2';
 
-    final alreadyRequested =
-        prefs?.getBool(appReviewRequestedKey) ?? false;
-    if (!shouldRequestAppReview(alreadyRequested: alreadyRequested)) {
-      return false;
-    }
+  // Count once per process, even when authentication rebuilds the main screen.
+  static Future<AppReviewPrompt?> forSession() => _session ??= _load();
 
-    // ⚠️ A jelölés **ELŐRE** megy ki: ez az „at most once" garanciája akkor is,
-    // ha a Play-hívás közben megszakad (pl. a felhasználó kilép).
-    try {
-      await prefs?.setBool(appReviewRequestedKey, true);
-    } catch (_) {
-      // A jelölés hibája nem akadályozhatja a kérést.
-    }
-
-    try {
-      final available = await (isAvailable ?? _isAvailable)();
-      if (!available) return false;
-      await (requestReview ?? _requestReview)();
-      return true;
-    } catch (error) {
-      // ⚠️ Némán elnyeljük: az értékelés-kérés kényelmi funkció, a felületen
-      // soha nem látszhat belőle hiba.
-      if (kDebugMode) {
-        debugPrint('HUHS értékelés-kérés kihagyva: ${error.runtimeType}');
-      }
-      return false;
-    }
-  }
-
-  /// A **pozitív pillanat** utáni indítás — a hívó `unawaited`-tel használja.
+  // Keep the existing iOS native request; Android now uses the timed dialog.
   static Future<void> requestAfterPositiveMoment({
     SharedPreferences? preferences,
     Future<bool> Function()? isAvailable,
     Future<void> Function()? requestReview,
   }) async {
+    if (kIsWeb ||
+        defaultTargetPlatform != TargetPlatform.iOS ||
+        _nativeInFlight) {
+      return;
+    }
+    _nativeInFlight = true;
     try {
-      await requestOnce(
-        preferences: preferences,
-        isAvailable: isAvailable,
-        requestReview: requestReview,
-      );
+      final prefs = preferences ?? await SharedPreferences.getInstance();
+      if (prefs.getBool('app_review_requested_v1') == true) return;
+      if (!await prefs.setBool('app_review_requested_v1', true)) return;
+      if (await (isAvailable ?? InAppReview.instance.isAvailable)()) {
+        await (requestReview ?? InAppReview.instance.requestReview)();
+      }
     } catch (_) {
-      // Védelem a védelemben: a hívó művelete semmiképp ne sérüljön.
+      // An optional store prompt must not fail the event rating.
+    } finally {
+      _nativeInFlight = false;
     }
   }
 
-  static Future<bool> _isAvailable() => InAppReview.instance.isAvailable();
+  static Future<AppReviewPrompt?> _load() async {
+    try {
+      final prompt = AppReviewPrompt(await SharedPreferences.getInstance());
+      await prompt.recordLaunch(DateTime.now());
+      return prompt;
+    } catch (_) {
+      // Storage failure must not interrupt startup or cause repeated prompts.
+      return null;
+    }
+  }
 
-  static Future<void> _requestReview() => InAppReview.instance.requestReview();
+  Future<void> recordLaunch(DateTime now) async {
+    if (!preferences.containsKey(firstLaunchKey)) {
+      await _setInt(firstLaunchKey, now.millisecondsSinceEpoch);
+      // Old native requests get a 30-day cooldown when migrating.
+      if (preferences.getBool('app_review_requested_v1') == true) {
+        await markShown(now);
+      }
+    }
+    await _setInt(launchesKey, (preferences.getInt(launchesKey) ?? 0) + 1);
+  }
+
+  bool isDue(DateTime now) {
+    if (preferences.getBool(disabledKey) == true) return false;
+    final first = preferences.getInt(firstLaunchKey);
+    if (first == null || (preferences.getInt(launchesKey) ?? 0) < 5) {
+      return false;
+    }
+    if (now.difference(DateTime.fromMillisecondsSinceEpoch(first)) <
+        const Duration(days: 7)) {
+      return false;
+    }
+    final last = preferences.getInt(lastPromptKey);
+    return last == null ||
+        now.difference(DateTime.fromMillisecondsSinceEpoch(last)) >=
+            const Duration(days: 30);
+  }
+
+  Future<void> markShown(DateTime now) =>
+      _setInt(lastPromptKey, now.millisecondsSinceEpoch);
+
+  Future<bool> respond(
+    AppReviewChoice? choice, {
+    Future<bool> Function(Uri)? openStore,
+  }) async {
+    if (choice == AppReviewChoice.never) {
+      await disable();
+    } else if (choice == AppReviewChoice.rate) {
+      final uri = Uri.parse(playStoreUrl);
+      final bool opened;
+      try {
+        opened = await (openStore != null
+            ? openStore(uri)
+            : launchUrl(uri, mode: LaunchMode.externalApplication));
+      } catch (_) {
+        return false;
+      }
+      if (!opened) return false;
+      // Store opening cannot tell us whether a review was actually submitted.
+      await disable();
+    }
+    return true;
+  }
+
+  Future<void> disable() async {
+    if (!await preferences.setBool(disabledKey, true)) {
+      throw StateError('Could not persist review preference');
+    }
+  }
+
+  Future<void> _setInt(String key, int value) async {
+    if (!await preferences.setInt(key, value)) {
+      throw StateError('Could not persist review preference');
+    }
+  }
 }

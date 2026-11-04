@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,8 @@ import '../widgets/app_text.dart';
 import '../widgets/radio_player_bar.dart';
 import '../services/app_badge_sync.dart';
 import '../services/app_update_service.dart';
+import '../services/app_review_prompt.dart';
+import '../widgets/app_review_dialog.dart';
 import '../services/picture_in_picture.dart';
 import '../services/radio_bar_visibility.dart';
 
@@ -41,12 +44,16 @@ class _MainNavigationState extends ConsumerState<MainNavigation>
   bool _updateRetryScheduled = false;
   bool _exitDialogOpen = false;
   bool _backHandling = false;
+  bool _reviewOpen = false;
   DateTime? _lastSystemBackAt;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      unawaited(AppReviewPrompt.forSession());
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
     // Az app-ikon jelvénye (olvasatlan értesítések száma) a teljes munkamenet
     // alatt figyelve van, mert ez a képernyő sosem tűnik el.
@@ -76,7 +83,7 @@ class _MainNavigationState extends ConsumerState<MainNavigation>
   }
 
   Future<void> _checkForUpdate({bool retryWhenMissing = true}) async {
-    if (_checkingUpdate || _updateDialogOpen || !mounted) return;
+    if (_checkingUpdate || _updateDialogOpen || _reviewOpen || !mounted) return;
     _checkingUpdate = true;
     try {
       final info = await AppUpdateService().check();
@@ -118,6 +125,55 @@ class _MainNavigationState extends ConsumerState<MainNavigation>
     } finally {
       _updateDialogOpen = false;
       _checkingUpdate = false;
+      unawaited(_checkForReview());
+    }
+  }
+
+  bool get _canAskForReview =>
+      mounted &&
+      _currentIndex == 0 &&
+      !_checkingUpdate &&
+      !_updateRetryScheduled &&
+      !_exitDialogOpen &&
+      !pictureInPicture.active.value &&
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
+      ModalRoute.of(context)?.isCurrent == true &&
+      _navigatorKeys[0].currentState?.canPop() == false &&
+      View.of(context).viewInsets.bottom == 0;
+
+  Future<void> _checkForReview() async {
+    if (kIsWeb ||
+        defaultTargetPlatform != TargetPlatform.android ||
+        _reviewOpen ||
+        !_canAskForReview) {
+      return;
+    }
+    _reviewOpen = true;
+    try {
+      final prompt = await AppReviewPrompt.forSession();
+      if (prompt == null ||
+          !_canAskForReview ||
+          !prompt.isDue(DateTime.now())) {
+        return;
+      }
+      await prompt.markShown(DateTime.now());
+      if (!mounted || !_canAskForReview) return;
+      final choice = await showDialog<AppReviewChoice>(
+        context: context,
+        builder: (_) => const AppReviewDialog(),
+      );
+      final handled = await prompt.respond(choice);
+      if (!handled && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: AppText('A Google Play most nem nyitható meg.'),
+          ),
+        );
+      }
+    } catch (_) {
+      // Optional prompts must not interrupt navigation if storage/platform fails.
+    } finally {
+      _reviewOpen = false;
     }
   }
 
@@ -127,6 +183,9 @@ class _MainNavigationState extends ConsumerState<MainNavigation>
       if (releasesState != null) unawaited(releasesState.refreshNow());
     }
     if (mounted) setState(() => _currentIndex = index);
+    if (index == 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _checkForReview());
+    }
   }
 
   void _openNewsTab() {

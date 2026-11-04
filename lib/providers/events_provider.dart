@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/event.dart';
+import '../services/wordpress_service.dart';
 import 'news_provider.dart';
 
-final eventsProvider = FutureProvider.autoDispose<List<HuhsEvent>>((ref) async {
+final eventsPageProvider = FutureProvider.autoDispose<EventsPage>((ref) async {
   ref.keepAlive();
   ref.watch(publicContentRefreshProvider);
   final refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
@@ -14,16 +15,27 @@ final eventsProvider = FutureProvider.autoDispose<List<HuhsEvent>>((ref) async {
   ref.onDispose(refreshTimer.cancel);
 
   final service = ref.watch(wordpressServiceProvider);
-  return service.getEvents();
+  return service.getEventsPage();
+});
+
+final eventsProvider = FutureProvider.autoDispose<List<HuhsEvent>>((ref) async {
+  ref.keepAlive();
+  return (await ref.watch(eventsPageProvider.future)).items;
+});
+
+final pastEventsPageProvider = FutureProvider.autoDispose<EventsPage>((
+  ref,
+) async {
+  ref.keepAlive();
+  ref.watch(publicContentRefreshProvider);
+  return ref.watch(wordpressServiceProvider).getEventsPage(includePast: true);
 });
 
 final pastEventsProvider = FutureProvider.autoDispose<List<HuhsEvent>>((
   ref,
 ) async {
   ref.keepAlive();
-  ref.watch(publicContentRefreshProvider);
-  final service = ref.watch(wordpressServiceProvider);
-  final events = await service.getEvents(includePast: true);
+  final events = (await ref.watch(pastEventsPageProvider.future)).items;
   final past = events.where((event) => event.isPast).toList();
   past.sort((a, b) => _eventDateTime(b).compareTo(_eventDateTime(a)));
   return List.unmodifiable(past);

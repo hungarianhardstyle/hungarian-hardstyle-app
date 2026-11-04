@@ -38,6 +38,29 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 404,
+    changes: [
+      'Biztonsági frissítés: megerősített hálózati tanúsítvány-ellenőrzés és frissített Firebase-kapcsolat.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
+    build: 403,
+    changes: [
+      'Új: időnként értékelheted az alkalmazást a Google Playen a Kezdőlapon megjelenő kérésből.',
+      'Az értékelési kérést 30 nappal elhalaszthatod vagy végleg kikapcsolhatod.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
+    build: 402,
+    changes: [
+      'Javítva: az eseménylista további oldalai akkor is betölthetők, ha az első oldalon kevés aktuális esemény marad.',
+      'Javítva: további események betöltésekor a korábban betöltött események is megmaradnak.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 401,
     changes: [
       'Javítva: iPhone-on a zárképernyőn megjelenik a rádió Szüneteltetés gombja — eddig az iOS az „élő adás” gombkészletét rajzolta, amiben nincs pause.',
@@ -767,7 +790,6 @@ bool isOlderRelease(AppReleaseNotes note, int currentBuild) =>
 /// A lista kézzel szerkesztett, ezért ez a függvény védi meg a felületet attól,
 /// hogy egy elrontott sorrend miatt a régi kiadás kerüljön felülre.
 List<AppReleaseNotes> sortedChangelog(Iterable<AppReleaseNotes> notes) {
-  final sorted = notes.toList()
-    ..sort((a, b) => b.build.compareTo(a.build));
+  final sorted = notes.toList()..sort((a, b) => b.build.compareTo(a.build));
   return sorted;
 }

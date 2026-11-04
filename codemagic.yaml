@@ -22,7 +22,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
-      flutter: 3.47.2
+      flutter: 3.47.8
       # A `latest` a Codemagic default Xcode-ját használja. Kiadás előtt
       # érdemes konkrét verzióra szorítani (pl. `xcode: 26.6`), hogy a build
       # jövő héten is ugyanaz legyen, mint ma.
@@ -34,6 +34,8 @@ workflows:
     scripts:
       - name: Függőségek
         script: flutter pub get
+      - name: eMudhra biztonsági javítások ellenőrzése
+        script: node tools/check-client-security.mjs
       - name: Statikus elemzés
         script: flutter analyze
       # A teljes tesztkészlet a GitHub Actions workflow-ban fut (ingyenes).
@@ -65,7 +67,7 @@ workflows:
       # különben ez a hivatkozás nem talál semmit.
       app_store_connect: HUHS_APPLE
     environment:
-      flutter: 3.47.2
+      flutter: 3.47.8
       xcode: latest
       cocoapods: default
       # A bundle ID és az Android applicationId szándékosan UGYANAZ
@@ -85,6 +87,8 @@ workflows:
     scripts:
       - name: Függőségek
         script: flutter pub get
+      - name: eMudhra biztonsági javítások ellenőrzése
+        script: node tools/check-client-security.mjs
       - name: Statikus elemzés
         script: flutter analyze
       - name: Firebase iOS konfiguráció (GoogleService-Info.plist)

@@ -1,177 +1,223 @@
-import 'dart:io';
-
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:hungarian_hardstyle_app/services/app_review_prompt.dart';
+import 'package:hungarian_hardstyle_app/services/share_links.dart';
+import 'package:hungarian_hardstyle_app/widgets/app_review_dialog.dart';
 
-/// **A Play-értékelés kérése** — az „egyszer, telepítésenként" szabály mérése.
-///
-/// MIÉRT: a Google irányelve (és a Play felülvizsgálata) szerint a rétegzett
-/// értékelés-kérés **nem ismételhető** korlátlanul. A jelölés ezért a
-/// `SharedPreferences`-be kerül, és **a hívás előtt** íródik ki — így akkor is
-/// garantált az egyszeri kérés, ha a Play-hívás közben megszakad a folyamat.
-///
-/// ⚠️ A kérés **soha** nem blokkolhat és **soha** nem dobhat: ezért a teszt
-/// külön méri a hibaágakat (nem elérhető szolgáltatás, dobó hívás).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final first = DateTime.utc(2026, 11, 3);
 
-  Future<SharedPreferences> preferencesWith([
-    Map<String, Object> values = const {},
-  ]) async {
-    SharedPreferences.setMockInitialValues(values);
-    return SharedPreferences.getInstance();
+  Future<AppReviewPrompt> create({bool oldRequest = false}) async {
+    SharedPreferences.setMockInitialValues({
+      if (oldRequest) 'app_review_requested_v1': true,
+    });
+    return AppReviewPrompt(await SharedPreferences.getInstance());
   }
 
-  group('a tiszta döntés', () {
-    test('friss telepítésnél kérünk', () {
-      expect(shouldRequestAppReview(alreadyRequested: false), isTrue);
-    });
+  Future<void> launches(AppReviewPrompt prompt, int count) async {
+    for (var i = 0; i < count; i++) {
+      await prompt.recordLaunch(first);
+    }
+  }
 
-    test('a már megkérdezett telepítésnél nem kérünk', () {
-      expect(shouldRequestAppReview(alreadyRequested: true), isFalse);
-    });
+  test(
+    'requires both seven days and five launches, including exact boundary',
+    () async {
+      final prompt = await create();
+      expect(prompt.isDue(first.add(const Duration(days: 30))), isFalse);
+      await launches(prompt, 4);
+      expect(prompt.isDue(first.add(const Duration(days: 7))), isFalse);
+      await prompt.recordLaunch(first);
+      expect(
+        prompt.isDue(
+          first
+              .add(const Duration(days: 7))
+              .subtract(const Duration(milliseconds: 1)),
+        ),
+        isFalse,
+      );
+      expect(prompt.isDue(first.add(const Duration(days: 7))), isTrue);
+    },
+  );
+
+  test(
+    'later or dismissal waits 30 days, survives a new service instance',
+    () async {
+      final prompt = await create();
+      await launches(prompt, 5);
+      final shown = first.add(const Duration(days: 7));
+      for (final choice in [AppReviewChoice.later, null]) {
+        await prompt.markShown(shown);
+        await prompt.respond(choice);
+        final restarted = AppReviewPrompt(prompt.preferences);
+        expect(restarted.isDue(shown.add(const Duration(days: 29))), isFalse);
+        expect(restarted.isDue(shown.add(const Duration(days: 30))), isTrue);
+      }
+    },
+  );
+
+  test('never persists and does not open the store', () async {
+    final prompt = await create();
+    await launches(prompt, 5);
+    await prompt.respond(
+      AppReviewChoice.never,
+      openStore: (_) async {
+        fail('Store must not open');
+      },
+    );
+    expect(
+      AppReviewPrompt(prompt.preferences)
+          .isDue(first.add(const Duration(days: 365))),
+      isFalse,
+    );
   });
 
-  group('a kérés lefutása', () {
-    test('az első hívás elindítja a Play-értékelést, és megjelöli', () async {
-      final preferences = await preferencesWith();
-      var reviewCalls = 0;
-
-      final started = await AppReviewPrompt.requestOnce(
-        preferences: preferences,
-        isAvailable: () async => true,
-        requestReview: () async => reviewCalls += 1,
-      );
-
-      expect(started, isTrue);
-      expect(reviewCalls, 1);
-      expect(preferences.getBool(appReviewRequestedKey), isTrue);
-    });
-
-    test('a MÁSODIK hívás már nem indít semmit (at most once)', () async {
-      final preferences = await preferencesWith();
-      var reviewCalls = 0;
-
-      await AppReviewPrompt.requestOnce(
-        preferences: preferences,
-        isAvailable: () async => true,
-        requestReview: () async => reviewCalls += 1,
-      );
-      final second = await AppReviewPrompt.requestOnce(
-        preferences: preferences,
-        isAvailable: () async => true,
-        requestReview: () async => reviewCalls += 1,
-      );
-
-      expect(second, isFalse);
-      expect(reviewCalls, 1, reason: 'telepítésenként legfeljebb egyszer');
-    });
-
-    test('a korábbi (mentett) jelölés is blokkol', () async {
-      final preferences = await preferencesWith({
-        appReviewRequestedKey: true,
-      });
-      var reviewCalls = 0;
-
-      final started = await AppReviewPrompt.requestOnce(
-        preferences: preferences,
-        isAvailable: () async => true,
-        requestReview: () async => reviewCalls += 1,
-      );
-
-      expect(started, isFalse);
-      expect(reviewCalls, 0);
-    });
-
-    test('ha a Play-értékelés nem elérhető, NEM hívunk (de megjelölünk)', () async {
-      final preferences = await preferencesWith();
-      var reviewCalls = 0;
-
-      final started = await AppReviewPrompt.requestOnce(
-        preferences: preferences,
-        isAvailable: () async => false,
-        requestReview: () async => reviewCalls += 1,
-      );
-
-      expect(started, isFalse);
-      expect(reviewCalls, 0);
-      // A jelölés akkor is kimegy: az „at most once" garancia az elsődleges.
-      expect(preferences.getBool(appReviewRequestedKey), isTrue);
-    });
-
-    test('a Play-hívás hibája némán elnyelődik (nem dob tovább)', () async {
-      final preferences = await preferencesWith();
-
-      final started = await AppReviewPrompt.requestOnce(
-        preferences: preferences,
-        isAvailable: () async => true,
-        requestReview: () async => throw StateError('nincs Play Áruház'),
-      );
-
-      expect(started, isFalse);
-      expect(preferences.getBool(appReviewRequestedKey), isTrue);
-    });
-
-    test('az elérhetőség-ellenőrzés hibája sem dob tovább', () async {
-      final preferences = await preferencesWith();
-
-      final started = await AppReviewPrompt.requestOnce(
-        preferences: preferences,
-        isAvailable: () async => throw StateError('nincs platform'),
-        requestReview: () async {},
-      );
-
-      expect(started, isFalse);
-    });
-
-    test('a „pozitív pillanat" indítása sem dob, ha minden hibázik', () async {
-      // A hívó `unawaited`-tel indítja — a hibának itt kell eltűnnie.
-      await AppReviewPrompt.requestAfterPositiveMoment(
-        preferences: await preferencesWith(),
-        isAvailable: () async => throw StateError('hiba'),
-        requestReview: () async => throw StateError('hiba'),
-      );
-      // Ha idáig eljutottunk, a kérés nem dobott tovább.
-      expect(true, isTrue);
-    });
-  });
-
-  /// **Forrás-lint:** a hívás a kiválasztott pozitív pillanathoz van kötve.
-  ///
-  /// A döntés indoklása a szolgáltatás fejlécében él (a pont-események
-  /// aszinkronok, az esemény-értékelés szinkron és egyértelműen sikeres).
-  group('a hívás helye (forrás-lint)', () {
-    test('a sikeres esemény-értékelés indítja (és csak az)', () {
-      final source = File(
-        'lib/screens/events/event_detail_screen.dart',
-      ).readAsStringSync();
+  test(
+    'rate opens the real Play listing and disables future prompts',
+    () async {
+      final prompt = await create();
+      await launches(prompt, 5);
+      Uri? opened;
       expect(
-        source.contains('AppReviewPrompt.requestAfterPositiveMoment'),
-        isTrue,
-        reason: 'a sikeres értékelés ágában kell indulnia',
-      );
-      expect(
-        RegExp(
-          r'AppReviewPrompt\.requestAfterPositiveMoment',
-        ).allMatches(source).length,
-        1,
-        reason: 'egyetlen hívó hely — ne szaporodhasson el',
-      );
-    });
-
-    test('a kérés a mentett jelölést használja', () {
-      final source = File(
-        'lib/services/app_review_prompt.dart',
-      ).readAsStringSync();
-      expect(source.contains(appReviewRequestedKey), isTrue);
-      // A jelölés a hívás ELŐTT megy ki („at most once" versenyhelyzet ellen).
-      expect(
-        source.indexOf('setBool(appReviewRequestedKey') <
-            source.indexOf('_isAvailable'),
+        await prompt.respond(
+          AppReviewChoice.rate,
+          openStore: (uri) async {
+            opened = uri;
+            return true;
+          },
+        ),
         isTrue,
       );
-    });
+      expect(opened.toString(), playStoreUrl);
+      expect(opened!.host, 'play.google.com');
+      expect(opened!.queryParameters['id'], 'hu.hungarianhardstyle.app');
+      expect(prompt.isDue(first.add(const Duration(days: 365))), isFalse);
+    },
+  );
+
+  test(
+    'failed store opening keeps retry possible after the cooldown',
+    () async {
+      final prompt = await create();
+      await launches(prompt, 5);
+      final shown = first.add(const Duration(days: 7));
+      await prompt.markShown(shown);
+      expect(
+        await prompt.respond(
+          AppReviewChoice.rate,
+          openStore: (_) async => false,
+        ),
+        isFalse,
+      );
+      expect(prompt.isDue(shown), isFalse);
+      expect(prompt.isDue(shown.add(const Duration(days: 30))), isTrue);
+    },
+  );
+
+  test(
+    'previous native request receives a 30-day migration cooldown',
+    () async {
+      final prompt = await create(oldRequest: true);
+      await launches(prompt, 5);
+      expect(prompt.isDue(first.add(const Duration(days: 29))), isFalse);
+      expect(prompt.isDue(first.add(const Duration(days: 30))), isTrue);
+    },
+  );
+
+  test(
+    'rebuilding main navigation cannot count another session launch',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prompt = await AppReviewPrompt.forSession();
+      expect(await AppReviewPrompt.forSession(), same(prompt));
+      expect(prompt!.preferences.getInt(AppReviewPrompt.launchesKey), 1);
+    },
+  );
+
+  test('platform exception leaves store opening retryable', () async {
+    final prompt = await create();
+    await launches(prompt, 5);
+    expect(
+      await prompt.respond(
+        AppReviewChoice.rate,
+        openStore: (_) async {
+          throw StateError('No browser');
+        },
+      ),
+      isFalse,
+    );
+    expect(prompt.preferences.getBool(AppReviewPrompt.disabledKey), isNull);
   });
+
+  test('event rating does not open a second Android review prompt', () async {
+    final prompt = await create();
+    await AppReviewPrompt.requestAfterPositiveMoment(
+      preferences: prompt.preferences,
+      isAvailable: () async => true,
+      requestReview: () async => fail('Android uses only the timed dialog'),
+    );
+    expect(prompt.preferences.getBool('app_review_requested_v1'), isNull);
+  });
+
+  test(
+    'iOS native review stays once-only and catches platform errors',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      final prompt = await create();
+      var calls = 0;
+      Future<void> request() async {
+        calls++;
+        throw StateError('Store unavailable');
+      }
+
+      for (var i = 0; i < 2; i++) {
+        await AppReviewPrompt.requestAfterPositiveMoment(
+          preferences: prompt.preferences,
+          isAvailable: () async => true,
+          requestReview: request,
+        );
+      }
+      expect(calls, 1);
+      expect(prompt.preferences.getBool('app_review_requested_v1'), isTrue);
+    },
+  );
+
+  for (final entry in {
+    'Értékelem': AppReviewChoice.rate,
+    'Később': AppReviewChoice.later,
+    'Ne kérdezd többet': AppReviewChoice.never,
+  }.entries) {
+    testWidgets('actual dialog returns ${entry.value.name}', (tester) async {
+      AppReviewChoice? result;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () async {
+                  result = await showDialog<AppReviewChoice>(
+                    context: context,
+                    builder: (_) => const AppReviewDialog(),
+                  );
+                },
+                child: const Text('open'),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppReviewDialog), findsOneWidget);
+      await tester.tap(find.text(entry.key));
+      await tester.pumpAndSettle();
+      expect(result, entry.value);
+      expect(find.byType(AppReviewDialog), findsNothing);
+    });
+  }
 }
