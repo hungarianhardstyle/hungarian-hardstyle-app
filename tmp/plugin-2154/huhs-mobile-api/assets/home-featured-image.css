@@ -1,5 +1,5 @@
 /*
- * A főoldali kiemelt kép mobil nézete (plugin 2.14.26).
+ * A főoldali kiemelt kép mobil nézete (plugin 2.14.27).
  *
  * MÉRT OK (2026-11-05, a téma összevont CSS-éből):
  *   .walkerpress-slide-box .slide-image { height: 507px; … }
@@ -8,18 +8,29 @@
  * Egy 390 px széles kijelzőn ez 390×507-es (ÁLLÓ) ablakot jelent, a 1200×630-as
  * borítóképből csak a középső ~40% látszik: az arcok óriásira nagyítva, a fejek
  * levágva — ez a „fura" kinézet. 16:9 ablaknál ugyanabban a szélességben a kép
- * ~93%-a látszik (a mért számot a tools/verify-home-image.php számolja).
+ * ~93%-a látszik.
+ *
+ * ⚠️ 2.14.27 — A SORREND CSAPDÁJA (élesben mérve): a 2.14.26 ugyanezt a szabályt
+ * tette ki, de a Jetpack Boost **a téma CSS-e ELÉ** fűzte be, és a téma
+ * `.walkerpress-slide-box .slide-image{height:507px}` szabálya ugyanolyan
+ * súlyú (2 osztály) volt, ezért **a téma nyert** (a későbbi nyer). Ezért most
+ * **egy plusz osztállyal** (`.walkerpress-slider`, ez a csúszka tartója a
+ * kimenetben) írjuk felül: 3 osztály > 2 osztály → a sorrendtől függetlenül
+ * nyerünk. Emellett a stílus a `wp_enqueue_scripts` 99-es prioritásával tölt be
+ * (a téma után).
  *
  * Csak mobilon (≤767 px) írunk felül, hogy a táblagép/asztali elrendezés — amit
  * a téma tervezett — bájtazonos maradjon.
  */
 @media (max-width: 767px) {
-  .walkerpress-slide-box .slide-image {
+  .walkerpress-slider .walkerpress-slide-box .slide-image,
+  .banner-slider-1 .walkerpress-slide-box .slide-image {
     height: auto;
     aspect-ratio: 16 / 9;
   }
 
-  .walkerpress-slide-box .slide-image img {
+  .walkerpress-slider .walkerpress-slide-box .slide-image img,
+  .banner-slider-1 .walkerpress-slide-box .slide-image img {
     height: 100%;
     width: 100%;
     object-fit: cover;

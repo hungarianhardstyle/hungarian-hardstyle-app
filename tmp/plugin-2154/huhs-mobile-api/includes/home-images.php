@@ -14,7 +14,7 @@
 
 defined('ABSPATH') || exit;
 
-add_action('wp_enqueue_scripts', 'huhs_home_featured_image_style');
+add_action('wp_enqueue_scripts', 'huhs_home_featured_image_style', 99);
 function huhs_home_featured_image_style()
 {
     if (is_admin()) return;

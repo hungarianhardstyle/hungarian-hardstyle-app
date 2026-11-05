@@ -2,18 +2,18 @@
 
 ## Aktuális kiadás: **405** (1.0.0), 2026-11-05
 
-Biztonsági kiadás az eMudhra-tanúsítványokkal kapcsolatos Firebase/Dart javítással.
+A főoldali kiemelt hír képe: nem nagyít rá az arcokra, a fotó teljes egészében látszik.
 A Play API szerint az Alpha sávon 403, az éles sávon 401 van.
 
-| A 404-es Android-csomag | Ellenőrzött érték |
+| A 405-ös Android-csomag | Ellenőrzött érték |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+404-release.aab` |
-| Verzió | `1.0.0+404` — a csomag saját manifestjéből visszaolvasva |
+| Fájl | `build/HUHS-v1.0.0+405-release.aab` |
+| Verzió | `1.0.0+405` — a csomag saját manifestjéből visszaolvasva |
 | Méret | 83 618 745 bájt |
-| SHA-256 | `5C73EF5EB8C989EA25ECF9A4557C7EB14183C2A437E66D2D9A6884817CBB9545` |
+| SHA-256 | `519D61256A521CBF44962715714729BD6CE7B09669587E885350B96B18E404B6` |
 | Aláírás | A 403-aséval azonos feltöltési tanúsítvány |
 
-1568/1568 Flutter-teszt sikeres, analyze tiszta, szigorú fordításellenőrzés 100%.
+1573/1573 Flutter-teszt sikeres, analyze tiszta, szigorú fordításellenőrzés 100%.
 A kész AAB mindhárom `libflutter.so` binárisa bitazonos a javított
 `cf636b1dfb818dd6a3ff16e390e93b1a036969c8` engine megfelelő, szimbólumoktól
 megtisztított kiadásával. Kész csomag ellenőrzése sikeres.
@@ -146,8 +146,8 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 currentBuild: 405
 currentVersion: 1.0.0
 lastPublishedBuild: 403
-aab: build/HUHS-v1.0.0+404-release.aab
-sha256: 5C73EF5EB8C989EA25ECF9A4557C7EB14183C2A437E66D2D9A6884817CBB9545
+aab: build/HUHS-v1.0.0+405-release.aab
+sha256: 519D61256A521CBF44962715714729BD6CE7B09669587E885350B96B18E404B6
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -472,6 +472,65 @@ A kész, másolható változat: `tmp/play-401-eles.txt` (bájtazonos ezzel a blo
 - ÚJ: a rádió „most szól” a zárképernyőn; a főoldali Twitch-kártya azonnal betölt.
 - Javítva: fekvő módban a hírek, a kiemelt hír és a Twitch-kártya sem lesz óriási.
 - ÚJ: a regisztrációd törlésével a nyereményjátékból is kikerülsz (nem nyerhetsz jegyet).
+```
+
+## 2c. A **405**-ös kiadás changelogja — mindhárom helyre (másolható)
+
+**Play Console → „Újdonságok" (405, magyar, 500 karakter alatt):**
+
+```
+- Javítva: a Kezdőlapon a kiemelt hír képe nem nagyít rá az arcokra — a fotó teljes egészében látszik.
+- A kártya mérete és a szöveg helye változatlan.
+```
+
+**Play Console → „Újdonságok" (405, angol):**
+
+```
+- Fixed: the featured news photo on the Home screen no longer zooms in on faces — the whole photo is visible.
+- The card size and text layout are unchanged.
+```
+
+**App (Több → Névjegy):** ugyanaz, mint a Play-blokk — a `lib/data/app_changelog.dart` már tartalmazza
+(`build: 405`), a `test/data/app_changelog_test.dart` és a `test/services/i18n_changelog_test.dart`
+pedig megköveteli az angol fordítását is (megvan: `assets/i18n/en.json`).
+
+**HUHS Mobile API WordPress-plugin — kiadásjegyzék (a csomagban `readme.txt`-ként is):**
+
+```
+= 2.14.27 =
+* Javítva: a főoldali kiemelt kép mobil nézete — erősebb szelektor + 99-es prioritás, mert a
+  2.14.26 szabályát a téma azonos súlyú, KÉSŐBBI szabálya felülírta (a javítás nem hatott).
+* Új: a plugin kiadásjegyzéke (readme.txt), hogy a plugin oldalán is látszódjon, mi változott.
+
+= 2.14.26 =
+* Új: a főoldali kiemelt kép mobil nézete — mobilra szűkített 16:9 CSS, a plugin verziójával töltve.
+
+= 2.14.25 =
+* Javítva: a befejezett hír-kör lezárja a cikk könyvelését — e nélkül az ötperces ör
+  ötpercenként újraindította a maradékot (ismétlődő push).
+* Javítva: a hír a saját feladatának haladását jegyzi fel (nem a globális „aktív" mutatóét).
+* Új: news_resume= diagnosztika.
+
+= 2.14.24 =
+* Javítva: a küldési lánc minden széles körre végigmegy, akkor is, ha a folytatás cron-eseménye elveszik.
+* Új: lánc-jegyzék — a biztonsági háló kérésenként legfeljebb két kört folytat.
+* Javítva: átmeneti tokenhiba esetén a feladat nem tűnik el (60 s múlva újrapróbálja, max. 20×).
+* Új: push_jobs= diagnosztika.
+
+= 2.14.23 =
+* Javítva: a címzettek determinisztikus sorrendben mennek (a token-tár sorrendje dupla pusht okozhatott).
+
+= 2.14.22 =
+* Javítva: a „van-e folyamatban lévő küldés" kérdésre a feladat-tár a válasz (két kör nem tolja ki egymást).
+
+= 2.14.21 =
+* Új: a félbeszakadt hír-küldés folytatása a feljegyzett haladástól.
+
+= 2.14.20 =
+* Javítva: a hír jelölője a legelső hívásnál íródik be (nincs négyszeres küldés).
+
+= 2.14.19 =
+* Új: @mindenki chat-push széles küldése nyelvenkénti szöveggel; kézi push is nyelvenként.
 ```
 
 ## 3. App (Több → Névjegy) — tételes, build szerint

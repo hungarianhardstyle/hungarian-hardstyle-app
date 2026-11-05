@@ -44,6 +44,9 @@ $GLOBALS['huhs_filters'] = array();
 function add_action($hook, $callback, $priority = 10, $args = 1)
 {
     $GLOBALS['huhs_hooks'][$hook][] = array('callback' => $callback, 'priority' => $priority);
+    if ($hook === 'wp_enqueue_scripts') {
+        $GLOBALS['huhs_enqueue_priority'] = $priority;
+    }
     return true;
 }
 function add_filter($hook, $callback, $priority = 10, $args = 1) { return true; }
@@ -138,6 +141,44 @@ check('a képet felső harmadra igazítja (a fejek nem vágódnak le)',
 check('a felülírás MOBILRA zárt (a desktop/tablet elrendezés érintetlen)',
     strpos($css, '@media (min-width: 768px)') === false && substr_count($css, '@media') === 1,
     'media blokkok: ' . substr_count($css, '@media'));
+
+// --- 3b) A SORREND CSAPDÁJA (2.14.27) ------------------------------------
+//
+// ⚠️ ÉLES MÉRÉS (2026-11-05, a feltöltött 2.14.26 után): a szabály bent volt a
+// Boost által összevont CSS-ben, de a téma `height:507px` szabálya **utána**
+// következett, és ugyanolyan súlyú volt (2 osztály) → a téma nyert, vagyis a
+// javítás **nem hatott**. Mostantól a mi szabályunk **3 osztályos**, tehát a
+// sorrendtől függetlenül nyer; a stílus pedig 99-es prioritással tölt be.
+$ourSelector = '.walkerpress-slider .walkerpress-slide-box .slide-image';
+$themeSelector = '.walkerpress-slide-box .slide-image'; // a téma mért szabálya
+$classCount = function ($selector) {
+    $classes = preg_match_all('/\.[A-Za-z0-9_-]+/', $selector, $match);
+    return (int) $classes;
+};
+$ourWeight = $classCount($ourSelector);
+$themeWeight = $classCount($themeSelector);
+check('a saját szelektor ERŐSEBB a témáénál (sorrendtől függetlenül nyer)',
+    strpos($css, $ourSelector) !== false && $ourWeight > $themeWeight,
+    'saját=' . $ourWeight . ' osztály, téma=' . $themeWeight . ' osztály');
+check('a 99-es prioritással tölt be (a téma stílusai után)',
+    ($GLOBALS['huhs_enqueue_priority'] ?? null) === 99,
+    'prioritás=' . var_export($GLOBALS['huhs_enqueue_priority'] ?? null, true));
+
+// --- 3c) A plugin KIADÁSJEGYZÉKE (readme.txt) ---------------------------
+$readmePath = HUHS_API_PATH . 'readme.txt';
+$mainHeader = (string) file_get_contents(HUHS_API_PATH . 'huhs-mobile-api.php');
+preg_match('/^\s*\*\s*Version:\s*(\S+)/m', $mainHeader, $versionMatch);
+$pluginVersion = (string) ($versionMatch[1] ?? '');
+check('van kiadásjegyzék a csomagban (readme.txt)', is_file($readmePath));
+$readme = is_file($readmePath) ? (string) file_get_contents($readmePath) : '';
+check('a kiadásjegyzékben van `== Changelog ==` szakasz',
+    strpos($readme, '== Changelog ==') !== false);
+check('a `Stable tag` a plugin verziója (' . ($pluginVersion !== '' ? $pluginVersion : '?') . ')',
+    $pluginVersion !== '' && strpos($readme, 'Stable tag: ' . $pluginVersion) !== false,
+    $pluginVersion);
+check('a legfrissebb kiadás bejegyzése benne van (`= ' . ($pluginVersion !== '' ? $pluginVersion : '?') . ' =`)',
+    $pluginVersion !== '' && strpos($readme, '= ' . $pluginVersion . ' =') !== false,
+    $pluginVersion);
 
 // --- 4) A geometria (számolt, mért bemenetekkel) -------------------------
 /**
