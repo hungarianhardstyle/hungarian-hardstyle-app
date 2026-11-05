@@ -494,6 +494,15 @@ A kész, másolható változat: `tmp/play-401-eles.txt` (bájtazonos ezzel a blo
 (`build: 405`), a `test/data/app_changelog_test.dart` és a `test/services/i18n_changelog_test.dart`
 pedig megköveteli az angol fordítását is (megvan: `assets/i18n/en.json`).
 
+**Hol látszik a changelog?** (a tulajdonos kérdése: *„hol a changelog?”*)
+
+| Hol | Mit lát |
+|---|---|
+| **WordPress admin** | **HUHS Mobile → Kiadásjegyzék** (plugin 2.14.28-tól) — ezt a listát mutatja, a `readme.txt`-ből |
+| A plugin csomagja | `readme.txt` → `== Changelog ==` (2.14.19 → 2.14.28) |
+| Az app | **Több → Névjegy → Újdonságok** (build 405 bejegyzés, magyarul és angolul) |
+| Play Console | ez a fejezet (a HU/EN blokkok fent) |
+
 **HUHS Mobile API WordPress-plugin — kiadásjegyzék (a csomagban `readme.txt`-ként is):**
 
 ```

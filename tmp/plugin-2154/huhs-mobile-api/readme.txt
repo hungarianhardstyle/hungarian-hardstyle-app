@@ -4,7 +4,7 @@ Tags: firebase, push, api, mobile
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.14.27
+Stable tag: 2.14.28
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,6 +15,9 @@ A Hungarian Hardstyle mobilalkalmazás (Flutter) WordPress-oldali API-ja: tartal
 A plugin a mobilalkalmazás egyetlen backendje: REST végpontok a hírekhez, eseményekhez, kiadványokhoz, DJ-khez, szavazásokhoz, játékokhoz és a közösségi feltöltésekhez, valamint az FCM **push-küldés** (a széles körök szeletekben, folytatható láncban mennek ki).
 
 == Changelog ==
+
+= 2.14.28 =
+* Új: **Kiadásjegyzék az adminban** — HUHS Mobile → Kiadásjegyzék (ezt a szöveget mutatja, a readme.txt-ből).
 
 = 2.14.27 =
 * Javítva: a főoldali kiemelt kép mobil nézete — a stílus **erősebb szelektorral** és a téma után (99-es prioritás) tölt be, mert a 2.14.26 szabályát a téma azonos súlyú, későbbi szabálya felülírta. Mobilra szűkített 16:9 ablak (a kép 40% → 93%-a látszik).

@@ -158,4 +158,17 @@ else
   fail=1
 fi
 
+# A 2.14.28 ujdonsaga: a plugin KIADASJEGYZEKE az adminban (a tulajdonos kerdese:
+# "hol a changelog?"). A csomagban van readme.txt, de a kezzel feltoltott
+# pluginhoz a WordPress nem mutatja meg, ezert a plugin sajat oldalt kap:
+# HUHS Mobile -> Kiadasjegyzek (a readme == Changelog == szakaszabol).
+echo ""
+echo "=== 13) A plugin kiadasjegyzeke az adminban (2.14.28)"
+if php /work/tools/verify-changelog-page.php "$PLUGIN"; then
+  echo "CHANGELOG-PAGE OK"
+else
+  echo "CHANGELOG-PAGE HIBA"
+  fail=1
+fi
+
 exit $fail
