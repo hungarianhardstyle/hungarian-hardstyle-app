@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/i18n/tr.dart';
+import '../../core/legal/legal_links.dart';
 import '../../core/navigation/in_app_browser.dart';
 import '../../data/app_changelog.dart';
 import '../../models/release.dart';
@@ -104,6 +105,28 @@ class AboutScreen extends StatelessWidget {
                       Uri(scheme: 'mailto', path: 'info@hungarianhardstyle.hu'),
                       mode: LaunchMode.externalApplication,
                     ),
+                  ),
+                  // ⚠️ 406 — A JOGI LINKEK (mért hiány): az ÁSZF és az
+                  // adatkezelési tájékoztató a WordPressben él (mindkettő HTTP
+                  // 200), de az appban **semmilyen hivatkozás** nem volt rájuk —
+                  // pedig a Play/App Store és az előfizetés is megköveteli, hogy
+                  // elérhető legyen. Az URL-ek egy helyen élnek:
+                  // `lib/core/legal/legal_links.dart`.
+                  _InfoTile(
+                    icon: Icons.description_outlined,
+                    label: tr(context, 'Felhasználási feltételek (ÁSZF)'),
+                    value: legalTermsOfServiceUrl
+                        .replaceFirst('https://', '')
+                        .replaceFirst(RegExp(r'/$'), ''),
+                    onTap: () => openInAppBrowser(context, legalTermsOfServiceUrl),
+                  ),
+                  _InfoTile(
+                    icon: Icons.privacy_tip_outlined,
+                    label: tr(context, 'Adatkezelési tájékoztató'),
+                    value: legalPrivacyPolicyUrl
+                        .replaceFirst('https://', '')
+                        .replaceFirst(RegExp(r'/$'), ''),
+                    onTap: () => openInAppBrowser(context, legalPrivacyPolicyUrl),
                   ),
                   const SizedBox(height: 18),
                   _Changelog(

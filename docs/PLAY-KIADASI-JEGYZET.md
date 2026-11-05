@@ -1,19 +1,19 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás: **405** (1.0.0), 2026-11-05
+## Aktuális kiadás: **406** (1.0.0), 2026-11-05
 
-A főoldali kiemelt hír képe: nem nagyít rá az arcokra, a fotó teljes egészében látszik.
+A Névjegy alatt elérhető a Felhasználási feltételek (ÁSZF) és az Adatkezelési tájékoztató; a főoldali kiemelt hír képe nem nagyít rá az arcokra.
 A Play API szerint az Alpha sávon 403, az éles sávon 401 van.
 
-| A 405-ös Android-csomag | Ellenőrzött érték |
+| A 406-os Android-csomag | Ellenőrzött érték |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+405-release.aab` |
-| Verzió | `1.0.0+405` — a csomag saját manifestjéből visszaolvasva |
-| Méret | 83 618 745 bájt |
-| SHA-256 | `519D61256A521CBF44962715714729BD6CE7B09669587E885350B96B18E404B6` |
+| Fájl | `build/HUHS-v1.0.0+406-release.aab` |
+| Verzió | `1.0.0+406` — a csomag saját manifestjéből visszaolvasva |
+| Méret | 83 623 165 bájt |
+| SHA-256 | `645B92DE431BDACA12C64CFEDBAC636045D06B3894DFB6C57909CA0FB072FA4E` |
 | Aláírás | A 403-aséval azonos feltöltési tanúsítvány |
 
-1573/1573 Flutter-teszt sikeres, analyze tiszta, szigorú fordításellenőrzés 100%.
+1575/1575 Flutter-teszt sikeres, analyze tiszta, szigorú fordításellenőrzés 100%.
 A kész AAB mindhárom `libflutter.so` binárisa bitazonos a javított
 `cf636b1dfb818dd6a3ff16e390e93b1a036969c8` engine megfelelő, szimbólumoktól
 megtisztított kiadásával. Kész csomag ellenőrzése sikeres.
@@ -143,11 +143,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 405
+currentBuild: 406
 currentVersion: 1.0.0
 lastPublishedBuild: 403
-aab: build/HUHS-v1.0.0+405-release.aab
-sha256: 519D61256A521CBF44962715714729BD6CE7B09669587E885350B96B18E404B6
+aab: build/HUHS-v1.0.0+406-release.aab
+sha256: 645B92DE431BDACA12C64CFEDBAC636045D06B3894DFB6C57909CA0FB072FA4E
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -474,7 +474,19 @@ A kész, másolható változat: `tmp/play-401-eles.txt` (bájtazonos ezzel a blo
 - ÚJ: a regisztrációd törlésével a nyereményjátékból is kikerülsz (nem nyerhetsz jegyet).
 ```
 
-## 2c. A **405**-ös kiadás changelogja — mindhárom helyre (másolható)
+## 2c. A **406**-os kiadás changelogja — mindhárom helyre (másolható)
+
+**Play Console → „Újdonságok" (406, magyar, 500 karakter alatt):**
+
+```
+- ÚJ: a Névjegy alatt elérhető a Felhasználási feltételek (ÁSZF) és az Adatkezelési tájékoztató.
+```
+
+**Play Console → „Újdonságok" (406, angol):**
+
+```
+- NEW: Terms of Service and the Privacy policy are now linked from the About screen.
+```
 
 **Play Console → „Újdonságok" (405, magyar, 500 karakter alatt):**
 
@@ -546,6 +558,15 @@ pedig megköveteli az angol fordítását is (megvan: `assets/i18n/en.json`).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 406 — a Felhasználási feltételek (ÁSZF) és az Adatkezelési tájékoztató a Névjegy alatt
+- **A tulajdonos kérdése (2026-11-05):** *„hol az app ÁSZF linkje?”*
+- **A MÉRT HELYZET:** a két jogi oldal **él** a WordPressben (HTTP 200):
+  `https://hungarianhardstyle.hu/altalanos-szerzodesi-feltetelek-aszf/` és
+  `https://hungarianhardstyle.hu/adatvedelmi-nyilatkozat/` — de az appban **egyetlen hivatkozás sem** volt rájuk (a kódban nincs nyomuk).
+- **A JAVÍTÁS:** `lib/core/legal/legal_links.dart` (egy forrás) + két sor a **Névjegy** alatt, a beépített böngészővel (`openInAppBrowser`).
+- **A kapu mérése:** `test/widgets/about_legal_links_test.dart` **2/2** (a két URL pontos egyezése + a feliratok és címek megjelenése), `flutter test` **1575/1575**, AAB **1.0.0+406** (83 623 165 bájt, SHA-256 `645B92DE431BDACA12C64CFEDBAC636045D06B3894DFB6C57909CA0FB072FA4E`).
+- **⚠️ Őszinte korlát:** a link megnyitását a telefonon kell látni; az oldalak tartalmáért (ÁSZF szövege) a WordPress a felelős — a link innentől elérhető.
 
 ### 405 — a főoldali kiemelt hír képe nem nagyít rá az arcokra (app) + mobil web
 - **A tulajdonos jelzése (2026-11-05):** *„mobil webes nézetben az utolsó cikk képe a főoldalon elég fura, lehet azon javítani?”*, majd *„mondjuk az app főoldalon is fura”*.

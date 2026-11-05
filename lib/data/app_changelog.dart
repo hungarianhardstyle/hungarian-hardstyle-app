@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 406,
+    changes: [
+      'ÚJ: a Névjegy alatt elérhető a Felhasználási feltételek (ÁSZF) és az Adatkezelési tájékoztató.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 405,
     changes: [
       'Javítva: a Kezdőlapon a kiemelt hír képe nem nagyít rá az arcokra — a fotó teljes egészében látszik, elmosott háttér előtt.',

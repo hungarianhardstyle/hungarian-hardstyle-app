@@ -99,6 +99,14 @@ void main() {
   testWidgets('ismeretlen buildnél jelzi, hogy ehhez nincs jegyzet', (
     tester,
   ) async {
+    // ⚠️ 406: a Névjegy két jogi sorral bővült (ÁSZF + adatkezelés), ezért a
+    // kártyák a szokásos teszt-méretben a látható területen kívülre kerülnek —
+    // a lista lustán épül, így nagyobb nézet kell a méréshez.
+    tester.view.physicalSize = const Size(1080, 3600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(_app(_info('1.0.0', '999999')));
     await tester.pumpAndSettle();
 
