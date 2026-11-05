@@ -1,4 +1,15 @@
 {
+  "Biztonsági frissítés: megerősített hálózati tanúsítvány-ellenőrzés és frissített Firebase-kapcsolat.": "Security update: strengthened network certificate validation and an updated Firebase connection.",
+  "Új: időnként értékelheted az alkalmazást a Google Playen a Kezdőlapon megjelenő kérésből.": "New: occasionally rate the app on Google Play from a prompt on the Home screen.",
+  "Az értékelési kérést 30 nappal elhalaszthatod vagy végleg kikapcsolhatod.": "You can postpone the rating prompt for 30 days or turn it off permanently.",
+  "Értékeld az alkalmazást!": "Rate the app!",
+  "Megosztanád a véleményed a Hungarian Hardstyle alkalmazásról a Google Playen?": "Would you share your thoughts about the Hungarian Hardstyle app on Google Play?",
+  "Ne kérdezd többet": "Don't ask again",
+  "Később": "Later",
+  "Értékelem": "Rate it",
+  "A Google Play most nem nyitható meg.": "Google Play cannot be opened right now.",
+  "Javítva: az eseménylista további oldalai akkor is betölthetők, ha az első oldalon kevés aktuális esemény marad.": "Fixed: more event pages can be loaded even when only a few current events remain on the first page.",
+  "Javítva: további események betöltésekor a korábban betöltött események is megmaradnak.": "Fixed: previously loaded events remain visible when more events are loaded.",
   " (eddig: {d})": " (until {d})",
   " hozzászólására: ": "'s comment: ",
   " üzenetére: ": "'s message: ",
@@ -1548,5 +1559,6 @@
   "Zaklatás": "Harassment",
   "zene": "music",
   "Zene": "Music",
-  "Zenerészlet lejátszása": "Play music sample"
+  "Zenerészlet lejátszása": "Play music sample",
+  "Javítva: a Kezdőlapon a kiemelt hír képe nem nagyít rá az arcokra — a fotó teljes egészében látszik, elmosott háttér előtt.": "Fixed: on the Home screen the featured news photo no longer zooms in on faces — the whole photo is visible over a blurred background."
 }

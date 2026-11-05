@@ -144,4 +144,18 @@ else
   fail=1
 fi
 
+# A 2.14.26 ujdonsaga: a FOOLDALI KIEMELT KEP mobil nezetet javitja a plugin.
+# A tulajdonos jelzese: "mobil webes nezetben az utolso cikk kepe a fooldalon
+# eleg fura". A meres a valodi PHP-t futtatja (a betoltes tenylegesen lefut), es
+# kiszamolja a lathato kephanyadot: 390x507 px (a tema fix magassaga) -> 40%,
+# 390x219 px (16:9) -> 93%.
+echo ""
+echo "=== 12) A fooldali kiemelt kep mobil nezet (2.14.26)"
+if php /work/tools/verify-home-image.php "$PLUGIN"; then
+  echo "HOME-IMAGE OK"
+else
+  echo "HOME-IMAGE HIBA"
+  fail=1
+fi
+
 exit $fail

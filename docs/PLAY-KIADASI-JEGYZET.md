@@ -1,5 +1,108 @@
 # Play Console — kiadási jegyzet (másolható)
 
+## Aktuális kiadás: **405** (1.0.0), 2026-11-05
+
+Biztonsági kiadás az eMudhra-tanúsítványokkal kapcsolatos Firebase/Dart javítással.
+A Play API szerint az Alpha sávon 403, az éles sávon 401 van.
+
+| A 404-es Android-csomag | Ellenőrzött érték |
+|---|---|
+| Fájl | `build/HUHS-v1.0.0+404-release.aab` |
+| Verzió | `1.0.0+404` — a csomag saját manifestjéből visszaolvasva |
+| Méret | 83 618 745 bájt |
+| SHA-256 | `5C73EF5EB8C989EA25ECF9A4557C7EB14183C2A437E66D2D9A6884817CBB9545` |
+| Aláírás | A 403-aséval azonos feltöltési tanúsítvány |
+
+1568/1568 Flutter-teszt sikeres, analyze tiszta, szigorú fordításellenőrzés 100%.
+A kész AAB mindhárom `libflutter.so` binárisa bitazonos a javított
+`cf636b1dfb818dd6a3ff16e390e93b1a036969c8` engine megfelelő, szimbólumoktól
+megtisztított kiadásával. Kész csomag ellenőrzése sikeres.
+Play-feltöltés és készülékes regressziós próba nem történt.
+
+iOS: [CI 41847073722](https://github.com/hungarianhardstyle/hungarian-hardstyle-app/actions/runs/41847073722)
+**success**, forráscommit `1c126bfaf008f64ed824940e4e17f1bf255d2e1a`.
+Xcode által feloldott Firebase SDK: **12.19.3**. A macOS-os teljes tesztkör is
+**1568/1568**. IPA: `build/ios-ipa-404/Runner-unsigned.ipa`, 23 225 514 bájt,
+SHA-256 `AE5D9F182CA1113E554FC915D061C74FAB46DB22706D42EA96BA921917ADE156`.
+A csomag Info.plist-je `404` / `1.0.0`, a changelog és a kétnyelvű tartalom ellenőrizve.
+Ez aláírás nélküli, teszthirdetéses teszt-IPA; telepítés előtt aláírást igényel,
+App Store-kiadásra változtatás nélkül nem való.
+
+```play-notes
+Fontos biztonsági frissítés: frissítettük a hálózati tanúsítványok ellenőrzését és a Firebase-kapcsolat összetevőit. Kérjük, telepítsd az új verziót.
+```
+
+### 404 — hálózati biztonsági frissítés
+
+- Flutter 3.47.8 / Dart 3.13.7; Cloud Firestore 6.10.2 és Firebase Core 4.15.2.
+- Firebase Apple SDK 12.19.3 a kapcsolódó FlutterFire javítókiadásokkal.
+- A GitHub Actions és a Codemagic ugyanazt a javított Flutter-verziót használja.
+- Automatikus verziókapu védi a buildet a korábbi sérülékeny SDK visszakerülésétől.
+- A korábbi eseménylapozás és értékeléskérés benne marad.
+- WordPress- és Functions-deploy nem szükséges.
+
+## Korábbi kiadás: **403** (1.0.0), 2026-11-03
+
+A Play API szerint az Alpha sávon már 402 van, az éles sávon 401.
+A következő szabad kód 403; a készülő csomag a 402 eseményjavítását is tartalmazza.
+
+Elkészült: `build/HUHS-v1.0.0+403-release.aab`, 83 566 651 bájt.
+SHA-256: `7EAE776E0105C1A89649A6DB9D5260E7E393DF5AC887C43CB094F0D2EC6D400D`.
+A csomag saját manifestjéből: `hu.hungarianhardstyle.app`, `1.0.0`, `403`.
+Feltöltési tanúsítvány: a 402-esével azonos. 1568/1568 Flutter-teszt sikeres,
+analyze tiszta, szigorú fordításellenőrzés 100%, AAB-ellenőrzés sikeres.
+Készülékes értékeléskérés és Play-megnyitás még nincs ellenőrizve.
+
+```play-notes
+Új: a Kezdőlapon időnként megkérünk az app Google Play-értékelésére. A kérést 30 nappal elhalaszthatod vagy végleg kikapcsolhatod. Játék, vásárlás és szövegszerkesztés közben nem jelenik meg.
+```
+
+### 403 — időzített alkalmazásértékelés
+
+- Első kérés legalább 7 nap és 5 indítás után, csak Androidon, a Kezdőlapon.
+- Értékelem / Később / Ne kérdezd többet, helyben megjegyzett választással.
+- A Play-adatlap sikeres megnyitása után nem kérdez újra; az értékelés elküldése nem ellenőrizhető.
+- iOS-en a korábbi egyszeri natív kérés megmarad.
+- Nincs szükség WordPress- vagy Functions-deployra. Play-feltöltés nem történt.
+
+## Korábbi kiadás: **402** (1.0.0), 2026-11-03
+
+A Play API-ból visszaolvasva az éles és az Alpha sáv egyaránt 401-es.
+A következő szabad verziókód 402. A 401 teljes forrására és az október
+28-ig pusholt módosításokra épül; az új kliensjavítás az eseménylapozás.
+A lentebbi 401-es és korábbi kiadási útmutatók történeti feljegyzések.
+
+| A 402-es csomag | Ellenőrzött érték |
+|---|---|
+| Fájl | `build/HUHS-v1.0.0+402-release.aab` |
+| Verzió | `1.0.0+402` (a kész AAB manifestjéből is visszaolvasva) |
+| Méret | 83 563 439 bájt |
+| SHA-256 | `F78AE0ED1689B45B15A91E35DE0CCC1D89B5C574FD6BBBB5D4139E92D5173526` |
+| Aláírás | A 401-esével azonos feltöltési tanúsítvány |
+
+Ellenőrzés: 1565/1565 Flutter-teszt, tiszta `flutter analyze --no-pub lib test`,
+100%-os szigorú fordításellenőrzés, kész csomag ellenőrzése.
+Forrásalap: `e31e6750` + a helyi eseménylapozási javítás és a 402-es
+verzió/changelog/fordítás. A fetch utáni `origin/codex/v1.0` ugyanerre a
+commitra mutatott; az `origin/master` és az
+`origin/agent/news-rich-content-events` egyaránt a HEAD őse.
+A commitokból a DeepSeek szerzősége külön nem igazolható, de a meglevő
+ágak változtatásai benne vannak. Play-feltöltés és készülékes próba nem történt.
+
+```play-notes
+Javított eseménylista: a további események akkor is betölthetők, ha az első oldalon kevés aktuális program szerepel. Lapozáskor a korábban betöltött események is megmaradnak.
+```
+
+### 402 — az eseménylista lapozása
+
+- A szerver lapozási jelzése eljut a képernyőig: kevés vagy nulla aktuális
+  eseménynél is elérhető a „További események” gomb.
+- A második és későbbi oldalak nem írják felül egymást.
+- A korábbi események lapozása nem kever be jövőbeli eseményeket.
+- WordPress-plugin és Functions-deploy ehhez a kliensjavításhoz nem szükséges.
+
+## Történeti kiadási feljegyzések (401 és korábbi)
+
 > 🟡 **A 401 A FELTÖLTENDŐ** (versionCode **401**, `1.0.0`) — a **400**-hoz képest:
 > ✅ **A TULAJDONOS IGAZOLTA (2026-10-04):** *„most fasza ájfónon”* (a zárképernyő pause gombja működik),
 > Androidon pedig *„Androidon működik”* (a 400 óta). ⚠️ **Androidra a 401 nem kötelező:** a 401 egyetlen
@@ -40,11 +143,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 401
+currentBuild: 405
 currentVersion: 1.0.0
-lastPublishedBuild: 384
-aab: build/HUHS-v1.0.0+401-release.aab
-sha256: F46E95797BEF27E894770D97F38CDD0F720B0888D3E24C7DFD5F6B6E5A699AC1
+lastPublishedBuild: 403
+aab: build/HUHS-v1.0.0+404-release.aab
+sha256: 5C73EF5EB8C989EA25ECF9A4557C7EB14183C2A437E66D2D9A6884817CBB9545
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -375,6 +478,14 @@ A kész, másolható változat: `tmp/play-401-eles.txt` (bájtazonos ezzel a blo
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 405 — a főoldali kiemelt hír képe nem nagyít rá az arcokra (app) + mobil web
+- **A tulajdonos jelzése (2026-11-05):** *„mobil webes nézetben az utolsó cikk képe a főoldalon elég fura, lehet azon javítani?”*, majd *„mondjuk az app főoldalon is fura”*.
+- **A MÉRT GYÖKÉR (app):** a kiemelt kártya álló telefonon **358×250 px**, a képsáv ebből `flex: 5/12` = **149×250 px** — vagyis ÁLLÓ. Egy 1200×630-as (1,90) borítóképet `BoxFit.cover`-rel ebbe belekényszerítve csak **31%** látszott: az arcok óriásira nagyítva, a fejek levágva (a legutóbbi cikk borítóképe maga is szűk, portré-kivágású press photo).
+- **A MÉRT GYÖKÉR (web):** a téma `.walkerpress-slide-box .slide-image` kerete **fix 507 px magas**, media query nélkül; 390 px széles telefonon ez **390×507** álló ablak → a kép **40%**-a látszott. (A plugin 2.14.26 ezt mobilon 16:9-re igazítja: **40% → 93%**.)
+- **A JAVÍTÁS (app, `FeaturedNewsImageBand`):** a sávban elmosott háttér fölött a kép **teljes egészében** látszik (`BoxFit.contain`, felülre igazítva) — a látható hányad **31% → 100%** —, a kártya mérete és a szöveg helye **változatlan**. Új, tiszta mérőfüggvény: `coverVisibleFraction()` (`lib/services/adaptive_card_layout.dart`).
+- **A kapu mérése:** `test/widgets/featured_card_image_test.dart` **5/5** (geometria 31%/93%/100% + a sáv felépítése: elmosott háttér, `contain`, felülre igazítás, sötétítő réteg), `flutter analyze` a módosított fájlokra **0 hiba**, AAB **`1.0.0+405`** (83 618 245 bájt, SHA-256 `EF318E08…81565E`, `tmp/verify-aab.mjs` → **MINDEN ELLENŐRZÉS RENDBEN**).
+- **⚠️ Őszinte korlát:** a vizuális visszajelzés a tulajdonos telefonjáról jön; ha a kép a sávban **nagyobb** legyen (kép felül, 16:9-ben, teljes kártyaszélességgel, a szöveg alatta), az külön kör (`406`) — a kártya magassága akkor ~+55 px.
 
 ### 401 — a rádió Szüneteltetés gombja az iPhone zárképernyőjén (mért gyökér a telefonról)
 - **A tulajdonos jelzése (2026-10-04, iPhone):** *„play van meg stop és ha rányomok a playre, egy pillre pause lesz belőle aztán visszaáll … és szól a rádió”*, illetve *„Androidon működik”*.

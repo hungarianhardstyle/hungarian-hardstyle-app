@@ -1,5 +1,16 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🟡 A **405**-ÖS BUILD + **2.14.26**-OS PLUGIN — A FŐOLDALI KIEMELT KÉP MOBILON (MÉRVE, 2026-11-05)
+
+- **A TULAJDONOS JELZÉSE:** *„mobil webes nézetben az utolsó cikk képe a főoldalon elég fura, lehet azon javítani?”*, majd *„mondjuk az app főoldalon is fura”*.
+- **A MÉRT GYÖKÉR (WEB):** a téma CSS-ében `.walkerpress-slide-box .slide-image { height: 507px }` — **fix magasság, media query nélkül** —, a kép `object-fit: cover`. 390 px széles telefonon ez **390×507** ÁLLÓ ablak: a 1200×630-as képből csak **40%** látszott (nagyított arcok, levágott fejek).
+- **A MÉRT GYÖKÉR (APP):** a kiemelt kártya álló telefonon **358×250 px**, a képsáv `flex: 5/12` = **149×250 px** (ÁLLÓ) → `BoxFit.cover`-rel csak **31%** látszott. A legutóbbi cikk borítóképe maga is szűk, portré-kivágású press photo — ezért tűnt még nagyobbítottnak.
+- **A JAVÍTÁS (web, plugin 2.14.26):** `assets/home-featured-image.css` + `includes/home-images.php` — mobilra (≤767 px) szűkített felülírás: `height:auto; aspect-ratio:16/9`, `object-position:center 25%`; **csak a főoldalon** tölt be, a desktop/tablet elrendezés bájtazonosan érintetlen. Látható hányad **40% → 93%**.
+- **A JAVÍTÁS (app, build 405):** `FeaturedNewsImageBand` — elmosott háttér fölött a kép **teljes egészében** (`BoxFit.contain`, felülre igazítva); a kártya mérete és a szöveg helye **változatlan**. Látható hányad **31% → 100%**. Új tiszta mérőfüggvény: `coverVisibleFraction()`.
+- **A MÉRÉS:** plugin-harness **12 kör** zöld (`HOME-IMAGE OK` **19/19**, benne futó PHP-betöltés-teszt + számolt geometria; a CSS-szabály törlésére **7 ellenőrzés pirosra vált**); app: `featured_card_image_test.dart` **5/5**, `flutter analyze` a módosított fájlokra **0 hiba**, AAB **1.0.0+405** = 83 618 245 bájt, SHA-256 `EF318E0811F125E3B7680FEADF943A788B4F31F20A9FDCDA7962BAA7EB81565E`, `tmp/verify-aab.mjs` → **MINDEN ELLENŐRZÉS RENDBEN**.
+- **⚠️ ŐSZINTE KORLÁT:** a webes nézet vizuális ellenőrzése a tulajdonos telefonján történik; az appban a kép a sávban most **kisebb** (teljes kép, elmosott háttér) — ha a kép **nagyobb** legyen (kép felül 16:9-ben, teljes kártyaszélességgel, szöveg alatta, ~+55 px kártyamagasság), az a **406**-os kör.
+- **📌 A TULAJDONOS LÉPÉSE:** (1) `build/huhs-mobile-api-2.14.26.zip` feltöltése; (2) a 405-ös build kipróbálása (Play zárt teszt / AAB feltöltés).
+
 ### 🔴 A **2.14.25**-ÖS PLUGIN — A DUPLA-PUSH MOTORJA LEÁLL (ÉLESBEN MÉRVE, 2026-10-28) — **FELTÖLTENDŐ**
 
 - **AZ ÉLES MÉRÉS (2.14.24-gyel, a tulajdonos feltöltése után):** `api=2.14.24` él; a figyelő (`tmp/watch-push-live.mjs`, 15 s-onként) ezt látta: `news_scan=18:49/s2/q2` → 18:50-kor egy küldés lefutott (`processed=164/1064`); `news_scan=18:54/s2/q2` → 18:55:16-kor **`push_jobs=2`, `push_job=DUE/runs=0/offset=1000,DUE/runs=0/offset=900`**; 18:55:36-kor `at=18:55` (tehát **újabb 164 eszköz kapta meg ugyanazt**); `news_scan=18:59/s2/q2` → **harmadik hullám**. Ötpercenként ismétlődik.

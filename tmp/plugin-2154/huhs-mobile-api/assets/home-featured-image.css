@@ -1,0 +1,30 @@
+/*
+ * A főoldali kiemelt kép mobil nézete (plugin 2.14.26).
+ *
+ * MÉRT OK (2026-11-05, a téma összevont CSS-éből):
+ *   .walkerpress-slide-box .slide-image { height: 507px; … }
+ *   .walkerpress-slide-box .slide-image img { height: 100%; object-fit: cover; width: 100% }
+ * Erre a magasságra **nincs media query** — vagyis telefonon is 507 px.
+ * Egy 390 px széles kijelzőn ez 390×507-es (ÁLLÓ) ablakot jelent, a 1200×630-as
+ * borítóképből csak a középső ~40% látszik: az arcok óriásira nagyítva, a fejek
+ * levágva — ez a „fura" kinézet. 16:9 ablaknál ugyanabban a szélességben a kép
+ * ~93%-a látszik (a mért számot a tools/verify-home-image.php számolja).
+ *
+ * Csak mobilon (≤767 px) írunk felül, hogy a táblagép/asztali elrendezés — amit
+ * a téma tervezett — bájtazonos maradjon.
+ */
+@media (max-width: 767px) {
+  .walkerpress-slide-box .slide-image {
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .walkerpress-slide-box .slide-image img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    /* A szűk, portré-kivágású borítóképeknél a felső harmad (arc) maradjon
+       látható; a középre igazítás pont a fejeket vágta le. */
+    object-position: center 25%;
+  }
+}

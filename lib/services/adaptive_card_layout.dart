@@ -87,3 +87,25 @@ const double heroCardMaxHeight = 460;
   final cap = wideCardMaxHeightFor(viewport);
   return (width: width, height: natural > cap ? cap : natural);
 }
+
+/// Mennyi látszik a kép **szélességéből**, ha `BoxFit.cover`-rel kerül egy
+/// adott méretű dobozba? (0…1, tiszta függvény — ezért mérhető.)
+///
+/// MIÉRT (build 402): a kiemelt hír képsávja álló telefonon **149×250 px**
+/// (a 358×250-es kártya `flex: 5/12` része), egy 1200×630-as (1,90) borítóképből
+/// `cover`-rel csak **31%** látszott — ez a „fura" nagyított, levágott arc.
+/// 16:9-es sávban ugyanez **93%**.
+///
+/// @param boxWidth a doboz szélessége (logikai px)
+/// @param boxHeight a doboz magassága (logikai px)
+/// @param imageAspectRatio a kép szélesség/magasság aránya (pl. 1200/630)
+double coverVisibleFraction({
+  required double boxWidth,
+  required double boxHeight,
+  required double imageAspectRatio,
+}) {
+  if (boxWidth <= 0 || boxHeight <= 0 || imageAspectRatio <= 0) return 0;
+  final boxAspect = boxWidth / boxHeight;
+  if (boxAspect >= imageAspectRatio) return 1; // a szélesség a szűkebb: nincs vágás
+  return boxAspect / imageAspectRatio;
+}
