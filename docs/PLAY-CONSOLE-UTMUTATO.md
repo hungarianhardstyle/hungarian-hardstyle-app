@@ -233,3 +233,48 @@ ellenőrzi őket, és a hiányuk az elutasítás egyik leggyakoribb oka (főleg 
 **Ami ezután jön (ezt én ellenőrzöm):** a nyilvános bolt-lap megjelenése
 (`node tools/check-play-listing.mjs` → 404 helyett **200**), és hogy a production ország-listája
 **pontosan egyezik-e** a termékek 9 országával (`node tools/check-play-products.mjs --tracks`).
+
+## 10. Kereskedői státusz (DSA) — **2027. február 1-ig** kell megtenni
+
+A Google Play levele (2026-11-05): *„Nyilatkozz kereskedői státuszodról 2027. február 1-ig”*.
+Ez az EU **digitális szolgáltatásokról szóló rendeletének** (DSA) előírása: az appboltnak meg kell
+mutatnia a **kereskedő** elérhetőségét az EU-s felhasználóknak.
+
+**A mi esetünk: KERESKEDŐ (trader) vagyunk** — nem vitás, mert
+- a **Hardstyle Revolution Label** kiadványok **fizetett Google Play-termékek** (a WordPress-feltöltés
+  automatikusan létrehozza őket), és
+- az appban **hirdetés** (AdMob) van.
+Mindkettő kereskedelmi cél. A „nem kereskedő” nyilatkozat ezért **ellentmondásos lenne**, és az app
+uniós elérhetőségét kockáztatja.
+
+**Mit kell megadni (és ez az EU-ban NYILVÁNOSAN megjelenik a Play-lapon):**
+| Mező | Megjegyzés |
+|---|---|
+| Név (személy vagy cégnév) | a szerződéses/pénzügyi profil szerinti név |
+| **Cím** | ez **nyilvános** — legyen összhangban a Play „payments profile” címével |
+| E-mail | olyan, amit tényleg olvasol (a Google ellenőrizheti) |
+| Telefonszám | ez is **nyilvános** |
+
+⚠️ Ha egyéni fejlesztőként adod meg a lakcímed, az **nyilvános lesz**. Ha ez nem kívánatos,
+céges/irodai cím kell (a Google dokumentummal ellenőrizheti).
+
+**Hol:** a levél kék **„Státusz bejelentése”** gombja → Play Console → **Beállítások → Kereskedői
+státusz** (vagy a fiókadatoknál megjelenő sor). A nyilatkozat után a Google **ellenőrzi**, és csak
+utána kerül ki a bolt-lapra.
+
+**Ha elmarad:** a Play a DSA szerint az **EU-s elérhetőséget** korlátozhatja/az appot eltávolíthatja
+az uniós országokból — a magyar felhasználók többsége EU-s, ezért ez **kritikus**, nem kozmetika.
+
+**Apple (ugyanez, korábbi határidővel):** az App Store-ban **2025. február 17. óta** kötelező a
+kereskedői státusz; ami nincs megadva/ellenőrizve, azt az Apple **eltávolítja az EU-s App Store-ból**
+([Apple: DSA trader status](https://developer.apple.com/news/upcoming-requirements/?id=02172025a)).
+A TestFlightre ez nem vonatkozik, de **az App Store megjelenés előtt** az App Store Connectben
+(Business → Compliance / DSA trader) meg kell adni.
+
+**Ellenőrző lista:**
+- [ ] Play Console → Kereskedői státusz: **kereskedő**, név + cím + e-mail + telefon kitöltve
+- [ ] A cím egyezik a Play **payments profile** címével
+- [ ] Az e-mail/telefon tényleg elérhető (ellenőrzés jöhet)
+- [ ] Ha céges: a cégadatok (adószám/nyilvántartási szám) is megvannak
+- [ ] App Store Connect: ugyanez megadva az iOS-megjelenés előtt
+- [ ] A bolt-lapon megjelenő „Kereskedői adatok” blokk átnézve (EU-s nézetből)
