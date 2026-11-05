@@ -1,19 +1,19 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás: **406** (1.0.0), 2026-11-05
+## Aktuális kiadás: **407** (1.0.0), 2026-11-05
 
-A Névjegy alatt elérhető a Felhasználási feltételek (ÁSZF) és az Adatkezelési tájékoztató; a főoldali kiemelt hír képe nem nagyít rá az arcokra.
+A Kezdőlapon a kiemelt hír képe visszakapta a korábbi kinézetet; a Névjegy alatt elérhető a Felhasználási feltételek (ÁSZF) és az Adatkezelési tájékoztató.
 A Play API szerint az Alpha sávon 403, az éles sávon 401 van.
 
-| A 406-os Android-csomag | Ellenőrzött érték |
+| A 407-es Android-csomag | Ellenőrzött érték |
 |---|---|
-| Fájl | `build/HUHS-v1.0.0+406-release.aab` |
-| Verzió | `1.0.0+406` — a csomag saját manifestjéből visszaolvasva |
-| Méret | 83 623 165 bájt |
-| SHA-256 | `645B92DE431BDACA12C64CFEDBAC636045D06B3894DFB6C57909CA0FB072FA4E` |
+| Fájl | `build/HUHS-v1.0.0+407-release.aab` |
+| Verzió | `1.0.0+407` — a csomag saját manifestjéből visszaolvasva |
+| Méret | 83 624 058 bájt |
+| SHA-256 | `8F96C144CD36341F25F5E01D90B75906D461431CAC7E2D5FD85DB6AADF65714F` |
 | Aláírás | A 403-aséval azonos feltöltési tanúsítvány |
 
-1575/1575 Flutter-teszt sikeres, analyze tiszta, szigorú fordításellenőrzés 100%.
+1574/1574 Flutter-teszt sikeres, analyze tiszta, szigorú fordításellenőrzés 100%.
 A kész AAB mindhárom `libflutter.so` binárisa bitazonos a javított
 `cf636b1dfb818dd6a3ff16e390e93b1a036969c8` engine megfelelő, szimbólumoktól
 megtisztított kiadásával. Kész csomag ellenőrzése sikeres.
@@ -143,11 +143,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 406
+currentBuild: 407
 currentVersion: 1.0.0
 lastPublishedBuild: 403
-aab: build/HUHS-v1.0.0+406-release.aab
-sha256: 645B92DE431BDACA12C64CFEDBAC636045D06B3894DFB6C57909CA0FB072FA4E
+aab: build/HUHS-v1.0.0+407-release.aab
+sha256: 8F96C144CD36341F25F5E01D90B75906D461431CAC7E2D5FD85DB6AADF65714F
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -474,7 +474,19 @@ A kész, másolható változat: `tmp/play-401-eles.txt` (bájtazonos ezzel a blo
 - ÚJ: a regisztrációd törlésével a nyereményjátékból is kikerülsz (nem nyerhetsz jegyet).
 ```
 
-## 2c. A **406**-os kiadás changelogja — mindhárom helyre (másolható)
+## 2c. A **407**-es kiadás changelogja — mindhárom helyre (másolható)
+
+**Play Console → „Újdonságok" (407, magyar, 500 karakter alatt):**
+
+```
+- Visszaállítottuk a Kezdőlapon a kiemelt hír képét a korábbi kinézetre.
+```
+
+**Play Console → „Újdonságok" (407, angol):**
+
+```
+- Restored the previous look of the featured news photo on the Home screen.
+```
 
 **Play Console → „Újdonságok" (406, magyar, 500 karakter alatt):**
 
@@ -558,6 +570,14 @@ pedig megköveteli az angol fordítását is (megvan: `assets/i18n/en.json`).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 407 — a kiemelt hír képe visszaállt a RÉGI kinézetre (a tulajdonos döntése)
+- **A tulajdonos jelzése (2026-11-05):** *„ne hari de így az app főoldal cikk kép kurvaszar, inkább legyen a régi vissza”* — a 405-ben bevezetett elmosott háttér + `contain` **nem tetszett**.
+- **A JAVÍTÁS:** a `FeaturedNewsImageBand` kikerült; a kártya ismét a régi, egyszerű `BoxFit.cover`-t használja (a `dart:ui` blur import is törölve). A kártya mérete és szerkezete (kép balra 5/12, szöveg jobbra 7/12) **változatlan**.
+- **A kapu mérése:** `test/widgets/featured_card_image_test.dart` **4/4** — a kártya `cover`-t használ, **nincs** `ImageFiltered`/`contain`/`FeaturedNewsImageBand`, és a geometria továbbra is dokumentálva van (149×250 px sávban a kép **31%-a** látszik — tudatos döntés). `flutter test` **1574/1574**, `flutter analyze` **0 hiba**.
+- **A jogi link is a valóban publikált oldalra mutat:** `lib/core/legal/legal_links.dart` → `https://hungarianhardstyle.hu/app-felhasznalasi-feltetelek/` (a tulajdonos által publikált, app-specifikus ÁSZF; HTTP 200, publikált oldal).
+- **Csomag:** AAB **1.0.0+407** (83 624 058 bájt, SHA-256 `8F96C144CD36341F25F5E01D90B75906D461431CAC7E2D5FD85DB6AADF65714F`), `tmp/verify-aab.mjs` → **MINDEN ELLENŐRZÉS RENDBEN**.
+- **⚠️ Őszinte korlát:** a vizuális ítélet a tulajdonosé; a 405-ös elmosott háttér **nem** kerül vissza, hacsak nem kéri.
 
 ### 406 — a Felhasználási feltételek (ÁSZF) és az Adatkezelési tájékoztató a Névjegy alatt
 - **A tulajdonos kérdése (2026-11-05):** *„hol az app ÁSZF linkje?”*

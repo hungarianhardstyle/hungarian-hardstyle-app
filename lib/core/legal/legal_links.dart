@@ -10,9 +10,10 @@
 /// módosítani — a felület innen olvassa.
 library;
 
-/// Általános Szerződési Feltételek (élő oldal: HTTP 200, 2026-11-05).
+/// Az ALKALMAZÁS Általános Szerződési Feltételei (élő oldal: HTTP 200, 2026-11-05;
+/// ez az URL kell a Play „kereskedői állapot” képernyőjének ÁSZF-mezőjébe is).
 const String legalTermsOfServiceUrl =
-    'https://hungarianhardstyle.hu/altalanos-szerzodesi-feltetelek-aszf/';
+    'https://hungarianhardstyle.hu/app-felhasznalasi-feltetelek/';
 
 /// Adatkezelési tájékoztató / adatvédelmi nyilatkozat (élő oldal: HTTP 200).
 const String legalPrivacyPolicyUrl =

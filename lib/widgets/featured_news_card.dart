@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 
 import '../core/content/date_formatters.dart';
@@ -67,9 +65,10 @@ class FeaturedNewsCard extends StatelessWidget {
               child: Hero(
                 tag: "post_${post.id}",
                 child: post.imageUrl.isNotEmpty
-                    ? FeaturedNewsImageBand(
+                    ? ResizedNetworkImage(
                         url: post.imageUrl,
                         physicalWidth: imageCacheWidth,
+                        fit: BoxFit.cover,
                       )
                     : Container(
                         color: colors.surfaceContainerHighest,
@@ -181,63 +180,6 @@ class FeaturedNewsCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// A kiemelt hír képének sávja (build 405).
-///
-/// ⚠️ MÉRT HIBA (2026-11-05, a tulajdonos jelzése: *„mondjuk az app főoldalon is
-/// fura"*): a kiemelt kártya álló telefonon **358×250 px**, a képsáv ebből
-/// `flex: 5/12` = **149×250 px** — vagyis ÁLLÓ. Egy 1200×630-as (1,90) borítóképet
-/// `BoxFit.cover`-rel ebbe belekényszerítve a kép **31%-a** látszott: az arcok
-/// óriásira nagyítva, a fejek levágva.
-///
-/// Ezért a sávban a kép **teljes egészében** látszik (`BoxFit.contain`, felülre
-/// igazítva) — a látható hányad **31% → 100%** —, a maradékot pedig ugyanannak a
-/// képnek az elmosott változata tölti ki. Így egyetlen kép sem vágódik le, akár
-/// fekvő, akár álló a borító; a kártya mérete és a szöveg helye **változatlan**.
-class FeaturedNewsImageBand extends StatelessWidget {
-  const FeaturedNewsImageBand({
-    super.key,
-    required this.url,
-    required this.physicalWidth,
-  });
-
-  final String url;
-  final int physicalWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // 1) Elmosott háttér: ugyanaz a kép, hogy a sáv ne legyen üres.
-        ImageFiltered(
-          imageFilter: ui.ImageFilter.blur(
-            sigmaX: 16,
-            sigmaY: 16,
-            tileMode: TileMode.clamp,
-          ),
-          child: ResizedNetworkImage(
-            url: url,
-            physicalWidth: physicalWidth,
-            fit: BoxFit.cover,
-          ),
-        ),
-        // 2) Sötétítés: az éles kép ne „villogjon" a világos elmosott háttéren.
-        ColoredBox(color: Colors.black.withValues(alpha: 0.30)),
-        // 3) Az ÉLES kép: teljes egészében, felülre igazítva (nem vágja le a fejet).
-        Align(
-          alignment: Alignment.topCenter,
-          child: ResizedNetworkImage(
-            url: url,
-            physicalWidth: physicalWidth,
-            fit: BoxFit.contain,
-            alignment: Alignment.topCenter,
-          ),
-        ),
-      ],
     );
   }
 }

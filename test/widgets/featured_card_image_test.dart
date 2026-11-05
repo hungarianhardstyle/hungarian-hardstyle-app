@@ -1,111 +1,51 @@
-import 'dart:ui' as ui;
+import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hungarian_hardstyle_app/services/adaptive_card_layout.dart';
-import 'package:hungarian_hardstyle_app/widgets/featured_news_card.dart';
 
-/// **A főoldali kiemelt hír képe** — a tulajdonos jelzése (2026-11-05):
-/// *„mondjuk az app főoldalon is fura”*.
+/// **A kiemelt hír képe: a RÉGI kinézet** (build 407) — a tulajdonos döntése:
+/// *„ne hari de így az app főoldal cikk kép kurvaszar, inkább legyen a régi vissza”*.
 ///
-/// A mért gyökér: a kártya álló telefonon **358×250 px**, a képsáv ebből
-/// `flex: 5/12` = **149×250 px** — vagyis ÁLLÓ. Egy 1200×630-as (1,90)
-/// borítóképből `BoxFit.cover`-rel csak **31%** látszott: az arcok óriásira
-/// nagyítva, a fejek levágva.
+/// A 405-ben a kép elmosott háttér előtt, teljes egészében (`contain`) látszott;
+/// ez **nem tetszett**, ezért visszaállt a régi, egyszerű `BoxFit.cover`.
 ///
-/// Ez a mérés két dolgot bizonyít:
-///  1. a **geometriát** (tiszta függvény: 31% → 100%);
-///  2. a **szerkezetet** (a sávban elmosott háttér fölött a kép TELJES
-///     egészében, `contain`-nal látszik) — vagyis a javítás tényleg benne van a
-///     felépítésben, nem csak a dokumentációban.
+/// ⚠️ Ez a mérés a **visszaállítást** védi: ha valaki újra beemelné az elmosott
+/// hátteret vagy a `contain`-t, a kapu pirosra vált. Emellett a geometria továbbra
+/// is mérve van (a sáv 149×250 px, a borítókép 1200×630 → a kép 31%-a látszik),
+/// hogy a döntés **tudatos** legyen, ne véletlen.
 void main() {
-  group('a borítókép látható hányada (cover)', () {
-    const imageAspect = 1200 / 630; // a legutóbbi cikk borítóképe: 1,90
+  final source = File('lib/widgets/featured_news_card.dart').readAsStringSync();
 
-    test('a RÉGI sáv (149×250) csak ~31%-ot mutatott', () {
-      final fraction = coverVisibleFraction(
+  group('a kiemelt hír képe a régi kinézetet használja (cover)', () {
+    test('a kártya `BoxFit.cover`-rel rajzolja a képet', () {
+      expect(source.contains('fit: BoxFit.cover'), isTrue);
+      expect(source.contains('ResizedNetworkImage('), isTrue);
+    });
+
+    test('NINCS elmosott háttér és NINCS contain (a 405-ös kísérlet kikerült)', () {
+      expect(source.contains('ImageFiltered'), isFalse,
+          reason: 'az elmosott háttér a 405-ben volt, a tulajdonos visszakérte a régit');
+      expect(source.contains('BoxFit.contain'), isFalse);
+      expect(source.contains('FeaturedNewsImageBand'), isFalse);
+      expect(source.contains("import 'dart:ui'"), isFalse);
+    });
+
+    test('a kártya szerkezete változatlan (kép balra, szöveg jobbra)', () {
+      expect(source.contains('flex: 5'), isTrue);
+      expect(source.contains('flex: 7'), isTrue);
+      expect(source.contains('Hero('), isTrue);
+    });
+
+    test('a geometria mérve van: a keskeny sávban a kép ~31%-a látszik', () {
+      // A kártya 358×250 px, a képsáv 149×250 px, a borítókép 1200×630 (1,90).
+      final visible = coverVisibleFraction(
         boxWidth: 149,
         boxHeight: 250,
-        imageAspectRatio: imageAspect,
+        imageAspectRatio: 1200 / 630,
       );
-      expect(fraction, closeTo(0.313, 0.01));
-    });
-
-    test('16:9-es sávban ugyanez ~93% lenne (a contain ehhez képest is jobb)',
-        () {
-      final fraction = coverVisibleFraction(
-        boxWidth: 149,
-        boxHeight: 149 * 9 / 16,
-        imageAspectRatio: imageAspect,
-      );
-      expect(fraction, closeTo(0.933, 0.01));
-    });
-
-    test('ha a doboz szélesebb a képnél, nincs vízszintes vágás', () {
-      expect(
-        coverVisibleFraction(
-          boxWidth: 400,
-          boxHeight: 100,
-          imageAspectRatio: imageAspect,
-        ),
-        1,
-      );
-    });
-
-    test('hibás bemenetre nulla (nem tippel)', () {
-      expect(
-        coverVisibleFraction(
-          boxWidth: 0,
-          boxHeight: 250,
-          imageAspectRatio: imageAspect,
-        ),
-        0,
-      );
-    });
-  });
-
-  group('a képsáv felépítése', () {
-    testWidgets('elmosott háttér fölött a kép TELJES egészében (contain)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: SizedBox(
-            width: 149,
-            height: 250,
-            child: FeaturedNewsImageBand(
-              url: 'https://hungarianhardstyle.hu/wp-content/uploads/a.jpg',
-              physicalWidth: 500,
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      // 1) van elmosott háttér (a `ImageFiltered` hozza a blur-t)
-      expect(find.byType(ImageFiltered), findsOneWidget);
-      expect(
-        tester.widget<ImageFiltered>(find.byType(ImageFiltered)).imageFilter,
-        isA<ui.ImageFilter>(),
-      );
-
-      // 2) KÉT kép van: elmosott háttér (cover) + éles kép (contain)
-      final images = tester
-          .widgetList<CachedNetworkImage>(find.byType(CachedNetworkImage))
-          .toList();
-      expect(images.length, 2);
-      expect(images.first.fit, BoxFit.cover); // háttér
-      expect(images.last.fit, BoxFit.contain); // éles kép — nincs vágás
-      expect(images.last.alignment, Alignment.topCenter);
-
-      // 3) az éles kép a háttér FÖLÖTT van (a Stack utolsó gyereke)
-      final stack = tester.widget<Stack>(find.byType(Stack).first);
-      expect(stack.children.length, 3);
-      expect(stack.children.last, isA<Align>());
-
-      // 4) a sötétítő réteg is ott van (a kép nem „villog")
-      expect(stack.children[1], isA<ColoredBox>());
+      expect(visible, closeTo(0.313, 0.01));
+      expect(visible, lessThan(0.5),
+          reason: 'ezért tűnik nagyítottnak a kép — tudatos döntés, hogy így marad');
     });
   });
 }

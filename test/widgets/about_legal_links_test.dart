@@ -28,7 +28,7 @@ void main() {
   test('az ÁSZF és az adatkezelési tájékoztató URL-je a valódi oldalra mutat', () {
     expect(
       legalTermsOfServiceUrl,
-      'https://hungarianhardstyle.hu/altalanos-szerzodesi-feltetelek-aszf/',
+      'https://hungarianhardstyle.hu/app-felhasznalasi-feltetelek/',
     );
     expect(
       legalPrivacyPolicyUrl,

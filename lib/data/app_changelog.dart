@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 407,
+    changes: [
+      'Visszaállítottuk a Kezdőlapon a kiemelt hír képét a korábbi kinézetre.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 406,
     changes: [
       'ÚJ: a Névjegy alatt elérhető a Felhasználási feltételek (ÁSZF) és az Adatkezelési tájékoztató.',
