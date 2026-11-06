@@ -4,7 +4,7 @@ Tags: firebase, push, api, mobile
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.14.28
+Stable tag: 2.14.29
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,6 +16,11 @@ A plugin a mobilalkalmazás egyetlen backendje: REST végpontok a hírekhez, ese
 
 == Changelog ==
 
+= 2.14.29 =
+* Javítva: egy készülék **egy** értesítést kap egy körből (a token-tárban egy eszköz több kulcson is szerepelhetett → 2-3 push ugyanarra a telefonra).
+* Javítva: az **esemény-emlékeztető**, az **esemény/kiadvány push** és a **nyitás-értesítés** nem megy ki kétszer, ha a pontos cron-esemény és az ötperces biztonsági scan ugyanabba az ablakba esik (foglalás a küldés előtt).
+* Javítva: az esemény/kiadvány adatcsomagjában a követett DJ-k/szervezők listája szövegként megy ki (`Array` helyett).
+* Új: `push_dup=` diagnosztika — hány duplikált token van a tárban.
 = 2.14.28 =
 * Új: **Kiadásjegyzék az adminban** — HUHS Mobile → Kiadásjegyzék (ezt a szöveget mutatja, a readme.txt-ből).
 

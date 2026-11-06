@@ -653,7 +653,30 @@ function huhs_push_diag_jobs()
     return 'cron_overdue=' . $overdue
         . ' push_job=' . ($jobs ? implode(',', $jobs) : 'none')
         . ' push_jobs=' . count(huhs_push_live_jobs())
+        . ' push_dup=' . huhs_push_diag_duplicate_tokens()
         . ' push_active=' . huhs_push_diag_active_job($now);
+}
+
+/**
+ * Hány **duplikált** FCM-token van a tárban? (2.14.29)
+ *
+ * MIÉRT: a token-tárban egy eszköz több kulcson is szerepelhet (újraregisztrálás,
+ * token-csere), és a küldés eddig a kulcs szerint ment — ugyanaz az eszköz így
+ * **két-három** értesítést kapott. A küldés már token-értékre dedupál; ez a
+ * szám mutatja, mennyi tisztítanivaló van a tárban (0 = tiszta).
+ */
+function huhs_push_diag_duplicate_tokens()
+{
+    $tokens = get_option(HUHS_PUSH_TOKENS_OPTION, array());
+    if (!is_array($tokens)) return 0;
+    $values = array();
+    foreach ($tokens as $record) {
+        if (!is_array($record)) continue;
+        $token = (string) ($record['token'] ?? '');
+        if ($token === '') continue;
+        $values[] = $token;
+    }
+    return max(0, count($values) - count(array_unique($values)));
 }
 
 /**
@@ -732,7 +755,24 @@ function huhs_push_recipients($tokens, $data, $language = '')
         }
         $recipients[$key] = $token;
     }
-    return $recipients;
+
+    // ⚠️ 2.14.29 — UGYANAZ AZ ESZKÖZ CSAK EGYSZER (a tulajdonos jelzése: *„néha
+    // 2-3 push is kimegy egy készülékre, ez hiba”*).
+    //
+    // MÉRT OK: a token-tárban **egy eszköz több kulcson is szerepelhet** (újra-
+    // regisztrálás, vagy a régi és az új FCM-token egyszerre). A küldés eddig a
+    // tároló **kulcsa** szerint ment, ezért ugyanaz az FCM-token kétszer (háromszor)
+    // kapott egy értesítést. Mostantól a **token értéke** számít: egy broadcastban
+    // egy tokenhez legfeljebb egy üzenet megy ki. (A duplikátumok számát a
+    // diagnosztika `push_dup=` mezője mutatja, hogy látszódjon, tisztítani kell-e.)
+    $unique = array();
+    $seen = array();
+    foreach ($recipients as $key => $token) {
+        if (isset($seen[$token])) continue;
+        $seen[$token] = true;
+        $unique[$key] = $token;
+    }
+    return $unique;
 }
 
 /**
@@ -743,12 +783,42 @@ function huhs_push_recipients($tokens, $data, $language = '')
  *            token was refreshed); keeping it would slow down every later push
  * 'failed' — anything else, worth another try
  */
+/**
+ * A `data` csomag előkészítése az FCM-nek (2.14.29).
+ *
+ * ⚠️ MÉRT HIBA: az esemény/kiadvány küldés adatcsomagja a követett DJ-k és
+ * szervezők **listáit** is tartalmazza (`artists`, `organizers`), és a régi
+ * `array_map('strval', …)` ezekből a `"Array"` szöveget csinálta (PHP warning
+ * mellett). Az FCM-ben minden adat-érték **szöveg** kell legyen, ezért a
+ * listákat vesszővel fűzzük össze, az üres/nem skalár értékeket pedig kihagyjuk.
+ */
+function huhs_push_data_payload($data)
+{
+    $out = array();
+    foreach ((array) $data as $key => $value) {
+        $name = (string) $key;
+        if ($name === '') continue;
+        if (is_array($value)) {
+            $flat = array();
+            foreach ($value as $item) {
+                if (is_scalar($item) && (string) $item !== '') $flat[] = (string) $item;
+            }
+            if (!$flat) continue;
+            $out[$name] = implode(',', $flat);
+            continue;
+        }
+        if ($value === null || !is_scalar($value)) continue;
+        $out[$name] = (string) $value;
+    }
+    return $out;
+}
+
 function huhs_push_message_body($token, $title, $body, $data)
 {
     return wp_json_encode(array('message' => array(
         'token' => (string) $token,
         'notification' => array('title' => (string) $title, 'body' => (string) $body),
-        'data' => array_map('strval', is_array($data) ? $data : array()),
+        'data' => huhs_push_data_payload($data),
         'android' => array('priority' => 'high'),
     )), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
@@ -1945,6 +2015,18 @@ function huhs_push_publish_content($post_id, $post_type, $retry_attempt = 1)
         : 'published';
     if (get_post_meta($post->ID, $marker, true) === $fingerprint) return;
 
+    // ⚠️ 2.14.29 — IGÉNYLÉS A KÜLDÉS ELŐTT (ugyanaz a hibaosztály, mint az
+    // emlékeztetőnél): az esemény/kiadvány push-ját a `transition_post_status`
+    // ÉS a mentés-hook is ütemezheti, a jelölő pedig eddig csak a küldés után
+    // íródott ki — két egymásba futó kör ezért **kétszer** küldte ki a teljes
+    // listát. A foglalás atomikus (`add_option`), 15 perc után lejár.
+    $claim_option = 'huhs_push_content_claim_' . (int) $post->ID . '_' . sanitize_key($post_type);
+    if (!add_option($claim_option, time(), '', false)) {
+        $claim = (int) get_option($claim_option, 0);
+        if ($claim > time() - 15 * MINUTE_IN_SECONDS) return;
+        update_option($claim_option, time(), false);
+    }
+
     $type = $post_type === 'huhs_event' ? 'event' : 'release';
     $title = $post_type === 'huhs_event' ? 'Új esemény' : 'Új release';
     // Kedvenc-alapú célzás (2.14.9): a küldés megmondja, mely DJ-k/szervezők
@@ -1962,8 +2044,12 @@ function huhs_push_publish_content($post_id, $post_type, $retry_attempt = 1)
     // többit — az újrapróbálkozás a nulláról dupla értesítést okozna.
     if ($sent > 0 || huhs_push_has_pending_job(array('type' => $type, 'id' => (string) $post->ID))) {
         update_post_meta($post->ID, $marker, $fingerprint);
-    } elseif ($post_type === 'huhs_release') {
-        huhs_schedule_release_push_retry($post->ID, $retry_attempt);
+    } else {
+        // Semmi nem ment ki: a foglalást elengedjük (a jelölő nem íródik ki).
+        delete_option($claim_option);
+        if ($post_type === 'huhs_release') {
+            huhs_schedule_release_push_retry($post->ID, $retry_attempt);
+        }
     }
 
     if ($post_type === 'huhs_event') {
@@ -2122,13 +2208,38 @@ function huhs_push_event_reminder($post_id, $kind)
 {
     $post = get_post($post_id);
     if (!$post || $post->post_status !== 'publish') return;
-    $marker = '_huhs_push_reminder_sent_' . sanitize_key($kind);
+    $kind = sanitize_key($kind);
+    $marker = '_huhs_push_reminder_sent_' . $kind;
     if (get_post_meta($post_id, $marker, true)) return;
+
+    // ⚠️ 2.14.29 — IGÉNYLÉS A KÜLDÉS ELŐTT (a tulajdonos jelzése: *„néha 2-3 push
+    // is kimegy egy készülékre, ez hiba”*).
+    //
+    // MÉRT GYÖKÉR: az emlékeztetőt **két út** is indítja — a pontos időre ütemezett
+    // cron-esemény ÉS az ötperces biztonsági scan —, a „elküldve” jelölő viszont
+    // csak a küldés **UTÁN** íródott ki. Ha a két futás ugyanabba az ablakba esett
+    // (WP-Cron nem pontos, a scan 5 percenként nézi), mindkettő átment a jelölő
+    // ellenőrzésén, és **kétszer** ment ki a teljes kör (1000+ eszköz). A foglalás
+    // atomikus (`add_option`), ezért egyszerre csak egy futás küldhet.
+    // Lejárt foglalást (15 perc) átveszünk, hogy egy elhalt folyamat ne blokkoljon.
+    $claim_option = 'huhs_push_reminder_claim_' . (int) $post_id . '_' . $kind;
+    if (!add_option($claim_option, time(), '', false)) {
+        $claim = (int) get_option($claim_option, 0);
+        if ($claim > time() - 15 * MINUTE_IN_SECONDS) return;
+        update_option($claim_option, time(), false);
+    }
+
     $sent = huhs_push_send_localized(
         huhs_push_event_reminder_texts($post, $kind),
         array('type' => 'event', 'kind' => 'reminder', 'id' => (string) $post_id)
     );
-    if ($sent > 0) update_post_meta($post_id, $marker, current_time('mysql', true));
+    if ($sent > 0) {
+        update_post_meta($post_id, $marker, current_time('mysql', true));
+    } else {
+        // Semmi nem ment ki: a foglalást elengedjük, hogy a következő futás
+        // (cron vagy scan) újrapróbálhassa — de a jelölő nem íródik ki.
+        delete_option($claim_option);
+    }
 }
 
 /**
@@ -2419,6 +2530,17 @@ function huhs_push_open_notice($post_id, $post_type)
     $fingerprint = huhs_push_open_fingerprint($post, $config);
     if (get_post_meta($post->ID, '_huhs_push_open_sent', true) === $fingerprint) return;
 
+    // ⚠️ 2.14.29 — IGÉNYLÉS A KÜLDÉS ELŐTT (ugyanaz a hibaosztály, mint az
+    // emlékeztetőnél): ezt is indítja ütemezett cron-esemény ÉS az ötperces
+    // scan, a jelölő pedig eddig csak utólag íródott ki → két futás = két
+    // teljes kör ugyanarra a nyitásra.
+    $claim_option = 'huhs_push_open_claim_' . (int) $post->ID;
+    if (!add_option($claim_option, time(), '', false)) {
+        $claim = (int) get_option($claim_option, 0);
+        if ($claim > time() - 15 * MINUTE_IN_SECONDS) return;
+        update_option($claim_option, time(), false);
+    }
+
     $data = array(
         'type' => (string) $config['payload'],
         'kind' => 'open',
@@ -2427,6 +2549,9 @@ function huhs_push_open_notice($post_id, $post_type)
     $sent = huhs_push_send_localized(huhs_push_open_notice_texts($post, $config), $data);
     if ($sent > 0 || huhs_push_has_pending_job($data)) {
         update_post_meta($post->ID, '_huhs_push_open_sent', $fingerprint);
+    } else {
+        // Semmi nem ment ki: engedjük újra (a jelölő nem íródik ki).
+        delete_option($claim_option);
     }
 }
 

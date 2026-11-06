@@ -171,4 +171,18 @@ else
   fail=1
 fi
 
+# A 2.14.29 ujdonsaga: a tulajdonos negy push-keresere a MERES.
+#  1-3) hir / esemeny / kiadvany / emlekezteto push MINDEN eszkoznek megy
+#       (a token-tarbol, a vendegek is benne vannak);
+#  4) egy eszkoz EGYSZER kap (token-ertekre dedupalva), es az emlekezteto/
+#       esemeny-push nem megy ki ketszer, ha a cron ES a scan osszefut.
+echo ""
+echo "=== 14) Push mindenkinek, es csak egyszer (2.14.29)"
+if php /work/tools/verify-push-once.php "$PLUGIN"; then
+  echo "PUSH-ONCE OK"
+else
+  echo "PUSH-ONCE HIBA"
+  fail=1
+fi
+
 exit $fail
