@@ -65,7 +65,7 @@ jobs:
       - name: Flutter telepítése
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.47.2
+          flutter-version: 3.47.8
           channel: stable
           cache: true
 
@@ -76,6 +76,9 @@ jobs:
 
       - name: Függőségek
         run: flutter pub get
+
+      - name: eMudhra biztonsági javítások ellenőrzése
+        run: node tools/check-client-security.mjs
 
       - name: Statikus elemzés
         run: flutter analyze
@@ -110,6 +113,9 @@ jobs:
             --dart-define=HUHS_ENABLE_TEST_ADS=true \
             --dart-define=HUHS_ADMOB_BANNER_ID_IOS=${{ vars.HUHS_ADMOB_BANNER_ID_IOS }} \
             --dart-define=HUHS_ADMOB_REWARDED_ID_IOS=${{ vars.HUHS_ADMOB_REWARDED_ID_IOS }}
+
+      - name: Xcode által feloldott Firebase SDK ellenőrzése
+        run: node tools/check-client-security.mjs --apple-resolved
 
       # --- Aláírás nélküli IPA a kézi teszteléshez -------------------------
       # Az `.ipa` a valóságban egy zip, benne `Payload/Runner.app` — nincs
