@@ -1186,7 +1186,7 @@ class WordpressService {
         final total = _readInt(data['total'], fallback: filtered.length);
         final hasMore = data.containsKey('has_more')
             ? _readBool(data['has_more'])
-            : filtered.length >= currentPerPage;
+            : items.length >= currentPerPage;
         return EventsPage(
           items: filtered,
           page: currentPage,

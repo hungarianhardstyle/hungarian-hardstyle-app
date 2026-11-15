@@ -228,12 +228,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             content: AppText('Köszönjük az értékelést! +10 achipont.'),
           ),
         );
-        // ⚠️ PLAY-ÉRTÉKELÉS — pontosan EGYSZER, telepítésenként (2026-09-28).
-        // MIÉRT ITT: ez a legbiztonságosabb „pozitív pillanat" — a felhasználó
-        // épp csillagokat adott, a hívás szinkron és sikeres, és a felület már
-        // mutatja a köszönő üzenetet. A pont-események ezzel szemben aszinkronok
-        // (szerveroldali jóváírás), ezért ott a kérés rossz pillanatban is
-        // elindulhatna. Részletes indoklás: `services/app_review_prompt.dart`.
         unawaited(AppReviewPrompt.requestAfterPositiveMoment());
       }
     } catch (error) {

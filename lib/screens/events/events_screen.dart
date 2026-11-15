@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/i18n/tr.dart';
 import '../../providers/events_provider.dart';
+import '../../providers/news_provider.dart';
 import '../../providers/community_provider.dart';
 import '../../models/event.dart';
 import '../../widgets/app_text.dart';
@@ -10,7 +11,6 @@ import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/huhs_corner_logo.dart';
 import '../../services/submission_rules.dart';
-import '../../services/wordpress_service.dart';
 import 'event_submission_screen.dart';
 
 class EventsScreen extends ConsumerStatefulWidget {
@@ -26,8 +26,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   final _extraPast = <HuhsEvent>[];
   int _upcomingPage = 1;
   int _pastPage = 1;
-  bool _hasMoreUpcoming = false;
-  bool _hasMorePast = false;
+  bool? _hasMoreUpcoming;
+  bool? _hasMorePast;
   bool _loadingMoreUpcoming = false;
   bool _loadingMorePast = false;
 
@@ -59,25 +59,32 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       }
     });
     try {
-      final result = await WordpressService().getEventsPage(
-        includePast: past,
-        page: nextPage,
-        perPage: _eventPageSize,
-      );
+      final result = await ref
+          .read(wordpressServiceProvider)
+          .getEventsPage(
+            includePast: past,
+            page: nextPage,
+            perPage: _eventPageSize,
+          );
       if (!mounted) return;
       setState(() {
         if (past) {
           _pastPage = result.page;
+          final merged = _mergeEvents(
+            _extraPast,
+            result.items.where((event) => event.isPast).toList(),
+          );
           _extraPast
             ..clear()
-            ..addAll(_mergeEvents(_extraPast, result.items));
+            ..addAll(merged);
           _hasMorePast = result.hasMore;
           _loadingMorePast = false;
         } else {
           _upcomingPage = result.page;
+          final merged = _mergeEvents(_extraUpcoming, result.items);
           _extraUpcoming
             ..clear()
-            ..addAll(_mergeEvents(_extraUpcoming, result.items));
+            ..addAll(merged);
           _hasMoreUpcoming = result.hasMore;
           _loadingMoreUpcoming = false;
         }
@@ -100,15 +107,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     _extraPast.clear();
     _upcomingPage = 1;
     _pastPage = 1;
-    _hasMoreUpcoming = false;
-    _hasMorePast = false;
-    final service = WordpressService();
+    _hasMoreUpcoming = null;
+    _hasMorePast = null;
+    final service = ref.read(wordpressServiceProvider);
     await Future.wait([
       service.getEvents(forceRefresh: true),
       service.getEvents(includePast: true, forceRefresh: true),
     ]);
-    ref.invalidate(eventsProvider);
-    ref.invalidate(pastEventsProvider);
+    ref.invalidate(eventsPageProvider);
+    ref.invalidate(pastEventsPageProvider);
     await Future.wait<void>([
       ref.read(eventsProvider.future).then<void>((_) {}),
       ref.read(pastEventsProvider.future).then<void>((_) {}),
@@ -117,8 +124,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final events = ref.watch(eventsProvider);
+    final events = ref.watch(eventsPageProvider);
     final pastEvents = ref.watch(pastEventsProvider);
+    final pastPage = ref.watch(pastEventsPageProvider);
     final user = ref.watch(communityAuthProvider).valueOrNull;
     final service = ref.watch(communityServiceProvider);
     // Eseményt a tulajdonos szabálya szerint csak SZERVEZŐ (vagy admin)
@@ -186,31 +194,30 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   const SizedBox(height: 14),
                   Center(
                     child: FilledButton.icon(
-                      onPressed: () => ref.invalidate(eventsProvider),
+                      onPressed: () => ref.invalidate(eventsPageProvider),
                       icon: const Icon(Icons.refresh),
                       label: const AppText('Újrapróbálás'),
                     ),
                   ),
                 ],
               ),
-              data: (items) {
+              data: (pageData) {
+                final items = pageData.items;
                 final mergedItems = _mergeEvents(items, _extraUpcoming);
                 final mergedPast = _mergeEvents(
                   pastEvents.valueOrNull ?? const [],
                   _extraPast,
                 );
-                final canLoadUpcoming =
-                    _hasMoreUpcoming || items.length >= _eventPageSize;
+                final canLoadUpcoming = _hasMoreUpcoming ?? pageData.hasMore;
                 final canLoadPast =
-                    _hasMorePast ||
-                    (pastEvents.valueOrNull?.length ?? 0) >= _eventPageSize;
+                    _hasMorePast ?? pastPage.valueOrNull?.hasMore ?? false;
                 final pastSection = _PastEventsSection(
                   events: mergedPast,
                   hasMore: canLoadPast,
                   loadingMore: _loadingMorePast,
                   onLoadMore: () => _loadMore(past: true),
                 );
-                if (items.isEmpty) {
+                if (mergedItems.isEmpty) {
                   return ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.symmetric(
@@ -224,12 +231,21 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                         onRefresh: _refreshEvents,
                       ),
                       const SizedBox(height: 80),
-                      const Center(
-                        child: AppText(
-                          'Nincs közelgő esemény.',
-                          style: TextStyle(fontSize: 18, color: Colors.white70),
+                      if (!canLoadUpcoming)
+                        const Center(
+                          child: AppText(
+                            'Nincs közelgő esemény.',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white70,
+                            ),
+                          ),
                         ),
-                      ),
+                      if (canLoadUpcoming)
+                        _LoadMoreEventsButton(
+                          loading: _loadingMoreUpcoming,
+                          onPressed: () => _loadMore(past: false),
+                        ),
                       pastSection,
                     ],
                   );
@@ -377,7 +393,7 @@ class _PastEventsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (events.isEmpty) return const SizedBox.shrink();
+    if (events.isEmpty && !hasMore) return const SizedBox.shrink();
     return ExpansionTile(
       tilePadding: EdgeInsets.zero,
       title: const AppText('Korábbi események'),
@@ -416,7 +432,9 @@ class _LoadMoreEventsButton extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.expand_more),
-      label: Text(loading ? tr(context, 'Betöltés…') : tr(context, 'További események')),
+      label: Text(
+        loading ? tr(context, 'Betöltés…') : tr(context, 'További események'),
+      ),
     ),
   );
 }
