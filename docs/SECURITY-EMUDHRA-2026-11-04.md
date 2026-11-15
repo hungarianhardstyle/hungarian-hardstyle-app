@@ -33,8 +33,8 @@ A pubspec legalább Dart 3.13.7-et követel. Mindkét CI-konfiguráció Flutter 
 
 ## Helyi SDK és ellenőrzések
 
-2026-11-15 óta az alapértelmezett SDK (`C:/src/flutter`) maga is 3.47.8 (stable,
-a `3.47.8` tagre rögzítve); a korábbi külön `C:/src/flutter-3.47.8` könyvtár törölve.
+2026-11-15 óta az alapértelmezett SDK (`C:/src/flutter`) 3.47.9 (stable,
+2026-11-15: a `3.47.9` tagre rögzítve, a CI is 3.47.9); a korábbi külön `C:/src/flutter-3.47.8` könyvtár törölve.
 PATH-módosítás nem kell:
 
 ```powershell

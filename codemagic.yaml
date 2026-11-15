@@ -22,7 +22,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
-      flutter: 3.47.8
+      flutter: 3.47.9
       # A `latest` a Codemagic default Xcode-ját használja. Kiadás előtt
       # érdemes konkrét verzióra szorítani (pl. `xcode: 26.6`), hogy a build
       # jövő héten is ugyanaz legyen, mint ma.
@@ -67,7 +67,7 @@ workflows:
       # különben ez a hivatkozás nem talál semmit.
       app_store_connect: HUHS_APPLE
     environment:
-      flutter: 3.47.8
+      flutter: 3.47.9
       xcode: latest
       cocoapods: default
       # A bundle ID és az Android applicationId szándékosan UGYANAZ
