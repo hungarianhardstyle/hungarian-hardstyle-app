@@ -33,11 +33,11 @@ A pubspec legalább Dart 3.13.7-et követel. Mindkét CI-konfiguráció Flutter 
 
 ## Helyi SDK és ellenőrzések
 
-A javított SDK külön könyvtár: `C:/src/flutter-3.47.8`. A korábbi SDK megmaradt;
-kiadáshoz az új SDK-t kell használni. A PATH csak az egyes folyamatokban változott:
+2026-11-15 óta az alapértelmezett SDK (`C:/src/flutter`) maga is 3.47.8 (stable,
+a `3.47.8` tagre rögzítve); a korábbi külön `C:/src/flutter-3.47.8` könyvtár törölve.
+PATH-módosítás nem kell:
 
 ```powershell
-$env:PATH='C:/src/flutter-3.47.8/bin;' + $env:PATH
 node tools/check-client-security.mjs --self-test
 node tools/check-client-security.mjs
 flutter analyze --no-pub lib test
