@@ -1,5 +1,12 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🟢 A **409**-ES BUILD — A BEMUTATÓ NEM TAKARJA EL A LINKRŐL/PUSH-RÓL MEGNYITOTT TARTALMAT (2026-11-16)
+
+- **A HIBA (408):** a „mélylinkről nem jelenik meg" szabály a döntésben megvolt, de a `StartupGate` nem adta át — linkről vagy push-koppintásról indítva a bemutató a tartalom fölé kerülhetett.
+- **A JAVÍTÁS:** `ReferralLinkService.launchedFromContentLink()` (a link feloldása előtt dönt; `isContentLaunchLink`, a `/invite` nem számít) és `PushNotificationService.launchedFromNotification()` (a `getInitialMessage()` **egyszer** fut, a regisztráció is a közös eredményt használja). A kapu max. 2 mp-et vár; ilyenkor a bemutató **nincs lezárva**, a következő sima indításkor jön.
+- **A 408 nem került fel, a 409 felváltja**; az app-changelogban a 408 bejegyzés a 409-be olvadt (a Névjegy-teszt tiltja az ismétlődő sort).
+- **MÉRVE:** `flutter test` **1589/1589**, analyze tiszta, i18n strict, play-notes és kliensbiztonsági kapu rendben. AAB `build/HUHS-v1.0.0+409-release.aab`, 83 722 170 bájt, SHA-256 `7C47C9A528703C34580C3D881EBFFD84A17AB549473E4F06E53F8132331699C1`, `verify-aab` → **MINDEN ELLENŐRZÉS RENDBEN**.
+
 ### 🟢 A **408**-AS BUILD — 5 LÉPÉSES BEMUTATÓ (2026-11-16)
 
 - **A TULAJDONOS KÉRÉSE:** a 3 lépéses bemutató *„elég alap"* volt → *„az 5 lépésest"*.

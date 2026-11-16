@@ -12,6 +12,7 @@ import '../services/community_service.dart';
 import '../services/startup_announcement_cooldown.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../services/onboarding_state.dart';
+import '../services/push_notification_service.dart';
 import '../services/referral_link_service.dart';
 import '../core/navigation/in_app_browser.dart';
 import 'app_text.dart';
@@ -184,6 +185,21 @@ class _StartupGateState extends State<StartupGate>
     );
   }
 
+  /// Linkről vagy értesítésről indult-e az app. Mindkét jel gyorsan elkészül
+  /// (a link feloldása és a token-útvonal előtt); ha 2 másodperc alatt sem,
+  /// sima indításnak vesszük.
+  Future<bool> _launchedFromExternalTarget() async {
+    try {
+      final results = await Future.wait<bool>([
+        ReferralLinkService.launchedFromContentLink(),
+        PushNotificationService.launchedFromNotification(),
+      ]).timeout(const Duration(seconds: 2));
+      return results.any((launched) => launched);
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Onboarding (381): egyszer fut, friss telepítésnél.
   bool _onboardingChecked = false;
 
@@ -192,10 +208,14 @@ class _StartupGateState extends State<StartupGate>
   Future<void> _maybeShowOnboarding() async {
     if (!mounted) return;
     if (!await shouldShowOnboardingNow()) return;
+    // Megosztott linkre vagy push-koppintásra indult app (409): a felhasználó
+    // konkrét tartalmat nyit, ezért a bemutató most nem jön elő (nincs is
+    // lezárva, így a következő, sima indításkor megjelenik).
+    if (await _launchedFromExternalTarget()) return;
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const OnboardingScreen()),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const OnboardingScreen()));
   }
 
   @override

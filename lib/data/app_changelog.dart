@@ -38,10 +38,11 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
-    build: 408,
+    build: 409,
     changes: [
       'ÚJ: 5 lépéses bemutató — kiválaszthatod a kedvenc stílusaidat, és helyben követheted a DJ-ket.',
       'A Kezdőlap közelgő eseményei között előnyt kapnak a kedvenc stílusaidhoz illő bulik.',
+      'Ha megosztott linkről vagy értesítésről nyitod meg az appot, a bemutató nem takarja el a tartalmat.',
     ],
   ),
   AppReleaseNotes(

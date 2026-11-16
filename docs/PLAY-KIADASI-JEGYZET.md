@@ -1,14 +1,15 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás: **408** (1.0.0), 2026-11-16
+## Aktuális kiadás: **409** (1.0.0), 2026-11-16
 
-A Play API szerint az éles és az Alpha sávon is 407 van (100%), ezért a következő szabad kód 408.
+A Play API szerint az éles és az Alpha sávon is 407 van (100%). A 408 nem került fel, a 409 felváltja.
 Új 5 lépéses bemutató: stílusválasztás, DJ-követés helyben, belépés és értesítések.
 A Kezdőlap közelgő eseményei a választott stílusokhoz illő bulikat részesítik előnyben.
 
 ```play-notes
 ÚJ: 5 lépéses bemutató — kiválaszthatod a kedvenc stílusaidat, és helyben követheted a DJ-ket.
 A Kezdőlap közelgő eseményei között előnyt kapnak a kedvenc stílusaidhoz illő bulik.
+Ha megosztott linkről vagy értesítésről nyitod meg az appot, a bemutató nem takarja el a tartalmat.
 ```
 
 ## Korábbi kiadás: **407** (1.0.0), 2026-11-05
@@ -154,11 +155,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 408
+currentBuild: 409
 currentVersion: 1.0.0
 lastPublishedBuild: 407
-aab: build/HUHS-v1.0.0+408-release.aab
-sha256: 86BC69347DA7C3B44253E1FFD11020CA8000EF7B89C1DD9BF79DFC4212A747B7
+aab: build/HUHS-v1.0.0+409-release.aab
+sha256: 7C47C9A528703C34580C3D881EBFFD84A17AB549473E4F06E53F8132331699C1
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -581,6 +582,11 @@ pedig megköveteli az angol fordítását is (megvan: `assets/i18n/en.json`).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 409 — a bemutató nem takarja el a linkről/értesítésről megnyitott tartalmat
+- **A hiba (a 408-ban):** a „mélylinkről nyitva nem jelenik meg" szabály a döntésben megvolt, de az indulási kapu nem adta át — linkről vagy push-koppintásról nyitva a bemutató a megnyitott tartalom fölé kerülhetett.
+- **A javítás:** `ReferralLinkService.launchedFromContentLink()` (a link feloldása ELŐTT dönt) és `PushNotificationService.launchedFromNotification()` (az indító értesítést EGYSZER kérjük le, a regisztráció is ezt használja); a `StartupGate` legfeljebb 2 mp-et vár rájuk. A bemutató ilyenkor nincs lezárva, a következő sima indításkor megjelenik. Meghívó-link (`/invite`) nem számít.
+- **A 408-at nem kell feltölteni**, a 409 tartalmazza.
 
 ### 408 — 5 lépéses bemutató (stílusok, DJ-követés helyben, belépés, értesítések)
 - **A tulajdonos kérése (2026-11-16):** a régi, 3 lépéses bemutató *„elég alap"* volt; a javasolt 5 lépéses változat készült el.

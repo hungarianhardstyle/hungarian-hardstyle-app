@@ -10,17 +10,45 @@ import 'content_link_route.dart';
 
 class ReferralLinkService {
   static const _pendingCodeKey = 'pending_referral_code';
-  static const _installReferrerChannel = MethodChannel('hu_hs/install_referrer');
+  static const _installReferrerChannel = MethodChannel(
+    'hu_hs/install_referrer',
+  );
   static StreamSubscription<Uri>? _subscription;
   static Future<void>? _initialization;
 
   static Future<void> initialize() => _initialization ??= _initialize();
 
+  /// Tartalom-linkről indult-e az app (409)? A feloldás (hálózat) **előtt**
+  /// készül el, ezért az indulás gyorsan dönthet: ilyenkor a bemutató nem
+  /// takarja el a megnyitott tartalmat.
+  static final Completer<bool> _launchedFromContentLink = Completer<bool>();
+
+  static Future<bool> launchedFromContentLink() {
+    unawaited(initialize());
+    return _launchedFromContentLink.future;
+  }
+
+  /// Tartalom-link-e (nem meghívó, és feloldható célpontra mutat) — ugyanaz a
+  /// feltétel, mint a `_storeFromUri` tartalom-ágán.
+  static bool isContentLaunchLink(Uri? uri) {
+    if (uri == null || _codeFromUri(uri) != null) return false;
+    final route = contentLinkRouteFromUri(uri);
+    if (route.kind == ContentLinkKind.invite) return false;
+    return route.kind != ContentLinkKind.unknown || route.isNavigable;
+  }
+
   static Future<void> _initialize() async {
     final links = AppLinks();
     try {
-      await _storeFromUri(await links.getInitialLink());
+      final initial = await links.getInitialLink();
+      if (!_launchedFromContentLink.isCompleted) {
+        _launchedFromContentLink.complete(isContentLaunchLink(initial));
+      }
+      await _storeFromUri(initial);
     } catch (_) {}
+    if (!_launchedFromContentLink.isCompleted) {
+      _launchedFromContentLink.complete(false);
+    }
     try {
       final rawReferrer = await _installReferrerChannel.invokeMethod<String>(
         'getInstallReferrer',

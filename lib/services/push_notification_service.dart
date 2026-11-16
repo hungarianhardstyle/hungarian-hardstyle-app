@@ -83,9 +83,31 @@ class PushNotificationService {
     return null;
   }
 
+  /// Az indító értesítés (ha az app egy push-koppintásra nyílt meg) — **egyszer**
+  /// kérjük le, mert Androidon a második lekérés már üres lehet. A regisztráció
+  /// és az indulási kapu is ezt a közös eredményt használja.
+  static Future<RemoteMessage?>? _initialMessage;
+
+  static Future<RemoteMessage?> _initialMessageOnce() =>
+      _initialMessage ??= () async {
+        try {
+          return await FirebaseMessaging.instance.getInitialMessage();
+        } catch (_) {
+          return null;
+        }
+      }();
+
+  /// Push-koppintásra indult-e az app (409)? Ilyenkor a bemutató nem takarja
+  /// el a megnyitott tartalmat.
+  static Future<bool> launchedFromNotification() async =>
+      await _initialMessageOnce() != null;
+
   static Future<void> initialize() async {
     if (_initializeStarted) return;
     _initializeStarted = true;
+    // Engedély nélkül is lekérjük (nem jelenít meg semmit), hogy az indulási
+    // döntés ne a lassú token-útvonalra várjon.
+    unawaited(_initialMessageOnce());
 
     // ⚠️ 2026-09-28 — AZ OS-ABLAK **NEM ITT** JELENIK MEG (mért probléma: eddig
     // induláskor, minden felhasználói művelet előtt kértük az engedélyt, ezért
@@ -158,7 +180,7 @@ class PushNotificationService {
     messaging.onTokenRefresh.listen(_storeToken);
     FirebaseMessaging.onMessage.listen(_showForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_handleOpenedMessage);
-    final initialMessage = await messaging.getInitialMessage();
+    final initialMessage = await _initialMessageOnce();
     if (initialMessage != null) {
       await _handleOpenedMessage(initialMessage);
     }
@@ -330,10 +352,12 @@ class PushNotificationService {
       // chatről, hogy live … akkor nyissa meg a twitches oldalt a pushra
       // nyomva”*. A széles push a Twitch-csatorna URL-jét hozza, ezért itt
       // **nem** a böngészőt nyitjuk, hanem az app saját Twitch-oldalát.
-      if (type == 'twitch_live' || type == 'twitch' || isTwitchChannelUrl(url)) {
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const TwitchScreen()),
-        );
+      if (type == 'twitch_live' ||
+          type == 'twitch' ||
+          isTwitchChannelUrl(url)) {
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const TwitchScreen()));
         return;
       }
       await openInAppBrowser(context, url, title: message.notification?.title);
