@@ -16,6 +16,11 @@ A plugin a mobilalkalmazás egyetlen backendje: REST végpontok a hírekhez, ese
 
 == Changelog ==
 
+= 2.15.0 =
+* Új: **QR-becsekkolás a bulikon** — az esemény szerkesztőjében eseményenként egyedi QR (letölthető PNG). Csak a buli ideje alatt érvényes, fiókonként egyszer; a becsekkolók pontot és jelvényt kapnak, a szerkesztőben látszik a létszám.
+* Új: **időbeosztás** mező az eseményeken (soronként: 22:00 - 23:30 | DJ) — az appban a „Ma este” kártyán és az adatlapon jelenik meg.
+* Új: becsekkolási jelvény neve és képe eseményenként.
+
 = 2.14.29 =
 * Javítva: egy készülék **egy** értesítést kap egy körből (a token-tárban egy eszköz több kulcson is szerepelhetett → 2-3 push ugyanarra a telefonra).
 * Javítva: az **esemény-emlékeztető**, az **esemény/kiadvány push** és a **nyitás-értesítés** nem megy ki kétszer, ha a pontos cron-esemény és az ötperces biztonsági scan ugyanabba az ablakba esik (foglalás a küldés előtt).

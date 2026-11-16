@@ -44,6 +44,7 @@
   "Az elfogadás nem sikerült.\n{error}",
   "Az elutasítás nem sikerült.\n{error}",
   "Az esemény már nem érhető el.",
+  "Becsekkolás",
   "Bejegyzés: {id}",
   "Beküldés",
   "Betöltés",
@@ -57,6 +58,5 @@
   "Érvénytelen e-mail-cím.",
   "Esemény beküldése",
   "Esemény értékelése",
-  "Események, ahol ott leszek",
-  "Felfedezés"
+  "Események, ahol ott leszek"
 ]

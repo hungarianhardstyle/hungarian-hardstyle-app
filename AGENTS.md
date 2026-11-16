@@ -1,5 +1,15 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🟢 A **410**-ES BUILD + PLUGIN **2.15.0** — QR-BECSEKKOLÁS, „MA ESTE” KÁRTYA, +25 PONT (2026-11-16)
+
+- **A TULAJDONOS KÉRÉSE:** a buli legyen a középpont: QR-becsekkolás a következő bulira, időbeosztás a bulinapi kártyán, +25 pont a belépésért (a „meglévő felhasználók csak a hiányzó lépéseket látják” ötlet **nem kell**; az „ismerőseid is jönnek” értesítés és a fotóalbum **későbbre**).
+- **BECSEKKOLÁS:** plugin `includes/event-checkin.php` — eseményenként titkos kód (`_huhs_checkin_code`), QR-link `https://hungarianhardstyle.hu/checkin/<id>/<kód>` (letölthető PNG az esemény szerkesztőjében, a `qrcode.js` MIT-licences, a plugin `assets/`-ében). A **WordPress** dönt: kód + időablak (kezdés előtt 1 órától a végéig; záró idő nélkül +10 óra) + fiókonként egyszer; a sor LÉTEZÉSE számít (a `(bool) '0'` tanulság), **UID-t nem tárol**, csak sózott ujjlenyomatot. A **Firebase** `checkInEvent` hívja (alkalmazás-jelszóval), a pontot (30, `event-checkin:<id>` ledger) és a jelvényt (`event_checkins/<uid>_<id>`, csak a saját olvasható) írja.
+- **APP:** `tonight_plan.dart` (tiszta: a „Ma este” a buli napján reggel 6-tól, amíg tart), `TonightCard` (időbeosztás, térkép, jegy, Becsekkolás gomb), `CheckinScannerScreen` (`mobile_scanner`, `useUnbundled=true` a gradle.properties-ben), `/checkin` app-link (manifest + `ReferralLinkService.checkinTargetFromUri` → a beolvasó a linkkel indul), „Ott voltam” jelvények a saját profilon, időbeosztás az esemény adatlapján.
+- **+25 PONT:** `claimWelcomeSignInBonus` (egyszer, `welcome-sign-in` ledger); a bemutató végén hívja, csak bejelentkezett fióknál; a bemutató belépés-lépése felsorolja.
+- **MÉRVE:** `flutter test` **1600/1600**, analyze tiszta, i18n strict rendben, függvények tiszta tesztjei **411/411** (7 új), `check-play-notes` rendben. AAB `build/HUHS-v1.0.0+410-release.aab`, 85 962 588 bájt, SHA-256 `60C06F287B7E8490CBCF108A8D5561EB2E85FA134AB353CD972C42F70A7B7070`, `verify-aab` rendben. Plugin `build/huhs-mobile-api-2.15.0.zip`, 236 860 bájt, SHA-256 `718B2B3716150965D083B845A97BB00FA461E1174AC609032C4735D2C5B8311C`, `verify-plugin-package` rendben.
+- **⚠️ KORLÁT:** a PHP-logikát (`tools/verify-event-checkin.php`) **nem tudtam lefuttatni** (nincs PHP, a Docker nem indult el) — a szintaxis (52/52 parse) és a Node-oldali tesztek zöldek, a viselkedésmérés a Docker-harnessre vár. Eszközön, valódi QR-ral nem próbáltam.
+- **A TULAJDONOS LÉPÉSE:** (1) plugin 2.15.0 feltöltése; (2) az esemény szerkesztőjében időbeosztás + jelvény kitöltése, a QR kinyomtatása/kivetítése; (3) a 410 feltöltése a Playre (a 408/409-et nem kell). A Kassa Hajó (11. 21.) bulira szoros, mert a Play-ellenőrzésnek addig le kell futnia.
+
 ### 🟢 A **409**-ES BUILD — A BEMUTATÓ NEM TAKARJA EL A LINKRŐL/PUSH-RÓL MEGNYITOTT TARTALMAT (2026-11-16)
 
 - **A HIBA (408):** a „mélylinkről nem jelenik meg" szabály a döntésben megvolt, de a `StartupGate` nem adta át — linkről vagy push-koppintásról indítva a bemutató a tartalom fölé kerülhetett.

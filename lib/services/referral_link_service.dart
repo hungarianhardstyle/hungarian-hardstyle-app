@@ -30,8 +30,16 @@ class ReferralLinkService {
 
   /// Tartalom-link-e (nem meghívó, és feloldható célpontra mutat) — ugyanaz a
   /// feltétel, mint a `_storeFromUri` tartalom-ágán.
+  /// A bulis becsekkolás QR-linkje: `/checkin/<eseményId>/<kód>` → `<id>/<kód>`.
+  static String? checkinTargetFromUri(Uri? uri) {
+    if (uri == null || uri.host != 'hungarianhardstyle.hu') return null;
+    final match = RegExp(r'^/checkin/(\d+)/([A-Za-z0-9]+)/?$').firstMatch(uri.path);
+    return match == null ? null : '${match.group(1)}/${match.group(2)}';
+  }
+
   static bool isContentLaunchLink(Uri? uri) {
     if (uri == null || _codeFromUri(uri) != null) return false;
+    if (checkinTargetFromUri(uri) != null) return true;
     final route = contentLinkRouteFromUri(uri);
     if (route.kind == ContentLinkKind.invite) return false;
     return route.kind != ContentLinkKind.unknown || route.isNavigable;
@@ -74,6 +82,13 @@ class ReferralLinkService {
     if (code != null) {
       final preferences = await SharedPreferences.getInstance();
       await preferences.setString(_pendingCodeKey, code);
+      return;
+    }
+    // Becsekkolási QR-link (410): nincs hálózati feloldás — a kód a linkben van.
+    final checkin = checkinTargetFromUri(uri);
+    if (checkin != null) {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setString(_pendingContentKey, 'checkin:$checkin');
       return;
     }
     // **Tartalom-link** (381): a megosztott hír/esemény/kiadvány/DJ linket

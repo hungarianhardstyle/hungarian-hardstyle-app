@@ -929,6 +929,14 @@
     ]
   },
   {
+    "value": "Becsekkolás",
+    "count": 2,
+    "files": [
+      "lib/screens/events/checkin_scanner_screen.dart",
+      "lib/widgets/tonight_card.dart"
+    ]
+  },
+  {
     "value": "Bejegyzés: {id}",
     "count": 2,
     "files": [
@@ -1236,6 +1244,14 @@
     ]
   },
   {
+    "value": "Kész",
+    "count": 2,
+    "files": [
+      "lib/screens/events/checkin_scanner_screen.dart",
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "Kezdőlap",
     "count": 2,
     "files": [
@@ -1537,6 +1553,14 @@
     "count": 2,
     "files": [
       "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Térkép",
+    "count": 2,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart",
+      "lib/widgets/tonight_card.dart"
     ]
   },
   {
@@ -1854,6 +1878,13 @@
     ]
   },
   {
+    "value": "+{n} pont jár a becsekkolásért.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/checkin_scanner_screen.dart"
+    ]
+  },
+  {
     "value": "+1 pont",
     "count": 1,
     "files": [
@@ -1924,6 +1955,13 @@
     ]
   },
   {
+    "value": "A becsekkoláshoz be kell jelentkezned.",
+    "count": 1,
+    "files": [
+      "lib/widgets/tonight_card.dart"
+    ]
+  },
+  {
     "value": "A bekapcsoláshoz előbb jelöld be: Ott leszek.",
     "count": 1,
     "files": [
@@ -1952,6 +1990,13 @@
     ]
   },
   {
+    "value": "A belépésért +25 pont jár ajándékba",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "A beszélgetések nem tölthetők be.",
     "count": 1,
     "files": [
@@ -1970,6 +2015,13 @@
     "count": 1,
     "files": [
       "lib/screens/artists/artist_edit_screen.dart"
+    ]
+  },
+  {
+    "value": "A bulin QR-kóddal becsekkolhatsz: pont és jelvény jár érte",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -2362,6 +2414,13 @@
     "count": 1,
     "files": [
       "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A kamera nem érhető el. Engedélyezd a kamerát a telefon beállításaiban.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/checkin_scanner_screen.dart"
     ]
   },
   {
@@ -3730,6 +3789,13 @@
     ]
   },
   {
+    "value": "Becsekkoltál!",
+    "count": 1,
+    "files": [
+      "lib/screens/events/checkin_scanner_screen.dart"
+    ]
+  },
+  {
     "value": "Bejelentkezés",
     "count": 1,
     "files": [
@@ -4164,6 +4230,13 @@
     ]
   },
   {
+    "value": "Ellenőrzés…",
+    "count": 1,
+    "files": [
+      "lib/screens/events/checkin_scanner_screen.dart"
+    ]
+  },
+  {
     "value": "Ellenőrző e-mail újraküldése",
     "count": 1,
     "files": [
@@ -4294,6 +4367,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Erre a bulira már becsekkoltál.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/checkin_scanner_screen.dart"
     ]
   },
   {
@@ -5193,6 +5273,13 @@
     ]
   },
   {
+    "value": "Időbeosztás",
+    "count": 1,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
     "value": "Időpont törlése",
     "count": 1,
     "files": [
@@ -5428,6 +5515,13 @@
     "count": 1,
     "files": [
       "lib/widgets/prize_entry_card.dart"
+    ]
+  },
+  {
+    "value": "Jegy",
+    "count": 1,
+    "files": [
+      "lib/widgets/tonight_card.dart"
     ]
   },
   {
@@ -5764,13 +5858,6 @@
     "count": 1,
     "files": [
       "lib/screens/releases/releases_screen.dart"
-    ]
-  },
-  {
-    "value": "Kész",
-    "count": 1,
-    "files": [
-      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -6282,6 +6369,13 @@
     "count": 1,
     "files": [
       "lib/services/news_reaction_service.dart"
+    ]
+  },
+  {
+    "value": "MA ESTE",
+    "count": 1,
+    "files": [
+      "lib/widgets/tonight_card.dart"
     ]
   },
   {
@@ -7027,6 +7121,13 @@
     ]
   },
   {
+    "value": "Olvasd be a bejáratnál kitett QR-kódot.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/checkin_scanner_screen.dart"
+    ]
+  },
+  {
     "value": "Olvasottnak jelölés",
     "count": 1,
     "files": [
@@ -7087,6 +7188,13 @@
     "count": 1,
     "files": [
       "lib/screens/events/event_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Ott voltam",
+    "count": 1,
+    "files": [
+      "lib/widgets/checkin_badges_section.dart"
     ]
   },
   {
@@ -7661,13 +7769,6 @@
     "count": 1,
     "files": [
       "lib/screens/artists/artist_edit_screen.dart"
-    ]
-  },
-  {
-    "value": "Térkép",
-    "count": 1,
-    "files": [
-      "lib/screens/events/event_detail_screen.dart"
     ]
   },
   {

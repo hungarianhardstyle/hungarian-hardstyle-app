@@ -1,4 +1,12 @@
 [
+  "Az értesítések törlése nem sikerült.",
+  "Az értesítésekkel szólunk az új hírekről, a közelgő eseményekről és a közösségi üzenetekről. A telefonod most engedélyt kér ehhez — bármikor kikapcsolhatod a Beállításokban.",
+  "Az esemény nem tölthető be.",
+  "Az esemény vége nem lehet a kezdés előtt vagy azzal egy időben.",
+  "Az esemény végét napra és órára együtt add meg.",
+  "Az esemény- és meetup-pont eseményenként (meetuponként) egyszer jár, és a jelentkezésedhez igazodik: lemondásnál elvész, visszajelentkezésnél újra jár.",
+  "Az indítási kép mentése nem sikerült: {detail}",
+  "Az ingyenes kiadványok nem tölthetők be.",
   "Az ingyenes külső link érvénytelen.",
   "Az irányítószám csak számokat tartalmazhat.",
   "Az ismerős törlése nem sikerült.",
@@ -16,6 +24,7 @@
   "Beállítás állapota",
   "Beállítás betöltése…",
   "Beatport",
+  "Becsekkoltál!",
   "Bejelentkezés",
   "Bejelentkezés szükséges.",
   "Bejelentő: {name}",
@@ -49,14 +58,5 @@
   "Csere",
   "Dátum *",
   "Diagnosztika futtatása",
-  "DJ",
-  "DJ / előadó beküldése",
-  "DJ-k száma",
-  "DJ-logó feltöltése",
-  "DJ-név *",
-  "E-mail-cím",
-  "E-mail-cím nem érhető el",
-  "Ebben a kvízben már játszottál",
-  "Egy fiók egyszer játszhat, a válasz utólag nem módosítható. Csak a helyes válasz nyerhet.",
-  "Egy fiók egyszer szavazhat, a szavazat utólag nem módosítható. Az eredmény nem nyilvános."
+  "DJ"
 ]

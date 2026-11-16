@@ -1,6 +1,14 @@
 [
+  "A jelvény a felhasználó neve elé kerül, egy sorban",
+  "A jelvényed a profilodon látható. A chatben a neve mellett is megjeleníthető, ha ezt a Beállításokban engedélyezed.",
+  "A jelvények grafikáit és a szintek pontszámait a HUHS adminisztrátora kezeli, ezért itt mindig a jelenlegi állapot látszik.",
+  "A jutalmazott reklám betöltése…",
+  "A jutalmazott reklám megtekintése után a fájl letölthető.",
+  "A jutalmazott reklám megtekintése után a WAV letölthető.",
+  "A jutalmazott reklám megtekintése után megnyitható.",
   "A jutalom jóváírása…",
   "A jutalom jóváírva. A letöltés indul…",
+  "A kamera nem érhető el. Engedélyezd a kamerát a telefon beállításaiban.",
   "A kedvenc nem tölthető be.",
   "A kép Cloudinary-ra kerül, és az app indulásakor bezárható.",
   "A kép mentése nem sikerült. Ellenőrizd a tárhelyengedélyt, majd próbáld újra.",
@@ -50,13 +58,5 @@
   "A nyereményjáték adatait most nem sikerült betölteni.\n{error}",
   "A nyilakkal rendezheted a sorrendet — fiókonként megjegyzi.",
   "A Play-termékazonosítók még nem érkeztek meg. Újrapróbálom automatikusan.",
-  "A profil mentése sikertelen: {error}",
-  "A profil nem tölthető be. Ellenőrizd az internetkapcsolatot.",
-  "A profil törlése sikertelen: {error}",
-  "A profil törlése sikerült.",
-  "A profil védelméhez a regisztráció után opcionális kétfaktoros védelem kapcsolható be a Beállításokban.",
-  "A profil, a Chat-üzenetek és a bejelentkezés is törlődik. Folytatod?",
-  "A profilod, a Chat-üzeneteid és a bejelentkezésed is törlődik. A nyereményjátékból is kikerülsz, így nem nyerhetsz jegyet. Folytatod?",
-  "A push elküldve.",
-  "A push nem sikerült: {error}"
+  "A profil mentése sikertelen: {error}"
 ]

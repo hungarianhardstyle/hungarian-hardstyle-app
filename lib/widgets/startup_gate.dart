@@ -9,6 +9,7 @@ import '../core/navigation/content_target.dart';
 import '../core/i18n/tr.dart';
 import '../screens/main_navigation.dart';
 import '../services/community_service.dart';
+import '../screens/events/checkin_scanner_screen.dart';
 import '../services/startup_announcement_cooldown.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../services/onboarding_state.dart';
@@ -178,6 +179,17 @@ class _StartupGateState extends State<StartupGate>
     final type = parts.first.trim();
     final id = parts.sublist(1).join(':').trim();
     if (type.isEmpty || id.isEmpty) return;
+    if (type == 'checkin') {
+      // Becsekkolási QR-link (410): a beolvasó a linkkel indul, a szerver dönt.
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => CheckinScannerScreen(
+            initialQr: 'https://hungarianhardstyle.hu/checkin/$id',
+          ),
+        ),
+      );
+      return;
+    }
     await openContentTarget(
       Navigator.of(context),
       targetType: type,

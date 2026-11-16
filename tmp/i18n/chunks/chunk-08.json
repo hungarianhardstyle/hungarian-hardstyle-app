@@ -1,4 +1,12 @@
 [
+  "A(z) {row}. kérdésnél jelöld meg a helyes választ.",
+  "Achievement a chatben",
+  "Achievement rang",
+  "Achievement rendszer",
+  "Achievement-pontokat és jelvényeket gyűjthetsz",
+  "Achievement-szintlépések",
+  "Achievementek",
+  "Adatkezelés, megőrzés és felhasználói jogok",
   "Adatközpont",
   "Adatlap átvétele",
   "Add meg a születési dátumodat. A közösségi funkciók 16 éves kortól használhatók, és a dátum a kiskorúak védelmét szolgálja.",
@@ -50,13 +58,5 @@
   "Az eredmény a leadott szavazatokból számol újra, ezért a lezárt kérdőíveknél is pontos marad. Ez az oldal csak adminisztrátornak látszik.",
   "Az eredményeket a játék lezárása után láthatod{d}.",
   "Az értesítések frissítése nem sikerült.",
-  "Az értesítések nem tölthetők be.",
-  "Az értesítések törlése nem sikerült.",
-  "Az értesítésekkel szólunk az új hírekről, a közelgő eseményekről és a közösségi üzenetekről. A telefonod most engedélyt kér ehhez — bármikor kikapcsolhatod a Beállításokban.",
-  "Az esemény nem tölthető be.",
-  "Az esemény vége nem lehet a kezdés előtt vagy azzal egy időben.",
-  "Az esemény végét napra és órára együtt add meg.",
-  "Az esemény- és meetup-pont eseményenként (meetuponként) egyszer jár, és a jelentkezésedhez igazodik: lemondásnál elvész, visszajelentkezésnél újra jár.",
-  "Az indítási kép mentése nem sikerült: {detail}",
-  "Az ingyenes kiadványok nem tölthetők be."
+  "Az értesítések nem tölthetők be."
 ]

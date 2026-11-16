@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/firebase/firebase_callable.dart';
 import '../../core/i18n/tr.dart';
 import '../../models/artist.dart';
 import '../../providers/artists_provider.dart';
@@ -69,7 +72,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await savePreferredGenres(prefs, _genres);
     markOnboardingCompleted(prefs);
     ref.invalidate(preferredGenresProvider);
+    // Belépett felhasználónak a +25 pont (egyszeri, a szerver ledgere őrzi).
+    if (ref.read(currentUidProvider) != null) {
+      unawaited(_claimWelcomeBonus());
+    }
     if (mounted) Navigator.of(context).maybePop();
+  }
+
+  Future<void> _claimWelcomeBonus() async {
+    try {
+      await callFirebaseCallable<Map<String, dynamic>>(
+        'claimWelcomeSignInBonus',
+      );
+    } catch (_) {
+      // Best-effort: a bemutató nem akadhat el egy pontjóváíráson.
+    }
   }
 
   Future<void> _next() async {
@@ -400,6 +417,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           benefit(
             Icons.event_available,
             tr(context, 'Jelezheted, melyik bulin leszel ott'),
+          ),
+          benefit(
+            Icons.qr_code_scanner,
+            tr(context, 'A bulin QR-kóddal becsekkolhatsz: pont és jelvény jár érte'),
+          ),
+          benefit(
+            Icons.card_giftcard,
+            tr(context, 'A belépésért +25 pont jár ajándékba'),
           ),
           Padding(
             padding: const EdgeInsets.all(24),

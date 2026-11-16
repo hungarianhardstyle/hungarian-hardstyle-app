@@ -699,6 +699,44 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                         ],
                       ),
                     ),
+                    if (event.hasTimetable)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          key: const Key('event-timetable'),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const AppText(
+                              'Időbeosztás',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            for (final entry in event.timetable)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 2),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      width: 104,
+                                      child: Text(
+                                        entry.time,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          color: Theme.of(context).colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(child: Text(entry.artist)),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     if (descriptionHtml.isNotEmpty)
                       Html(
                         data: linkifyPlainUrls(descriptionHtml),

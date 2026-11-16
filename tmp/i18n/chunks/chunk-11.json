@@ -1,4 +1,15 @@
 [
+  "Érvényes HTTPS-linket adj meg.",
+  "Esemény a naptárba",
+  "Esemény elküldése",
+  "Esemény neve *",
+  "Esemény utáni értékelés",
+  "Esemény vége",
+  "Esemény vége – óra",
+  "Esemény-emlékeztetők",
+  "Esemény, ahol ott lesz",
+  "Esemény, ahol ott leszek",
+  "Események száma",
   "Eseményen ott leszek",
   "Eseményenként egyszer adható.",
   "Eseményenként egyszer jár. Amíg jelentkezve vagy rá, addig érvényes: ha lemondod, a pont elvész, visszajelentkezésnél újra jár.",
@@ -47,16 +58,5 @@
   "Fontos szabályok",
   "Forrás: {source}",
   "Fotó készítése",
-  "FRISS HÍR",
-  "Friss hírek",
-  "Friss hírek a hazai és külföldi színtérről",
-  "Frissítsd az alkalmazást a legújabb javításokért.",
-  "Függőben lévő beküldések",
-  "Galéria",
-  "Gomb felirata (például: Jegyek)",
-  "Gomb linkje (HTTPS)",
-  "Google Authenticator",
-  "Google Naptár",
-  "Google-bejelentkezés nem sikerült: {error}",
-  "Gratulálunk a nyertesnek! A részleteket e-mailben is elküldtük."
+  "FRISS HÍR"
 ]

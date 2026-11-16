@@ -33,6 +33,7 @@ import '../../services/community_service.dart';
 import '../../services/chat_display_preferences.dart';
 import '../../services/birth_date.dart';
 import '../../widgets/app_text.dart';
+import '../../widgets/checkin_badges_section.dart';
 import '../../widgets/birth_date_field.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../services/referral_link_service.dart';
@@ -3901,6 +3902,7 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
             onTap: () => FavoritesScreen.openEntry(context, ref, entry),
           ),
       ],
+      const CheckinBadgesSection(),
       StreamBuilder<List<QueryDocumentSnapshot<Map<String, dynamic>>>>(
         stream: _service.watchActivePlannedEvents(),
         builder: (context, snapshot) {

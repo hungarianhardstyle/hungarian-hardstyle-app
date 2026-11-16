@@ -29,6 +29,7 @@ import '../../widgets/mobile_ad_banner.dart';
 import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/home_action_card.dart';
+import '../../widgets/tonight_card.dart';
 import '../../widgets/poll_entry_button.dart';
 import '../../widgets/prize_entry_card.dart';
 import '../../services/notification_service.dart';
@@ -470,6 +471,9 @@ class HomeScreen extends ConsumerWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        // A buli napján (és amíg tart) a „Ma este” kártya;
+                        // egyébként nem foglal helyet.
+                        const TonightCard(),
                         // A nyeremenyjatek sora magatol eltunik, ha nincs
                         // nyitott jatek es nincs frissen kihirdetett nyertes.
                         const PrizeEntryCard(),

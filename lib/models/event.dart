@@ -42,6 +42,24 @@ class EventOrganizer {
   }
 }
 
+/// Az időbeosztás egy sora (pl. `22:00 - 23:30` — Denoiser).
+class EventTimetableEntry {
+  final String time;
+  final String artist;
+
+  const EventTimetableEntry({required this.time, required this.artist});
+
+  static EventTimetableEntry? fromJson(Object? value) {
+    if (value is! Map) return null;
+    final artist = _readString(value['artist']);
+    if (artist.isEmpty) return null;
+    return EventTimetableEntry(
+      time: _readString(value['time']),
+      artist: artist,
+    );
+  }
+}
+
 class HuhsEvent {
   final int id;
   final String title;
@@ -67,6 +85,14 @@ class HuhsEvent {
   final bool visible;
   final String status;
 
+  /// Időbeosztás és QR-becsekkolás (plugin 2.15.0). Régebbi válaszban hiányzik.
+  final List<EventTimetableEntry> timetable;
+  final bool checkinEnabled;
+  final String checkinOpens;
+  final String checkinCloses;
+  final String checkinBadgeName;
+  final String checkinBadgeUrl;
+
   const HuhsEvent({
     required this.id,
     required this.title,
@@ -91,6 +117,12 @@ class HuhsEvent {
     required this.featured,
     required this.visible,
     required this.status,
+    this.timetable = const [],
+    this.checkinEnabled = false,
+    this.checkinOpens = '',
+    this.checkinCloses = '',
+    this.checkinBadgeName = '',
+    this.checkinBadgeUrl = '',
   });
 
   factory HuhsEvent.fromJson(Map<String, dynamic> json) {
@@ -132,6 +164,17 @@ class HuhsEvent {
       featured: _readBool(json['featured']),
       visible: _readBool(json['visible']),
       status: _readString(json['status']),
+      timetable: json['timetable'] is List
+          ? (json['timetable'] as List)
+                .map(EventTimetableEntry.fromJson)
+                .whereType<EventTimetableEntry>()
+                .toList()
+          : const [],
+      checkinEnabled: _readBool(json['checkin_enabled']),
+      checkinOpens: _readString(json['checkin_opens']),
+      checkinCloses: _readString(json['checkin_closes']),
+      checkinBadgeName: _readString(json['checkin_badge_name']),
+      checkinBadgeUrl: _readString(json['checkin_badge_url']),
     );
   }
 
@@ -151,6 +194,12 @@ class HuhsEvent {
   bool get hasGoogleMaps => googleMapsUrl.trim().isNotEmpty;
 
   bool get hasFacebookEvent => facebookEventUrl.trim().isNotEmpty;
+
+  bool get hasTimetable => timetable.isNotEmpty;
+
+  /// A becsekkolás ablaka (a szerver adja UTC-ben); null, ha nincs.
+  DateTime? get checkinOpensAt => DateTime.tryParse(checkinOpens)?.toLocal();
+  DateTime? get checkinClosesAt => DateTime.tryParse(checkinCloses)?.toLocal();
 
   bool get isPast => isPastAt(DateTime.now());
 

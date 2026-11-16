@@ -1,15 +1,15 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás: **409** (1.0.0), 2026-11-16
+## Aktuális kiadás: **410** (1.0.0), 2026-11-16
 
-A Play API szerint az éles és az Alpha sávon is 407 van (100%). A 408 nem került fel, a 409 felváltja.
-Új 5 lépéses bemutató: stílusválasztás, DJ-követés helyben, belépés és értesítések.
-A Kezdőlap közelgő eseményei a választott stílusokhoz illő bulikat részesítik előnyben.
+A Play API szerint az éles és az Alpha sávon is 407 van (100%). A 408 és a 409 nem került fel, a 410 mindkettőt tartalmazza.
+ÚJ: QR-kódos becsekkolás a bulikon (pont + jelvény), „Ma este” kártya a Kezdőlapon, +25 pont a belépésért. **A becsekkolás működéséhez a WordPress-plugin 2.15.0 és a Firebase-függvények kellenek** (a függvények élesítve vannak, a plugint a tulajdonos tölti fel).
 
 ```play-notes
+ÚJ: QR-kódos becsekkolás a bulikon — a bejáratnál kitett QR beolvasása pontot és „Ott voltam” jelvényt ad.
+Új „Ma este” kártya a Kezdőlapon a buli napján: időbeosztás, térkép, jegy és becsekkolás.
+A belépésért +25 pont jár ajándékba, az esemény adatlapján pedig megjelenik az időbeosztás.
 ÚJ: 5 lépéses bemutató — kiválaszthatod a kedvenc stílusaidat, és helyben követheted a DJ-ket.
-A Kezdőlap közelgő eseményei között előnyt kapnak a kedvenc stílusaidhoz illő bulik.
-Ha megosztott linkről vagy értesítésről nyitod meg az appot, a bemutató nem takarja el a tartalmat.
 ```
 
 ## Korábbi kiadás: **407** (1.0.0), 2026-11-05
@@ -155,11 +155,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 409
+currentBuild: 410
 currentVersion: 1.0.0
 lastPublishedBuild: 407
-aab: build/HUHS-v1.0.0+409-release.aab
-sha256: 7C47C9A528703C34580C3D881EBFFD84A17AB549473E4F06E53F8132331699C1
+aab: build/HUHS-v1.0.0+410-release.aab
+sha256: 60C06F287B7E8490CBCF108A8D5561EB2E85FA134AB353CD972C42F70A7B7070
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -582,6 +582,14 @@ pedig megköveteli az angol fordítását is (megvan: `assets/i18n/en.json`).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 410 — QR-becsekkolás, „Ma este” kártya, +25 pont a belépésért
+- **A tulajdonos kérése (2026-11-16):** a buli legyen a középpont — QR-becsekkolás, időbeosztás a bulinapi kártyán, +25 pont a belépésért.
+- **Becsekkolás:** az esemény szerkesztőjében (WordPress, plugin **2.15.0**) eseményenként egyedi QR; csak a buli ideje alatt érvényes (kezdés előtt 1 órától a végéig), fiókonként egyszer; a kódot és az időablakot a WordPress ellenőrzi, a pontot (30) és a jelvényt a Firebase `checkInEvent` írja jóvá. A WordPress UID-t nem tárol, csak sózott ujjlenyomatot. Jelvény: a szerkesztőben megadott név/kép, különben „<esemény> – ott voltam”.
+- **App:** „Ma este” kártya (a buli napján reggel 6-tól, amíg tart): időbeosztás, térkép, jegy, **Becsekkolás** gomb; QR-beolvasó (`mobile_scanner`, kamera-engedély); a QR-link app-linkként is megnyílik (`/checkin`); jelvények a saját profilon; időbeosztás az esemény adatlapján.
+- **Belépési jutalom:** a bemutató végén +25 pont (egyszer, `welcome-sign-in` ledger), csak bejelentkezett fióknak.
+- **Telepítési sorrend:** (1) Firebase `functions` + `firestore:rules` (megtörtént), (2) **plugin 2.15.0 feltöltése** (`build/huhs-mobile-api-2.15.0.zip`), (3) a 410 feltöltése. A plugin nélkül a Ma este kártya időbeosztás/becsekkolás nélkül jelenik meg, a becsekkolás gomb nem.
+- **A 408-at és a 409-et nem kell feltölteni**, a 410 tartalmazza.
 
 ### 409 — a bemutató nem takarja el a linkről/értesítésről megnyitott tartalmat
 - **A hiba (a 408-ban):** a „mélylinkről nyitva nem jelenik meg" szabály a döntésben megvolt, de az indulási kapu nem adta át — linkről vagy push-koppintásról nyitva a bemutató a megnyitott tartalom fölé kerülhetett.

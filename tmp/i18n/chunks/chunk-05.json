@@ -1,10 +1,17 @@
 [
+  "+50 pont",
+  "96 kbps MP3 feloldása reklámmal",
+  "A {n} követett DJ-t a belépés után a fiókodba mentjük.",
+  "A becsekkoláshoz be kell jelentkezned.",
+  "A bekapcsoláshoz előbb jelöld be: Ott leszek.",
   "A beküldés csak regisztrált felhasználóknak érhető el.",
   "A beküldés ellenőrzés után kerülhet fel az oldalra és az alkalmazásba.",
   "A belépés ingyenes és átugorható. Belépve ezt kapod:",
+  "A belépésért +25 pont jár ajándékba",
   "A beszélgetések nem tölthetők be.",
   "A biometrikus feloldás nem érhető el. Engedélyezd a telefon beállításaiban.",
   "A borítókép a profil mögött látszik.",
+  "A bulin QR-kóddal becsekkolhatsz: pont és jelvény jár érte",
   "A Chat nem érhető el.\n{error}",
   "A Chat névvel és képfeltöltéssel használható.",
   "A címke hírei nem tölthetők be.\n{error}",
@@ -51,12 +58,5 @@
   "A jelentés kezelése nem sikerült.",
   "A jelöltek hamarosan érkeznek.",
   "A jelszó módosítása sikerült.",
-  "A jelszó-visszaállító e-mail elküldve.",
-  "A jelvény a felhasználó neve elé kerül, egy sorban",
-  "A jelvényed a profilodon látható. A chatben a neve mellett is megjeleníthető, ha ezt a Beállításokban engedélyezed.",
-  "A jelvények grafikáit és a szintek pontszámait a HUHS adminisztrátora kezeli, ezért itt mindig a jelenlegi állapot látszik.",
-  "A jutalmazott reklám betöltése…",
-  "A jutalmazott reklám megtekintése után a fájl letölthető.",
-  "A jutalmazott reklám megtekintése után a WAV letölthető.",
-  "A jutalmazott reklám megtekintése után megnyitható."
+  "A jelszó-visszaállító e-mail elküldve."
 ]

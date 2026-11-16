@@ -55,6 +55,8 @@ function achievementReasonKey(sourceKey) {
   if (key.startsWith('submission:')) return 'achievement_reason_submission';
   if (key.startsWith('release-purchase:')) return 'achievement_reason_release_purchase';
   if (key.startsWith('daily-activity:')) return 'achievement_reason_daily_activity';
+  if (key.startsWith('event-checkin:')) return 'achievement_reason_event_checkin';
+  if (key === 'welcome-sign-in') return 'achievement_reason_welcome_sign_in';
   return 'achievement_reason_generic';
 }
 
@@ -365,6 +367,14 @@ const TEXTS = {
   achievement_reason_daily_activity: {
     hu: { title: '', body: 'a tegnapi közösségi aktivitásodért (hozzászólás és chat)' },
     en: { title: '', body: 'for your community activity yesterday (comments and chat)' },
+  },
+  achievement_reason_event_checkin: {
+    hu: { title: '', body: 'a bulis becsekkolásodért' },
+    en: { title: '', body: 'for checking in at a party' },
+  },
+  achievement_reason_welcome_sign_in: {
+    hu: { title: '', body: 'a belépésedért' },
+    en: { title: '', body: 'for signing in' },
   },
   achievement_reason_generic: {
     hu: { title: '', body: 'egy jóváírt tevékenységért' },

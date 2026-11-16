@@ -38,6 +38,15 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 410,
+    changes: [
+      'ÚJ: QR-kódos becsekkolás a bulikon — a bejáratnál kitett QR beolvasása pontot és „Ott voltam” jelvényt ad.',
+      'Új „Ma este” kártya a Kezdőlapon a buli napján: időbeosztás, térkép, jegy és becsekkolás.',
+      'A belépésért +25 pont jár ajándékba, az esemény adatlapján pedig megjelenik az időbeosztás.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 409,
     changes: [
       'ÚJ: 5 lépéses bemutató — kiválaszthatod a kedvenc stílusaidat, és helyben követheted a DJ-ket.',

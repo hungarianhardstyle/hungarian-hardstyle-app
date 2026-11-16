@@ -1,4 +1,12 @@
 [
+  "A profil nem tölthető be. Ellenőrizd az internetkapcsolatot.",
+  "A profil törlése sikertelen: {error}",
+  "A profil törlése sikerült.",
+  "A profil védelméhez a regisztráció után opcionális kétfaktoros védelem kapcsolható be a Beállításokban.",
+  "A profil, a Chat-üzenetek és a bejelentkezés is törlődik. Folytatod?",
+  "A profilod, a Chat-üzeneteid és a bejelentkezésed is törlődik. A nyereményjátékból is kikerülsz, így nem nyerhetsz jegyet. Folytatod?",
+  "A push elküldve.",
+  "A push nem sikerült: {error}",
   "A rádiót a Real Hardstyle FM szolgáltatja.",
   "A rangod mindig a legmagasabb elért szinted jelvénye.",
   "A reakció mentése nem sikerült.",
@@ -50,13 +58,5 @@
   "A(z) {label} létrehozva.",
   "A(z) {label} mentve.",
   "A(z) {row}. kérdés szövege üres.",
-  "A(z) {row}. kérdéshez 2–6 válaszlehetőség kell.",
-  "A(z) {row}. kérdésnél jelöld meg a helyes választ.",
-  "Achievement a chatben",
-  "Achievement rang",
-  "Achievement rendszer",
-  "Achievement-pontokat és jelvényeket gyűjthetsz",
-  "Achievement-szintlépések",
-  "Achievementek",
-  "Adatkezelés, megőrzés és felhasználói jogok"
+  "A(z) {row}. kérdéshez 2–6 válaszlehetőség kell."
 ]

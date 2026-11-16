@@ -123,7 +123,7 @@ function huhs_build_event_summary($event, $lang = 'hu')
         'featured' => (bool) get_post_meta($event->ID, 'featured', true),
         'visible' => (bool) get_post_meta($event->ID, 'visible', true),
         'status' => get_post_meta($event->ID, 'status', true),
-    );
+    ) + huhs_event_checkin_public_fields($event->ID);
 }
 
 function huhs_build_event_response($event, $lang = 'hu')
@@ -201,5 +201,5 @@ function huhs_build_event_response($event, $lang = 'hu')
         'featured'           => (bool) get_post_meta($event->ID, 'featured', true),
         'visible'            => (bool) get_post_meta($event->ID, 'visible', true),
         'status'             => get_post_meta($event->ID, 'status', true),
-    );
+    ) + huhs_event_checkin_public_fields($event->ID);
 }

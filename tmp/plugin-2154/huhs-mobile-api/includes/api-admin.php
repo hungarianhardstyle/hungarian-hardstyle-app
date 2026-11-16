@@ -385,6 +385,15 @@ function huhs_admin_api_read(WP_REST_Request $request)
     // `pollId` nelkul a NYITOTT kerdőívet, ha nincs, a legfrissebbet adja — így a
     // mobil admin legalabb egy kerdőívet mindig lat, es a regi kerdőívek is
     // visszanezhetok ugyanazon a vegponton.
+    // 2.15.0: a bulis becsekkolás QR-ja a natív adminban (kijelzőn is mutatható).
+    if ($action === 'event_checkin_code') {
+        $event_id = absint($request->get_param('eventId'));
+        if (!$event_id || get_post_type($event_id) !== 'huhs_event') {
+            return new WP_Error('invalid_event', 'Érvényes esemény szükséges.', array('status' => 400));
+        }
+        return rest_ensure_response(huhs_event_checkin_code_payload($event_id));
+    }
+
     if ($action === 'poll_results') {
         $poll_id = absint($request->get_param('pollId'));
         if ($poll_id && get_post_type($poll_id) !== 'huhs_poll') {
@@ -880,6 +889,10 @@ function huhs_admin_resource_fields($post_type)
             array('key' => 'artists', 'label' => 'DJ ID-k (vesszővel)', 'type' => 'ids'),
             array('key' => 'status', 'label' => 'Esemény állapota', 'type' => 'text'),
             array('key' => 'flyer_image', 'label' => 'Flyer média ID', 'type' => 'int'),
+            // 2.15.0: időbeosztás + becsekkolási jelvény (a QR-t a checkin-code végpont adja).
+            array('key' => 'event_timetable', 'label' => 'Időbeosztás (soronként: 22:00 - 23:30 | DJ)', 'type' => 'textarea'),
+            array('key' => 'checkin_badge_name', 'label' => 'Becsekkolási jelvény neve', 'type' => 'text'),
+            array('key' => 'checkin_badge_url', 'label' => 'Becsekkolási jelvény képe (URL)', 'type' => 'url'),
         ), $common);
     }
     if ($post_type === 'huhs_artist') {

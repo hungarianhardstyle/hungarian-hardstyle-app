@@ -3,7 +3,7 @@ description: "Hungarian Hardstyle mobile application"
 
 publish_to: 'none'
 
-version: 1.0.0+409
+version: 1.0.0+410
 
 environment:
   sdk: ^3.13.7
@@ -76,6 +76,8 @@ dependencies:
   # Play-értékelés kérése EGYSZER, egy pozitív pillanatban (lásd
   # `lib/services/app_review_prompt.dart`).
   in_app_review: ^2.0.12
+  mobile_scanner: ^7.5.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

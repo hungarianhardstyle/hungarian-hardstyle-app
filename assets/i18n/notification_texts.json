@@ -56,6 +56,16 @@
         "body": "for your community activity yesterday (comments and chat)"
       }
     },
+    "achievement_reason_event_checkin": {
+      "hu": {
+        "title": "",
+        "body": "a bulis becsekkolásodért"
+      },
+      "en": {
+        "title": "",
+        "body": "for checking in at a party"
+      }
+    },
     "achievement_reason_event_rating": {
       "hu": {
         "title": "",
@@ -184,6 +194,16 @@
       "en": {
         "title": "",
         "body": "for your vote in the annual poll"
+      }
+    },
+    "achievement_reason_welcome_sign_in": {
+      "hu": {
+        "title": "",
+        "body": "a belépésedért"
+      },
+      "en": {
+        "title": "",
+        "body": "for signing in"
       }
     },
     "article_comment": {

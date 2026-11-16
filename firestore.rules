@@ -387,6 +387,14 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Bulis becsekkolások (jelvények, build 410). Csak a szerver (checkInEvent)
+    // írja; a felhasználó a SAJÁT jelvényeit olvashatja — másét nem, mert a
+    // becsekkolás a tartózkodási helyről is árulkodik.
+    match /event_checkins/{checkinId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
     match /email_delivery_jobs/{entryId} {
       allow read, write: if false;
     }

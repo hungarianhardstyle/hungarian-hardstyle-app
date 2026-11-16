@@ -86,6 +86,14 @@ const {
 } = require('./favorite-follow-plan');
 const { generateAuthActionLink } = require('./auth_action_link');
 const { referralRewardPlan } = require('./referral-reward-plan');
+const {
+  EVENT_CHECKIN_POINTS,
+  WELCOME_SIGN_IN_POINTS,
+  parseCheckinTarget,
+  checkinDocId,
+  checkinSourceKey,
+  checkinBadge,
+} = require('./event-checkin-plan');
 const { logWarning } = require('./log-warning');
 const {
   TWITCH_CHANNEL,
@@ -5088,6 +5096,7 @@ async function deleteUserReferences(uid, profileData = {}) {
     ownPosts,
     dailyActivity,
     submissionAuthors,
+    eventCheckins,
   ] = await Promise.all([
     db.collectionGroup('users').get(),
     db.collection('connection_requests').where('from', '==', uid).get(),
@@ -5113,6 +5122,8 @@ async function deleteUserReferences(uid, profileData = {}) {
     // fiókra vonatkozó adat nem marad).
     db.collection('daily_activity').where('uid', '==', uid).get(),
     db.collection('submission_authors').where('uid', '==', uid).get(),
+    // A bulis becsekkolások (jelvények) is a fiókhoz tartoznak.
+    db.collection('event_checkins').where('uid', '==', uid).get(),
   ]);
   const cloudinaryAssets = [];
   for (const [publicIdKey, urlKey] of [
@@ -5256,6 +5267,7 @@ async function deleteUserReferences(uid, profileData = {}) {
     deleteDocumentReferences(rewardedTransactions.docs),
     deleteDocumentReferences(dailyActivity.docs),
     deleteDocumentReferences(submissionAuthors.docs),
+    deleteDocumentReferences(eventCheckins.docs),
     ...conversations.docs.map((conversation) => db.recursiveDelete(conversation.ref)),
     ...ownPosts.docs.map((post) => post.ref.delete()),
   ]);
@@ -6433,6 +6445,94 @@ exports.pollVote = functions
     }
     if (!hasOption) return { voted: payload?.voted === true };
     return { ok: true, alreadyVoted: payload?.alreadyVoted === true };
+  });
+
+// ---------------------------------------------------------------------------
+// Bulis becsekkolás QR-kóddal (2.15.0 / build 410).
+//
+// A kapu a WordPressben van (titkos kód + a buli időablaka + fiókonként egyszer,
+// sózott ujjlenyomattal). Itt csak a hitelesített UID-t adjuk át, majd a jelvényt
+// a profilhoz írjuk, és a pontot a ledgeren át fizetjük (eseményenként egyszer).
+// ---------------------------------------------------------------------------
+exports.checkInEvent = functions
+  .runWith({
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+    enforceAppCheck: false,
+  })
+  .https.onCall(async (data, context) => {
+    const uid = requireRegisteredViewer(context);
+    const target = parseCheckinTarget(typeof data?.qr === 'string' ? data.qr : data);
+    if (!target) {
+      throw new HttpsError('invalid-argument', 'Ez nem egy Hungarian Hardstyle becsekkolási QR-kód.');
+    }
+    if (!(await allowCall(uid, 'event_checkin', 10))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
+    }
+    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+    const response = await fetch(`${WORDPRESS_BASE_URL}/events/${target.eventId}/checkin`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ code: target.code, uid }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    console.info('event_checkin_wordpress_result', {
+      eventId: target.eventId,
+      uidLength: uid.length,
+      status: response.status,
+      alreadyCheckedIn: payload?.alreadyCheckedIn === true,
+    });
+    if (!response.ok) {
+      const message =
+        typeof payload?.message === 'string' && payload.message !== ''
+          ? payload.message
+          : 'A becsekkolás most nem sikerült, próbáld újra.';
+      throw new HttpsError(
+        response.status === 404 ? 'not-found' : response.status === 403 ? 'failed-precondition' : 'internal',
+        message,
+      );
+    }
+    const badge = checkinBadge(payload);
+    const ref = db.collection('event_checkins').doc(checkinDocId(uid, target.eventId));
+    try {
+      await ref.create({
+        uid,
+        eventId: target.eventId,
+        title: badge.title,
+        badgeName: badge.badgeName,
+        badgeUrl: badge.badgeUrl,
+        checkedInAt: FieldValue.serverTimestamp(),
+      });
+    } catch (error) {
+      // Már létezik (ismételt beolvasás) — a jelvény megvan, nincs teendő.
+      if (error?.code !== 6 && error?.code !== 'already-exists') throw error;
+    }
+    const award = await awardAchievementPoints(uid, EVENT_CHECKIN_POINTS, checkinSourceKey(target.eventId));
+    return {
+      ok: true,
+      alreadyCheckedIn: payload?.alreadyCheckedIn === true,
+      eventId: target.eventId,
+      title: badge.title,
+      badgeName: badge.badgeName,
+      badgeUrl: badge.badgeUrl,
+      points: award?.changed ? EVENT_CHECKIN_POINTS : 0,
+    };
+  });
+
+// Egyszeri jutalom a belépésért — a bemutató „Lépj be” lépése ajánlja fel. A ledger
+// (`welcome-sign-in`) miatt fiókonként EGYSZER fizet; vendég (anonim) fiók nem kap.
+exports.claimWelcomeSignInBonus = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (_data, context) => {
+    const uid = requireRegisteredViewer(context);
+    if (!(await allowCall(uid, 'welcome_sign_in', 5))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok kérés, próbáld később.');
+    }
+    const award = await awardAchievementPoints(uid, WELCOME_SIGN_IN_POINTS, 'welcome-sign-in');
+    return { points: award?.changed ? WELCOME_SIGN_IN_POINTS : 0 };
   });
 
 // ---------------------------------------------------------------------------

@@ -51,7 +51,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Beküldési képek, flyerek és profilképek elkészítéséhez használjuk a kamerát.</string>
+	<string>Beküldési képek, flyerek és profilképek elkészítéséhez, valamint a bulik QR-kódos becsekkolásához használjuk a kamerát.</string>
 	<!-- A biometrikus belépés (local_auth) iOS-en Face ID/Touch ID: a rendszer
 	     kötelezően kéri ezt a szöveget, enélkül a Face ID hitelesítés elhal. -->
 	<key>NSFaceIDUsageDescription</key>

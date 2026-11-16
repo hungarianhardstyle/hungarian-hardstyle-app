@@ -1,9 +1,12 @@
 [
+  "Social és kapcsolat",
+  "Spotify Playlistek",
   "Szavazási összesítő",
   "Szavazok",
   "Szerepkör szűrése",
   "Szerkesztés: {n}",
   "Szünet",
+  "Térkép",
   "Törlöd ezt a privát beszélgetést?",
   "Új privát üzenet",
   "Újra",
@@ -48,15 +51,12 @@
   "{releases} kiadvány · {tracks} tétel · {size} a készüléken",
   "{type}  •  {status}\nBeküldések: {submissions}  •  Helyes válaszok: {correct}/{total}",
   "• {label}: {n} jelölt",
+  "+{n} pont jár a becsekkolásért.",
   "+1 pont",
   "+1–5 pont",
   "+15 pont",
   "+2 pont",
   "+20 pont",
   "+30 pont",
-  "+5 pont",
-  "+50 pont",
-  "96 kbps MP3 feloldása reklámmal",
-  "A {n} követett DJ-t a belépés után a fiókodba mentjük.",
-  "A bekapcsoláshoz előbb jelöld be: Ott leszek."
+  "+5 pont"
 ]

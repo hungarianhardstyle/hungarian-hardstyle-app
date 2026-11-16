@@ -92,6 +92,7 @@ const loadHandled = new Set([...loadSource.matchAll(/_section == '([a-z_]+)'/g)]
 const exceptions = new Map([
   ['voting_seasons', 'az éves szavazás szezonjainak adminja szándékosan a WordPressben marad'],
   ['resource', 'belső művelet a szerkesztéshez/törléshez (nem önálló menüpont)'],
+  ['event_checkin_code', 'a bulis QR a WordPress esemény-szerkesztőjében (és a REST végponton) érhető el; a natív admin a szerkesztő mezőit (időbeosztás, jelvény) kezeli'],
   ['polls', 'a „Kérdőív" menüpont mögötti képernyő használja'],
   ['poll_results', 'a „Kérdőív" menüpont mögötti képernyő használja'],
   ['prize_games', 'a „Nyereményjáték" menüpont mögötti képernyő használja'],
