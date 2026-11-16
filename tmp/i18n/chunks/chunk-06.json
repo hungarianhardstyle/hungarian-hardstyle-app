@@ -1,4 +1,10 @@
 [
+  "A jutalom jóváírása…",
+  "A jutalom jóváírva. A letöltés indul…",
+  "A kedvenc nem tölthető be.",
+  "A kép Cloudinary-ra kerül, és az app indulásakor bezárható.",
+  "A kép mentése nem sikerült. Ellenőrizd a tárhelyengedélyt, majd próbáld újra.",
+  "A képek gyorsítótárát az app automatikusan kezeli.",
   "A két jelszó nem egyezik.",
   "A kiadási jegyzet betöltése…",
   "A kiadó zenéi egy helyen",
@@ -8,6 +14,8 @@
   "A kijelöltek törlése nem sikerült.",
   "A kód nem érvényes. Az authenticator nem lett bekapcsolva.",
   "A korábbi Google Play-vásárlások visszaállítása nem sikerült.",
+  "A követéseid és a kedvenceid a fiókodhoz mentődnek.",
+  "A követett DJ-k minden eszközödön megmaradnak",
   "A közösségi funkciók 16 éves kortól használhatók.",
   "A közösségi funkciók használatához add meg a születési dátumodat. Ez nem jelenik meg nyilvánosan, amíg nem engedélyezed.",
   "A közösségi funkciókhoz regisztráció szükséges.",
@@ -50,13 +58,5 @@
   "A profil, a Chat-üzenetek és a bejelentkezés is törlődik. Folytatod?",
   "A profilod, a Chat-üzeneteid és a bejelentkezésed is törlődik. A nyereményjátékból is kikerülsz, így nem nyerhetsz jegyet. Folytatod?",
   "A push elküldve.",
-  "A push nem sikerült: {error}",
-  "A rádiót a Real Hardstyle FM szolgáltatja.",
-  "A rangod mindig a legmagasabb elért szinted jelvénye.",
-  "A reakció mentése nem sikerült.",
-  "A regisztráció után megerősítő e-mailt küldünk. A profil használatához erősítsd meg a címedet.",
-  "A reklám jóváírásának ellenőrzése…",
-  "A reklám lefutott, de a feloldás nem érkezett meg. Próbáld újra később.",
-  "A reklám megtekintése nem fejeződött be.",
-  "A reklámos feloldáshoz be kell jelentkezni."
+  "A push nem sikerült: {error}"
 ]

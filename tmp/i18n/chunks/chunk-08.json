@@ -1,4 +1,13 @@
 [
+  "Adatközpont",
+  "Adatlap átvétele",
+  "Add meg a születési dátumodat. A közösségi funkciók 16 éves kortól használhatók, és a dátum a kiskorúak védelmét szolgálja.",
+  "Add meg az e-mail-címedet.",
+  "Add meg az e-mail-címet és a jelszót.",
+  "Add meg ezt a kulcsot a Google Authenticatorban:",
+  "Adj meg e-mail-címet és erősítsd meg 24 órán belül.",
+  "Adj meg egy érvényes e-mail-címet.",
+  "Adj meg egy megjelenési nevet.",
   "Adj meg érvényes e-mail-címet.",
   "Adminisztrátorként korlátlan névmódosítás",
   "Ajánlás másolása",
@@ -49,14 +58,5 @@
   "Az esemény végét napra és órára együtt add meg.",
   "Az esemény- és meetup-pont eseményenként (meetuponként) egyszer jár, és a jelentkezésedhez igazodik: lemondásnál elvész, visszajelentkezésnél újra jár.",
   "Az indítási kép mentése nem sikerült: {detail}",
-  "Az ingyenes kiadványok nem tölthetők be.",
-  "Az ingyenes külső link érvénytelen.",
-  "Az irányítószám csak számokat tartalmazhat.",
-  "Az ismerős törlése nem sikerült.",
-  "Az ismerőslista nem tölthető be.",
-  "Az ismerőslista regisztrált felhasználóknak érhető el.",
-  "Az ismerősnek jelölés nem sikerült.\n{error}",
-  "Az új jelszó legalább 6 karakter legyen, és a két mező egyezzen.",
-  "Az üzenet nem ment el. Próbáld újra.",
-  "Azok láthatók itt, akik erre az eseményre Meetupot jeleztek."
+  "Az ingyenes kiadványok nem tölthetők be."
 ]

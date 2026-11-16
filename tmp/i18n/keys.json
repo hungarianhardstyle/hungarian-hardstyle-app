@@ -852,6 +852,14 @@
     ]
   },
   {
+    "value": "Adatkezelési tájékoztató",
+    "count": 2,
+    "files": [
+      "lib/screens/more/about_screen.dart",
+      "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
     "value": "Adatlap szerkesztése",
     "count": 2,
     "files": [
@@ -1217,6 +1225,14 @@
     "files": [
       "lib/screens/poll/poll_screen.dart",
       "lib/widgets/poll_entry_button.dart"
+    ]
+  },
+  {
+    "value": "Később",
+    "count": 2,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart",
+      "lib/widgets/app_review_dialog.dart"
     ]
   },
   {
@@ -1901,6 +1917,13 @@
     ]
   },
   {
+    "value": "A {n} követett DJ-t a belépés után a fiókodba mentjük.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "A bekapcsoláshoz előbb jelöld be: Ott leszek.",
     "count": 1,
     "files": [
@@ -1919,6 +1942,13 @@
     "count": 1,
     "files": [
       "lib/screens/events/event_submission_screen.dart"
+    ]
+  },
+  {
+    "value": "A belépés ingyenes és átugorható. Belépve ezt kapod:",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -1975,6 +2005,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
+    "value": "A DJ-ket most nem sikerült betölteni, később a DJ-k listájában követheted őket.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -2073,6 +2110,13 @@
     "count": 1,
     "files": [
       "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A Google Play most nem nyitható meg.",
+    "count": 1,
+    "files": [
+      "lib/screens/main_navigation.dart"
     ]
   },
   {
@@ -2409,6 +2453,20 @@
     "count": 1,
     "files": [
       "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "A követéseid és a kedvenceid a fiókodhoz mentődnek.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
+    "value": "A követett DJ-k minden eszközödön megmaradnak",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -2804,6 +2862,13 @@
     ]
   },
   {
+    "value": "A stílusokat most nem sikerült betölteni, ezt a lépést kihagyhatod.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "A stream-chat most nem érhető el.",
     "count": 1,
     "files": [
@@ -3098,6 +3163,13 @@
     ]
   },
   {
+    "value": "Achievement-pontokat és jelvényeket gyűjthetsz",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "Achievement-szintlépések",
     "count": 1,
     "files": [
@@ -3116,13 +3188,6 @@
     "count": 1,
     "files": [
       "lib/screens/more/more_screen.dart"
-    ]
-  },
-  {
-    "value": "Adatkezelési tájékoztató",
-    "count": 1,
-    "files": [
-      "lib/screens/more/privacy_screen.dart"
     ]
   },
   {
@@ -3630,6 +3695,13 @@
     ]
   },
   {
+    "value": "Be vagy jelentkezve",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "Beágyazott tartalom",
     "count": 1,
     "files": [
@@ -3704,6 +3776,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "Belépés vagy regisztráció",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -3802,6 +3881,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/privacy_screen.dart"
+    ]
+  },
+  {
+    "value": "Chat és közösség a ravereknek",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -4218,6 +4304,20 @@
     ]
   },
   {
+    "value": "Értékeld az alkalmazást!",
+    "count": 1,
+    "files": [
+      "lib/widgets/app_review_dialog.dart"
+    ]
+  },
+  {
+    "value": "Értékelem",
+    "count": 1,
+    "files": [
+      "lib/widgets/app_review_dialog.dart"
+    ]
+  },
+  {
     "value": "Értesítés",
     "count": 1,
     "files": [
@@ -4526,6 +4626,13 @@
     ]
   },
   {
+    "value": "Felhasználási feltételek (ÁSZF)",
+    "count": 1,
+    "files": [
+      "lib/screens/more/about_screen.dart"
+    ]
+  },
+  {
     "value": "Felhasználó szerkesztése",
     "count": 1,
     "files": [
@@ -4691,6 +4798,13 @@
     "count": 1,
     "files": [
       "lib/screens/news/news_screen.dart"
+    ]
+  },
+  {
+    "value": "Friss hírek a hazai és külföldi színtérről",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -4932,13 +5046,6 @@
     ]
   },
   {
-    "value": "Hírek, bulik, kiadványok, DJ-k és a rádió — egy helyen. A következő két lépésben személyessé tesszük.",
-    "count": 1,
-    "files": [
-      "lib/screens/onboarding/onboarding_screen.dart"
-    ]
-  },
-  {
     "value": "Hívd meg az ismerőseidet a HUHS appba!",
     "count": 1,
     "files": [
@@ -5177,6 +5284,13 @@
     ]
   },
   {
+    "value": "Írhatsz a Chatbe és kommentelhetsz",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "Írj egy rövid üzenetet (legfeljebb 500 karakter).",
     "count": 1,
     "files": [
@@ -5377,6 +5491,20 @@
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelezheted, melyik bulin leszel ott",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelöld be a kedvenc stílusaidat — ez alapján ajánlunk. Bármikor kihagyhatod.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -5821,6 +5949,13 @@
     ]
   },
   {
+    "value": "Koppints a követéshez: szólunk, ha új kiadványuk vagy bulijuk van.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "Koppints a megnyitáshoz",
     "count": 1,
     "files": [
@@ -5916,6 +6051,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Közelgő bulik, jegyek és helyszínek",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -6084,6 +6226,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/my_music_screen.dart"
+    ]
+  },
+  {
+    "value": "Lépj be, és minden megmarad",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -6402,6 +6551,13 @@
     ]
   },
   {
+    "value": "Megosztanád a véleményed a Hungarian Hardstyle alkalmazásról a Google Playen?",
+    "count": 1,
+    "files": [
+      "lib/widgets/app_review_dialog.dart"
+    ]
+  },
+  {
     "value": "Megőrzés és törlés: a fiókhoz és közösségi szolgáltatáshoz kapcsolódó adatokat addig őrizzük, amíg a szolgáltatás biztosításához szükséges, illetve amíg jogi igény, biztonsági vagy jogszabályi megőrzési ok indokolja. A hirdetési és hírlevél-hozzájárulás visszavonása után az erre épülő kezelést megszüntetjük. A saját profil törlése az alkalmazásból indítható; ez a Firebase Auth-fiók és a hozzá kapcsolt közösségi adatok törlését kezdeményezi. Egyes, jogszabály alapján megőrzendő vagy jogi igényhez szükséges adatok a szükséges időre korlátozottan megmaradhatnak.",
     "count": 1,
     "files": [
@@ -6500,6 +6656,13 @@
     ]
   },
   {
+    "value": "Mit szeretsz hallgatni?",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
     "value": "MP3 320 kbps",
     "count": 1,
     "files": [
@@ -6535,10 +6698,24 @@
     ]
   },
   {
+    "value": "Ne kérdezd többet",
+    "count": 1,
+    "files": [
+      "lib/widgets/app_review_dialog.dart"
+    ]
+  },
+  {
     "value": "Néhány hivatkozás nem kattintható (csak adminnak/moderátornak jár).",
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Néhány lépésben személyessé tesszük: a stílusod alapján ajánlunk DJ-ket és bulikat.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -6843,13 +7020,6 @@
     ]
   },
   {
-    "value": "Nyisd meg a DJ-k listáját, és a szív ikonnal követheted őket.",
-    "count": 1,
-    "files": [
-      "lib/screens/onboarding/onboarding_screen.dart"
-    ]
-  },
-  {
     "value": "Ok: {reason}",
     "count": 1,
     "files": [
@@ -7120,6 +7290,13 @@
     "count": 1,
     "files": [
       "lib/widgets/radio_player_bar.dart"
+    ]
+  },
+  {
+    "value": "Real Hardstyle FM rádió a háttérben is",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {
@@ -7421,6 +7598,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/private_messages_screen.dart"
+    ]
+  },
+  {
+    "value": "Szólunk, ha {names} új kiadványt tesz közzé vagy bulin játszik, és vasárnap a hét összefoglalójával.",
+    "count": 1,
+    "files": [
+      "lib/screens/onboarding/onboarding_screen.dart"
     ]
   },
   {

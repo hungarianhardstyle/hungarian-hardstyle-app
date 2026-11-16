@@ -1,4 +1,5 @@
 [
+  "Felhasználó blokkolva.",
   "Felhasználó jelentése",
   "Felhasználók",
   "GYÍK",
@@ -22,6 +23,7 @@
   "Kedvenceid",
   "Kép kiválasztása",
   "KÉRDŐÍV",
+  "Később",
   "Kezdőlap",
   "Kiemelt események",
   "Kijelentkezés",
@@ -56,7 +58,5 @@
   "Regisztráció szükséges",
   "Release",
   "Social és kapcsolat",
-  "Spotify Playlistek",
-  "Szavazási összesítő",
-  "Szavazok"
+  "Spotify Playlistek"
 ]

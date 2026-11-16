@@ -1,4 +1,6 @@
 [
+  "Szavazási összesítő",
+  "Szavazok",
   "Szerepkör szűrése",
   "Szerkesztés: {n}",
   "Szünet",
@@ -55,8 +57,6 @@
   "+5 pont",
   "+50 pont",
   "96 kbps MP3 feloldása reklámmal",
-  "A bekapcsoláshoz előbb jelöld be: Ott leszek.",
-  "A beküldés csak regisztrált felhasználóknak érhető el.",
-  "A beküldés ellenőrzés után kerülhet fel az oldalra és az alkalmazásba.",
-  "A beszélgetések nem tölthetők be."
+  "A {n} követett DJ-t a belépés után a fiókodba mentjük.",
+  "A bekapcsoláshoz előbb jelöld be: Ott leszek."
 ]
