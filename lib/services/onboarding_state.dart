@@ -1,4 +1,5 @@
-/// **Onboarding (3 lépés) — a döntés**, tiszta kóddal, hálózat és UI nélkül.
+/// **Onboarding (5 lépés, 408; eredetileg 3) — a döntés**, tiszta kóddal,
+/// hálózat és UI nélkül.
 ///
 /// MIÉRT (a cél 2. pontja): a mért szakadék a **regisztrált profilok (45)** és a
 /// **push-ra regisztrált eszközök (~1010)** között van — vagyis a legtöbb ember
@@ -7,7 +8,7 @@
 /// (1) rövid bemutatás, (2) kedvenc DJ(k) kiválasztása, (3) értesítési engedély.
 ///
 /// ⚠️ **EGYSZER fut**, és **átugorható**: a döntést a `SharedPreferences` jelöli
-/// (`onboarding_completed_v1`), ezért egy friss telepítésen egyszer jelenik meg,
+/// (`onboarding_completed_v2`, eredetileg v1), ezért egy friss telepítésen egyszer jelenik meg,
 /// utána soha. A verziózott kulcs miatt egy későbbi, más tartalmú folyamat
 /// **újrakezdhető** anélkül, hogy a régi döntést felül kellene írni.
 ///
@@ -18,23 +19,42 @@
 /// kéri, de **kihagyható**.
 library;
 
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// A `SharedPreferences` kulcsa: végigment-e a felhasználó az onboardingon.
-const String onboardingCompletedKey = 'onboarding_completed_v1';
+///
+/// ⚠️ **v2 (408):** az 5 lépéses bemutató új kulcsot kapott, ezért a régi,
+/// 3 lépéses változaton már átment felhasználók is **egyszer** látják; a már
+/// teljesült lépést (bejelentkezés) a felület maga jelzi.
+const String onboardingCompletedKey = 'onboarding_completed_v2';
+
+/// A választott műfajok (a DJ-ajánlás és a főoldal ebből szab személyre).
+const String onboardingGenresKey = 'onboarding_genres_v1';
+
+/// A **vendégként** követett DJ-k (azonosító + név), amíg nincs bejelentkezés;
+/// a kedvencek a belépés után átveszik (`FavoritesNotifier`).
+const String onboardingPendingArtistsKey = 'onboarding_pending_artists_v1';
 
 /// A lépések száma (a felület ehhez igazítja a pontozó sávot).
-const int onboardingStepCount = 3;
+const int onboardingStepCount = 5;
 
 /// A lépések — a felület ezekből épül (a sorrend kötött).
 enum OnboardingStep {
   /// 1. Rövid bemutatás: mi van az appban.
   welcome,
 
-  /// 2. Kedvenc DJ(k) kiválasztása (ez indítja a személyes értesítéseket).
+  /// 2. A kedvelt stílusok kiválasztása.
+  genres,
+
+  /// 3. DJ-k követése helyben (a stílusokhoz illők elöl).
   favoriteArtists,
 
-  /// 3. Értesítési engedély a **jó pillanatban** (a meglévő kapun át).
+  /// 4. Belépés — mit ad (átugorható).
+  account,
+
+  /// 5. Értesítési engedély a **jó pillanatban** (a meglévő kapun át).
   notifications,
 }
 
@@ -47,8 +67,7 @@ enum OnboardingStep {
 bool shouldShowOnboarding({
   required bool completed,
   bool openedFromLink = false,
-}) =>
-    !completed && !openedFromLink;
+}) => !completed && !openedFromLink;
 
 /// A jelölés beolvasása (hiányzó kulcs = még nem futott le; sosem dob).
 bool onboardingCompletedFromPreferences(SharedPreferences? preferences) {
@@ -94,3 +113,79 @@ OnboardingStep? nextOnboardingStep(OnboardingStep current) {
 /// Hányadik lépésnél tartunk (1-től számolva, a pontozó sávhoz).
 int onboardingStepNumber(OnboardingStep step) =>
     OnboardingStep.values.indexOf(step) + 1;
+
+/// A mentett műfajok (hiba vagy hiány esetén üres).
+Set<String> preferredGenresFromPreferences(SharedPreferences? preferences) {
+  if (preferences == null) return const {};
+  try {
+    return (preferences.getStringList(onboardingGenresKey) ?? const [])
+        .map((genre) => genre.trim())
+        .where((genre) => genre.isNotEmpty)
+        .toSet();
+  } catch (_) {
+    return const {};
+  }
+}
+
+/// A műfajok mentése (üres halmaz törli a kulcsot).
+Future<void> savePreferredGenres(
+  SharedPreferences? preferences,
+  Set<String> genres,
+) async {
+  if (preferences == null) return;
+  try {
+    if (genres.isEmpty) {
+      await preferences.remove(onboardingGenresKey);
+    } else {
+      await preferences.setStringList(onboardingGenresKey, genres.toList());
+    }
+  } catch (_) {
+    // A választás ebben a munkamenetben így is érvényes.
+  }
+}
+
+/// A vendégként követett DJ-k: azonosító → név.
+Map<int, String> pendingArtistFollowsFromPreferences(
+  SharedPreferences? preferences,
+) {
+  if (preferences == null) return const {};
+  try {
+    final raw = preferences.getString(onboardingPendingArtistsKey);
+    if (raw == null || raw.isEmpty) return const {};
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) return const {};
+    final result = <int, String>{};
+    for (final entry in decoded) {
+      if (entry is! Map) continue;
+      final id = entry['id'];
+      if (id is! num || id <= 0) continue;
+      result[id.toInt()] = (entry['title'] ?? '').toString();
+    }
+    return result;
+  } catch (_) {
+    return const {};
+  }
+}
+
+/// A vendégként követett DJ-k mentése (üres → törlés).
+Future<void> savePendingArtistFollows(
+  SharedPreferences? preferences,
+  Map<int, String> follows,
+) async {
+  if (preferences == null) return;
+  try {
+    if (follows.isEmpty) {
+      await preferences.remove(onboardingPendingArtistsKey);
+      return;
+    }
+    await preferences.setString(
+      onboardingPendingArtistsKey,
+      jsonEncode([
+        for (final entry in follows.entries)
+          {'id': entry.key, 'title': entry.value},
+      ]),
+    );
+  } catch (_) {
+    // Best-effort: a következő belépésnél újra lehet követni.
+  }
+}

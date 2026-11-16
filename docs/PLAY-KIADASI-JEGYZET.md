@@ -1,6 +1,17 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás: **407** (1.0.0), 2026-11-05
+## Aktuális kiadás: **408** (1.0.0), 2026-11-16
+
+A Play API szerint az éles és az Alpha sávon is 407 van (100%), ezért a következő szabad kód 408.
+Új 5 lépéses bemutató: stílusválasztás, DJ-követés helyben, belépés és értesítések.
+A Kezdőlap közelgő eseményei a választott stílusokhoz illő bulikat részesítik előnyben.
+
+```play-notes
+ÚJ: 5 lépéses bemutató — kiválaszthatod a kedvenc stílusaidat, és helyben követheted a DJ-ket.
+A Kezdőlap közelgő eseményei között előnyt kapnak a kedvenc stílusaidhoz illő bulik.
+```
+
+## Korábbi kiadás: **407** (1.0.0), 2026-11-05
 
 A Kezdőlapon a kiemelt hír képe visszakapta a korábbi kinézetet; a Névjegy alatt elérhető a Felhasználási feltételek (ÁSZF) és az Adatkezelési tájékoztató.
 A Play API szerint az Alpha sávon 403, az éles sávon 401 van.
@@ -143,11 +154,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 407
+currentBuild: 408
 currentVersion: 1.0.0
-lastPublishedBuild: 403
-aab: build/HUHS-v1.0.0+407-release.aab
-sha256: 8F96C144CD36341F25F5E01D90B75906D461431CAC7E2D5FD85DB6AADF65714F
+lastPublishedBuild: 407
+aab: build/HUHS-v1.0.0+408-release.aab
+sha256: 86BC69347DA7C3B44253E1FFD11020CA8000EF7B89C1DD9BF79DFC4212A747B7
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
@@ -570,6 +581,14 @@ pedig megköveteli az angol fordítását is (megvan: `assets/i18n/en.json`).
 
 Ez a lista **maga az app** (`lib/data/app_changelog.dart`), ezért külön feltölteni nem kell;
 itt azért van, hogy egy helyen látsszon, mit kap a felhasználó. A sorok a legfrissebbel kezdődnek.
+
+### 408 — 5 lépéses bemutató (stílusok, DJ-követés helyben, belépés, értesítések)
+- **A tulajdonos kérése (2026-11-16):** a régi, 3 lépéses bemutató *„elég alap"* volt; a javasolt 5 lépéses változat készült el.
+- **A lépések:** (1) bemutatás logóval, (2) **stílusok** — a választható műfajok a valódi DJ-adatokból jönnek, gyakoriság szerint, (3) **DJ-k követése helyben**, a választott stílusokhoz illők elöl, (4) **belépés** — mit ad, átugorható, (5) **értesítések** a követett DJ-k nevével.
+- **Vendégként is működik:** a követés helyben mentődik (`onboarding_pending_artists_v1`), és a belépéskor a `FavoritesNotifier.applyPendingArtistFollows()` a kedvencek közé teszi (csak hozzáad, majd törli a függő listát).
+- **Kezdőlap:** a közelgő események közül (a következő 10-ből) a stílusodhoz illők előnyt kapnak, de a kártyák **időrendben** maradnak; stílus nélkül a régi viselkedés (`personalizedUpcoming`).
+- **v2 kulcs:** `onboarding_completed_v2` — a régi bemutatón átment felhasználók is **egyszer** látják; mélylinkről nyitva továbbra sem jelenik meg, és bármikor kihagyható.
+- **⚠️ Őszinte korlát:** a belépésért járó pont **nincs** benne (az szerveroldali változás lenne); a képernyőt eszközön nem próbáltam, a viselkedést widget-teszt méri.
 
 ### 407 — a kiemelt hír képe visszaállt a RÉGI kinézetre (a tulajdonos döntése)
 - **A tulajdonos jelzése (2026-11-05):** *„ne hari de így az app főoldal cikk kép kurvaszar, inkább legyen a régi vissza”* — a 405-ben bevezetett elmosott háttér + `contain` **nem tetszett**.

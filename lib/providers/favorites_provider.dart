@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/onboarding_state.dart';
 import '../services/push_notification_service.dart';
 import '../services/wordpress_service.dart';
 
@@ -74,8 +75,14 @@ class FavoritesNotifier extends ChangeNotifier {
     }
     notifyListeners();
 
-    // A követett DJ-k/szervezők azonnal menjenek a plugin felé (381): ebből lesz
-    // a személyes push-célzás. Best-effort — a kedvencelés helyben így is érvényes.
+    _syncFollowedTargets();
+    await _saveLocal();
+    await _saveCloud();
+  }
+
+  /// A követett DJ-k/szervezők azonnal menjenek a plugin felé (381): ebből lesz
+  /// a személyes push-célzás. Best-effort — a kedvencelés helyben így is érvényes.
+  void _syncFollowedTargets() {
     unawaited(
       PushNotificationService.syncFollowedTargets(
         artists: _items.values
@@ -88,20 +95,33 @@ class FavoritesNotifier extends ChangeNotifier {
             .toList(),
       ),
     );
+  }
 
+  /// A bemutatóban **vendégként** követett DJ-k átvétele a belépés után (408).
+  ///
+  /// Csak hozzáad (meglévő kedvencet nem töröl), és a sikeres átvétel után a
+  /// függő listát törli, ezért ugyanaz a választás nem ismétlődik.
+  Future<void> applyPendingArtistFollows() async {
+    if (!canUseFavorites) return;
     final preferences = await SharedPreferences.getInstance();
-    await preferences.setStringList(
-      _storageKey,
-      _items.values
-          .map(
-            (entry) => jsonEncode({
-              'kind': entry.kind.name,
-              'id': entry.id,
-              'title': entry.title,
-            }),
-          )
-          .toList(),
-    );
+    final pending = pendingArtistFollowsFromPreferences(preferences);
+    if (pending.isEmpty) return;
+    var added = false;
+    for (final entry in pending.entries) {
+      final key = _key(FavoriteKind.artist, entry.key);
+      if (_items.containsKey(key)) continue;
+      _items[key] = FavoriteEntry(
+        kind: FavoriteKind.artist,
+        id: entry.key,
+        title: entry.value,
+      );
+      added = true;
+    }
+    await savePendingArtistFollows(preferences, const {});
+    if (!added) return;
+    notifyListeners();
+    _syncFollowedTargets();
+    await _saveLocal();
     await _saveCloud();
   }
 
@@ -163,6 +183,8 @@ class FavoritesNotifier extends ChangeNotifier {
     await _saveLocal();
     await _saveCloud();
     notifyListeners();
+    // A bemutatóban vendégként követett DJ-k (408) a belépéssel átkerülnek.
+    await applyPendingArtistFollows();
     unawaited(pruneUnavailable());
   }
 

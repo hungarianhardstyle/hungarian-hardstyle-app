@@ -12,6 +12,7 @@ import 'package:hungarian_hardstyle_app/providers/games_provider.dart';
 import 'package:hungarian_hardstyle_app/providers/news_provider.dart';
 import 'package:hungarian_hardstyle_app/providers/voting_provider.dart';
 import 'package:hungarian_hardstyle_app/services/app_review_prompt.dart';
+import 'package:hungarian_hardstyle_app/services/onboarding_state.dart';
 import 'package:hungarian_hardstyle_app/widgets/app_review_dialog.dart';
 
 void main() {
@@ -27,7 +28,7 @@ void main() {
       addTearDown(tester.view.reset);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       SharedPreferences.setMockInitialValues({
-        'onboarding_completed_v1': true,
+        onboardingCompletedKey: true,
         AppReviewPrompt.firstLaunchKey: DateTime.now()
             .subtract(const Duration(days: 8))
             .millisecondsSinceEpoch,

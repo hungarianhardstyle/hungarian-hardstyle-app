@@ -12,6 +12,8 @@ import '../../providers/events_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/voting_provider.dart';
 import '../../providers/games_provider.dart';
+import '../../providers/genre_preferences_provider.dart';
+import '../../services/onboarding_plan.dart';
 import '../../providers/poll_provider.dart';
 import '../../providers/prize_provider.dart';
 import '../../core/i18n/tr.dart';
@@ -674,7 +676,14 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ),
                       data: (items) {
-                        final upcomingEvents = items.take(5).toList();
+                        // A bemutatóban választott stílusokhoz illő bulik
+                        // előnyt kapnak, de a kártyák időrendben maradnak (408).
+                        final upcomingEvents = personalizedUpcoming(
+                          items,
+                          (event) => event.genres,
+                          ref.watch(preferredGenresProvider).valueOrNull ??
+                              const <String>{},
+                        );
 
                         if (upcomingEvents.isEmpty) {
                           return const SizedBox(

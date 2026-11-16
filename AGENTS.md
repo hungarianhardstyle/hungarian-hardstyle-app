@@ -1,5 +1,15 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
+### 🟢 A **408**-AS BUILD — 5 LÉPÉSES BEMUTATÓ (2026-11-16)
+
+- **A TULAJDONOS KÉRÉSE:** a 3 lépéses bemutató *„elég alap"* volt → *„az 5 lépésest"*.
+- **A LÉPÉSEK:** bemutatás → stílusok (a DJ-adatokból, `availableGenres`) → DJ-k követése helyben (stílus szerint rendezve, `rankByGenres`) → belépés, mit ad (átugorható) → értesítések a követett DJ-k nevével. Tiszta döntések: `lib/services/onboarding_plan.dart`; állapot: `onboarding_state.dart` (**`onboarding_completed_v2`**, `onboarding_genres_v1`, `onboarding_pending_artists_v1`).
+- **VENDÉG-KÖVETÉS:** helyben mentődik, belépéskor a `FavoritesNotifier.applyPendingArtistFollows()` átveszi (csak hozzáad, utána törli a függő listát).
+- **KEZDŐLAP:** `personalizedUpcoming` — a következő 10 eseményből a stílushoz illők előnyt kapnak, **időrendben**; stílus nélkül a régi első 5.
+- **⚠️ TESZT-TANULSÁG:** a valódi appot indító tesztekben a bemutatót az `onboardingCompletedKey` konstanssal kell kikapcsolni (a `'onboarding_completed_v1'` literál a v2 után már nem hat, és a bemutató eltakarta a Kezdőlapot).
+- **MÉRVE:** `flutter test` **1586/1586**, `flutter analyze` tiszta, i18n `--strict` rendben, `check-play-notes` rendben, kliensbiztonsági kapu rendben. AAB `build/HUHS-v1.0.0+408-release.aab`, 83 711 936 bájt, SHA-256 `86BC69347DA7C3B44253E1FFD11020CA8000EF7B89C1DD9BF79DFC4212A747B7`, `tmp/verify-aab.mjs` → **MINDEN ELLENŐRZÉS RENDBEN** (PowerShellből kell futtatni: Git Bash-ben a GNU `tar` nem olvassa a zip-et).
+- **⚠️ KORLÁT:** belépési pont nincs (szerveroldali változás kellene); eszközön nem próbálva. **A TULAJDONOS LÉPÉSE:** a 408 feltöltése a Play-re.
+
 ### 🟡 A **405**-ÖS BUILD + **2.14.26**-OS PLUGIN — A FŐOLDALI KIEMELT KÉP MOBILON (MÉRVE, 2026-11-05)
 
 - **A TULAJDONOS JELZÉSE:** *„mobil webes nézetben az utolsó cikk képe a főoldalon elég fura, lehet azon javítani?”*, majd *„mondjuk az app főoldalon is fura”*.
