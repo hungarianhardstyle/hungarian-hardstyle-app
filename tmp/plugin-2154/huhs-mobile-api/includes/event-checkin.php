@@ -275,9 +275,16 @@ add_action('add_meta_boxes', function () {
         'huhs_event_checkin_meta_box',
         'huhs_event',
         'normal',
-        'default'
+        'high'
     );
 });
+
+// 2.15.1: az általános „Egyéni mezők” doboz az eseményeknél csak zavart (a mezőket
+// a saját dobozaink kezelik). Elrejtjük; az adatok nem érintettek, és ha valaki
+// mégis kell, a „Képernyő beállításai” alatt újra bekapcsolható.
+add_action('add_meta_boxes_huhs_event', function () {
+    remove_meta_box('postcustom', 'huhs_event', 'normal');
+}, 99);
 
 function huhs_event_checkin_meta_box($post)
 {
