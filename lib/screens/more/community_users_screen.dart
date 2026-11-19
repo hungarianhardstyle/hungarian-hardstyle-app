@@ -22,6 +22,7 @@ import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
 import 'favorites_screen.dart';
 import 'newsletter_screen.dart';
+import 'suggested_people_screen.dart';
 import '../community/private_messages_screen.dart';
 import '../../widgets/achievement_badge_card.dart';
 import '../../widgets/profile_content_card.dart';
@@ -950,6 +951,13 @@ class CommunityHubScreen extends StatelessWidget {
             tr(context, 'Felhasználók keresése'),
             tr(context, 'Publikus profilok és ismerősnek jelölés'),
             registered ? const CommunityUsersScreen() : null,
+          ),
+          _hubTile(
+            context,
+            Icons.person_search_outlined,
+            tr(context, 'Kit ismerhetek?'),
+            tr(context, 'Akik ugyanazokra a bulikra mennek, mint te'),
+            registered ? const SuggestedPeopleScreen() : null,
           ),
           _hubTile(
             context,
