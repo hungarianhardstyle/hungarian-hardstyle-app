@@ -15,6 +15,10 @@ A „Ma este” kártya egyelőre csak a Hungarian Hardstyle által szervezett b
 - A webes szavazólap címe a WordPress-plugin 2.15.6 telepítése után `/eves-szavazas/`.
 - A mobilalkalmazás igazolt e-mail-címet kér, és jelzi, ha a szavazatot már leadtad a weboldalon.
 
+### 411 — ez a build nem ment ki, a 412 váltja
+
+- Tartalma: Play wifi-figyelmeztetés javítása, „Ma este” csak a Hungarian Hardstyle bulikon, időbeosztás → DJ-adatlap, „Hol van buli ma este?”, „Kit ismerhetek?”. A 412 ezt a Közösség menübe is betett „Kit ismerhetek?” gombbal egészíti ki.
+
 ### 408–412 összesítő — az ÉLES sávra (ott még a 407 van, a 408–411 nem ment ki külön)
 
 ```play-notes
