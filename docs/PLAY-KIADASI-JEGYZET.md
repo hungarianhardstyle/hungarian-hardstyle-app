@@ -1,6 +1,6 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás **411** (1.0.0), 2026-11-17
+## Aktuális kiadás **412** (1.0.0), 2026-11-19
 
 ```play-notes
 Az éves szavazás az appban és a weben is elérhető. Igazolt e-mail-címmel évadonként egyszer szavazhatsz.
@@ -10,12 +10,12 @@ A „Ma este” kártya egyelőre csak a Hungarian Hardstyle által szervezett b
 Új: a Közösségben a „Kit ismerhetek?” azokat mutatja, akik ugyanazokra a bulikra mennek, mint te.
 ```
 
-### 411 — közös éves szavazás
+### 412 — közös éves szavazás (a 411 nem ment ki, ez váltja)
 
 - A webes szavazólap címe a WordPress-plugin 2.15.6 telepítése után `/eves-szavazas/`.
 - A mobilalkalmazás igazolt e-mail-címet kér, és jelzi, ha a szavazatot már leadtad a weboldalon.
 
-### 408–411 összesítő — az ÉLES sávra (ott még a 407 van, a 408–410 nem ment ki külön)
+### 408–412 összesítő — az ÉLES sávra (ott még a 407 van, a 408–411 nem ment ki külön)
 
 ```play-notes
 ÚJ: 5 lépéses bemutató — kiválaszthatod a kedvenc stílusaidat, és követheted a DJ-ket.
@@ -180,11 +180,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 411
+currentBuild: 412
 currentVersion: 1.0.0
 lastPublishedBuild: 410
-aab: build/HUHS-v1.0.0+411-release.aab
-sha256: 3C416D85A39AA0D23214E91F28CD8FA9B4E911CDD5E27F6C67EADEA36A639287
+aab: build/HUHS-v1.0.0+412-release.aab
+sha256: 465A75EFAC8DC9FF2E8BF6A4BDA9C7192426241BAEAB8BBDC05B6D58F699117D
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
