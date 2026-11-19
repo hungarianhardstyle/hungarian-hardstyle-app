@@ -49,6 +49,7 @@ import '../../widgets/notification_permission_prompt.dart';
 import '../../widgets/profile_content_card.dart';
 import '../more/favorites_screen.dart';
 import '../more/community_users_screen.dart';
+import '../more/suggested_people_screen.dart';
 import '../artists/artist_detail_screen.dart';
 import '../events/event_detail_screen.dart';
 import 'wordpress_admin_screen.dart';
@@ -3977,6 +3978,17 @@ class _CommunityProfileScreenState extends ConsumerState<CommunityProfileScreen>
         ),
         icon: const Icon(Icons.people_outline),
         label: const AppText('Ismerősök'),
+      ),
+      const SizedBox(height: 8),
+      OutlinedButton.icon(
+        key: const Key('suggested-people-open'),
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const SuggestedPeopleScreen(),
+          ),
+        ),
+        icon: const Icon(Icons.person_search_outlined),
+        label: const AppText('Kit ismerhetek?'),
       ),
       const SizedBox(height: 8),
       OutlinedButton.icon(

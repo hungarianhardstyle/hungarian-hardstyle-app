@@ -20,6 +20,7 @@ HuhsEvent _event({
   'end_date': end,
   'end_time': endTime,
   'checkin_enabled': checkin,
+  'organizer': {'id': 11673, 'name': 'Hungarian Hardstyle'},
   ...extra,
 });
 
@@ -47,6 +48,16 @@ void main() {
       _event(id: 1, start: '2026-11-21', startTime: '20:00'),
     ];
     expect(tonightEvent(events, DateTime(2026, 11, 21, 12, 0))!.id, 1);
+  });
+
+  test('csak a Hungarian Hardstyle által szervezett buli kerül a kártyára', () {
+    final now = DateTime(2026, 11, 21, 12);
+    final other = _event(id: 3, extra: {'organizer': {'id': 12079, 'name': 'Noise Conference'}});
+    final none = _event(id: 4, extra: {'organizer': {'id': 0, 'name': ''}});
+    expect(tonightEvent([other, none], now), isNull);
+    expect(tonightEvent([other, _event(id: 5, startTime: '23:00')], now)!.id, 5);
+    final byName = _event(id: 6, extra: {'organizer': {'id': 0, 'name': 'Hungarian Hardstyle'}});
+    expect(tonightEvent([byName], now)!.id, 6);
   });
 
   test('dátum nélküli esemény nem jelenik meg', () {

@@ -1,4 +1,11 @@
 [
+  "Értesítés műveletei",
+  "Értesítés új esemény közzétételekor",
+  "Értesítés új hír közzétételekor",
+  "Értesítés új rang vagy jelvény elérésekor",
+  "Értesítés új release közzétételekor",
+  "Értesítések és gyorsítótár",
+  "Értesülj az új hírekről és fontos eseményekről e-mailben.",
   "Érvényes HTTPS-linket adj meg.",
   "Esemény a naptárba",
   "Esemény elküldése",
@@ -16,6 +23,7 @@
   "Eseményenként és kapcsolatonként jár, ha valódi, kölcsönös kapcsolat születik. Ha a kapcsolat megszűnik, a pont is elvész.",
   "Eseményt csak regisztrált felhasználó küldhet be.",
   "Eseményt szervező, DJ-t DJ, szervezőt szervező küldhet be; a pont a jóváhagyáskor jár a beküldőnek. Naponta legfeljebb 3 jóváhagyott beküldésért.",
+  "Évadonként egyszer szavazhatsz, az appban vagy a weboldalon.",
   "Éves e-mail-módosítási lehetőség: {n} maradt",
   "Éves HUHS szavazás",
   "Éves névmódosítási lehetőség: {n} maradt",
@@ -50,13 +58,5 @@
   "Feloldva, de a letöltést nem sikerült elindítani.",
   "Figyelem: a beszélgetőpartnered nagykorú. Ha kellemetlenül érzed magad, jelentsd a felhasználót és blokkold.",
   "Figyelem: a megadott dátum szerint 16 évesnél fiatalabb vagy.",
-  "Fiók-szerepkör",
-  "Flyer feltöltése",
-  "Folytatás",
-  "Folytatás Google-fiókkal",
-  "Folytatás: {title} — {time}-tól",
-  "Fontos szabályok",
-  "Forrás: {source}",
-  "Fotó készítése",
-  "FRISS HÍR"
+  "Fiók-szerepkör"
 ]

@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,6 +11,7 @@ import '../../providers/voting_service_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../services/voting_service.dart';
 import '../../widgets/app_text.dart';
+import '../community/community_screen.dart';
 
 class VotingScreen extends ConsumerStatefulWidget {
   const VotingScreen({super.key});
@@ -22,49 +24,31 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
   final Map<String, Set<int>> _selected = {};
   final Set<String> _voted = {};
   int? _statusSeasonId;
+  String? _statusUid;
   bool _loadingVoteStatus = false;
   bool _ballotSubmitted = false;
   bool _busy = false;
   bool _newsletterAsked = false;
   bool _newsletterConsent = false;
 
-  void _ensureVoteStatus(VotingSeason season) {
-    if (!season.active ||
-        _statusSeasonId == season.seasonId ||
-        _loadingVoteStatus) {
-      return;
-    }
+  void _ensureVoteStatus(VotingSeason season, String uid) {
+    if (_statusSeasonId == season.seasonId && _statusUid == uid) return;
+    _statusUid = uid;
     _statusSeasonId = season.seasonId;
+    _selected.clear();
+    _voted.clear();
+    _ballotSubmitted = false;
+    _newsletterAsked = false;
+    _newsletterConsent = false;
     _loadingVoteStatus = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
       final service = ref.read(votingServiceProvider);
-      final cachedFuture = service.cachedVotingStatus(
-        seasonId: season.seasonId,
-      );
-      final serverFuture = service.votingStatus(seasonId: season.seasonId);
-
       try {
-        final cached = await cachedFuture;
-        if (mounted && cached != null && _statusSeasonId == season.seasonId) {
-          setState(() {
-            _applyVotingStatus(cached, season);
-          });
-        }
-      } catch (_) {
-        // A corrupt or unavailable local cache must not block the server read.
-      }
-
-      try {
-        final status = await serverFuture;
-        try {
-          await service.cacheVotingStatus(
-            seasonId: season.seasonId,
-            status: status,
-          );
-        } catch (_) {
-          // The cache is optional and must not affect the server result.
-        }
-        if (mounted) {
+        final status = await service.votingStatus(seasonId: season.seasonId);
+        if (mounted &&
+            _statusUid == uid &&
+            _statusSeasonId == season.seasonId) {
           setState(() {
             _applyVotingStatus(status, season);
           });
@@ -73,7 +57,11 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
         // The server still prevents duplicate votes if this optional lookup
         // is temporarily unavailable.
       } finally {
-        _loadingVoteStatus = false;
+        if (mounted &&
+            _statusUid == uid &&
+            _statusSeasonId == season.seasonId) {
+          setState(() => _loadingVoteStatus = false);
+        }
       }
     });
   }
@@ -98,7 +86,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
   }
 
   Future<void> _voteAll(VotingSeason season) async {
-    if (_busy) return;
+    if (_busy || _loadingVoteStatus) return;
     final missing = season.categories
         .where(
           (category) =>
@@ -113,11 +101,10 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
             trArgs(context, 'Még hiányzik:\n{list}', {
               'list': missing
                   .map(
-                    (category) => trArgs(
-                      context,
-                      '{label}: {n} választás',
-                      {'label': category.label, 'n': '${category.minVotes}'},
-                    ),
+                    (category) => trArgs(context, '{label}: {n} választás', {
+                      'label': category.label,
+                      'n': '${category.minVotes}',
+                    }),
                   )
                   .join('\n'),
             }),
@@ -133,7 +120,8 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
     }
     if (votes.isEmpty) return;
     final user = ref.read(communityServiceProvider).auth.currentUser;
-    if (!_newsletterAsked && user != null && !user.isAnonymous) {
+    if (user == null || user.isAnonymous || !user.emailVerified) return;
+    if (!_newsletterAsked) {
       _newsletterConsent =
           await showDialog<bool>(
             context: context,
@@ -157,6 +145,10 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
           false;
       _newsletterAsked = true;
     }
+    if (!mounted ||
+        ref.read(communityServiceProvider).auth.currentUser?.uid != user.uid) {
+      return;
+    }
     setState(() => _busy = true);
     try {
       final service = ref.read(votingServiceProvider);
@@ -166,28 +158,32 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
         newsletterConsent: _newsletterConsent,
         wordpress: ref.read(wordpressServiceProvider),
       );
+      if (!mounted || _statusUid != user.uid) return;
       _voted.addAll(votes.keys);
-      try {
-        await service.cacheVotingStatus(
-          seasonId: season.seasonId,
-          status: VotingStatus(
-            votedCategories: {..._voted},
-            selectedCandidateIds: {
-              for (final entry in _selected.entries)
-                entry.key: {...entry.value},
-            },
-          ),
-        );
-      } catch (_) {
-        // The vote was already accepted by the server; caching is optional.
-      }
       if (mounted) {
         setState(() {
           _ballotSubmitted = true;
         });
       }
       if (mounted) await _showVoteSuccessDialog();
-    } catch (error) {
+    } on FirebaseFunctionsException catch (error) {
+      if (mounted && _statusUid == user.uid && error.code == 'already-exists') {
+        setState(() {
+          _voted.addAll(season.categories.map((category) => category.key));
+          _ballotSubmitted = true;
+        });
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: AppText(
+              error.code == 'failed-precondition'
+                  ? 'Jelenleg nincs aktív szavazás.'
+                  : 'A szavazat mentése nem sikerült. Próbáld újra később.',
+            ),
+          ),
+        );
+      }
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -220,7 +216,6 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
           ),
         ),
         data: (season) {
-          _ensureVoteStatus(season);
           if (!season.active) {
             return Center(
               child: season.hasPublishedResults
@@ -240,6 +235,35 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                   : const AppText('Jelenleg nincs aktív szavazás.'),
             );
           }
+          final user = ref.watch(communityAuthProvider).valueOrNull;
+          if (user == null || user.isAnonymous || !user.emailVerified) {
+            _statusUid = null;
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const AppText(
+                      'A szavazáshoz igazolt e-mail-cím szükséges.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              const CommunityProfileScreen(editing: true),
+                        ),
+                      ),
+                      child: const AppText('Fiókom'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          _ensureVoteStatus(season, user.uid);
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -253,7 +277,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
               ),
               const SizedBox(height: 6),
               AppText(
-                'Regisztráció nélkül is szavazhatsz. Egy készülékről ebben az évadban csak egyszer lehet leadni a szavazatot.',
+                'Évadonként egyszer szavazhatsz, az appban vagy a weboldalon.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 18),
@@ -268,7 +292,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
   }
 
   Widget _category(VotingSeason season, VotingCategory category) {
-    final voted = _ballotSubmitted;
+    final voted = _ballotSubmitted || _loadingVoteStatus;
     final selected = _selected[category.key] ?? const <int>{};
     return Card(
       margin: const EdgeInsets.only(bottom: 18),
@@ -309,9 +333,11 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    trArgs(context, 'Legfeljebb {n} jelöltet választhatsz.', {
-                                      'n': '${category.maxVotes}',
-                                    }),
+                                    trArgs(
+                                      context,
+                                      'Legfeljebb {n} jelöltet választhatsz.',
+                                      {'n': '${category.maxVotes}'},
+                                    ),
                                   ),
                                 ),
                               );
@@ -375,11 +401,11 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                   {
                     'list': missing
                         .map(
-                          (category) => trArgs(
-                            context,
-                            '• {label}: {n} jelölt',
-                            {'label': category.label, 'n': '${category.minVotes}'},
-                          ),
+                          (category) =>
+                              trArgs(context, '• {label}: {n} jelölt', {
+                                'label': category.label,
+                                'n': '${category.minVotes}',
+                              }),
                         )
                         .join('\n'),
                   },

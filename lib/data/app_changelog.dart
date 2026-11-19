@@ -38,6 +38,17 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 411,
+    changes: [
+      'Az éves szavazás az appban és a weben is elérhető. Igazolt e-mail-címmel évadonként egyszer szavazhatsz.',
+      'A „Ma este” kártya egyelőre csak a Hungarian Hardstyle által szervezett bulikon jelenik meg.',
+      'Új: az időbeosztásban a DJ nevére koppintva megnyílik az adatlapja.',
+      'Új: „Hol van buli ma este?” a Kezdőlapon — a mai bulik térkép-linkkel.',
+      'Új: a Közösségben a „Kit ismerhetek?” azokat mutatja, akik ugyanazokra a bulikra mennek, mint te.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 410,
     changes: [
       'ÚJ: QR-kódos becsekkolás a bulikon — a bejáratnál kitett QR beolvasása pontot és „Ott voltam” jelvényt ad.',

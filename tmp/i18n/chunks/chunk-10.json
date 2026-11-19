@@ -1,4 +1,11 @@
 [
+  "Csak az admin látja.",
+  "Csak magyar zenékkel",
+  "Csatlakozz a HUHS közösséghez! Regisztrálj az ajánlólinkkel: {url}",
+  "Csere",
+  "Dátum *",
+  "Diagnosztika futtatása",
+  "DJ",
   "DJ / előadó beküldése",
   "DJ-k száma",
   "DJ-logó feltöltése",
@@ -51,12 +58,5 @@
   "Erre a címre már kiment a megerősítő e-mail, ezért most nem küldtük ki újra. Nézd meg a postaládádat (a spam mappát is); {hint}",
   "Értékeld az alkalmazást!",
   "Értékelem",
-  "Értesítés",
-  "Értesítés műveletei",
-  "Értesítés új esemény közzétételekor",
-  "Értesítés új hír közzétételekor",
-  "Értesítés új rang vagy jelvény elérésekor",
-  "Értesítés új release közzétételekor",
-  "Értesítések és gyorsítótár",
-  "Értesülj az új hírekről és fontos eseményekről e-mailben."
+  "Értesítés"
 ]

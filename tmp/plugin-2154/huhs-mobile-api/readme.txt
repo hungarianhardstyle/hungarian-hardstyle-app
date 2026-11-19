@@ -4,7 +4,7 @@ Tags: firebase, push, api, mobile
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.14.29
+Stable tag: 2.16.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,6 +15,42 @@ A Hungarian Hardstyle mobilalkalmazás (Flutter) WordPress-oldali API-ja: tartal
 A plugin a mobilalkalmazás egyetlen backendje: REST végpontok a hírekhez, eseményekhez, kiadványokhoz, DJ-khez, szavazásokhoz, játékokhoz és a közösségi feltöltésekhez, valamint az FCM **push-küldés** (a széles körök szeletekben, folytatható láncban mennek ki).
 
 == Changelog ==
+
+= 2.16.4 =
+* DJ verseny: a szavazás december 25-ig tart (a jelentkezés határideje december 10 marad).
+
+= 2.16.3 =
+* DJ verseny: a megosztási oldal csak JavaScripttel irányít át (a meta refresh-t a közösségi crawlerek követhetik, és a céloldal képét mutatták).
+
+= 2.16.2 =
+* DJ verseny: a megosztott jelentkező linkje a külön verseny-oldalra visz.
+
+= 2.16.1 =
+* DJ verseny: nyertes a szavazás lezárása után (legtöbb lájk, vagy kézi jelölés), értesítő levél a nyertesnek és az adminnak; a szavazás határideje december 20, a jelentkezésé december 10.
+
+= 2.16.0 =
+* Új: DJ verseny (HUHS Mobile → DJ verseny). Jelentkezés a hardstylerevolution.hu oldalról, jóváhagyás az adminban (Közzététel), lájkolás és egyenkénti megosztás.
+
+= 2.15.8 =
+* Az éves szavazóoldal címében megjelenik az évszám, aktív évad nélkül is.
+
+= 2.15.7 =
+* Az éves szavazóoldal a stílust és az évad állapotát az első válaszban adja vissza, lezárt évadnál nincs szavazóprogram-betöltés.
+
+= 2.15.6 =
+* Mobilbarát éves szavazás a /eves-szavazas címen, Firebase e-mailes azonosítással és közös appos szavazatszámlálással.
+
+= 2.15.5 =
+* Javítva: a több szeletben kimenő push (hír) haladását a token **kulcsa** követi, nem a sorszám — ha a kör közben valaki regisztrált vagy tokent cserélt, az egyik eszköz kétszer kapta, a másik kimaradt.
+
+= 2.15.4 =
+* Új: az időbeosztásnál megadható, mikortól látszódjon az appban (pl. a buli napján 18:00-tól).
+
+= 2.15.3 =
+* Javítva: a jelvénykép gomb a médiatárat nyitja (a médiatár a szerkesztő betöltésekor töltődik be).
+
+= 2.15.2 =
+* Új: a becsekkolási jelvény képe feltölthető/kiválasztható a médiatárból (gomb), nem kell URL-t másolni.
 
 = 2.15.0 =
 * Új: **QR-becsekkolás a bulikon** — az esemény szerkesztőjében eseményenként egyedi QR (letölthető PNG). Csak a buli ideje alatt érvényes, fiókonként egyszer; a becsekkolók pontot és jelvényt kapnak, a szerkesztőben látszik a létszám.

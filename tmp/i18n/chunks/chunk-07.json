@@ -1,4 +1,9 @@
 [
+  "A nem letöltött tételek nincsenek a listában — azokat a kiadvány kártyáján tudod letölteni.",
+  "A nyereményjáték adatait most nem sikerült betölteni.\n{error}",
+  "A nyilakkal rendezheted a sorrendet — fiókonként megjegyzi.",
+  "A Play-termékazonosítók még nem érkeztek meg. Újrapróbálom automatikusan.",
+  "A profil mentése sikertelen: {error}",
   "A profil nem tölthető be. Ellenőrizd az internetkapcsolatot.",
   "A profil törlése sikertelen: {error}",
   "A profil törlése sikerült.",
@@ -27,8 +32,8 @@
   "A szavazás jelenleg nem tölthető be. Próbáld újra később.",
   "A szavazás véget ért",
   "A szavazás véget ért. Az összesítő az adminisztrátori engedély után lesz elérhető.",
+  "A szavazáshoz igazolt e-mail-cím szükséges.",
   "A szavazáshoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána szavazhatsz.",
-  "A szavazat mentése nem sikerült. Próbáld újra később.",
   "A szavazatod sikeresen rögzítettük. Ebben az éves szavazásban erről a készülékről már nem adhatsz le újabb szavazatot.",
   "A szavazatot most nem sikerült rögzíteni. Próbáld újra.",
   "A szerkesztés nem sikerült: {error}",
@@ -53,10 +58,5 @@
   "A zenéid most nem érhetők el",
   "A zenéidhez jelentkezz be",
   "A(z) „{title}\" letöltött fájlja törlődik. A vásárlás megmarad, ezért bármikor újra letöltheted.",
-  "A(z) „{title}\" még nincs letöltve — előbb töltsd le, és utána játszható.",
-  "A(z) {label} a mentés után azonnal megjelenik az appban (kivéve, ha piszkozatot választasz).",
-  "A(z) {label} létrehozva.",
-  "A(z) {label} mentve.",
-  "A(z) {row}. kérdés szövege üres.",
-  "A(z) {row}. kérdéshez 2–6 válaszlehetőség kell."
+  "A(z) „{title}\" még nincs letöltve — előbb töltsd le, és utána játszható."
 ]

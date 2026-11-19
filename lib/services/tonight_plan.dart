@@ -36,11 +36,21 @@ DateTime? eventEndAt(HuhsEvent event) {
   return end;
 }
 
+/// A Hungarian Hardstyle szervező azonosítója a WordPressben.
+const hungarianHardstyleOrganizerId = 11673;
+
+/// Egyelőre csak a Hungarian Hardstyle által szervezett bulinál van „Ma este".
+/// shortcut: szervező-azonosító vagy név szerint, ha több saját szervező lesz, szerveroldali jelző kell.
+bool isHungarianHardstyleEvent(HuhsEvent event) =>
+    event.organizer.id == hungarianHardstyleOrganizerId ||
+    event.organizer.name.trim().toLowerCase() == 'hungarian hardstyle';
+
 /// A kártyán megjelenítendő buli, vagy `null`.
 HuhsEvent? tonightEvent(Iterable<HuhsEvent> events, DateTime now) {
   HuhsEvent? best;
   DateTime? bestStart;
   for (final event in events) {
+    if (!isHungarianHardstyleEvent(event)) continue;
     final start = eventStartAt(event);
     final end = eventEndAt(event);
     if (start == null || end == null) continue;
@@ -55,6 +65,22 @@ HuhsEvent? tonightEvent(Iterable<HuhsEvent> events, DateTime now) {
     }
   }
   return best;
+}
+
+/// Minden mai buli (bármely szervezőtől): ma kezdődik, vagy épp tart; a vége
+/// után már nem. Kezdés szerint rendezve — a „Hol van buli ma este" oldalhoz.
+List<HuhsEvent> todaysEvents(Iterable<HuhsEvent> events, DateTime now) {
+  final today = DateTime(now.year, now.month, now.day);
+  final found = <(DateTime, HuhsEvent)>[];
+  for (final event in events) {
+    final start = eventStartAt(event);
+    final end = eventEndAt(event);
+    if (start == null || end == null || now.isAfter(end)) continue;
+    final startsToday = DateTime(start.year, start.month, start.day) == today;
+    if (startsToday || !now.isBefore(start)) found.add((start, event));
+  }
+  found.sort((a, b) => a.$1.compareTo(b.$1));
+  return [for (final f in found) f.$2];
 }
 
 enum CheckinWindow { none, notYet, open, closed }

@@ -1,4 +1,9 @@
 [
+  "A jelentés adatai nem tölthetők be.",
+  "A jelentés kezelése nem sikerült.",
+  "A jelöltek hamarosan érkeznek.",
+  "A jelszó módosítása sikerült.",
+  "A jelszó-visszaállító e-mail elküldve.",
   "A jelvény a felhasználó neve elé kerül, egy sorban",
   "A jelvényed a profilodon látható. A chatben a neve mellett is megjeleníthető, ha ezt a Beállításokban engedélyezed.",
   "A jelvények grafikáit és a szintek pontszámait a HUHS adminisztrátora kezeli, ezért itt mindig a jelenlegi állapot látszik.",
@@ -53,10 +58,5 @@
   "A művelet véglegesen törli a lomtár tartalmát. Folytatod?",
   "A napi aktivitási pont (1–5) a lezárt nap után, naponta egyszer jár: a szerver a cikkhez írt hozzászólásaidból és a chat-üzeneteidből számolja.",
   "A naptárfájl elkészítése nem sikerült.",
-  "A neked küldött és általad küldött privát beszélgetések",
-  "A nem letöltött tételek nincsenek a listában — azokat a kiadvány kártyáján tudod letölteni.",
-  "A nyereményjáték adatait most nem sikerült betölteni.\n{error}",
-  "A nyilakkal rendezheted a sorrendet — fiókonként megjegyzi.",
-  "A Play-termékazonosítók még nem érkeztek meg. Újrapróbálom automatikusan.",
-  "A profil mentése sikertelen: {error}"
+  "A neked küldött és általad küldött privát beszélgetések"
 ]

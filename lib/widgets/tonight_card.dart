@@ -10,6 +10,7 @@ import '../screens/events/checkin_scanner_screen.dart';
 import '../screens/events/event_detail_screen.dart';
 import '../services/tonight_plan.dart';
 import 'app_text.dart';
+import 'timetable_rows.dart';
 
 /// A Kezdőlap tetején megjelenő **„Ma este"** kártya: a buli napján (és amíg a
 /// buli tart) időbeosztás, térkép, jegy és a QR-becsekkolás. Egyébként **nem
@@ -115,26 +116,7 @@ class _TonightBody extends ConsumerWidget {
               ),
               if (timetable.isNotEmpty) ...[
                 const SizedBox(height: 10),
-                for (final entry in timetable)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 96,
-                          child: Text(
-                            entry.time,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        Expanded(child: Text(entry.artist)),
-                      ],
-                    ),
-                  ),
+                TimetableRows(event: event, entries: timetable),
               ],
               const SizedBox(height: 10),
               Wrap(

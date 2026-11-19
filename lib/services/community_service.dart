@@ -22,6 +22,7 @@ import '../core/i18n/app_language.dart';
 import '../core/images/wordpress_image_url.dart';
 import 'birth_date.dart';
 import 'chat_report.dart';
+import 'people_suggestions.dart';
 import 'wordpress_service.dart';
 
 class _AchievementCacheEntry {
@@ -2615,6 +2616,51 @@ class CommunityService {
           }),
     );
     return result;
+  }
+
+  /// Ajánlott ismerősök: akik ugyanazokra a közelgő bulikra mennek („Ott
+  /// leszek"), mint te — az ismerőseid, a blokkoltak és te magad nélkül.
+  Future<List<Map<String, dynamic>>> getSuggestedPeople({int limit = 20}) async {
+    final user = auth.currentUser;
+    if (user == null || user.isAnonymous) return const [];
+    final planned = await watchActivePlannedEvents().first;
+    final eventIds = <int>{
+      for (final doc in planned)
+        ?int.tryParse('${doc.data()['eventId']}'),
+    };
+    if (eventIds.isEmpty) return const [];
+    final friends = await firestore
+        .collection('community_profiles')
+        .doc(user.uid)
+        .collection('connections')
+        .get();
+    final blocked = await _loadBlockedUserIds();
+    final attendees = <int, Iterable<String>>{};
+    for (final id in eventIds) {
+      final snapshot = await _attendance(id).get();
+      attendees[id] = [
+        for (final doc in snapshot.docs)
+          if (doc.data()['state'] == 'attending') doc.id,
+      ];
+    }
+    final ranked = rankSuggestions(
+      attendees,
+      me: user.uid,
+      exclude: {...friends.docs.map((d) => d.id), ...blocked},
+      limit: limit,
+    );
+    return Future.wait([
+      for (final r in ranked)
+        () async {
+          final profile = await getPublicProfile(r.uid);
+          return <String, dynamic>{
+            'id': r.uid,
+            'name': (profile['displayName'] as String? ?? '').trim(),
+            'image': resolveProfileImage(profile),
+            'shared': r.shared,
+          };
+        }(),
+    ]);
   }
 
   Future<bool> biometricEnabled() async {

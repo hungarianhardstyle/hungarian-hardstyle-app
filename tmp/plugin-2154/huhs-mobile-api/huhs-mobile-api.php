@@ -3,7 +3,7 @@
  * Plugin Name: HUHS Mobile API
  * Plugin URI: https://hungarianhardstyle.hu
  * Description: Mobile API for the Hungarian Hardstyle mobilalkalmazáshoz.
- * Version: 2.15.1
+ * Version: 2.16.4
  * Author: Denoiser
  */
 
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('HUHS_API_VERSION', '2.15.1');
+define('HUHS_API_VERSION', '2.16.4');
 define('HUHS_API_PATH', plugin_dir_path(__FILE__));
 define('HUHS_API_URL', plugin_dir_url(__FILE__));
 
@@ -34,6 +34,7 @@ require_once HUHS_API_PATH . 'includes/api-releases.php';
 require_once HUHS_API_PATH . 'includes/achievements.php';
 require_once HUHS_API_PATH . 'includes/poll.php';
 require_once HUHS_API_PATH . 'includes/prize.php';
+require_once HUHS_API_PATH . 'includes/contest.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -58,6 +59,7 @@ require_once HUHS_API_PATH . 'includes/submissions.php';
 require_once HUHS_API_PATH . 'includes/push.php';
 require_once HUHS_API_PATH . 'includes/newsletter.php';
 require_once HUHS_API_PATH . 'includes/voting.php';
+require_once HUHS_API_PATH . 'includes/voting-web.php';
 require_once HUHS_API_PATH . 'includes/games.php';
 // A natív admin létrehozó-végpontjai (kérdőív / nyereményjáték / kvíz) — szándékosan
 // a games.php UTÁN, mert a mező-definíciók a HUHS_GAME_TYPES listát használják.

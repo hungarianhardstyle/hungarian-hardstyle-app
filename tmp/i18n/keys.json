@@ -185,6 +185,14 @@
     ]
   },
   {
+    "value": "Felhasználó",
+    "count": 6,
+    "files": [
+      "lib/screens/more/community_users_screen.dart",
+      "lib/screens/more/suggested_people_screen.dart"
+    ]
+  },
+  {
     "value": "Küldés…",
     "count": 6,
     "files": [
@@ -222,13 +230,6 @@
     "count": 5,
     "files": [
       "lib/screens/community/community_screen.dart",
-      "lib/screens/more/community_users_screen.dart"
-    ]
-  },
-  {
-    "value": "Felhasználó",
-    "count": 5,
-    "files": [
       "lib/screens/more/community_users_screen.dart"
     ]
   },
@@ -772,6 +773,15 @@
     ]
   },
   {
+    "value": "Térkép",
+    "count": 3,
+    "files": [
+      "lib/screens/events/event_detail_screen.dart",
+      "lib/screens/events/tonight_screen.dart",
+      "lib/widgets/tonight_card.dart"
+    ]
+  },
+  {
     "value": "Több",
     "count": 3,
     "files": [
@@ -849,6 +859,13 @@
     "files": [
       "lib/screens/community/wordpress_admin_screen.dart",
       "lib/screens/notifications/notification_center_screen.dart"
+    ]
+  },
+  {
+    "value": "A szavazat mentése nem sikerült. Próbáld újra később.",
+    "count": 2,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
     ]
   },
   {
@@ -1153,6 +1170,13 @@
     ]
   },
   {
+    "value": "Jelenleg nincs aktív szavazás.",
+    "count": 2,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
     "value": "Jelenlegi jelszó",
     "count": 2,
     "files": [
@@ -1287,6 +1311,14 @@
     ]
   },
   {
+    "value": "Kit ismerhetek?",
+    "count": 2,
+    "files": [
+      "lib/screens/community/community_screen.dart",
+      "lib/screens/more/suggested_people_screen.dart"
+    ]
+  },
+  {
     "value": "Label",
     "count": 2,
     "files": [
@@ -1298,6 +1330,14 @@
     "count": 2,
     "files": [
       "lib/screens/community/wordpress_admin_screen.dart"
+    ]
+  },
+  {
+    "value": "MA ESTE",
+    "count": 2,
+    "files": [
+      "lib/screens/events/tonight_screen.dart",
+      "lib/widgets/tonight_card.dart"
     ]
   },
   {
@@ -1556,14 +1596,6 @@
     ]
   },
   {
-    "value": "Térkép",
-    "count": 2,
-    "files": [
-      "lib/screens/events/event_detail_screen.dart",
-      "lib/widgets/tonight_card.dart"
-    ]
-  },
-  {
     "value": "Törlöd ezt a privát beszélgetést?",
     "count": 2,
     "files": [
@@ -1735,6 +1767,13 @@
     "count": 1,
     "files": [
       "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
+    "value": "{n} közös buli",
+    "count": 1,
+    "files": [
+      "lib/screens/more/suggested_people_screen.dart"
     ]
   },
   {
@@ -2970,17 +3009,17 @@
     ]
   },
   {
+    "value": "A szavazáshoz igazolt e-mail-cím szükséges.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
     "value": "A szavazáshoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána szavazhatsz.",
     "count": 1,
     "files": [
       "lib/screens/poll/poll_screen.dart"
-    ]
-  },
-  {
-    "value": "A szavazat mentése nem sikerült. Próbáld újra később.",
-    "count": 1,
-    "files": [
-      "lib/screens/voting/voting_screen.dart"
     ]
   },
   {
@@ -3523,6 +3562,13 @@
     ]
   },
   {
+    "value": "Az ajánlások most nem tölthetők be.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/suggested_people_screen.dart"
+    ]
+  },
+  {
     "value": "Az ajánlókód nem tölthető be.",
     "count": 1,
     "files": [
@@ -3653,6 +3699,13 @@
     "count": 1,
     "files": [
       "lib/screens/more/achievement_guide_screen.dart"
+    ]
+  },
+  {
+    "value": "Az események most nem tölthetők be.",
+    "count": 1,
+    "files": [
+      "lib/screens/events/tonight_screen.dart"
     ]
   },
   {
@@ -4573,6 +4626,13 @@
     ]
   },
   {
+    "value": "Évadonként egyszer szavazhatsz, az appban vagy a weboldalon.",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
+    ]
+  },
+  {
     "value": "Éves e-mail-módosítási lehetőség: {n} maradt",
     "count": 1,
     "files": [
@@ -4815,6 +4875,13 @@
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
+    ]
+  },
+  {
+    "value": "Fiókom",
+    "count": 1,
+    "files": [
+      "lib/screens/voting/voting_screen.dart"
     ]
   },
   {
@@ -5144,6 +5211,20 @@
     "count": 1,
     "files": [
       "lib/screens/releases/release_detail_screen.dart"
+    ]
+  },
+  {
+    "value": "Hol van buli ma este?",
+    "count": 1,
+    "files": [
+      "lib/screens/events/tonight_screen.dart"
+    ]
+  },
+  {
+    "value": "Hol van buli ma este? ({n})",
+    "count": 1,
+    "files": [
+      "lib/screens/events/tonight_screen.dart"
     ]
   },
   {
@@ -5532,13 +5613,6 @@
     ]
   },
   {
-    "value": "Jelenleg nincs aktív szavazás.",
-    "count": 1,
-    "files": [
-      "lib/screens/voting/voting_screen.dart"
-    ]
-  },
-  {
     "value": "Jelenlét rögzítése",
     "count": 1,
     "files": [
@@ -5599,6 +5673,13 @@
     "count": 1,
     "files": [
       "lib/screens/onboarding/onboarding_screen.dart"
+    ]
+  },
+  {
+    "value": "Jelöld meg az eseményeken, hogy ott leszel, és megmutatjuk, kik mennek veled.",
+    "count": 1,
+    "files": [
+      "lib/screens/more/suggested_people_screen.dart"
     ]
   },
   {
@@ -6372,10 +6453,10 @@
     ]
   },
   {
-    "value": "MA ESTE",
+    "value": "Ma estére nincs bejegyzett buli.",
     "count": 1,
     "files": [
-      "lib/widgets/tonight_card.dart"
+      "lib/screens/events/tonight_screen.dart"
     ]
   },
   {
@@ -7440,13 +7521,6 @@
     "count": 1,
     "files": [
       "lib/screens/community/community_screen.dart"
-    ]
-  },
-  {
-    "value": "Regisztráció nélkül is szavazhatsz. Egy készülékről ebben az évadban csak egyszer lehet leadni a szavazatot.",
-    "count": 1,
-    "files": [
-      "lib/screens/voting/voting_screen.dart"
     ]
   },
   {

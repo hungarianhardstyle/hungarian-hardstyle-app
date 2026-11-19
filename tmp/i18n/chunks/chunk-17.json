@@ -1,4 +1,15 @@
 [
+  "Nem tudtok majd egymásnak privát üzenetet küldeni.",
+  "Nem tudtok majd egymásnak privát üzenetet küldeni. A blokkolás később a blokkolt felhasználók listájából visszavonható.",
+  "Némítás",
+  "Némítás feloldása",
+  "Név",
+  "Névjegy",
+  "Nincs adat.",
+  "Nincs archivált értesítés.",
+  "Nincs blokkolt felhasználó.",
+  "Nincs cél",
+  "Nincs cikk ehhez a címkéhez.",
   "Nincs elérhető kérdőív.",
   "Nincs elérhető nyereményjáték.",
   "Nincs elérhető szavazási szezon.",
@@ -47,16 +58,5 @@
   "Preview még nem érhető el.",
   "Privát beszélgetés",
   "Privát üzenet",
-  "Privát üzenetekhez regisztráció szükséges.",
-  "Próbáld ki magad!",
-  "Profil kitöltése",
-  "Profil mentése",
-  "Profil mentve.",
-  "Profilkép feltöltése",
-  "Projekt",
-  "Publikus profilok és ismerősnek jelölés",
-  "Push",
-  "Radio",
-  "Radio verzió",
-  "Rawstyle zenékkel"
+  "Privát üzenetekhez regisztráció szükséges."
 ]

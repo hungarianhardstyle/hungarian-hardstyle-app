@@ -24,6 +24,7 @@
   "Profil törlése",
   "Szervezői adatlap",
   "Támogatás PayPallal",
+  "Térkép",
   "Több",
   "Üzenet szerkesztése",
   "Válasz",
@@ -34,6 +35,7 @@
   "A fiókodat törölték. Kijelentkeztettünk.",
   "A közösség tagja",
   "A művelet nem sikerült.",
+  "A szavazat mentése nem sikerült. Próbáld újra később.",
   "Adatkezelési tájékoztató",
   "Adatlap szerkesztése",
   "Adatvédelem és GDPR",
@@ -56,7 +58,5 @@
   "ÉLŐ",
   "Értesítések engedélyezése",
   "Érvénytelen e-mail-cím.",
-  "Esemény beküldése",
-  "Esemény értékelése",
-  "Események, ahol ott leszek"
+  "Esemény beküldése"
 ]

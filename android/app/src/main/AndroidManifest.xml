@@ -16,6 +16,8 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- A WIFI-engedélyek miatt a Play alapból kötelező hardverként venné fel; nem az. -->
+    <uses-feature android:name="android.hardware.wifi" android:required="false" />
 
     <application
         android:label="Hungarian Hardstyle"

@@ -1,4 +1,9 @@
 [
+  "+15 pont",
+  "+2 pont",
+  "+20 pont",
+  "+30 pont",
+  "+5 pont",
   "+50 pont",
   "96 kbps MP3 feloldása reklámmal",
   "A {n} követett DJ-t a belépés után a fiókodba mentjük.",
@@ -53,10 +58,5 @@
   "A játékhoz beállított jutalom: kvíznél a helyes válaszok aránya szerint sávokban, más játéktípusnál csak teljes pontszámért.",
   "A játékhoz regisztrált fiók szükséges. Regisztrálj, vagy jelentkezz be, és utána játszhatsz.",
   "A játékot meg tudod nézni, de a válaszadáshoz regisztrált felhasználói fiók kell.",
-  "A játékot most nem sikerült rögzíteni. Próbáld újra.",
-  "A jelentés adatai nem tölthetők be.",
-  "A jelentés kezelése nem sikerült.",
-  "A jelöltek hamarosan érkeznek.",
-  "A jelszó módosítása sikerült.",
-  "A jelszó-visszaállító e-mail elküldve."
+  "A játékot most nem sikerült rögzíteni. Próbáld újra."
 ]

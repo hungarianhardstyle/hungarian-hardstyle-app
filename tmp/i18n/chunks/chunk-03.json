@@ -1,4 +1,6 @@
 [
+  "Esemény értékelése",
+  "Események, ahol ott leszek",
   "Felfedezés",
   "Felhasználó blokkolva.",
   "Felhasználó jelentése",
@@ -13,6 +15,7 @@
   "Írj egy üzenetet.",
   "Írj valamit a közösségnek…",
   "JÁTÉK",
+  "Jelenleg nincs aktív szavazás.",
   "Jelenlegi jelszó",
   "Jelentés",
   "Jelentések kezelése",
@@ -31,8 +34,10 @@
   "Kijelentkezés",
   "Kikapcsolva – koppints a bekapcsoláshoz",
   "Kilépés",
+  "Kit ismerhetek?",
   "Label",
   "Lomtár ürítése",
+  "MA ESTE",
   "Magyarország",
   "Meetup",
   "Megjelenés: {d}",
@@ -53,10 +58,5 @@
   "Ország",
   "Privát kapcsolattartó e-mail *",
   "Profil befejezése szükséges",
-  "Profil szerkesztése",
-  "Profilkép",
-  "Rádió szolgáltató",
-  "Real Hardstyle FM",
-  "Regisztráció szükséges",
-  "Release"
+  "Profil szerkesztése"
 ]

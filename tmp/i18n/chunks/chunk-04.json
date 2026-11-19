@@ -1,4 +1,9 @@
 [
+  "Profilkép",
+  "Rádió szolgáltató",
+  "Real Hardstyle FM",
+  "Regisztráció szükséges",
+  "Release",
   "Social és kapcsolat",
   "Spotify Playlistek",
   "Szavazási összesítő",
@@ -6,7 +11,6 @@
   "Szerepkör szűrése",
   "Szerkesztés: {n}",
   "Szünet",
-  "Térkép",
   "Törlöd ezt a privát beszélgetést?",
   "Új privát üzenet",
   "Újra",
@@ -31,6 +35,7 @@
   "{n} érdeklődő",
   "{n} kapcsolódó cikk",
   "{n} kiválasztva",
+  "{n} közös buli",
   "{n} lejárt esemény",
   "{n} letöltött zene",
   "{n} nap",
@@ -53,10 +58,5 @@
   "• {label}: {n} jelölt",
   "+{n} pont jár a becsekkolásért.",
   "+1 pont",
-  "+1–5 pont",
-  "+15 pont",
-  "+2 pont",
-  "+20 pont",
-  "+30 pont",
-  "+5 pont"
+  "+1–5 pont"
 ]

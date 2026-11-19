@@ -168,6 +168,7 @@ add_action('admin_menu', function () {
             'huhs-poll-results',
             'edit.php?post_type=huhs_prize',
             'huhs-prize',
+            'edit.php?post_type=huhs_contest',
             'edit.php?post_type=huhs_vote_season',
             'huhs-voting-summary',
         ),

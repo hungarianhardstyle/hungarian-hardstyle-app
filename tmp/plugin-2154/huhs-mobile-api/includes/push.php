@@ -1297,8 +1297,19 @@ function huhs_push_continue($job_key, $budget = HUHS_PUSH_TIME_BUDGET)
     // valtozhat (ujraregisztralas, token-csere), es akkor ugyanaz a token KET
     // szeletbe esett -> egy korbol tobb ertesites ment ki ugyanarra az eszkozre.
     // A kulcs szerinti rendezes stabil, ezert az offset jelentese allando.
-    ksort($recipients);
-    $remaining = array_slice($recipients, $offset, null, true);
+    ksort($recipients, SORT_STRING);
+    // 2.15.5: a haladást a KULCS-kurzor adja (nem a sorszám). Az offset az élő
+    // listában csúszott, ha a kör közben valaki regisztrált/token-et cserélt:
+    // az egyik eszköz kétszer kapta, a másik kimaradt.
+    $last_key = isset($job['last_key']) ? (string) $job['last_key'] : '';
+    if ($last_key !== '') {
+        $remaining = array();
+        foreach ($recipients as $rk => $rt) {
+            if (strcmp((string) $rk, $last_key) > 0) $remaining[$rk] = $rt;
+        }
+    } else {
+        $remaining = array_slice($recipients, $offset, null, true);
+    }
 
     $result = huhs_push_deliver_slice($remaining, $title, $body, $data, $project, $access_token, $budget);
     $dead = array_merge($dead, $result['dead']);
@@ -1338,6 +1349,7 @@ function huhs_push_continue($job_key, $budget = HUHS_PUSH_TIME_BUDGET)
             'body' => $body,
             'data' => $data,
             'offset' => $offset + $result['processed'],
+            'last_key' => $result['processed'] > 0 ? (string) array_keys($remaining)[$result['processed'] - 1] : $last_key,
             'dead' => $dead,
             'runs' => $runs + 1,
             'last_run' => time(),
@@ -1604,7 +1616,7 @@ function huhs_push_send($title, $body, $data = array(), $language = '')
     // valtozhat (ujraregisztralas, token-csere), es akkor ugyanaz a token KET
     // szeletbe esett -> egy korbol tobb ertesites ment ki ugyanarra az eszkozre.
     // A kulcs szerinti rendezes stabil, ezert az offset jelentese allando.
-    ksort($recipients);
+    ksort($recipients, SORT_STRING);
     if (!$recipients) {
         error_log('HUHS push: nothing to do (' . $type . '), no recipient matches the preferences.');
         huhs_push_record_result(array(
@@ -1653,6 +1665,7 @@ function huhs_push_send($title, $body, $data = array(), $language = '')
             'body' => $body,
             'data' => $data,
             'offset' => $result['processed'],
+            'last_key' => $result['processed'] > 0 ? (string) array_keys($recipients)[$result['processed'] - 1] : '',
             'dead' => $result['dead'],
             'runs' => 1,
         ));

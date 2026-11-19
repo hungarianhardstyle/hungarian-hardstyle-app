@@ -30,6 +30,7 @@ import '../../widgets/brand_loading_indicator.dart';
 import '../../widgets/content_refresh_icon.dart';
 import '../../widgets/home_action_card.dart';
 import '../../widgets/tonight_card.dart';
+import '../events/tonight_screen.dart';
 import '../../widgets/poll_entry_button.dart';
 import '../../widgets/prize_entry_card.dart';
 import '../../services/notification_service.dart';
@@ -474,6 +475,8 @@ class HomeScreen extends ConsumerWidget {
                         // A buli napján (és amíg tart) a „Ma este” kártya;
                         // egyébként nem foglal helyet.
                         const TonightCard(),
+                        // „Hol van buli ma este?” — csak ha ma van buli.
+                        const TonightEntry(),
                         // A nyeremenyjatek sora magatol eltunik, ha nincs
                         // nyitott jatek es nincs frissen kihirdetett nyertes.
                         const PrizeEntryCard(),

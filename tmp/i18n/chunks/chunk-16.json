@@ -1,4 +1,15 @@
 [
+  "Meetuponként egyszer jár. Ha lemondod a jelzést, ez a pont is elvész, visszajelzésnél újra jár.",
+  "Még hiányzik:\n{list}",
+  "Még nincs bejegyzés.",
+  "Még nincs hozzászólás. Mondd el elsőként a véleményed!",
+  "Még nincs megjeleníthető toplista.",
+  "Még nincs megvásárolt zenéd",
+  "Még nincs mentett kedvenced.",
+  "Még nincs privát beszélgetés.",
+  "Még nincs regisztrált profil.",
+  "Még nincs üzenet a stream alatt — írj te először!",
+  "Még senki nem játszott ebben a játékban.",
   "Megadom",
   "Megerősítés",
   "Megerősítő e-mail újraküldése",
@@ -47,16 +58,5 @@
   "Nem sikerült betölteni a szervezőket.",
   "Nem sikerült kiválasztani a képet.",
   "Nem sikerült megnyitni a levelezőt.",
-  "Nem sikerült megnyitni a linket.",
-  "Nem tudtok majd egymásnak privát üzenetet küldeni.",
-  "Nem tudtok majd egymásnak privát üzenetet küldeni. A blokkolás később a blokkolt felhasználók listájából visszavonható.",
-  "Némítás",
-  "Némítás feloldása",
-  "Név",
-  "Névjegy",
-  "Nincs adat.",
-  "Nincs archivált értesítés.",
-  "Nincs blokkolt felhasználó.",
-  "Nincs cél",
-  "Nincs cikk ehhez a címkéhez."
+  "Nem sikerült megnyitni a linket."
 ]

@@ -1,4 +1,14 @@
 [
+  "Tárhely ürítése",
+  "Tartsd hosszan az elemet, majd húzd a helyére.",
+  "Te reagáltál erre",
+  "Teljes címet adj meg (https://…). Ha kiüríted, a link eltűnik.",
+  "Termékek betöltése…",
+  "Tervezett események az Ott leszek funkcióval jelennek majd meg.",
+  "Tiltások megtekintése és feloldása",
+  "Tovább",
+  "További események",
+  "További hírek",
   "Töltsd ki a mezőket; a jelszó legalább 6 karakter legyen.",
   "TÖRLÉS",
   "Törlés a készülékről",
@@ -48,15 +58,5 @@
   "Válasz: ",
   "Válasz: {text}",
   "Válaszd ki a jelentés okát. A jelentést a moderátorok kapják meg.",
-  "Válaszd ki az esemény dátumát.",
-  "Válaszd ki, hogyan használod az appot.",
-  "Válaszd ki, hova kerüljön a bejegyzés — a naptár emlékeztetni fog a bulira.",
-  "Válaszlehetőségek",
-  "Válaszok beküldése",
-  "Válassz dátumot",
-  "Válassz egy zenét",
-  "Válassz időpontot",
-  "Válassz legalább egy kategóriát és egy műfajt.",
-  "Válassz pontosan {min} jelöltet ({selected}/{min})",
-  "Valódi név"
+  "Válaszd ki az esemény dátumát."
 ]

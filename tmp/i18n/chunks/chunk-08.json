@@ -1,4 +1,9 @@
 [
+  "A(z) {label} a mentés után azonnal megjelenik az appban (kivéve, ha piszkozatot választasz).",
+  "A(z) {label} létrehozva.",
+  "A(z) {label} mentve.",
+  "A(z) {row}. kérdés szövege üres.",
+  "A(z) {row}. kérdéshez 2–6 válaszlehetőség kell.",
   "A(z) {row}. kérdésnél jelöld meg a helyes választ.",
   "Achievement a chatben",
   "Achievement rang",
@@ -46,17 +51,12 @@
   "Az adatlap átvétele sikerült.",
   "Az adatlap csak szerkesztői ellenőrzés és jóváhagyás után jelenhet meg.",
   "Az adatok nem tölthetők be.\n{error}",
+  "Az ajánlások most nem tölthetők be.",
   "Az ajánlókód nem tölthető be.",
   "Az ajánlószöveg a vágólapra másolva.",
   "Az átvétel visszavonva.",
   "Az authenticator-kód hibás.",
   "Az elem létrehozva.",
   "Az elem mentve.",
-  "Az ellenőrző e-mailt újraküldtük.",
-  "Az első közösségi mérföldkő.",
-  "Az eredeti üzenet nincs a betöltött beszélgetésben.",
-  "Az eredmény a leadott szavazatokból számol újra, ezért a lezárt kérdőíveknél is pontos marad. Ez az oldal csak adminisztrátornak látszik.",
-  "Az eredményeket a játék lezárása után láthatod{d}.",
-  "Az értesítések frissítése nem sikerült.",
-  "Az értesítések nem tölthetők be."
+  "Az ellenőrző e-mailt újraküldtük."
 ]

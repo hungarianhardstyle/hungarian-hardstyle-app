@@ -28,6 +28,7 @@ import '../../services/wordpress_service.dart';
 import '../../core/errors/user_facing_error.dart';
 import '../../widgets/notification_permission_prompt.dart';
 import '../../widgets/share_action.dart';
+import '../../widgets/timetable_rows.dart';
 import 'event_meetup_screen.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
@@ -714,26 +715,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                               ),
                             ),
                             const SizedBox(height: 6),
-                            for (final entry in event.timetable)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(
-                                      width: 104,
-                                      child: Text(
-                                        entry.time,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(child: Text(entry.artist)),
-                                  ],
-                                ),
-                              ),
+                            TimetableRows(
+                              event: event,
+                              entries: event.timetable,
+                              timeWidth: 104,
+                            ),
                           ],
                         ),
                       ),

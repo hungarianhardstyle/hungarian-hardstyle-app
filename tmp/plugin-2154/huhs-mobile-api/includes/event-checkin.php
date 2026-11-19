@@ -129,6 +129,21 @@ function huhs_event_checkin_count($event_id)
  *
  * @return array<int, array{time:string, artist:string}>
  */
+/** Az időbeosztás megjelenési ideje (webhely-idő); üres = azonnal látszik. */
+function huhs_event_timetable_visible($event_id)
+{
+    $from = trim((string) get_post_meta($event_id, 'event_timetable_from', true));
+    if ($from === '') {
+        return true;
+    }
+    try {
+        $at = new DateTimeImmutable($from, wp_timezone());
+    } catch (Exception $e) {
+        return true;
+    }
+    return time() >= $at->getTimestamp();
+}
+
 function huhs_parse_event_timetable($raw)
 {
     $rows = array();
@@ -160,7 +175,7 @@ function huhs_event_checkin_public_fields($event_id)
     $window = huhs_event_checkin_window($event_id);
     $badge_url = esc_url_raw((string) get_post_meta($event_id, 'checkin_badge_url', true));
     return array(
-        'timetable' => huhs_parse_event_timetable(get_post_meta($event_id, 'event_timetable', true)),
+        'timetable' => huhs_event_timetable_visible($event_id) ? huhs_parse_event_timetable(get_post_meta($event_id, 'event_timetable', true)) : array(),
         'checkin_enabled' => huhs_event_checkin_code($event_id) !== '',
         'checkin_opens' => $window['opens'] ? gmdate('c', $window['opens']) : '',
         'checkin_closes' => $window['closes'] ? gmdate('c', $window['closes']) : '',
@@ -268,6 +283,10 @@ function huhs_event_checkin_code_payload($event_id)
 |--------------------------------------------------------------------------
 */
 
+add_action('admin_enqueue_scripts', function ($hook) {
+    if (($hook === 'post.php' || $hook === 'post-new.php')) { wp_enqueue_media(); }
+});
+
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'huhs_event_checkin',
@@ -303,6 +322,7 @@ function huhs_event_checkin_meta_box($post)
     <textarea name="event_timetable" rows="6" class="widefat"><?php
         echo esc_textarea((string) get_post_meta($post->ID, 'event_timetable', true));
     ?></textarea>
+    <p><label>Mikortól látszódjon az appban (üres = azonnal)<br><input type="datetime-local" name="event_timetable_from" value="<?php echo esc_attr((string) get_post_meta($post->ID, 'event_timetable_from', true)); ?>"></label></p>
     <p class="description">A buli napján az app Kezdőlapján, a „Ma este” kártyán és az esemény adatlapján jelenik meg.</p>
 
     <hr>
@@ -315,12 +335,41 @@ function huhs_event_checkin_meta_box($post)
         </label>
     </p>
     <p>
-        <label>Jelvény képe (URL a médiatárból)<br>
-            <input type="url" class="widefat" name="checkin_badge_url" value="<?php
+        <label>Jelvény képe<br>
+            <input type="url" class="widefat" id="huhs-checkin-badge-url" name="checkin_badge_url" value="<?php
                 echo esc_attr((string) get_post_meta($post->ID, 'checkin_badge_url', true));
             ?>" placeholder="https://hungarianhardstyle.hu/wp-content/uploads/...">
         </label>
     </p>
+    <p>
+        <a href="#" class="button" id="huhs-checkin-badge-pick">Kép feltöltése / kiválasztása</a>
+        <img id="huhs-checkin-badge-preview" src="<?php
+            echo esc_url((string) get_post_meta($post->ID, 'checkin_badge_url', true));
+        ?>" alt="" style="max-width:96px;max-height:96px;vertical-align:middle;margin-left:10px;<?php
+            echo get_post_meta($post->ID, 'checkin_badge_url', true) ? '' : 'display:none;';
+        ?>">
+    </p>
+    <script>
+    (function () {
+        var btn = document.getElementById('huhs-checkin-badge-pick');
+        if (!btn) { return; }
+        var frame;
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (typeof wp === 'undefined' || !wp.media) { alert('A médiatár nem töltődött be — frissítsd az oldalt.'); return; }
+            if (!frame) {
+                frame = wp.media({ title: 'Becsekkolási jelvény', button: { text: 'Használom' }, library: { type: 'image' }, multiple: false });
+                frame.on('select', function () {
+                    var a = frame.state().get('selection').first().toJSON();
+                    document.getElementById('huhs-checkin-badge-url').value = a.url;
+                    var p = document.getElementById('huhs-checkin-badge-preview');
+                    p.src = a.url; p.style.display = '';
+                });
+            }
+            frame.open();
+        });
+    })();
+    </script>
 
     <hr>
     <?php if ($url === '') : ?>
@@ -368,6 +417,10 @@ function huhs_save_event_checkin_meta($post_id)
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
+    if (isset($_POST['event_timetable_from'])) {
+        $from = sanitize_text_field(wp_unslash($_POST['event_timetable_from']));
+        update_post_meta($post_id, 'event_timetable_from', preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $from) ? $from : '');
+    }
     if (isset($_POST['event_timetable'])) {
         update_post_meta($post_id, 'event_timetable', sanitize_textarea_field(wp_unslash($_POST['event_timetable'])));
     }

@@ -1,6 +1,21 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás: **410** (1.0.0), 2026-11-16
+## Aktuális kiadás **411** (1.0.0), 2026-11-17
+
+```play-notes
+Az éves szavazás az appban és a weben is elérhető. Igazolt e-mail-címmel évadonként egyszer szavazhatsz.
+A „Ma este” kártya egyelőre csak a Hungarian Hardstyle által szervezett bulikon jelenik meg.
+Új: az időbeosztásban a DJ nevére koppintva megnyílik az adatlapja.
+Új: „Hol van buli ma este?” a Kezdőlapon — a mai bulik térkép-linkkel.
+Új: a Közösségben a „Kit ismerhetek?” azokat mutatja, akik ugyanazokra a bulikra mennek, mint te.
+```
+
+### 411 — közös éves szavazás
+
+- A webes szavazólap címe a WordPress-plugin 2.15.6 telepítése után `/eves-szavazas/`.
+- A mobilalkalmazás igazolt e-mail-címet kér, és jelzi, ha a szavazatot már leadtad a weboldalon.
+
+## Korábbi kiadás **410** (1.0.0), 2026-11-16
 
 A Play API szerint az éles és az Alpha sávon is 407 van (100%). A 408 és a 409 nem került fel, a 410 mindkettőt tartalmazza.
 ÚJ: QR-kódos becsekkolás a bulikon (pont + jelvény), „Ma este” kártya a Kezdőlapon, +25 pont a belépésért. **A becsekkolás működéséhez a WordPress-plugin 2.15.0 és a Firebase-függvények kellenek** (a függvények élesítve vannak, a plugint a tulajdonos tölti fel).
@@ -155,11 +170,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 410
+currentBuild: 411
 currentVersion: 1.0.0
-lastPublishedBuild: 407
-aab: build/HUHS-v1.0.0+410-release.aab
-sha256: 60C06F287B7E8490CBCF108A8D5561EB2E85FA134AB353CD972C42F70A7B7070
+lastPublishedBuild: 410
+aab: build/HUHS-v1.0.0+411-release.aab
+sha256: BD55F5FA9EB7291C90DB2D35E5DEACBAE7C16E1930820FAAA05C068F467B7975
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at

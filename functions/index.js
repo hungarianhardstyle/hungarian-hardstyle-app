@@ -5659,7 +5659,8 @@ exports.cleanupIncompleteAccounts = onSchedule(
           pendingEmail && Number.isFinite(pendingExpiryTime) && pendingExpiryTime <= Date.now(),
         );
         const hasGoogleProvider = authUser.providerData.some((provider) => provider.providerId === 'google.com');
-        if ((authUser.emailVerified || hasGoogleProvider) && !incompleteName) {
+        if (((authUser.emailVerified || hasGoogleProvider) && !incompleteName) ||
+            (incompleteName && await hasVerifiedVotingBallot(authUser))) {
           if (pendingEmailExpired) {
             await profileSnapshot.ref.set(
               {
@@ -7897,6 +7898,52 @@ const VOTING_REQUIRED_COUNTS = Object.freeze({
   international_dj: 5,
 });
 
+const VOTING_EMAIL_SECRET = 'HUHS_VOTING_EMAIL_KEY';
+
+async function hasVerifiedVotingBallot(user) {
+  if (!user.emailVerified) return false;
+  // Web voters have a verified identity and a ballot without an app profile.
+  const votes = await db.collection('voting_votes').where('userId', '==', user.uid).limit(1).get();
+  return !votes.empty;
+}
+
+function votingEmailRef(seasonId, context) {
+  const token = context.auth.token;
+  const email = typeof token.email === 'string' ? token.email.trim().toLowerCase() : '';
+  if (token.firebase?.sign_in_provider === 'anonymous' || token.email_verified !== true || !email) {
+    return null;
+  }
+  const key = process.env[VOTING_EMAIL_SECRET];
+  if (!key) throw new HttpsError('unavailable', 'A szavazás átmenetileg nem elérhető.');
+  const hash = crypto.createHmac('sha256', key).update(`${seasonId}:${email}`).digest('hex');
+  return db.collection('voting_email_claims').doc(`${seasonId}_${hash}`);
+}
+
+async function validateActiveVotingSeason(seasonId, votes) {
+  let season;
+  try {
+    const response = await fetch(`${WORDPRESS_BASE_URL}/voting/ballot-catalog?t=${Date.now()}`, {
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-store',
+    });
+    if (!response.ok) throw new Error('Voting catalog request failed');
+    season = await response.json();
+  } catch (_) {
+    throw new HttpsError('unavailable', 'A jelöltek listája átmenetileg nem elérhető.');
+  }
+  if (season?.active !== true || season.seasonId !== seasonId) {
+    throw new HttpsError('failed-precondition', 'Ez a szavazás jelenleg nem aktív.');
+  }
+  const categories = new Map((season.categories || []).map((entry) => [
+    entry.key, new Set((entry.candidates || []).map((candidate) => candidate.id)),
+  ]));
+  for (const [category, ids] of Object.entries(votes)) {
+    if (!ids.every((id) => categories.get(category)?.has(id))) {
+      throw new HttpsError('invalid-argument', 'A jelöltek listája megváltozott. Frissítsd a szavazólapot.');
+    }
+  }
+}
+
 function requireVotingUser(context) {
   if (!context.auth?.uid) {
     throw new HttpsError('unauthenticated', 'A szavazáshoz az appnak azonosítania kell a felhasználót.');
@@ -7954,7 +8001,7 @@ function normalizeVotingBallot(rawVotes) {
   return votes;
 }
 
-exports.getVotingStatus = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+exports.getVotingStatus = functions.runWith({ enforceAppCheck: false, secrets: [VOTING_EMAIL_SECRET] }).https.onCall(async (data, context) => {
   const uid = requireVotingUser(context);
   const seasonId = Number(data?.seasonId);
   if (!Number.isSafeInteger(seasonId) || seasonId <= 0)
@@ -7962,9 +8009,11 @@ exports.getVotingStatus = functions.runWith({ enforceAppCheck: false }).https.on
   const deviceId = votingDeviceIdForRequest(context, data?.deviceId);
   const categories = Object.keys(VOTING_REQUIRED_COUNTS);
   const refs = categories.map((category) => db.collection('voting_votes').doc(`${seasonId}_${category}_${uid}`));
-  const [voteSnapshots, deviceSnapshot] = await Promise.all([
+  const emailRef = votingEmailRef(seasonId, context);
+  const [voteSnapshots, deviceSnapshot, emailClaim] = await Promise.all([
     Promise.all(refs.map((ref) => ref.get())),
     votingDeviceRef(seasonId, deviceId).get(),
+    emailRef?.get(),
   ]);
   const votedCategories = new Set();
   const selectedCandidateIds = {};
@@ -7981,6 +8030,7 @@ exports.getVotingStatus = functions.runWith({ enforceAppCheck: false }).https.on
   const deviceData = deviceSnapshot.exists ? deviceSnapshot.data() || {} : {};
   const deviceCategories = Array.isArray(deviceData.categories) ? deviceData.categories : [];
   deviceCategories.forEach((category) => {
+    if (deviceData.userId !== uid) return;
     if (Object.prototype.hasOwnProperty.call(VOTING_REQUIRED_COUNTS, category)) {
       votedCategories.add(category);
       const ids = deviceData.selections?.[category];
@@ -7989,6 +8039,9 @@ exports.getVotingStatus = functions.runWith({ enforceAppCheck: false }).https.on
       }
     }
   });
+  if (emailClaim?.exists || (deviceData.userId && deviceData.userId !== uid)) {
+    categories.forEach((category) => votedCategories.add(category));
+  }
   return {
     seasonId,
     votedCategories: [...votedCategories],
@@ -7996,13 +8049,17 @@ exports.getVotingStatus = functions.runWith({ enforceAppCheck: false }).https.on
   };
 });
 
-exports.submitVotingBallot = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+exports.submitVotingBallot = functions.runWith({ enforceAppCheck: false, secrets: [VOTING_EMAIL_SECRET] }).https.onCall(async (data, context) => {
   const uid = requireVotingUser(context);
   const seasonId = Number(data?.seasonId);
   if (!Number.isSafeInteger(seasonId) || seasonId <= 0)
     throw new HttpsError('invalid-argument', 'Érvényes szezon szükséges.');
   const deviceId = votingDeviceIdForRequest(context, data?.deviceId);
   const votes = normalizeVotingBallot(data?.votes);
+  const emailRef = votingEmailRef(seasonId, context);
+  if (!emailRef) throw new HttpsError('permission-denied', 'A szavazáshoz igazolt e-mail-cím szükséges.');
+  if (!Object.keys(votes).length) throw new HttpsError('invalid-argument', 'Üres szavazólap.');
+  await validateActiveVotingSeason(seasonId, votes);
   const refs = Object.keys(VOTING_REQUIRED_COUNTS).map((category) => ({
     category,
     ref: db.collection('voting_votes').doc(`${seasonId}_${category}_${uid}`),
@@ -8011,6 +8068,15 @@ exports.submitVotingBallot = functions.runWith({ enforceAppCheck: false }).https
   const createdCategories = [];
   let ballotComplete = false;
   await db.runTransaction(async (transaction) => {
+    createdCategories.length = 0;
+    const banRef = db.collection('deleted_identity_hashes').doc(deletedIdentityKey(context.auth.token.email));
+    if (isExplicitIdentityBan((await transaction.get(banRef)).data() || {})) {
+      throw new HttpsError('permission-denied', 'Ezzel a fiókkal nem lehet szavazni.');
+    }
+    const emailClaim = await transaction.get(emailRef);
+    if (emailClaim.exists) {
+      throw new HttpsError('already-exists', 'Ebben az éves szavazásban már szavaztál.');
+    }
     const current = new Map();
     for (const item of refs) current.set(item.category, await transaction.get(item.ref));
     const deviceClaim = await transaction.get(deviceRef);
@@ -8058,6 +8124,9 @@ exports.submitVotingBallot = functions.runWith({ enforceAppCheck: false }).https
       ]),
     ];
     ballotComplete = refs.every((item) => allCategories.includes(item.category));
+    if (ballotComplete) {
+      transaction.create(emailRef, { seasonId, createdAt: FieldValue.serverTimestamp() });
+    }
     transaction.set(
       deviceRef,
       {
