@@ -184,7 +184,7 @@ currentBuild: 411
 currentVersion: 1.0.0
 lastPublishedBuild: 410
 aab: build/HUHS-v1.0.0+411-release.aab
-sha256: BD55F5FA9EB7291C90DB2D35E5DEACBAE7C16E1930820FAAA05C068F467B7975
+sha256: 3C416D85A39AA0D23214E91F28CD8FA9B4E911CDD5E27F6C67EADEA36A639287
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
