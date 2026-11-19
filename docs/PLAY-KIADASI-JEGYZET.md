@@ -15,6 +15,16 @@ A „Ma este” kártya egyelőre csak a Hungarian Hardstyle által szervezett b
 - A webes szavazólap címe a WordPress-plugin 2.15.6 telepítése után `/eves-szavazas/`.
 - A mobilalkalmazás igazolt e-mail-címet kér, és jelzi, ha a szavazatot már leadtad a weboldalon.
 
+### 408–411 összesítő — az ÉLES sávra (ott még a 407 van, a 408–410 nem ment ki külön)
+
+```play-notes
+ÚJ: 5 lépéses bemutató — kiválaszthatod a kedvenc stílusaidat, és követheted a DJ-ket.
+ÚJ: QR-kódos becsekkolás a bulikon (pont + „Ott voltam” jelvény), és „Ma este” kártya a Kezdőlapon a Hungarian Hardstyle bulijain, időbeosztással. A belépésért +25 pont jár.
+Az időbeosztásban a DJ nevére koppintva megnyílik az adatlapja.
+Új: „Hol van buli ma este?” a Kezdőlapon, és „Kit ismerhetek?” a Közösségben.
+Az éves szavazás az appban és a weben is elérhető.
+```
+
 ## Korábbi kiadás **410** (1.0.0), 2026-11-16
 
 A Play API szerint az éles és az Alpha sávon is 407 van (100%). A 408 és a 409 nem került fel, a 410 mindkettőt tartalmazza.
