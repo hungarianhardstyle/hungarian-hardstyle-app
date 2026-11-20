@@ -1,6 +1,6 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás **412** (1.0.0), 2026-11-19
+## Aktuális kiadás **413** (1.0.0), 2026-11-20
 
 ```play-notes
 Az éves szavazás az appban és a weben is elérhető. Igazolt e-mail-címmel évadonként egyszer szavazhatsz.
@@ -11,16 +11,20 @@ A „Ma este” kártya egyelőre csak a Hungarian Hardstyle által szervezett b
 Új: a cikkek képei nagyíthatók.
 ```
 
-### 412 — közös éves szavazás (a 411 nem ment ki, ez váltja)
+### 413 — közös éves szavazás (a 411 és a 412 nem ment ki, ez váltja)
 
 - A webes szavazólap címe a WordPress-plugin 2.15.6 telepítése után `/eves-szavazas/`.
 - A mobilalkalmazás igazolt e-mail-címet kér, és jelzi, ha a szavazatot már leadtad a weboldalon.
 
-### 411 — ez a build nem ment ki, a 412 váltja
+### 412 — ez a build nem ment ki, a 413 váltja
+
+- Tartalma: a 411 + a „Kit ismerhetek?” a Közösség menüben + a cikkek képei nagyíthatók.
+
+### 411 — ez a build nem ment ki, a 412 és a 413 váltja
 
 - Tartalma: Play wifi-figyelmeztetés javítása, „Ma este” csak a Hungarian Hardstyle bulikon, időbeosztás → DJ-adatlap, „Hol van buli ma este?”, „Kit ismerhetek?”. A 412 ezt a Közösség menübe is betett „Kit ismerhetek?” gombbal egészíti ki.
 
-### 408–412 összesítő — az ÉLES sávra (ott még a 407 van, a 408–411 nem ment ki külön)
+### 408–413 összesítő — az ÉLES sávra (ott még a 407 van, a 408–412 nem ment ki külön)
 
 ```play-notes
 ÚJ: 5 lépéses bemutató: stílusok és DJ-k kiválasztása.
@@ -186,11 +190,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 412
+currentBuild: 413
 currentVersion: 1.0.0
 lastPublishedBuild: 410
-aab: build/HUHS-v1.0.0+412-release.aab
-sha256: 57D90CCC64DD00287FC92CAD48CC97A1C93959797E01B472029ED9E8F6EBC2A9
+aab: build/HUHS-v1.0.0+413-release.aab
+sha256: 91EE8231C67D138E807379665D504FB94CD95A5CFB17D6DDFD13CF0ED8B39B6D
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at

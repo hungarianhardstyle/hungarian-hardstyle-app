@@ -38,7 +38,7 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
-    build: 412,
+    build: 413,
     changes: [
       'Az éves szavazás az appban és a weben is elérhető. Igazolt e-mail-címmel évadonként egyszer szavazhatsz.',
       'A „Ma este” kártya egyelőre csak a Hungarian Hardstyle által szervezett bulikon jelenik meg.',
