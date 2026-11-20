@@ -9657,3 +9657,181 @@ exports.__moderationForTests = {
   handlePrivateMessageModeration,
   writeChildSafetyFlag,
 };
+
+// ───────────────────────────── HARD token (devnet) ─────────────────────────────
+// Tárcakötés és egyenleg. A kliens SOHA nem ír a `hard_*` gyűjteményekbe (a
+// szabályok tiltják); minden itt, az Admin SDK-val történik. A pontok és a HARD
+// külön rendszer: ez a blokk nem érinti a pontrendszert.
+const {
+  CHALLENGE_TTL_MS: HARD_CHALLENGE_TTL_MS,
+  parseSolanaAddress: hardParseAddress,
+  buildChallengeMessage: hardBuildChallenge,
+  verifyWalletSignature: hardVerifySignature,
+  challengeProblem: hardChallengeProblem,
+  sumRawAmounts: hardSumRaw,
+  formatRawAmount: hardFormatRaw,
+  readHardConfig,
+} = require('./hard-wallet-plan');
+
+const HARD_DECIMALS = 6;
+
+async function loadHardConfig() {
+  const snapshot = await db.collection('hard_config').doc('current').get();
+  const config = readHardConfig(snapshot.data());
+  if (!config) {
+    throw new HttpsError('failed-precondition', 'A HARD funkció jelenleg nem elérhető.');
+  }
+  return config;
+}
+
+function hardAudit(action, uid, details = {}) {
+  // Nem várjuk meg és nem dobunk: az auditírás hibája nem akaszthat el egy műveletet.
+  return db
+    .collection('hard_audit_logs')
+    .add({ action, uid, ...details, at: FieldValue.serverTimestamp() })
+    .catch((error) => console.warn('hard_audit_failed', { action, message: error?.message }));
+}
+
+exports.hardWalletChallenge = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    const uid = requireRegisteredViewer(context);
+    await loadHardConfig();
+    const address = typeof data?.address === 'string' ? data.address.trim() : '';
+    if (!hardParseAddress(address)) {
+      throw new HttpsError('invalid-argument', 'Ez nem érvényes Solana-cím.');
+    }
+    if (!(await allowCall(uid, 'hard_challenge', 5))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
+    }
+    const nonce = crypto.randomBytes(16).toString('hex');
+    const issuedAtMs = Date.now();
+    const expiresAtMs = issuedAtMs + HARD_CHALLENGE_TTL_MS;
+    const message = hardBuildChallenge({ uid, address, nonce, issuedAtMs, expiresAtMs });
+    const challengeId = crypto.randomBytes(16).toString('hex');
+    await db.collection('hard_wallet_challenges').doc(challengeId).set({
+      uid,
+      address,
+      message,
+      expiresAtMs,
+      used: false,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    return { challengeId, message, expiresAtMs };
+  });
+
+exports.hardWalletVerify = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    const uid = requireRegisteredViewer(context);
+    await loadHardConfig();
+    const challengeId = typeof data?.challengeId === 'string' ? data.challengeId.trim() : '';
+    if (!/^[0-9a-f]{32}$/.test(challengeId) || typeof data?.signature !== 'string') {
+      throw new HttpsError('invalid-argument', 'Hiányzó vagy hibás igazolás.');
+    }
+    if (!(await allowCall(uid, 'hard_verify', 10))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
+    }
+    const challengeRef = db.collection('hard_wallet_challenges').doc(challengeId);
+    const linkRef = db.collection('hard_wallet_links').doc(uid);
+    const address = await db.runTransaction(async (tx) => {
+      const challengeSnap = await tx.get(challengeRef);
+      const challenge = challengeSnap.exists ? challengeSnap.data() : null;
+      const problem = hardChallengeProblem(challenge, { uid, nowMs: Date.now() });
+      if (problem) {
+        throw new HttpsError(
+          'failed-precondition',
+          problem === 'expired'
+            ? 'Az igazolás lejárt, indítsd újra.'
+            : 'Ez az igazolás nem használható, indítsd újra.',
+        );
+      }
+      if (!hardVerifySignature({ address: challenge.address, message: challenge.message, signature: data.signature })) {
+        throw new HttpsError('permission-denied', 'Az aláírás nem érvényes.');
+      }
+      const ownerRef = db.collection('hard_wallet_owners').doc(challenge.address);
+      const [ownerSnap, linkSnap] = await Promise.all([tx.get(ownerRef), tx.get(linkRef)]);
+      // Egy tárca egy fiókhoz tartozhat (fiókfarmolás ellen).
+      if (ownerSnap.exists && ownerSnap.data()?.uid !== uid) {
+        throw new HttpsError('already-exists', 'Ezt a tárcát egy másik fiók már használja.');
+      }
+      const previous = linkSnap.exists ? linkSnap.data()?.address : null;
+      if (previous && previous !== challenge.address) {
+        tx.delete(db.collection('hard_wallet_owners').doc(previous));
+      }
+      tx.set(ownerRef, { uid, linkedAt: FieldValue.serverTimestamp() });
+      tx.set(linkRef, { address: challenge.address, verifiedAt: FieldValue.serverTimestamp() });
+      tx.update(challengeRef, { used: true });
+      return challenge.address;
+    });
+    await hardAudit('wallet_linked', uid, { address });
+    return { address };
+  });
+
+exports.hardWalletDisconnect = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (_data, context) => {
+    const uid = requireRegisteredViewer(context);
+    if (!(await allowCall(uid, 'hard_disconnect', 5))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
+    }
+    const linkRef = db.collection('hard_wallet_links').doc(uid);
+    const removed = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(linkRef);
+      if (!snap.exists) return null;
+      const address = snap.data()?.address;
+      tx.delete(linkRef);
+      if (address) tx.delete(db.collection('hard_wallet_owners').doc(address));
+      return address || null;
+    });
+    if (removed) await hardAudit('wallet_unlinked', uid, { address: removed });
+    return { ok: true };
+  });
+
+// Állapot + egyenleg egy hívásban: a kapcsoló, a kötött tárca és a HARD-egyenleg
+// a RÖGZÍTETT mint alapján (a szerver kérdezi le az RPC-t, nem a kliens).
+exports.hardGetBalance = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (_data, context) => {
+    const uid = requireRegisteredViewer(context);
+    const configSnap = await db.collection('hard_config').doc('current').get();
+    const config = readHardConfig(configSnap.data());
+    if (!config) return { enabled: false, linked: false };
+    if (!(await allowCall(uid, 'hard_balance', 10))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
+    }
+    const linkSnap = await db.collection('hard_wallet_links').doc(uid).get();
+    const address = linkSnap.exists ? linkSnap.data()?.address : null;
+    if (!address) return { enabled: true, linked: false };
+    let accounts;
+    try {
+      const response = await fetch(config.rpcUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'getTokenAccountsByOwner',
+          params: [address, { mint: config.mint }, { encoding: 'jsonParsed' }],
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+      const payload = await response.json();
+      if (!response.ok || payload?.error) throw new Error(payload?.error?.message || `HTTP ${response.status}`);
+      accounts = payload?.result?.value || [];
+    } catch (error) {
+      console.warn('hard_balance_rpc_failed', { message: error?.message });
+      throw new HttpsError('unavailable', 'Az egyenleg most nem kérdezhető le, próbáld újra később.');
+    }
+    const raw = hardSumRaw(accounts);
+    return {
+      enabled: true,
+      linked: true,
+      address,
+      mint: config.mint,
+      cluster: config.cluster,
+      rawAmount: raw.toString(),
+      decimals: HARD_DECIMALS,
+      amount: hardFormatRaw(raw, HARD_DECIMALS),
+    };
+  });

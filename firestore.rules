@@ -677,6 +677,30 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // HARD token: a konfiguráció olvasható a regisztráltaknak (kapcsoló + mint-cím,
+    // nem titok), minden más SZERVER-ONLY. A tárcakötést, a kihívást és az
+    // auditnaplót csak a callable-ök írják az Admin SDK-val.
+    match /hard_config/{configId} {
+      allow read: if isRegistered();
+      allow write: if false;
+    }
+
+    match /hard_wallet_links/{linkId} {
+      allow read, write: if false;
+    }
+
+    match /hard_wallet_owners/{address} {
+      allow read, write: if false;
+    }
+
+    match /hard_wallet_challenges/{challengeId} {
+      allow read, write: if false;
+    }
+
+    match /hard_audit_logs/{logId} {
+      allow read, write: if false;
+    }
+
     match /voting_device_claims/{claimId} {
       // Device claims are server-only. The callable stores only a one-way
       // hash-derived document ID and the minimum data needed to prevent a

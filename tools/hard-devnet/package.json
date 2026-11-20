@@ -1,0 +1,14 @@
+{
+  "name": "huhs-hard-devnet",
+  "private": true,
+  "type": "module",
+  "description": "HARD token devnet eszkozok (csak devnet; a kulcsok a repon KIVUL vannak)",
+  "dependencies": {
+    "@metaplex-foundation/mpl-token-metadata": "^4.0.0",
+    "@metaplex-foundation/umi": "^1.6.0",
+    "@metaplex-foundation/umi-bundle-defaults": "^1.6.0",
+    "@metaplex-foundation/umi-web3js-adapters": "^1.6.0",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4"
+  }
+}

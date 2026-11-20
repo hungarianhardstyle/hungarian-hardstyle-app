@@ -10,6 +10,13 @@
 - A HUHS-pontok és achievementek **külön rendszer maradnak**, nincs pont↔token átváltás.
 - Az első verzió Solana **devnet**; mainnet külön döntés.
 
+## 0.1 Devnet-állapot (2026-11-20)
+
+- **Mint (devnet):** `EqJXiQXPGhJrMy5adhMRNF8B4JVKKYA1rCUFuBuQdLEQ`, név: *Hungarian Hardstyle Token*, szimbólum: *HARD*, 6 tizedes, 100 000 000 kínálat.
+- Lánc-szinten ellenőrizve: a **mint és a freeze authority visszavonva**, a metaadat **nem módosítható** (nem nevezhető át).
+- Eszköz: `tools/hard-devnet/hard-devnet-token.mjs` (`--verify`, `--new`). A kulcsok a repón kívül vannak (`~/.huhs-hard/`).
+- A backend (`hardWalletChallenge/Verify/Disconnect`, `hardGetBalance`) és a szabályok megvannak és tesztelve; **élesítve nincs**, a `hard_config/current` még nincs létrehozva.
+
 ## 1. Mit találtam a mostani projektben
 
 | Terület | Állapot | Következmény |

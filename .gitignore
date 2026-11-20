@@ -82,4 +82,5 @@ business/pexels-api.json
 /android/build/
 /functions/node_modules/
 /node_modules/
+/tools/hard-devnet/node_modules/
 /graphify-out/
