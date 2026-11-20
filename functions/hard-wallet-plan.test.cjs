@@ -123,6 +123,14 @@ test('FORRÁS-LINT: minden HARD-callable regisztrált felhasználót kér, és n
     assert.match(body, /requireRegisteredViewer\(context\)/, `${name}: nincs regisztráció-ellenőrzés`);
     assert.match(body, /allowCall\(uid/, `${name}: nincs rate limit`);
   }
+  // A tárcát érintő három hívás nagykorúságot is kér (a szerver dönt, nem a kliens).
+  for (const name of ['hardWalletChallenge', 'hardWalletVerify', 'hardGetBalance']) {
+    const start = block.indexOf(`exports.${name} =`);
+    const next = block.indexOf('\nexports.', start + 10);
+    assert.match(block.slice(start, next === -1 ? undefined : next), /requireHardAdult\(uid\)/, `${name}: nincs kor-kapu`);
+  }
+  // A felhasznált kihívás törlődik, nem marad `used: true` sorként.
+  assert.doesNotMatch(block, /used: true/);
   // A HARD és a pontok külön rendszer: ez a blokk nem írhat pontot.
   assert.doesNotMatch(block, /awardAchievementPoints|achievement_ledger/);
 });

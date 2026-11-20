@@ -9676,6 +9676,54 @@ const {
 } = require('./hard-wallet-plan');
 
 const HARD_DECIMALS = 6;
+const { isAdultBirthDate: hardIsAdultBirthDate } = require('./birth-date-plan');
+// A kihívás lejárta után ennyivel törölhető (a futó igazolásnak nem szabad eltűnnie).
+const HARD_CHALLENGE_CLEANUP_GRACE_MS = 60 * 60 * 1000;
+// Az aláírás 64 bájt (88 base64-karakter); ennél jóval hosszabb bemenet eleve hibás.
+const HARD_MAX_SIGNATURE_LENGTH = 200;
+
+/**
+ * A HARD csak nagykorú (18+), a profilban megadott születési dátumú fiókoknak
+ * érhető el. Szerveroldali döntés: a kliens elrejtése nem védelem. Hiányzó vagy
+ * érvénytelen dátum = nem nagykorú (a biztonságos irány).
+ */
+async function requireHardAdult(uid) {
+  const snapshot = await db.collection('community_profiles').doc(uid).get();
+  if (!hardIsAdultBirthDate(snapshot.data()?.birthDate)) {
+    throw new HttpsError(
+      'permission-denied',
+      'A HARD funkció csak 18 év felettieknek érhető el. Add meg a születési dátumodat a profilodban.',
+    );
+  }
+}
+exports.__requireHardAdultForTests = requireHardAdult;
+
+/** A lejárt (és be nem váltott) kihívások takarítása; visszaadja a törölt darabszámot. */
+async function cleanupExpiredHardChallenges(nowMs = Date.now()) {
+  let deleted = 0;
+  // Körönként legfeljebb 400 törlés (egy batch); a kör limitje megvéd egy végtelen ciklustól.
+  for (let round = 0; round < 25; round++) {
+    const snapshot = await db
+      .collection('hard_wallet_challenges')
+      .where('expiresAtMs', '<', nowMs - HARD_CHALLENGE_CLEANUP_GRACE_MS)
+      .limit(400)
+      .get();
+    if (snapshot.empty) break;
+    await deleteDocumentReferences(snapshot.docs);
+    deleted += snapshot.size;
+    if (snapshot.size < 400) break;
+  }
+  return deleted;
+}
+exports.__cleanupExpiredHardChallengesForTests = cleanupExpiredHardChallenges;
+
+exports.cleanupHardWalletChallenges = onSchedule(
+  { schedule: 'every day 04:00', timeZone: 'Europe/Budapest', region: 'europe-central2' },
+  async () => {
+    const deleted = await cleanupExpiredHardChallenges();
+    console.info('hard_challenge_cleanup', { deleted });
+  },
+);
 
 async function loadHardConfig() {
   const snapshot = await db.collection('hard_config').doc('current').get();
@@ -9728,6 +9776,14 @@ exports.hardWalletChallenge = functions
     if (!(await allowCall(uid, 'hard_challenge', 5))) {
       throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
     }
+    await requireHardAdult(uid);
+    // Előre szólunk, ha a tárcát másik fiók használja: így a felhasználó nem
+    // végigcsinálja a tárca-aláírást, hogy utána hibát kapjon (a döntés a
+    // `hardWalletVerify` tranzakciójában marad a végleges).
+    const ownerSnap = await db.collection('hard_wallet_owners').doc(address).get();
+    if (ownerSnap.exists && ownerSnap.data()?.uid !== uid) {
+      throw new HttpsError('already-exists', 'Ezt a tárcát egy másik fiók már használja.');
+    }
     const nonce = crypto.randomBytes(16).toString('hex');
     const issuedAtMs = Date.now();
     const expiresAtMs = issuedAtMs + HARD_CHALLENGE_TTL_MS;
@@ -9750,12 +9806,17 @@ exports.hardWalletVerify = functions
     const uid = requireRegisteredViewer(context);
     await loadHardConfig();
     const challengeId = typeof data?.challengeId === 'string' ? data.challengeId.trim() : '';
-    if (!/^[0-9a-f]{32}$/.test(challengeId) || typeof data?.signature !== 'string') {
+    if (
+      !/^[0-9a-f]{32}$/.test(challengeId) ||
+      typeof data?.signature !== 'string' ||
+      data.signature.length > HARD_MAX_SIGNATURE_LENGTH
+    ) {
       throw new HttpsError('invalid-argument', 'Hiányzó vagy hibás igazolás.');
     }
     if (!(await allowCall(uid, 'hard_verify', 10))) {
       throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
     }
+    await requireHardAdult(uid);
     const challengeRef = db.collection('hard_wallet_challenges').doc(challengeId);
     const linkRef = db.collection('hard_wallet_links').doc(uid);
     const address = await db.runTransaction(async (tx) => {
@@ -9785,7 +9846,8 @@ exports.hardWalletVerify = functions
       }
       tx.set(ownerRef, { uid, linkedAt: FieldValue.serverTimestamp() });
       tx.set(linkRef, { address: challenge.address, verifiedAt: FieldValue.serverTimestamp() });
-      tx.update(challengeRef, { used: true });
+      // A felhasznált kihívás törlődik (egyszer használatos, és nem gyűlik).
+      tx.delete(challengeRef);
       return challenge.address;
     });
     await hardAudit('wallet_linked', uid, { address });
@@ -9824,6 +9886,7 @@ exports.hardGetBalance = functions
     if (!(await allowCall(uid, 'hard_balance', 10))) {
       throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
     }
+    await requireHardAdult(uid);
     const linkSnap = await db.collection('hard_wallet_links').doc(uid).get();
     const address = linkSnap.exists ? linkSnap.data()?.address : null;
     if (!address) return { enabled: true, linked: false };
