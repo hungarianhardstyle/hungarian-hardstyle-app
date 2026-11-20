@@ -5268,6 +5268,8 @@ async function deleteUserReferences(uid, profileData = {}) {
     deleteDocumentReferences(dailyActivity.docs),
     deleteDocumentReferences(submissionAuthors.docs),
     deleteDocumentReferences(eventCheckins.docs),
+    // A HARD tárcakötés (és a tárcacímet tartalmazó napló) is a fiókhoz tartozik.
+    deleteHardWalletData(uid),
     ...conversations.docs.map((conversation) => db.recursiveDelete(conversation.ref)),
     ...ownPosts.docs.map((post) => post.ref.delete()),
   ]);
@@ -9683,6 +9685,28 @@ async function loadHardConfig() {
   }
   return config;
 }
+
+/**
+ * A fiók HARD-adatainak törlése (fióktörléskor hívja a `deleteUserReferences`).
+ * A tulajdonos-térképet a `uid` mező alapján keresi, nem a kötésből: így akkor is
+ * törlődik, ha a kötés-dokumentum már hiányzik, és a tárca újra kötheti másik
+ * fiók. Függvény-deklaráció, ezért a fájl elején lévő törlés is eléri.
+ */
+async function deleteHardWalletData(uid) {
+  const [link, owners, challenges, audits] = await Promise.all([
+    db.collection('hard_wallet_links').doc(uid).get(),
+    db.collection('hard_wallet_owners').where('uid', '==', uid).get(),
+    db.collection('hard_wallet_challenges').where('uid', '==', uid).get(),
+    db.collection('hard_audit_logs').where('uid', '==', uid).get(),
+  ]);
+  await deleteDocumentReferences([
+    ...(link.exists ? [link] : []),
+    ...owners.docs,
+    ...challenges.docs,
+    ...audits.docs,
+  ]);
+}
+exports.__deleteHardWalletDataForTests = deleteHardWalletData;
 
 function hardAudit(action, uid, details = {}) {
   // Nem várjuk meg és nem dobunk: az auditírás hibája nem akaszthat el egy műveletet.
