@@ -20,7 +20,7 @@ dependencies:
   cached_network_image: ^3.4.1
   flutter_cache_manager: ^3.4.1
   intl: ^0.20.2
-  html: ^0.15.6
+  html: 0.15.6 # 0.15.7 breaks flutter_html 3.0.0 (matches)
   flutter_html: ^3.0.0
   google_fonts: ^6.3.3
   url_launcher: ^6.3.2
