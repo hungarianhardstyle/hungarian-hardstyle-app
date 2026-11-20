@@ -44,6 +44,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
+        leading: IconButton(
+          tooltip: tr(context, 'Bezárás'),
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
 
         title: Text("${_current + 1} / ${widget.images.length}"),
         actions: [

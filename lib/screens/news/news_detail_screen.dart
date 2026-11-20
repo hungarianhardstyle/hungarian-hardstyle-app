@@ -108,6 +108,40 @@ class _NewsDetailScreenState extends State<NewsDetailScreen>
     }
   }
 
+  /// A cikk összes képe (borító + a szövegbeli `<img>`-ek) nagyítható nézetben.
+  void _openImage(BuildContext context, String? tapped) {
+    final urls = <String>{
+      if (post.imageUrl.isNotEmpty) post.imageUrl,
+      for (final m in RegExp(
+        '<img[^>]+src=["\']([^"\']+)["\']',
+        caseSensitive: false,
+      ).allMatches(post.contentForDisplay))
+        if (m.group(1)!.startsWith('http')) m.group(1)!,
+      if (tapped != null && tapped.startsWith('http')) tapped,
+    }.toList();
+    if (urls.isEmpty) return;
+    final index = tapped == null ? 0 : urls.indexOf(tapped).clamp(0, urls.length - 1);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => GalleryScreen(
+          // Negatív azonosító: nem ütközik a galéria Hero-címkéivel.
+          images: [
+            for (var i = 0; i < urls.length; i++)
+              GalleryImage(
+                id: -1 - i,
+                url: urls[i],
+                title: '',
+                alt: '',
+                description: '',
+                order: i,
+              ),
+          ],
+          initialIndex: index,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,12 +171,15 @@ class _NewsDetailScreenState extends State<NewsDetailScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (post.imageUrl.isNotEmpty)
-                      Hero(
-                        tag: "post_${post.id}",
-                        child: CachedNetworkImage(
-                          imageUrl: post.imageUrl,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
+                      GestureDetector(
+                        onTap: () => _openImage(context, post.imageUrl),
+                        child: Hero(
+                          tag: "post_${post.id}",
+                          child: CachedNetworkImage(
+                            imageUrl: post.imageUrl,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
 
@@ -207,6 +244,12 @@ class _NewsDetailScreenState extends State<NewsDetailScreen>
 
                     Html(
                       data: linkifyPlainUrls(post.contentForDisplay),
+                      extensions: [
+                        OnImageTapExtension(
+                          onImageTap: (src, attributes, element) =>
+                              _openImage(context, src),
+                        ),
+                      ],
                       onLinkTap: (url, attributes, element) => _openLink(
                         context,
                         resolveHtmlLinkTarget(

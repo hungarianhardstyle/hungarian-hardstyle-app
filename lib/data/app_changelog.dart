@@ -45,6 +45,7 @@ const appChangelog = <AppReleaseNotes>[
       'Új: az időbeosztásban a DJ nevére koppintva megnyílik az adatlapja.',
       'Új: „Hol van buli ma este?” a Kezdőlapon — a mai bulik térkép-linkkel.',
       'Új: a Közösségben a „Kit ismerhetek?” azokat mutatja, akik ugyanazokra a bulikra mennek, mint te.',
+      'Új: a hírekben és cikkekben minden kép nagyítható, X gombbal zárható.',
     ],
   ),
   AppReleaseNotes(

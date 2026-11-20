@@ -8,6 +8,7 @@ A „Ma este” kártya egyelőre csak a Hungarian Hardstyle által szervezett b
 Új: az időbeosztásban a DJ nevére koppintva megnyílik az adatlapja.
 Új: „Hol van buli ma este?” a Kezdőlapon — a mai bulik térkép-linkkel.
 Új: a Közösségben a „Kit ismerhetek?” azokat mutatja, akik ugyanazokra a bulikra mennek, mint te.
+Új: a hírekben és cikkekben minden kép nagyítható, X gombbal zárható.
 ```
 
 ### 412 — közös éves szavazás (a 411 nem ment ki, ez váltja)
@@ -27,6 +28,7 @@ A „Ma este” kártya egyelőre csak a Hungarian Hardstyle által szervezett b
 Az időbeosztásban a DJ nevére koppintva megnyílik az adatlapja.
 Új: „Hol van buli ma este?” a Kezdőlapon, és „Kit ismerhetek?” a Közösségben.
 Az éves szavazás az appban és a weben is elérhető.
+Új: a cikkek képei nagyíthatók.
 ```
 
 ## Korábbi kiadás **410** (1.0.0), 2026-11-16
@@ -188,7 +190,7 @@ currentBuild: 412
 currentVersion: 1.0.0
 lastPublishedBuild: 410
 aab: build/HUHS-v1.0.0+412-release.aab
-sha256: 465A75EFAC8DC9FF2E8BF6A4BDA9C7192426241BAEAB8BBDC05B6D58F699117D
+sha256: 689EED9D3EDA1FAFCD192B7609D0BB29E2886DCDA6AA9CFDF4E6B62798BBCA92
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
