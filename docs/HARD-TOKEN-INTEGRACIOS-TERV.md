@@ -116,3 +116,65 @@ A keresési találatok alapján (a hivatalos oldalakat érdemes egyszer teljesen
 ## 7. Amit ez a terv nem néz meg
 
 A WordPress-plugin érintettségét (jelenleg nincs szükség rá), a konkrét RPC-szolgáltatót és költségét, a Flutter-oldali Solana-csomagokat, valamint a jogi minősítést. Az állítások a Play-szabályokról keresési kivonatokból valók.
+
+## 8. Gazdasági vázlat: mennyi HARD jár, mit lehet venni (ötletek, 2026-11-21)
+
+Állapot: **csak ötletek, kód nélkül**. A számokat a kincstár méretéből kell kiszámolni, itt csak súlyviszonyok vannak. Két rögzített korlát: **digitális tartalmat (Label-zene) tokenért nem adhatunk** (Play Billing kötelező), és **a HUHS-pontok külön rendszer maradnak** (nincs pont↔HARD átváltás).
+
+### 8.1 Miért és mennyi HARD jár
+
+Elv: HARD-ot a **valós részvételért** kapjon a felhasználó, ne hirdetésnézésért vagy kattintásért.
+
+| Tevékenység | Súly | Megjegyzés |
+|---|---|---|
+| Valós buli (QR-becsekkolás) | nagy | Fizikai jelenlét, nehéz csalni |
+| Meghívott barát első becsekkolása | nagy | Mindkét félnek, csak a becsekkolás után |
+| Szavazás az éves szavazáson | közepes | Évente egyszer |
+| Heti streak (pl. 4 hétig minden héten buli) | közepes | A kitartás jutalma |
+| Jóváhagyott esemény-beküldés | közepes | Csak az elfogadott fizet, a spam nem |
+| Hír/esemény megosztása | kicsi | Napi felső korláttal |
+| Kérdőív kitöltése | kicsi | |
+
+Nem jár: hirdetésnézésért, napi bejelentkezésért, semmiért, amit bottal vagy több fiókkal ki lehet használni. Minden jutalom a szerveren számolódik, egy tárca egy fiók, napi/heti korláttal.
+
+Nyitott kérdések:
+- Mekkora része a 100 millióból a „jutalom" keret, és hány év alatt oszlik el (a ütemet nyilvánosan kell vállalni)?
+- Van-e éves felső korlát fiókonként?
+- Mi lesz a jutalommal, ha a tárca nincs összekötve (várakozik vagy elveszik)?
+
+### 8.2 Mit lehet venni HARD-ért (fizikai / eseményelőny)
+
+| Ötlet | Típus |
+|---|---|
+| Jegykedvezmény (−10% vagy ajándék belépő) | fizikai |
+| VIP-sor / gyorsabb bejutás | esemény |
+| Merch (póló, kitűző, matrica) | fizikai |
+| Backstage / meet & greet verseny | esemény |
+| Saját név a kreditek között egy eseményen | esemény |
+| Jelképes szavazási súly / jelölési jog (ne befolyásolja a végeredményt) | közösségi |
+| Ajándék belépő küldése barátnak | esemény |
+
+Az elköltött HARD a kincstárba megy; hogy részben elégetjük-e, külön döntés.
+
+### 8.3 Új funkciók HARD-ért
+
+1. **HARD-bolt:** lista a kedvezményekről és merchről, készlettel és határidővel.
+2. **Kuponok/belépők:** tokenért kapott, QR-kódos, egyszer beváltható utalvány (a meglévő QR-becsekkolás mellé).
+3. **Ranglista és szintek:** a becsekkolások alapján, nem a vagyon alapján.
+4. **Közösségi szavazás a következő bulira:** jelképes támogatás, nem döntő.
+5. **Streak-jutalom:** pl. 4 egymást követő buli után bónusz.
+6. **Csapat-kihívás:** baráti társaság együtt gyűjt egy jutalomra.
+
+### 8.4 Óvatosság
+
+- **Nincs ígéret árra vagy hozamra** sehol (app, Play-leírás, push). „Megéri megvenni" jellegű szöveg tilos.
+- **Jogi kérdés nyitott:** az „earn" jutalom a MiCA szerint „ingyenes ajánlatnak" számít-e, ha cserébe adatot vagy használatot kapunk; az azonosítható kibocsátó; pool esetén a nyilvános ajánlat. Ügyvéddel tisztázandó, éles token kiosztása előtt.
+- **Play financial features nyilatkozat** kell, ha az app tokenjutalmat ad.
+- **Ne legyen pay-to-win:** a vásárolható dolog kényelmi/élmény-előny legyen, ne a közösségi döntést vagy a ranglistát torzítsa.
+- **Likviditás nélkül a HARD csak jutalompont:** a kedvezmény az egyetlen érték, erről őszintén kell kommunikálni.
+
+### 8.5 Következő döntés
+
+Mi az a 2–3 tevékenység, amiért HARD jár, és az mennyit ér egy jegykedvezményben? Ebből kiszámolható a kiosztási keret és a szükséges kincstár; a bolt, a kuponok és a ranglista erre épül.
+
+Nem néztem: a meglévő HUHS-pontrendszer pontos szabályait, a kiosztási keretet és árazást, a Play szabályainak friss szövegét.
