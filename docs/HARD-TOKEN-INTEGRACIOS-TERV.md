@@ -280,3 +280,20 @@ Egy kedvezmény kb. 5 buli után jár, egy ingyenes jegy kb. 17 után. A kerette
 
 ### 10.4 Még nincs megvizsgálva
 A számok illusztratívak; nem néztük a tényleges közösségméretet, a jegyárbevételt, az adózást és a Play külső ajánlati szabályait.
+
+## 11. Összefoglaló: jutalom, bolt, tárca-funkciók (2026-11-21, tulajdonosi döntések)
+
+### 11.1 Rögzített
+- **Hír-megosztás és chat-aktivitás:** 1 HARD/alkalom, **összesen legfeljebb heti 3 HARD** (a két forrásra együtt, szerveroldali ISO-heti számlálóval). A megosztás csak azt tudja jelezni, hogy a felhasználó megnyitotta a megosztás-ablakot (az Android nem jelzi vissza a tényleges elküldést); a chat-jutalom késleltetett, és csak a nem moderált, nem duplikált, nem túl rövid üzenetre jár, napi 1 üzenetig.
+- **Buy / Sell gomb:** később lehet, de **csak külső linkként a DEX oldalára**, appon belüli ügylet nélkül. Mainnet és jogi válasz (MiCA, Play) után.
+- **Küldés felhasználók között:** tervezett, devnet-en, először csak barátok közt, napi plafonnal, megerősítő képernyővel; a tárca írja alá. Nyitott: ki fizeti a hálózati díjat (SOL) és az új címzett számlájának létrehozását; farmolás elleni heti plafon.
+- **Tárca-képernyő:** token-logó (`assets/logos/hard_token.png`, a token metaadatában szereplő logó) és „Mire jó a HARD?” kártya; a tervezett funkciók tervezettként szerepelnek, értéket nem ígér. Következő kör: teljes cím + másolás + QR + explorer-link.
+
+### 11.2 Skálák ütköznek: döntendő
+A 10.2 táblázat (300 HARD/becsekkolás, bolt: póló 5 000) és a beszélgetésben felmerült kisebb skála (20–50 HARD/becsekkolás) **nem ugyanaz**. A heti 3 × 1 HARD passzív jutalom a nagyobb skálán elhanyagolható a becsekkoláshoz (300) képest, ami kívánatos. A skálát a kibocsátási keret határozza meg; amíg ez nincs eldöntve, a 10.2 számai az érvényesek.
+
+### 11.3 Fizikai termékek a bolthoz (a tulajdonos készletéből)
+Hardstyle Revolution **bögre, passztartó, maszk**; eseményen átvétel (nincs postázás), darabszám-korláttal. Árjavaslat a 10.2 skálán (nem döntés): matrica/kitűző 400, passztartó ~1 500, maszk ~1 500, bögre ~2 500, póló 5 000. Darabszámok: a tulajdonos adja meg. Fizikai termékre a Play Billing nem kötelező, de a jogi/Play pontokat (8–10. fejezet) előbb át kell nézni.
+
+### 11.4 GYIK
+A WordPress-kezelt GYIK szövegei: `docs/HARD-GYIK-SZOVEGEK.md` (a felvitel a WordPress adminban a tulajdonos dolga, vagy API-hozzáférés után az enyém).

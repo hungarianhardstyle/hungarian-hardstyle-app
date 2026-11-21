@@ -41,6 +41,8 @@ const TARGETS = [
   // A sarok-logó 34×48 logikai képpont.
   { file: 'assets/logos/huhs_corner_logo.png', width: 160, height: 241, why: '34×48 dp sarok-logó' },
   // A rádió-logó 110 logikai képpont magas.
+  // A HARD token logója a tárca-képernyőn 96 logikai képpont.
+  { file: 'assets/logos/hard_token.png', width: 320, height: 320, why: '96 dp token-logó a HARD tárcán' },
   { file: 'assets/logos/real_hardstyle_fm.png', width: 1040, height: 330, why: '110 dp magas rádió-logó' },
 ];
 

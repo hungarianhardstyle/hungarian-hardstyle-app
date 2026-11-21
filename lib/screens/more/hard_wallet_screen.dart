@@ -30,7 +30,10 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
   bool _busy = false;
   String? _error;
 
-  Future<void> _run(Future<void> Function() action, {bool connecting = false}) async {
+  Future<void> _run(
+    Future<void> Function() action, {
+    bool connecting = false,
+  }) async {
     setState(() {
       _busy = true;
       _error = null;
@@ -45,11 +48,14 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
       try {
         linked = (await ref.refresh(hardWalletStatusProvider.future)).linked;
       } catch (_) {}
-      final lostReply = connecting &&
+      final lostReply =
+          connecting &&
           linked &&
           error is FirebaseFunctionsException &&
           error.code == 'unavailable';
-      if (mounted && !lostReply) setState(() => _error = hardWalletErrorMessage(error));
+      if (mounted && !lostReply) {
+        setState(() => _error = hardWalletErrorMessage(error));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -66,10 +72,23 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
+            Center(
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/logos/hard_token.png',
+                  width: 96,
+                  height: 96,
+                  semanticLabel: 'HARD token',
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             const AppText(
               'A tárca összekapcsolása csak egy aláírás: nem költ és nem utal el semmit. '
               'Az egyenleget a szerver a blokkláncról kérdezi le.',
             ),
+            const SizedBox(height: 16),
+            const _HardInfo(),
             const SizedBox(height: 16),
             status.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -99,7 +118,9 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           FilledButton.icon(
-            onPressed: _busy ? null : () => _run(hardWalletService.connect, connecting: true),
+            onPressed: _busy
+                ? null
+                : () => _run(hardWalletService.connect, connecting: true),
             icon: _busy
                 ? const SizedBox.square(
                     dimension: 18,
@@ -110,7 +131,12 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
-            onPressed: _busy ? null : () => _run(() => hardWalletConnect.connect(context), connecting: true),
+            onPressed: _busy
+                ? null
+                : () => _run(
+                    () => hardWalletConnect.connect(context),
+                    connecting: true,
+                  ),
             icon: const Icon(Icons.qr_code_2),
             label: const AppText('Más tárca (WalletConnect)'),
           ),
@@ -136,13 +162,52 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
             if (status.cluster == 'devnet')
               const Padding(
                 padding: EdgeInsets.only(top: 4),
-                child: AppText('Teszthálózat (devnet): a token nem valódi érték.'),
+                child: AppText(
+                  'Teszthálózat (devnet): a token nem valódi érték.',
+                ),
               ),
             const SizedBox(height: 12),
             OutlinedButton(
-              onPressed: _busy ? null : () => _run(hardWalletService.disconnect),
+              onPressed: _busy
+                  ? null
+                  : () => _run(hardWalletService.disconnect),
               child: const AppText('Tárca leválasztása'),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Rövid magyarázat arról, mire való a HARD. A tervezett funkciókat tervezettként
+/// mutatja, értéket nem ígér.
+class _HardInfo extends StatelessWidget {
+  const _HardInfo();
+
+  static const _lines = <String>[
+    'A HARD a Hungarian Hardstyle közösségi tokenje. Jelenleg teszthálózaton (devnet) fut, ezért nincs pénzbeli értéke.',
+    'Tervezett felhasználás: jutalom a valódi részvételért (buli-becsekkolás, barát meghívása), majd bolt: Hardstyle Revolution tárgyak (bögre, passztartó) és digitális jelvények.',
+    'Hír-megosztásért és chat-aktivitásért legfeljebb heti 3 HARD jár, a spam ellen.',
+    'A tárcád kulcsa nálad marad: az app nem tudja elkölteni a tokenjeidet.',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppText(
+              'Mire jó a HARD?',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            for (final line in _lines) ...[
+              const SizedBox(height: 8),
+              AppText(line),
+            ],
           ],
         ),
       ),
@@ -175,7 +240,9 @@ class _SupportedWallets extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppText('Ezekkel a tárcákkal kapcsolhatod össze (és még sok mással):'),
+        const AppText(
+          'Ezekkel a tárcákkal kapcsolhatod össze (és még sok mással):',
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 16,
@@ -189,7 +256,8 @@ class _SupportedWallets extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: CachedNetworkImage(
-                        imageUrl: 'https://api.web3modal.org/getWalletImage/$imageId',
+                        imageUrl:
+                            'https://api.web3modal.org/getWalletImage/$imageId',
                         httpHeaders: _headers,
                         width: 48,
                         height: 48,
