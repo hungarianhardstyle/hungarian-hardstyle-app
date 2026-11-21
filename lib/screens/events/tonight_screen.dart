@@ -127,7 +127,7 @@ class TonightEntry extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: HomeActionCard(
         key: const Key('tonight-entry'),
-        eyebrow: 'MA ESTE',
+        eyebrow: 'BULIFIGYELŐ',
         label: trArgs(context, 'Hol van buli ma este? ({n})', {'n': '$count'}),
         icon: Icons.map_outlined,
         onTap: () => Navigator.of(context).push(
