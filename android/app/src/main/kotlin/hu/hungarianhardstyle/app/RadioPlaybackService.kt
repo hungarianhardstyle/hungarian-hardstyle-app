@@ -15,9 +15,10 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioPlaybackConfiguration
 import android.media.MediaMetadata
-import android.media.MediaPlayer
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
+import android.net.ConnectivityManager
+import android.net.Network
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
@@ -26,6 +27,14 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import androidx.annotation.RequiresApi
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 
 /**
  * A Real Hardstyle FM rádió lejátszása előtér-szolgáltatásként.
@@ -56,7 +65,15 @@ import androidx.annotation.RequiresApi
  *     képernyő-ki mellett is működjön (lásd [acquireFocusWatchLock]).
  */
 class RadioPlaybackService : Service() {
-    private var player: MediaPlayer? = null
+    private var player: ExoPlayer? = null
+
+    /** Egymás utáni sikertelen újracsatlakozások száma (exponenciális késleltetéshez). */
+    private var reconnectAttempt = 0
+
+    /** Igaz, ha épp egy ütemezett újracsatlakozásra várunk (a lejátszó ilyenkor null). */
+    private var reconnectPending = false
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var lastNetwork: Network? = null
     private var streamUrl: String? = null
     private var volume = 1f
     private var wakeLock: PowerManager.WakeLock? = null
@@ -213,11 +230,11 @@ class RadioPlaybackService : Service() {
         when (change) {
             AudioManager.AUDIOFOCUS_LOSS -> pauseForFocusLoss(permanent = true)
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> pauseForFocusLoss(permanent = false)
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> player?.setVolume(0.2f, 0.2f)
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> player?.volume = 0.2f
             AudioManager.AUDIOFOCUS_GAIN -> {
                 pausedByFocus = false
                 reconnectHandler.removeCallbacks(focusWatchdog)
-                player?.setVolume(volume, volume)
+                player?.volume = volume
                 val url = streamUrl
                 if (isPlaybackRequested() && !url.isNullOrBlank()) {
                     startForeground(NOTIFICATION_ID, notification())
@@ -229,10 +246,50 @@ class RadioPlaybackService : Service() {
     }
     private val reconnectHandler = Handler(Looper.getMainLooper())
     private val reconnect = Runnable {
+        reconnectPending = false
         streamUrl?.takeIf { isPlaybackRequested() }?.let {
             startPlayer(it)
             applyMetadata()
         }
+    }
+
+    /**
+     * Hálózatváltás (Wi-Fi ↔ mobil): a régi TCP-kapcsolat ilyenkor csendben
+     * elhal, ezért nem várjuk meg az időtúllépést — azonnal újracsatlakozunk.
+     * Csak akkor, ha szól a rádió, vagy újracsatlakozásra vár (hívás/fókuszvesztés
+     * alatt a lejátszó szándékosan null, ott nem indítunk).
+     */
+    private fun registerNetworkWatcher() {
+        if (networkCallback != null || Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                val previous = lastNetwork
+                lastNetwork = network
+                if (previous == null || previous == network) return
+                reconnectHandler.post { reconnectNow() }
+            }
+        }
+        networkCallback = callback
+        runCatching {
+            getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(callback)
+        }
+    }
+
+    private fun unregisterNetworkWatcher() {
+        networkCallback?.let {
+            runCatching { getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(it) }
+        }
+        networkCallback = null
+    }
+
+    private fun reconnectNow() {
+        val url = streamUrl ?: return
+        if (!isPlaybackRequested() || pausedByFocus) return
+        if (player == null && !reconnectPending) return
+        reconnectHandler.removeCallbacks(reconnect)
+        reconnectAttempt = 0
+        startPlayer(url)
+        applyMetadata()
     }
 
     override fun onCreate() {
@@ -249,6 +306,7 @@ class RadioPlaybackService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerPlaybackWatcher()
         }
+        registerNetworkWatcher()
     }
 
     /**
@@ -436,11 +494,12 @@ class RadioPlaybackService : Service() {
             ACTION_PAUSE -> pauseRadio()
             ACTION_VOLUME -> {
                 volume = intent.getFloatExtra(EXTRA_VOLUME, 1f)
-                player?.setVolume(volume, volume)
+                player?.volume = volume
             }
             // A szünet/folytatás gomb (az értesítés akció-sora).
             ACTION_TOGGLE_PAUSE -> {
-                if (player?.isPlaying == true) {
+                // A szándék dönt (nem az `isPlaying`): ExoPlayer pufferelés alatt hamis.
+                if (isPlaybackRequested() && (player != null || reconnectPending)) {
                     pauseRadio()
                 } else {
                     val url = streamUrl
@@ -482,6 +541,7 @@ class RadioPlaybackService : Service() {
         streamUrl = url
         preferences().edit().putBoolean(KEY_PLAYING, true).putBoolean(KEY_PAUSED, false).putString(KEY_URL, url).apply()
         reconnectHandler.removeCallbacks(reconnect)
+        reconnectAttempt = 0
         startForeground(NOTIFICATION_ID, notification())
         startMetadataRefresh()
         if (!requestAudioFocus()) {
@@ -586,36 +646,59 @@ class RadioPlaybackService : Service() {
     private fun startPlayer(url: String) {
         releasePlayer()
         acquireLocks()
-        player = MediaPlayer().apply {
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build(),
-            )
-            setOnPreparedListener {
-                start()
-                // ⚠️ A MÉDIakártya (zárképernyő + értesítési sáv) a
-                // **MediaSession** állapotából rajzolja a play/pause gombot —
-                // ezért amikor tényleg elindul a hang, AZONNAL frissítjük az
-                // állapotot (a tulajdonos jelzése: *„nincs pause gomb a
-                // zárképernyőn és az értesítési sávban”*).
-                applyMetadata()
+        // Élő rádióhoz: nagyobb puffer (a 192 kbps ~24 KB/s, 50 s ≈ 1,2 MB), így
+        // a rövid hálózati kiesés nem hallatszik; újrapufferelés után 5 s kell a folytatáshoz.
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(15_000, 50_000, 2_500, 5_000)
+            .setPrioritizeTimeOverSizeThresholds(true)
+            .build()
+        val http = DefaultHttpDataSource.Factory()
+            .setUserAgent("HUHS-Radio")
+            .setConnectTimeoutMs(10_000)
+            .setReadTimeoutMs(15_000)
+            .setAllowCrossProtocolRedirects(true)
+        val attributes = androidx.media3.common.AudioAttributes.Builder()
+            .setUsage(C.USAGE_MEDIA)
+            .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+            .build()
+        try {
+            player = ExoPlayer.Builder(this)
+                .setLoadControl(loadControl)
+                .setMediaSourceFactory(DefaultMediaSourceFactory(http))
+                // A fókuszt mi kezeljük (lásd [requestAudioFocus]), ezért itt kikapcsolva.
+                .setAudioAttributes(attributes, false)
+                // A lejátszó saját ébrentartása (CPU + Wi-Fi): képernyő-ki mellett is szól.
+                .setWakeMode(C.WAKE_MODE_NETWORK)
+                .build()
+                .apply {
+                    volume = this@RadioPlaybackService.volume
+                    addListener(playerListener)
+                    setMediaItem(MediaItem.fromUri(url))
+                    playWhenReady = true
+                    prepare()
+                }
+            applyMetadata() // a kártya azonnal „szól" állapotot mutat; READY-nél újra frissül
+        } catch (_: Exception) {
+            scheduleReconnect()
+        }
+    }
+
+    private val playerListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(state: Int) {
+            when (state) {
+                Player.STATE_READY -> {
+                    reconnectAttempt = 0
+                    // ⚠️ A médiakártya (zárképernyő + értesítési sáv) a MediaSession
+                    // állapotából rajzolja a play/pause gombot — ezért amikor tényleg
+                    // elindul a hang, azonnal frissítjük.
+                    applyMetadata()
+                }
+                Player.STATE_ENDED -> scheduleReconnect()
             }
-            setOnCompletionListener { scheduleReconnect() }
-            setOnErrorListener { _, _, _ ->
-                scheduleReconnect()
-                true
-            }
-            try {
-                // A lejátszó saját ébrentartása: képernyő-ki mellett is szól.
-                setWakeMode(applicationContext, PowerManager.PARTIAL_WAKE_LOCK)
-                setDataSource(url)
-                prepareAsync()
-                setVolume(volume, volume)
-            } catch (_: Exception) {
-                scheduleReconnect()
-            }
+        }
+
+        override fun onPlayerError(error: PlaybackException) {
+            scheduleReconnect()
         }
     }
 
@@ -626,7 +709,12 @@ class RadioPlaybackService : Service() {
             // A lockot SZÁNDÉKOSAN nem engedjük el: az újracsatlakozás is
             // ébren fut, különben a képernyő-ki melletti újrapróbálkozás
             // elaludna, és a rádió némán megállna.
-            reconnectHandler.postDelayed(reconnect, RECONNECT_DELAY_MS)
+            // Exponenciális késleltetés: 1, 2, 4, 8, 16, 30, 30… másodperc.
+            val delay = (RECONNECT_BASE_DELAY_MS shl reconnectAttempt.coerceAtMost(5))
+                .coerceAtMost(RECONNECT_MAX_DELAY_MS)
+            reconnectAttempt++
+            reconnectPending = true
+            reconnectHandler.postDelayed(reconnect, delay)
         } else {
             releaseLocks()
         }
@@ -697,13 +785,11 @@ class RadioPlaybackService : Service() {
     }
 
     private fun releasePlayer() {
+        reconnectPending = false
         player?.runCatching {
-            setOnPreparedListener(null)
-            setOnCompletionListener(null)
-            setOnErrorListener(null)
-            reset()
+            removeListener(playerListener)
+            release()
         }
-        player?.release()
         player = null
     }
 
@@ -789,6 +875,7 @@ class RadioPlaybackService : Service() {
         runCatching { mediaSession?.release() }
         mediaSession = null
         unregisterPlaybackWatcher()
+        unregisterNetworkWatcher()
         super.onDestroy()
     }
 
@@ -852,7 +939,8 @@ class RadioPlaybackService : Service() {
         private const val WIFI_LOCK_TAG = "huhs:radio-wifi"
         private const val CHANNEL_ID = "huhs_radio"
         private const val NOTIFICATION_ID = 421
-        private const val RECONNECT_DELAY_MS = 3_000L
+        private const val RECONNECT_BASE_DELAY_MS = 1_000L
+        private const val RECONNECT_MAX_DELAY_MS = 30_000L
         private const val FOCUS_RETRY_DELAY_MS = 2_000L
         private const val FOCUS_WATCH_WAKE_LOCK_MS = 20 * 60 * 1_000L
 

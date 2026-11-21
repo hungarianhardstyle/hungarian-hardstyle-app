@@ -61,7 +61,7 @@ void main() {
 
   group('folyamatos lejátszás (nem szakad meg képernyő-ki mellett)', () {
     test('a lejátszó és a szolgáltatás is ébren tartja a készüléket', () {
-      expect(service, contains('setWakeMode(applicationContext, PowerManager.PARTIAL_WAKE_LOCK)'));
+      expect(service, contains('setWakeMode(C.WAKE_MODE_NETWORK)'));
       expect(service, contains('PARTIAL_WAKE_LOCK'));
       expect(service, contains('newWakeLock('));
       expect(service, contains('.acquire()'));
@@ -146,7 +146,7 @@ void main() {
 
     test('a hangerőt csökkentjük, ha csak halkan szabad szólni (duck)', () {
       expect(service, contains('AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK'));
-      expect(service, contains('setVolume(0.2f, 0.2f)'));
+      expect(service, contains('player?.volume = 0.2f'));
     });
 
     test('a hang elvesztése elhallgattat, de nem állítja le a szolgáltatást', () {
