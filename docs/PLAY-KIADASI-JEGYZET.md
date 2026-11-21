@@ -1,15 +1,34 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás **413** (1.0.0), 2026-11-20
+## Aktuális kiadás **418** (1.0.0), 2026-11-21
 
 ```play-notes
-Az éves szavazás az appban és a weben is elérhető. Igazolt e-mail-címmel évadonként egyszer szavazhatsz.
-A „Ma este” kártya egyelőre csak a Hungarian Hardstyle által szervezett bulikon jelenik meg.
-Új: az időbeosztásban a DJ nevére koppintva megnyílik az adatlapja.
-Új: „Hol van buli ma este?” a Kezdőlapon — a mai bulik térkép-linkkel.
-Új: a Közösségben a „Kit ismerhetek?” azokat mutatja, akik ugyanazokra a bulikra mennek, mint te.
-Új: a cikkek képei nagyíthatók.
+Új (tesztelés alatt): HARD-tárca a Közösségben — Solana-tárca összekapcsolása és HARD-egyenleg (18 éves kortól).
+Új (tesztelés alatt): a rádió új lejátszót kapott, hálózatváltás után magától újracsatlakozik.
+Új: a cikkek képei lightboxban nyílnak (koppintásra bezár, dupla koppintásra nagyít).
+Javítva: a „Ma este” térkép-gombja a Google Térkép appot nyitja; a kártyán a flyer is látszik.
+Javítva: az esemény időbeosztása igazodik a többi tartalomhoz.
 ```
+
+### 418 — esemény időbeosztás igazítása
+
+- Az esemény részletei képernyőn az időbeosztás kapott 20 px-es oldalsó behúzást.
+
+### 417 — rádió új lejátszóval (Media3 ExoPlayer)
+
+- Háttér-rádió puffer, exponenciális újracsatlakozás, hálózatváltás-kezelés. Tesztelés alatt.
+
+### 416 — HARD-tárca hibaüzenet, cikkkép-lightbox
+
+- A tárca összekapcsolása után nincs hamis hálózati hibaüzenet; a cikkek képei lightboxban nyílnak.
+
+### 415 — cikkképek, WalletConnect
+
+- Cikkképek bezárása/nagyítása; a HARD-tárca más tárcákkal is összekapcsolható (tesztelés alatt).
+
+### 414 — HARD-tárca, „Ma este” kártya javítások
+
+- HARD-tárca a Közösségben (tesztelés alatt); térkép-gomb a Google Térkép appra; flyer a „Ma este” kártyán; csomagfrissítések.
 
 ### 413 — közös éves szavazás (a 411 és a 412 nem ment ki, ez váltja)
 
@@ -190,11 +209,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 413
+currentBuild: 418
 currentVersion: 1.0.0
-lastPublishedBuild: 410
-aab: build/HUHS-v1.0.0+413-release.aab
-sha256: 91EE8231C67D138E807379665D504FB94CD95A5CFB17D6DDFD13CF0ED8B39B6D
+lastPublishedBuild: 413
+aab: build/HUHS-v1.0.0+418-release.aab
+sha256: 4BD7734017FDBD94D4AA53C684F7F9491068D39A89078616B9A29F59A24D1867
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at

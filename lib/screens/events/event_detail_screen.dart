@@ -702,7 +702,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                     ),
                     if (event.hasTimetable)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                         child: Column(
                           key: const Key('event-timetable'),
                           crossAxisAlignment: CrossAxisAlignment.start,

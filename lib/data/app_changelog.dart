@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 418,
+    changes: [
+      'Javítva: az esemény időbeosztása igazodik a többi tartalomhoz.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 417,
     changes: [
       'Új (tesztelés alatt): a rádió új lejátszót kapott: kevesebb akadás, automatikus újracsatlakozás hálózatváltás (Wi-Fi/mobilnet) után.',
