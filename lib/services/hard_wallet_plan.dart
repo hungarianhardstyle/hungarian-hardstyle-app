@@ -53,9 +53,44 @@ class HardWalletStatus {
   }
 }
 
+/// A szerver által összeállított, aláíratlan HARD-átutalás (`hardPrepareTransfer`).
+class HardTransferQuote {
+  const HardTransferQuote({
+    required this.transaction,
+    required this.sender,
+    required this.recipient,
+    required this.amount,
+  });
+
+  /// Aláíratlan tranzakció, base64.
+  final String transaction;
+  final String sender;
+  final String recipient;
+
+  /// Az összeg tizedes szövegként (pl. `1.5`).
+  final String amount;
+
+  factory HardTransferQuote.fromMap(Map<Object?, Object?> map) {
+    String text(String key) => map[key] is String ? map[key] as String : '';
+    final quote = HardTransferQuote(
+      transaction: text('transaction'),
+      sender: text('sender'),
+      recipient: text('recipient'),
+      amount: text('amount'),
+    );
+    if (quote.transaction.isEmpty ||
+        quote.sender.isEmpty ||
+        quote.recipient.isEmpty) {
+      throw const FormatException('Invalid transfer quote');
+    }
+    return quote;
+  }
+}
+
 /// Rövidített cím a kijelzéshez: `CzTZ…R5UV`.
-String shortAddress(String address) =>
-    address.length <= 10 ? address : '${address.substring(0, 4)}…${address.substring(address.length - 4)}';
+String shortAddress(String address) => address.length <= 10
+    ? address
+    : '${address.substring(0, 4)}…${address.substring(address.length - 4)}';
 
 /// A szerver hibakódjainak érthető magyar üzenete (a szerver üzenete az irányadó,
 /// ha van; a kódok csak a tartalék).

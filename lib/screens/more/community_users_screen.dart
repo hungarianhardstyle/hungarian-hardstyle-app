@@ -26,6 +26,7 @@ import 'newsletter_screen.dart';
 import 'suggested_people_screen.dart';
 import '../community/private_messages_screen.dart';
 import '../../widgets/achievement_badge_card.dart';
+import '../../widgets/hard_send_button.dart';
 import '../../widgets/profile_content_card.dart';
 
 class CommunityUsersScreen extends ConsumerStatefulWidget {
@@ -579,6 +580,10 @@ class _CommunityPublicProfileScreenState
                       label: const AppText('Ismerősnek jelölés'),
                     );
                   },
+                ),
+                HardSendButton(
+                  recipientUid: widget.userId,
+                  recipientName: name.isEmpty ? 'HUHS user' : name,
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(

@@ -9676,6 +9676,10 @@ const {
 } = require('./hard-wallet-plan');
 
 const HARD_DECIMALS = 6;
+const {
+  parseAmountRaw: parseHardAmountRaw,
+  buildTransferTransaction: buildHardTransferTransaction,
+} = require('./hard-transfer-plan');
 const { isAdultBirthDate: hardIsAdultBirthDate } = require('./birth-date-plan');
 // A kihívás lejárta után ennyivel törölhető (a futó igazolásnak nem szabad eltűnnie).
 const HARD_CHALLENGE_CLEANUP_GRACE_MS = 60 * 60 * 1000;
@@ -9920,5 +9924,84 @@ exports.hardGetBalance = functions
       rawAmount: raw.toString(),
       decimals: HARD_DECIMALS,
       amount: hardFormatRaw(raw, HARD_DECIMALS),
+    };
+  });
+
+async function hardRpc(config, method, params) {
+  const response = await fetch(config.rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+    signal: AbortSignal.timeout(8000),
+  });
+  const payload = await response.json();
+  if (!response.ok || payload?.error) throw new Error(payload?.error?.message || `HTTP ${response.status}`);
+  return payload.result;
+}
+
+// HARD-küldés felhasználók között: a szerver CSAK összeállítja az aláíratlan
+// tranzakciót (a feladó a díjfizető); az aláírást és a beküldést a feladó
+// tárcája végzi, a szerver nem mozgat pénzt. A címzett címét a szerver oldja fel,
+// a kliens nem választhat tetszőleges címet.
+exports.hardPrepareTransfer = functions
+  .runWith({ enforceAppCheck: false })
+  .https.onCall(async (data, context) => {
+    const uid = requireRegisteredViewer(context);
+    const config = await loadHardConfig();
+    const recipientUid = typeof data?.recipientUid === 'string' ? data.recipientUid.trim() : '';
+    if (!recipientUid || recipientUid.length > 128 || recipientUid === uid) {
+      throw new HttpsError('invalid-argument', 'Hibás címzett.');
+    }
+    const rawAmount = parseHardAmountRaw(data?.amount, HARD_DECIMALS);
+    if (rawAmount === null) {
+      throw new HttpsError('invalid-argument', 'Adj meg egy érvényes, pozitív összeget (legfeljebb 6 tizedessel).');
+    }
+    if (!(await allowCall(uid, 'hard_transfer', 10))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
+    }
+    await requireHardAdult(uid);
+    const [senderLink, recipientLink] = await Promise.all([
+      db.collection('hard_wallet_links').doc(uid).get(),
+      db.collection('hard_wallet_links').doc(recipientUid).get(),
+    ]);
+    const sender = senderLink.exists ? senderLink.data()?.address : null;
+    const recipient = recipientLink.exists ? recipientLink.data()?.address : null;
+    if (!sender) throw new HttpsError('failed-precondition', 'Előbb kapcsold össze a saját tárcádat.');
+    if (!recipient) {
+      throw new HttpsError('failed-precondition', 'Ennek a felhasználónak még nincs összekötött tárcája.');
+    }
+    let blockhash;
+    let balance;
+    try {
+      const accounts = await hardRpc(config, 'getTokenAccountsByOwner', [
+        sender,
+        { mint: config.mint },
+        { encoding: 'jsonParsed' },
+      ]);
+      balance = hardSumRaw(accounts?.value || []);
+      const latest = await hardRpc(config, 'getLatestBlockhash', [{ commitment: 'confirmed' }]);
+      blockhash = latest?.value?.blockhash;
+    } catch (error) {
+      console.warn('hard_transfer_rpc_failed', { message: error?.message });
+      throw new HttpsError('unavailable', 'A hálózat most nem érhető el, próbáld újra később.');
+    }
+    if (!blockhash) throw new HttpsError('unavailable', 'A hálózat most nem érhető el, próbáld újra később.');
+    if (balance < rawAmount) {
+      throw new HttpsError('failed-precondition', 'Nincs elég HARD az egyenlegeden.');
+    }
+    const built = buildHardTransferTransaction({
+      sender,
+      recipient,
+      mint: config.mint,
+      rawAmount,
+      decimals: HARD_DECIMALS,
+      blockhash,
+    });
+    await hardAudit('transfer_prepared', uid, { recipientUid, rawAmount: rawAmount.toString() });
+    return {
+      transaction: built.base64,
+      sender,
+      recipient,
+      amount: hardFormatRaw(rawAmount, HARD_DECIMALS),
     };
   });
