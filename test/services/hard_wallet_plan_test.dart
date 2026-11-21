@@ -32,6 +32,13 @@ void main() {
     expect(base58Encode(bytes), address);
   });
 
+  test('base58Decode: oda-vissza, a vezető nullákkal együtt', () {
+    final bytes = Uint8List.fromList([0, 0, 1, 2, 250, 255, 7]);
+    expect(base58Decode(base58Encode(bytes)), bytes);
+    expect(base58Decode('1' * 32), Uint8List(32));
+    expect(() => base58Decode('0OIl'), throwsFormatException);
+  });
+
   test('állapot: kikapcsolt és nem kötött tárca', () {
     final off = HardWalletStatus.fromMap({'enabled': false, 'linked': false});
     expect(off.enabled, isFalse);

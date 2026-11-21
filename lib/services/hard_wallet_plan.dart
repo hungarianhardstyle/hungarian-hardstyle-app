@@ -100,3 +100,27 @@ Future<T> retryOnUnavailable<T>(
     }
   }
 }
+
+/// A [base58Encode] párja: a WalletConnect-tárcák az aláírást base58-ban adják vissza.
+Uint8List base58Decode(String text) {
+  var zeros = 0;
+  while (zeros < text.length && text[zeros] == '1') {
+    zeros++;
+  }
+  final bytes = <int>[];
+  for (final char in text.substring(zeros).split('')) {
+    final value = _alphabet.indexOf(char);
+    if (value < 0) throw const FormatException('Invalid base58 character');
+    var carry = value;
+    for (var i = 0; i < bytes.length; i++) {
+      carry += bytes[i] * 58;
+      bytes[i] = carry & 0xff;
+      carry >>= 8;
+    }
+    while (carry > 0) {
+      bytes.add(carry & 0xff);
+      carry >>= 8;
+    }
+  }
+  return Uint8List.fromList([...List.filled(zeros, 0), ...bytes.reversed]);
+}

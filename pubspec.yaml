@@ -3,7 +3,7 @@ description: "Hungarian Hardstyle mobile application"
 
 publish_to: 'none'
 
-version: 1.0.0+414
+version: 1.0.0+415
 
 environment:
   sdk: ^3.13.7
@@ -79,6 +79,7 @@ dependencies:
   mobile_scanner: ^7.5.0
   qr_flutter: ^4.1.0
   solana_mobile_client: ^0.1.2
+  reown_appkit: ^1.9.0
 
 dev_dependencies:
   flutter_test:
@@ -101,3 +102,7 @@ flutter:
     # felirat a magyar marad, ezért a szótár bővülhet anélkül, hogy bármi
     # üresen maradna.
     - assets/i18n/
+
+dependency_overrides:
+  # solana_mobile_client 0.1.2 kéri a freezed_annotation ^2-t, a reown_appkit >=1.6 a ^3-at.
+  freezed_annotation: ^3.1.0

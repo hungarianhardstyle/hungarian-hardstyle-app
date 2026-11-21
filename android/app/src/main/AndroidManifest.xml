@@ -117,6 +117,16 @@
             <data android:mimeType="text/plain"/>
         </intent>
 
+        <!-- WalletConnect: a telepített Solana-tárcák felismeréséhez. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="wc"/>
+        </intent>
+        <package android:name="app.phantom"/>
+        <package android:name="com.solflare.mobile"/>
+        <package android:name="app.backpack.mobile"/>
+        <package android:name="com.wallet.crypto.trustapp"/>
+
     </queries>
 
 </manifest>

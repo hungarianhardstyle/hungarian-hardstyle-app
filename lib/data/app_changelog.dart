@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 415,
+    changes: [
+      'Új (tesztelés alatt): a HARD-tárca más tárcákkal is összekapcsolható (WalletConnect, pl. Trust Wallet, Backpack), és az appban látszanak a támogatott tárcák logói.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 414,
     changes: [
       'Új (tesztelés alatt): HARD-tárca a Közösségben — Solana-tárca összekapcsolása és a HARD-egyenleg megtekintése (18 éves kortól).',
