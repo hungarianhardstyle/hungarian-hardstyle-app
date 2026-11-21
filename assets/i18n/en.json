@@ -3,6 +3,7 @@
   "Új: „Hol van buli ma este?” a Kezdőlapon — a mai bulik térkép-linkkel.": "New: “Where's the party tonight?” on the Home screen — today's parties with a map link.",
   "Új: a Közösségben a „Kit ismerhetek?” azokat mutatja, akik ugyanazokra a bulikra mennek, mint te.": "New: “People you may know” in Community shows who is going to the same events as you.",
   "Kit ismerhetek?": "People you may know",
+  "Új (tesztelés alatt): HARD küldése másik felhasználónak a profilja oldaláról (a saját tárcáddal aláírva, teszthálózaton).": "New (in testing): send HARD to another user from their profile (signed with your own wallet, on the test network).",
   "Új: a HARD-tárca oldalon megjelent a token logója és egy rövid ismertető arról, mire való a HARD (teszthálózaton, pénzbeli érték nélkül).": "New: the HARD wallet page now shows the token logo and a short note on what HARD is for (on a test network, with no monetary value).",
   "Javítva: az esemény időbeosztása igazodik a többi tartalomhoz.": "Fixed: the event timetable now lines up with the rest of the content.",
   "Új (tesztelés alatt): HARD-tárca a Közösségben — Solana-tárca összekapcsolása és a HARD-egyenleg megtekintése (18 éves kortól).": "New (in testing): HARD wallet in Community — connect a Solana wallet and view your HARD balance (age 18+).",
