@@ -3,7 +3,7 @@ description: "Hungarian Hardstyle mobile application"
 
 publish_to: 'none'
 
-version: 1.0.0+413
+version: 1.0.0+414
 
 environment:
   sdk: ^3.13.7
