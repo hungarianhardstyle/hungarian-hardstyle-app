@@ -5,6 +5,7 @@ import {
   TOKEN_NAME,
   TOKEN_SYMBOL,
   verifyMetadataFacts,
+  TOKEN_URI,
   verifyMintFacts,
 } from './hard-devnet-token.mjs';
 
@@ -25,4 +26,6 @@ test('metaadat: a név és a szimbólum helyes, és nem módosítható', () => {
   assert.equal(verifyMetadataFacts({ ...meta, isMutable: true }).ok, false);
   assert.equal(verifyMetadataFacts({ ...meta, name: 'Más' }).ok, false);
   assert.equal(verifyMetadataFacts({ ...meta, symbol: 'X' }).ok, false);
+  assert.equal(verifyMetadataFacts({ ...meta, uri: TOKEN_URI }).ok, true);
+  assert.equal(verifyMetadataFacts({ ...meta, uri: '' }).ok, false);
 });

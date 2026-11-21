@@ -35,12 +35,15 @@ export const EXPECTED_RAW_SUPPLY = TOTAL_SUPPLY_WHOLE * 10n ** BigInt(DECIMALS);
 // A név legfeljebb 32, a szimbólum legfeljebb 10 karakter lehet (Metaplex-korlát).
 export const TOKEN_NAME = 'HUHS';
 export const TOKEN_SYMBOL = 'HARD';
+// A tárcák a logót ebből a JSON-ból olvassák (a lánc csak az URL-t tárolja).
+export const TOKEN_URI = 'https://hardtoken.hungarianhardstyle.hu/token.json';
 
 /** A névadás lánc-szintű ellenőrzése: név, szimbólum, és hogy már nem módosítható. */
-export function verifyMetadataFacts({ name, symbol, isMutable }) {
+export function verifyMetadataFacts({ name, symbol, isMutable, uri }) {
   const problems = [];
   if (name !== TOKEN_NAME) problems.push(`név="${name}", várt: "${TOKEN_NAME}"`);
   if (symbol !== TOKEN_SYMBOL) problems.push(`szimbólum="${symbol}", várt: "${TOKEN_SYMBOL}"`);
+  if (uri !== undefined && uri !== TOKEN_URI) problems.push(`uri="${uri}", várt: "${TOKEN_URI}"`);
   if (isMutable !== false) problems.push('a metaadat MÓDOSÍTHATÓ (át lehetne nevezni)');
   return { ok: problems.length === 0, problems };
 }
@@ -119,7 +122,7 @@ async function main() {
         data: {
           name: TOKEN_NAME,
           symbol: TOKEN_SYMBOL,
-          uri: '',
+          uri: TOKEN_URI,
           sellerFeeBasisPoints: 0,
           creators: none(),
           collection: none(),
@@ -161,8 +164,8 @@ async function main() {
   try {
     const umi = createUmi('https://api.devnet.solana.com').use(mplTokenMetadata());
     const meta = await fetchMetadata(umi, findMetadataPda(umi, { mint: umiPublicKey(mint) }));
-    const named = verifyMetadataFacts({ name: meta.name, symbol: meta.symbol, isMutable: meta.isMutable });
-    console.log(JSON.stringify({ name: meta.name, symbol: meta.symbol, isMutable: meta.isMutable }));
+    const named = verifyMetadataFacts({ name: meta.name, symbol: meta.symbol, isMutable: meta.isMutable, uri: meta.uri });
+    console.log(JSON.stringify({ name: meta.name, symbol: meta.symbol, uri: meta.uri, isMutable: meta.isMutable }));
     problems.push(...named.problems);
   } catch {
     problems.push('a mintnek nincs metaadata-fiókja (nincs neve)');

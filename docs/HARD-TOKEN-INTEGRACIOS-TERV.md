@@ -12,7 +12,7 @@
 
 ## 0.1 Devnet-állapot (2026-11-20)
 
-- **Mint (devnet):** `8yi3SaRjcftYWqyJY7JdoBKa4DuBDzjgpyjnAhFEvH7k`, név: *HUHS*, szimbólum: *HARD*, 6 tizedes, 100 000 000 kínálat.
+- **Mint (devnet):** `C8mKvFsSmbro4jTHAGMrK4MJ5k2MaAgrDR4QFZadpYuV`, név: *HUHS*, szimbólum: *HARD*, 6 tizedes, 100 000 000 kínálat.
 - Lánc-szinten ellenőrizve: a **mint és a freeze authority visszavonva**, a metaadat **nem módosítható** (nem nevezhető át).
 - Eszköz: `tools/hard-devnet/hard-devnet-token.mjs` (`--verify`, `--new`). A kulcsok a repón kívül vannak (`~/.huhs-hard/`).
 - A backend (`hardWalletChallenge/Verify/Disconnect`, `hardGetBalance`) és a szabályok megvannak és tesztelve; **élesítve nincs**, a `hard_config/current` még nincs létrehozva.
