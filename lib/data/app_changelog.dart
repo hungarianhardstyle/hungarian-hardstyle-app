@@ -38,6 +38,13 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 419,
+    changes: [
+      'Új: a HARD-tárca oldalon megjelent a token logója és egy rövid ismertető arról, mire való a HARD (teszthálózaton, pénzbeli érték nélkül).',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 418,
     changes: [
       'Javítva: az esemény időbeosztása igazodik a többi tartalomhoz.',
