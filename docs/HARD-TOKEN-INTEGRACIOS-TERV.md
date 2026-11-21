@@ -297,3 +297,8 @@ Hardstyle Revolution **bögre, passztartó, maszk**; eseményen átvétel (nincs
 
 ### 11.4 GYIK
 A WordPress-kezelt GYIK szövegei: `docs/HARD-GYIK-SZOVEGEK.md` (a felvitel a WordPress adminban a tulajdonos dolga, vagy API-hozzáférés után az enyém).
+
+### 11.5 Dinamikus árazás: csak DEX/CEX-listázás után (2026-11-21)
+- **Amíg nincs piaci ár (devnet, nincs DEX/CEX):** a bolt **fix HARD-árat** használ. Az árak a szerveren/WordPressben vannak, nem az appba égetve, hogy a későbbi átállás kliensfrissítés nélkül menjen.
+- **Listázás után (külön feladat):** forint-horgonyzott ár, szerveroldali HARD-átszámítással. Feltételek: időátlagolt (TWAP) árfolyamforrás a vékony likviditású pool manipulálása ellen; 5 perces, szerver által ellenőrzött árajánlat-zárolás; alsó/felső korlát és vészleállító (fix árra vagy szünetre váltás); az árfolyam a szerveren, nem a kliensben.
+- **Nyitott:** melyik árfolyamforrás (DEX-API/oracle) megbízható Solanán; a forint-horgonyzott ár azt sugallja, hogy a HARD-nak forintértéke van, ami ütközik az „értéket nem ígérünk” elvvel (jogi kérdés, a 27. kérdés rokona); a forintérték adó-/könyvelési kezelése vásárláskor.
