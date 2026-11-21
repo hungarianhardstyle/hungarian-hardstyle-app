@@ -178,3 +178,49 @@ Az elköltött HARD a kincstárba megy; hogy részben elégetjük-e, külön dö
 Mi az a 2–3 tevékenység, amiért HARD jár, és az mennyit ér egy jegykedvezményben? Ebből kiszámolható a kiosztási keret és a szükséges kincstár; a bolt, a kuponok és a ranglista erre épül.
 
 Nem néztem: a meglévő HUHS-pontrendszer pontos szabályait, a kiosztási keretet és árazást, a Play szabályainak friss szövegét.
+
+## 9. HARD Wallet specifikáció értelmezése és tulajdonosi döntések (2026-11-21)
+
+Forrás: `Desktop\HARD_Wallet_Claude_spec.md` (beépített tárca, jutalmak, NFT-rendszer). Állapot: **terv, kód nélkül.**
+
+### 9.1 Rögzített tulajdonosi döntések
+
+1. **Beépített (non-custodial) tárca kell.** A mostani külső tárcás összekapcsolás (MWA + WalletConnect) megmarad, a beépített tárca mellé vagy helyett kerül; a sorrendet külön kell eldönteni.
+2. **Kvízjutalom: mindkettő lehet, és később választható legyen** (HUHS-pont, HARD, vagy mindkettő). Ez beállítás legyen (kvízenként/kampányonként), ne kódba égetve. A pont↔HARD átváltás továbbra sincs.
+3. **Az NFT fizetős legyen az elejétől.** (Következmények: 9.4.)
+4. **Az alapítói részesedés lánc-szintű zárolással (vesting) induljon**; a zárolás a mintelés előtt, nyilvánosan ellenőrizhetően legyen beállítva.
+
+### 9.2 Eltérések a specifikáció és a rögzített terv között
+
+- **A spec mint-címe elavult** (`8yi3Sa…`): a mostani devnet-mint `C8mKvFs…`. A hálózatot és a tulajdonságokat RPC-n kell ellenőrizni.
+- **Apple-belépés** csak iOS-hez kell; iOS jelenleg kimarad.
+- **Tokenelosztás** (35% jutalom / 20% likviditás / 20% kincstár / 15% alapító / 10% partner): az alapítói rész zárolása a 4. fejezet rug-pull elleni elveivel egyezik.
+- **Digitális szolgáltatás HARD-ért** (zene, reklámmentesség): a spec is tiltja a Play/iOS szabályok ellenőrzése nélküli élesítést; lásd 8. fejezet.
+
+### 9.3 Beépített tárca: nyitott döntések
+
+- **Kulcskezelés:** saját megoldás (recovery phrase, jelszóból képzett kulcs) vagy külső MPC/embedded wallet szolgáltató. A spec saját kriptográfiát audit nélkül tilt; javasolt: kész szolgáltató. Szolgáltatók (pl. Privy, Web3Auth, Turnkey) **nincsenek megvizsgálva**.
+- **Helyreállítás:** a Google-/Apple-fiók nem kulcsmentés; külön erős faktor kell. Az elveszett faktor következményét dokumentálni kell.
+- **Jog:** a tárcafunkció szabályozott kriptoszolgáltatásnak minősülhet-e (MiCA); a Play szabálya a non-custodial tárcát nem érinti, de a jogi minősítés ügyvédi kérdés.
+
+### 9.4 Fizetős NFT az elejétől: következmények
+
+- **Play:** a fizetős NFT digitális tartalom. Az appban történő eladáshoz **Play Billing** kell (jutalék), és a terméket **tokenizált digitális eszközként** be kell jelenteni; a Financial features nyilatkozat is kell. Nem hirdethető nyereség/értéknövekedés.
+- **Web mint alternatíva:** ha az eladás a weben történik, a Play fizetési szabálya nem az appban érvényesül, de az app nem terelheti oda a felhasználót (lásd 8. fejezet). Az EU külső ajánlati szabályait nem néztük meg.
+- **MiCA:** a nagy sorozatú, egymással helyettesíthető NFT nem automatikusan mentes; egyedi minősítés kell.
+- **Adó, számla, fogyasztóvédelem:** a spec szerinti 60/40 megosztás nettó bevételből történik; az elszámolás és az áfa-kezelés tisztázandó.
+- **Szerzői jog:** DJ-fotó, képmás, logó: írásos hozzájárulás minden kollekcióhoz.
+- **Jogdíj (5%):** nem ígérhető, a piacterek nem kötelesek betartani.
+- **Piactér:** saját letétkezelő piactér nem épül audit és jogi vizsgálat nélkül; az első lépés az elsődleges eladás, nem a P2P kereskedés.
+- **Ügyvédi/hatósági kapu:** a fizetős NFT-eladás éles indítása csak a jogi és Play-egyeztetés után.
+
+### 9.5 Javasolt sorrend
+
+1. Külső tárcás összekapcsolás (kész) + jutalom (earn) + jegykedvezmény-bolt (8. fejezet).
+2. A beépített tárca előkészítése: szolgáltató-összehasonlítás, threat model, helyreállítási UX.
+3. Kvízjutalom-beállítás (pont / HARD / mindkettő).
+4. Az NFT-modul előkészítése devneten (ingyenes tesztkollekció), a fizetős élesítés külön kapu mögött.
+
+### 9.6 Még nincs megvizsgálva
+
+Költségek (RPC, Firebase, audit, Metaplex Core vs. alternatívák), MPC-szolgáltatók feltételei és ára, az EU külső ajánlati szabályai a Play-en, a meglévő kvíz/Guess the Track kód, a partneri szerződések tartalma.
