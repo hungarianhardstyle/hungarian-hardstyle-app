@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 416,
+    changes: [
+      'Javítva: a HARD-tárca összekapcsolása után nem jelenik meg hamis hálózati hibaüzenet.',
+      'Új: a cikkek képei lightboxban nyílnak (sötét háttér, koppintásra bezár, dupla koppintásra nagyít).',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 415,
     changes: [
       'Új: a cikkek képei koppintásra bezárhatók, dupla koppintásra nagyíthatók.',
