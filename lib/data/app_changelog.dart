@@ -38,6 +38,14 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 414,
+    changes: [
+      'Új (tesztelés alatt): HARD-tárca a Közösségben — Solana-tárca összekapcsolása és a HARD-egyenleg megtekintése (18 éves kortól).',
+      'Háttérfrissítések: a használt csomagok frissítve a stabilabb működésért.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 413,
     changes: [
       'Az éves szavazás az appban és a weben is elérhető. Igazolt e-mail-címmel évadonként egyszer szavazhatsz.',
