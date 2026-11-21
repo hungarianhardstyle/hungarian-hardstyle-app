@@ -122,6 +122,8 @@ dependencies {
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("com.android.installreferrer:installreferrer:2.2")
+    // A háttér-rádió lejátszója; ugyanaz a verzió, mint a just_audio-é (nincs ütközés).
+    implementation("androidx.media3:media3-exoplayer:1.4.1")
     baselineProfile(project(":baselineprofile"))
 }
 
