@@ -1,4 +1,4 @@
-# HARD Token – kérdéslista az ügyvédnek (előértékesítéssel)
+# HARD Token – kérdéslista az ügyvédnek (előértékesítéssel; 2026-11-21 óta a tulajdonos döntése: nincs presale, lásd a G. részt)
 
 Állapot: **vázlat az első konzultációhoz** (2026-11-20). Ez kérdéslista, nem jogi vélemény: a jogi állításokat a szakember mondja ki. Kapcsolódó terv: `docs/HARD-TOKEN-INTEGRACIOS-TERV.md`.
 
@@ -58,6 +58,14 @@ Kérj olyan ügyvédet, aki **kriptoeszköz-szabályozásban (MiCA) és magyar p
 23. Mi a **minimális, jogilag biztonságos első lépés**? Például: csak devnet + ingyenes várólista, majd presale nélküli jutalomrendszer, és a presale csak később.
 24. Mennyibe kerül egy **írásos vélemény**, és egy teljes white paper / jogi dokumentumcsomag? Mi a becsült átfutás?
 25. Kell-e **külső biztonsági audit** a kibocsátás vagy a likviditás előtt, és kinek kell ezt megrendelnie?
+
+### G. Tulajdonosi eladás, presale nélkül (2026-11-21, tulajdonosi döntés: nincs presale, nincs értékígéret)
+
+26. A **tulajdonos saját készletének** nyilvános, zárolt és szakaszos eladása milyen feltételekkel nem minősül megtévesztésnek, csalásnak vagy piaci visszaélésnek (rug pullnak), ha a projekt közben tovább fejlődik, és a tulajdonos ezt előre, nyilvánosan közli?
+27. Az app már most mutat jutalmakat és tervezett boltot, kifejezett érték- vagy árfolyamígéret nélkül. Számíthat-e ez **hallgatólagos ígéretnek**, ami korlátozza a tulajdonos eladását?
+28. A tulajdonos saját készletének aktív kínálása a nyilvánosságnak (DEX) **nyilvános ajánlatnak** számít-e a MiCA szerint, kell-e white paper, még ha nincs presale?
+29. A tulajdonos mint **bennfentes**: mikor és milyen információ (bolt indulása, listázás, új funkció) tiltja az eladást, és hogyan dokumentálható az eladási időzítés, hogy később védhető legyen?
+30. A saját készlet eladásából származó jövedelem hogyan adózik (magánszemély vagy cég, árfolyamnyereség, mikor keletkezik az adófizetési kötelezettség)?
 
 ## 3. Döntési táblázat (ezt töltsd ki a válaszok alapján)
 
