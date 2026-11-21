@@ -1,16 +1,16 @@
-# Graph Report - hungarian_hardstyle_app  (2026-11-20)
+# Graph Report - hungarian_hardstyle_app  (2026-11-21)
 
 ## Corpus Check
-- 4015 files · ~26,819,800 words
+- 4020 files · ~26,823,699 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 35230 nodes · 76448 edges · 1934 communities (1305 shown, 171 thin omitted)
+- 35319 nodes · 76572 edges · 1913 communities (1285 shown, 171 thin omitted)
 - Extraction: 69% EXTRACTED · 31% INFERRED · 0% AMBIGUOUS · INFERRED: 23525 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d9f445d7`
+- Built from commit: `aa999a40`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -30,7 +30,7 @@
 - push_notification_service.dart
 - esc_html
 - Hungarian Hardstyle – FAQ vázlat
-- package:flutter/material.dart
+- StatelessWidget
 - event.dart
 - wordpress_admin_screen.dart
 - _inspect_flat/kozponti-cegregiszter.php
@@ -39,15 +39,15 @@
 - kcr-1.9.25-deploy/kozponti-cegregiszter/kozponti-cegregiszter.php
 - kcr-1.9.25-flat/kozponti-cegregiszter.php
 - plugins/kozponti-cegregiszter/kozponti-cegregiszter.php
-- community-360-backup.dart
-- event_submission_screen.dart
+- firebase_callable.dart
+- artist_submission_screen.dart
 - package:flutter_test/flutter_test.dart
 - kcr-core-fixed/kozponti-cegregiszter.php
 - main_navigation.dart
 - home_screen.dart
-- wp_remote_post
+- is_wp_error
 - index.js
-- MaterialPageRoute
+- plugin-211/huhs-mobile-api/includes/push.php
 - news_provider.dart
 - AGENTS.md történeti build-napló (archív)
 - sanitize_title
@@ -55,26 +55,26 @@
 - Roadmap
 - scripts
 - plugin-2140/huhs-mobile-api/includes/push.php
-- main.dart
+- notification_center_screen.dart
 - hungarian-hardstyle-newsroom/app/main.py
 - label_purchase_service.dart
 - my_application.cc
 - List
 - radio_player_bar.dart
-- music_queue_player.dart
+- dart:async
 - plugins/kcr-account-ui-fix/kcr-account-ui-fix.php
 - get_option
 - private_messages_screen.dart
 - huhs_update_claimed_artist_profile
-- hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/push.php
+- rest_ensure_response
 - extract/huhs-mobile-api/includes/voting.php
-- attachment_url_to_postid
-- communityServiceProvider
-- package:flutter_riverpod/flutter_riverpod.dart
-- voting.dart
-- community_profile_form_fields.dart
+- patchcheck-2141/huhs-mobile-api/includes/push.php
+- MaterialPageRoute
+- release_detail_screen.dart
+- voting_screen.dart
+- return
 - befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/push.php
-- kcr-account-ui-fix-1.0.9/kcr-account-ui-fix.php
+- wp_mail
 - html_linkifier.dart
 - huhs_admin_api_read
 - RadioPlaybackService
@@ -83,12 +83,12 @@
 - kcr-account-ui-fix-1.0.6/kcr-account-ui-fix.php
 - kcr-account-ui-fix-1.0.7/kcr-account-ui-fix.php
 - kcr-account-ui-fix-1.0.8/kcr-account-ui-fix.php
-- news_screen.dart
+- plugin-210/huhs-mobile-api/includes/games.php
 - my_music_screen.dart
 - PROJECT_CONTEXT.md
 - chat_mention_plan.dart
 - plugin-2151-base/huhs-mobile-api/includes/submissions.php
-- community-screen-backup.dart
+- community-360-backup.dart
 - huhs_admin_api_read
 - Hungarian Hardstyle App
 - huhs_admin_api_read
@@ -98,7 +98,7 @@
 - huhs_admin_api_read
 - _stage_account_1_1_10/kcr-account-1.1.6/kcr-account.php
 - _stage_account_1_1_8/kcr-account-1.1.6/kcr-account.php
-- dart:convert
+- huhs_request_lang
 - _stage_account_fix/kcr-account-1.1.6/kcr-account.php
 - _stage_claim/kcr-account-1.1.6/kcr-account.php
 - 3. App (Több → Névjegy) — tételes, build szerint
@@ -107,45 +107,45 @@
 - news_reaction_service.dart
 - FlutterWindow
 - mutation-home-image/huhs-mobile-api/includes/push.php
-- wp_strip_all_tags
+- halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/push.php
 - huhs_request_lang
 - checkin_scanner_screen.dart
-- huhs_request_lang
+- wpautop
 - artist.dart
-- zipcheck/huhs-mobile-api/includes/push.php
-- ../core/firebase/firebase_callable.dart
+- cmp-21418/huhs-mobile-api/includes/games.php
+- label_library_service.dart
 - allowCall
-- zipcheck/huhs-mobile-api/includes/translation-sweep.php
+- zipcheck/huhs-mobile-api/includes/translation-fields.php
 - Win32Window
 - dependencies
 - user_can
-- halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/push.php
+- wp_date
 - functions/package.json
-- huhs_update_claimed_artist_profile
+- huhs_request_lang
 - tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/push.php
 - huhs_request_lang
 - huhs_request_lang
-- notification_delete_all_test.dart
+- befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/games.php
 - kcr-account-1.1.3/kcr-account.php
 - kcr-account-1.1.4/kcr-account.php
-- huhs_request_lang
+- huhs_build_event_response
 - verify_live_category_images.py
 - wordpress_head_cache.dart
-- register_rest_route
+- huhs_request_lang
 - wWinMain
 - REDUNDANT-RULES.md
 - ios/Runner/AppDelegate.swift
-- huhs_request_lang
+- huhs_build_event_response
 - manifest.json
 - hungarian-hardstyle-newsroom/app/graphics.py
 - huhs_request_lang
-- huhs_request_lang
+- huhs_build_event_response
 - win32_window.cpp
 - update_post_meta
 - huhs_request_lang
 - huhs_request_lang
 - huhs_request_lang
-- wp_date
+- plugin-2153/huhs-mobile-api/includes/push.php
 - mutation-home-image2/huhs-mobile-api/includes/push.php
 - Hungarian Hardstyle Newsroom GPT v2
 - Hungarian Hardstyle App
@@ -160,12 +160,12 @@
 - Newsroom GPT v2 telepítés
 - Newsroom GPT v2 elfogadási tesztek
 - faq.dart
-- achievement_leaderboard_screen.dart
-- release_detail_screen.dart
+- prize.dart
+- php-plugin/huhs-mobile-api/includes/games.php
 - Vision
 - compose_hsrevo_2026_11_21_v3.py
 - active-theme-check/functions.php
-- update_option
+- php-plugin/huhs-mobile-api/includes/push.php
 - Központi Cégregiszter
 - theme-final/functions.php
 - extract/huhs-mobile-api/includes/push.php
@@ -174,14 +174,14 @@
 - huhs_update_claimed_artist_profile
 - huhs_admin_api_read
 - huhs_update_claimed_artist_profile
-- huhs_request_lang
+- huhs_build_event_response
 - huhs_admin_api_read
 - huhs_admin_api_read
 - huhs_admin_api_read
 - get_post
 - hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/submissions.php
 - huhs_update_claimed_artist_profile
-- wpautop
+- huhs_update_claimed_artist_profile
 - .kcr-turnstile-1.0.3-stage/kcr-turnstile/kcr-turnstile.php
 - .kcr-turnstile-1.0.4-stage/kcr-turnstile/kcr-turnstile.php
 - .kcr-turnstile-1.0.5-stage/kcr-turnstile/kcr-turnstile.php
@@ -226,8 +226,8 @@
 - secret
 - secretMultiline
 - OpenAPITests
-- chat_birth_date_prompt_test.dart
-- purchase_diagnostics_plan.dart
+- notification_delete_all_test.dart
+- plugin-2145-base/huhs-mobile-api/includes/games.php
 - Központi Cégregiszter WordPress frissítési szabály
 - business/AGENTS.md
 - devDependencies
@@ -259,13 +259,13 @@
 - REFLECTION-GUIDE.md
 - REPORT_FORMAT.md
 - voting.test.cjs
-- wp_schedule_single_event
+- plugin-212/huhs-mobile-api/includes/push.php
 - chat-notification-plan.test.cjs
 - compose_hardstyle_flyers.py
 - Enable optimization
-- plugin-212/huhs-mobile-api/includes/voting.php
+- huhs_admin_api_read
 - plugin-2142-recon/huhs-mobile-api/includes/push.php
-- package:shared_preferences/shared_preferences.dart
+- huhs_admin_api_read
 - make_hs_facebook_variants.ps1
 - HuHS Baseline Profile
 - Angol nyelvi verzió – későbbi terv
@@ -290,13 +290,13 @@
 - ARTICLE_COMMENTS_2026-09-05.md
 - wordpress-release-catalog/README.md
 - include
-- patchcheck-2142/huhs-mobile-api/includes/push.php
+- wp_schedule_single_event
 - patchcheck/huhs-mobile-api/includes/push.php
 - plugin-213/huhs-mobile-api/includes/push.php
 - organizer.dart
 - plugin-2141/huhs-mobile-api/includes/push.php
 - plugin-2142/huhs-mobile-api/includes/push.php
-- plugin-2144-recon/huhs-mobile-api/includes/push.php
+- plugin-2145-base/huhs-mobile-api/includes/translation-fields.php
 - plugin-2145-base/huhs-mobile-api/includes/push.php
 - verify-push-speed.php
 - awardAchievementPoints
@@ -308,17 +308,17 @@
 - Native, managed, and packaged artifacts
 - child-safety-plan.test.cjs
 - check-push-duplicates.mjs
-- event_calendar.dart
+- huhs_event_details_callback
 - verify-push-audience.php
 - entry
 - plugin-2142/huhs-mobile-api/includes/translation-sweep.php
 - shortHash
 - rules.test.cjs
-- game.dart
+- huhs_event_details_callback
 - rea/package.json
 - email_delivery_retry.js
 - 3. App (TĂ¶bb â†’ NĂ©vjegy) â€” tĂ©teles, build szerint
-- cmp-21418/huhs-mobile-api/includes/translation-fields.php
+- cmp-21418/huhs-mobile-api/includes/translation-sweep.php
 - 3. App (Több → Névjegy) — tételes, build szerint
 - plugin-2149/huhs-mobile-api/includes/translation-sweep.php
 - plugin-2152/huhs-mobile-api/includes/translation-sweep.php
@@ -326,14 +326,14 @@
 - event_calendar_button_test.dart
 - patchcheck-2142/huhs-mobile-api/includes/submissions.php
 - huhs_request_lang
-- huhs_request_lang
+- register_rest_route
 - 1b. Mi közös a két platformban — és mi nem
 - probe-news-freshness.mjs
 - mutation-home-image/huhs-mobile-api/includes/submissions.php
 - plugin-2152/huhs-mobile-api/includes/submissions.php
 - zipcheck/huhs-mobile-api/includes/submissions.php
 - verify-prize-forget.php
-- huhs_request_lang
+- huhs_update_claimed_artist_profile
 - extract/huhs-mobile-api/includes/translation-sweep.php
 - mutation-home-image2/huhs-mobile-api/includes/translation-sweep.php
 - patchcheck-2145/huhs-mobile-api/includes/translation-sweep.php
@@ -344,32 +344,32 @@
 - plugin-210/huhs-mobile-api/includes/submissions.php
 - plugin-213/huhs-mobile-api/includes/submissions.php
 - plugin-2147/huhs-mobile-api/includes/submissions.php
-- huhs_admin_api_read
+- plugin-2147/huhs-mobile-api/includes/translation-sweep.php
 - plugin-2150/huhs-mobile-api/includes/submissions.php
-- plugin-2151/huhs-mobile-api/includes/translation-sweep.php
+- plugin-2151/huhs-mobile-api/includes/translation-fields.php
 - verify-event-checkin.php
 - adaptive_card_layout.dart
 - birth-date-notice-plan.test.cjs
 - extract-ui-strings.mjs
-- prize_entry_card_test.dart
+- huhs_event_details_callback
 - cmp-21418/huhs-mobile-api/includes/submissions.php
-- release.dart
+- app_analytics.dart
 - mutation-home-image2/huhs-mobile-api/includes/submissions.php
 - befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/submissions.php
 - befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-sweep.php
 - halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/submissions.php
 - halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/submissions.php
 - plugin-2140/huhs-mobile-api/includes/submissions.php
-- hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-fields.php
+- hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-sweep.php
 - tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/submissions.php
 - patchcheck-2141/huhs-mobile-api/includes/submissions.php
 - patchcheck/huhs-mobile-api/includes/submissions.php
 - php-plugin/huhs-mobile-api/includes/submissions.php
-- php-plugin/huhs-mobile-api/includes/translation-fields.php
+- php-plugin/huhs-mobile-api/includes/translation-sweep.php
 - plugin-211/huhs-mobile-api/includes/submissions.php
 - plugin-213/huhs-mobile-api/includes/games.php
 - plugin-2142/huhs-mobile-api/includes/submissions.php
-- huhs_build_event_response
+- cmp-21418/huhs-mobile-api/includes/translation-fields.php
 - plugin-2141/huhs-mobile-api/includes/submissions.php
 - post.dart
 - plugin-2142-recon/huhs-mobile-api/includes/submissions.php
@@ -378,22 +378,22 @@
 - plugin-2145-base/huhs-mobile-api/includes/submissions.php
 - plugin-2146/huhs-mobile-api/includes/submissions.php
 - plugin-2148/huhs-mobile-api/includes/submissions.php
-- huhs_admin_api_read
+- plugin-2148/huhs-mobile-api/includes/translation-sweep.php
 - plugin-2149/huhs-mobile-api/includes/submissions.php
 - plugin-2151/huhs-mobile-api/includes/submissions.php
 - plugin-2153/huhs-mobile-api/includes/submissions.php
 - plugin-2153/huhs-mobile-api/includes/translation-sweep.php
-- plugin-2154/huhs-mobile-api/includes/translation-fields.php
+- plugin-2154/huhs-mobile-api/includes/games.php
 - tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-sweep.php
-- patchcheck-2141/huhs-mobile-api/includes/translation-fields.php
+- patchcheck-2141/huhs-mobile-api/includes/translation-sweep.php
 - patchcheck-2142/huhs-mobile-api/includes/translation-fields.php
 - plugin-213/huhs-mobile-api/includes/translation-sweep.php
-- plugin-2143-recon/huhs-mobile-api/includes/translation-fields.php
+- plugin-2143-recon/huhs-mobile-api/includes/translation-sweep.php
 - Changelog
-- poll_results_screen.dart
+- huhs_event_details_callback
 - compilerOptions
 - plugin-212/huhs-mobile-api/includes/submissions.php
-- services/twitch_chat.dart
+- huhs_admin_api_write
 - slow_backend_plan_test.dart
 - MainActivity.kt
 - prize-draw.test.cjs
@@ -416,27 +416,27 @@
 - huhs_admin_api_read
 - huhs_admin_api_read
 - huhs_admin_api_read
-- huhs_request_lang
-- huhs_request_lang
-- huhs_admin_api_read
-- huhs_request_lang
-- huhs_update_claimed_artist_profile
+- huhs_admin_api_write
 - huhs_request_lang
 - huhs_admin_api_read
+- php-plugin/huhs-mobile-api/includes/translation-fields.php
+- huhs_admin_api_write
+- huhs_request_lang
+- huhs_admin_api_read
 - huhs_admin_api_read
 - huhs_request_lang
-- rest_ensure_response
-- huhs_event_details_callback
+- huhs_admin_api_read
+- hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-fields.php
 - weekly-digest-plan.js
 - tasks
-- plugin-211/huhs-mobile-api/includes/games.php
+- patchcheck/huhs-mobile-api/includes/games.php
 - huhs_admin_api_read
 - extract/huhs-mobile-api/includes/games.php
 - extract/huhs-mobile-api/includes/submissions.php
 - mutation-home-image2/huhs-mobile-api/includes/games.php
-- mutation-home-image/huhs-mobile-api/includes/games.php
+- huhs_request_lang
 - huhs_event_details_callback
-- halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/games.php
+- plugin-2147/huhs-mobile-api/includes/translation-fields.php
 - halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/games.php
 - hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/games.php
 - tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/games.php
@@ -446,15 +446,15 @@
 - patchcheck-2142/huhs-mobile-api/includes/games.php
 - huhs_admin_api_read
 - patchcheck-2145/huhs-mobile-api/includes/games.php
-- huhs_event_details_callback
+- plugin-2148/huhs-mobile-api/includes/translation-fields.php
 - plugin-2141/huhs-mobile-api/includes/games.php
 - plugin-2142-recon/huhs-mobile-api/includes/games.php
-- artist_claim_cache_test.dart
+- mutation-home-image2/huhs-mobile-api/includes/admin.php
 - plugin-2143-recon/huhs-mobile-api/includes/games.php
 - plugin-2144-recon/huhs-mobile-api/includes/games.php
 - huhs_admin_api_read
 - huhs_event_details_callback
-- plugin-2145-base/huhs-mobile-api/includes/translation-fields.php
+- plugin-2145-base/huhs-mobile-api/includes/translation-sweep.php
 - plugin-2146/huhs-mobile-api/includes/games.php
 - plugin-2147/huhs-mobile-api/includes/games.php
 - plugin-2148/huhs-mobile-api/includes/games.php
@@ -467,13 +467,13 @@
 - plugin-2151/huhs-mobile-api/includes/games.php
 - huhs_admin_api_read
 - plugin-2152/huhs-mobile-api/includes/games.php
-- plugin-2153/huhs-mobile-api/includes/games.php
-- plugin-2154/huhs-mobile-api/includes/games.php
+- huhs_request_lang
+- huhs_event_details_callback
 - package.json
 - halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-fields.php
 - huhs_admin_api_write
 - huhs_event_details_callback
-- huhs_event_details_callback
+- huhs_request_lang
 - plugin-2150/huhs-mobile-api/includes/translation-fields.php
 - plugin-2151-base/huhs-mobile-api/includes/translation-fields.php
 - plugin-2153/huhs-mobile-api/includes/translation-fields.php
@@ -485,34 +485,34 @@
 - huhs_event_details_callback
 - huhs_event_details_callback
 - huhs_admin_api_write
-- halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-sweep.php
+- halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-fields.php
 - huhs_admin_api_write
 - settings_screen.dart
 - add_meta_box
 - plugin-2140/huhs-mobile-api/includes/games.php
-- huhs_event_details_callback
-- huhs_push_send
+- huhs_request_lang
+- app_strings.dart
 - verify-twitch-card.php
 - Play Console — kiadási jegyzet (másolható)
 - birthday-plan.test.cjs
-- huhs_build_event_response
+- huhs_request_lang
 - notification_permission_gate.dart
-- label_library_plan_test.dart
+- huhs_update_claimed_artist_profile
 - mutation-home-image2/huhs-mobile-api/includes/translation-fields.php
-- return
-- twitch_live_test.dart
-- genre_discovery_screen.dart
+- youtube_embed.dart
+- plugin-2143-recon/huhs-mobile-api/includes/translation-fields.php
+- kcr-account-ui-fix-update/kcr-account-ui-fix/kcr-account-ui-fix.php
 - huhs_build_event_response
-- huhs_build_event_response
+- huhs_event_details_callback
 - repairCommunityProfileProjections
 - plugin-2146/huhs-mobile-api/includes/translation-fields.php
 - huhs_request_lang
-- plugin-2151/huhs-mobile-api/includes/translation-fields.php
+- huhs_event_details_callback
 - mutation-home-image2/huhs-mobile-api/includes/voting.php
-- halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-fields.php
-- plugin-2147/huhs-mobile-api/includes/voting.php
-- huhs_request_lang
-- voting_service.dart
+- huhs_event_details_callback
+- huhs_event_details_callback
+- zipcheck/huhs-mobile-api/includes/event-checkin.php
+- patchcheck-2141/huhs-mobile-api/includes/translation-fields.php
 - play-product-plan.test.cjs
 - check-untranslated-ui.mjs
 - <FlutterApplicationLifeCycleDelegate>
@@ -545,8 +545,8 @@
 - huhs_admin_api_write
 - Felhasználókezelési forrásaudit — Hungarian Hardstyle
 - achievement-restore.test.cjs
-- i18n_untranslated_ui_test.dart
-- chat_message_text_test.dart
+- cmp-21418/huhs-mobile-api/includes/poll.php
+- php-plugin/huhs-mobile-api/includes/poll.php
 - inputs
 - plugin-2149/huhs-mobile-api/includes/games.php
 - FlutterViewController
@@ -575,27 +575,27 @@
 - FlutterViewController
 - FlutterViewController
 - huhs_event_details_callback
-- zipcheck/huhs-mobile-api/includes/games.php
-- label_library.dart
-- huhs_event_details_callback
-- huhs_event_details_callback
-- huhs_event_details_callback
-- huhs_event_details_callback
-- huhs_event_details_callback
-- patchcheck-2142/huhs-mobile-api/includes/translation-sweep.php
-- patchcheck/huhs-mobile-api/includes/games.php
-- huhs_event_details_callback
-- plugin-212/huhs-mobile-api/includes/games.php
+- plugin-2145-base/huhs-mobile-api/includes/poll.php
 - bool get
+- plugin-2147/huhs-mobile-api/includes/poll.php
+- huhs_event_details_callback
+- huhs_event_details_callback
+- plugin-2148/huhs-mobile-api/includes/poll.php
+- befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/poll.php
+- patchcheck-2142/huhs-mobile-api/includes/translation-sweep.php
+- huhs_update_claimed_artist_profile
+- huhs_event_details_callback
+- huhs_update_claimed_artist_profile
+- huhs_update_claimed_artist_profile
 - hard-wallet-plan.test.cjs
 - huhs_event_details_callback
 - huhs_event_details_callback
 - check-play-notes.mjs
 - achievement-guided-points.test.cjs
-- huhs_event_details_callback
-- huhs_admin_api_write
+- huhs_update_claimed_artist_profile
+- mutation-home-image/huhs-mobile-api/includes/voting.php
 - befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-fields.php
-- app_notification.dart
+- halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/admin.php
 - huhs_admin_api_write
 - huhs_admin_api_write
 - plugin-2144-recon/huhs-mobile-api/includes/translation-fields.php
@@ -613,11 +613,11 @@
 - huhs_admin_api_write
 - huhs_admin_api_write
 - huhs_admin_api_write
-- huhs_admin_api_write
+- patchcheck-2145/huhs-mobile-api/includes/voting.php
 - plugin-2152/huhs-mobile-api/includes/translation-fields.php
 - huhs_admin_api_write
-- wp_mail
-- label_playlist_membership.dart
+- plugin-2154/huhs-mobile-api/includes/contest.php
+- huhs_translation_request
 - zipcheck/huhs-mobile-api/includes/contest.php
 - A javasolt GYIK
 - Play Console — hol van mit kell megnyomni (nyilvános kiadás)
@@ -626,7 +626,7 @@
 - wrap-ui-strings.mjs
 - fix-context-fallout.mjs
 - plugin-2140/huhs-mobile-api/includes/translation-fields.php
-- content_language_reload.dart
+- plugin-210/huhs-mobile-api/includes/voting.php
 - patchcheck-2145/huhs-mobile-api/includes/translation-fields.php
 - huhs_admin_api_write
 - huhs_request_lang
@@ -664,7 +664,7 @@
 - ipa-verify-376/Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterPlugin.h
 - ipa-verify-377/Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterPlugin.h
 - huhs_update_claimed_artist_profile
-- zipcheck/huhs-mobile-api/includes/event-checkin.php
+- huhs_translation_request
 - content_link_route.dart
 - achievement-daily-limit.test.cjs
 - artist-claim-plan.test.cjs
@@ -674,10 +674,10 @@
 - twitch-live-plan.test.cjs
 - push-dedupe.test.cjs
 - registration.integration.test.cjs
-- huhs_update_claimed_artist_profile
+- plugin-2140/huhs-mobile-api/includes/admin.php
 - mutation-proof-push-open-notice.mjs
 - _kcr_account_1_1_0/kcr-account/kcr-account.php
-- label_release_availability.dart
+- plugin-2145-base/huhs-mobile-api/includes/voting.php
 - analyze-r8-config.mjs
 - check-i18n.mjs
 - check-usage.mjs
@@ -726,7 +726,7 @@
 - plugin-2154/huhs-mobile-api/includes/http-cache.php
 - zipcheck/huhs-mobile-api/includes/http-cache.php
 - verify-poll-status.mjs
-- huhs_admin_api_write
+- plugin-2154/huhs-mobile-api/includes/voting.php
 - business/kcr-account-1.1.6/kcr-account.php
 - plugin-2154/huhs-mobile-api/assets/voting-web.js
 - zipcheck/huhs-mobile-api/assets/voting-web.js
@@ -761,7 +761,7 @@
 - check-adjacent-literals.mjs
 - verify-plugin-package.mjs
 - HUHS WordPress/Firebase teljesítményaudit — 2026-09-09
-- event_checkin.dart
+- huhs_diag_health_header
 - ignorePatterns
 - audit-raw-labels.mjs
 - <FlutterPluginRegistrar>
@@ -791,21 +791,21 @@
 - <FlutterPluginRegistrar>
 - huhs_admin_api_write
 - extract/huhs-mobile-api/includes/poll.php
-- label_release_availability_test.dart
+- halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-cron.php
 - hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/poll.php
 - patchcheck-2141/huhs-mobile-api/includes/poll.php
 - patchcheck-2142/huhs-mobile-api/includes/poll.php
 - patchcheck-2145/huhs-mobile-api/includes/poll.php
-- mutation-home-image2/huhs-mobile-api/includes/api-admin.php
+- patchcheck-2142/huhs-mobile-api/includes/api-admin.php
 - huhs_admin_api_write
 - halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/api-admin.php
 - halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/api-admin.php
-- label_playback_plan_test.dart
+- patchcheck-2145/huhs-mobile-api/includes/api-admin.php
 - plugin-2150/huhs-mobile-api/includes/poll.php
 - plugin-2151-base/huhs-mobile-api/includes/poll.php
 - plugin-2152/huhs-mobile-api/includes/poll.php
-- zipcheck/huhs-mobile-api/includes/translation-fields.php
-- cmp-21418/huhs-mobile-api/includes/voting.php
+- plugin-2147/huhs-mobile-api/includes/api-admin.php
+- plugin-2148/huhs-mobile-api/includes/api-admin.php
 - REA: Reverse Engineer Anything
 - fetch-content-for-translation.mjs
 - tools/verify-ios-ipa.mjs
@@ -842,38 +842,38 @@
 - FlutterPluginSceneLifeCycleDelegate
 - FlutterPluginSceneLifeCycleDelegate
 - mutation-home-image2/huhs-mobile-api/includes/poll.php
-- huhs_admin_api_write
-- mutation-home-image/huhs-mobile-api/includes/poll.php
+- huhs_diag_health_header
+- huhs_translate_text
 - halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/voting.php
-- huhs_admin_api_write
-- halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/poll.php
+- huhs_translate_text
+- huhs_translate_text
 - halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/poll.php
 - huhs_admin_api_write
 - tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/poll.php
 - verify-alt.cjs
 - 4. HUHS Mobile API WordPress-plugin â€” kiadĂˇsjegyzĂ©k (2.10.0)
-- hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/voting.php
+- huhs_translate_text
 - huhs_update_claimed_artist_profile
 - plugin-2140/huhs-mobile-api/includes/poll.php
 - plugin-2141/huhs-mobile-api/includes/translation-fields.php
 - plugin-2141/huhs-mobile-api/includes/poll.php
 - plugin-2142/huhs-mobile-api/includes/poll.php
 - plugin-2143-recon/huhs-mobile-api/includes/poll.php
-- huhs_update_claimed_artist_profile
+- huhs_translate_text
 - plugin-2146/huhs-mobile-api/includes/poll.php
-- tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/voting.php
+- huhs_translate_text
 - patchcheck-2141/huhs-mobile-api/includes/voting.php
 - plugin-2151/huhs-mobile-api/includes/poll.php
-- plugin-2153/huhs-mobile-api/includes/poll.php
+- huhs_event_maps_url
 - plugin-2142/huhs-mobile-api/includes/translation-fields.php
 - plugin-2154/huhs-mobile-api/includes/event-checkin.php
-- patchcheck-2142/huhs-mobile-api/includes/admin.php
+- huhs_translation_post_types
 - CONTRIBUTING.md
 - build-plugin-zip.mjs
 - repair-label-audio-status.mjs
 - Gyermekbiztonság: moderációs javaslat (2026-09-27)
 - Bővítmény-audit — Hungarian Hardstyle (2026-09-18)
-- patchcheck-2142/huhs-mobile-api/includes/translation-cron.php
+- huhs_djs_shortcode
 - plugin-2142-recon/huhs-mobile-api/includes/translation-fields.php
 - <FlutterPlugin>
 - <FlutterPlugin>
@@ -906,32 +906,28 @@
 - befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/api-admin.php
 - dependencies
 - php-plugin/huhs-mobile-api/includes/voting.php
-- onboarding_state.dart
+- favorites_provider.dart
 - halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/voting.php
 - hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/api-admin.php
 - huhs_event_details_callback
-- huhs_event_details_callback
+- huhs_djs_shortcode
 - mutation-proof-donate-placement.mjs
 - mutation-proof-event-calendar.mjs
 - mutation-proof-referral-reward.mjs
-- plugin-211/huhs-mobile-api/includes/voting.php
+- plugin-2154/huhs-mobile-api/includes/changelog.php
 - share_links.dart
 - patchcheck-2145/huhs-mobile-api/includes/push.php
 - plugin-213/huhs-mobile-api/includes/voting.php
 - The PHP Interpreter
 - php-plugin/huhs-mobile-api/includes/api-admin.php
-- plugin-2140/huhs-mobile-api/includes/voting.php
-- plugin-2141/huhs-mobile-api/includes/voting.php
 - plugin-2142/huhs-mobile-api/includes/voting.php
 - plugin-2144-recon/huhs-mobile-api/includes/poll.php
 - plugin-2149/huhs-mobile-api/includes/poll.php
 - 2. Kérdések, fontossági sorrendben
 - plugin-2142-recon/huhs-mobile-api/includes/voting.php
 - plugin-2143-recon/huhs-mobile-api/includes/voting.php
-- huhs_update_claimed_artist_profile
 - plugin-2144-recon/huhs-mobile-api/includes/voting.php
 - plugin-2146/huhs-mobile-api/includes/voting.php
-- plugin-2149/huhs-mobile-api/includes/voting.php
 - plugin-2150/huhs-mobile-api/includes/voting.php
 - probe-raw-interpolated.mjs
 - verify-aab.mjs
@@ -973,12 +969,10 @@
 - mutation-proof-picture-in-picture.mjs
 - mutation-proof-round377.mjs
 - mutation-proof-twitch-live.mjs
-- zipcheck/huhs-mobile-api/includes/poll.php
 - _kcr-account-flat/kcr-account.php
 - content_link_route_test.dart
-- cmp-21418/huhs-mobile-api/includes/api-admin.php
+- huhs_admin_api_write
 - zipcheck/huhs-mobile-api/includes/api-admin.php
-- plugins/kcr-account/kcr-account.php
 - tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/api-admin.php
 - plugin-2151-base/huhs-mobile-api/includes/voting.php
 - hard-devnet-token.mjs
@@ -989,7 +983,6 @@
 - server.json
 - tmp/verify-ios-ipa.mjs
 - verify-twitch-chat-rules.mjs
-- android_radio_service_test.dart
 - check-chat-focus-reach.mjs
 - check-post-translations.mjs
 - check-signing-identity.mjs
@@ -999,7 +992,6 @@
 - prize-active-payload.test.cjs
 - plugin-2152/huhs-mobile-api/includes/voting.php
 - mutation-proof-adaptive-cards.mjs
-- plugin-2153/huhs-mobile-api/includes/voting.php
 - mutation-proof-everyone-push.mjs
 - mutation-proof-twitch-card-speed.mjs
 - mutation-proof-twitch-chat.mjs
@@ -1011,8 +1003,6 @@
 - plugin-211-golden/posts.php
 - huhs-release-catalog.php
 - huhs_admin_api_write
-- huhs_diag_health_header
-- kcr_order_options
 - probe-birth-date-round2-result.mjs
 - probe-referral-live.mjs
 - verify-aab-363.mjs
@@ -1020,7 +1010,6 @@
 - verify-sideload-385.mjs
 - attach-ios-firebase.mjs
 - check-event-reminders.mjs
-- patchcheck/huhs-mobile-api/includes/admin.php
 - check-translation-volume.mjs
 - verify-push-delivery.mjs
 - write-post-translations.mjs
@@ -1033,10 +1022,8 @@
 - head-notes.md
 - make-qr-poster.mjs
 - measure-radio-stop-action.mjs
-- kcr_hungarian_counties
 - mutation-proof-achievement-ux.mjs
 - mutation-proof-birth-date-round2.mjs
-- kcr_order_options
 - mutation-proof-child-safety-birthday.mjs
 - mutation-proof-log-warning.mjs
 - mutation-proof-news-freshness.mjs
@@ -1045,12 +1032,8 @@
 - build-en.cjs
 - verify-en.cjs
 - notes-broken-backup.md
-- huhs_build_event_response
-- kcr_hungarian_counties
 - plugin-211-backup/newsletter-cooldown.test.cjs
-- plugin-213/huhs-mobile-api/includes/admin.php
 - hard-backend.test.cjs
-- followed_section_test.dart
 - extract/huhs-mobile-api/includes/api-admin.php
 - add_menu_page
 - hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-cron.php
@@ -1066,7 +1049,6 @@
 - [6.3.0](https://github.com/morluto/rea/compare/rea-agents-6.2.0...rea-agents-6.3.0) (2026-10-09)
 - tsconfig.frida-verification.json
 - vitest.config.ts
-- plugin-2152/huhs-mobile-api/includes/api-admin.php
 - hard-rules.test.cjs
 - merge-i18n.mjs
 - run_scenario
@@ -1090,7 +1072,6 @@
 - _this
 - probe-event-reminder-state.mjs
 - probe-translation-coverage.mjs
-- plugin-2153/huhs-mobile-api/includes/api-admin.php
 - Repository Guidelines
 - [2.5.0](https://github.com/morluto/rea/compare/rea-agents-2.4.0...rea-agents-2.5.0) (2026-07-24)
 - [3.0.0](https://github.com/morluto/rea/compare/rea-agents-2.7.0...rea-agents-3.0.0) (2026-08-01)
@@ -1490,7 +1471,6 @@
 - @visibleForTesting
 - hard-deletion.test.cjs
 - FlutterHeadlessDartRunner
-- business/kcr-newsletter-final-menu.php
 
 ## God Nodes (most connected - your core abstractions)
 1. `get_post_meta()` - 3695 edges
@@ -1507,19 +1487,19 @@
 ## Surprising Connections (you probably didn't know these)
 - `kcr_register()` --calls--> `register_post_type()`  [INFERRED]
   business/_inspect_flat/kozponti-cegregiszter.php → tools/verify-prize-forget.php
-- `kcr_cat_edit()` --calls--> `get_term_meta()`  [INFERRED]
-  business/_inspect_flat/kozponti-cegregiszter.php → tools/php/plugin-translation-test.php
 - `kcr_meta_box()` --calls--> `add_meta_box()`  [INFERRED]
   business/_inspect_flat/kozponti-cegregiszter.php → tools/verify-prize-forget.php
 - `kcr_company_images_box()` --calls--> `add_meta_box()`  [INFERRED]
   business/_inspect_flat/kozponti-cegregiszter.php → tools/verify-prize-forget.php
 - `kcr_api()` --calls--> `sanitize_title()`  [INFERRED]
   business/_inspect_flat/kozponti-cegregiszter.php → tools/verify-push-language.php
+- `kcr_import_category()` --calls--> `sanitize_title()`  [INFERRED]
+  business/_inspect_flat/kozponti-cegregiszter.php → tools/verify-push-language.php
 
 ## Import Cycles
 - None detected.
 
-## Communities (1934 total, 171 thin omitted)
+## Communities (1913 total, 171 thin omitted)
 
 ### Community 0 - "community_service.dart"
 Cohesion: 0.01
@@ -1527,35 +1507,35 @@ Nodes (225): birth_date.dart, chat_report.dart, accessAdmin, accessModerator, ac
 
 ### Community 1 - "community_screen.dart"
 Cohesion: 0.01
-Nodes (196): _achievement, _achievementFuture, _achievementRefreshListener, _activeMentions, _anonymous, _applyingProfileData, _applyProfileData, _askBirthDate (+188 more)
+Nodes (233): FocusNode, twitchChatMessagesProvider, twitchChatServiceProvider, _achievement, _achievementFuture, _achievementRefreshListener, _activeMentions, _anonymous (+225 more)
 
 ### Community 2 - "kcr-core-final-20260813/kcr-core-final-20260813.php"
 Cohesion: 0.06
-Nodes (44): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+36 more)
+Nodes (43): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+35 more)
 
 ### Community 3 - "core-flat/kcr-core-final-20260813.php"
 Cohesion: 0.06
-Nodes (44): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+36 more)
+Nodes (43): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+35 more)
 
 ### Community 4 - "core-package/kozponti-cegregiszter/kozponti-cegregiszter.php"
-Cohesion: 0.07
-Nodes (38): kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html(), kcr_create_order(), kcr_expire_listings() (+30 more)
+Cohesion: 0.06
+Nodes (42): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+34 more)
 
 ### Community 5 - "business/kcr-core-final-20260813.php"
 Cohesion: 0.06
-Nodes (28): kcr_api(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html(), kcr_create_order(), kcr_description() (+20 more)
+Nodes (42): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+34 more)
 
 ### Community 6 - "kcr-core-fixed-2/kozponti-cegregiszter.php"
 Cohesion: 0.06
-Nodes (44): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+36 more)
+Nodes (43): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+35 more)
 
 ### Community 7 - "kcr-core-fixed-3/kozponti-cegregiszter.php"
 Cohesion: 0.06
-Nodes (44): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+36 more)
+Nodes (42): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+34 more)
 
 ### Community 8 - "_old923/kozponti-cegregiszter.php"
 Cohesion: 0.06
-Nodes (44): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+36 more)
+Nodes (43): kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html() (+35 more)
 
 ### Community 9 - "wordpress_service.dart"
 Cohesion: 0.01
@@ -1563,7 +1543,7 @@ Nodes (141): _activeGameCache, _activeGameInFlight, _allowedImageExtensions, _ar
 
 ### Community 10 - "kcr-plugin-pack/kozponti-cegregiszter/kozponti-cegregiszter.php"
 Cohesion: 0.07
-Nodes (32): kcr_api(), kcr_cat_edit(), kcr_create_order(), kcr_expire_listings(), kcr_fields(), kcr_geocode_address(), kcr_hungarian_counties(), kcr_import_categories() (+24 more)
+Nodes (33): kcr_api(), kcr_cat_edit(), kcr_create_order(), kcr_description(), kcr_expire_listings(), kcr_fields(), kcr_geocode_address(), kcr_hungarian_counties() (+25 more)
 
 ### Community 11 - "kcr-updated-stage/kozponti-cegregiszter/kozponti-cegregiszter.php"
 Cohesion: 0.08
@@ -1571,79 +1551,79 @@ Nodes (29): kcr_api(), kcr_create_order(), kcr_expire_listings(), kcr_fields(), 
 
 ### Community 12 - "push_notification_service.dart"
 Cohesion: 0.01
-Nodes (185): content_link_resolver.dart, ../i18n/app_strings.dart, false, _hungarianUserFacingError, isCloudinaryRequest, looksLikeForeignEngineMessage, markers, raw (+177 more)
+Nodes (192): AnimationController, content_link_resolver.dart, ../i18n/app_strings.dart, false, _hungarianUserFacingError, isCloudinaryRequest, looksLikeForeignEngineMessage, markers (+184 more)
 
 ### Community 13 - "esc_html"
 Cohesion: 0.01
-Nodes (242): huhs_event_directory_date(), huhs_events_shortcode(), huhs_render_event_directory_card(), huhs_event_directory_date(), huhs_events_shortcode(), huhs_render_event_directory_card(), huhs_djs_shortcode(), huhs_group_directory_artists() (+234 more)
+Nodes (243): huhs_djs_shortcode(), huhs_group_directory_artists(), huhs_render_artist_directory_card(), huhs_event_directory_date(), huhs_events_shortcode(), huhs_render_event_directory_card(), huhs_djs_shortcode(), huhs_group_directory_artists() (+235 more)
 
 ### Community 14 - "Hungarian Hardstyle – FAQ vázlat"
 Cohesion: 0.22
 Nodes (8): Az appról, Hibabejelentés és kapcsolat, Hol jelezhetem a hibát?, Honnan származnak az adatok?, Hungarian Hardstyle – FAQ vázlat, Megvalósítási megjegyzés, Mi a Hungarian Hardstyle app?, Mit írjak egy hibabejelentésbe?
 
-### Community 15 - "package:flutter/material.dart"
+### Community 15 - "StatelessWidget"
 Cohesion: 0.01
-Nodes (300): about_screen.dart, achievement_guide_screen.dart, achievement_leaderboard_screen.dart, app_text.dart, ../artists/artist_detail_screen.dart, ../artists/artists_screen.dart, ../core/i18n/tr.dart, ../../core/legal/legal_links.dart (+292 more)
+Nodes (315): about_screen.dart, achievement_guide_screen.dart, achievement_leaderboard_screen.dart, artist_detail_screen.dart, ArtistListQuery get, ../artists/artist_detail_screen.dart, ../artists/artists_screen.dart, ../core/i18n/tr.dart (+307 more)
 
 ### Community 16 - "event.dart"
 Cohesion: 0.03
 Nodes (61): DateTime? get, 0, artist, artists, checkinBadgeName, checkinBadgeUrl, checkinCloses, checkinClosesAt (+53 more)
 
 ### Community 17 - "wordpress_admin_screen.dart"
-Cohesion: 0.02
-Nodes (136): admin_resource_editor_screen.dart, community_users_screen.dart, ../../core/errors/user_facing_error.dart, Future, _authRefreshInFlight, callable, classifyFirebaseCallableFailure, compact (+128 more)
+Cohesion: 0.01
+Nodes (148): admin_resource_editor_screen.dart, ../community/admin_resource_editor_screen.dart, community_users_screen.dart, ../../core/errors/user_facing_error.dart, Future, BirthDateSetupScreen, _BirthDateSetupScreenState, build (+140 more)
 
 ### Community 18 - "_inspect_flat/kozponti-cegregiszter.php"
-Cohesion: 0.06
-Nodes (28): kcr_api(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html(), kcr_create_order(), kcr_expire_listings() (+20 more)
+Cohesion: 0.05
+Nodes (44): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html() (+36 more)
 
 ### Community 19 - "_inspect_kcr2/kozponti-cegregiszter/kozponti-cegregiszter.php"
-Cohesion: 0.06
-Nodes (43): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html() (+35 more)
+Cohesion: 0.05
+Nodes (44): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html() (+36 more)
 
 ### Community 20 - "_inspect_kcr/kozponti-cegregiszter/kozponti-cegregiszter.php"
-Cohesion: 0.06
-Nodes (42): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html() (+34 more)
+Cohesion: 0.05
+Nodes (44): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+36 more)
 
 ### Community 21 - "kcr-1.9.25-deploy/kozponti-cegregiszter/kozponti-cegregiszter.php"
 Cohesion: 0.06
 Nodes (43): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html() (+35 more)
 
 ### Community 22 - "kcr-1.9.25-flat/kozponti-cegregiszter.php"
-Cohesion: 0.06
-Nodes (41): kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html(), kcr_create_order() (+33 more)
+Cohesion: 0.05
+Nodes (44): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+36 more)
 
 ### Community 23 - "plugins/kozponti-cegregiszter/kozponti-cegregiszter.php"
 Cohesion: 0.06
-Nodes (42): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_clean_sitemap_response(), kcr_company_images_box(), kcr_create_order(), kcr_expire_listings() (+34 more)
+Nodes (44): kcr_full_company_editor(), kcr_full_editor_field(), kcr_full_editor_locations(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids() (+36 more)
 
-### Community 24 - "community-360-backup.dart"
-Cohesion: 0.01
-Nodes (189): ChatMentionSource get, CommunityService get, private_messages_screen.dart, ../../services/chat_paging.dart, _achievement, _achievementFuture, _achievementRefreshListener, _activeMentions (+181 more)
-
-### Community 25 - "event_submission_screen.dart"
+### Community 24 - "firebase_callable.dart"
 Cohesion: 0.02
-Nodes (126): FormState, ProfileSubmissionOptions, bytes, name, SubmissionImage, eventSubmissionGenresProvider, profileSubmissionOptionsProvider, _addressController (+118 more)
+Nodes (79): dart:typed_data, Exception, FirebaseFunctionsException, hard_wallet_plan.dart, _authRefreshInFlight, callable, classifyFirebaseCallableFailure, compact (+71 more)
+
+### Community 25 - "artist_submission_screen.dart"
+Cohesion: 0.02
+Nodes (112): class, FormState, Artist, ProfileSubmissionOptions, profileSubmissionOptionsProvider, artist, ArtistEditScreen, _ArtistEditScreenState (+104 more)
 
 ### Community 26 - "package:flutter_test/flutter_test.dart"
-Cohesion: 0.01
-Nodes (195): dart:io, dart:typed_data, File, FilledButton, publicContentRefreshProvider, package:cloud_functions/cloud_functions.dart, package:flutter_test/flutter_test.dart, package:hungarian_hardstyle_app/core/content/html_linkifier.dart (+187 more)
+Cohesion: 0.00
+Nodes (573): CachedNetworkImage, Completer, dart:convert, dart:io, File, FilledButton, appNavigatorKey, appScaffoldMessengerKey (+565 more)
 
 ### Community 27 - "kcr-core-fixed/kozponti-cegregiszter.php"
 Cohesion: 0.09
 Nodes (26): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html() (+18 more)
 
 ### Community 28 - "main_navigation.dart"
-Cohesion: 0.02
-Nodes (87): events/events_screen.dart, home/home_screen.dart, appNavigatorKey, appScaffoldMessengerKey, twitchCardOverrideProvider, twitchLiveProvider, _backHandling, _badgeSync (+79 more)
+Cohesion: 0.01
+Nodes (151): app_text.dart, ../core/media/youtube_embed.dart, events/events_screen.dart, home/home_screen.dart, ../i18n/tr.dart, build, _controller, createState (+143 more)
 
 ### Community 29 - "home_screen.dart"
-Cohesion: 0.02
-Nodes (113): community_provider.dart, ../events/tonight_screen.dart, ../games/game_screen.dart, language_provider.dart, achievementRankSyncProvider, achievementServiceProvider, service, sync (+105 more)
-
-### Community 30 - "wp_remote_post"
 Cohesion: 0.01
-Nodes (287): huhs_newsletter_subscribe(), WP_REST_Request, huhs_translation_request_fields(), huhs_translate_text(), huhs_translation_api_key(), huhs_translation_install(), huhs_translation_table(), WP_REST_Request (+279 more)
+Nodes (164): community_provider.dart, ../events/tonight_screen.dart, ../games/game_screen.dart, home_action_card.dart, home_row_state.dart, language_provider.dart, artist, artwork (+156 more)
+
+### Community 30 - "is_wp_error"
+Cohesion: 0.01
+Nodes (457): huhs_get_faq(), WP_REST_Request, huhs_newsletter_admin_page(), huhs_newsletter_subscribe(), WP_REST_Request, huhs_release_process_audio(), huhs_translate_text(), huhs_translation_api_key() (+449 more)
 
 ### Community 31 - "index.js"
 Cohesion: 0.02
@@ -1658,21 +1638,21 @@ Nodes (126): authEmailTemplate(), emailChangeEmailTemplate(), acquireLabelSyncLe
   claimedArtistIds,
 } (+118 more)
 
-### Community 32 - "MaterialPageRoute"
-Cohesion: 0.01
-Nodes (160): event_detail_screen.dart, event_submission_screen.dart, free_releases_screen.dart, HuhsEvent, date, _eventDateTime, events, eventsPageProvider (+152 more)
+### Community 32 - "plugin-211/huhs-mobile-api/includes/push.php"
+Cohesion: 0.10
+Nodes (43): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+35 more)
 
 ### Community 33 - "news_provider.dart"
-Cohesion: 0.01
-Nodes (144): Duration?, _applyBackgroundUpdate, categories, categoryId, _contentUpdates, copyWith, dispose, error (+136 more)
+Cohesion: 0.02
+Nodes (123): _applyBackgroundUpdate, categories, categoryId, _contentUpdates, copyWith, dispose, error, _getPostsPage (+115 more)
 
 ### Community 34 - "AGENTS.md történeti build-napló (archív)"
 Cohesion: 0.01
 Nodes (234): „100 év után jelent meg a nyertes" — a `forceRefresh` HEAD + ETag útja a RÉGI testet adta vissza (2026-09-18, AAB 324), +162 végrehajtási állapot — 2026-08-18, +163 helyi állapot — 2026-08-18, +163 — végrehajtási állapot, +164 — végrehajtási állapot, +165 — rögzített javítás, AAB elkészült, +166 — production AAB elkészült, emulátoron ellenőrizve, +166 végrehajtási ellenőrzés (+226 more)
 
 ### Community 35 - "sanitize_title"
-Cohesion: 0.03
-Nodes (65): kcr_api(), kcr_import_category(), kcr_import_categories(), kcr_import_categories(), kcr_import_category(), kcr_api(), kcr_import_categories(), kcr_import_category() (+57 more)
+Cohesion: 0.04
+Nodes (55): kcr_import_categories(), kcr_import_category(), kcr_import_categories(), kcr_api(), kcr_import_category(), kcr_import_categories(), kcr_import_category(), kcr_import_categories() (+47 more)
 
 ### Community 36 - "Hungarian Hardstyle App - Project Context for AI Agents"
 Cohesion: 0.09
@@ -1690,9 +1670,9 @@ Nodes (206): scripts, artifacts:error-schema, artifacts:managed-evidence, artifa
 Cohesion: 0.09
 Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
 
-### Community 40 - "main.dart"
-Cohesion: 0.02
-Nodes (121): AnimationController, AppleAppCheckProvider get, ../community/private_messages_screen.dart, ../core/i18n/app_language.dart, ../../core/i18n/notification_texts.dart, ../core/navigation/app_navigator.dart, ../../core/navigation/content_target.dart, core/theme/app_theme.dart (+113 more)
+### Community 40 - "notification_center_screen.dart"
+Cohesion: 0.04
+Nodes (51): ../community/private_messages_screen.dart, ../../core/navigation/content_target.dart, build, _contentTitles, createState, _deleteAll, _deleteSelected, _handleAction (+43 more)
 
 ### Community 41 - "hungarian-hardstyle-newsroom/app/main.py"
 Cohesion: 0.07
@@ -1708,67 +1688,68 @@ Nodes (22): FlPluginRegistry, FlView, GApplication, gboolean, gchar, GObject, Gt
 
 ### Community 44 - "List"
 Cohesion: 0.01
-Nodes (172): HttpClientResponse, appLanguageCode, appLanguageFromCode, appLanguageLocale, appLanguageName, appLanguageStorageKey, appLanguageSwitchLabel, _languageCodes (+164 more)
+Nodes (193): appLanguageCode, appLanguageFromCode, appLanguageLocale, appLanguageName, appLanguageStorageKey, appLanguageSwitchLabel, _languageCodes, normalized (+185 more)
 
 ### Community 45 - "radio_player_bar.dart"
 Cohesion: 0.05
 Nodes (41): bindRadioRemoteCommands, build, _cancelMetadataTimer, createState, dispose, initState, isRadioPlaybackActive, _metadataTimer (+33 more)
 
-### Community 46 - "music_queue_player.dart"
+### Community 46 - "dart:async"
 Cohesion: 0.01
-Nodes (179): @immutable, AudioPlayer, AudioPlayer get, AutomaticKeepAliveClientMixin, ../core/errors/playback_error.dart, dart:math, int get, label_playback_plan.dart (+171 more)
+Nodes (231): @immutable, AudioPlayer, AudioPlayer get, BaseAudioHandler, ../core/errors/playback_error.dart, dart:async, dart:math, HttpClient? client,
+  Duration (+223 more)
 
 ### Community 47 - "plugins/kcr-account-ui-fix/kcr-account-ui-fix.php"
-Cohesion: 0.13
-Nodes (18): kcr_account_check_turnstile(), kcr_account_fix_company_ids(), kcr_account_fix_content(), kcr_account_fix_field(), kcr_account_fix_login(), kcr_account_fix_newsletter(), kcr_account_fix_register(), kcr_account_fix_shortcodes() (+10 more)
+Cohesion: 0.09
+Nodes (26): kcr_account_check_turnstile(), kcr_account_csrf(), kcr_account_redirect(), kcr_company_email(), kcr_company_tools(), kcr_newsletter_admin_page(), kcr_newsletter_admin_table(), kcr_newsletter_subscribe() (+18 more)
 
 ### Community 48 - "get_option"
 Cohesion: 0.01
-Nodes (250): huhs_newsletter_admin_page(), huhs_flush_profile_rewrites_once(), huhs_render_public_profile_content(), huhs_voting_summary_admin_page(), huhs_newsletter_admin_page(), huhs_flush_profile_rewrites_once(), huhs_render_public_profile_content(), huhs_voting_summary_admin_page() (+242 more)
+Nodes (460): kcr_cat_edit(), kcr_cat_edit(), kcr_import_categories(), kcr_cat_edit(), kcr_import_categories(), kcr_import_categories(), kcr_cat_edit(), kcr_import_categories() (+452 more)
 
 ### Community 49 - "private_messages_screen.dart"
 Cohesion: 0.01
-Nodes (176): chat_mention_plan.dart, community_service.dart, ../../core/input/sentence_capitalization_formatter.dart, ../i18n/tr.dart, ContentLanguageReload, build, _controller, createState (+168 more)
+Nodes (193): AutomaticKeepAliveClientMixin, ../../core/input/sentence_capitalization_formatter.dart, ContentLanguageReload, GalleryImage, _PostAuthorLabels, _PostAuthorLabelsState, _adultPartnerWarning, _Avatar (+185 more)
 
 ### Community 50 - "huhs_update_claimed_artist_profile"
 Cohesion: 0.07
 Nodes (49): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+41 more)
 
-### Community 51 - "hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/push.php"
-Cohesion: 0.06
-Nodes (74): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_base64url() (+66 more)
+### Community 51 - "rest_ensure_response"
+Cohesion: 0.12
+Nodes (29): huhs_build_release_response(), huhs_build_release_summary(), huhs_get_release_detail(), huhs_get_releases(), huhs_update_release_play_products(), WP_REST_Request, huhs_release_is_upcoming(), huhs_build_release_response() (+21 more)
 
 ### Community 52 - "extract/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.14
-Nodes (18): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+10 more)
+Cohesion: 0.29
+Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
-### Community 53 - "attachment_url_to_postid"
+### Community 53 - "patchcheck-2141/huhs-mobile-api/includes/push.php"
 Cohesion: 0.09
-Nodes (48): huhs_release_process_audio(), huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page() (+40 more)
+Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
 
-### Community 54 - "communityServiceProvider"
+### Community 54 - "MaterialPageRoute"
 Cohesion: 0.01
-Nodes (245): cache_provider.dart, ../community/community_screen.dart, ../community/prize_admin_screen.dart, CommunityAdminScreen, CommunityProfileScreen, ConsumerState, ConsumerStatefulWidget, ConsumerWidget (+237 more)
+Nodes (338): cache_provider.dart, ../community/prize_admin_screen.dart, CommunityAdminScreen, CommunityProfileScreen, ConsumerState, ConsumerStatefulWidget, ConsumerWidget, event_detail_screen.dart (+330 more)
 
-### Community 55 - "package:flutter_riverpod/flutter_riverpod.dart"
+### Community 55 - "release_detail_screen.dart"
 Cohesion: 0.01
-Nodes (232): artist_detail_screen.dart, artist_edit_screen.dart, ArtistListQuery get, CachedNetworkImage, ChangeNotifier, ../../core/content/html_linkifier.dart, ../core/i18n/app_strings.dart, ../../core/i18n/content_language_reload.dart (+224 more)
+Nodes (227): artist_edit_screen.dart, ../../core/content/html_linkifier.dart, ../core/i18n/app_strings.dart, ../../core/i18n/content_language_reload.dart, ../../core/layout/scroll_bottom_inset.dart, event_meetup_screen.dart, ../gallery/gallery_screen.dart, HuhsEvent get (+219 more)
 
-### Community 56 - "voting.dart"
-Cohesion: 0.08
-Nodes (25): active, artist, candidates, categories, fromJson, hasPublishedResults, id, image (+17 more)
-
-### Community 57 - "community_profile_form_fields.dart"
+### Community 56 - "voting_screen.dart"
 Cohesion: 0.04
-Nodes (48): BirthDatePromptDialog, _BirthDatePromptDialogState, build, CommunityProfileBirthDateField, createState, errorText, first, initial (+40 more)
+Nodes (57): ../community/community_screen.dart, active, artist, candidates, categories, fromJson, hasPublishedResults, id (+49 more)
+
+### Community 57 - "return"
+Cohesion: 0.02
+Nodes (124): appChangelog, AppReleaseNotes, build, changes, isOlderRelease, null, releaseNotesForBuild, sorted (+116 more)
 
 ### Community 58 - "befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (47): huhs_push_clean_texts(), huhs_push_content_follow_ids(), huhs_push_content_follow_targets(), huhs_push_diag_summary(), huhs_push_digest_reach(), huhs_push_digest_texts(), huhs_push_event_reminder(), huhs_push_event_reminder_texts() (+39 more)
+Cohesion: 0.07
+Nodes (77): huhs_diag_health_header(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_chain_forget(), huhs_push_chain_index() (+69 more)
 
-### Community 59 - "kcr-account-ui-fix-1.0.9/kcr-account-ui-fix.php"
-Cohesion: 0.16
-Nodes (14): kcr_account_fix_company_ids(), kcr_account_fix_content(), kcr_account_fix_field(), kcr_account_fix_login(), kcr_account_fix_newsletter(), kcr_account_fix_no_cache(), kcr_account_fix_register(), kcr_account_fix_shortcodes() (+6 more)
+### Community 59 - "wp_mail"
+Cohesion: 0.15
+Nodes (15): kcr_account_fix_company_ids(), kcr_account_fix_content(), kcr_account_fix_field(), kcr_account_fix_login(), kcr_account_fix_newsletter(), kcr_account_fix_no_cache(), kcr_account_fix_register(), kcr_account_fix_shortcodes() (+7 more)
 
 ### Community 60 - "html_linkifier.dart"
 Cohesion: 0.10
@@ -1784,7 +1765,7 @@ Nodes (11): RadioPlaybackService, AudioFocusRequest, AudioManager, IBinder, Inte
 
 ### Community 63 - "GeneratedPluginRegistrant.swift"
 Cohesion: 0.07
-Nodes (27): app_badge_plus, app_links, audio_service, audio_session, cloud_firestore, cloud_functions, file_selector_macos, firebase_analytics (+19 more)
+Nodes (28): app_badge_plus, app_links, audio_service, audio_session, cloud_firestore, cloud_functions, connectivity_plus, file_selector_macos (+20 more)
 
 ### Community 64 - "kcr-account-ui-fix-1.0.5/kcr-account-ui-fix.php"
 Cohesion: 0.17
@@ -1802,14 +1783,13 @@ Nodes (13): kcr_account_fix_company_ids(), kcr_account_fix_content(), kcr_accoun
 Cohesion: 0.17
 Nodes (13): kcr_account_fix_company_ids(), kcr_account_fix_content(), kcr_account_fix_field(), kcr_account_fix_login(), kcr_account_fix_newsletter(), kcr_account_fix_register(), kcr_account_fix_shortcodes(), kcr_security_handle_login() (+5 more)
 
-### Community 68 - "news_screen.dart"
-Cohesion: 0.05
-Nodes (49): paginatedNewsProvider, stickyNewsProvider, build, _category, createState, _ErrorState, faqProvider, FaqScreen (+41 more)
+### Community 68 - "plugin-210/huhs-mobile-api/includes/games.php"
+Cohesion: 0.13
+Nodes (29): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+21 more)
 
 ### Community 69 - "my_music_screen.dart"
 Cohesion: 0.01
-Nodes (171): dart:async, DateTime? now,
-  Duration, Dio, label_purchase_service.dart, LabelDownloadManager get, labelDownloadManagerProvider, labelLibraryProvider, labelLibraryServiceProvider (+163 more)
+Nodes (185): Dio, LabelDownloadManager get, labelDownloadManagerProvider, labelLibraryProvider, labelLibraryServiceProvider, uid, _availability, body (+177 more)
 
 ### Community 70 - "PROJECT_CONTEXT.md"
 Cohesion: 0.08
@@ -1820,16 +1800,16 @@ Cohesion: 0.03
 Nodes (59): activeMentionQuery, after, before, byLabel, candidates, caret, ChatMentionTarget, contains (+51 more)
 
 ### Community 72 - "plugin-2151-base/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.14
-Nodes (29): huhs_genre_options(), huhs_genres_field(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options() (+21 more)
+Cohesion: 0.15
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
-### Community 73 - "community-screen-backup.dart"
+### Community 73 - "community-360-backup.dart"
 Cohesion: 0.01
-Nodes (194): AsyncValue, GlobalKey, _, ChatPaging, newOlderPosts, oldestBoundary, reachedStart, ../../models/community_post.dart (+186 more)
+Nodes (419): AsyncValue, ChatMentionSource get, CommunityService get, GlobalKey, HttpClientResponse, AchievementSummary, badgeDescription, badgeImageUrl (+411 more)
 
 ### Community 74 - "huhs_admin_api_read"
-Cohesion: 0.05
-Nodes (78): huhs_about_page(), huhs_dashboard_page(), huhs_delete_submission_attachments(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types(), huhs_admin_api_read() (+70 more)
+Cohesion: 0.08
+Nodes (57): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+49 more)
 
 ### Community 75 - "Hungarian Hardstyle App"
 Cohesion: 0.11
@@ -1848,13 +1828,13 @@ Cohesion: 0.29
 Nodes (12): check_url(), main(), sql_categories(), api_key(), categories(), search(), api(), attrib() (+4 more)
 
 ### Community 79 - "twitch_live.dart"
-Cohesion: 0.04
-Nodes (44): HttpClient? client,
-  String, channel, debugPrintTwitchCardFallbackFailed, displayImageUrl, enabled, fetchTwitchCardConfig, fetchTwitchCardFromWordPress, fetchTwitchLive (+36 more)
+Cohesion: 0.01
+Nodes (135): async_cache_plan.dart, Duration?, HttpClient, HttpClient? client,
+  String, HttpClientRequest, HttpHeaders, asyncCacheStoreProvider, AsyncCacheStore (+127 more)
 
 ### Community 80 - "huhs_admin_api_read"
-Cohesion: 0.11
-Nodes (44): huhs_admin_api_read(), huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_poll_active_id(), huhs_poll_api_active() (+36 more)
+Cohesion: 0.05
+Nodes (78): huhs_about_page(), huhs_dashboard_page(), huhs_delete_submission_attachments(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types(), huhs_admin_api_read() (+70 more)
 
 ### Community 81 - "_stage_account_1_1_10/kcr-account-1.1.6/kcr-account.php"
 Cohesion: 0.17
@@ -1864,9 +1844,9 @@ Nodes (11): kcr_full_company_editor(), kcr_full_editor_field(), kcr_full_editor_
 Cohesion: 0.17
 Nodes (11): kcr_full_company_editor(), kcr_full_editor_field(), kcr_full_editor_locations(), kcr_account_csrf(), kcr_account_redirect(), kcr_company_email(), kcr_company_tools(), kcr_newsletter_admin_page() (+3 more)
 
-### Community 83 - "dart:convert"
-Cohesion: 0.03
-Nodes (72): dart:convert, package:flutter_localizations/flutter_localizations.dart, package:hungarian_hardstyle_app/core/content/html_text.dart, package:hungarian_hardstyle_app/core/i18n/app_language.dart, package:hungarian_hardstyle_app/core/i18n/app_strings.dart, package:hungarian_hardstyle_app/core/i18n/content_labels.dart, package:hungarian_hardstyle_app/core/i18n/content_language_reload.dart, package:hungarian_hardstyle_app/core/i18n/notification_texts.dart (+64 more)
+### Community 83 - "huhs_request_lang"
+Cohesion: 0.14
+Nodes (25): huhs_build_release_response(), huhs_build_release_summary(), huhs_get_release_detail(), huhs_get_releases(), huhs_update_release_play_products(), WP_REST_Request, huhs_get_gallery_id(), huhs_get_gallery_images() (+17 more)
 
 ### Community 84 - "_stage_account_fix/kcr-account-1.1.6/kcr-account.php"
 Cohesion: 0.17
@@ -1882,7 +1862,7 @@ Nodes (86): 323 — kérdőív-eredmények javítása, 324 — nyertes és kérd
 
 ### Community 87 - "plugin-2154/huhs-mobile-api/includes/push.php"
 Cohesion: 0.06
-Nodes (81): huhs_diag_health_header(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_chain_forget(), huhs_push_chain_index() (+73 more)
+Nodes (82): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url() (+74 more)
 
 ### Community 88 - "huhs_request_lang"
 Cohesion: 0.07
@@ -1898,11 +1878,11 @@ Nodes (16): FlutterViewController, unique_ptr, DartProject, HWND, LPARAM, LRESUL
 
 ### Community 91 - "mutation-home-image/huhs-mobile-api/includes/push.php"
 Cohesion: 0.06
-Nodes (79): huhs_diag_health_header(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_chain_forget(), huhs_push_chain_index() (+71 more)
+Nodes (80): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+72 more)
 
-### Community 92 - "wp_strip_all_tags"
+### Community 92 - "halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/push.php"
 Cohesion: 0.06
-Nodes (83): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+75 more)
+Nodes (80): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+72 more)
 
 ### Community 93 - "huhs_request_lang"
 Cohesion: 0.07
@@ -1912,29 +1892,30 @@ Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value()
 Cohesion: 0.05
 Nodes (39): _badgeIcon, build, _busy, CheckinScannerScreen, _CheckinScannerScreenState, _controller, createState, dispose (+31 more)
 
-### Community 95 - "huhs_request_lang"
+### Community 95 - "wpautop"
 Cohesion: 0.07
-Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
+Nodes (56): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+48 more)
 
 ### Community 96 - "artist.dart"
 Cohesion: 0.06
 Nodes (35): 0, ArtistCategory, ArtistsPage, biography, bookingEmail, bookingViaHuhs, categories, city (+27 more)
 
-### Community 97 - "zipcheck/huhs-mobile-api/includes/push.php"
-Cohesion: 0.06
-Nodes (81): huhs_diag_health_header(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_chain_forget(), huhs_push_chain_index() (+73 more)
+### Community 97 - "cmp-21418/huhs-mobile-api/includes/games.php"
+Cohesion: 0.16
+Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
-### Community 98 - "../core/firebase/firebase_callable.dart"
-Cohesion: 0.09
-Nodes (20): ../core/firebase/firebase_callable.dart, _clean, contentTypes, needsResolve, NotificationContentTitles, resolve, activePoll, hasVoted (+12 more)
+### Community 98 - "label_library_service.dart"
+Cohesion: 0.02
+Nodes (109): chat_mention_plan.dart, community_service.dart, ../core/firebase/firebase_callable.dart, DateTime? now,
+  Duration, label_purchase_service.dart, AchievementCatalogCaller, AchievementLevel, _callCatalog (+101 more)
 
 ### Community 99 - "allowCall"
 Cohesion: 0.06
 Nodes (62): readHardConfig(), activeAdUnlock(), allowCall(), articleComments(), awardApprovedSubmissionPoints(), claimProfileCompletionAchievement(), claimWelcomeSignInBonus(), deleteCommunityUser() (+54 more)
 
-### Community 100 - "zipcheck/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.16
-Nodes (28): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled() (+20 more)
+### Community 100 - "zipcheck/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.10
+Nodes (51): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled() (+43 more)
 
 ### Community 101 - "Win32Window"
 Cohesion: 0.23
@@ -1945,36 +1926,36 @@ Cohesion: 0.03
 Nodes (79): ajv, ajv-formats, @babel/parser, @babel/types, canonicalize, cborg, @clack/prompts, cross-spawn (+71 more)
 
 ### Community 103 - "user_can"
-Cohesion: 0.05
-Nodes (50): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_meta_auth_callback(), huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_meta_auth_callback(), huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta() (+42 more)
-
-### Community 104 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/push.php"
 Cohesion: 0.06
-Nodes (76): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_push_adopt_orphan_job(), huhs_push_chain_forget(), huhs_push_chain_index(), huhs_push_chain_register() (+68 more)
+Nodes (44): huhs_translation_meta_auth_callback(), huhs_translation_meta_auth_callback(), huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_meta_auth_callback(), huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_meta_auth_callback() (+36 more)
+
+### Community 104 - "wp_date"
+Cohesion: 0.06
+Nodes (78): huhs_diag_health_header(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_chain_forget(), huhs_push_chain_index(), huhs_push_chain_register() (+70 more)
 
 ### Community 105 - "functions/package.json"
 Cohesion: 0.09
 Nodes (22): firebase, firebase-admin, firebase-functions, @firebase/rules-unit-testing, dependencies, firebase-admin, firebase-functions, googleapis (+14 more)
 
-### Community 106 - "huhs_update_claimed_artist_profile"
-Cohesion: 0.11
-Nodes (30): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+22 more)
+### Community 106 - "huhs_request_lang"
+Cohesion: 0.06
+Nodes (58): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+50 more)
 
 ### Community 107 - "tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/push.php"
-Cohesion: 0.06
-Nodes (79): huhs_diag_health_header(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_chain_forget(), huhs_push_chain_index() (+71 more)
+Cohesion: 0.07
+Nodes (77): huhs_diag_health_header(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_chain_forget(), huhs_push_chain_index() (+69 more)
 
 ### Community 108 - "huhs_request_lang"
 Cohesion: 0.06
 Nodes (58): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+50 more)
 
 ### Community 109 - "huhs_request_lang"
-Cohesion: 0.07
-Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
+Cohesion: 0.06
+Nodes (58): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+50 more)
 
-### Community 110 - "notification_delete_all_test.dart"
-Cohesion: 0.03
-Nodes (103): class _FakeCollection extends, class _FakeDoc extends, class _FakeDocument extends, class _FakeQuery extends, class _FakeQuerySnapshot extends, class _FakeSnapshot extends, CollectionReference, DocumentReference (+95 more)
+### Community 110 - "befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/games.php"
+Cohesion: 0.16
+Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
 ### Community 111 - "kcr-account-1.1.3/kcr-account.php"
 Cohesion: 0.23
@@ -1984,9 +1965,9 @@ Nodes (8): kcr_account_csrf(), kcr_account_redirect(), kcr_company_email(), kcr_
 Cohesion: 0.23
 Nodes (8): kcr_account_csrf(), kcr_account_redirect(), kcr_company_email(), kcr_company_tools(), kcr_newsletter_admin_page(), kcr_newsletter_admin_table(), kcr_newsletter_subscribe(), kcr_owner_or_admin()
 
-### Community 113 - "huhs_request_lang"
-Cohesion: 0.07
-Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
+### Community 113 - "huhs_build_event_response"
+Cohesion: 0.17
+Nodes (19): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+11 more)
 
 ### Community 114 - "verify_live_category_images.py"
 Cohesion: 0.32
@@ -1994,11 +1975,11 @@ Nodes (9): active_theme(), add_cache_buster(), bulk_sync(), canonical_url(), Cat
 
 ### Community 115 - "wordpress_head_cache.dart"
 Cohesion: 0.02
-Nodes (80): DateTime?, AchievementCatalogCaller, AchievementLevel, _callCatalog, _catalogCaller, description, fallbackLevels, fetchLevels (+72 more)
+Nodes (119): DateTime?, FieldValue, AchievementRankSync, badgeKeyOf, dispose, _handle, _lastBadgeKey, _lastRefreshAt (+111 more)
 
-### Community 116 - "register_rest_route"
-Cohesion: 0.06
-Nodes (64): huhs_register_translation_sweep_api(), huhs_register_translation_sweep_api(), huhs_register_translation_sweep_api(), huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response() (+56 more)
+### Community 116 - "huhs_request_lang"
+Cohesion: 0.07
+Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
 
 ### Community 117 - "wWinMain"
 Cohesion: 0.24
@@ -2012,9 +1993,9 @@ Nodes (15): Blanket Coroutine Library Rules, Case: Android Components, Case: Glo
 Cohesion: 0.10
 Nodes (16): Cocoa, Flutter, FlutterMacOS, FlutterSceneDelegate, SceneDelegate, RunnerTests, RegisterGeneratedPlugins(), FlutterPluginRegistry (+8 more)
 
-### Community 120 - "huhs_request_lang"
-Cohesion: 0.07
-Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
+### Community 120 - "huhs_build_event_response"
+Cohesion: 0.17
+Nodes (19): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+11 more)
 
 ### Community 121 - "manifest.json"
 Cohesion: 0.18
@@ -2025,12 +2006,12 @@ Cohesion: 0.33
 Nodes (8): cover(), fetch(), generate(), Image, Path, render_psd(), Fit, Path
 
 ### Community 123 - "huhs_request_lang"
-Cohesion: 0.15
-Nodes (24): huhs_build_release_response(), huhs_build_release_summary(), huhs_get_release_detail(), huhs_get_releases(), huhs_update_release_play_products(), WP_REST_Request, huhs_get_gallery_id(), huhs_get_gallery_images() (+16 more)
-
-### Community 124 - "huhs_request_lang"
 Cohesion: 0.07
 Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
+
+### Community 124 - "huhs_build_event_response"
+Cohesion: 0.17
+Nodes (19): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+11 more)
 
 ### Community 125 - "win32_window.cpp"
 Cohesion: 0.32
@@ -2038,7 +2019,7 @@ Nodes (11): HWND, LPARAM, LRESULT, UINT, WPARAM, EnableFullDpiSupportIfAvailable
 
 ### Community 126 - "update_post_meta"
 Cohesion: 0.01
-Nodes (362): kcr_approve_featured(), kcr_import_company(), kcr_publish_paid_order(), kcr_approve_featured(), kcr_import_company(), kcr_publish_paid_order(), kcr_approve_featured(), kcr_description() (+354 more)
+Nodes (409): kcr_approve_featured(), kcr_import_company(), kcr_publish_paid_order(), kcr_approve_featured(), kcr_import_company(), kcr_publish_paid_order(), kcr_approve_featured(), kcr_description() (+401 more)
 
 ### Community 127 - "huhs_request_lang"
 Cohesion: 0.07
@@ -2052,13 +2033,13 @@ Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value()
 Cohesion: 0.07
 Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
 
-### Community 130 - "wp_date"
-Cohesion: 0.06
-Nodes (73): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+65 more)
+### Community 130 - "plugin-2153/huhs-mobile-api/includes/push.php"
+Cohesion: 0.07
+Nodes (70): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url() (+62 more)
 
 ### Community 131 - "mutation-home-image2/huhs-mobile-api/includes/push.php"
-Cohesion: 0.06
-Nodes (82): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+74 more)
+Cohesion: 0.07
+Nodes (70): huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_chain_forget(), huhs_push_chain_index(), huhs_push_chain_register(), huhs_push_classify_response() (+62 more)
 
 ### Community 132 - "Hungarian Hardstyle Newsroom GPT v2"
 Cohesion: 0.22
@@ -2074,23 +2055,23 @@ Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value()
 
 ### Community 135 - "plugin-2152/huhs-mobile-api/includes/push.php"
 Cohesion: 0.07
-Nodes (71): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+63 more)
+Nodes (63): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_push_adopt_orphan_job(), huhs_push_classify_response(), huhs_push_content_follow_ids(), huhs_push_content_follow_targets() (+55 more)
 
 ### Community 136 - "huhs_request_lang"
 Cohesion: 0.07
 Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
 
 ### Community 137 - "huhs_request_lang"
-Cohesion: 0.07
-Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
+Cohesion: 0.12
+Nodes (31): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+23 more)
 
 ### Community 138 - "plugin-2151/huhs-mobile-api/includes/push.php"
-Cohesion: 0.07
-Nodes (68): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+60 more)
+Cohesion: 0.08
+Nodes (58): huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_classify_response(), huhs_push_content_follow_ids(), huhs_push_content_follow_targets(), huhs_push_continue() (+50 more)
 
 ### Community 139 - "cmp-21418/huhs-mobile-api/includes/push.php"
 Cohesion: 0.07
-Nodes (69): huhs_diag_health_header(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_classify_response(), huhs_push_content_follow_ids() (+61 more)
+Nodes (70): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+62 more)
 
 ### Community 140 - "AppDelegate"
 Cohesion: 0.14
@@ -2112,13 +2093,13 @@ Nodes (7): Newsroom GPT v2 elfogadási tesztek, T1 – Action, T2 – URL, T3 �
 Cohesion: 0.18
 Nodes (10): answer, category, FaqItem, faqPlainText, fromJson, id, order, question (+2 more)
 
-### Community 145 - "achievement_leaderboard_screen.dart"
+### Community 145 - "prize.dart"
 Cohesion: 0.03
-Nodes (72): ChatFocusStatus, class, int?, AchievementLeaderboardScreen, _AchievementLeaderboardScreenState, build, createState, _cursorPoints (+64 more)
+Nodes (71): ChatFocusStatus, int?, answerIndex, answers, correct, drawnAt, fromEntryResult, fromJson (+63 more)
 
-### Community 146 - "release_detail_screen.dart"
-Cohesion: 0.02
-Nodes (79): ReleaseQuery, _adCacheKey, _adUnlocked, _authUpdates, _buy, _cacheAdUnlock, _cacheVerifiedProduct, _checkingAdUnlock (+71 more)
+### Community 146 - "php-plugin/huhs-mobile-api/includes/games.php"
+Cohesion: 0.16
+Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
 ### Community 147 - "Vision"
 Cohesion: 0.25
@@ -2132,9 +2113,9 @@ Nodes (15): A(), B(), base(), C(), center(), crop(), f(), fit() (+7 more)
 Cohesion: 0.38
 Nodes (4): kcr_category_image_item(), kcr_category_image_manifest(), kcr_keyword_cloud(), kcr_render_keyword_cloud()
 
-### Community 150 - "update_option"
-Cohesion: 0.01
-Nodes (281): kcr_cat_edit(), kcr_import_categories(), kcr_import_categories(), kcr_cat_edit(), kcr_cat_edit(), kcr_cat_edit(), kcr_import_categories(), kcr_cat_edit() (+273 more)
+### Community 150 - "php-plugin/huhs-mobile-api/includes/push.php"
+Cohesion: 0.06
+Nodes (79): huhs_diag_health_header(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_chain_forget(), huhs_push_chain_index(), huhs_push_chain_register() (+71 more)
 
 ### Community 151 - "Központi Cégregiszter"
 Cohesion: 0.29
@@ -2146,7 +2127,7 @@ Nodes (4): kcr_category_image_item(), kcr_category_image_manifest(), kcr_keyword
 
 ### Community 153 - "extract/huhs-mobile-api/includes/push.php"
 Cohesion: 0.07
-Nodes (68): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+60 more)
+Nodes (67): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+59 more)
 
 ### Community 154 - "huhs_admin_api_read"
 Cohesion: 0.21
@@ -2161,16 +2142,16 @@ Cohesion: 0.07
 Nodes (50): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+42 more)
 
 ### Community 157 - "huhs_admin_api_read"
-Cohesion: 0.20
-Nodes (27): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+19 more)
+Cohesion: 0.05
+Nodes (84): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+76 more)
 
 ### Community 158 - "huhs_update_claimed_artist_profile"
 Cohesion: 0.07
 Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
 
-### Community 159 - "huhs_request_lang"
-Cohesion: 0.08
-Nodes (45): huhs_build_artist_response(), huhs_get_artist_upcoming_events(), huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request (+37 more)
+### Community 159 - "huhs_build_event_response"
+Cohesion: 0.18
+Nodes (18): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+10 more)
 
 ### Community 160 - "huhs_admin_api_read"
 Cohesion: 0.08
@@ -2181,24 +2162,24 @@ Cohesion: 0.21
 Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
 ### Community 162 - "huhs_admin_api_read"
-Cohesion: 0.20
-Nodes (27): huhs_admin_api_read(), huhs_poll_repair_escapes(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants() (+19 more)
+Cohesion: 0.21
+Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
 ### Community 163 - "get_post"
-Cohesion: 0.06
-Nodes (71): huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target() (+63 more)
+Cohesion: 0.08
+Nodes (61): huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target(), huhs_push_resolve_custom_target() (+53 more)
 
 ### Community 164 - "hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.15
-Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
+Cohesion: 0.07
+Nodes (48): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genre_options() (+40 more)
 
 ### Community 165 - "huhs_update_claimed_artist_profile"
 Cohesion: 0.07
-Nodes (50): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+42 more)
+Nodes (53): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+45 more)
 
-### Community 166 - "wpautop"
+### Community 166 - "huhs_update_claimed_artist_profile"
 Cohesion: 0.07
-Nodes (48): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+40 more)
+Nodes (47): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+39 more)
 
 ### Community 167 - ".kcr-turnstile-1.0.3-stage/kcr-turnstile/kcr-turnstile.php"
 Cohesion: 0.73
@@ -2230,7 +2211,7 @@ Nodes (4): FlutterAppDelegate, AppDelegate, Bool, NSApplication
 
 ### Community 174 - "plugin-2150/huhs-mobile-api/includes/push.php"
 Cohesion: 0.08
-Nodes (58): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+50 more)
+Nodes (56): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+48 more)
 
 ### Community 175 - "Hungarian Hardstyle szerkesztőségi referencia"
 Cohesion: 0.33
@@ -2266,7 +2247,7 @@ Nodes (11): Adatmodell-javaslat, App-megjelenítés, Bevezetési sorrend, Bizton
 
 ### Community 183 - "plugin-2149/huhs-mobile-api/includes/push.php"
 Cohesion: 0.08
-Nodes (56): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+48 more)
+Nodes (55): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+47 more)
 
 ### Community 184 - "Current WordPress Modules"
 Cohesion: 0.40
@@ -2277,20 +2258,20 @@ Cohesion: 0.40
 Nodes (4): Current Decisions, hard-lake-2026-08-15, Open Questions, User Notes
 
 ### Community 186 - "huhs_admin_api_write"
-Cohesion: 0.18
-Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
+Cohesion: 0.13
+Nodes (20): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+12 more)
 
 ### Community 187 - "plugin-2151-base/huhs-mobile-api/includes/push.php"
 Cohesion: 0.08
-Nodes (57): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+49 more)
+Nodes (56): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+48 more)
 
 ### Community 189 - "Megvalósítási állapot"
 Cohesion: 0.50
 Nodes (3): Aktuális állapot, Következő blokk, Megvalósítási állapot
 
 ### Community 190 - "kcr-core-1.9.31-package/kozponti-cegregiszter/kozponti-cegregiszter.php"
-Cohesion: 0.06
-Nodes (41): kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html() (+33 more)
+Cohesion: 0.07
+Nodes (38): kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html(), kcr_create_order(), kcr_expire_listings() (+30 more)
 
 ### Community 191 - "chat-mention-plan.test.cjs"
 Cohesion: 0.15
@@ -2306,35 +2287,35 @@ Nodes (4): Hard Lake, Hardstyle Revolution, Rave Revolution, Related Brands
 
 ### Community 195 - "kcr-plugin-1.9.30-update/kozponti-cegregiszter.php"
 Cohesion: 0.06
-Nodes (44): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+36 more)
+Nodes (42): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_cat_edit(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box() (+34 more)
 
 ### Community 196 - "live-firebase.mjs"
 Cohesion: 0.05
 Nodes (39): byDay, docs, field(), today, withCreated, bodies, documents, titles (+31 more)
 
 ### Community 197 - "plugin-2142-recon/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.14
-Nodes (28): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_translation_api_key() (+20 more)
+Cohesion: 0.13
+Nodes (33): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+25 more)
 
 ### Community 198 - "plugin-2148/huhs-mobile-api/includes/push.php"
 Cohesion: 0.09
-Nodes (53): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+45 more)
+Nodes (51): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url() (+43 more)
 
 ### Community 199 - "kcr-plugin-1.9.30/kozponti-cegregiszter.php"
 Cohesion: 0.06
-Nodes (40): kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html(), kcr_create_order() (+32 more)
+Nodes (42): kcr_api(), kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_clean_sitemap_response(), kcr_company_additional_image_ids(), kcr_company_images_box(), kcr_company_images_box_html() (+34 more)
 
 ### Community 200 - "files"
 Cohesion: 0.04
 Nodes (51): bridge/android/ReaJadxBridge.java, bridge/cutter/rea_bridge.py, bridge/ghidra/ReaGhidraAnalysisOptions.java, bridge/ghidra/ReaGhidraApplySeeds.java, bridge/ghidra/ReaGhidraBridge.java, bridge/ghidra/ReaGhidraBundleActivator.java, bridge/ghidra/ReaGhidraExtensions.java, bridge/ghidra/ReaGhidraMipsSoftFloat.java (+43 more)
 
 ### Community 201 - "plugin-2140/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.13
-Nodes (33): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+25 more)
+Cohesion: 0.14
+Nodes (28): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_translation_api_key() (+20 more)
 
 ### Community 202 - "plugin-2141/huhs-mobile-api/includes/translation-sweep.php"
 Cohesion: 0.14
-Nodes (30): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+22 more)
+Nodes (28): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_translation_api_key() (+20 more)
 
 ### Community 203 - "accessToken"
 Cohesion: 0.06
@@ -2342,15 +2323,15 @@ Nodes (41): interesting, TYPES, forPost, groups, missing, recipients, byAccessRo
 
 ### Community 204 - "plugin-2146/huhs-mobile-api/includes/push.php"
 Cohesion: 0.09
-Nodes (50): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+42 more)
+Nodes (49): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+41 more)
 
 ### Community 205 - "register_post_type"
 Cohesion: 0.01
-Nodes (104): kcr_recovery_activate(), kcr_recovery_register_content(), huhs_add_artist_meta_box(), huhs_register_artist_post_type(), huhs_register_event_post_type(), huhs_add_organizer_meta_box(), huhs_register_organizer_post_type(), huhs_register_event_post_type() (+96 more)
+Nodes (98): kcr_recovery_activate(), kcr_recovery_register_content(), huhs_register_event_post_type(), huhs_add_artist_meta_box(), huhs_register_artist_post_type(), huhs_register_event_post_type(), huhs_register_event_post_type(), huhs_register_submission_post_type() (+90 more)
 
 ### Community 207 - "plugin-2147/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (50): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+42 more)
+Cohesion: 0.10
+Nodes (42): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_push_adopt_orphan_job(), huhs_push_classify_response(), huhs_push_continue(), huhs_push_deliver_parallel() (+34 more)
 
 ### Community 208 - "plugin-translation-test.php"
 Cohesion: 0.04
@@ -2364,25 +2345,25 @@ Nodes (37): FIXES, password, user, adminGet(), auth(), list, answersWithDebris, 
 Cohesion: 0.05
 Nodes (49): auth, client, { google }, report, require, serviceAccount, auth, client (+41 more)
 
-### Community 212 - "chat_birth_date_prompt_test.dart"
-Cohesion: 0.02
-Nodes (121): class _FakeProfileSnapshot extends, DatePickerDialog, fetchTwitchCardConfig, fetchTwitchLive, loadTwitchCardFromFirestore, timer, CommunityService, archive (+113 more)
+### Community 212 - "notification_delete_all_test.dart"
+Cohesion: 0.01
+Nodes (266): class _FakeCollection extends, class _FakeDoc extends, class _FakeDocument extends, class _FakeProfileSnapshot extends, class _FakeQuery extends, class _FakeQuerySnapshot extends, class _FakeSnapshot extends, CollectionReference (+258 more)
 
-### Community 213 - "purchase_diagnostics_plan.dart"
-Cohesion: 0.04
-Nodes (52): clear, entryKey, fromJson, keyFor, LabelPlaybackMemory, LabelPlaybackPoint, load, positionMs (+44 more)
+### Community 213 - "plugin-2145-base/huhs-mobile-api/includes/games.php"
+Cohesion: 0.16
+Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
 ### Community 216 - "devDependencies"
 Cohesion: 0.04
 Nodes (47): @fast-check/vitest, husky, jscpd, knip, lint-staged, oxfmt, oxlint, rolldown (+39 more)
 
 ### Community 217 - "mutation-home-image/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.16
-Nodes (30): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled() (+22 more)
+Cohesion: 0.14
+Nodes (30): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+22 more)
 
 ### Community 218 - "halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.14
-Nodes (30): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key() (+22 more)
+Cohesion: 0.15
+Nodes (26): huhs_translation_all_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled(), huhs_translation_parse_response() (+18 more)
 
 ### Community 219 - "verify-chat-everyone.php"
 Cohesion: 0.04
@@ -2410,7 +2391,7 @@ Nodes (10): 1. Az UID-cache törlése nem frissíti a már felépült chat-sort,
 
 ### Community 348 - "notification_texts.dart"
 Cohesion: 0.05
-Nodes (44): AppStrings, decodeDictionary, dictionaryAsset, dictionarySize, _english, isEnglish, _language, parseEnglishDictionary (+36 more)
+Nodes (37): app_language.dart, app_strings.dart, _contentLanguage, dispose, initState, _listening, _onSignal, reloadForLanguage (+29 more)
 
 ### Community 349 - "compose_hsrevo_2026_11_21.py"
 Cohesion: 0.40
@@ -2452,9 +2433,9 @@ Nodes (8): 1. Configuration, 2. Global disable rules, 3. Optimization summary, 4
 Cohesion: 0.25
 Nodes (6): assert, completeBallot(), fixture(), fs, { test }, vm
 
-### Community 359 - "wp_schedule_single_event"
-Cohesion: 0.05
-Nodes (91): wp_schedule_single_event(), huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page() (+83 more)
+### Community 359 - "plugin-212/huhs-mobile-api/includes/push.php"
+Cohesion: 0.10
+Nodes (44): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+36 more)
 
 ### Community 360 - "chat-notification-plan.test.cjs"
 Cohesion: 0.07
@@ -2472,17 +2453,17 @@ Nodes (7): font(), footer(), logos(), paste_logo(), render(), text(), wrap()
 Cohesion: 0.29
 Nodes (7): Enable optimization, For AGP versions 9.3 and higher, Groovy, Kotlin, Legacy DSL for AGP versions lower than 9.3, Legacy DSL (Groovy), Legacy DSL (Kotlin)
 
-### Community 363 - "plugin-212/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.29
-Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
+### Community 363 - "huhs_admin_api_read"
+Cohesion: 0.21
+Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
 ### Community 364 - "plugin-2142-recon/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+Cohesion: 0.10
+Nodes (44): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+36 more)
 
-### Community 365 - "package:shared_preferences/shared_preferences.dart"
-Cohesion: 0.02
-Nodes (133): Completer, fromJson, HuhsPoll, HuhsPollOption, id, index, label, options (+125 more)
+### Community 365 - "huhs_admin_api_read"
+Cohesion: 0.21
+Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
 ### Community 366 - "make_hs_facebook_variants.ps1"
 Cohesion: 0.67
@@ -2538,7 +2519,7 @@ Nodes (6): Point, x, y, Size, height, width
 
 ### Community 384 - ".header"
 Cohesion: 0.10
-Nodes (34): kcr_sitemap_output(), kcr_sitemap_output(), kcr_clean_sitemap_response(), kcr_sitemap_output(), kcr_sitemap_output(), kcr_sitemap_output(), kcr_sitemap_output(), kcr_sitemap_output() (+26 more)
+Nodes (34): kcr_sitemap_output(), kcr_sitemap_output(), kcr_sitemap_output(), kcr_sitemap_output(), kcr_sitemap_output(), kcr_sitemap_output(), kcr_sitemap_output(), kcr_sitemap_output() (+26 more)
 
 ### Community 385 - "Kiadás előtti audit — Hungarian Hardstyle"
 Cohesion: 0.04
@@ -2556,37 +2537,37 @@ Nodes (34): _, _boolCache, clearGamePlayed, clearPollVoted, clearPrizePlayed, _d
 Cohesion: 0.04
 Nodes (45): src/application/reverse/ReverseEngineeringService.ts, src/cli/reverseEngineeringCommands.ts, src/cutter/CutterBridgeClient.ts, src/cutter/CutterBridgeService.ts, src/gdb/GdbSessionManager.ts, src/objdump/ObjdumpCommand.ts, src/process/ExecFileOutput.test.ts, src/process/ExecFileOutput.ts (+37 more)
 
-### Community 393 - "patchcheck-2142/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+### Community 393 - "wp_schedule_single_event"
+Cohesion: 0.05
+Nodes (87): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+79 more)
 
 ### Community 394 - "patchcheck/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+Cohesion: 0.10
+Nodes (43): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+35 more)
 
 ### Community 395 - "plugin-213/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+Cohesion: 0.10
+Nodes (44): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+36 more)
 
 ### Community 396 - "organizer.dart"
 Cohesion: 0.06
 Nodes (30): ../core/content/html_text.dart, event.dart, 0, city, country, description, excerpt, false (+22 more)
 
 ### Community 397 - "plugin-2141/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+Cohesion: 0.10
+Nodes (44): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+36 more)
 
 ### Community 398 - "plugin-2142/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+Cohesion: 0.10
+Nodes (44): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+36 more)
 
-### Community 399 - "plugin-2144-recon/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+### Community 399 - "plugin-2145-base/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.20
+Nodes (25): huhs_schedule_translation_on_publish(), huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently() (+17 more)
 
 ### Community 400 - "plugin-2145-base/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+Cohesion: 0.10
+Nodes (43): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+35 more)
 
 ### Community 402 - "verify-push-speed.php"
 Cohesion: 0.05
@@ -2608,16 +2589,16 @@ Cohesion: 0.05
 Nodes (36): Android application artifacts, Choose the remedy from the observed failure, Codex tool approval is separate from REA readiness, Connection and task recovery, Continue through an installed CLI, Repair registration when needed, Evidence, comparison, and verification workflows, JavaScript and Electron application artifacts (+28 more)
 
 ### Community 405 - "admin_resource_editor_screen.dart"
-Cohesion: 0.03
-Nodes (79): FocusNode, twitchChatMessagesProvider, twitchChatServiceProvider, AdminResourceEditorScreen, _AdminResourceEditorScreenState, adminResourceRequestProvider, build, _checks (+71 more)
+Cohesion: 0.05
+Nodes (42): AdminResourceEditorScreen, _AdminResourceEditorScreenState, adminResourceRequestProvider, build, _checks, _collectMeta, controller, _controllers (+34 more)
 
 ### Community 406 - "secretAsync"
 Cohesion: 0.04
 Nodes (27): deletedInGame, deletedUids, prizes, credentials, api(), get(), jwt, serviceAccount (+19 more)
 
 ### Community 407 - "plugin-2143-recon/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+Cohesion: 0.10
+Nodes (44): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+36 more)
 
 ### Community 408 - "check-bitmap-subsampling.mjs"
 Cohesion: 0.07
@@ -2635,9 +2616,9 @@ Nodes (31): ageGapWeight(), ageInYears(), detectSignals(), excerptOf(), flagDocu
 Cohesion: 0.36
 Nodes (8): argValue(), countPushRuns(), fetchEntries(), findDuplicates(), main(), PUSH_EVENTS, selfTest(), since
 
-### Community 412 - "event_calendar.dart"
-Cohesion: 0.05
-Nodes (40): allDay, buildEventIcs, current, dates, day, details, end, endClock (+32 more)
+### Community 412 - "huhs_event_details_callback"
+Cohesion: 0.14
+Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
 
 ### Community 413 - "verify-push-audience.php"
 Cohesion: 0.05
@@ -2649,7 +2630,7 @@ Nodes (39): esbuild, mkfifo, scripts/**/*.mjs, scripts/run-exact-tests.mjs, scri
 
 ### Community 415 - "plugin-2142/huhs-mobile-api/includes/translation-sweep.php"
 Cohesion: 0.14
-Nodes (30): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+22 more)
+Nodes (28): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_translation_api_key() (+20 more)
 
 ### Community 416 - "shortHash"
 Cohesion: 0.12
@@ -2663,9 +2644,9 @@ Nodes (34): assert, chatCreatePayload(), chatPost(), chatReportPayload(), { doc,
   assertFails,
 }, path (+26 more)
 
-### Community 418 - "game.dart"
-Cohesion: 0.05
-Nodes (38): artist, artwork, audioReady, clueImageUrl, clueMode, correctAnswers, displayName, endAt (+30 more)
+### Community 418 - "huhs_event_details_callback"
+Cohesion: 0.14
+Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
 
 ### Community 419 - "rea/package.json"
 Cohesion: 0.05
@@ -2679,41 +2660,41 @@ Nodes (13): bumpIdentityNotificationRetry(), clearIdentityNotificationRetry(), c
 Cohesion: 0.05
 Nodes (38): 323 â€” kĂ©rdĹ‘Ă­v-eredmĂ©nyek javĂ­tĂˇsa, 324 â€” nyertes Ă©s kĂ©rdĹ‘Ă­v azonnali frissĂĽlĂ©se, 325 â€” Ă©rtesĂ­tĂ©sek: â€žĂ¶sszes tĂ¶rlĂ©se" fĂĽlre szĹ±kĂ­tve, 326 â€” chat Ă©s cikk-hozzĂˇszĂłlĂˇs szerkesztĂ©se, 327 â€” kiadĂˇsi jegyzet a NĂ©vjegy alatt, 328 â€” â€žTovĂˇbbi hĂ­rek" kĂˇrtya + GYIK, 329 â€” chat-lapozĂˇs, azonnali Ăˇllapot, natĂ­v nyeremĂ©nyjĂˇtĂ©k-admin, 330 â€” natĂ­v admin menĂĽpontok (kvĂ­z, kĂ©rdĹ‘Ă­v, nyeremĂ©nyjĂˇtĂ©k) (+30 more)
 
-### Community 422 - "cmp-21418/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.09
-Nodes (52): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+44 more)
+### Community 422 - "cmp-21418/huhs-mobile-api/includes/translation-sweep.php"
+Cohesion: 0.15
+Nodes (29): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key() (+21 more)
 
 ### Community 423 - "3. App (Több → Névjegy) — tételes, build szerint"
 Cohesion: 0.05
 Nodes (37): 323 — kérdőív-eredmények javítása, 324 — nyertes és kérdőív azonnali frissülése, 325 — értesítések: „összes törlése" fülre szűkítve, 326 — chat és cikk-hozzászólás szerkesztése, 327 — kiadási jegyzet a Névjegy alatt, 328 — „További hírek" kártya + GYIK, 329 — chat-lapozás, azonnali állapot, natív nyereményjáték-admin, 330 — natív admin menüpontok (kvíz, kérdőív, nyereményjáték) (+29 more)
 
 ### Community 424 - "plugin-2149/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.17
-Nodes (25): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled(), huhs_translation_parse_response() (+17 more)
+Cohesion: 0.14
+Nodes (30): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+22 more)
 
 ### Community 425 - "plugin-2152/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.13
-Nodes (34): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+26 more)
+Cohesion: 0.14
+Nodes (30): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+22 more)
 
 ### Community 427 - "verify-push-language.php"
 Cohesion: 0.06
 Nodes (6): scanKinds(), wp_date(), WP_Error, WP_REST_Request, WP_REST_Response, wp_timezone()
 
 ### Community 428 - "event_calendar_button_test.dart"
-Cohesion: 0.05
-Nodes (36): Exception, EventCheckinException, LinkDelegate? get, package:hungarian_hardstyle_app/models/event.dart, package:hungarian_hardstyle_app/services/event_calendar.dart, package:hungarian_hardstyle_app/services/event_checkin_service.dart, package:hungarian_hardstyle_app/services/people_suggestions.dart, package:hungarian_hardstyle_app/services/public_content_warmer.dart (+28 more)
+Cohesion: 0.11
+Nodes (17): LinkDelegate? get, package:hungarian_hardstyle_app/widgets/calendar_export_button.dart, package:url_launcher_platform_interface/link.dart, package:url_launcher_platform_interface/url_launcher_platform_interface.dart, calls, canLaunch, event, _FakeLauncher (+9 more)
 
 ### Community 429 - "patchcheck-2142/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
 ### Community 430 - "huhs_request_lang"
 Cohesion: 0.07
 Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
 
-### Community 431 - "huhs_request_lang"
-Cohesion: 0.07
-Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
+### Community 431 - "register_rest_route"
+Cohesion: 0.05
+Nodes (67): huhs_register_translation_sweep_api(), huhs_register_translation_sweep_api(), huhs_register_translation_sweep_api(), huhs_register_translation_sweep_api(), huhs_register_translation_sweep_api(), huhs_register_translation_sweep_api(), huhs_register_translation_sweep_api(), huhs_artist_editable_fields() (+59 more)
 
 ### Community 432 - "1b. Mi közös a két platformban — és mi nem"
 Cohesion: 0.06
@@ -2724,28 +2705,28 @@ Cohesion: 0.06
 Nodes (24): iconBlock, iconIndex, lines, notifications, pkg, session, t, targets (+16 more)
 
 ### Community 434 - "mutation-home-image/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
+Cohesion: 0.14
+Nodes (29): huhs_cloudinary_preview_meta_box_callback(), huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options() (+21 more)
 
 ### Community 435 - "plugin-2152/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
+Cohesion: 0.08
+Nodes (47): huhs_artist_meta_box_callback(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_cloudinary_preview_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field() (+39 more)
 
 ### Community 436 - "zipcheck/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.07
-Nodes (48): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genre_options() (+40 more)
+Cohesion: 0.15
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
 ### Community 437 - "verify-prize-forget.php"
 Cohesion: 0.06
 Nodes (5): add_post_meta(), update_post_meta(), WP_Error, WP_REST_Request, WP_REST_Response
 
-### Community 438 - "huhs_request_lang"
-Cohesion: 0.07
-Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
+### Community 438 - "huhs_update_claimed_artist_profile"
+Cohesion: 0.11
+Nodes (30): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+22 more)
 
 ### Community 439 - "extract/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.17
-Nodes (28): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled() (+20 more)
+Cohesion: 0.14
+Nodes (29): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key() (+21 more)
 
 ### Community 440 - "mutation-home-image2/huhs-mobile-api/includes/translation-sweep.php"
 Cohesion: 0.16
@@ -2753,15 +2734,15 @@ Nodes (30): huhs_translation_all_post_types(), huhs_translation_post_types(), hu
 
 ### Community 441 - "patchcheck-2145/huhs-mobile-api/includes/translation-sweep.php"
 Cohesion: 0.14
-Nodes (28): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_translation_api_key() (+20 more)
+Nodes (30): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+22 more)
 
 ### Community 442 - "plugin-2144-recon/huhs-mobile-api/includes/translation-sweep.php"
 Cohesion: 0.14
-Nodes (33): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+25 more)
+Nodes (27): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_translation_api_key() (+19 more)
 
 ### Community 443 - "plugin-2146/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.13
-Nodes (31): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+23 more)
+Cohesion: 0.14
+Nodes (31): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key() (+23 more)
 
 ### Community 444 - "ignorePatterns"
 Cohesion: 0.07
@@ -2769,11 +2750,11 @@ Nodes (32): .cache, .codex, coverage, .devin, .factory, import, oxc, .turbo (+24
 
 ### Community 445 - "patchcheck-2145/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
 ### Community 446 - "plugin-210/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.07
-Nodes (48): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genre_options() (+40 more)
+Cohesion: 0.15
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
 ### Community 447 - "plugin-213/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
@@ -2781,19 +2762,19 @@ Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist
 
 ### Community 448 - "plugin-2147/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.07
-Nodes (48): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genre_options() (+40 more)
-
-### Community 449 - "huhs_admin_api_read"
-Cohesion: 0.05
-Nodes (95): huhs_admin_api_read(), huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_poll_active_id(), huhs_poll_api_active() (+87 more)
-
-### Community 450 - "plugin-2150/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.07
 Nodes (51): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_cloudinary_preview_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field() (+43 more)
 
-### Community 451 - "plugin-2151/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.13
-Nodes (34): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+26 more)
+### Community 449 - "plugin-2147/huhs-mobile-api/includes/translation-sweep.php"
+Cohesion: 0.14
+Nodes (33): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+25 more)
+
+### Community 450 - "plugin-2150/huhs-mobile-api/includes/submissions.php"
+Cohesion: 0.14
+Nodes (29): huhs_genre_options(), huhs_genres_field(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options() (+21 more)
+
+### Community 451 - "plugin-2151/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.11
+Nodes (46): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+38 more)
 
 ### Community 452 - "verify-event-checkin.php"
 Cohesion: 0.06
@@ -2811,21 +2792,21 @@ Nodes (32): hasBirthDate(), isValidEmail(), needsBirthDateNotice(), normalizeLan
 Cohesion: 0.11
 Nodes (25): hits, namedNames, sources, lines, byFile, dictionary, dictionary, keys (+17 more)
 
-### Community 456 - "prize_entry_card_test.dart"
-Cohesion: 0.03
-Nodes (72): answerIndex, answers, correct, drawnAt, fromEntryResult, fromJson, HuhsPrize, HuhsPrizeAnswer (+64 more)
+### Community 456 - "huhs_event_details_callback"
+Cohesion: 0.14
+Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
 
 ### Community 457 - "cmp-21418/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.15
-Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
+Cohesion: 0.07
+Nodes (49): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_cloudinary_preview_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field() (+41 more)
 
-### Community 458 - "release.dart"
-Cohesion: 0.06
-Nodes (31): artists, audioStatus, available, coverUrl, freeExternalLink, fromJson, genre, hasFreeWav (+23 more)
+### Community 458 - "app_analytics.dart"
+Cohesion: 0.08
+Nodes (23): all, _analytics, AppAnalytics, AppAnalyticsEvent, appOpen, attendanceSet, eventOpen, initialize (+15 more)
 
 ### Community 459 - "mutation-home-image2/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.14
-Nodes (29): huhs_genre_options(), huhs_genres_field(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options() (+21 more)
+Cohesion: 0.15
+Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
 
 ### Community 460 - "befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
@@ -2836,92 +2817,92 @@ Cohesion: 0.14
 Nodes (31): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+23 more)
 
 ### Community 462 - "halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.07
-Nodes (48): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genre_options() (+40 more)
+Cohesion: 0.15
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
 ### Community 463 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.07
-Nodes (51): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_cloudinary_preview_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field() (+43 more)
+Cohesion: 0.14
+Nodes (29): huhs_genre_options(), huhs_genres_field(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options() (+21 more)
 
 ### Community 464 - "plugin-2140/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
 Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
-### Community 465 - "hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.11
-Nodes (45): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_enabled(), huhs_run_field_translation(), huhs_translation_field_list_values() (+37 more)
+### Community 465 - "hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-sweep.php"
+Cohesion: 0.16
+Nodes (26): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+18 more)
 
 ### Community 466 - "tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.15
-Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
+Cohesion: 0.07
+Nodes (51): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_cloudinary_preview_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field() (+43 more)
 
 ### Community 467 - "patchcheck-2141/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
-Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
+Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
 
 ### Community 468 - "patchcheck/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
 ### Community 469 - "php-plugin/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.18
-Nodes (24): huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_submission_statuses(), huhs_is_cloudinary_url(), huhs_profile_submission_honeypot(), huhs_profile_submission_rate_limit(), huhs_register_event_submission_api() (+16 more)
-
-### Community 470 - "php-plugin/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.10
-Nodes (51): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled() (+43 more)
-
-### Community 471 - "plugin-211/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
-
-### Community 472 - "plugin-213/huhs-mobile-api/includes/games.php"
-Cohesion: 0.13
-Nodes (29): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+21 more)
-
-### Community 473 - "plugin-2142/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.14
-Nodes (29): huhs_genre_options(), huhs_genres_field(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options() (+21 more)
-
-### Community 474 - "huhs_build_event_response"
-Cohesion: 0.18
-Nodes (18): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+10 more)
-
-### Community 475 - "plugin-2141/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
-
-### Community 476 - "post.dart"
-Cohesion: 0.02
-Nodes (118): ../core/content/date_formatters.dart, ../core/i18n/content_labels.dart, detail_prefetch.dart, genre_chip.dart, AppLanguage, openContentTarget, target, type (+110 more)
-
-### Community 477 - "plugin-2142-recon/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
-
-### Community 478 - "plugin-2143-recon/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.07
-Nodes (48): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genre_options() (+40 more)
-
-### Community 479 - "plugin-2144-recon/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
-
-### Community 480 - "plugin-2145-base/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.07
-Nodes (48): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genre_options() (+40 more)
-
-### Community 481 - "plugin-2146/huhs-mobile-api/includes/submissions.php"
-Cohesion: 0.14
-Nodes (29): huhs_genre_options(), huhs_genres_field(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options() (+21 more)
-
-### Community 482 - "plugin-2148/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
 Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
-### Community 483 - "huhs_admin_api_read"
-Cohesion: 0.05
-Nodes (97): huhs_admin_api_read(), huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_poll_active_id(), huhs_poll_api_active() (+89 more)
+### Community 470 - "php-plugin/huhs-mobile-api/includes/translation-sweep.php"
+Cohesion: 0.16
+Nodes (29): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled() (+21 more)
+
+### Community 471 - "plugin-211/huhs-mobile-api/includes/submissions.php"
+Cohesion: 0.15
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
+
+### Community 472 - "plugin-213/huhs-mobile-api/includes/games.php"
+Cohesion: 0.18
+Nodes (23): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+15 more)
+
+### Community 473 - "plugin-2142/huhs-mobile-api/includes/submissions.php"
+Cohesion: 0.15
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
+
+### Community 474 - "cmp-21418/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.22
+Nodes (23): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+15 more)
+
+### Community 475 - "plugin-2141/huhs-mobile-api/includes/submissions.php"
+Cohesion: 0.07
+Nodes (51): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_cloudinary_preview_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field() (+43 more)
+
+### Community 476 - "post.dart"
+Cohesion: 0.01
+Nodes (160): AppleAppCheckProvider get, ../core/content/date_formatters.dart, ../core/i18n/app_language.dart, ../core/i18n/content_labels.dart, ../../core/i18n/notification_texts.dart, ../core/navigation/app_navigator.dart, core/theme/app_theme.dart, detail_prefetch.dart (+152 more)
+
+### Community 477 - "plugin-2142-recon/huhs-mobile-api/includes/submissions.php"
+Cohesion: 0.15
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
+
+### Community 478 - "plugin-2143-recon/huhs-mobile-api/includes/submissions.php"
+Cohesion: 0.15
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
+
+### Community 479 - "plugin-2144-recon/huhs-mobile-api/includes/submissions.php"
+Cohesion: 0.07
+Nodes (48): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genre_options() (+40 more)
+
+### Community 480 - "plugin-2145-base/huhs-mobile-api/includes/submissions.php"
+Cohesion: 0.15
+Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
+
+### Community 481 - "plugin-2146/huhs-mobile-api/includes/submissions.php"
+Cohesion: 0.07
+Nodes (51): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_cloudinary_preview_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field() (+43 more)
+
+### Community 482 - "plugin-2148/huhs-mobile-api/includes/submissions.php"
+Cohesion: 0.14
+Nodes (29): huhs_genre_options(), huhs_genres_field(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options() (+21 more)
+
+### Community 483 - "plugin-2148/huhs-mobile-api/includes/translation-sweep.php"
+Cohesion: 0.15
+Nodes (31): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled() (+23 more)
 
 ### Community 484 - "plugin-2149/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
@@ -2929,47 +2910,47 @@ Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist
 
 ### Community 485 - "plugin-2151/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
 ### Community 486 - "plugin-2153/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
-Nodes (27): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+19 more)
+Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist_submission(), huhs_create_event_submission(), huhs_create_organizer_submission(), huhs_get_event_submission_options(), huhs_get_profile_submission_options(), huhs_get_submission_statuses() (+20 more)
 
 ### Community 487 - "plugin-2153/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.13
-Nodes (34): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+26 more)
+Cohesion: 0.14
+Nodes (31): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+23 more)
 
-### Community 488 - "plugin-2154/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.10
-Nodes (50): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled() (+42 more)
+### Community 488 - "plugin-2154/huhs-mobile-api/includes/games.php"
+Cohesion: 0.06
+Nodes (76): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+68 more)
 
 ### Community 489 - "tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.16
-Nodes (28): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled() (+20 more)
+Cohesion: 0.13
+Nodes (31): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+23 more)
 
-### Community 490 - "patchcheck-2141/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.10
-Nodes (47): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+39 more)
+### Community 490 - "patchcheck-2141/huhs-mobile-api/includes/translation-sweep.php"
+Cohesion: 0.17
+Nodes (23): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_enabled() (+15 more)
 
 ### Community 491 - "patchcheck-2142/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.23
-Nodes (20): huhs_schedule_translation_on_publish(), huhs_run_field_translation(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_source_hash() (+12 more)
+Cohesion: 0.25
+Nodes (19): huhs_schedule_translation_on_publish(), huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently() (+11 more)
 
 ### Community 492 - "plugin-213/huhs-mobile-api/includes/translation-sweep.php"
 Cohesion: 0.14
 Nodes (28): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy() (+20 more)
 
-### Community 493 - "plugin-2143-recon/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.10
-Nodes (47): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+39 more)
+### Community 493 - "plugin-2143-recon/huhs-mobile-api/includes/translation-sweep.php"
+Cohesion: 0.16
+Nodes (26): huhs_translation_all_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled(), huhs_translation_parse_response() (+18 more)
 
 ### Community 494 - "Changelog"
 Cohesion: 0.06
 Nodes (30): [0.2.1](https://github.com/morluto/rea/compare/rea-0.2.0...rea-0.2.1) (2026-07-12), [1.0.0](https://github.com/morluto/rea/compare/rea-agents-0.5.0...rea-agents-1.0.0) (2026-07-13), [1.1.0](https://github.com/morluto/rea/compare/rea-agents-1.0.0...rea-agents-1.1.0) (2026-07-13), [1.3.0](https://github.com/morluto/rea/compare/rea-agents-1.2.0...rea-agents-1.3.0) (2026-07-13), [2.4.0](https://github.com/morluto/rea/compare/rea-agents-2.3.0...rea-agents-2.4.0) (2026-07-23), [2.5.1](https://github.com/morluto/rea/compare/rea-agents-2.5.0...rea-agents-2.5.1) (2026-07-25), [2.7.0](https://github.com/morluto/rea/compare/rea-agents-2.6.0...rea-agents-2.7.0) (2026-07-28), [3.2.1](https://github.com/morluto/rea/compare/rea-agents-3.2.0...rea-agents-3.2.1) (2026-10-03) (+22 more)
 
-### Community 495 - "poll_results_screen.dart"
-Cohesion: 0.08
-Nodes (29): ../community/admin_resource_editor_screen.dart, _body, build, createState, error, _ErrorBody, fromJson, id (+21 more)
+### Community 495 - "huhs_event_details_callback"
+Cohesion: 0.14
+Nodes (19): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_image_field() (+11 more)
 
 ### Community 496 - "compilerOptions"
 Cohesion: 0.07
@@ -2977,15 +2958,15 @@ Nodes (29): ES2023, compilerOptions, allowUnreachableCode, allowUnusedLabels, ex
 
 ### Community 497 - "plugin-212/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.07
-Nodes (51): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_cloudinary_preview_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field() (+43 more)
+Nodes (48): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genre_options() (+40 more)
 
-### Community 498 - "services/twitch_chat.dart"
-Cohesion: 0.04
-Nodes (47): FieldValue, _auth, authorId, authorImageUrl, authorName, createdAt, deleteOwnMessage, displayName (+39 more)
+### Community 498 - "huhs_admin_api_write"
+Cohesion: 0.14
+Nodes (19): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+11 more)
 
 ### Community 499 - "slow_backend_plan_test.dart"
 Cohesion: 0.04
-Nodes (44): BaseAudioHandler, Directory, package:hungarian_hardstyle_app/models/label_library.dart, package:hungarian_hardstyle_app/services/birth_date.dart, package:hungarian_hardstyle_app/services/label_download_manager.dart, package:hungarian_hardstyle_app/services/label_library_service.dart, package:hungarian_hardstyle_app/services/wordpress_tag_cache.dart, package:hungarian_hardstyle_app/widgets/home_row_state.dart (+36 more)
+Nodes (43): Directory, package:hungarian_hardstyle_app/models/label_library.dart, package:hungarian_hardstyle_app/services/birth_date.dart, package:hungarian_hardstyle_app/services/label_download_manager.dart, package:hungarian_hardstyle_app/services/label_library_plan.dart, package:hungarian_hardstyle_app/services/label_library_service.dart, package:hungarian_hardstyle_app/services/wordpress_tag_cache.dart, package:hungarian_hardstyle_app/widgets/home_row_state.dart (+35 more)
 
 ### Community 500 - "MainActivity.kt"
 Cohesion: 0.15
@@ -2996,40 +2977,40 @@ Cohesion: 0.07
 Nodes (23): adminPayload, after, app, assert, authEmails, authStub, before, beforeEach (+15 more)
 
 ### Community 502 - "huhs_admin_api_read"
-Cohesion: 0.06
-Nodes (80): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+72 more)
+Cohesion: 0.20
+Nodes (27): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+19 more)
 
 ### Community 503 - "huhs_admin_api_read"
-Cohesion: 0.20
-Nodes (27): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+19 more)
-
-### Community 504 - "huhs_admin_api_read"
-Cohesion: 0.20
-Nodes (27): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+19 more)
-
-### Community 505 - "huhs_admin_api_read"
-Cohesion: 0.20
-Nodes (27): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+19 more)
-
-### Community 506 - "huhs_admin_api_read"
-Cohesion: 0.20
-Nodes (27): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+19 more)
-
-### Community 507 - "huhs_admin_api_read"
 Cohesion: 0.19
 Nodes (28): huhs_admin_api_read(), huhs_poll_repair_escapes(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants() (+20 more)
+
+### Community 504 - "huhs_admin_api_read"
+Cohesion: 0.05
+Nodes (84): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+76 more)
+
+### Community 505 - "huhs_admin_api_read"
+Cohesion: 0.05
+Nodes (85): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+77 more)
+
+### Community 506 - "huhs_admin_api_read"
+Cohesion: 0.19
+Nodes (28): huhs_admin_api_read(), huhs_poll_repair_escapes(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants() (+20 more)
+
+### Community 507 - "huhs_admin_api_read"
+Cohesion: 0.20
+Nodes (27): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+19 more)
 
 ### Community 508 - "huhs_request_lang"
 Cohesion: 0.14
 Nodes (25): huhs_build_release_response(), huhs_build_release_summary(), huhs_get_release_detail(), huhs_get_releases(), huhs_update_release_play_products(), WP_REST_Request, huhs_get_gallery_id(), huhs_get_gallery_images() (+17 more)
 
 ### Community 509 - "plugin-210/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+Cohesion: 0.10
+Nodes (44): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+36 more)
 
 ### Community 510 - "plugin-2142/huhs-mobile-api/includes/games.php"
-Cohesion: 0.15
-Nodes (26): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+18 more)
+Cohesion: 0.16
+Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
 ### Community 511 - "plugin-2154/huhs-mobile-api/includes/submissions.php"
 Cohesion: 0.15
@@ -3044,24 +3025,24 @@ Cohesion: 0.07
 Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
 
 ### Community 514 - "huhs_admin_api_read"
-Cohesion: 0.05
-Nodes (84): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+76 more)
-
-### Community 515 - "huhs_admin_api_read"
 Cohesion: 0.19
 Nodes (28): huhs_admin_api_read(), huhs_poll_repair_escapes(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants() (+20 more)
 
+### Community 515 - "huhs_admin_api_read"
+Cohesion: 0.20
+Nodes (27): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+19 more)
+
 ### Community 516 - "huhs_admin_api_read"
-Cohesion: 0.05
-Nodes (84): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+76 more)
+Cohesion: 0.20
+Nodes (27): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+19 more)
 
 ### Community 517 - "huhs_admin_api_read"
 Cohesion: 0.21
 Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
 ### Community 518 - "huhs_admin_api_read"
-Cohesion: 0.20
-Nodes (27): huhs_admin_api_read(), huhs_poll_repair_escapes(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants() (+19 more)
+Cohesion: 0.21
+Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
 ### Community 519 - "huhs_admin_api_read"
 Cohesion: 0.21
@@ -3071,9 +3052,9 @@ Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page
 Cohesion: 0.21
 Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
-### Community 521 - "huhs_request_lang"
+### Community 521 - "huhs_admin_api_write"
 Cohesion: 0.14
-Nodes (20): huhs_get_gallery_id(), huhs_get_gallery_images(), huhs_clean_content(), huhs_event_maps_url(), huhs_featured_image(), huhs_format_date(), huhs_get_embeds(), huhs_ip_rate_limited() (+12 more)
+Nodes (19): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+11 more)
 
 ### Community 522 - "huhs_request_lang"
 Cohesion: 0.07
@@ -3083,37 +3064,37 @@ Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value()
 Cohesion: 0.21
 Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
-### Community 524 - "huhs_request_lang"
-Cohesion: 0.14
-Nodes (25): huhs_build_release_response(), huhs_build_release_summary(), huhs_get_release_detail(), huhs_get_releases(), huhs_update_release_play_products(), WP_REST_Request, huhs_get_gallery_id(), huhs_get_gallery_images() (+17 more)
+### Community 524 - "php-plugin/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.22
+Nodes (22): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+14 more)
 
-### Community 525 - "huhs_update_claimed_artist_profile"
+### Community 525 - "huhs_admin_api_write"
 Cohesion: 0.14
-Nodes (24): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+16 more)
+Nodes (19): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+11 more)
 
 ### Community 526 - "huhs_request_lang"
 Cohesion: 0.07
 Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
 
 ### Community 527 - "huhs_admin_api_read"
-Cohesion: 0.21
-Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
-
-### Community 528 - "huhs_admin_api_read"
 Cohesion: 0.20
 Nodes (27): huhs_admin_api_read(), huhs_poll_repair_escapes(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants() (+19 more)
+
+### Community 528 - "huhs_admin_api_read"
+Cohesion: 0.06
+Nodes (73): huhs_admin_api_read(), huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values() (+65 more)
 
 ### Community 529 - "huhs_request_lang"
 Cohesion: 0.07
 Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
 
-### Community 530 - "rest_ensure_response"
-Cohesion: 0.08
-Nodes (63): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+55 more)
+### Community 530 - "huhs_admin_api_read"
+Cohesion: 0.09
+Nodes (50): huhs_admin_api_read(), huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_twitch_card_normalize(), huhs_twitch_card_page() (+42 more)
 
-### Community 531 - "huhs_event_details_callback"
-Cohesion: 0.14
-Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
+### Community 531 - "hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.23
+Nodes (20): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+12 more)
 
 ### Community 532 - "weekly-digest-plan.js"
 Cohesion: 0.10
@@ -3123,9 +3104,9 @@ Nodes (23): digestAllowed(), digestDedupeKey(), digestParams(), digestParamsByLa
 Cohesion: 0.09
 Nodes (27): artifacts:managed-evidence, artifacts:mcp-catalog, artifacts:product-catalog, artifacts:skills, .cache/static-checks/oxlint.json, docs/verification/managed-conformance-ledger.json, docs/verification/managed-conformance-manifest.json, dependsOn (+19 more)
 
-### Community 534 - "plugin-211/huhs-mobile-api/includes/games.php"
-Cohesion: 0.18
-Nodes (23): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+15 more)
+### Community 534 - "patchcheck/huhs-mobile-api/includes/games.php"
+Cohesion: 0.09
+Nodes (46): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+38 more)
 
 ### Community 535 - "huhs_admin_api_read"
 Cohesion: 0.21
@@ -3143,25 +3124,25 @@ Nodes (28): huhs_genre_options(), huhs_save_organizer_meta(), huhs_create_artist
 Cohesion: 0.16
 Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
-### Community 539 - "mutation-home-image/huhs-mobile-api/includes/games.php"
-Cohesion: 0.16
-Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
+### Community 539 - "huhs_request_lang"
+Cohesion: 0.19
+Nodes (18): huhs_get_gallery_id(), huhs_get_gallery_images(), huhs_clean_content(), huhs_clean_title(), huhs_featured_image(), huhs_format_date(), huhs_get_embeds(), huhs_ip_rate_limited() (+10 more)
 
 ### Community 540 - "huhs_event_details_callback"
 Cohesion: 0.14
-Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
+Nodes (19): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_image_field() (+11 more)
 
-### Community 541 - "halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/games.php"
-Cohesion: 0.16
-Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
+### Community 541 - "plugin-2147/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.23
+Nodes (20): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt() (+12 more)
 
 ### Community 542 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/games.php"
 Cohesion: 0.16
 Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
 ### Community 543 - "hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/games.php"
-Cohesion: 0.16
-Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
+Cohesion: 0.15
+Nodes (26): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+18 more)
 
 ### Community 544 - "tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/games.php"
 Cohesion: 0.16
@@ -3184,16 +3165,16 @@ Cohesion: 0.17
 Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
 ### Community 549 - "huhs_admin_api_read"
-Cohesion: 0.20
-Nodes (27): huhs_admin_api_read(), huhs_poll_repair_escapes(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants() (+19 more)
+Cohesion: 0.21
+Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
 ### Community 550 - "patchcheck-2145/huhs-mobile-api/includes/games.php"
-Cohesion: 0.16
-Nodes (26): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+18 more)
+Cohesion: 0.15
+Nodes (27): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+19 more)
 
-### Community 551 - "huhs_event_details_callback"
-Cohesion: 0.14
-Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
+### Community 551 - "plugin-2148/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.23
+Nodes (20): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt() (+12 more)
 
 ### Community 552 - "plugin-2141/huhs-mobile-api/includes/games.php"
 Cohesion: 0.17
@@ -3203,29 +3184,29 @@ Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_ga
 Cohesion: 0.16
 Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
-### Community 554 - "artist_claim_cache_test.dart"
-Cohesion: 0.05
-Nodes (39): package:hungarian_hardstyle_app/models/artist_claim_status.dart, package:hungarian_hardstyle_app/providers/cache_provider.dart, package:hungarian_hardstyle_app/services/async_cache_plan.dart, package:hungarian_hardstyle_app/services/async_cache_store.dart, package:hungarian_hardstyle_app/widgets/account_prefetch.dart, artistClaimStatus, backing, claimedArtists (+31 more)
+### Community 554 - "mutation-home-image2/huhs-mobile-api/includes/admin.php"
+Cohesion: 0.11
+Nodes (14): huhs_about_page(), huhs_dashboard_page(), huhs_delete_submission_attachments(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types(), huhs_about_page() (+6 more)
 
 ### Community 555 - "plugin-2143-recon/huhs-mobile-api/includes/games.php"
-Cohesion: 0.15
-Nodes (27): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+19 more)
-
-### Community 556 - "plugin-2144-recon/huhs-mobile-api/includes/games.php"
 Cohesion: 0.16
 Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
+### Community 556 - "plugin-2144-recon/huhs-mobile-api/includes/games.php"
+Cohesion: 0.16
+Nodes (26): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+18 more)
+
 ### Community 557 - "huhs_admin_api_read"
-Cohesion: 0.05
-Nodes (80): huhs_about_page(), huhs_dashboard_page(), huhs_delete_submission_attachments(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types(), huhs_admin_api_read() (+72 more)
+Cohesion: 0.21
+Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
 ### Community 558 - "huhs_event_details_callback"
 Cohesion: 0.14
 Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
 
-### Community 559 - "plugin-2145-base/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.09
-Nodes (53): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+45 more)
+### Community 559 - "plugin-2145-base/huhs-mobile-api/includes/translation-sweep.php"
+Cohesion: 0.17
+Nodes (25): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled(), huhs_translation_parse_response() (+17 more)
 
 ### Community 560 - "plugin-2146/huhs-mobile-api/includes/games.php"
 Cohesion: 0.16
@@ -3240,16 +3221,16 @@ Cohesion: 0.16
 Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
 ### Community 563 - "huhs_admin_api_read"
-Cohesion: 0.20
-Nodes (27): huhs_admin_api_read(), huhs_poll_repair_escapes(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants() (+19 more)
+Cohesion: 0.21
+Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
 
 ### Community 564 - "plugin-2150/huhs-mobile-api/includes/games.php"
 Cohesion: 0.16
 Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
 
 ### Community 565 - "plugin-2150/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.14
-Nodes (30): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+22 more)
+Cohesion: 0.13
+Nodes (31): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+23 more)
 
 ### Community 566 - "huhs_admin_api_read"
 Cohesion: 0.21
@@ -3261,59 +3242,59 @@ Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_ga
 
 ### Community 568 - "plugin-2151-base/huhs-mobile-api/includes/translation-sweep.php"
 Cohesion: 0.14
-Nodes (31): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+23 more)
+Nodes (32): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish() (+24 more)
 
 ### Community 569 - "plugin-2151/huhs-mobile-api/includes/games.php"
-Cohesion: 0.16
-Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
-
-### Community 570 - "huhs_admin_api_read"
-Cohesion: 0.20
-Nodes (27): huhs_admin_api_read(), huhs_poll_repair_escapes(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants() (+19 more)
-
-### Community 571 - "plugin-2152/huhs-mobile-api/includes/games.php"
-Cohesion: 0.16
-Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
-
-### Community 572 - "plugin-2153/huhs-mobile-api/includes/games.php"
-Cohesion: 0.16
-Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
-
-### Community 573 - "plugin-2154/huhs-mobile-api/includes/games.php"
 Cohesion: 0.15
 Nodes (26): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+18 more)
+
+### Community 570 - "huhs_admin_api_read"
+Cohesion: 0.21
+Nodes (26): huhs_admin_api_read(), huhs_prize_active_id(), huhs_prize_admin_page(), huhs_prize_answers(), huhs_prize_api_active(), huhs_prize_api_enter(), huhs_prize_api_participants(), huhs_prize_api_pending() (+18 more)
+
+### Community 571 - "plugin-2152/huhs-mobile-api/includes/games.php"
+Cohesion: 0.15
+Nodes (26): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+18 more)
+
+### Community 572 - "huhs_request_lang"
+Cohesion: 0.20
+Nodes (17): huhs_get_gallery_id(), huhs_get_gallery_images(), huhs_clean_content(), huhs_featured_image(), huhs_format_date(), huhs_get_embeds(), huhs_ip_rate_limited(), huhs_make_excerpt() (+9 more)
+
+### Community 573 - "huhs_event_details_callback"
+Cohesion: 0.18
+Nodes (17): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_image_field(), huhs_organizer_field(), huhs_select_field() (+9 more)
 
 ### Community 574 - "package.json"
 Cohesion: 0.13
 Nodes (26): .agents/skills/reverse-engineer-anything/**, .agents/skills/reverse-engineer-anything/SKILL.md, .oxfmtrc.json, package.json, scripts/fixtures/managed/**, scripts/generate-completion-ledger.mjs, scripts/generate-error-schema.mjs, scripts/generate-mcp-tool-catalog.mjs (+18 more)
 
 ### Community 575 - "halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.22
-Nodes (23): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+15 more)
+Cohesion: 0.21
+Nodes (24): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english(), huhs_translation_fields_source_hash() (+16 more)
 
 ### Community 576 - "huhs_admin_api_write"
 Cohesion: 0.14
-Nodes (19): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+11 more)
+Nodes (24): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+16 more)
 
 ### Community 577 - "huhs_event_details_callback"
-Cohesion: 0.14
-Nodes (19): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_image_field() (+11 more)
+Cohesion: 0.23
+Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
 
-### Community 578 - "huhs_event_details_callback"
-Cohesion: 0.14
-Nodes (19): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_image_field() (+11 more)
+### Community 578 - "huhs_request_lang"
+Cohesion: 0.20
+Nodes (17): huhs_get_gallery_id(), huhs_get_gallery_images(), huhs_clean_content(), huhs_featured_image(), huhs_format_date(), huhs_get_embeds(), huhs_ip_rate_limited(), huhs_make_excerpt() (+9 more)
 
 ### Community 579 - "plugin-2150/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.21
+Cohesion: 0.22
 Nodes (23): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+15 more)
 
 ### Community 580 - "plugin-2151-base/huhs-mobile-api/includes/translation-fields.php"
 Cohesion: 0.22
-Nodes (22): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+14 more)
+Nodes (21): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+13 more)
 
 ### Community 581 - "plugin-2153/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.23
-Nodes (20): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt() (+12 more)
+Cohesion: 0.22
+Nodes (22): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+14 more)
 
 ### Community 582 - "write-content-translations.mjs"
 Cohesion: 0.12
@@ -3337,23 +3318,23 @@ Nodes (21): dictionary, lines, PAIRS, raw, dictionary, lines, missing, PAIRS (+1
 
 ### Community 587 - "huhs_event_details_callback"
 Cohesion: 0.14
-Nodes (19): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_image_field() (+11 more)
+Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
 
 ### Community 588 - "huhs_event_details_callback"
-Cohesion: 0.14
-Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
+Cohesion: 0.18
+Nodes (18): huhs_artist_meta_box_callback(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+10 more)
 
 ### Community 589 - "huhs_admin_api_write"
 Cohesion: 0.31
 Nodes (12): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+4 more)
 
-### Community 590 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.15
-Nodes (31): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled() (+23 more)
+### Community 590 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.11
+Nodes (45): huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_enabled(), huhs_run_field_translation(), huhs_translation_field_list_values() (+37 more)
 
 ### Community 591 - "huhs_admin_api_write"
-Cohesion: 0.14
-Nodes (19): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+11 more)
+Cohesion: 0.31
+Nodes (12): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+4 more)
 
 ### Community 592 - "settings_screen.dart"
 Cohesion: 0.06
@@ -3361,19 +3342,19 @@ Nodes (36): _achievementNotificationsEnabled, _achievementNotificationsKey, _aut
 
 ### Community 593 - "add_meta_box"
 Cohesion: 0.02
-Nodes (102): kcr_meta_box(), kcr_order_meta_box(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_cloudinary_preview_meta_box_callback(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_cloudinary_preview_meta_box_callback() (+94 more)
+Nodes (100): kcr_meta_box(), kcr_order_meta_box(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_add_cloudinary_preview_meta_boxes(), huhs_add_event_meta_boxes(), huhs_cloudinary_preview_meta_box_callback(), huhs_add_organizer_meta_box() (+92 more)
 
 ### Community 594 - "plugin-2140/huhs-mobile-api/includes/games.php"
-Cohesion: 0.18
-Nodes (23): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+15 more)
+Cohesion: 0.13
+Nodes (29): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+21 more)
 
-### Community 595 - "huhs_event_details_callback"
-Cohesion: 0.14
-Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
+### Community 595 - "huhs_request_lang"
+Cohesion: 0.20
+Nodes (17): huhs_get_gallery_id(), huhs_get_gallery_images(), huhs_clean_content(), huhs_featured_image(), huhs_format_date(), huhs_get_embeds(), huhs_ip_rate_limited(), huhs_make_excerpt() (+9 more)
 
-### Community 596 - "huhs_push_send"
-Cohesion: 0.17
-Nodes (23): huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job(), huhs_push_base64url(), huhs_push_chain_forget(), huhs_push_chain_index(), huhs_push_chain_register(), huhs_push_classify_response() (+15 more)
+### Community 596 - "app_strings.dart"
+Cohesion: 0.11
+Nodes (18): AppStrings, decodeDictionary, dictionaryAsset, dictionarySize, _english, isEnglish, _language, parseEnglishDictionary (+10 more)
 
 ### Community 597 - "verify-twitch-card.php"
 Cohesion: 0.08
@@ -3387,41 +3368,41 @@ Nodes (23): 0. ÉLŐ ÁLLAPOT a Play-en (mérve, `node tools/check-play-track.mj
 Cohesion: 0.15
 Nodes (20): birthdayGreeting(), birthdayKey(), birthdayMatches(), birthdayTargets(), displayNameOf(), isLeapYear(), localDateIn(), normalizeLanguage() (+12 more)
 
-### Community 600 - "huhs_build_event_response"
-Cohesion: 0.17
-Nodes (19): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+11 more)
+### Community 600 - "huhs_request_lang"
+Cohesion: 0.07
+Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
 
 ### Community 601 - "notification_permission_gate.dart"
 Cohesion: 0.06
 Nodes (32): copyWith, declined, doNotAsk, explained, fromPreferences, memory, none, NotificationPermissionAction (+24 more)
 
-### Community 602 - "label_library_plan_test.dart"
-Cohesion: 0.07
-Nodes (24): package:hungarian_hardstyle_app/models/release.dart, package:hungarian_hardstyle_app/screens/releases/releases_screen.dart, package:hungarian_hardstyle_app/services/artist_releases_plan.dart, package:hungarian_hardstyle_app/services/label_library_plan.dart, package:hungarian_hardstyle_app/widgets/release_preview_player.dart, ScrollableState, main, main (+16 more)
+### Community 602 - "huhs_update_claimed_artist_profile"
+Cohesion: 0.19
+Nodes (17): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+9 more)
 
 ### Community 603 - "mutation-home-image2/huhs-mobile-api/includes/translation-fields.php"
 Cohesion: 0.23
 Nodes (20): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt() (+12 more)
 
-### Community 604 - "return"
-Cohesion: 0.02
-Nodes (92): , allowfullscreen, async_cache_plan.dart, _after, charset, _clean, cleaned, _firstSegment (+84 more)
+### Community 604 - "youtube_embed.dart"
+Cohesion: 0.09
+Nodes (22): , allowfullscreen, _after, charset, _clean, cleaned, _firstSegment, host (+14 more)
 
-### Community 605 - "twitch_live_test.dart"
-Cohesion: 0.06
-Nodes (29): HttpClient, HttpClientRequest, HttpHeaders, package:hungarian_hardstyle_app/services/adaptive_card_layout.dart, package:hungarian_hardstyle_app/services/twitch_live.dart, package:hungarian_hardstyle_app/widgets/news_card.dart, main, main (+21 more)
+### Community 605 - "plugin-2143-recon/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.25
+Nodes (18): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_source_hash() (+10 more)
 
-### Community 606 - "genre_discovery_screen.dart"
-Cohesion: 0.06
-Nodes (32): _artistContent, _artistHasMore, _artistPage, _artists, build, child, createState, dispose (+24 more)
+### Community 606 - "kcr-account-ui-fix-update/kcr-account-ui-fix/kcr-account-ui-fix.php"
+Cohesion: 0.18
+Nodes (13): kcr_account_fix_company_ids(), kcr_account_fix_content(), kcr_account_fix_field(), kcr_account_fix_login(), kcr_account_fix_newsletter(), kcr_account_fix_register(), kcr_account_fix_shortcodes(), kcr_security_handle_login() (+5 more)
 
 ### Community 607 - "huhs_build_event_response"
 Cohesion: 0.18
 Nodes (18): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+10 more)
 
-### Community 608 - "huhs_build_event_response"
-Cohesion: 0.18
-Nodes (18): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+10 more)
+### Community 608 - "huhs_event_details_callback"
+Cohesion: 0.23
+Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
 
 ### Community 609 - "repairCommunityProfileProjections"
 Cohesion: 0.11
@@ -3429,35 +3410,35 @@ Nodes (33): achievementCatalogIsReliable(), allowCallByIp(), badgeForPoints(), c
 
 ### Community 610 - "plugin-2146/huhs-mobile-api/includes/translation-fields.php"
 Cohesion: 0.22
-Nodes (23): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+15 more)
+Nodes (22): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+14 more)
 
 ### Community 611 - "huhs_request_lang"
-Cohesion: 0.19
-Nodes (18): huhs_get_gallery_id(), huhs_get_gallery_images(), huhs_clean_content(), huhs_clean_title(), huhs_featured_image(), huhs_format_date(), huhs_get_embeds(), huhs_ip_rate_limited() (+10 more)
+Cohesion: 0.12
+Nodes (31): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+23 more)
 
-### Community 612 - "plugin-2151/huhs-mobile-api/includes/translation-fields.php"
+### Community 612 - "huhs_event_details_callback"
 Cohesion: 0.23
-Nodes (20): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt() (+12 more)
+Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
 
 ### Community 613 - "mutation-home-image2/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.14
-Nodes (18): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+10 more)
+Cohesion: 0.29
+Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
-### Community 614 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.24
-Nodes (19): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt() (+11 more)
+### Community 614 - "huhs_event_details_callback"
+Cohesion: 0.23
+Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
 
-### Community 615 - "plugin-2147/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.14
-Nodes (18): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+10 more)
+### Community 615 - "huhs_event_details_callback"
+Cohesion: 0.23
+Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
 
-### Community 616 - "huhs_request_lang"
-Cohesion: 0.12
-Nodes (30): huhs_build_organizer_response(), huhs_get_organizer_detail(), huhs_get_organizer_upcoming_events(), huhs_get_organizers(), huhs_register_organizers_api(), WP_REST_Request, huhs_build_release_response(), huhs_build_release_summary() (+22 more)
+### Community 616 - "zipcheck/huhs-mobile-api/includes/event-checkin.php"
+Cohesion: 0.06
+Nodes (72): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+64 more)
 
-### Community 617 - "voting_service.dart"
-Cohesion: 0.11
-Nodes (17): _auth, cachedVotedCategories, cachedVotingStatus, _cacheStatus, cacheVotedCategories, cacheVotingStatus, _deviceId, _deviceIdKey (+9 more)
+### Community 617 - "patchcheck-2141/huhs-mobile-api/includes/translation-fields.php"
+Cohesion: 0.29
+Nodes (16): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_source_hash() (+8 more)
 
 ### Community 618 - "play-product-plan.test.cjs"
 Cohesion: 0.15
@@ -3568,12 +3549,12 @@ Cohesion: 0.09
 Nodes (23): <FlutterApplicationLifeCycleDelegate>, -applicationcontinueUserActivityrestorationHandler, -applicationDidBecomeActive, -applicationDidEnterBackground, -applicationdidFailToRegisterForRemoteNotificationsWithError, -applicationdidFinishLaunchingWithOptions, -applicationdidReceiveLocalNotification, -applicationdidReceiveRemoteNotificationfetchCompletionHandler (+15 more)
 
 ### Community 645 - "extract/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.22
-Nodes (22): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+14 more)
+Cohesion: 0.21
+Nodes (24): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+16 more)
 
 ### Community 646 - "tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-fields.php"
 Cohesion: 0.22
-Nodes (23): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+15 more)
+Nodes (22): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+14 more)
 
 ### Community 647 - "huhs_admin_api_write"
 Cohesion: 0.18
@@ -3590,21 +3571,21 @@ Nodes (14): after, app, assert, before, beforeEach, {
   __applyAchievementRestorePlanForTests: applyPlan,
 }, crypto, db (+6 more)
 
-### Community 650 - "i18n_untranslated_ui_test.dart"
-Cohesion: 0.13
-Nodes (14): allowedLiterals, dictionary, displayCalls, displayParams, enclosingCall, hungarianAccent, hungarianWord, hungarianWordsWithoutAccent (+6 more)
+### Community 650 - "cmp-21418/huhs-mobile-api/includes/poll.php"
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
-### Community 651 - "chat_message_text_test.dart"
-Cohesion: 0.09
-Nodes (19): package:flutter/gestures.dart, package:hungarian_hardstyle_app/services/chat_mention_plan.dart, package:hungarian_hardstyle_app/widgets/chat_mention_overlay.dart, package:hungarian_hardstyle_app/widgets/chat_message_text.dart, TapGestureRecognizer, contentItem, main, user (+11 more)
+### Community 651 - "php-plugin/huhs-mobile-api/includes/poll.php"
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
 ### Community 652 - "inputs"
 Cohesion: 0.16
 Nodes (22): bridge/**/*.{java,py}, *.{cjs,cts,js,jsx,mjs,mts,ts,tsx}, docs/**/*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}, !docs/.vitepress/cache/**, !docs/.vitepress/dist/**, !experiments/analysis-efficiency/results/**, experiments/**/*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}, .gitignore (+14 more)
 
 ### Community 653 - "plugin-2149/huhs-mobile-api/includes/games.php"
-Cohesion: 0.16
-Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
+Cohesion: 0.15
+Nodes (26): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+18 more)
 
 ### Community 654 - "FlutterViewController"
 Cohesion: 0.09
@@ -3707,69 +3688,68 @@ Cohesion: 0.09
 Nodes (22): FlutterViewController, -initWithCoderNS_DESIGNATED_INITIALIZER, -initWithEnginenibNamebundleNS_DESIGNATED_INITIALIZER, -initWithProjectinitialRoutenibNamebundleNS_DESIGNATED_INITIALIZER, -initWithProjectnibNamebundleNS_DESIGNATED_INITIALIZER, +isUIAccessibilityIsVoiceOverRunning, -loadDefaultSplashScreenView, -lookupKeyForAsset (+14 more)
 
 ### Community 679 - "huhs_event_details_callback"
-Cohesion: 0.23
-Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
-
-### Community 680 - "zipcheck/huhs-mobile-api/includes/games.php"
-Cohesion: 0.16
-Nodes (25): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+17 more)
-
-### Community 681 - "label_library.dart"
-Cohesion: 0.08
-Nodes (24): artist, coverUrl, fileName, fromJson, isAdOnly, isPurchased, key, labelFileName (+16 more)
-
-### Community 682 - "huhs_event_details_callback"
-Cohesion: 0.23
-Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
-
-### Community 683 - "huhs_event_details_callback"
-Cohesion: 0.23
-Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
-
-### Community 684 - "huhs_event_details_callback"
-Cohesion: 0.11
-Nodes (24): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genre_options() (+16 more)
-
-### Community 685 - "huhs_event_details_callback"
 Cohesion: 0.14
 Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
 
-### Community 686 - "huhs_event_details_callback"
+### Community 680 - "plugin-2145-base/huhs-mobile-api/includes/poll.php"
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
+
+### Community 681 - "bool get"
+Cohesion: 0.02
+Nodes (81): bool get, articleCategoriesLabel, join, parts, build, extra, safe, ScrollBottomInset (+73 more)
+
+### Community 682 - "plugin-2147/huhs-mobile-api/includes/poll.php"
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
+
+### Community 683 - "huhs_event_details_callback"
+Cohesion: 0.14
+Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
+
+### Community 684 - "huhs_event_details_callback"
 Cohesion: 0.23
 Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
+
+### Community 685 - "plugin-2148/huhs-mobile-api/includes/poll.php"
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
+
+### Community 686 - "befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/poll.php"
+Cohesion: 0.37
+Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
 
 ### Community 687 - "patchcheck-2142/huhs-mobile-api/includes/translation-sweep.php"
-Cohesion: 0.24
-Nodes (16): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_post_types(), huhs_run_translation(), huhs_translation_enabled(), huhs_register_translation_sweep_api(), huhs_run_translation_sweep_event() (+8 more)
+Cohesion: 0.14
+Nodes (28): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_all_post_types(), huhs_translation_meta_auth_callback(), huhs_translation_post_types(), huhs_run_content_translation(), huhs_run_translation(), huhs_translation_api_key() (+20 more)
 
-### Community 688 - "patchcheck/huhs-mobile-api/includes/games.php"
-Cohesion: 0.18
-Nodes (23): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+15 more)
+### Community 688 - "huhs_update_claimed_artist_profile"
+Cohesion: 0.28
+Nodes (12): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+4 more)
 
 ### Community 689 - "huhs_event_details_callback"
-Cohesion: 0.23
-Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
+Cohesion: 0.14
+Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
 
-### Community 690 - "plugin-212/huhs-mobile-api/includes/games.php"
-Cohesion: 0.18
-Nodes (23): huhs_game_artwork_defaults(), huhs_game_create_clip_token(), huhs_game_datetime(), huhs_game_images_page(), huhs_game_is_quiz_type(), huhs_game_media_json(), huhs_game_media_values(), huhs_game_normalize_timeline_items() (+15 more)
+### Community 690 - "huhs_update_claimed_artist_profile"
+Cohesion: 0.28
+Nodes (12): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+4 more)
 
-### Community 691 - "bool get"
-Cohesion: 0.03
-Nodes (58): bool get, HttpClient? client,
-  Duration, androidChannel, appleChannel, _busy, clear, isRunning, _last (+50 more)
+### Community 691 - "huhs_update_claimed_artist_profile"
+Cohesion: 0.28
+Nodes (12): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+4 more)
 
 ### Community 692 - "hard-wallet-plan.test.cjs"
 Cohesion: 0.16
 Nodes (17): base58Decode(), base58Encode(), buildChallengeMessage(), challengeProblem(), crypto, ED25519_SPKI_PREFIX, formatRawAmount(), NETWORK_RPC (+9 more)
 
 ### Community 693 - "huhs_event_details_callback"
-Cohesion: 0.14
-Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
-
-### Community 694 - "huhs_event_details_callback"
 Cohesion: 0.23
 Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
+
+### Community 694 - "huhs_event_details_callback"
+Cohesion: 0.14
+Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
 
 ### Community 695 - "check-play-notes.mjs"
 Cohesion: 0.13
@@ -3789,41 +3769,41 @@ Nodes (11): after, app, assert, {
   __reconcileAcceptedSubmissionPointsForTests: reconcileAccepted,
 }, before, beforeEach, crypto, db (+3 more)
 
-### Community 697 - "huhs_event_details_callback"
-Cohesion: 0.23
-Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
+### Community 697 - "huhs_update_claimed_artist_profile"
+Cohesion: 0.28
+Nodes (12): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+4 more)
 
-### Community 698 - "huhs_admin_api_write"
-Cohesion: 0.13
-Nodes (20): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+12 more)
+### Community 698 - "mutation-home-image/huhs-mobile-api/includes/voting.php"
+Cohesion: 0.29
+Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
 ### Community 699 - "befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-fields.php"
 Cohesion: 0.21
 Nodes (23): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+15 more)
 
-### Community 700 - "app_notification.dart"
-Cohesion: 0.12
-Nodes (16): AppNotification, archivedAt, body, createdAt, fromSnapshot, id, isArchived, isRead (+8 more)
+### Community 700 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/admin.php"
+Cohesion: 0.22
+Nodes (7): huhs_about_page(), huhs_dashboard_page(), huhs_delete_submission_attachments(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types()
 
 ### Community 701 - "huhs_admin_api_write"
-Cohesion: 0.18
-Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
+Cohesion: 0.19
+Nodes (17): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+9 more)
 
 ### Community 702 - "huhs_admin_api_write"
-Cohesion: 0.18
-Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
+Cohesion: 0.13
+Nodes (20): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+12 more)
 
 ### Community 703 - "plugin-2144-recon/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.27
-Nodes (16): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt(), huhs_translation_game_question_texts() (+8 more)
+Cohesion: 0.22
+Nodes (21): huhs_schedule_translation_on_publish(), huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently() (+13 more)
 
 ### Community 704 - "huhs_admin_api_write"
-Cohesion: 0.18
-Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
+Cohesion: 0.19
+Nodes (17): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+9 more)
 
 ### Community 705 - "get_post_meta"
 Cohesion: 0.01
-Nodes (275): huhs_artist_meta_box_callback(), huhs_event_maps_url(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field() (+267 more)
+Nodes (290): huhs_release_create_download_token(), huhs_release_download_filename(), huhs_release_ensure_mp3_96(), huhs_release_private_dir(), huhs_release_private_variant(), WP_REST_Request, huhs_release_create_download_token(), huhs_release_download_filename() (+282 more)
 
 ### Community 706 - "huhs_admin_api_write"
 Cohesion: 0.18
@@ -3847,19 +3827,19 @@ Nodes (11): kcr_full_company_editor(), kcr_full_editor_field(), kcr_full_editor_
 
 ### Community 711 - "huhs_admin_api_write"
 Cohesion: 0.13
-Nodes (21): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+13 more)
+Nodes (20): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+12 more)
 
 ### Community 712 - "huhs_admin_api_write"
 Cohesion: 0.18
 Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
 
 ### Community 713 - "plugin-2149/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.20
-Nodes (25): huhs_schedule_translation_on_publish(), huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently() (+17 more)
+Cohesion: 0.22
+Nodes (22): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+14 more)
 
 ### Community 714 - "huhs_admin_api_write"
-Cohesion: 0.19
-Nodes (17): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+9 more)
+Cohesion: 0.18
+Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
 
 ### Community 715 - "huhs_admin_api_write"
 Cohesion: 0.18
@@ -3870,28 +3850,28 @@ Cohesion: 0.18
 Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
 
 ### Community 717 - "huhs_admin_api_write"
-Cohesion: 0.13
-Nodes (20): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+12 more)
+Cohesion: 0.18
+Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
 
-### Community 718 - "huhs_admin_api_write"
-Cohesion: 0.14
-Nodes (19): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+11 more)
+### Community 718 - "patchcheck-2145/huhs-mobile-api/includes/voting.php"
+Cohesion: 0.29
+Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
 ### Community 719 - "plugin-2152/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.23
-Nodes (20): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt() (+12 more)
+Cohesion: 0.22
+Nodes (22): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+14 more)
 
 ### Community 720 - "huhs_admin_api_write"
-Cohesion: 0.13
-Nodes (20): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+12 more)
+Cohesion: 0.18
+Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
 
-### Community 721 - "wp_mail"
-Cohesion: 0.10
-Nodes (34): kcr_account_fix_company_ids(), kcr_account_fix_content(), kcr_account_fix_field(), kcr_account_fix_login(), kcr_account_fix_newsletter(), kcr_account_fix_register(), kcr_account_fix_shortcodes(), kcr_security_handle_login() (+26 more)
+### Community 721 - "plugin-2154/huhs-mobile-api/includes/contest.php"
+Cohesion: 0.21
+Nodes (20): huhs_contest_count_likes(), huhs_contest_deadline(), huhs_contest_entries_open(), huhs_contest_error(), huhs_contest_finalize(), huhs_contest_is_photo(), huhs_contest_is_soundcloud(), huhs_contest_like() (+12 more)
 
-### Community 722 - "label_playlist_membership.dart"
-Cohesion: 0.12
-Nodes (15): clean, keyFor, LabelPlaylistMembership, load, loadOrder, order, orderKeyFor, _orderPrefix (+7 more)
+### Community 722 - "huhs_translation_request"
+Cohesion: 0.42
+Nodes (9): huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled(), huhs_translation_parse_response(), huhs_translation_provider(), huhs_translation_request() (+1 more)
 
 ### Community 723 - "zipcheck/huhs-mobile-api/includes/contest.php"
 Cohesion: 0.21
@@ -3922,28 +3902,28 @@ Cohesion: 0.24
 Nodes (17): at, analyzeErrors(), enclosingOpenBracket(), findConstKeyword(), main(), offsetOf(), planConstRemovals(), planFinalInsertions() (+9 more)
 
 ### Community 730 - "plugin-2140/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.31
-Nodes (14): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt(), huhs_translation_list() (+6 more)
+Cohesion: 0.25
+Nodes (19): huhs_schedule_translation_on_publish(), huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently() (+11 more)
 
-### Community 731 - "content_language_reload.dart"
-Cohesion: 0.07
-Nodes (23): app_language.dart, app_strings.dart, articleCategoriesLabel, join, parts, _contentLanguage, dispose, initState (+15 more)
+### Community 731 - "plugin-210/huhs-mobile-api/includes/voting.php"
+Cohesion: 0.29
+Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
 ### Community 732 - "patchcheck-2145/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.22
-Nodes (21): huhs_schedule_translation_on_publish(), huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently() (+13 more)
+Cohesion: 0.28
+Nodes (17): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_source_hash() (+9 more)
 
 ### Community 733 - "huhs_admin_api_write"
 Cohesion: 0.18
 Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
 
 ### Community 734 - "huhs_request_lang"
-Cohesion: 0.14
-Nodes (25): huhs_build_release_response(), huhs_build_release_summary(), huhs_get_release_detail(), huhs_get_releases(), huhs_update_release_play_products(), WP_REST_Request, huhs_get_gallery_id(), huhs_get_gallery_images() (+17 more)
+Cohesion: 0.07
+Nodes (55): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+47 more)
 
 ### Community 735 - "mutation-home-image/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.23
-Nodes (20): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt() (+12 more)
+Cohesion: 0.21
+Nodes (24): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+16 more)
 
 ### Community 736 - "verify-faq-content.mjs"
 Cohesion: 0.11
@@ -3974,12 +3954,12 @@ Cohesion: 0.12
 Nodes (19): docs/**/package.json, scripts/bundle-runtime.mjs, scripts/check-dependency-install.mjs, scripts/clean-build-output.mjs, scripts/**/*.d.{cts,mts,ts}, scripts/**/package.json, src/**/*.{cts,mts,ts,tsx}, src/**/package.json (+11 more)
 
 ### Community 768 - "huhs_update_claimed_artist_profile"
-Cohesion: 0.28
-Nodes (12): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+4 more)
+Cohesion: 0.19
+Nodes (17): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+9 more)
 
-### Community 769 - "zipcheck/huhs-mobile-api/includes/event-checkin.php"
-Cohesion: 0.26
-Nodes (18): huhs_checkin_player_hash(), huhs_checkin_salt(), huhs_checkin_state(), huhs_checkin_timestamp(), huhs_checkin_window_from(), huhs_event_checkin_api_code(), huhs_event_checkin_api_record(), huhs_event_checkin_code() (+10 more)
+### Community 769 - "huhs_translation_request"
+Cohesion: 0.42
+Nodes (9): huhs_run_translation(), huhs_schedule_translation_on_publish(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_enabled(), huhs_translation_parse_response(), huhs_translation_provider(), huhs_translation_request() (+1 more)
 
 ### Community 770 - "content_link_route.dart"
 Cohesion: 0.06
@@ -4021,9 +4001,9 @@ Nodes (10): after, app, assert, before, beforeEach, db, { getFirestore, FieldVal
 Cohesion: 0.13
 Nodes (15): after, app, assert, auth(), before, beforeEach, callable(), crypto (+7 more)
 
-### Community 779 - "huhs_update_claimed_artist_profile"
-Cohesion: 0.28
-Nodes (12): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+4 more)
+### Community 779 - "plugin-2140/huhs-mobile-api/includes/admin.php"
+Cohesion: 0.22
+Nodes (7): huhs_about_page(), huhs_dashboard_page(), huhs_delete_submission_attachments(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types()
 
 ### Community 780 - "mutation-proof-push-open-notice.mjs"
 Cohesion: 0.11
@@ -4033,9 +4013,9 @@ Nodes (15): BASE, control, MUTATIONS, ROOT, WORK, after, baseline, EXTRACT (+7 m
 Cohesion: 0.23
 Nodes (8): kcr_account_csrf(), kcr_account_redirect(), kcr_company_email(), kcr_company_tools(), kcr_newsletter_admin_page(), kcr_newsletter_admin_table(), kcr_newsletter_subscribe(), kcr_owner_or_admin()
 
-### Community 782 - "label_release_availability.dart"
-Cohesion: 0.17
-Nodes (11): active, activeMissingIds, clear, _decodeRaw, _key, LabelReleaseAvailability, loadMissing, markMissing (+3 more)
+### Community 782 - "plugin-2145-base/huhs-mobile-api/includes/voting.php"
+Cohesion: 0.29
+Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
 ### Community 783 - "analyze-r8-config.mjs"
 Cohesion: 0.15
@@ -4229,9 +4209,9 @@ Nodes (16): huhs_add_public_cache_headers(), huhs_apply_public_cache_headers(), 
 Cohesion: 0.12
 Nodes (11): adminFile, adminSource, mainFile, pollFile, results, source, statusCodeOnly, statusEnd (+3 more)
 
-### Community 831 - "huhs_admin_api_write"
-Cohesion: 0.18
-Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
+### Community 831 - "plugin-2154/huhs-mobile-api/includes/voting.php"
+Cohesion: 0.29
+Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
 ### Community 832 - "business/kcr-account-1.1.6/kcr-account.php"
 Cohesion: 0.17
@@ -4369,9 +4349,9 @@ Nodes (14): compareFileLists(), DEFAULT_SOURCE, DEFAULT_ZIP, EXPECTED_ROOT, list
 Cohesion: 0.14
 Nodes (13): 10. Előtte–utána mérési eredmények, 11. Repositoryn kívül elvégzendő WordPress-, Cloudflare- vagy Firebase-beállítások, 12. Az összes követelményt tartalmazó ellenőrzőlista, 1. Feltárt teljesítményproblémák, 2. Módosított fájlok és céljuk, 3. Cache-first működés megvalósítása, 4. WordPress-optimalizálások, 5. Firebase-optimalizálások és szükséges indexek (+5 more)
 
-### Community 866 - "event_checkin.dart"
-Cohesion: 0.14
-Nodes (13): checkInMessageKey, checkInOpenAfter, checkInOpenBefore, CheckInStatus, checkInWindowOpen, day, eventStartFrom, hour (+5 more)
+### Community 866 - "huhs_diag_health_header"
+Cohesion: 0.43
+Nodes (6): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_push_diag_limits(), huhs_push_diag_news_scan()
 
 ### Community 867 - "ignorePatterns"
 Cohesion: 0.14
@@ -4482,40 +4462,40 @@ Cohesion: 0.14
 Nodes (14): <FlutterApplicationRegistrar>, <FlutterBaseRegistrar>, -messenger, -registerViewFactorywithId, -registerViewFactorywithIdgestureRecognizersBlockingPolicy, -textures, <FlutterPluginRegistrar>, -addApplicationDelegate (+6 more)
 
 ### Community 894 - "huhs_admin_api_write"
-Cohesion: 0.14
-Nodes (19): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+11 more)
+Cohesion: 0.18
+Nodes (18): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+10 more)
 
 ### Community 895 - "extract/huhs-mobile-api/includes/poll.php"
 Cohesion: 0.34
 Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
-### Community 896 - "label_release_availability_test.dart"
-Cohesion: 0.17
-Nodes (11): package:hungarian_hardstyle_app/services/label_release_availability.dart, afterParams, depth, _functionBody, main, match, open, openParen (+3 more)
+### Community 896 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-cron.php"
+Cohesion: 0.57
+Nodes (6): huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_parse_response(), huhs_translation_provider(), huhs_translation_request(), huhs_translation_system_prompt()
 
 ### Community 897 - "hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.37
-Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
 ### Community 898 - "patchcheck-2141/huhs-mobile-api/includes/poll.php"
 Cohesion: 0.34
 Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
 ### Community 899 - "patchcheck-2142/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.30
-Nodes (14): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+6 more)
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
 ### Community 900 - "patchcheck-2145/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.37
-Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
-### Community 901 - "mutation-home-image2/huhs-mobile-api/includes/api-admin.php"
-Cohesion: 0.27
-Nodes (10): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_twitch_card_normalize(), huhs_twitch_card_page(), huhs_twitch_card_read() (+2 more)
+### Community 901 - "patchcheck-2142/huhs-mobile-api/includes/api-admin.php"
+Cohesion: 0.43
+Nodes (5): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value()
 
 ### Community 902 - "huhs_admin_api_write"
 Cohesion: 0.13
-Nodes (21): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+13 more)
+Nodes (20): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+12 more)
 
 ### Community 903 - "halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/api-admin.php"
 Cohesion: 0.27
@@ -4525,29 +4505,29 @@ Nodes (10): huhs_admin_resource_field_options(), huhs_startup_announcement_norma
 Cohesion: 0.27
 Nodes (10): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_twitch_card_normalize(), huhs_twitch_card_page(), huhs_twitch_card_read() (+2 more)
 
-### Community 905 - "label_playback_plan_test.dart"
-Cohesion: 0.20
-Nodes (9): package:hungarian_hardstyle_app/services/label_playback_plan.dart, afterParams, depth, _functionBody, main, match, open, openParen (+1 more)
+### Community 905 - "patchcheck-2145/huhs-mobile-api/includes/api-admin.php"
+Cohesion: 0.43
+Nodes (5): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value()
 
 ### Community 906 - "plugin-2150/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.37
-Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
 ### Community 907 - "plugin-2151-base/huhs-mobile-api/includes/poll.php"
 Cohesion: 0.34
 Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
 ### Community 908 - "plugin-2152/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.37
-Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
-### Community 909 - "zipcheck/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.22
-Nodes (23): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_has_english() (+15 more)
+### Community 909 - "plugin-2147/huhs-mobile-api/includes/api-admin.php"
+Cohesion: 0.43
+Nodes (5): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value()
 
-### Community 910 - "cmp-21418/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.29
-Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
+### Community 910 - "plugin-2148/huhs-mobile-api/includes/api-admin.php"
+Cohesion: 0.43
+Nodes (5): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value()
 
 ### Community 911 - "REA: Reverse Engineer Anything"
 Cohesion: 0.14
@@ -4566,8 +4546,8 @@ Cohesion: 0.16
 Nodes (10): adminCode, adminFile, codeOnly, localNow(), playerHash(), prizeFile, recordEntry(), results (+2 more)
 
 ### Community 915 - "HARD Token – integrációs terv a meglévő HUHS-projektre"
-Cohesion: 0.14
-Nodes (13): 0.1 Devnet-állapot (2026-11-20), 0. Rögzített döntések, 1. Mit találtam a mostani projektben, 2.1 Firestore (új, mind kliens-tiltott), 2.2 Callable-ök (új, `functions/`), 2.3 Flutter (új), 2. Cél-architektúra, 3. Google Play-megfelelés (kapu) (+5 more)
+Cohesion: 0.07
+Nodes (26): 0.1 Devnet-állapot (2026-11-20), 0. Rögzített döntések, 1. Mit találtam a mostani projektben, 2.1 Firestore (új, mind kliens-tiltott), 2.2 Callable-ök (új, `functions/`), 2.3 Flutter (új), 2. Cél-architektúra, 3. Google Play-megfelelés (kapu) (+18 more)
 
 ### Community 916 - "firestoreGet"
 Cohesion: 0.08
@@ -4690,40 +4670,40 @@ Cohesion: 0.15
 Nodes (13): FlutterPluginSceneLifeCycleDelegate, -scenecontinueUserActivity, -sceneDidBecomeActive, -sceneDidDisconnect, -sceneDidEnterBackground, -sceneopenURLContexts, -scenewillConnectToSessionoptions, -sceneWillEnterForeground (+5 more)
 
 ### Community 946 - "mutation-home-image2/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.34
-Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
+Cohesion: 0.37
+Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
 
-### Community 947 - "huhs_admin_api_write"
-Cohesion: 0.31
-Nodes (12): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+4 more)
+### Community 947 - "huhs_diag_health_header"
+Cohesion: 0.43
+Nodes (6): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_push_diag_active_job(), huhs_push_diag_jobs()
 
-### Community 948 - "mutation-home-image/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.34
-Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
+### Community 948 - "huhs_translate_text"
+Cohesion: 0.53
+Nodes (5): huhs_translate_text(), huhs_translation_api_key(), huhs_translation_install(), huhs_translation_table(), WP_REST_Request
 
 ### Community 949 - "halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/voting.php"
 Cohesion: 0.29
 Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
-### Community 950 - "huhs_admin_api_write"
+### Community 950 - "huhs_translate_text"
+Cohesion: 0.53
+Nodes (5): huhs_translate_text(), huhs_translation_api_key(), huhs_translation_install(), huhs_translation_table(), WP_REST_Request
+
+### Community 951 - "huhs_translate_text"
+Cohesion: 0.53
+Nodes (5): huhs_translate_text(), huhs_translation_api_key(), huhs_translation_install(), huhs_translation_table(), WP_REST_Request
+
+### Community 952 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/poll.php"
+Cohesion: 0.37
+Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
+
+### Community 953 - "huhs_admin_api_write"
 Cohesion: 0.14
 Nodes (19): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+11 more)
 
-### Community 951 - "halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.34
-Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
-
-### Community 952 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.34
-Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
-
-### Community 953 - "huhs_admin_api_write"
-Cohesion: 0.31
-Nodes (12): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+4 more)
-
 ### Community 954 - "tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.37
-Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
 ### Community 955 - "verify-alt.cjs"
 Cohesion: 0.18
@@ -4733,9 +4713,9 @@ Nodes (8): altSummary, fs, HU_WORDS, ids, maskAlt(), src, tagsMaskedOf(), tagsOf
 Cohesion: 0.15
 Nodes (13): 2.10.0 â€” a hĂ­rlevĂ©l nem kĂĽldi ki korlĂˇtlanul a megerĹ‘sĂ­tĹ‘ levelet (2026-09-24), 2.5.7 â€” lĂ©trehozĂˇs a natĂ­v adminbĂłl, 2.5.8 â€” a WordPress-adminban elfogadott bekĂĽldĂ©sek pontja, 2.6.0 â€” a privĂˇt claim-e-mail vĂ©gpont Ă©s a cĂ­m-pĂłtlĂˇs (2026-09-21), 2.7.0 â€” a DJ-adatlap szerkesztĂ©se + a nyilvĂˇnos gyorsĂ­tĂłtĂˇr javĂ­tĂˇsa (2026-09-22), 2.8.0 â€” a nyeremĂ©ny leĂ­rĂˇsa a NYITOTT jĂˇtĂ©kban is kimegy (2026-09-24), 2.9.0 â€” a DJ privĂˇt (kapcsolattartĂł) e-mail cĂ­me lĂˇthatĂł Ă©s javĂ­thatĂł (2026-09-24), 4. HUHS Mobile API WordPress-plugin â€” kiadĂˇsjegyzĂ©k (2.10.0) (+5 more)
 
-### Community 957 - "hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.29
-Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
+### Community 957 - "huhs_translate_text"
+Cohesion: 0.53
+Nodes (5): huhs_translate_text(), huhs_translation_api_key(), huhs_translation_install(), huhs_translation_table(), WP_REST_Request
 
 ### Community 958 - "huhs_update_claimed_artist_profile"
 Cohesion: 0.28
@@ -4746,12 +4726,12 @@ Cohesion: 0.34
 Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
 ### Community 960 - "plugin-2141/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.28
-Nodes (17): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_source_hash() (+9 more)
+Cohesion: 0.25
+Nodes (19): huhs_schedule_translation_on_publish(), huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently() (+11 more)
 
 ### Community 961 - "plugin-2141/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.37
-Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
 ### Community 962 - "plugin-2142/huhs-mobile-api/includes/poll.php"
 Cohesion: 0.34
@@ -4761,41 +4741,41 @@ Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(
 Cohesion: 0.34
 Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
-### Community 964 - "huhs_update_claimed_artist_profile"
-Cohesion: 0.28
-Nodes (12): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+4 more)
+### Community 964 - "huhs_translate_text"
+Cohesion: 0.53
+Nodes (5): huhs_translate_text(), huhs_translation_api_key(), huhs_translation_install(), huhs_translation_table(), WP_REST_Request
 
 ### Community 965 - "plugin-2146/huhs-mobile-api/includes/poll.php"
 Cohesion: 0.34
 Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
-### Community 966 - "tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.29
-Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
+### Community 966 - "huhs_translate_text"
+Cohesion: 0.53
+Nodes (5): huhs_translate_text(), huhs_translation_api_key(), huhs_translation_install(), huhs_translation_table(), WP_REST_Request
 
 ### Community 967 - "patchcheck-2141/huhs-mobile-api/includes/voting.php"
 Cohesion: 0.29
 Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
 ### Community 968 - "plugin-2151/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.34
-Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
-
-### Community 969 - "plugin-2153/huhs-mobile-api/includes/poll.php"
 Cohesion: 0.37
 Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
 
+### Community 969 - "huhs_event_maps_url"
+Cohesion: 0.40
+Nodes (3): huhs_event_maps_url(), huhs_save_event_meta(), huhs_render_single_event_content()
+
 ### Community 970 - "plugin-2142/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.27
-Nodes (17): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_source_hash() (+9 more)
+Cohesion: 0.22
+Nodes (21): huhs_schedule_translation_on_publish(), huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently() (+13 more)
 
 ### Community 971 - "plugin-2154/huhs-mobile-api/includes/event-checkin.php"
-Cohesion: 0.05
-Nodes (75): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+67 more)
+Cohesion: 0.06
+Nodes (72): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+64 more)
 
-### Community 972 - "patchcheck-2142/huhs-mobile-api/includes/admin.php"
-Cohesion: 0.22
-Nodes (7): huhs_about_page(), huhs_dashboard_page(), huhs_delete_submission_attachments(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types()
+### Community 972 - "huhs_translation_post_types"
+Cohesion: 0.60
+Nodes (4): huhs_enable_translation_meta_custom_fields(), huhs_register_post_translation_meta(), huhs_translation_meta_auth_callback(), huhs_translation_post_types()
 
 ### Community 973 - "CONTRIBUTING.md"
 Cohesion: 0.19
@@ -4817,13 +4797,13 @@ Nodes (11): 1. fázis — „olcsó és azonnal hasznos" (ajánlott elsőként),
 Cohesion: 0.17
 Nodes (11): 1. NE kapcsold ki — bizonyítottan vagy nagy valószínűséggel kell, 2. Aktív és bizonyítottan használt — csak akkor, ha tudod, hogy nem kell, 3. Valószínűleg biztonságosan kikapcsolható — kicsi a kockázat, 4. Biztonságos végrehajtási sorrend, 5. Ami a bővítményeken túl segítene (hosting), 6. Amit ez a lista nem tartalmaz, A sorrend, Bővítmény-audit — Hungarian Hardstyle (2026-09-18) (+3 more)
 
-### Community 979 - "patchcheck-2142/huhs-mobile-api/includes/translation-cron.php"
-Cohesion: 0.36
-Nodes (9): huhs_run_content_translation(), huhs_translation_api_key(), huhs_translation_api_key_is_legacy(), huhs_translation_parse_response(), huhs_translation_provider(), huhs_translation_request(), huhs_translation_system_prompt(), huhs_translation_failed_recently() (+1 more)
+### Community 979 - "huhs_djs_shortcode"
+Cohesion: 0.83
+Nodes (3): huhs_djs_shortcode(), huhs_group_directory_artists(), huhs_render_artist_directory_card()
 
 ### Community 980 - "plugin-2142-recon/huhs-mobile-api/includes/translation-fields.php"
-Cohesion: 0.22
-Nodes (21): huhs_schedule_translation_on_publish(), huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_field_post_types(), huhs_translation_field_specs(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently() (+13 more)
+Cohesion: 0.27
+Nodes (16): huhs_run_field_translation(), huhs_translation_field_list_values(), huhs_translation_fields_complete(), huhs_translation_fields_current(), huhs_translation_fields_failed_recently(), huhs_translation_fields_source_hash(), huhs_translation_fields_system_prompt(), huhs_translation_game_question_texts() (+8 more)
 
 ### Community 981 - "<FlutterPlugin>"
 Cohesion: 0.17
@@ -4930,8 +4910,8 @@ Cohesion: 0.29
 Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
 ### Community 1007 - "mutation-home-image/huhs-mobile-api/includes/api-admin.php"
-Cohesion: 0.27
-Nodes (10): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_twitch_card_normalize(), huhs_twitch_card_page(), huhs_twitch_card_read() (+2 more)
+Cohesion: 0.24
+Nodes (11): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_twitch_card_normalize(), huhs_twitch_card_page(), huhs_twitch_card_read() (+3 more)
 
 ### Community 1008 - "patchcheck/huhs-mobile-api/includes/voting.php"
 Cohesion: 0.29
@@ -4949,9 +4929,9 @@ Nodes (17): @metaplex-foundation/mpl-token-metadata, @metaplex-foundation/umi, @
 Cohesion: 0.29
 Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
-### Community 1012 - "onboarding_state.dart"
-Cohesion: 0.12
-Nodes (16): index, markOnboardingCompleted, nextOnboardingStep, onboardingCompletedFromPreferences, onboardingCompletedKey, onboardingGenresKey, onboardingPendingArtistsKey, OnboardingStep (+8 more)
+### Community 1012 - "favorites_provider.dart"
+Cohesion: 0.02
+Nodes (92): ChangeNotifier, ArtistListQuery, artistsProvider, getArtist, service, applyPendingArtistFollows, _auth, _authSubscription (+84 more)
 
 ### Community 1013 - "halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/voting.php"
 Cohesion: 0.29
@@ -4962,12 +4942,12 @@ Cohesion: 0.27
 Nodes (10): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_twitch_card_normalize(), huhs_twitch_card_page(), huhs_twitch_card_read() (+2 more)
 
 ### Community 1015 - "huhs_event_details_callback"
-Cohesion: 0.14
-Nodes (20): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field() (+12 more)
+Cohesion: 0.23
+Nodes (16): huhs_artist_meta_box_callback(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_genres_field(), huhs_image_field(), huhs_organizer_field() (+8 more)
 
-### Community 1016 - "huhs_event_details_callback"
-Cohesion: 0.14
-Nodes (19): huhs_add_artist_meta_box(), huhs_artist_meta_box_callback(), huhs_register_artist_post_type(), huhs_event_details_callback(), huhs_artists_field(), huhs_checkbox_field(), huhs_date_field(), huhs_image_field() (+11 more)
+### Community 1016 - "huhs_djs_shortcode"
+Cohesion: 0.83
+Nodes (3): huhs_djs_shortcode(), huhs_group_directory_artists(), huhs_render_artist_directory_card()
 
 ### Community 1017 - "mutation-proof-donate-placement.mjs"
 Cohesion: 0.20
@@ -4981,17 +4961,17 @@ Nodes (9): after, baseline, FILES, hashes, mutations, originals, REPO, restored 
 Cohesion: 0.17
 Nodes (9): after, baseline, FILES, hashes, mutations, NODE_TESTS, originals, REPO (+1 more)
 
-### Community 1020 - "plugin-211/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.29
-Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
+### Community 1020 - "plugin-2154/huhs-mobile-api/includes/changelog.php"
+Cohesion: 0.83
+Nodes (3): huhs_changelog_admin_page(), huhs_changelog_entries(), huhs_changelog_latest_version()
 
 ### Community 1021 - "share_links.dart"
 Cohesion: 0.13
 Nodes (14): appLine, buildContentShareMessage, buildShareMessage, canonical, clean, cleanTitle, cleanUrl, contentShareUrl (+6 more)
 
 ### Community 1022 - "patchcheck-2145/huhs-mobile-api/includes/push.php"
-Cohesion: 0.09
-Nodes (45): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+37 more)
+Cohesion: 0.10
+Nodes (44): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_firebase_firestore_access_token(), huhs_push_access_token(), huhs_push_admin_page(), huhs_push_adopt_orphan_job() (+36 more)
 
 ### Community 1023 - "plugin-213/huhs-mobile-api/includes/voting.php"
 Cohesion: 0.29
@@ -5005,21 +4985,13 @@ Nodes (11): Building PHP source code, Contributing, Credits, Documentation, Guid
 Cohesion: 0.27
 Nodes (10): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_twitch_card_normalize(), huhs_twitch_card_page(), huhs_twitch_card_read() (+2 more)
 
-### Community 1026 - "plugin-2140/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.29
-Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
-
-### Community 1027 - "plugin-2141/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.29
-Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
-
 ### Community 1028 - "plugin-2142/huhs-mobile-api/includes/voting.php"
 Cohesion: 0.29
 Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
 ### Community 1029 - "plugin-2144-recon/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.37
-Nodes (12): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_results(), huhs_poll_results_admin_page() (+4 more)
+Cohesion: 0.34
+Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
 
 ### Community 1030 - "plugin-2149/huhs-mobile-api/includes/poll.php"
 Cohesion: 0.34
@@ -5037,19 +5009,11 @@ Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), 
 Cohesion: 0.29
 Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
-### Community 1034 - "huhs_update_claimed_artist_profile"
-Cohesion: 0.25
-Nodes (13): huhs_artist_editable_fields(), huhs_artist_sanitize_editable_value(), huhs_artist_sanitize_image_url(), huhs_backfill_artist_claim_emails(), huhs_build_artist_response(), huhs_get_artist_claim_emails(), huhs_get_artist_detail(), huhs_get_artist_upcoming_events() (+5 more)
-
 ### Community 1035 - "plugin-2144-recon/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.29
-Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
+Cohesion: 0.14
+Nodes (18): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+10 more)
 
 ### Community 1036 - "plugin-2146/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.29
-Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
-
-### Community 1037 - "plugin-2149/huhs-mobile-api/includes/voting.php"
 Cohesion: 0.29
 Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
@@ -5217,10 +5181,6 @@ Nodes (9): CLIENT_TESTS, imageRestored, MUTATIONS, originalImage, passes(), resu
 Cohesion: 0.22
 Nodes (8): after, before, digest(), failures, mutations, report, targets, untouched
 
-### Community 1079 - "zipcheck/huhs-mobile-api/includes/poll.php"
-Cohesion: 0.34
-Nodes (13): huhs_poll_active_id(), huhs_poll_api_active(), huhs_poll_api_status(), huhs_poll_api_vote(), huhs_poll_meta_box(), huhs_poll_options(), huhs_poll_repair_escapes(), huhs_poll_results() (+5 more)
-
 ### Community 1080 - "_kcr-account-flat/kcr-account.php"
 Cohesion: 0.23
 Nodes (8): kcr_account_csrf(), kcr_account_redirect(), kcr_company_email(), kcr_company_tools(), kcr_newsletter_admin_page(), kcr_newsletter_admin_table(), kcr_newsletter_subscribe(), kcr_owner_or_admin()
@@ -5229,17 +5189,13 @@ Nodes (8): kcr_account_csrf(), kcr_account_redirect(), kcr_company_email(), kcr_
 Cohesion: 0.17
 Nodes (10): package:hungarian_hardstyle_app/services/content_link_resolver.dart, package:hungarian_hardstyle_app/services/content_link_route.dart, main, _artistLink, _eventLink, _inviteLink, main, _newsLink (+2 more)
 
-### Community 1082 - "cmp-21418/huhs-mobile-api/includes/api-admin.php"
-Cohesion: 0.24
-Nodes (11): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_twitch_card_normalize(), huhs_twitch_card_page(), huhs_twitch_card_read() (+3 more)
+### Community 1082 - "huhs_admin_api_write"
+Cohesion: 0.14
+Nodes (23): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+15 more)
 
 ### Community 1083 - "zipcheck/huhs-mobile-api/includes/api-admin.php"
 Cohesion: 0.27
 Nodes (10): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value(), huhs_twitch_card_normalize(), huhs_twitch_card_page(), huhs_twitch_card_read() (+2 more)
-
-### Community 1084 - "plugins/kcr-account/kcr-account.php"
-Cohesion: 0.16
-Nodes (13): kcr_full_company_editor(), kcr_full_editor_field(), kcr_full_editor_locations(), kcr_account_csrf(), kcr_account_redirect(), kcr_company_email(), kcr_company_tools(), kcr_newsletter_admin_page() (+5 more)
 
 ### Community 1085 - "tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/api-admin.php"
 Cohesion: 0.27
@@ -5250,8 +5206,8 @@ Cohesion: 0.29
 Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
 ### Community 1087 - "hard-devnet-token.mjs"
-Cohesion: 0.31
-Nodes (9): DECIMALS, EXPECTED_RAW_SUPPLY, main(), good, TOKEN_NAME, TOKEN_SYMBOL, TOTAL_SUPPLY_WHOLE, verifyMetadataFacts() (+1 more)
+Cohesion: 0.29
+Nodes (10): DECIMALS, EXPECTED_RAW_SUPPLY, main(), good, TOKEN_NAME, TOKEN_SYMBOL, TOKEN_URI, TOTAL_SUPPLY_WHOLE (+2 more)
 
 ### Community 1088 - "auth_action_link.test.cjs"
 Cohesion: 0.29
@@ -5280,10 +5236,6 @@ Nodes (7): app, build, checks, chipKeys, framework, plist, raw
 ### Community 1094 - "verify-twitch-chat-rules.mjs"
 Cohesion: 0.20
 Nodes (7): check(), deleteProbe(), failed, googleServices, leftovers, results, stamp
-
-### Community 1095 - "android_radio_service_test.dart"
-Cohesion: 0.20
-Nodes (9): _bodyAfter, depth, _functionBody, main, manifest, open, service, source (+1 more)
 
 ### Community 1096 - "check-chat-focus-reach.mjs"
 Cohesion: 0.35
@@ -5320,10 +5272,6 @@ Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), 
 ### Community 1104 - "mutation-proof-adaptive-cards.mjs"
 Cohesion: 0.24
 Nodes (8): after, before, digest(), failures, mutations, report, targets, untouched
-
-### Community 1105 - "plugin-2153/huhs-mobile-api/includes/voting.php"
-Cohesion: 0.29
-Nodes (9): huhs_vote_active(), huhs_vote_can_save(), huhs_vote_candidate_box(), huhs_vote_categories_for_season(), huhs_vote_firestore_value(), huhs_vote_save_candidate(), huhs_vote_save_season(), huhs_vote_season_box() (+1 more)
 
 ### Community 1106 - "mutation-proof-everyone-push.mjs"
 Cohesion: 0.20
@@ -5367,15 +5315,7 @@ Nodes (8): huhs_release_catalog_app_url(), huhs_release_catalog_body_class(), hu
 
 ### Community 1116 - "huhs_admin_api_write"
 Cohesion: 0.13
-Nodes (20): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+12 more)
-
-### Community 1117 - "huhs_diag_health_header"
-Cohesion: 0.31
-Nodes (8): huhs_diag_emit(), huhs_diag_health_header(), huhs_diag_mark(), huhs_diag_state(), huhs_push_diag_active_job(), huhs_push_diag_jobs(), huhs_push_diag_limits(), huhs_push_diag_news_scan()
-
-### Community 1118 - "kcr_order_options"
-Cohesion: 0.32
-Nodes (8): kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_order_options(), kcr_order_settings_init(), kcr_order_settings_page(), kcr_stripe_signature_valid(), kcr_stripe_webhook()
+Nodes (21): huhs_admin_created_status(), huhs_admin_encode_meta_value(), huhs_admin_interaction_fields(), huhs_admin_is_creatable_type(), huhs_admin_normalize_resource_meta(), huhs_admin_question_values(), huhs_admin_resource_title(), huhs_admin_text_list_values() (+13 more)
 
 ### Community 1119 - "probe-birth-date-round2-result.mjs"
 Cohesion: 0.29
@@ -5404,10 +5344,6 @@ Nodes (9): attachUrlScheme(), attachXcodeProject(), insertAfterLine(), insertBef
 ### Community 1125 - "check-event-reminders.mjs"
 Cohesion: 0.42
 Nodes (9): eventStartMs(), fetchHealth(), formatLocal(), main(), parseHealthHeader(), REMINDER_WINDOWS, reminderSchedule(), selfTest() (+1 more)
-
-### Community 1126 - "patchcheck/huhs-mobile-api/includes/admin.php"
-Cohesion: 0.22
-Nodes (7): huhs_about_page(), huhs_dashboard_page(), huhs_delete_submission_attachments(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types()
 
 ### Community 1127 - "check-translation-volume.mjs"
 Cohesion: 0.44
@@ -5457,10 +5393,6 @@ Nodes (5): outPath, play, qrDir, require_, TEMP_MODULES
 Cohesion: 0.22
 Nodes (6): blocks, noticeActions, noticeStart, notifications, sessions, start
 
-### Community 1139 - "kcr_hungarian_counties"
-Cohesion: 0.36
-Nodes (8): kcr_hungarian_counties(), kcr_meta_box_html(), kcr_order_categories(), kcr_order_form_shortcode(), kcr_order_input(), kcr_order_location_template(), kcr_repeater_html(), kcr_repeater_row()
-
 ### Community 1140 - "mutation-proof-achievement-ux.mjs"
 Cohesion: 0.25
 Nodes (7): after, baseline, FILES, mutations, originals, results, sha()
@@ -5468,10 +5400,6 @@ Nodes (7): after, baseline, FILES, mutations, originals, results, sha()
 ### Community 1141 - "mutation-proof-birth-date-round2.mjs"
 Cohesion: 0.22
 Nodes (7): after, baseline, files, hashes, mutations, originals, restored
-
-### Community 1142 - "kcr_order_options"
-Cohesion: 0.32
-Nodes (8): kcr_billingo_invoice(), kcr_billingo_partner(), kcr_billingo_request(), kcr_order_options(), kcr_order_settings_init(), kcr_order_settings_page(), kcr_stripe_signature_valid(), kcr_stripe_webhook()
 
 ### Community 1143 - "mutation-proof-child-safety-birthday.mjs"
 Cohesion: 0.25
@@ -5505,25 +5433,9 @@ Nodes (4): fs, HU_WORDS, ids, src
 Cohesion: 0.22
 Nodes (8): 0. Ă‰LĹ ĂLLAPOT a Play-en (mĂ©rve, `node tools/check-play-track.mjs`), 0b. Play-kĂ¶vetelmĂ©ny: alkalmazĂˇsregisztrĂˇciĂł (hatĂˇridĹ‘: **2026. szeptember 30.**), 1. Play Console â€” RĂ–VID (ezt mĂˇsold be), 1b. Play Console â€” a NYILVĂNOS kiadĂˇshoz (356â€“359 Ă¶sszesĂ­tĹ‘), 1c. Play Console â€” CSAK a 351-hez, bĹ‘vebben (tartalĂ©k), 2. Play Console â€” CSAK akkor, ha a 329 is kiment volna, 5. EllenĹ‘rzĂ©s feltĂ¶ltĂ©s elĹ‘tt, A feltĂ¶ltendĹ‘ AAB (mĂ©rve)
 
-### Community 1151 - "huhs_build_event_response"
-Cohesion: 0.13
-Nodes (21): huhs_build_event_response(), huhs_build_event_summary(), huhs_get_event(), huhs_get_events(), huhs_register_events_api(), WP_REST_Request, huhs_build_organizer_response(), huhs_get_organizer_detail() (+13 more)
-
-### Community 1152 - "kcr_hungarian_counties"
-Cohesion: 0.36
-Nodes (8): kcr_hungarian_counties(), kcr_meta_box_html(), kcr_order_categories(), kcr_order_form_shortcode(), kcr_order_input(), kcr_order_location_template(), kcr_repeater_html(), kcr_repeater_row()
-
 ### Community 1153 - "plugin-211-backup/newsletter-cooldown.test.cjs"
 Cohesion: 0.28
 Nodes (8): assert, fs, path, PLUGIN_ROOT, pluginFile(), rateLimitCall(), subscribeBody(), test
-
-### Community 1154 - "plugin-213/huhs-mobile-api/includes/admin.php"
-Cohesion: 0.22
-Nodes (7): huhs_about_page(), huhs_dashboard_page(), huhs_delete_submission_attachments(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types()
-
-### Community 1156 - "followed_section_test.dart"
-Cohesion: 0.29
-Nodes (6): package:hungarian_hardstyle_app/providers/favorites_provider.dart, package:hungarian_hardstyle_app/widgets/followed_section.dart, artist, main, organizer, wrap
 
 ### Community 1157 - "extract/huhs-mobile-api/includes/api-admin.php"
 Cohesion: 0.43
@@ -5531,7 +5443,7 @@ Nodes (5): huhs_admin_resource_field_options(), huhs_startup_announcement_normal
 
 ### Community 1158 - "add_menu_page"
 Cohesion: 0.01
-Nodes (124): huhs_about_page(), huhs_dashboard_page(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types(), huhs_about_page(), huhs_dashboard_page() (+116 more)
+Nodes (145): huhs_about_page(), huhs_dashboard_page(), huhs_delete_submission_attachments(), huhs_handle_trash_action(), huhs_mobile_admin_menu(), huhs_shortcodes_page(), huhs_trash_page(), huhs_trash_post_types() (+137 more)
 
 ### Community 1159 - "hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-cron.php"
 Cohesion: 0.57
@@ -5584,10 +5496,6 @@ Nodes (8): compilerOptions, noEmit, extends, files, include, scripts/verify/frid
 ### Community 1171 - "vitest.config.ts"
 Cohesion: 0.22
 Nodes (8): CANONICAL_TEMPORARY_DIRECTORY, COVERAGE_ENABLED, COVERAGE_SHARD, MAX_TEST_WORKERS, PROJECT_POLICIES, projects, TEST_PROJECTS, ZERO_COVERAGE_THRESHOLDS
-
-### Community 1172 - "plugin-2152/huhs-mobile-api/includes/api-admin.php"
-Cohesion: 0.43
-Nodes (5): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value()
 
 ### Community 1173 - "hard-rules.test.cjs"
 Cohesion: 0.25
@@ -5672,10 +5580,6 @@ Nodes (6): events, now, rows, startMs(), windows, zoneOffsetMinutes()
 ### Community 1195 - "probe-translation-coverage.mjs"
 Cohesion: 0.29
 Nodes (6): len(), password, restBase, strip(), TYPES, user
-
-### Community 1196 - "plugin-2153/huhs-mobile-api/includes/api-admin.php"
-Cohesion: 0.43
-Nodes (5): huhs_admin_resource_field_options(), huhs_startup_announcement_normalize(), huhs_startup_announcement_page(), huhs_startup_announcement_read(), huhs_startup_announcement_value()
 
 ### Community 1197 - "Repository Guidelines"
 Cohesion: 0.25
@@ -6786,24 +6690,20 @@ Nodes (3): assert, COLLECTIONS, nodeTest
 Cohesion: 0.33
 Nodes (6): FlutterHeadlessDartRunner, -init, -initWithNameproject, -initWithNameprojectallowHeadlessExecution, -initWithNameprojectallowHeadlessExecutionrestorationEnabledNS_DESIGNATED_INITIALIZER, FlutterEngine
 
-### Community 1987 - "business/kcr-newsletter-final-menu.php"
-Cohesion: 0.67
-Nodes (3): kcr_news_final_gutenberg(), kcr_news_final_subscribers(), kcr_news_final_table()
-
 ## Knowledge Gaps
-- **11087 isolated node(s):** `nodeTest`, `before`, `beforeEach`, `after`, `assert` (+11082 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 14386 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **11149 isolated node(s):** `nodeTest`, `before`, `beforeEach`, `after`, `assert` (+11144 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 14456 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **171 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `get_post_meta()` connect `get_post_meta` to `esc_html`, `wp_remote_post`, `sanitize_title`, `plugin-2140/huhs-mobile-api/includes/push.php`, `get_option`, `huhs_update_claimed_artist_profile`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/push.php`, `extract/huhs-mobile-api/includes/voting.php`, `attachment_url_to_postid`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `plugin-2151-base/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `plugin-2154/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/push.php`, `wp_strip_all_tags`, `huhs_request_lang`, `huhs_request_lang`, `zipcheck/huhs-mobile-api/includes/push.php`, `zipcheck/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/push.php`, `huhs_update_claimed_artist_profile`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `register_rest_route`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `update_post_meta`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `wp_date`, `mutation-home-image2/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `plugin-2152/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `plugin-2151/huhs-mobile-api/includes/push.php`, `cmp-21418/huhs-mobile-api/includes/push.php`, `update_option`, `extract/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `get_post`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/submissions.php`, `huhs_update_claimed_artist_profile`, `wpautop`, `plugin-2150/huhs-mobile-api/includes/push.php`, `wp_nonce_field`, `plugin-2149/huhs-mobile-api/includes/push.php`, `plugin-2151-base/huhs-mobile-api/includes/push.php`, `plugin-2142-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2148/huhs-mobile-api/includes/push.php`, `plugin-2140/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2141/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/push.php`, `plugin-2147/huhs-mobile-api/includes/push.php`, `mutation-home-image/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-sweep.php`, `wp_schedule_single_event`, `plugin-212/huhs-mobile-api/includes/voting.php`, `plugin-2142-recon/huhs-mobile-api/includes/push.php`, `patchcheck-2142/huhs-mobile-api/includes/push.php`, `patchcheck/huhs-mobile-api/includes/push.php`, `plugin-213/huhs-mobile-api/includes/push.php`, `plugin-2141/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/push.php`, `plugin-2144-recon/huhs-mobile-api/includes/push.php`, `plugin-2145-base/huhs-mobile-api/includes/push.php`, `plugin-2143-recon/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/translation-sweep.php`, `cmp-21418/huhs-mobile-api/includes/translation-fields.php`, `plugin-2149/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2152/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2142/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/submissions.php`, `plugin-2152/huhs-mobile-api/includes/submissions.php`, `zipcheck/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `extract/huhs-mobile-api/includes/translation-sweep.php`, `mutation-home-image2/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2145/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2144-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2145/huhs-mobile-api/includes/submissions.php`, `plugin-210/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/submissions.php`, `plugin-2147/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `plugin-2150/huhs-mobile-api/includes/submissions.php`, `plugin-2151/huhs-mobile-api/includes/translation-sweep.php`, `cmp-21418/huhs-mobile-api/includes/submissions.php`, `mutation-home-image2/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/submissions.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/submissions.php`, `plugin-2140/huhs-mobile-api/includes/submissions.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-fields.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/submissions.php`, `patchcheck-2141/huhs-mobile-api/includes/submissions.php`, `patchcheck/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/translation-fields.php`, `plugin-211/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/games.php`, `plugin-2142/huhs-mobile-api/includes/submissions.php`, `huhs_build_event_response`, `plugin-2141/huhs-mobile-api/includes/submissions.php`, `plugin-2142-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2143-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2144-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2145-base/huhs-mobile-api/includes/submissions.php`, `plugin-2146/huhs-mobile-api/includes/submissions.php`, `plugin-2148/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `plugin-2149/huhs-mobile-api/includes/submissions.php`, `plugin-2151/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2154/huhs-mobile-api/includes/translation-fields.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2141/huhs-mobile-api/includes/translation-fields.php`, `patchcheck-2142/huhs-mobile-api/includes/translation-fields.php`, `plugin-213/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2143-recon/huhs-mobile-api/includes/translation-fields.php`, `plugin-212/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `plugin-210/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/games.php`, `plugin-2154/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_update_claimed_artist_profile`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `rest_ensure_response`, `huhs_event_details_callback`, `plugin-211/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `extract/huhs-mobile-api/includes/games.php`, `extract/huhs-mobile-api/includes/submissions.php`, `mutation-home-image2/huhs-mobile-api/includes/games.php`, `mutation-home-image/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/games.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/games.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/games.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2141/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2142/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2145/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `plugin-2141/huhs-mobile-api/includes/games.php`, `plugin-2142-recon/huhs-mobile-api/includes/games.php`, `plugin-2143-recon/huhs-mobile-api/includes/games.php`, `plugin-2144-recon/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `huhs_event_details_callback`, `plugin-2145-base/huhs-mobile-api/includes/translation-fields.php`, `plugin-2146/huhs-mobile-api/includes/games.php`, `plugin-2147/huhs-mobile-api/includes/games.php`, `plugin-2148/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2150/huhs-mobile-api/includes/games.php`, `plugin-2150/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_read`, `plugin-2151-base/huhs-mobile-api/includes/games.php`, `plugin-2151-base/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2151/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2152/huhs-mobile-api/includes/games.php`, `plugin-2153/huhs-mobile-api/includes/games.php`, `plugin-2154/huhs-mobile-api/includes/games.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_event_details_callback`, `huhs_event_details_callback`, `plugin-2150/huhs-mobile-api/includes/translation-fields.php`, `plugin-2151-base/huhs-mobile-api/includes/translation-fields.php`, `plugin-2153/huhs-mobile-api/includes/translation-fields.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_write`, `add_meta_box`, `plugin-2140/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `huhs_build_event_response`, `mutation-home-image2/huhs-mobile-api/includes/translation-fields.php`, `huhs_build_event_response`, `huhs_build_event_response`, `plugin-2146/huhs-mobile-api/includes/translation-fields.php`, `huhs_request_lang`, `plugin-2151/huhs-mobile-api/includes/translation-fields.php`, `mutation-home-image2/huhs-mobile-api/includes/voting.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-fields.php`, `plugin-2147/huhs-mobile-api/includes/voting.php`, `huhs_request_lang`, `extract/huhs-mobile-api/includes/translation-fields.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-fields.php`, `plugin-2149/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `zipcheck/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_event_details_callback`, `patchcheck/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `plugin-212/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_admin_api_write`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-fields.php`, `plugin-2144-recon/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2149/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2152/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `wp_mail`, `zipcheck/huhs-mobile-api/includes/contest.php`, `plugin-2140/huhs-mobile-api/includes/translation-fields.php`, `patchcheck-2145/huhs-mobile-api/includes/translation-fields.php`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/translation-fields.php`, `huhs_update_claimed_artist_profile`, `zipcheck/huhs-mobile-api/includes/event-checkin.php`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_write`, `extract/huhs-mobile-api/includes/poll.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/poll.php`, `patchcheck-2141/huhs-mobile-api/includes/poll.php`, `patchcheck-2142/huhs-mobile-api/includes/poll.php`, `patchcheck-2145/huhs-mobile-api/includes/poll.php`, `huhs_admin_api_write`, `plugin-2150/huhs-mobile-api/includes/poll.php`, `plugin-2151-base/huhs-mobile-api/includes/poll.php`, `plugin-2152/huhs-mobile-api/includes/poll.php`, `zipcheck/huhs-mobile-api/includes/translation-fields.php`, `cmp-21418/huhs-mobile-api/includes/voting.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/voting.php`, `mutation-home-image2/huhs-mobile-api/includes/poll.php`, `mutation-home-image/huhs-mobile-api/includes/poll.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/voting.php`, `huhs_admin_api_write`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/poll.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/poll.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/poll.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/voting.php`, `huhs_update_claimed_artist_profile`, `plugin-2140/huhs-mobile-api/includes/poll.php`, `plugin-2141/huhs-mobile-api/includes/translation-fields.php`, `plugin-2141/huhs-mobile-api/includes/poll.php`, `plugin-2142/huhs-mobile-api/includes/poll.php`, `plugin-2143-recon/huhs-mobile-api/includes/poll.php`, `huhs_update_claimed_artist_profile`, `plugin-2146/huhs-mobile-api/includes/poll.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/voting.php`, `patchcheck-2141/huhs-mobile-api/includes/voting.php`, `plugin-2151/huhs-mobile-api/includes/poll.php`, `plugin-2153/huhs-mobile-api/includes/poll.php`, `plugin-2142/huhs-mobile-api/includes/translation-fields.php`, `plugin-2154/huhs-mobile-api/includes/event-checkin.php`, `patchcheck-2142/huhs-mobile-api/includes/admin.php`, `patchcheck-2142/huhs-mobile-api/includes/translation-cron.php`, `plugin-2142-recon/huhs-mobile-api/includes/translation-fields.php`, `patchcheck-2142/huhs-mobile-api/includes/voting.php`, `patchcheck/huhs-mobile-api/includes/voting.php`, `php-plugin/huhs-mobile-api/includes/voting.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/voting.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `plugin-211/huhs-mobile-api/includes/voting.php`, `patchcheck-2145/huhs-mobile-api/includes/push.php`, `plugin-213/huhs-mobile-api/includes/voting.php`, `plugin-2140/huhs-mobile-api/includes/voting.php`, `plugin-2141/huhs-mobile-api/includes/voting.php`, `plugin-2142/huhs-mobile-api/includes/voting.php`, `plugin-2144-recon/huhs-mobile-api/includes/poll.php`, `plugin-2149/huhs-mobile-api/includes/poll.php`, `plugin-2142-recon/huhs-mobile-api/includes/voting.php`, `plugin-2143-recon/huhs-mobile-api/includes/voting.php`, `huhs_update_claimed_artist_profile`, `plugin-2144-recon/huhs-mobile-api/includes/voting.php`, `plugin-2146/huhs-mobile-api/includes/voting.php`, `plugin-2149/huhs-mobile-api/includes/voting.php`, `plugin-2150/huhs-mobile-api/includes/voting.php`, `plugin-2142-recon/huhs-mobile-api/includes/poll.php`, `zipcheck/huhs-mobile-api/includes/poll.php`, `plugin-2151-base/huhs-mobile-api/includes/voting.php`, `plugin-2151/huhs-mobile-api/includes/voting.php`, `plugin-2152/huhs-mobile-api/includes/voting.php`, `plugin-2153/huhs-mobile-api/includes/voting.php`, `zipcheck/huhs-mobile-api/includes/voting.php`, `plugin-211-golden/posts.php`, `huhs_admin_api_write`, `patchcheck/huhs-mobile-api/includes/admin.php`, `huhs_build_event_response`, `plugin-213/huhs-mobile-api/includes/admin.php`, `add_menu_page`?**
-  _High betweenness centrality (0.076) - this node is a cross-community bridge._
-- **Why does `get_option()` connect `get_option` to `wp_remote_post`, `plugin-2140/huhs-mobile-api/includes/push.php`, `huhs_update_claimed_artist_profile`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/push.php`, `attachment_url_to_postid`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `plugin-2151-base/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `plugin-2154/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/push.php`, `wp_strip_all_tags`, `huhs_request_lang`, `huhs_request_lang`, `zipcheck/huhs-mobile-api/includes/push.php`, `zipcheck/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/push.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `register_rest_route`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `update_post_meta`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `wp_date`, `mutation-home-image2/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `plugin-2152/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `plugin-2151/huhs-mobile-api/includes/push.php`, `cmp-21418/huhs-mobile-api/includes/push.php`, `update_option`, `extract/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `get_post`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/submissions.php`, `huhs_update_claimed_artist_profile`, `wpautop`, `plugin-2150/huhs-mobile-api/includes/push.php`, `wp_nonce_field`, `plugin-2149/huhs-mobile-api/includes/push.php`, `huhs_admin_api_write`, `plugin-2151-base/huhs-mobile-api/includes/push.php`, `plugin-2142-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2148/huhs-mobile-api/includes/push.php`, `plugin-2140/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2141/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/push.php`, `plugin-2147/huhs-mobile-api/includes/push.php`, `mutation-home-image/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-sweep.php`, `wp_schedule_single_event`, `plugin-2142-recon/huhs-mobile-api/includes/push.php`, `patchcheck-2142/huhs-mobile-api/includes/push.php`, `patchcheck/huhs-mobile-api/includes/push.php`, `plugin-213/huhs-mobile-api/includes/push.php`, `plugin-2141/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/push.php`, `plugin-2144-recon/huhs-mobile-api/includes/push.php`, `plugin-2145-base/huhs-mobile-api/includes/push.php`, `plugin-2143-recon/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/translation-sweep.php`, `cmp-21418/huhs-mobile-api/includes/translation-fields.php`, `plugin-2149/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2152/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2142/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/submissions.php`, `plugin-2152/huhs-mobile-api/includes/submissions.php`, `zipcheck/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `extract/huhs-mobile-api/includes/translation-sweep.php`, `mutation-home-image2/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2145/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2144-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2145/huhs-mobile-api/includes/submissions.php`, `plugin-210/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/submissions.php`, `plugin-2147/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `plugin-2150/huhs-mobile-api/includes/submissions.php`, `plugin-2151/huhs-mobile-api/includes/translation-sweep.php`, `cmp-21418/huhs-mobile-api/includes/submissions.php`, `mutation-home-image2/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/submissions.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/submissions.php`, `plugin-2140/huhs-mobile-api/includes/submissions.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/submissions.php`, `patchcheck-2141/huhs-mobile-api/includes/submissions.php`, `patchcheck/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/translation-fields.php`, `plugin-211/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/games.php`, `plugin-2142/huhs-mobile-api/includes/submissions.php`, `plugin-2141/huhs-mobile-api/includes/submissions.php`, `plugin-2142-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2143-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2144-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2145-base/huhs-mobile-api/includes/submissions.php`, `plugin-2146/huhs-mobile-api/includes/submissions.php`, `plugin-2148/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `plugin-2149/huhs-mobile-api/includes/submissions.php`, `plugin-2151/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2154/huhs-mobile-api/includes/translation-fields.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2141/huhs-mobile-api/includes/translation-fields.php`, `plugin-213/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2143-recon/huhs-mobile-api/includes/translation-fields.php`, `plugin-212/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `plugin-210/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/games.php`, `plugin-2154/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `rest_ensure_response`, `plugin-211/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `extract/huhs-mobile-api/includes/games.php`, `extract/huhs-mobile-api/includes/submissions.php`, `mutation-home-image2/huhs-mobile-api/includes/games.php`, `mutation-home-image/huhs-mobile-api/includes/games.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/games.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/games.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/games.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2141/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2142/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2145/huhs-mobile-api/includes/games.php`, `plugin-2141/huhs-mobile-api/includes/games.php`, `plugin-2142-recon/huhs-mobile-api/includes/games.php`, `plugin-2143-recon/huhs-mobile-api/includes/games.php`, `plugin-2144-recon/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2145-base/huhs-mobile-api/includes/translation-fields.php`, `plugin-2146/huhs-mobile-api/includes/games.php`, `plugin-2147/huhs-mobile-api/includes/games.php`, `plugin-2148/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2150/huhs-mobile-api/includes/games.php`, `plugin-2150/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_read`, `plugin-2151-base/huhs-mobile-api/includes/games.php`, `plugin-2151-base/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2151/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2152/huhs-mobile-api/includes/games.php`, `plugin-2153/huhs-mobile-api/includes/games.php`, `plugin-2154/huhs-mobile-api/includes/games.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2140/huhs-mobile-api/includes/games.php`, `huhs_push_send`, `huhs_request_lang`, `huhs_request_lang`, `huhs_admin_api_write`, `plugin-2149/huhs-mobile-api/includes/games.php`, `zipcheck/huhs-mobile-api/includes/games.php`, `patchcheck/huhs-mobile-api/includes/games.php`, `plugin-212/huhs-mobile-api/includes/games.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `wp_mail`, `zipcheck/huhs-mobile-api/includes/contest.php`, `huhs_admin_api_write`, `huhs_request_lang`, `zipcheck/huhs-mobile-api/includes/event-checkin.php`, `cmp-21418/huhs-mobile-api/includes/http-cache.php`, `extract/huhs-mobile-api/includes/http-cache.php`, `mutation-home-image2/huhs-mobile-api/includes/http-cache.php`, `mutation-home-image/huhs-mobile-api/includes/http-cache.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/http-cache.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/http-cache.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/http-cache.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/http-cache.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/http-cache.php`, `patchcheck-2141/huhs-mobile-api/includes/http-cache.php`, `patchcheck-2142/huhs-mobile-api/includes/http-cache.php`, `patchcheck-2145/huhs-mobile-api/includes/http-cache.php`, `patchcheck/huhs-mobile-api/includes/http-cache.php`, `php-plugin/huhs-mobile-api/includes/http-cache.php`, `plugin-210/huhs-mobile-api/includes/http-cache.php`, `plugin-211/huhs-mobile-api/includes/http-cache.php`, `plugin-212/huhs-mobile-api/includes/http-cache.php`, `plugin-213/huhs-mobile-api/includes/http-cache.php`, `plugin-2140/huhs-mobile-api/includes/http-cache.php`, `plugin-2141/huhs-mobile-api/includes/http-cache.php`, `plugin-2142/huhs-mobile-api/includes/http-cache.php`, `plugin-2142-recon/huhs-mobile-api/includes/http-cache.php`, `plugin-2143-recon/huhs-mobile-api/includes/http-cache.php`, `plugin-2144-recon/huhs-mobile-api/includes/http-cache.php`, `plugin-2145-base/huhs-mobile-api/includes/http-cache.php`, `plugin-2146/huhs-mobile-api/includes/http-cache.php`, `plugin-2147/huhs-mobile-api/includes/http-cache.php`, `plugin-2148/huhs-mobile-api/includes/http-cache.php`, `plugin-2149/huhs-mobile-api/includes/http-cache.php`, `plugin-2150/huhs-mobile-api/includes/http-cache.php`, `plugin-2151-base/huhs-mobile-api/includes/http-cache.php`, `plugin-2151/huhs-mobile-api/includes/http-cache.php`, `plugin-2152/huhs-mobile-api/includes/http-cache.php`, `plugin-2153/huhs-mobile-api/includes/http-cache.php`, `plugin-2154/huhs-mobile-api/includes/http-cache.php`, `zipcheck/huhs-mobile-api/includes/http-cache.php`, `huhs_admin_api_write`, `extract/huhs-mobile-api/includes/poll.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/poll.php`, `patchcheck-2141/huhs-mobile-api/includes/poll.php`, `patchcheck-2142/huhs-mobile-api/includes/poll.php`, `patchcheck-2145/huhs-mobile-api/includes/poll.php`, `mutation-home-image2/huhs-mobile-api/includes/api-admin.php`, `huhs_admin_api_write`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/api-admin.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/api-admin.php`, `plugin-2150/huhs-mobile-api/includes/poll.php`, `plugin-2151-base/huhs-mobile-api/includes/poll.php`, `plugin-2152/huhs-mobile-api/includes/poll.php`, `mutation-home-image2/huhs-mobile-api/includes/poll.php`, `mutation-home-image/huhs-mobile-api/includes/poll.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/poll.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/poll.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/poll.php`, `plugin-2140/huhs-mobile-api/includes/poll.php`, `plugin-2141/huhs-mobile-api/includes/poll.php`, `plugin-2142/huhs-mobile-api/includes/poll.php`, `plugin-2143-recon/huhs-mobile-api/includes/poll.php`, `plugin-2146/huhs-mobile-api/includes/poll.php`, `plugin-2151/huhs-mobile-api/includes/poll.php`, `plugin-2153/huhs-mobile-api/includes/poll.php`, `plugin-2154/huhs-mobile-api/includes/event-checkin.php`, `patchcheck-2142/huhs-mobile-api/includes/translation-cron.php`, `mutation-home-image/huhs-mobile-api/includes/api-admin.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/api-admin.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/api-admin.php`, `patchcheck-2145/huhs-mobile-api/includes/push.php`, `php-plugin/huhs-mobile-api/includes/api-admin.php`, `plugin-2144-recon/huhs-mobile-api/includes/poll.php`, `plugin-2149/huhs-mobile-api/includes/poll.php`, `plugin-2142-recon/huhs-mobile-api/includes/poll.php`, `zipcheck/huhs-mobile-api/includes/poll.php`, `cmp-21418/huhs-mobile-api/includes/api-admin.php`, `zipcheck/huhs-mobile-api/includes/api-admin.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/api-admin.php`, `plugin-211-golden/posts.php`, `huhs_admin_api_write`, `huhs_diag_health_header`, `extract/huhs-mobile-api/includes/api-admin.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-cron.php`, `plugin-2141/huhs-mobile-api/includes/api-admin.php`, `plugin-2144-recon/huhs-mobile-api/includes/api-admin.php`, `plugin-2152/huhs-mobile-api/includes/api-admin.php`, `plugin-2153/huhs-mobile-api/includes/api-admin.php`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
-- **Why does `update_post_meta()` connect `update_post_meta` to `esc_html`, `wp_remote_post`, `plugin-2140/huhs-mobile-api/includes/push.php`, `huhs_update_claimed_artist_profile`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/push.php`, `extract/huhs-mobile-api/includes/voting.php`, `attachment_url_to_postid`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `plugin-2151-base/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `plugin-2154/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/push.php`, `wp_strip_all_tags`, `huhs_request_lang`, `huhs_request_lang`, `zipcheck/huhs-mobile-api/includes/push.php`, `zipcheck/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/push.php`, `huhs_update_claimed_artist_profile`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `register_rest_route`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `wp_date`, `mutation-home-image2/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `plugin-2152/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `plugin-2151/huhs-mobile-api/includes/push.php`, `cmp-21418/huhs-mobile-api/includes/push.php`, `update_option`, `extract/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `get_post`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/submissions.php`, `huhs_update_claimed_artist_profile`, `wpautop`, `plugin-2150/huhs-mobile-api/includes/push.php`, `wp_nonce_field`, `plugin-2149/huhs-mobile-api/includes/push.php`, `huhs_admin_api_write`, `plugin-2151-base/huhs-mobile-api/includes/push.php`, `plugin-2142-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2148/huhs-mobile-api/includes/push.php`, `plugin-2140/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2141/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/push.php`, `plugin-2147/huhs-mobile-api/includes/push.php`, `mutation-home-image/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-sweep.php`, `wp_schedule_single_event`, `plugin-212/huhs-mobile-api/includes/voting.php`, `plugin-2142-recon/huhs-mobile-api/includes/push.php`, `patchcheck-2142/huhs-mobile-api/includes/push.php`, `patchcheck/huhs-mobile-api/includes/push.php`, `plugin-213/huhs-mobile-api/includes/push.php`, `plugin-2141/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/push.php`, `plugin-2144-recon/huhs-mobile-api/includes/push.php`, `plugin-2145-base/huhs-mobile-api/includes/push.php`, `plugin-2143-recon/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/translation-sweep.php`, `cmp-21418/huhs-mobile-api/includes/translation-fields.php`, `plugin-2149/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2152/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2142/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/submissions.php`, `plugin-2152/huhs-mobile-api/includes/submissions.php`, `zipcheck/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `extract/huhs-mobile-api/includes/translation-sweep.php`, `mutation-home-image2/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2145/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2144-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2145/huhs-mobile-api/includes/submissions.php`, `plugin-210/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/submissions.php`, `plugin-2147/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `plugin-2150/huhs-mobile-api/includes/submissions.php`, `plugin-2151/huhs-mobile-api/includes/translation-sweep.php`, `cmp-21418/huhs-mobile-api/includes/submissions.php`, `mutation-home-image2/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/submissions.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/submissions.php`, `plugin-2140/huhs-mobile-api/includes/submissions.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-fields.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/submissions.php`, `patchcheck-2141/huhs-mobile-api/includes/submissions.php`, `patchcheck/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/translation-fields.php`, `plugin-211/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/games.php`, `plugin-2142/huhs-mobile-api/includes/submissions.php`, `plugin-2141/huhs-mobile-api/includes/submissions.php`, `plugin-2142-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2143-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2144-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2145-base/huhs-mobile-api/includes/submissions.php`, `plugin-2146/huhs-mobile-api/includes/submissions.php`, `plugin-2148/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `plugin-2149/huhs-mobile-api/includes/submissions.php`, `plugin-2151/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2154/huhs-mobile-api/includes/translation-fields.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2141/huhs-mobile-api/includes/translation-fields.php`, `patchcheck-2142/huhs-mobile-api/includes/translation-fields.php`, `plugin-213/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2143-recon/huhs-mobile-api/includes/translation-fields.php`, `plugin-212/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `plugin-210/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/games.php`, `plugin-2154/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_update_claimed_artist_profile`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `rest_ensure_response`, `huhs_event_details_callback`, `plugin-211/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `extract/huhs-mobile-api/includes/games.php`, `extract/huhs-mobile-api/includes/submissions.php`, `mutation-home-image2/huhs-mobile-api/includes/games.php`, `mutation-home-image/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/games.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/games.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/games.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2141/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2142/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2145/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `plugin-2141/huhs-mobile-api/includes/games.php`, `plugin-2142-recon/huhs-mobile-api/includes/games.php`, `plugin-2143-recon/huhs-mobile-api/includes/games.php`, `plugin-2144-recon/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `huhs_event_details_callback`, `plugin-2145-base/huhs-mobile-api/includes/translation-fields.php`, `plugin-2146/huhs-mobile-api/includes/games.php`, `plugin-2147/huhs-mobile-api/includes/games.php`, `plugin-2148/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2150/huhs-mobile-api/includes/games.php`, `plugin-2150/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_read`, `plugin-2151-base/huhs-mobile-api/includes/games.php`, `plugin-2151-base/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2151/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2152/huhs-mobile-api/includes/games.php`, `plugin-2153/huhs-mobile-api/includes/games.php`, `plugin-2154/huhs-mobile-api/includes/games.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_event_details_callback`, `huhs_event_details_callback`, `plugin-2150/huhs-mobile-api/includes/translation-fields.php`, `plugin-2151-base/huhs-mobile-api/includes/translation-fields.php`, `plugin-2153/huhs-mobile-api/includes/translation-fields.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_admin_api_write`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_write`, `plugin-2140/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `mutation-home-image2/huhs-mobile-api/includes/translation-fields.php`, `plugin-2146/huhs-mobile-api/includes/translation-fields.php`, `plugin-2151/huhs-mobile-api/includes/translation-fields.php`, `mutation-home-image2/huhs-mobile-api/includes/voting.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-fields.php`, `plugin-2147/huhs-mobile-api/includes/voting.php`, `huhs_request_lang`, `extract/huhs-mobile-api/includes/translation-fields.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `plugin-2149/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `zipcheck/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_event_details_callback`, `patchcheck/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `plugin-212/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_admin_api_write`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2144-recon/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `get_post_meta`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2149/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2152/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `wp_mail`, `zipcheck/huhs-mobile-api/includes/contest.php`, `plugin-2140/huhs-mobile-api/includes/translation-fields.php`, `patchcheck-2145/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/translation-fields.php`, `huhs_update_claimed_artist_profile`, `zipcheck/huhs-mobile-api/includes/event-checkin.php`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `zipcheck/huhs-mobile-api/includes/translation-fields.php`, `cmp-21418/huhs-mobile-api/includes/voting.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/voting.php`, `huhs_admin_api_write`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/voting.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/voting.php`, `huhs_update_claimed_artist_profile`, `plugin-2141/huhs-mobile-api/includes/translation-fields.php`, `huhs_update_claimed_artist_profile`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/voting.php`, `patchcheck-2141/huhs-mobile-api/includes/voting.php`, `plugin-2142/huhs-mobile-api/includes/translation-fields.php`, `plugin-2154/huhs-mobile-api/includes/event-checkin.php`, `patchcheck-2142/huhs-mobile-api/includes/translation-cron.php`, `plugin-2142-recon/huhs-mobile-api/includes/translation-fields.php`, `patchcheck-2142/huhs-mobile-api/includes/voting.php`, `patchcheck/huhs-mobile-api/includes/voting.php`, `php-plugin/huhs-mobile-api/includes/voting.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/voting.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `plugin-211/huhs-mobile-api/includes/voting.php`, `patchcheck-2145/huhs-mobile-api/includes/push.php`, `plugin-213/huhs-mobile-api/includes/voting.php`, `plugin-2140/huhs-mobile-api/includes/voting.php`, `plugin-2141/huhs-mobile-api/includes/voting.php`, `plugin-2142/huhs-mobile-api/includes/voting.php`, `plugin-2142-recon/huhs-mobile-api/includes/voting.php`, `plugin-2143-recon/huhs-mobile-api/includes/voting.php`, `huhs_update_claimed_artist_profile`, `plugin-2144-recon/huhs-mobile-api/includes/voting.php`, `plugin-2146/huhs-mobile-api/includes/voting.php`, `plugin-2149/huhs-mobile-api/includes/voting.php`, `plugin-2150/huhs-mobile-api/includes/voting.php`, `plugin-2151-base/huhs-mobile-api/includes/voting.php`, `plugin-2151/huhs-mobile-api/includes/voting.php`, `plugin-2152/huhs-mobile-api/includes/voting.php`, `plugin-2153/huhs-mobile-api/includes/voting.php`, `zipcheck/huhs-mobile-api/includes/voting.php`, `huhs_admin_api_write`, `huhs_build_event_response`?**
-  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+- **Why does `get_post_meta()` connect `get_post_meta` to `esc_html`, `is_wp_error`, `plugin-211/huhs-mobile-api/includes/push.php`, `sanitize_title`, `plugin-2140/huhs-mobile-api/includes/push.php`, `get_option`, `huhs_update_claimed_artist_profile`, `rest_ensure_response`, `extract/huhs-mobile-api/includes/voting.php`, `patchcheck-2141/huhs-mobile-api/includes/push.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `plugin-210/huhs-mobile-api/includes/games.php`, `plugin-2151-base/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `plugin-2154/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/push.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `wpautop`, `cmp-21418/huhs-mobile-api/includes/games.php`, `zipcheck/huhs-mobile-api/includes/translation-fields.php`, `wp_date`, `huhs_request_lang`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/games.php`, `huhs_build_event_response`, `huhs_request_lang`, `huhs_build_event_response`, `huhs_request_lang`, `huhs_build_event_response`, `update_post_meta`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `plugin-2153/huhs-mobile-api/includes/push.php`, `mutation-home-image2/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `plugin-2152/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `plugin-2151/huhs-mobile-api/includes/push.php`, `cmp-21418/huhs-mobile-api/includes/push.php`, `php-plugin/huhs-mobile-api/includes/games.php`, `php-plugin/huhs-mobile-api/includes/push.php`, `extract/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_build_event_response`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `get_post`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/submissions.php`, `huhs_update_claimed_artist_profile`, `huhs_update_claimed_artist_profile`, `plugin-2150/huhs-mobile-api/includes/push.php`, `wp_nonce_field`, `plugin-2149/huhs-mobile-api/includes/push.php`, `huhs_admin_api_write`, `plugin-2151-base/huhs-mobile-api/includes/push.php`, `plugin-2142-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2148/huhs-mobile-api/includes/push.php`, `plugin-2140/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2141/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/push.php`, `plugin-2147/huhs-mobile-api/includes/push.php`, `plugin-2145-base/huhs-mobile-api/includes/games.php`, `mutation-home-image/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-sweep.php`, `plugin-212/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `plugin-2142-recon/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `wp_schedule_single_event`, `patchcheck/huhs-mobile-api/includes/push.php`, `plugin-213/huhs-mobile-api/includes/push.php`, `plugin-2141/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/push.php`, `plugin-2145-base/huhs-mobile-api/includes/translation-fields.php`, `plugin-2145-base/huhs-mobile-api/includes/push.php`, `plugin-2143-recon/huhs-mobile-api/includes/push.php`, `huhs_event_details_callback`, `plugin-2142/huhs-mobile-api/includes/translation-sweep.php`, `huhs_event_details_callback`, `cmp-21418/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2149/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2152/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2142/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `register_rest_route`, `mutation-home-image/huhs-mobile-api/includes/submissions.php`, `plugin-2152/huhs-mobile-api/includes/submissions.php`, `zipcheck/huhs-mobile-api/includes/submissions.php`, `huhs_update_claimed_artist_profile`, `extract/huhs-mobile-api/includes/translation-sweep.php`, `mutation-home-image2/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2145/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2144-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2145/huhs-mobile-api/includes/submissions.php`, `plugin-210/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/submissions.php`, `plugin-2147/huhs-mobile-api/includes/submissions.php`, `plugin-2147/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2150/huhs-mobile-api/includes/submissions.php`, `plugin-2151/huhs-mobile-api/includes/translation-fields.php`, `huhs_event_details_callback`, `cmp-21418/huhs-mobile-api/includes/submissions.php`, `mutation-home-image2/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/submissions.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/submissions.php`, `plugin-2140/huhs-mobile-api/includes/submissions.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-sweep.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/submissions.php`, `patchcheck-2141/huhs-mobile-api/includes/submissions.php`, `patchcheck/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/translation-sweep.php`, `plugin-211/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/games.php`, `plugin-2142/huhs-mobile-api/includes/submissions.php`, `cmp-21418/huhs-mobile-api/includes/translation-fields.php`, `plugin-2141/huhs-mobile-api/includes/submissions.php`, `plugin-2142-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2143-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2144-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2145-base/huhs-mobile-api/includes/submissions.php`, `plugin-2146/huhs-mobile-api/includes/submissions.php`, `plugin-2148/huhs-mobile-api/includes/submissions.php`, `plugin-2148/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2149/huhs-mobile-api/includes/submissions.php`, `plugin-2151/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2154/huhs-mobile-api/includes/games.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2141/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2142/huhs-mobile-api/includes/translation-fields.php`, `plugin-213/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2143-recon/huhs-mobile-api/includes/translation-sweep.php`, `huhs_event_details_callback`, `plugin-212/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_write`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `plugin-210/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/games.php`, `plugin-2154/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_write`, `huhs_request_lang`, `huhs_admin_api_read`, `php-plugin/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_admin_api_read`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-fields.php`, `patchcheck/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `extract/huhs-mobile-api/includes/games.php`, `extract/huhs-mobile-api/includes/submissions.php`, `mutation-home-image2/huhs-mobile-api/includes/games.php`, `huhs_request_lang`, `huhs_event_details_callback`, `plugin-2147/huhs-mobile-api/includes/translation-fields.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/games.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/games.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2141/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2142/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2145/huhs-mobile-api/includes/games.php`, `plugin-2148/huhs-mobile-api/includes/translation-fields.php`, `plugin-2141/huhs-mobile-api/includes/games.php`, `plugin-2142-recon/huhs-mobile-api/includes/games.php`, `mutation-home-image2/huhs-mobile-api/includes/admin.php`, `plugin-2143-recon/huhs-mobile-api/includes/games.php`, `plugin-2144-recon/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `huhs_event_details_callback`, `plugin-2145-base/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/games.php`, `plugin-2147/huhs-mobile-api/includes/games.php`, `plugin-2148/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2150/huhs-mobile-api/includes/games.php`, `plugin-2150/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_read`, `plugin-2151-base/huhs-mobile-api/includes/games.php`, `plugin-2151-base/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2151/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2152/huhs-mobile-api/includes/games.php`, `huhs_request_lang`, `huhs_event_details_callback`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-fields.php`, `huhs_event_details_callback`, `huhs_request_lang`, `plugin-2150/huhs-mobile-api/includes/translation-fields.php`, `plugin-2151-base/huhs-mobile-api/includes/translation-fields.php`, `plugin-2153/huhs-mobile-api/includes/translation-fields.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-fields.php`, `add_meta_box`, `plugin-2140/huhs-mobile-api/includes/games.php`, `huhs_request_lang`, `huhs_request_lang`, `huhs_update_claimed_artist_profile`, `mutation-home-image2/huhs-mobile-api/includes/translation-fields.php`, `plugin-2143-recon/huhs-mobile-api/includes/translation-fields.php`, `huhs_build_event_response`, `huhs_event_details_callback`, `plugin-2146/huhs-mobile-api/includes/translation-fields.php`, `huhs_request_lang`, `huhs_event_details_callback`, `mutation-home-image2/huhs-mobile-api/includes/voting.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `zipcheck/huhs-mobile-api/includes/event-checkin.php`, `patchcheck-2141/huhs-mobile-api/includes/translation-fields.php`, `extract/huhs-mobile-api/includes/translation-fields.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-fields.php`, `cmp-21418/huhs-mobile-api/includes/poll.php`, `php-plugin/huhs-mobile-api/includes/poll.php`, `plugin-2149/huhs-mobile-api/includes/games.php`, `huhs_event_details_callback`, `plugin-2145-base/huhs-mobile-api/includes/poll.php`, `plugin-2147/huhs-mobile-api/includes/poll.php`, `huhs_event_details_callback`, `huhs_event_details_callback`, `plugin-2148/huhs-mobile-api/includes/poll.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/poll.php`, `patchcheck-2142/huhs-mobile-api/includes/translation-sweep.php`, `huhs_update_claimed_artist_profile`, `huhs_event_details_callback`, `huhs_update_claimed_artist_profile`, `huhs_update_claimed_artist_profile`, `huhs_event_details_callback`, `huhs_event_details_callback`, `huhs_update_claimed_artist_profile`, `mutation-home-image/huhs-mobile-api/includes/voting.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-fields.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/admin.php`, `huhs_admin_api_write`, `plugin-2144-recon/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2149/huhs-mobile-api/includes/translation-fields.php`, `patchcheck-2145/huhs-mobile-api/includes/voting.php`, `plugin-2152/huhs-mobile-api/includes/translation-fields.php`, `plugin-2154/huhs-mobile-api/includes/contest.php`, `zipcheck/huhs-mobile-api/includes/contest.php`, `plugin-2140/huhs-mobile-api/includes/translation-fields.php`, `plugin-210/huhs-mobile-api/includes/voting.php`, `patchcheck-2145/huhs-mobile-api/includes/translation-fields.php`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/translation-fields.php`, `huhs_update_claimed_artist_profile`, `plugin-2140/huhs-mobile-api/includes/admin.php`, `plugin-2145-base/huhs-mobile-api/includes/voting.php`, `plugin-2154/huhs-mobile-api/includes/voting.php`, `extract/huhs-mobile-api/includes/poll.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/poll.php`, `patchcheck-2141/huhs-mobile-api/includes/poll.php`, `patchcheck-2142/huhs-mobile-api/includes/poll.php`, `patchcheck-2145/huhs-mobile-api/includes/poll.php`, `huhs_admin_api_write`, `plugin-2150/huhs-mobile-api/includes/poll.php`, `plugin-2151-base/huhs-mobile-api/includes/poll.php`, `plugin-2152/huhs-mobile-api/includes/poll.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/voting.php`, `mutation-home-image2/huhs-mobile-api/includes/poll.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/voting.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/poll.php`, `huhs_admin_api_write`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/poll.php`, `huhs_update_claimed_artist_profile`, `plugin-2140/huhs-mobile-api/includes/poll.php`, `plugin-2141/huhs-mobile-api/includes/translation-fields.php`, `plugin-2141/huhs-mobile-api/includes/poll.php`, `plugin-2142/huhs-mobile-api/includes/poll.php`, `plugin-2143-recon/huhs-mobile-api/includes/poll.php`, `plugin-2146/huhs-mobile-api/includes/poll.php`, `patchcheck-2141/huhs-mobile-api/includes/voting.php`, `plugin-2151/huhs-mobile-api/includes/poll.php`, `huhs_event_maps_url`, `plugin-2142/huhs-mobile-api/includes/translation-fields.php`, `plugin-2154/huhs-mobile-api/includes/event-checkin.php`, `huhs_djs_shortcode`, `plugin-2142-recon/huhs-mobile-api/includes/translation-fields.php`, `patchcheck-2142/huhs-mobile-api/includes/voting.php`, `patchcheck/huhs-mobile-api/includes/voting.php`, `php-plugin/huhs-mobile-api/includes/voting.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/voting.php`, `huhs_event_details_callback`, `huhs_djs_shortcode`, `patchcheck-2145/huhs-mobile-api/includes/push.php`, `plugin-213/huhs-mobile-api/includes/voting.php`, `plugin-2142/huhs-mobile-api/includes/voting.php`, `plugin-2144-recon/huhs-mobile-api/includes/poll.php`, `plugin-2149/huhs-mobile-api/includes/poll.php`, `plugin-2142-recon/huhs-mobile-api/includes/voting.php`, `plugin-2143-recon/huhs-mobile-api/includes/voting.php`, `plugin-2144-recon/huhs-mobile-api/includes/voting.php`, `plugin-2146/huhs-mobile-api/includes/voting.php`, `plugin-2150/huhs-mobile-api/includes/voting.php`, `plugin-2142-recon/huhs-mobile-api/includes/poll.php`, `plugin-2151-base/huhs-mobile-api/includes/voting.php`, `plugin-2151/huhs-mobile-api/includes/voting.php`, `plugin-2152/huhs-mobile-api/includes/voting.php`, `zipcheck/huhs-mobile-api/includes/voting.php`, `plugin-211-golden/posts.php`, `huhs_admin_api_write`, `add_menu_page`?**
+  _High betweenness centrality (0.095) - this node is a cross-community bridge._
+- **Why does `get_option()` connect `get_option` to `is_wp_error`, `plugin-211/huhs-mobile-api/includes/push.php`, `plugin-2140/huhs-mobile-api/includes/push.php`, `huhs_update_claimed_artist_profile`, `patchcheck-2141/huhs-mobile-api/includes/push.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `plugin-210/huhs-mobile-api/includes/games.php`, `plugin-2151-base/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `plugin-2154/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/push.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `wpautop`, `cmp-21418/huhs-mobile-api/includes/games.php`, `zipcheck/huhs-mobile-api/includes/translation-fields.php`, `wp_date`, `huhs_request_lang`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/games.php`, `huhs_request_lang`, `huhs_request_lang`, `update_post_meta`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `plugin-2153/huhs-mobile-api/includes/push.php`, `mutation-home-image2/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `plugin-2152/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `plugin-2151/huhs-mobile-api/includes/push.php`, `cmp-21418/huhs-mobile-api/includes/push.php`, `php-plugin/huhs-mobile-api/includes/games.php`, `php-plugin/huhs-mobile-api/includes/push.php`, `extract/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `get_post`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/submissions.php`, `huhs_update_claimed_artist_profile`, `huhs_update_claimed_artist_profile`, `plugin-2150/huhs-mobile-api/includes/push.php`, `wp_nonce_field`, `plugin-2149/huhs-mobile-api/includes/push.php`, `huhs_admin_api_write`, `plugin-2151-base/huhs-mobile-api/includes/push.php`, `plugin-2142-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2148/huhs-mobile-api/includes/push.php`, `plugin-2140/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2141/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/push.php`, `plugin-2147/huhs-mobile-api/includes/push.php`, `plugin-2145-base/huhs-mobile-api/includes/games.php`, `mutation-home-image/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-sweep.php`, `plugin-212/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `plugin-2142-recon/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `wp_schedule_single_event`, `patchcheck/huhs-mobile-api/includes/push.php`, `plugin-213/huhs-mobile-api/includes/push.php`, `plugin-2141/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/push.php`, `plugin-2145-base/huhs-mobile-api/includes/push.php`, `plugin-2143-recon/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/translation-sweep.php`, `cmp-21418/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2149/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2152/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2142/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `register_rest_route`, `mutation-home-image/huhs-mobile-api/includes/submissions.php`, `plugin-2152/huhs-mobile-api/includes/submissions.php`, `zipcheck/huhs-mobile-api/includes/submissions.php`, `extract/huhs-mobile-api/includes/translation-sweep.php`, `mutation-home-image2/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2145/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2144-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2145/huhs-mobile-api/includes/submissions.php`, `plugin-210/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/submissions.php`, `plugin-2147/huhs-mobile-api/includes/submissions.php`, `plugin-2147/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2150/huhs-mobile-api/includes/submissions.php`, `cmp-21418/huhs-mobile-api/includes/submissions.php`, `mutation-home-image2/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/submissions.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/submissions.php`, `plugin-2140/huhs-mobile-api/includes/submissions.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/submissions.php`, `patchcheck-2141/huhs-mobile-api/includes/submissions.php`, `patchcheck/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/translation-sweep.php`, `plugin-211/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/games.php`, `plugin-2142/huhs-mobile-api/includes/submissions.php`, `plugin-2141/huhs-mobile-api/includes/submissions.php`, `plugin-2142-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2143-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2144-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2145-base/huhs-mobile-api/includes/submissions.php`, `plugin-2146/huhs-mobile-api/includes/submissions.php`, `plugin-2148/huhs-mobile-api/includes/submissions.php`, `plugin-2148/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2149/huhs-mobile-api/includes/submissions.php`, `plugin-2151/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2154/huhs-mobile-api/includes/games.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-sweep.php`, `plugin-213/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2143-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-212/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `plugin-210/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/games.php`, `plugin-2154/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_admin_api_read`, `patchcheck/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `extract/huhs-mobile-api/includes/games.php`, `extract/huhs-mobile-api/includes/submissions.php`, `mutation-home-image2/huhs-mobile-api/includes/games.php`, `huhs_request_lang`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/games.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/games.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2141/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2142/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `patchcheck-2145/huhs-mobile-api/includes/games.php`, `plugin-2141/huhs-mobile-api/includes/games.php`, `plugin-2142-recon/huhs-mobile-api/includes/games.php`, `plugin-2143-recon/huhs-mobile-api/includes/games.php`, `plugin-2144-recon/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2145-base/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/games.php`, `plugin-2147/huhs-mobile-api/includes/games.php`, `plugin-2148/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2150/huhs-mobile-api/includes/games.php`, `plugin-2150/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_read`, `plugin-2151-base/huhs-mobile-api/includes/games.php`, `plugin-2151-base/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2151/huhs-mobile-api/includes/games.php`, `huhs_admin_api_read`, `plugin-2152/huhs-mobile-api/includes/games.php`, `huhs_request_lang`, `huhs_admin_api_write`, `huhs_request_lang`, `plugin-2140/huhs-mobile-api/includes/games.php`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `zipcheck/huhs-mobile-api/includes/event-checkin.php`, `huhs_admin_api_write`, `cmp-21418/huhs-mobile-api/includes/poll.php`, `php-plugin/huhs-mobile-api/includes/poll.php`, `plugin-2149/huhs-mobile-api/includes/games.php`, `plugin-2145-base/huhs-mobile-api/includes/poll.php`, `plugin-2147/huhs-mobile-api/includes/poll.php`, `plugin-2148/huhs-mobile-api/includes/poll.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/poll.php`, `patchcheck-2142/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2154/huhs-mobile-api/includes/contest.php`, `huhs_translation_request`, `zipcheck/huhs-mobile-api/includes/contest.php`, `huhs_admin_api_write`, `huhs_request_lang`, `huhs_translation_request`, `cmp-21418/huhs-mobile-api/includes/http-cache.php`, `extract/huhs-mobile-api/includes/http-cache.php`, `mutation-home-image2/huhs-mobile-api/includes/http-cache.php`, `mutation-home-image/huhs-mobile-api/includes/http-cache.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/http-cache.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/http-cache.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/http-cache.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/http-cache.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/http-cache.php`, `patchcheck-2141/huhs-mobile-api/includes/http-cache.php`, `patchcheck-2142/huhs-mobile-api/includes/http-cache.php`, `patchcheck-2145/huhs-mobile-api/includes/http-cache.php`, `patchcheck/huhs-mobile-api/includes/http-cache.php`, `php-plugin/huhs-mobile-api/includes/http-cache.php`, `plugin-210/huhs-mobile-api/includes/http-cache.php`, `plugin-211/huhs-mobile-api/includes/http-cache.php`, `plugin-212/huhs-mobile-api/includes/http-cache.php`, `plugin-213/huhs-mobile-api/includes/http-cache.php`, `plugin-2140/huhs-mobile-api/includes/http-cache.php`, `plugin-2141/huhs-mobile-api/includes/http-cache.php`, `plugin-2142/huhs-mobile-api/includes/http-cache.php`, `plugin-2142-recon/huhs-mobile-api/includes/http-cache.php`, `plugin-2143-recon/huhs-mobile-api/includes/http-cache.php`, `plugin-2144-recon/huhs-mobile-api/includes/http-cache.php`, `plugin-2145-base/huhs-mobile-api/includes/http-cache.php`, `plugin-2146/huhs-mobile-api/includes/http-cache.php`, `plugin-2147/huhs-mobile-api/includes/http-cache.php`, `plugin-2148/huhs-mobile-api/includes/http-cache.php`, `plugin-2149/huhs-mobile-api/includes/http-cache.php`, `plugin-2150/huhs-mobile-api/includes/http-cache.php`, `plugin-2151-base/huhs-mobile-api/includes/http-cache.php`, `plugin-2151/huhs-mobile-api/includes/http-cache.php`, `plugin-2152/huhs-mobile-api/includes/http-cache.php`, `plugin-2153/huhs-mobile-api/includes/http-cache.php`, `plugin-2154/huhs-mobile-api/includes/http-cache.php`, `zipcheck/huhs-mobile-api/includes/http-cache.php`, `huhs_diag_health_header`, `huhs_admin_api_write`, `extract/huhs-mobile-api/includes/poll.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-cron.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/poll.php`, `patchcheck-2141/huhs-mobile-api/includes/poll.php`, `patchcheck-2142/huhs-mobile-api/includes/poll.php`, `patchcheck-2145/huhs-mobile-api/includes/poll.php`, `patchcheck-2142/huhs-mobile-api/includes/api-admin.php`, `huhs_admin_api_write`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/api-admin.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/api-admin.php`, `patchcheck-2145/huhs-mobile-api/includes/api-admin.php`, `plugin-2150/huhs-mobile-api/includes/poll.php`, `plugin-2151-base/huhs-mobile-api/includes/poll.php`, `plugin-2152/huhs-mobile-api/includes/poll.php`, `plugin-2147/huhs-mobile-api/includes/api-admin.php`, `plugin-2148/huhs-mobile-api/includes/api-admin.php`, `mutation-home-image2/huhs-mobile-api/includes/poll.php`, `huhs_diag_health_header`, `huhs_translate_text`, `huhs_translate_text`, `huhs_translate_text`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/poll.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/poll.php`, `huhs_translate_text`, `plugin-2140/huhs-mobile-api/includes/poll.php`, `plugin-2141/huhs-mobile-api/includes/poll.php`, `plugin-2142/huhs-mobile-api/includes/poll.php`, `plugin-2143-recon/huhs-mobile-api/includes/poll.php`, `huhs_translate_text`, `plugin-2146/huhs-mobile-api/includes/poll.php`, `huhs_translate_text`, `plugin-2151/huhs-mobile-api/includes/poll.php`, `plugin-2154/huhs-mobile-api/includes/event-checkin.php`, `mutation-home-image/huhs-mobile-api/includes/api-admin.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/api-admin.php`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/api-admin.php`, `patchcheck-2145/huhs-mobile-api/includes/push.php`, `php-plugin/huhs-mobile-api/includes/api-admin.php`, `plugin-2144-recon/huhs-mobile-api/includes/poll.php`, `plugin-2149/huhs-mobile-api/includes/poll.php`, `plugin-2142-recon/huhs-mobile-api/includes/poll.php`, `huhs_admin_api_write`, `zipcheck/huhs-mobile-api/includes/api-admin.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/api-admin.php`, `plugin-211-golden/posts.php`, `huhs_admin_api_write`, `extract/huhs-mobile-api/includes/api-admin.php`, `add_menu_page`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-cron.php`, `plugin-2141/huhs-mobile-api/includes/api-admin.php`, `plugin-2144-recon/huhs-mobile-api/includes/api-admin.php`?**
+  _High betweenness centrality (0.042) - this node is a cross-community bridge._
+- **Why does `is_wp_error()` connect `is_wp_error` to `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_write`, `huhs_request_lang`, `huhs_admin_api_read`, `php-plugin/huhs-mobile-api/includes/translation-fields.php`, `esc_html`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_request_lang`, `huhs_admin_api_read`, `huhs_admin_api_write`, `huhs_admin_api_read`, `extract/huhs-mobile-api/includes/submissions.php`, `plugin-2147/huhs-mobile-api/includes/translation-fields.php`, `plugin-211/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `sanitize_title`, `huhs_admin_api_read`, `huhs_admin_api_read`, `plugin-2140/huhs-mobile-api/includes/push.php`, `plugin-2148/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_read`, `plugin-2145-base/huhs-mobile-api/includes/translation-sweep.php`, `get_option`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_read`, `patchcheck-2141/huhs-mobile-api/includes/push.php`, `plugin-2150/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_read`, `plugin-2151-base/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_write`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `plugin-2150/huhs-mobile-api/includes/translation-fields.php`, `plugin-2153/huhs-mobile-api/includes/translation-fields.php`, `plugin-2151-base/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_write`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_admin_api_read`, `plugin-2154/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `huhs_update_claimed_artist_profile`, `mutation-home-image2/huhs-mobile-api/includes/translation-fields.php`, `mutation-home-image/huhs-mobile-api/includes/push.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `wpautop`, `huhs_admin_api_write`, `plugin-2146/huhs-mobile-api/includes/translation-fields.php`, `zipcheck/huhs-mobile-api/includes/translation-fields.php`, `wp_date`, `zipcheck/huhs-mobile-api/includes/event-checkin.php`, `huhs_request_lang`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `update_post_meta`, `huhs_request_lang`, `huhs_request_lang`, `huhs_request_lang`, `plugin-2153/huhs-mobile-api/includes/push.php`, `mutation-home-image2/huhs-mobile-api/includes/push.php`, `extract/huhs-mobile-api/includes/translation-fields.php`, `add_menu_page`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/translation-cron.php`, `huhs_request_lang`, `huhs_admin_api_write`, `plugin-2151/huhs-mobile-api/includes/push.php`, `cmp-21418/huhs-mobile-api/includes/push.php`, `huhs_request_lang`, `plugin-2152/huhs-mobile-api/includes/push.php`, `php-plugin/huhs-mobile-api/includes/push.php`, `extract/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_read`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `hir-a-globalis-mutator-jegyzi-fel/huhs-mobile-api/includes/submissions.php`, `huhs_update_claimed_artist_profile`, `huhs_update_claimed_artist_profile`, `plugin-2150/huhs-mobile-api/includes/push.php`, `patchcheck-2142/huhs-mobile-api/includes/translation-sweep.php`, `huhs_update_claimed_artist_profile`, `huhs_update_claimed_artist_profile`, `huhs_update_claimed_artist_profile`, `plugin-2149/huhs-mobile-api/includes/push.php`, `huhs_update_claimed_artist_profile`, `huhs_admin_api_write`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-fields.php`, `plugin-2151-base/huhs-mobile-api/includes/push.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2144-recon/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `get_post_meta`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2142-recon/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2148/huhs-mobile-api/includes/push.php`, `plugin-2140/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2141/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_write`, `plugin-2146/huhs-mobile-api/includes/push.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `plugin-2147/huhs-mobile-api/includes/push.php`, `huhs_admin_api_write`, `huhs_admin_api_write`, `huhs_translation_request`, `huhs_admin_api_write`, `plugin-2154/huhs-mobile-api/includes/contest.php`, `zipcheck/huhs-mobile-api/includes/contest.php`, `mutation-home-image/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2140/huhs-mobile-api/includes/translation-fields.php`, `patchcheck-2145/huhs-mobile-api/includes/translation-fields.php`, `huhs_admin_api_write`, `huhs_request_lang`, `mutation-home-image/huhs-mobile-api/includes/translation-fields.php`, `huhs_translate_text`, `huhs_update_claimed_artist_profile`, `huhs_translation_request`, `huhs_djs_shortcode`, `plugin-212/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `plugin-2142-recon/huhs-mobile-api/includes/push.php`, `huhs_admin_api_read`, `huhs_admin_api_write`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/translation-cron.php`, `huhs_admin_api_write`, `wp_schedule_single_event`, `patchcheck/huhs-mobile-api/includes/push.php`, `plugin-213/huhs-mobile-api/includes/push.php`, `plugin-2141/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/push.php`, `plugin-2145-base/huhs-mobile-api/includes/translation-fields.php`, `plugin-2145-base/huhs-mobile-api/includes/push.php`, `plugin-2143-recon/huhs-mobile-api/includes/push.php`, `plugin-2142/huhs-mobile-api/includes/translation-sweep.php`, `cmp-21418/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2149/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2152/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2142/huhs-mobile-api/includes/submissions.php`, `huhs_request_lang`, `register_rest_route`, `mutation-home-image/huhs-mobile-api/includes/submissions.php`, `plugin-2152/huhs-mobile-api/includes/submissions.php`, `huhs_translate_text`, `zipcheck/huhs-mobile-api/includes/submissions.php`, `huhs_update_claimed_artist_profile`, `extract/huhs-mobile-api/includes/translation-sweep.php`, `mutation-home-image2/huhs-mobile-api/includes/translation-sweep.php`, `huhs_admin_api_write`, `huhs_translate_text`, `patchcheck-2145/huhs-mobile-api/includes/translation-sweep.php`, `huhs_translate_text`, `patchcheck-2145/huhs-mobile-api/includes/submissions.php`, `plugin-210/huhs-mobile-api/includes/submissions.php`, `plugin-213/huhs-mobile-api/includes/submissions.php`, `huhs_update_claimed_artist_profile`, `plugin-2141/huhs-mobile-api/includes/translation-fields.php`, `plugin-2144-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2146/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2147/huhs-mobile-api/includes/submissions.php`, `plugin-2147/huhs-mobile-api/includes/translation-sweep.php`, `huhs_translate_text`, `plugin-2150/huhs-mobile-api/includes/submissions.php`, `huhs_translate_text`, `cmp-21418/huhs-mobile-api/includes/submissions.php`, `plugin-2142/huhs-mobile-api/includes/translation-fields.php`, `mutation-home-image2/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/submissions.php`, `befejezes-nem-zarja-le-a-konyvelest/huhs-mobile-api/includes/translation-sweep.php`, `halo-csak-a-szivveres-korat-nezi/huhs-mobile-api/includes/submissions.php`, `halo-csak-az-aktiv-feladatot-nezi/huhs-mobile-api/includes/submissions.php`, `plugin-2140/huhs-mobile-api/includes/submissions.php`, `plugin-2154/huhs-mobile-api/includes/event-checkin.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/submissions.php`, `patchcheck-2141/huhs-mobile-api/includes/submissions.php`, `patchcheck/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/submissions.php`, `php-plugin/huhs-mobile-api/includes/translation-sweep.php`, `plugin-211/huhs-mobile-api/includes/submissions.php`, `huhs_djs_shortcode`, `plugin-2142/huhs-mobile-api/includes/submissions.php`, `cmp-21418/huhs-mobile-api/includes/translation-fields.php`, `plugin-2141/huhs-mobile-api/includes/submissions.php`, `plugin-2142-recon/huhs-mobile-api/includes/translation-fields.php`, `plugin-2142-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2143-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2144-recon/huhs-mobile-api/includes/submissions.php`, `plugin-2145-base/huhs-mobile-api/includes/submissions.php`, `plugin-2146/huhs-mobile-api/includes/submissions.php`, `plugin-2148/huhs-mobile-api/includes/submissions.php`, `plugin-2148/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2149/huhs-mobile-api/includes/submissions.php`, `plugin-2151/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/submissions.php`, `plugin-2153/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2154/huhs-mobile-api/includes/games.php`, `tokenhiba-torli-a-feladatot/huhs-mobile-api/includes/translation-sweep.php`, `patchcheck-2142/huhs-mobile-api/includes/translation-fields.php`, `plugin-213/huhs-mobile-api/includes/translation-sweep.php`, `plugin-2143-recon/huhs-mobile-api/includes/translation-sweep.php`, `plugin-212/huhs-mobile-api/includes/submissions.php`, `huhs_admin_api_write`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `huhs_admin_api_read`, `plugin-210/huhs-mobile-api/includes/push.php`, `patchcheck-2145/huhs-mobile-api/includes/push.php`, `plugin-2154/huhs-mobile-api/includes/submissions.php`?**
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **Are the 3694 inferred relationships involving `get_post_meta()` (e.g. with `huhs_delete_submission_attachments()` and `huhs_admin_api_read()`) actually correct?**
   _`get_post_meta()` has 3694 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 1345 inferred relationships involving `get_option()` (e.g. with `huhs_achievement_badges()` and `huhs_admin_api_read()`) actually correct?**

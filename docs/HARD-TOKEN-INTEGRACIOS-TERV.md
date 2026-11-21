@@ -224,3 +224,59 @@ Forrás: `Desktop\HARD_Wallet_Claude_spec.md` (beépített tárca, jutalmak, NFT
 ### 9.6 Még nincs megvizsgálva
 
 Költségek (RPC, Firebase, audit, Metaplex Core vs. alternatívák), MPC-szolgáltatók feltételei és ára, az EU külső ajánlati szabályai a Play-en, a meglévő kvíz/Guess the Track kód, a partneri szerződések tartalma.
+
+## 10. Újabb döntések és javaslatok (2026-11-21)
+
+### 10.1 Rögzített döntés
+
+- **A beépített tárca kulcskezelője: MetaMask Embedded Wallets (korábban Web3Auth).** Még **nincs bevezetve**; először külön ágon próba kell (Firebase-JWT-s belépés, Solana ed25519 kulcs, MFA/helyreállítás, az aláírás elfogadása a mostani szerverrel). Ellenőrizendő: az SDK a kulcsot az eszközön állítja össze (az MPC Core Kit, ami nem, Enterprise csomagban van); a helyreállítási faktor Firebase JWT mellett is működik-e; árak a hivatalos oldalon. Nyitott kockázat: függés a szolgáltatótól, ezért kell kulcs-exportálás.
+- **OneTicket:** a tulajdonos megkérdezi (kupon-API, CSV-feltöltés, használat/kód, beváltási lista, díj); az eredmény dönti el az A/B/C esetet (lásd 8. fejezet).
+
+### 10.2 Javaslat: mennyi HARD jár, és mit ér (illusztratív számok, nem döntés)
+
+**Alapelv.** A HARD értékét nem árfolyam adja, hanem a **bolt belső árszintje**: 1 HARD ≈ 1 Ft kedvezmény *a mi saját termékeinkben* (jegy, merch). Ez belső ár, **nem piaci árígéret**; az appban és a kommunikációban „1 HARD = 1 Ft” nem szerepelhet értékként, csak a bolt konkrét árai.
+
+**Kiosztási keret.** A spec szerinti 35% (35 000 000 HARD) 5 évre, csökkenő ütemben: 1. év 10 M, 2. év 8 M, 3. év 7 M, 4. év 5 M, 5. év 5 M. Az 1. év heti kerete ~190 000 HARD. A ütemet nyilvánosan kell vállalni.
+
+**Jutalmak (javaslat).**
+
+| Tevékenység | HARD | Korlát |
+|---|---|---|
+| QR-becsekkolás egy buliban | 300 | buliként egyszer |
+| Meghívott barát első becsekkolása | 300 a meghívónak, 150 a meghívottnak | a becsekkolás után, fiókonként max. 10 meghívás |
+| Éves szavazáson való részvétel | 150 | évadonként egyszer |
+| 4 hetes streak (4 hétig minden héten buli) | +500 bónusz | |
+| Jóváhagyott esemény-beküldés | 300 | |
+| Kvíz / Guess the Track | 10–50 | napi 100 |
+| Megosztás | 5 | napi 20 |
+
+Fiókonkénti éves felső korlát: **12 000 HARD**. Egy átlagos látogató (havi 2 buli) ~7 000 HARD-ot gyűjt évente.
+
+**Bolt (javaslat, a belső árszint szerint).**
+
+| Termék | HARD |
+|---|---|
+| Jegykedvezmény (kb. 10%) | 1 500 |
+| Ingyenes belépő | 5 000 |
+| VIP-sor / gyorsabb bejutás | 800 |
+| Matrica / kitűző | 400 |
+| Póló | 5 000 |
+
+Egy kedvezmény kb. 5 buli után jár, egy ingyenes jegy kb. 17 után. A kerettel és a jutalmakkal ez fenntartható, ha az elköltött HARD visszamegy a jutalomkeretbe (nem elégetjük).
+
+**Költség a szervezőnek.** Ha egy 1 000 fős aktív közösség évente ~6 M HARD-ot gyűjt és mindet beváltja jegykedvezményre, az ~6 M Ft kedvezményt jelent. Ezt a Hungarian Hardstyle saját bulijainál vállalhatja; más szervezőknél külön megállapodás kell. A kedvezmény mértékét és a beváltási arányt mérni kell, és a jutalmakat ehhez kell hangolni.
+
+**Visszaélés-védelem.** Minden jutalom szerveroldalon számolódik, egy tárca egy fiók, a becsekkolás QR-ablakhoz kötött, napi/éves korlátok, auditnapló.
+
+### 10.3 Javaslat: webes kiadványvásárlás HARD-ért
+
+- **Adatforrás:** a meglévő WordPress kiadvány-rekordok és API (a web és az app ugyanazt használja).
+- **Kötés:** a vásárlás a **Firebase-fiókhoz** (uid) kötődik, a **tárcával** történő aláírás igazolja a fizetést. Fiók nélkül nincs vásárlás (letöltési jog, visszaállítás, jelentés).
+- **Ár (belső árszint szerint):** 320 kbps MP3 = 550 HARD, WAV = 700 HARD (a mostani Play-árakkal egyező szám, a Play-vásárlás külön marad).
+- **Fizetés:** HARD-átutalás a kincstárba (vagy égetés, ez külön döntés); a szerver ellenőrzi a tranzakciót (összeg, címzett, rendelés-azonosító memóban, véglegesítés, újrafelhasználás elleni védelem).
+- **Letöltés:** egy fiókhoz kötött, tartós jog; letöltés lejáró, aláírt URL-lel, napi korláttal.
+- **Az app nem linkel és nem hirdeti** a webes vásárlást (Play fizetési szabály); az EU külső ajánlati szabályait nem néztük meg.
+- Nyitott: kincstárba megy vagy elégetjük; Firebase-bejelentkezés weben; adó/számla a tokenes fizetésnél.
+
+### 10.4 Még nincs megvizsgálva
+A számok illusztratívak; nem néztük a tényleges közösségméretet, a jegyárbevételt, az adózást és a Play külső ajánlati szabályait.
