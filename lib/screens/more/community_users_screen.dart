@@ -21,6 +21,7 @@ import '../events/event_detail_screen.dart';
 import '../artists/artist_detail_screen.dart';
 import '../organizers/organizer_detail_screen.dart';
 import 'favorites_screen.dart';
+import 'hard_wallet_screen.dart';
 import 'newsletter_screen.dart';
 import 'suggested_people_screen.dart';
 import '../community/private_messages_screen.dart';
@@ -904,11 +905,11 @@ class _LegacyCommunityConnectionsScreen extends StatelessWidget {
   }
 }
 
-class CommunityHubScreen extends StatelessWidget {
+class CommunityHubScreen extends ConsumerWidget {
   const CommunityHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final service = CommunityService();
     final user = service.auth.currentUser;
     final registered = user != null && !user.isAnonymous;
@@ -959,6 +960,16 @@ class CommunityHubScreen extends StatelessWidget {
             tr(context, 'Akik ugyanazokra a bulikra mennek, mint te'),
             registered ? const SuggestedPeopleScreen() : null,
           ),
+          if (registered &&
+              (ref.watch(hardWalletStatusProvider).asData?.value.enabled ??
+                  false))
+            _hubTile(
+              context,
+              Icons.account_balance_wallet_outlined,
+              tr(context, 'HARD tárca'),
+              tr(context, 'Solana-tárca összekapcsolása és HARD-egyenleg'),
+              const HardWalletScreen(),
+            ),
           _hubTile(
             context,
             Icons.block_outlined,

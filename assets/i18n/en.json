@@ -1629,5 +1629,19 @@
   "Túl sok próbálkozás, várj egy percet.": "Too many attempts, please wait a minute.",
   "ÚJ: QR-kódos becsekkolás a bulikon — a bejáratnál kitett QR beolvasása pontot és „Ott voltam” jelvényt ad.": "NEW: QR check-in at parties — scanning the QR code at the entrance earns points and an “I was there” badge.",
   "Új „Ma este” kártya a Kezdőlapon a buli napján: időbeosztás, térkép, jegy és becsekkolás.": "A new “Tonight” card on the Home screen on party day: timetable, map, ticket and check-in.",
-  "A belépésért +25 pont jár ajándékba, az esemény adatlapján pedig megjelenik az időbeosztás.": "Signing in now earns +25 points as a gift, and the event page shows the timetable."
+  "A belépésért +25 pont jár ajándékba, az esemény adatlapján pedig megjelenik az időbeosztás.": "Signing in now earns +25 points as a gift, and the event page shows the timetable.",
+  "A tárca összekapcsolása csak egy aláírás: nem költ és nem utal el semmit. Az egyenleget a szerver a blokkláncról kérdezi le.": "Linking a wallet is only a signature: it does not spend or send anything. The server reads the balance from the blockchain.",
+  "HARD tárca": "HARD wallet",
+  "Solana-tárca összekapcsolása és HARD-egyenleg": "Link a Solana wallet and see your HARD balance",
+  "Tárca összekapcsolása": "Link wallet",
+  "Tárca leválasztása": "Unlink wallet",
+  "Egyenleg": "Balance",
+  "A HARD-tárca jelenleg nem érhető el.": "The HARD wallet is not available right now.",
+  "Teszthálózat (devnet): a token nem valódi érték.": "Test network (devnet): the token has no real value.",
+  "A HARD-tárca csak 18 éves kortól érhető el.": "The HARD wallet is available from age 18.",
+  "Az egyenleg most nem kérdezhető le, próbáld újra később.": "The balance can't be fetched right now, please try again later.",
+  "Nem sikerült, próbáld újra később.": "That didn't work, please try again later.",
+  "A tárca nem engedélyezte a kapcsolódást.": "The wallet did not allow the connection.",
+  "Az aláírás megszakadt vagy elutasítva.": "The signature was cancelled or rejected.",
+  "Nincs telepítve Solana-tárca az eszközön (például Phantom vagy Solflare).": "No Solana wallet is installed on this device (for example Phantom or Solflare)."
 }
