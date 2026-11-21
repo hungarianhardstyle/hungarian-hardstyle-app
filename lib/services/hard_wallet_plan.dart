@@ -62,13 +62,14 @@ String shortAddress(String address) =>
 String hardWalletErrorMessage(Object error) {
   if (error is HardWalletException) return error.message;
   if (error is FirebaseFunctionsException) {
-    final message = error.message;
+    // A hálózati 'unavailable' üzenete nyers angol kód ("UNAVAILABLE"): azt nem mutatjuk.
+    final message = error.code == 'unavailable' ? null : error.message;
     if (message != null && message.trim().isNotEmpty) return message;
     switch (error.code) {
       case 'permission-denied':
         return 'A HARD-tárca csak 18 éves kortól érhető el.';
       case 'unavailable':
-        return 'Az egyenleg most nem kérdezhető le, próbáld újra később.';
+        return 'Nincs kapcsolat a szerverrel, próbáld újra.';
       case 'resource-exhausted':
         return 'Túl sok próbálkozás, várj egy percet.';
     }
@@ -81,4 +82,21 @@ class HardWalletException implements Exception {
   final String message;
   @override
   String toString() => message;
+}
+
+/// A tárcaapp után az app a háttérből tér vissza, és a hálózat néhány másodpercig
+/// nem elérhető lehet: az 'unavailable' hibát ezért néhányszor újrapróbáljuk.
+Future<T> retryOnUnavailable<T>(
+  Future<T> Function() call, {
+  int attempts = 4,
+  Duration delay = const Duration(seconds: 1),
+}) async {
+  for (var attempt = 1; ; attempt++) {
+    try {
+      return await call();
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'unavailable' || attempt >= attempts) rethrow;
+      await Future<void>.delayed(delay * attempt);
+    }
+  }
 }

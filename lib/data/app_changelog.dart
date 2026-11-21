@@ -41,6 +41,8 @@ const appChangelog = <AppReleaseNotes>[
     build: 414,
     changes: [
       'Új (tesztelés alatt): HARD-tárca a Közösségben — Solana-tárca összekapcsolása és a HARD-egyenleg megtekintése (18 éves kortól).',
+      'Javítva: a „Hol van buli ma este?” és a „Ma este” kártya térkép-gombja a Google Térkép appot nyitja meg.',
+      'Új: a „Ma este” kártyán az esemény flyere is látszik.',
       'Háttérfrissítések: a használt csomagok frissítve a stabilabb működésért.',
     ],
   ),

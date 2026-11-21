@@ -51,12 +51,14 @@ class HardWalletService {
       if (signatures.isEmpty) {
         throw const HardWalletException('Az aláírás megszakadt vagy elutasítva.');
       }
-      await callFirebaseCallable<Object?>(
-        'hardWalletVerify',
-        parameters: {
-          'challengeId': challenge.data['challengeId'],
-          'signature': base64.encode(signatures.first),
-        },
+      await retryOnUnavailable(
+        () => callFirebaseCallable<Object?>(
+          'hardWalletVerify',
+          parameters: {
+            'challengeId': challenge.data['challengeId'],
+            'signature': base64.encode(signatures.first),
+          },
+        ),
       );
     } finally {
       await session.close();

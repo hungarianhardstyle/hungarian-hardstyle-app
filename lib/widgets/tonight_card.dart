@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -93,6 +94,26 @@ class _TonightBody extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 8),
+              if (event.flyerUrl.isNotEmpty) ...[
+                InkWell(
+                  key: const Key('tonight-flyer'),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => EventDetailScreen(event: event),
+                    ),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 260),
+                    child: CachedNetworkImage(
+                      imageUrl: event.flyerUrl,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      errorWidget: (_, _, _) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               InkWell(
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -127,7 +148,7 @@ class _TonightBody extends ConsumerWidget {
                     OutlinedButton.icon(
                       key: const Key('tonight-map'),
                       onPressed: () =>
-                          openInAppBrowser(context, event.googleMapsUrl),
+                          openSocialLink(context, event.googleMapsUrl),
                       icon: const Icon(Icons.map_outlined),
                       label: const AppText('Térkép'),
                     ),

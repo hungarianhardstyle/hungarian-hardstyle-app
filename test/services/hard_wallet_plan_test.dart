@@ -1,9 +1,25 @@
 import 'dart:typed_data';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hungarian_hardstyle_app/services/hard_wallet_plan.dart';
 
 void main() {
+  test('unavailable: nem a nyers "UNAVAILABLE" kerül a felhasználó elé, és újrapróbálja', () async {
+    final error = FirebaseFunctionsException(code: 'unavailable', message: 'UNAVAILABLE');
+    expect(hardWalletErrorMessage(error), isNot(contains('UNAVAILABLE')));
+    var calls = 0;
+    final result = await retryOnUnavailable<int>(() async {
+      if (++calls < 3) throw error;
+      return 7;
+    }, delay: Duration.zero);
+    expect((result, calls), (7, 3));
+    await expectLater(
+      retryOnUnavailable<int>(() async => throw FirebaseFunctionsException(code: 'permission-denied', message: 'x'), delay: Duration.zero),
+      throwsA(isA<FirebaseFunctionsException>()),
+    );
+  });
+
   test('base58: a rendszercím 32 nulla bájt = 32 darab 1-es', () {
     expect(base58Encode(Uint8List(32)), '1' * 32);
   });

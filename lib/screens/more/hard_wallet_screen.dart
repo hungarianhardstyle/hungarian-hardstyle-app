@@ -35,6 +35,8 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
       await action();
       ref.invalidate(hardWalletStatusProvider);
     } catch (error) {
+      // Ha a kötés a hiba ellenére megtörtént, az állapot ezt azonnal mutatja.
+      ref.invalidate(hardWalletStatusProvider);
       if (mounted) setState(() => _error = hardWalletErrorMessage(error));
     } finally {
       if (mounted) setState(() => _busy = false);

@@ -97,7 +97,7 @@ class _TonightRow extends StatelessWidget {
               Align(
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(
-                  onPressed: () => openInAppBrowser(context, event.googleMapsUrl),
+                  onPressed: () => openSocialLink(context, event.googleMapsUrl),
                   icon: const Icon(Icons.map_outlined),
                   label: const AppText('Térkép'),
                 ),
