@@ -33,7 +33,7 @@ export const TOTAL_SUPPLY_WHOLE = 100_000_000n;
 export const EXPECTED_RAW_SUPPLY = TOTAL_SUPPLY_WHOLE * 10n ** BigInt(DECIMALS);
 
 // A név legfeljebb 32, a szimbólum legfeljebb 10 karakter lehet (Metaplex-korlát).
-export const TOKEN_NAME = 'Hungarian Hardstyle Token';
+export const TOKEN_NAME = 'HUHS';
 export const TOKEN_SYMBOL = 'HARD';
 
 /** A névadás lánc-szintű ellenőrzése: név, szimbólum, és hogy már nem módosítható. */

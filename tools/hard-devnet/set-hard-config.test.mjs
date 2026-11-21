@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { isValidMint } from './set-hard-config.mjs';
 
-const MINT = 'EqJXiQXPGhJrMy5adhMRNF8B4JVKKYA1rCUFuBuQdLEQ';
+const MINT = '8yi3SaRjcftYWqyJY7JdoBKa4DuBDzjgpyjnAhFEvH7k';
 
 test('mint-cím: csak a pontosan 32 bájtos base58 elfogadott', () => {
   assert.equal(isValidMint(MINT), true);
