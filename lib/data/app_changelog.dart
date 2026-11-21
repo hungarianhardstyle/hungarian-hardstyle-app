@@ -40,6 +40,7 @@ const appChangelog = <AppReleaseNotes>[
     version: '1.0.0',
     build: 415,
     changes: [
+      'Új: a cikkek képei koppintásra bezárhatók, dupla koppintásra nagyíthatók.',
       'Új (tesztelés alatt): a HARD-tárca más tárcákkal is összekapcsolható (WalletConnect, pl. Trust Wallet, Backpack), és az appban látszanak a támogatott tárcák logói.',
     ],
   ),

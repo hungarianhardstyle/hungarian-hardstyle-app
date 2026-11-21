@@ -121,9 +121,15 @@ class _NewsDetailScreenState extends State<NewsDetailScreen>
     }.toList();
     if (urls.isEmpty) return;
     final index = tapped == null ? 0 : urls.indexOf(tapped).clamp(0, urls.length - 1);
+    // Lightbox: átlátszó háttér, a cikk sötéten átsejlik, koppintásra bezárul.
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => GalleryScreen(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierColor: Colors.black87,
+        transitionsBuilder: (_, animation, _, child) =>
+            FadeTransition(opacity: animation, child: child),
+        pageBuilder: (_, _, _) => GalleryScreen(
+          overlay: true,
           // Negatív azonosító: nem ütközik a galéria Hero-címkéivel.
           images: [
             for (var i = 0; i < urls.length; i++)
@@ -250,15 +256,33 @@ class _NewsDetailScreenState extends State<NewsDetailScreen>
                               _openImage(context, src),
                         ),
                       ],
-                      onLinkTap: (url, attributes, element) => _openLink(
-                        context,
-                        resolveHtmlLinkTarget(
-                          callbackUrl: url,
-                          attributes: attributes,
-                          visibleText: element?.text,
-                        ),
-                        attributes,
-                      ),
+                      onLinkTap: (url, attributes, element) {
+                        // A WordPress a képet gyakran a nagy változatára linkeli:
+                        // az nem böngészőbe, hanem a lightboxba való.
+                        final target = url ?? '';
+                        final isImageFile = RegExp(
+                          r'\.(jpe?g|png|webp|gif)(\?.*)?$',
+                          caseSensitive: false,
+                        ).hasMatch(target);
+                        final inner = element
+                            ?.querySelector('img')
+                            ?.attributes['src'];
+                        if (isImageFile ||
+                            (inner != null &&
+                                target.contains('/wp-content/uploads/'))) {
+                          _openImage(context, isImageFile ? target : inner);
+                          return;
+                        }
+                        _openLink(
+                          context,
+                          resolveHtmlLinkTarget(
+                            callbackUrl: url,
+                            attributes: attributes,
+                            visibleText: element?.text,
+                          ),
+                          attributes,
+                        );
+                      },
                       style: {
                         "body": Style(
                           margin: Margins.zero,

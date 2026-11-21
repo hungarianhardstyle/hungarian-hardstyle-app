@@ -11,6 +11,7 @@
   "Ezekkel a tárcákkal kapcsolhatod össze (és még sok mással):": "You can connect these wallets (and many more):",
   "A tárca nem kapcsolódott.": "The wallet did not connect.",
   "Új (tesztelés alatt): a HARD-tárca más tárcákkal is összekapcsolható (WalletConnect, pl. Trust Wallet, Backpack), és az appban látszanak a támogatott tárcák logói.": "New (in testing): the HARD wallet can also be linked with other wallets (WalletConnect, e.g. Trust Wallet, Backpack), and the supported wallets' logos are shown in the app.",
+  "Új: a cikkek képei koppintásra bezárhatók, dupla koppintásra nagyíthatók.": "New: article images close with a tap and zoom with a double tap.",
   "Nincs kapcsolat a szerverrel, próbáld újra.": "No connection to the server, please try again.",
   "Új: a cikkek képei nagyíthatók.": "New: article images can be enlarged.",
   "Akik ugyanazokra a bulikra mennek, mint te": "People going to the same events as you",

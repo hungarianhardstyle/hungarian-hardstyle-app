@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,7 +30,7 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
   bool _busy = false;
   String? _error;
 
-  Future<void> _run(Future<void> Function() action) async {
+  Future<void> _run(Future<void> Function() action, {bool connecting = false}) async {
     setState(() {
       _busy = true;
       _error = null;
@@ -38,9 +39,17 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
       await action();
       ref.invalidate(hardWalletStatusProvider);
     } catch (error) {
-      // Ha a kötés a hiba ellenére megtörtént, az állapot ezt azonnal mutatja.
-      ref.invalidate(hardWalletStatusProvider);
-      if (mounted) setState(() => _error = hardWalletErrorMessage(error));
+      // A tárcából visszalépve a válasz elveszhet, miközben a szerver a kötést
+      // már rögzítette: friss állapotot kérünk, és ha a kötés megvan, nincs hiba.
+      var linked = false;
+      try {
+        linked = (await ref.refresh(hardWalletStatusProvider.future)).linked;
+      } catch (_) {}
+      final lostReply = connecting &&
+          linked &&
+          error is FirebaseFunctionsException &&
+          error.code == 'unavailable';
+      if (mounted && !lostReply) setState(() => _error = hardWalletErrorMessage(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -90,7 +99,7 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           FilledButton.icon(
-            onPressed: _busy ? null : () => _run(hardWalletService.connect),
+            onPressed: _busy ? null : () => _run(hardWalletService.connect, connecting: true),
             icon: _busy
                 ? const SizedBox.square(
                     dimension: 18,
@@ -101,7 +110,7 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
-            onPressed: _busy ? null : () => _run(() => hardWalletConnect.connect(context)),
+            onPressed: _busy ? null : () => _run(() => hardWalletConnect.connect(context), connecting: true),
             icon: const Icon(Icons.qr_code_2),
             label: const AppText('Más tárca (WalletConnect)'),
           ),

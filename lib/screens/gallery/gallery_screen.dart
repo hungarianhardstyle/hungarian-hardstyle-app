@@ -10,7 +10,15 @@ class GalleryScreen extends StatefulWidget {
   final List<GalleryImage> images;
   final int initialIndex;
 
-  const GalleryScreen({super.key, required this.images, this.initialIndex = 0});
+  /// Lightbox-módban a háttér átlátszó (a hívó route nem átlátszatlan).
+  final bool overlay;
+
+  const GalleryScreen({
+    super.key,
+    required this.images,
+    this.initialIndex = 0,
+    this.overlay = false,
+  });
 
   @override
   State<GalleryScreen> createState() => _GalleryScreenState();
@@ -39,10 +47,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: widget.overlay ? Colors.transparent : Colors.black,
 
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: widget.overlay ? Colors.transparent : Colors.black,
         elevation: 0,
         leading: IconButton(
           tooltip: tr(context, 'Bezárás'),
