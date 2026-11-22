@@ -38,6 +38,17 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
+    build: 421,
+    changes: [
+      'Új: a bulis becsekkolás a buli kezdetekor nyílik, és nyitás előtt is látszik, mikortól lehet becsekkolni.',
+      'Új (tesztelés alatt): helyalapú becsekkolás („Itt vagyok a helyszínen”) azoknál a bulikoknál, ahol a szervező bekapcsolja; helyengedélyt kér, a pozíciót nem tároljuk.',
+      'Új: az „Ott voltam” jelvények oldala: a profilodon 3 jelvényt kiemelhetsz, és mások is megnézhetik a jelvényeidet.',
+      'Új: a HARD-tárca oldalon a teljes cím másolható, QR-kóddal is látszik, és a HARD küldhető másik felhasználónak (a felhasználó kiválasztásával).',
+      'Új (tesztelés alatt): gyorsabban betöltő HARD-tárca oldal, és a tárca összekötésekor nem jelenik meg hamis hálózati hiba.',
+    ],
+  ),
+  AppReleaseNotes(
+    version: '1.0.0',
     build: 420,
     changes: [
       'Új (tesztelés alatt): HARD küldése másik felhasználónak a profilja oldaláról (a saját tárcáddal aláírva, teszthálózaton).',
