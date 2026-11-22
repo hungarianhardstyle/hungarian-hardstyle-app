@@ -6471,58 +6471,116 @@ exports.checkInEvent = functions
     if (!(await allowCall(uid, 'event_checkin', 10))) {
       throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
     }
-    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
-    const response = await fetch(`${WORDPRESS_BASE_URL}/events/${target.eventId}/checkin`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ code: target.code, uid }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    console.info('event_checkin_wordpress_result', {
-      eventId: target.eventId,
-      uidLength: uid.length,
-      status: response.status,
-      alreadyCheckedIn: payload?.alreadyCheckedIn === true,
-    });
-    if (!response.ok) {
-      const message =
-        typeof payload?.message === 'string' && payload.message !== ''
-          ? payload.message
-          : 'A becsekkolás most nem sikerült, próbáld újra.';
-      throw new HttpsError(
-        response.status === 404 ? 'not-found' : response.status === 403 ? 'failed-precondition' : 'internal',
-        message,
-      );
-    }
-    const badge = checkinBadge(payload);
-    const ref = db.collection('event_checkins').doc(checkinDocId(uid, target.eventId));
-    try {
-      await ref.create({
-        uid,
-        eventId: target.eventId,
-        title: badge.title,
-        badgeName: badge.badgeName,
-        badgeUrl: badge.badgeUrl,
-        checkedInAt: FieldValue.serverTimestamp(),
-      });
-    } catch (error) {
-      // Már létezik (ismételt beolvasás) — a jelvény megvan, nincs teendő.
-      if (error?.code !== 6 && error?.code !== 'already-exists') throw error;
-    }
-    const award = await awardAchievementPoints(uid, EVENT_CHECKIN_POINTS, checkinSourceKey(target.eventId));
-    return {
-      ok: true,
-      alreadyCheckedIn: payload?.alreadyCheckedIn === true,
-      eventId: target.eventId,
+    const payload = await postWordPressCheckin(uid, target.eventId, { code: target.code });
+    return recordEventCheckin(uid, target.eventId, payload);
+  });
+
+// A WordPress becsekkolási végpontja (csak a szerver hívja, alkalmazás-jelszóval).
+// `extra`: { code } a QR-hoz, { gps_verified: true } a már megmért helyalapú úthoz.
+async function postWordPressCheckin(uid, eventId, extra) {
+  const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+  const response = await fetch(`${WORDPRESS_BASE_URL}/events/${eventId}/checkin`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ ...extra, uid }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  console.info('event_checkin_wordpress_result', {
+    eventId,
+    uidLength: uid.length,
+    status: response.status,
+    alreadyCheckedIn: payload?.alreadyCheckedIn === true,
+    gps: extra?.gps_verified === true,
+  });
+  if (!response.ok) {
+    const message =
+      typeof payload?.message === 'string' && payload.message !== ''
+        ? payload.message
+        : 'A becsekkolás most nem sikerült, próbáld újra.';
+    throw new HttpsError(
+      response.status === 404 ? 'not-found' : response.status === 403 ? 'failed-precondition' : 'internal',
+      message,
+    );
+  }
+  return payload;
+}
+
+// A jelvény és a pont jóváírása (a QR és a helyalapú út közös vége).
+async function recordEventCheckin(uid, eventId, payload) {
+  const badge = checkinBadge(payload);
+  const ref = db.collection('event_checkins').doc(checkinDocId(uid, eventId));
+  try {
+    await ref.create({
+      uid,
+      eventId,
       title: badge.title,
       badgeName: badge.badgeName,
       badgeUrl: badge.badgeUrl,
-      points: award?.changed ? EVENT_CHECKIN_POINTS : 0,
-    };
+      checkedInAt: FieldValue.serverTimestamp(),
+    });
+  } catch (error) {
+    // Már létezik (ismételt beolvasás) — a jelvény megvan, nincs teendő.
+    if (error?.code !== 6 && error?.code !== 'already-exists') throw error;
+  }
+  const award = await awardAchievementPoints(uid, EVENT_CHECKIN_POINTS, checkinSourceKey(eventId));
+  return {
+    ok: true,
+    alreadyCheckedIn: payload?.alreadyCheckedIn === true,
+    eventId,
+    title: badge.title,
+    badgeName: badge.badgeName,
+    badgeUrl: badge.badgeUrl,
+    points: award?.changed ? EVENT_CHECKIN_POINTS : 0,
+  };
+}
+
+// Helyalapú becsekkolás (a QR mellett, eseményenként kapcsolható a WordPressben).
+// A telefon pozícióját a szerver csak az ellenőrzéshez használja: nem tárolja és
+// nem naplózza; csak az eredmény számít. A döntés tiszta logikája: checkin-gps-plan.js.
+const {
+  parsePosition: parseGpsPosition,
+  gpsCheckinDecision,
+  gpsDecisionMessage,
+} = require('./checkin-gps-plan');
+
+exports.checkInEventGps = functions
+  .runWith({
+    secrets: [WORDPRESS_USERNAME, WORDPRESS_APPLICATION_PASSWORD],
+    enforceAppCheck: false,
+  })
+  .https.onCall(async (data, context) => {
+    const uid = requireRegisteredViewer(context);
+    const eventId = Number(data?.eventId);
+    const position = parseGpsPosition(data);
+    if (!Number.isInteger(eventId) || eventId <= 0 || !position) {
+      throw new HttpsError('invalid-argument', 'Hibás helyadat vagy esemény.');
+    }
+    if (!(await allowCall(uid, 'event_checkin_gps', 6))) {
+      throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
+    }
+    const credentials = `${WORDPRESS_USERNAME.value()}:${WORDPRESS_APPLICATION_PASSWORD.value()}`;
+    const response = await fetch(`${WORDPRESS_BASE_URL}/events/${eventId}/checkin-gps`, {
+      headers: { Authorization: `Basic ${Buffer.from(credentials).toString('base64')}`, Accept: 'application/json' },
+    });
+    const config = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new HttpsError(
+        response.status === 404 ? 'not-found' : 'unavailable',
+        'A helyalapú becsekkolás most nem érhető el, próbáld újra vagy olvasd be a QR-kódot.',
+      );
+    }
+    const decision = gpsCheckinDecision(config, position);
+    if (!decision.ok) {
+      // Szándékosan nincs koordináta a naplóban: csak az eredmény kódja.
+      console.info('event_checkin_gps_rejected', { eventId, code: decision.code });
+      throw new HttpsError('failed-precondition', gpsDecisionMessage(decision));
+    }
+    const payload = await postWordPressCheckin(uid, eventId, { gps_verified: true });
+    return recordEventCheckin(uid, eventId, payload);
   });
 
 // ---------------------------------------------------------------------------

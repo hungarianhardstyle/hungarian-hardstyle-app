@@ -88,6 +88,9 @@ class HuhsEvent {
   /// Időbeosztás és QR-becsekkolás (plugin 2.15.0). Régebbi válaszban hiányzik.
   final List<EventTimetableEntry> timetable;
   final bool checkinEnabled;
+
+  /// Helyalapú becsekkolás (plugin 2.16.6): a szerver a koordinátát nem adja ki.
+  final bool checkinGps;
   final String checkinOpens;
   final String checkinCloses;
   final String checkinBadgeName;
@@ -119,6 +122,7 @@ class HuhsEvent {
     required this.status,
     this.timetable = const [],
     this.checkinEnabled = false,
+    this.checkinGps = false,
     this.checkinOpens = '',
     this.checkinCloses = '',
     this.checkinBadgeName = '',
@@ -171,6 +175,7 @@ class HuhsEvent {
                 .toList()
           : const [],
       checkinEnabled: _readBool(json['checkin_enabled']),
+      checkinGps: _readBool(json['checkin_gps']),
       checkinOpens: _readString(json['checkin_opens']),
       checkinCloses: _readString(json['checkin_closes']),
       checkinBadgeName: _readString(json['checkin_badge_name']),

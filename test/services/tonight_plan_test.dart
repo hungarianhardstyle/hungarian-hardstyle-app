@@ -116,6 +116,26 @@ void main() {
     expect(ReferralLinkService.checkinTargetFromUri(Uri.parse('https://x.hu/checkin/1/abc')), isNull);
   });
 
+  test('a helyalapú becsekkolás jelzője az esemény adatából jön, alapból ki van kapcsolva', () {
+    expect(_event().checkinGps, isFalse);
+    expect(_event(extra: {'checkin_gps': true}).checkinGps, isTrue);
+  });
+
+  test('a helyalapú becsekkolás a pozíciót a szervernek adja, az eredményt visszaadja', () async {
+    double? lat;
+    double? accuracy;
+    final service = EventCheckinService(gpsCaller: (eventId, la, ln, acc) async {
+      lat = la;
+      accuracy = acc;
+      return {'eventId': eventId, 'title': 'Hard Base', 'badgeName': 'Hard Base – ott voltam', 'alreadyCheckedIn': false, 'points': 30};
+    });
+    final result = await service.checkInWithLocation(eventId: 12992, lat: 47.4979, lng: 19.0402, accuracy: 12);
+    expect(result.eventId, 12992);
+    expect(result.points, 30);
+    expect(lat, 47.4979);
+    expect(accuracy, 12);
+  });
+
   test('a szolgáltatás a szerver üzenetét adja tovább, és hamis QR-t el sem küld', () async {
     var calls = 0;
     final service = EventCheckinService(caller: (qr) async {

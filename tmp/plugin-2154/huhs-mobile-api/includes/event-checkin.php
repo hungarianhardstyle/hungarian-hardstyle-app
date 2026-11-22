@@ -25,6 +25,30 @@ if (!defined('ABSPATH')) {
 const HUHS_CHECKIN_OPENS_BEFORE = 0;          // a buli kezdetekor nyílik
 const HUHS_CHECKIN_DEFAULT_LENGTH = 36000;    // záró idő nélkül: 10 óra
 const HUHS_CHECKIN_META_PREFIX = '_huhs_checkin_entry_';
+const HUHS_CHECKIN_GPS_RADIUS = 250;           // méter: ennyin belül számít „a helyszínen”
+
+/**
+ * A helyalapú becsekkolás beállítása (2.16.6): kapcsoló + a helyszín koordinátája.
+ * Érvénytelen koordinátánál kikapcsoltnak számít. A koordinátát NEM adjuk a
+ * nyilvános válaszba; a távolságot a szerver (Firebase) méri.
+ *
+ * @return array{enabled:bool, lat:float, lng:float, radius:int}
+ */
+function huhs_event_checkin_gps($event_id)
+{
+    $lat = (string) get_post_meta($event_id, 'checkin_lat', true);
+    $lng = (string) get_post_meta($event_id, 'checkin_lng', true);
+    $valid = is_numeric($lat) && is_numeric($lng)
+        && (float) $lat >= -90 && (float) $lat <= 90
+        && (float) $lng >= -180 && (float) $lng <= 180;
+    $on = (string) get_post_meta($event_id, 'checkin_gps', true) === '1';
+    return array(
+        'enabled' => $on && $valid,
+        'lat' => $valid ? (float) $lat : 0.0,
+        'lng' => $valid ? (float) $lng : 0.0,
+        'radius' => HUHS_CHECKIN_GPS_RADIUS,
+    );
+}
 
 /** A becsekkolás sójának lekérése (első használatkor jön létre, a szerveren marad). */
 function huhs_checkin_salt()
@@ -177,6 +201,7 @@ function huhs_event_checkin_public_fields($event_id)
     return array(
         'timetable' => huhs_event_timetable_visible($event_id) ? huhs_parse_event_timetable(get_post_meta($event_id, 'event_timetable', true)) : array(),
         'checkin_enabled' => huhs_event_checkin_code($event_id) !== '',
+        'checkin_gps' => huhs_event_checkin_gps($event_id)['enabled'],
         'checkin_opens' => $window['opens'] ? gmdate('c', $window['opens']) : '',
         'checkin_closes' => $window['closes'] ? gmdate('c', $window['closes']) : '',
         'checkin_badge_name' => sanitize_text_field((string) get_post_meta($event_id, 'checkin_badge_name', true)),
@@ -199,6 +224,12 @@ add_action('rest_api_init', function () {
         'callback' => 'huhs_event_checkin_api_record',
         'permission_callback' => $server_only,
     ));
+    // A helyalapú becsekkolás beállítása (koordináta, sugár, ablak): csak a Firebase kéri.
+    register_rest_route('huhs/v1', '/events/(?P<id>\d+)/checkin-gps', array(
+        'methods' => 'GET',
+        'callback' => 'huhs_event_checkin_api_gps',
+        'permission_callback' => $server_only,
+    ));
     // A natív admin (HUHS Vezérlőközpont) ezzel kéri le / generálja újra a QR-t.
     register_rest_route('huhs/v1', '/events/(?P<id>\d+)/checkin-code', array(
         'methods' => array('GET', 'POST'),
@@ -219,9 +250,18 @@ function huhs_event_checkin_api_record(WP_REST_Request $request)
     if ($uid === '' || strlen($uid) > 128) {
         return new WP_Error('huhs_checkin_bad_user', 'Érvénytelen felhasználó.', array('status' => 400));
     }
-    $expected = huhs_event_checkin_code($event_id);
-    if ($expected === '' || $code === '' || !hash_equals($expected, $code)) {
-        return new WP_Error('huhs_checkin_bad_code', 'Ez a QR-kód nem ehhez a bulihoz tartozik.', array('status' => 403));
+    // `gps_verified`: a Firebase már megmérte a távolságot (csak ő hívja ezt a végpontot,
+    // alkalmazás-jelszóval); ilyenkor a QR-kód nem kell, de csak ha az esemény GPS-es.
+    $gps_verified = filter_var($request->get_param('gps_verified'), FILTER_VALIDATE_BOOLEAN);
+    if ($gps_verified) {
+        if (!huhs_event_checkin_gps($event_id)['enabled']) {
+            return new WP_Error('huhs_checkin_gps_off', 'Ennél a bulinál nincs helyalapú becsekkolás.', array('status' => 403));
+        }
+    } else {
+        $expected = huhs_event_checkin_code($event_id);
+        if ($expected === '' || $code === '' || !hash_equals($expected, $code)) {
+            return new WP_Error('huhs_checkin_bad_code', 'Ez a QR-kód nem ehhez a bulihoz tartozik.', array('status' => 403));
+        }
     }
     $state = huhs_checkin_state(huhs_event_checkin_window($event_id), time());
     if ($state !== 'open') {
@@ -245,6 +285,24 @@ function huhs_event_checkin_api_record(WP_REST_Request $request)
         'badgeName' => $fields['checkin_badge_name'],
         'badgeUrl' => $fields['checkin_badge_url'],
         'count' => huhs_event_checkin_count($event_id),
+    ));
+}
+
+function huhs_event_checkin_api_gps(WP_REST_Request $request)
+{
+    $event_id = (int) $request['id'];
+    $event = get_post($event_id);
+    if (!$event || $event->post_type !== 'huhs_event' || $event->post_status !== 'publish') {
+        return new WP_Error('huhs_checkin_not_found', 'Ez az esemény nem található.', array('status' => 404));
+    }
+    $gps = huhs_event_checkin_gps($event_id);
+    $window = huhs_event_checkin_window($event_id);
+    return rest_ensure_response(array(
+        'enabled' => $gps['enabled'],
+        'lat' => $gps['lat'],
+        'lng' => $gps['lng'],
+        'radius' => $gps['radius'],
+        'state' => huhs_checkin_state($window, time()),
     ));
 }
 
@@ -324,6 +382,19 @@ function huhs_event_checkin_meta_box($post)
     ?></textarea>
     <p><label>Mikortól látszódjon az appban (üres = azonnal)<br><input type="datetime-local" name="event_timetable_from" value="<?php echo esc_attr((string) get_post_meta($post->ID, 'event_timetable_from', true)); ?>"></label></p>
     <p class="description">A buli napján az app Kezdőlapján, a „Ma este” kártyán és az esemény adatlapján jelenik meg.</p>
+
+    <hr>
+    <p><strong>Helyalapú becsekkolás (GPS)</strong> — a QR mellett az app „Itt vagyok a helyszínen” gombja is becsekkolja a látogatót, ha a telefonja a helyszín közelében van (<?php echo (int) HUHS_CHECKIN_GPS_RADIUS; ?> m). Alapból ki van kapcsolva.</p>
+    <p><label><input type="checkbox" name="checkin_gps" value="1" <?php checked((string) get_post_meta($post->ID, 'checkin_gps', true), '1'); ?>> Helyalapú becsekkolás engedélyezése</label></p>
+    <p>
+        <label>Helyszín szélessége (pl. 47.4979)<br>
+            <input type="text" name="checkin_lat" value="<?php echo esc_attr((string) get_post_meta($post->ID, 'checkin_lat', true)); ?>" placeholder="47.4979">
+        </label>
+        <label style="margin-left:12px">Helyszín hosszúsága (pl. 19.0402)<br>
+            <input type="text" name="checkin_lng" value="<?php echo esc_attr((string) get_post_meta($post->ID, 'checkin_lng', true)); ?>" placeholder="19.0402">
+        </label>
+    </p>
+    <p class="description">A koordinátát a Google Térképen a helyszínre jobb gombbal kattintva másolhatod ki. A telefon pozícióját a szerver csak az ellenőrzéshez használja, nem tárolja.</p>
 
     <hr>
     <p><strong>Becsekkolási jelvény</strong> (a becsekkolók ezt kapják; ha üres, általános „Ott voltam” jelvény jár)</p>
@@ -423,6 +494,13 @@ function huhs_save_event_checkin_meta($post_id)
     }
     if (isset($_POST['event_timetable'])) {
         update_post_meta($post_id, 'event_timetable', sanitize_textarea_field(wp_unslash($_POST['event_timetable'])));
+    }
+    update_post_meta($post_id, 'checkin_gps', !empty($_POST['checkin_gps']) ? '1' : '0');
+    foreach (array('checkin_lat' => 90.0, 'checkin_lng' => 180.0) as $key => $limit) {
+        if (!isset($_POST[$key])) continue;
+        $raw = str_replace(',', '.', trim(sanitize_text_field(wp_unslash($_POST[$key]))));
+        $ok = $raw !== '' && is_numeric($raw) && abs((float) $raw) <= $limit;
+        update_post_meta($post_id, $key, $ok ? (string) (float) $raw : '');
     }
     if (isset($_POST['checkin_badge_name'])) {
         update_post_meta($post_id, 'checkin_badge_name', sanitize_text_field(wp_unslash($_POST['checkin_badge_name'])));

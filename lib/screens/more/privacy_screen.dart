@@ -1,4 +1,5 @@
 import '../../widgets/app_text.dart';
+
 import 'package:flutter/material.dart';
 
 class PrivacyScreen extends StatelessWidget {
@@ -44,7 +45,11 @@ class PrivacyScreen extends StatelessWidget {
             'lehetnek: alapértelmezés szerint az összes jelvényed nyilvános a profilodon, '
             'de az „Összes jelvény” oldalon kikapcsolhatod, hogy mások csak a (legfeljebb '
             '3) kiemelt jelvényedet lássák. A jelvény elárulhatja, hogy részt vettél egy '
-            'eseményen. A jelvények a fiókod törlésekor törlődnek.',
+            'eseményen. A jelvények a fiókod törlésekor törlődnek. Ha a helyalapú becsekkolást '
+            'választod („Itt vagyok a helyszínen”), az alkalmazás helyengedélyt kér, és a '
+            'telefonod pozícióját egyszer elküldi a szervernek, amely csak azt ellenőrzi, '
+            'hogy az esemény helyszínének közelében vagy-e; a pozíciót nem tároljuk és nem '
+            'naplózzuk, csak az eredmény (becsekkoltál vagy sem) számít.',
           ),
           SizedBox(height: 14),
           AppText(

@@ -81,8 +81,11 @@ test('forrás-lint: a callable bejelentkezést kér, a WordPress dönt, a ledger
   assert.ok(start > 0 && end > start);
   const body = source.slice(start, end);
   assert.match(body, /requireRegisteredViewer\(context\)/);
-  assert.match(body, /\/events\/\$\{target\.eventId\}\/checkin/);
-  assert.match(body, /awardAchievementPoints\(uid, EVENT_CHECKIN_POINTS, checkinSourceKey\(target\.eventId\)\)/);
+  assert.match(body, /\/events\/\$\{eventId\}\/checkin/);
+  assert.match(body, /awardAchievementPoints\(uid, EVENT_CHECKIN_POINTS, checkinSourceKey\(eventId\)\)/);
+  // A helyalapú út is a WordPress ablakát és a közös jóváírást használja.
+  assert.match(body, /gps_verified: true/);
+  assert.match(body, /recordEventCheckin\(uid, eventId, payload\)/);
   // A UID a hitelesített tokenből jön, nem a kliens kéréséből.
   assert.doesNotMatch(body, /data\??\.uid/);
   const welcome = source.slice(end, end + 800);
