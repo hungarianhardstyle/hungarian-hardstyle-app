@@ -1,11 +1,14 @@
 # Hungarian Hardstyle App - Project Context for AI Agents
 
-## Aktuális állapot (2026-11-17)
+## Aktuális állapot (2026-11-22)
 
-- **App:** build **410** (QR-becsekkolás, „Ma este” kártya, +25 pont a belépésért, 5 lépéses bemutató). AAB: `build/HUHS-v1.0.0+410-release.aab`, SHA-256 `60C06F287B7E8490CBCF108A8D5561EB2E85FA134AB353CD972C42F70A7B7070`; feltöltés a tulajdonos dolga.
-- **Plugin:** forrás `tmp/plugin-2154/huhs-mobile-api`, jelenleg **2.15.5** (jelvény-feltöltő, időbeosztás időzítése 2026-11-21 18:00-ra, push-duplázás/kihagyás javítása kulcs-kurzorral). Építés: `node tools/build-plugin-zip.mjs <forrás> <zip> huhs-mobile-api`; ellenőrzés PowerShellből: `node tools/verify-plugin-package.mjs --zip=… --source=…`.
-- **Nyitott (tulajdonos):** időbeosztás + „Mikortól látszódjon” + jelvény kitöltése a Kassa Hajó eseményen; a 410 feltöltése a Playre; a következő hír-küldés után ellenőrizni, hogy mindenki pontosan egy push-t kapott-e (`node tools/check-push-duplicates.mjs --hours N`).
-- **Ismert korlát:** a PHP-logikát (`tools/verify-event-checkin.php`) nem futtattuk; eszközön QR-olvasás nem próbálva.
+- **App:** build **421** (`1.0.0+421`): HARD-tárca (cím, QR, küldés felhasználónak), „Ott voltam” jelvény-oldal (3 kiemelhető), helyalapú becsekkolás („Itt vagyok a helyszínen”), becsekkolás a buli kezdetekor, új rádiólejátszó (Media3 ExoPlayer). AAB: `build/HUHS-v1.0.0+421-release.aab`, SHA-256 `CD307ABE0BCA9A3A863A21959B6961B977C75753466438135BCC8D6D75F88946`; a feltöltés a tulajdonos dolga, **előtte a Play Adatbiztonság űrlapot frissíteni kell a helyadat miatt** (`docs/PLAY-ADATBIZTONSAG-HELYADAT.md`).
+- **Plugin:** forrás `tmp/plugin-2154/huhs-mobile-api`, jelenleg **2.16.6** (a becsekkolás a kezdéskor nyílik; helyalapú becsekkolás kapcsolója és koordinátája az esemény szerkesztőjében). Építés: `node tools/build-plugin-zip.mjs <forrás> <zip> huhs-mobile-api`; ellenőrzés PowerShellből (a bash `tar`-ja nem jó): `node tools/verify-plugin-package.mjs --zip=… --source=…`.
+- **Szerver (Firebase, élesben):** `hardPrepareTransfer`, `hardWalletVerify` (idempotens), `hardGetBalance` (párhuzamos olvasás, airdrop-jelzés), `getCheckinBadges`, `setFeaturedCheckinBadges`, `checkInEvent` (közös jóváíró segédfüggvénnyel), `checkInEventGps`. A WordPress időzónája 2026-11-22-től **Europe/Budapest** (korábban fix UTC+2, ezért télen minden időzített dolog egy órát tévedett).
+- **HARD:** devnet; terv, jutalomrendszer és nyitott döntések: `docs/HARD-TOKEN-INTEGRACIOS-TERV.md` (10. és 12. fejezet), jogi kérdések: `docs/HARD-TOKEN-JOGI-KERDESEK.md`. A külön **jutalom-tárca** létrehozva (cím a 12.7 pontban, kulcs: Secret Manager `HARD_REWARD_WALLET_KEY`), **egyenlege 0**; a küldő/jutalomkönyv kód még nincs megírva.
+- **Nyitott (tulajdonos):** a 421 feltöltése + Play Adatbiztonság; a GPS eseményenkénti bekapcsolása és koordináta; jutalom-tárca feltöltése (SOL + HARD); OneTicket-kérdések; ügyvéd; Kassa Hajó mezők.
+- **Ismert korlát:** a PHP-logikát nem futtattuk (nincs PHP a gépen); a QR- és GPS-olvasás, a tárca-oldal és a jelvény-oldal eszközön nincs kipróbálva; a Solflare-hiba kliensoldali javítása és az idempotens ellenőrzés hatása eszközön nem mért.
+- **Graphify:** a `graphify` nincs a PATH-on, és a 3.14-es Python `python.exe`-je sérült (29 bájtos szöveg). Működő frissítés: `C:\Users\deero\AppData\Local\Python\pythoncore-3.13-64\python.exe -m graphify update .`
 - **Történet:** a build-napló a `docs/AGENTS-TORTENET.md` fájlban van (nem töltődik be automatikusan).
 
 ## Központi Cégregiszter – külön WordPress migrációs követelmények

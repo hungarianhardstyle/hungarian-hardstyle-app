@@ -48,6 +48,9 @@ export const EMULATOR_SUITES = [
     // zöldet: az érintett 6 teszt kihagyva fut, indoklással.
     env: { FIREBASE_DEBUG_MODE: 'true', FIREBASE_DEBUG_FEATURES: '{"skipTokenVerification":true}' } },
   { file: 'functions/rules.test.cjs', services: 'firestore' },
+  // A HARD-gyűjtemények szabályai (tárcakötés, kihívás, auditnapló): az emulátor nélkül
+  // a Firestore-hívás ECONNREFUSED-del elhasal, ezért a tiszta csoportból ide került.
+  { file: 'functions/hard-rules.test.cjs', services: 'firestore' },
   // A Twitch-élő figyelő TELJES útja (2026-10-02): a döntés tiszta tesztekkel
   // már mérve volt, a hívó viszont eddig csak forrás-linttel. Ez a suite a
   // valódi `runTwitchLiveNotice`-t futtatja az emulátoron, és csak a HÁLÓZATOT

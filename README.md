@@ -4,17 +4,17 @@ The official cross-platform application of **Hungarian Hardstyle** — one hub f
 
 **Live:** [Google Play](https://play.google.com/store/apps/details?id=hu.hungarianhardstyle.app) · [hungarianhardstyle.hu](https://hungarianhardstyle.hu) · [Privacy policy](https://hungarianhardstyle.hu/adatvedelmi-nyilatkozat/) · [Account deletion](https://hungarianhardstyle.hu/fiok-torles/) · [Child safety](https://hungarianhardstyle.hu/gyermekbiztonsag/)
 
-WordPress stays the editorial source of truth. The Flutter app reads the public REST API of the companion **HUHS Mobile API** WordPress plugin (**2.14.5**) for news, events, DJs, organizers, releases, FAQ, polls and games, while Firebase provides authentication, community data, push notifications and every server-side decision.
+WordPress stays the editorial source of truth. The Flutter app reads the public REST API of the companion **HUHS Mobile API** WordPress plugin (**2.16.6**) for news, events, DJs, organizers, releases, FAQ, polls and games, while Firebase provides authentication, community data, push notifications and every server-side decision. The community token **HARD** runs on Solana **devnet** (no monetary value yet): wallet linking, in-app transfers between users and reward rules are built server-first.
 
 ## Current status
 
 | Area | State |
 | --- | --- |
-| App version | **1.0.0+377** (`versionCode 377`) — Android via the Play production track; iOS built unsigned in CI and installed by sideload for testing |
-| WordPress plugin | **2.14.5** |
-| Cloud Functions | **81 deployed** — 53 callable, 12 scheduled, 15 Firestore triggers (23 in `europe-central2`, 58 legacy in `us-central1`) |
-| Localization | Hungarian + English, **1450** dictionary keys, language follows the device and can be switched in-app; **42** notification kinds in both languages |
-| Test suite | **1220** Flutter tests, **349** pure Cloud Functions tests, **9** emulator suites (including Firestore-rules tests) |
+| App version | **1.0.0+421** (`versionCode 421`) — Android via Google Play; iOS built unsigned in CI and installed by sideload for testing |
+| WordPress plugin | **2.16.6** |
+| Cloud Functions | **94 deployed** — 63 callable, 15 scheduled, 15 Firestore triggers, 1 HTTPS (26 in `europe-central2`, 68 in `us-central1`; measured with `firebase functions:list`) |
+| Localization | Hungarian + English, **1721** dictionary keys (100% of the targeted strings translated), language follows the device and can be switched in-app; push and in-app notification texts exist in both languages |
+| Test suite | **1621** Flutter tests, **446** pure Cloud Functions tests in 43 files (437 pass, 9 skipped, 0 fail), **10** emulator suites (including Firestore-rules tests; not re-run in the latest round) |
 
 ### Shipped
 
@@ -28,10 +28,13 @@ WordPress stays the editorial source of truth. The Flutter app reads the public 
 - achievements, points, levels, badges, leaderboard and a referral program
 - games, polls, prize draws and yearly voting with published results
 - Hardstyle Revolution label catalog with previews, free downloads, Google Play Billing purchases and an offline "my music" library
-- online radio (Real Hardstyle FM) with a native Android foreground service, an iOS stream player and a persistent player bar in the navigation shell
+- online radio (Real Hardstyle FM) with a native Android foreground service on **Media3 ExoPlayer** (buffering, exponential reconnect, network-change handling), an iOS stream player and a persistent player bar in the navigation shell
 - Mailchimp newsletter signup (through the WordPress API) and consent-gated AdMob monetization of free downloads
 - Firebase Cloud Messaging push for news, events, chat, achievements, moderation and birthdays, with per-user notification preferences
 - event reminders **1 week, 1 day and 6 hours before** every published event, broadcast to every registered device and honouring each device's notification/reminder settings
+- **"Ma este" card and event check-in:** on the day of a Hungarian Hardstyle event the Home screen shows the timetable, map, ticket, flyer and a check-in that opens when the event starts — by **QR code** or, where the organizer enables it, by **location** ("Itt vagyok a helyszínen": the position is checked once on the server and never stored)
+- **"Ott voltam" check-in badges:** a badges page where you pick 3 to feature on your profile, with an owner-controlled public/private switch
+- **HARD token (Solana devnet):** link a wallet (Mobile Wallet Adapter or any WalletConnect wallet), see the balance, copy the address / QR, and **send HARD to another user** (the server builds the unsigned transfer, the user's own wallet signs it; the app never holds a key). Tokenomics, rewards and the legal question list live in `docs/`
 - child-safety layer: 16+ registration gate, birth date (required at registration, hidden by default), warning banner when a minor talks to an adult, private-chat reporting and a server-side private-message flagging system
 
 ### How changes are verified
@@ -39,8 +42,8 @@ WordPress stays the editorial source of truth. The Flutter app reads the public 
 Every round ships with measured evidence rather than assumptions:
 
 - `flutter analyze lib test` → clean
-- `flutter test` → **1220/1220**
-- `node tools/run-function-tests.mjs` → **349/349** pure + **9/9** emulator suites
+- `flutter test` → **1621/1621**
+- `node tools/run-function-tests.mjs --pure` → **446** tests (437 pass, 9 skipped, 0 fail); the emulator suites need the Firebase emulators (`node tools/run-function-tests.mjs --emulator`)
 - `node tools/check-i18n.mjs --strict` → every extracted Hungarian UI string has an English entry
 - `node tools/check-adjacent-literals.mjs` → multi-line concatenated literals must exist as dictionary keys
 - `node tools/check-play-notes.mjs` → release notes fit the Play character limits
@@ -57,6 +60,7 @@ Every round ships with measured evidence rather than assumptions:
 | Identity & community | Firebase Authentication, Cloud Firestore (named database `hungarian-hardstyle`), App Check |
 | Server logic | Cloud Functions for Node.js 22 (`europe-central2` for data-handling functions), Firestore security rules, scheduled jobs |
 | Messaging | Firebase Cloud Messaging push + in-app notification center |
+| HARD token | Solana **devnet** SPL token (mint authority revoked, immutable metadata); Solana Mobile Wallet Adapter + WalletConnect (Reown); transactions built server-side with `@solana/web3.js` / `@solana/spl-token`; `tools/hard-devnet/` holds the token tooling (keys stay outside the repository) |
 | Monetization | Google Play Billing (label releases), AdMob (banner/rewarded, consent-gated), PayPal donations |
 | Localization | JSON string dictionary (`assets/i18n/en.json`), generated notification catalog shared with the server |
 
@@ -110,6 +114,10 @@ Every released build gets a **new versionCode**; an already published build is n
 | `docs/PLAY-PRODUCTION-BEADAS.md` | Production submission checklist |
 | `docs/IOS-CI-TESTFLIGHT.md` | iOS CI build and TestFlight distribution |
 | `docs/GYERMEKBIZTONSAG-MODERACIO-JAVASLAT.md` | Child-safety and moderation design (phased) |
+| `docs/HARD-TOKEN-INTEGRACIOS-TERV.md` | HARD token architecture, economics, reward system design and open decisions |
+| `docs/HARD-TOKEN-JOGI-KERDESEK.md` | Question list for the lawyer (MiCA, Play rules, owner allocation) |
+| `docs/HARD-GYIK-SZOVEGEK.md` | FAQ texts for the HARD token (published in the WordPress FAQ) |
+| `docs/PLAY-ADATBIZTONSAG-HELYADAT.md` | Play Console data-safety answers for the location check-in |
 | `docs/I18N-GLOSSARY.md` | Hungarian → English terminology used by the app |
 | `docs/RELEASEHARDSTYLE-BEILLESZTES-TERV.md` | Planned native integration of releasehardstyle.nl |
 | `AGENTS.md` | Round-by-round delivery log with measured evidence |
@@ -141,26 +149,35 @@ Every released build gets a **new versionCode**; an already published build is n
 - [x] global publication pushes for new events to every device with an FCM token
 - [x] event reminders to **every** registered device (1 week / 1 day / 6 hours before, per-event and per-window de-duplication)
 - [ ] per-user event targeting: pushes only to users who favorited an event or marked `Ott leszek`, plus notifications for an organizer's new events
-- [ ] show planned events on the profile (currently a placeholder pointing at the attendance feature)
+- [x] show planned events on the profile
 - [x] reporting, blocking, privacy controls and account deletion (in-app and a signed-out web path)
 - [x] phase 1 child-safety flagging on private messages, human-reviewed, with no automatic ban or deletion
 - [ ] phase 2: reporting/queue tooling for moderators, retention rules and metrics
 - [ ] phase 3: external hash-based media detection for CSAM (requires a third-party service)
 - [ ] authenticated admin backend so admins can review, approve and edit submissions without the WordPress dashboard
-- [ ] annual voting administration: WordPress-managed seasons and candidates with one-user/one-vote enforcement
-- [ ] claim a DJ profile only after verifying the private or artist-owned booking e-mail (the Hungarian Hardstyle-managed address never qualifies)
+- [x] annual voting administration: WordPress-managed seasons and candidates with one-user/one-vote enforcement
+- [x] claim a DJ profile only after verifying the private or artist-owned booking e-mail (the Hungarian Hardstyle-managed address never qualifies)
 
 ### v1.5 — Hardstyle Revolution Store
 
 - [ ] free MP3 releases without payment or advertising
-- [ ] rewarded-ad 128 kbps MP3 downloads for premium releases
-- [ ] paid 320 kbps MP3 downloads and paid WAV/lossless downloads
-- [ ] process paid digital downloads through Google Play Billing (not direct Google Pay checkout)
-- [ ] upload one WAV master and generate 128 kbps MP3, 320 kbps MP3 and preview derivatives server-side with FFmpeg in a background job, keeping the WAV master private
+- [x] rewarded-ad 128 kbps MP3 downloads for premium releases
+- [x] paid 320 kbps MP3 downloads and paid WAV/lossless downloads
+- [x] process paid digital downloads through Google Play Billing (not direct Google Pay checkout)
+- [x] upload one WAV master and generate 128 kbps MP3, 320 kbps MP3 and preview derivatives server-side with FFmpeg in a background job, keeping the WAV master private
 - [x] verify Websupport FFmpeg support (`/usr/bin/ffmpeg` 4.4.2 with `libmp3lame`)
 - [ ] optional purchase and download history
 
 Releases and Store share one WordPress-managed catalog rather than separate content systems.
+
+### HARD token — next
+
+- [x] Solana devnet token, wallet linking (MWA + WalletConnect), balance, address/QR, user-to-user transfers (server-built, wallet-signed)
+- [x] WordPress-managed FAQ section and privacy text for the token
+- [x] separate reward wallet created on devnet (key in Secret Manager; unfunded)
+- [ ] reward engine: idempotent ledger, yearly/per-account caps, scheduled retry (check-in 10 HARD, invite 10/5, vote 5, share/chat 1 with a weekly cap of 3), then the "Hamarosan" shop
+- [ ] airdrop campaign for linking a wallet (config-driven banner is already in the app)
+- [ ] lawyer review before any mainnet step; dynamic shop pricing only once a market price exists
 
 ## Navigation direction
 

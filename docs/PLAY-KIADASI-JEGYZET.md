@@ -1,14 +1,34 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás **418** (1.0.0), 2026-11-21
+## Aktuális kiadás **421** (1.0.0), 2026-11-22
 
 ```play-notes
-Új (tesztelés alatt): HARD-tárca a Közösségben — Solana-tárca összekapcsolása és HARD-egyenleg (18 éves kortól).
-Új (tesztelés alatt): a rádió új lejátszót kapott, hálózatváltás után magától újracsatlakozik.
-Új: a cikkek képei lightboxban nyílnak (koppintásra bezár, dupla koppintásra nagyít).
-Javítva: a „Ma este” térkép-gombja a Google Térkép appot nyitja; a kártyán a flyer is látszik.
-Javítva: az esemény időbeosztása igazodik a többi tartalomhoz.
+Új (tesztelés alatt): HARD-tárca — Solana-tárca, egyenleg, cím és QR, HARD küldése felhasználónak (18 éves kortól).
+Új (tesztelés alatt): helyalapú becsekkolás „Itt vagyok a helyszínen” (a pozíciót nem tároljuk); a becsekkolás a buli kezdetekor nyílik.
+Új: „Ott voltam” jelvények oldala, 3 kiemelhető jelvény a profilon.
+Új (tesztelés alatt): új rádiólejátszó.
+Új: a cikkek képei lightboxban nyílnak.
+Javítva: a „Ma este” kártya térkép-gombja és flyere.
 ```
+
+### 421 — jelvények, helyalapú becsekkolás, tárca-oldal
+
+- Új: a bulis becsekkolás a buli kezdetekor nyílik, nyitás előtt letiltott gomb mutatja, mikortól.
+- Új (tesztelés alatt): helyalapú becsekkolás („Itt vagyok a helyszínen”) azoknál a bulikoknál, ahol a szervező bekapcsolja; a pozíciót nem tároljuk (plugin 2.16.6 + `checkInEventGps`).
+- Új: az „Ott voltam” jelvények oldala (3 kiemelhető, nyilvánosság-kapcsoló).
+- Új: HARD-tárca oldal: teljes cím, QR, Explorer-link, airdrop-szalag (config-vezérelt), HARD küldése a tárcából felhasználó kiválasztásával; helyi gyorsítótár a gyors betöltéshez; újrapróbálás a Solflare-hibára.
+- Csomag: `build/HUHS-v1.0.0+421-release.aab`, 97 686 254 bájt, SHA-256 `CD307ABE0BCA9A3A863A21959B6961B977C75753466438135BCC8D6D75F88946`.
+- **A feltöltés előtt** a Play Console Adatbiztonság űrlapját frissíteni kell a helyadat miatt (`docs/PLAY-ADATBIZTONSAG-HELYADAT.md`).
+
+### 420 — HARD-küldés felhasználók között
+
+- Új (tesztelés alatt): HARD küldése másik felhasználónak a profil oldaláról (a saját tárcával aláírva, teszthálózaton). Szerver: `hardPrepareTransfer`.
+- Csomag: `build/HUHS-v1.0.0+420-release.aab`, SHA-256 `67C8C0C498EC084DAF2573F985E7C830F120A92F475C81D7C85AB9DC5E190653`.
+
+### 419 — HARD-tárca logó és ismertető
+
+- Új: a HARD-tárca oldalon a token logója és egy rövid ismertető („Mire jó a HARD?”).
+- Csomag: `build/HUHS-v1.0.0+419-release.aab`, SHA-256 `21A758AB6413C46E282E74108092001697CBC28B401342EB7038EE072300D278`.
 
 ### 418 — esemény időbeosztás igazítása
 
@@ -209,11 +229,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 418
+currentBuild: 421
 currentVersion: 1.0.0
 lastPublishedBuild: 413
-aab: build/HUHS-v1.0.0+418-release.aab
-sha256: 4BD7734017FDBD94D4AA53C684F7F9491068D39A89078616B9A29F59A24D1867
+aab: build/HUHS-v1.0.0+421-release.aab
+sha256: CD307ABE0BCA9A3A863A21959B6961B977C75753466438135BCC8D6D75F88946
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at
