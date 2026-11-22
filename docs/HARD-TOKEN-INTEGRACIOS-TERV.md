@@ -234,6 +234,8 @@ Költségek (RPC, Firebase, audit, Metaplex Core vs. alternatívák), MPC-szolg�
 
 ### 10.2 Javaslat: mennyi HARD jár, és mit ér (illusztratív számok, nem döntés)
 
+> **FELÜLÍRVA (2026-11-22):** a jutalom-számok a 12. fejezetben rögzített kis skálát követik (becsekkolás 10 HARD, nem 300). Az alábbi táblázat csak történeti.
+
 **Alapelv.** A HARD értékét nem árfolyam adja, hanem a **bolt belső árszintje**: 1 HARD ≈ 1 Ft kedvezmény *a mi saját termékeinkben* (jegy, merch). Ez belső ár, **nem piaci árígéret**; az appban és a kommunikációban „1 HARD = 1 Ft” nem szerepelhet értékként, csak a bolt konkrét árai.
 
 **Kiosztási keret.** A spec szerinti 35% (35 000 000 HARD) 5 évre, csökkenő ütemben: 1. év 10 M, 2. év 8 M, 3. év 7 M, 4. év 5 M, 5. év 5 M. Az 1. év heti kerete ~190 000 HARD. A ütemet nyilvánosan kell vállalni.
@@ -307,3 +309,50 @@ A WordPress-kezelt GYIK szövegei: `docs/HARD-GYIK-SZOVEGEK.md` (a felvitel a Wo
 - **A „HARD tárca” menüpont lassan tölt be.** Még nem vizsgáltuk. Feltételezett okok (nem ellenőrzöttek): a `hardGetBalance` callable hideg indítása, a Solana RPC lekérdezés a szerveren (8 mp időkorlát, soros hívás), és az `autoDispose` provider, ami minden megnyitáskor újra lekérdez; a Közösség menü is ugyanezt a providert figyeli a menüpont megjelenítéséhez. Lehetséges javítások: az utolsó egyenleg gyorsítótárazása és azonnali megjelenítése frissítéssel a háttérben, az RPC-hívás és a hibakezelés mérése, a függvény melegen tartása. Előtte mérni kell, hol megy el az idő.
 - **Airdrop-esemény:** aki a kampány alatt összekapcsolja a tárcáját, 10 HARD-ot kap. Külön airdrop-tárca (Secret Manager), szerveroldali egyszeri kiosztás keret-számlálóval és naplóval; app-oldalon az első változathoz nem kell új build. Döntendő: keret, időszak, szigorúság (megerősített e-mail, becsekkolás). Jogi kérdés: ügyvédi lista 5. pont.
 - **Solflare (és talán más tárcák) összekapcsolásakor „Nincs kapcsolat a szerverrel, próbáld újra.” hiba** (tulajdonosi bejelentés, 2026-11-21; vizsgálata későbbre). Eddig tudott: a 414-es napló szerint a `hardWalletVerify` a szerveren sikeres volt, de a válasz elveszett (a tárcaappból visszatérve a hálózat egy ideig nem elérhető); a 416-ban újrapróbálás (4×, 1 mp) és a kötés-állapot frissítése van (ha a kötés megvan, nincs hiba). A mostani Solflare-hiba ennek ellenére jelentkezik: kiderítendő, hogy a kötés ilyenkor létrejön-e, melyik hívás (kihívás vagy ellenőrzés) bukik, és hogy a 416 előtti vagy utáni buildről van-e szó. Kell hozzá a Cloud Functions napló és az eszköz-logcat.
+
+
+## 12. Jutalomrendszer: kidolgozott terv (2026-11-22, tulajdonosi döntés a skáláról)
+
+### 12.1 Rögzített skála és elvek
+- **A közösségi készlet 35 000 000 HARD**, nem szórjuk gyorsan; a cél, hogy a token ne értéktelenedjen. A mint-jogosultság visszavonva: **a mennyiség nem növelhető**, ezért a kiosztást keretből és ütemből kell vezérelni.
+- **Elv:** alacsonyan indulunk, később emelhetünk (a csökkentés értéktelenedésnek érződik). Piaci ár esetén a jutalom érték-alapú lehet (a HARD-mennyiség csökken, ha az ár nő); a token 6 tizedesig osztható, ezért tört jutalom is adható.
+- **Skála:**
+
+| Tevékenység | HARD | Korlát |
+|---|---|---|
+| Buli-becsekkolás (QR) | **10** | eseményenként egyszer |
+| Meghívott barát első becsekkolása | **10** a meghívónak, **5** a meghívottnak | csak a meghívott első becsekkolása után; fiókonként legfeljebb 10 meghívás |
+| Éves szavazáson való részvétel | **5** | évadonként egyszer |
+| Hír-megosztás / chat-aktivitás | **1** | **együtt legfeljebb heti 3** |
+| Airdrop a tárca összekötéséért | **5** | kampányonként, fiókonként egyszer; csak futó kampánynál |
+
+- **Keretek (a szerver kényszeríti, csak az admin emelheti):** éves összes kiosztás az 1. évben **1 000 000 HARD** (a 35 M-ból; a docs 5 éves ütemét nem lépjük túl), fiókonként éves felső korlát **1 000 HARD**, heti passzív (megosztás/chat) **3 HARD**. 1 000 aktív felhasználóval, havi 2 bulival a becsekkolás ~240 000 HARD/év.
+- **Bolt:** ebben a körben csak a „Hamarosan” kártya, tárgyak nélkül. A későbbi árak tájékoztatóan: matrica ~30, passztartó ~120, maszk ~120, bögre ~200, ingyenes jegy ~1 000 HARD (finomítandó). Az elköltött HARD a kincstárba megy vissza (nem égetjük).
+
+### 12.2 Felépítés
+- **Jutalomkönyv (idempotens):** `hard_reward_ledger/{uid}_{típus}_{forrásAzonosító}` (pl. `uid_checkin_12992`). A dokumentum létezése adja az egyszeriséget (`create`, nem `set`). Mezők: `status` (`accrued` | `sending` | `sent` | `failed`), `amountRaw`, `txSignature`, `attempts`, `createdAt`. A kliens sem olvassa, sem írja (a szabályok tiltják); az app egy callable-ön át kapja a saját előzményeit.
+- **Beállítás:** `hard_config/current.rewards`: { `enabled`, összegek (becsekkolás, meghívó, meghívott, szavazás, social), `yearlyCap`, `perUserYearlyCap`, `weeklySocialCap` }. **Vészleállító:** `enabled=false` minden kiosztást megállít. A számláló (`hard_reward_budget/{év}`) tranzakcióban nő, így a keret nem léphető túl.
+- **Külön jutalom-tárca (nem a fő kincstár):** a kiosztáshoz a szervernek aláíró kulcs kell. A fő kincstár (multisig, 2 független aláíró) hideg marad; a jutalom-tárca egy **kis, csak a kampány keretével feltöltött** tárca, a kulcsa Secret Managerben. Kiszivárgás esetén legfeljebb a feltöltött keret vész el. A feltöltést (és a díj-SOL-t) kézzel, időnként végzed.
+- **Küldés:** a szerver a jutalom-tárcából utal (a címzett token-számlájának létrehozását és a hálózati díjat is ő fizeti): idempotens számlalétrehozás + `TransferChecked`. **Duplázás elleni védelem:** küldés előtt `sending` állapot és az aláírt tranzakció azonosítója a könyvbe kerül; újrapróbálásnál előbb az aláírás állapotát kérdezzük le. Egy ütemezett függvény 5 percenként újrapróbálja a `failed`/`sending` sorokat (legfeljebb 10×).
+- **Forrás-kapcsolók:** a becsekkolás (`checkInEvent`, a pontjóváírás után), a meghívás (a meglévő `referral` függvény), a szavazás, az airdrop (a tárca összekötésekor), a social (kliens jelzi a megosztást, a szerver számlál; a chat-jutalom a következő napon, moderálatlan, nem duplikált, nem túl rövid üzenetre).
+- **Visszaélés-védelem:** egy tárca = egy fiók (megvan), 18+ (megvan), megerősített e-mail, fiókonkénti és összes keret, auditnapló minden jóváírásról. A jutalmak zöme valódi jelenléthez kötött (becsekkolás).
+- **Tárcához nem kötött felhasználó:** a jutalom `accrued` állapotban gyűlik (tokent nem mozgat), és a tárca összekötésekor fizetődik ki; a gyűjtés felső korlátja a fiókonkénti éves korlát. *(Nyitott döntés: alternatíva, hogy tárca nélkül nem jár semmi.)*
+
+### 12.3 Az app oldala
+- **HARD tárca képernyő:** „Jutalmaim” (utolsó jóváírások, függő összeg), „Mit szerezhetsz” (a szerver beállításából, hogy a számok ne kerüljenek az appba), és a **„Hamarosan” bolt kártya** (bögre, passztartó, matrica, jegy; nincs vásárlás). Az airdrop-szalag megvan (config-vezérelt).
+- A számok és a korlátok a szerveren élnek, így a skála app-frissítés nélkül hangolható.
+
+### 12.4 Fázisok
+1. **Szerver (új AAB nélkül):** jutalomkönyv, beállítás, keret, küldő, ütemezett újrapróbáló, források bekötése, airdrop-kampány; devnet-en tesztelve, `enabled=false` állapotban telepítve.
+2. **App (AAB):** Jutalmaim, Mit szerezhetsz, „Hamarosan” kártya.
+3. **Bolt (később):** fizikai tárgyak, HARD-küldés a kincstárba, rendelés és eseményen átvétel, korlátozott darabszám.
+
+### 12.5 Döntés / jóváhagyás kell a kódolás előtt
+- **A jutalom-tárca létrehozása és kulcsának eltárolása (Secret Manager):** a kulcs létrehozása a jóváhagyásodat kéri; én nem hozok létre kulcsot nélküle.
+- Mekkora összeggel töltöd fel a jutalom-tárcát, és ki tölti fel időnként (és a díj-SOL-t).
+- Tárca nélküli felhasználó jutalma: gyűlik (javaslat) vagy nem jár.
+- Az 1. évi 1 000 000 és a fiókonkénti 1 000 HARD-os korlát jó-e.
+- A meghívás és a szavazás meglévő függvényeinek bekötése; a chat-jutalom pontos feltételei.
+
+### 12.6 Nem ellenőrzött
+Hány aktív felhasználó van, ezért a keretek példák. A meglévő `referral` és szavazó függvények bekötési pontjait még nem vizsgáltam. A tokennek jelenleg nincs piaca, ezért a skála jogilag (a „közösségi jutalom” ajánlattételi minősítése) az ügyvédi lista 5. kérdése alá tartozik.
