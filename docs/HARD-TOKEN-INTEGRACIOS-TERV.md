@@ -356,3 +356,9 @@ A WordPress-kezelt GYIK szövegei: `docs/HARD-GYIK-SZOVEGEK.md` (a felvitel a Wo
 
 ### 12.6 Nem ellenőrzött
 Hány aktív felhasználó van, ezért a keretek példák. A meglévő `referral` és szavazó függvények bekötési pontjait még nem vizsgáltam. A tokennek jelenleg nincs piaca, ezért a skála jogilag (a „közösségi jutalom” ajánlattételi minősítése) az ügyvédi lista 5. kérdése alá tartozik.
+
+### 12.7 A jutalom-tárca létrehozva (2026-11-22, devnet, tulajdonosi jóváhagyással)
+- **Cím (nyilvános):** `6Bn59PmLEwSvTzxH7v7kzdvdaTCUUgg5PQDmkBGUXa98` (Solana devnet).
+- **Kulcs:** a Firebase Secret Managerben, `HARD_REWARD_WALLET_KEY` (1. verzió); a repóban és a naplókban nincs. Ellenőrizve: a titok olvasható, és a belőle származtatott cím egyezik a fentivel. A kulcs csak a szerverfüggvényeknek érhető el, ha azokhoz kötjük (`secrets: [...]`); egyelőre egyetlen függvény sem használja.
+- **Egyenleg: 0 SOL és 0 HARD.** A devnet RPC-faucet lezárt („faucet closed”), a SOL csak a webes faucetről (faucet.solana.com, bejelentkezés/captcha) vagy átutalással jöhet; ezt a tulajdonos végzi. A HARD-ot a jutalom-tárcába a HARD-készletet őrző kulcsról kell átutalni (az `~/.huhs-hard/` kulcsai a repón kívül vannak; én ezeket nem használtam).
+- **Következő lépés a kódolás előtt:** (1) pár devnet SOL a díjakra (0,5–1 SOL bőven elég), (2) HARD-keret a jutalom-tárcára (az első időszakra elegendő; javaslat: 100 000 HARD), (3) a függvények `secrets` kötése és a küldő kód.
