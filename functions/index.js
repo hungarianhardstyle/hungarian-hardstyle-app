@@ -6525,6 +6525,79 @@ exports.checkInEvent = functions
     };
   });
 
+// ---------------------------------------------------------------------------
+// „Ott voltam” jelvények: lista és kiemelés. A becsekkolás a tartózkodási helyről
+// is árulkodik, ezért az `event_checkins` kliensről csak a sajátot olvasható; mások
+// jelvényeit ez a callable adja, a tulajdonos beállítása szerint (`checkin-badges-plan.js`).
+// ---------------------------------------------------------------------------
+const {
+  readBadgePrefs: readCheckinBadgePrefs,
+  normalizeFeatured: normalizeFeaturedCheckinBadges,
+  visibleBadges: visibleCheckinBadges,
+} = require('./checkin-badges-plan');
+
+async function loadCheckinBadges(uid) {
+  const snapshot = await db.collection('event_checkins').where('uid', '==', uid).get();
+  return snapshot.docs
+    .map((doc) => {
+      const row = doc.data();
+      return {
+        eventId: Number(row.eventId),
+        title: String(row.title || ''),
+        badgeName: String(row.badgeName || ''),
+        badgeUrl: String(row.badgeUrl || ''),
+        at: row.checkedInAt?.toMillis?.() || 0,
+      };
+    })
+    .filter((badge) => Number.isInteger(badge.eventId))
+    .sort((a, b) => b.at - a.at);
+}
+
+exports.getCheckinBadges = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const viewer = requireRegisteredViewer(context);
+  const requested = typeof data?.userId === 'string' ? data.userId.trim() : '';
+  if (requested.length > 128) throw new HttpsError('invalid-argument', 'Érvénytelen felhasználó.');
+  const target = requested || viewer;
+  if (!(await allowCall(viewer, 'checkin_badges', 30))) {
+    throw new HttpsError('resource-exhausted', 'Túl sok kérés, próbáld később.');
+  }
+  const [badges, profileSnap] = await Promise.all([
+    loadCheckinBadges(target),
+    db.collection('community_profiles').doc(target).get(),
+  ]);
+  const prefs = readCheckinBadgePrefs(profileSnap.data());
+  const own = target === viewer;
+  return {
+    own,
+    showAll: prefs.showAll,
+    featured: prefs.featured,
+    badges: visibleCheckinBadges({ badges, prefs, own }),
+  };
+});
+
+exports.setFeaturedCheckinBadges = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  const uid = requireRegisteredViewer(context);
+  if (!(await allowCall(uid, 'checkin_badges_set', 10))) {
+    throw new HttpsError('resource-exhausted', 'Túl sok kérés, próbáld később.');
+  }
+  if (typeof data?.showAll !== 'boolean') {
+    throw new HttpsError('invalid-argument', 'Hiányzó beállítás.');
+  }
+  const owned = await loadCheckinBadges(uid);
+  const featured = normalizeFeaturedCheckinBadges(
+    data?.eventIds,
+    owned.map((badge) => badge.eventId),
+  );
+  if (featured === null) {
+    throw new HttpsError('invalid-argument', 'Legfeljebb 3 saját jelvényt emelhetsz ki.');
+  }
+  await db
+    .collection('community_profiles')
+    .doc(uid)
+    .set({ featuredCheckinEventIds: featured, checkinBadgesPublic: data.showAll }, { merge: true });
+  return { ok: true, featured, showAll: data.showAll };
+});
+
 // Egyszeri jutalom a belépésért — a bemutató „Lépj be” lépése ajánlja fel. A ledger
 // (`welcome-sign-in`) miatt fiókonként EGYSZER fizet; vendég (anonim) fiók nem kap.
 exports.claimWelcomeSignInBonus = functions

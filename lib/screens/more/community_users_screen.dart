@@ -26,6 +26,7 @@ import 'newsletter_screen.dart';
 import 'suggested_people_screen.dart';
 import '../community/private_messages_screen.dart';
 import '../../widgets/achievement_badge_card.dart';
+import '../../widgets/checkin_badges_section.dart';
 import '../../widgets/hard_send_button.dart';
 import '../../widgets/profile_content_card.dart';
 
@@ -592,6 +593,8 @@ class _CommunityPublicProfileScreenState
                   label: const AppText('Blokkolás / letiltás'),
                 ),
               ],
+              if (isRegistered)
+                PublicCheckinBadges(userId: widget.userId, userName: name),
               const SizedBox(height: 18),
               if (isRegistered)
                 StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
