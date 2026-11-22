@@ -34,6 +34,8 @@ class HardWalletStatus {
     this.address,
     this.amount,
     this.cluster,
+    this.airdropAmount,
+    this.airdropEndsAtMs,
   });
 
   final bool enabled;
@@ -42,13 +44,37 @@ class HardWalletStatus {
   final String? amount;
   final String? cluster;
 
+  /// Futó airdrop-kampány (csak a tárca nélküli felhasználónak jön): mennyit kap.
+  final int? airdropAmount;
+  final int? airdropEndsAtMs;
+
+  /// A helyi gyorsítótárnak (az utolsó ismert állapot azonnali mutatásához).
+  Map<String, Object?> toMap() => {
+    'enabled': enabled,
+    'linked': linked,
+    'address': address,
+    'amount': amount,
+    'cluster': cluster,
+    if (airdropAmount != null)
+      'airdrop': {'amount': airdropAmount, 'endsAtMs': airdropEndsAtMs},
+  };
+
   factory HardWalletStatus.fromMap(Map<Object?, Object?> map) {
+    final airdrop = map['airdrop'];
+    final airdropAmount = airdrop is Map && airdrop['amount'] is num
+        ? (airdrop['amount'] as num).toInt()
+        : null;
+    final endsAt = airdrop is Map && airdrop['endsAtMs'] is num
+        ? (airdrop['endsAtMs'] as num).toInt()
+        : null;
     return HardWalletStatus(
       enabled: map['enabled'] == true,
       linked: map['linked'] == true,
       address: map['address'] as String?,
       amount: map['amount'] as String?,
       cluster: map['cluster'] as String?,
+      airdropAmount: airdropAmount,
+      airdropEndsAtMs: airdropAmount == null ? null : endsAt,
     );
   }
 }

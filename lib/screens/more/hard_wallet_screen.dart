@@ -1,10 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/i18n/tr.dart';
 import '../../core/layout/scroll_bottom_inset.dart';
+import '../../core/navigation/in_app_browser.dart';
+import '../../providers/community_provider.dart';
+import '../../services/hard_wallet_cache.dart';
 import '../../services/hard_wallet_connect.dart';
 import '../../services/hard_wallet_plan.dart';
 import '../../services/hard_wallet_service.dart';
@@ -15,9 +20,21 @@ const hardWalletConnect = HardWalletConnect();
 
 /// A tárca állapota és a HARD-egyenleg. Hiba (pl. 18 év alatt) vagy kikapcsolt
 /// funkció esetén a menüpont el is tűnik (lásd a Közösség menüt).
-final hardWalletStatusProvider = FutureProvider.autoDispose<HardWalletStatus>(
-  (ref) => hardWalletService.status(),
-);
+///
+/// Először az utolsó ismert (helyi) állapotot adja, hogy az oldal azonnal
+/// megjelenjen, majd a szerver friss válaszát (hideg indításnál ~2 s).
+final hardWalletStatusProvider = StreamProvider.autoDispose<HardWalletStatus>((
+  ref,
+) async* {
+  final uid = ref.watch(currentUidProvider);
+  if (uid != null) {
+    final cached = await HardWalletStatusCache.read(uid);
+    if (cached != null) yield cached;
+  }
+  final fresh = await hardWalletService.status();
+  if (uid != null) await HardWalletStatusCache.write(uid, fresh);
+  yield fresh;
+});
 
 class HardWalletScreen extends ConsumerStatefulWidget {
   const HardWalletScreen({super.key});
@@ -44,10 +61,15 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
     } catch (error) {
       // A tárcából visszalépve a válasz elveszhet, miközben a szerver a kötést
       // már rögzítette: friss állapotot kérünk, és ha a kötés megvan, nincs hiba.
+      // A hálózat a tárcaapp után néhány másodpercig nem elérhető lehet: újrapróbáljuk.
       var linked = false;
       try {
-        linked = (await ref.refresh(hardWalletStatusProvider.future)).linked;
+        linked = (await retryOnUnavailable(
+          hardWalletService.status,
+          attempts: 5,
+        )).linked;
       } catch (_) {}
+      ref.invalidate(hardWalletStatusProvider);
       final lostReply =
           connecting &&
           linked &&
@@ -67,7 +89,10 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
     return Scaffold(
       appBar: AppBar(title: const AppText('HARD tárca')),
       body: RefreshIndicator(
-        onRefresh: () async => ref.refresh(hardWalletStatusProvider.future),
+        onRefresh: () async {
+          ref.invalidate(hardWalletStatusProvider);
+          await ref.read(hardWalletStatusProvider.future);
+        },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
@@ -90,11 +115,15 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
             const SizedBox(height: 16),
             const _HardInfo(),
             const SizedBox(height: 16),
-            status.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => AppText(hardWalletErrorMessage(error)),
-              data: _body,
-            ),
+            // Ha már van (helyi) állapot, azt mutatjuk akkor is, ha a frissítés hibázik.
+            if (status.valueOrNull != null)
+              _body(status.requireValue)
+            else
+              status.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) => AppText(hardWalletErrorMessage(error)),
+                data: _body,
+              ),
             if (_error != null) ...[
               const SizedBox(height: 12),
               Text(
@@ -117,6 +146,7 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (status.airdropAmount != null) _AirdropBanner(status: status),
           FilledButton.icon(
             onPressed: _busy
                 ? null
@@ -158,7 +188,10 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
-            SelectableText(shortAddress(status.address ?? '')),
+            _AddressBlock(
+              address: status.address ?? '',
+              cluster: status.cluster,
+            ),
             if (status.cluster == 'devnet')
               const Padding(
                 padding: EdgeInsets.only(top: 4),
@@ -176,6 +209,122 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Futó airdrop-kampány jelzése: ennyit kap, aki most összekapcsolja a tárcáját.
+class _AirdropBanner extends StatelessWidget {
+  const _AirdropBanner({required this.status});
+
+  final HardWalletStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final ends = status.airdropEndsAtMs;
+    final n = '${status.airdropAmount}';
+    final text = ends == null
+        ? trArgs(
+            context,
+            'Airdrop: aki összekapcsolja a tárcáját, {n} HARD-ot kap.',
+            {'n': n},
+          )
+        : trArgs(
+            context,
+            'Airdrop: aki a(z) {date} napig összekapcsolja a tárcáját, {n} HARD-ot kap.',
+            {'n': n, 'date': _date(DateTime.fromMillisecondsSinceEpoch(ends))},
+          );
+    return Card(
+      color: Theme.of(context).colorScheme.primaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            const Icon(Icons.redeem_outlined),
+            const SizedBox(width: 12),
+            Expanded(child: Text(text)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _date(DateTime d) =>
+      '${d.year}.${d.month.toString().padLeft(2, '0')}.${d.day.toString().padLeft(2, '0')}.';
+}
+
+/// A kötött tárca teljes címe: másolható, QR-kóddal fogadáshoz, és megnyitható a
+/// Solana Explorerben (devnet).
+class _AddressBlock extends StatefulWidget {
+  const _AddressBlock({required this.address, required this.cluster});
+
+  final String address;
+  final String? cluster;
+
+  @override
+  State<_AddressBlock> createState() => _AddressBlockState();
+}
+
+class _AddressBlockState extends State<_AddressBlock> {
+  bool _showQr = false;
+
+  Future<void> _copy() async {
+    await Clipboard.setData(ClipboardData(text: widget.address));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(tr(context, 'Tárcacím másolva.'))));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final suffix = widget.cluster == 'devnet' ? '?cluster=devnet' : '';
+    final explorer =
+        'https://explorer.solana.com/address/${widget.address}$suffix';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: SelectableText(widget.address)),
+            IconButton(
+              tooltip: tr(context, 'Másolás'),
+              icon: const Icon(Icons.copy_outlined),
+              onPressed: _copy,
+            ),
+          ],
+        ),
+        Wrap(
+          spacing: 8,
+          children: [
+            TextButton.icon(
+              onPressed: () => setState(() => _showQr = !_showQr),
+              icon: const Icon(Icons.qr_code_2),
+              label: AppText(_showQr ? 'QR-kód elrejtése' : 'QR-kód mutatása'),
+            ),
+            TextButton.icon(
+              onPressed: () => openInAppBrowser(context, explorer),
+              icon: const Icon(Icons.open_in_new),
+              label: const AppText('Megnyitás az Explorerben'),
+            ),
+          ],
+        ),
+        if (_showQr)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Center(
+              child: Container(
+                color: Colors.white,
+                padding: const EdgeInsets.all(12),
+                child: QrImageView(
+                  data: widget.address,
+                  size: 200,
+                  semanticsLabel: tr(context, 'A tárcacím QR-kódja'),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

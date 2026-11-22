@@ -134,3 +134,15 @@ test('FORRÁS-LINT: minden HARD-callable regisztrált felhasználót kér, és n
   // A HARD és a pontok külön rendszer: ez a blokk nem írhat pontot.
   assert.doesNotMatch(block, /awardAchievementPoints|achievement_ledger/);
 });
+
+test('airdrop-jelzés: csak bekapcsolt, érvényes és le nem járt kampányra', () => {
+  const { readAirdrop } = require('./hard-wallet-plan');
+  const now = 1_000_000;
+  assert.deepEqual(readAirdrop({ enabled: true, amount: 10 }, now), { amount: 10, endsAtMs: null });
+  assert.deepEqual(readAirdrop({ enabled: true, amount: 10, endsAtMs: now + 1 }, now), { amount: 10, endsAtMs: now + 1 });
+  assert.equal(readAirdrop({ enabled: true, amount: 10, endsAtMs: now }, now), null);
+  assert.equal(readAirdrop({ enabled: false, amount: 10 }, now), null);
+  assert.equal(readAirdrop({ enabled: true, amount: 0 }, now), null);
+  assert.equal(readAirdrop({ enabled: true, amount: 1.5 }, now), null);
+  assert.equal(readAirdrop(undefined, now), null);
+});

@@ -146,7 +146,25 @@ function readHardConfig(data) {
   return { mint, cluster, rpcUrl: NETWORK_RPC[cluster] };
 }
 
+/**
+ * A futó airdrop-kampány jelzése az appnak (csak megjelenítés: az utalást a kiosztó
+ * függvény végzi, ha lesz). Kikapcsolt/hibás/lejárt beállításra `null`.
+ * `data` a `hard_config/current.airdrop` mező: { enabled, amount, endsAtMs? }.
+ */
+function readAirdrop(data, nowMs) {
+  if (!data || data.enabled !== true) return null;
+  const amount = Number(data.amount);
+  if (!Number.isInteger(amount) || amount < 1 || amount > 1_000_000) return null;
+  const endsAtMs = Number(data.endsAtMs);
+  if (data.endsAtMs !== undefined && data.endsAtMs !== null) {
+    if (!Number.isFinite(endsAtMs) || endsAtMs <= nowMs) return null;
+    return { amount, endsAtMs };
+  }
+  return { amount, endsAtMs: null };
+}
+
 module.exports = {
+  readAirdrop,
   CHALLENGE_TTL_MS,
   CHALLENGE_DOMAIN,
   NETWORK_RPC,

@@ -9673,6 +9673,7 @@ const {
   sumRawAmounts: hardSumRaw,
   formatRawAmount: hardFormatRaw,
   readHardConfig,
+  readAirdrop: hardReadAirdrop,
 } = require('./hard-wallet-plan');
 
 const HARD_DECIMALS = 6;
@@ -9824,8 +9825,15 @@ exports.hardWalletVerify = functions
     const challengeRef = db.collection('hard_wallet_challenges').doc(challengeId);
     const linkRef = db.collection('hard_wallet_links').doc(uid);
     const address = await db.runTransaction(async (tx) => {
-      const challengeSnap = await tx.get(challengeRef);
+      const [challengeSnap, linkSnap] = await Promise.all([tx.get(challengeRef), tx.get(linkRef)]);
       const challenge = challengeSnap.exists ? challengeSnap.data() : null;
+      // Idempotens újrapróba: ha az első kérés sikerült (a kihívás már törölve), de a
+      // válasz elveszett (a tárcaappból visszatérve a hálózat egy ideig nem
+      // elérhető), ugyanaz a kihívás-azonosító másodszor is sikert ad, mert a kötés
+      // az utolsó sikeres azonosítót megőrzi.
+      if (!challenge && linkSnap.exists && linkSnap.data()?.lastChallengeId === challengeId) {
+        return linkSnap.data().address;
+      }
       const problem = hardChallengeProblem(challenge, { uid, nowMs: Date.now() });
       if (problem) {
         throw new HttpsError(
@@ -9839,7 +9847,7 @@ exports.hardWalletVerify = functions
         throw new HttpsError('permission-denied', 'Az aláírás nem érvényes.');
       }
       const ownerRef = db.collection('hard_wallet_owners').doc(challenge.address);
-      const [ownerSnap, linkSnap] = await Promise.all([tx.get(ownerRef), tx.get(linkRef)]);
+      const ownerSnap = await tx.get(ownerRef);
       // Egy tárca egy fiókhoz tartozhat (fiókfarmolás ellen).
       if (ownerSnap.exists && ownerSnap.data()?.uid !== uid) {
         throw new HttpsError('already-exists', 'Ezt a tárcát egy másik fiók már használja.');
@@ -9849,7 +9857,11 @@ exports.hardWalletVerify = functions
         tx.delete(db.collection('hard_wallet_owners').doc(previous));
       }
       tx.set(ownerRef, { uid, linkedAt: FieldValue.serverTimestamp() });
-      tx.set(linkRef, { address: challenge.address, verifiedAt: FieldValue.serverTimestamp() });
+      tx.set(linkRef, {
+        address: challenge.address,
+        verifiedAt: FieldValue.serverTimestamp(),
+        lastChallengeId: challengeId,
+      });
       // A felhasznált kihívás törlődik (egyszer használatos, és nem gyűlik).
       tx.delete(challengeRef);
       return challenge.address;
@@ -9884,16 +9896,28 @@ exports.hardGetBalance = functions
   .runWith({ enforceAppCheck: false })
   .https.onCall(async (_data, context) => {
     const uid = requireRegisteredViewer(context);
-    const configSnap = await db.collection('hard_config').doc('current').get();
+    // Egymástól független olvasások egyszerre (a soros változat ~0,5 s-mal tovább tartott).
+    const [configSnap, linkSnap, allowed, adultError] = await Promise.all([
+      db.collection('hard_config').doc('current').get(),
+      db.collection('hard_wallet_links').doc(uid).get(),
+      allowCall(uid, 'hard_balance', 10),
+      requireHardAdult(uid).then(
+        () => null,
+        (error) => error,
+      ),
+    ]);
     const config = readHardConfig(configSnap.data());
     if (!config) return { enabled: false, linked: false };
-    if (!(await allowCall(uid, 'hard_balance', 10))) {
+    if (!allowed) {
       throw new HttpsError('resource-exhausted', 'Túl sok próbálkozás, várj egy percet.');
     }
-    await requireHardAdult(uid);
-    const linkSnap = await db.collection('hard_wallet_links').doc(uid).get();
+    if (adultError) throw adultError;
     const address = linkSnap.exists ? linkSnap.data()?.address : null;
-    if (!address) return { enabled: true, linked: false };
+    if (!address) {
+      // Futó airdrop-kampány esetén az app jelzi, mennyit kap, aki összekapcsolja a tárcáját.
+      const airdrop = hardReadAirdrop(configSnap.data()?.airdrop, Date.now());
+      return airdrop ? { enabled: true, linked: false, airdrop } : { enabled: true, linked: false };
+    }
     let accounts;
     try {
       const response = await fetch(config.rpcUrl, {
