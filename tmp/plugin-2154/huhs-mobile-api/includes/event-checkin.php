@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 | A szabályok (a szerver dönt, nem a kliens):
 |  - eseményenként EGY titkos kód (`_huhs_checkin_code`), ebből készül a QR:
 |    https://hungarianhardstyle.hu/checkin/<eseményId>/<kód>
-|  - a becsekkolás CSAK a buli ideje alatt érvényes (kezdés előtt 1 órától a
+|  - a becsekkolás CSAK a buli ideje alatt érvényes (a kezdéstől a
 |    végéig; záró idő nélkül a kezdéstől 10 óráig) — egy lefotózott QR-rel
 |    otthonról nem lehet pontot gyűjteni;
 |  - egy fiók eseményenként EGYSZER csekkol be. A WordPress csak a sózott
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 |    a pontot és a jelvényt a Firebase írja jóvá.
 */
 
-const HUHS_CHECKIN_OPENS_BEFORE = 3600;       // kezdés előtt 1 órával nyílik
+const HUHS_CHECKIN_OPENS_BEFORE = 0;          // a buli kezdetekor nyílik
 const HUHS_CHECKIN_DEFAULT_LENGTH = 36000;    // záró idő nélkül: 10 óra
 const HUHS_CHECKIN_META_PREFIX = '_huhs_checkin_entry_';
 
@@ -226,7 +226,7 @@ function huhs_event_checkin_api_record(WP_REST_Request $request)
     $state = huhs_checkin_state(huhs_event_checkin_window($event_id), time());
     if ($state !== 'open') {
         $message = $state === 'before'
-            ? 'A becsekkolás a buli kezdése előtt egy órával nyílik.'
+            ? 'A becsekkolás a buli kezdetekor nyílik.'
             : 'Ennek a bulinak a becsekkolása már lezárult.';
         return new WP_Error('huhs_checkin_closed', $message, array('status' => 403, 'state' => $state));
     }
@@ -312,7 +312,7 @@ function huhs_event_checkin_meta_box($post)
     $url = huhs_event_checkin_url($post->ID, $code);
     $state = huhs_checkin_state(huhs_event_checkin_window($post->ID), time());
     $state_label = array(
-        'before' => 'még nem nyílt meg (a kezdés előtt 1 órával nyílik)',
+        'before' => 'még nem nyílt meg (a buli kezdetekor nyílik)',
         'open' => 'NYITVA — most lehet becsekkolni',
         'closed' => 'lezárult',
         'unknown' => 'nincs kezdő dátum, ezért nem nyílik meg',

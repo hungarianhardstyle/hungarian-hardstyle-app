@@ -64,12 +64,16 @@ void main() {
     expect(tonightEvent([_event(start: '')], DateTime(2026, 11, 21, 12)), isNull);
   });
 
-  test('a becsekkolás ablaka: 1 órával a kezdés előtt nyílik, a végén zár', () {
+  test('a becsekkolás ablaka: a kezdéskor nyílik, a végén zár', () {
     final e = _event();
-    expect(checkinWindowFor(e, DateTime(2026, 11, 21, 20, 30)), CheckinWindow.notYet);
-    expect(checkinWindowFor(e, DateTime(2026, 11, 21, 21, 0)), CheckinWindow.open);
+    expect(checkinWindowFor(e, DateTime(2026, 11, 21, 21, 30)), CheckinWindow.notYet);
+    expect(checkinWindowFor(e, DateTime(2026, 11, 21, 22, 0)), CheckinWindow.open);
     expect(checkinWindowFor(e, DateTime(2026, 11, 22, 4, 59)), CheckinWindow.open);
     expect(checkinWindowFor(e, DateTime(2026, 11, 22, 5, 1)), CheckinWindow.closed);
+  });
+
+  test('a nyitás ideje a szerver adata nélkül a buli kezdete', () {
+    expect(checkinOpensAtFor(_event()), DateTime(2026, 11, 21, 22));
   });
 
   test('QR nélküli (kikapcsolt) eseménynél nincs becsekkolás', () {

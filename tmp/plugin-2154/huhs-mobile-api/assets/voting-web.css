@@ -1,0 +1,27 @@
+:root { color-scheme: dark; font: 16px/1.55 system-ui, sans-serif; color: #fff6f6; background: #100e10; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+#huhs-vote { max-width: 1056px; margin: auto; padding: clamp(16px, 5vw, 48px); }
+.vote-hero { padding: clamp(28px, 8vw, 76px); border: 1px solid #6b2833; border-left: 5px solid #ff4957; background: radial-gradient(ellipse at 90% 0%, #681e2b, transparent 63%), repeating-linear-gradient(135deg, #1c1419 0 17px, #21161c 17px 18px); margin-bottom: 22px; }
+.vote-hero h1 { margin: 16px 0 12px; font-size: clamp(2.3rem, 8vw, 5.3rem); line-height: .98; letter-spacing: -.055em; text-transform: uppercase; }
+.vote-hero p { margin: 0; color: #eed1d7; }
+.vote-brand { font-weight: 800; letter-spacing: .14em; font-size: .78rem; }
+a { color: #ffa2a9; text-underline-offset: 3px; }
+.vote-panel, fieldset, dialog { border: 1px solid #4c3941; background: #1c171b; border-radius: 12px; padding: 18px; margin: 0 0 16px; min-width: 0; }
+dialog { margin: auto; max-width: min(560px, 92vw); max-height: 85vh; color: inherit; }
+dialog::backdrop { background: #080608dc; }
+#vote-message { margin: 0 0 10px; }
+.vote-hint { color: #d9c4cb; font-size: .9rem; }
+input[type=email] { display: block; width: min(100%, 400px); margin-top: 6px; padding: 10px 12px; border-radius: 7px; border: 1px solid #a18490; font: inherit; }
+button { padding: 12px 16px; min-height: 44px; border-radius: 7px; border: 1px solid transparent; background: #ff666f; color: #17090d; font: inherit; font-weight: 750; cursor: pointer; }
+button:disabled { opacity: .6; cursor: wait; }
+.vote-secondary { background: transparent; border-color: #9f818d; color: inherit; }
+:focus-visible { outline: 3px solid #ffd5da; outline-offset: 3px; }
+legend { font-size: 1.18rem; font-weight: 800; padding: 0 8px; }
+.vote-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 8px; max-height: 27rem; overflow: auto; padding: 5px; }
+.vote-card { display: flex; align-items: center; gap: 10px; padding: 9px; min-height: 54px; border: 1px solid #51414a; border-radius: 8px; cursor: pointer; overflow-wrap: anywhere; }
+.vote-card:has(:checked) { background: #57222f; border-color: #ff8b95; }
+.vote-card input { accent-color: #ff666f; width: 19px; height: 19px; flex: none; }
+.vote-card img { width: 44px; height: 44px; object-fit: cover; border-radius: 5px; }
+.vote-actions { display: flex; gap: 8px; flex-wrap: wrap; }

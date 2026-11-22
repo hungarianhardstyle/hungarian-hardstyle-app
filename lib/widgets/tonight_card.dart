@@ -33,6 +33,10 @@ class TonightCard extends ConsumerWidget {
   }
 }
 
+String _hhmm(DateTime? time) => time == null
+    ? ''
+    : '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
 class _TonightBody extends ConsumerWidget {
   const _TonightBody({required this.event, required this.now});
 
@@ -44,9 +48,7 @@ class _TonightBody extends ConsumerWidget {
     if (uid == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            tr(context, 'A becsekkoláshoz be kell jelentkezned.'),
-          ),
+          content: Text(tr(context, 'A becsekkoláshoz be kell jelentkezned.')),
         ),
       );
       return;
@@ -159,6 +161,18 @@ class _TonightBody extends ConsumerWidget {
                           openInAppBrowser(context, event.ticketUrl),
                       icon: const Icon(Icons.confirmation_number_outlined),
                       label: const AppText('Jegy'),
+                    ),
+                  // Nyitás előtt is látszik (letiltva), hogy tudd, mikortól lehet becsekkolni.
+                  if (window == CheckinWindow.notYet)
+                    OutlinedButton.icon(
+                      key: const Key('tonight-checkin-soon'),
+                      onPressed: null,
+                      icon: const Icon(Icons.qr_code_scanner),
+                      label: Text(
+                        trArgs(context, 'Becsekkolás {time}-tól', {
+                          'time': _hhmm(checkinOpensAtFor(event)),
+                        }),
+                      ),
                     ),
                   if (window == CheckinWindow.open)
                     FilledButton.icon(

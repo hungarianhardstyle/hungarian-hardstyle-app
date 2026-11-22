@@ -12,8 +12,8 @@ const Duration tonightLeadTime = Duration(hours: 12);
 /// Záró idő nélkül ennyi ideig tart egy buli (ugyanaz, mint a szerveren).
 const Duration tonightDefaultLength = Duration(hours: 10);
 
-/// A becsekkolás a kezdés előtt ennyivel nyílik (ugyanaz, mint a szerveren).
-const Duration checkinLeadTime = Duration(hours: 1);
+/// A becsekkolás a kezdés előtt ennyivel nyílik (ugyanaz, mint a szerveren): a buli kezdetekor.
+const Duration checkinLeadTime = Duration.zero;
 
 DateTime? eventStartAt(HuhsEvent event) =>
     _combine(event.startDate, event.startTime, '20:00');
@@ -87,11 +87,13 @@ enum CheckinWindow { none, notYet, open, closed }
 
 /// A becsekkolás állapota. A szerver által küldött ablakot használja; ha az
 /// hiányzik, a saját számítást (a szerver úgyis ellenőriz).
+/// A becsekkolás nyitása: a szerver adta időpont, ennek hiányában a kezdés.
+DateTime? checkinOpensAtFor(HuhsEvent event) =>
+    event.checkinOpensAt ?? eventStartAt(event)?.subtract(checkinLeadTime);
+
 CheckinWindow checkinWindowFor(HuhsEvent event, DateTime now) {
   if (!event.checkinEnabled) return CheckinWindow.none;
-  final opens =
-      event.checkinOpensAt ??
-      eventStartAt(event)?.subtract(checkinLeadTime);
+  final opens = checkinOpensAtFor(event);
   final closes = event.checkinClosesAt ?? eventEndAt(event);
   if (opens == null || closes == null) return CheckinWindow.none;
   if (now.isBefore(opens)) return CheckinWindow.notYet;

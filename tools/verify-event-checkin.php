@@ -3,7 +3,7 @@
  * A BULIS BECSEKKOLÁS (plugin 2.15.0) — bizonyítás valódi PHP-n, stubolt WordPressen.
  *
  * MIT MÉR (lefutó kód, nem forrás-lint):
- *   1. az **időablak**: kezdés előtt 1 órával nyílik, a végén zár; záró idő nélkül
+ *   1. az **időablak**: a kezdéskor nyílik, a végén zár; záró idő nélkül
  *      a kezdéstől 10 óra; a 22:00 → 05:00 buli az éjfél utáni nap;
  *   2. a **kapu**: rossz kód → 403, ablakon kívül → 403 (a „state" jelzéssel),
  *      érvényes → ok, **ugyanaz a fiók másodszor** → `alreadyCheckedIn`, és a
@@ -99,7 +99,7 @@ function ts($s) { return (new DateTimeImmutable($s, new DateTimeZone('Europe/Bud
 
 // 1) időablak
 $w = huhs_checkin_window_from('2026-11-21', '22:00', '2026-11-22', '05:00');
-check('a becsekkolás a kezdés előtt 1 órával nyílik', $w['opens'] === ts('2026-11-21 21:00'));
+check('a becsekkolás a buli kezdetekor nyílik', $w['opens'] === ts('2026-11-21 22:00'));
 check('a becsekkolás a buli végén zár', $w['closes'] === ts('2026-11-22 05:00'));
 $w2 = huhs_checkin_window_from('2026-11-21', '22:00', '', '');
 check('záró idő nélkül a kezdéstől 10 óráig tart', $w2['closes'] === ts('2026-11-22 08:00'));

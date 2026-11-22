@@ -4,7 +4,7 @@ Tags: firebase, push, api, mobile
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.16.4
+Stable tag: 2.16.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,6 +15,9 @@ A Hungarian Hardstyle mobilalkalmazás (Flutter) WordPress-oldali API-ja: tartal
 A plugin a mobilalkalmazás egyetlen backendje: REST végpontok a hírekhez, eseményekhez, kiadványokhoz, DJ-khez, szavazásokhoz, játékokhoz és a közösségi feltöltésekhez, valamint az FCM **push-küldés** (a széles körök szeletekben, folytatható láncban mennek ki).
 
 == Changelog ==
+
+= 2.16.5 =
+* Bulis becsekkolás: a buli kezdetekor nyílik (korábban a kezdés előtt 1 órával).
 
 = 2.16.4 =
 * DJ verseny: a szavazás december 25-ig tart (a jelentkezés határideje december 10 marad).
