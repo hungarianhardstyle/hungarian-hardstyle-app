@@ -10,7 +10,7 @@ WordPress stays the editorial source of truth. The Flutter app reads the public 
 
 | Area | State |
 | --- | --- |
-| App version | **1.0.0+421** (`versionCode 421`) — Android via Google Play; iOS built unsigned in CI and installed by sideload for testing |
+| App version | **1.0.0+422** (`versionCode 422`) — Android via Google Play; iOS built unsigned in CI and installed by sideload for testing |
 | WordPress plugin | **2.16.6** |
 | Cloud Functions | **94 deployed** — 63 callable, 15 scheduled, 15 Firestore triggers, 1 HTTPS (26 in `europe-central2`, 68 in `us-central1`; measured with `firebase functions:list`) |
 | Localization | Hungarian + English, **1721** dictionary keys (100% of the targeted strings translated), language follows the device and can be switched in-app; push and in-app notification texts exist in both languages |

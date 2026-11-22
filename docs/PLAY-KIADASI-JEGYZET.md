@@ -1,6 +1,6 @@
 # Play Console — kiadási jegyzet (másolható)
 
-## Aktuális kiadás **421** (1.0.0), 2026-11-22
+## Aktuális kiadás **422** (1.0.0), 2026-11-22
 
 ```play-notes
 Új (tesztelés alatt): HARD-tárca — Solana-tárca, egyenleg, cím és QR, HARD küldése felhasználónak (18 éves kortól).
@@ -11,7 +11,13 @@
 Javítva: a „Ma este” kártya térkép-gombja és flyere.
 ```
 
-### 421 — jelvények, helyalapú becsekkolás, tárca-oldal
+### 422 — a 421 hibajavítása: a hely nélküli eszközök nem esnek ki
+
+- A 421-nél a Play Console figyelmeztetett: **7 eszközt** (1 telefon, 6 táblagép) kizárt volna, mert a helyengedélyek az `android.hardware.location` és a `.location.network` hardvert **kötelezőnek** jelölték (a GPS-t már nem kötelezőnek jelöltük). A manifest most mindhármat `required="false"`-ra állítja; a QR-os becsekkolás hely nélkül is használható.
+- Tartalma: a 421 teljes egésze (a 421-et **ne** publikáld, ez váltja).
+- Csomag: `build/HUHS-v1.0.0+422-release.aab`, 97 686 257 bájt, SHA-256 `DEC899E9E2054A4D8222A035C123C04A283BFFCC41DA25A0E175BAEB9C14BD65`.
+
+### 421 — jelvények, helyalapú becsekkolás, tárca-oldal (a Play figyelmeztetése miatt nem ment ki, a 422 váltja)
 
 - Új: a bulis becsekkolás a buli kezdetekor nyílik, nyitás előtt letiltott gomb mutatja, mikortól.
 - Új (tesztelés alatt): helyalapú becsekkolás („Itt vagyok a helyszínen”) azoknál a bulikoknál, ahol a szervező bekapcsolja; a pozíciót nem tároljuk (plugin 2.16.6 + `checkInEventGps`).
@@ -229,11 +235,11 @@ ugyanaz a magyar changelog megy a Play Console-ra, az app Névjegyére
 (`lib/data/app_changelog.dart`) és a plugin kiadásjegyzékére.
 
 <!-- play-notes-meta
-currentBuild: 421
+currentBuild: 422
 currentVersion: 1.0.0
 lastPublishedBuild: 413
-aab: build/HUHS-v1.0.0+421-release.aab
-sha256: CD307ABE0BCA9A3A863A21959B6961B977C75753466438135BCC8D6D75F88946
+aab: build/HUHS-v1.0.0+422-release.aab
+sha256: DEC899E9E2054A4D8222A035C123C04A283BFFCC41DA25A0E175BAEB9C14BD65
 -->
 
 ⚠️ A **388**-at a **387** után kellett építeni, a **389** pedig **mindegyiket felváltja** (a 385–388-at

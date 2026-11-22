@@ -22,6 +22,11 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <!-- A helyengedélyek ezeket is kötelező hardverként jelölnék (a Play ettől zárta ki a
+         hely nélküli táblagépeket és egy telefont a 421-nél); a helyalapú becsekkolás
+         nem kötelező, a QR mindig használható. -->
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.location.network" android:required="false" />
     <!-- A WIFI-engedélyek miatt a Play alapból kötelező hardverként venné fel; nem az. -->
     <uses-feature android:name="android.hardware.wifi" android:required="false" />
 

@@ -1,6 +1,6 @@
 # Play Console – Adatbiztonság (Data safety) frissítése a helyadat miatt
 
-**Mikor:** a 421-es (helyalapú becsekkolást tartalmazó) AAB feltöltése ELŐTT. A Play Console-ban az űrlapot csak a tulajdonos tudja módosítani; az alábbi válaszok a kód működéséből jönnek. A Play kérdéseinek pontos szövege változhat, ezért a válaszokat a konzol aktuális szövegével kell egyeztetni (a kódot ellenőriztem, az űrlap mostani szövegét nem láttam).
+**Mikor:** a 421-es és újabb (helyalapú becsekkolást tartalmazó, jelenleg a 422-es) AAB feltöltése ELŐTT. A Play Console-ban az űrlapot csak a tulajdonos tudja módosítani; az alábbi válaszok a kód működéséből jönnek. A Play kérdéseinek pontos szövege változhat, ezért a válaszokat a konzol aktuális szövegével kell egyeztetni (a kódot ellenőriztem, az űrlap mostani szövegét nem láttam).
 
 **Útvonal:** Play Console → az alkalmazás → Szabályzat és programok → Alkalmazás tartalma → Adatbiztonság → Kezelés.
 

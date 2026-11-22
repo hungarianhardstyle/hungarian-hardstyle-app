@@ -38,7 +38,7 @@ class AppReleaseNotes {
 const appChangelog = <AppReleaseNotes>[
   AppReleaseNotes(
     version: '1.0.0',
-    build: 421,
+    build: 422,
     changes: [
       'Új: a bulis becsekkolás a buli kezdetekor nyílik, és nyitás előtt is látszik, mikortól lehet becsekkolni.',
       'Új (tesztelés alatt): helyalapú becsekkolás („Itt vagyok a helyszínen”) azoknál a bulikoknál, ahol a szervező bekapcsolja; helyengedélyt kér, a pozíciót nem tároljuk.',
