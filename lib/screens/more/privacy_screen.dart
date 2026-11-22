@@ -48,6 +48,19 @@ class PrivacyScreen extends StatelessWidget {
           ),
           SizedBox(height: 14),
           AppText(
+            'HARD-tárca: ha összekapcsolsz egy Solana-tárcát (18 éves kortól), a tárca '
+            'nyilvános címét a fiókodhoz kötve tároljuk, és naplózzuk a kapcsolódással, a '
+            'leválasztással és az alkalmazáson belüli HARD-küldéssel kapcsolatos műveleteket '
+            '(időpont, a küldés címzettje és összege). Az egyenleged lekérdezéséhez a '
+            'tárcacímet a szerverünk a Solana-hálózat nyilvános végpontjának küldi el. A '
+            'tárcád privát kulcsát soha nem kapjuk meg és nem tároljuk: az aláírást a '
+            'tárcaalkalmazásod végzi. A tárcacím és a blokkláncon végrehajtott tranzakciók '
+            'a blokkláncon nyilvánosak és nem törölhetők; a fiókodhoz kötést a tárca '
+            'leválasztásakor, a kötést és a naplót a fiók törlésekor töröljük, a blokkláncon '
+            'lévő adatot azonban nem tudjuk.',
+          ),
+          SizedBox(height: 14),
+          AppText(
             'Vásárlás és letöltés esetén a Google Play termékazonosítója, a vásárlási token '
             'ellenőrzéséhez szükséges adatok és a felhasználói azonosító kapcsolódhatnak '
             'egymáshoz. A vásárlási jogosultságot a szerver ellenőrzi; a letöltési jogosultság '
