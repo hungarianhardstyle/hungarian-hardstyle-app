@@ -37,6 +37,17 @@ class PrivacyScreen extends StatelessWidget {
           ),
           SizedBox(height: 14),
           AppText(
+            'Bulis becsekkolás és „Ott voltam” jelvények: ha a helyszínen beolvasod a '
+            'becsekkolási QR-kódot, a fiókodhoz tároljuk, melyik eseményre és mikor '
+            'jelentkeztél be, és ebből kapod a jelvényedet. A becsekkolási rekordot '
+            'közvetlenül csak te olvashatod. A jelvényeid mások számára is láthatók '
+            'lehetnek: alapértelmezés szerint az összes jelvényed nyilvános a profilodon, '
+            'de az „Összes jelvény” oldalon kikapcsolhatod, hogy mások csak a (legfeljebb '
+            '3) kiemelt jelvényedet lássák. A jelvény elárulhatja, hogy részt vettél egy '
+            'eseményen. A jelvények a fiókod törlésekor törlődnek.',
+          ),
+          SizedBox(height: 14),
+          AppText(
             'Vásárlás és letöltés esetén a Google Play termékazonosítója, a vásárlási token '
             'ellenőrzéséhez szükséges adatok és a felhasználói azonosító kapcsolódhatnak '
             'egymáshoz. A vásárlási jogosultságot a szerver ellenőrzi; a letöltési jogosultság '
