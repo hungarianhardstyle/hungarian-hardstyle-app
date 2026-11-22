@@ -1649,6 +1649,8 @@
   "A belépésért +25 pont jár ajándékba, az esemény adatlapján pedig megjelenik az időbeosztás.": "Signing in now earns +25 points as a gift, and the event page shows the timetable.",
   "A tárca összekapcsolása csak egy aláírás: nem költ és nem utal el semmit. Az egyenleget a szerver a blokkláncról kérdezi le.": "Linking a wallet is only a signature: it does not spend or send anything. The server reads the balance from the blockchain.",
   "HARD tárca": "HARD wallet",
+  "Kinek küldesz?": "Who are you sending to?",
+  "Csak olyan felhasználónak küldhetsz, aki összekötötte a tárcáját.": "You can only send to a user who has linked their wallet.",
   "Itt vagyok a helyszínen": "I'm at the venue",
   "Helyalapú becsekkolás": "Location check-in",
   "A telefonod pozícióját egyszer lekérjük, és a szerver csak azt ellenőrzi, hogy a buli helyszínén vagy-e. A pozíciót nem tároljuk.": "We get your phone’s position once, and the server only checks whether you are at the event venue. We do not store the position.",

@@ -14,6 +14,8 @@ import '../../services/hard_wallet_connect.dart';
 import '../../services/hard_wallet_plan.dart';
 import '../../services/hard_wallet_service.dart';
 import '../../widgets/app_text.dart';
+import '../../widgets/hard_send_button.dart';
+import 'hard_recipient_picker_screen.dart';
 
 const hardWalletService = HardWalletService();
 const hardWalletConnect = HardWalletConnect();
@@ -81,6 +83,19 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// Címzett kiválasztása a felhasználók közül, majd a küldő párbeszéd.
+  Future<void> _pickRecipientAndSend() async {
+    final picked = await Navigator.of(context).push<(String, String)>(
+      MaterialPageRoute(builder: (_) => const HardRecipientPickerScreen()),
+    );
+    if (picked == null || !mounted) return;
+    await showHardSendDialog(
+      context,
+      recipientUid: picked.$1,
+      recipientName: picked.$2,
+    );
   }
 
   @override
@@ -200,6 +215,12 @@ class _HardWalletScreenState extends ConsumerState<HardWalletScreen> {
                 ),
               ),
             const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: _busy ? null : _pickRecipientAndSend,
+              icon: const Icon(Icons.send_outlined),
+              label: const AppText('HARD küldése'),
+            ),
+            const SizedBox(height: 8),
             OutlinedButton(
               onPressed: _busy
                   ? null

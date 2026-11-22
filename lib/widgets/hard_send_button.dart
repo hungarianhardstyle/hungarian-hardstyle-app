@@ -26,17 +26,31 @@ class HardSendButton extends ConsumerWidget {
       return const SizedBox.shrink();
     }
     return OutlinedButton.icon(
-      onPressed: () => showDialog<void>(
-        context: context,
-        builder: (_) => _SendDialog(
-          recipientUid: recipientUid,
-          recipientName: recipientName,
-        ),
+      onPressed: () => showHardSendDialog(
+        context,
+        recipientUid: recipientUid,
+        recipientName: recipientName,
       ),
       icon: const Icon(Icons.send_outlined),
       label: const AppText('HARD küldése'),
     );
   }
+}
+
+/// Megnyitja a küldő párbeszédet egy már kiválasztott címzetthez (a profilról és a
+/// tárca-oldalról is ezt használjuk).
+Future<void> showHardSendDialog(
+  BuildContext context, {
+  required String recipientUid,
+  required String recipientName,
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (_) => _SendDialog(
+      recipientUid: recipientUid,
+      recipientName: recipientName,
+    ),
+  );
 }
 
 class _SendDialog extends ConsumerStatefulWidget {
